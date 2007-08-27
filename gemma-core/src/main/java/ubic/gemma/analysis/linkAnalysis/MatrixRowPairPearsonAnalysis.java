@@ -87,6 +87,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
     private ExpressionDataDoubleMatrix dataMatrix;
     private boolean[] hasGenesCache;
     private Map<ExpressionDataMatrixRowElement, DesignElement> rowMapCache = new HashMap<ExpressionDataMatrixRowElement, DesignElement>();
+    private int minNumUsed = 3;
 
     private int[] fastHistogram = new int[NUM_BINS];
 
@@ -263,8 +264,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
      * @return double
      */
     private double correlFast( double[] ival, double[] jval, int i, int j ) {
-        if (rowSumSquaresSqrt[i] == 0 || rowSumSquaresSqrt[j] == 0)
-            return Double.NaN;
+        if ( rowSumSquaresSqrt[i] == 0 || rowSumSquaresSqrt[j] == 0 ) return Double.NaN;
         double sxy = 0.0;
         for ( int k = 0, n = ival.length; k < n; k++ ) {
             sxy += ( ival[k] - rowMeans[i] ) * ( jval[k] - rowMeans[j] );
@@ -436,8 +436,9 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
                     }
                 }
 
-                // avoid -1 correlations
-                if ( numused < 3 )
+                // avoid -1 correlations or extremely noisy values (minNumUsed should be set high enough so that degrees
+                // of freedom isn't too low.
+                if ( numused < minNumUsed )
                     setCorrel( i, j, Double.NaN, 0 );
                 else {
                     double denom = correlationNorm( numused, sxx, sx, syy, sy );
@@ -566,9 +567,8 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
         if ( keepers == null ) {
             return false;
         }
-        
-        if (Double.isNaN( correl ))
-            return false;
+
+        if ( Double.isNaN( correl ) ) return false;
 
         double acorrel = Math.abs( correl );
 
@@ -608,8 +608,7 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
      * @param numused int
      */
     private void setCorrel( int i, int j, double correl, int numused ) {
-        if (Double.isNaN(correl))
-            return;
+        if ( Double.isNaN( correl ) ) return;
         double acorrel = Math.abs( correl );
 
         // it is possible, due to roundoff, to overflow the bins.
@@ -761,6 +760,13 @@ public class MatrixRowPairPearsonAnalysis implements MatrixRowPairAnalysis {
         m.setRepresentation( PrimitiveType.DOUBLE );
         m.setScale( ScaleType.LINEAR );
         return m;
+
     }
 
+    /**
+     * Note that you cannot set the value less than 3 (the default)
+     */
+    public void setMinNumpresent( int minSamplesToKeepCorrelation ) {
+        if ( minSamplesToKeepCorrelation > 3 ) this.minNumUsed = minSamplesToKeepCorrelation;
+    }
 }

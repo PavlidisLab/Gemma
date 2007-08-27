@@ -39,6 +39,9 @@ import cern.colt.list.ObjectArrayList;
  */
 
 public class SpearmannMetrics implements MatrixRowPairAnalysis {
+
+    private int minSamplesToKeepCorrelation = 0;
+
     public SpearmannMetrics() {
         throw new UnsupportedOperationException();
     }
@@ -112,6 +115,10 @@ public class SpearmannMetrics implements MatrixRowPairAnalysis {
         m.setRepresentation( PrimitiveType.DOUBLE );
         m.setScale( ScaleType.LINEAR );
         return m;
+    }
+
+    public void setMinNumpresent( int minSamplesToKeepCorrelation ) {
+        this.minSamplesToKeepCorrelation = minSamplesToKeepCorrelation;
     }
 
 }

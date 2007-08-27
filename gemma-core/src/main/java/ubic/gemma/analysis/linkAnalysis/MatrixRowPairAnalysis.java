@@ -36,7 +36,7 @@ import cern.colt.list.ObjectArrayList;
 public interface MatrixRowPairAnalysis {
 
     public void calculateMetrics();
-    
+
     public QuantitationType getMetricType();
 
     public void setUseAbsoluteValue( boolean k );
@@ -64,5 +64,7 @@ public interface MatrixRowPairAnalysis {
     public double getScoreInBin( int i );
 
     public DesignElement getProbeForRow( ExpressionDataMatrixRowElement rowEl );
+
+    public void setMinNumpresent( int minSamplesToKeepCorrelation );
 
 }

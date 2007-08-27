@@ -57,6 +57,11 @@ import cern.colt.list.ObjectArrayList;
  */
 public class LinkAnalysis {
 
+    /**
+     * A value above which we would be concerned that statistical significance is going to be hard to achieve.
+     */
+    private static final double VERY_HIGH_CORRELATION_THRESHOLD = 0.9;
+
     protected static final Log log = LogFactory.getLog( LinkAnalysis.class );
     private MatrixRowPairAnalysis metricMatrix;
     private DoubleArrayList cdf;
@@ -68,6 +73,8 @@ public class LinkAnalysis {
     private Map<Gene, Collection<CompositeSequence>> geneToProbeMap = null;
     private Taxon taxon = null;
     private int uniqueGenesInDataset = 0;
+
+    private int minSamplesToKeepCorrelation = 0;
 
     private NumberFormat form;
 
@@ -183,8 +190,28 @@ public class LinkAnalysis {
             metricMatrix = MatrixRowPairAnalysisFactory.spearmann( dataMatrix, config.getCorrelationCacheThreshold() );
         }
 
+        /*
+         * Determine the threshold number of samples in a gene pair before we consider keeping the result. This is
+         * needed in data sets that have many missing values. In that case, some pairs will have a much smaller
+         * effective sample size. Because with too few degrees of freedom, the values have no chance of being
+         * significant (within reason), they shouldn't be included in the histograms.
+         */
+        double maxP = config.getFwe() / uniqueGenesInDataset;
+        for ( int i = 3; i < this.dataMatrix.columns(); i++ ) {
+            double scoreForSmallSampleSize = CorrelationStats.correlationForPvalue( maxP, i );
+            if ( scoreForSmallSampleSize > VERY_HIGH_CORRELATION_THRESHOLD ) {
+                minSamplesToKeepCorrelation = i + 1;
+                break;
+            }
+        }
+
+        if ( minSamplesToKeepCorrelation > 0 ) {
+            log.info( "Pairs must have at least " + minSamplesToKeepCorrelation + " mutual values to be considered" );
+        }
+
         metricMatrix.setDuplicateMap( probeToGeneMap, geneToProbeMap );
         metricMatrix.setUseAbsoluteValue( config.isAbsoluteValue() );
+        metricMatrix.setMinNumpresent( minSamplesToKeepCorrelation );
         metricMatrix.calculateMetrics();
         log.info( "Completed first pass over the data. Cached " + metricMatrix.numCached()
                 + " values in the correlation matrix with values over " + config.getCorrelationCacheThreshold() );
@@ -246,6 +273,11 @@ public class LinkAnalysis {
             log.info( "Minimum correlation to get " + form.format( maxP ) + " is about " + form.format( scoreAtP )
                     + " for " + uniqueGenesInDataset + " unique items (if all " + this.dataMatrix.columns()
                     + " items are present)" );
+
+            if ( scoreAtP > 0.9 ) {
+                log.warn( "This data set has a very high threshold for statistical significance!" );
+            }
+
         }
         this.metricMatrix.setPValueThreshold( maxP ); // this is the corrected
         // value.
