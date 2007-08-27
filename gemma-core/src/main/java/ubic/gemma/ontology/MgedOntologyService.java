@@ -42,7 +42,11 @@ import com.hp.hpl.jena.ontology.OntModelSpec;
 
 public class MgedOntologyService extends AbstractOntologyService {
 
-    /* (non-Javadoc)
+    public static final String MGED_ONTO_BASE_URL = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl";
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.ontology.AbstractOntologyService#getOntologyName()
      */
     @Override
@@ -52,13 +56,12 @@ public class MgedOntologyService extends AbstractOntologyService {
 
     protected static final Log log = LogFactory.getLog( MgedOntologyService.class );
 
-    protected  String ontology_startingPoint;
+    protected String ontology_startingPoint;
 
     public MgedOntologyService() {
         super();
         ontology_startingPoint = getOntologyStartingPoint();
     }
-
 
     public Collection<OntologyTreeNode> getBioMaterialTreeNodeTerms() {
 
@@ -71,17 +74,17 @@ public class MgedOntologyService extends AbstractOntologyService {
         nodes.add( buildTreeNode( term ) );
         return nodes;
     }
-    
-    public Collection<OntologyTerm> getBioMaterialTerms(){
-        
+
+    public Collection<OntologyTerm> getBioMaterialTerms() {
+
         if ( !ready.get() ) return null;
-                
+
         OntologyTerm term = terms.get( ontology_startingPoint );
         Collection<OntologyTerm> results = getAllTerms( term );
         results.add( term );
-        
-        return results; 
-        
+
+        return results;
+
     }
 
     /**
@@ -103,23 +106,21 @@ public class MgedOntologyService extends AbstractOntologyService {
         init();
 
     }
-    
-    protected Collection<OntologyTerm> getAllTerms(OntologyTerm term){
-        
+
+    protected Collection<OntologyTerm> getAllTerms( OntologyTerm term ) {
+
         Collection<OntologyTerm> children = term.getChildren( true );
 
-        if ( ( children == null ) || ( children.isEmpty() ) ) 
-            return new HashSet<OntologyTerm>();
-            
+        if ( ( children == null ) || ( children.isEmpty() ) ) return new HashSet<OntologyTerm>();
+
         Collection<OntologyTerm> grandChildren = new HashSet<OntologyTerm>();
-            for ( OntologyTerm child : children ) {
-                 grandChildren.addAll( getAllTerms( child ) );
-            }
-            
-        
-         children.addAll( grandChildren );           
-         return children;
-        
+        for ( OntologyTerm child : children ) {
+            grandChildren.addAll( getAllTerms( child ) );
+        }
+
+        children.addAll( grandChildren );
+        return children;
+
     }
 
     /**
@@ -145,20 +146,18 @@ public class MgedOntologyService extends AbstractOntologyService {
 
     }
 
- 
-
     @Override
     protected OntModel loadModel( String url, OntModelSpec spec ) throws IOException {
         return OntologyLoader.loadMemoryModel( url, spec );
     }
 
     protected String getOntologyStartingPoint() {
-        return "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#BioMaterialPackage";
+        return MGED_ONTO_BASE_URL + "#BioMaterialPackage";
     }
 
     @Override
     protected String getOntologyUrl() {
-        return "http://mged.sourceforge.net/ontologies/MGEDOntology.owl";
+        return MGED_ONTO_BASE_URL;
     }
 
 }
