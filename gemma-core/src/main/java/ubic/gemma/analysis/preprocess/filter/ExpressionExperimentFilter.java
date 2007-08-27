@@ -73,9 +73,9 @@ public class ExpressionExperimentFilter {
         boolean twoColor = isTwoColor();
         if ( config.isMinPresentFractionIsSet() && twoColor ) {
             /* Apply two color missing value filter */
+            builder.maskMissingValues( filteredMatrix, null );
             ExpressionDataBooleanMatrix missingValues = builder.getMissingValueData( null );
             filteredMatrix = minPresentFilter( filteredMatrix, missingValues );
-            builder.maskMissingValues( filteredMatrix, null );
         }
 
         if ( !twoColor ) {
