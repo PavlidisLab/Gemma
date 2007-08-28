@@ -2,7 +2,6 @@ package ubic.gemma.apps;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.text.Format;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,6 +18,7 @@ import ubic.basecode.gui.JMatrixDisplay;
 import ubic.basecode.io.writer.MatrixWriter;
 import ubic.gemma.analysis.linkAnalysis.CoexpressionAnalysisService;
 import ubic.gemma.analysis.linkAnalysis.CoexpressionAnalysisService.CoexpressionMatrices;
+import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
@@ -137,7 +137,8 @@ public class EffectSizeCalculationCli extends AbstractGeneCoexpressionManipulati
             return new Exception( "No genes in query/target" );
         }
 
-        CoexpressionMatrices matrices = effectSizeService.calculateCoexpressionMatrices( ees, queryGenes, targetGenes );
+        FilterConfig filterConfig = new FilterConfig(); // FIXME
+        CoexpressionMatrices matrices = effectSizeService.calculateCoexpressionMatrices( ees, queryGenes, targetGenes, filterConfig);
         DenseDoubleMatrix3DNamed correlationMatrix = matrices.getCorrelationMatrix();
         DenseDoubleMatrix3DNamed sampleSizeMatrix = matrices.getSampleSizeMatrix();
         DenseDoubleMatrix2DNamed effectSizeMatrix = effectSizeService.calculateEffectSizeMatrix( correlationMatrix, sampleSizeMatrix );

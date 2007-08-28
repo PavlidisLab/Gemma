@@ -17,9 +17,16 @@ import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix3DNamed;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.metaanalysis.CorrelationEffectMetaAnalysis;
 import ubic.gemma.analysis.coexpression.ExpressionProfile;
+import ubic.gemma.analysis.preprocess.filter.ExpressionExperimentFilter;
+import ubic.gemma.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
@@ -31,480 +38,467 @@ import cern.colt.list.DoubleArrayList;
  * @spring.bean id="effectSizeService"
  * @spring.property name="eeService" ref="expressionExperimentService"
  * @spring.property name="dedvService" ref="designElementDataVectorService"
+ * @spring.property name="csService" ref="compositeSequenceService"
+ * @spring.property name="adService" ref="arrayDesignService"
  * @author Raymond
  */
 public class CoexpressionAnalysisService {
-	private ExpressionExperimentService eeService;
+    private ExpressionExperimentService eeService;
 
-	private DesignElementDataVectorService dedvService;
+    private DesignElementDataVectorService dedvService;
 
-	private CorrelationEffectMetaAnalysis metaAnalysis;
+    private CorrelationEffectMetaAnalysis metaAnalysis;
 
-	private static Log log = LogFactory.getLog(CoexpressionAnalysisService.class
-			.getName());
+    private CompositeSequenceService csService;
 
-	protected static final int MIN_EP_NUM_SAMPLES = 3;
+    private ArrayDesignService adService;
 
-	/**
-	 * Minimum number of expression experiments for calculating the correlation
-	 */
-	protected static final int MIN_EE_SAMPLE_SIZE = 3;
+    private static Log log = LogFactory.getLog( CoexpressionAnalysisService.class.getName() );
 
-	/**
-	 * Process gene pairs in chunks
-	 */
-	protected static final int GENE_PAIR_CHUNK_SIZE = 400000;
+    protected static final int MIN_EP_NUM_SAMPLES = 3;
 
-	/**
-	 * Load genes in chunks
-	 */
-	protected static final int GENE_LOAD_CHUNK_SIZE = 100;
+    /**
+     * Minimum number of expression experiments for calculating the correlation
+     */
+    protected static final int MIN_EE_SAMPLE_SIZE = 3;
 
-	/**
-	 * Load composite sequences in chunks
-	 */
-	protected static final int CS_CHUNK_SIZE = 500;
+    /**
+     * Process gene pairs in chunks
+     */
+    protected static final int GENE_PAIR_CHUNK_SIZE = 400000;
 
-	/**
-	 * Filter out expression profiles for genes with relatively low expression
-	 * levels
-	 */
-	protected static final double MIN_EP_RANK = 0.3;
+    /**
+     * Load genes in chunks
+     */
+    protected static final int GENE_LOAD_CHUNK_SIZE = 100;
 
-	/**
-	 * Minimum number of expression experiments for the figure
-	 */
-	protected static final int MIN_FIGURE_GENE_PAIR_EE_NUM = 100;
+    /**
+     * Load composite sequences in chunks
+     */
+    protected static final int CS_CHUNK_SIZE = 500;
 
-	/**
-	 * Create an effect size service
-	 */
-	public CoexpressionAnalysisService() {
-		metaAnalysis = new CorrelationEffectMetaAnalysis(true, false);
-	}
+    /**
+     * Filter out expression profiles for genes with relatively low expression levels
+     */
+    protected static final double MIN_EP_RANK = 0.3;
 
-	// /**
-	// * Pair specified genes with coexpressed genes
-	// *
-	// * @param genes - genes to pair
-	// * @param EEs - expression experiments
-	// * @param stringency - minimum support for coexpressed genes
-	// * @return - set of gene pairs
-	// */
-	// public Collection<Gene> getCleanCoexpressedGenes( Collection<Gene> genes,
-	// Collection<ExpressionExperiment> EEs,
-	// int stringency ) {
-	// Collection<Gene> coexpressedGenes = new HashSet<Gene>();
-	// for ( Gene gene : genes ) {
-	// CoexpressionCollectionValueObject coexpressionCollectionValueObject = ( (
-	// CoexpressionCollectionValueObject ) geneService
-	// .getCoexpressedGenes( gene, EEs, stringency ) );
-	// Collection<CoexpressionValueObject> coexpressionData =
-	// coexpressionCollectionValueObject
-	// .getGeneCoexpressionData();
-	// Set<Long> ids = new HashSet<Long>();
-	// for ( CoexpressionValueObject coexpressionValueObject : coexpressionData
-	// ) {
-	// Integer linkCount = coexpressionValueObject.getPositiveLinkCount();
-	// long coexpressedGeneId = coexpressionValueObject.getGeneId();
-	// if ( !ids.contains( new Double( coexpressedGeneId ) ) &&
-	// coexpressedGeneId != gene.getId()
-	// && linkCount != null ) {
-	// coexpressedGenes.add( o );
-	// }
-	// ids.add( coexpressedGeneId );
-	// }
-	// }
-	// return coexpressedGenes;
-	// }
+    /**
+     * Minimum number of expression experiments for the figure
+     */
+    protected static final int MIN_FIGURE_GENE_PAIR_EE_NUM = 100;
 
-	public DenseDoubleMatrix3DNamed filterCoexpressionMatrix(
-			DenseDoubleMatrix3DNamed matrix) {
-		log.info("Filtering expression experiments...");
-		List<Long> filteredEeIds = new ArrayList<Long>(matrix.slices());
-		EE: for (Object eeId : matrix.getSliceNames()) {
-			int slice = matrix.getSliceIndexByName(eeId);
-			for (int i = 0; i < matrix.rows(); i++)
-				for (int j = 0; j < matrix.columns(); j++)
-					if (!matrix.isMissing(slice, i, j)) {
-						filteredEeIds.add((Long) eeId);
-						continue EE;
-					}
-		}
-		log.info(filteredEeIds.size() + " of " + matrix.slices() + " passed");
+    /**
+     * Create an effect size service
+     */
+    public CoexpressionAnalysisService() {
+        metaAnalysis = new CorrelationEffectMetaAnalysis( true, false );
+    }
 
-		DenseDoubleMatrix3DNamed filteredMatrix = new DenseDoubleMatrix3DNamed(
-				filteredEeIds.size(), matrix.rows(), matrix.columns());
-		filteredMatrix.setSliceNames(filteredEeIds);
-		for (int i = 0; i < filteredEeIds.size(); i++) {
-			Long eeId = filteredEeIds.get(i);
-			int slice = filteredMatrix.getSliceIndexByName(eeId);
-			for (int j = 0; j < matrix.rows(); j++) {
-				for (int k = 0; k < matrix.columns(); k++) {
-					double val = matrix.get(matrix.getSliceIndexByName(eeId),
-							j, k);
-					filteredMatrix.set(slice, j, k, val);
-				}
-			}
-		}
+    // /**
+    // * Pair specified genes with coexpressed genes
+    // *
+    // * @param genes - genes to pair
+    // * @param EEs - expression experiments
+    // * @param stringency - minimum support for coexpressed genes
+    // * @return - set of gene pairs
+    // */
+    // public Collection<Gene> getCleanCoexpressedGenes( Collection<Gene> genes,
+    // Collection<ExpressionExperiment> EEs,
+    // int stringency ) {
+    // Collection<Gene> coexpressedGenes = new HashSet<Gene>();
+    // for ( Gene gene : genes ) {
+    // CoexpressionCollectionValueObject coexpressionCollectionValueObject = ( (
+    // CoexpressionCollectionValueObject ) geneService
+    // .getCoexpressedGenes( gene, EEs, stringency ) );
+    // Collection<CoexpressionValueObject> coexpressionData =
+    // coexpressionCollectionValueObject
+    // .getGeneCoexpressionData();
+    // Set<Long> ids = new HashSet<Long>();
+    // for ( CoexpressionValueObject coexpressionValueObject : coexpressionData
+    // ) {
+    // Integer linkCount = coexpressionValueObject.getPositiveLinkCount();
+    // long coexpressedGeneId = coexpressionValueObject.getGeneId();
+    // if ( !ids.contains( new Double( coexpressedGeneId ) ) &&
+    // coexpressedGeneId != gene.getId()
+    // && linkCount != null ) {
+    // coexpressedGenes.add( o );
+    // }
+    // ids.add( coexpressedGeneId );
+    // }
+    // }
+    // return coexpressedGenes;
+    // }
 
-		return filteredMatrix;
+    public DenseDoubleMatrix3DNamed filterCoexpressionMatrix( DenseDoubleMatrix3DNamed matrix ) {
+        log.info( "Filtering expression experiments..." );
+        List<Long> filteredEeIds = new ArrayList<Long>( matrix.slices() );
+        EE: for ( Object eeId : matrix.getSliceNames() ) {
+            int slice = matrix.getSliceIndexByName( eeId );
+            for ( int i = 0; i < matrix.rows(); i++ )
+                for ( int j = 0; j < matrix.columns(); j++ )
+                    if ( !matrix.isMissing( slice, i, j ) ) {
+                        filteredEeIds.add( ( Long ) eeId );
+                        continue EE;
+                    }
+        }
+        log.info( filteredEeIds.size() + " of " + matrix.slices() + " passed" );
 
-	}
+        DenseDoubleMatrix3DNamed filteredMatrix = new DenseDoubleMatrix3DNamed( filteredEeIds.size(), matrix.rows(),
+                matrix.columns() );
+        filteredMatrix.setSliceNames( filteredEeIds );
+        for ( int i = 0; i < filteredEeIds.size(); i++ ) {
+            Long eeId = filteredEeIds.get( i );
+            int slice = filteredMatrix.getSliceIndexByName( eeId );
+            for ( int j = 0; j < matrix.rows(); j++ ) {
+                for ( int k = 0; k < matrix.columns(); k++ ) {
+                    double val = matrix.get( matrix.getSliceIndexByName( eeId ), j, k );
+                    filteredMatrix.set( slice, j, k, val );
+                }
+            }
+        }
 
-	public DenseDoubleMatrix2DNamed foldCoexpressionMatrix(
-			DenseDoubleMatrix3DNamed matrix) {
-		DenseDoubleMatrix2DNamed foldedMatrix = new DenseDoubleMatrix2DNamed(
-				matrix.rows() * matrix.columns(), matrix.slices());
-		foldedMatrix.setColumnNames(matrix.getSliceNames());
-		for (int i = 0; i < matrix.rows(); i++) {
-			for (int j = 0; j < matrix.columns(); j++) {
-				for (int k = 0; k < matrix.slices(); k++) {
-					int row = i * matrix.columns() + j;
-					int column = k;
-					double val = matrix.get(k, i, j);
-					foldedMatrix.addRowName(matrix.getRowName(i) + ":"
-							+ matrix.getColName(j));
-					foldedMatrix.set(row, column, val);
-				}
-			}
-		}
-		return foldedMatrix;
-	}
+        return filteredMatrix;
 
-	private Map<DesignElementDataVector, Collection<Gene>> getSpecificDedv2gene(
-			Map<DesignElementDataVector, Collection<Gene>> dedv2genes) {
-		Map<DesignElementDataVector, Collection<Gene>> specificDedv2gene = new HashMap<DesignElementDataVector, Collection<Gene>>();
-		for (DesignElementDataVector dedv : dedv2genes.keySet()) {
-			if (dedv2genes.get(dedv).size() == 1) {
-				specificDedv2gene.put(dedv, dedv2genes.get(dedv));
-			}
-		}
-		return specificDedv2gene;
-	}
+    }
 
-	/**
-	 * Get a gene ID to expression profiles map for an expression experiment
-	 * (specified by the quantitation type)
-	 * 
-	 * @param genes -
-	 *            genes to map
-	 * @param qt -
-	 *            quantitation type of the expression experiment
-	 * @return gene ID to expression profile map
-	 */
-	private Map<Gene, Collection<ExpressionProfile>> getGene2EpsMap(
-			ExpressionExperiment ee) {
-		Collection<QuantitationType> qts = (Collection<QuantitationType>) eeService
-				.getPreferredQuantitationType(ee);
-		if (qts.size() < 1) {
-			return null;
-		}
-		QuantitationType qt = qts.iterator().next();
-		log.debug("Loading expression profiles for " + ee.getShortName());
-		Collection<DesignElementDataVector> dedvs = eeService
-				.getDesignElementDataVectors(ee, qts);
-		Map<DesignElementDataVector, Collection<Gene>> dedv2genes = dedvService
-				.getDedv2GenesMap(dedvs, qt);
-		dedv2genes = getSpecificDedv2gene(dedv2genes);
+    public DenseDoubleMatrix2DNamed foldCoexpressionMatrix( DenseDoubleMatrix3DNamed matrix ) {
+        DenseDoubleMatrix2DNamed foldedMatrix = new DenseDoubleMatrix2DNamed( matrix.rows() * matrix.columns(), matrix
+                .slices() );
+        foldedMatrix.setColumnNames( matrix.getSliceNames() );
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            for ( int j = 0; j < matrix.columns(); j++ ) {
+                for ( int k = 0; k < matrix.slices(); k++ ) {
+                    int row = i * matrix.columns() + j;
+                    int column = k;
+                    double val = matrix.get( k, i, j );
+                    foldedMatrix.addRowName( matrix.getRowName( i ) + ":" + matrix.getColName( j ) );
+                    foldedMatrix.set( row, column, val );
+                }
+            }
+        }
+        return foldedMatrix;
+    }
 
-		Map<Gene, Collection<ExpressionProfile>> gene2eps = new HashMap<Gene, Collection<ExpressionProfile>>();
-		// build genes to expression profiles map
-		for (DesignElementDataVector dedv : dedv2genes.keySet()) {
-			Collection<Gene> genes = dedv2genes.get(dedv);
-			for (Gene gene : genes) {
-				Collection<ExpressionProfile> eps = gene2eps.get(gene);
-				if (eps == null) {
-					eps = new HashSet<ExpressionProfile>();
-					gene2eps.put(gene, eps);
-				}
-				eps.add(new ExpressionProfile(dedv));
-			}
-		}
-		log.info(ee.getShortName() + ": Loaded " + dedv2genes.keySet().size()
-				+ " expression profiles.");
-		return gene2eps;
-	}
+    private Map<DesignElementDataVector, Collection<Gene>> getSpecificDedv2gene(
+            Map<DesignElementDataVector, Collection<Gene>> dedv2genes ) {
+        Map<DesignElementDataVector, Collection<Gene>> specificDedv2gene = new HashMap<DesignElementDataVector, Collection<Gene>>();
+        for ( DesignElementDataVector dedv : dedv2genes.keySet() ) {
+            if ( dedv2genes.get( dedv ).size() == 1 ) {
+                specificDedv2gene.put( dedv, dedv2genes.get( dedv ) );
+            }
+        }
+        return specificDedv2gene;
+    }
 
-	public DenseDoubleMatrix2DNamed calculateEffectSizeMatrix(
-			DenseDoubleMatrix3DNamed correlationMatrix,
-			DenseDoubleMatrix3DNamed sampleSizeMatrix) {
-		DenseDoubleMatrix2DNamed matrix = new DenseDoubleMatrix2DNamed(
-				correlationMatrix.rows(), correlationMatrix.columns());
-		matrix.setRowNames(correlationMatrix.getRowNames());
-		matrix.setColumnNames(correlationMatrix.getColNames());
+    /**
+     * Get a gene ID to expression profiles map for an expression experiment (specified by the quantitation type)
+     * 
+     * @param genes - genes to map
+     * @param qt - quantitation type of the expression experiment
+     * @return gene ID to expression profile map
+     */
+    private Map<Gene, Collection<DesignElementDataVector>> getGene2DedvsMap( Collection<DesignElementDataVector> dedvs,
+            QuantitationType qt ) {
+        Map<DesignElementDataVector, Collection<Gene>> dedv2genes = dedvService.getDedv2GenesMap( dedvs, qt );
+        dedv2genes = getSpecificDedv2gene( dedv2genes );
 
-		for (Object rowId : correlationMatrix.getRowNames()) {
-			int rowIndex = matrix.getRowIndexByName(rowId);
-			for (Object colId : correlationMatrix.getColNames()) {
-				int colIndex = matrix.getColIndexByName(colId);
-				DoubleArrayList correlations = new DoubleArrayList(
-						correlationMatrix.slices());
-				DoubleArrayList sampleSizes = new DoubleArrayList(
-						correlationMatrix.slices());
-				for (Object sliceId : correlationMatrix.getSliceNames()) {
-					int sliceIndex = correlationMatrix
-							.getSliceIndexByName(sliceId);
-					double correlation = correlationMatrix.get(sliceIndex,
-							rowIndex, colIndex);
-					double sampleSize = sampleSizeMatrix.get(sliceIndex,
-							rowIndex, colIndex);
-					correlations.add(correlation);
-					sampleSizes.add(sampleSize);
-				}
-				metaAnalysis.run(correlations, sampleSizes);
-				double effectSize = metaAnalysis.getE();
-				matrix.set(rowIndex, colIndex, effectSize);
-			}
-		}
-		return matrix;
-	}
+        Map<Gene, Collection<DesignElementDataVector>> gene2dedvs = new HashMap<Gene, Collection<DesignElementDataVector>>();
+        // build genes to expression profiles map
+        for ( DesignElementDataVector dedv : dedv2genes.keySet() ) {
+            Collection<Gene> genes = dedv2genes.get( dedv );
+            for ( Gene gene : genes ) {
+                Collection<DesignElementDataVector> vectors = gene2dedvs.get( gene );
+                if ( vectors == null ) {
+                    vectors = new HashSet<DesignElementDataVector>();
+                    gene2dedvs.put( gene, vectors );
+                }
+                vectors.add( dedv );
+            }
+        }
+        return gene2dedvs;
+    }
 
-	/**
-	 * Fold the 3D correlation matrix to a 2D matrix with maximum correlations
-	 * 
-	 * @param matrix -
-	 *            correlation matrix
-	 * @param n -
-	 *            the Nth largest correlation
-	 * @return matrix with Nth largest correlations
-	 */
-	public DenseDoubleMatrix2DNamed getMaxCorrelationMatrix(
-			DenseDoubleMatrix3DNamed matrix, int n) {
-		DenseDoubleMatrix2DNamed maxMatrix = new DenseDoubleMatrix2DNamed(
-				matrix.rows(), matrix.columns());
-		maxMatrix.setRowNames(matrix.getRowNames());
-		maxMatrix.setColumnNames(matrix.getColNames());
-		for (int i = 0; i < matrix.rows(); i++) {
-			for (int j = 0; j < matrix.columns(); j++) {
-				DoubleArrayList list = new DoubleArrayList();
-				for (int k = 0; k < matrix.slices(); k++) {
-					double val = matrix.get(k, i, j);
-					if (!Double.isNaN(val)) {
-						list.add(val);
-					}
-				}
-				list.sort();
-				double val = Double.NaN;
-				if (list.size() > n)
-					val = list.get(list.size() - 1 - n);
-				maxMatrix.set(i, j, val);
-			}
-		}
-		return maxMatrix;
-	}
+    public DenseDoubleMatrix2DNamed calculateEffectSizeMatrix( DenseDoubleMatrix3DNamed correlationMatrix,
+            DenseDoubleMatrix3DNamed sampleSizeMatrix ) {
+        DenseDoubleMatrix2DNamed matrix = new DenseDoubleMatrix2DNamed( correlationMatrix.rows(), correlationMatrix
+                .columns() );
+        matrix.setRowNames( correlationMatrix.getRowNames() );
+        matrix.setColumnNames( correlationMatrix.getColNames() );
 
-	/**
-	 * Create and populate the coexpression matrices (correlation matrix, sample
-	 * size matrix, expression level matrix)
-	 * 
-	 * @param ees
-	 * @param queryGenes
-	 * @param targetGenes
-	 * @return
-	 */
-	public CoexpressionMatrices calculateCoexpressionMatrices(
-			Collection<ExpressionExperiment> ees, Collection<Gene> queryGenes,
-			Collection<Gene> targetGenes) {
-		CoexpressionMatrices matrices = new CoexpressionMatrices(ees,
-				queryGenes, targetGenes);
-		DenseDoubleMatrix3DNamed correlationMatrix = matrices
-				.getCorrelationMatrix();
-		DenseDoubleMatrix3DNamed sampleSizeMatrix = matrices
-				.getSampleSizeMatrix();
-		DenseDoubleMatrix3DNamed exprLvlMatrix = matrices.getExprLvlMatrix();
-		int count = 0;
-		int totalEes = ees.size();
-		StopWatch watch = new StopWatch();
-		for (ExpressionExperiment ee : ees) {
-			log.info("Calculating coexpression matrices for " + ee.getShortName());
-			Map<Gene, Collection<ExpressionProfile>> gene2eps = getGene2EpsMap(ee);
-			int slice = correlationMatrix.getSliceIndexByName(ee.getId());
-			if (gene2eps == null)
-				continue;
-			watch.start();
+        for ( Object rowId : correlationMatrix.getRowNames() ) {
+            int rowIndex = matrix.getRowIndexByName( rowId );
+            for ( Object colId : correlationMatrix.getColNames() ) {
+                int colIndex = matrix.getColIndexByName( colId );
+                DoubleArrayList correlations = new DoubleArrayList( correlationMatrix.slices() );
+                DoubleArrayList sampleSizes = new DoubleArrayList( correlationMatrix.slices() );
+                for ( Object sliceId : correlationMatrix.getSliceNames() ) {
+                    int sliceIndex = correlationMatrix.getSliceIndexByName( sliceId );
+                    double correlation = correlationMatrix.get( sliceIndex, rowIndex, colIndex );
+                    double sampleSize = sampleSizeMatrix.get( sliceIndex, rowIndex, colIndex );
+                    correlations.add( correlation );
+                    sampleSizes.add( sampleSize );
+                }
+                metaAnalysis.run( correlations, sampleSizes );
+                double effectSize = metaAnalysis.getE();
+                matrix.set( rowIndex, colIndex, effectSize );
+            }
+        }
+        return matrix;
+    }
 
-			for (Gene qGene : queryGenes) {
-				int row = correlationMatrix.getRowIndexByName(qGene.getId());
-				for (Gene tGene : targetGenes) {
-					int col = correlationMatrix
-							.getColIndexByName(tGene.getId());
-					Collection<ExpressionProfile> queryEps = gene2eps
-							.get(qGene);
-					Collection<ExpressionProfile> targetEps = gene2eps
-							.get(tGene);
+    /**
+     * Fold the 3D correlation matrix to a 2D matrix with maximum correlations
+     * 
+     * @param matrix - correlation matrix
+     * @param n - the Nth largest correlation
+     * @return matrix with Nth largest correlations
+     */
+    public DenseDoubleMatrix2DNamed getMaxCorrelationMatrix( DenseDoubleMatrix3DNamed matrix, int n ) {
+        DenseDoubleMatrix2DNamed maxMatrix = new DenseDoubleMatrix2DNamed( matrix.rows(), matrix.columns() );
+        maxMatrix.setRowNames( matrix.getRowNames() );
+        maxMatrix.setColumnNames( matrix.getColNames() );
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            for ( int j = 0; j < matrix.columns(); j++ ) {
+                DoubleArrayList list = new DoubleArrayList();
+                for ( int k = 0; k < matrix.slices(); k++ ) {
+                    double val = matrix.get( k, i, j );
+                    if ( !Double.isNaN( val ) ) {
+                        list.add( val );
+                    }
+                }
+                list.sort();
+                double val = Double.NaN;
+                if ( list.size() > n ) val = list.get( list.size() - 1 - n );
+                maxMatrix.set( i, j, val );
+            }
+        }
+        return maxMatrix;
+    }
 
-					List<ExpressionProfilePair> epPairs = new ArrayList<ExpressionProfilePair>();
-					if (queryEps != null && targetEps != null) {
-						for (ExpressionProfile queryEp : queryEps) {
-							for (ExpressionProfile targetEp : targetEps) {
-								if (isValidExpressionProfile(queryEp)
-										&& isValidExpressionProfile(targetEp)
-										&& queryEp.getNumSamples() == targetEp
-												.getNumSamples())
-									epPairs.add(new ExpressionProfilePair(
-											queryEp, targetEp));
-							}
-						}
-						Collections.sort(epPairs);
-					}
+    /**
+     * Create and populate the coexpression matrices (correlation matrix, sample size matrix, expression level matrix)
+     * 
+     * @param ees
+     * @param queryGenes
+     * @param targetGenes
+     * @return
+     */
+    public CoexpressionMatrices calculateCoexpressionMatrices( Collection<ExpressionExperiment> ees,
+            Collection<Gene> queryGenes, Collection<Gene> targetGenes, FilterConfig filterConfig ) {
+        CoexpressionMatrices matrices = new CoexpressionMatrices( ees, queryGenes, targetGenes );
+        DenseDoubleMatrix3DNamed correlationMatrix = matrices.getCorrelationMatrix();
+        DenseDoubleMatrix3DNamed sampleSizeMatrix = matrices.getSampleSizeMatrix();
+        DenseDoubleMatrix3DNamed exprLvlMatrix = matrices.getExprLvlMatrix();
+        int count = 0;
+        int totalEes = ees.size();
+        StopWatch watch = new StopWatch();
+        for ( ExpressionExperiment ee : ees ) {
+            watch.start();
+            log.info( ee.getShortName() + ": Calculating coexpression matrices" );
+            Collection<ArrayDesign> ads = eeService.getArrayDesignsUsed( ee );
 
-					if (epPairs.size() > 0) {
-						ExpressionProfilePair epPair = epPairs.get(epPairs
-								.size() / 2);
-						correlationMatrix.set(slice, row, col,
-								epPair.correlation);
-						exprLvlMatrix.set(slice, row, col,
-								epPair.expressionLevel);
-						sampleSizeMatrix
-								.set(slice, row, col, epPair.sampleSize);
-					} else {
-						correlationMatrix.set(slice, row, col, Double.NaN);
-						exprLvlMatrix.set(slice, row, col, Double.NaN);
-						sampleSizeMatrix.set(slice, row, col, Double.NaN);
-					}
-				}
-			}
-			watch.stop();
-			log.info(ee.getShortName() + " (" + ++count + " of " + totalEes
-					+ "): calculated correlation of "
-					+ gene2eps.values().size() + " expression profiles in "
-					+ watch);
-			watch.reset();
-		}
-		return matrices;
-	}
+            Collection<CompositeSequence> css = new HashSet<CompositeSequence>();
+            for ( ArrayDesign ad : ads ) {
+                css.addAll( adService.loadCompositeSequences( ad ) );
+            }
 
-	private boolean isValidExpressionProfile(ExpressionProfile ep) {
-		return ep != null && ep.getRank() != null && ep.getRank() > MIN_EP_RANK
-				&& ep.getNumValidSamples() > MIN_EP_NUM_SAMPLES;
-	}
+            // get quantitation types
+            Collection<QuantitationType> qts;
+            qts = ( Collection<QuantitationType> ) eeService.getPreferredQuantitationType( ee );
+            if ( qts.size() < 1 ) {
+                return null;
+            }
+            QuantitationType qt = qts.iterator().next();
 
-	public void setEeService(ExpressionExperimentService eeService) {
-		this.eeService = eeService;
-	}
+            // get dedvs to build expression data matrix
+            Collection<DesignElementDataVector> dedvs;
+            dedvs = eeService.getDesignElementDataVectors( css, qt );
 
-	protected class GenePair {
-		private long firstId;
+            Map<Gene, Collection<CompositeSequence>> gene2css = csService.getGenes( css );
 
-		private long secondId;
+            // build and filter expression data matrix
+            ExpressionExperimentFilter filter = new ExpressionExperimentFilter( ee, ads, filterConfig );
+            ExpressionDataDoubleMatrix eeDoubleMatrix = filter.getFilteredMatrix( dedvs );
+            int slice = correlationMatrix.getSliceIndexByName( ee.getId() );
 
-		/**
-		 * Construct a gene pair with the specified pair of IDs and count
-		 * 
-		 * @param id1 -
-		 *            ID of first gene
-		 * @param id2 -
-		 *            ID of second gene
-		 */
-		public GenePair(long id1, long id2) {
-			this.firstId = id1;
-			this.secondId = id2;
-		}
+            for ( Gene qGene : queryGenes ) {
+                int row = correlationMatrix.getRowIndexByName( qGene.getId() );
+                for ( Gene tGene : targetGenes ) {
+                    int col = correlationMatrix.getColIndexByName( tGene.getId() );
+                    Collection<CompositeSequence> queryCss = gene2css.get( qGene );
+                    Collection<CompositeSequence> targetCss = gene2css.get( tGene );
 
-		public long getFirstId() {
-			return firstId;
-		}
+                    List<ExpressionProfilePair> epPairs = new ArrayList<ExpressionProfilePair>();
+                    if ( queryCss != null && targetCss != null ) {
+                        for ( CompositeSequence queryCs : queryCss ) {
+                            for ( CompositeSequence targetCs : targetCss ) {
+                                ExpressionProfile queryEp = new ExpressionProfile( queryCs.getId(), null,
+                                        eeDoubleMatrix.getRow( queryCs ) );
+                                ExpressionProfile targetEp = new ExpressionProfile( targetCs.getId(), null,
+                                        eeDoubleMatrix.getRow( targetCs ) );
+                                if ( isValidExpressionProfile( queryEp ) && isValidExpressionProfile( targetEp )
+                                        && queryEp.getNumSamples() == targetEp.getNumSamples() )
+                                    epPairs.add( new ExpressionProfilePair( queryEp, targetEp ) );
+                            }
+                        }
+                        Collections.sort( epPairs );
+                    }
 
-		public void setFirstId(long firstId) {
-			this.firstId = firstId;
-		}
+                    if ( epPairs.size() > 0 ) {
+                        ExpressionProfilePair epPair = epPairs.get( epPairs.size() / 2 );
+                        correlationMatrix.set( slice, row, col, epPair.correlation );
+                        sampleSizeMatrix.set( slice, row, col, epPair.sampleSize );
+                    } else {
+                        correlationMatrix.set( slice, row, col, Double.NaN );
+                        sampleSizeMatrix.set( slice, row, col, Double.NaN );
+                    }
+                }
+            }
+            watch.stop();
+            log.info( ee.getShortName() + " (" + ++count + " of " + totalEes + "): calculated correlation of "
+                    + css.size() + " expression profiles in " + watch );
+            watch.reset();
+        }
+        return matrices;
+    }
 
-		public long getSecondId() {
-			return secondId;
-		}
+    private boolean isValidExpressionProfile( ExpressionProfile ep ) {
+        return ep != null && ep.getRank() != null && ep.getRank() > MIN_EP_RANK
+                && ep.getNumValidSamples() > MIN_EP_NUM_SAMPLES;
+    }
 
-		public void setSecondId(long secondId) {
-			this.secondId = secondId;
-		}
-	}
+    public void setEeService( ExpressionExperimentService eeService ) {
+        this.eeService = eeService;
+    }
 
-	public class CoexpressionMatrices {
-		private DenseDoubleMatrix3DNamed correlationMatrix;
-		private DenseDoubleMatrix3DNamed sampleSizeMatrix;
-		private DenseDoubleMatrix3DNamed exprLvlMatrix;
+    protected class GenePair {
+        private long firstId;
 
-		public CoexpressionMatrices(Collection<ExpressionExperiment> ees,
-				Collection<Gene> queryGenes, Collection<Gene> targetGenes) {
-			List eeNames = getEeNames(ees);
-			List queryGeneNames = getGeneNames(queryGenes);
-			List targetGeneNames = getGeneNames(targetGenes);
+        private long secondId;
 
-			correlationMatrix = new DenseDoubleMatrix3DNamed(eeNames,
-					queryGeneNames, targetGeneNames);
-			sampleSizeMatrix = new DenseDoubleMatrix3DNamed(eeNames,
-					queryGeneNames, targetGeneNames);
-			exprLvlMatrix = new DenseDoubleMatrix3DNamed(eeNames,
-					queryGeneNames, targetGeneNames);
-		}
+        /**
+         * Construct a gene pair with the specified pair of IDs and count
+         * 
+         * @param id1 - ID of first gene
+         * @param id2 - ID of second gene
+         */
+        public GenePair( long id1, long id2 ) {
+            this.firstId = id1;
+            this.secondId = id2;
+        }
 
-		private List getEeNames(Collection<ExpressionExperiment> ees) {
-			List eeNames = new ArrayList();
-			for (ExpressionExperiment ee : ees) {
-				eeNames.add(ee.getId());
-			}
-			return eeNames;
-		}
+        public long getFirstId() {
+            return firstId;
+        }
 
-		private List getGeneNames(Collection<Gene> genes) {
-			List geneNames = new ArrayList();
-			for (Gene gene : genes) {
-				geneNames.add(gene.getId());
-			}
-			return geneNames;
-		}
+        public void setFirstId( long firstId ) {
+            this.firstId = firstId;
+        }
 
-		public DenseDoubleMatrix3DNamed getCorrelationMatrix() {
-			return correlationMatrix;
-		}
+        public long getSecondId() {
+            return secondId;
+        }
 
-		public void setCorrelationMatrix(
-				DenseDoubleMatrix3DNamed correlationMatrix) {
-			this.correlationMatrix = correlationMatrix;
-		}
+        public void setSecondId( long secondId ) {
+            this.secondId = secondId;
+        }
+    }
 
-		public DenseDoubleMatrix3DNamed getExprLvlMatrix() {
-			return exprLvlMatrix;
-		}
+    public class CoexpressionMatrices {
+        private DenseDoubleMatrix3DNamed correlationMatrix;
+        private DenseDoubleMatrix3DNamed sampleSizeMatrix;
+        private DenseDoubleMatrix3DNamed exprLvlMatrix;
 
-		public void setExprLvlMatrix(DenseDoubleMatrix3DNamed exprLvlMatrix) {
-			this.exprLvlMatrix = exprLvlMatrix;
-		}
+        public CoexpressionMatrices( Collection<ExpressionExperiment> ees, Collection<Gene> queryGenes,
+                Collection<Gene> targetGenes ) {
+            List eeNames = getEeNames( ees );
+            List queryGeneNames = getGeneNames( queryGenes );
+            List targetGeneNames = getGeneNames( targetGenes );
 
-		public DenseDoubleMatrix3DNamed getSampleSizeMatrix() {
-			return sampleSizeMatrix;
-		}
+            correlationMatrix = new DenseDoubleMatrix3DNamed( eeNames, queryGeneNames, targetGeneNames );
+            sampleSizeMatrix = new DenseDoubleMatrix3DNamed( eeNames, queryGeneNames, targetGeneNames );
+            exprLvlMatrix = new DenseDoubleMatrix3DNamed( eeNames, queryGeneNames, targetGeneNames );
+        }
 
-		public void setSampleSizeMatrix(
-				DenseDoubleMatrix3DNamed sampleSizeMatrix) {
-			this.sampleSizeMatrix = sampleSizeMatrix;
-		}
-	}
+        private List getEeNames( Collection<ExpressionExperiment> ees ) {
+            List eeNames = new ArrayList();
+            for ( ExpressionExperiment ee : ees ) {
+                eeNames.add( ee.getId() );
+            }
+            return eeNames;
+        }
 
-	private class ExpressionProfilePair implements
-			Comparable<ExpressionProfilePair> {
-		ExpressionProfile ep1;
-		ExpressionProfile ep2;
-		double correlation;
-		double expressionLevel;
-		int sampleSize;
+        private List getGeneNames( Collection<Gene> genes ) {
+            List geneNames = new ArrayList();
+            for ( Gene gene : genes ) {
+                geneNames.add( gene.getId() );
+            }
+            return geneNames;
+        }
 
-		public ExpressionProfilePair(ExpressionProfile ep1,
-				ExpressionProfile ep2) {
-			this.ep1 = ep1;
-			this.ep2 = ep2;
-			this.correlation = CorrelationStats.correl(ep1
-					.getExpressionLevels(), ep2.getExpressionLevels());
-			this.sampleSize = ep1.getExpressionLevels().length;
-			this.expressionLevel = (ep1.getRank() + ep2.getRank()) / 2;
-		}
+        public DenseDoubleMatrix3DNamed getCorrelationMatrix() {
+            return correlationMatrix;
+        }
 
-		public int compareTo(ExpressionProfilePair epPair) {
-			return correlation > epPair.correlation ? 1 : -1;
-		}
-	}
+        public void setCorrelationMatrix( DenseDoubleMatrix3DNamed correlationMatrix ) {
+            this.correlationMatrix = correlationMatrix;
+        }
 
-	public void setDedvService(DesignElementDataVectorService dedvService) {
-		this.dedvService = dedvService;
-	}
+        public DenseDoubleMatrix3DNamed getExprLvlMatrix() {
+            return exprLvlMatrix;
+        }
+
+        public void setExprLvlMatrix( DenseDoubleMatrix3DNamed exprLvlMatrix ) {
+            this.exprLvlMatrix = exprLvlMatrix;
+        }
+
+        public DenseDoubleMatrix3DNamed getSampleSizeMatrix() {
+            return sampleSizeMatrix;
+        }
+
+        public void setSampleSizeMatrix( DenseDoubleMatrix3DNamed sampleSizeMatrix ) {
+            this.sampleSizeMatrix = sampleSizeMatrix;
+        }
+    }
+
+    private class ExpressionProfilePair implements Comparable<ExpressionProfilePair> {
+        ExpressionProfile ep1;
+        ExpressionProfile ep2;
+        double correlation;
+        double expressionLevel;
+        int sampleSize;
+
+        public ExpressionProfilePair( ExpressionProfile ep1, ExpressionProfile ep2 ) {
+            this.ep1 = ep1;
+            this.ep2 = ep2;
+            double[] v1 = new double[ep1.getExpressionLevels().length];
+            double[] v2 = new double[ep2.getExpressionLevels().length];
+            for ( int i = 0; i < v1.length; i++ )
+                v1[i] = ep1.getExpressionLevels()[i];
+            for ( int i = 0; i < v2.length; i++ )
+                v2[i] = ep2.getExpressionLevels()[i];
+            this.correlation = CorrelationStats.correl( v1, v2 );
+            this.sampleSize = ep1.getExpressionLevels().length;
+        }
+
+        public int compareTo( ExpressionProfilePair epPair ) {
+            return correlation > epPair.correlation ? 1 : -1;
+        }
+    }
+
+    public void setDedvService( DesignElementDataVectorService dedvService ) {
+        this.dedvService = dedvService;
+    }
+
+    public void setCsService( CompositeSequenceService csService ) {
+        this.csService = csService;
+    }
+
+    public ArrayDesignService getAdService() {
+        return adService;
+    }
+
+    public void setAdService( ArrayDesignService adService ) {
+        this.adService = adService;
+    }
 }

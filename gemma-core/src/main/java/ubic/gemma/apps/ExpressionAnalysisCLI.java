@@ -23,6 +23,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -43,6 +44,8 @@ public class ExpressionAnalysisCLI extends AbstractGeneCoexpressionManipulatingC
     private ExpressionExperimentService eeService;
 
     private ArrayDesignService adService;
+    
+    private DesignElementDataVectorService dedvService;
 
     private double filterThreshold;
 
@@ -91,6 +94,7 @@ public class ExpressionAnalysisCLI extends AbstractGeneCoexpressionManipulatingC
     protected void initBeans() {
         eeService = ( ExpressionExperimentService ) getBean( "expressionExperimentService" );
         adService = ( ArrayDesignService ) getBean( "arrayDesignService" );
+        dedvService = (DesignElementDataVectorService) getBean("designElementDataVectorService");
     }
 
     private DenseDoubleMatrix2DNamed getRankMatrix( Collection<Gene> genes, Collection<ExpressionExperiment> ees ) {
@@ -113,26 +117,28 @@ public class ExpressionAnalysisCLI extends AbstractGeneCoexpressionManipulatingC
                 css.addAll( adService.loadCompositeSequences( ad ) );
             }
             Map<CompositeSequence, Collection<Gene>> cs2geneMap = geneService.getCS2GeneMap( css );
-            QuantitationType qt = ( QuantitationType ) eeService.getPreferredQuantitationType( ee ).iterator().next();
-            Map<DesignElementDataVector, Collection<Gene>> dedv2geneMap = eeService.getDesignElementDataVectors(
-                    cs2geneMap, qt ); // FIXME
+            Collection<QuantitationType> qts =  eeService.getPreferredQuantitationType( ee );
+            QuantitationType qt = qts.iterator().next();
+            Collection<DesignElementDataVector> dedvs = eeService.getDesignElementDataVectors( ee, qts );
+            Map<DesignElementDataVector, Collection<Gene>> dedv2geneMap = dedvService.getDedv2GenesMap( dedvs, qt );
 
             // invert dedv2geneMap
             Map<Gene, Collection<DesignElementDataVector>> gene2dedvMap = new HashMap<Gene, Collection<DesignElementDataVector>>();
             for ( DesignElementDataVector dedv : dedv2geneMap.keySet() ) {
                 Collection<Gene> c = dedv2geneMap.get( dedv );
                 for ( Gene gene : c ) {
-                    Collection<DesignElementDataVector> dedvs = gene2dedvMap.get( dedv );
-                    if ( dedvs == null ) {
-                        dedvs = new HashSet<DesignElementDataVector>();
-                        gene2dedvMap.put( gene, dedvs );
+                    Collection<DesignElementDataVector> vs = gene2dedvMap.get( dedv );
+                    if ( vs == null ) {
+                        vs = new HashSet<DesignElementDataVector>();
+                        gene2dedvMap.put( gene, vs );
                     }
-                    dedvs.add( dedv );
+                    vs.add( dedv );
                 }
 
             }
             log.info( "Loaded design element data vectors" );
 
+            // construct the rank matrix
             int rankCount = 0;
             String line = ee.getShortName();
             for ( Gene gene : genes ) {
@@ -140,9 +146,9 @@ public class ExpressionAnalysisCLI extends AbstractGeneCoexpressionManipulatingC
                 line += "\t";
                 Double rank;
                 List<Double> ranks = new ArrayList<Double>();
-                Collection<DesignElementDataVector> dedvs = gene2dedvMap.get( gene.getId() );
-                if ( dedvs == null ) continue;
-                for ( DesignElementDataVector dedv : dedvs ) {
+                Collection<DesignElementDataVector> vs = gene2dedvMap.get( gene.getId() );
+                if ( vs == null ) continue;
+                for ( DesignElementDataVector dedv : vs ) {
                     ranks.add( dedv.getRank() );
                 }
                 if ( ranks.size() < 1 ) continue;

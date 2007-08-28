@@ -16,6 +16,8 @@ import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix3DNamed;
 import ubic.basecode.io.writer.MatrixWriter;
 import ubic.gemma.analysis.linkAnalysis.CoexpressionAnalysisService;
 import ubic.gemma.analysis.linkAnalysis.CoexpressionAnalysisService.CoexpressionMatrices;
+import ubic.gemma.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
@@ -23,10 +25,13 @@ import ubic.gemma.model.genome.Gene;
 public class CorrelationAnalysisCLI extends AbstractGeneCoexpressionManipulatingCLI {
     private String outFilePrefix;
 
-    private CoexpressionAnalysisService effectSizeService;
+    private CoexpressionAnalysisService coexpressionAnalysisService;
+    
+    private FilterConfig filterConfig;
 
     public CorrelationAnalysisCLI() {
         super();
+        filterConfig = new FilterConfig();  
     }
 
     @Override
@@ -47,7 +52,7 @@ public class CorrelationAnalysisCLI extends AbstractGeneCoexpressionManipulating
     }
 
     protected void initBeans() {
-        effectSizeService = ( CoexpressionAnalysisService ) this.getBean( "effectSizeService" );
+        coexpressionAnalysisService = ( CoexpressionAnalysisService ) this.getBean( "effectSizeService" );
         eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
     }
 
@@ -69,12 +74,12 @@ public class CorrelationAnalysisCLI extends AbstractGeneCoexpressionManipulating
         }
         
         // calculate matrices
-        CoexpressionMatrices matrices = effectSizeService.calculateCoexpressionMatrices( ees, queryGenes, targetGenes );
+        CoexpressionMatrices matrices = coexpressionAnalysisService.calculateCoexpressionMatrices( ees, queryGenes, targetGenes, filterConfig );
         DenseDoubleMatrix3DNamed correlationMatrix = matrices.getCorrelationMatrix();
         
-        DenseDoubleMatrix2DNamed maxCorrelationMatrix = effectSizeService
+        DenseDoubleMatrix2DNamed maxCorrelationMatrix = coexpressionAnalysisService
                 .getMaxCorrelationMatrix( correlationMatrix, 0 );
-        DenseDoubleMatrix2DNamed correlationMatrix2D = effectSizeService.foldCoexpressionMatrix( correlationMatrix );
+        DenseDoubleMatrix2DNamed correlationMatrix2D = coexpressionAnalysisService.foldCoexpressionMatrix( correlationMatrix );
         // create row/col name maps
         Map<String, String> geneIdPair2NameMap = getGeneIdPair2NameMap( queryGenes, targetGenes );
         Map<Long, String> qGeneId2NameMap = new HashMap<Long, String>();
