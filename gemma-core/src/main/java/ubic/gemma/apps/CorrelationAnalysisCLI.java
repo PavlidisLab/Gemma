@@ -14,18 +14,18 @@ import org.apache.commons.lang.time.StopWatch;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix3DNamed;
 import ubic.basecode.io.writer.MatrixWriter;
-import ubic.gemma.analysis.linkAnalysis.EffectSizeService;
-import ubic.gemma.analysis.linkAnalysis.EffectSizeService.CoexpressionMatrices;
+import ubic.gemma.analysis.linkAnalysis.CoexpressionAnalysisService;
+import ubic.gemma.analysis.linkAnalysis.CoexpressionAnalysisService.CoexpressionMatrices;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 
-public class NoCorrelationAnalysisCLI extends AbstractGeneCoexpressionManipulatingCLI {
+public class CorrelationAnalysisCLI extends AbstractGeneCoexpressionManipulatingCLI {
     private String outFilePrefix;
 
-    private EffectSizeService effectSizeService;
+    private CoexpressionAnalysisService effectSizeService;
 
-    public NoCorrelationAnalysisCLI() {
+    public CorrelationAnalysisCLI() {
         super();
     }
 
@@ -47,7 +47,7 @@ public class NoCorrelationAnalysisCLI extends AbstractGeneCoexpressionManipulati
     }
 
     protected void initBeans() {
-        effectSizeService = ( EffectSizeService ) this.getBean( "effectSizeService" );
+        effectSizeService = ( CoexpressionAnalysisService ) this.getBean( "effectSizeService" );
         eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
     }
 
@@ -67,22 +67,14 @@ public class NoCorrelationAnalysisCLI extends AbstractGeneCoexpressionManipulati
         } catch ( IOException e ) {
             return e;
         }
-
+        
         // calculate matrices
         CoexpressionMatrices matrices = effectSizeService.calculateCoexpressionMatrices( ees, queryGenes, targetGenes );
         DenseDoubleMatrix3DNamed correlationMatrix = matrices.getCorrelationMatrix();
-        DenseDoubleMatrix3DNamed randCorrelationMatrix = effectSizeService
-                .calculateRandomCorrelationMatrix( correlationMatrix );
         
         DenseDoubleMatrix2DNamed maxCorrelationMatrix = effectSizeService
                 .getMaxCorrelationMatrix( correlationMatrix, 0 );
-        DenseDoubleMatrix2DNamed maxRandCorrelationMatrix = effectSizeService.getMaxCorrelationMatrix(
-                randCorrelationMatrix, 0 );
-        
         DenseDoubleMatrix2DNamed correlationMatrix2D = effectSizeService.foldCoexpressionMatrix( correlationMatrix );
-        DenseDoubleMatrix2DNamed randCorrelationMatrix2D = effectSizeService
-                .foldCoexpressionMatrix( randCorrelationMatrix );
-        
         // create row/col name maps
         Map<String, String> geneIdPair2NameMap = getGeneIdPair2NameMap( queryGenes, targetGenes );
         Map<Long, String> qGeneId2NameMap = new HashMap<Long, String>();
@@ -105,17 +97,10 @@ public class NoCorrelationAnalysisCLI extends AbstractGeneCoexpressionManipulati
             out.writeMatrix( correlationMatrix2D, topLeft );
             out.close();
             
-            out = new MatrixWriter( outFilePrefix + ".rand_corr.txt", formatter, geneIdPair2NameMap, eeId2NameMap, valMap);
-            out.writeMatrix( randCorrelationMatrix2D, topLeft );
-            out.close();
-
             out = new MatrixWriter( outFilePrefix + ".max_corr.txt", formatter ,  qGeneId2NameMap, tGeneId2NameMap, valMap);
             out.writeMatrix( maxCorrelationMatrix );
             out.close();
             
-            out = new MatrixWriter( outFilePrefix + ".max_rand_corr.txt", formatter ,  qGeneId2NameMap, tGeneId2NameMap, valMap);
-            out.writeMatrix( maxRandCorrelationMatrix );
-            out.close();
         } catch ( IOException e ) {
             return e;
         }
@@ -124,7 +109,7 @@ public class NoCorrelationAnalysisCLI extends AbstractGeneCoexpressionManipulati
     }
 
     public static void main( String[] args ) {
-        NoCorrelationAnalysisCLI analysis = new NoCorrelationAnalysisCLI();
+        CorrelationAnalysisCLI analysis = new CorrelationAnalysisCLI();
         StopWatch watch = new StopWatch();
         watch.start();
         log.info( "Starting No Correlation Analysis" );

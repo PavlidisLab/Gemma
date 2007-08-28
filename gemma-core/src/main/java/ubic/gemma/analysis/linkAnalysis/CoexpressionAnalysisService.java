@@ -1,14 +1,10 @@
 package ubic.gemma.analysis.linkAnalysis;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -19,18 +15,14 @@ import org.apache.commons.logging.LogFactory;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix3DNamed;
 import ubic.basecode.math.CorrelationStats;
-import ubic.basecode.math.distribution.HistogramSampler;
 import ubic.basecode.math.metaanalysis.CorrelationEffectMetaAnalysis;
 import ubic.gemma.analysis.coexpression.ExpressionProfile;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.util.ConfigUtils;
 import cern.colt.list.DoubleArrayList;
 
 /**
@@ -41,14 +33,14 @@ import cern.colt.list.DoubleArrayList;
  * @spring.property name="dedvService" ref="designElementDataVectorService"
  * @author Raymond
  */
-public class EffectSizeService {
+public class CoexpressionAnalysisService {
 	private ExpressionExperimentService eeService;
 
 	private DesignElementDataVectorService dedvService;
 
 	private CorrelationEffectMetaAnalysis metaAnalysis;
 
-	private static Log log = LogFactory.getLog(EffectSizeService.class
+	private static Log log = LogFactory.getLog(CoexpressionAnalysisService.class
 			.getName());
 
 	protected static final int MIN_EP_NUM_SAMPLES = 3;
@@ -87,7 +79,7 @@ public class EffectSizeService {
 	/**
 	 * Create an effect size service
 	 */
-	public EffectSizeService() {
+	public CoexpressionAnalysisService() {
 		metaAnalysis = new CorrelationEffectMetaAnalysis(true, false);
 	}
 
@@ -180,15 +172,6 @@ public class EffectSizeService {
 		return foldedMatrix;
 	}
 
-	private Map<Long, ExpressionExperiment> getEeMap(Collection<Long> eeIds) {
-		Map<Long, ExpressionExperiment> eeMap = new HashMap<Long, ExpressionExperiment>();
-		for (ExpressionExperiment ee : (Collection<ExpressionExperiment>) eeService
-				.loadMultiple(eeIds)) {
-			eeMap.put(ee.getId(), ee);
-		}
-		return eeMap;
-	}
-
 	private Map<DesignElementDataVector, Collection<Gene>> getSpecificDedv2gene(
 			Map<DesignElementDataVector, Collection<Gene>> dedv2genes) {
 		Map<DesignElementDataVector, Collection<Gene>> specificDedv2gene = new HashMap<DesignElementDataVector, Collection<Gene>>();
@@ -210,7 +193,7 @@ public class EffectSizeService {
 	 *            quantitation type of the expression experiment
 	 * @return gene ID to expression profile map
 	 */
-	private Map<Gene, Collection<ExpressionProfile>> getGene2epsMap(
+	private Map<Gene, Collection<ExpressionProfile>> getGene2EpsMap(
 			ExpressionExperiment ee) {
 		Collection<QuantitationType> qts = (Collection<QuantitationType>) eeService
 				.getPreferredQuantitationType(ee);
@@ -278,52 +261,6 @@ public class EffectSizeService {
 	}
 
 	/**
-	 * Reads in a correlation matrix and randomizes the correlations using the
-	 * distributions provided by link analysis
-	 * 
-	 * @param EEs -
-	 *            expression experiments
-	 * @param correlationMatrix
-	 * @return
-	 */
-	public DenseDoubleMatrix3DNamed calculateRandomCorrelationMatrix(
-			DenseDoubleMatrix3DNamed correlationMatrix) {
-		DenseDoubleMatrix3DNamed randCorrMatrix = new DenseDoubleMatrix3DNamed(
-				correlationMatrix.getSliceNames(), correlationMatrix
-						.getRowNames(), correlationMatrix.getColNames());
-		Collection<Long> eeIds = correlationMatrix.getSliceNames();
-		Map<Long, ExpressionExperiment> eeMap = getEeMap(eeIds);
-		Map<ExpressionExperiment, HistogramSampler> histSamplerMap = getHistogramSamplerMap(eeMap
-				.values());
-		for (Long eeId : eeIds) {
-			int slice = correlationMatrix.getSliceIndexByName(eeId);
-			HistogramSampler sampler = histSamplerMap.get(eeMap.get(eeId));
-			if (sampler != null) {
-				for (int row = 0; row < correlationMatrix.rows(); row++) {
-					for (int col = 0; col < correlationMatrix.columns(); col++) {
-						double correlation = correlationMatrix.get(slice, row,
-								col);
-						if (!Double.isNaN(correlation)) {
-							double randCorrelation = sampler.nextSample();
-							randCorrMatrix
-									.set(slice, row, col, randCorrelation);
-						} else {
-							randCorrMatrix.set(slice, row, col, Double.NaN);
-						}
-
-					}
-				}
-			} else {
-				for (int row = 0; row < randCorrMatrix.rows(); row++) {
-					for (int col = 0; col < randCorrMatrix.columns(); col++)
-						randCorrMatrix.set(slice, row, col, Double.NaN);
-				}
-			}
-		}
-		return randCorrMatrix;
-	}
-
-	/**
 	 * Fold the 3D correlation matrix to a 2D matrix with maximum correlations
 	 * 
 	 * @param matrix -
@@ -348,65 +285,13 @@ public class EffectSizeService {
 					}
 				}
 				list.sort();
-				if (list.size() > 0)
-					maxMatrix.set(i, j, list.get(list.size() - 1 - n));
-				else
-					maxMatrix.set(i, j, Double.NaN);
+				double val = Double.NaN;
+				if (list.size() > n)
+					val = list.get(list.size() - 1 - n);
+				maxMatrix.set(i, j, val);
 			}
 		}
 		return maxMatrix;
-	}
-
-	private Map<ExpressionExperiment, HistogramSampler> getHistogramSamplerMap(
-			Collection<ExpressionExperiment> ees) {
-		Map<ExpressionExperiment, HistogramSampler> histSamplers = new HashMap<ExpressionExperiment, HistogramSampler>();
-		for (ExpressionExperiment ee : ees) {
-			String fileName = ConfigUtils.getAnalysisStoragePath()
-					+ ee.getShortName() + ".correlDist.txt";
-			try {
-				HistogramSampler sampler = readHistogramFile(fileName);
-				histSamplers.put(ee, sampler);
-			} catch (IOException e) {
-				log.error(e.getMessage());
-				log
-						.error("ERROR: Unable to read correlation distribution file for "
-								+ ee.getShortName());
-			}
-		}
-		return histSamplers;
-	}
-
-	/**
-	 * Read a correlation distribution
-	 * 
-	 * @param fileName
-	 * @return a histogram sampler for the read distribution
-	 * @throws IOException
-	 */
-	public HistogramSampler readHistogramFile(String fileName)
-			throws IOException {
-		BufferedReader in = new BufferedReader(new FileReader(fileName));
-		int numHeaderLines = 1;
-		LinkedList<Double> bins = new LinkedList<Double>();
-		List<Integer> countList = new LinkedList<Integer>();
-		while (in.ready()) {
-			String line = in.readLine();
-			if (line.startsWith("#") || numHeaderLines-- > 0)
-				continue;
-			String fields[] = line.split("\t");
-			Double bin = Double.valueOf(fields[0]);
-			bins.add(bin);
-			Integer count = Integer.valueOf(fields[1]);
-			countList.add(count);
-		}
-
-		double min = bins.getFirst().doubleValue();
-		double max = bins.getLast().doubleValue();
-		int[] counts = new int[countList.size()];
-		for (int i = 0; i < counts.length; i++) {
-			counts[i] = countList.get(i);
-		}
-		return new HistogramSampler(counts, min, max);
 	}
 
 	/**
@@ -432,11 +317,12 @@ public class EffectSizeService {
 		int totalEes = ees.size();
 		StopWatch watch = new StopWatch();
 		for (ExpressionExperiment ee : ees) {
-			watch.start();
-			Map<Gene, Collection<ExpressionProfile>> gene2eps = getGene2epsMap(ee);
+			log.info("Calculating coexpression matrices for " + ee.getShortName());
+			Map<Gene, Collection<ExpressionProfile>> gene2eps = getGene2EpsMap(ee);
+			int slice = correlationMatrix.getSliceIndexByName(ee.getId());
 			if (gene2eps == null)
 				continue;
-			int slice = correlationMatrix.getSliceIndexByName(ee.getId());
+			watch.start();
 
 			for (Gene qGene : queryGenes) {
 				int row = correlationMatrix.getRowIndexByName(qGene.getId());
@@ -483,7 +369,7 @@ public class EffectSizeService {
 			log.info(ee.getShortName() + " (" + ++count + " of " + totalEes
 					+ "): calculated correlation of "
 					+ gene2eps.values().size() + " expression profiles in "
-					+ watch.getTime() / 1000 + " seconds");
+					+ watch);
 			watch.reset();
 		}
 		return matrices;

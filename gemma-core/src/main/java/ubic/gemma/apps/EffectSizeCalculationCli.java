@@ -17,8 +17,8 @@ import ubic.basecode.gui.ColorMap;
 import ubic.basecode.gui.ColorMatrix;
 import ubic.basecode.gui.JMatrixDisplay;
 import ubic.basecode.io.writer.MatrixWriter;
-import ubic.gemma.analysis.linkAnalysis.EffectSizeService;
-import ubic.gemma.analysis.linkAnalysis.EffectSizeService.CoexpressionMatrices;
+import ubic.gemma.analysis.linkAnalysis.CoexpressionAnalysisService;
+import ubic.gemma.analysis.linkAnalysis.CoexpressionAnalysisService.CoexpressionMatrices;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
@@ -40,7 +40,7 @@ public class EffectSizeCalculationCli extends AbstractGeneCoexpressionManipulati
 
     private Taxon taxon;
 
-    private EffectSizeService effectSizeService;
+    private CoexpressionAnalysisService effectSizeService;
 
     private ExpressionExperimentService eeService;
 
@@ -100,7 +100,7 @@ public class EffectSizeCalculationCli extends AbstractGeneCoexpressionManipulati
     }
 
     protected void initBeans() {
-        effectSizeService = ( EffectSizeService ) this.getBean( "effectSizeService" );
+        effectSizeService = ( CoexpressionAnalysisService ) this.getBean( "effectSizeService" );
         eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
         geneService = ( GeneService ) this.getBean( "geneService" );
     }
