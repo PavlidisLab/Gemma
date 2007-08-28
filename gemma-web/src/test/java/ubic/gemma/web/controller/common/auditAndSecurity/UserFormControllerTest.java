@@ -22,6 +22,7 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.validation.BindException;
+import org.springframework.validation.BindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
@@ -59,7 +60,7 @@ public class UserFormControllerTest extends BaseSpringWebTest {
 
         MockHttpServletResponse response = new MockHttpServletResponse();
         ModelAndView mv = controller.handleRequest( request, response );
-        Errors errors = ( Errors ) mv.getModel().get( BindException.ERROR_KEY_PREFIX + "user" );
+        Errors errors = ( Errors ) mv.getModel().get( BindingResult.MODEL_KEY_PREFIX + "user" );
         assertNull( "Errors returned in model: " + errors, errors );
 
         assertEquals( "redirect:users.html", mv.getViewName() );
@@ -72,7 +73,7 @@ public class UserFormControllerTest extends BaseSpringWebTest {
 
         MockHttpServletResponse response = new MockHttpServletResponse();
         ModelAndView mv = controller.handleRequest( request, response );
-        Errors errors = ( Errors ) mv.getModel().get( BindException.ERROR_KEY_PREFIX + "user" );
+        Errors errors = ( Errors ) mv.getModel().get( BindingResult.MODEL_KEY_PREFIX + "user" );
         assertNull( "Errors returned in model: " + errors, errors );
         assertEquals( "mainMenu", mv.getViewName() );
 
@@ -101,7 +102,7 @@ public class UserFormControllerTest extends BaseSpringWebTest {
         MockHttpServletResponse response = new MockHttpServletResponse();
 
         ModelAndView mv = controller.handleRequest( request, response );
-        Errors errors = ( Errors ) mv.getModel().get( BindException.ERROR_KEY_PREFIX + "user" );
+        Errors errors = ( Errors ) mv.getModel().get( BindingResult.MODEL_KEY_PREFIX + "user" );
         assertTrue( "Errors returned in model: " + errors, errors == null || errors.getErrorCount() == 0 );
 
         assertEquals( "redirect:users.html", mv.getViewName() );
@@ -132,7 +133,7 @@ public class UserFormControllerTest extends BaseSpringWebTest {
         ModelAndView mv = controller.handleRequest( request, response );
         assertNotNull( mv );
 
-        Errors errors = ( Errors ) mv.getModel().get( BindException.ERROR_KEY_PREFIX + "user" );
+        Errors errors = ( Errors ) mv.getModel().get( BindingResult.MODEL_KEY_PREFIX + "user" );
         assertNull( "Errors returned in model: " + errors, errors );
 
         assertEquals( "/mainMenu.html", ( ( RedirectView ) mv.getView() ).getUrl() );// getViewName() );
@@ -152,7 +153,7 @@ public class UserFormControllerTest extends BaseSpringWebTest {
         ModelAndView mv = controller.handleRequest( request, response );
         assertNotNull( mv );
 
-        Errors errors = ( Errors ) mv.getModel().get( BindException.ERROR_KEY_PREFIX + "user" );
+        Errors errors = ( Errors ) mv.getModel().get( BindingResult.MODEL_KEY_PREFIX + "user" );
         assertNull( "Errors returned in model: " + errors, errors );
 
         // go back to list view.
@@ -171,7 +172,7 @@ public class UserFormControllerTest extends BaseSpringWebTest {
 
         MockHttpServletResponse response = new MockHttpServletResponse();
         ModelAndView mv = controller.handleRequest( request, response );
-        Errors errors = ( Errors ) mv.getModel().get( BindException.ERROR_KEY_PREFIX + "user" );
+        Errors errors = ( Errors ) mv.getModel().get( BindingResult.MODEL_KEY_PREFIX + "user" );
         assertNull( "Errors returned in model: " + errors, errors );
 
         // go back to list view.
@@ -199,7 +200,7 @@ public class UserFormControllerTest extends BaseSpringWebTest {
 
         assertNotNull( mv );
 
-        Errors errors = ( Errors ) mv.getModel().get( BindException.ERROR_KEY_PREFIX + "user" );
+        Errors errors = ( Errors ) mv.getModel().get( BindingResult.MODEL_KEY_PREFIX + "user" );
         assertNull( "Errors returned in model: " + errors, errors );
         assertEquals( "/mainMenu.html", ( ( RedirectView ) mv.getView() ).getUrl() );// getViewName() );
 
@@ -227,7 +228,7 @@ public class UserFormControllerTest extends BaseSpringWebTest {
 
         assertNotNull( mv );
 
-        Errors errors = ( Errors ) mv.getModel().get( BindException.ERROR_KEY_PREFIX + "user" );
+        Errors errors = ( Errors ) mv.getModel().get( BindingResult.MODEL_KEY_PREFIX + "user" );
         assertNull( "Errors returned in model: " + errors, errors );
         assertEquals( "/mainMenu.html", ( ( RedirectView ) mv.getView() ).getUrl() );// getViewName() );
 
