@@ -21,8 +21,8 @@ package ubic.gemma.web.controller.testdata;
 import java.util.Map;
 
 import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.validation.BindException;
+import org.springframework.mock.web.MockHttpServletResponse; 
+import org.springframework.validation.BindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -57,7 +57,7 @@ public class TestDataAddingControllerTest extends BaseSpringWebTest {
         MockHttpServletRequest request = newPost( "/addTestData.html" );
         request.setRemoteUser( ConfigUtils.getString( "gemma.regular.user" ) );
         ModelAndView mv = controller.handleRequest( request, response );
-        Errors errors = ( Errors ) mv.getModel().get( BindException.ERROR_KEY_PREFIX + "user" );
+        Errors errors = ( Errors ) mv.getModel().get( BindingResult.MODEL_KEY_PREFIX + "user" );
 
         assertTrue( "Errors returned in model: " + errors, errors == null );
         assertEquals( "Returned incorrect view name", "expressionExperiment.detail", mv.getViewName() );

@@ -20,8 +20,7 @@ package ubic.gemma.web.controller.common.auditAndSecurity;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.validation.BindException;
+import org.springframework.mock.web.MockHttpServletResponse; 
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
@@ -260,7 +259,7 @@ public class UserFormControllerTest extends BaseSpringWebTest {
         request.addParameter( "roles", UserConstants.ADMIN_ROLE );
 
         ModelAndView mv = controller.handleRequest( request, response );
-        Errors errors = ( Errors ) mv.getModel().get( BindException.ERROR_KEY_PREFIX + "user" );
+        Errors errors = ( Errors ) mv.getModel().get( BindingResult.MODEL_KEY_PREFIX + "user" );
         assertNull( "Errors returned in model: " + errors, errors );
 
         assertNotNull( mv );

@@ -20,8 +20,8 @@ package ubic.gemma.web.controller.expression.arrayDesign;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.validation.BindException;
+import org.springframework.mock.web.MockHttpServletResponse; 
+import org.springframework.validation.BindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -84,7 +84,7 @@ public class ArrayDesignFormControllerTest extends BaseSpringContextTest {
         request.setParameter( "id", ad.getId().toString() );
         ModelAndView mav = c.handleRequest( request, ( new MockHttpServletResponse() ) );
 
-        String errorsKey = BindException.ERROR_KEY_PREFIX + c.getCommandName();
+        String errorsKey = BindingResult.MODEL_KEY_PREFIX + c.getCommandName();
         Errors errors = ( Errors ) mav.getModel().get( errorsKey );
 
         assertNull( errors );
