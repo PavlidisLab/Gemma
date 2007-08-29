@@ -1,0 +1,29 @@
+total RNA	total_RNA
+polyA RNA	polyA_RNA
+cytoplasmic RNA	cytoplasmic_RNA
+nuclear RNA	nuclear_RNA
+genomic DNA	genomic_DNA
+protein	protein
+time	SamplingTimePoint
+tissue	OrganismPart
+strain	StrainOrLine
+gender	Sex
+cell line	CellLine
+development stage	DevelopmentalStage
+age	Age
+agent	Compound
+cell type	CellType
+infection	DiseaseState
+shock	EnvironmentalStress
+stress	EnvironmentalStress
+temperature	Temperature
+specimen	Individual
+disease state	DiseaseState
+protocol	ProtocolVariation
+growth protocol	GrowthCondition
+genotype/variation	Genotype
+species	Organism
+individual	Individual
+biological replicate	biological_replicate
+technical replicate - extract	technical_replicate
+technical replicate - labeled-extract	technical_replicate
