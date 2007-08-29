@@ -286,6 +286,28 @@ public class GeoConverterTest extends TestCase {
     }
 
     /**
+     * NPE in converter, not reproduced here.
+     * 
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    public void testConvertGSE8134() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE8134_family.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE8134" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Object result = this.gc.convert( series );
+        assertNotNull( result );
+        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
+        assertEquals( 1, ees.size() );
+    }
+
+    /**
      * Was yielding a 'ArrayDesigns must be converted before datasets'.
      * 
      * @throws Exception

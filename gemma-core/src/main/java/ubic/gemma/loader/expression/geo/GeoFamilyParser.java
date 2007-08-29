@@ -1221,6 +1221,9 @@ public class GeoFamilyParser implements Parser {
             sampleAddTo( currentSampleAccession, "dataProcessing", value );
         } else if ( startsWithIgnoreCase( line, "!Sample_description" ) ) {
             sampleAddTo( currentSampleAccession, "description", value );
+        } else if ( startsWithIgnoreCase( line, "!Sample_label_protocol" ) ) {
+            int channel = extractChannelNumber( line );
+            sampleChannelSet( currentSampleAccession, "labelProtocol", channel, value );
         } else if ( startsWithIgnoreCase( line, "!Sample_label" ) ) {
             int channel = extractChannelNumber( line );
             sampleChannelSet( currentSampleAccession, "label", channel, value );

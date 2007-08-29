@@ -116,56 +116,56 @@ public class GeoVariable {
      * @return
      */
     public static VariableType convertStringToType( String string ) {
-        if ( string.equals( "age" ) ) {
+        if ( string.toLowerCase().equals( "age" ) ) {
             return VariableType.age;
-        } else if ( string.equals( "agent" ) ) {
+        } else if ( string.toLowerCase().equals( "agent" ) ) {
             return VariableType.agent;
         } else if ( string.equals( "cell line" ) ) {
             return VariableType.cellLine;
-        } else if ( string.equals( "cell type" ) ) {
+        } else if ( string.toLowerCase().equals( "cell type" ) ) {
             return VariableType.cellType;
-        } else if ( string.equals( "development stage" ) ) {
+        } else if ( string.toLowerCase().equals( "development stage" ) ) {
             return VariableType.developmentStage;
-        } else if ( string.equals( "disease state" ) ) {
+        } else if ( string.toLowerCase().equals( "disease state" ) ) {
             return VariableType.diseaseState;
-        } else if ( string.equals( "dose" ) ) {
+        } else if ( string.toLowerCase().equals( "dose" ) ) {
             return VariableType.dose;
-        } else if ( string.equals( "gender" ) ) {
+        } else if ( string.toLowerCase().equals( "gender" ) ) {
             return VariableType.gender;
-        } else if ( string.equals( "genotype/variation" ) ) {
+        } else if ( string.toLowerCase().equals( "genotype/variation" ) ) {
             return VariableType.genotypeOrVariation;
-        } else if ( string.equals( "growth protocol" ) ) {
+        } else if ( string.toLowerCase().equals( "growth protocol" ) ) {
             return VariableType.growthProtocol;
-        } else if ( string.equals( "individual" ) ) {
+        } else if ( string.toLowerCase().equals( "individual" ) ) {
             return VariableType.individual;
-        } else if ( string.equals( "infection" ) ) {
+        } else if ( string.toLowerCase().equals( "infection" ) ) {
             return VariableType.infection;
-        } else if ( string.equals( "isolate" ) ) {
+        } else if ( string.toLowerCase().equals( "isolate" ) ) {
             return VariableType.isolate;
-        } else if ( string.equals( "metabolism" ) ) {
+        } else if ( string.toLowerCase().equals( "metabolism" ) ) {
             return VariableType.metabolism;
-        } else if ( string.equals( "other" ) ) {
+        } else if ( string.toLowerCase().equals( "other" ) ) {
             return VariableType.other;
-        } else if ( string.equals( "protocol" ) ) {
+        } else if ( string.toLowerCase().equals( "protocol" ) ) {
             return VariableType.protocol;
-        } else if ( string.equals( "shock" ) ) {
+        } else if ( string.toLowerCase().equals( "shock" ) ) {
             return VariableType.shock;
-        } else if ( string.equals( "species" ) ) {
+        } else if ( string.toLowerCase().equals( "species" ) ) {
             return VariableType.species;
-        } else if ( string.equals( "specimen" ) ) {
+        } else if ( string.toLowerCase().equals( "specimen" ) ) {
             return VariableType.specimen;
-        } else if ( string.equals( "stress" ) ) {
+        } else if ( string.toLowerCase().equals( "stress" ) ) {
             return VariableType.stress;
-        } else if ( string.equals( "strain" ) ) {
+        } else if ( string.toLowerCase().equals( "strain" ) ) {
             return VariableType.strain;
-        } else if ( string.equals( "temperature" ) ) {
+        } else if ( string.toLowerCase().equals( "temperature" ) ) {
             return VariableType.temperature;
-        } else if ( string.equals( "time" ) ) {
+        } else if ( string.toLowerCase().equals( "time" ) ) {
             return VariableType.time;
-        } else if ( string.equals( "tissue" ) ) {
+        } else if ( string.toLowerCase().equals( "tissue" ) ) {
             return VariableType.tissue;
         } else {
-            throw new IllegalArgumentException( "Unknown subset type " + string );
+            throw new IllegalArgumentException( "Unknown variable type " + string );
         }
 
     }

@@ -21,9 +21,9 @@ package ubic.gemma.loader.expression.geo.model;
 import java.util.Collection;
 import java.util.HashSet;
 
-import ubic.gemma.loader.expression.mage.MgedOntologyHelper;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.ontology.MgedOntologyService;
 
 /**
  * Represents data for one channel on a microarray in GEO. Corresponds (roughly) to a BioMaterial in Gemma.
@@ -33,7 +33,7 @@ import ubic.gemma.model.common.description.VocabCharacteristic;
  */
 public class GeoChannel {
 
-      private int channelNumber = -1;
+    private int channelNumber = -1;
 
     private String organism = null;
 
@@ -166,8 +166,8 @@ public class GeoChannel {
     }
 
     /**
-     * Convert the molecule into a MGED Ontology-based VocabCharacteristic. If "other" we just return a plain text
-     * Characteristic.
+     * Convert the molecule into a MGED Ontology-based MaterialType VocabCharacteristic. If "other" we just return a
+     * plain text value.
      * 
      * @return
      */
@@ -175,35 +175,36 @@ public class GeoChannel {
 
         VocabCharacteristic result = VocabCharacteristic.Factory.newInstance();
         result.setDescription( "MaterialType" );
+        result.setCategory( "MaterialType" );
+        result.setCategoryUri( MgedOntologyService.MGED_ONTO_BASE_URL + "MaterialType" );
+
         switch ( this.molecule ) {
             case cytoplasmicRNA:
                 result.setValue( "cytoplasmic_RNA" );
-                result.setValueUri(  MgedOntologyHelper.MGED_ONTO_BASE_URL + "cytoplasmic_RNA" );
+                result.setValueUri( MgedOntologyService.MGED_ONTO_BASE_URL + "cytoplasmic_RNA" );
                 break;
             case polyARNA:
                 result.setValue( "polyA_RNA" );
-                result.setValueUri(  MgedOntologyHelper.MGED_ONTO_BASE_URL + "polyA_RNA" );
+                result.setValueUri( MgedOntologyService.MGED_ONTO_BASE_URL + "polyA_RNA" );
                 break;
             case genomicDNA:
                 result.setValue( "genomic_DNA" );
-                result.setValueUri(  MgedOntologyHelper.MGED_ONTO_BASE_URL + "genomic_DNA" );
+                result.setValueUri( MgedOntologyService.MGED_ONTO_BASE_URL + "genomic_DNA" );
                 break;
             case totalRNA:
                 result.setValue( "total_RNA" );
-                result.setValueUri(  MgedOntologyHelper.MGED_ONTO_BASE_URL + "total_RNA" );
+                result.setValueUri( MgedOntologyService.MGED_ONTO_BASE_URL + "total_RNA" );
                 break;
             case nuclearRNA:
                 result.setValue( "nuclear_RNA" );
-                result.setValueUri(  MgedOntologyHelper.MGED_ONTO_BASE_URL + "nuclear_RNA" );
+                result.setValueUri( MgedOntologyService.MGED_ONTO_BASE_URL + "nuclear_RNA" );
                 break;
             case protein:
                 result.setValue( "protein" );
-                result.setValueUri(  MgedOntologyHelper.MGED_ONTO_BASE_URL + "protein" );
+                result.setValueUri( MgedOntologyService.MGED_ONTO_BASE_URL + "protein" );
                 break;
             case other:
-                Characteristic c = Characteristic.Factory.newInstance();
-                c.setValue( "Other material type" );
-                return c;
+                result.setValue( "Other material type" );
             default:
                 break;
         }

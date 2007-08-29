@@ -52,7 +52,6 @@ import ubic.gemma.loader.expression.geo.model.GeoDataset.PlatformType;
 import ubic.gemma.loader.expression.geo.model.GeoReplication.ReplicationType;
 import ubic.gemma.loader.expression.geo.model.GeoVariable.VariableType;
 import ubic.gemma.loader.expression.geo.util.GeoConstants;
-import ubic.gemma.loader.expression.mage.MgedOntologyHelper;
 import ubic.gemma.loader.util.converter.Converter;
 import ubic.gemma.loader.util.parser.ExternalDatabaseUtils;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
@@ -78,13 +77,13 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
+import ubic.gemma.ontology.MgedOntologyService;
 
 /**
  * Convert GEO domain objects into Gemma objects. Usually we trigger this by passing in GeoDataset objects.
@@ -148,24 +147,6 @@ public class GeoConverter implements Converter {
     static {
         organismDatabases.put( "Saccharomyces cerevisiae", "SGD" );
         organismDatabases.put( "Schizosaccharomyces pombe", "GeneDB" );
-    }
-
-    /**
-     * Find the bioassay in the experiment that matches the one given.
-     */
-    @SuppressWarnings("unchecked")
-    private boolean addMatchingBioAssayToSubSet( ExpressionExperimentSubSet subSet, String accession,
-            ExpressionExperiment expExp ) {
-        log.debug( "Seeking subset match for " + accession );
-        Collection<BioAssay> experimentBioAssays = expExp.getBioAssays();
-        for ( BioAssay assay : experimentBioAssays ) {
-            String testAccession = assay.getAccession().getAccession();
-            if ( testAccession.equals( accession ) ) {
-                subSet.getBioAssays().add( assay );
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
@@ -269,33 +250,52 @@ public class GeoConverter implements Converter {
 
         if ( !StringUtils.isBlank( channel.getLabelProtocol() ) ) {
             Treatment treatment = Treatment.Factory.newInstance();
-            treatment.setName( sample.getGeoAccession() + " channel " + channel.getChannelNumber() + " label" );
+            treatment.setName( sample.getGeoAccession() + " channel " + channel.getChannelNumber() + " labeling" );
             treatment.setDescription( channel.getLabelProtocol() );
             bioMaterial.getTreatments().add( treatment );
         }
 
         for ( String characteristic : channel.getCharacteristics() ) {
-            Characteristic gemmaChar = Characteristic.Factory.newInstance();
 
             characteristic = trimString( characteristic );
 
-            // switch this to use MGED? Doing automatically is not easy. Or a more formal ONtology structure.
-            // Characteristic ci = Characteristic.Factory.newInstance();
-            // ci.setTerm( term ); // GEO:SampleCharacteristic OR MGED BioMaterialCharacteristic.
-            // ci.setProperties( properties ); // has_value
+            /*
+             * Sometimes values are like Age:8 weeks, so we can try to convert them.
+             */
+            String[] fields = characteristic.split( ":" );
+            String defaultDescription = "GEO Sample characteristic";
+            if ( fields.length == 2 ) {
 
-            // Category is a term. Value is a term, or a data value.
+                String category = fields[0].trim();
+                String value = fields[1].trim();
 
-            gemmaChar.setDescription( "GEO Sample characteristic" );
-            gemmaChar.setValue( characteristic );
-            bioMaterial.getCharacteristics().add( gemmaChar );
+                try {
+                    VocabCharacteristic gemmaChar = convertVariableType( GeoVariable.convertStringToType( category ) );
+                    gemmaChar.setDescription( defaultDescription );
+                    gemmaChar.setValue( value );
+                    bioMaterial.getCharacteristics().add( gemmaChar );
+                } catch ( Exception e ) {
+                    // conversion didn't work, fall back.
+                    Characteristic gemmaChar = Characteristic.Factory.newInstance();
+                    gemmaChar.setDescription( defaultDescription );
+                    bioMaterial.getCharacteristics().add( gemmaChar );
+                }
+
+            } else {
+                // no colon, just use raw (same as fallback above)
+                Characteristic gemmaChar = Characteristic.Factory.newInstance();
+                gemmaChar.setDescription( defaultDescription );
+                bioMaterial.getCharacteristics().add( gemmaChar );
+            }
+
         }
 
         if ( StringUtils.isNotBlank( channel.getSourceName() ) ) {
-            // this is really a BioMaterialCharacteristic, too, but difficult to automatically convert.
-            Characteristic sourceChar = Characteristic.Factory.newInstance();
+            VocabCharacteristic sourceChar = VocabCharacteristic.Factory.newInstance();
             sourceChar.setDescription( "GEO Sample source" );
             String characteristic = trimString( channel.getSourceName() );
+            sourceChar.setCategory( "BioSource" );
+            sourceChar.setCategoryUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#BioSource" );
             sourceChar.setValue( characteristic );
             bioMaterial.getCharacteristics().add( sourceChar );
         }
@@ -313,9 +313,12 @@ public class GeoConverter implements Converter {
         }
 
         if ( StringUtils.isNotBlank( channel.getLabel() ) ) {
-            Characteristic labelChar = Characteristic.Factory.newInstance();
-            labelChar.setDescription( "GEO Sample label" );
             String characteristic = trimString( channel.getLabel() );
+            // This is typically something like "biotin-labeled nucleotides", which we can convert later.
+            VocabCharacteristic labelChar = VocabCharacteristic.Factory.newInstance();
+            labelChar.setDescription( "GEO Sample label" );
+            labelChar.setCategory( "LabelCompound" );
+            labelChar.setCategoryUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#LabelCompound" );
             labelChar.setValue( characteristic );
             bioMaterial.getCharacteristics().add( labelChar );
         }
@@ -1053,6 +1056,8 @@ public class GeoConverter implements Converter {
      */
     private VocabCharacteristic convertReplicatationType( ReplicationType repType ) {
         VocabCharacteristic result = VocabCharacteristic.Factory.newInstance();
+        result.setCategory( "ReplicateDescriptionType" );
+        result.setCategoryUri( MgedOntologyService.MGED_ONTO_BASE_URL + "ReplicateDescriptionType" );
         ExternalDatabase mged = ExternalDatabase.Factory.newInstance();
 
         if ( !repType.equals( VariableType.other ) ) {
@@ -1062,13 +1067,13 @@ public class GeoConverter implements Converter {
 
         if ( repType.equals( ReplicationType.biologicalReplicate ) ) {
             result.setValue( "biological_replicate" );
-            result.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "biological_replicate" );
+            result.setValueUri( MgedOntologyService.MGED_ONTO_BASE_URL + "biological_replicate" );
         } else if ( repType.equals( ReplicationType.technicalReplicateExtract ) ) {
             result.setValue( "technical_replicate" );
-            result.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "technical_replicate" );
+            result.setValueUri( MgedOntologyService.MGED_ONTO_BASE_URL + "technical_replicate" );
         } else if ( repType.equals( ReplicationType.technicalReplicateLabeledExtract ) ) {
             result.setValue( "technical_replicate" );
-            result.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "technical_replicate" ); // MGED doesn't have
+            result.setValueUri( MgedOntologyService.MGED_ONTO_BASE_URL + "technical_replicate" ); // MGED doesn't have
             // a
             // term to distinguish
             // these.
@@ -1104,7 +1109,8 @@ public class GeoConverter implements Converter {
      */
     private FactorValue convertReplicationToFactorValue( GeoReplication replication ) {
         FactorValue factorValue = FactorValue.Factory.newInstance();
-        factorValue.setValue( replication.getDescription() );
+        VocabCharacteristic term = convertReplicatationType( replication.getType() );
+        factorValue.getCharacteristics().add( term );
         return factorValue;
     }
 
@@ -1124,7 +1130,7 @@ public class GeoConverter implements Converter {
      * @param sample
      */
     @SuppressWarnings("unchecked")
-    private BioAssay convertSample( GeoSample sample, BioMaterial bioMaterial ) {
+    private BioAssay convertSample( GeoSample sample, BioMaterial bioMaterial, ExperimentalDesign experimentalDesign ) {
         if ( sample == null ) {
             log.warn( "Null sample" );
             return null;
@@ -1157,20 +1163,16 @@ public class GeoConverter implements Converter {
 
         // : use the ones from the ExperimentalFactor. In other words, these factor values should correspond to
         // experimentalfactors
-        // for ( GeoReplication replication : sample.getReplicates() ) {
-        //
-        // // find the experimentalFactor that matches this.
-        //
-        // bioMaterial.getFactorValues().add( convertReplicationToFactorValue( replication ) );
-        // }
-        //
-        // // : use the ones from the ExperimentalFactor.
-        // for ( GeoVariable variable : sample.getVariables() ) {
-        //
-        // // find the experimentalFactor that matches this.
-        //
-        // bioMaterial.getFactorValues().add( convertVariableToFactorValue( variable ) );
-        // }
+        Collection<ExperimentalFactor> experimentalFactors = experimentalDesign.getExperimentalFactors();
+        for ( GeoReplication replication : sample.getReplicates() ) {
+            matchSampleReplicationToExperimentalFactorValue( bioMaterial, experimentalFactors, replication );
+        }
+
+        // : use the ones from the ExperimentalFactor.
+        for ( GeoVariable variable : sample.getVariables() ) {
+            matchSampleVariableToExperimentalFactorValue( bioMaterial, experimentalFactors, variable );
+        }
+
         for ( GeoChannel channel : sample.getChannels() ) {
             /*
              * In reality GEO does not have information about the samples run on each channel. We're just making it up.
@@ -1205,6 +1207,73 @@ public class GeoConverter implements Converter {
         }
 
         return bioAssay;
+    }
+
+    /**
+     * @param bioMaterial
+     * @param experimentalFactors
+     * @param variable
+     */
+    private void matchSampleVariableToExperimentalFactorValue( BioMaterial bioMaterial,
+            Collection<ExperimentalFactor> experimentalFactors, GeoVariable variable ) {
+        // find the experimentalFactor that matches this.
+        FactorValue convertVariableToFactorValue = convertVariableToFactorValue( variable );
+        FactorValue matchingFactorValue = findMatchingExperimentalFactorValue( experimentalFactors,
+                convertVariableToFactorValue );
+
+        if ( matchingFactorValue != null ) {
+            bioMaterial.getFactorValues().add( matchingFactorValue );
+        } else {
+            throw new IllegalStateException( "Could not find matching factor value for " + variable
+                    + " in experimental design for sample " + bioMaterial );
+        }
+    }
+
+    /**
+     * @param experimentalFactors
+     * @param convertVariableToFactorValue
+     * @return
+     */
+    private FactorValue findMatchingExperimentalFactorValue( Collection<ExperimentalFactor> experimentalFactors,
+            FactorValue convertVariableToFactorValue ) {
+        Collection<Characteristic> characteristics = convertVariableToFactorValue.getCharacteristics();
+        if ( characteristics.size() > 1 )
+            throw new UnsupportedOperationException(
+                    "Can't handle factor values with multiple characteristics in GEO conversion" );
+        Characteristic c = characteristics.iterator().next();
+
+        FactorValue matchingFactorValue = null;
+        factors: for ( ExperimentalFactor factor : experimentalFactors ) {
+            for ( FactorValue fv : factor.getFactorValues() ) {
+                for ( Characteristic m : fv.getCharacteristics() ) {
+                    if ( m.getCategory().equals( c.getCategory() ) && m.getValue().equals( c.getValue() ) ) {
+                        matchingFactorValue = fv;
+                        break factors;
+                    }
+
+                }
+            }
+        }
+        return matchingFactorValue;
+    }
+
+    /**
+     * @param bioMaterial
+     * @param experimentalFactors
+     * @param variable
+     */
+    private void matchSampleReplicationToExperimentalFactorValue( BioMaterial bioMaterial,
+            Collection<ExperimentalFactor> experimentalFactors, GeoReplication replication ) {
+        // find the experimentalFactor that matches this.
+        FactorValue convertVariableToFactorValue = convertReplicationToFactorValue( replication );
+        FactorValue matchingFactorValue = findMatchingExperimentalFactorValue( experimentalFactors,
+                convertVariableToFactorValue );
+        if ( matchingFactorValue != null ) {
+            bioMaterial.getFactorValues().add( matchingFactorValue );
+        } else {
+            throw new IllegalStateException( "Could not find matching factor value for " + replication
+                    + " in experimental design for sample " + bioMaterial );
+        }
     }
 
     /**
@@ -1452,7 +1521,7 @@ public class GeoConverter implements Converter {
                         }
                         seen.add( accession );
 
-                        BioAssay ba = convertSample( sample, bioMaterial );
+                        BioAssay ba = convertSample( sample, bioMaterial, expExp.getExperimentalDesign() );
 
                         LocalFile rawDataFile = convertSupplementaryFileToLocalFile( sample );
                         ba.setRawDataFile( rawDataFile );// deal with null at UI
@@ -1632,60 +1701,6 @@ public class GeoConverter implements Converter {
     }
 
     /**
-     * @param expExp
-     * @param geoSubSet
-     * @deprecated We turn GeoSubsets into ExperimentalFactors only.
-     */
-    @SuppressWarnings("unchecked")
-    @Deprecated
-    private ExpressionExperimentSubSet convertSubset( ExpressionExperiment expExp, GeoSubset geoSubSet ) {
-        ExpressionExperimentSubSet subSet = getExistingOrNewSubSet( expExp, geoSubSet );
-        for ( GeoSample sample : geoSubSet.getSamples() ) {
-            boolean found = addMatchingBioAssayToSubSet( subSet, sample.getGeoAccession(), expExp );
-            /*
-             * This happens if there were really two series.
-             */
-            if ( !found )
-                throw new IllegalStateException( "No matching bioassay found for " + sample.getGeoAccession()
-                        + " in subset " + geoSubSet + " Make sure the ExpressionExperiment was initialized "
-                        + "properly by converting the samples before converting the subsets." );
-        }
-        return subSet;
-    }
-
-    /**
-     * check to see if the expExp already has a matching subset to add this to.
-     * 
-     * @param expExp
-     * @param geoSubSet
-     * @return
-     * @deprecated We turn GeoSubsets into ExperimentalFactors only.
-     */
-    @Deprecated
-    private ExpressionExperimentSubSet getExistingOrNewSubSet( ExpressionExperiment expExp, GeoSubset geoSubSet ) {
-
-        ExpressionExperimentSubSet subSet = null;
-
-        boolean alreadyExists = false;
-        for ( ExpressionExperimentSubSet existingSubset : expExp.getSubsets() ) {
-            if ( geoSubSet.getDescription().equals( existingSubset.getName() ) ) {
-                subSet = existingSubset;
-                alreadyExists = true;
-                break;
-            }
-        }
-
-        if ( !alreadyExists ) {
-            subSet = ExpressionExperimentSubSet.Factory.newInstance();
-            subSet.setName( geoSubSet.getDescription() );
-            subSet.setDescription( geoSubSet.getType().toString() );
-            subSet.setSourceExperiment( expExp );
-            subSet.setBioAssays( new HashSet<BioAssay>() );
-        }
-        return subSet;
-    }
-
-    /**
      * Converts Geo subsets to experimental factors. This adds a new factor value to the experimental factor of an
      * experimental design, and adds the factor value to each BioMaterial of a specific BioAssay.
      * 
@@ -1700,6 +1715,13 @@ public class GeoConverter implements Converter {
 
         ExperimentalFactor experimentalFactor = ExperimentalFactor.Factory.newInstance();
         experimentalFactor.setName( geoSubSet.getType().toString() );
+        Characteristic term = convertVariableType( geoSubSet.getType() );
+        term.setDescription( "Converted from GEO subset " + geoSubSet.getGeoAccession() );
+        term.setValue( term.getCategory() );
+        if ( term instanceof VocabCharacteristic ) {
+            ( ( VocabCharacteristic ) term ).setValueUri( ( ( VocabCharacteristic ) term ).getCategoryUri() );
+        }
+        experimentalFactor.setCategory( term );
         experimentalFactor.setDescription( "Converted from GEO subset " + geoSubSet.getGeoAccession() );
 
         boolean duplicateExists = false;
@@ -1738,8 +1760,11 @@ public class GeoConverter implements Converter {
             ExperimentalFactor experimentalFactor ) {
         // By definition each subset defines a new factor value.
         FactorValue factorValue = FactorValue.Factory.newInstance();
+        Characteristic term = convertVariableType( geoSubSet.getType() );
+        term.setValue( geoSubSet.getDescription() );
+        term.setDescription( "Converted from GEO subset " + geoSubSet.getGeoAccession() );
+        factorValue.getCharacteristics().add( term );
         factorValue.setExperimentalFactor( experimentalFactor );
-        factorValue.setValue( StringUtils.strip( geoSubSet.getDescription() ) ); // :( OntologyEntry or Measurement
         return factorValue;
     }
 
@@ -1781,9 +1806,6 @@ public class GeoConverter implements Converter {
     private void convertSubsetAssociations( ExpressionExperiment result, GeoDataset geoDataset ) {
         for ( GeoSubset subset : geoDataset.getSubsets() ) {
             if ( log.isDebugEnabled() ) log.debug( "Converting subset to experimentalFactor" + subset.getType() );
-            // ExpressionExperimentSubSet ees = convertSubset( result, subset );
-            // result.getSubsets().add( ees );
-
             convertSubsetToExperimentalFactor( result, subset );
         }
     }
@@ -1802,17 +1824,29 @@ public class GeoConverter implements Converter {
         Characteristic term = convertVariableType( variable.getType() );
         result.setCategory( term );
         return result;
-
     }
 
     /**
      * @param variable
-     * @return
+     * @return Category will be filled in with a URI but value will just be plain text.
      */
     private FactorValue convertVariableToFactorValue( GeoVariable variable ) {
         log.info( "Converting variable " + variable );
+        VariableType type = variable.getType();
+        FactorValue factorValue = convertTypeToFactorValue( type, variable.getDescription() );
+        return factorValue;
+    }
+
+    /**
+     * @param variable
+     * @param type
+     * @return
+     */
+    private FactorValue convertTypeToFactorValue( VariableType type, String value ) {
         FactorValue factorValue = FactorValue.Factory.newInstance();
-        factorValue.setValue( variable.getDescription() ); // really want to find ontology term for this, if possible.
+        Characteristic term = convertVariableType( type );
+        term.setValue( value ); // TODO map onto an ontology.
+        factorValue.getCharacteristics().add( term );
         return factorValue;
     }
 
@@ -1830,96 +1864,77 @@ public class GeoConverter implements Converter {
      * Convert a variable
      * 
      * @param variable
-     * @return
+     * @return a VocabCharacteristic with the category URI and category filled in.
      */
-    private Characteristic convertVariableType( VariableType varType ) {
-        VocabCharacteristic categoryTerm = VocabCharacteristic.Factory.newInstance();
-        ExternalDatabase mged = ExternalDatabase.Factory.newInstance();
+    private VocabCharacteristic convertVariableType( VariableType varType ) {
 
-        if ( !varType.equals( VariableType.other ) ) {
-            mged.setName( "MGED Ontology" );
-            mged.setType( DatabaseType.ONTOLOGY );
-        }
-
+        String mgedTerm = null;
         if ( varType.equals( VariableType.age ) ) {
-            categoryTerm.setValue( "Age" );
-            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Age" );
+            mgedTerm = "Age";
         } else if ( varType.equals( VariableType.agent ) ) {
-            categoryTerm.setValue( "Agent" );
-            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Agent" );
+            mgedTerm = "Agent";
         } else if ( varType.equals( VariableType.cellLine ) ) {
-            categoryTerm.setValue( "CellLine" );
-            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "CellLine" );
+            mgedTerm = "CellLine";
         } else if ( varType.equals( VariableType.cellType ) ) {
-            categoryTerm.setValue( "CellType" );
-            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "CellType" );
+            mgedTerm = "CellType";
         } else if ( varType.equals( VariableType.developmentStage ) ) {
-            categoryTerm.setValue( "DevelopmentalStage" );
-            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "DevelopmentalStage" );
+            mgedTerm = "DevelopmentalStage";
         } else if ( varType.equals( VariableType.diseaseState ) ) {
-            categoryTerm.setValue( "DiseaseState" );
-            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "DiseaseState" );
+            mgedTerm = "DiseaseState";
         } else if ( varType.equals( VariableType.dose ) ) {
-            categoryTerm.setValue( "Dose" );
-            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Dose" );
+            mgedTerm = "Dose";
         } else if ( varType.equals( VariableType.gender ) ) {
-            categoryTerm.setValue( "Sex" );
-            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Sex" );
+            mgedTerm = "Sex";
         } else if ( varType.equals( VariableType.genotypeOrVariation ) ) {
-            categoryTerm.setValue( "IndividualGeneticCharacteristics" );
-            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "IndividualGeneticCharacteristics" );
+            mgedTerm = "IndividualGeneticCharacteristics";
         } else if ( varType.equals( VariableType.growthProtocol ) ) {
-            categoryTerm.setValue( "GrowthCondition" );
-            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "GrowthCondition" );
+            mgedTerm = "GrowthCondition";
         } else if ( varType.equals( VariableType.individual ) ) {
-            categoryTerm.setValue( "Individiual" );
-            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Individiual" );
+            mgedTerm = "Individiual";
         } else if ( varType.equals( VariableType.infection ) ) {
-            categoryTerm.setValue( "Phenotype" );
-            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Phenotype" );
+            mgedTerm = "Phenotype";
         } else if ( varType.equals( VariableType.isolate ) ) {
-            categoryTerm.setValue( "Age" );
-            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Age" );
+            mgedTerm = "Age";
         } else if ( varType.equals( VariableType.metabolism ) ) {
-            categoryTerm.setValue( "Metabolism" );
-            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Metabolism" );
+            mgedTerm = "Metabolism";
         } else if ( varType.equals( VariableType.other ) ) {
-            categoryTerm.setValue( "Other" );
-            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Other" );
+            mgedTerm = "Other";
         } else if ( varType.equals( VariableType.protocol ) ) {
-            categoryTerm.setValue( "Protocol" );
-            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Protocol" );
+            mgedTerm = "Protocol";
         } else if ( varType.equals( VariableType.shock ) ) {
-            categoryTerm.setValue( "EnvironmentalStress" );
-            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "EnvironmentalStress" );
+            mgedTerm = "EnvironmentalStress";
         } else if ( varType.equals( VariableType.species ) ) {
-            categoryTerm.setValue( "Organism" );
-            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Organism" );
+            mgedTerm = "Organism";
         } else if ( varType.equals( VariableType.specimen ) ) {
-            categoryTerm.setValue( "BioSample" );
-            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "BioSample" );
+            mgedTerm = "BioSample";
         } else if ( varType.equals( VariableType.strain ) ) {
-            categoryTerm.setValue( "StrainOrLine" );
-            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "StrainOrLine" );
+            mgedTerm = "StrainOrLine";
         } else if ( varType.equals( VariableType.stress ) ) {
-            categoryTerm.setValue( "EnvironmentalStress" );
-            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "EnvironmentalStress" );
+            mgedTerm = "EnvironmentalStress";
         } else if ( varType.equals( VariableType.temperature ) ) {
-            categoryTerm.setValue( "Temperature" );
-            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Temperature" );
+            mgedTerm = "Temperature";
         } else if ( varType.equals( VariableType.time ) ) {
-            categoryTerm.setValue( "Time" );
-            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "Time" );
+            mgedTerm = "Time";
         } else if ( varType.equals( VariableType.tissue ) ) {
-            categoryTerm.setValue( "OrganismPart" );
-            categoryTerm.setValueUri( MgedOntologyHelper.MGED_ONTO_BASE_URL + "OrganismPart" );
+            mgedTerm = "OrganismPart";
         } else {
             throw new IllegalStateException();
         }
 
-        log.debug( "Category term: " + categoryTerm.getName() + " " );
-        return categoryTerm;
+        log.debug( "Category term: " + mgedTerm + " " );
+        return setCategory( mgedTerm );
 
+    }
+
+    /**
+     * @param mgedTerm
+     * @return
+     */
+    private VocabCharacteristic setCategory( String mgedTerm ) {
+        VocabCharacteristic categoryTerm = VocabCharacteristic.Factory.newInstance();
+        categoryTerm.setCategory( mgedTerm );
+        categoryTerm.setCategoryUri( MgedOntologyService.MGED_ONTO_BASE_URL + mgedTerm );
+        return categoryTerm;
     }
 
     /**
