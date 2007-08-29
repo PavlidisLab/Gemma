@@ -185,7 +185,7 @@
 				${service.fullyQualifiedName}.${operation.name}=${operation.transactionType},readOnly
 #elseif ($operation.name.equals("find"))
 				${service.fullyQualifiedName}.${operation.name}=${operation.transactionType},readOnly
-#elseif ($operation.name.equals("thaw"))
+#elseif ($operation.name.startsWith("thaw"))
 				${service.fullyQualifiedName}.${operation.name}=${operation.transactionType},readOnly
 #else
 				${service.fullyQualifiedName}.${operation.name}=${operation.transactionType}
