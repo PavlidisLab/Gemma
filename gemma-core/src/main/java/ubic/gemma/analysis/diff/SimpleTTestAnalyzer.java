@@ -35,13 +35,13 @@ import cern.colt.list.DoubleArrayList;
  * @author gozde
  *
  */
-public class TTestAnalyzer extends RCommander{
+public class SimpleTTestAnalyzer extends RCommander{
     
     public final double fdr = 0.01;
     
     ExpressionDataManager manager;
     
-    public TTestAnalyzer(){
+    public SimpleTTestAnalyzer(){
         super();
     }
     
@@ -170,7 +170,7 @@ public class TTestAnalyzer extends RCommander{
     
     public static void main(String[] args){
         //write two experiments' significant genes to files
-        TTestAnalyzer analyzer = new TTestAnalyzer();
+        SimpleTTestAnalyzer analyzer = new SimpleTTestAnalyzer();
         Hashtable<String, Double> sigGenes = analyzer.getSignificantGenes("GDS1328", "saline", "OVA");
         analyzer.writeSignificantGenesToFile("GDS1328_siggenes.txt", sigGenes);
         

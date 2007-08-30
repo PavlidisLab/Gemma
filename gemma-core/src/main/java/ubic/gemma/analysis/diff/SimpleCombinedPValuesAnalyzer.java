@@ -30,11 +30,11 @@ import cern.colt.list.DoubleArrayList;
  * by combining the p-values of genes, all of which are detected by one-way ANOVA.
  * @author gozde
  */
-public class CombinedPValuesAnalyzer extends OneWayAnovaAnalyzer{
+public class SimpleCombinedPValuesAnalyzer extends SimpleOneWayAnovaAnalyzer{
     
     ExpressionDataManager[] managers = null;
     
-    public CombinedPValuesAnalyzer(int numberOfExperiments){
+    public SimpleCombinedPValuesAnalyzer(int numberOfExperiments){
         super();
         
         managers = new ExpressionDataManager[numberOfExperiments];
@@ -121,7 +121,7 @@ public class CombinedPValuesAnalyzer extends OneWayAnovaAnalyzer{
     }
     
     public static void main( String[] args ) {
-        CombinedPValuesAnalyzer analyzer = new CombinedPValuesAnalyzer(2);
+        SimpleCombinedPValuesAnalyzer analyzer = new SimpleCombinedPValuesAnalyzer(2);
         
         //in order not to get OutOfMemoryError, I run these all three sections below seperately, one after another.
         

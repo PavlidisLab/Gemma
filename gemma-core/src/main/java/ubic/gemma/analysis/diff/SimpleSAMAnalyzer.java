@@ -38,13 +38,13 @@ import cern.colt.list.DoubleArrayList;
  * 
  * @author gozde
  */
-public class SAMAnalyzer extends RCommander {
+public class SimpleSAMAnalyzer extends RCommander {
 
     ExpressionDataManager manager;
     DenseDoubleMatrix2DNamed expressionLevelsMatrix = null;
     int[] columnLabels;
 
-    public SAMAnalyzer() {
+    public SimpleSAMAnalyzer() {
         super();
         manager = new ExpressionDataManager();
     }
@@ -187,7 +187,7 @@ public class SAMAnalyzer extends RCommander {
     }
 
     public static void main( String[] args ) {
-        SAMAnalyzer analyzer = new SAMAnalyzer();
+        SimpleSAMAnalyzer analyzer = new SimpleSAMAnalyzer();
 
         // in order not to get OutOfMemoryError, I run these all three sections below seperately, one after another.
 

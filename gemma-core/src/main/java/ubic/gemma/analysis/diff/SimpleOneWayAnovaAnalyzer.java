@@ -36,13 +36,13 @@ import cern.colt.list.DoubleArrayList;
  * their F-statistic derived p values.
  * @author gozde
  */
-public class OneWayAnovaAnalyzer extends RCommander{
+public class SimpleOneWayAnovaAnalyzer extends RCommander{
     
     public final double fdr = 0.01;
     
     ExpressionDataManager manager;
     
-    public OneWayAnovaAnalyzer(){
+    public SimpleOneWayAnovaAnalyzer(){
         super();
     }
     
@@ -124,7 +124,7 @@ public class OneWayAnovaAnalyzer extends RCommander{
      * @param args
      */
     public static void main( String[] args ) {
-        OneWayAnovaAnalyzer analyzer = new OneWayAnovaAnalyzer();
+        SimpleOneWayAnovaAnalyzer analyzer = new SimpleOneWayAnovaAnalyzer();
         Hashtable<String, Double> sigGenes = analyzer.getSignificantGenes("GDS1110");
         analyzer.writeSignificantGenesToFile("GDS1110", sigGenes);
         
