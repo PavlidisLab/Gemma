@@ -32,6 +32,7 @@ import ubic.gemma.loader.expression.mage.MageMLParser;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -43,6 +44,7 @@ import ubic.gemma.persistence.PersisterHelper;
  * @spring.bean id="arrayExpressLoadService"
  * @spring.property name="persisterHelper" ref="persisterHelper"
  * @spring.property name="mageMLConverter" ref="mageMLConverter"
+ * @spring.property name="arrayDesignService" ref="arrayDesignService"
  * @author pavlidis
  * @version $Id$
  */
@@ -54,17 +56,41 @@ public class ArrayExpressLoadService {
 
     MageMLConverter mageMLConverter;
 
+    ArrayDesignService arrayDesignService;
+
+    public ExpressionExperiment load( String accession ) throws IOException {
+
+        return this.load( accession, null );
+
+    }
+
     /**
      * NOTE this currently will not handle data sets that have multiple array designs.
      * 
      * @param accession e.g. E-AFMX-4
      * @return
      */
-    public ExpressionExperiment load( String accession ) throws IOException {
+
+    public ExpressionExperiment load( String accession, String adAccession ) throws IOException {
         DataFileFetcher dfFetcher = new DataFileFetcher();
         ProcessedDataFetcher pdFetcher = new ProcessedDataFetcher();
         ProcessedDataFileParser pdParser = new ProcessedDataFileParser();
         ProcessedDataMerger pdMerger = new ProcessedDataMerger();
+
+        ArrayDesign selectedAd = null;
+        if ( adAccession != null ) {
+            selectedAd = this.arrayDesignService.findArrayDesignByName( adAccession );
+            
+            //what if short name was specified....
+            if (selectedAd == null)
+                selectedAd = this.arrayDesignService.findByShortName(  adAccession );
+
+            if ( selectedAd == null ) {
+                log.error( "The array design selected doesn't exist in the system: " + adAccession
+                        + ", halting processing" );
+                return null;
+            }
+        }
 
         MageMLParser mlp = new MageMLParser();
 
@@ -101,8 +127,15 @@ public class ArrayExpressLoadService {
 
         log.info( "MAGE conversion: located raw expression experiment: " + ee );
 
-        log.info( "Filling in array design information" );
-        processArrayDesignInfo( bioAssays );
+        // If we made it this far, and selectedAd is null we know an AD was never specified so go ahead and
+        // use the AD given by mage
+        if ( selectedAd == null ) {
+            log.info( "Filling in array design information" );
+            processArrayDesignInfo( bioAssays );
+        } else { // the user selected an AD in the system, make sure all the bioAssays point to it.
+            log.info( "Using specified Array Design: " + selectedAd.getShortName() );
+            processArrayDesignInfo( bioAssays, selectedAd );
+        }
 
         log.info( "Parsing processed data" );
         InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( pdFile.getLocalURL().getPath() );
@@ -121,13 +154,39 @@ public class ArrayExpressLoadService {
 
     }
 
+    private void processArrayDesignInfo( Collection<BioAssay> bioAssays, ArrayDesign ad ) {
+
+        arrayDesignService.thaw( ad );
+        
+        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+
+        for ( BioAssay assay : bioAssays ) {
+            ads.add( assay.getArrayDesignUsed() );
+        }
+        log.info( "There are " + ads.size() + " array designs for this experiment" );
+        if ( ads.size() != 1 ) {
+            throw new IllegalStateException(
+                    "Expression experiment uses multiple Array Designs, "
+                            + ads.size()
+                            + "  Unable to match up multiple array designs with single array design selected. Failed to load Expression experiment. " );
+        }
+
+        // Just make sure all the bioAssays are pointing to the correct AD.
+        for ( BioAssay assay : bioAssays ) {
+            assay.setArrayDesignUsed( ad );
+        }
+
+    }
+
     /**
      * @param bioAssays
      */
+
     private void processArrayDesignInfo( Collection<BioAssay> bioAssays ) {
         ArrayDesignFetcher adFetcher = new ArrayDesignFetcher();
         ArrayDesignParser adParser = new ArrayDesignParser();
         Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+
         for ( BioAssay assay : bioAssays ) {
             ads.add( assay.getArrayDesignUsed() );
         }
@@ -214,4 +273,7 @@ public class ArrayExpressLoadService {
         this.persisterHelper = persisterHelper;
     }
 
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
 }

@@ -18,8 +18,12 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
 
@@ -30,15 +34,18 @@ import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.validation.BindException;
+import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.gemmaspaces.GemmaSpacesResult;
 import ubic.gemma.gemmaspaces.expression.experiment.ExpressionExperimentLoadTask;
 import ubic.gemma.gemmaspaces.expression.experiment.GemmaSpacesExpressionExperimentLoadCommand;
+import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.gemmaspaces.GemmaSpacesEnum;
 import ubic.gemma.util.gemmaspaces.GemmaSpacesUtil;
@@ -46,6 +53,7 @@ import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.gemmaspaces.AbstractGemmaSpacesFormController;
+import ubic.gemma.web.propertyeditor.ArrayDesignPropertyEditor;
 import ubic.gemma.web.util.MessageUtil;
 
 /**
@@ -60,12 +68,48 @@ import ubic.gemma.web.util.MessageUtil;
  * @spring.property name="successView" value="loadExpressionExperimentProgress.html"
  * @spring.property name="geoDatasetService" ref="geoDatasetService"
  * @spring.property name="gemmaSpacesUtil" ref="gemmaSpacesUtil"
+ * @spring.property name="arrayDesignService" ref="arrayDesignService"
+ * @spring.property name="arrayExpressLoadService" ref="arrayExpressLoadService"
  */
 public class ExpressionExperimentLoadController extends AbstractGemmaSpacesFormController {
 
     private static final boolean AJAX = true;
 
     GeoDatasetService geoDatasetService;
+    ArrayDesignService arrayDesignService;
+    ArrayExpressLoadService arrayExpressLoadService;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.web.servlet.mvc.AbstractFormController#formBackingObject(javax.servlet.http.HttpServletRequest)
+     */
+    @Override
+    protected Object formBackingObject( HttpServletRequest request ) throws Exception {
+        ExpressionExperimentLoadCommand command = new ExpressionExperimentLoadCommand();
+        return command;
+    }
+
+    @Override
+    protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
+        super.initBinder( request, binder );
+        binder.registerCustomEditor( ArrayDesign.class, new ArrayDesignPropertyEditor( this.arrayDesignService ) );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.web.servlet.mvc.SimpleFormController#referenceData(javax.servlet.http.HttpServletRequest)
+     */
+    @SuppressWarnings("unused")
+    @Override
+    protected Map referenceData( HttpServletRequest request ) throws Exception {
+        Map<String, List<? extends Object>> mapping = new HashMap<String, List<? extends Object>>();
+
+        populateArrayDesignReferenceData( mapping );
+        return mapping;
+
+    }
 
     /*
      * (non-Javadoc)
@@ -77,8 +121,8 @@ public class ExpressionExperimentLoadController extends AbstractGemmaSpacesFormC
     @SuppressWarnings("unused")
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
-        return startJob( command, GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl(),
-                ExpressionExperimentLoadTask.class.getName(), true );
+        return startJob( command, GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ExpressionExperimentLoadTask.class
+                .getName(), true );
     }
 
     public String run( ExpressionExperimentLoadCommand command ) {
@@ -102,6 +146,30 @@ public class ExpressionExperimentLoadController extends AbstractGemmaSpacesFormC
         }
 
         return super.processFormSubmission( request, response, command, errors );
+    }
+
+    /**
+     * @param mapping
+     */
+    @SuppressWarnings("unchecked")
+    private void populateArrayDesignReferenceData( Map<String, List<? extends Object>> mapping ) {
+        List<ArrayDesign> arrayDesigns = new ArrayList<ArrayDesign>();
+        for ( ArrayDesign arrayDesign : ( Collection<ArrayDesign> ) arrayDesignService.loadAll() ) {
+            // remove AD's that are mergees or subsumers
+
+            if ( arrayDesign.getSubsumingArrayDesign() != null ) continue;
+
+            if ( arrayDesign.getMergedInto() != null ) continue;
+
+            arrayDesigns.add( arrayDesign );
+        }
+        Collections.sort( arrayDesigns, new Comparator<ArrayDesign>() {
+            public int compare( ArrayDesign o1, ArrayDesign o2 ) {
+                return ( o1 ).getName().compareTo( ( o2 ).getName() );
+            }
+        } );
+
+        mapping.put( "arrayDesigns", arrayDesigns );
     }
 
     /**
@@ -132,6 +200,21 @@ public class ExpressionExperimentLoadController extends AbstractGemmaSpacesFormC
         this.geoDatasetService = geoDatasetService;
     }
 
+    /**
+     * @param arrayDesignService the arrayDesignService to set
+     */
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
+
+    /**
+     * @param arrayExpressLoadService the arrayExpressLoadService to set
+     */
+    public void setArrayExpressLoadService( ArrayExpressLoadService arrayExpressLoadService ) {
+        this.arrayExpressLoadService = arrayExpressLoadService;
+    }
+
+    // TODO: getRunner and getSpaceRunner have a lot of similar code, can we consolidate this?
     /*
      * (non-Javadoc)
      * 
@@ -185,8 +268,8 @@ public class ExpressionExperimentLoadController extends AbstractGemmaSpacesFormC
                         return new ModelAndView(
                                 new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?ids=" + list ) );
                     }
-
-                } else {
+                    // GEO
+                } else if ( expressionExperimentLoadCommand.isGeo() ) {
                     Collection<ExpressionExperiment> result = geoDatasetService.fetchAndLoad( accesionNum, false,
                             doSampleMatching, aggressiveQtRemoval );
                     if ( result.size() == 1 ) {
@@ -197,13 +280,31 @@ public class ExpressionExperimentLoadController extends AbstractGemmaSpacesFormC
                                 "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
                                         + result.iterator().next().getId() ) );
                     } else {
-                        // model.put( "expressionExeriments", result );
                         this.saveMessage( "Successfully loaded " + result.size() + " expression experiments" );
                         for ( ExpressionExperiment ee : result )
                             list += ee.getId() + ",";
                         return new ModelAndView( new RedirectView(
                                 "/Gemma/expressionExperiment/showAllExpressionExperiments.html?ids=" + list ) );
                     }
+                }
+                // Array Express
+                else if ( expressionExperimentLoadCommand.isArrayExpress() ) {
+
+                    if (expressionExperimentLoadCommand.getArrayDesignName() == null){
+                        this.saveMessage( "Unable to load: Must select an array design to use" );
+                        return new ModelAndView( new RedirectView( "/Gemma/loadExpressionExperiment.html" ) );
+                    }
+                        
+                    ExpressionExperiment result = arrayExpressLoadService.load( accesionNum,
+                            expressionExperimentLoadCommand.getArrayDesignName() );
+
+                    this.saveMessage( "Successfully loaded " + result.getName() );
+                    model.put( "expressionExperiment", result );
+                    return new ModelAndView( new RedirectView(
+                            "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + result.getId() ) );
+                } else {
+                    this.saveMessage( "Failed to load: Must select type of file. ie) geo or array express " );
+                    return new ModelAndView( new RedirectView( "/Gemma/loadExpressionExperiment.html" ) );
 
                 }
 
@@ -222,7 +323,8 @@ public class ExpressionExperimentLoadController extends AbstractGemmaSpacesFormC
     protected BackgroundControllerJob<ModelAndView> getSpaceRunner( String taskId, SecurityContext securityContext,
             Object command, MessageUtil messenger ) {
 
-        final ExpressionExperimentLoadTask eeTaskProxy = ( ExpressionExperimentLoadTask ) updatedContext.getBean( "proxy" );
+        final ExpressionExperimentLoadTask eeTaskProxy = ( ExpressionExperimentLoadTask ) updatedContext
+                .getBean( "proxy" );
 
         return new BackgroundControllerJob<ModelAndView>( taskId, securityContext, command, messenger ) {
 
@@ -268,7 +370,18 @@ public class ExpressionExperimentLoadController extends AbstractGemmaSpacesFormC
                         return new ModelAndView(
                                 new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?ids=" + list ) );
                     }
+                }
 
+                // Array Express
+                else if ( expressionExperimentLoadCommand.isArrayExpress() ) {
+                    ExpressionExperiment result = arrayExpressLoadService.load( accesionNum,
+                            expressionExperimentLoadCommand.getArrayDesignName() );
+
+                    this.saveMessage( "Successfully loaded " + result.getName() );
+                    model.put( "expressionExperiment", result );
+                    return new ModelAndView( new RedirectView(
+                            "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + result.getId() ) );
+                    // GEO
                 } else {
                     ExpressionExperimentLoadCommand eeLoadCommand = ( ExpressionExperimentLoadCommand ) command;
                     GemmaSpacesExpressionExperimentLoadCommand jsCommand = new GemmaSpacesExpressionExperimentLoadCommand(

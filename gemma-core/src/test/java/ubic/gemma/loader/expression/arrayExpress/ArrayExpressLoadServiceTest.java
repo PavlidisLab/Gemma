@@ -34,4 +34,13 @@ public class ArrayExpressLoadServiceTest extends BaseSpringContextTest {
         assertNotNull( experiment );
     }
 
+    
+ 
+    final public void testLoadWithAD() throws Exception {
+        endTransaction();
+        ArrayExpressLoadService svc = ( ArrayExpressLoadService ) this.getBean( "arrayExpressLoadService" );
+        ExpressionExperiment experiment = svc.load( "E-MEXP-955", "GPL81" );
+        assertNotNull( experiment );
+    }
+
 }

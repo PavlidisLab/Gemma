@@ -13,11 +13,15 @@ function submitForm() {
 	var accession = Ext.get("accession").dom.value;
 	var suppressMatching = Ext.get("suppressMatching").dom.checked;
 	var loadPlatformOnly = Ext.get("loadPlatformOnly").dom.checked;
+	var geo = Ext.get("geo").dom.checked;
+	var arrayExpress = Ext.get("arrayExpress").dom.checked;
+	var arrayDesign = Ext.get("arrayDesign").dom.value;
+
 	
 	var callParams = [];
 	
-	var commandObj = {accession: accession, suppressMatching: suppressMatching, loadPlatformOnly : loadPlatformOnly};
-	
+	var commandObj = {accession: accession, suppressMatching: suppressMatching, loadPlatformOnly : loadPlatformOnly, arrayExpress: arrayExpress, geo: geo, arrayDesignName: arrayDesign};
+
 	callParams.push(commandObj);
 	
 	var delegate = handleSuccess.createDelegate(this, [], true);

@@ -40,6 +40,8 @@ import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import com.j_spaces.core.cluster.sync_replication.TodoQueueInitException;
+
 import ubic.basecode.util.FileTools;
 import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
@@ -147,6 +149,9 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
      */
     @SuppressWarnings("unchecked")
     private void populateArrayDesignReferenceData( Map<String, List<? extends Object>> mapping ) {
+        //FIXME replicated code.  also in ExpressionExperimentLoad controller. 
+        //Need to factor out.  Also need to remove AD's that are subsumed or merged into other AD's. 
+        
         List<ArrayDesign> arrayDesigns = new ArrayList<ArrayDesign>();
         for ( ArrayDesign arrayDesign : ( Collection<ArrayDesign> ) arrayDesignService.loadAll() ) {
             arrayDesigns.add( arrayDesign );

@@ -19,6 +19,9 @@
 package ubic.gemma.web.controller.expression.experiment;
 
 import java.io.Serializable;
+import java.util.Collection;
+
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 /**
  * Command class for expression experiment loading.
@@ -36,7 +39,13 @@ public class ExpressionExperimentLoadCommand implements Serializable {
     private String datasourceName;
 
     private boolean loadPlatformOnly;
-
+    
+    private String arrayDesignName;
+    
+    private boolean arrayExpress;
+    
+    private boolean geo;
+ 
     /**
      * Used to turn off 'bioassay to biomaterial' matching.
      */
@@ -49,6 +58,8 @@ public class ExpressionExperimentLoadCommand implements Serializable {
      */
     private boolean aggressiveQtRemoval;
 
+    Collection<ArrayDesign> arrayDesigns;
+    
     /**
      * @return Returns the accession.
      */
@@ -107,6 +118,62 @@ public class ExpressionExperimentLoadCommand implements Serializable {
 
     public void setAggressiveQtRemoval( boolean aggressiveQtRemoval ) {
         this.aggressiveQtRemoval = aggressiveQtRemoval;
+    }
+
+    /**
+     * @return the arrayDesignName
+     */
+    public String getArrayDesignName() {
+        return arrayDesignName;
+    }
+
+    /**
+     * @param arrayDesignName the arrayDesignName to set
+     */
+    public void setArrayDesignName( String arrayDesignName ) {
+        this.arrayDesignName = arrayDesignName;
+    }
+
+    /**
+     * @return the arrayDesigns
+     */
+    public Collection<ArrayDesign> getArrayDesigns() {
+        return arrayDesigns;
+    }
+
+    /**
+     * @param arrayDesigns the arrayDesigns to set
+     */
+    public void setArrayDesigns( Collection<ArrayDesign> arrayDesigns ) {
+        this.arrayDesigns = arrayDesigns;
+    }
+
+    /**
+     * @return the arrayExpress
+     */
+    public boolean isArrayExpress() {
+        return arrayExpress;
+    }
+
+    /**
+     * @param arrayExpress the arrayExpress to set
+     */
+    public void setArrayExpress( boolean arrayExpress ) {
+        this.arrayExpress = arrayExpress;
+    }
+
+    /**
+     * @return the geo
+     */
+    public boolean isGeo() {
+        return geo;
+    }
+
+    /**
+     * @param geo the geo to set
+     */
+    public void setGeo( boolean geo ) {
+        this.geo = geo;
     }
 
 }

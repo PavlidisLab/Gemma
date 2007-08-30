@@ -3,7 +3,7 @@
 	class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand" />
 <head>
 	<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
-	<script src="<c:url value='/scripts/ext/ext-all-debug.js'/>" type="text/javascript"></script>
+	<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
 
 	<script type="text/javascript" src="<c:url value='/scripts/progressbar.js'/>"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
@@ -12,6 +12,10 @@
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 
+<%--
+Note: to get the command object updated with values from the form one has to update the loadExpressionExperiment.js file as it builds the command obj on the fly
+by getting the info it needs from the dom.  The initbinder method in the controller never gets called. 
+ --%>
 	<script type="text/javascript" src="<c:url value='/scripts/ajax/loadExpressionExperiment.js'/>" type="text/javascript"></script>
 
 	<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/progressbar.css'/>" />
@@ -52,7 +56,32 @@
 				<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
 			</spring:bind>
 		</td>
+	</tr>	
+	<tr>
+		<th>
+			<fmt:message key="expressionExperiment.load.geo" />
+		</th>
+		<td align="left">
+			<spring:bind path="command.geo">				
+				<input id="geo" align="left" type="checkbox" name="<c:out value="${status.expression}"/>" value="true"
+				  <c:if test="${status.value}">checked</c:if> />
+				<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
+			</spring:bind>
+		</td>
 	</tr>
+	<tr>
+		<th>
+			<fmt:message key="expressionExperiment.load.arrayExpress" />
+		</th>
+		<td align="left">
+			<spring:bind path="command.arrayExpress">	
+				<input type="hidden" name="_<c:out value="${status.expression}"/>">			
+				<input id="arrayExpress" align="left" type="checkbox" name="<c:out value="${status.expression}"/>" value="true"
+				      <c:if test="${status.value}">checked</c:if> />
+				<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
+			</spring:bind>
+		</td>
+	</tr>		
 	<tr>
 		<th>
 			<fmt:message key="expressionExperiment.load.platformOnly" />
@@ -81,6 +110,27 @@
 				<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
 			</spring:bind>
 		</td>
+	</tr>
+	
+	
+	<tr>
+				<th>
+					<fmt:message key="expressionExperiment.load.arrayDesign" />
+				</th>
+				<td>
+				<spring:bind
+					path="expressionExperimentLoadCommand.arrayDesigns">
+					<select id="arrayDesign" name="${status.expression}" multiple>
+						<c:forEach items="${arrayDesigns}" var="arrayDesign">
+							<option value="${arrayDesign.name}">
+								${arrayDesign.name}
+							</option>
+						</c:forEach>
+					</select>
+					<span class="fieldError">${status.errorMessage}</span>
+				</spring:bind>
+
+			</td>
 	</tr>
 	<tr>
 		<td colspan="2" style="padding:10px" align="center" class="buttonBar"  >
