@@ -37,14 +37,14 @@ import org.apache.commons.logging.LogFactory;
  * quantitationType. Values are stored in vectors, roughly equivalent to DesignElementDataVectors.
  * <p>
  * This is an important class as it encompasses how we convert GEO sample data into vectors. There are a couple of
- * assumption that this is predicated on. First, we assume that all samples are presented with their quantitation types
+ * assumptions that this is predicated on. First, we assume that all samples are presented with their quantitation types
  * in the same order. Second, we assume that all samples have the same quantitation type, OR at worst, some are missing
- * off the 'end' for some samples. We do not assume that all samples have quantitation types with the same names
- * (quantitation types correspond to column names in the GEO files).
+ * off the 'end' for some samples (in which case the vectors are padded). We do not assume that all samples have
+ * quantitation types with the same names (quantitation types correspond to column names in the GEO files).
  * <p>
- * There are two counterexamples we have found that push or violate these assumptions: GSE360 and GSE4345 (which is
- * really broken). Loading GSE4345 results in a cast exception because the quantitation types are 'mixed up' across the
- * samples..
+ * There are two counterexamples we have found (so far) that push or violate these assumptions: GSE360 and GSE4345
+ * (which is really broken). Loading GSE4345 results in a cast exception because the quantitation types are 'mixed up'
+ * across the samples.
  * 
  * @author pavlidis
  * @version $Id$
@@ -434,26 +434,37 @@ public class GeoValues {
 
             for ( Object qType : sampleDimensions.get( platform ).keySet() ) {
 
+                // This is the number of samples that have been processed so far for the given quantitation type.
                 int numSamples = sampleDimensions.get( platform ).get( qType ).size();
 
                 if ( skippableQuantitationTypes.contains( qType ) ) continue;
 
                 Map<String, List<Object>> q = d.get( qType );
-
+                boolean warned = false;
                 for ( String designElement : q.keySet() ) {
                     List<Object> vals = q.get( designElement );
-                    if ( vals.size() != numSamples ) {
+                    if ( vals.size() < numSamples ) {
+                        int paddingAmount = numSamples - vals.size();
+                        if ( !warned )
+                            log.warn( "Padding some vectors with " + paddingAmount + " values for quantitation type "
+                                    + qType );
+                        warned = true;
+                        for ( int i = 0; i < paddingAmount; i++ ) {
+                            vals.add( null );
+                        }
+                    } else if ( vals.size() > numSamples ) {
                         log.error( "Samples so far: "
                                 + StringUtils.join( sampleDimensions.get( platform ).get( qType ), ',' ) );
+
                         throw new IllegalStateException( "Validation failed at platform=" + platform
                                 + " designelement=" + designElement + " qType=" + qType + " expected " + numSamples
                                 + " values, got " + vals.size() );
                     }
                 }
-                log.debug( qType + " ok on " + platform + ", all vectors have " + numSamples + " values" );
+                if ( log.isDebugEnabled() )
+                    log.debug( qType + " ok on " + platform + ", all vectors have " + numSamples + " values" );
             }
         }
 
     }
-
 }

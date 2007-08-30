@@ -23,7 +23,6 @@ import java.util.HashSet;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
-import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
@@ -240,8 +239,8 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     // public void testFetchASeries() throws Exception {
     // endTransaction();
     // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-    // geoService.fetchAndLoad( "GSE464" );
-    // }
+    // geoService.fetchAndLoad( "GSE4763", false, false, false );
+    //    }
 
     /**
      * GSE3434 has no dataset. It's small so okay to download.

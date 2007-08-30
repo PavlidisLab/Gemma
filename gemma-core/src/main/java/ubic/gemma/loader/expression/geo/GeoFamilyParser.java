@@ -1066,7 +1066,7 @@ public class GeoFamilyParser implements Parser {
         }
 
         if ( previousNumTokens != null && tokens.length != previousNumTokens ) {
-            log.warn( "Last line had " + ( previousNumTokens - 1 ) + " , quantitation types, this one has "
+            log.warn( "Last line had " + ( previousNumTokens - 1 ) + " quantitation types, this one has "
                     + ( tokens.length - 1 ) );
         }
 
