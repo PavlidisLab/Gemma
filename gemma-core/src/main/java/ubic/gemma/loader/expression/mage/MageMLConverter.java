@@ -21,12 +21,16 @@ package ubic.gemma.loader.expression.mage;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
 import ubic.gemma.loader.util.converter.Converter;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * Class to parse MAGE-ML files and convert them into Gemma domain objects SDO.
@@ -94,9 +98,54 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
                 }
             }
         }
+
+        fillInBioMaterialFactorValues( convertedResult );
+
         this.isConverted = true;
         return convertedResult;
     }
+
+    /**
+     * @param convertedResult
+     */
+    private void fillInBioMaterialFactorValues( Collection<Object> convertedResult ) {
+        ExpressionExperiment ee = null;
+        for ( Object object : convertedResult ) {
+            if ( object instanceof ExpressionExperiment ) ee = ( ExpressionExperiment ) object;
+        }
+        assert ee != null;
+
+        Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
+        Collection<BioAssay> bioAssays = ee.getBioAssays();
+        for ( BioAssay assay : bioAssays ) {
+            for ( BioMaterial bm : assay.getSamplesUsed() ) {
+                log.info( "checking factor values on biomaterial " + bm );
+                Collection<FactorValue> factorValues = new HashSet<FactorValue>();
+                for ( FactorValue value : bm.getFactorValues() ) {
+                    FactorValue efFactorValue = findMatchingFactorValue( value, experimentalFactors );
+                    if ( efFactorValue == null )
+                        throw new IllegalStateException( "No experimental-factor bound factor value found for " + value );
+                    if ( efFactorValue.getExperimentalFactor() == null )
+                        log.info( "experimental-factor bound factor value " + efFactorValue + " has null experimental factor"  );
+                    factorValues.add( efFactorValue );
+                }
+                bm.setFactorValues( factorValues );
+                log.info( "biomaterial " + bm + " has " + factorValues.size() + " factor values: " + factorValues );
+            }
+        }
+    }
+    
+    private FactorValue findMatchingFactorValue(FactorValue needle, Collection<ExperimentalFactor> haystack) {
+        for ( ExperimentalFactor factor : haystack ) {
+            for ( FactorValue factorValue : factor.getFactorValues() ) {
+                // TODO find a better way to equate factor values
+                if ( needle.toString().equals( factorValue.toString() ) )
+                    return factorValue;
+            }
+        }
+        return null;
+    }
+    
 
     /*
      * (non-Javadoc)

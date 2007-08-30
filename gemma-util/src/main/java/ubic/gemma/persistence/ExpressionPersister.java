@@ -374,7 +374,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      * @return
      */
     private ExperimentalFactor persistExperimentalFactor( ExperimentalFactor experimentalFactor ) {
-        if ( !isTransient( experimentalFactor ) ) return experimentalFactor;
+        if ( !isTransient( experimentalFactor ) || experimentalFactor == null ) return experimentalFactor;
         fillInExperimentalFactorAssociations( experimentalFactor );
         assert ( !isTransient( experimentalFactor.getExperimentalDesign() ) );
         return experimentalFactorService.create( experimentalFactor );

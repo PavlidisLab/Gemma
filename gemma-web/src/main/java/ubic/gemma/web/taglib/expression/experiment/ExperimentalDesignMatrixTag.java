@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -34,6 +35,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -135,11 +137,21 @@ public class ExperimentalDesignMatrixTag extends TagSupport {
     }
     
     private String getString( FactorValue value ) {
-        if ( value == null ) {
-            return "null";  // shouldn't happen...
+        if ( value == null) {
+            return "unknown";
         } else if ( value.getMeasurement() != null ) {
             return value.getMeasurement().getValue();
+        } else if ( value.getCharacteristics() != null && !value.getCharacteristics().isEmpty() ) {
+            StringBuffer buf = new StringBuffer();
+            for (Iterator iter = value.getCharacteristics().iterator(); iter.hasNext(); ) {
+                Characteristic c = (Characteristic)iter.next();
+                buf.append( c.getValue() );
+                if (iter.hasNext())
+                    buf.append( ", " );
+            }
+            return buf.toString();
         } else {
+            // legacy; shouldn't get this far...
             return value.getValue();
         }
     }

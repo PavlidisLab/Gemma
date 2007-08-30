@@ -26,11 +26,14 @@ import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -432,7 +435,7 @@ public class MageMLConverterHelper {
 
         if ( associationName.equals( "BioAssayFactorValues" ) ) {
             // Note that these are be the same factorvalues as referred to by the experimentalfactors.
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
+            // simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
         } else if ( associationName.equals( "Channels" ) ) {
             ; // we don't support this.
         } else {
@@ -1166,36 +1169,38 @@ public class MageMLConverterHelper {
      * @return
      */
     public ubic.gemma.model.expression.bioAssay.BioAssay convertDerivedBioAssay( DerivedBioAssay mageObj ) {
-        if ( mageObj == null ) return null;
-        ubic.gemma.model.expression.bioAssay.BioAssay result = convertBioAssay( mageObj );
-
-        // Attempt to get the array design for this bioassay. ( so far this hasn't worked - the information isn't linked
-        // to the derived bioassay!)
-        List map = mageObj.getDerivedBioAssayMap();
-        if ( map.size() > 0 ) {
-            BioAssayMap dbap = ( BioAssayMap ) map.get( 0 );
-
-            List bioAssays = dbap.getSourceBioAssays();
-            // if ( bioAssays.size() == 0 ) log.debug( "DerivedBioAssayMap, but no sourcebioAssays" );
-            if ( bioAssays.size() > 1 ) {
-                // This
-                log.warn( "More than one sourcebioAssay for a DerivedBioAssay: " + mageObj.getIdentifier() + " has "
-                        + bioAssays.size() + " sourceBioAssays" );
-            }
-
-            for ( Iterator iter = bioAssays.iterator(); iter.hasNext(); ) {
-                BioAssay bioAssay = ( BioAssay ) iter.next();
-                if ( bioAssay instanceof MeasuredBioAssay ) {
-
-                    specialConvertAssociationsForPhysicalBioAssay( ( ( MeasuredBioAssay ) bioAssay )
-                            .getFeatureExtraction().getPhysicalBioAssaySource(), result );
-                } else {
-                    log.error( "What kind of bioassay is associated?: " + bioAssay.getClass().getName() );
-                }
-            }
-        }
-        convertAssociations( mageObj, result );
-        return result;
+        // if ( mageObj == null ) return null;
+        // ubic.gemma.model.expression.bioAssay.BioAssay result = convertBioAssay( mageObj );
+        //
+        // // Attempt to get the array design for this bioassay. ( so far this hasn't worked - the information isn't
+        // linked
+        // // to the derived bioassay!)
+        // List map = mageObj.getDerivedBioAssayMap();
+        // if ( map.size() > 0 ) {
+        // BioAssayMap dbap = ( BioAssayMap ) map.get( 0 );
+        //
+        // List bioAssays = dbap.getSourceBioAssays();
+        // // if ( bioAssays.size() == 0 ) log.debug( "DerivedBioAssayMap, but no sourcebioAssays" );
+        // if ( bioAssays.size() > 1 ) {
+        // // This
+        // log.warn( "More than one sourcebioAssay for a DerivedBioAssay: " + mageObj.getIdentifier() + " has "
+        // + bioAssays.size() + " sourceBioAssays" );
+        // }
+        //
+        // for ( Iterator iter = bioAssays.iterator(); iter.hasNext(); ) {
+        // BioAssay bioAssay = ( BioAssay ) iter.next();
+        // if ( bioAssay instanceof MeasuredBioAssay ) {
+        //
+        // specialConvertAssociationsForPhysicalBioAssay( ( ( MeasuredBioAssay ) bioAssay )
+        // .getFeatureExtraction().getPhysicalBioAssaySource(), result );
+        // } else {
+        // log.error( "What kind of bioassay is associated?: " + bioAssay.getClass().getName() );
+        // }
+        // }
+        // }
+        // convertAssociations( mageObj, result );
+        // return result;
+        return null;
     }
 
     /**
@@ -1215,12 +1220,22 @@ public class MageMLConverterHelper {
             specialConvertBioAssayBioAssayDataAssociations( ( List ) associatedObject, gemmaObj );
         } else if ( associationName.equals( "Type" ) ) {
             // simpleFillIn( associatedObject, gemmaObj, getter, "Type" );
-        } else if ( associationName.equals( "Channels" ) || associationName.equals( "BioAssayFactorValues" ) ) {
-            ; // nothing.
+        } else if ( associationName.equals( "Channels" ) ) {
+        } else if ( associationName.equals( "BioAssayFactorValues" ) ) {
+            if ( !bioAssayFactors.containsKey( gemmaObj.getName() ) )
+                bioAssayFactors.put( gemmaObj.getName(), new HashSet<FactorValue>( 0 ) );
+
+            for ( org.biomage.Experiment.FactorValue magefv : ( Collection<org.biomage.Experiment.FactorValue> ) mageObj
+                    .getBioAssayFactorValues() ) {
+                FactorValue factorValue = convertFactorValue( magefv );
+                bioAssayFactors.get( gemmaObj.getName() ).add( factorValue );
+            }
         } else {
             log.warn( "Unsupported or unknown association, or belongs to superclass: " + associationName );
         }
     }
+
+    Map<String, Collection<FactorValue>> bioAssayFactors = new HashMap<String, Collection<FactorValue>>();
 
     /**
      * An Affymetrix CHP file is considered DerivedBioAssayData.
@@ -1370,10 +1385,13 @@ public class MageMLConverterHelper {
             simpleFillIn( associatedObject, gemmaObj, getter, "Category", Characteristic.class );
         else if ( associationName.equals( "Annotations" ) )
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, false );
-        else if ( associationName.equals( "FactorValues" ) )
+        else if ( associationName.equals( "FactorValues" ) ) {
             // Note that these should be the same factorvalues as referred to by the bioassays.
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, false );
-        else
+            for (FactorValue factorValue : gemmaObj.getFactorValues() ) {
+                factorValue.setExperimentalFactor( gemmaObj );
+            }
+        } else
             log.warn( "Unsupported or unknown association: " + associationName );
     }
 
@@ -1529,9 +1547,8 @@ public class MageMLConverterHelper {
         } else if ( associationName.equals( "Measurement" ) ) {
             simpleFillIn( associatedObject, gemmaObj, getter, "Measurement" );
         } else if ( associationName.equals( "Value" ) ) {
-            List tmp = new ArrayList();
-            tmp.add( gemmaObj );
-            simpleFillIn( ( List ) tmp, gemmaObj, getter, "Chacteristics" );
+            simpleFillIn( Arrays.asList( new Object[] { associatedObject } ), gemmaObj, getter, CONVERT_ALL,
+                    "Characteristics" );
         } else {
             log.warn( "Unsupported or unknown association: " + associationName );
         }
@@ -1726,8 +1743,13 @@ public class MageMLConverterHelper {
     public ubic.gemma.model.expression.bioAssay.BioAssay convertMeasuredBioAssay( MeasuredBioAssay mageObj ) {
         if ( mageObj == null ) return null;
         ubic.gemma.model.expression.bioAssay.BioAssay result = convertBioAssay( mageObj );
+
+        specialConvertAssociationsForPhysicalBioAssay( mageObj.getFeatureExtraction().getPhysicalBioAssaySource(),
+                result );
+
         convertAssociations( mageObj, result );
         return result;
+
     }
 
     /**
@@ -1745,6 +1767,15 @@ public class MageMLConverterHelper {
             specialConvertFeatureExtraction( ( FeatureExtraction ) associatedObject, gemmaObj );
         } else if ( associationName.equals( "MeasuredBioAssayData" ) ) {
             specialConvertBioAssayBioAssayDataAssociations( ( List ) associatedObject, gemmaObj );
+        } else if ( associationName.equals( "BioAssayFactorValues" ) ) {
+            if ( !bioAssayFactors.containsKey( gemmaObj.getName() ) )
+                bioAssayFactors.put( gemmaObj.getName(), new HashSet<FactorValue>( 0 ) );
+
+            for ( org.biomage.Experiment.FactorValue magefv : ( Collection<org.biomage.Experiment.FactorValue> ) mageObj
+                    .getBioAssayFactorValues() ) {
+                FactorValue factorValue = convertFactorValue( magefv );
+                bioAssayFactors.get( gemmaObj.getName() ).add( factorValue );
+            }
         } else {
             log.debug( "Unsupported or unknown association, or belongs to superclass: " + associationName );
         }
@@ -1855,12 +1886,12 @@ public class MageMLConverterHelper {
 
         /**
          * <pre>
-         * Cases:
-         * 
-         * - Category is a MO term
-         * - Value is a MO instance
-         * 
-         * 
+         *       Cases:
+         *       
+         *       - Category is a MO term
+         *       - Value is a MO instance
+         *       
+         *       
          * </pre>
          */
 
@@ -2065,6 +2096,9 @@ public class MageMLConverterHelper {
     public ubic.gemma.model.expression.bioAssay.BioAssay convertPhysicalBioAssay( PhysicalBioAssay mageObj ) {
         if ( mageObj == null ) return null;
         return null;
+        // ubic.gemma.model.expression.bioAssay.BioAssay result = convertBioAssay( mageObj );
+        // convertAssociations( mageObj, result );
+        // return result;
     }
 
     /**
@@ -2081,7 +2115,7 @@ public class MageMLConverterHelper {
 
         if ( associatedObject == null ) return;
 
-        if ( associationName.equals( "BioAssayCreation" ) ) { // we only use this to get the array designs.
+        if ( associationName.equals( "BioAssayCreation" ) ) {
             specialConvertAssociationsForPhysicalBioAssay( mageObj, gemmaObj );
         } else if ( associationName.equals( "BioAssayTreatments" ) ) {
             assert associatedObject instanceof List;
@@ -3373,6 +3407,8 @@ public class MageMLConverterHelper {
         } else {
             ubic.gemma.model.expression.arrayDesign.ArrayDesign conv = convertArrayDesign( ad );
 
+            assert conv != null;
+
             if ( log.isTraceEnabled() )
                 log.trace( "Adding array design used " + ad.getName() + " to " + result.getName() );
 
@@ -3383,13 +3419,23 @@ public class MageMLConverterHelper {
         Collection<BioMaterialMeasurement> measurements = bac.getSourceBioMaterialMeasurements();
         Collection<BioMaterial> biomaterials = new HashSet<BioMaterial>();
 
+        Collection<FactorValue> factorValues = this.bioAssayFactors.get( result.getName() );
+
         for ( BioMaterialMeasurement bmm : measurements ) {
             if ( log.isDebugEnabled() ) log.debug( "Converting " + bmm.getBioMaterial() + " for " + mageObj );
-            biomaterials.add( convertBioMaterial( bmm.getBioMaterial() ) );
+            BioMaterial biomaterial = convertBioMaterial( bmm.getBioMaterial() );
+            addFactorValuesToBioMaterial( biomaterial, factorValues );
+            biomaterials.add( biomaterial );
         }
 
         result.setSamplesUsed( biomaterials );
 
+    }
+
+    private void addFactorValuesToBioMaterial( BioMaterial biomaterial, Collection<FactorValue> factorValues ) {
+        if ( factorValues == null || factorValues.isEmpty() ) return;
+        if ( biomaterial.getFactorValues() == null ) biomaterial.setFactorValues( new HashSet<FactorValue>() );
+        biomaterial.getFactorValues().addAll( factorValues );
     }
 
     /**
