@@ -37,6 +37,7 @@ import cern.colt.list.DoubleArrayList;
  * levels.
  * 
  * @author gozde
+ * @version $Id$
  */
 public class SimpleSAMAnalyzer extends RCommander {
 

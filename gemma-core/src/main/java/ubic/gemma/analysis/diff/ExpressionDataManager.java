@@ -47,6 +47,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
  * data.
  * 
  * @author gozde
+ * @version $Id$
  */
 public class ExpressionDataManager {
 

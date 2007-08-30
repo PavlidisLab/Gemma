@@ -32,92 +32,97 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import cern.colt.list.DoubleArrayList;
 
 /**
- * This class performs one-way ANOVA analysis in an experiment to detect the significant genes along with
- * their F-statistic derived p values.
+ * This class performs one-way ANOVA analysis in an experiment to detect the significant genes along with their
+ * F-statistic derived p values.
+ * 
  * @author gozde
+ * @version $Id$
  */
-public class SimpleOneWayAnovaAnalyzer extends RCommander{
-    
+public class SimpleOneWayAnovaAnalyzer extends RCommander {
+
     public final double fdr = 0.01;
-    
+
     ExpressionDataManager manager;
-    
-    public SimpleOneWayAnovaAnalyzer(){
+
+    public SimpleOneWayAnovaAnalyzer() {
         super();
     }
-    
+
     /**
      * This method detects significant genes of an experiment at ANOVA analysis and returns a list of them.
+     * 
      * @param fileName name of the file from which the expression levels will be read
      * @return Hashtable<String, Double> table of the probe ids of the genes with p values
      */
-    protected Hashtable<String, Double> getSignificantGenes(String fileName){
-        log.info("Calculating  p values of the genes. (It takes long time.)");
-        Hashtable<String, Double> pValuesTable = getPValuesOfGenes(fileName);   
-        log.info(pValuesTable.size() + " p values have been calculated.");
+    protected Hashtable<String, Double> getSignificantGenes( String fileName ) {
+        log.info( "Calculating  p values of the genes. (It takes long time.)" );
+        Hashtable<String, Double> pValuesTable = getPValuesOfGenes( fileName );
+        log.info( pValuesTable.size() + " p values have been calculated." );
         DoubleArrayList list = new DoubleArrayList();
-        
+
         Enumeration elements = pValuesTable.elements();
-        for (int j = 0; j < pValuesTable.size(); j++)
-            list.add((Double)elements.nextElement());
-        
-        double threshold = MultipleTestCorrection.BenjaminiHochbergCut(list, fdr);
-        log.info("p value cut-off : " + threshold);
-        
-        Hashtable<String, Double> significantGenes = manager.getSignificantGenes(pValuesTable, threshold);
-        log.info(significantGenes.size() + " significant genes have been detected.");
+        for ( int j = 0; j < pValuesTable.size(); j++ )
+            list.add( ( Double ) elements.nextElement() );
+
+        double threshold = MultipleTestCorrection.BenjaminiHochbergCut( list, fdr );
+        log.info( "p value cut-off : " + threshold );
+
+        Hashtable<String, Double> significantGenes = manager.getSignificantGenes( pValuesTable, threshold );
+        log.info( significantGenes.size() + " significant genes have been detected." );
         return significantGenes;
     }
-    
+
     /**
      * This method detects p values of genes of an experiment at ANOVA analysis and returns a list of them.
+     * 
      * @param fileName name of the file from which the expression levels will be read
      * @return Hashtable<String, Double> table of the probe ids of the genes with p values
      */
-    protected Hashtable<String, Double> getPValuesOfGenes(String fileName){
-        log.info("Calculating p values of the genes.");
+    protected Hashtable<String, Double> getPValuesOfGenes( String fileName ) {
+        log.info( "Calculating p values of the genes." );
         Hashtable<String, Double> genesToPValuesTable = new Hashtable<String, Double>();
-        manager = new ExpressionDataManager(fileName);
+        manager = new ExpressionDataManager( fileName );
         Collection<DesignElementDataVector> dataVectors = manager.getDesignElementDataVectors();
         String[] subsetNamesForBioAssays = manager.getSubsetNamesForBioAssays();
-        
-        for (DesignElementDataVector dataVector : dataVectors){
-            double[] expressionLevels = manager.getExpressionLevels(dataVector);
-            double pVal = anovaAnalysis(subsetNamesForBioAssays, expressionLevels);
-            genesToPValuesTable.put(dataVector.getDesignElement().getName(), Double.valueOf(pVal));
+
+        for ( DesignElementDataVector dataVector : dataVectors ) {
+            double[] expressionLevels = manager.getExpressionLevels( dataVector );
+            double pVal = anovaAnalysis( subsetNamesForBioAssays, expressionLevels );
+            genesToPValuesTable.put( dataVector.getDesignElement().getName(), Double.valueOf( pVal ) );
         }
-        return genesToPValuesTable; 
+        return genesToPValuesTable;
     }
-    
+
     /**
      * This method calculates the p value of a gene using F-statistic by calling R
+     * 
      * @param subsetNamesColumn array of the names of subsets corresponding to bioassays
      * @param expLevelsColumn array of the double values for expression levels
      * @return the p value for the gene
      */
-    protected double anovaAnalysis(String[] subsetNamesColumn, double[] expLevelsColumn){
-        rc.assign("subsets", subsetNamesColumn);
-        rc.assign("expLevels", expLevelsColumn);
-        
-        rc.voidEval("matrix <- data.frame(subsets, expLevels)");
-        rc.voidEval("aov.result <- aov(expLevels ~ subsets, data = matrix)");
-        REXP exp = rc.eval("anova(aov.result)");
-        
-        RList content = (RList) exp.getContent();
+    protected double anovaAnalysis( String[] subsetNamesColumn, double[] expLevelsColumn ) {
+        rc.assign( "subsets", subsetNamesColumn );
+        rc.assign( "expLevels", expLevelsColumn );
+
+        rc.voidEval( "matrix <- data.frame(subsets, expLevels)" );
+        rc.voidEval( "aov.result <- aov(expLevels ~ subsets, data = matrix)" );
+        REXP exp = rc.eval( "anova(aov.result)" );
+
+        RList content = ( RList ) exp.getContent();
         REXP tableExp = content.getBody();
-        Vector tableArray = (Vector) tableExp.getContent();
-        REXP pValExp = (REXP)tableArray.get(4); //p value list
-        double[] pValList = (double[]) pValExp.getContent();
+        Vector tableArray = ( Vector ) tableExp.getContent();
+        REXP pValExp = ( REXP ) tableArray.get( 4 ); // p value list
+        double[] pValList = ( double[] ) pValExp.getContent();
         double pVal = pValList[0];
-        
+
         return pVal;
     }
-    
+
     /**
      * This method is used to write significant genes for ANOVA with their p values to an output file
      */
-    protected void writeSignificantGenesToFile(String fileName, Hashtable<String, Double> sigGenes ){
-        manager.writeSignificantGenesToFile(fileName, sigGenes);
+    protected void writeSignificantGenesToFile( String fileName, Hashtable<String, Double> sigGenes ) {
+        manager.writeSignificantGenesToFile( fileName, sigGenes );
     }
 
     /**
@@ -125,10 +130,10 @@ public class SimpleOneWayAnovaAnalyzer extends RCommander{
      */
     public static void main( String[] args ) {
         SimpleOneWayAnovaAnalyzer analyzer = new SimpleOneWayAnovaAnalyzer();
-        Hashtable<String, Double> sigGenes = analyzer.getSignificantGenes("GDS1110");
-        analyzer.writeSignificantGenesToFile("GDS1110", sigGenes);
-        
-        System.exit(0);
+        Hashtable<String, Double> sigGenes = analyzer.getSignificantGenes( "GDS1110" );
+        analyzer.writeSignificantGenesToFile( "GDS1110", sigGenes );
+
+        System.exit( 0 );
     }
 
 }
