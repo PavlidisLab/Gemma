@@ -20,7 +20,6 @@ package ubic.gemma.analysis.diff;
 
 import java.util.Collection;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Gene;
 
@@ -33,12 +32,10 @@ public class TTestAnalyzer extends AbstractAnalyzer {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.analysis.diff.AbstractAnalyzer#getSignificantGenes(ubic.gemma.model.expression.experiment.ExpressionExperiment,
-     *      java.util.Collection)
+     * @see ubic.gemma.analysis.diff.AbstractAnalyzer#getSignificantGenes(java.util.Collection)
      */
     @Override
-    public Collection<Gene> getSignificantGenes( ExpressionExperiment expressionExperiment,
-            Collection<ExpressionExperimentSubSet> expressionExperimentSubsets ) {
+    public Collection<Gene> getSignificantGenes( Collection<ExpressionExperimentSubSet> expressionExperimentSubsets ) {
         // TODO Auto-generated method stub
         return null;
     }

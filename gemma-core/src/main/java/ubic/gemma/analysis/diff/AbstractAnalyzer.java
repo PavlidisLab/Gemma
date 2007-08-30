@@ -21,7 +21,6 @@ package ubic.gemma.analysis.diff;
 import java.util.Collection;
 
 import ubic.gemma.analysis.util.RCommander;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Gene;
 
@@ -34,10 +33,9 @@ public abstract class AbstractAnalyzer extends RCommander {
     /**
      * Returns the significant genes for the implementing analyzer.
      * 
-     * @param expressionExperiment The {@link ExpressionExperiment} of interest.
      * @param expressionExperimentSubsets If null, subsets are ignored.
      * @return Collection<Gene> Stored internally as a list of genes ordered by p-value.
      */
-    public abstract Collection<Gene> getSignificantGenes( ExpressionExperiment expressionExperiment,
+    public abstract Collection<Gene> getSignificantGenes(
             Collection<ExpressionExperimentSubSet> expressionExperimentSubsets );
 }
