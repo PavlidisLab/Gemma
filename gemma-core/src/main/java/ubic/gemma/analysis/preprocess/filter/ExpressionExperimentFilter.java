@@ -82,6 +82,7 @@ public class ExpressionExperimentFilter {
 
         if ( !twoColor ) {
 
+            // NOTE we do not use the PresentAbsent values here. Only filtering on the basis of the data itself.
             if ( config.isMinPresentFractionIsSet() ) filteredMatrix = minPresentFilter( filteredMatrix, null );
 
             if ( config.isLowExpressionCutIsSet() ) filteredMatrix = lowExpressionFilter( filteredMatrix );
