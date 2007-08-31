@@ -84,9 +84,9 @@ public class ExpressionExperimentFilter {
 
             if ( config.isMinPresentFractionIsSet() ) filteredMatrix = minPresentFilter( filteredMatrix, null );
 
-            if ( config.isLowExpressionCutIsSet() ) filteredMatrix = lowExpressionFilter( eeDoubleMatrix );
+            if ( config.isLowExpressionCutIsSet() ) filteredMatrix = lowExpressionFilter( filteredMatrix );
 
-            if ( config.isLowVarianceCutIsSet() ) filteredMatrix = lowCVFilter( eeDoubleMatrix );
+            if ( config.isLowVarianceCutIsSet() ) filteredMatrix = lowCVFilter( filteredMatrix );
 
             if ( usesAffymetrix() ) filteredMatrix = affyControlProbeFilter( filteredMatrix );
         }
