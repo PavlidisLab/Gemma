@@ -40,18 +40,26 @@ public class FilterConfig {
 
     public static final double DEFAULT_LOWEXPRESSIONCUT = 0.3;
 
+    public static final double DEFAULT_LOWVARIANCECUT = 0.2;
+
     public static final double DEFAULT_TOOSMALLTOKEEP = 0.5;
 
     public static final double DEFAULT_MINPRESENT_FRACTION = 0.3;
 
     private boolean minPresentFractionIsSet = true;
     private boolean lowExpressionCutIsSet = true;
+    private boolean lowVarianceCutIsSet = true;
     private double minPresentFraction = DEFAULT_MINPRESENT_FRACTION;
     private double lowExpressionCut = DEFAULT_LOWEXPRESSIONCUT;
     private double highExpressionCut = DEFAULT_HIGHEXPRESSION_CUT;
+    private double lowVarianceCut = DEFAULT_LOWVARIANCECUT;
 
     public double getHighExpressionCut() {
         return highExpressionCut;
+    }
+
+    public boolean isLowVarianceCutIsSet() {
+        return lowVarianceCutIsSet;
     }
 
     public void setHighExpressionCut( double highExpressionCut ) {
@@ -82,6 +90,15 @@ public class FilterConfig {
 
     public boolean isMinPresentFractionIsSet() {
         return minPresentFractionIsSet;
+    }
+
+    public double getLowVarianceCut() {
+        return lowVarianceCut;
+    }
+
+    public void setLowVarianceCut( double lowVarianceCut ) {
+        this.lowVarianceCutIsSet = true;
+        this.lowVarianceCut = lowVarianceCut;
     }
 
 }

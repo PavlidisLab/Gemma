@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.analysis.preprocess.filter.AffyProbeNameFilter.Pattern;
+import ubic.gemma.analysis.preprocess.filter.RowLevelFilter.Method;
 import ubic.gemma.analysis.preprocess.filter.InsufficientSamplesException;
 import ubic.gemma.datastructure.matrix.ExpressionDataBooleanMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -76,6 +77,7 @@ public class ExpressionExperimentFilter {
             builder.maskMissingValues( filteredMatrix, null );
             ExpressionDataBooleanMatrix missingValues = builder.getMissingValueData( null );
             filteredMatrix = minPresentFilter( filteredMatrix, missingValues );
+            if ( config.isLowVarianceCutIsSet() ) filteredMatrix = lowVarianceFilter( eeDoubleMatrix );
         }
 
         if ( !twoColor ) {
@@ -83,6 +85,8 @@ public class ExpressionExperimentFilter {
             if ( config.isMinPresentFractionIsSet() ) filteredMatrix = minPresentFilter( filteredMatrix, null );
 
             if ( config.isLowExpressionCutIsSet() ) filteredMatrix = lowExpressionFilter( eeDoubleMatrix );
+
+            if ( config.isLowVarianceCutIsSet() ) filteredMatrix = lowCVFilter( eeDoubleMatrix );
 
             if ( usesAffymetrix() ) filteredMatrix = affyControlProbeFilter( filteredMatrix );
         }
@@ -174,6 +178,34 @@ public class ExpressionExperimentFilter {
         rowLevelFilter.setLowCut( config.getLowExpressionCut() );
         rowLevelFilter.setHighCut( config.getHighExpressionCut() );
         rowLevelFilter.setRemoveAllNegative( true );
+        rowLevelFilter.setUseAsFraction( true );
+        return rowLevelFilter.filter( matrix );
+    }
+
+    /**
+     * @param matrix
+     * @return
+     */
+    private ExpressionDataDoubleMatrix lowVarianceFilter( ExpressionDataDoubleMatrix matrix ) {
+        RowLevelFilter rowLevelFilter = new RowLevelFilter();
+        rowLevelFilter.setMethod( Method.VAR );
+        rowLevelFilter.setLowCut( config.getLowExpressionCut() );
+        rowLevelFilter.setHighCut( config.getHighExpressionCut() );
+        rowLevelFilter.setRemoveAllNegative( false );
+        rowLevelFilter.setUseAsFraction( true );
+        return rowLevelFilter.filter( matrix );
+    }
+
+    /**
+     * @param matrix
+     * @return
+     */
+    private ExpressionDataDoubleMatrix lowCVFilter( ExpressionDataDoubleMatrix matrix ) {
+        RowLevelFilter rowLevelFilter = new RowLevelFilter();
+        rowLevelFilter.setMethod( Method.CV );
+        rowLevelFilter.setLowCut( config.getLowExpressionCut() );
+        rowLevelFilter.setHighCut( config.getHighExpressionCut() );
+        rowLevelFilter.setRemoveAllNegative( false );
         rowLevelFilter.setUseAsFraction( true );
         return rowLevelFilter.filter( matrix );
     }

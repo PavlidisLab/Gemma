@@ -115,7 +115,7 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
     private static Log log = LogFactory.getLog( RowLevelFilter.class.getName() );
 
     public enum Method {
-        MIN, MAX, MEDIAN, MEAN, RANGE, CV
+        MIN, MAX, MEDIAN, MEAN, RANGE, CV, VAR
     };
 
     private boolean removeAllNegative = false;
@@ -265,6 +265,10 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
             }
             case CV: {
                 criteria.set( i, Stats.cv( rowAsList ) );
+                break;
+            }
+            case VAR: {
+                criteria.set( i, DescriptiveWithMissing.variance( rowAsList ) );
                 break;
             }
             default: {

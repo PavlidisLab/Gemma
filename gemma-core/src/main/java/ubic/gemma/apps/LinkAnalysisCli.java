@@ -87,7 +87,7 @@ public class LinkAnalysisCli extends AbstractGeneExpressionExperimentManipulatin
      * @param arrayDesign
      */
     private void audit( ExpressionExperiment ee, String note, AuditEventType eventType ) {
-        if (linkAnalysisConfig.isUseDb()) {
+        if ( linkAnalysisConfig.isUseDb() ) {
             expressionExperimentReportService.generateSummaryObject( ee.getId() );
             auditTrailService.addUpdateEvent( ee, eventType, note );
         }
@@ -118,14 +118,19 @@ public class LinkAnalysisCli extends AbstractGeneExpressionExperimentManipulatin
         addOption( fwe );
 
         Option minPresentFraction = OptionBuilder.hasArg().withArgName( "Missing Value Threshold" ).withDescription(
-                "The tolerance for accepting the gene with missing values, default="
+                "Fraction of data points that must be present in a profile to be retained , default="
                         + FilterConfig.DEFAULT_MINPRESENT_FRACTION ).withLongOpt( "missingcut" ).create( 'm' );
         addOption( minPresentFraction );
 
         Option lowExpressionCut = OptionBuilder.hasArg().withArgName( "Expression Threshold" ).withDescription(
-                "The tolerance for accepting the expression values, default=" + FilterConfig.DEFAULT_LOWEXPRESSIONCUT )
-                .withLongOpt( "lowcut" ).create( 'l' );
+                "Fraction of expression vectors to reject based on low values, default="
+                        + FilterConfig.DEFAULT_LOWEXPRESSIONCUT ).withLongOpt( "lowcut" ).create( 'l' );
         addOption( lowExpressionCut );
+
+        Option lowVarianceCut = OptionBuilder.hasArg().withArgName( "Variance Threshold" ).withDescription(
+                "Fraction of expression vectors to reject based on low variance (or coefficient of variation), default="
+                        + FilterConfig.DEFAULT_LOWVARIANCECUT ).withLongOpt( "lowvarcut" ).create( "lv" );
+        addOption( lowVarianceCut );
 
         Option absoluteValue = OptionBuilder.withDescription( "If using absolute value in expression file" )
                 .withLongOpt( "abs" ).create( 'a' );
@@ -275,7 +280,9 @@ public class LinkAnalysisCli extends AbstractGeneExpressionExperimentManipulatin
         if ( hasOption( 'l' ) ) {
             filterConfig.setLowExpressionCut( Double.parseDouble( getOptionValue( 'l' ) ) );
         }
-
+        if ( hasOption( "lv" ) ) {
+            filterConfig.setLowVarianceCut( Double.parseDouble( getOptionValue( "lv" ) ) );
+        }
         if ( hasOption( 'a' ) ) {
             this.linkAnalysisConfig.setAbsoluteValue( true );
         }
