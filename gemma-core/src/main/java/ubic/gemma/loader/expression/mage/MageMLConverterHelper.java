@@ -58,7 +58,6 @@ import org.biomage.BioAssay.MeasuredBioAssay;
 import org.biomage.BioAssay.PhysicalBioAssay;
 import org.biomage.BioAssayData.BioAssayData;
 import org.biomage.BioAssayData.BioAssayDimension;
-import org.biomage.BioAssayData.BioAssayMap;
 import org.biomage.BioAssayData.BioDataCube;
 import org.biomage.BioAssayData.BioDataTuples;
 import org.biomage.BioAssayData.BioDataValues;
@@ -135,6 +134,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
+import ubic.gemma.ontology.MgedOntologyService;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.ReflectionUtil;
 
@@ -201,10 +201,7 @@ public class MageMLConverterHelper {
      */
     private static final String MGED_DATABASE_IDENTIFIER = "MGED Ontology";
 
-    /**
-     * FIXME this should be defined elsewhere.
-     */
-    private static final String MGED_ONTOLOGY_URL = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl";
+    private static final String MGED_ONTOLOGY_URL = MgedOntologyService.MGED_ONTO_BASE_URL;
 
     private static final String[] DATE_FORMATS = new String[] { "yyyy-MM-dd HH:mm:ss" };
 
@@ -1207,6 +1204,7 @@ public class MageMLConverterHelper {
      * @param mageObj
      * @param gemmaObj
      * @param getter
+     * @deprecated at least temporarily
      */
     public void convertDerivedBioAssayAssociations( DerivedBioAssay mageObj,
             ubic.gemma.model.expression.bioAssay.BioAssay gemmaObj, Method getter ) {
@@ -1388,7 +1386,7 @@ public class MageMLConverterHelper {
         else if ( associationName.equals( "FactorValues" ) ) {
             // Note that these should be the same factorvalues as referred to by the bioassays.
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, false );
-            for (FactorValue factorValue : gemmaObj.getFactorValues() ) {
+            for ( FactorValue factorValue : gemmaObj.getFactorValues() ) {
                 factorValue.setExperimentalFactor( gemmaObj );
             }
         } else
