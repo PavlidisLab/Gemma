@@ -77,7 +77,7 @@ public class ExpressionExperimentFilter {
             builder.maskMissingValues( filteredMatrix, null );
             ExpressionDataBooleanMatrix missingValues = builder.getMissingValueData( null );
             filteredMatrix = minPresentFilter( filteredMatrix, missingValues );
-            if ( config.isLowVarianceCutIsSet() ) filteredMatrix = lowVarianceFilter( eeDoubleMatrix );
+            if ( config.isLowVarianceCutIsSet() ) filteredMatrix = lowVarianceFilter( filteredMatrix );
         }
 
         if ( !twoColor ) {
