@@ -179,8 +179,8 @@ public class GeoValues {
      * @param quantitationTypeIndex The column number for the quantitation type, needed because the names of the
      *        quantitation types don't always match across samples (but hopefully the columns do). Even though the first
      *        column contains the design element name (ID_REF), the first quantitation type should be numbered 0. This
-     *        is almost always a good way to match values across samples, there is a single (pathological?) case where
-     *        the order isn't the same for two samples.
+     *        is almost always a good way to match values across samples, there ARE cases where the order isn't the same
+     *        for two samples in the same series.
      * @param quantitationTypeIndex Identifies the quantitation type.
      * @param designElement
      * @param value The data point to be stored.
@@ -219,7 +219,6 @@ public class GeoValues {
 
         Map<Object, Map<String, List<Object>>> platformMap = data.get( platform );
         if ( !platformMap.containsKey( quantitationTypeIndex ) ) {
-
             platformMap.put( quantitationTypeIndex, new HashMap<String, List<Object>>() );
         }
 
@@ -236,20 +235,63 @@ public class GeoValues {
         }
     }
 
-    private Map<String, Integer> quantitationTypeNameMap = new HashMap<String, Integer>();
+    private Map<GeoPlatform, Map<String, Integer>> quantitationTypeNameMap = new HashMap<GeoPlatform, Map<String, Integer>>();
+    private Map<GeoPlatform, Map<Integer, Collection<String>>> quantitationTypeIndexMap = new HashMap<GeoPlatform, Map<Integer, Collection<String>>>();
 
-    public void addQuantitationType( String columnName, Integer index ) {
-        if ( columnName != null ) {
-            if ( quantitationTypeNameMap.containsKey( columnName )
-                    && getQuantitationTypeIndex( columnName ).intValue() != index.intValue() ) {
-                throw new IllegalArgumentException( "You just tried to reassign the column for a quantitation type" );
-            }
-            quantitationTypeNameMap.put( columnName, index );
+    /**
+     * @param columnName
+     * @param index - the actual index of the data in the final data structure, not necessarily the column where the
+     *        data are found in the data file (as that can vary from sample to sample).
+     */
+    public void addQuantitationType( GeoPlatform platform, String columnName, Integer index ) {
+        if ( columnName == null ) throw new IllegalArgumentException( "Column name cannot be null" );
+
+        if ( !quantitationTypeNameMap.containsKey( platform ) ) {
+            quantitationTypeNameMap.put( platform, new HashMap<String, Integer>() );
+            quantitationTypeIndexMap.put( platform, new HashMap<Integer, Collection<String>>() );
         }
+
+        Map<String, Integer> qtNameMapForPlatform = quantitationTypeNameMap.get( platform );
+        Map<Integer, Collection<String>> qtIndexMapForPlatform = quantitationTypeIndexMap.get( platform );
+
+        if ( qtNameMapForPlatform.containsKey( columnName )
+                && qtNameMapForPlatform.get( columnName ).intValue() != index.intValue() ) {
+            throw new IllegalArgumentException( "You just tried to reassign the column for a quantitation type" );
+        } else {
+
+        }
+
+        qtNameMapForPlatform.put( columnName, index );
+        if ( !qtIndexMapForPlatform.containsKey( index ) ) {
+            qtIndexMapForPlatform.put( index, new HashSet<String>() );
+            qtIndexMapForPlatform.get( index ).add( columnName );
+            log.info( "Added quantitation type " + columnName + " at index " + index + " for platform " + platform );
+        }
+
+        // did we get a new column name for the same index?
+        if ( !qtIndexMapForPlatform.get( index ).contains( columnName ) ) {
+            /*
+             * This is often a bad thing -- we have to live with it. It means we already have a QT for this column, but
+             * now the name has changed. Sometimes it's just a name change - some people put the sample name as a suffix
+             * in the quantitation type, for example. In other cases, it means the data for one quantitation type will
+             * effectively be used for another; validation will fail in this case because the number of values won't
+             * match for all the vectors.
+             */
+            log.warn( "Column #" + index + " has an additional name: " + columnName + ", it already has names: "
+                    + StringUtils.join( qtIndexMapForPlatform.get( index ), " " ) );
+
+            qtIndexMapForPlatform.get( index ).add( columnName ); // add it anyway.
+
+        }
+
     }
 
-    public Integer getQuantitationTypeIndex( String columnName ) {
-        return this.quantitationTypeNameMap.get( columnName );
+    /**
+     * @param columnName
+     * @return
+     */
+    public Integer getQuantitationTypeIndex( GeoPlatform platform, String columnName ) {
+        return this.quantitationTypeNameMap.get( platform ).get( columnName );
     }
 
     /**
@@ -265,7 +307,7 @@ public class GeoValues {
      * @param designElement
      * @return
      */
-    public List<Object> getValues( GeoPlatform platform, String quantitationType, String designElement ) {
+    public List<Object> getValues( GeoPlatform platform, Integer quantitationType, String designElement ) {
         return data.get( platform ).get( quantitationType ).get( designElement );
     }
 
@@ -338,7 +380,11 @@ public class GeoValues {
     public List<Object> getValues( GeoPlatform platform, Integer quantitationType, String designElement,
             Integer[] indices ) {
         List<Object> result = new ArrayList<Object>();
-        List<Object> rawvals = data.get( platform ).get( quantitationType ).get( designElement );
+        Map<Object, Map<String, List<Object>>> map = data.get( platform );
+        assert map != null;
+        Map<String, List<Object>> map2 = map.get( quantitationType );
+        assert map2 != null : "No data for qt " + quantitationType + " on " + platform;
+        List<Object> rawvals = map2.get( designElement );
 
         // this can happen if the data doesn't contain that designElement.
         if ( rawvals == null ) return null;
@@ -387,7 +433,9 @@ public class GeoValues {
             Object[] ar = sampleDimensions.get( platform ).keySet().toArray();
             Arrays.sort( ar );
             for ( Object qType : ar ) {
-                buf.append( "---------------- QuantitationType #" + qType + " ------------------\n" );
+                String qTName = StringUtils.join( quantitationTypeIndexMap.get( platform ).get( qType ), "/" );
+                buf.append( "---------------- Platform " + platform + " QuantitationType #" + qType + " (" + qTName
+                        + ") ------------------\n" );
                 buf.append( "DeEl" );
 
                 for ( GeoSample sam : sampleDimensions.get( platform ).get( qType ) ) {
@@ -438,6 +486,11 @@ public class GeoValues {
                 int numSamples = sampleDimensions.get( platform ).get( qType ).size();
 
                 if ( skippableQuantitationTypes.contains( qType ) ) continue;
+                Collection<String> qtNames = quantitationTypeIndexMap.get( platform ).get( qType );
+
+                // if ( qtNames.size() > 1 ) {
+                // log.warn( "There are " + qtNames.size() + " names for this data column" );
+                //                }
 
                 Map<String, List<Object>> q = d.get( qType );
                 boolean warned = false;
@@ -447,7 +500,7 @@ public class GeoValues {
                         int paddingAmount = numSamples - vals.size();
                         if ( !warned )
                             log.warn( "Padding some vectors with " + paddingAmount + " values for quantitation type "
-                                    + qType );
+                                    + qType + "(" + StringUtils.join( qtNames, "/" ) + ")" );
                         warned = true;
                         for ( int i = 0; i < paddingAmount; i++ ) {
                             vals.add( null );
@@ -455,10 +508,26 @@ public class GeoValues {
                     } else if ( vals.size() > numSamples ) {
                         log.error( "Samples so far: "
                                 + StringUtils.join( sampleDimensions.get( platform ).get( qType ), ',' ) );
-
                         throw new IllegalStateException( "Validation failed at platform=" + platform
                                 + " designelement=" + designElement + " qType=" + qType + " expected " + numSamples
-                                + " values, got " + vals.size() );
+                                + " values, got " + vals.size() + "; name(s) for qType are "
+                                + StringUtils.join( qtNames, "," ) );
+                        // pad all the other vectors that are too short.
+                        // int paddingAmount = vals.size() - numSamples;
+                        // if ( !warned )
+                        // log.warn( "Vector for designelement=" + designElement + " on platform=" + platform
+                        // + " is long; Padding other vectors with " + paddingAmount
+                        // + " values for quantitation type " + qType + " (" + StringUtils.join( qtNames, "/" )
+                        // + ")" );
+                        // warned = true;
+                        // for ( String de : q.keySet() ) {
+                        // List<Object> v = q.get( de );
+                        // if ( v.size() < vals.size() ) {
+                        // for ( int i = 0; i < paddingAmount; i++ ) {
+                        // vals.add( null );
+                        // }
+                        // }
+                        // }
                     }
                 }
                 if ( log.isDebugEnabled() )

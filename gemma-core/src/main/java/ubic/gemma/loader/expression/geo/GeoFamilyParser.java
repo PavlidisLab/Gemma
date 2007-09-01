@@ -164,14 +164,14 @@ public class GeoFamilyParser implements Parser {
 
         final ExecutorService executor = Executors.newSingleThreadExecutor();
 
-        FutureTask<Boolean> future = new FutureTask<Boolean>( new Callable<Boolean>() {
+        FutureTask<Exception> future = new FutureTask<Exception>( new Callable<Exception>() {
             @SuppressWarnings("synthetic-access")
-            public Boolean call() throws Exception {
+            public Exception call() throws Exception {
                 try {
                     return doParse( dis );
                 } catch ( Exception e ) {
                     log.error( e, e );
-                    return Boolean.FALSE;
+                    return e;
                 }
 
             }
@@ -191,9 +191,10 @@ public class GeoFamilyParser implements Parser {
         }
 
         try {
-            Boolean ok = future.get();
-            if ( !ok ) {
-                throw new RuntimeException( "Something bad happened during parsing." );
+            Exception e = future.get();
+            if ( e != null ) {
+                log.error( e.getMessage() );
+                throw new RuntimeException( e.getCause() );
             }
         } catch ( ExecutionException e ) {
             throw new RuntimeException( "Parse failed", e.getCause() );
@@ -257,10 +258,10 @@ public class GeoFamilyParser implements Parser {
     }
 
     /**
-     * Check to make sure data has been added for all the design elements. This is necessary where the data for some
-     * design elements is omitted. This can happen if there is some variability between the samples in terms of what
-     * design elements they have. Important: This has to be called IMMEDIATELY after the data for the sample is read in,
-     * so the values get added in the right place.
+     * Check to make sure data has been added for all the design elements, and all quantitation types. This is necessary
+     * where the data for some design elements is omitted. This can happen if there is some variability between the
+     * samples in terms of what design elements they have. Important: This has to be called IMMEDIATELY after the data
+     * for the sample is read in, so the values get added in the right place.
      * 
      * @param currentSample
      */
@@ -297,6 +298,7 @@ public class GeoFamilyParser implements Parser {
             log.debug( "Added data missing for " + countMissing + " probes for sample=" + currentSample + "  on "
                     + samplePlatform + "; last probe with missing data was " + lastMissingValue );
         }
+
     }
 
     /**
@@ -436,7 +438,7 @@ public class GeoFamilyParser implements Parser {
      * @param dis
      * @throws IOException
      */
-    private Boolean doParse( BufferedReader dis ) {
+    private Exception doParse( BufferedReader dis ) {
         haveReadPlatformHeader = false;
         haveReadSampleDataHeader = false;
         String line = "";
@@ -467,7 +469,7 @@ public class GeoFamilyParser implements Parser {
         log.debug( this.seriesDataLines + " series data lines" );
         log.debug( this.dataSetDataLines + " data set data lines" );
         log.debug( this.sampleDataLines + " sample data lines" );
-        return Boolean.TRUE;
+        return null;
     }
 
     private void checkDataCompleteness() {
@@ -1037,10 +1039,12 @@ public class GeoFamilyParser implements Parser {
      * ID_REF, according to the kind folks at NCBI. If this changes, this code will BREAK.
      * <p>
      * Similarly, the column names between the different samples are not necessarily the same, but we trust that they
-     * all refer to the same quantitation types in the same order. That is, the nth column for this sample 'means' the
-     * same thing as the nth column for another sample in this series. If that isn't true, this will be BROKEN.
+     * all refer to the same quantitation types in the same order, for a given platform. That is, the nth column for
+     * this sample 'means' the same thing as the nth column for another sample in this series (on the same platform). If
+     * that isn't true, this will be BROKEN. However, we do try to sort it out if we can.
      * 
      * @param line
+     * @see initializeQuantitationTypes
      */
     private void parseSampleDataLine( String line ) {
 
@@ -1048,6 +1052,7 @@ public class GeoFamilyParser implements Parser {
 
         if ( !haveReadSampleDataHeader ) {
             haveReadSampleDataHeader = true;
+            previousNumTokens = null;
             initializeQuantitationTypes();
             return;
         }
@@ -1072,30 +1077,35 @@ public class GeoFamilyParser implements Parser {
 
         previousNumTokens = tokens.length;
 
-        GeoSample sample = results.getSampleMap().get( currentSampleAccession );
-
         if ( results.getSeriesMap().get( currentSeriesAccession ) == null ) {
             return; // this happens if we are parsing a GPL file.
         }
 
+        GeoSample sample = results.getSampleMap().get( currentSampleAccession );
+        GeoPlatform platformForSample = sample.getPlatforms().iterator().next(); // slow
+
         GeoValues values = results.getSeriesMap().get( currentSeriesAccession ).getValues();
 
         String designElement = tokens[0]; // ID_REF.
+        Map<Integer, Integer> map = quantitationTypeTargetColumn.get( platformForSample );
+
         for ( int i = 1; i < tokens.length; i++ ) {
             String value = tokens[i];
-            int quantitationTypeIndex = i - 1;
+            int qtIndex = i - 1;
 
-            if ( !isWantedQuantitationType( quantitationTypeIndex ) ) continue;
+            /*
+             * This map tells us which column this quantitation type is SUPPOSED to go in.
+             */
 
-            if ( quantitationTypeTargetColumn.containsKey( quantitationTypeIndex ) ) {
-                quantitationTypeIndex = quantitationTypeTargetColumn.get( quantitationTypeIndex );
+            if ( map.containsKey( qtIndex ) ) qtIndex = map.get( qtIndex );
+            if ( !isWantedQuantitationType( qtIndex ) ) {
+                continue;
             }
 
             if ( log.isTraceEnabled() ) {
-                log.trace( "Adding: " + value + " to  quantitationType " + ( quantitationTypeIndex ) + " for "
-                        + designElement );
+                log.trace( "Adding: " + value + " to  quantitationType " + ( qtIndex ) + " for " + designElement );
             }
-            values.addValue( sample, quantitationTypeIndex, designElement, value );
+            values.addValue( sample, qtIndex, designElement, value );
             processedDesignElements.add( designElement );
         }
 
@@ -1107,48 +1117,162 @@ public class GeoFamilyParser implements Parser {
     }
 
     private Collection<Integer> wantedQuantitationTypes = new HashSet<Integer>();
-    Map<String, Integer> quantitationTypeKey = new HashMap<String, Integer>();
-    Map<Integer, Integer> quantitationTypeTargetColumn = new HashMap<Integer, Integer>();
+    Map<GeoPlatform, Map<String, Integer>> quantitationTypeKey = new HashMap<GeoPlatform, Map<String, Integer>>();
+    Map<GeoPlatform, Map<Integer, Integer>> quantitationTypeTargetColumn = new HashMap<GeoPlatform, Map<Integer, Integer>>();
     private boolean aggressiveQuantitationTypeRemoval;
 
     /**
+     * This is run once for each sample, to try to figure out where the data are for each quantitation type (because it
+     * can vary from sample to sample). Each platform in the series gets its own reference.
+     * <p>
      * Note that the first column is the "ID_REF"; the first 'real' quantitation type gets column number 0. This
      * initialization is run for each sample.
      */
     private void initializeQuantitationTypes() {
         wantedQuantitationTypes.clear();
         quantitationTypeTargetColumn.clear();
-        GeoValues values = results.getSeriesMap().get( currentSeriesAccession ).getValues();
-        int i = 0;
+        GeoSeries geoSeries = results.getSeriesMap().get( currentSeriesAccession );
+        if ( geoSeries == null ) {
+            throw new IllegalStateException( "No series is being parsed" );
+        }
+        GeoValues values = geoSeries.getValues();
+        Map<GeoPlatform, Integer> currentIndex = new HashMap<GeoPlatform, Integer>();
+        Collection<String> seenColumnNames = new HashSet<String>();
+
         for ( String columnName : currentSample().getColumnNames() ) {
             boolean isWanted = values.isWantedQuantitationType( columnName, this.aggressiveQuantitationTypeRemoval );
 
-            int quantitationTypeIndex = i - 1;
+            /*
+             * In some data sets, the quantitation types are not in the same columns in different samples. ARRRGH!
+             */
+            GeoPlatform platformForSample = this.currentSample().getPlatforms().iterator().next();
+            if ( !currentIndex.containsKey( platformForSample ) ) {
+                currentIndex.put( platformForSample, 0 );
+            }
+
+            int actualColumnNumber = currentIndex.get( platformForSample ) - 1;
+
+            /*
+             * In some datasets (e.g. GSE432) the column names are not distinct. ARRRGH. We try to salvage the situation
+             * by adding a suffix to the name.
+             */
+            if ( seenColumnNames.contains( columnName ) ) {
+                log.warn( columnName + " appears more than once for sample " + currentSample()
+                        + ", will mangle. This usually indicates a problem with the GEO file format!" );
+                /*
+                 * This method of mangling the name means that the repeated name had better show up in the same column
+                 * each time. If it doesn't, then things are REALLY confused.
+                 */
+                columnName = columnName + "___" + actualColumnNumber;
+            }
+
+            initMaps( platformForSample );
+
+            /*
+             * Stores the column index for the column name.
+             */
+            Map<String, Integer> qtMapForPlatform = quantitationTypeKey.get( platformForSample );
+
+            /*
+             * Once we've seen a column, we check to see if it is in the same place as before.
+             */
+            Integer desiredColumnNumber = actualColumnNumber;
+            if ( qtMapForPlatform.containsKey( columnName ) ) {
+                desiredColumnNumber = qtMapForPlatform.get( columnName );
+                if ( desiredColumnNumber != actualColumnNumber ) {
+                    log.warn( columnName + " is not in previous column " + desiredColumnNumber + ": For sample "
+                            + currentSample() + ", it is in column " + actualColumnNumber );
+
+                    /*
+                     * This is used to put the data in the right place later. We know the actual column is where it is
+                     * NOW, for this sample, but in our data structure we put it where we EXPECT it to be (where it was
+                     * the first time we saw it). This is our attempt to fix problems with columns moving around.
+                     */
+                    quantitationTypeTargetColumn.get( platformForSample ).put( actualColumnNumber, desiredColumnNumber );
+                }
+                values.addQuantitationType( platformForSample, columnName, desiredColumnNumber );
+            } else {
+                /*
+                 * First time we see this column name. Normally we assume it just goes at the column index we're at.
+                 * However, make sure that there isn't another column name in this sample that should be at the same
+                 * index. We have to 'look ahead'. This isn't the usual case, but it isn't rare either.
+                 */
+                boolean clobbers = willClobberOtherQuantitationType( columnName, actualColumnNumber, qtMapForPlatform );
+
+                if ( clobbers ) {
+                    // we need to put it at the end - at the highest index we know about.
+                    Collection<Integer> allIndexes = qtMapForPlatform.values();
+                    int max = -1;
+                    for ( Integer v : allIndexes ) {
+                        if ( v > max ) {
+                            max = v;
+                        }
+                    }
+                    desiredColumnNumber = max + 1;
+                    quantitationTypeTargetColumn.get( platformForSample ).put( actualColumnNumber, desiredColumnNumber );
+                    log.warn( "Current column name " + columnName + " reassigned to index " + desiredColumnNumber
+                            + " to avoid clobbering." );
+                }
+                log.debug( columnName + " ---> " + desiredColumnNumber );
+                qtMapForPlatform.put( columnName, desiredColumnNumber );
+                values.addQuantitationType( platformForSample, columnName, desiredColumnNumber );
+            }
+
+            /*
+             * Some quantitation types are skipped to save space.
+             */
             if ( !isWanted ) {
                 if ( log.isDebugEnabled() )
                     log.debug( "Data column " + columnName + " will be skipped for " + currentSample()
-                            + " - it is an 'unwanted' quantitation type (column number " + i + ", "
-                            + quantitationTypeIndex + "th quantitation type.)" );
+                            + " - it is an 'unwanted' quantitation type (column number "
+                            + currentIndex.get( platformForSample ) + ", " + desiredColumnNumber
+                            + "th quantitation type.)" );
             } else {
-                wantedQuantitationTypes.add( quantitationTypeIndex );
+                wantedQuantitationTypes.add( desiredColumnNumber );
             }
 
-            if ( quantitationTypeKey.containsKey( columnName ) ) {
-                int previousColumnLocation = quantitationTypeKey.get( columnName ).intValue();
-                if ( previousColumnLocation != quantitationTypeIndex ) {
-                    log.warn( columnName + " is not in previous column " + previousColumnLocation + " for sample "
-                            + currentSample() + ", it is in column " + quantitationTypeIndex );
-                    quantitationTypeTargetColumn.put( quantitationTypeIndex, previousColumnLocation );
-                }
-                values.addQuantitationType( columnName, previousColumnLocation );
-            } else {
-                quantitationTypeKey.put( columnName, quantitationTypeIndex );
-                values.addQuantitationType( columnName, quantitationTypeIndex );
-            }
+            seenColumnNames.add( columnName );
 
-            i++;
+            // update the current index, note that it is platform-specific.
+            currentIndex.put( platformForSample, currentIndex.get( platformForSample ) + 1 );
         }
 
+    }
+
+    /**
+     * @param columnName
+     * @param actualColumnNumber
+     * @param qtMapForPlatform
+     * @return
+     */
+    private boolean willClobberOtherQuantitationType( String columnName, int actualColumnNumber,
+            Map<String, Integer> qtMapForPlatform ) {
+        boolean clobbers = false;
+        for ( String name : currentSample().getColumnNames() ) {
+            if ( name.equals( columnName ) ) continue;
+            if ( !qtMapForPlatform.containsKey( name ) ) continue;
+            Integer checkColInd = qtMapForPlatform.get( name );
+            if ( checkColInd == actualColumnNumber ) {
+                log.warn( "Current column name is new, " + columnName
+                        + " would be going in the index previously occupied by " + name );
+                clobbers = true;
+                break;
+            }
+        }
+        return clobbers;
+    }
+
+    /**
+     * @param platformForSample
+     */
+    private void initMaps( GeoPlatform platformForSample ) {
+        if ( !quantitationTypeKey.containsKey( platformForSample ) ) {
+            quantitationTypeKey.put( platformForSample, new HashMap<String, Integer>() );
+
+        }
+        if ( !quantitationTypeTargetColumn.containsKey( platformForSample ) ) {
+            quantitationTypeTargetColumn.put( platformForSample, new HashMap<Integer, Integer>() );
+        }
     }
 
     /**

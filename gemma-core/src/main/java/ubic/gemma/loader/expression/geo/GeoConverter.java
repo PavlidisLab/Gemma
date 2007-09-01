@@ -277,6 +277,7 @@ public class GeoConverter implements Converter {
                 } catch ( Exception e ) {
                     // conversion didn't work, fall back.
                     Characteristic gemmaChar = Characteristic.Factory.newInstance();
+                    gemmaChar.setValue( characteristic );
                     gemmaChar.setDescription( defaultDescription );
                     bioMaterial.getCharacteristics().add( gemmaChar );
                 }
@@ -284,6 +285,7 @@ public class GeoConverter implements Converter {
             } else {
                 // no colon, just use raw (same as fallback above)
                 Characteristic gemmaChar = Characteristic.Factory.newInstance();
+                gemmaChar.setValue( characteristic );
                 gemmaChar.setDescription( defaultDescription );
                 bioMaterial.getCharacteristics().add( gemmaChar );
             }
@@ -326,6 +328,10 @@ public class GeoConverter implements Converter {
         return bioMaterial;
     }
 
+    /**
+     * @param characteristic
+     * @return
+     */
     private String trimString( String characteristic ) {
         if ( characteristic.length() > 255 ) {
             log.warn( "** Characteristic too long: " + characteristic + " - will truncate - ****" );
@@ -604,7 +610,7 @@ public class GeoConverter implements Converter {
 
             int columnAccordingToSample = quantitationTypes.indexOf( quantitationType );
 
-            int quantitationTypeIndex = values.getQuantitationTypeIndex( quantitationType );
+            int quantitationTypeIndex = values.getQuantitationTypeIndex( geoPlatform, quantitationType );
             log.info( "Processing " + quantitationType + " (column=" + quantitationTypeIndex
                     + " - according to sample, it's " + columnAccordingToSample + ")" );
 

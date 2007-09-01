@@ -150,31 +150,6 @@ public class LinkAnalysisService {
         la.setProbeToGeneMap( probeToGeneMap );
         return p2v;
     }
-//
-//    /**
-//     * @param ee
-//     * @return true if the data set has the missing values computed correctly, or if computing missing values isn't
-//     *         necessary (e.g., Affymetrix), or if computing missing values isn't possible (no intensity data present)
-//     */
-//    @SuppressWarnings("unchecked")
-    // private boolean hasMissingValuesComputedIfPossible( ExpressionExperiment ee ) {
-//
-//        // First make sure the data set is in a state that makes it ready to be processed: the rank analyses and the
-//        // missing data analyses should have been run, if possible.
-//        Collection<ArrayDesign> arrayDesignsUsed = eeService.getArrayDesignsUsed( ee );
-//        for ( ArrayDesign design : arrayDesignsUsed ) {
-//            TechnologyType tt = design.getTechnologyType();
-//            if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
-//                // see if we have missing values computed.
-//                Collection<QuantitationType> qts = ee.getQuantitationTypes();
-//                for ( QuantitationType qt : qts ) {
-//                    if ( qt.getType().equals( StandardQuantitationType.PRESENTABSENT ) ) return true;
-//                }
-//            }
-//        }
-//
-//        return true;
-//    }
 
     /**
      * Persist the links to the database. This takes care of saving a 'flipped' version of the links.

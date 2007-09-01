@@ -45,12 +45,6 @@ public class GeoFamilyParserTest extends TestCase {
         parser = new GeoFamilyParser();
     }
 
-    public void testParseShortFamily() throws Exception {
-        is = this.getClass().getResourceAsStream( "/data/loader/expression/geo/soft_ex_affy.txt" );
-        parser.parse( is );
-        assertEquals( 3, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().size() );
-    }
-
     public void testParseBigA() throws Exception {
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/fullSizeTests/GSE1623_family.soft.txt.gz" ) );
@@ -89,6 +83,9 @@ public class GeoFamilyParserTest extends TestCase {
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/gse432Short/GSE432_family.soft.gz" ) );
         parser.parse( is );
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE432" );
+        GeoValues values = series.getValues();
+        System.err.print( values );
     }
 
     /**
@@ -103,7 +100,7 @@ public class GeoFamilyParserTest extends TestCase {
         GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE59" );
         GeoValues values = series.getValues();
         System.err.print( values );
-        
+
     }
 
     // /**
