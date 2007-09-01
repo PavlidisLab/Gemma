@@ -172,7 +172,7 @@ public class GoldenPath {
         }
 
         String databaseHost = ConfigUtils.getString( "gemma.goldenpath.db.host" );
-        int databasePort = Integer.valueOf( ConfigUtils.getString( "gemma.goldpenpath.db.port" ) );
+        int databasePort = Integer.valueOf( ConfigUtils.getString( "gemma.goldenpath.db.port" ) );
         String databaseUser = ConfigUtils.getString( "gemma.goldenpath.db.user" );
         String databasePassword = ConfigUtils.getString( "gemma.goldenpath.db.password" );
         
