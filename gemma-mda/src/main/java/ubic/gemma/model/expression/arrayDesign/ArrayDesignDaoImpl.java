@@ -581,9 +581,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
         // get the expression experiment counts
         Map eeCounts = this.getExpressionExperimentCountMap();
-        // get the composite sequence counts
-        // Map csCounts = this.getCompositeSequenceCountMap();
-        Collection<ArrayDesignValueObject> vo = new ArrayList<ArrayDesignValueObject>();
+       
+        Collection<ArrayDesignValueObject> result = new ArrayList<ArrayDesignValueObject>();
 
         final String queryString = "select ad.id as id, " + " ad.name as name, " + " ad.shortName as shortName, "
                 + " ad.technologyType from ArrayDesignImpl as ad " + " group by ad order by ad.name";
@@ -636,13 +635,13 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
                     v.setTaxon( arrayToTaxon.get( v.getId() ) );
                     v.setExpressionExperimentCount( ( Long ) eeCounts.get( v.getId() ) );
-                    vo.add( v );
+                    result.add( v );
                 }
             }
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
-        return vo;
+        return result;
     }
 
     /*

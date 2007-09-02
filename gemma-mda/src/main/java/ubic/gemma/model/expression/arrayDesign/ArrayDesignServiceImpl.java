@@ -75,7 +75,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
             /*
              * Check if the subsuming or merged array (if any) was updated more recently. To do this: 1) load the AA; 2)
-             * check for merged; check for subsumed; check events for thos.
+             * check for merged; check for subsumed; check events for those.
              */
             ArrayDesign arrayDesign = this.load( arrayDesignId );
             if ( arrayDesign.getSubsumingArrayDesign() != null ) {
