@@ -34,6 +34,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -284,7 +285,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      * @param errors
      * @return ModelAndView
      */
-    @SuppressWarnings("unused")
+    @SuppressWarnings({ "unused", "unchecked" })
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
 
         if ( request.getParameter( "id" ) == null ) {
@@ -335,11 +336,16 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         // load coexpression link count from cache
         Collection<Long> eeId = new ArrayList<Long>();
         eeId.add( id );
-        Collection eeVo = expressionExperimentReportService.retrieveSummaryObjects( eeId );
-        if ( eeVo != null && eeVo.size() > 0 ) {
-            ExpressionExperimentValueObject vo = ( ExpressionExperimentValueObject ) eeVo.iterator().next();
+        
+        AuditEvent lastArrayDesignUpdate = expressionExperimentService.getLastArrayDesignUpdate( expressionExperiment );
+        mav.addObject( "lastArrayDesignUpdate", lastArrayDesignUpdate );
+        
+        Collection<ExpressionExperimentValueObject> eeVos = expressionExperimentReportService.retrieveSummaryObjects( eeId );
+        if ( eeVos != null && eeVos.size() > 0 ) {
+            ExpressionExperimentValueObject vo =  eeVos.iterator().next();
             String eeLinks = vo.getCoexpressionLinkCount().toString() + " (as of " + vo.getDateCached() + ")";
             mav.addObject( "eeCoexpressionLinks", eeLinks );
+           
         }
 
         return mav;

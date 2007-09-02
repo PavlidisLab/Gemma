@@ -40,7 +40,7 @@ Ext.onReady(function() {
 			{header: "Date",  width: 80, dataIndex:"date"}, 
 			{header: "Action", width: 50, dataIndex:"actionName" }, 
 			{header: "Performer", width: 100, dataIndex:"performer"}, 
-			{header: "Event", width: 100, dataIndex:"eventTypeName"}, 
+			{header: "Event", width: 120, dataIndex:"eventTypeName"}, 
 			{header: "Comment", width: 300, dataIndex:"note"}]);
 	
 	cm.defaultSortable = false;

@@ -60,6 +60,9 @@
 	<display:column property="dateLinkAnalysisNoTime" sortable="true"
 		defaultorder="descending" title="Link Analyzed"
 		comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />
+	<display:column property="dateLastArrayDesignUpdatedNoTime"
+		sortable="true" defaultorder="descending" title="Array Des. Mod."
+		comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />
 	<authz:authorize ifAnyGranted="admin">
 		<display:column property="refreshReport" title="Refresh" />
 	</authz:authorize>

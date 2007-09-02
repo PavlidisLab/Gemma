@@ -30,7 +30,7 @@
 
 <h2>
 	Details for
-	<jsp:getProperty name="arrayDesign" property="name" />
+	<jsp:getProperty name="arrayDesign" property="name" /> (<jsp:getProperty name="arrayDesign" property="shortName" />)
 </h2>
 
 

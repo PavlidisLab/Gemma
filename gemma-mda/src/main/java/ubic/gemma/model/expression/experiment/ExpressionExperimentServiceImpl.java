@@ -349,6 +349,7 @@ public class ExpressionExperimentServiceImpl extends
      * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastLinkAnalysis(java.util.Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Map handleGetLastLinkAnalysis( Collection ids ) throws Exception {
         Map<Long, Collection<AuditEvent>> eventMap = this.getExpressionExperimentDao().getAuditEvents( ids );
@@ -382,6 +383,7 @@ public class ExpressionExperimentServiceImpl extends
      * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastMissingValueAnalysis(java.util.Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Map handleGetLastMissingValueAnalysis( Collection ids ) throws Exception {
         Map<Long, Collection<AuditEvent>> eventMap = this.getExpressionExperimentDao().getAuditEvents( ids );
@@ -415,6 +417,7 @@ public class ExpressionExperimentServiceImpl extends
      * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastRankComputation(java.util.Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Map handleGetLastRankComputation( Collection ids ) throws Exception {
         Map<Long, Collection<AuditEvent>> eventMap = this.getExpressionExperimentDao().getAuditEvents( ids );
@@ -441,6 +444,27 @@ public class ExpressionExperimentServiceImpl extends
             }
         }
         return lastEventMap;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    protected AuditEvent handleGetLastArrayDesignUpdate( ExpressionExperiment ee ) throws Exception {
+        Collection<ArrayDesign> ads = this.getArrayDesignsUsed( ee );
+        Collection<Long> adids = new HashSet<Long>();
+        for ( ArrayDesign arrayDesign : ads ) {
+            adids.add( arrayDesign.getId() );
+        }
+        AuditEvent mostRecent = null;
+        Map<ArrayDesign, Collection<AuditEvent>> events = this.getArrayDesignDao().getAuditEvents( adids );
+        for ( Collection<AuditEvent> auditEvents : events.values() ) {
+            for ( AuditEvent auditEvent : auditEvents ) {
+                if ( mostRecent == null || auditEvent.getDate().after( mostRecent.getDate() ) ) {
+                    mostRecent = auditEvent;
+                }
+            }
+        }
+
+        return mostRecent;
     }
 
     /*

@@ -147,6 +147,9 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         generateSummaryObjects( ids );
     }
 
+    /**
+     * @param vos
+     */
     private void getStats( Collection vos ) {
         String timestamp = DateFormatUtils.format( new Date( System.currentTimeMillis() ), "yyyy.MM.dd HH:mm" );
         for ( Object object : vos ) {
@@ -279,7 +282,12 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                     eeVo.setRankComputationEventType( event.getEventType() );
                 }
             }
+
+            AuditEvent event = expressionExperimentService.getLastArrayDesignUpdate( expressionExperimentService
+                    .load( id ) );
+            eeVo.setDateArrayDesignLastUpdated( event.getDate() );
         }
+
     }
 
     /**

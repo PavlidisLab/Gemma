@@ -278,37 +278,7 @@ if ( expressionExperiment.getName() != null ) {
 	}
 	%>
 	
-	<%--
-	<authz:authorize ifAnyGranted="admin">
-	<%
-	if ( expressionExperiment.getSubsets().size() > 0 ) {
-	%>
-	<div style="margin:0px 0px 0px 20px;><script type="text/javascript" src="<c:url value="/scripts/aa.js"/>"></script>
-	<h3>
-		<fmt:message key="expressionExperimentSubsets.title" />&nbsp;<a class="helpLink" href="?"
-	onclick="showHelpTip(event, 'Subsets are much like experimental design factors...'); return false"><img
-		src="<c:url value="/images/help.png"/>" alt="help"> </a>
-	</h3>
-	<aazone tableId="subsetList" zone="subsetTable" />
-	<aa:zone name="subsetTable">
-		<display:table name="expressionExperiment.subsets" class="list" defaultsort="1" 
-			requestURI="/Gemma/expressionExperiment/showExpressionExperiment.html"
-			id="subsetList" pagesize="10" 
-			decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentSubSetWrapper">
-			<display:column defaultorder="ascending"  title="Factor" property="description" sortable="true" maxWords="100" />
-			<display:column title="Value" property="name" sortable="true" maxWords="20"
-				titleKey="expressionExperimentSubsets.name" />
-			<display:column sortable="true" title="Assays" property="bioAssaySize" />
-			<display:setProperty name="basic.empty.showtable" value="false" />
-		</display:table>
-	</aa:zone>
-	</div>
-	<%
-	}
-	%>
-	</authz:authorize>
-	--%>
-
+ 
 <h3>
 	Quantitation Types
 	<a class="helpLink" href="?"
@@ -356,8 +326,14 @@ if ( expressionExperiment.getName() != null ) {
 	<!-- the import of auditTrail.js has to happen here or non-admin users
 	     will see an error because auditableId isn't defined; -->
     <script type="text/javascript" src="<c:url value='/scripts/ajax/auditTrail.js'/>" type="text/javascript"></script>
-	<h3>History</h3>
+    
+   
+    
+  	<h3>History</h3>
 	<div id="auditTrail" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:250px;"></div>
+	 <c:if test="${ lastArrayDesignUpdate != null}">
+				<p>The last time an array design associated with this experiment was updated: ${lastArrayDesignUpdate.date}</p>
+	</c:if>
 	<input type="hidden" name="auditableId" id="auditableId" value="${expressionExperiment.id}" />
 	<input type="hidden" name="auditableClass" id="auditableClass" value="${expressionExperiment.class.name}" />
 </authz:authorize>

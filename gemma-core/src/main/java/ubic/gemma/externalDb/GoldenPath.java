@@ -160,9 +160,12 @@ public class GoldenPath {
     }
 
     private void init() throws SQLException {
+        if ( taxon == null ) throw new IllegalStateException( "Taxon cannot be null" );
         String commonName = taxon.getCommonName();
         if ( commonName.equals( "mouse" ) ) {
-            databaseName = ConfigUtils.getString( "gemma.goldenpath.db.mouse" ); // FIXME get these names from an external source - e.g., the taxon service.
+            databaseName = ConfigUtils.getString( "gemma.goldenpath.db.mouse" ); // FIXME get these names from an
+                                                                                    // external source - e.g., the taxon
+                                                                                    // service.
         } else if ( commonName.equals( "human" ) ) {
             databaseName = ConfigUtils.getString( "gemma.goldenpath.db.human" );
         } else if ( commonName.equals( "rat" ) ) {
@@ -175,7 +178,7 @@ public class GoldenPath {
         int databasePort = Integer.valueOf( ConfigUtils.getString( "gemma.goldenpath.db.port" ) );
         String databaseUser = ConfigUtils.getString( "gemma.goldenpath.db.user" );
         String databasePassword = ConfigUtils.getString( "gemma.goldenpath.db.password" );
-        
+
         searchedDatabase = ExternalDatabase.Factory.newInstance();
         searchedDatabase.setName( databaseName );
         searchedDatabase.setType( DatabaseType.SEQUENCE );

@@ -87,8 +87,27 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         Date dateObject = object.getDateLastUpdated();
         if ( dateObject != null ) {
+            boolean mostRecent = determineIfMostRecent( dateObject, object );
             String fullDate = dateObject.toString();
             String shortDate = StringUtils.left( fullDate, 10 );
+            shortDate = formatIfRecent( mostRecent, shortDate );
+            return "<span title='" + fullDate + "'>" + shortDate + "</span>";
+        } else {
+            return "[None]";
+        }
+    }
+
+    /**
+     * @return String
+     */
+    public String getDateLastArrayDesignUpdatedNoTime() {
+        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
+        Date dateObject = object.getDateArrayDesignLastUpdated();
+        if ( dateObject != null ) {
+            boolean mostRecent = determineIfMostRecent( dateObject, object );
+            String fullDate = dateObject.toString();
+            String shortDate = StringUtils.left( fullDate, 10 );
+            shortDate = formatIfRecent( mostRecent, shortDate );
             return "<span title='" + fullDate + "'>" + shortDate + "</span>";
         } else {
             return "[None]";
@@ -102,9 +121,11 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         Date dateObject = object.getDateMissingValueAnalysis();
         if ( dateObject != null ) {
+            boolean mostRecent = determineIfMostRecent( dateObject, object );
             AuditEventType type = object.getMissingValueAnalysisEventType();
             String fullDate = dateObject.toString();
             String shortDate = StringUtils.left( fullDate, 10 );
+            shortDate = formatIfRecent( mostRecent, shortDate );
             String style = "";
 
             if ( type instanceof FailedMissingValueAnalysisEvent ) {
@@ -119,6 +140,11 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         }
     }
 
+    private String formatIfRecent( boolean mostRecent, String shortDate ) {
+        shortDate = mostRecent ? "<strong>" + shortDate + "</strong>" : shortDate;
+        return shortDate;
+    }
+
     /**
      * @return String
      */
@@ -126,12 +152,14 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         Date dateObject = object.getDateRankComputation();
         if ( dateObject != null ) {
+            boolean mostRecent = determineIfMostRecent( dateObject, object );
             // AuditEventType type = object.getRankComputationEventType();
             // if ( type instanceof FailedRankAnalysisEvent ) {
             // style = "style=\"color=#F33;\"";
             // }
             String fullDate = dateObject.toString();
             String shortDate = StringUtils.left( fullDate, 10 );
+            shortDate = formatIfRecent( mostRecent, shortDate );
             return "<span title='" + fullDate + "'>" + shortDate + "</span>";
         } else {
             return "[None]";
@@ -145,6 +173,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         Date dateObject = object.getDateLinkAnalysis();
         if ( dateObject != null ) {
+            boolean mostRecent = determineIfMostRecent( dateObject, object );
             AuditEventType type = object.getLinkAnalysisEventType();
 
             String style = "";
@@ -157,6 +186,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
 
             String fullDate = dateObject.toString();
             String shortDate = StringUtils.left( fullDate, 10 );
+            shortDate = formatIfRecent( mostRecent, shortDate );
             return "<span " + style + " title='" + fullDate + "'>" + shortDate + "</span>";
         } else {
             return "[None]";
@@ -407,6 +437,26 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         if ( eeVo.isSpecific() ) return "&bull;";
 
         return "";
+    }
+
+    /**
+     * @param dateObject
+     * @param object
+     * @return
+     */
+    private boolean determineIfMostRecent( Date dateObject, ExpressionExperimentValueObject object ) {
+        if ( dateObject == null ) return false;
+        Date linksdate = object.getDateLinkAnalysis();
+        Date mvdate = object.getDateMissingValueAnalysis();
+        Date rankDate = object.getDateRankComputation();
+        Date adDate = object.getDateArrayDesignLastUpdated();
+
+        if ( adDate != null && dateObject.before( adDate ) ) return false;
+        if ( rankDate != null && dateObject.before( rankDate ) ) return false;
+        if ( mvdate != null && dateObject.before( mvdate ) ) return false;
+        if ( linksdate != null && dateObject.before( linksdate ) ) return false;
+
+        return true;
     }
 
 }
