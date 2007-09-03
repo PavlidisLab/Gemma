@@ -36,6 +36,7 @@ public class DifferentialExpressionAnalysis {
     private int EXPERIMENTAL_FACTOR_ONE = 1;
     private int EXPERIMENTAL_FACTOR_TWO = 2;
     private int FACTOR_VALUE_ONE = 1;
+    private int FACTOR_VALUE_TWO = 2;
 
     /**
      * Determines the analysis to execute based on the experimental factors and factor values.
@@ -69,13 +70,13 @@ public class DifferentialExpressionAnalysis {
         else if ( experimentalFactors.size() == EXPERIMENTAL_FACTOR_TWO ) {
             for ( ExperimentalFactor f : experimentalFactors ) {
                 Collection<FactorValue> factorValues = f.getFactorValues();
-                if ( colIsEmpty( factorValues ) || factorValues.size() < 2 ) {
+                if ( colIsEmpty( factorValues ) || factorValues.size() < FACTOR_VALUE_TWO ) {
                     throw new RuntimeException( experimentalFactors.size() + " experimental factor(s) with "
                             + factorValues.size()
                             + " factor value(s).  Cannot execute differential expression analysis." );
                 }
+                // check for block design and execute two way anova (with or without interactions)
             }
-            // check for block design and execute two way anova (with or without interactions)
         }
 
         else {
