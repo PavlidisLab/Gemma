@@ -202,29 +202,64 @@ public class ArrayDesignWrapper extends TableDecorator {
 
         buf.append( "<span class=\"" + arraySummary + "\" style=\"display:none\" onclick=\"return toggleVisibility('"
                 + arraySummary + "')\">" );
-        buf.append( "<img src=\"/Gemma/images/chart_organisation_delete.png\" /></span>" );
+        buf.append( "<img src=\"/Gemma/images/plus.png\" /></span>" );
 
         buf.append( "<a href=\"#\" onclick=\"return toggleVisibility('" + arraySummary + "')\" >Summary</a>" );
 
         buf.append( "<div class=\"" + arraySummary + "\" style=\"display:none\">" );
 
         buf.append( "<table class='datasummary'>" + "<tr>" + "<td colspan=2 align=center>" + "</td></tr>"
-                + "<tr><td>Probes</td><td>" + object.getDesignElementCount() + "</td></tr>" + "<tr><td>" + "Sequences"
-                + "</td><td>" + object.getNumProbeSequences() + "</td></tr>" + "<tr><td>" + "Alignments to:" + "</td>"
-                + "<td>" + object.getNumProbeAlignments() + "</td></tr>" + "<tr><td>" + "To Gene(s)" + "</td><td>"
-                + object.getNumProbesToGenes() + "</td></tr>" +
+                + "<tr><td>Probes</td><td align=\"right\" >"
+                + object.getDesignElementCount()
+                + "</td></tr>"
+                + "<tr><td title=\"Number of probes with sequences\">"
+                + "With seq"
+                + "</td><td>"
+                + object.getNumProbeSequences()
+                + "</td></tr>"
+                + "<tr><td title=\"Number of probes with at least one genome alignment\">"
+                + "With align"
+                + "</td>"
+                + "<td>"
+                + object.getNumProbeAlignments()
+                + "</td></tr>"
+                + "<tr><td title=\"Number of probes mapped to genes (including predicted and anonymous locations)\">"
+                + "Mapped"
+                + "</td><td align=\"right\" >"
+                + object.getNumProbesToGenes()
+                + "</td></tr>"
+                +
 
-                "<tr><td>" + "&nbsp;&nbsp;known" + "</td><td>" + object.getNumProbesToKnownGenes() + "</td></tr>" +
+                "<tr><td  title=\"Number of probes mapping to known genes\">"
+                + "&nbsp;&nbsp;Known"
+                + "</td><td align=\"right\" >"
+                + object.getNumProbesToKnownGenes()
+                + "</td></tr>"
+                +
 
-                "<tr><td>" + "&nbsp;&nbsp;predicted" + "</td><td>" + object.getNumProbesToPredictedGenes()
-                + "</td></tr>" +
+                "<tr><td title=\"Number of probes mapping to predicted genes\">"
+                + "&nbsp;&nbsp;Pred."
+                + "</td><td align=\"right\" >"
+                + object.getNumProbesToPredictedGenes()
+                + "</td></tr>"
+                +
 
-                "<tr><td>" + "&nbsp;&nbsp;unknown" + "</td><td>" + object.getNumProbesToProbeAlignedRegions()
-                + "</td></tr>" +
+                "<tr><td  title=\"Number of probes mapping to non-gene locations in the genome\">"
+                + "&nbsp;&nbsp;Unknown"
+                + "</td><td align=\"right\" >"
+                + object.getNumProbesToProbeAlignedRegions()
+                + "</td></tr>"
+                +
 
-                "<tr><td>" + "Unique genes represented" + "</td><td>" + object.getNumGenes() + "</td></tr>"
-                + "<tr><td colspan=2 align='center' class='small'>" + "(as of " + object.getDateCached() + ")"
-                + "</td></tr>" + "</table>" );
+                "<tr><td>"
+                + "Unique genes represented"
+                + "</td><td align=\"right\" >"
+                + object.getNumGenes()
+                + "</td></tr>"
+                + "<tr><td colspan=2 align='center' class='small'>"
+                + "(as of "
+                + object.getDateCached()
+                + ")" + "</td></tr>" + "</table>" );
 
         buf.append( "</div>" );
         return buf.toString();

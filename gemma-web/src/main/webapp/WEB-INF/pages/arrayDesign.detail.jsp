@@ -95,21 +95,20 @@
 					</tr>
 					<tr>
 						<td align="right">
-							Probe-aligned regions
-						</td>
-						<td>
-							${summary.numProbesToProbeAlignedRegions}
-						</td>
-					</tr>
-					<tr>
-						<td align="right">
 							Predicted genes
 						</td>
 						<td>
 							${summary.numProbesToPredictedGenes}
 						</td>
 					</tr>
-
+					<tr>
+						<td align="right">
+							Probe-aligned regions
+						</td>
+						<td>
+							${summary.numProbesToProbeAlignedRegions}
+						</td>
+					</tr>
 					<tr>
 						<td>
 							Unique genes represented
