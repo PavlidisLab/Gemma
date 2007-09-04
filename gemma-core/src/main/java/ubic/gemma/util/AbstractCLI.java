@@ -64,6 +64,8 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
  */
 public abstract class AbstractCLI {
 
+    protected static final String AUTO_OPTION_NAME = "auto";
+
     public enum ErrorCode {
         NORMAL, MISSING_OPTION, INVALID_OPTION, MISSING_ARGUMENT, FATAL_ERROR, AUTHENTICATION_ERROR
     }
@@ -93,7 +95,17 @@ public abstract class AbstractCLI {
     protected int port = DEFAULT_PORT;
     protected String username;
     protected String password;
+
+    /*
+     * Date used to identify which endities to run the tool on (e.g., those which were run less recently than mDate). To
+     * enable call addDateOption.
+     */
     protected String mDate = null;
+
+    /*
+     * Automatically identify which entities to run the tool on. To enable call addAutoOption.
+     */
+    protected boolean autoSeek = false;
 
     protected Collection<Object> errorObjects = new HashSet<Object>();
 
@@ -336,6 +348,15 @@ public abstract class AbstractCLI {
                         "mdate" );
 
         addOption( dateOption );
+    }
+
+    @SuppressWarnings("static-access")
+    protected void addAutoOption() {
+        Option autoSeek = OptionBuilder.withArgName( AUTO_OPTION_NAME ).withDescription(
+                "Attempt to run all entities that need updating based on last date of previous modifications." )
+                .create( AUTO_OPTION_NAME );
+
+        addOption( autoSeek );
     }
 
     /**

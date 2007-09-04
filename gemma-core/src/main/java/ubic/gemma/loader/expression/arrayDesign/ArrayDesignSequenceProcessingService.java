@@ -240,8 +240,8 @@ public class ArrayDesignSequenceProcessingService {
         if ( bs.getSequenceDatabaseEntry() == null ) {
             return null;
         }
+        this.bioSequenceService.thaw( bs );
         return bs.getSequenceDatabaseEntry().getAccession();
-
     }
 
     /**

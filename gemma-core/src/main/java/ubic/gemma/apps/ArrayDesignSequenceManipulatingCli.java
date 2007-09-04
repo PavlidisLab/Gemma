@@ -29,6 +29,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.security.principal.UserDetailsServiceImpl;
@@ -56,6 +57,8 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
         addOption( arrayDesignOption );
 
         addDateOption();
+
+        addAutoOption();
 
     }
 
@@ -89,10 +92,27 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
             this.arrayDesignName = this.getOptionValue( 'a' );
         }
 
+        if ( hasOption( "mdate" ) ) {
+            super.mDate = this.getOptionValue( "mdate" );
+            if ( hasOption( AUTO_OPTION_NAME ) ) {
+                throw new IllegalArgumentException( "Please only select one of 'mdate' OR 'auto'" );
+            }
+        }
+
+        if ( hasOption( AUTO_OPTION_NAME ) ) {
+            this.autoSeek = true;
+            if ( hasOption( "mdate" ) ) {
+                throw new IllegalArgumentException( "Please only select one of 'mdate' OR 'auto'" );
+            }
+        }
+
         arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
         this.auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
     }
 
+    /**
+     * @param note
+     */
     protected void updateAudit( String note ) {
         ArrayDesign ad = this.locateArrayDesign( arrayDesignName );
         AuditEvent ae = AuditEvent.Factory.newInstance();
@@ -112,7 +132,9 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
      */
     protected boolean needToRun( Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
             Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
-        if ( skipIfLastRunLaterThan == null ) return true;
+
+        if ( skipIfLastRunLaterThan == null && autoSeek == false ) return true;
+
         auditTrailService.thaw( arrayDesign );
 
         ArrayDesign subsumingArrayDesign = arrayDesign.getSubsumingArrayDesign();
@@ -127,15 +149,82 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
             }
         }
 
-        List<AuditEvent> events = getEvents( arrayDesign, eventClass );
+        if ( autoSeek ) {
+            return needToAutoRun( arrayDesign, eventClass );
+        }
 
+        List<AuditEvent> events = getEvents( arrayDesign, eventClass );
         if ( events.size() == 0 ) {
-            return true; // always do it
+            return true; // always do it, it's never been done.
         } else {
+            assert skipIfLastRunLaterThan != null;
             // return true if the last time was older than the limit time.
             AuditEvent lastEvent = events.get( events.size() - 1 );
             return lastEvent.getDate().before( skipIfLastRunLaterThan );
         }
+    }
+
+    /**
+     * Find if the most recent ArrayDesignAnalysisEvent is less recent than the _other_ types of array design events; if
+     * so, then we need to refresh it.
+     * <ul>
+     * <li>If the autoseek option is not turned on, then return false.
+     * <li>If the event has never been done, return true.
+     * <li>If the last event was of the passed eventClass, then return false.
+     * <li>If any other ArrayDesignAnalysisEvent was more recent than the last event of eventClass, return true.
+     * <li>Otherwise return false.
+     * </ul>
+     * 
+     * @param arrayDesign
+     * @param eventClass The type of event we are considering running on the basis of this call.
+     * @return whether the array design needs updating based on the criteria outlined above.
+     */
+    private boolean needToAutoRun( ArrayDesign arrayDesign, Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
+        if ( !autoSeek ) return false;
+
+        List<AuditEvent> eventsOfCurrentType = getEvents( arrayDesign, eventClass );
+        List<AuditEvent> allEvents = ( List<AuditEvent> ) arrayDesign.getAuditTrail().getEvents();
+
+        if ( eventsOfCurrentType.size() == 0 ) {
+            // it's never been run.
+            return true;
+        }
+
+        AuditEvent lastEventOfCurrentType = eventsOfCurrentType.get( eventsOfCurrentType.size() - 1 );
+        assert lastEventOfCurrentType != null;
+
+        if ( lastEventOfCurrentType.getEventType().getClass().isAssignableFrom( eventClass ) ) {
+            // then definitely don't run it. The last event was the same as the one we're trying to renew.
+            log.debug( "Last event on " + arrayDesign + " was also a " + eventClass + ", skipping." );
+            return false;
+        }
+
+        for ( AuditEvent currentEvent : allEvents ) {
+
+            if ( currentEvent.getEventType() == null || currentEvent.getEventType().getClass().equals( eventClass ) ) {
+                continue;
+            }
+
+            Class<? extends AuditEventType> currentEventClass = currentEvent.getEventType().getClass();
+
+            // we only care about ArrayDesignAnalysisEvent events.
+            if ( !ArrayDesignAnalysisEvent.class.isAssignableFrom( currentEventClass ) ) {
+                log.debug( currentEventClass.getSimpleName() + " is not of interest" );
+                continue;
+            }
+
+            if ( currentEvent.getDate().after( lastEventOfCurrentType.getDate() ) ) {
+                log.info( arrayDesign + " needs update, last " + eventClass.getSimpleName() + " was before last "
+                        + currentEvent.getEventType().getClass().getSimpleName() );
+                return true;
+            } else {
+                log.debug( arrayDesign + " " + eventClass.getSimpleName() + " was after last "
+                        + currentEvent.getEventType().getClass().getSimpleName() + " (OK)" );
+            }
+
+        }
+        log.info( arrayDesign + " does not need an update" );
+        return false;
     }
 
     /**
@@ -159,7 +248,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
 
     /**
      * @param arrayDesign
-     * @param eventClass
+     * @param eventClass if null, then all events are added.
      * @return
      */
     private List<AuditEvent> getEvents( ArrayDesign arrayDesign, Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
@@ -167,7 +256,8 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
 
         for ( AuditEvent event : arrayDesign.getAuditTrail().getEvents() ) {
             if ( event == null ) continue;
-            if ( event.getEventType() != null && eventClass.isAssignableFrom( event.getEventType().getClass() ) ) {
+            if ( eventClass == null
+                    || ( event.getEventType() != null && eventClass.isAssignableFrom( event.getEventType().getClass() ) ) ) {
                 events.add( event );
             }
         }
