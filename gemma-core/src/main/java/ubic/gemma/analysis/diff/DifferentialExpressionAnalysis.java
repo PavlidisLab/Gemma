@@ -19,12 +19,14 @@
 package ubic.gemma.analysis.diff;
 
 import java.util.Collection;
+import java.util.Hashtable;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.genome.Gene;
 
 /**
  * @author keshav
@@ -38,31 +40,54 @@ public class DifferentialExpressionAnalysis {
     private int FACTOR_VALUE_ONE = 1;
     private int FACTOR_VALUE_TWO = 2;
 
+    Hashtable<Gene, Double> pvalues = null;
+
+    Collection<Gene> significantGenes = null;
+
+    public void analyze( Collection<ExperimentalFactor> experimentalFactors ) {
+
+        AbstractAnalyzer analyzer = determineAnalysis( experimentalFactors );
+
+        pvalues = analyzer.getPValues( experimentalFactors );
+
+        significantGenes = analyzer.getSignificantGenes( experimentalFactors );
+    }
+
     /**
      * Determines the analysis to execute based on the experimental factors and factor values.
      * 
      * @param experimentalFactors
      */
-    protected void determineAnalysis( Collection<ExperimentalFactor> experimentalFactors ) {
-        // TODO make analyzers implement Analyzer and return the appropriate analyzer from here
-        if ( colIsEmpty( experimentalFactors ) )
+    protected AbstractAnalyzer determineAnalysis( Collection<ExperimentalFactor> experimentalFactors ) {
+
+        if ( colIsEmpty( experimentalFactors ) ) {
             throw new RuntimeException(
                     "Collection of experimental factors is either null or 0.  Cannot execute differential expression analysis." );
+        }
 
         if ( experimentalFactors.size() == EXPERIMENTAL_FACTOR_ONE ) {
+
             ExperimentalFactor experimentalFactor = experimentalFactors.iterator().next();
             Collection<FactorValue> factorValues = experimentalFactor.getFactorValues();
+
             if ( colIsEmpty( factorValues ) )
                 throw new RuntimeException(
                         "Collection of factor values is either null or 0. Cannot execute differential expression analysis." );
             if ( factorValues.size() == FACTOR_VALUE_ONE ) {
                 throw new RuntimeException( experimentalFactors.size() + " experimental factor(s) with "
                         + factorValues.size() + " factor value(s).  Cannot execute differential expression analysis." );
-            } else {
+            }
+
+            else if ( experimentalFactors.size() == FACTOR_VALUE_TWO ) {
+                return new TTestAnalyzer();
+            }
+
+            else {
                 log.debug( experimentalFactors.size() + " experimental factor(s) with " + factorValues.size()
                         + " factor value(s).  Running one way anova." );
-                // execute one way anova ... this takes care of the t-test as well, since a one-way anova with two
+                // execute one way anova ... this can take care of the t-test as well, since a one-way anova with two
                 // groups is just a t-test
+                return null;
             }
 
         }
@@ -76,13 +101,12 @@ public class DifferentialExpressionAnalysis {
                             + " factor value(s).  Cannot execute differential expression analysis." );
                 }
                 // check for block design and execute two way anova (with or without interactions)
+                return null;
             }
         }
 
-        else {
-            throw new RuntimeException(
-                    "Differential expression analysis supports a maximum of 2 experimental factors at this time." );
-        }
+        throw new RuntimeException(
+                "Differential expression analysis supports a maximum of 2 experimental factors at this time." );
 
     }
 

@@ -19,8 +19,9 @@
 package ubic.gemma.analysis.diff;
 
 import java.util.Collection;
+import java.util.Hashtable;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.genome.Gene;
 
 /**
@@ -29,15 +30,29 @@ import ubic.gemma.model.genome.Gene;
  */
 public class TTestAnalyzer extends AbstractAnalyzer {
 
+    public TTestAnalyzer() {
+        super();
+    }
+
     /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.analysis.diff.AbstractAnalyzer#getSignificantGenes(java.util.Collection)
      */
     @Override
-    public Collection<Gene> getSignificantGenes( Collection<ExpressionExperimentSubSet> expressionExperimentSubsets ) {
+    public Collection<Gene> getSignificantGenes( Collection<ExperimentalFactor> expressionExperimentSubsets ) {
         // TODO Auto-generated method stub
         return null;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.diff.AbstractAnalyzer#getPValues(java.util.Collection)
+     */
+    @Override
+    public Hashtable<Gene, Double> getPValues( Collection<ExperimentalFactor> experimentalFactors ) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }
