@@ -19,12 +19,17 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 import java.util.Calendar;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.OKStatusFlagEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEvent;
 
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService
@@ -110,5 +115,66 @@ public class AuditTrailServiceImpl extends ubic.gemma.model.common.auditAndSecur
         auditEvent.setEventType( auditEventType );
         auditEvent.setNote( note );
         return this.getAuditTrailDao().addEvent( auditable, auditEvent );
+    }
+
+    @Override
+    protected void handleAddComment( Auditable auditable, String comment ) throws Exception {
+        AuditEventType type = CommentedEvent.Factory.newInstance();
+        this.addUpdateEvent( auditable, type, comment );
+
+    }
+
+    @Override
+    protected void handleAddOkFlag( Auditable auditable, String comment ) throws Exception {
+        // TODO possibly don't allow this if there isn't already a trouble event on this object. That is, maybe OK
+        // should only be used to reverse "trouble".
+        AuditEventType type = OKStatusFlagEvent.Factory.newInstance();
+        this.addUpdateEvent( auditable, type, comment );
+    }
+
+    @Override
+    protected void handleAddTroubleFlag( Auditable auditable, String comment ) throws Exception {
+        AuditEventType type = TroubleStatusFlagEvent.Factory.newInstance();
+        this.addUpdateEvent( auditable, type, comment );
+    }
+
+    @Override
+    protected void handleAddValidatedFlag( Auditable auditable, String comment ) throws Exception {
+        AuditEventType type = ValidatedFlagEvent.Factory.newInstance();
+        this.addUpdateEvent( auditable, type, comment );
+
+    }
+
+    @Override
+    protected AuditEvent handleGetLastTroubleEvent( Auditable auditable ) throws Exception {
+        thaw( auditable );
+        AuditTrail auditTrail = auditable.getAuditTrail();
+        List<AuditEvent> events = ( List<AuditEvent> ) auditTrail.getEvents();
+        AuditEvent lastOK = null;
+        for ( int i = events.size() - 1; i >= 0; i-- ) {
+            AuditEvent e = events.get( i );
+            if ( e.getEventType() instanceof TroubleStatusFlagEvent ) {
+                if ( lastOK == null ) {
+                    return e;
+                }
+            } else if ( e.getEventType() instanceof OKStatusFlagEvent ) {
+                lastOK = e;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    protected AuditEvent handleGetLastValidationEvent( Auditable auditable ) throws Exception {
+        thaw( auditable );
+        AuditTrail auditTrail = auditable.getAuditTrail();
+        List<AuditEvent> events = ( List<AuditEvent> ) auditTrail.getEvents();
+        for ( int i = events.size() - 1; i >= 0; i-- ) {
+            AuditEvent e = events.get( i );
+            if ( e.getEventType() instanceof ValidatedFlagEvent ) {
+                return e;
+            }
+        }
+        return null;
     }
 }
