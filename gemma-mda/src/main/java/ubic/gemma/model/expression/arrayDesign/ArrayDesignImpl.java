@@ -49,4 +49,9 @@ public class ArrayDesignImpl extends ubic.gemma.model.expression.arrayDesign.Arr
         return super.hashCode();
     }
 
+    @Override
+    public java.lang.String toString() {
+        return super.toString() + " (" + this.getShortName() + ")";
+    }
+
 }
