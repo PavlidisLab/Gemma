@@ -52,7 +52,6 @@ import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
-import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
@@ -72,7 +71,6 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
 
     private DesignElementDataVectorService dedvService;
     private ExpressionExperimentService eeService;
-    private CompositeSequenceService csService;
     private GeneService geneService;
     private String geneList = null;
     private String taxonName = null;
@@ -101,6 +99,7 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
     /**
      * 
      */
+    @Override
     protected void processOptions() {
         super.processOptions();
         if ( hasOption( 'g' ) ) {
@@ -118,7 +117,6 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         dedvService = ( DesignElementDataVectorService ) this.getBean( "designElementDataVectorService" );
         eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
         geneService = ( GeneService ) this.getBean( "geneService" );
-        csService = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
     }
 
     /**
@@ -168,8 +166,9 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         return taxon;
     }
 
+    @SuppressWarnings("unchecked")
     Collection<Gene> getCoExpressedGenes( Collection<Gene> queryGenes ) {
-        HashSet<Gene> coExpressedGenes = new HashSet<Gene>();
+        Set<Gene> coExpressedGenes = new HashSet<Gene>();
         Collection<Long> geneIds = new HashSet<Long>();
         for ( Gene gene : queryGenes ) {
             log.info( "Get co-expressed genes for " + gene.getName() );
@@ -193,6 +192,7 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
      * @param ee FIXME not needed?
      * @return
      */
+    @SuppressWarnings("unchecked")
     private Map<DesignElementDataVector, Collection<Gene>> getDesignElementDataVector(
             Map<Long, Collection<Gene>> cs2gene, QuantitationType qt, ExpressionExperiment ee ) {
         Map<DesignElementDataVector, Collection<Gene>> dedv2genes = eeService.getDesignElementDataVectors( cs2gene, qt );
@@ -203,6 +203,7 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
     }
 
     // For small number of queryGenes.
+    @SuppressWarnings("unchecked")
     Map<DesignElementDataVector, Collection<Gene>> getDedv2GenesMap( Collection<Gene> queryGenes,
             Collection<Gene> coExpressedGenes, Collection<ExpressionExperiment> allEEs ) {
         StopWatch qWatch = new StopWatch();
@@ -250,6 +251,7 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
      * @param coExpressedGenes
      * @return Map of CS Ids to Genes.
      */
+    @SuppressWarnings("unchecked")
     private Map<Long, Collection<Gene>> getCsId2GeneMap( Collection<Gene> queryGenes, Collection<Gene> coExpressedGenes ) {
         Collection<Gene> allGenes = new HashSet<Gene>();
         allGenes.addAll( queryGenes );
@@ -335,12 +337,12 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
                 allEEs );
         if ( dedv2genes.size() == 0 || queryGenes.size() == 0 || coExpressedGenes.size() == 0 || allEEs.size() == 0 )
             return null;
-        GeneCoExpressionAnalysis coExpression = new GeneCoExpressionAnalysis( ( Set ) queryGenes,
-                ( Set ) coExpressedGenes, ( Set ) new HashSet( allEEs ) );
+        GeneCoExpressionAnalysis coExpression = new GeneCoExpressionAnalysis( queryGenes, coExpressedGenes,
+                new HashSet( allEEs ) );
 
         coExpression.setDedv2Genes( dedv2genes );
         coExpression.setExpressionExperimentService( eeService );
-        coExpression.analysis( ( Set ) dedv2genes.keySet() );
+        coExpression.analysis( dedv2genes.keySet() );
 
         try {
             makeClusterGrams( coExpression );
@@ -387,10 +389,10 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         Process cluster = rt.exec( clusterCmd + " -f " + this.outputFile + " " + commonOptions );
         cluster.waitFor();
 
-		DoubleMatrixNamed dataMatrix = getClusteredMatrix();
+        DoubleMatrixNamed dataMatrix = getClusteredMatrix();
 
-		// Get the rank Matrix
-		DoubleMatrixNamed rankMatrix = coExpression.getRankMatrix(dataMatrix);
+        // Get the rank Matrix
+        DoubleMatrixNamed rankMatrix = coExpression.getRankMatrix( dataMatrix );
 
         // generate the png figures
         ColorMatrix dataColorMatrix = new ColorMatrix( dataMatrix );
@@ -405,17 +407,16 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         rankMatrixDisplay.saveImage( "rankMatrix.png", true );
     }
 
-	/**
-	 * @return
-	 * @throws IOException
-	 */
-	private DoubleMatrixNamed getClusteredMatrix() throws IOException {
-		// Read the generated file into a String Matrix
-		StringMatrixReader mReader = new StringMatrixReader();
-		int dotIndex = this.outputFile.lastIndexOf('.');
-		String CDTMatrixFile = this.outputFile.substring(0, dotIndex);
-		StringMatrix2DNamed cdtMatrix = (StringMatrix2DNamed) mReader
-				.read(CDTMatrixFile + ".cdt");
+    /**
+     * @return
+     * @throws IOException
+     */
+    private DoubleMatrixNamed getClusteredMatrix() throws IOException {
+        // Read the generated file into a String Matrix
+        StringMatrixReader mReader = new StringMatrixReader();
+        int dotIndex = this.outputFile.lastIndexOf( '.' );
+        String CDTMatrixFile = this.outputFile.substring( 0, dotIndex );
+        StringMatrix2DNamed cdtMatrix = ( StringMatrix2DNamed ) mReader.read( CDTMatrixFile + ".cdt" );
 
         // Read String Matrix and convert into DenseDoubleMatrix
         int extra_rows = 2, extra_cols = 3;
@@ -427,26 +428,25 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         for ( int i = extra_cols; i < colNames.size(); i++ )
             colLabels.add( ( String ) colNames.get( i ) );
 
-		int rowIndex = 0;
-		for (int i = extra_rows; i < cdtMatrix.rows(); i++) {
-			Object row[] = cdtMatrix.getRow(i);
-			rowLabels.add((String) row[0]);
-			data[rowIndex] = new double[row.length - extra_cols];
-			for (int j = extra_cols; j < row.length; j++)
-				try {
-					data[rowIndex][j - extra_cols] = Double
-							.valueOf((String) row[j]);
-				} catch (Exception e) {
-					data[rowIndex][j - extra_cols] = Double.NaN;
-					continue;
-				}
-			rowIndex++;
-		}
-		DoubleMatrixNamed dataMatrix = new DenseDoubleMatrix2DNamed(data);
-		dataMatrix.setRowNames(rowLabels);
-		dataMatrix.setColumnNames(colLabels);
-		return dataMatrix;
-	}
+        int rowIndex = 0;
+        for ( int i = extra_rows; i < cdtMatrix.rows(); i++ ) {
+            Object row[] = cdtMatrix.getRow( i );
+            rowLabels.add( ( String ) row[0] );
+            data[rowIndex] = new double[row.length - extra_cols];
+            for ( int j = extra_cols; j < row.length; j++ )
+                try {
+                    data[rowIndex][j - extra_cols] = Double.valueOf( ( String ) row[j] );
+                } catch ( Exception e ) {
+                    data[rowIndex][j - extra_cols] = Double.NaN;
+                    continue;
+                }
+            rowIndex++;
+        }
+        DoubleMatrixNamed dataMatrix = new DenseDoubleMatrix2DNamed( data );
+        dataMatrix.setRowNames( rowLabels );
+        dataMatrix.setColumnNames( colLabels );
+        return dataMatrix;
+    }
 
     /**
      * @param args
