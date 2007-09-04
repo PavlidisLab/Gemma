@@ -330,6 +330,7 @@ if ( expressionExperiment.getName() != null ) {
    
     
   	<h3>History</h3>
+	<div id="auditTrailToolbar" class="x-grid-mso" style="padding-left: 2px; padding-right: 2px; overflow: hidden; width:650px; height:30px;"></div>
 	<div id="auditTrail" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:250px;"></div>
 	 <c:if test="${ lastArrayDesignUpdate != null}">
 				<p>The last time an array design associated with this experiment was updated: ${lastArrayDesignUpdate.date}</p>
