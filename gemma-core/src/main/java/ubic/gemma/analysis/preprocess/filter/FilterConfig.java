@@ -40,7 +40,7 @@ public class FilterConfig {
 
     public static final double DEFAULT_LOWEXPRESSIONCUT = 0.3;
 
-    public static final double DEFAULT_LOWVARIANCECUT = 0.2;
+    public static final double DEFAULT_LOWVARIANCECUT = 0.05;
 
     public static final double DEFAULT_TOOSMALLTOKEEP = 0.5;
 
