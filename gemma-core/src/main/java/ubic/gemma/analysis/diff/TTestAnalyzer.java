@@ -83,17 +83,10 @@ public class TTestAnalyzer extends AbstractAnalyzer {
                 throw new RuntimeException( "Supplied experimental factor " + experimentalFactor
                         + "does not match the experimental factors of the design." );
 
-            // 1. Get the expression values for each factor value. There could be multiple bioassays (levels) for each
-            // factor value (group).
-            // 2. Store each group of expression values as a double[][] (or another structure in baseCode).
-            // 3. Each row of the double[][] holds all the values for one group of one factor value. Input this one dim
-            // array into the R method (see SimpleTTestAnalyzer).
-
-            // Collection<FactorValue> factorValues = experimentalFactor.getFactorValues();
-            //
-            // for ( FactorValue factorValue : factorValues ) {
-            //                
-            // }
+            // ExpressionDataMatrix matrixA = new ExpressionDataDoubleMatrix(filteredDesignElementDataVectorsA);
+            // ExpressionDataMatrix matrixB = new ExpressionDataDoubleMatrix(filteredDesignElementDataVectorsB);
+            // tTest(matrixA, matrixB);
+            // for each matrix get row and pass the double[] to the ttest R method (see SimpleTTestAnalyzer).
         }
         return pVal;
     }
