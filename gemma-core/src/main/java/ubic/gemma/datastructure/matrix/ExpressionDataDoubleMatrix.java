@@ -244,7 +244,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
 
     /**
      * @param designElement
-     * @param bioMaterial
+     * @param bioAssay
      * @param value
      */
     public void set( DesignElement designElement, BioAssay bioAssay, Object value ) {
@@ -254,6 +254,11 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         matrix.setQuick( row, column, ( ( Double ) value ).doubleValue() );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#set(int, int, java.lang.Object)
+     */
     public void set( int row, int column, Object value ) {
         if ( value == null ) {
             matrix.setQuick( row, column, Double.NaN );
