@@ -605,4 +605,10 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().updateSubsumingStatus( candidateSubsumer, candidateSubsumee );
     }
 
+    @Override
+    protected void handleRemoveBiologicalCharacteristics( ArrayDesign arrayDesign ) throws Exception {
+        this.getArrayDesignDao().removeBiologicalCharacteristics( arrayDesign );
+
+    }
+
 }

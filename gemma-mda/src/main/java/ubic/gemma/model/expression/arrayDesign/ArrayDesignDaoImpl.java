@@ -581,7 +581,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
         // get the expression experiment counts
         Map eeCounts = this.getExpressionExperimentCountMap();
-       
+
         Collection<ArrayDesignValueObject> result = new ArrayList<ArrayDesignValueObject>();
 
         final String queryString = "select ad.id as id, " + " ad.name as name, " + " ad.shortName as shortName, "
@@ -1189,6 +1189,18 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             }
         }, true );
 
+    }
+
+    @Override
+    protected void handleRemoveBiologicalCharacteristics( ArrayDesign arrayDesign ) throws Exception {
+        if ( arrayDesign == null ) {
+            throw new IllegalArgumentException( "Array design cannot be null" );
+        }
+        this.thawLite( arrayDesign );
+        for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+            cs.setBiologicalCharacteristic( null );
+        }
+        this.update( arrayDesign );
     }
 
 }
