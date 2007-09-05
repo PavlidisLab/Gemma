@@ -61,14 +61,10 @@ import ubic.gemma.util.concurrent.GenericStreamConsumer;
  */
 public class Blat {
 
-    private static final int BLAT_UPDATE_INTERVAL_MS = 1000 * 30;
-
     /**
      * Spaces in the sequence name will cause problems when converting back from the PSL format, so they are replaced.
      */
     public static final String SPACE_REPLACEMENT = "_____";
-
-    private static final Log log = LogFactory.getLog( Blat.class );
 
     /**
      * This value is basically a threshold fraction of aligned bases in the query
@@ -79,13 +75,21 @@ public class Blat {
 
     public static final double STEPSIZE = 7;
 
-    private double blatScoreThreshold = DEFAULT_BLAT_SCORE_THRESHOLD;
+    private static final int BLAT_UPDATE_INTERVAL_MS = 1000 * 30;
+
+    private static final Log log = LogFactory.getLog( Blat.class );
 
     private static String os = System.getProperty( "os.name" ).toLowerCase();
 
-    public static enum BlattableGenome {
-        HUMAN, MOUSE, RAT
-    };
+    /**
+     * Strings of As or Ts at the start or end of a sequence longer than this will be stripped off prior to analysis.
+     */
+    private static final int POLY_AT_THRESHOLD = 5;
+
+    /**
+     * Required for some applications (read: Repeatmasker) that can't handle long identifiers.
+     */
+    private static final int MAX_SEQ_IDENTIFIER_LENGTH = 50;
 
     static {
         if ( !os.toLowerCase().startsWith( "windows" ) ) {
@@ -100,178 +104,39 @@ public class Blat {
             }
         }
     }
-    private boolean doShutdown = true;
-
-    // typical values.
-    private String gfClientExe = "/cygdrive/c/cygwin/usr/local/bin/gfClient.exe";
-    private String gfServerExe = "/cygdrive/c/cygwin/usr/local/bin/gfServer.exe";
-    private String host = "localhost";
-    private String seqDir = "/";
-
-    private String humanSeqFiles;
-    private String ratSeqFiles;
-    private String mouseSeqFiles;
-
-    private Process serverProcess;
-    private int humanServerPort;
-    private int mouseServerPort;
-    private int ratServerPort;
-
-    private String humanServerHost;
-    private String mouseServerHost;
-    private String ratServerHost;
 
     /**
-     * Create a blat object with settings read from the config file.
-     */
-    public Blat() {
-        try {
-            init();
-        } catch ( ConfigurationException e ) {
-            throw new RuntimeException( "Could not load configuration", e );
-        }
-    }
-
-    /**
-     * @param host
-     * @param port
-     * @param seqDir
-     */
-    public Blat( String host, int humanServerPort, String seqDir ) {
-
-        if ( host == null || humanServerPort <= 0 || seqDir == null )
-            throw new IllegalArgumentException( "All values must be non-null" );
-        this.host = host;
-        this.humanServerPort = humanServerPort;
-        this.seqDir = seqDir;
-    }
-
-    /**
-     * @return Returns the gfClientExe.
-     */
-    public String getGfClientExe() {
-        return this.gfClientExe;
-    }
-
-    /**
-     * @return Returns the gfServerExe.
-     */
-    public String getGfServerExe() {
-        return this.gfServerExe;
-    }
-
-    /**
-     * @return Returns the host.
-     */
-    public String getHost() {
-        return this.host;
-    }
-
-    /**
-     * @return Returns the seqDir.
-     */
-    public String getSeqDir() {
-        return this.seqDir;
-    }
-
-    /**
-     * @return Returns the seqFiles.
-     */
-    public String getSeqFiles( BlattableGenome genome ) {
-        switch ( genome ) {
-            case HUMAN:
-                return this.humanSeqFiles;
-            case MOUSE:
-                return this.mouseSeqFiles;
-            case RAT:
-                return this.ratSeqFiles;
-            default:
-                return this.humanSeqFiles;
-
-        }
-    }
-
-    /**
-     * Strings of As or Ts at the start or end of a sequence longer than this will be stripped off prior to analysis.
-     */
-    private static final int POLY_AT_THRESHOLD = 5;
-
-    /**
-     * Run a BLAT search using the gfClient.
+     * Modify the identifier for the purposes of using in temporary Fasta files. WARNING There is a faint possibility
+     * that this could cause problems in identifying the sequences later.
      * 
      * @param b
-     * @param genome
-     * @return Collection of BlatResult objects.
-     * @throws IOException
-     */
-    public Collection<BlatResult> blatQuery( BioSequence b, Taxon taxon ) throws IOException {
-        assert seqDir != null;
-        // write the sequence to a temporary file.
-        File querySequenceFile = File.createTempFile( b.getName(), ".fa" );
-
-        BufferedWriter out = new BufferedWriter( new FileWriter( querySequenceFile ) );
-        String trimmed = SequenceManipulation.stripPolyAorT( b.getSequence(), POLY_AT_THRESHOLD );
-        out.write( ">" + b.getName() + "\n" + trimmed );
-        out.close();
-        log.info( "Wrote sequence to " + querySequenceFile.getPath() );
-
-        String outputPath = getTmpPslFilePath( b.getName() );
-
-        Collection<BlatResult> results = gfClient( querySequenceFile, outputPath, choosePortForQuery( taxon ) );
-
-        ExternalDatabase searchedDatabase = getSearchedGenome( taxon );
-        for ( BlatResult result : results ) {
-            result.setSearchedDatabase( searchedDatabase );
-        }
-
-        cleanUpTmpFiles( querySequenceFile, outputPath );
-        return results;
-
-    }
-
-    /**
-     * Run a BLAT search using the gfClient.
-     * 
-     * @param b. The genome is inferred from the Taxon held by the sequence.
-     * @return Collection of BlatResult objects.
-     * @throws IOException
-     */
-    public Collection<BlatResult> blatQuery( BioSequence b ) throws IOException {
-        Taxon t = b.getTaxon();
-        if ( t == null ) {
-            throw new IllegalArgumentException( "Cannot blat sequence unless taxon is given or inferrable" );
-        }
-
-        return blatQuery( b, t );
-    }
-
-    /**
-     * @param genome
      * @return
      */
-    private int choosePortForQuery( Taxon taxon ) {
-        BlattableGenome genome = inferBlatDatabase( taxon );
-        switch ( genome ) {
-            case HUMAN:
-                return humanServerPort;
-            case MOUSE:
-                return mouseServerPort;
-            case RAT:
-                return ratServerPort;
-            default:
-                return humanServerPort;
+    public static String getIdentifier( BioSequence b ) {
+        String identifier = b.getName();
+        identifier = identifier.replaceAll( " ", SPACE_REPLACEMENT );
+        identifier = identifier.substring( 0, Math.max( identifier.length(), MAX_SEQ_IDENTIFIER_LENGTH ) - 1 );
+        return identifier;
+    }
 
-        }
+    public static String getMinutesElapsed( StopWatch overallWatch ) {
+        Long overallElapsed = overallWatch.getTime();
+        NumberFormat nf = new DecimalFormat();
+        nf.setMaximumFractionDigits( 2 );
+        String minutes = nf.format( overallElapsed / ( 60.0 * 1000.0 ) );
+        return minutes;
     }
 
     /**
-     * @param querySequenceFile
-     * @param outputPath
+     * @param taxon
+     * @return
      */
-    private void cleanUpTmpFiles( File querySequenceFile, String outputPath ) {
-        if ( !querySequenceFile.delete() || !( new File( outputPath ) ).delete() ) {
-            log.warn( "Could not clean up temporary files." );
-        }
+    public static ExternalDatabase getSearchedGenome( Taxon taxon ) {
+        BlattableGenome genome = inferBlatDatabase( taxon );
+        ExternalDatabase searchedDatabase = ExternalDatabase.Factory.newInstance();
+        searchedDatabase.setType( DatabaseType.SEQUENCE );
+        searchedDatabase.setName( genome.toString().toLowerCase() );
+        return searchedDatabase;
     }
 
     /**
@@ -319,10 +184,123 @@ public class Blat {
         return count;
     }
 
-    public static String getIdentifier( BioSequence b ) {
-        String identifier = b.getName();
-        identifier = identifier.replaceAll( " ", SPACE_REPLACEMENT );
-        return identifier;
+    /**
+     * @param taxon
+     * @return
+     */
+    private static BlattableGenome inferBlatDatabase( Taxon taxon ) {
+        BlattableGenome bg = BlattableGenome.MOUSE;
+
+        if ( taxon.getNcbiId() == 10090 || taxon.getCommonName().equals( "mouse" ) ) {
+            bg = BlattableGenome.MOUSE;
+        } else if ( taxon.getNcbiId() == 10116 || taxon.getCommonName().equals( "rat" ) ) {
+            bg = BlattableGenome.RAT;
+        } else if ( taxon.getNcbiId() == 9606 || taxon.getCommonName().equals( "human" ) ) {
+            bg = BlattableGenome.HUMAN;
+        } else {
+            throw new UnsupportedOperationException( "Cannot determine which database to search for " + taxon );
+        }
+        return bg;
+    }
+
+    private double blatScoreThreshold = DEFAULT_BLAT_SCORE_THRESHOLD;
+    private boolean doShutdown = true;
+    // typical values.
+    private String gfClientExe = "/cygdrive/c/cygwin/usr/local/bin/gfClient.exe";
+
+    private String gfServerExe = "/cygdrive/c/cygwin/usr/local/bin/gfServer.exe";
+    private String host = "localhost";
+    private String seqDir = "/";
+    private String humanSeqFiles;
+
+    private String ratSeqFiles;
+    private String mouseSeqFiles;
+    private Process serverProcess;
+
+    private int humanServerPort;
+
+    private int mouseServerPort;
+
+    private int ratServerPort;
+
+    private String humanServerHost;
+
+    private String mouseServerHost;
+
+    private String ratServerHost;
+
+    /**
+     * Create a blat object with settings read from the config file.
+     */
+    public Blat() {
+        try {
+            init();
+        } catch ( ConfigurationException e ) {
+            throw new RuntimeException( "Could not load configuration", e );
+        }
+    }
+
+    /**
+     * @param host
+     * @param port
+     * @param seqDir
+     */
+    public Blat( String host, int humanServerPort, String seqDir ) {
+
+        if ( host == null || humanServerPort <= 0 || seqDir == null )
+            throw new IllegalArgumentException( "All values must be non-null" );
+        this.host = host;
+        this.humanServerPort = humanServerPort;
+        this.seqDir = seqDir;
+    }
+
+    /**
+     * Run a BLAT search using the gfClient.
+     * 
+     * @param b. The genome is inferred from the Taxon held by the sequence.
+     * @return Collection of BlatResult objects.
+     * @throws IOException
+     */
+    public Collection<BlatResult> blatQuery( BioSequence b ) throws IOException {
+        Taxon t = b.getTaxon();
+        if ( t == null ) {
+            throw new IllegalArgumentException( "Cannot blat sequence unless taxon is given or inferrable" );
+        }
+
+        return blatQuery( b, t );
+    }
+
+    /**
+     * Run a BLAT search using the gfClient.
+     * 
+     * @param b
+     * @param genome
+     * @return Collection of BlatResult objects.
+     * @throws IOException
+     */
+    public Collection<BlatResult> blatQuery( BioSequence b, Taxon taxon ) throws IOException {
+        assert seqDir != null;
+        // write the sequence to a temporary file.
+        File querySequenceFile = File.createTempFile( b.getName(), ".fa" );
+
+        BufferedWriter out = new BufferedWriter( new FileWriter( querySequenceFile ) );
+        String trimmed = SequenceManipulation.stripPolyAorT( b.getSequence(), POLY_AT_THRESHOLD );
+        out.write( ">" + b.getName() + "\n" + trimmed );
+        out.close();
+        log.info( "Wrote sequence to " + querySequenceFile.getPath() );
+
+        String outputPath = getTmpPslFilePath( b.getName() );
+
+        Collection<BlatResult> results = gfClient( querySequenceFile, outputPath, choosePortForQuery( taxon ) );
+
+        ExternalDatabase searchedDatabase = getSearchedGenome( taxon );
+        for ( BlatResult result : results ) {
+            result.setSearchedDatabase( searchedDatabase );
+        }
+
+        cleanUpTmpFiles( querySequenceFile, outputPath );
+        return results;
+
     }
 
     /**
@@ -366,39 +344,122 @@ public class Blat {
     }
 
     /**
-     * @param taxon
-     * @return
+     * @return the blatScoreThreshold
      */
-    public static ExternalDatabase getSearchedGenome( Taxon taxon ) {
-        BlattableGenome genome = inferBlatDatabase( taxon );
-        ExternalDatabase searchedDatabase = ExternalDatabase.Factory.newInstance();
-        searchedDatabase.setType( DatabaseType.SEQUENCE );
-        searchedDatabase.setName( genome.toString().toLowerCase() );
-        return searchedDatabase;
+    public double getBlatScoreThreshold() {
+        return this.blatScoreThreshold;
     }
 
     /**
-     * @param taxon
-     * @return
+     * @return Returns the gfClientExe.
      */
-    private static BlattableGenome inferBlatDatabase( Taxon taxon ) {
-        BlattableGenome bg = BlattableGenome.MOUSE;
+    public String getGfClientExe() {
+        return this.gfClientExe;
+    }
 
-        if ( taxon.getNcbiId() == 10090 || taxon.getCommonName().equals( "mouse" ) ) {
-            bg = BlattableGenome.MOUSE;
-        } else if ( taxon.getNcbiId() == 10116 || taxon.getCommonName().equals( "rat" ) ) {
-            bg = BlattableGenome.RAT;
-        } else if ( taxon.getNcbiId() == 9606 || taxon.getCommonName().equals( "human" ) ) {
-            bg = BlattableGenome.HUMAN;
-        } else {
-            throw new UnsupportedOperationException( "Cannot determine which database to search for " + taxon );
+    /**
+     * @return Returns the gfServerExe.
+     */
+    public String getGfServerExe() {
+        return this.gfServerExe;
+    }
+
+    /**
+     * @return Returns the host.
+     */
+    public String getHost() {
+        return this.host;
+    }
+
+    /**
+     * @return Returns the humanServerPort.
+     */
+    public int getHumanServerPort() {
+        return this.humanServerPort;
+    }
+
+    /**
+     * @return Returns the mouseServerPort.
+     */
+    public int getMouseServerPort() {
+        return this.mouseServerPort;
+    }
+
+    /**
+     * @return Returns the ratServerPort.
+     */
+    public int getRatServerPort() {
+        return this.ratServerPort;
+    }
+
+    /**
+     * @return Returns the seqDir.
+     */
+    public String getSeqDir() {
+        return this.seqDir;
+    }
+
+    /**
+     * @return Returns the seqFiles.
+     */
+    public String getSeqFiles( BlattableGenome genome ) {
+        switch ( genome ) {
+            case HUMAN:
+                return this.humanSeqFiles;
+            case MOUSE:
+                return this.mouseSeqFiles;
+            case RAT:
+                return this.ratSeqFiles;
+            default:
+                return this.humanSeqFiles;
+
         }
-        return bg;
     }
 
     /**
-     * Start the server, if the port isn't already being used. If the port is in use, we assume it is a gfServer.
+     * @param inputStream to the Blat output file in psl format
+     * @return processed results.
      */
+    public Collection<BlatResult> processPsl( InputStream inputStream, Taxon taxon ) throws IOException {
+        log.debug( "Processing " + inputStream );
+        BlatResultParser brp = new BlatResultParser();
+        brp.setTaxon( taxon );
+        brp.setScoreThreshold( this.blatScoreThreshold );
+        brp.parse( inputStream );
+        return brp.getResults();
+    }
+
+    // /**
+    // * @param future
+    // * @return
+    // * @throws InterruptedException
+    // * @throws ExecutionException
+    // * @throws IOException
+    // */
+    // private StringBuilder getErrOutput( FutureTask<Process> future ) throws InterruptedException, ExecutionException,
+    // IOException {
+    // InputStream result = future.get().getErrorStream();
+    // BufferedReader br = new BufferedReader( new InputStreamReader( result ) );
+    // String l = null;
+    // StringBuilder buf = new StringBuilder();
+    // while ( ( l = br.readLine() ) != null ) {
+    // buf.append( l + "\n" );
+    // }
+    // br.close();
+    // return buf;
+    // }
+
+    /**
+     * @param blatScoreThreshold the blatScoreThreshold to set
+     */
+    public void setBlatScoreThreshold( double blatScoreThreshold ) {
+        this.blatScoreThreshold = blatScoreThreshold;
+    }
+
+    /**
+                                                         * Start the server, if the port isn't already being used. If
+                                                         * the port is in use, we assume it is a gfServer.
+                                                         */
     public void startServer( BlattableGenome genome, int port ) throws IOException {
         try {
             new Socket( host, port );
@@ -428,8 +489,8 @@ public class Blat {
     }
 
     /**
-     * Stop the gfServer, if it was started by this.
-     */
+                                                                     * Stop the gfServer, if it was started by this.
+                                                                     */
     public void stopServer( int port ) {
         if ( false && !doShutdown ) {
             return;
@@ -453,12 +514,42 @@ public class Blat {
     }
 
     /**
-     * Run a gfClient query, using a call to exec().
-     * 
-     * @param querySequenceFile
-     * @param outputPath
-     * @return
-     */
+                 * @param genome
+                 * @return
+                 */
+    private int choosePortForQuery( Taxon taxon ) {
+        BlattableGenome genome = inferBlatDatabase( taxon );
+        switch ( genome ) {
+            case HUMAN:
+                return humanServerPort;
+            case MOUSE:
+                return mouseServerPort;
+            case RAT:
+                return ratServerPort;
+            default:
+                return humanServerPort;
+
+        }
+    }
+
+    /**
+                 * @param querySequenceFile
+                 * @param outputPath
+                 */
+    private void cleanUpTmpFiles( File querySequenceFile, String outputPath ) {
+        if ( !querySequenceFile.delete() || !( new File( outputPath ) ).delete() ) {
+            log.warn( "Could not clean up temporary files." );
+        }
+    }
+
+    /**
+                                                                                     * Run a gfClient query, using a
+                                                                                     * call to exec().
+                                                                                     * 
+                                                                                     * @param querySequenceFile
+                                                                                     * @param outputPath
+                                                                                     * @return
+                                                                                     */
     private Collection<BlatResult> execGfClient( File querySequenceFile, String outputPath, int portToUse )
             throws IOException {
         final String cmd = gfClientExe + " -nohead -minScore=16 " + host + " " + portToUse + " " + seqDir + " "
@@ -485,7 +576,8 @@ public class Blat {
                 try {
                     exitVal = run.exitValue();
                 } catch ( IllegalThreadStateException e ) {
-                    // okay, still waiting.
+                    // okay, still
+                                                                                                        // waiting.
                 }
                 Thread.sleep( BLAT_UPDATE_INTERVAL_MS );
                 // I hope this is okay...
@@ -515,26 +607,6 @@ public class Blat {
         return processPsl( outputPath, null );
     }
 
-    // /**
-    // * @param future
-    // * @return
-    // * @throws InterruptedException
-    // * @throws ExecutionException
-    // * @throws IOException
-    // */
-    // private StringBuilder getErrOutput( FutureTask<Process> future ) throws InterruptedException, ExecutionException,
-    // IOException {
-    // InputStream result = future.get().getErrorStream();
-    // BufferedReader br = new BufferedReader( new InputStreamReader( result ) );
-    // String l = null;
-    // StringBuilder buf = new StringBuilder();
-    // while ( ( l = br.readLine() ) != null ) {
-    // buf.append( l + "\n" );
-    // }
-    // br.close();
-    // return buf;
-    // }
-
     /**
      * Get a temporary file name.
      * 
@@ -550,11 +622,11 @@ public class Blat {
     }
 
     /**
-     * @param querySequenceFile
-     * @param outputPath
-     * @return processed results.
-     * @throws IOException
-     */
+                                                                         * @param querySequenceFile
+                                                                         * @param outputPath
+                                                                         * @return processed results.
+                                                                         * @throws IOException
+                                                                         */
     private Collection<BlatResult> gfClient( File querySequenceFile, String outputPath, int portToUse )
             throws IOException {
         if ( !os.startsWith( "windows" ) ) return jniGfClientCall( querySequenceFile, outputPath, portToUse );
@@ -563,17 +635,17 @@ public class Blat {
     }
 
     /**
-     * @param host
-     * @param port
-     * @param seqDir
-     * @param inputFile
-     * @param outputFile
-     */
+             * @param host
+             * @param port
+             * @param seqDir
+             * @param inputFile
+             * @param outputFile
+             */
     private native void GfClientCall( String h, String p, String dir, String input, String output );
 
     /**
-     * @throws ConfigurationException
-     */
+         * @throws ConfigurationException
+         */
     private void init() throws ConfigurationException {
 
         log.debug( "Reading global config" );
@@ -657,14 +729,6 @@ public class Blat {
         return this.processPsl( outputPath, null );
     }
 
-    public static String getMinutesElapsed( StopWatch overallWatch ) {
-        Long overallElapsed = overallWatch.getTime();
-        NumberFormat nf = new DecimalFormat();
-        nf.setMaximumFractionDigits( 2 );
-        String minutes = nf.format( overallElapsed / ( 60.0 * 1000.0 ) );
-        return minutes;
-    }
-
     /**
      * @param filePath to the Blat output file in psl format
      * @return processed results.
@@ -678,52 +742,8 @@ public class Blat {
         return brp.getResults();
     }
 
-    /**
-     * @param inputStream to the Blat output file in psl format
-     * @return processed results.
-     */
-    public Collection<BlatResult> processPsl( InputStream inputStream, Taxon taxon ) throws IOException {
-        log.debug( "Processing " + inputStream );
-        BlatResultParser brp = new BlatResultParser();
-        brp.setTaxon( taxon );
-        brp.setScoreThreshold( this.blatScoreThreshold );
-        brp.parse( inputStream );
-        return brp.getResults();
-    }
-
-    /**
-     * @return Returns the humanServerPort.
-     */
-    public int getHumanServerPort() {
-        return this.humanServerPort;
-    }
-
-    /**
-     * @return Returns the mouseServerPort.
-     */
-    public int getMouseServerPort() {
-        return this.mouseServerPort;
-    }
-
-    /**
-     * @return Returns the ratServerPort.
-     */
-    public int getRatServerPort() {
-        return this.ratServerPort;
-    }
-
-    /**
-     * @return the blatScoreThreshold
-     */
-    public double getBlatScoreThreshold() {
-        return this.blatScoreThreshold;
-    }
-
-    /**
-     * @param blatScoreThreshold the blatScoreThreshold to set
-     */
-    public void setBlatScoreThreshold( double blatScoreThreshold ) {
-        this.blatScoreThreshold = blatScoreThreshold;
+    public static enum BlattableGenome {
+        HUMAN, MOUSE, RAT
     }
 
 }
