@@ -58,8 +58,6 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
     private Taxon taxon;
 
-    private ArrayDesignReportService arrayDesignReportService;
-
     /*
      * (non-Javadoc)
      * 
@@ -253,7 +251,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
         arrayDesignSequenceAlignmentService = ( ArrayDesignSequenceAlignmentService ) this
                 .getBean( "arrayDesignSequenceAlignmentService" );
-        arrayDesignReportService = ( ArrayDesignReportService ) this.getBean( "arrayDesignReportService" );
+
     }
 
 }

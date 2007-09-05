@@ -167,6 +167,8 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
 
                 seqs.remove( anchorSeq );
 
+                this.bss.thaw( seqs );
+
                 // ensure this group really does contain all duplicates.
                 if ( log.isDebugEnabled() )
                     log.debug( "Examining set of " + seqs.size() + " possible duplicates of " + anchorSeq );
@@ -206,6 +208,7 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
     /**
      * @param bioSequences
      */
+    @SuppressWarnings("unchecked")
     private void processSequences( Collection<BioSequence> bioSequences ) {
         // ///////////////////////////////
         // First stage: fix biosequences that lack database entries, when there is one for another essentially
@@ -309,6 +312,9 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
      * @return
      */
     private boolean equals( BioSequence one, BioSequence that ) {
+
+        bss.thaw( one );
+        bss.thaw( that );
 
         if ( one.getSequenceDatabaseEntry() != null
                 && that.getSequenceDatabaseEntry() != null

@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
+import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
@@ -47,6 +48,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
     ArrayDesignService arrayDesignService;
     String arrayDesignName = null;
     AuditTrailService auditTrailService;
+    protected ArrayDesignReportService arrayDesignReportService;
 
     @Override
     @SuppressWarnings("static-access")
@@ -105,7 +107,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
                 throw new IllegalArgumentException( "Please only select one of 'mdate' OR 'auto'" );
             }
         }
-
+        arrayDesignReportService = ( ArrayDesignReportService ) this.getBean( "arrayDesignReportService" );
         arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
         this.auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
     }
@@ -133,9 +135,9 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
     protected boolean needToRun( Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
             Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
 
-        if ( skipIfLastRunLaterThan == null && autoSeek == false ) return true;
-
         auditTrailService.thaw( arrayDesign );
+
+        if ( skipIfLastRunLaterThan == null && autoSeek == false ) return true;
 
         ArrayDesign subsumingArrayDesign = arrayDesign.getSubsumingArrayDesign();
 

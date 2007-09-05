@@ -43,8 +43,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private TaxonService taxonService;
     private String taxonName;
     private Taxon taxon;
-    private ArrayDesignReportService arrayDesignReportService;
-
     /*
      * (non-Javadoc)
      * 
@@ -251,7 +249,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         super.processOptions();
         arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this
                 .getBean( "arrayDesignProbeMapperService" );
-        arrayDesignReportService = ( ArrayDesignReportService ) this.getBean( "arrayDesignReportService" );
         this.taxonService = ( TaxonService ) this.getBean( "taxonService" );
 
         if ( this.hasOption( 't' ) ) {

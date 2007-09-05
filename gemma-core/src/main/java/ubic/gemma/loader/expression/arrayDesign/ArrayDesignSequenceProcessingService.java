@@ -41,6 +41,9 @@ import ubic.gemma.loader.genome.FastaCmd;
 import ubic.gemma.loader.genome.FastaParser;
 import ubic.gemma.loader.genome.SimpleFastaCmd;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -64,6 +67,7 @@ import ubic.gemma.util.progress.ProgressManager;
  * @spring.property name="persisterHelper" ref="persisterHelper"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
  * @spring.property name="bioSequenceService" ref="bioSequenceService"
+ * @spring.property name="externalDatabaseService" ref="externalDatabaseService"
  */
 public class ArrayDesignSequenceProcessingService {
 
@@ -87,6 +91,8 @@ public class ArrayDesignSequenceProcessingService {
     private PersisterHelper persisterHelper;
 
     private BioSequenceService bioSequenceService;
+
+    private ExternalDatabaseService externalDatabaseService;
 
     /**
      * @param nameMap
@@ -763,7 +769,6 @@ public class ArrayDesignSequenceProcessingService {
             Map<String, BioSequence> found = findOrUpdateSequences( accessionsToFetch, retrievedSequences, taxon, force );
 
             finalResult.addAll( found.values() );
-
             notFound = getUnFound( notFound, found );
 
             if ( notFound.isEmpty() ) {
@@ -911,7 +916,35 @@ public class ArrayDesignSequenceProcessingService {
                         + " from " + dbname );
             retrievedSequences.addAll( moreBioSequences );
         }
+
+        fillInGenbank( retrievedSequences );
+
         return retrievedSequences;
+    }
+
+    /**
+     * @param retrievedSequences
+     */
+    private void fillInGenbank( Collection<BioSequence> retrievedSequences ) {
+        ExternalDatabase genbank = getGenbank();
+        assert genbank.getId() != null;
+        for ( BioSequence bioSequence : retrievedSequences ) {
+            if ( bioSequence.getSequenceDatabaseEntry() == null ) {
+                log.warn( "No database entry for " + bioSequence );
+                continue;
+            }
+            if ( bioSequence.getSequenceDatabaseEntry().getExternalDatabase().getId() == null ) {
+                bioSequence.getSequenceDatabaseEntry().setExternalDatabase( genbank );
+            }
+        }
+    }
+
+    public void setExternalDatabaseService( ExternalDatabaseService externalDatabaseService ) {
+        this.externalDatabaseService = externalDatabaseService;
+    }
+
+    private ExternalDatabase getGenbank() {
+        return this.externalDatabaseService.find( "Genbank" );
     }
 
     /**
@@ -990,7 +1023,8 @@ public class ArrayDesignSequenceProcessingService {
         Map<String, BioSequence> found = new HashMap<String, BioSequence>();
         for ( BioSequence sequence : retrievedSequences ) {
             sequence.setTaxon( taxon );
-            sequence = createOrUpdateSequence( sequence, force );
+            assert sequence.getSequenceDatabaseEntry() != null : "No sequence database entry for " + sequence;
+            sequence = createOrUpdateGenbankSequence( sequence, force );
             String accession = sequence.getSequenceDatabaseEntry().getAccession();
             found.put( accession, sequence );
             accessionsToFetch.remove( accession );
@@ -1014,7 +1048,7 @@ public class ArrayDesignSequenceProcessingService {
         for ( BioSequence sequence : retrievedSequences ) {
             if ( log.isDebugEnabled() ) log.debug( "Processing retrieved sequence: " + sequence );
             sequence.setTaxon( taxon );
-            sequence = createOrUpdateSequence( sequence, force );
+            sequence = createOrUpdateGenbankSequence( sequence, force );
             String accession = sequence.getSequenceDatabaseEntry().getAccession();
             found.put( accession, sequence );
             accessionsToFetch.remove( accession );
@@ -1054,59 +1088,100 @@ public class ArrayDesignSequenceProcessingService {
             boolean force ) {
         BioSequence found = this.searchBlastDbs( databaseNames, blastDbHome, sequenceId );
         if ( found == null ) return null;
-        return createOrUpdateSequence( found, force );
+        return createOrUpdateGenbankSequence( found, force );
 
     }
 
     /**
      * @param found a new (nonpersistent) biosequence that can be used to create a new entry or update an existing one
-     *        with the sequence.
+     *        with the sequence. The sequence would have come from Genbank.
      * @param force If true, if an existing BioSequence that matches if found in the system, any existing sequence
      *        information in the BioSequence will be overwritten.
      * @return persistent BioSequence.
      */
-    private BioSequence createOrUpdateSequence( BioSequence found, boolean force ) {
+    private BioSequence createOrUpdateGenbankSequence( BioSequence found, boolean force ) {
         assert found != null;
-        BioSequence existing = bioSequenceService.findByAccession( found.getSequenceDatabaseEntry() );
+        DatabaseEntry sequenceDatabaseEntry = found.getSequenceDatabaseEntry();
 
+        assert sequenceDatabaseEntry != null; // this should always be the case because the sequences comes from
+        // genbank (blastdb)
+        assert sequenceDatabaseEntry.getExternalDatabase() != null;
+
+        BioSequence existing = null;
+
+        existing = bioSequenceService.findByAccession( sequenceDatabaseEntry );
+
+        BioSequence result = null;
         if ( existing == null ) {
             if ( log.isDebugEnabled() ) log.debug( "Find (or creating) new sequence " + found );
-            BioSequence bs = bioSequenceService.find( found ); // there still might be a match.
-            if ( bs == null ) {
-                existing = bioSequenceService.create( found );
-                return updateExistingWithSequenceData( found, existing, force );
-            } else {
-                return bs;
+
+            result = bioSequenceService.find( found ); // there still might be a match.
+
+            if ( result == null ) {
+                result = bioSequenceService.create( found );
             }
         } else {
-            return updateExistingWithSequenceData( found, existing, force );
+            result = existing;
+        }
+
+        assert result != null;
+        // note that no matter what we make sure the database entry is filled in.
+        if ( force ) {
+            result = updateExistingWithSequenceData( found, result );
+        } else {
+            fillInDatabaseEntry( found, result );
+        }
+
+        return result;
+    }
+
+    /**
+     * Unfortunately we have to make sure the database entry is filled in, even if we aren't using 'force'. This seems
+     * due in part to an old bug in the system that left these blank. This is our opporunity to fill them in.
+     */
+    private void fillInDatabaseEntry( BioSequence found, BioSequence existing ) {
+        if ( existing.getSequenceDatabaseEntry() == null ) {
+            existing.setSequenceDatabaseEntry( found.getSequenceDatabaseEntry() );
+            bioSequenceService.update( existing );
         }
     }
 
     /**
+     * Replace information in "existing" with data from "found".
+     * 
      * @param found
      * @param existing
      * @return
      */
-    private BioSequence updateExistingWithSequenceData( BioSequence found, BioSequence existing, boolean force ) {
+    private BioSequence updateExistingWithSequenceData( BioSequence found, BioSequence existing ) {
         assert found != null;
         assert existing != null;
 
-        if ( force || existing.getSequence() == null ) {
-            if ( existing.getType() == null ) existing.setType( found.getType() ); // generic...
-            existing.setLength( found.getLength() );
-            assert found.getSequence() != null;
+        if ( existing.getType() == null ) existing.setType( found.getType() ); // generic...
+        existing.setLength( found.getLength() );
+        assert found.getSequence() != null;
 
-            // existing.setName( found.getName() );
-            existing.setSequence( found.getSequence() );
-            existing.setIsApproximateLength( found.getIsApproximateLength() );
+        existing.setSequence( found.getSequence() );
+        existing.setIsApproximateLength( found.getIsApproximateLength() );
 
-            bioSequenceService.update( existing );
-            if ( log.isDebugEnabled() )
-                log.debug( "Updated " + existing + " with sequence "
-                        + StringUtils.abbreviate( existing.getSequence(), 20 ) );
+        if ( existing.getSequenceDatabaseEntry() == null ) {
+            log.debug( "Inserting database entry into existing sequence " + existing );
+            existing.setSequenceDatabaseEntry( found.getSequenceDatabaseEntry() );
         }
 
+        // This is just for debugging purposes -- some array designs give suspicious sequence information.
+        if ( existing.getSequence().length() > 10e4 ) {
+            log.warn( existing + " - new sequence is very long for an expression probe ("
+                    + existing.getSequence().length() + " bases)" );
+        }
+
+        bioSequenceService.update( existing );
+        if ( log.isDebugEnabled() )
+            log
+                    .debug( "Updated " + existing + " with sequence "
+                            + StringUtils.abbreviate( existing.getSequence(), 20 ) );
+
+        assert found.getSequenceDatabaseEntry().getExternalDatabase() != null;
         return existing;
     }
 

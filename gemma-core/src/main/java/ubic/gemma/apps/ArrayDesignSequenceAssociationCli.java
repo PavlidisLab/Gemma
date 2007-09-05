@@ -25,6 +25,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 
 import ubic.basecode.util.FileTools;
+import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -47,7 +48,6 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
     private String sequenceFile;
     private boolean force = false;
     private TaxonService taxonService;
-
     private String taxonName = null;
 
     private String idFile = null;
@@ -244,6 +244,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
      * @param arrayDesign
      */
     private void audit( ArrayDesign arrayDesign, String note ) {
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
         AuditEventType eventType = ArrayDesignSequenceUpdateEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }
