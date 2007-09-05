@@ -209,8 +209,8 @@ public class ProbeMapper {
 
         } // end of iteration over sequence
 
-        if ( log.isInfoEnabled() && skipped > 0 ) {
-            log.info( "Skipped " + skipped + "/" + blatResults.size()
+        if ( log.isDebugEnabled() && skipped > 0 ) {
+            log.debug( "Skipped " + skipped + "/" + blatResults.size()
                     + " individual blat results that didn't meet criteria; " + skippedDueToRepeat
                     + " were skipped due to repeat or low complexity content." );
         }
