@@ -23,7 +23,6 @@ import java.util.Hashtable;
 
 import ubic.gemma.analysis.util.RCommander;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Gene;
 
 /**

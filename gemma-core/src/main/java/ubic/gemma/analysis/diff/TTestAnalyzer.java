@@ -21,7 +21,11 @@ package ubic.gemma.analysis.diff;
 import java.util.Collection;
 import java.util.Hashtable;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 
 /**
@@ -29,6 +33,8 @@ import ubic.gemma.model.genome.Gene;
  * @version $Id$
  */
 public class TTestAnalyzer extends AbstractAnalyzer {
+
+    private Log log = LogFactory.getLog( this.getClass() );
 
     public TTestAnalyzer() {
         super();
@@ -52,7 +58,26 @@ public class TTestAnalyzer extends AbstractAnalyzer {
      */
     @Override
     public Hashtable<Gene, Double> getPValues( Collection<ExperimentalFactor> experimentalFactors ) {
-        // TODO Auto-generated method stub
+        for ( ExperimentalFactor factor : experimentalFactors ) {
+            Collection<FactorValue> factorValues = factor.getFactorValues();
+
+            tTest( factorValues );
+        }
         return null;
+    }
+
+    /**
+     * @param factorValues
+     * @return
+     */
+    protected double tTest( Collection<FactorValue> factorValues ) {
+        double pVal = 0;
+        for ( FactorValue factorValue : factorValues ) {
+            // get the factor values and pass to a tTest method in baseCode that takes in two double array lists
+            // (DoubleArrayList)
+            // and a command. See listTwoDoubleArrayEval( "t.test(x,y)", "x", list1values, "y", list2values ) in the
+            // SimpleTTestAnalyzer
+        }
+        return pVal;
     }
 }
