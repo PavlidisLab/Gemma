@@ -24,7 +24,9 @@ import java.util.HashSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -37,6 +39,7 @@ import ubic.gemma.web.controller.common.auditAndSecurity.AuditEventValueObject;
  * @spring.bean id="auditController"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
+ * @spring.property name="auditTrailService" ref="auditTrailService"
  * @author pavlidis
  * @version $Id$
  */
@@ -46,14 +49,12 @@ public class AuditController {
 
     ArrayDesignService arrayDesignService;
     ExpressionExperimentService expressionExperimentService;
+    AuditTrailService auditTrailService;
 
-    @SuppressWarnings("unchecked")
-    public Collection<AuditEventValueObject> getEvents( EntityDelegator e ) {
+    public Auditable getAuditable( EntityDelegator e ) {
         if ( e == null || e.getId() == null ) return null;
         if ( e.getClassDelegatingFor() == null ) return null;
-
-        Collection<AuditEventValueObject> result = new HashSet<AuditEventValueObject>();
-        Collection events = new HashSet<AuditEvent>();
+        
         Class<?> clazz;
         try {
             clazz = Class.forName( e.getClassDelegatingFor() );
@@ -62,28 +63,56 @@ public class AuditController {
         }
         if ( ExpressionExperiment.class.isAssignableFrom( clazz ) ) {
             ExpressionExperiment entity = expressionExperimentService.load( e.getId() );
-
             if ( entity == null ) {
                 log.warn( "Entity with id = " + e.getId() + " not found" );
-                return new HashSet();
             }
-            events = expressionExperimentService.getEvents( entity );
+            return entity;
         } else if ( ArrayDesign.class.isAssignableFrom( clazz ) ) {
             ArrayDesign entity = arrayDesignService.load( e.getId() );
             if ( entity == null ) {
                 log.warn( "Entity with id = " + e.getId() + " not found" );
-                return new HashSet();
             }
-            events = arrayDesignService.getEvents( entity );
+            return entity;
         } else {
             log.warn( "We don't support that class yet, sorry" );
+            return null;
         }
-
+    }
+    
+    @SuppressWarnings("unchecked")
+    public Collection<AuditEventValueObject> getEvents( EntityDelegator e ) {
+        Collection<AuditEventValueObject> result = new HashSet<AuditEventValueObject>();
+        Collection events = new HashSet<AuditEvent>();
+        
+        Auditable entity = getAuditable( e );
+        if ( entity instanceof ExpressionExperiment ) {
+            events = expressionExperimentService.getEvents( (ExpressionExperiment)entity );
+        } else if ( entity instanceof ArrayDesign ) {
+            events = arrayDesignService.getEvents( (ArrayDesign)entity );
+        }
+        
         for ( AuditEvent ev : ( Collection<AuditEvent> ) events ) {
             result.add( new AuditEventValueObject( ev ) );
         }
 
         return result;
+    }
+    
+    public void addAuditEvent( EntityDelegator e, String auditEventType, String comment ) {
+        Auditable entity = getAuditable( e );
+        if ( entity == null ) {
+            log.warn( "Couldn't find Auditable represented by " + e );
+            return;
+        }
+        
+        if ( auditEventType.equals("TroubleStatusFlagEvent") ) {
+            auditTrailService.addTroubleFlag( entity, comment );
+        } else if ( auditEventType.equals( "OKStatusFlagEvent" ) ) {
+            auditTrailService.addOkFlag( entity, comment );
+        } else {
+            log.warn( "We don't support that type of audit event yet, sorry" );
+        }
+        
     }
 
     public void setArrayDesignService( ArrayDesignService auditableService ) {
@@ -92,5 +121,9 @@ public class AuditController {
 
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
+    }
+
+    public void setAuditTrailService( AuditTrailService auditTrailService ) {
+        this.auditTrailService = auditTrailService;
     }
 }

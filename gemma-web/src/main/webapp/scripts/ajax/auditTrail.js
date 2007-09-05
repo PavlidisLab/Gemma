@@ -59,14 +59,17 @@ Ext.onReady(function() {
 	var auditEventTypeCombo = new Ext.form.ComboBox({
 		store: auditEventTypeStore,
 		displayField: 'description',
+		valueField: 'type',
 		typeAhead: true,
 		mode: 'local',
 		triggerAction: 'all',
 		emptyText: 'Select an event type...',
+		editable: false,
 		width: 200
 	});
 	var auditEventCommentField = new Ext.form.TextField({
-		fieldLabel: 'Comment',
+		fieldLabel: 'Comment:',
+		fieldWidth: 50,
 		name: 'comment',
 		width: 400,
 		allowBlank: true
@@ -77,16 +80,12 @@ Ext.onReady(function() {
 		text: 'save',
 		tooltip: 'Save the AuditEvent',
 		handler: function() {
-			alert("Save button clicked with '" +
-				auditEventTypeCombo.getValue() + "' and '" +
-				auditEventCommentField.getValue() + "'");
-			// TODO implement AuditTrailServiceHelper
-			// AuditTrailServiceHelper.addEvent(
-			// 	auditableId,
-			// 	auditEventTypeCombo.getValue(),
-			// 	auditEventCommentField.getValue(),
-			// 	function() { ds.reload(); grid.render(); }
-			// );
+			AuditController.addAuditEvent(
+				g,
+				auditEventTypeCombo.getValue(),
+				auditEventCommentField.getValue(),
+				function() { ds.reload(); grid.render(); }
+			);
 		}
 	});
 	

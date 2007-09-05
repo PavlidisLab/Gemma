@@ -311,6 +311,7 @@
 					<property name="includes">
 						<list>
 							<value>getEvents</value>
+							<value>addAuditEvent</value>
 						</list>
 					</property>
 				</bean>
