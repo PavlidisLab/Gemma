@@ -25,7 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 
 /**
@@ -46,7 +46,7 @@ public class TTestAnalyzer extends AbstractAnalyzer {
      * @see ubic.gemma.analysis.diff.AbstractAnalyzer#getSignificantGenes(java.util.Collection)
      */
     @Override
-    public Collection<Gene> getSignificantGenes( Collection<ExperimentalFactor> expressionExperimentSubsets ) {
+    public Collection<Gene> getSignificantGenes( Collection<ExperimentalFactor> experimentalFactors ) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -54,15 +54,15 @@ public class TTestAnalyzer extends AbstractAnalyzer {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.analysis.diff.AbstractAnalyzer#getPValues(java.util.Collection)
+     * @see ubic.gemma.analysis.diff.AbstractAnalyzer#getPValues(ubic.gemma.model.expression.experiment.ExpressionExperiment,
+     *      java.util.Collection)
      */
     @Override
-    public Hashtable<Gene, Double> getPValues( Collection<ExperimentalFactor> experimentalFactors ) {
-        for ( ExperimentalFactor factor : experimentalFactors ) {
-            Collection<FactorValue> factorValues = factor.getFactorValues();
+    public Hashtable<Gene, Double> getPValues( ExpressionExperiment expressionExperiment,
+            Collection<ExperimentalFactor> experimentalFactors ) {
 
-            tTest( factorValues );
-        }
+        tTest( expressionExperiment, experimentalFactors );
+
         return null;
     }
 
@@ -70,13 +70,30 @@ public class TTestAnalyzer extends AbstractAnalyzer {
      * @param factorValues
      * @return
      */
-    protected double tTest( Collection<FactorValue> factorValues ) {
+    protected double tTest( ExpressionExperiment expressionExperiment,
+            Collection<ExperimentalFactor> experimentalFactors ) {
+
         double pVal = 0;
-        for ( FactorValue factorValue : factorValues ) {
-            // get the factor values and pass to a tTest method in baseCode that takes in two double array lists
-            // (DoubleArrayList)
-            // and a command. See listTwoDoubleArrayEval( "t.test(x,y)", "x", list1values, "y", list2values ) in the
-            // SimpleTTestAnalyzer
+
+        Collection<ExperimentalFactor> efs = expressionExperiment.getExperimentalDesign().getExperimentalFactors();
+
+        for ( ExperimentalFactor experimentalFactor : experimentalFactors ) {
+
+            if ( !efs.contains( experimentalFactor ) )
+                throw new RuntimeException( "Supplied experimental factor " + experimentalFactor
+                        + "does not match the experimental factors of the design." );
+
+            // 1. Get the expression values for each factor value. There could be multiple bioassays (levels) for each
+            // factor value (group).
+            // 2. Store each group of expression values as a double[][] (or another structure in baseCode).
+            // 3. Each row of the double[][] holds all the values for one group of one factor value. Input this one dim
+            // array into the R method (see SimpleTTestAnalyzer).
+
+            // Collection<FactorValue> factorValues = experimentalFactor.getFactorValues();
+            //
+            // for ( FactorValue factorValue : factorValues ) {
+            //                
+            // }
         }
         return pVal;
     }

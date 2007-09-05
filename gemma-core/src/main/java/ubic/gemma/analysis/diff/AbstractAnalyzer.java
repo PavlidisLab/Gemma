@@ -23,6 +23,7 @@ import java.util.Hashtable;
 
 import ubic.gemma.analysis.util.RCommander;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 
 /**
@@ -40,9 +41,11 @@ public abstract class AbstractAnalyzer extends RCommander {
     public abstract Collection<Gene> getSignificantGenes( Collection<ExperimentalFactor> experimentalFactors );
 
     /**
+     * @param expressionExperiment
      * @param experimentalFactors
-     * @return Hashtable<Gene, Double>
+     * @return
      */
-    public abstract Hashtable<Gene, Double> getPValues( Collection<ExperimentalFactor> experimentalFactors );
+    public abstract Hashtable<Gene, Double> getPValues( ExpressionExperiment expressionExperiment,
+            Collection<ExperimentalFactor> experimentalFactors );
 
 }

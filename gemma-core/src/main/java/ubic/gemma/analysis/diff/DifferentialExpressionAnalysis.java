@@ -25,6 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 
@@ -44,11 +45,11 @@ public class DifferentialExpressionAnalysis {
 
     Collection<Gene> significantGenes = null;
 
-    public void analyze( Collection<ExperimentalFactor> experimentalFactors ) {
+    public void analyze( ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> experimentalFactors ) {
 
         AbstractAnalyzer analyzer = determineAnalysis( experimentalFactors );
 
-        pvalues = analyzer.getPValues( experimentalFactors );
+        pvalues = analyzer.getPValues( expressionExperiment, experimentalFactors );
 
         significantGenes = analyzer.getSignificantGenes( experimentalFactors );
     }
