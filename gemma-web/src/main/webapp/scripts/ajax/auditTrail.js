@@ -54,6 +54,7 @@ Ext.onReady(function() {
 		data: [
 			['TroubleStatusFlagEvent', 'Trouble flag'],
 			['OKStatusFlagEvent', 'OK flag (clear Trouble flag)']
+			['ValidatedFlagEvent', 'Validated flag']
 		]
 	});
 	var auditEventTypeCombo = new Ext.form.ComboBox({

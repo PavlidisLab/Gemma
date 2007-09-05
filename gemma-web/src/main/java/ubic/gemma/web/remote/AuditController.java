@@ -109,6 +109,8 @@ public class AuditController {
             auditTrailService.addTroubleFlag( entity, comment );
         } else if ( auditEventType.equals( "OKStatusFlagEvent" ) ) {
             auditTrailService.addOkFlag( entity, comment );
+        } else if ( auditEventType.equals( "ValidatedFlagEvent" ) ) {
+            auditTrailService.addValidatedFlag( entity, comment );
         } else {
             log.warn( "We don't support that type of audit event yet, sorry" );
         }
