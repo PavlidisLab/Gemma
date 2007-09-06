@@ -1192,15 +1192,27 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     }
 
     @Override
-    protected void handleRemoveBiologicalCharacteristics( ArrayDesign arrayDesign ) throws Exception {
+    protected void handleRemoveBiologicalCharacteristics( final ArrayDesign arrayDesign ) throws Exception {
         if ( arrayDesign == null ) {
             throw new IllegalArgumentException( "Array design cannot be null" );
         }
-        this.thawLite( arrayDesign );
-        for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
-            cs.setBiologicalCharacteristic( null );
-        }
-        this.update( arrayDesign );
+        HibernateTemplate templ = this.getHibernateTemplate();
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                session.lock( arrayDesign, LockMode.READ );
+                int count = 0;
+                for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+                    cs.setBiologicalCharacteristic( null );
+                    session.update( cs );
+                    session.evict( cs );
+                    if ( ++count % LOGGING_UPDATE_EVENT_COUNT == 0) {
+                        log.info( "Cleared sequence association for " + count + " composite sequences" );
+                    }
+                }
+
+                return null;
+            }
+        } );
     }
 
 }
