@@ -214,13 +214,13 @@ public class ArrayDesignWrapper extends TableDecorator {
                 + "</td></tr>"
                 + "<tr><td title=\"Number of probes with sequences\">"
                 + "With seq"
-                + "</td><td>"
+                + "</td><td align=\"right\" >"
                 + object.getNumProbeSequences()
                 + "</td></tr>"
                 + "<tr><td title=\"Number of probes with at least one genome alignment\">"
                 + "With align"
                 + "</td>"
-                + "<td>"
+                + "<td align=\"right\" >"
                 + object.getNumProbeAlignments()
                 + "</td></tr>"
                 + "<tr><td title=\"Number of probes mapped to genes (including predicted and anonymous locations)\">"
@@ -251,8 +251,8 @@ public class ArrayDesignWrapper extends TableDecorator {
                 + "</td></tr>"
                 +
 
-                "<tr><td>"
-                + "Unique genes represented"
+                "<tr><td title=\"Number of unique genes represented on the array\" >"
+                + "Unique genes"
                 + "</td><td align=\"right\" >"
                 + object.getNumGenes()
                 + "</td></tr>"
