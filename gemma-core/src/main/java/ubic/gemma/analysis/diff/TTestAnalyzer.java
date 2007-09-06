@@ -18,15 +18,22 @@
  */
 package ubic.gemma.analysis.diff;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * @author keshav
@@ -46,7 +53,7 @@ public class TTestAnalyzer extends AbstractAnalyzer {
      * @see ubic.gemma.analysis.diff.AbstractAnalyzer#getSignificantGenes(java.util.Collection)
      */
     @Override
-    public Collection<Gene> getSignificantGenes( Collection<ExperimentalFactor> experimentalFactors ) {
+    public Collection<DesignElement> getSignificantGenes( Collection<ExperimentalFactor> experimentalFactors ) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -58,10 +65,16 @@ public class TTestAnalyzer extends AbstractAnalyzer {
      *      java.util.Collection)
      */
     @Override
-    public Hashtable<Gene, Double> getPValues( ExpressionExperiment expressionExperiment,
+    public HashMap<DesignElement, Double> getPValues( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> experimentalFactors ) {
 
-        tTest( expressionExperiment, experimentalFactors );
+        if ( experimentalFactors.size() != 1 )
+            throw new RuntimeException( "T-test supports one experimental factor.  Received "
+                    + experimentalFactors.size() + "." );
+
+        ExperimentalFactor experimentalFactor = experimentalFactors.iterator().next();
+
+        tTest( expressionExperiment, experimentalFactor );
 
         return null;
     }
@@ -70,24 +83,43 @@ public class TTestAnalyzer extends AbstractAnalyzer {
      * @param factorValues
      * @return
      */
-    protected double tTest( ExpressionExperiment expressionExperiment,
-            Collection<ExperimentalFactor> experimentalFactors ) {
+    protected Map<DesignElement, Double> tTest( ExpressionExperiment expressionExperiment,
+            ExperimentalFactor experimentalFactor ) {
 
-        double pVal = 0;
+        Collection<FactorValue> factorValues = experimentalFactor.getFactorValues();
 
-        Collection<ExperimentalFactor> efs = expressionExperiment.getExperimentalDesign().getExperimentalFactors();
+        if ( factorValues.size() != 1 )
+            throw new RuntimeException( "Only supports one factor value per experimental factor." );
 
-        for ( ExperimentalFactor experimentalFactor : experimentalFactors ) {
+        Collection<BioMaterial> biomaterials = new ArrayList<BioMaterial>();
 
-            if ( !efs.contains( experimentalFactor ) )
-                throw new RuntimeException( "Supplied experimental factor " + experimentalFactor
-                        + "does not match the experimental factors of the design." );
+        Collection<BioAssay> allAssays = expressionExperiment.getBioAssays();
 
-            // ExpressionDataMatrix matrixA = new ExpressionDataDoubleMatrix(filteredDesignElementDataVectorsA);
-            // ExpressionDataMatrix matrixB = new ExpressionDataDoubleMatrix(filteredDesignElementDataVectorsB);
-            // tTest(matrixA, matrixB);
-            // for each matrix get row and pass the double[] to the ttest R method (see SimpleTTestAnalyzer).
+        for ( BioAssay assay : allAssays ) {
+            Collection<BioMaterial> samplesUsed = assay.getSamplesUsed();
+            for ( BioMaterial sampleUsed : samplesUsed ) {
+                Collection<FactorValue> fvs = sampleUsed.getFactorValues();
+                if ( fvs.size() != 1 ) throw new RuntimeException( "Only supports one factor value per biomaterial." );
+
+                biomaterials.add( sampleUsed );
+            }
         }
-        return pVal;
+
+        ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( expressionExperiment
+                .getDesignElementDataVectors() );
+
+        return tTest( matrix, biomaterials );
+    }
+
+    /**
+     * @param matrix
+     * @param biomaterials
+     * @return
+     */
+    protected Map<DesignElement, Double> tTest( ExpressionDataMatrix matrix, Collection<BioMaterial> biomaterials ) {
+
+        // make the R call ... returning null for now.
+
+        return null;
     }
 }

@@ -19,15 +19,15 @@
 package ubic.gemma.analysis.diff;
 
 import java.util.Collection;
-import java.util.Hashtable;
+import java.util.HashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.genome.Gene;
 
 /**
  * @author keshav
@@ -41,9 +41,9 @@ public class DifferentialExpressionAnalysis {
     private int FACTOR_VALUE_ONE = 1;
     private int FACTOR_VALUE_TWO = 2;
 
-    Hashtable<Gene, Double> pvalues = null;
+    HashMap<DesignElement, Double> pvalues = null;
 
-    Collection<Gene> significantGenes = null;
+    Collection<DesignElement> significantGenes = null;
 
     public void analyze( ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> experimentalFactors ) {
 
