@@ -30,7 +30,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  */
 public interface FastaCmd {
 
-    public BioSequence getByAccesion( String accession, String database );
+    public BioSequence getByAccession( String accession, String database );
 
     public BioSequence getByIdentifier( int identifier, String database );
 

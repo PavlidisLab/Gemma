@@ -232,9 +232,9 @@ public class SimpleFastaCmd implements FastaCmd {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.loader.genome.FastaCmd#getByAccesion(java.lang.String, java.lang.String)
+     * @see ubic.gemma.loader.genome.FastaCmd#getByAccession(java.lang.String, java.lang.String)
      */
-    public BioSequence getByAccesion( String accession, String database ) {
+    public BioSequence getByAccession( String accession, String database ) {
         return this.getByAccession( accession, database, blastDbHome );
     }
 
