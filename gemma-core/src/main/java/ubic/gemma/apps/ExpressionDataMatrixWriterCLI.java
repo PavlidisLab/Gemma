@@ -71,7 +71,7 @@ public class ExpressionDataMatrixWriterCLI extends
             try {
                 MatrixWriter out = new MatrixWriter();
                 PrintWriter writer = new PrintWriter(outFileName);
-                out.write(writer, dataMatrix, true);
+                out.write(writer, dataMatrix, true, false);
             } catch (IOException e) {
             	return e;
             }

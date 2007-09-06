@@ -1,14 +1,9 @@
 package ubic.gemma.apps;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.cli.Option;
@@ -16,14 +11,15 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.time.StopWatch;
 
 import ubic.basecode.math.distribution.HistogramSampler;
+import ubic.gemma.analysis.linkAnalysis.CoexpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
-import ubic.gemma.util.ConfigUtils;
 import cern.colt.list.DoubleArrayList;
 
 public class CorrelationHistogramSamplerCLI extends
 		AbstractGeneExpressionExperimentManipulatingCLI {
+	private CoexpressionAnalysisService coexprAnalysisService;
 	private Taxon taxon;
 	private int numSamples;
 	private String outFileName;
@@ -81,6 +77,7 @@ public class CorrelationHistogramSamplerCLI extends
 		}
 		outFileName = getOptionValue('o');
 
+		coexprAnalysisService = (CoexpressionAnalysisService) getBean("coexpressionAnalysisService");
 	}
 
 	@Override
@@ -95,9 +92,9 @@ public class CorrelationHistogramSamplerCLI extends
 			return e;
 		}
 
-		Map<ExpressionExperiment, HistogramSampler> ee2SamplerMap = getHistogramSamplerMap(ees);
+		Collection<HistogramSampler> samplers = coexprAnalysisService.getHistogramSamplers(ees);
 
-		log.info("Sampling " + ee2SamplerMap.keySet().size()
+		log.info("Sampling " + samplers.size()
 				+ " expression experiments");
 		log.info("Taking the n-" + kMax + " largest value " + numSamples
 				+ " times");
@@ -106,8 +103,7 @@ public class CorrelationHistogramSamplerCLI extends
 		double[] samples = new double[numSamples];
 		for (int i = 0; i < numSamples; i++) {
 			DoubleArrayList eeSamples = new DoubleArrayList(ees.size());
-			for (ExpressionExperiment ee : ee2SamplerMap.keySet()) {
-				HistogramSampler sampler = ee2SamplerMap.get(ee);
+			for (HistogramSampler sampler : samplers) {
 				eeSamples.add(sampler.nextSample());
 			}
 			log.debug(eeSamples.toString());
@@ -118,7 +114,7 @@ public class CorrelationHistogramSamplerCLI extends
 		log.info("Finished sampling in " + watch);
 
 		String header = "# ";
-		for (ExpressionExperiment ee : ee2SamplerMap.keySet()) {
+		for (ExpressionExperiment ee : ees ) {
 			header += ee.getShortName() + " ";
 		}
 
@@ -144,67 +140,6 @@ public class CorrelationHistogramSamplerCLI extends
 		Exception exc = analysis.doWork(args);
 		if (exc != null)
 			log.error(exc.getMessage());
-	}
-
-	private Map<ExpressionExperiment, HistogramSampler> getHistogramSamplerMap(
-			Collection<ExpressionExperiment> ees) {
-		Map<ExpressionExperiment, HistogramSampler> histSamplers = new HashMap<ExpressionExperiment, HistogramSampler>();
-		for (ExpressionExperiment ee : ees) {
-			String fileName = ConfigUtils.getAnalysisStoragePath()
-					+ ee.getShortName() + ".correlDist.txt";
-			try {
-				HistogramSampler sampler = readHistogramFile(fileName);
-				if (sampler == null)
-					log.error("ERROR: " + ee.getShortName()
-							+ " has an invalid correlation distribution");
-				else
-					histSamplers.put(ee, sampler);
-			} catch (IOException e) {
-				log.error(e.getMessage());
-				log
-						.error("ERROR: Unable to read correlation distribution file for "
-								+ ee.getShortName());
-			}
-		}
-		return histSamplers;
-	}
-
-	/**
-	 * Read a correlation distribution
-	 * 
-	 * @param fileName
-	 * @return a histogram sampler for the read distribution
-	 * @throws IOException
-	 */
-	public HistogramSampler readHistogramFile(String fileName)
-			throws IOException {
-		BufferedReader in = new BufferedReader(new FileReader(fileName));
-		int numHeaderLines = 1;
-		LinkedList<Double> bins = new LinkedList<Double>();
-		List<Integer> countList = new LinkedList<Integer>();
-		while (in.ready()) {
-			String line = in.readLine();
-			if (line.startsWith("#") || numHeaderLines-- > 0)
-				continue;
-			String fields[] = line.split("\t");
-			Double bin = Double.valueOf(fields[0]);
-			bins.add(bin);
-			Integer count = Integer.valueOf(fields[1]);
-			countList.add(count);
-		}
-
-		double min = bins.getFirst().doubleValue();
-		double max = bins.getLast().doubleValue();
-		int[] counts = new int[countList.size()];
-		boolean foundNonZeroCount = false;
-		for (int i = 0; i < counts.length; i++) {
-			counts[i] = countList.get(i);
-			if (counts[i] > 0)
-				foundNonZeroCount = true;
-		}
-		if (!foundNonZeroCount)
-			return null;
-		return new HistogramSampler(counts, min, max);
 	}
 
 }

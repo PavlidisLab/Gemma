@@ -40,7 +40,7 @@ public class EffectSizeCalculationCli extends AbstractGeneCoexpressionManipulati
 
     private Taxon taxon;
 
-    private CoexpressionAnalysisService effectSizeService;
+    private CoexpressionAnalysisService coexpressionAnalysisService;
 
     private ExpressionExperimentService eeService;
 
@@ -100,7 +100,7 @@ public class EffectSizeCalculationCli extends AbstractGeneCoexpressionManipulati
     }
 
     protected void initBeans() {
-        effectSizeService = ( CoexpressionAnalysisService ) this.getBean( "effectSizeService" );
+        coexpressionAnalysisService = ( CoexpressionAnalysisService ) this.getBean( "coexpressionAnalysisService" );
         eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
         geneService = ( GeneService ) this.getBean( "geneService" );
     }
@@ -138,11 +138,11 @@ public class EffectSizeCalculationCli extends AbstractGeneCoexpressionManipulati
         }
 
         FilterConfig filterConfig = new FilterConfig(); // FIXME
-        CoexpressionMatrices matrices = effectSizeService.calculateCoexpressionMatrices( ees, queryGenes, targetGenes, filterConfig);
+        CoexpressionMatrices matrices = coexpressionAnalysisService.calculateCoexpressionMatrices( ees, queryGenes, targetGenes, filterConfig);
         DenseDoubleMatrix3DNamed correlationMatrix = matrices.getCorrelationMatrix();
         DenseDoubleMatrix3DNamed sampleSizeMatrix = matrices.getSampleSizeMatrix();
-        DenseDoubleMatrix2DNamed effectSizeMatrix = effectSizeService.calculateEffectSizeMatrix( correlationMatrix, sampleSizeMatrix );
-        DenseDoubleMatrix2DNamed correlationMatrix2D = effectSizeService.foldCoexpressionMatrix( correlationMatrix );
+        DenseDoubleMatrix2DNamed effectSizeMatrix = coexpressionAnalysisService.calculateEffectSizeMatrix( correlationMatrix, sampleSizeMatrix );
+        DenseDoubleMatrix2DNamed correlationMatrix2D = coexpressionAnalysisService.foldCoexpressionMatrix( correlationMatrix );
         
         // create 2D correlation heat map
         ColorMatrix dataColorMatrix = new ColorMatrix( correlationMatrix2D );

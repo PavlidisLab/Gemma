@@ -286,8 +286,8 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
     }
 
     @Override
-    protected Map handleGetCS2GeneMap( Collection csIds ) throws Exception {
-        return this.getGeneDao().getCS2GeneMap( csIds );
+    protected Map handleGetCS2GeneMap( Collection css ) throws Exception {
+        return this.getGeneDao().getCS2GeneMap( css );
     }
 
     @Override

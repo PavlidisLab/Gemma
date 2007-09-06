@@ -136,7 +136,7 @@ public abstract class AbstractGeneExpressionExperimentManipulatingCLI extends
 		if (experimentListFile != null) {
 			ees.addAll(readExpressionExperimentListFile(experimentListFile));
 		}
-		if (ees.size() == 0) {
+		if (ees.size() == 0 && taxon != null) {
 			ees.addAll(eeService.findByTaxon(taxon));
 		}
 		if (excludeEeFileName != null) {
