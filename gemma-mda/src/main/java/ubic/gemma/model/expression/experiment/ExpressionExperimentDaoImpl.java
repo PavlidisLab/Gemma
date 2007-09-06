@@ -501,7 +501,6 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
-
     }
 
     /*

@@ -211,7 +211,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                 if ( results.size() > 1 ) {
                     debug( results );
                     log.warn( "More than one instance of '" + BioSequence.class.getName()
-                            + "' was found when executing query" );
+                            + "' was found when executing query for accession=" + databaseEntry.getAccession() );
 
                     // favor the one with name matching the accession.
                     for ( Object object : results ) {
@@ -223,7 +223,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
                     throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
                             "No real match frond for  '" + DatabaseEntry.class.getName()
-                                    + "' was found when executing query for " + databaseEntry );
+                                    + "' was found when executing query for accession=" + databaseEntry.getAccession() );
 
                 } else if ( results.size() == 1 ) {
                     result = results.iterator().next();
@@ -273,8 +273,9 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                 session.update( bioSequence );
                 bioSequence.getBioSequence2GeneProduct().size();
 
-                bioSequence.getSequenceDatabaseEntry();
-                session.update( bioSequence.getTaxon() );
+                if ( bioSequence.getTaxon() != null && bioSequence.getTaxon().getId() != null ) {
+                    session.update( bioSequence.getTaxon() );
+                }
 
                 DatabaseEntry dbEntry = bioSequence.getSequenceDatabaseEntry();
 
