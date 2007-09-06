@@ -259,7 +259,8 @@ public class ArrayDesignWrapper extends TableDecorator {
                 + "<tr><td colspan=2 align='center' class='small'>"
                 + "(as of "
                 + object.getDateCached()
-                + ")" + "</td></tr>" + "</table>" );
+                + ")"
+                + "</td></tr>" + "</table>" );
 
         buf.append( "</div>" );
         return buf.toString();
@@ -296,9 +297,7 @@ public class ArrayDesignWrapper extends TableDecorator {
         if ( object == null ) {
             return "Array Design unavailable";
         }
-        return "<form action=\"generateArrayDesignSummary.html?id=" + object.getId()
-                + "\" onSubmit=\"return confirm('Refresh report for " + object.getName()
-                + "?')\" method=\"post\"><input type=\"submit\"  value=\"Refresh\" /></form>";
+        return "<input type=\"button\" value=\"Refresh\" " + "\" onClick=\"updateReport(" + object.getId() + ")\" >";
     }
 
     public String getColor() {

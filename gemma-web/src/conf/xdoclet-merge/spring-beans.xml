@@ -170,6 +170,8 @@
 						<list>
 							<value>getCsSummaries</value>
 							<value>getCsSummaryRange</value>
+							<value>updateReport</value>
+							<value>remove</value>
 						</list>
 					</property>
 				</bean>

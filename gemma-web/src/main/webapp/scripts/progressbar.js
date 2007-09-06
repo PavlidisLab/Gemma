@@ -222,34 +222,7 @@ Ext.extend(progressbar, Ext.util.Observable, {
 	createIndeterminateBarDetails : function (w,h,bgc,brdW,brdC,blkC,speed,blocks,count,action){
 		var div = '<div id="progressTextArea" class="clob" style="font-size:smaller;width:650px;margin:10px;padding:4px;" ><input type="textarea" /></div><div style="width:650px;"><input style="float:left" type="button" id="cancel-button" name="Cancel" value="Cancel job" /><img style="float:right" src="/Gemma/images/default/basic-dialog/progress2.gif" /></div>';
 		Ext.DomHelper.overwrite("progress-area", div);
-//	 	var textArea = new Ext.form.TextArea({grow: false, });
-//	 	textArea.disable();
-//	 	Ext.DomHelper.overwrite("progressTextArea", textArea);
-//	 	
-//		var rz = new Ext.Resizable("progressTextArea", {
-//        	wrap:true,
-//        	minHeight:100,
-//        	pinned:true 
-//    	});
-//    	//rz.on('resize', grid.autoSize, grid);
 	} 
 	
  
 });
-
- 
-
-function startBar(bn){
-	var ie=(document.all)?true:false;
-	var t=(ie)?document.all['blocks'+bn]:document.getElementById('blocks'+bn);
-	if(parseInt(t.style.left)+t.h+1-(t.blocks*t.h+t.blocks)>t.w){
-		t.style.left=-(t.h*2+1)+'px';
-		t.ctr++;
-		if(t.ctr>=t.count){
-			eval(t.action);
-			t.ctr=0;
-		}
-	} else 
-		t.style.left=(parseInt(t.style.left)+t.h+1)+'px';
-} 
-	

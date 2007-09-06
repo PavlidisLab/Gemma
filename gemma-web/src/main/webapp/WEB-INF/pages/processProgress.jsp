@@ -23,22 +23,13 @@
 	 	p.createIndeterminateProgressBar();
 		p.on('fail', handleFailure);
 		p.on('cancel', reset);
-	 	p.startProgress();
-	}
-	 
-});
+	 	p.startProgress(); });
 		</script>
 
-
-
-
-
 <input type = 'hidden' name='taskId' id='taskId' value= '${taskid }'/>
+<div id="messages" style="margin:10px;width:400px"></div>
+<div id="progress-area" style="padding:5px;"></div>
 
-
-<form method="post" action="<c:url value='/processDelete.html?taskId= ${taskId}' />">
-	<input type="submit" value="cancel" />
-</form>
 
 
 

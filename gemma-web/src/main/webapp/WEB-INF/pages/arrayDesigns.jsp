@@ -1,5 +1,17 @@
 <%-- $Id$ --%>
 <%@ include file="/common/taglibs.jsp"%>
+<head>
+	<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
+	<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
+	<script type="text/javascript" src="<c:url value='/scripts/progressbar.js'/>"></script>
+	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/ArrayDesignController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/ProgressStatusService.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
+	<script type="text/javascript" src="<c:url value='/scripts/ajax/arrayDesign.js'/>" type="text/javascript"></script>
+	<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/progressbar.css'/>" />
+</head>
 
 <!--  Summary of array design associations -->
 <%-- Admin only --%>
@@ -92,7 +104,9 @@
 	<input type="submit" value="Find" />
 </form>
 
-
+<div id="messages" style="margin:10px;width:400px"></div>
+<div id="taskId" style="display: none;"></div>
+<div id="progress-area" style="padding:5px;"></div>
 
 <h3>
 	Displaying
