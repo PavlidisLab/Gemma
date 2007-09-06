@@ -153,7 +153,7 @@
           font-size: 1em;
         }
         
-        .clob {
+        .clob,.stacktrace {
           border-style:solid;
           padding: 4px 6px 4px 6px;
           border-width:1px;
@@ -162,6 +162,12 @@
           line-height: 1.3em;
           height:100px;
           overflow:auto;
+        }
+        
+        .stacktrace {
+          font-size: 10px;
+          font-family: "courier new", courier, monospace;
+          height:400px;
         }
         
                 

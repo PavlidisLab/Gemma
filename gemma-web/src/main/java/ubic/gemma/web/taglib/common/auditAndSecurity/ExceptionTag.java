@@ -68,13 +68,13 @@ public class ExceptionTag extends TagSupport {
 
                 if ( showStackTrace ) {
                     buf
-                            .append( "<textarea readonly class=\"stacktrace\" name=\"stacktrace\" rows=\"20\" cols=\"120\" >" );
+                            .append( "<div class=\"stacktrace\" name=\"stacktrace\" >" );
                     if ( exception.getStackTrace() != null ) {
                         buf.append( ExceptionUtils.getFullStackTrace( exception ) );
                     } else {
                         buf.append( "There was no stack trace!" );
                     }
-                    buf.append( "</textarea>" );
+                    buf.append( "</div>" );
                 }
             }
 
