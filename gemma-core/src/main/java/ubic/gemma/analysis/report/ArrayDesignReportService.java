@@ -193,12 +193,13 @@ public class ArrayDesignReportService {
 
         try {
             // remove file first
-            File f = new File( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/" + ARRAY_DESIGN_SUMMARY );
+            File f = new File( HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR + File.separatorChar
+                    + ARRAY_DESIGN_SUMMARY );
             if ( f.exists() ) {
                 f.delete();
             }
-            FileOutputStream fos = new FileOutputStream( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/"
-                    + ARRAY_DESIGN_SUMMARY );
+            FileOutputStream fos = new FileOutputStream( HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR
+                    + File.separatorChar + ARRAY_DESIGN_SUMMARY );
             ObjectOutputStream oos = new ObjectOutputStream( fos );
             oos.writeObject( adVo );
             oos.flush();
@@ -232,7 +233,7 @@ public class ArrayDesignReportService {
         ArrayDesign ad = arrayDesignService.load( adVo.getId() );
         if ( ad == null ) return;
 
-        log.info( "Generating report for array design " + ad.getId() + "\n" );
+        log.info( "Generating report for array design " + ad.getId() );
 
         // obtain time information (for timestamping)
         Date d = new Date( System.currentTimeMillis() );
@@ -259,13 +260,13 @@ public class ArrayDesignReportService {
 
         try {
             // remove file first
-            File f = new File( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/" + ARRAY_DESIGN_SUMMARY + "."
-                    + adVo.getId() );
+            File f = new File( HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR + File.separatorChar
+                    + ARRAY_DESIGN_SUMMARY + "." + adVo.getId() );
             if ( f.exists() ) {
                 f.delete();
             }
-            FileOutputStream fos = new FileOutputStream( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/"
-                    + ARRAY_DESIGN_SUMMARY + "." + adVo.getId() );
+            FileOutputStream fos = new FileOutputStream( HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR
+                    + File.separatorChar + ARRAY_DESIGN_SUMMARY + "." + adVo.getId() );
             ObjectOutputStream oos = new ObjectOutputStream( fos );
             oos.writeObject( adVo );
             oos.flush();
@@ -287,6 +288,8 @@ public class ArrayDesignReportService {
         Collection<ArrayDesignValueObject> adVo = arrayDesignService.loadValueObjects( ids );
         if ( adVo != null && adVo.size() > 0 ) {
             generateArrayDesignReport( adVo.iterator().next() );
+        } else {
+            log.warn("No value objects return for requested array designs");
         }
     }
 
@@ -338,7 +341,8 @@ public class ArrayDesignReportService {
     public ArrayDesignValueObject getSummaryObject() {
         ArrayDesignValueObject adVo = null;
         try {
-            File f = new File( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/" + ARRAY_DESIGN_SUMMARY );
+            File f = new File( HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR + File.separatorChar
+                    + ARRAY_DESIGN_SUMMARY );
             if ( f.exists() ) {
                 FileInputStream fis = new FileInputStream( f );
                 ObjectInputStream ois = new ObjectInputStream( fis );
@@ -379,7 +383,8 @@ public class ArrayDesignReportService {
     public ArrayDesignValueObject getSummaryObject( Long id ) {
         ArrayDesignValueObject adVo = null;
         try {
-            File f = new File( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + "/" + ARRAY_DESIGN_SUMMARY + "." + id );
+            File f = new File( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + File.separatorChar + ARRAY_DESIGN_SUMMARY
+                    + "." + id );
             if ( f.exists() ) {
                 FileInputStream fis = new FileInputStream( f );
                 ObjectInputStream ois = new ObjectInputStream( fis );
@@ -448,8 +453,8 @@ public class ArrayDesignReportService {
         // check to see if the home directory exists. If it doesn't, create it.
         // check to see if the reports directory exists. If it doesn't, create it.
         FileTools.createDir( HOME_DIR );
-        FileTools.createDir( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR );
-        File f = new File( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR );
+        FileTools.createDir( HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR );
+        File f = new File( HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR );
         Collection<File> files = new ArrayList<File>();
         File[] fileArray = f.listFiles();
         for ( File file : fileArray ) {

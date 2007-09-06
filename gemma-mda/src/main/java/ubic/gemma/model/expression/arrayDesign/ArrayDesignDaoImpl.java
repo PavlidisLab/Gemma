@@ -434,11 +434,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     @Override
     protected Taxon handleGetTaxon( Long id ) throws Exception {
 
-        /*
-         * This query is very slow if you put a
-         */
         final String queryString = "select t from ArrayDesignImpl as arrayD "
-                + "inner join arrayD.compositeSequences as cs inner join " + "cs.biologicalCharacteristic as bioC"
+                + "inner join arrayD.compositeSequences as cs left outer join " + "cs.biologicalCharacteristic as bioC"
                 + " left join bioC.taxon t where arrayD.id = :id";
 
         try {
@@ -695,15 +692,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
         // get the expression experiment counts
         Map eeCounts = this.getExpressionExperimentCountMap();
-        // get the composite sequence counts
-        // Map csCounts = this.getCompositeSequenceCountMap();
 
-        // removed join from taxon as it is slowing down the system
-        final String queryString = "select ad.id as id, "
-                + " ad.name as name, "
-                + " ad.shortName as shortName, "
-                + " ad.technologyType, taxon.commonName "
-                + " from ArrayDesignImpl as ad inner join ad.compositeSequences as compositeS inner join compositeS.biologicalCharacteristic as bioC inner join bioC.taxon as taxon "
+        final String queryString = "select ad.id as id, ad.name as name, ad.shortName as shortName, "
+                + " ad.technologyType" + " from ArrayDesignImpl ad "
                 + " where ad.id in (:ids) group by ad order by ad.name";
 
         try {
@@ -1205,7 +1196,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                     cs.setBiologicalCharacteristic( null );
                     session.update( cs );
                     session.evict( cs );
-                    if ( ++count % LOGGING_UPDATE_EVENT_COUNT == 0) {
+                    if ( ++count % LOGGING_UPDATE_EVENT_COUNT == 0 ) {
                         log.info( "Cleared sequence association for " + count + " composite sequences" );
                     }
                 }

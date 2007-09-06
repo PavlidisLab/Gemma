@@ -271,6 +271,23 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     }
 
     /**
+     * AJAX
+     * @param ed
+     * @return
+     */
+    public String updateReport(EntityDelegator ed) {
+        GenerateSummary job = new GenerateSummary( null, arrayDesignReportService, ed.getId()  );
+        return (String)startJob(null, job).getModel().get("taskId");
+    }
+    
+    /**
+     * 
+     */
+    public String remove(EntityDelegator ed) {
+        return null; // TODO
+    }
+    
+    /**
      * @param request
      * @param response
      * @param errors
