@@ -39,8 +39,8 @@ public class BlatResultImpl extends ubic.gemma.model.genome.sequenceAnalysis.Bla
     private static Log log = LogFactory.getLog( BlatResultImpl.class.getName() );
 
     /**
-     * Based on the JKSrc method in psl.c, but without double-penalizing for mismatches. We also do not count repeat
-     * matches at all.
+     * Based on the JKSrc method in psl.c, but without double-penalizing for mismatches. We also consider repeat matches
+     * to be the same as regular matches.
      * 
      * @return Value between 0 and 1, representing the fraction of matches, minus a gap penalty.
      * @see ubic.gemma.model.sequence.sequenceAnalysis.BlatResult#score()
@@ -65,15 +65,16 @@ public class BlatResultImpl extends ubic.gemma.model.genome.sequenceAnalysis.Bla
 
         assert length > 0;
 
-        long matches = this.getMatches();
+        // Note: we count repeat matches just like regular matches.
+        long matches = this.getMatches() + this.getRepMatches();
 
         /*
          * This can happen if the sequence in our system was polyA/T trimmed, which we don't do any more, but there are
-         * remnants.
+         * remnants. When blat results come back from goldenpath (rather than computed by us) the lengths can disagree.
          */
-        if ( this.getMatches() > length ) {
+        if ( matches > length ) {
             log.warn( "Blat result for " + this.getQuerySequence()
-                    + " More matches than sequence length (polyA trimmed?) " + this.getMatches() + " > " + length );
+                    + " More matches than sequence length (polyA trimmed?) " + matches + " > " + length );
             matches = length;
         }
 
@@ -92,18 +93,18 @@ public class BlatResultImpl extends ubic.gemma.model.genome.sequenceAnalysis.Bla
                     + this.getId() );
         }
 
-        assert score <= 1.0 : "Score was " + score + "; matches=" + matches + " repMatches=" + this.getRepMatches()
-                + " queryGaps=" + this.getQueryGapCount() + " targetGaps=" + this.getTargetGapCount() + " length="
-                + length + " sequence=" + this.getQuerySequence() + " id=" + this.getId();
+        assert score >= 0.0 && score <= 1.0 : "Score was " + score + "; matches=" + matches + " queryGaps="
+                + this.getQueryGapCount() + " targetGaps=" + this.getTargetGapCount() + " length=" + length
+                + " sequence=" + this.getQuerySequence() + " id=" + this.getId();
 
         return score;
     }
 
     /**
-     * Fraction identity computation, as in psl.c.
+     * Fraction identity computation, as in psl.c. Modified to INCLUDE repeat matches in the match count.
      * 
      * @return Value between 0 and 1.
-     * @see http://genome.ucsc.edu/FAQ/FAQblat#blat4
+     * @see http://genome.ucsc.edu/FAQ/FAQblat#blat4.
      */
     @Override
     public Double identity() {
@@ -120,14 +121,15 @@ public class BlatResultImpl extends ubic.gemma.model.genome.sequenceAnalysis.Bla
             // of whether the input sequence is mRNA or protein")
         }
         int insertFactor = this.getQueryGapCount(); // assumes isMrna is true.
-        int total = ( sizeMul * ( this.getMatches() + this.getMismatches() ) );
+        int total = ( sizeMul * ( this.getMatches() + this.getRepMatches() + this.getMismatches() ) );
         int milliBad = 0;
         if ( total != 0 ) {
             milliBad = ( 1000 * ( this.getMismatches() * sizeMul + insertFactor + ( int ) Math.round( 3.0 * Math
                     .log( 1.0 + sizeDif ) ) ) )
                     / total;
         }
-        assert milliBad >= 0 && milliBad <= 1000 : "Millibad was ourside of range 0-1000: " + milliBad;
+        assert milliBad >= 0 && milliBad <= 1000 : "Millibad was ourside of range 0-1000: " + milliBad + " for result "
+                + this;
         return 100.0 - milliBad * 0.1;
     }
 

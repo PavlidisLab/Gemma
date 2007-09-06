@@ -48,7 +48,21 @@ public class BlatResultImplTest extends TestCase {
     }
 
     public void testScore() {
+        brtest.setRepMatches( 0 );
         brtest.setMatches( 49 );
+        brtest.setQueryGapCount( 0 );
+        brtest.setTargetGapCount( 2 );
+        brtest.setMismatches( 1 );
+        brtest.setQuerySequence( BioSequence.Factory.newInstance() );
+        brtest.getQuerySequence().setLength( 50L );
+        double actualReturn = brtest.score();
+        double expectedReturn = 47.0 / 50.0;
+        assertEquals( expectedReturn, actualReturn, 0.001 );
+    }
+
+    public void testScorewr() {
+        brtest.setRepMatches( 2 );
+        brtest.setMatches( 47 );
         brtest.setQueryGapCount( 0 );
         brtest.setTargetGapCount( 2 );
         brtest.setMismatches( 1 );
