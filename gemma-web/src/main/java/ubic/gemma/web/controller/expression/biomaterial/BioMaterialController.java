@@ -41,6 +41,7 @@ import ubic.gemma.ontology.OntologyResource;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.web.controller.BaseMultiActionController;
 import ubic.gemma.web.controller.expression.experiment.AnnotationValueObject;
+import ubic.gemma.web.controller.expression.experiment.FactorValueObject;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.EntityNotFoundException;
 
@@ -102,8 +103,8 @@ public class BioMaterialController extends BaseMultiActionController {
         this.saveMessage( request, "biomaterial with id " + id + " found" );
         request.setAttribute( "id", id );
         ModelAndView mnv = new ModelAndView( "bioMaterial.detail" ).addObject( "bioMaterial", bioMaterial );
-        
-        return mnv; 
+
+        return mnv;
     }
 
     /**
@@ -165,62 +166,46 @@ public class BioMaterialController extends BaseMultiActionController {
     public Collection<BioMaterial> getBioMaterials( Collection<Long> ids ) {
         return bioMaterialService.loadMultiple( ids );
     }
-    
+
     public Collection<AnnotationValueObject> getAnnotation( EntityDelegator bm ) {
-        if ( bm == null || bm.getId() == null )
-            return null;
+        if ( bm == null || bm.getId() == null ) return null;
         BioMaterial bioM = bioMaterialService.load( bm.getId() );
-        
+
         Collection<AnnotationValueObject> annotation = new ArrayList<AnnotationValueObject>();
-        
+
         for ( Characteristic c : bioM.getCharacteristics() ) {
             AnnotationValueObject annotationValue = new AnnotationValueObject();
             annotationValue.setId( c.getId() );
             annotationValue.setClassName( c.getCategory() );
             annotationValue.setTermName( c.getValue() );
             if ( c instanceof VocabCharacteristic ) {
-                VocabCharacteristic vc = (VocabCharacteristic)c;
+                VocabCharacteristic vc = ( VocabCharacteristic ) c;
                 String className = getLabelFromUri( vc.getCategoryUri() );
-                if ( className != null )
-                    annotationValue.setClassName( className );
+                if ( className != null ) annotationValue.setClassName( className );
                 String termName = getLabelFromUri( vc.getValueUri() );
-                if ( termName != null )
-                    annotationValue.setTermName( termName );
+                if ( termName != null ) annotationValue.setTermName( termName );
             }
             annotation.add( annotationValue );
         }
         return annotation;
     }
-    
-    public Collection<String> getFactorValues(EntityDelegator bm){
-        
-        
-        if ( bm == null || bm.getId() == null )
-            return null;
+
+    public Collection<FactorValueObject> getFactorValues( EntityDelegator bm ) {
+
+        if ( bm == null || bm.getId() == null ) return null;
 
         BioMaterial bioM = bioMaterialService.load( bm.getId() );
-        
-        Collection<String> results = new HashSet<String>();
-        String factorValueString = "";
-        
+
+        Collection<FactorValueObject> results = new HashSet<FactorValueObject>();
         Collection<FactorValue> factorValues = bioM.getFactorValues();
-        for ( FactorValue value : factorValues ) {
-            if ( value.getCharacteristics().size() > 0 ) {
-                for(Characteristic c :  value.getCharacteristics()) {
-                    factorValueString += c.getValue();
-                }
-                
-            } else {
-                factorValueString += value.getValue();
-                }
-         
-            results.add( factorValueString );
-            factorValueString = "";
-        }
+
+        for ( FactorValue value : factorValues )
+            results.add( new FactorValueObject( value ) );
+
         return results;
-        
+
     }
-    
+
     private String getLabelFromUri( String uri ) {
         OntologyResource resource = ontologyService.getResource( uri );
         if ( resource != null )
@@ -238,7 +223,7 @@ public class BioMaterialController extends BaseMultiActionController {
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
         return new ModelAndView( "bioMaterials" ).addObject( "bioMaterials", bioMaterialService.loadAll() );
     }
-    
+
     /**
      * @param searchService the searchService to set
      */

@@ -23,14 +23,12 @@ Ext.onReady(function() {
 	factorValueDS.setDefaultSort('factorValue');
 	
 	var cm = new Ext.grid.ColumnModel([
-			{header: "Factor Value",  width: 150, dataIndex:"factorValue"}]);
+			{header: "Factor Value", width: 650, dataIndex:"factorValue"}]);
 	cm.defaultSortable = false;
  
 	factorValueGrid = new Ext.grid.Grid("bmFactorValues", {
 		ds:factorValueDS,
 		cm:cm,
-		loadMask: true,
-		autoExpandColumn: 1
 	});
 
 	factorValueGrid.render();

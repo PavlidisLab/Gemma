@@ -834,6 +834,18 @@
 					</property>
 				</bean>
 			</entry>
+			<entry key="ubic.gemma.web.controller.expression.experiment.FactorValueObject">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+					<property name="includes">
+						<list>
+							<value>id</value>
+							<value>factorValue</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			
 		</map>
 	</property>
 </bean>
