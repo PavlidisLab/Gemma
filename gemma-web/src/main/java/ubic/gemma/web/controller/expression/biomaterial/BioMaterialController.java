@@ -20,6 +20,7 @@ package ubic.gemma.web.controller.expression.biomaterial;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -35,6 +36,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.ontology.OntologyResource;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.web.controller.BaseMultiActionController;
@@ -99,7 +101,9 @@ public class BioMaterialController extends BaseMultiActionController {
 
         this.saveMessage( request, "biomaterial with id " + id + " found" );
         request.setAttribute( "id", id );
-        return new ModelAndView( "bioMaterial.detail" ).addObject( "bioMaterial", bioMaterial );
+        ModelAndView mnv = new ModelAndView( "bioMaterial.detail" ).addObject( "bioMaterial", bioMaterial );
+        
+        return mnv; 
     }
 
     /**
@@ -186,6 +190,35 @@ public class BioMaterialController extends BaseMultiActionController {
             annotation.add( annotationValue );
         }
         return annotation;
+    }
+    
+    public Collection<String> getFactorValues(EntityDelegator bm){
+        
+        
+        if ( bm == null || bm.getId() == null )
+            return null;
+
+        BioMaterial bioM = bioMaterialService.load( bm.getId() );
+        
+        Collection<String> results = new HashSet<String>();
+        String factorValueString = "";
+        
+        Collection<FactorValue> factorValues = bioM.getFactorValues();
+        for ( FactorValue value : factorValues ) {
+            if ( value.getCharacteristics().size() > 0 ) {
+                for(Characteristic c :  value.getCharacteristics()) {
+                    factorValueString += c.getValue();
+                }
+                
+            } else {
+                factorValueString += value.getValue();
+                }
+         
+            results.add( factorValueString );
+            factorValueString = "";
+        }
+        return results;
+        
     }
     
     private String getLabelFromUri( String uri ) {

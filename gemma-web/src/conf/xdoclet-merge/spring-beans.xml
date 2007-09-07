@@ -139,6 +139,7 @@
 						<list>
 							<value>getBioMaterials</value>
 							<value>getAnnotation</value>
+							<value>getFactorValues</value>
 						</list>
 					</property>
 				</bean>
