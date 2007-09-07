@@ -98,7 +98,7 @@ public abstract class AbstractOntologyService implements InitializingBean {
      */
     public OntologyTerm getTerm( String uri ) {
 
-        if ( uri == null ) return null;
+        if (( uri == null ) || (!ready.get())) return null;
 
         OntologyTerm term = terms.get( uri );
 
@@ -113,7 +113,7 @@ public abstract class AbstractOntologyService implements InitializingBean {
      */
     public OntologyIndividual getIndividual( String uri ) {
 
-        if ( uri == null ) return null;
+        if (( uri == null ) || (!ready.get())) return null;
 
         OntologyIndividual indi = individuals.get( uri );
 
@@ -129,7 +129,7 @@ public abstract class AbstractOntologyService implements InitializingBean {
      */
     public OntologyResource getResource( String uri ) {
 
-        if ( uri == null ) return null;
+        if (( uri == null ) || (!ready.get())) return null;
 
         OntologyResource resource = terms.get( uri );
 
