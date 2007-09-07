@@ -28,6 +28,7 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.io.ByteArrayConverter;
@@ -35,6 +36,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -461,6 +463,27 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
             i++;
         }
 
+    }
+
+    /**
+     * @return
+     */
+    public DoubleMatrixNamed getNamedMatrix() {
+        // TODO maybe this should be abstract and implemented here
+        Double[][] data = ( Double[][] ) getMatrix();
+        double[][] ddata = new double[data.length][];
+        for ( int i = 0; i < data.length; i++ ) {
+            for ( int j = 0; j < data[i].length; j++ ) {
+                ddata[i][j] = data[i][j];
+            }
+        }
+
+        DoubleMatrixNamed namedMatrix = new DenseDoubleMatrix2DNamed( ddata );
+        for ( int i = 0; i < columns(); i++ ) {
+            BioMaterial bm = getBioMaterialForColumn( i );
+            namedMatrix.addColumnName( bm, i );
+        }
+        return namedMatrix;
     }
 
 }
