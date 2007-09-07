@@ -62,9 +62,12 @@ Ext.extend(Ext.data.ListRangeReader, Ext.data.DataReader, {
 		 
 		var records = [];
 		var root;
-		if (o.data !== undefined) {
+		if ((o !== null) && (o.data !== undefined)) {
 			root = o.data;
 		} else {
+			if (o === null){
+				o = [];	
+			}
 			root = o;
 		}
 		var c = root.length;
