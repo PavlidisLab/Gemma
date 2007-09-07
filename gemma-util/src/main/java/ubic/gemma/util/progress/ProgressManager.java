@@ -26,6 +26,7 @@ import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.acegisecurity.context.SecurityContextHolder;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -286,16 +287,11 @@ public class ProgressManager {
                     .debug( "ProgressManager.destroyProgressJob received a null reference for a progressJob, hence can't destroy." );
             return false;
         }
-        log.debug( "Finishing up" + progressJob );
+        log.debug( "Finishing up failed " + progressJob );
 
-        String toForwardTo = FORWARD_DEFAULT;
+        String toForwardTo = getForwardingUrl( progressJob, doForward );
 
-        if ( doForward && ( progressJob.getForwardingURL() != null ) && ( progressJob.getForwardingURL().length() != 0 ) ) {
-            toForwardTo = progressJob.getForwardingURL();
-            progressJob.updateProgress( new ProgressData( 100, "Job failed.", true, toForwardTo ) );
-            log.debug( "Forwarding url is  " + toForwardTo );
-        }
-
+        progressJob.updateProgress( new ProgressData( 100, "Job failed.", true, toForwardTo ) );
         progressJob.failed( cause );
 
         currentJob.set( null );
@@ -343,21 +339,23 @@ public class ProgressManager {
         }
         log.debug( "Destroying " + progressJob );
 
-        String toForwardTo = FORWARD_DEFAULT;
-
-        // not sure if this forwarding scheme is correct. Could it be the case we wan't to forward to someplace else?
-        if ( doForward && ( progressJob.getForwardingURL() != null ) && ( progressJob.getForwardingURL().length() != 0 ) ) {
-            toForwardTo = progressJob.getForwardingURL();
-        }
-
-        // if ( doForward ) {
+        String toForwardTo = getForwardingUrl( progressJob, doForward );
         progressJob.updateProgress( new ProgressData( 100, "Job completed.", true, toForwardTo ) );
-        // }
         progressJob.done();
 
         currentJob.set( null );
         jobInfoDao.update( progressJob.getJobInfo() );
         return true;
+    }
+
+    private static String getForwardingUrl( ProgressJob progressJob, boolean doForward ) {
+        String toForwardTo = doForward == true ? FORWARD_DEFAULT : null;
+
+        // not sure if this forwarding scheme is correct. Could it be the case we wan't to forward to someplace else?
+        if ( doForward && StringUtils.isNotBlank( progressJob.getForwardingURL() ) ) {
+            toForwardTo = progressJob.getForwardingURL();
+        }
+        return toForwardTo;
     }
 
     public void setJobInfoDao( JobInfoDao jobDao ) {

@@ -49,12 +49,22 @@ public abstract class BackgroundControllerJob<T> implements Callable<T> {
 
     private BindException errors;
 
+    private boolean doForward;
+
     public BindException getErrors() {
         return errors;
     }
 
     public void setErrors( BindException errors ) {
         this.errors = errors;
+    }
+    
+    public void setDoForward(boolean doForward) {
+        this.doForward = doForward;
+    }
+    
+    public boolean getDoForward() {
+        return this.doForward;
     }
 
     /**

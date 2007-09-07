@@ -99,9 +99,15 @@ Ext.extend(progressbar, Ext.util.Observable, {
 					return  this.handleFailure(d);
 				} else if (d.done) {
 					this.fireEvent('done');
-					if (d.forwardingURL) {
+					if ((d.forwardingURL !== undefined) && (d.forwardingURL !== null)) {
 					  	window.location = d.forwardingURL + "?taskId=" + dwr.util.getValue("taskId");
 					  	return;
+					}
+					else {
+						//Not forwarding so clean up progress mess on page. 
+						Ext.DomHelper.overwrite("progress-area", "");
+						
+						return;
 					}
 				}
 			}	
@@ -132,10 +138,15 @@ Ext.extend(progressbar, Ext.util.Observable, {
 					return this.handleFailure(d);
 				} else if (d.done) {
 					this.fireEvent('done');
-					if (d.forwardingURL) {
+						if ((d.forwardingURL !== undefined) && (d.forwardingURL !== null)) {
 				  		window.location = d.forwardingURL + "?taskId=" + dwr.util.getValue("taskId");
 						return;
 					}
+					else {
+						//Not forwarding so clean up the progress mess on the page. 
+						Ext.DomHelper.overwrite("progress-area", "");
+						return;
+						}
 				}
 			}	
 		} else {

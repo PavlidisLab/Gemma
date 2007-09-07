@@ -45,10 +45,18 @@ function handleReportUpdateSuccess(data) {
 	 	p.createIndeterminateProgressBar();
 		p.on('fail', handleFailure);
 		p.on('cancel', reset);
+		p.on('done', handleDone);
 	 	p.startProgress();
 	}
 	catch (e) {
 		handleFailure(data, e);
 		return;
 	}
+	
+};
+
+function handleDone(data){
+		Ext.DomHelper.overwrite("messages", "");  
+		Ext.DomHelper.overwrite("taskId", "");
+	alert("Hello");
 };

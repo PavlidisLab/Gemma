@@ -276,8 +276,9 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      * @return
      */
     public String updateReport(EntityDelegator ed) {
-        GenerateSummary job = new GenerateSummary( null, arrayDesignReportService, ed.getId()  );
-        return (String)startJob(null, job).getModel().get("taskId");
+        GenerateSummary runner = new GenerateSummary( null, arrayDesignReportService, ed.getId()  );
+        runner.setDoForward( false );
+        return (String)startJob(null, runner).getModel().get("taskId");
     }
     
     /**
@@ -656,7 +657,9 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
                 job.updateProgress( "Generating summary for specified platform" );
                 arrayDesignReportService.generateArrayDesignReport( id );
             }
-            ProgressManager.destroyProgressJob( job, true );
+           
+       
+            ProgressManager.destroyProgressJob( job, this.getDoForward() );
             return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesignStatistics.html" ) );
 
         }

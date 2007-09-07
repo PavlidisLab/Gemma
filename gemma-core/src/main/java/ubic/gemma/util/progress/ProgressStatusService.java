@@ -75,7 +75,10 @@ public class ProgressStatusService {
             ProgressData data = pd.poll();
             result.add( data );
             if ( data.isDone() ) {
-                log.debug( "Job is done! forward to " + data.getForwardingURL() );
+                log.debug( "Job is done!" );
+                if ( data.getForwardingURL() != null ) {
+                    log.debug( "forward to " + data.getForwardingURL() );
+                }
                 progressManager.cleanupJob( taskId );
             }
         }

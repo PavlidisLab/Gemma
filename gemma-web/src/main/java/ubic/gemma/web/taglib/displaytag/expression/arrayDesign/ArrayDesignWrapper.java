@@ -206,7 +206,7 @@ public class ArrayDesignWrapper extends TableDecorator {
 
         buf.append( "<a href=\"#\" onclick=\"return toggleVisibility('" + arraySummary + "')\" >Summary</a>" );
 
-        buf.append( "<div class=\"" + arraySummary + "\" style=\"display:none\">" );
+        buf.append( "<div id=\"arraySummary" + object.getId() + "\" class=\"" + arraySummary + "\" style=\"display:none\">" );
 
         buf.append( "<table class='datasummary'>" + "<tr>" + "<td colspan=2 align=center>" + "</td></tr>"
                 + "<tr><td>Probes</td><td align=\"right\" >"
