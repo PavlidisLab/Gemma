@@ -103,12 +103,14 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
 
         addOption( aggressiveQtRemoval );
 
-        Option fileFormat = OptionBuilder.hasArg().withArgName( "File Format" ).withDescription("Either AE or GEO defaults to GEO (using batch file does not work with Array Express)" ).withLongOpt(
+        Option fileFormat = OptionBuilder.hasArg().withArgName( "File Format" ).withDescription(
+                "Either AE or GEO defaults to GEO (using batch file does not work with Array Express)" ).withLongOpt(
                 "format" ).create( 'm' );
 
         addOption( fileFormat );
 
-        Option arrayDesign = OptionBuilder.hasArg().withArgName( "Array Name" ).withDescription( "Required for Array Express format.  Specify the name of the platform the experiment uses" )
+        Option arrayDesign = OptionBuilder.hasArg().withArgName( "Array Name" ).withDescription(
+                "Required for Array Express format.  Specify the name of the platform the experiment uses" )
                 .withLongOpt( "Array" ).create( 'd' );
 
         addOption( arrayDesign );
@@ -148,7 +150,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
         }
         try {
 
-            GeoDatasetService geoService = ( GeoDatasetService ) this.getBean( "geoDatasetService" );          
+            GeoDatasetService geoService = ( GeoDatasetService ) this.getBean( "geoDatasetService" );
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
 
             ArrayExpressLoadService aeService = ( ArrayExpressLoadService ) this.getBean( "arrayExpressLoadService" );
@@ -160,14 +162,15 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
 
             Boolean aeFlag = false;
             ArrayDesign ad;
-            if ( StringUtils.equalsIgnoreCase(ARRAY_EXPRESS, fileFormat ) ) {
-                
-                if (platformOnly)
+            if ( StringUtils.equalsIgnoreCase( ARRAY_EXPRESS, fileFormat ) ) {
+
+                if ( platformOnly )
                     return new IllegalArgumentException( "Loading platform only not supported for Array Express. " );
-                
-                if (accessionFile != null)
-                    return new IllegalArgumentException( "Batch loading via text file not supported for Array Express file formats. " );
-                
+
+                if ( accessionFile != null )
+                    return new IllegalArgumentException(
+                            "Batch loading via text file not supported for Array Express file formats. " );
+
                 ad = adService.findByShortName( this.adName );
                 if ( ad == null ) ad = adService.findArrayDesignByName( this.adName );
 
@@ -177,8 +180,6 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
                 }
                 aeFlag = true;
             }
-            
-            
 
             if ( accessions != null ) {
                 log.info( "Got accession(s) from command line " + accessions );
@@ -192,11 +193,10 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
                         continue;
                     }
 
-                    if (aeFlag){                      
-                       processAEAccession(aeService, accession);
-                        
-                    }                    
-                    else if ( platformOnly ) {
+                    if ( aeFlag ) {
+                        processAEAccession( aeService, accession );
+
+                    } else if ( platformOnly ) {
                         Collection designs = geoService.fetchAndLoad( accession, true, true, false );
                         for ( Object object : designs ) {
                             assert object instanceof ArrayDesign;
@@ -237,19 +237,19 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
         }
         return null;
     }
-    
-    protected void processAEAccession(ArrayExpressLoadService aeService, String accession){
+
+    protected void processAEAccession( ArrayExpressLoadService aeService, String accession ) {
 
         try {
-        ExpressionExperiment aeExperiment = aeService.load( accession, adName );
-        successObjects.add( ( ( Describable ) aeExperiment ).getName() + " ("
-                + ( ( ExpressionExperiment ) aeExperiment ).getShortName() + ")" );
-        
-        }catch(Exception e){
+            ExpressionExperiment aeExperiment = aeService.load( accession, adName );
+            successObjects.add( ( ( Describable ) aeExperiment ).getName() + " ("
+                    + ( ( ExpressionExperiment ) aeExperiment ).getShortName() + ")" );
+
+        } catch ( Exception e ) {
             errorObjects.add( accession + ": " + e.getMessage() );
             log.error( "**** Exception while processing " + accession + ": " + e.getMessage() + " ********" );
             log.error( e, e );
-            
+
         }
     }
 
