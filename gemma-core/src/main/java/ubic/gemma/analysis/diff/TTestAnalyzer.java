@@ -25,7 +25,9 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.rosuda.JRclient.RList;
 
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -83,7 +85,7 @@ public class TTestAnalyzer extends AbstractAnalyzer {
      * @param factorValues
      * @return
      */
-    protected Map<DesignElement, Double> tTest( ExpressionExperiment expressionExperiment,
+    public Map<DesignElement, Double> tTest( ExpressionExperiment expressionExperiment,
             ExperimentalFactor experimentalFactor ) {
 
         Collection<FactorValue> factorValues = experimentalFactor.getFactorValues();
@@ -119,6 +121,17 @@ public class TTestAnalyzer extends AbstractAnalyzer {
     protected Map<DesignElement, Double> tTest( ExpressionDataMatrix matrix, Collection<BioMaterial> biomaterials ) {
 
         // make the R call ... returning null for now.
+        ExpressionDataDoubleMatrix dmatrix = ( ExpressionDataDoubleMatrix ) matrix;
+
+        DoubleMatrixNamed namedMatrix = dmatrix.getNamedMatrix();
+
+        String matrixName = rc.assignMatrix( namedMatrix );
+        StringBuffer command = new StringBuffer();
+        command.append( "apply(" );
+        command.append( matrixName );
+        command.append( ", 1, function(x) t.test(x ~ factor)$p.value)" );
+
+        RList l = rc.eval( command.toString() ).asList();
 
         return null;
     }
