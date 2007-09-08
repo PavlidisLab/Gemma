@@ -59,7 +59,7 @@ public class ExpressionProfile {
 	}
 	
 	public int getNumSamples() {
-		return val.length;
+		return (val == null)? 0 : val.length;
 	}
 
 	/**

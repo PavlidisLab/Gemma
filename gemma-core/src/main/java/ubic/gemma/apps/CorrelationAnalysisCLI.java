@@ -63,7 +63,7 @@ public class CorrelationAnalysisCLI extends
 
 	@Override
 	protected Exception doWork(String[] args) {
-		Exception exc = processCommandLine("NoCorrelationAnalysis", args);
+		Exception exc = processCommandLine("CorrelationAnalysis", args);
 		if (exc != null) {
 			return exc;
 		}
