@@ -80,7 +80,6 @@ public class TTestAnalyzerTest extends BaseSpringContextTest {
 
         Collection<BioAssay> assays = ee.getBioAssays();
         for ( BioAssay assay : assays ) {
-            log.debug( assay.getName() );
             Collection<BioMaterial> materials = assay.getSamplesUsed();
             if ( materials.size() != 1 )
                 throw new RuntimeException( "Only supporting 1 biomaterial/bioassay at this time" );
