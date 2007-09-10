@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -58,6 +59,7 @@ import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BackgroundProcessingMultiActionController;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.remote.ListRange;
+import ubic.gemma.web.taglib.arrayDesign.ArrayDesignHtmlUtil;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
@@ -272,22 +274,54 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
     /**
      * AJAX
-     * @param ed
-     * @return
-     */
-    public String updateReport(EntityDelegator ed) {
-        GenerateSummary runner = new GenerateSummary( null, arrayDesignReportService, ed.getId()  );
-        runner.setDoForward( false );
-        return (String)startJob(null, runner).getModel().get("taskId");
-    }
-    
-    /**
      * 
+     * @param ed
+     * @return the taskid
      */
-    public String remove(EntityDelegator ed) {
-        return null; // TODO
+    public String updateReport( EntityDelegator ed ) {
+        GenerateSummary runner = new GenerateSummary( null, arrayDesignReportService, ed.getId() );
+        runner.setDoForward( false );
+        return ( String ) startJob( null, runner ).getModel().get( "taskId" );
     }
-    
+
+    /**
+     * AJAX
+     * 
+     * @param ed
+     * @return the HTML to display.
+     */
+    public Map<String, String> getReportHtml( EntityDelegator ed ) {
+        assert ed.getId() != null;
+        ArrayDesignValueObject summary = arrayDesignReportService.getSummaryObject( ed.getId() );
+        Map<String, String> result = new HashMap<String, String>();
+
+        result.put( "id", ed.getId().toString() );
+        if ( summary == null )
+            result.put( "html", "Not available" );
+        else
+            result.put( "html", ArrayDesignHtmlUtil.getSummaryHtml( summary ) );
+        return result;
+    }
+
+    /**
+     * AJAX
+     * 
+     * @return the taskid
+     */
+    public String remove( EntityDelegator ed ) {
+        ArrayDesign arrayDesign = arrayDesignService.load( ed.getId() );
+        if ( arrayDesign == null ) {
+            throw new EntityNotFoundException( ed.getId() + " not found" );
+        }
+        Collection assays = arrayDesignService.getAllAssociatedBioAssays( ed.getId() );
+        if ( assays.size() != 0 ) {
+            throw new IllegalArgumentException( "Cannot delete " + arrayDesign
+                    + ", it is used by an expression experiment" );
+        }
+        return ( String ) startJob( null, new RemoveArrayJob( null, arrayDesign, arrayDesignService ) ).getModel().get(
+                "taskId" );
+    }
+
     /**
      * @param request
      * @param response
@@ -482,7 +516,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
         ArrayDesign arrayDesign = arrayDesignService.load( id );
         if ( arrayDesign == null ) {
-            throw new EntityNotFoundException( arrayDesign + " not found" );
+            throw new EntityNotFoundException( "Array design with id=" + id + " not found" );
         }
 
         // check that no EE depend on the arraydesign we want to delete
@@ -646,20 +680,20 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             init();
 
             ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
-                    .getName(), "Generating ArrayDesign Report summary" );
+                    .getName(), "Generating ArrayDesign Report summary", false );
 
             if ( id == null ) {
-                saveMessage( "Generated summary for all platforms" );
+                if ( this.getDoForward() ) saveMessage( "Generated summary for all platforms" );
                 job.updateProgress( "Generated summary for all platforms" );
                 arrayDesignReportService.generateArrayDesignReport();
             } else {
-                saveMessage( "Generating summary for platform " + id );
+                if ( this.getDoForward() )  saveMessage( "Generating summary for platform " + id );
                 job.updateProgress( "Generating summary for specified platform" );
-                arrayDesignReportService.generateArrayDesignReport( id );
+                ArrayDesignValueObject report = arrayDesignReportService.generateArrayDesignReport( id );
+                job.setPayload( report );
             }
-           
-       
-            ProgressManager.destroyProgressJob( job, this.getDoForward() );
+
+            // ProgressManager.destroyProgressJob( job, this.getDoForward() );
             return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesignStatistics.html" ) );
 
         }

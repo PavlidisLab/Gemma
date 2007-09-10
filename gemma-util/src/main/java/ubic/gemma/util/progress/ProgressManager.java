@@ -340,7 +340,9 @@ public class ProgressManager {
         log.debug( "Destroying " + progressJob );
 
         String toForwardTo = getForwardingUrl( progressJob, doForward );
-        progressJob.updateProgress( new ProgressData( 100, "Job completed.", true, toForwardTo ) );
+        ProgressData progressData = new ProgressData( 100, "Job completed.", true, toForwardTo );
+        progressData.setPayload( progressJob.getPayload() );// must be a better way.
+        progressJob.updateProgress( progressData );
         progressJob.done();
 
         currentJob.set( null );
@@ -348,10 +350,13 @@ public class ProgressManager {
         return true;
     }
 
+    /**
+     * @param progressJob
+     * @param doForward
+     * @return
+     */
     private static String getForwardingUrl( ProgressJob progressJob, boolean doForward ) {
         String toForwardTo = doForward == true ? FORWARD_DEFAULT : null;
-
-        // not sure if this forwarding scheme is correct. Could it be the case we wan't to forward to someplace else?
         if ( doForward && StringUtils.isNotBlank( progressJob.getForwardingURL() ) ) {
             toForwardTo = progressJob.getForwardingURL();
         }
@@ -373,7 +378,7 @@ public class ProgressManager {
         log.debug( key + " Done!" );
         ProgressJob job = progressJobsByTaskId.get( key );
         assert job != null : "No job of id " + key;
-        destroyProgressJob( job, true );
+        destroyProgressJob( job, job.forwardWhenDone() );
     }
 
     /**
@@ -385,7 +390,7 @@ public class ProgressManager {
         assert job != null : "No job of id " + key;
         if ( job != null ) job.getJobInfo().setFailedMessage( "Cancellation was signalled by user" );
 
-        destroyProgressJob( job, false );
+        destroyProgressJob( job, false ); // never forward.
     }
 
     /**
@@ -409,6 +414,12 @@ public class ProgressManager {
     public static void updateJob( Object taskId, String message ) {
         ProgressJob job = progressJobsByTaskId.get( taskId );
         if ( job != null ) job.updateProgress( message );
+    }
+
+    public static ProgressJob createProgressJob( String taskId, String name, String string, boolean doForward ) {
+        ProgressJob job = createProgressJob( taskId, name, string );
+        job.setForwardWhenDone( doForward );
+        return job;
     }
 
 }

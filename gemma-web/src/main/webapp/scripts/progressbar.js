@@ -63,15 +63,14 @@ Ext.extend(progressbar, Ext.util.Observable, {
 		callParams.push(errorHandler);
 		var f = this.refreshProgress.createDelegate(this, callParams, false);
 		
-		this.timeoutid = setInterval(f, this.BAR_UPDATE_INTERVAL);
+		this.timeoutid = window.setInterval(f, this.BAR_UPDATE_INTERVAL);
 	},
 	
 	
 	stopProgress : function () {
-		window.clearTimeout(this.timeoutid);
+	    window.clearInterval(this.timeoutid);
 		Ext.DomHelper.overwrite("progress-area", "");
-	//	this.bar.stop();
-		this.previousMessage = null;
+	    this.previousMessage = null;
 	},
 	
 	
@@ -96,26 +95,24 @@ Ext.extend(progressbar, Ext.util.Observable, {
 				messages = messages + "<br/>" + d.description;
 				percent = d.percent; // use last value.
 				if (d.failed) {
+					this.stopProgress();
 					return  this.handleFailure(d);
 				} else if (d.done) {
-					this.fireEvent('done');
+					this.fireEvent('done', d.payload);
+					this.stopProgress();
 					if ((d.forwardingURL !== undefined) && (d.forwardingURL !== null)) {
 					  	window.location = d.forwardingURL + "?taskId=" + dwr.util.getValue("taskId");
-					  	return;
-					}
-					else {
-						//Not forwarding so clean up progress mess on page. 
-						Ext.DomHelper.overwrite("progress-area", "");
-						
-						return;
-					}
+					}  
+					return;
 				}
 			}	
 		} else {
 			if (data.done) {
+				this.stopProgress();
 				return this.handleFailure(data);
 			} else if (d.done) {
-				this.fireEvent('done');
+				this.fireEvent('done', data.payload);
+				this.stopProgress();
 			}
 			percent = data.percent;
 		}
@@ -135,25 +132,24 @@ Ext.extend(progressbar, Ext.util.Observable, {
 				messages = messages + "<br/>" + d.description;
 				percent = d.percent; // use last value.
 				if (d.failed) {
+					this.stopProgress();
 					return this.handleFailure(d);
 				} else if (d.done) {
-					this.fireEvent('done');
-						if ((d.forwardingURL !== undefined) && (d.forwardingURL !== null)) {
+					this.fireEvent('done', d.payload);
+					this.stopProgress();
+					if ((d.forwardingURL !== undefined) && (d.forwardingURL !== null)) {
 				  		window.location = d.forwardingURL + "?taskId=" + dwr.util.getValue("taskId");
-						return;
 					}
-					else {
-						//Not forwarding so clean up the progress mess on the page. 
-						Ext.DomHelper.overwrite("progress-area", "");
-						return;
-						}
+					return;
 				}
 			}	
 		} else {
 			if (data.done) {
+				this.stopProgress();
 				return this.handleFailure(data);
 			} else if (d.done) {
-				this.fireEvent('done');
+				this.fireEvent('done', data.payload);
+				this.stopProgress();
 			}
 			percent = data.percent;
 		}
@@ -211,9 +207,9 @@ Ext.extend(progressbar, Ext.util.Observable, {
 	/**
 	 * Create a progress bar that has no fixed endpoint
 	 */
-	createIndeterminateProgressBar : function () {
+	createIndeterminateProgressBar : function (params) {
 		this.determinate = 0;
-		this.bar= this.createIndeterminateBarDetails(300,15,'white',1,'black','#FF9933',85,4,3,"");
+		this.bar= this.createIndeterminateBarDetails();
 		f = this.cancelJob.createDelegate(this, [], true);
 		Ext.get("cancel-button").on('click', f);
 	},
@@ -230,7 +226,7 @@ Ext.extend(progressbar, Ext.util.Observable, {
 	},
 	
 	 
-	createIndeterminateBarDetails : function (w,h,bgc,brdW,brdC,blkC,speed,blocks,count,action){
+	createIndeterminateBarDetails : function (){
 		var div = '<div id="progressTextArea" class="clob" style="font-size:smaller;width:650px;margin:10px;padding:4px;" ><input type="textarea" /></div><div style="width:650px;"><input style="float:left" type="button" id="cancel-button" name="Cancel" value="Cancel job" /><img style="float:right" src="/Gemma/images/default/basic-dialog/progress2.gif" /></div>';
 		Ext.DomHelper.overwrite("progress-area", div);
 	} 

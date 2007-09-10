@@ -38,6 +38,8 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
     protected int currentPhase;
     protected String forwardingURL;
     protected Object taskId;
+    protected Object payload = null;
+    boolean forwardWhenDone = true;
 
     /*
      * (non-Javadoc)
@@ -182,6 +184,24 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
 
     public Object getTaskId() {
         return this.taskId;
+    }
+
+    public Object getPayload() {
+        return payload;
+
+    }
+
+    public void setPayload( Object payload ) {
+        this.payload = payload;
+
+    }
+
+    public boolean forwardWhenDone() {
+        return this.forwardWhenDone;
+    }
+
+    public void setForwardWhenDone( boolean value ) {
+        this.forwardWhenDone = value;
     }
 
 }

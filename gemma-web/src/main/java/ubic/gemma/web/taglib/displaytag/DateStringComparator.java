@@ -83,7 +83,13 @@ public class DateStringComparator implements Comparator {
             date2 = DateUtils.parseDate( d2, formats );
         } catch ( ParseException e ) {
             log.debug( "Failed to parse dates, returning lexigraphic ordering" );
-            return d1.compareTo( d2 );
+            if ( d1.contains( "NA" ) ) {
+                return -1;
+            } else if ( d2.contains( "NA" ) ) {
+                return 1;
+            } else {
+                return d1.compareTo( d2 );
+            }
         }
 
         if ( date1.before( date2 ) ) {
@@ -95,5 +101,4 @@ public class DateStringComparator implements Comparator {
         }
 
     }
-
 }

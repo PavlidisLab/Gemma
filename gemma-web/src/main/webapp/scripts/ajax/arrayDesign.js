@@ -28,7 +28,6 @@ function handleFailure(data, e) {
 	Ext.DomHelper.overwrite("taskId", "");
 	Ext.DomHelper.overwrite("messages", {tag : 'img', src:'/Gemma/images/icons/warning.png' });  
 	Ext.DomHelper.append("messages", {tag : 'span', html : "&nbsp;There was an error:<br/>" + data });  
-	uploadButton.enable();
 };
 
 function reset(data) {
@@ -36,7 +35,6 @@ function reset(data) {
 }
 
 function handleReportUpdateSuccess(data) {
-// todo: refresh the div containing the report information
 	try {
 		taskId = data;
 		Ext.DomHelper.overwrite("messages", "");  
@@ -45,7 +43,7 @@ function handleReportUpdateSuccess(data) {
 	 	p.createIndeterminateProgressBar();
 		p.on('fail', handleFailure);
 		p.on('cancel', reset);
-		p.on('done', handleDone);
+		p.on('done', handleDoneUpdateReport);
 	 	p.startProgress();
 	}
 	catch (e) {
@@ -55,8 +53,29 @@ function handleReportUpdateSuccess(data) {
 	
 };
 
-function handleDone(data){
-		Ext.DomHelper.overwrite("messages", "");  
-		Ext.DomHelper.overwrite("taskId", "");
-	alert("Hello");
+function handleReportLoadSuccess(data) {
+	try {
+	    Ext.DomHelper.overwrite("messages", "");
+	    var arrayDesignSummaryDiv = "arraySummary_" + data.id;
+		Ext.DomHelper.overwrite(arrayDesignSummaryDiv, data.html);  
+	//	changeObjectVisibility(arrayDesignSummaryDiv, true);
+	} catch (e) {
+		handleFailure(data, e);
+		return;
+	}
+};
+
+function handleDoneUpdateReport(data){
+	Ext.DomHelper.overwrite("messages", {tag : 'img', src:'/Gemma/images/default/tree/loading.gif' }); 
+	var id = data.id;
+	var callParams = [];
+	var commandObj = {id : id};
+	callParams.push(commandObj);
+	var callback = handleReportLoadSuccess.createDelegate(this, [], true);
+	var errorHandler = handleFailure.createDelegate(this, [], true);
+	callParams.push(callback);
+	callParams.push(errorHandler);
+	ArrayDesignController.getReportHtml.apply( this, callParams);
+	
+	 
 };

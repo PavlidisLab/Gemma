@@ -32,6 +32,15 @@ public class ProgressData implements Serializable {
     private String forwardingURL;
     private String taskId;
     private boolean failed = false;
+    private Object payload;
+
+    public Object getPayload() {
+        return payload;
+    }
+
+    public void setPayload( Object payload ) {
+        this.payload = payload;
+    }
 
     public boolean isFailed() {
         return failed;

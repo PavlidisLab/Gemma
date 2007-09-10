@@ -106,7 +106,7 @@
 
 <div id="messages" style="margin:10px;width:400px"></div>
 <div id="taskId" style="display: none;"></div>
-<div id="progress-area" style="padding:5px;"></div>
+<div id="progress-area" style="padding:15px;"></div>
 
 <h3>
 	Displaying

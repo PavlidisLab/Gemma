@@ -17,8 +17,6 @@
 		type="text/javascript"></script>
 	<script type="text/javascript"
 		src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
-	<script type="text/javascript"
-		src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
 	<script type='text/javascript'
 		src='/Gemma/dwr/interface/AuditController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
@@ -26,104 +24,128 @@
 	<script type="text/javascript"
 		src="<c:url value='/scripts/ajax/auditTrail.js'/>"
 		type="text/javascript"></script>
+	<script type="text/javascript"
+		src="<c:url value='/scripts/progressbar.js'/>"></script>
+	<script type="text/javascript"
+		src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
+	<script type='text/javascript'
+		src='/Gemma/dwr/interface/ArrayDesignController.js'></script>
+	<script type='text/javascript'
+		src='/Gemma/dwr/interface/ProgressStatusService.js'></script>
+	<script type="text/javascript"
+		src="<c:url value='/scripts/ajax/arrayDesign.js'/>"
+		type="text/javascript"></script>
+	<link rel="stylesheet" type="text/css" media="all"
+		href="<c:url value='/styles/progressbar.css'/>" />
 </head>
 
 <h2>
 	Details for
-	<jsp:getProperty name="arrayDesign" property="name" /> (<jsp:getProperty name="arrayDesign" property="shortName" />)
+	<jsp:getProperty name="arrayDesign" property="name" />
+	(<jsp:getProperty name="arrayDesign" property="shortName" />)
 </h2>
 
+<div id="messages" style="margin: 10px; width: 400px"></div>
+<div id="taskId" style="display: none;"></div>
+<div id="progress-area" style="padding: 15px;"></div>
 
 <!--  Summary of array design associations -->
 <c:if test="${ summary != ''}">
 	<table class='datasummaryarea'>
 		<caption>
 			Sequence analysis details
-
-
 		</caption>
+
 		<tr>
 			<td>
 
-				<table class='datasummary'>
-					<tr>
-						<td colspan=2 align=center>
-						</td>
-					</tr>
-					<tr>
-						<td>
-							Probes
-						</td>
-						<td>
-							${numCompositeSequences}
-						</td>
-					</tr>
-					<authz:authorize ifAnyGranted="admin">
-
+				<div id="arraySummary_${arrayDesign.id}"
+					name="arraySummary_${arrayDesign.id}">
+					<table class='datasummary'>
+						<tr>
+							<td colspan=2 align=center>
+							</td>
+						</tr>
 						<tr>
 							<td>
-								With sequences
+								Probes
 							</td>
+							<td align="right">
+								${numCompositeSequences}
+							</td>
+						</tr>
+						<tr>
 							<td>
+								With seq.
+							</td>
+							<td align="right">
 								${summary.numProbeSequences}
 							</td>
 						</tr>
 						<tr>
 							<td>
-								With genome alignments
+								With align
 							</td>
-							<td>
+							<td align="right">
 								${summary.numProbeAlignments}
 							</td>
 						</tr>
-					</authz:authorize>
-					<tr>
-						<td>
-							Mapping to genes
-						</td>
-						<td>
-							${summary.numProbesToGenes}
-						</td>
-					</tr>
-					<tr>
-						<td align="right">
-							Known genes
-						</td>
-						<td>
-							${summary.numProbesToKnownGenes }
-						</td>
-					</tr>
-					<tr>
-						<td align="right">
-							Predicted genes
-						</td>
-						<td>
-							${summary.numProbesToPredictedGenes}
-						</td>
-					</tr>
-					<tr>
-						<td align="right">
-							Probe-aligned regions
-						</td>
-						<td>
-							${summary.numProbesToProbeAlignedRegions}
-						</td>
-					</tr>
-					<tr>
-						<td>
-							Unique genes represented
-						</td>
-						<td>
-							${summary.numGenes}
-						</td>
-					</tr>
-					<tr>
-						<td colspan=2 align='center' class='small'>
-							(as of ${summary.dateCached})
-						</td>
-					</tr>
-				</table>
+						<tr>
+							<td>
+								Mapped
+							</td>
+							<td align="right">
+								${summary.numProbesToGenes}
+							</td>
+						</tr>
+						<tr>
+							<td >
+								&nbsp;&nbsp;Known
+							</td>
+							<td align="right">
+								${summary.numProbesToKnownGenes }
+							</td>
+						</tr>
+						<tr>
+							<td >
+								&nbsp;&nbsp;Predicted
+							</td>
+							<td align="right">
+								${summary.numProbesToPredictedGenes}
+							</td>
+						</tr>
+						<tr>
+							<td >
+								&nbsp;&nbsp;Unknown
+							</td>
+							<td align="right">
+								${summary.numProbesToProbeAlignedRegions}
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Unique genes
+							</td>
+							<td align="right">
+								${summary.numGenes}
+							</td>
+						</tr>
+						<tr>
+							<td colspan=2 align='center' class='small'>
+								(as of ${summary.dateCached})
+							</td>
+						</tr>
+					</table>
+				</div>
 
+			</td>
+		</tr>
+		<tr>
+			<td colspan="2">
+				<authz:authorize ifAnyGranted="admin">
+					<input type="button" value="Refresh report"
+						onClick="updateReport(${arrayDesign.id })" />
+				</authz:authorize>
 			</td>
 		</tr>
 		<tr>
@@ -141,7 +163,7 @@
 	</table>
 </c:if>
 
-<table>
+<table style="width: 70%;">
 	<tr>
 		<td class="label">
 			Name
@@ -296,7 +318,7 @@
 					History
 				</h3>
 				<div id="auditTrail" class="x-grid-mso"
-					style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:250px;"></div>
+					style="border: 1px solid #c3daf9; overflow: hidden; width: 630px; height: 250px;"></div>
 				<input type="hidden" name="auditableId" id="auditableId"
 					value="${arrayDesign.id}" />
 				<input type="hidden" name="auditableClass" id="auditableClass"

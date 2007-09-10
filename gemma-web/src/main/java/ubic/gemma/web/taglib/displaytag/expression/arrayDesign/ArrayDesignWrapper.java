@@ -26,6 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.web.taglib.arrayDesign.ArrayDesignHtmlUtil;
 
 /**
  * Used to generate hyperlinks in displaytag tables.
@@ -183,6 +184,9 @@ public class ArrayDesignWrapper extends TableDecorator {
         }
     }
 
+    /**
+     * @return
+     */
     public String getSummaryTable() {
         StringBuilder buf = new StringBuilder();
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
@@ -200,72 +204,23 @@ public class ArrayDesignWrapper extends TableDecorator {
                         + "')\">" );
         buf.append( "<img src=\"/Gemma/images/chart_organisation_add.png\" /></span>" );
 
-        buf.append( "<span class=\"" + arraySummary + "\" style=\"display:none\" onclick=\"return toggleVisibility('"
-                + arraySummary + "')\">" );
+        buf.append( "<span class=\"" + arraySummary + "\" name=\"" + arraySummary
+                + "\" style=\"display:none\" onclick=\"return toggleVisibility('" + arraySummary + "')\">" );
         buf.append( "<img src=\"/Gemma/images/plus.png\" /></span>" );
 
         buf.append( "<a href=\"#\" onclick=\"return toggleVisibility('" + arraySummary + "')\" >Summary</a>" );
 
-        buf.append( "<div id=\"arraySummary" + object.getId() + "\" class=\"" + arraySummary + "\" style=\"display:none\">" );
+        buf.append( "<div id=\"" + arraySummary + "\" class=\"" + arraySummary + "\" style=\"display:none\">" );
 
-        buf.append( "<table class='datasummary'>" + "<tr>" + "<td colspan=2 align=center>" + "</td></tr>"
-                + "<tr><td>Probes</td><td align=\"right\" >"
-                + object.getDesignElementCount()
-                + "</td></tr>"
-                + "<tr><td title=\"Number of probes with sequences\">"
-                + "With seq"
-                + "</td><td align=\"right\" >"
-                + object.getNumProbeSequences()
-                + "</td></tr>"
-                + "<tr><td title=\"Number of probes with at least one genome alignment\">"
-                + "With align"
-                + "</td>"
-                + "<td align=\"right\" >"
-                + object.getNumProbeAlignments()
-                + "</td></tr>"
-                + "<tr><td title=\"Number of probes mapped to genes (including predicted and anonymous locations)\">"
-                + "Mapped"
-                + "</td><td align=\"right\" >"
-                + object.getNumProbesToGenes()
-                + "</td></tr>"
-                +
-
-                "<tr><td  title=\"Number of probes mapping to known genes\">"
-                + "&nbsp;&nbsp;Known"
-                + "</td><td align=\"right\" >"
-                + object.getNumProbesToKnownGenes()
-                + "</td></tr>"
-                +
-
-                "<tr><td title=\"Number of probes mapping to predicted genes\">"
-                + "&nbsp;&nbsp;Pred."
-                + "</td><td align=\"right\" >"
-                + object.getNumProbesToPredictedGenes()
-                + "</td></tr>"
-                +
-
-                "<tr><td  title=\"Number of probes mapping to non-gene locations in the genome\">"
-                + "&nbsp;&nbsp;Unknown"
-                + "</td><td align=\"right\" >"
-                + object.getNumProbesToProbeAlignedRegions()
-                + "</td></tr>"
-                +
-
-                "<tr><td title=\"Number of unique genes represented on the array\" >"
-                + "Unique genes"
-                + "</td><td align=\"right\" >"
-                + object.getNumGenes()
-                + "</td></tr>"
-                + "<tr><td colspan=2 align='center' class='small'>"
-                + "(as of "
-                + object.getDateCached()
-                + ")"
-                + "</td></tr>" + "</table>" );
+        buf.append( ArrayDesignHtmlUtil.getSummaryHtml( object ) );
 
         buf.append( "</div>" );
         return buf.toString();
     }
 
+    /**
+     * @return
+     */
     public String getExpressionExperimentCountLink() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
         if ( object.getExpressionExperimentCount() != null && object.getExpressionExperimentCount() > 0 ) {
@@ -279,16 +234,20 @@ public class ArrayDesignWrapper extends TableDecorator {
         return "0";
     }
 
+    /**
+     * @return
+     */
     public String getDelete() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
 
-        if ( object == null ) {
-            return "Array Design unavailable";
+        if ( object == null || object.getExpressionExperimentCount() == null
+                || object.getExpressionExperimentCount() == 0 ) {
+            // FIXME wire to AJAX call.
+            return "<form action=\"deleteArrayDesign.html?id=" + object.getId()
+                    + "\" onSubmit=\"return confirmDelete('Array Design " + object.getName()
+                    + "')\" method=\"post\"><input type=\"submit\"  value=\"Delete\" /></form>";
         }
-
-        return "<form action=\"deleteArrayDesign.html?id=" + object.getId()
-                + "\" onSubmit=\"return confirmDelete('Array Design " + object.getName()
-                + "')\" method=\"post\"><input type=\"submit\"  value=\"Delete\" /></form>";
+        return "";
 
     }
 

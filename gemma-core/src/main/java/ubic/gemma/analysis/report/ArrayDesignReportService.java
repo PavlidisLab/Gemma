@@ -280,16 +280,19 @@ public class ArrayDesignReportService {
 
     /**
      * @param id
+     * @return 
      */
     @SuppressWarnings("unchecked")
-    public void generateArrayDesignReport( Long id ) {
+    public ArrayDesignValueObject generateArrayDesignReport( Long id ) {
         Collection<Long> ids = new ArrayList<Long>();
         ids.add( id );
         Collection<ArrayDesignValueObject> adVo = arrayDesignService.loadValueObjects( ids );
         if ( adVo != null && adVo.size() > 0 ) {
             generateArrayDesignReport( adVo.iterator().next() );
+            return getSummaryObject(id);
         } else {
             log.warn("No value objects return for requested array designs");
+            return null;
         }
     }
 

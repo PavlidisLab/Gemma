@@ -172,6 +172,7 @@
 							<value>getCsSummaries</value>
 							<value>getCsSummaryRange</value>
 							<value>updateReport</value>
+							<value>getReportHtml</value>
 							<value>remove</value>
 						</list>
 					</property>
@@ -845,7 +846,16 @@
 					</property>
 				</bean>
 			</entry>
-			
+			<entry key="ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+					<property name="includes">
+						<list>
+							<value>id</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
 		</map>
 	</property>
 </bean>
