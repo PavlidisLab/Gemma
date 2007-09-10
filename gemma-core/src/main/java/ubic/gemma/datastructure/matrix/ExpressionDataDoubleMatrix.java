@@ -473,12 +473,9 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         Double[][] data = ( Double[][] ) getMatrix();
         double[][] ddata = new double[data.length][];
         for ( int i = 0; i < data.length; i++ ) {
+            ddata[i] = new double[data[i].length];
             for ( int j = 0; j < data[i].length; j++ ) {
-                if ( Double.isNaN( data[i][j] ) ) {
-                    ddata[i][j] = Double.NaN;
-                } else {
-                    ddata[i][j] = data[i][j];
-                }
+                ddata[i][j] = data[i][j];
             }
         }
 
