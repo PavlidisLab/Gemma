@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.rosuda.JRclient.REXP;
 import org.rosuda.JRclient.RList;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
@@ -90,8 +91,8 @@ public class TTestAnalyzer extends AbstractAnalyzer {
 
         Collection<FactorValue> factorValues = experimentalFactor.getFactorValues();
 
-        if ( factorValues.size() != 1 )
-            throw new RuntimeException( "Only supports one factor value per experimental factor." );
+        if ( factorValues.size() != 2 )
+            throw new RuntimeException( "Must have only two factor value per experimental factor." );
 
         Collection<BioMaterial> biomaterials = new ArrayList<BioMaterial>();
 
@@ -125,14 +126,25 @@ public class TTestAnalyzer extends AbstractAnalyzer {
 
         DoubleMatrixNamed namedMatrix = dmatrix.getNamedMatrix();
 
-        // apply(matrix, 1, function(x) {t.test(x ~ ffacts)}$p.value)
-        // apply(matrix, 1, function(x) {t.test(x ~ factor(t(facts)))}$p.value)
+        // TODO remove me - this is a test
+        // List<String> colFactors = new ArrayList<String>();
+        // for ( int i = 0; i < 6; i++ ) {
+        // if ( i % 2 == 0 )
+        // colFactors.add( "a" );
+        // else
+        // colFactors.add( "b" );
+        // }
+        // String facts = rc.assignStringList( colFactors );
 
+        // FIXME this is wrong
         String facts = rc.assignStringList( namedMatrix.getColNames() );
 
         String tfacts = "t(" + facts + ")";
 
         String factor = "factor(" + tfacts + ")";
+
+        // REXP rexp0 = rc.eval( tfacts );
+        // REXP rexp1 = rc.eval( factor );
 
         String matrixName = rc.assignMatrix( namedMatrix );
         StringBuffer command = new StringBuffer();
@@ -142,6 +154,7 @@ public class TTestAnalyzer extends AbstractAnalyzer {
         command.append( ")" );
 
         log.debug( command.toString() );
+        // apply(matrix, 1, function(x) {t.test(x ~ factor(t(facts)))}$p.value)
         // apply(Matrix_16799190, 1, function(x) {t.test(x ~ factor(t(stringList.1528280046)))}$p.value)
 
         RList l = rc.eval( command.toString() ).asList();
