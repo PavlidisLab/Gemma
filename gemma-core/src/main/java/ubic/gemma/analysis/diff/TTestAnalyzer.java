@@ -125,11 +125,24 @@ public class TTestAnalyzer extends AbstractAnalyzer {
 
         DoubleMatrixNamed namedMatrix = dmatrix.getNamedMatrix();
 
+        // apply(matrix, 1, function(x) {t.test(x ~ ffacts)}$p.value)
+        // apply(matrix, 1, function(x) {t.test(x ~ factor(t(facts)))}$p.value)
+
+        String facts = rc.assignStringList( namedMatrix.getColNames() );
+
+        String tfacts = "t(" + facts + ")";
+
+        String factor = "factor(" + tfacts + ")";
+
         String matrixName = rc.assignMatrix( namedMatrix );
         StringBuffer command = new StringBuffer();
         command.append( "apply(" );
         command.append( matrixName );
-        command.append( ", 1, function(x) t.test(x ~ factor)$p.value)" );
+        command.append( ", 1, function(x) {t.test(x ~ " + factor + ")}$p.value" );
+        command.append( ")" );
+
+        log.debug( command.toString() );
+        // apply(Matrix_16799190, 1, function(x) {t.test(x ~ factor(t(stringList.1528280046)))}$p.value)
 
         RList l = rc.eval( command.toString() ).asList();
 
