@@ -59,7 +59,8 @@ public class ArrayDesignProbeRenamingService {
 
     /**
      * @param arrayDesign
-     * @param newIdFile Two columns, where first column is old id, second column is new id.
+     * @param newIdFile Two columns, where first column is old id, second column is new id. If second column is blank,
+     *        old name will be retained.
      */
     public void reName( ArrayDesign arrayDesign, InputStream newIdFile ) {
         Map<String, String> old2new;
@@ -82,10 +83,12 @@ public class ArrayDesignProbeRenamingService {
                 }
 
                 cs.setName( old2new.get( cs.getName() ) );
+
+                if ( ++count % 2000 == 0 ) {
+                    log.info( "Renamed " + count + " composite sequences, last to be renamed was " + cs );
+                }
             }
-            if ( ++count % 2000 == 0 ) {
-                log.info( "Renamed " + count + " composite sequences, last to be renamed was " + cs );
-            }
+
         }
 
         arrayDesignService.update( arrayDesign );
@@ -94,7 +97,7 @@ public class ArrayDesignProbeRenamingService {
 
     /**
      * @param newIdFile
-     * @return
+     * @returnk
      * @throws IOException
      */
     private Map<String, String> parseIdFile( InputStream newIdFile ) throws IOException {

@@ -435,23 +435,19 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     protected Taxon handleGetTaxon( Long id ) throws Exception {
 
         final String queryString = "select t from ArrayDesignImpl as arrayD "
-                + "inner join arrayD.compositeSequences as cs left outer join " + "cs.biologicalCharacteristic as bioC"
-                + " left join bioC.taxon t where arrayD.id = :id";
+                + "inner join arrayD.compositeSequences as cs inner join " + "cs.biologicalCharacteristic as bioC"
+                + " inner join bioC.taxon t where arrayD.id = :id";
 
         try {
             org.hibernate.Query queryObject = this.getSession().createQuery( queryString );
             queryObject.setParameter( "id", id );
-
-            // get more than one, guarding against the possibility that the taxon is null.
-            queryObject.setMaxResults( 10 );
+            queryObject.setMaxResults( 1 );
             List list = queryObject.list();
-            for ( Object object : list ) {
-                if ( object == null ) continue;
-                return ( Taxon ) object;
+            if ( list.size() == 0 ) {
+                log.warn( "Could not determine taxon for array design" + id + " (no sequences?)" );
+                return null;
             }
-
-            return null;
-
+            return ( Taxon ) list.iterator().next();
         } catch ( org.hibernate.HibernateException ex ) {
             throw SessionFactoryUtils.convertHibernateAccessException( ex );
         }

@@ -148,6 +148,7 @@ public class ArrayDesignSequenceAlignmentService {
 
         ExternalDatabase searchedDatabase = Blat.getSearchedGenome( taxon );
 
+        Collection<BlatResult> toSkip = new HashSet<BlatResult>();
         for ( BlatResult result : rawBlatResults ) {
 
             /*
@@ -157,7 +158,8 @@ public class ArrayDesignSequenceAlignmentService {
                 String querySeqName = result.getQuerySequence().getName();
                 BioSequence actualSequence = seqMap.get( querySeqName );
                 if ( actualSequence == null ) {
-                    log.warn( "Array design does not contain a sequence with name " + querySeqName );
+                    log.debug( "Array design does not contain a sequence with name " + querySeqName );
+                    toSkip.add( result );
                     continue;
                 }
                 result.setQuerySequence( actualSequence );
@@ -168,6 +170,11 @@ public class ArrayDesignSequenceAlignmentService {
             result.setSearchedDatabase( searchedDatabase );
             result.getTargetChromosome().setTaxon( taxon );
             result.getTargetChromosome().getSequence().setTaxon( taxon );
+        }
+
+        if ( toSkip.size() > 0 ) {
+            log.warn( toSkip.size() + " blat results were for sequences not on " + ad + "; they will be ignored." );
+            rawBlatResults.removeAll( toSkip );
         }
 
         Map<BioSequence, Collection<BlatResult>> goldenPathAlignments = new HashMap<BioSequence, Collection<BlatResult>>();

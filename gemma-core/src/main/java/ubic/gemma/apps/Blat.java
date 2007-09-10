@@ -115,7 +115,7 @@ public class Blat {
     public static String getIdentifier( BioSequence b ) {
         String identifier = b.getName();
         identifier = identifier.replaceAll( " ", SPACE_REPLACEMENT );
-        identifier = identifier.substring( 0, Math.max( identifier.length(), MAX_SEQ_IDENTIFIER_LENGTH ) - 1 );
+        identifier = identifier.substring( 0, Math.min( identifier.length(), MAX_SEQ_IDENTIFIER_LENGTH ) );
         return identifier;
     }
 
@@ -162,20 +162,22 @@ public class Blat {
         Collection<Object> identifiers = new HashSet<Object>();
         int repeats = 0;
         for ( BioSequence b : sequences ) {
-            if ( StringUtils.isNotBlank( b.getSequence() ) ) {
-                String identifier = getIdentifier( b );
-                if ( identifiers.contains( identifier ) ) {
-                    repeats++;
-                    continue; // don't repeat sequences.
-                }
-
-                // use toUpper to ensure that sequence does not start out 'masked'.
-                out.write( ">" + identifier + "\n" + b.getSequence().toUpperCase() + "\n" );
-                identifiers.add( identifier );
-            } else {
+            if ( StringUtils.isBlank( b.getSequence() ) ) {
                 log.warn( "Blank sequence for " + b );
+                continue;
             }
-            if ( ++count % 5000 == 0 ) {
+            String identifier = getIdentifier( b );
+            if ( identifiers.contains( identifier ) ) {
+                log.debug( b + " is a repeat with identifier " + identifier );
+                repeats++;
+                continue; // don't repeat sequences.
+            }
+
+            // use toUpper to ensure that sequence does not start out 'masked'.
+            out.write( ">" + identifier + "\n" + b.getSequence().toUpperCase() + "\n" );
+            identifiers.add( identifier );
+
+            if ( ++count % 2000 == 0 ) {
                 log.debug( "Wrote " + count + " sequences" );
             }
         }
@@ -457,9 +459,8 @@ public class Blat {
     }
 
     /**
-                                                         * Start the server, if the port isn't already being used. If
-                                                         * the port is in use, we assume it is a gfServer.
-                                                         */
+     * Start the server, if the port isn't already being used. If the port is in use, we assume it is a gfServer.
+     */
     public void startServer( BlattableGenome genome, int port ) throws IOException {
         try {
             new Socket( host, port );
@@ -489,8 +490,8 @@ public class Blat {
     }
 
     /**
-                                                                     * Stop the gfServer, if it was started by this.
-                                                                     */
+     * Stop the gfServer, if it was started by this.
+     */
     public void stopServer( int port ) {
         if ( false && !doShutdown ) {
             return;
@@ -514,9 +515,9 @@ public class Blat {
     }
 
     /**
-                 * @param genome
-                 * @return
-                 */
+     * @param genome
+     * @return
+     */
     private int choosePortForQuery( Taxon taxon ) {
         BlattableGenome genome = inferBlatDatabase( taxon );
         switch ( genome ) {
@@ -533,9 +534,9 @@ public class Blat {
     }
 
     /**
-                 * @param querySequenceFile
-                 * @param outputPath
-                 */
+     * @param querySequenceFile
+     * @param outputPath
+     */
     private void cleanUpTmpFiles( File querySequenceFile, String outputPath ) {
         if ( !querySequenceFile.delete() || !( new File( outputPath ) ).delete() ) {
             log.warn( "Could not clean up temporary files." );
@@ -543,13 +544,12 @@ public class Blat {
     }
 
     /**
-                                                                                     * Run a gfClient query, using a
-                                                                                     * call to exec().
-                                                                                     * 
-                                                                                     * @param querySequenceFile
-                                                                                     * @param outputPath
-                                                                                     * @return
-                                                                                     */
+     * Run a gfClient query, using a call to exec().
+     * 
+     * @param querySequenceFile
+     * @param outputPath
+     * @return
+     */
     private Collection<BlatResult> execGfClient( File querySequenceFile, String outputPath, int portToUse )
             throws IOException {
         final String cmd = gfClientExe + " -nohead -minScore=16 " + host + " " + portToUse + " " + seqDir + " "
@@ -577,7 +577,7 @@ public class Blat {
                     exitVal = run.exitValue();
                 } catch ( IllegalThreadStateException e ) {
                     // okay, still
-                                                                                                        // waiting.
+                    // waiting.
                 }
                 Thread.sleep( BLAT_UPDATE_INTERVAL_MS );
                 // I hope this is okay...
@@ -622,11 +622,11 @@ public class Blat {
     }
 
     /**
-                                                                         * @param querySequenceFile
-                                                                         * @param outputPath
-                                                                         * @return processed results.
-                                                                         * @throws IOException
-                                                                         */
+     * @param querySequenceFile
+     * @param outputPath
+     * @return processed results.
+     * @throws IOException
+     */
     private Collection<BlatResult> gfClient( File querySequenceFile, String outputPath, int portToUse )
             throws IOException {
         if ( !os.startsWith( "windows" ) ) return jniGfClientCall( querySequenceFile, outputPath, portToUse );
@@ -635,17 +635,17 @@ public class Blat {
     }
 
     /**
-             * @param host
-             * @param port
-             * @param seqDir
-             * @param inputFile
-             * @param outputFile
-             */
+     * @param host
+     * @param port
+     * @param seqDir
+     * @param inputFile
+     * @param outputFile
+     */
     private native void GfClientCall( String h, String p, String dir, String input, String output );
 
     /**
-         * @throws ConfigurationException
-         */
+     * @throws ConfigurationException
+     */
     private void init() throws ConfigurationException {
 
         log.debug( "Reading global config" );

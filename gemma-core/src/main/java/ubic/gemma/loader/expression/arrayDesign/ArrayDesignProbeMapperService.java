@@ -76,6 +76,9 @@ public class ArrayDesignProbeMapperService {
     public void processArrayDesign( ArrayDesign arrayDesign ) {
 
         Taxon taxon = arrayDesignService.getTaxon( arrayDesign.getId() );
+        if ( taxon == null ) {
+            throw new IllegalArgumentException( "Cannot analyze " + arrayDesign + ", taxon could not be determined" );
+        }
         GoldenPathSequenceAnalysis goldenPathDb;
         try {
             goldenPathDb = new GoldenPathSequenceAnalysis( taxon );

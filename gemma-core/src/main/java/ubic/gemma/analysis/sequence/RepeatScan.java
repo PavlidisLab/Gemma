@@ -64,6 +64,11 @@ public class RepeatScan {
      */
     public Collection<BioSequence> repeatScan( Collection<BioSequence> sequences ) {
         try {
+            if ( sequences.size() == 0 ) {
+                log.warn( "No sequences to test" );
+                return sequences;
+            }
+
             File querySequenceFile = File.createTempFile( "repmask", ".fa" );
             Blat.writeSequencesToFile( sequences, querySequenceFile );
 

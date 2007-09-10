@@ -243,6 +243,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
      * @param arrayDesign
      */
     private void audit( ArrayDesign arrayDesign, String note ) {
+        // minor : don't add audit event if no sequences were changed, or --force.
         arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
         AuditEventType eventType = ArrayDesignSequenceUpdateEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
