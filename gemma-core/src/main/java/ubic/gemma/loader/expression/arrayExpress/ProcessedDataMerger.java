@@ -154,9 +154,17 @@ public class ProcessedDataMerger {
             } else if ( representation.equals( PrimitiveType.BOOLEAN ) ) {
                 dataObjects[i] = new Boolean( stringVal );
             } else if ( representation.equals( PrimitiveType.DOUBLE ) ) {
-                dataObjects[i] = new Double( stringVal );
+                try {
+                    dataObjects[i] = new Double( stringVal );
+                } catch ( NumberFormatException e ) {
+                    dataObjects[i] = Double.NaN;
+                }
             } else if ( representation.equals( PrimitiveType.INT ) ) {
-                dataObjects[i] = new Integer( stringVal );
+                try {
+                    dataObjects[i] = new Integer( stringVal );
+                } catch ( NumberFormatException e ) {
+                    dataObjects[i] = 0;
+                }
             } else {
                 throw new IllegalStateException( "Don't know how to convert " + representation );
             }
