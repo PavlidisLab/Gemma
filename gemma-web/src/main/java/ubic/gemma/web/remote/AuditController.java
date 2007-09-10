@@ -98,7 +98,7 @@ public class AuditController {
         return result;
     }
     
-    public void addAuditEvent( EntityDelegator e, String auditEventType, String comment ) {
+    public void addAuditEvent( EntityDelegator e, String auditEventType, String comment, String detail ) {
         Auditable entity = getAuditable( e );
         if ( entity == null ) {
             log.warn( "Couldn't find Auditable represented by " + e );
@@ -106,11 +106,11 @@ public class AuditController {
         }
         
         if ( auditEventType.equals("TroubleStatusFlagEvent") ) {
-            auditTrailService.addTroubleFlag( entity, comment );
+            auditTrailService.addTroubleFlag( entity, comment, detail );
         } else if ( auditEventType.equals( "OKStatusFlagEvent" ) ) {
-            auditTrailService.addOkFlag( entity, comment );
+            auditTrailService.addOkFlag( entity, comment, detail );
         } else if ( auditEventType.equals( "ValidatedFlagEvent" ) ) {
-            auditTrailService.addValidatedFlag( entity, comment );
+            auditTrailService.addValidatedFlag( entity, comment, detail );
         } else {
             log.warn( "We don't support that type of audit event yet, sorry" );
         }

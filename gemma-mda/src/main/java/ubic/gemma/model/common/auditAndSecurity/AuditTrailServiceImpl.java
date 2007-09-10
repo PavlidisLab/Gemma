@@ -116,6 +116,18 @@ public class AuditTrailServiceImpl extends ubic.gemma.model.common.auditAndSecur
         auditEvent.setNote( note );
         return this.getAuditTrailDao().addEvent( auditable, auditEvent );
     }
+    
+    @Override
+    protected AuditEvent handleAddUpdateEvent( Auditable auditable, AuditEventType auditEventType, String note, String detail )
+            throws Exception {
+        AuditEvent auditEvent = AuditEvent.Factory.newInstance();
+        auditEvent.setDate( Calendar.getInstance().getTime() );
+        auditEvent.setAction( AuditAction.UPDATE );
+        auditEvent.setEventType( auditEventType );
+        auditEvent.setNote( note );
+        auditEvent.setDetail( detail );
+        return this.getAuditTrailDao().addEvent( auditable, auditEvent );
+    }
 
     @Override
     protected void handleAddComment( Auditable auditable, String comment ) throws Exception {
@@ -125,23 +137,23 @@ public class AuditTrailServiceImpl extends ubic.gemma.model.common.auditAndSecur
     }
 
     @Override
-    protected void handleAddOkFlag( Auditable auditable, String comment ) throws Exception {
+    protected void handleAddOkFlag( Auditable auditable, String comment, String detail ) throws Exception {
         // TODO possibly don't allow this if there isn't already a trouble event on this object. That is, maybe OK
         // should only be used to reverse "trouble".
         AuditEventType type = OKStatusFlagEvent.Factory.newInstance();
-        this.addUpdateEvent( auditable, type, comment );
+        this.addUpdateEvent( auditable, type, comment, detail );
     }
 
     @Override
-    protected void handleAddTroubleFlag( Auditable auditable, String comment ) throws Exception {
+    protected void handleAddTroubleFlag( Auditable auditable, String comment, String detail ) throws Exception {
         AuditEventType type = TroubleStatusFlagEvent.Factory.newInstance();
-        this.addUpdateEvent( auditable, type, comment );
+        this.addUpdateEvent( auditable, type, comment, detail );
     }
 
     @Override
-    protected void handleAddValidatedFlag( Auditable auditable, String comment ) throws Exception {
+    protected void handleAddValidatedFlag( Auditable auditable, String comment, String detail ) throws Exception {
         AuditEventType type = ValidatedFlagEvent.Factory.newInstance();
-        this.addUpdateEvent( auditable, type, comment );
+        this.addUpdateEvent( auditable, type, comment, detail );
 
     }
 

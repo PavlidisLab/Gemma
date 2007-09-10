@@ -47,17 +47,33 @@ Ext.onReady(function() {
 	var grid = new Ext.grid.Grid("auditTrail",
 		{ds:ds, cm:cm, loadMask: true });
 	grid.render();
-
-	var toolbar = new Ext.Toolbar("auditTrailToolbar");
+	
+	var addEventDialogDiv = Ext.DomHelper.append(document.body, {
+		tag: 'div',
+		id: 'addEventDialogDiv'
+	});
+	addEventDialogDiv.width = 300;
+	addEventDialogDiv.height = 200;
+	addEventDialogDiv.style.visibility = 'hidden';
+	var addEventDialog = new Ext.BasicDialog(addEventDialogDiv, {
+		width: 440,
+		height: 400,
+		shadow: true,
+		minWidth: 200,
+		minHeight: 150,
+		proxyDrag: true
+	});
+	addEventDialog.setTitle('Add Audit Event');
 	var auditEventTypeStore = new Ext.data.SimpleStore({
 		fields: ['type', 'description'],
 		data: [
 			['TroubleStatusFlagEvent', 'Trouble flag'],
-			['OKStatusFlagEvent', 'OK flag (clear Trouble flag)']
+			['OKStatusFlagEvent', 'OK flag (clear Trouble flag)'],
 			['ValidatedFlagEvent', 'Validated flag']
 		]
 	});
 	var auditEventTypeCombo = new Ext.form.ComboBox({
+		fieldLabel: 'Event type',
 		store: auditEventTypeStore,
 		displayField: 'description',
 		valueField: 'type',
@@ -66,27 +82,45 @@ Ext.onReady(function() {
 		triggerAction: 'all',
 		emptyText: 'Select an event type...',
 		editable: false,
-		width: 200
+		width: 180
 	});
 	var auditEventCommentField = new Ext.form.TextField({
-		fieldLabel: 'Comment:',
-		fieldWidth: 50,
-		name: 'comment',
+		fieldLabel: 'Comment',
 		width: 400,
 		allowBlank: true
 	});
-	toolbar.addField(auditEventTypeCombo);
-	toolbar.addField(auditEventCommentField);
-	var saveButton = toolbar.addButton({
-		text: 'save',
-		tooltip: 'Save the AuditEvent',
+	var auditEventDetailField = new Ext.form.TextArea({
+		fieldLabel: 'Details',
+		height: 200,
+		width: 400,
+		allowBlank: true
+	});
+	var addEventForm = new Ext.Form({
+		labelAlign: 'top'
+	});
+	addEventForm.add(auditEventTypeCombo);
+	addEventForm.add(auditEventCommentField);
+	addEventForm.add(auditEventDetailField);
+	addEventForm.addButton('Add Event', function() {
+		AuditController.addAuditEvent(
+			g,
+			auditEventTypeCombo.getValue(),
+			auditEventCommentField.getValue(),
+			auditEventDetailField.getValue(),
+			function() { ds.reload(); grid.getView().refresh(true); }
+		);
+		addEventDialog.hide;
+	}, addEventDialog); //.disable();
+	addEventForm.addButton('Cancel', addEventDialog.hide, addEventDialog);
+	addEventForm.render(addEventDialog.body);
+
+	var auditTrailToolbar = new Ext.Toolbar(grid.getView().getHeaderPanel(true));
+	auditTrailToolbar.addSpacer({ width: 400 });
+	auditTrailToolbar.addButton({
+		text: 'Add audit event',
+		tooltip: 'Add an audit event',
 		handler: function() {
-			AuditController.addAuditEvent(
-				g,
-				auditEventTypeCombo.getValue(),
-				auditEventCommentField.getValue(),
-				function() { ds.reload(); grid.render(); }
-			);
+			addEventDialog.show(Ext.get('auditTrail').dom);
 		}
 	});
 	
