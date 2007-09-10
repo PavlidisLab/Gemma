@@ -24,6 +24,7 @@ Ext.onReady(function() {
 		{name:"date", type:"date"}, 
 		{name:"actionName", type:"string"}, 
 		{name:"note", type:"string"}, 
+		{name:"detail", type:"string"},
 		{name:"performer", convert : convertUser }, 
 		{name:"eventTypeName", type:"string"}]);
 		
@@ -47,6 +48,10 @@ Ext.onReady(function() {
 	var grid = new Ext.grid.Grid("auditTrail",
 		{ds:ds, cm:cm, loadMask: true });
 	grid.render();
+	grid.on('rowdblclick', function (grid, row, event) {
+		var record = ds.getAt(row);
+		alert(record.data.detail);
+	});
 	
 	var addEventDialogDiv = Ext.DomHelper.append(document.body, {
 		tag: 'div',
@@ -102,6 +107,7 @@ Ext.onReady(function() {
 	addEventForm.add(auditEventCommentField);
 	addEventForm.add(auditEventDetailField);
 	addEventForm.addButton('Add Event', function() {
+		addEventDialog.hide;
 		AuditController.addAuditEvent(
 			g,
 			auditEventTypeCombo.getValue(),
@@ -109,7 +115,6 @@ Ext.onReady(function() {
 			auditEventDetailField.getValue(),
 			function() { ds.reload(); grid.getView().refresh(true); }
 		);
-		addEventDialog.hide;
 	}, addEventDialog); //.disable();
 	addEventForm.addButton('Cancel', addEventDialog.hide, addEventDialog);
 	addEventForm.render(addEventDialog.body);

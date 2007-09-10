@@ -37,6 +37,7 @@ public class AuditEventValueObject extends AuditEventImpl {
         this.setEventType( ae.getEventType() );
         this.setNote( ae.getNote() );
         this.setDate( ae.getDate() );
+        this.setDetail( ae.getDetail() );
     }
 
     public String getActionName() {

@@ -819,6 +819,7 @@
 							<value>actionName</value>
 							<value>eventTypeName</value>
 							<value>note</value>
+							<value>detail</value>
 						</list>
 					</property>
 				</bean>
