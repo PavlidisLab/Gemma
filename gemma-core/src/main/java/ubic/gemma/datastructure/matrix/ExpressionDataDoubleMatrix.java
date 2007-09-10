@@ -482,7 +482,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         DoubleMatrixNamed namedMatrix = new DenseDoubleMatrix2DNamed( ddata );
         for ( int i = 0; i < columns(); i++ ) {
             BioMaterial bm = getBioMaterialForColumn( i );
-            namedMatrix.addColumnName( bm, i );
+            namedMatrix.addColumnName( bm.getName(), i );
         }
         return namedMatrix;
     }
