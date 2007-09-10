@@ -136,7 +136,8 @@ public class TTestAnalyzer extends AbstractAnalyzer {
         // }
         // String facts = rc.assignStringList( colFactors );
 
-        // FIXME this is wrong
+        // FIXME this is wrong ... you need to use the factor values (and you will only have 2 of them, which is
+        // correct)
         String facts = rc.assignStringList( namedMatrix.getColNames() );
 
         String tfacts = "t(" + facts + ")";
