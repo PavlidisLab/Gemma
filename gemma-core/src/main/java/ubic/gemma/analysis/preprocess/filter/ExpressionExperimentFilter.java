@@ -76,20 +76,38 @@ public class ExpressionExperimentFilter {
             /* Apply two color missing value filter */
             builder.maskMissingValues( filteredMatrix, null );
             ExpressionDataBooleanMatrix missingValues = builder.getMissingValueData( null );
+
+            log.info( "Filtering for missing data" );
             filteredMatrix = minPresentFilter( filteredMatrix, missingValues );
-            if ( config.isLowVarianceCutIsSet() ) filteredMatrix = lowVarianceFilter( filteredMatrix );
+
+            if ( config.isLowVarianceCutIsSet() ) {
+                log.info( "Filtering for low variance" );
+                filteredMatrix = lowVarianceFilter( filteredMatrix );
+            }
         }
 
         if ( !twoColor ) {
 
             // NOTE we do not use the PresentAbsent values here. Only filtering on the basis of the data itself.
-            if ( config.isMinPresentFractionIsSet() ) filteredMatrix = minPresentFilter( filteredMatrix, null );
+            if ( config.isMinPresentFractionIsSet() ) {
+                log.info( "Filtering for missing data" );
+                filteredMatrix = minPresentFilter( filteredMatrix, null );
+            }
 
-            if ( config.isLowExpressionCutIsSet() ) filteredMatrix = lowExpressionFilter( filteredMatrix );
+            if ( config.isLowExpressionCutIsSet() ) {
+                log.info( "Filtering for low expression" );
+                filteredMatrix = lowExpressionFilter( filteredMatrix );
+            }
 
-            if ( config.isLowVarianceCutIsSet() ) filteredMatrix = lowCVFilter( filteredMatrix );
+            if ( config.isLowVarianceCutIsSet() ) {
+                log.info( "Filtering for low variance" );
+                filteredMatrix = lowCVFilter( filteredMatrix );
+            }
 
-            if ( usesAffymetrix() ) filteredMatrix = affyControlProbeFilter( filteredMatrix );
+            if ( usesAffymetrix() ) {
+                log.info( "Filtering Affymetrix controls" );
+                filteredMatrix = affyControlProbeFilter( filteredMatrix );
+            }
         }
         return filteredMatrix;
     }
@@ -190,8 +208,7 @@ public class ExpressionExperimentFilter {
     private ExpressionDataDoubleMatrix lowVarianceFilter( ExpressionDataDoubleMatrix matrix ) {
         RowLevelFilter rowLevelFilter = new RowLevelFilter();
         rowLevelFilter.setMethod( Method.VAR );
-        rowLevelFilter.setLowCut( config.getLowExpressionCut() );
-        rowLevelFilter.setHighCut( config.getHighExpressionCut() );
+        rowLevelFilter.setLowCut( config.getLowVarianceCut() );
         rowLevelFilter.setRemoveAllNegative( false );
         rowLevelFilter.setUseAsFraction( true );
         return rowLevelFilter.filter( matrix );
@@ -204,8 +221,7 @@ public class ExpressionExperimentFilter {
     private ExpressionDataDoubleMatrix lowCVFilter( ExpressionDataDoubleMatrix matrix ) {
         RowLevelFilter rowLevelFilter = new RowLevelFilter();
         rowLevelFilter.setMethod( Method.CV );
-        rowLevelFilter.setLowCut( config.getLowExpressionCut() );
-        rowLevelFilter.setHighCut( config.getHighExpressionCut() );
+        rowLevelFilter.setLowCut( config.getLowVarianceCut() );
         rowLevelFilter.setRemoveAllNegative( false );
         rowLevelFilter.setUseAsFraction( true );
         return rowLevelFilter.filter( matrix );

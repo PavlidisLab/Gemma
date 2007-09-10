@@ -357,7 +357,7 @@ public class LinkAnalysis {
      */
     private void outputOptions() {
         log.info( "Current Settings" );
-        log.info( "AbsouteValue Setting:" + config.isAbsoluteValue() );
+        log.info( "AbsoluteValue Setting:" + config.isAbsoluteValue() );
         log.info( "cdfCut:" + config.getCdfCut() );
         log.info( "cacheCut:" + config.getCorrelationCacheThreshold() );
         log.info( "Unique Items:" + this.uniqueGenesInDataset );
