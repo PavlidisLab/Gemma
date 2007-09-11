@@ -31,13 +31,12 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.type.DoubleType;
 import org.hibernate.type.LongType;
-import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -58,6 +57,61 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     private static Log log = LogFactory.getLog( Probe2ProbeCoexpressionDaoImpl.class.getName() );
 
     private long eeId = 0L;
+
+    /*
+     * (non-Javadoc) This should be faster than doing it one at a time; uses the "DML-style" syntax. This implementation
+     * assumes all the links in the collection are of the same class!F
+     * 
+     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression#remove(java.util.Collection)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public void remove( java.util.Collection entities ) {
+        if ( entities == null ) {
+            throw new IllegalArgumentException( "Probe2ProbeCoexpression.remove - 'entities' can not be null" );
+        }
+        if ( entities.size() < 1000 ) {
+            super.remove( entities );
+        }
+
+        int batchSize = 5000;
+
+        Class clazz = entities.iterator().next().getClass();
+        String className = clazz.getSimpleName();
+
+        Collection<Probe2ProbeCoexpression> batch = new HashSet<Probe2ProbeCoexpression>();
+
+        Query query = super.getSession( true ).createQuery( "DELETE from " + className + " d where d in (:vals)" );
+
+        int count = 0;
+        for ( Probe2ProbeCoexpression o : ( Collection<Probe2ProbeCoexpression> ) entities ) {
+            batch.add( o );
+            if ( batch.size() == batchSize ) {
+                count += batch.size();
+                query.setParameterList( "vals", batch );
+                query.executeUpdate();
+                super.getSession( false ).flush();
+                super.getSession( false ).clear();
+                batch.clear();
+
+                if ( count % 100000 == 0 ) log.debug( "Deleted " + count + "/" + entities.size() + " links" );
+            }
+        }
+
+        if ( batch.size() > 0 ) {
+            count += batch.size();
+            query.setParameterList( "vals", batch );
+            query.executeUpdate();
+            super.getSession( false ).flush();
+            super.getSession( false ).clear();
+        }
+
+        if ( entities.size() > 0 && count != entities.size() )
+            throw new IllegalStateException( "Failed to delete entries (deleted " + count + " of " + entities.size()
+                    + ")" );
+
+        // log.debug( "Deleted " + count + " links" );
+    }
 
     /**
      * @param toBuild
@@ -388,6 +442,10 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     }
 
+    // FIXME figure out the taxon instead of this iteration.
+    private static final String[] p2pClassNames = new String[] { "HumanProbeCoExpressionImpl",
+            "MouseProbeCoExpressionImpl", "RatProbeCoExpressionImpl", "OtherProbeCoExpressionImpl" };
+
     /*
      * (non-Javadoc)
      * 
@@ -396,10 +454,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     @SuppressWarnings("unchecked")
     @Override
     protected void handleDeleteLinks( ExpressionExperiment ee ) throws Exception {
-
-        // FIXME figure out the taxon instead of this iteration.
-        String[] p2pClassNames = new String[] { "HumanProbeCoExpressionImpl", "MouseProbeCoExpressionImpl",
-                "RatProbeCoExpressionImpl", "OtherProbeCoExpressionImpl" };
 
         int totalDone = 0;
 
@@ -423,10 +477,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
                 if ( results.size() == 0 ) break;
 
-                HibernateTemplate templ = this.getHibernateTemplate();
-                templ.deleteAll( results );
-                templ.flush();
-                templ.clear();
+                remove( results );
 
                 Integer numDone = results.size();
 

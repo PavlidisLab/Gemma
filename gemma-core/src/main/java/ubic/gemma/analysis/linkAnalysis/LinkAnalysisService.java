@@ -72,7 +72,7 @@ import cern.colt.list.ObjectArrayList;
  */
 public class LinkAnalysisService {
 
-    private static final int LINK_BATCH_SIZE = 1000;
+    private static final int LINK_BATCH_SIZE = 10000;
 
     private static final boolean useDB = true; // useful for debugging.
 
