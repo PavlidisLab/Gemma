@@ -50,7 +50,18 @@ if ( expressionExperiment.getName() != null ) {
 		src="<c:url value="/images/help.png"/>" alt="help"> </a>
 </content>
 
+<div style='float:right; width:25em; margin:1em; clear:right;'>
+<c:if test="${ troubleEvent != null}">
+<p class='trouble'>This dataset was flagged as <a href="?"
+	onclick="showHelpTip(event, '<c:out value="${ troubleEvent.detail }" />'); return false">problematic</a>
+	on <c:out value="${ troubleEvent.date }" /> by <c:out value="${ troubleEvent.performer.name }" />.</p>
+</c:if>
 
+<c:if test="${ validatedEvent != null}">
+<p class='validated'>This dataset was validated
+	on <c:out value="${ validatedEvent.date }" /> by <c:out value="${ validatedEvent.performer.name }" />.</p>
+</c:if>
+</div>
 
 <table width="100%" cellspacing="10">
 	<tr>

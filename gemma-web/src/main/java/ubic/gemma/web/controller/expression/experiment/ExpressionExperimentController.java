@@ -35,6 +35,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -67,6 +68,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * @spring.property name="methodNameResolver" ref="expressionExperimentActions"
  * @spring.property name="searchService" ref="searchService"
  * @spring.property name="ontologyService" ref="ontologyService"
+ * @spring.property name="auditTrailService" ref="auditTrailService"
  */
 public class ExpressionExperimentController extends BackgroundProcessingMultiActionController {
 
@@ -79,6 +81,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
     private SearchService searchService;
     private OntologyService ontologyService;
+    
+    private AuditTrailService auditTrailService;
 
     private final String identifierNotFound = "Must provide a valid ExpressionExperiment identifier";
 
@@ -240,10 +244,24 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     }
 
     /**
-     * @param searchService the searchService to set
+     * @param ontologyService the ontologyService to set
      */
     public void setOntologyService( OntologyService ontologyService ) {
         this.ontologyService = ontologyService;
+    }
+
+    /**
+     * @return the ontologyService
+     */
+    public AuditTrailService getAuditTrailService() {
+        return auditTrailService;
+    }
+
+    /**
+     * @param ausitTrailService the auditTrailService to set
+     */
+    public void setAuditTrailService( AuditTrailService auditTrailService ) {
+        this.auditTrailService = auditTrailService;
     }
     
     public Collection<AnnotationValueObject> getAnnotation( EntityDelegator e ) {
@@ -308,6 +326,11 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         ModelAndView mav = new ModelAndView( "expressionExperiment.detail" ).addObject( "expressionExperiment",
                 expressionExperiment );
+        
+        AuditEvent troubleEvent = auditTrailService.getLastTroubleEvent( expressionExperiment );
+        mav.addObject( "troubleEvent", troubleEvent );
+        AuditEvent validatedEvent = auditTrailService.getLastValidationEvent( expressionExperiment );
+        mav.addObject( "validatedEvent", validatedEvent );
         
         Collection characteristics = expressionExperiment.getCharacteristics();
         mav.addObject( "characteristics", characteristics );

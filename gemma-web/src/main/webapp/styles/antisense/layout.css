@@ -231,6 +231,15 @@ a.info{
 	color: red;
 }
 
+/* colours for validation/trouble */
+.trouble {
+	color: red;
+}
+
+.validated {
+	color: darkgreen;
+}
+
 a.info:hover{
 	z-index:25; 
 	background-color:#ff0;
