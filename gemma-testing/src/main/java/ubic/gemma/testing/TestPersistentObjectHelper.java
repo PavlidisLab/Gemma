@@ -256,6 +256,9 @@ public class TestPersistentObjectHelper {
 
         vectors.addAll( getDesignElementDataVectors( ee, quantitationTypes, bioAssaysA, adA ) );
         vectors.addAll( getDesignElementDataVectors( ee, quantitationTypes, bioAssaysB, adB ) );
+
+        ee.setQuantitationTypes( quantitationTypes );
+
         ee.setDesignElementDataVectors( vectors );
 
         return ( ExpressionExperiment ) persisterHelper.persist( ee );
