@@ -22,10 +22,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent;
@@ -352,30 +352,34 @@ public class ExpressionExperimentServiceImpl extends
     @SuppressWarnings("unchecked")
     @Override
     protected Map handleGetLastLinkAnalysis( Collection ids ) throws Exception {
-        Map<Long, Collection<AuditEvent>> eventMap = this.getExpressionExperimentDao().getAuditEvents( ids );
+
+        return getLastEvent( ids, LinkAnalysisEvent.Factory.newInstance() );
+
+    }
+
+    /**
+     * @param ids
+     * @param type
+     * @returns a map of the expression experiment ids to the last audit event for the given audit event type the map
+     *          can contain nulls if the specified auditEventType isn't found for a given expression experiment id
+     */
+    @SuppressWarnings("unchecked")
+    private Map<Long, AuditEvent> getLastEvent( Collection<Long> ids, AuditEventType type ) {
+
         Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
-        // remove all AuditEvents that are not LinkAnalysis events
-        Set<Long> keys = eventMap.keySet();
-        for ( Long key : keys ) {
-            Collection<AuditEvent> events = eventMap.get( key );
-            AuditEvent lastEvent = null;
-            if ( events == null ) {
-                lastEventMap.put( key, null );
-            } else {
-                for ( AuditEvent event : events ) {
-                    if ( event.getEventType() != null && event.getEventType() instanceof LinkAnalysisEvent ) {
-                        if ( lastEvent == null ) {
-                            lastEvent = event;
-                            continue;
-                        } else if ( lastEvent.getDate().before( event.getDate() ) ) {
-                            lastEvent = event;
-                        }
-                    }
-                }
-                lastEventMap.put( key, lastEvent );
-            }
+
+        // This could be optimized by builing the map in the dao and having getLastAuditEvent take a collection of ids.
+        Collection<ExpressionExperiment> ees = this.loadMultiple( ids );
+        AuditEvent last;
+        for ( ExpressionExperiment experiment : ees ) {
+
+            last = this.getExpressionExperimentDao().getLastAuditEvent( experiment, type );
+            lastEventMap.put( experiment.getId(), last );
+
         }
+
         return lastEventMap;
+
     }
 
     /*
@@ -386,30 +390,7 @@ public class ExpressionExperimentServiceImpl extends
     @SuppressWarnings("unchecked")
     @Override
     protected Map handleGetLastMissingValueAnalysis( Collection ids ) throws Exception {
-        Map<Long, Collection<AuditEvent>> eventMap = this.getExpressionExperimentDao().getAuditEvents( ids );
-        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
-        // remove all AuditEvents that are not LinkAnalysis events
-        Set<Long> keys = eventMap.keySet();
-        for ( Long key : keys ) {
-            Collection<AuditEvent> events = eventMap.get( key );
-            AuditEvent lastEvent = null;
-            if ( events == null ) {
-                lastEventMap.put( key, null );
-            } else {
-                for ( AuditEvent event : events ) {
-                    if ( event.getEventType() != null && event.getEventType() instanceof MissingValueAnalysisEvent ) {
-                        if ( lastEvent == null ) {
-                            lastEvent = event;
-                            continue;
-                        } else if ( lastEvent.getDate().before( event.getDate() ) ) {
-                            lastEvent = event;
-                        }
-                    }
-                }
-                lastEventMap.put( key, lastEvent );
-            }
-        }
-        return lastEventMap;
+        return getLastEvent( ids, MissingValueAnalysisEvent.Factory.newInstance() );
     }
 
     /*
@@ -420,51 +401,14 @@ public class ExpressionExperimentServiceImpl extends
     @SuppressWarnings("unchecked")
     @Override
     protected Map handleGetLastRankComputation( Collection ids ) throws Exception {
-        Map<Long, Collection<AuditEvent>> eventMap = this.getExpressionExperimentDao().getAuditEvents( ids );
-        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
-        // remove all AuditEvents that are not LinkAnalysis events
-        Set<Long> keys = eventMap.keySet();
-        for ( Long key : keys ) {
-            Collection<AuditEvent> events = eventMap.get( key );
-            AuditEvent lastEvent = null;
-            if ( events == null ) {
-                lastEventMap.put( key, null );
-            } else {
-                for ( AuditEvent event : events ) {
-                    if ( event.getEventType() != null && event.getEventType() instanceof RankComputationEvent ) {
-                        if ( lastEvent == null ) {
-                            lastEvent = event;
-                            continue;
-                        } else if ( lastEvent.getDate().before( event.getDate() ) ) {
-                            lastEvent = event;
-                        }
-                    }
-                }
-                lastEventMap.put( key, lastEvent );
-            }
-        }
-        return lastEventMap;
+        return getLastEvent( ids, RankComputationEvent.Factory.newInstance() );
     }
 
     @Override
     @SuppressWarnings("unchecked")
     protected AuditEvent handleGetLastArrayDesignUpdate( ExpressionExperiment ee ) throws Exception {
-        Collection<ArrayDesign> ads = this.getArrayDesignsUsed( ee );
-        Collection<Long> adids = new HashSet<Long>();
-        for ( ArrayDesign arrayDesign : ads ) {
-            adids.add( arrayDesign.getId() );
-        }
-        AuditEvent mostRecent = null;
-        Map<ArrayDesign, Collection<AuditEvent>> events = this.getArrayDesignDao().getAuditEvents( adids );
-        for ( Collection<AuditEvent> auditEvents : events.values() ) {
-            for ( AuditEvent auditEvent : auditEvents ) {
-                if ( mostRecent == null || auditEvent.getDate().after( mostRecent.getDate() ) ) {
-                    mostRecent = auditEvent;
-                }
-            }
-        }
 
-        return mostRecent;
+        return this.getExpressionExperimentDao().getLastArrayDesignUpdate( ee );
     }
 
     /*
