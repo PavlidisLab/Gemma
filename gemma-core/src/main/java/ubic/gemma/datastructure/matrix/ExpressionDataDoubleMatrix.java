@@ -28,9 +28,9 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.FastRowAccessDoubleMatrix2DNamed;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -479,10 +479,15 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
             }
         }
 
-        DoubleMatrixNamed namedMatrix = new DenseDoubleMatrix2DNamed( ddata );
+        DoubleMatrixNamed namedMatrix = new FastRowAccessDoubleMatrix2DNamed( ddata );
         for ( int i = 0; i < columns(); i++ ) {
             BioMaterial bm = getBioMaterialForColumn( i );
             namedMatrix.addColumnName( bm.getName(), i );
+        }
+
+        for ( int j = 0; j < rows(); j++ ) {
+            DesignElement d = this.getDesignElementForRow( j );
+            namedMatrix.addRowName( d.getName(), j );
         }
         return namedMatrix;
     }
