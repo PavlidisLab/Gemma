@@ -54,21 +54,21 @@ public abstract class AbstractGeneCoexpressionManipulatingCLI extends AbstractGe
     protected void buildOptions() {
         super.buildOptions();
         Option queryGeneFileOption = OptionBuilder.hasArg().withDescription(
-                "Query file containing list of gene official symbols" ).withArgName( "queryGeneFile" ).withLongOpt(
+                "Query file containing list of gene official symbols" ).withArgName( "File name" ).withLongOpt(
                 "queryGeneFile" ).create();
         addOption( queryGeneFileOption );
-        Option queryGeneOption = OptionBuilder.hasArgs().withArgName( "queryGeneSymbols" ).withDescription(
-                "Query gene official symbol(s)" ).withLongOpt( "queryGene" ).create();
+        Option queryGeneOption = OptionBuilder.hasArgs().withArgName( "Gene symbol(s)" ).withDescription(
+                "The query gene(s)" ).withLongOpt( "queryGene" ).create();
         addOption( queryGeneOption );
 
-        Option targetFileOption = OptionBuilder.hasArg().withArgName( "targetGeneFile" ).withDescription(
+        Option targetFileOption = OptionBuilder.hasArg().withArgName( "File name" ).withDescription(
                 "File containing list of target gene official symbols" ).withLongOpt( "targetGeneFile" ).create();
         addOption( targetFileOption );
-        Option targetGeneOption = OptionBuilder.hasArgs().withArgName( "targetGeneSymbols" ).withDescription(
-                "Target gene official symbol(s)" ).withLongOpt( "targetGene" ).create();
+        Option targetGeneOption = OptionBuilder.hasArgs().withArgName( "Gene symbol(s)" ).withDescription(
+                "The target gene(s)" ).withLongOpt( "targetGene" ).create();
         addOption( targetGeneOption );
 
-        Option taxonOption = OptionBuilder.hasArg().isRequired().withArgName( "taxon" ).withDescription(
+        Option taxonOption = OptionBuilder.hasArg().isRequired().withArgName( "Taxon" ).withDescription(
                 "The taxon of the genes" ).withLongOpt( "taxon" ).create( 't' );
         addOption( taxonOption );
     }

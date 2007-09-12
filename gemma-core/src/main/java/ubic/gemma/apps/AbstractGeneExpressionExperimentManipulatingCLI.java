@@ -56,7 +56,7 @@ public abstract class AbstractGeneExpressionExperimentManipulatingCLI extends
 	protected void buildOptions() {
 		Option expOption = OptionBuilder
 				.hasArg()
-				.withArgName("Expression experiment")
+				.withArgName("Expression experiment name")
 				.withDescription(
 						"Expression experiment short name. Most tools recognize comma-delimited values given on the command line, "
 								+ "and if this option is omitted, the tool will be applied to all expression experiments.")
@@ -66,14 +66,14 @@ public abstract class AbstractGeneExpressionExperimentManipulatingCLI extends
 
 		Option geneFileListOption = OptionBuilder
 				.hasArg()
-				.withArgName("List of gene expression experiments file")
+				.withArgName("Expression experiment list file")
 				.withDescription(
 						"File with list of short names of expression experiments (one per line; use instead of '-e')")
 				.withLongOpt("eeListfile").create('f');
 		addOption(geneFileListOption);
 
 		Option excludeEeOption = OptionBuilder.hasArg().withArgName(
-				"Experiments to exclude").withDescription(
+				"Expression experiment list file").withDescription(
 				"File containing list of expression experiments to exclude")
 				.withLongOpt("excludeEEFile").create('x');
 		addOption(excludeEeOption);

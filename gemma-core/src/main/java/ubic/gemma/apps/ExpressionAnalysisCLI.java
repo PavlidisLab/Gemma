@@ -46,6 +46,7 @@ public class ExpressionAnalysisCLI extends AbstractGeneCoexpressionManipulatingC
     private ArrayDesignService adService;
     
     private DesignElementDataVectorService dedvService;
+    
 
     private double filterThreshold;
 
@@ -60,11 +61,11 @@ public class ExpressionAnalysisCLI extends AbstractGeneCoexpressionManipulatingC
     protected void buildOptions() {
         super.buildOptions();
 
-        Option outFileOption = OptionBuilder.hasArg().isRequired().withArgName( "outFile" ).withDescription(
+        Option outFileOption = OptionBuilder.hasArg().isRequired().withArgName( "File name" ).withDescription(
                 "File to save rank matrix to" ).withLongOpt( "outFile" ).create( 'o' );
         addOption( outFileOption );
         
-        Option filterOption = OptionBuilder.hasArg().withArgName( "filterThreshold" ).withDescription(
+        Option filterOption = OptionBuilder.hasArg().withArgName( "Threshold" ).withDescription(
                 "Fraction of data sets with ranks threshold" ).withLongOpt( "filterThreshold" ).create( 'f' );
         addOption( filterOption );
     }
@@ -113,9 +114,8 @@ public class ExpressionAnalysisCLI extends AbstractGeneCoexpressionManipulatingC
             log.info( "Processing " + ee.getShortName() + " (" + eeCount++ + " of " + ees.size() + ")" );
             Collection<ArrayDesign> ads = eeService.getArrayDesignsUsed( ee );
             Collection<CompositeSequence> css = new HashSet<CompositeSequence>();
-            for ( ArrayDesign ad : ads ) {
+            for ( ArrayDesign ad : ads )
                 css.addAll( adService.loadCompositeSequences( ad ) );
-            }
             Map<CompositeSequence, Collection<Gene>> cs2geneMap = geneService.getCS2GeneMap( css );
             Collection<QuantitationType> qts =  eeService.getPreferredQuantitationType( ee );
             QuantitationType qt = qts.iterator().next();
