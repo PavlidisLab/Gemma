@@ -21,11 +21,11 @@ package ubic.gemma.analysis.diff;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.rosuda.JRclient.REXP;
 import org.rosuda.JRclient.RList;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
@@ -77,86 +77,94 @@ public class TTestAnalyzer extends AbstractAnalyzer {
 
         ExperimentalFactor experimentalFactor = experimentalFactors.iterator().next();
 
-        tTest( expressionExperiment, experimentalFactor );
+        tTest( expressionExperiment, experimentalFactor.getFactorValues() );
 
         return null;
     }
 
     /**
+     * Runs a t-test on the factor values.
+     * 
+     * @param expressionExperiment
      * @param factorValues
      * @return
      */
     public Map<DesignElement, Double> tTest( ExpressionExperiment expressionExperiment,
-            ExperimentalFactor experimentalFactor ) {
-
-        Collection<FactorValue> factorValues = experimentalFactor.getFactorValues();
-
-        if ( factorValues.size() != 2 )
-            throw new RuntimeException( "Must have only two factor value per experimental factor." );
-
+            Collection<FactorValue> factorValues ) {
+        // TODO change signature to take factorValue1 and factorValue2 since we know this for a ttest
         Collection<BioMaterial> biomaterials = new ArrayList<BioMaterial>();
 
         Collection<BioAssay> allAssays = expressionExperiment.getBioAssays();
 
         for ( BioAssay assay : allAssays ) {
             Collection<BioMaterial> samplesUsed = assay.getSamplesUsed();
-            for ( BioMaterial sampleUsed : samplesUsed ) {
-                Collection<FactorValue> fvs = sampleUsed.getFactorValues();
-                if ( fvs.size() != 1 ) throw new RuntimeException( "Only supports one factor value per biomaterial." );
-
-                biomaterials.add( sampleUsed );
-            }
+            biomaterials.addAll( samplesUsed );
         }
 
         ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( expressionExperiment
                 .getDesignElementDataVectors() );
 
-        return tTest( matrix, biomaterials );
+        return tTest( matrix, factorValues, biomaterials );
     }
 
     /**
+     * Makes the following R call:
+     * <p>
+     * apply(matrix, 1, function(x) {t.test(x ~ factor(t(facts)))$p.value}) <-- R Console
+     * 
      * @param matrix
-     * @param biomaterials
+     * @param factorValues
+     * @param samplesUsed
      * @return
      */
-    protected Map<DesignElement, Double> tTest( ExpressionDataMatrix matrix, Collection<BioMaterial> biomaterials ) {
+    protected Map<DesignElement, Double> tTest( ExpressionDataMatrix matrix, Collection<FactorValue> factorValues,
+            Collection<BioMaterial> samplesUsed ) {
 
-        // make the R call ... returning null for now.
+        List<String> rFactors = new ArrayList<String>();
+
+        if ( factorValues.size() != 2 )
+            throw new RuntimeException( "Must have only two factor values per experimental factor." );
+
+        for ( BioMaterial sampleUsed : samplesUsed ) {
+            Collection<FactorValue> factorValuesFromBioMaterial = sampleUsed.getFactorValues();
+
+            if ( factorValuesFromBioMaterial.size() != 1 ) {
+                throw new RuntimeException( "Only supports one factor value per biomaterial." );
+            }
+
+            FactorValue fv = factorValuesFromBioMaterial.iterator().next();
+
+            for ( FactorValue f : factorValues ) {
+                if ( fv.getValue() == f.getValue() ) {
+                    log.debug( "factor value match" );
+                    break;
+                }
+
+            }
+
+            rFactors.add( fv.getValue() );
+        }
+
         ExpressionDataDoubleMatrix dmatrix = ( ExpressionDataDoubleMatrix ) matrix;
 
         DoubleMatrixNamed namedMatrix = dmatrix.getNamedMatrix();
 
-        // TODO remove me - this is a test
-        // List<String> colFactors = new ArrayList<String>();
-        // for ( int i = 0; i < 6; i++ ) {
-        // if ( i % 2 == 0 )
-        // colFactors.add( "a" );
-        // else
-        // colFactors.add( "b" );
-        // }
-        // String facts = rc.assignStringList( colFactors );
-
-        // FIXME this is wrong ... you need to use the factor values (and you will only have 2 of them, which is
-        // correct)
-        String facts = rc.assignStringList( namedMatrix.getColNames() );
+        String facts = rc.assignStringList( rFactors );
 
         String tfacts = "t(" + facts + ")";
 
         String factor = "factor(" + tfacts + ")";
 
-        // REXP rexp0 = rc.eval( tfacts );
-        // REXP rexp1 = rc.eval( factor );
-
         String matrixName = rc.assignMatrix( namedMatrix );
         StringBuffer command = new StringBuffer();
+
         command.append( "apply(" );
         command.append( matrixName );
-        command.append( ", 1, function(x) {t.test(x ~ " + factor + ")}$p.value" );
+        // command.append( ", 1, function(x) {t.test(x[1:3],x[4:6])}" ); <-- Useful Test
+        command.append( ", 1, function(x) {t.test(x ~ " + factor + ")$p.value}" );
         command.append( ")" );
 
         log.debug( command.toString() );
-        // apply(matrix, 1, function(x) {t.test(x ~ factor(t(facts)))}$p.value)
-        // apply(Matrix_16799190, 1, function(x) {t.test(x ~ factor(t(stringList.1528280046)))}$p.value)
 
         RList l = rc.eval( command.toString() ).asList();
 
