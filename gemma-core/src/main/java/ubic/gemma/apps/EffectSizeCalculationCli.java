@@ -10,8 +10,8 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.time.StopWatch;
 
-import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix3DNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.gui.ColorMap;
 import ubic.basecode.gui.ColorMatrix;
 import ubic.basecode.gui.JMatrixDisplay;
@@ -141,8 +141,8 @@ public class EffectSizeCalculationCli extends AbstractGeneCoexpressionManipulati
         CoexpressionMatrices matrices = coexpressionAnalysisService.calculateCoexpressionMatrices( ees, queryGenes, targetGenes, filterConfig);
         DenseDoubleMatrix3DNamed correlationMatrix = matrices.getCorrelationMatrix();
         DenseDoubleMatrix3DNamed sampleSizeMatrix = matrices.getSampleSizeMatrix();
-        DenseDoubleMatrix2DNamed effectSizeMatrix = coexpressionAnalysisService.calculateEffectSizeMatrix( correlationMatrix, sampleSizeMatrix );
-        DenseDoubleMatrix2DNamed correlationMatrix2D = coexpressionAnalysisService.foldCoexpressionMatrix( correlationMatrix );
+        DoubleMatrixNamed effectSizeMatrix = coexpressionAnalysisService.calculateEffectSizeMatrix( correlationMatrix, sampleSizeMatrix );
+        DoubleMatrixNamed correlationMatrix2D = coexpressionAnalysisService.foldCoexpressionMatrix( correlationMatrix );
         
         // create 2D correlation heat map
         ColorMatrix dataColorMatrix = new ColorMatrix( correlationMatrix2D );
@@ -151,23 +151,23 @@ public class EffectSizeCalculationCli extends AbstractGeneCoexpressionManipulati
         String figureFileName = outFilePrefix + ".corr.png";
         
         // create row/col name maps
-        Map<String, String> geneIdPair2nameMap = getGeneIdPair2NameMap( queryGenes, targetGenes );
-        Map<Long, String> eeId2nameMap = new HashMap<Long, String>();
-        for ( ExpressionExperiment ee : ees )
-            eeId2nameMap.put( ee.getId(), ee.getShortName() );
+        Map<ExpressionExperiment, String> eeNameMap = matrices.getEeNameMap();
 
         DecimalFormat formatter = (DecimalFormat) DecimalFormat.getNumberInstance();
         formatter.applyPattern("0.0000");
-        Map<String, String> valMap = new HashMap<String, String>();
-        valMap.put(formatter.format(Double.NaN), "");
+        formatter.getDecimalFormatSymbols().setNaN("");
         String topLeft = "GenePair";
         try {
-            MatrixWriter out = new MatrixWriter( outFilePrefix + ".corr.txt", formatter,  geneIdPair2nameMap, eeId2nameMap, valMap);
-            out.writeMatrix( correlationMatrix2D, topLeft );
+            MatrixWriter out = new MatrixWriter( outFilePrefix + ".corr.txt", formatter);
+            out.setColNameMap(eeNameMap);
+            out.setTopLeft(topLeft);
+            out.writeMatrix( correlationMatrix2D, true );
             out.close();
             
-            out = new MatrixWriter( outFilePrefix + ".effect_size.txt", formatter, geneIdPair2nameMap, eeId2nameMap, valMap);
-            out.writeMatrix( effectSizeMatrix, topLeft );
+            out = new MatrixWriter( outFilePrefix + ".effect_size.txt", formatter);
+            out.setColNameMap(eeNameMap);
+            out.setTopLeft(topLeft);
+            out.writeMatrix( effectSizeMatrix, true );
             out.close();
             
             dataMatrixDisplay.saveImage( figureFileName, true );

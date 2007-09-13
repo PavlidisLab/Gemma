@@ -11,13 +11,12 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.time.StopWatch;
 
-import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix3DNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.io.writer.MatrixWriter;
 import ubic.gemma.analysis.linkAnalysis.CoexpressionAnalysisService;
 import ubic.gemma.analysis.linkAnalysis.CoexpressionAnalysisService.CoexpressionMatrices;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
-import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
@@ -85,47 +84,39 @@ public class CorrelationAnalysisCLI extends
 		DenseDoubleMatrix3DNamed correlationMatrix = matrices
 				.getCorrelationMatrix();
 
-		DenseDoubleMatrix2DNamed maxCorrelationMatrix = coexpressionAnalysisService
+		DoubleMatrixNamed maxCorrelationMatrix = coexpressionAnalysisService
 				.getMaxCorrelationMatrix(correlationMatrix, 0);
-		DenseDoubleMatrix2DNamed correlationMatrix2D = coexpressionAnalysisService
+		DoubleMatrixNamed correlationMatrix2D = coexpressionAnalysisService
 				.foldCoexpressionMatrix(correlationMatrix);
-		DenseDoubleMatrix2DNamed pValMatrix = coexpressionAnalysisService
+		DoubleMatrixNamed pValMatrix = coexpressionAnalysisService
 				.calculateMaxCorrelationPValueMatrix(maxCorrelationMatrix, 0,
 						ees);
 
-		// create row/col name maps
-		Map<String, String> geneIdPair2NameMap = getGeneIdPair2NameMap(
-				queryGenes, targetGenes);
-		Map<Long, String> qGeneId2NameMap = new HashMap<Long, String>();
-		for (Gene gene : queryGenes)
-			qGeneId2NameMap.put(gene.getId(), gene.getOfficialSymbol());
-		Map<Long, String> tGeneId2NameMap = new HashMap<Long, String>();
-		for (Gene gene : targetGenes)
-			tGeneId2NameMap.put(gene.getId(), gene.getOfficialSymbol());
-		Map<Long, String> eeId2NameMap = new HashMap<Long, String>();
-		for (ExpressionExperiment ee : ees)
-			eeId2NameMap.put(ee.getId(), ee.getShortName());
+		// get row/col name maps
+		Map<Gene, String> geneNameMap = matrices.getGeneNameMap();
+		Map<ExpressionExperiment, String> eeNameMap = matrices.getEeNameMap();
 
 		String topLeft = "GenePair";
 		DecimalFormat formatter = (DecimalFormat) DecimalFormat
 				.getNumberInstance(Locale.US);
 		formatter.applyPattern("0.0000");
-		Map<String, String> valMap = new HashMap<String, String>();
-		valMap.put(formatter.format(Double.NaN), "");
+		formatter.getDecimalFormatSymbols().setNaN("");
 		try {
 			MatrixWriter out = new MatrixWriter(outFilePrefix + ".corr.txt",
-					formatter, geneIdPair2NameMap, eeId2NameMap, valMap);
-			out.writeMatrix(correlationMatrix2D, topLeft);
+					formatter);
+			out.setColNameMap(eeNameMap);
+			out.setTopLeft(topLeft);
+			out.writeMatrix(correlationMatrix2D, true);
 			out.close();
 
 			out = new MatrixWriter(outFilePrefix + ".max_corr.txt", formatter,
-					qGeneId2NameMap, tGeneId2NameMap, valMap);
-			out.writeMatrix(maxCorrelationMatrix);
+					geneNameMap, geneNameMap);
+			out.writeMatrix(maxCorrelationMatrix, true);
 			out.close();
 
 			out = new MatrixWriter(outFilePrefix + ".max_corr.pVal.txt",
-					formatter, qGeneId2NameMap, tGeneId2NameMap, valMap);
-			out.writeMatrix(pValMatrix);
+					formatter, geneNameMap, geneNameMap);
+			out.writeMatrix(pValMatrix, true);
 			out.close();
 
 		} catch (IOException e) {
@@ -144,6 +135,6 @@ public class CorrelationAnalysisCLI extends
 		if (exc != null) {
 			log.error(exc.getMessage());
 		}
-		log.info("Finished analysis in " + watch.getTime() / 1000 + " seconds");
+		log.info("Finished analysis in " + watch);
 	}
 }

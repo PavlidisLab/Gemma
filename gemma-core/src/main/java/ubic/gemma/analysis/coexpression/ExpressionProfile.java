@@ -12,7 +12,7 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 public class ExpressionProfile {
 	private static ByteArrayConverter bac = new ByteArrayConverter();
 
-	private Double[] val;
+	private double[] val;
 	private Double rank;
 	
 
@@ -27,16 +27,19 @@ public class ExpressionProfile {
 	public ExpressionProfile(DesignElementDataVector dedv) {
 		this.id = dedv.getId();
 		byte[] bytes = dedv.getData();
-		double[] v = bac.byteArrayToDoubles(bytes);
-        for (int i = 0; i < v.length; i++) {
-            val[i] = v[i];
-        }
+		val = bac.byteArrayToDoubles(bytes);
 		rank = dedv.getRank();
 	}
     
     public ExpressionProfile(long id, Double rank, Double[] values) {
         this.id = id;
-        this.val = values;
+        this.val = new double[values.length];
+        for (int i = 0; i < values.length; i++) {
+        	if (values[i] != null)
+        		val[i] = values[i];
+        	else
+        		val[i] = Double.NaN;
+        }
         this.rank = rank;
     }
 
@@ -73,7 +76,11 @@ public class ExpressionProfile {
 		return rank;
 	}
 	
-	public Double[] getExpressionLevels() {
+	public double[] getExpressionLevels() {
 		return val;
+	}
+	
+	public double getExpressionLevel(int x) {
+		return val[x];
 	}
 }
