@@ -130,9 +130,9 @@ public class AuditTrailServiceImpl extends ubic.gemma.model.common.auditAndSecur
     }
 
     @Override
-    protected void handleAddComment( Auditable auditable, String comment ) throws Exception {
+    protected void handleAddComment( Auditable auditable, String comment, String detail ) throws Exception {
         AuditEventType type = CommentedEvent.Factory.newInstance();
-        this.addUpdateEvent( auditable, type, comment );
+        this.addUpdateEvent( auditable, type, comment, detail );
 
     }
 

@@ -72,6 +72,7 @@ Ext.onReady(function() {
 	var auditEventTypeStore = new Ext.data.SimpleStore({
 		fields: ['type', 'description'],
 		data: [
+			['CommentedEvent', 'Comment'],
 			['TroubleStatusFlagEvent', 'Trouble flag'],
 			['OKStatusFlagEvent', 'OK flag (clear Trouble flag)'],
 			['ValidatedFlagEvent', 'Validated flag']
@@ -107,7 +108,7 @@ Ext.onReady(function() {
 	addEventForm.add(auditEventCommentField);
 	addEventForm.add(auditEventDetailField);
 	addEventForm.addButton('Add Event', function() {
-		addEventDialog.hide;
+		addEventDialog.hide();
 		AuditController.addAuditEvent(
 			g,
 			auditEventTypeCombo.getValue(),

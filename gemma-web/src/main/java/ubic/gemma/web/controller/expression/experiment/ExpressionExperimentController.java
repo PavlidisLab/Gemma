@@ -296,6 +296,34 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         else
             return null;
     }
+    
+    private AuditEvent getLastTroubleEvent( ExpressionExperiment ee ) {
+        AuditEvent event = auditTrailService.getLastTroubleEvent( ee );
+        if ( event != null )
+            return event;
+        
+        for ( Object o : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
+            event = auditTrailService.getLastTroubleEvent( (ArrayDesign)o );
+            if ( event != null )
+                return event;
+        }
+        
+        return null;
+    }
+    
+    private AuditEvent getLastValidationEvent( ExpressionExperiment ee ) {
+        AuditEvent event = auditTrailService.getLastValidationEvent( ee );
+        if ( event != null )
+            return event;
+        
+        for ( Object o : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
+            event = auditTrailService.getLastValidationEvent( (ArrayDesign)o );
+            if ( event != null )
+                return event;
+        }
+        
+        return null;
+    }
 
     /**
      * @param request
@@ -327,9 +355,9 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         ModelAndView mav = new ModelAndView( "expressionExperiment.detail" ).addObject( "expressionExperiment",
                 expressionExperiment );
         
-        AuditEvent troubleEvent = auditTrailService.getLastTroubleEvent( expressionExperiment );
+        AuditEvent troubleEvent = getLastTroubleEvent( expressionExperiment );
         mav.addObject( "troubleEvent", troubleEvent );
-        AuditEvent validatedEvent = auditTrailService.getLastValidationEvent( expressionExperiment );
+        AuditEvent validatedEvent = getLastValidationEvent( expressionExperiment );
         mav.addObject( "validatedEvent", validatedEvent );
         
         Collection characteristics = expressionExperiment.getCharacteristics();

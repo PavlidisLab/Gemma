@@ -105,7 +105,9 @@ public class AuditController {
             return;
         }
         
-        if ( auditEventType.equals("TroubleStatusFlagEvent") ) {
+        if ( auditEventType.equals("CommentedEvent") ) {
+            auditTrailService.addComment( entity, comment, detail );
+        } else if ( auditEventType.equals("TroubleStatusFlagEvent") ) {
             auditTrailService.addTroubleFlag( entity, comment, detail );
         } else if ( auditEventType.equals( "OKStatusFlagEvent" ) ) {
             auditTrailService.addOkFlag( entity, comment, detail );
