@@ -52,8 +52,11 @@ if ( expressionExperiment.getName() != null ) {
 
 <div style='float:right; width:25em; margin:1em; clear:right;'>
 <c:if test="${ troubleEvent != null}">
+<form name='troubleEvent'>
+<input type='hidden' name='detail' value='<c:out value="${ troubleEvent.detail }" />' />
+</form>
 <p class='trouble'>This dataset was flagged as <a href="?"
-	onclick="showHelpTip(event, '<c:out value="${ troubleEvent.detail }" />'); return false">problematic</a>
+	onclick="showHelpTip(event, document.troubleEvent.detail.value); return false;">problematic</a>
 	on <c:out value="${ troubleEvent.date }" /> by <c:out value="${ troubleEvent.performer.name }" />.</p>
 </c:if>
 
