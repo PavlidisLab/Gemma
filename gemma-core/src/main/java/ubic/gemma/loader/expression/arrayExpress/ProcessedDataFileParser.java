@@ -133,6 +133,9 @@ public class ProcessedDataFileParser extends LineMapParser {
             if ( field.startsWith( "CompositeSequence" ) ) continue;
             if ( field.startsWith( "Database" ) ) continue;
 
+            /*
+             * The header strings are of the format "sample name/quantitation type name".
+             */
             String[] subFields = StringUtils.splitPreserveAllTokens( field, '/' );
             if ( subFields.length > 2 )
                 throw new UnsupportedOperationException(
