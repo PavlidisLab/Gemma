@@ -33,6 +33,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
@@ -47,10 +48,18 @@ public abstract class AbstractGeneExpressionExperimentManipulatingCLI extends
 		AbstractSpringAwareCLI {
 
 	protected ExpressionExperimentService eeService;
+
 	protected GeneService geneService;
+	
+	protected TaxonService taxonService;
+
 	private String experimentShortName = null;
+
 	private String excludeEeFileName;
+
 	protected String experimentListFile = null;
+	
+	protected Taxon taxon = null;
 
 	@SuppressWarnings("static-access")
 	protected void buildOptions() {
@@ -71,6 +80,12 @@ public abstract class AbstractGeneExpressionExperimentManipulatingCLI extends
 						"File with list of short names of expression experiments (one per line; use instead of '-e')")
 				.withLongOpt("eeListfile").create('f');
 		addOption(geneFileListOption);
+
+		Option taxonOption = OptionBuilder.hasArg().withDescription(
+				"taxon name").withDescription(
+				"taxon of the expression experiments and genes").withLongOpt(
+				"taxon").create('t');
+		addOption(taxonOption);
 
 		Option excludeEeOption = OptionBuilder.hasArg().withArgName(
 				"Expression experiment list file").withDescription(
@@ -116,6 +131,15 @@ public abstract class AbstractGeneExpressionExperimentManipulatingCLI extends
 		eeService = (ExpressionExperimentService) this
 				.getBean("expressionExperimentService");
 		geneService = (GeneService) this.getBean("geneService");
+        taxonService = ( TaxonService ) getBean( "taxonService" );
+		if (hasOption('t')) {
+			String taxonName = getOptionValue('t');
+	        taxon = taxonService.findByCommonName(taxonName);
+	        if (taxon == null) {
+	        	log.error("ERROR: Cannot find taxon " + taxonName);
+	        }
+		}
+
 	}
 
 	public String getExperimentShortName() {

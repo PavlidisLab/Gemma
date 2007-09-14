@@ -29,7 +29,6 @@ import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 
 /**
@@ -68,9 +67,6 @@ public abstract class AbstractGeneCoexpressionManipulatingCLI extends AbstractGe
                 "The target gene(s)" ).withLongOpt( "targetGene" ).create();
         addOption( targetGeneOption );
 
-        Option taxonOption = OptionBuilder.hasArg().isRequired().withArgName( "Taxon" ).withDescription(
-                "The taxon of the genes" ).withLongOpt( "taxon" ).create( 't' );
-        addOption( taxonOption );
     }
 
     @Override
@@ -81,12 +77,6 @@ public abstract class AbstractGeneCoexpressionManipulatingCLI extends AbstractGe
 
         if ( hasOption( "targetGeneFile" ) ) targetGeneFile = getOptionValue( "targetGeneFile" );
         if ( hasOption( "targetGene" ) ) targetGeneSymbols = getOptionValues( "targetGene" );
-
-        TaxonService taxonService = ( TaxonService ) getBean( "taxonService" );
-        String taxonName = getOptionValue( 't' );
-        taxon = Taxon.Factory.newInstance();
-        taxon.setCommonName( taxonName );
-        taxon = taxonService.find( taxon );
 
         geneService = ( GeneService ) getBean( "geneService" );
     }
