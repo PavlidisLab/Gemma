@@ -46,6 +46,8 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -73,6 +75,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * @spring.property name = "arrayDesignMapResultService" ref="arrayDesignMapResultService"
  * @spring.property name="methodNameResolver" ref="arrayDesignActions"
  * @spring.property name="searchService" ref="searchService"
+ * @spring.property name="auditTrailService" ref="auditTrailService"
  */
 public class ArrayDesignController extends BackgroundProcessingMultiActionController implements InitializingBean {
 
@@ -108,6 +111,8 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     private CompositeSequenceService compositeSequenceService = null;
     private final String messageName = "Array design with name";
     private final String identifierNotFound = "Must provide a valid Array Design identifier";
+    
+    private AuditTrailService auditTrailService;
 
     private Cache cache;
 
@@ -123,6 +128,20 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      */
     public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
         this.arrayDesignService = arrayDesignService;
+    }
+
+    /**
+     * @return the ontologyService
+     */
+    public AuditTrailService getAuditTrailService() {
+        return auditTrailService;
+    }
+
+    /**
+     * @param ausitTrailService the auditTrailService to set
+     */
+    public void setAuditTrailService( AuditTrailService auditTrailService ) {
+        this.auditTrailService = auditTrailService;
     }
 
     /**
@@ -369,6 +388,11 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         String eeIds = formatExpressionExperimentIds( ee );
 
         ModelAndView mav = new ModelAndView( "arrayDesign.detail" );
+        
+        AuditEvent troubleEvent = getLastTroubleEvent( arrayDesign );
+        mav.addObject( "troubleEvent", troubleEvent );
+        AuditEvent validatedEvent = getLastValidationEvent( arrayDesign );
+        mav.addObject( "validatedEvent", validatedEvent );
 
         Collection<ArrayDesign> subsumees = arrayDesign.getSubsumedArrayDesigns();
         ArrayDesign subsumer = arrayDesign.getSubsumingArrayDesign();
@@ -419,6 +443,14 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             colorString = "No color";
         }
         return colorString;
+    }
+    
+    private AuditEvent getLastTroubleEvent( ArrayDesign ee ) {
+        return auditTrailService.getLastTroubleEvent( ee );
+    }
+    
+    private AuditEvent getLastValidationEvent( ArrayDesign ee ) {
+        return auditTrailService.getLastValidationEvent( ee );
     }
 
     /**

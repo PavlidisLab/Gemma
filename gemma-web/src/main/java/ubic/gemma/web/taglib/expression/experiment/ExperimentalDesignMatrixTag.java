@@ -117,7 +117,7 @@ public class ExperimentalDesignMatrixTag extends TagSupport {
             buf.append( "<tr>" );
             for ( ExperimentalFactor factor : experimentalFactors ) {
                 buf.append( "<td>" );
-                buf.append( getString( vector.getValueForFactor( factor ) ) );
+                buf.append( getString( vector.getValuesForFactor( factor ) ) );
                 buf.append( "</td>" );
             }
             buf.append( "<td align=\"right\">" );
@@ -136,8 +136,21 @@ public class ExperimentalDesignMatrixTag extends TagSupport {
         return SKIP_BODY;
     }
     
+    private String getString( Collection<FactorValue> values ) {
+        if ( values == null || values.isEmpty() ) {
+            return "unknown";
+        } else {
+            StringBuffer buf = new StringBuffer();
+            for ( Iterator it = values.iterator() ; it.hasNext(); ) {
+                buf.append( (FactorValue)it.next() );
+                if ( it.hasNext() )
+                    buf.append( "<br>" );
+            }
+            return buf.toString();
+        }
+    }
     private String getString( FactorValue value ) {
-        if ( value == null) {
+        if ( value == null ) {
             return "unknown";
         } else if ( value.getMeasurement() != null ) {
             return value.getMeasurement().getValue();
@@ -156,40 +169,66 @@ public class ExperimentalDesignMatrixTag extends TagSupport {
         }
     }
     
-    class FactorValueVector {
-        private String key;
-        private List<FactorValue> values;
-        
-        public FactorValueVector( Collection<FactorValue> values ) {
-            this.values = new ArrayList<FactorValue>( values );
-            Collections.sort( this.values, FactorValueComparator.getInstance() );
-            key = new String ( StringUtils.join( values, ":" ) );
-        }
-        
-        public FactorValue getValueForFactor(ExperimentalFactor factor) {
-            for ( FactorValue value : values ) {
-                if ( value.getExperimentalFactor().equals( factor ) )
-                    return value;
-            }
-            return null;
-        }
-        
-        public int hashCode() {
-            return key.hashCode();
-        }
-        
-        public boolean equals(Object obj) {
-            if ( obj instanceof FactorValueVector )
-                return key.equals( ( (FactorValueVector)obj ).key );
-            else
-                return false;
-        }
-    }
+//    class FactorValueVectorFactory {
+//        private List<ExperimentalFactor> factors;
+//        private FactorValueVectorComparator comparator;
+//        
+//        public FactorValueVectorFactory(Collection<ExperimentalFactor> factors) {
+//            this.factors = new ArrayList(factors);
+//            this.comparator = new FactorValueVectorComparator(this.factors);
+//        }
+//        
+//        public FactorValueVector newFactorValueVector( Collection<FactorValue> values ) {
+//            List<FactorValue> orderedValues = new ArrayList<FactorValue>( values );
+//            StringBuffer buf = new StringBuffer();
+//            for ( ExperimentalFactor factor : factors ) {
+//                buf.append( "; " );
+//                buf.append( factor.getName() );
+//                buf.append( ": [ " );
+//                
+//            }
+//            return new FactorValueVector(orderedValues, buf.toString() );
+//        }
+//    }
+//    
+//    class FactorValueVector {
+//        private String key;
+//        private List<FactorValue> values;
+//        
+//        public FactorValueVector( List<FactorValue> values, String key ) {
+//            this.values = values;
+//            this.key = key;
+//        }
+//        
+//        public Collection<FactorValue> getValuesForFactor(ExperimentalFactor factor) {
+//            Collection<FactorValue> returnValues = new ArrayList<FactorValue>();
+//            for ( FactorValue value : values ) {
+//                if ( value.getExperimentalFactor().equals( factor ) )
+//                    returnValues.add( value );
+//            }
+//            return returnValues;
+//        }
+//        
+//        public String toString() {
+//            return key;
+//        }
+//        
+//        public int hashCode() {
+//            return key.hashCode();
+//        }
+//        
+//        public boolean equals(Object obj) {
+//            if ( obj instanceof FactorValueVector )
+//                return key.equals( ( (FactorValueVector)obj ).key );
+//            else
+//                return false;
+//        }
+//    }
     
     class FactorValueVectorComparator implements Comparator<FactorValueVector> {
         List<ExperimentalFactor> factors;
         
-        public FactorValueVectorComparator(List<ExperimentalFactor> factors) {
+        public FactorValueVectorComparator( List<ExperimentalFactor> factors ) {
             this.factors = factors;
         }
         
@@ -201,14 +240,92 @@ public class ExperimentalDesignMatrixTag extends TagSupport {
             if ( i >= factors.size() )
                 return 0;
 
-            String s1 = getString ( o1.getValueForFactor( factors.get( i ) ) );
-            String s2 = getString ( o2.getValueForFactor( factors.get( i ) ) );
+            String s1 = getString ( o1.getValuesForFactor( factors.get( i ) ) );
+            String s2 = getString ( o2.getValuesForFactor( factors.get( i ) ) );
             int compare = s1.compareTo( s2 );
             if ( compare != 0 )
                 return compare;
             else
                 return compare( o1, o2, ++i );
         }
+        
+        private String getString( Collection<FactorValue> values ) {
+            return values.toString();
+        }
+    }
+}
+
+
+class FactorValueVector {
+    
+    /**
+     * An ordered list of ExperimentalFactors represented in this vector.
+     * The order must be guaranteed across all FactorValueVectors.  i.e.:
+     * any two FactorValueVectors containing FactorValues for the same
+     * ExperimentalFactors must maintain this list in the same order.
+     */
+    private List<ExperimentalFactor> factors;
+    private static final DescribableComparator factorComparator = DescribableComparator.getInstance();
+    
+    /**
+     * A map from ExperimentalFactor to an ordered list of FactorValues.
+     * The order must be guaranteed as above.
+     */
+    private Map<ExperimentalFactor, List<FactorValue>> valuesForFactor;
+    private static final FactorValueComparator factorValueComparator = FactorValueComparator.getInstance();
+    
+    private String key;
+    
+    public FactorValueVector( Collection<FactorValue> values ) {
+        
+        valuesForFactor = new HashMap<ExperimentalFactor, List<FactorValue>>();
+        for ( FactorValue value : values ) {
+            if ( value.getExperimentalFactor() != null )
+                getValuesForFactor( value.getExperimentalFactor() ).add( value );
+        }
+        for ( List<FactorValue> storedValues : valuesForFactor.values() )
+            Collections.sort( storedValues, factorValueComparator );
+        
+        factors = new ArrayList<ExperimentalFactor>( valuesForFactor.keySet() );
+        Collections.sort( factors, factorComparator );
+        
+        StringBuffer buf = new StringBuffer();
+        for ( ExperimentalFactor factor : factors ) {
+            buf.append( "; " );
+            buf.append( factor.getName() );
+            buf.append( " => [ " );
+            for ( Iterator it = getValuesForFactor( factor ).iterator() ; it.hasNext(); ) {
+                buf.append( (FactorValue)it.next() );
+                if ( it.hasNext() )
+                    buf.append( ", " );
+            }
+            buf.append( " ] " );
+        }
+        key = buf.toString();
+    }
+    
+    public List<FactorValue> getValuesForFactor( ExperimentalFactor factor ) {
+        List<FactorValue> values = valuesForFactor.get( factor );
+        if ( values == null ) {
+            values = new ArrayList<FactorValue>();
+            valuesForFactor.put( factor, values );
+        }
+        return values;
+    }
+    
+    public String toString() {
+        return key;
+    }
+    
+    public int hashCode() {
+        return key.hashCode();
+    }
+    
+    public boolean equals(Object obj) {
+        if ( obj instanceof FactorValueVector )
+            return key.equals( ( (FactorValueVector)obj ).key );
+        else
+            return false;
     }
 }
 

@@ -14,3 +14,4 @@ andromda*.exc
 velocity.log.*
 .myumldata
 .fatjar
+.myhibernatedata
