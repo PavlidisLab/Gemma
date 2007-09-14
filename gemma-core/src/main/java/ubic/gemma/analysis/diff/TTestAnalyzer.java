@@ -26,7 +26,7 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.rosuda.JRclient.RList;
+import org.rosuda.JRclient.REXP;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -166,8 +166,17 @@ public class TTestAnalyzer extends AbstractAnalyzer {
 
         log.debug( command.toString() );
 
-        RList l = rc.eval( command.toString() ).asList();
+        REXP regExp = rc.eval( command.toString() );
 
-        return null;
+        double[] pvalues = ( double[] ) regExp.getContent();
+
+        // TODO can you get the design elements from R?
+        Map<DesignElement, Double> pvaluesMap = new HashMap<DesignElement, Double>();
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            DesignElement de = matrix.getDesignElementForRow( i );
+            pvaluesMap.put( de, pvalues[i] );
+        }
+
+        return pvaluesMap;
     }
 }
