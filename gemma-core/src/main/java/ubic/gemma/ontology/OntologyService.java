@@ -20,7 +20,6 @@ package ubic.gemma.ontology;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -59,6 +58,8 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
  */
 
 public class OntologyService {
+
+    private static final String USED = " -USED- ";
 
     private static Log log = LogFactory.getLog( OntologyService.class.getName() );
 
@@ -236,7 +237,7 @@ public class OntologyService {
         }
 
         Collection<String> foundValues = new HashSet<String>();
-        List<Characteristic> characteristicResults = new ArrayList<Characteristic>();
+        List<Characteristic> alreadyUsedResults = new ArrayList<Characteristic>();
         Collection<Characteristic> foundChars = characteristicService.findByValue( search );
 
         // remove duplicates, don't want to redefine == operator for Characteristics
@@ -244,7 +245,10 @@ public class OntologyService {
         if ( foundChars != null ) {
             for ( Characteristic characteristic : foundChars ) {
                 if ( !foundValues.contains( characteristic.getValue().toLowerCase() ) ) {
-                    characteristicResults.add( characteristic );
+                    // Want to flag in the web interface that these are alrady used by Gemma
+                    // Didn't want to make a characteristic value object just to hold a boolean flag for used....
+                    characteristic.setDescription( USED + characteristic.getDescription() );
+                    alreadyUsedResults.add( characteristic );
                     foundValues.add( characteristic.getValue().toLowerCase() );
                 }
             }
@@ -262,64 +266,64 @@ public class OntologyService {
         if ( results != null ) searchResults.addAll( filter( results, search ) );
 
         // Sort the individual results.
-        
-       return sort(individualResults, characteristicResults, searchResults, search);
-               
-    }
-    
-    private Collection<Characteristic> sort( List<Characteristic> individualResults,  List<Characteristic> characteristicResults,  List<Characteristic> searchResults, String searchTerm){
-        
-        Comparator compare = new TermComparator( searchTerm );
-        Collections.sort( individualResults, compare );
-        Collections.sort( characteristicResults, compare );
-        Collections.sort( searchResults, compare );
 
-        // Organize the list into 2 halfs.
-        // Want to get the exact match showing up ontop
-        // But close matching individualResults and characteristicResults should get
+        return sort( individualResults, alreadyUsedResults, searchResults, search );
+
+    }
+
+    private Collection<Characteristic> sort( List<Characteristic> individualResults,
+            List<Characteristic> alreadyUsedResults, List<Characteristic> searchResults, String searchTerm ) {
+
+        // Comparator compare = new TermComparator( searchTerm );
+        // Collections.sort( individualResults, compare );
+        // Collections.sort( alreadyUsedResults, compare );
+        // Collections.sort( searchResults, compare );
+
+        // Organize the list into 3 parts.
+        // Want to get the exact match showing up on top
+        // But close matching individualResults and alreadyUsedResults should get
         // priority over jena's search results.
         // Each reasults shoulds order should be preserved.
 
-        List<Characteristic> sortedResultsTop = new ArrayList<Characteristic>();
-        List<Characteristic> sortedResultsMiddle = new ArrayList<Characteristic>();
+        List<Characteristic> sortedResultsExact = new ArrayList<Characteristic>();
+        List<Characteristic> sortedResultsStartsWith = new ArrayList<Characteristic>();
         List<Characteristic> sortedResultsBottem = new ArrayList<Characteristic>();
 
-        for ( Characteristic characteristic : individualResults ) {
+        for ( Characteristic characteristic : alreadyUsedResults ) {
             if ( characteristic.getValue().equalsIgnoreCase( searchTerm ) )
-                sortedResultsTop.add( characteristic );
+                sortedResultsExact.add( characteristic );
             else if ( characteristic.getValue().startsWith( searchTerm ) )
-                sortedResultsMiddle.add( characteristic );
+                sortedResultsStartsWith.add( characteristic );
             else
                 sortedResultsBottem.add( characteristic );
         }
 
-        for ( Characteristic characteristic : characteristicResults ) {
+        for ( Characteristic characteristic : individualResults ) {
             if ( characteristic.getValue().equalsIgnoreCase( searchTerm ) )
-                sortedResultsTop.add( characteristic );
+                sortedResultsExact.add( characteristic );
             else if ( characteristic.getValue().startsWith( searchTerm ) )
-                sortedResultsMiddle.add( characteristic );
+                sortedResultsStartsWith.add( characteristic );
             else
                 sortedResultsBottem.add( characteristic );
         }
 
         for ( Characteristic characteristic : searchResults ) {
             if ( characteristic.getValue().equalsIgnoreCase( searchTerm ) )
-                sortedResultsTop.add( characteristic );
+                sortedResultsExact.add( characteristic );
             else if ( characteristic.getValue().startsWith( searchTerm ) )
-                sortedResultsMiddle.add( characteristic );
+                sortedResultsStartsWith.add( characteristic );
             else
                 sortedResultsBottem.add( characteristic );
         }
 
-        Collections.sort( sortedResultsTop, compare );
-        Collections.reverse( sortedResultsTop );
+        // Collections.sort( sortedResultsExact, compare );
+        // Collections.reverse( sortedResultsExact );
 
-        Collection<Characteristic> sortedTerms = new HashSet<Characteristic>();
+        Collection<Characteristic> sortedTerms = new ArrayList<Characteristic>();
+        sortedTerms.addAll( sortedResultsExact );
+        sortedTerms.addAll( sortedResultsStartsWith );
         sortedTerms.addAll( sortedResultsBottem );
-        sortedTerms.addAll( sortedResultsMiddle );
-        sortedTerms.addAll( sortedResultsTop );
 
-        
         return sortedTerms;
     }
 
@@ -373,13 +377,13 @@ public class OntologyService {
         Collection<BioMaterial> biomaterials = bioMaterialService.loadMultiple( bioMaterialIdList );
 
         for ( BioMaterial bioM : biomaterials ) {
-            
+
             Collection<Characteristic> current = bioM.getCharacteristics();
             if ( current == null )
                 current = new HashSet<Characteristic>( chars );
             else
                 current.addAll( chars );
-            
+
             bioM.setCharacteristics( current );
             bioMaterialService.update( bioM );
 
@@ -481,8 +485,7 @@ public class OntologyService {
 
         }
     }
-    
-    
+
     /**
      * @param birnLexOntologyService the birnLexOntologyService to set
      */
