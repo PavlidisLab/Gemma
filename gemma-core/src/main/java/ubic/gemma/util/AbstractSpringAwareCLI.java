@@ -30,6 +30,7 @@ import org.apache.commons.lang.StringUtils;
 import org.quartz.impl.StdScheduler;
 import org.springframework.beans.factory.BeanFactory;
 
+import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.security.authentication.ManualAuthenticationProcessing;
 
@@ -48,6 +49,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     protected BeanFactory ctx = null;
     PersisterHelper ph = null;
+    protected AuditTrailService auditTrailService;
     protected Collection<Exception> exceptionCache = new ArrayList<Exception>();
 
     @Override
@@ -183,6 +185,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     protected void processOptions() {
         createSpringContext();
         authenticate();
+        this.auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
     }
 
     /**

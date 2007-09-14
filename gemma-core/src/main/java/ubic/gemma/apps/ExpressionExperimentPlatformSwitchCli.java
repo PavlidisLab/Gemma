@@ -18,10 +18,15 @@
  */
 package ubic.gemma.apps;
 
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
+
 import ubic.gemma.loader.expression.ExpressionExperimentPlatformSwitchService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -32,10 +37,13 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class ExpressionExperimentPlatformSwitchCli extends AbstractGeneExpressionExperimentManipulatingCLI {
 
+    ArrayDesignService arrayDesignService;
+    String arrayDesignName = null;
+
     @Override
     protected Exception doWork( String[] args ) {
 
-        Exception exp = processCommandLine( "Switch EE to merged Array Design", args );
+        Exception exp = processCommandLine( "Switch EE to merged or selected Array Design", args );
         if ( exp != null ) {
             return exp;
         }
@@ -45,17 +53,42 @@ public class ExpressionExperimentPlatformSwitchCli extends AbstractGeneExpressio
 
         ExpressionExperiment ee = this.locateExpressionExperiment( this.getExperimentShortName() );
 
-        if ( ee == null ) return null;
+        if ( ee == null ) {
+            log.error( "Missing or unknown expression experiment" );
+            bail( ErrorCode.INVALID_OPTION );
+        }
 
         this.eeService.thawLite( ee );
 
-        serv.assignArrayDesignTo( ee );
-
         AuditTrailService auditEventService = ( AuditTrailService ) this.getBean( "auditTrailService" );
         AuditEventType type = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
-        auditEventService.addUpdateEvent( ee, type, "Switched to use merged array Design " );
+        if ( this.arrayDesignName != null ) {
+            ArrayDesign ad = locateArrayDesign( this.arrayDesignName );
+            if ( ad == null ) {
+                log.error( "Unknown array design" );
+                bail( ErrorCode.INVALID_OPTION );
+            }
+            arrayDesignService.thawLite( ad );
+            serv.switchExperimentToArrayDesign( ee, ad );
+            auditEventService.addUpdateEvent( ee, type, "Switched to use " + ad );
+
+        } else {
+            serv.switchExperimentToMergedPlatform( ee );
+            auditEventService.addUpdateEvent( ee, type, "Switched to use merged array Design " );
+        }
 
         return null;
+    }
+
+    @Override
+    @SuppressWarnings("static-access")
+    protected void buildOptions() {
+        super.buildOptions();
+        Option arrayDesignOption = OptionBuilder.hasArg().withArgName( "Array design" ).withDescription(
+                "Array design name (or short name) - no need to specifiy if the platforms used by the EE are merged" )
+                .withLongOpt( "array" ).create( 'a' );
+
+        addOption( arrayDesignOption );
     }
 
     /**
@@ -69,4 +102,33 @@ public class ExpressionExperimentPlatformSwitchCli extends AbstractGeneExpressio
         }
     }
 
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+        if ( this.hasOption( 'a' ) ) {
+            this.arrayDesignName = this.getOptionValue( 'a' );
+        }
+        arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
+    }
+
+    /**
+     * code copied from
+     * 
+     * @param name of the array design to find.
+     * @return
+     */
+    protected ArrayDesign locateArrayDesign( String name ) {
+
+        ArrayDesign arrayDesign = arrayDesignService.findArrayDesignByName( name.trim().toUpperCase() );
+
+        if ( arrayDesign == null ) {
+            arrayDesign = arrayDesignService.findByShortName( name );
+        }
+
+        if ( arrayDesign == null ) {
+            log.error( "No arrayDesign " + name + " found" );
+            bail( ErrorCode.INVALID_OPTION );
+        }
+        return arrayDesign;
+    }
 }

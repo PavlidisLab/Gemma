@@ -239,9 +239,9 @@ public abstract class AbstractGeneExpressionExperimentManipulatingCLI extends
 		return genes;
 	}
 
-	protected Gene findGeneByOfficialSymbol(String symbol, Taxon taxon) {
-		Collection<Gene> genes = geneService
-				.findByOfficialSymbolInexact(symbol);
+	@SuppressWarnings("unchecked")
+    protected Gene findGeneByOfficialSymbol(String symbol, Taxon taxon) { 
+		Collection<Gene> genes = geneService.findByOfficialSymbolInexact( symbol );
 		for (Gene gene : genes) {
 			if (taxon.equals(gene.getTaxon()))
 				return gene;

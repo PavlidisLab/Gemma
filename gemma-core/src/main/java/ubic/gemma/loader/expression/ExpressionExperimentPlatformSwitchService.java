@@ -32,7 +32,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector; 
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -84,10 +84,22 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
      * @param arrayDesign
      */
     @SuppressWarnings("unchecked")
-    public void assignArrayDesignTo( ExpressionExperiment expExp ) {
+    public void switchExperimentToMergedPlatform( ExpressionExperiment expExp ) {
 
-        ArrayDesign arrayDesign = checkMergedDesign( expExp );
+        ArrayDesign arrayDesign = locateMergedDesign( expExp );
 
+        switchExperimentToArrayDesign( expExp, arrayDesign );
+
+    }
+
+    /**
+     * If you know the arraydesigns are already in a merged state, you should use switchExperimentToMergedPlatform
+     * 
+     * @param expExp
+     * @param arrayDesign
+     */
+    @SuppressWarnings("unchecked")
+    public void switchExperimentToArrayDesign( ExpressionExperiment expExp, ArrayDesign arrayDesign ) {
         assert arrayDesign != null;
 
         // get relation between sequence and designelements.
@@ -112,6 +124,9 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         Collection<ArrayDesign> oldArrayDesigns = expressionExperimentService.getArrayDesignsUsed( expExp );
         Collection<DesignElement> usedDesignElements = new HashSet<DesignElement>();
         for ( ArrayDesign oldAd : oldArrayDesigns ) {
+
+            if ( oldAd.equals( arrayDesign ) ) continue; // no need to switch
+
             arrayDesignService.thawLite( oldAd );
             Collection<QuantitationType> qts = expressionExperimentService.getQuantitationTypes( expExp, oldAd );
             log.info( qts.size() + " quantitation types for vectors on " + oldAd );
@@ -153,11 +168,10 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         expExp.setDescription( expExp.getDescription() + " [Switched to use " + arrayDesign.getShortName()
                 + " by Gemma]" );
         expressionExperimentService.update( expExp );
-
     }
 
     @SuppressWarnings("unchecked")
-    private ArrayDesign checkMergedDesign( ExpressionExperiment expExp ) {
+    private ArrayDesign locateMergedDesign( ExpressionExperiment expExp ) {
         // get the array designs for this EE
         ArrayDesign arrayDesign = null;
         Collection<ArrayDesign> oldArrayDesigns = expressionExperimentService.getArrayDesignsUsed( expExp );

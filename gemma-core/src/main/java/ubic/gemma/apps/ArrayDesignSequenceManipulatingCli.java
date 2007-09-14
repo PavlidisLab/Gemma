@@ -28,7 +28,6 @@ import org.apache.commons.cli.OptionBuilder;
 import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -47,7 +46,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
 
     ArrayDesignService arrayDesignService;
     String arrayDesignName = null;
-    AuditTrailService auditTrailService;
+
     protected ArrayDesignReportService arrayDesignReportService;
 
     @Override
@@ -109,7 +108,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
         }
         arrayDesignReportService = ( ArrayDesignReportService ) this.getBean( "arrayDesignReportService" );
         arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
-        this.auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
+
     }
 
     /**
@@ -158,12 +157,12 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
         List<AuditEvent> events = getEvents( arrayDesign, eventClass );
         if ( events.size() == 0 ) {
             return true; // always do it, it's never been done.
-        } else {
-            assert skipIfLastRunLaterThan != null;
-            // return true if the last time was older than the limit time.
-            AuditEvent lastEvent = events.get( events.size() - 1 );
-            return lastEvent.getDate().before( skipIfLastRunLaterThan );
         }
+        assert skipIfLastRunLaterThan != null;
+        // return true if the last time was older than the limit time.
+        AuditEvent lastEvent = events.get( events.size() - 1 );
+        return lastEvent.getDate().before( skipIfLastRunLaterThan );
+
     }
 
     /**
@@ -219,10 +218,9 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
                 log.info( arrayDesign + " needs update, last " + eventClass.getSimpleName() + " was before last "
                         + currentEvent.getEventType().getClass().getSimpleName() );
                 return true;
-            } else {
-                log.debug( arrayDesign + " " + eventClass.getSimpleName() + " was after last "
-                        + currentEvent.getEventType().getClass().getSimpleName() + " (OK)" );
             }
+            log.debug( arrayDesign + " " + eventClass.getSimpleName() + " was after last "
+                    + currentEvent.getEventType().getClass().getSimpleName() + " (OK)" );
 
         }
         log.info( arrayDesign + " does not need an update" );
