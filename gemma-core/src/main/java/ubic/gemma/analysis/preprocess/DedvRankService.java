@@ -118,30 +118,42 @@ public class DedvRankService {
 		}
 
 	}
-	
-	public AbstractNamedMatrix getRankMatrix(Collection<Gene> genes, Collection<ExpressionExperiment> ees, Method method) {
-		DenseDoubleMatrix2DNamed matrix = new DenseDoubleMatrix2DNamed(genes.size(), ees.size());
+
+	public AbstractNamedMatrix getRankMatrix(Collection<Gene> genes,
+			Collection<ExpressionExperiment> ees, Method method) {
+		DenseDoubleMatrix2DNamed matrix = new DenseDoubleMatrix2DNamed(genes
+				.size(), ees.size());
 		matrix.setRowNames(new ArrayList(genes));
 		matrix.setColumnNames(new ArrayList(ees));
 		for (int i = 0; i < matrix.rows(); i++) {
-			for (int j = 0; j< matrix.columns(); j++) {
+			for (int j = 0; j < matrix.columns(); j++) {
 				matrix.set(i, j, Double.NaN);
 			}
 		}
-		
+
 		EE: for (ExpressionExperiment ee : ees) {
 			log.info(ee.getShortName() + ": processing...");
 			eeService.thawLite(ee);
-			Collection<DesignElementDataVector> vectors = eeService
-					.getDesignElementDataVectors(ee, ExpressionDataMatrixBuilder
-							.getUsefulQuantitationTypes(ee));
-	
+			Collection<DesignElementDataVector> vectors;
+
+			try {
+				vectors = eeService.getDesignElementDataVectors(ee,
+						ExpressionDataMatrixBuilder
+								.getUsefulQuantitationTypes(ee));
+			} catch (Exception e) {
+				log.error(e.getMessage());
+				log
+						.error(ee.getShortName()
+								+ ": Unable to retrieve design element data vectors, skipping...");
+				continue;
+			}
+
 			Collection<DesignElementDataVector> rankedVectors;
 			if (method != null) {
 				// recompute ranks
 				rankedVectors = new HashSet<DesignElementDataVector>();
 				devService.thaw(vectors);
-				
+
 				ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder(
 						vectors);
 				for (ArrayDesign ad : (Collection<ArrayDesign>) this.eeService
@@ -149,7 +161,8 @@ public class DedvRankService {
 					Collection<DesignElementDataVector> preferredVectors = computeRanks(
 							ad, builder, method);
 					if (preferredVectors == null) {
-						log.info(ee.getShortName() + ": Unable to re-compute ranks, skipping");
+						log.info(ee.getShortName()
+								+ ": Unable to re-compute ranks, skipping");
 						continue EE;
 					}
 					rankedVectors.addAll(preferredVectors);
@@ -158,8 +171,9 @@ public class DedvRankService {
 				// use stored ranks
 				rankedVectors = vectors;
 			}
-			
-			QuantitationType qt = (QuantitationType) eeService.getPreferredQuantitationType(ee).iterator().next();
+
+			QuantitationType qt = (QuantitationType) eeService
+					.getPreferredQuantitationType(ee).iterator().next();
 			Map<DesignElementDataVector, Collection<Gene>> dedv2geneMap = devService
 					.getDedv2GenesMap(rankedVectors, qt);
 
@@ -209,8 +223,7 @@ public class DedvRankService {
 			}
 			log.info("Saved " + rankCount + " gene ranks");
 		}
-		
-		
+
 		return matrix;
 	}
 
@@ -219,7 +232,7 @@ public class DedvRankService {
 		log.info("Processing vectors on " + ad);
 		ExpressionDataDoubleMatrix intensities;
 		try {
-    		intensities = builder.getIntensity(ad);
+			intensities = builder.getIntensity(ad);
 		} catch (IllegalStateException e) {
 			log.error(e.getMessage());
 			return null;
