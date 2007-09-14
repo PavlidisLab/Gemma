@@ -25,7 +25,6 @@ import ubic.gemma.analysis.util.RCommander;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Gene;
 
 /**
  * @author keshav
