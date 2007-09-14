@@ -107,6 +107,10 @@ public class DedvRankService {
 				.getArrayDesignsUsed(ee)) {
 			Collection<DesignElementDataVector> preferredVectors = computeRanks(
 					ad, builder, method);
+			if (preferredVectors == null) {
+				log.info("Not updating ranks data");
+				continue;
+			}
 
 			log.info("Updating ranks data for " + preferredVectors.size()
 					+ " vectors");
@@ -125,7 +129,8 @@ public class DedvRankService {
 			}
 		}
 		
-		for (ExpressionExperiment ee : ees) {
+		EE: for (ExpressionExperiment ee : ees) {
+			log.info(ee.getShortName() + ": processing...");
 			eeService.thawLite(ee);
 			Collection<DesignElementDataVector> vectors = eeService
 					.getDesignElementDataVectors(ee, ExpressionDataMatrixBuilder
@@ -143,6 +148,10 @@ public class DedvRankService {
 						.getArrayDesignsUsed(ee)) {
 					Collection<DesignElementDataVector> preferredVectors = computeRanks(
 							ad, builder, method);
+					if (preferredVectors == null) {
+						log.info(ee.getShortName() + ": Unable to re-compute ranks, skipping");
+						continue EE;
+					}
 					rankedVectors.addAll(preferredVectors);
 				}
 			} else {
@@ -208,7 +217,13 @@ public class DedvRankService {
 	private Collection<DesignElementDataVector> computeRanks(ArrayDesign ad,
 			ExpressionDataMatrixBuilder builder, Method method) {
 		log.info("Processing vectors on " + ad);
-		ExpressionDataDoubleMatrix intensities = builder.getIntensity(ad);
+		ExpressionDataDoubleMatrix intensities;
+		try {
+    		intensities = builder.getIntensity(ad);
+		} catch (IllegalStateException e) {
+			log.error(e.getMessage());
+			return null;
+		}
 
 		// We don't remove missing values for Affymetrix based on absent/present
 		// calls.

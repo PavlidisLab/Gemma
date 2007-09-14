@@ -2,8 +2,8 @@ package ubic.gemma.apps;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.cli.Option;
@@ -155,7 +155,9 @@ public class EffectSizeCalculationCli extends AbstractGeneCoexpressionManipulati
 
         DecimalFormat formatter = (DecimalFormat) DecimalFormat.getNumberInstance();
         formatter.applyPattern("0.0000");
-        formatter.getDecimalFormatSymbols().setNaN("");
+		DecimalFormatSymbols symbols = formatter.getDecimalFormatSymbols();
+		symbols.setNaN("");
+		formatter.setDecimalFormatSymbols(symbols);
         String topLeft = "GenePair";
         try {
             MatrixWriter out = new MatrixWriter( outFilePrefix + ".corr.txt", formatter);

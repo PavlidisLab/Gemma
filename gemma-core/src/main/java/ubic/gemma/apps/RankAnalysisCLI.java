@@ -4,8 +4,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.Collection;
-import java.util.Locale;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -41,6 +41,7 @@ public class RankAnalysisCLI extends
 	@Override
 	protected Exception doWork(String[] args) {
 		processCommandLine("RankAnalysisCLI", args);
+		
 		Collection<ExpressionExperiment> ees;
 		try {
 			 ees = getExpressionExperiments(taxon);
@@ -81,9 +82,11 @@ public class RankAnalysisCLI extends
 		}
 		
 		DecimalFormat formatter = (DecimalFormat) DecimalFormat
-				.getNumberInstance(Locale.US);
+				.getNumberInstance();
 		formatter.applyPattern("0.0000");
-		formatter.getDecimalFormatSymbols().setNaN("NaN");
+		DecimalFormatSymbols symbols = formatter.getDecimalFormatSymbols();
+		symbols.setNaN("NaN");
+		formatter.setDecimalFormatSymbols(symbols);
 		try {
 			MatrixWriter out = new MatrixWriter(outFilePrefix + ".txt", formatter);
 			out.writeMatrix(rankMatrix, false);

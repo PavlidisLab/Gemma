@@ -2,6 +2,7 @@ package ubic.gemma.apps;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Locale;
@@ -100,7 +101,9 @@ public class CorrelationAnalysisCLI extends
 		DecimalFormat formatter = (DecimalFormat) DecimalFormat
 				.getNumberInstance(Locale.US);
 		formatter.applyPattern("0.0000");
-		formatter.getDecimalFormatSymbols().setNaN("");
+		DecimalFormatSymbols symbols = formatter.getDecimalFormatSymbols();
+		symbols.setNaN("");
+		formatter.setDecimalFormatSymbols(symbols);
 		try {
 			MatrixWriter out = new MatrixWriter(outFilePrefix + ".corr.txt",
 					formatter);
