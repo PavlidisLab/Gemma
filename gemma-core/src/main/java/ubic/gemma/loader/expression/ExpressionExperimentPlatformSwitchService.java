@@ -179,6 +179,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         // find the AD they have been merged into, make sure it is exists and they are all merged into the same AD.
         for ( ArrayDesign design : oldArrayDesigns ) {
             ArrayDesign mergedInto = design.getMergedInto();
+            arrayDesignService.thawLite( mergedInto );
 
             if ( mergedInto == null ) {
                 throw new IllegalArgumentException( design + " used by " + expExp
