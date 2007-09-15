@@ -45,10 +45,6 @@ import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
-import ubic.gemma.model.common.Auditable;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-
 /**
  * Base Command Line Interface. Provides some default functionality.
  * <p>
@@ -522,28 +518,6 @@ public abstract class AbstractCLI {
             log.info( "Analyses will be run only if last was older than " + skipIfLastRunLaterThan );
         }
         return skipIfLastRunLaterThan;
-    }
-
-    /**
-     * @param ee
-     * @param eventClass
-     * @return
-     */
-    protected boolean needToRun( Auditable ee, Class<? extends AuditEventType> eventClass ) {
-        boolean needToRun = true;
-        Date skipIfLastRunLaterThan = getLimitingDate();
-        if ( skipIfLastRunLaterThan != null ) {
-            for ( AuditEvent event : ee.getAuditTrail().getEvents() ) {
-                if ( event.getEventType() != null && eventClass.isAssignableFrom( event.getEventType().getClass() ) ) {
-                    // figure out if we need to run it.
-                    if ( event.getDate().after( skipIfLastRunLaterThan ) ) {
-                        errorObjects.add( ee + ": " + " run more recently than " + skipIfLastRunLaterThan );
-                        needToRun = false;
-                    }
-                }
-            }
-        }
-        return needToRun;
     }
 
     /**

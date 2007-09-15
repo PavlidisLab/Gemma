@@ -25,12 +25,20 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
+import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.quartz.impl.StdScheduler;
 import org.springframework.beans.factory.BeanFactory;
 
+import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.security.authentication.ManualAuthenticationProcessing;
 
@@ -105,6 +113,57 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         assert ctx != null : "Spring context was not initialized";
         return ( PersisterHelper ) ctx.getBean( "persisterHelper" );
 
+    }
+
+    /**
+     * @param auditable
+     * @param eventClass
+     * @return
+     */
+    protected boolean needToRun( Auditable auditable, Class<? extends AuditEventType> eventClass ) {
+        boolean needToRun = true;
+        Date skipIfLastRunLaterThan = getLimitingDate();
+
+        List<AuditEvent> events = ( List<AuditEvent> ) auditable.getAuditTrail().getEvents();
+
+        boolean okToRun = true; // assume okay unless indicated otherwise
+
+        // figure out if we need to run it by date
+        if ( skipIfLastRunLaterThan != null ) {
+            for ( int j = events.size() - 1; j >= 0; j-- ) {
+                AuditEvent event = events.get( j );
+                if ( event.getEventType() != null && eventClass.isAssignableFrom( event.getEventType().getClass() ) ) {
+                    if ( event.getDate().after( skipIfLastRunLaterThan ) ) {
+                        errorObjects.add( auditable + ": " + " run more recently than " + skipIfLastRunLaterThan );
+                        needToRun = false;
+                    }
+                }
+            }
+        }
+
+        /*
+         * If we're running in an 'auto' mode (by date, or with the --auto option, skip if we're in a 'trouble' state.
+         */
+        if ( autoSeek || skipIfLastRunLaterThan != null ) {
+            AuditEvent lastTrouble = this.auditTrailService.getLastTroubleEvent( auditable );
+
+            // special case for expression experiments - check associated ADs.
+            if ( lastTrouble == null && auditable instanceof ExpressionExperiment ) {
+                ExpressionExperimentService ees = ( ExpressionExperimentService ) this
+                        .getBean( "expressionExperimentService" );
+                for ( Object o : ees.getArrayDesignsUsed( ( ExpressionExperiment ) auditable ) ) {
+                    lastTrouble = auditTrailService.getLastTroubleEvent( ( ArrayDesign ) o );
+                }
+            }
+
+            okToRun = lastTrouble == null;
+        }
+
+        if ( !okToRun ) {
+            errorObjects.add( auditable + ": has an active 'trouble' flag" );
+        }
+
+        return needToRun && okToRun;
     }
 
     /** check username and password. */
