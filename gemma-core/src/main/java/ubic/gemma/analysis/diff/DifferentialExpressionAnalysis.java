@@ -19,7 +19,7 @@
 package ubic.gemma.analysis.diff;
 
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -41,7 +41,7 @@ public class DifferentialExpressionAnalysis {
     private int FACTOR_VALUE_ONE = 1;
     private int FACTOR_VALUE_TWO = 2;
 
-    HashMap<DesignElement, Double> pvalues = null;
+    Map<DesignElement, Double> pvalues = null;
 
     Collection<DesignElement> significantGenes = null;
 

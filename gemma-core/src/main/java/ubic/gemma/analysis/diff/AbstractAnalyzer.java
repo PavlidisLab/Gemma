@@ -19,7 +19,7 @@
 package ubic.gemma.analysis.diff;
 
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.Map;
 
 import ubic.gemma.analysis.util.RCommander;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -45,7 +45,7 @@ public abstract class AbstractAnalyzer extends RCommander {
      * @param experimentalFactors
      * @return
      */
-    public abstract HashMap<DesignElement, Double> getPValues( ExpressionExperiment expressionExperiment,
+    public abstract Map<DesignElement, Double> getPValues( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> experimentalFactors );
 
 }

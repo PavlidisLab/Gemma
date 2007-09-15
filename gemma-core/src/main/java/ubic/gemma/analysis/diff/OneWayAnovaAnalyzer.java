@@ -18,10 +18,15 @@
  */
 package ubic.gemma.analysis.diff;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -41,10 +46,33 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
      *      java.util.Collection)
      */
     @Override
-    public HashMap<DesignElement, Double> getPValues( ExpressionExperiment expressionExperiment,
+    public Map<DesignElement, Double> getPValues( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> experimentalFactors ) {
-        // TODO Auto-generated method stub
-        return null;
+
+        if ( experimentalFactors.size() != 1 )
+            throw new RuntimeException( "One way anova supports one experimental factor.  Received "
+                    + experimentalFactors.size() + "." );
+
+        ExperimentalFactor experimentalFactor = experimentalFactors.iterator().next();
+
+        return oneWayAnova( expressionExperiment, experimentalFactor.getFactorValues() );
+    }
+
+    public Map<DesignElement, Double> oneWayAnova( ExpressionExperiment expressionExperiment,
+            Collection<FactorValue> factorValues ) {
+        Collection<BioMaterial> biomaterials = new ArrayList<BioMaterial>();
+
+        Collection<BioAssay> allAssays = expressionExperiment.getBioAssays();
+
+        for ( BioAssay assay : allAssays ) {
+            Collection<BioMaterial> samplesUsed = assay.getSamplesUsed();
+            biomaterials.addAll( samplesUsed );
+        }
+
+        ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( expressionExperiment
+                .getDesignElementDataVectors() );
+
+        return oneWayAnova( matrix, factorValues, biomaterials );
     }
 
     /*
@@ -64,11 +92,25 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
      * @param samplesUsed
      * @return
      */
-    public HashMap<DesignElement, Double> oneWayAnova( ExpressionDataMatrix matrix,
-            Collection<FactorValue> factorValues, Collection<BioMaterial> samplesUsed ) {
+    public Map<DesignElement, Double> oneWayAnova( ExpressionDataMatrix matrix, Collection<FactorValue> factorValues,
+            Collection<BioMaterial> samplesUsed ) {
 
-        // TODO implement me
+        List<String> rFactors = AnalyzerHelper.getRFactorsFromFactorValues( factorValues, samplesUsed );
+
+        ExpressionDataDoubleMatrix dmatrix = ( ExpressionDataDoubleMatrix ) matrix;
+
+        DoubleMatrixNamed namedMatrix = dmatrix.getNamedMatrix();
+
+        String facts = rc.assignStringList( rFactors );
+
         // R Call
+        // aof <- function(x) {
+        // m<-data.frame(bfacts["area"], bfacts["treat"], x);
+        // anova(aov(x ~ area + treat + area*treat, m))
+        // }
+        //
+        // banovaresults<-apply(bdata, 1, aof);
+
         return null;
     }
 

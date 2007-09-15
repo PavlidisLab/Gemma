@@ -18,7 +18,6 @@
  */
 package ubic.gemma.analysis.diff;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -31,7 +30,6 @@ import org.rosuda.JRclient.REXP;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -68,7 +66,7 @@ public class TTestAnalyzer extends AbstractAnalyzer {
      *      java.util.Collection)
      */
     @Override
-    public HashMap<DesignElement, Double> getPValues( ExpressionExperiment expressionExperiment,
+    public Map<DesignElement, Double> getPValues( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> experimentalFactors ) {
 
         if ( experimentalFactors.size() != 1 )
@@ -77,9 +75,7 @@ public class TTestAnalyzer extends AbstractAnalyzer {
 
         ExperimentalFactor experimentalFactor = experimentalFactors.iterator().next();
 
-        tTest( expressionExperiment, experimentalFactor.getFactorValues() );
-
-        return null;
+        return tTest( expressionExperiment, experimentalFactor.getFactorValues() );
     }
 
     /**
@@ -92,14 +88,8 @@ public class TTestAnalyzer extends AbstractAnalyzer {
     public Map<DesignElement, Double> tTest( ExpressionExperiment expressionExperiment,
             Collection<FactorValue> factorValues ) {
         // TODO change signature to take factorValue1 and factorValue2 since we know this for a ttest
-        Collection<BioMaterial> biomaterials = new ArrayList<BioMaterial>();
 
-        Collection<BioAssay> allAssays = expressionExperiment.getBioAssays();
-
-        for ( BioAssay assay : allAssays ) {
-            Collection<BioMaterial> samplesUsed = assay.getSamplesUsed();
-            biomaterials.addAll( samplesUsed );
-        }
+        Collection<BioMaterial> biomaterials = AnalyzerHelper.getBioMaterialsForBioAssays( expressionExperiment );
 
         ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( expressionExperiment
                 .getDesignElementDataVectors() );
@@ -120,30 +110,10 @@ public class TTestAnalyzer extends AbstractAnalyzer {
     protected Map<DesignElement, Double> tTest( ExpressionDataMatrix matrix, Collection<FactorValue> factorValues,
             Collection<BioMaterial> samplesUsed ) {
 
-        List<String> rFactors = new ArrayList<String>();
-
         if ( factorValues.size() != 2 )
             throw new RuntimeException( "Must have only two factor values per experimental factor." );
 
-        for ( BioMaterial sampleUsed : samplesUsed ) {
-            Collection<FactorValue> factorValuesFromBioMaterial = sampleUsed.getFactorValues();
-
-            if ( factorValuesFromBioMaterial.size() != 1 ) {
-                throw new RuntimeException( "Only supports one factor value per biomaterial." );
-            }
-
-            FactorValue fv = factorValuesFromBioMaterial.iterator().next();
-
-            for ( FactorValue f : factorValues ) {
-                if ( fv.getValue() == f.getValue() ) {
-                    log.debug( "factor value match" );
-                    break;
-                }
-
-            }
-
-            rFactors.add( fv.getValue() );
-        }
+        List<String> rFactors = AnalyzerHelper.getRFactorsFromFactorValues( factorValues, samplesUsed );
 
         ExpressionDataDoubleMatrix dmatrix = ( ExpressionDataDoubleMatrix ) matrix;
 
