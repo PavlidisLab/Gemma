@@ -373,7 +373,7 @@ public class ExpressionExperimentServiceImpl extends
         AuditEvent last;
         for ( ExpressionExperiment experiment : ees ) {
 
-            last = this.getExpressionExperimentDao().getLastAuditEvent( experiment, type );
+            last = getLastAuditEvent( experiment, type );
             lastEventMap.put( experiment.getId(), last );
 
         }

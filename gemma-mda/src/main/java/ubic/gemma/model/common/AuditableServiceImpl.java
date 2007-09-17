@@ -42,6 +42,14 @@ public abstract class AuditableServiceImpl extends ubic.gemma.model.common.Audit
             throws java.lang.Exception {
         return this.getAuditableDao().getAuditEvents( auditable );
     }
+    
+    /**
+     * @see ubic.gemma.model.common.AuditableService#getLastAuditEvent(ubic.gemma.model.common.Auditable, ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)
+     */
+    @Override
+    protected ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastAuditEvent( final Auditable auditable, AuditEventType type ) throws java.lang.Exception {
+        return this.getAuditableDao().getLastAuditEvent( auditable, type );
+    }
 
     /**
      * @param events
