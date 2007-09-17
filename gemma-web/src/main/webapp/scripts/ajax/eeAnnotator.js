@@ -18,7 +18,7 @@ var createMgedComboBox = function(terms){
                     	
                 var ds = new Ext.data.Store(
                {
-                       proxy:new Ext.data.DWRProxy(MgedOntologyService.getBioMaterialTerms),
+                       proxy:new Ext.data.DWRProxy(MgedOntologyService.getUsefulMgedTerms),
                        reader:new Ext.data.ListRangeReader({id:"id"}, recordType),
                        remoteSort:false,
                        sortInfo:{field:'term'}

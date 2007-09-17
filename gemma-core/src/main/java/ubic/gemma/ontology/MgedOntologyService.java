@@ -86,6 +86,27 @@ public class MgedOntologyService extends AbstractOntologyService {
         return results;
 
     }
+    
+    
+    /**
+     * @return
+     * 
+     * Returns the Mged Ontology Terms that are usefull for annotating Gemma. 
+     * Basically the terms in the bioMaterial package plus some special cases. 
+     */
+    public Collection<OntologyTerm> getUsefulMgedTerms(){
+        if ( !ready.get() ) return null;
+        
+        Collection<OntologyTerm> results = getBioMaterialTerms();
+        
+        //A bunch of terms not in the biomaterial package that we need. (special cases)
+        OntologyTerm term = terms.get( MGED_ONTO_BASE_URL + "#ExperimentPackage" );
+        results.addAll( getAllTerms( term ));
+        
+        return results;
+        
+        
+    }
 
     /**
      * Will attempt to load a different ontology into the MGED ontology service

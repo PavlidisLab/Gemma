@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +42,7 @@ import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
@@ -81,7 +83,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
     private SearchService searchService;
     private OntologyService ontologyService;
-    
+
     private AuditTrailService auditTrailService;
 
     private final String identifierNotFound = "Must provide a valid ExpressionExperiment identifier";
@@ -263,12 +265,11 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     public void setAuditTrailService( AuditTrailService auditTrailService ) {
         this.auditTrailService = auditTrailService;
     }
-    
+
     public Collection<AnnotationValueObject> getAnnotation( EntityDelegator e ) {
-        if ( e == null || e.getId() == null )
-            return null;
+        if ( e == null || e.getId() == null ) return null;
         ExpressionExperiment expressionExperiment = expressionExperimentService.load( e.getId() );
-        
+
         Collection<AnnotationValueObject> annotation = new ArrayList<AnnotationValueObject>();
         for ( Characteristic c : expressionExperiment.getCharacteristics() ) {
             AnnotationValueObject annotationValue = new AnnotationValueObject();
@@ -276,19 +277,17 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             annotationValue.setClassName( c.getCategory() );
             annotationValue.setTermName( c.getValue() );
             if ( c instanceof VocabCharacteristic ) {
-                VocabCharacteristic vc = (VocabCharacteristic)c;
+                VocabCharacteristic vc = ( VocabCharacteristic ) c;
                 String className = getLabelFromUri( vc.getCategoryUri() );
-                if ( className != null )
-                    annotationValue.setClassName( className );
+                if ( className != null ) annotationValue.setClassName( className );
                 String termName = getLabelFromUri( vc.getValueUri() );
-                if ( termName != null )
-                    annotationValue.setTermName( termName );
+                if ( termName != null ) annotationValue.setTermName( termName );
             }
             annotation.add( annotationValue );
         }
         return annotation;
     }
-    
+
     private String getLabelFromUri( String uri ) {
         OntologyResource resource = ontologyService.getResource( uri );
         if ( resource != null )
@@ -296,32 +295,28 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         else
             return null;
     }
-    
+
     private AuditEvent getLastTroubleEvent( ExpressionExperiment ee ) {
         AuditEvent event = auditTrailService.getLastTroubleEvent( ee );
-        if ( event != null )
-            return event;
-        
+        if ( event != null ) return event;
+
         for ( Object o : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
-            event = auditTrailService.getLastTroubleEvent( (ArrayDesign)o );
-            if ( event != null )
-                return event;
+            event = auditTrailService.getLastTroubleEvent( ( ArrayDesign ) o );
+            if ( event != null ) return event;
         }
-        
+
         return null;
     }
-    
+
     private AuditEvent getLastValidationEvent( ExpressionExperiment ee ) {
         AuditEvent event = auditTrailService.getLastValidationEvent( ee );
-        if ( event != null )
-            return event;
-        
+        if ( event != null ) return event;
+
         for ( Object o : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
-            event = auditTrailService.getLastValidationEvent( (ArrayDesign)o );
-            if ( event != null )
-                return event;
+            event = auditTrailService.getLastValidationEvent( ( ArrayDesign ) o );
+            if ( event != null ) return event;
         }
-        
+
         return null;
     }
 
@@ -331,7 +326,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      * @param errors
      * @return ModelAndView
      */
-    @SuppressWarnings({ "unused", "unchecked" })
+    @SuppressWarnings( { "unused", "unchecked" })
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
 
         if ( request.getParameter( "id" ) == null ) {
@@ -354,12 +349,12 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         ModelAndView mav = new ModelAndView( "expressionExperiment.detail" ).addObject( "expressionExperiment",
                 expressionExperiment );
-        
+
         AuditEvent troubleEvent = getLastTroubleEvent( expressionExperiment );
         mav.addObject( "troubleEvent", troubleEvent );
         AuditEvent validatedEvent = getLastValidationEvent( expressionExperiment );
         mav.addObject( "validatedEvent", validatedEvent );
-        
+
         Collection characteristics = expressionExperiment.getCharacteristics();
         mav.addObject( "characteristics", characteristics );
 
@@ -387,16 +382,17 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         // load coexpression link count from cache
         Collection<Long> eeId = new ArrayList<Long>();
         eeId.add( id );
-        
+
         AuditEvent lastArrayDesignUpdate = expressionExperimentService.getLastArrayDesignUpdate( expressionExperiment );
         mav.addObject( "lastArrayDesignUpdate", lastArrayDesignUpdate );
-        
-        Collection<ExpressionExperimentValueObject> eeVos = expressionExperimentReportService.retrieveSummaryObjects( eeId );
+
+        Collection<ExpressionExperimentValueObject> eeVos = expressionExperimentReportService
+                .retrieveSummaryObjects( eeId );
         if ( eeVos != null && eeVos.size() > 0 ) {
-            ExpressionExperimentValueObject vo =  eeVos.iterator().next();
+            ExpressionExperimentValueObject vo = eeVos.iterator().next();
             String eeLinks = vo.getCoexpressionLinkCount().toString() + " (as of " + vo.getDateCached() + ")";
             mav.addObject( "eeCoexpressionLinks", eeLinks );
-           
+
         }
 
         return mav;
@@ -762,6 +758,9 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             this.ee = ee;
         }
 
+        /* (non-Javadoc)
+         * @see java.util.concurrent.Callable#call()
+         */
         @SuppressWarnings("unchecked")
         public ModelAndView call() throws Exception {
 
@@ -781,4 +780,33 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         }
     }
 
+    /**
+     * @param eeId
+     * @return a Map of Factor names to the category of the Factor
+     */
+    public Map<String, String> getExperimentalFactors( Long eeId ) {
+
+        ExpressionExperiment ee = this.expressionExperimentService.load( eeId );
+        Map<String, String> result = new HashMap<String, String>();
+
+        if (ee.getExperimentalDesign() == null)
+            return null;
+        
+        Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
+
+        for ( ExperimentalFactor factor : factors ) {
+            Characteristic category = factor.getCategory();
+            if (category == null){
+                result.put( factor.getName(), "none" );
+            }
+            else if ( category instanceof VocabCharacteristic ) {
+                VocabCharacteristic vc = ( VocabCharacteristic ) category;
+                result.put( factor.getName(), vc.getCategoryUri() );
+            } else
+                result.put( factor.getName(), category.getCategory() );
+            
+        }
+
+        return result;
+    }
 }

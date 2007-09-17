@@ -252,7 +252,8 @@
 							<value>getTermIndividuals</value>
 							<value>getTermRestrictions</value>
 							<value>loadNewOntology</value>
-							<value>isOntologyLoaded</value>											
+							<value>isOntologyLoaded</value>
+							<value>getUsefulMgedTerms</value>												
 						</list>
 					</property>
 				</bean>
@@ -301,6 +302,7 @@
 						<list>
 							<value>deleteById</value>
 							<value>getAnnotation</value>
+							<value>getExperimentalFactors</value>
 						</list>
 					</property>
 				</bean>
