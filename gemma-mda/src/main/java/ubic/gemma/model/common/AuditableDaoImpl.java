@@ -66,7 +66,7 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setMaxResults( 1 );
+//            queryObject.setMaxResults( 1 );
             queryObject.setParameter( "a", auditableId );
           
             Collection results = queryObject.list();
