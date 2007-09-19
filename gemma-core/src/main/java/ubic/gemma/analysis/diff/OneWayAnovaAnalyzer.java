@@ -89,11 +89,11 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
     public Map<DesignElement, Double> oneWayAnova( ExpressionDataMatrix matrix, Collection<FactorValue> factorValues,
             Collection<BioMaterial> samplesUsed ) {
 
-        List<String> rFactors = AnalyzerHelper.getRFactorsFromFactorValues( factorValues, samplesUsed );
-
         ExpressionDataDoubleMatrix dmatrix = ( ExpressionDataDoubleMatrix ) matrix;
 
         DoubleMatrixNamed namedMatrix = dmatrix.getNamedMatrix();
+
+        List<String> rFactors = AnalyzerHelper.getRFactorsFromFactorValues( factorValues, samplesUsed );
 
         String facts = rc.assignStringList( rFactors );
 
