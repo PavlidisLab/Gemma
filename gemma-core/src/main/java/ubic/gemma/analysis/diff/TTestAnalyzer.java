@@ -97,6 +97,7 @@ public class TTestAnalyzer extends AbstractAnalyzer {
      * @param samplesUsed
      * @return
      */
+    @SuppressWarnings("unchecked")
     protected Map<DesignElement, Double> tTest( ExpressionDataMatrix matrix, Collection<FactorValue> factorValues,
             Collection<BioMaterial> samplesUsed ) {
 
@@ -137,6 +138,7 @@ public class TTestAnalyzer extends AbstractAnalyzer {
             pvaluesMap.put( de, pvalues[i] );
         }
 
+        // TODO verify sorting is working
         Map sortedPvaluesMap = MapUtils.sortMapByValues( pvaluesMap );
 
         return sortedPvaluesMap;
