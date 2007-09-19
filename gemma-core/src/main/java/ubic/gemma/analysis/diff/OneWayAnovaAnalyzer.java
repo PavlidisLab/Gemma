@@ -75,17 +75,6 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
         return oneWayAnova( matrix, factorValues, biomaterials );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.diff.AbstractAnalyzer#getSignificantGenes(java.util.Collection)
-     */
-    @Override
-    public Collection<DesignElement> getSignificantGenes( Collection<ExperimentalFactor> experimentalFactors ) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
     /**
      * @param matrix
      * @param factorValues

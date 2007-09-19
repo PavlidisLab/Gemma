@@ -33,14 +33,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public abstract class AbstractAnalyzer extends RCommander {
 
     /**
-     * Returns the significant genes for the implementing analyzer.
-     * 
-     * @param experimentalFactors If null, subsets are ignored.
-     * @return Collection<DesignElement> Stored internally as a list of genes ordered by p-value.
-     */
-    public abstract Collection<DesignElement> getSignificantGenes( Collection<ExperimentalFactor> experimentalFactors );
-
-    /**
      * @param expressionExperiment
      * @param experimentalFactors
      * @return

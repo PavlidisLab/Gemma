@@ -28,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import org.rosuda.JRclient.REXP;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.util.MapUtils;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -46,17 +47,6 @@ public class TTestAnalyzer extends AbstractAnalyzer {
 
     public TTestAnalyzer() {
         super();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.diff.AbstractAnalyzer#getSignificantGenes(java.util.Collection)
-     */
-    @Override
-    public Collection<DesignElement> getSignificantGenes( Collection<ExperimentalFactor> experimentalFactors ) {
-        // TODO Auto-generated method stub
-        return null;
     }
 
     /*
@@ -141,12 +131,15 @@ public class TTestAnalyzer extends AbstractAnalyzer {
         double[] pvalues = ( double[] ) regExp.getContent();
 
         // TODO can you get the design elements from R?
-        Map<DesignElement, Double> pvaluesMap = new HashMap<DesignElement, Double>();
+        Map pvaluesMap = new HashMap<DesignElement, Double>();
         for ( int i = 0; i < matrix.rows(); i++ ) {
             DesignElement de = matrix.getDesignElementForRow( i );
             pvaluesMap.put( de, pvalues[i] );
         }
 
-        return pvaluesMap;
+        Map sortedPvaluesMap = MapUtils.sortMapByValues( pvaluesMap );
+
+        return sortedPvaluesMap;
     }
+
 }

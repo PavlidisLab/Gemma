@@ -43,15 +43,24 @@ public class DifferentialExpressionAnalysis {
 
     Map<DesignElement, Double> pvalues = null;
 
-    Collection<DesignElement> significantGenes = null;
-
-    public void analyze( ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> experimentalFactors ) {
+    /**
+     * @param expressionExperiment
+     * @param experimentalFactors
+     */
+    public void analyze( ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> experimentalFactors,
+            int top ) {
 
         AbstractAnalyzer analyzer = determineAnalysis( experimentalFactors );
 
         pvalues = analyzer.getPValues( expressionExperiment, experimentalFactors );
 
-        significantGenes = analyzer.getSignificantGenes( experimentalFactors );
+    }
+
+    /**
+     * @return
+     */
+    public Map<DesignElement, Double> getPvalues() {
+        return pvalues;
     }
 
     /**
@@ -122,5 +131,4 @@ public class DifferentialExpressionAnalysis {
 
         return false;
     }
-
 }
