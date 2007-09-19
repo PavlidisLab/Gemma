@@ -73,6 +73,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         gene2GOAssociationService = ( Gene2GOAssociationService ) getBean( "gene2GOAssociationService" );
         ontologyEntryService = ( GeneOntologyService ) getBean( "geneOntologyService" );
         taxonService = ( TaxonService ) getBean( "taxonService" );
+
     }
 
     /*
@@ -97,7 +98,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         // a hashset containing all genes (master genes and coexpressed genes)
 
         Set<Gene> coExpGenes = new HashSet<Gene>();
-        // a hashset containing all genes (master genes and coexpressed genes)
+        // a hashset containing all coexpressed genes
 
         final int stringincy = 6;
 
@@ -133,16 +134,49 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         log.debug( "Total coexpressed genes:" + coExpGenes.size() );
         // log.debug( "The following genes: " + allGenes.size() );
 
-        for ( Gene gene : allGenes ) {
+        // new GOTermOverlap code
+        Set<OntologyTerm> allGOTerms = new HashSet<OntologyTerm>();
+        Map<OntologyTerm, Double> GOProbMap = new HashMap<OntologyTerm, Double>();
 
-            Set<OntologyTerm> GOTermSet = new HashSet<OntologyTerm>();
-            GOTermSet = getGOTerms( gene );
-            geneOntologyTerms.put( gene, GOTermSet );
+        Taxon mouse = taxonService.findByCommonName( commonName );
+        Collection<Gene> mouseGenes = geneService.getGenesByTaxon( mouse );
+        Map<Gene, Set<OntologyTerm>> mouseGeneGOMap = new HashMap<Gene, Set<OntologyTerm>>();
+
+        log.debug( "I'm here" );
+
+        for ( Gene gene : mouseGenes ) {
+            Set<OntologyTerm> GOTerms = getGOTerms( gene );
+            mouseGeneGOMap.put( gene, GOTerms );
+            if ( GOTerms != null ) allGOTerms.addAll( GOTerms );
         }
 
-        Map<Gene, Map<Gene, Integer>> masterTermCountMap = new HashMap<Gene, Map<Gene, Integer>>();
-        // a hashmap for each gene and its map to each of its expressed
+        mouseGenes = null;
+        // Calculating the probability of each term
+        int total = allGOTerms.size();
+        log.info( "Total number of GO terms: " + total );
 
+        for ( OntologyTerm ontE : allGOTerms ) {
+            int termCount = 0;
+
+            for ( Gene mouseGene : mouseGeneGOMap.keySet() ) {
+                Collection<OntologyTerm> GO = mouseGeneGOMap.get( mouseGene );
+                if ( ( GO == null ) || GO.isEmpty() ) continue;
+
+                for ( OntologyTerm ontM : GO ) {
+                    if ( ontE.equals( ontM ) ) ++termCount;
+                }
+            }
+
+            log.info( "The termCount is: " + termCount );
+            double termProb = ( ( double ) termCount / ( double ) total );
+            log.info( "The probability is: " + termProb );
+            GOProbMap.put( ontE, termProb );
+
+        }
+        // Map<Gene, Map<Gene, Integer>> masterTermCountMap = new HashMap<Gene, Map<Gene, Integer>>();
+
+        Map<Gene, Map<Gene, Double>> masterTermCountMap = new HashMap<Gene, Map<Gene, Double>>();
+        // a hashmap for each gene and its map to each of its expressed
         Set<Gene> set = geneExpMap.keySet();
 
         for ( Gene masterGene : set ) {
@@ -153,17 +187,18 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
             Collection<Gene> coExpGene = geneExpMap.get( masterGene );
             // for that same key (master gene) obtain collection of coexpressed genes
 
-            masterTermCountMap.put( masterGene, computeOverlap( masterGO, coExpGene ) );
+            // masterTermCountMap.put( masterGene, computeOverlap( masterGO, coExpGene ) );
+            masterTermCountMap.put( masterGene, computeResnikOverlap( masterGO, coExpGene, GOProbMap ) );
         }
 
         try {
-            Writer write = initOutputFile( "synaptic_transmission[3]" );
+            Writer write = initOutputFile( "synaptic_transmission" );
             String masterGene;
             String geneCoexpressed;
-            int overlap;
+            double overlap;
             for ( Gene g : masterTermCountMap.keySet() ) {
                 masterGene = g.getOfficialSymbol();
-                Map<Gene, Integer> coexpressed = masterTermCountMap.get( g );
+                Map<Gene, Double> coexpressed = masterTermCountMap.get( g );
                 int masterGOTerms = ( geneOntologyTerms.get( g ) ).size();
 
                 for ( Gene coexpG : coexpressed.keySet() ) {
@@ -220,8 +255,8 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
     //
     // }
     // log.info( "=============" );
-    //        }
-    //    }
+    // }
+    // }
 
     /**
      * @param geneOntologyTerms
@@ -263,44 +298,58 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         return ontologyTermCount;
     }
 
-    // private Map<Gene, Double> computeNewOverlap( Collection<OntologyTerm> masterGO, Collection<Gene> coExpGene,
-    // Map<OntologyTerm, Double> GOProbMap, Map<Gene, HashSet<OntologyTerm>> mouseGeneGOMap ) {
-    //
-    // Map<Gene, Double> ontologyTermCount = new HashMap<Gene, Double>();
-    //
-    // if ( ( masterGO == null ) || ( masterGO.isEmpty() ) ) return null;
-    //
-    // // for each Go term associated with the master gene compare the GO term for each coexpressed gene
-    // for ( Gene gene : coExpGene ) {
-    // Collection<OntologyTerm> coExpGO = mouseGeneGOMap.get( gene );
-    // Integer count = 0;
-    // double threshold = 1;
-    //
-    // if ( ( coExpGO == null ) || coExpGO.isEmpty() )
-    // count = -1;
-    //
-    // else {
-    //
-    // for ( OntologyTerm ontoM : masterGO ) {
-    // for ( OntologyTerm ontoC : coExpGO ) {
-    //
-    // if ( ontoM.equals( ontoC ) ) {
-    // double pValue = GOProbMap.get( ontoM );
-    // if ( pValue < threshold ) threshold = pValue;
-    // }
-    // }
-    // }
-    // // the count value tells us the number of GO term matches of the coexpressed gene with the master gene
-    // // put count into a table with the pair of genes
-    // }
-    //
-    // double score = -1 * ( StrictMath.log10( threshold ) );
-    // log.debug( "Term score: " + score );
-    // ontologyTermCount.put( gene, score );
-    // }
-    //
-    // return ontologyTermCount;
-    // }
+    private int newmethod( int help ) {
+
+        return 1;
+
+    }
+
+    /**
+     * @param masterGO
+     * @param coExpGene
+     * @param GOProbMap
+     * @return This will compute the GO overlap using Resnik's similarity score, using the calculated value of the
+     *         probability of the minimum subsumer.
+     */
+    private Map<Gene, Double> computeResnikOverlap( Collection<OntologyTerm> masterGO, Collection<Gene> coExpGene,
+            Map<OntologyTerm, Double> GOProbMap ) {
+
+        Map<Gene, Double> ontologyTermCount = new HashMap<Gene, Double>();
+
+        if ( ( masterGO == null ) || ( masterGO.isEmpty() ) ) return null;
+
+        // // for each Go term associated with the master gene compare the GO term for each coexpressed gene
+        for ( Gene gene : coExpGene ) {
+            Collection<OntologyTerm> coExpGO = geneOntologyTerms.get( gene );
+            Integer count = 0;
+            double threshold = 1;
+
+            if ( ( coExpGO == null ) || coExpGO.isEmpty() )
+                continue;
+
+            else {
+
+                for ( OntologyTerm ontoM : masterGO ) {
+                    for ( OntologyTerm ontoC : coExpGO ) {
+
+                        if ( ontoM.equals( ontoC ) ) {
+                            double pValue = GOProbMap.get( ontoM );
+                            if ( pValue < threshold ) threshold = pValue;
+                        }
+                    }
+                }
+                // // the count value tells us the number of GO term matches of the coexpressed gene with the master
+                // gene
+                // // put count into a table with the pair of genes
+            }
+
+            double score = -1 * ( StrictMath.log10( threshold ) );
+            // log.debug( "Term score: " + score );
+            ontologyTermCount.put( gene, score );
+        }
+
+        return ontologyTermCount;
+    }
 
     /**
      * @param Take a gene and return a set of all GO terms including the parents of each GO term
@@ -317,8 +366,9 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
 
         if ( ( terms == null ) || terms.isEmpty() ) return null;
 
-        Collection<OntologyTerm> parentMap = ontologyEntryService.getAllParents( terms );
-        allGOTermSet.addAll( parentMap ); // add the child
+        Collection<OntologyTerm> parents = ontologyEntryService.getAllParents( terms );
+        allGOTermSet.addAll( parents ); // add the parents
+        allGOTermSet.addAll( terms ); // add the children
 
         Set<OntologyTerm> finalGOTermSet = new HashSet<OntologyTerm>();
         for ( OntologyTerm oe : allGOTermSet ) {
@@ -392,7 +442,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         return writer;
     }
 
-    protected void writeOverlapLine( Writer writer, String masterGene, String geneCoexpressed, int overlap,
+    protected void writeOverlapLine( Writer writer, String masterGene, String geneCoexpressed, double overlap,
             Collection<OntologyTerm> goTerms, int masterGOTerms, int coExpGOTerms ) throws IOException {
 
         if ( log.isDebugEnabled() ) log.debug( "Generating line for annotation file \n" );
