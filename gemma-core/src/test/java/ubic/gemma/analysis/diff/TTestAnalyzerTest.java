@@ -29,6 +29,8 @@ import org.apache.commons.logging.LogFactory;
  */
 public class TTestAnalyzerTest extends AbstractAnalyzerTest {
 
+    TTestAnalyzer analyzer = new TTestAnalyzer();
+
     private Log log = LogFactory.getLog( this.getClass() );
 
     /**

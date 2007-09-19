@@ -58,6 +58,11 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
         return oneWayAnova( expressionExperiment, experimentalFactor.getFactorValues() );
     }
 
+    /**
+     * @param expressionExperiment
+     * @param factorValues
+     * @return
+     */
     public Map<DesignElement, Double> oneWayAnova( ExpressionExperiment expressionExperiment,
             Collection<FactorValue> factorValues ) {
         Collection<BioMaterial> biomaterials = new ArrayList<BioMaterial>();

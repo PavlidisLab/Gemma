@@ -28,8 +28,6 @@ public class AbstractAnalyzerTest extends BaseSpringContextTest {
 
     private Log log = LogFactory.getLog( this.getClass() );
 
-    TTestAnalyzer analyzer = new TTestAnalyzer();
-
     ExpressionDataMatrix matrix = null;
 
     Collection<BioMaterial> biomaterials = new ArrayList<BioMaterial>();
