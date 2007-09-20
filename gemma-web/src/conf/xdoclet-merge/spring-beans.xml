@@ -140,6 +140,7 @@
 							<value>getBioMaterials</value>
 							<value>getAnnotation</value>
 							<value>getFactorValues</value>
+							<value>getBioMaterialsForEEWithFactor</value>
 						</list>
 					</property>
 				</bean>
@@ -303,6 +304,7 @@
 							<value>deleteById</value>
 							<value>getAnnotation</value>
 							<value>getExperimentalFactors</value>
+							<value>getFactorValues</value>
 						</list>
 					</property>
 				</bean>
@@ -470,6 +472,20 @@
 					</property>
 				</bean>
 			</entry>
+			<entry key="ubic.gemma.web.controller.expression.experiment.BioMaterialValueObject">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+					<property name="includes">
+						<list>
+							<value>id</value>
+							<value>name</value>
+							<value>description</value>
+							<value>factorValue</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			
 			<entry key="ubic.gemma.util.progress.ProgressData">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
@@ -845,6 +861,9 @@
 						<list>
 							<value>id</value>
 							<value>factorValue</value>
+							<value>category</value>
+							<value>description</value>
+							
 						</list>
 					</property>
 				</bean>

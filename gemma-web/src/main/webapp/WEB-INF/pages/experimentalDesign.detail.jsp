@@ -5,6 +5,16 @@
 
 <title>  <fmt:message key="experimentalDesign.details" />  </title>
 
+
+	<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
+	<script src="<c:url value='/scripts/ext/ext-all-debug.js'/>" type="text/javascript"></script>
+	<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
+	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/BioMaterialController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
+
 <h2>
 	<fmt:message key="experimentalDesign.details" />
 </h2>
@@ -112,6 +122,18 @@
         <br />
         <hr />
         <hr />
+    
+    <h3>
+    	
+   	</h3>
+   	 
+ 	<script type="text/javascript" src="<c:url value='/scripts/ajax/ExperimentalDesign.js'/>" type="text/javascript"></script>
+    
+    <input type="hidden" name="expressionExperimentID" id="expressionExperimentID" value="${expressionExperiment.id}"
+    
+    <div id="eDesign" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:30px;"></div>   
+	<div id="bmGrid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:250px;"></div>
+	
         
     <table>
     <tr>

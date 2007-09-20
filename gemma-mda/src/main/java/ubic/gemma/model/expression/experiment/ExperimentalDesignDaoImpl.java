@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import java.util.Collection;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
@@ -77,6 +79,30 @@ public class ExperimentalDesignDaoImpl extends ubic.gemma.model.expression.exper
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
+    }
+
+    @Override
+    protected ExpressionExperiment handleGetExpressionExperiment( ExperimentalDesign ed ) {
+
+        if ( ed == null ) return null;
+
+        final String queryString = "select distinct ee FROM ExpressionExperimentImpl as ee where ee.experimentalDesign = :ed ";
+
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameter( "ed", ed );
+
+            Collection<ExpressionExperiment> results = queryObject.list();
+            if ( results == null ) {
+                log.info( "There is no expression experiment that has experimental design id = " + ed.getId() );
+                return null;
+            }
+            return results.iterator().next();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+
     }
 
 }

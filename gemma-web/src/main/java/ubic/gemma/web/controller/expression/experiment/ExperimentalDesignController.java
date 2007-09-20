@@ -25,6 +25,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignService;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.web.controller.BaseMultiActionController;
 import ubic.gemma.web.util.EntityNotFoundException;
 
@@ -69,9 +70,16 @@ public class ExperimentalDesignController extends BaseMultiActionController {
             throw new EntityNotFoundException( id + " not found" );
         }
 
+        ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment(experimentalDesign);
+        
         request.setAttribute( "id", id );
-        return new ModelAndView( "experimentalDesign.detail" ).addObject( "experimentalDesign", experimentalDesign );
-    }
+        
+        ModelAndView mnv = new ModelAndView( "experimentalDesign.detail" );
+        mnv.addObject( "experimentalDesign", experimentalDesign );
+        mnv.addObject( "expressionExperiment", ee );
+        
+        return mnv;
+     }
 
     /**
      * @param request

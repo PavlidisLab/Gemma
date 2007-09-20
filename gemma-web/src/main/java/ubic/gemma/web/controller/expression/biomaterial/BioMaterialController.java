@@ -41,6 +41,7 @@ import ubic.gemma.ontology.OntologyResource;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.web.controller.BaseMultiActionController;
 import ubic.gemma.web.controller.expression.experiment.AnnotationValueObject;
+import ubic.gemma.web.controller.expression.experiment.BioMaterialValueObject;
 import ubic.gemma.web.controller.expression.experiment.FactorValueObject;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.EntityNotFoundException;
@@ -161,6 +162,49 @@ public class BioMaterialController extends BaseMultiActionController {
             }
         }
         return bioMaterials;
+    }
+
+    /**
+     * @param eeId
+     * @param factorId
+     * @return A collection of BioMaterialValueObjects. These value objects are all the biomaterials for the given
+     *         Expression Experiment. As a biomaterial can have many factor values for different factors the value
+     *         object only contains the factor values for the specified factor
+     */
+    public Collection<BioMaterialValueObject> getBioMaterialsForEEWithFactor( EntityDelegator eeId, EntityDelegator factorId ) {
+
+        ExpressionExperiment expressionExperiment = expressionExperimentService.load( eeId.getId() );
+        if ( expressionExperiment == null ) {
+            throw new EntityNotFoundException( "Expression experiment with id=" + eeId + " not found" );
+        }
+
+        expressionExperimentService.thawLite( expressionExperiment );
+        Collection<BioAssay> bioAssays = expressionExperiment.getBioAssays();
+        Collection<BioMaterialValueObject> bioMaterials = new ArrayList<BioMaterialValueObject>();
+
+        for ( BioAssay assay : bioAssays ) {
+            Collection<BioMaterial> materials = assay.getSamplesUsed();
+
+            if ( materials == null ) continue;
+
+            for ( BioMaterial material : materials ) {
+                BioMaterialValueObject bmvo = new BioMaterialValueObject( material );
+
+                if ( material.getFactorValues() == null ) continue;
+
+                for ( FactorValue value : material.getFactorValues() ) {
+                    if ( factorId.getId().compareTo( value.getExperimentalFactor().getId() ) == 0)
+                        bmvo.setFactorValue( value.getValue() );
+                }
+
+                bioMaterials.add( bmvo );
+
+            }
+
+        }
+
+        return bioMaterials;
+
     }
 
     public Collection<BioMaterial> getBioMaterials( Collection<Long> ids ) {

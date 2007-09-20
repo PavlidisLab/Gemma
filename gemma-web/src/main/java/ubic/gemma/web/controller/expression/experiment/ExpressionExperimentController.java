@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -43,11 +43,13 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.ontology.OntologyResource;
 import ubic.gemma.ontology.OntologyService;
@@ -71,12 +73,14 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * @spring.property name="searchService" ref="searchService"
  * @spring.property name="ontologyService" ref="ontologyService"
  * @spring.property name="auditTrailService" ref="auditTrailService"
+ * @spring.property name="experimentalFactorService" ref="experimentalFactorService"
  */
 public class ExpressionExperimentController extends BackgroundProcessingMultiActionController {
 
     private static final Boolean AJAX = true;
 
     private ExpressionExperimentService expressionExperimentService = null;
+    private ExperimentalFactorService experimentalFactorService;
 
     private ExpressionExperimentSubSetService expressionExperimentSubSetService = null;
     private ExpressionExperimentReportService expressionExperimentReportService = null;
@@ -202,13 +206,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     }
 
     /**
-     * @return the searchService
-     */
-    public SearchService getSearchService() {
-        return searchService;
-    }
-
-    /**
      * @param expressionExperimentReportService the expressionExperimentReportService to set
      */
     public void setExpressionExperimentReportService(
@@ -239,24 +236,14 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     }
 
     /**
-     * @return the ontologyService
-     */
-    public OntologyService getOntologyService() {
-        return ontologyService;
-    }
-
-    /**
      * @param ontologyService the ontologyService to set
      */
     public void setOntologyService( OntologyService ontologyService ) {
         this.ontologyService = ontologyService;
     }
 
-    /**
-     * @return the ontologyService
-     */
-    public AuditTrailService getAuditTrailService() {
-        return auditTrailService;
+    public void setexperimentalFactorService( ExperimentalFactorService experimentalFactorService ) {
+        this.experimentalFactorService = experimentalFactorService;
     }
 
     /**
@@ -498,7 +485,9 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         // load cached data
         expressionExperimentReportService.fillLinkStatsFromCache( expressionExperiments );
+
         expressionExperimentReportService.fillEventInformation( expressionExperiments );
+
         // sort expression experiments by name first
         Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments, new Comparator() {
             public int compare( Object o1, Object o2 ) {
@@ -758,7 +747,9 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             this.ee = ee;
         }
 
-        /* (non-Javadoc)
+        /*
+         * (non-Javadoc)
+         * 
          * @see java.util.concurrent.Callable#call()
          */
         @SuppressWarnings("unchecked")
@@ -782,31 +773,42 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
     /**
      * @param eeId
-     * @return a Map of Factor names to the category of the Factor
+     * @return a collectino of factor value objects that represent the factors of a given experiment
      */
-    public Map<String, String> getExperimentalFactors( Long eeId ) {
+    public Collection<FactorValueObject> getExperimentalFactors( EntityDelegator e ) {
 
-        ExpressionExperiment ee = this.expressionExperimentService.load( eeId );
-        Map<String, String> result = new HashMap<String, String>();
+        if ( e == null || e.getId() == null ) return null;
 
-        if (ee.getExperimentalDesign() == null)
-            return null;
-        
+        ExpressionExperiment ee = this.expressionExperimentService.load( e.getId() );
+        Collection<FactorValueObject> result = new HashSet<FactorValueObject>();
+
+        if ( ee.getExperimentalDesign() == null ) return null;
+
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
 
-        for ( ExperimentalFactor factor : factors ) {
-            Characteristic category = factor.getCategory();
-            if (category == null){
-                result.put( factor.getName(), "none" );
-            }
-            else if ( category instanceof VocabCharacteristic ) {
-                VocabCharacteristic vc = ( VocabCharacteristic ) category;
-                result.put( factor.getName(), vc.getCategoryUri() );
-            } else
-                result.put( factor.getName(), category.getCategory() );
-            
+        for ( ExperimentalFactor factor : factors )
+            result.add( new FactorValueObject( factor ) );
+
+        return result;
+    }
+
+    /**
+     * @param id of an experimental factor
+     * @return A collection of factor value objects for the specified experimental factor
+     */
+    public Collection<FactorValueObject> getFactorValues( EntityDelegator e ) {
+
+        if ( e == null || e.getId() == null ) return null;
+
+        ExperimentalFactor ef = this.experimentalFactorService.load( e.getId() );
+        Collection<FactorValueObject> result = new HashSet<FactorValueObject>();
+
+        Collection<FactorValue> values = ef.getFactorValues();
+        for ( FactorValue value : values ) {
+            result.add( new FactorValueObject( value ) );
         }
 
         return result;
     }
+
 }
