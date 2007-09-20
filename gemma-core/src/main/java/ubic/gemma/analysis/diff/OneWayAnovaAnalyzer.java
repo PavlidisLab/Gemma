@@ -22,8 +22,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 
 import org.rosuda.JRclient.REXP;
+import org.rosuda.JRclient.RList;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -108,14 +110,22 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
 
         command.append( "apply(" );
         command.append( matrixName );
-        command.append( ", 1, function(x) {aov(x ~ " + factor + ")$p.value}" );
+        command.append( ", 1, function(x) {anova(aov(x ~ " + factor + "))}" );
         command.append( ")" );
 
-        log.debug( command.toString() );
+        log.info( command.toString() );
 
         REXP regExp = rc.eval( command.toString() );
 
-        double[] pvalues = ( double[] ) regExp.getContent();
+        RList content = ( RList ) regExp.getContent();
+
+        REXP tableExp = content.getBody();
+
+        Vector tableArray = ( Vector ) tableExp.getContent();
+
+        REXP pValExp = ( REXP ) tableArray.get( 4 ); // p value list
+
+        Object pValList = pValExp.getContent();
 
         return null;
     }

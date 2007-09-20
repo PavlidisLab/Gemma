@@ -21,6 +21,8 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
+ * A useful test class to be extended by analyzers that need an expression experiment.
+ * 
  * @author keshav
  * @version $Id$
  */
