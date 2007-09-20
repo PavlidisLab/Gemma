@@ -118,7 +118,7 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
 
         double[] pvalues = ( double[] ) regExp.getContent();
 
-        double[] filteredPvalues = new double[pvalues.length / 2];// remove the NaN row
+        double[] filteredPvalues = new double[pvalues.length / 2];// removes the NaN row
         for ( int i = 0, j = 0; i < pvalues.length; i++ ) {
             if ( i % 2 == 0 ) {
                 filteredPvalues[j] = pvalues[i];
