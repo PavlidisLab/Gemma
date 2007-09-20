@@ -19,6 +19,7 @@
 package ubic.gemma.analysis.diff;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -27,7 +28,6 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * @author keshav
@@ -44,7 +44,16 @@ public class TwoWayAnovaAnalyzer extends AbstractAnalyzer {
     @Override
     public Map<DesignElement, Double> getPValues( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> experimentalFactors ) {
-        return twoWayAnova( expressionExperiment, experimentalFactors );
+
+        if ( experimentalFactors.size() != 2 )
+            throw new RuntimeException( "Two way anova supports two experimental factors.  Received "
+                    + experimentalFactors.size() + "." );
+
+        Iterator iter = experimentalFactors.iterator();
+        ExperimentalFactor experimentalFactorA = ( ExperimentalFactor ) iter.next();
+        ExperimentalFactor experimentalFactorB = ( ExperimentalFactor ) iter.next();
+
+        return twoWayAnova( expressionExperiment, experimentalFactorA, experimentalFactorB );
     }
 
     /**
@@ -53,17 +62,14 @@ public class TwoWayAnovaAnalyzer extends AbstractAnalyzer {
      * @return
      */
     public Map<DesignElement, Double> twoWayAnova( ExpressionExperiment expressionExperiment,
-            Collection<ExperimentalFactor> experimentalFactors ) {
+            ExperimentalFactor experimentalFactorA, ExperimentalFactor experimentalFactorB ) {
 
-        if ( experimentalFactors.size() != 2 )
-            throw new RuntimeException( "Two way anova supports two experimental factors.  Received "
-                    + experimentalFactors.size() + "." );
+        Collection factorValuesA = experimentalFactorA.getFactorValues();
+        Collection factorValuesB = experimentalFactorB.getFactorValues();
 
-        for ( ExperimentalFactor ef : experimentalFactors ) {
-            Collection factorValues = ef.getFactorValues();
-            if ( factorValues.size() < 2 )
-                throw new RuntimeException( "Number of factor values must exceed 2.  Received " + factorValues.size()
-                        + " for experimental factor " + ef.getName() );
+        if ( factorValuesA.size() < 2 || factorValuesB.size() < 2 ) {
+            throw new RuntimeException( "Number of factor values must exceed 2.  Received " + factorValuesA.size()
+                    + "." );
         }
 
         Collection<BioMaterial> biomaterials = AnalyzerHelper.getBioMaterialsForBioAssays( expressionExperiment );
