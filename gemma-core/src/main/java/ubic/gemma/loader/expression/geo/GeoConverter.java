@@ -1063,7 +1063,7 @@ public class GeoConverter implements Converter {
     private VocabCharacteristic convertReplicatationType( ReplicationType repType ) {
         VocabCharacteristic result = VocabCharacteristic.Factory.newInstance();
         result.setCategory( "ReplicateDescriptionType" );
-        result.setCategoryUri( MgedOntologyService.MGED_ONTO_BASE_URL + "ReplicateDescriptionType" );
+        result.setCategoryUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#ReplicateDescriptionType" );
         ExternalDatabase mged = ExternalDatabase.Factory.newInstance();
 
         if ( !repType.equals( VariableType.other ) ) {
@@ -1073,13 +1073,13 @@ public class GeoConverter implements Converter {
 
         if ( repType.equals( ReplicationType.biologicalReplicate ) ) {
             result.setValue( "biological_replicate" );
-            result.setValueUri( MgedOntologyService.MGED_ONTO_BASE_URL + "biological_replicate" );
+            result.setValueUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#biological_replicate" );
         } else if ( repType.equals( ReplicationType.technicalReplicateExtract ) ) {
             result.setValue( "technical_replicate" );
-            result.setValueUri( MgedOntologyService.MGED_ONTO_BASE_URL + "technical_replicate" );
+            result.setValueUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#technical_replicate" );
         } else if ( repType.equals( ReplicationType.technicalReplicateLabeledExtract ) ) {
             result.setValue( "technical_replicate" );
-            result.setValueUri( MgedOntologyService.MGED_ONTO_BASE_URL + "technical_replicate" ); // MGED doesn't have
+            result.setValueUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#technical_replicate" ); // MGED doesn't have
             // a
             // term to distinguish
             // these.
@@ -1939,7 +1939,7 @@ public class GeoConverter implements Converter {
     private VocabCharacteristic setCategory( String mgedTerm ) {
         VocabCharacteristic categoryTerm = VocabCharacteristic.Factory.newInstance();
         categoryTerm.setCategory( mgedTerm );
-        categoryTerm.setCategoryUri( MgedOntologyService.MGED_ONTO_BASE_URL + mgedTerm );
+        categoryTerm.setCategoryUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#" + mgedTerm );
         return categoryTerm;
     }
 
