@@ -4,7 +4,7 @@
 //================================
 
 //member variables
-var saveButton, expFactorsCB, factorValueCB, grid;	//gui components
+var saveButton, expFactorsCB, factorValueCB, bmGrid;	//gui components
 var eeID, clazz;
 var factorValueDS, bmDS;							//Datastores behind gui components
 var bioMaterialList, selectedFactorId, selectedFactorValueId;	//what is selected by user
@@ -137,7 +137,7 @@ var saveHandler = function(){
 bmGridRefresh = function(){
 	
 	bmDS.reload({params:[{id:eeID, classDelegatingFor:"expressionExperimentID"},{id:selectedFactorId, classDelegatingFor: "FactorID"}]});	
-	grid.getView().refresh(true);	
+	bmGrid.getView().refresh(true);	
 	
 }
 
@@ -168,14 +168,14 @@ var initBioMaterialGrid = function(div) {
                        ]);
        cm.defaultSortable = true;
 
-       grid = new Ext.grid.Grid(div, {autoSizeColumns: true,
+       bmGrid = new Ext.grid.Grid(div, {autoSizeColumns: true,
        							 ds:bmDS,
        							 cm:cm,
        							 loadMask: true });
        
-       var gridClickHandler = function(grid, rowIndex, event){
+       var gridClickHandler = function(bmGrid, rowIndex, event){
        		//Get the ids of the selected biomaterials and put them in BiomatierialList
-	       	var selected = grid.getSelectionModel().getSelections();	
+	       	var selected = bmGrid.getSelectionModel().getSelections();	
 	   
 	    	bioMaterialList = [];
 	    	for(var index=0; index<selected.length; index++) {	    		
@@ -184,9 +184,9 @@ var initBioMaterialGrid = function(div) {
        	
        }
        
-       grid.on("rowclick", gridClickHandler);
+       bmGrid.on("rowclick", gridClickHandler);
        
-       grid.render();
+       bmGrid.render();
 	
 };
 
@@ -209,8 +209,8 @@ Ext.onReady(function() {
 	simpleTB.addSpacer();
 	simpleTB.addField(factorValueCB);
 	simpleTB.addSpacer();
-	saveButton = simpleTB.addButton({text: 'save',
-						tooltip: 'updates the selected biomaterial with the chosen factor value',								  
+	saveButton = simpleTB.addButton({text: 'assign',
+						tooltip: 'assigns the selected Factor Value to the selected BioMaterials',								  
 						handler: saveHandler,
 						disabled: true
 					});
