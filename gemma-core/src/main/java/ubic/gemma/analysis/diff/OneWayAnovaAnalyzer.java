@@ -56,7 +56,7 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
 
         ExperimentalFactor experimentalFactor = experimentalFactors.iterator().next();
 
-        return oneWayAnova( expressionExperiment, experimentalFactor.getFactorValues() );
+        return oneWayAnova( expressionExperiment, experimentalFactor );
     }
 
     /**
@@ -65,7 +65,15 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
      * @return
      */
     public Map<DesignElement, Double> oneWayAnova( ExpressionExperiment expressionExperiment,
-            Collection<FactorValue> factorValues ) {
+            ExperimentalFactor experimentalFactor ) {
+
+        Collection<FactorValue> factorValues = experimentalFactor.getFactorValues();
+
+        if ( factorValues.size() < 2 )
+            throw new RuntimeException(
+                    "One way anova requires 2 or more factor values (2 factor values is a t-test).  Received "
+                            + factorValues.size() + "." );
+
         Collection<BioMaterial> biomaterials = AnalyzerHelper.getBioMaterialsForBioAssays( expressionExperiment );
 
         ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( expressionExperiment
@@ -110,6 +118,7 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
         double[] pvalues = ( double[] ) regExp.getContent();
 
         double[] filteredPvalues = new double[pvalues.length / 2];// removes the NaN row
+
         for ( int i = 0, j = 0; i < pvalues.length; i++ ) {
             if ( i % 2 == 0 ) {
                 filteredPvalues[j] = pvalues[i];
