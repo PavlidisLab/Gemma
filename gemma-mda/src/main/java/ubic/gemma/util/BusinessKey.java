@@ -23,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
+import org.hibernate.criterion.Conjunction;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Restrictions;
 
@@ -173,6 +174,12 @@ public class BusinessKey {
      * @param experimentalFactor
      */
     public static void addRestrictions( Criteria queryObject, ExperimentalFactor experimentalFactor ) {
+
+        if ( experimentalFactor.getId() != null ) {
+            queryObject.add( Restrictions.eq( "id", experimentalFactor.getId() ) );
+            return;
+        }
+
         if ( StringUtils.isNotBlank( experimentalFactor.getName() ) ) {
             queryObject.add( Restrictions.eq( "name", experimentalFactor.getName() ) );
         }
@@ -229,18 +236,38 @@ public class BusinessKey {
 
     /**
      * @param queryObject
-     * @param ontologyEntry
+     * @param characteristic
      */
-    public static void addRestrictions( Criteria queryObject, VocabCharacteristic ontologyEntry ) {
-        queryObject.add( Restrictions.eq( "valueUri", ontologyEntry.getValueUri() ) );
+    public static void addRestrictions( Criteria queryObject, VocabCharacteristic characteristic ) {
 
+        if ( characteristic.getCategoryUri() != null ) {
+            queryObject.add( Restrictions.eq( "categoryUri", characteristic.getCategoryUri() ) );
+        } else {
+            assert characteristic.getCategory() != null;
+            queryObject.add( Restrictions.eq( "category", characteristic.getCategory() ) );
+        }
+
+        if ( characteristic.getValueUri() != null ) {
+            queryObject.add( Restrictions.eq( "valueUri", characteristic.getValueUri() ) );
+        } else {
+            assert characteristic.getValue() != null;
+            queryObject.add( Restrictions.eq( "value", characteristic.getValue() ) );
+        }
     }
 
-    public static void addRestrictions( Criteria queryObject, Characteristic ontologyEntry ) {
-        if ( ontologyEntry instanceof VocabCharacteristic ) {
-            addRestrictions( queryObject, ( VocabCharacteristic ) ontologyEntry );
+    /**
+     * @param queryObject
+     * @param characteristic
+     */
+    public static void addRestrictions( Criteria queryObject, Characteristic characteristic ) {
+        if ( characteristic instanceof VocabCharacteristic ) {
+            addRestrictions( queryObject, ( VocabCharacteristic ) characteristic );
         } else {
-            queryObject.add( Restrictions.eq( "value", ontologyEntry.getValue() ) );
+            if ( characteristic.getCategory() != null ) {
+                queryObject.add( Restrictions.eq( "category", characteristic.getCategory() ) );
+            }
+            assert characteristic.getValue() != null;
+            queryObject.add( Restrictions.eq( "value", characteristic.getValue() ) );
         }
 
     }
@@ -549,15 +576,69 @@ public class BusinessKey {
      * @param factorValue
      */
     public static void createQueryObject( Criteria queryObject, FactorValue factorValue ) {
+
+        ExperimentalFactor ef = factorValue.getExperimentalFactor();
+
+        if ( ef == null )
+            throw new IllegalArgumentException( "Must have experimentalfactor on factorvalue to search" );
+
+        Criteria innerQuery = queryObject.createCriteria( "experimentalFactor" );
+        addRestrictions( innerQuery, ef );
+
         if ( factorValue.getValue() != null ) {
             queryObject.add( Restrictions.eq( "value", factorValue.getValue() ) );
         } else if ( factorValue.getCharacteristics().size() > 0 ) {
-            // FIXME ITERATE
-            
-         //   BusinessKey.attachCriteria( queryObject, factorValue.getOntologyEntry(), "ontologyEntry" );
+
+            /*
+             * All the characteristics have to match ones in the result, and the result cannot have any extras. In other
+             * words there has to be a one-to-one match between the characteristics.
+             */
+
+            // this takes care of the size check
+            queryObject.add( Restrictions.sizeEq( "characteristics", factorValue.getCharacteristics().size() ) );
+
+            // now the equivalence.
+            Criteria characteristicsCriteria = queryObject.createCriteria( "characteristics" );
+
+            /*
+             * Note that this isn't exactly correct, but it should work okay: "If all the characteristics in the
+             * candidate are also in the query", along with the size restriction. The only problem would be if the same
+             * characteristic were added to an object more than once - so the sizes would be the same, but a
+             * characteristic in the query might not show up in the candidate. Multiple entries of the same
+             * characteristic shouldn't be allowed, and even if it did happen the chance of a problem is small.... but a
+             * formal possibility.
+             */
+            Disjunction vdj = Restrictions.disjunction();
+            for ( Characteristic characteristic : factorValue.getCharacteristics() ) {
+
+                Conjunction c = Restrictions.conjunction();
+
+                if ( characteristic instanceof VocabCharacteristic ) {
+                    VocabCharacteristic vc = ( VocabCharacteristic ) characteristic;
+                    if ( vc.getCategoryUri() != null ) {
+                        c.add( Restrictions.eq( "categoryUri", vc.getCategoryUri() ) );
+                    }
+                    if ( vc.getValueUri() != null ) {
+                        c.add( Restrictions.eq( "valueUri", vc.getValueUri() ) );
+                    }
+                }
+
+                if ( characteristic.getValue() != null )
+                    c.add( Restrictions.eq( "value", characteristic.getValue() ) );
+
+                if ( characteristic.getCategory() != null )
+                    c.add( Restrictions.eq( "category", characteristic.getCategory() ) );
+
+                vdj.add( c );
+            }
+            characteristicsCriteria.add( vdj );
+
         } else if ( factorValue.getMeasurement() != null ) {
-            queryObject.add( Restrictions.eq( "measurement", factorValue.getMeasurement() ) );
+            queryObject.add( Restrictions.eq( "measurement", factorValue.getMeasurement() ) ); // FIXME this won't
+            // really work.
         }
+
+        queryObject.setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY );
     }
 
     /**

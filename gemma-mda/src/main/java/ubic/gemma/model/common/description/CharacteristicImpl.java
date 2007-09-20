@@ -33,12 +33,14 @@ public class CharacteristicImpl extends ubic.gemma.model.common.description.Char
      */
     private static final long serialVersionUID = 163962374233046021L;
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.description.Characteristic#toString()
      */
     @Override
     public String toString() {
-      return this.getValue();
+        return "Category = " + this.getCategory() + " Value = " + this.getValue();
     }
 
 }

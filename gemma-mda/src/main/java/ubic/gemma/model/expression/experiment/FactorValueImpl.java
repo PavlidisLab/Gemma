@@ -44,18 +44,21 @@ public class FactorValueImpl extends ubic.gemma.model.expression.experiment.Fact
         StringBuilder buf = new StringBuilder();
         buf.append( this.getClass().getSimpleName() );
         if ( this.getId() != null ) {
-            buf.append( "Id:" + this.getId() );
+            buf.append( "Id:" + this.getId() + " ");
         } else {
             buf.append( " " );
         }
+        buf.append( " Factor: " + this.getExperimentalFactor()  );
         if ( this.getCharacteristics().size() > 0 ) {
+            buf.append( " Characteristics : " );
             for ( Characteristic c : this.getCharacteristics() ) {
                 buf.append( c );
+                buf.append( " | " );
             }
         } else if ( this.getMeasurement() != null ) {
-            buf.append( this.getMeasurement() );
+            buf.append(" Measurement: " +  this.getMeasurement() );
         } else if ( StringUtils.isNotBlank( this.getValue() ) ) {
-            buf.append( "Value: '" + this.getValue() + "'" );
+            buf.append( " Value: '" + this.getValue() );
         }
         return buf.toString();
     }

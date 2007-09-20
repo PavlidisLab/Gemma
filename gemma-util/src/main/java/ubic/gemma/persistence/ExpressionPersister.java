@@ -444,11 +444,13 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     private FactorValue persistFactorValue( FactorValue factorValue ) {
         if ( factorValue == null ) return null;
         if ( !isTransient( factorValue ) ) return factorValue;
-
+        if ( isTransient( factorValue.getExperimentalFactor() ) ) {
+            throw new IllegalArgumentException(
+                    "You must fill in the experimental factor before persisting a factorvalue" );
+        }
         fillInFactorValueAssociations( factorValue );
 
-        // we use create because factor values are specific to this design.
-        return factorValueService.create( factorValue );
+        return factorValueService.findOrCreate( factorValue );
 
     }
 

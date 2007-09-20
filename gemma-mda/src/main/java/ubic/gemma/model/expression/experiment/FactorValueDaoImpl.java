@@ -75,14 +75,7 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
         StringBuilder sb = new StringBuilder();
         sb.append( "\nFactorValues found:\n" );
         for ( Object object : results ) {
-            FactorValue fv = ( FactorValue ) object;
-            sb.append( "\tID=" + fv.getId() + " Value=" + fv.getValue() );
-            if ( fv.getMeasurement() != null ) sb.append( " Measurement=" + fv.getMeasurement().getValue() );
-            for(Characteristic c : fv.getCharacteristics()) {
-                sb.append( c);
-                sb.append( "\n" );
-            }
-          
+            sb.append( object + "\n" );
         }
         log.error( sb.toString() );
     }
