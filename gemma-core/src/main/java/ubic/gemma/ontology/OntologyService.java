@@ -187,9 +187,11 @@ public class OntologyService {
 
         if ( ( terms == null ) || ( terms.isEmpty() ) ) return filtered;
 
+        String caseInsensitiveFilter = filter.toLowerCase();
+        
         for ( OntologyResource res : terms ) {
             if ( ( res.getUri() != null ) && ( StringUtils.isNotEmpty( res.getUri() ) )
-                    && ( res.getLabel().startsWith( filter ) ) ) {
+                    && ( res.getLabel().toLowerCase().startsWith( caseInsensitiveFilter ) ) ) {
                 VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
                 if ( res instanceof OntologyTerm ) {
                     OntologyTerm term = ( OntologyTerm ) res;
