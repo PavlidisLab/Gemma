@@ -23,13 +23,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 
 import org.rosuda.JRclient.REXP;
-import org.rosuda.JRclient.RList;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
-import ubic.basecode.util.MapUtils;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -136,9 +133,6 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
             pvaluesMap.put( de, filteredPvalues[i] );
         }
 
-        // FIXME remove this MapUtils and use a DesignElementScore
-        Map sortedPvaluesMap = MapUtils.sortMapByValues( pvaluesMap );
-
-        return sortedPvaluesMap;
+        return pvaluesMap;
     }
 }

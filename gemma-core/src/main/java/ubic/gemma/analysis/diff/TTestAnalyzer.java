@@ -28,7 +28,6 @@ import org.apache.commons.logging.LogFactory;
 import org.rosuda.JRclient.REXP;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
-import ubic.basecode.util.MapUtils;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -138,10 +137,7 @@ public class TTestAnalyzer extends AbstractAnalyzer {
             pvaluesMap.put( de, pvalues[i] );
         }
 
-        // FIXME remove this MapUtils and use a DesignElementScore
-        Map sortedPvaluesMap = MapUtils.sortMapByValues( pvaluesMap );
-
-        return sortedPvaluesMap;
+        return pvaluesMap;
     }
 
 }
