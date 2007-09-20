@@ -138,7 +138,7 @@ public class TTestAnalyzer extends AbstractAnalyzer {
             pvaluesMap.put( de, pvalues[i] );
         }
 
-        // TODO verify sorting is working
+        // FIXME remove this MapUtils and use a DesignElementScore
         Map sortedPvaluesMap = MapUtils.sortMapByValues( pvaluesMap );
 
         return sortedPvaluesMap;

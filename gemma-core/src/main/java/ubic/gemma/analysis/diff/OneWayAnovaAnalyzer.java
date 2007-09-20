@@ -23,6 +23,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.rosuda.JRclient.REXP;
+
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
@@ -97,13 +99,19 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
 
         String facts = rc.assignStringList( rFactors );
 
-        // R Call
-        // aof <- function(x) {
-        // m<-data.frame(bfacts["area"], bfacts["treat"], x);
-        // anova(aov(x ~ area + treat + area*treat, m))
-        // }
-        //
-        // banovaresults<-apply(bdata, 1, aof);
+        String matrixName = rc.assignMatrix( namedMatrix );
+        StringBuffer command = new StringBuffer();
+
+        command.append( "apply(" );
+        command.append( matrixName );
+        command.append( ", 1, function(x) {aov(x ~ " + facts + ")$p.value}" );
+        command.append( ")" );
+
+        log.debug( command.toString() );
+
+        REXP regExp = rc.eval( command.toString() );
+
+        double[] pvalues = ( double[] ) regExp.getContent();
 
         return null;
     }
