@@ -92,11 +92,15 @@ public class SequenceManipulation {
         Collection<Reporter> copyOfSequences = copyReporters( sequences );
         BioSequence collapsed = BioSequence.Factory.newInstance();
         collapsed.setSequence( "" );
+        if ( log.isDebugEnabled() ) log.debug( "Collapsing " + sequences.size() + " sequences" );
         while ( !copyOfSequences.isEmpty() ) {
             Reporter next = findLeftMostProbe( copyOfSequences );
             int ol = SequenceManipulation.rightHandOverlap( collapsed, next.getImmobilizedCharacteristic() );
             String nextSeqStr = next.getImmobilizedCharacteristic().getSequence();
             collapsed.setSequence( collapsed.getSequence() + nextSeqStr.substring( ol ) );
+            if ( log.isDebugEnabled() ) {
+                log.debug( "New Seq to add: " + nextSeqStr + " Overlap=" + ol + " Result=" + collapsed.getSequence() );
+            }
             copyOfSequences.remove( next );
         }
         collapsed.setIsCircular( false );
@@ -353,11 +357,16 @@ public class SequenceManipulation {
     private static Collection<Reporter> copyReporters( Collection<Reporter> reporters ) {
         Collection<Reporter> copyReporters = new HashSet<Reporter>();
         for ( Reporter next : reporters ) {
+            assert next.getStartInBioChar() != null : "Null startInBioChar";
+            assert next.getImmobilizedCharacteristic() != null : "Null immob.char.";
+
             Reporter copy = Reporter.Factory.newInstance();
             copy.setImmobilizedCharacteristic( next.getImmobilizedCharacteristic() );
+            copy.setName( next.getName() );
             copy.setStartInBioChar( next.getStartInBioChar() );
             copyReporters.add( copy );
         }
+        assert copyReporters.size() == reporters.size() : "Sequences did not copy properly";
         return copyReporters;
     }
 
