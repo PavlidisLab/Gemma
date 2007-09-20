@@ -90,5 +90,4 @@ public class AnalyzerHelper {
         }
         return rFactors;
     }
-
 }

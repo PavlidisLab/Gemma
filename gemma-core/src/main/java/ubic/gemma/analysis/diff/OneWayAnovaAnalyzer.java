@@ -18,7 +18,6 @@
  */
 package ubic.gemma.analysis.diff;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -29,7 +28,6 @@ import org.rosuda.JRclient.REXP;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -68,14 +66,7 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
      */
     public Map<DesignElement, Double> oneWayAnova( ExpressionExperiment expressionExperiment,
             Collection<FactorValue> factorValues ) {
-        Collection<BioMaterial> biomaterials = new ArrayList<BioMaterial>();
-
-        Collection<BioAssay> allAssays = expressionExperiment.getBioAssays();
-
-        for ( BioAssay assay : allAssays ) {
-            Collection<BioMaterial> samplesUsed = assay.getSamplesUsed();
-            biomaterials.addAll( samplesUsed );
-        }
+        Collection<BioMaterial> biomaterials = AnalyzerHelper.getBioMaterialsForBioAssays( expressionExperiment );
 
         ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( expressionExperiment
                 .getDesignElementDataVectors() );
@@ -127,7 +118,7 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
         }
 
         // TODO can you get the design elements from R?
-        Map pvaluesMap = new HashMap<DesignElement, Double>();
+        Map<DesignElement, Double> pvaluesMap = new HashMap<DesignElement, Double>();
         for ( int i = 0; i < matrix.rows(); i++ ) {
             DesignElement de = matrix.getDesignElementForRow( i );
             pvaluesMap.put( de, filteredPvalues[i] );

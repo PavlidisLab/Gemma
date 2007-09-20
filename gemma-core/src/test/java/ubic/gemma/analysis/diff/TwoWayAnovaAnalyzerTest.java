@@ -32,7 +32,7 @@ public class TwoWayAnovaAnalyzerTest extends AbstractAnalyzerTest {
      * Tests the TwoWayAnova method.
      */
     public void testTwoWayAnova() {
-        analyzer.twoWayAnova();
+
     }
 
 }

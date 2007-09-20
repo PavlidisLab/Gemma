@@ -21,9 +21,13 @@ package ubic.gemma.analysis.diff;
 import java.util.Collection;
 import java.util.Map;
 
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * @author keshav
@@ -40,15 +44,34 @@ public class TwoWayAnovaAnalyzer extends AbstractAnalyzer {
     @Override
     public Map<DesignElement, Double> getPValues( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> experimentalFactors ) {
-        // TODO Auto-generated method stub
-        return null;
+        return twoWayAnova( expressionExperiment, experimentalFactors );
     }
 
     /**
+     * @param expressionExperiment
+     * @param experimentalFactors
      * @return
      */
-    public Map<DesignElement, Double> twoWayAnova() {
+    public Map<DesignElement, Double> twoWayAnova( ExpressionExperiment expressionExperiment,
+            Collection<ExperimentalFactor> experimentalFactors ) {
+
+        if ( experimentalFactors.size() != 2 )
+            throw new RuntimeException( "Two way anova supports two experimental factors.  Received "
+                    + experimentalFactors.size() + "." );
+
+        for ( ExperimentalFactor ef : experimentalFactors ) {
+            Collection factorValues = ef.getFactorValues();
+            if ( factorValues.size() < 2 )
+                throw new RuntimeException( "Number of factor values must exceed 2.  Received " + factorValues.size()
+                        + " for experimental factor " + ef.getName() );
+        }
+
+        Collection<BioMaterial> biomaterials = AnalyzerHelper.getBioMaterialsForBioAssays( expressionExperiment );
+
+        ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( expressionExperiment
+                .getDesignElementDataVectors() );
+
+        // return twoWayAnova( matrix, factorValues, biomaterials );
         return null;
     }
-
 }
