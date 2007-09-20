@@ -18,8 +18,10 @@
  */
 package ubic.gemma.analysis.diff;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -59,12 +61,22 @@ public class TTestAnalyzer extends AbstractAnalyzer {
             Collection<ExperimentalFactor> experimentalFactors ) {
 
         if ( experimentalFactors.size() != 1 )
-            throw new RuntimeException( "T-test supports one experimental factor.  Received "
+            throw new RuntimeException( "T-test supports 1 experimental factor.  Received "
                     + experimentalFactors.size() + "." );
 
         ExperimentalFactor experimentalFactor = experimentalFactors.iterator().next();
 
-        return tTest( expressionExperiment, experimentalFactor.getFactorValues() );
+        Collection<FactorValue> factorValues = experimentalFactor.getFactorValues();
+        if ( factorValues.size() != 2 )
+            throw new RuntimeException( "T-test supports 2 factor values.  Received " + factorValues.size() + "." );
+
+        Iterator<FactorValue> iter = factorValues.iterator();
+
+        FactorValue factorValueA = iter.next();
+
+        FactorValue factorValueB = iter.next();
+
+        return tTest( expressionExperiment, factorValueA, factorValueB );
     }
 
     /**
@@ -74,16 +86,15 @@ public class TTestAnalyzer extends AbstractAnalyzer {
      * @param factorValues
      * @return
      */
-    public Map<DesignElement, Double> tTest( ExpressionExperiment expressionExperiment,
-            Collection<FactorValue> factorValues ) {
-        // TODO change signature to take factorValue1 and factorValue2 since we know this for a ttest
+    public Map<DesignElement, Double> tTest( ExpressionExperiment expressionExperiment, FactorValue factorValueA,
+            FactorValue factorValueB ) {
 
         Collection<BioMaterial> biomaterials = AnalyzerHelper.getBioMaterialsForBioAssays( expressionExperiment );
 
         ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( expressionExperiment
                 .getDesignElementDataVectors() );
 
-        return tTest( matrix, factorValues, biomaterials );
+        return tTest( matrix, factorValueA, factorValueB, biomaterials );
     }
 
     /**
@@ -97,11 +108,12 @@ public class TTestAnalyzer extends AbstractAnalyzer {
      * @return
      */
     @SuppressWarnings("unchecked")
-    protected Map<DesignElement, Double> tTest( ExpressionDataMatrix matrix, Collection<FactorValue> factorValues,
-            Collection<BioMaterial> samplesUsed ) {
+    protected Map<DesignElement, Double> tTest( ExpressionDataMatrix matrix, FactorValue factorValueA,
+            FactorValue factorValueB, Collection<BioMaterial> samplesUsed ) {
 
-        if ( factorValues.size() != 2 )
-            throw new RuntimeException( "Must have only two factor values per experimental factor." );
+        Collection<FactorValue> factorValues = new ArrayList<FactorValue>();
+        factorValues.add( factorValueA );
+        factorValues.add( factorValueB );
 
         List<String> rFactors = AnalyzerHelper.getRFactorsFromFactorValues( factorValues, samplesUsed );
 

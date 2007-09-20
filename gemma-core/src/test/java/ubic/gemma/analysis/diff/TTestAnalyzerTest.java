@@ -18,10 +18,14 @@
  */
 package ubic.gemma.analysis.diff;
 
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * @author keshav
@@ -38,7 +42,16 @@ public class TTestAnalyzerTest extends AbstractAnalyzerTest {
      *
      */
     public void testTTest() {
-        Map pvaluesMap = analyzer.tTest( matrix, ef.getFactorValues(), biomaterials );
+        Collection<FactorValue> factorValues = ef.getFactorValues();
+        assertEquals( factorValues.size(), 2 );
+
+        Iterator<FactorValue> iter = factorValues.iterator();
+
+        FactorValue factorValueA = iter.next();
+
+        FactorValue factorValueB = iter.next();
+
+        Map pvaluesMap = analyzer.tTest( matrix, factorValueA, factorValueB, biomaterials );
 
         log.info( pvaluesMap );
 
