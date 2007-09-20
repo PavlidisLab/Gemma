@@ -117,7 +117,9 @@ public class OwlOntologyLoadCli extends AbstractCLI {
     protected void processOptions() {
         this.url = this.getOptionValue( 'o' );
         this.force = this.hasOption( 'f' );
-        this.file = new File( this.getOptionValue( 'l' ) );
+        
+        if (this.getOptionValue( 'l' ) != null)
+            this.file = new File( this.getOptionValue( 'l' ) );
     }
 
 }
