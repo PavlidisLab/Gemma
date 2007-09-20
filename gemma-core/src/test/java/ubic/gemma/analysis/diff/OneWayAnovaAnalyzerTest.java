@@ -18,6 +18,11 @@
  */
 package ubic.gemma.analysis.diff;
 
+import java.util.Map;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * Tests the one way anova analyzer.
  * 
@@ -25,6 +30,7 @@ package ubic.gemma.analysis.diff;
  * @version $Id$
  */
 public class OneWayAnovaAnalyzerTest extends AbstractAnalyzerTest {
+    private Log log = LogFactory.getLog( this.getClass() );
 
     OneWayAnovaAnalyzer analyzer = new OneWayAnovaAnalyzer();
 
@@ -33,7 +39,11 @@ public class OneWayAnovaAnalyzerTest extends AbstractAnalyzerTest {
      */
     public void testOneWayAnova() {
 
-        analyzer.oneWayAnova( matrix, ef.getFactorValues(), biomaterials );
+        Map pvaluesMap = analyzer.oneWayAnova( matrix, ef.getFactorValues(), biomaterials );
+
+        log.info( pvaluesMap );
+
+        assertEquals( pvaluesMap.size(), 6 );
 
     }
 

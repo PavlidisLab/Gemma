@@ -20,6 +20,7 @@ package ubic.gemma.analysis.diff;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
@@ -28,6 +29,7 @@ import org.rosuda.JRclient.REXP;
 import org.rosuda.JRclient.RList;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.util.MapUtils;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -110,24 +112,33 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
 
         command.append( "apply(" );
         command.append( matrixName );
-        command.append( ", 1, function(x) {anova(aov(x ~ " + factor + "))}" );
+        command.append( ", 1, function(x) {anova(aov(x ~ " + factor + "))$Pr}" );
         command.append( ")" );
 
         log.info( command.toString() );
 
         REXP regExp = rc.eval( command.toString() );
 
-        RList content = ( RList ) regExp.getContent();
+        double[] pvalues = ( double[] ) regExp.getContent();
 
-        REXP tableExp = content.getBody();
+        double[] filteredPvalues = new double[pvalues.length / 2];// remove the NaN row
+        for ( int i = 0, j = 0; i < pvalues.length; i++ ) {
+            if ( i % 2 == 0 ) {
+                filteredPvalues[j] = pvalues[i];
+                j++;
+            }
+        }
 
-        Vector tableArray = ( Vector ) tableExp.getContent();
+        // TODO can you get the design elements from R?
+        Map pvaluesMap = new HashMap<DesignElement, Double>();
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            DesignElement de = matrix.getDesignElementForRow( i );
+            pvaluesMap.put( de, filteredPvalues[i] );
+        }
 
-        REXP pValExp = ( REXP ) tableArray.get( 4 ); // p value list
+        // FIXME remove this MapUtils and use a DesignElementScore
+        Map sortedPvaluesMap = MapUtils.sortMapByValues( pvaluesMap );
 
-        Object pValList = pValExp.getContent();
-
-        return null;
+        return sortedPvaluesMap;
     }
-
 }
