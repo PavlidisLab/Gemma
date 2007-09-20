@@ -46,7 +46,7 @@ public class TwoWayAnovaAnalyzer extends AbstractAnalyzer {
             Collection<ExperimentalFactor> experimentalFactors ) {
 
         if ( experimentalFactors.size() != 2 )
-            throw new RuntimeException( "Two way anova supports two experimental factors.  Received "
+            throw new RuntimeException( "Two way anova supports 2 experimental factors.  Received "
                     + experimentalFactors.size() + "." );
 
         Iterator iter = experimentalFactors.iterator();
@@ -68,8 +68,10 @@ public class TwoWayAnovaAnalyzer extends AbstractAnalyzer {
         Collection factorValuesB = experimentalFactorB.getFactorValues();
 
         if ( factorValuesA.size() < 2 || factorValuesB.size() < 2 ) {
-            throw new RuntimeException( "Number of factor values must exceed 2.  Received " + factorValuesA.size()
-                    + "." );
+            throw new RuntimeException(
+                    "Two way anova requires 2 or more factor values per experimental factor.  Received "
+                            + factorValuesA.size() + " for either experimental factor " + experimentalFactorA.getName()
+                            + " or experimental factor " + experimentalFactorB.getName() + "." );
         }
 
         Collection<BioMaterial> biomaterials = AnalyzerHelper.getBioMaterialsForBioAssays( expressionExperiment );
@@ -77,6 +79,7 @@ public class TwoWayAnovaAnalyzer extends AbstractAnalyzer {
         ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( expressionExperiment
                 .getDesignElementDataVectors() );
 
+        // TODO now create another twoWayAnova method that checks the block design.
         // return twoWayAnova( matrix, factorValues, biomaterials );
         return null;
     }
