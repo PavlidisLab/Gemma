@@ -24,7 +24,11 @@ package ubic.gemma.model.common;
 
 import java.util.Collection;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
 /**
@@ -33,7 +37,8 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
  * @see ubic.gemma.model.common.Auditable
  */
 public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
-
+    private Log log = LogFactory.getLog( this.getClass() );
+    
     /**
      * This is basically a thaw method.
      */
@@ -52,23 +57,34 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
     
     protected ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastAuditEvent( Long auditableId, AuditEventType type ) throws java.lang.Exception {
         
+        log.info("is this method ever called?");
+        return null;
+        
+    }
+    
+    @Override
+    protected ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastAuditEvent( final Auditable auditable, AuditEventType type ) throws java.lang.Exception {
+        return handleGetLastAuditEvent( auditable.getAuditTrail(), type );
+    }
+    
+    protected ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastAuditEvent( final AuditTrail auditTrail, AuditEventType type ) throws java.lang.Exception {
+
         //for the = operator to work in hibernate the class name can't be passed in as a parameter :type setParameter("type", type.getClass.getCanoicalName)
         //wouldn't work.  Although technically this is now vunerable to an sql injection attack, it seems moot as an attacker would have to have access to the JVM to inject
-        //a mallformed AuditEventType class name and if they had access to the JVM then sql injection is the least of our worries. 
+        //a malformed AuditEventType class name and if they had access to the JVM then sql injection is the least of our worries. 
         
         final String queryString = "select distinct event " +
-            "from ubic.gemma.model.common.Auditable a " +
-                "inner join a.auditTrail trail " +
+            "from ubic.gemma.model.common.auditAndSecurity.AuditTrail trail " +
                 "inner join trail.events event " +
-            "where a.id = :a " +
+            "where trail = :trail " +
                 "and event.eventType.class = " + type.getClass().getCanonicalName() + " " +
             "order by event.date desc ";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-//            queryObject.setMaxResults( 1 );
-            queryObject.setParameter( "a", auditableId );
-          
+            queryObject.setParameter( "trail", auditTrail );
+            queryObject.setMaxResults( 1 );
+            
             Collection results = queryObject.list();
 
             if (results == null || results.isEmpty())
@@ -80,10 +96,5 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
             throw super.convertHibernateAccessException( ex );
         }
         
-    }
-    
-    @Override
-    protected ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastAuditEvent( final Auditable auditable, AuditEventType type ) throws java.lang.Exception {
-        return handleGetLastAuditEvent( auditable.getId(), type );
     }
 }

@@ -21,11 +21,13 @@ package ubic.gemma.web.taglib.displaytag.expression.experiment;
 import java.util.Date;
 import java.util.Map;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedMissingValueAnalysisEvent;
@@ -298,9 +300,28 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     public String getNameLink() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         if ( object != null ) {
-            return "<a title=\"" + object.getName()
-                    + "\" href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + object.getId()
-                    + "\">" + StringUtils.abbreviate( object.getName(), 75 ) + "</a>";
+//            return "<a title=\"" + object.getName()
+//                    + "\" href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + object.getId()
+//                    + "\">" + StringUtils.abbreviate( object.getName(), 75 ) + "</a>";
+            StringBuffer buf = new StringBuffer();
+            buf.append( "<a title=\"" );
+            buf.append( object.getName() );
+            buf.append( "\" href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id=" );
+            buf.append( object.getId() );
+            buf.append( "\">" );
+            buf.append( StringUtils.abbreviate( object.getName(), 75 ) );
+            buf.append( "</a>" );
+            if ( object.getTroubleFlag() != null ) {
+                buf.append( "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt='trouble' title='" );
+                buf.append( buildAuditEventString( object.getTroubleFlag() ) );
+                buf.append( "' />" );
+            }
+            if ( object.getValidatedFlag() != null ) {
+                buf.append( "&nbsp;<img src='/Gemma/images/icons/ok.png' height='16' width='16' alt='validated' title='" );
+                buf.append( buildAuditEventString( object.getValidatedFlag() ) );
+                buf.append( "' />" );
+            }
+            return buf.toString();
         }
         return "No design";
     }
@@ -459,4 +480,21 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         return true;
     }
 
+    private String buildAuditEventString(AuditEvent event) {
+        StringBuffer buf = new StringBuffer();
+        buf.append( event.getDate() );
+        buf.append( " by " );
+        buf.append( event.getPerformer().getName() );
+        StringUtils su;
+        if ( !StringUtils.isEmpty( event.getNote() ) ) {
+            buf.append( "\n" );
+            buf.append( event.getNote() );
+        }
+        if ( !StringUtils.isEmpty( event.getDetail() ) ) {
+            buf.append( "\n" );
+            buf.append( event.getDetail() );
+        }
+        return StringEscapeUtils.escapeHtml( buf.toString() );
+    }
+    
 }

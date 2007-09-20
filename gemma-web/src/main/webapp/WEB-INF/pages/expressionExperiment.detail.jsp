@@ -48,8 +48,19 @@ if ( expressionExperiment.getName() != null ) {
 <a class="helpLink" href="?"
 	onclick="showHelpTip(event, 'This page shows the details for a specific expression experiment; further details can be obtained by following the links on this page.'); return false"><img
 		src="<c:url value="/images/help.png"/>" alt="help"> </a>
+<c:if test="${ troubleEvent != null}">
+&nbsp;
+<img src='<c:url value="/images/icons/warning.png"/>' height='16' width='16' alt='trouble'
+ title='${ troubleEventDescription }' />
+</c:if>
+<c:if test="${ validatedEvent != null}">
+&nbsp;
+<img src='<c:url value="/images/icons/ok.png"/>' height='16' width='16' alt='validated'
+ title='${ validatedEventDescription }' />
+</c:if>
 </content>
 
+<!--
 <div style='float:right; width:25em; margin:1em; clear:right;'>
 <c:if test="${ troubleEvent != null}">
 <form name='troubleEvent'>
@@ -65,6 +76,7 @@ if ( expressionExperiment.getName() != null ) {
 	on <c:out value="${ validatedEvent.date }" /> by <c:out value="${ validatedEvent.performer.name }" />.</p>
 </c:if>
 </div>
+-->
 
 <table width="100%" cellspacing="10">
 	<tr>

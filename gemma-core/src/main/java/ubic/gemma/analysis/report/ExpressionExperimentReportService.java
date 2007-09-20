@@ -30,6 +30,7 @@ import java.util.Date;
 import java.util.Map;
 
 import org.apache.commons.lang.time.DateFormatUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -41,6 +42,7 @@ import ubic.gemma.gemmaspaces.expression.experiment.ExpressionExperimentReportTa
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -283,11 +285,37 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                 }
             }
 
-            AuditEvent event = expressionExperimentService.getLastArrayDesignUpdate( expressionExperimentService
-                    .load( id ) );
-            eeVo.setDateArrayDesignLastUpdated( event.getDate() );
+            
+            ExpressionExperiment ee = expressionExperimentService.load( id );
+            
+            AuditEvent arrayDesignUpdateEvent = expressionExperimentService.getLastArrayDesignUpdate( ee );
+            eeVo.setDateArrayDesignLastUpdated( arrayDesignUpdateEvent.getDate() );
+            
+            StopWatch watch = new StopWatch();
+            watch.start();
+            
+            AuditEvent troubleEvent = getLastTroubleEvent( ee );
+            eeVo.setTroubleFlag( troubleEvent );
+            
+            AuditEvent validatedEvent = auditTrailService.getLastValidationEvent( ee );
+            eeVo.setValidatedFlag( validatedEvent );
+
+            watch.stop();
+            log.info( "Added event information in " + watch.getTime() + "ms (wall time)" );
         }
 
+    }
+    
+    private AuditEvent getLastTroubleEvent( ExpressionExperiment ee ) {
+        AuditEvent event = auditTrailService.getLastTroubleEvent( ee );
+        if ( event != null ) return event;
+
+        for ( Object o : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
+            event = auditTrailService.getLastTroubleEvent( ( ArrayDesign ) o );
+            if ( event != null ) return event;
+        }
+
+        return null;
     }
 
     /**

@@ -30,6 +30,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
@@ -296,15 +297,15 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     }
 
     private AuditEvent getLastValidationEvent( ExpressionExperiment ee ) {
-        AuditEvent event = auditTrailService.getLastValidationEvent( ee );
-        if ( event != null ) return event;
-
-        for ( Object o : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
-            event = auditTrailService.getLastValidationEvent( ( ArrayDesign ) o );
-            if ( event != null ) return event;
-        }
-
-        return null;
+        return auditTrailService.getLastValidationEvent( ee );
+//        if ( event != null ) return event;
+//
+//        for ( Object o : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
+//            event = auditTrailService.getLastValidationEvent( ( ArrayDesign ) o );
+//            if ( event != null ) return event;
+//        }
+//
+//        return null;
     }
 
     /**
@@ -339,8 +340,10 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         AuditEvent troubleEvent = getLastTroubleEvent( expressionExperiment );
         mav.addObject( "troubleEvent", troubleEvent );
+        mav.addObject( "troubleEventDescription", buildAuditEventString( troubleEvent ) );
         AuditEvent validatedEvent = getLastValidationEvent( expressionExperiment );
         mav.addObject( "validatedEvent", validatedEvent );
+        mav.addObject( "validatedEventDescription", buildAuditEventString( validatedEvent ) );
 
         Collection characteristics = expressionExperiment.getCharacteristics();
         mav.addObject( "characteristics", characteristics );
@@ -383,6 +386,25 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         }
 
         return mav;
+    }
+
+    private String buildAuditEventString(AuditEvent event) {
+        if ( event == null)
+            return "";
+        StringBuffer buf = new StringBuffer();
+        buf.append( event.getDate() );
+        buf.append( " by " );
+        buf.append( event.getPerformer().getName() );
+        StringUtils su;
+        if ( !StringUtils.isEmpty( event.getNote() ) ) {
+            buf.append( "\n" );
+            buf.append( event.getNote() );
+        }
+        if ( !StringUtils.isEmpty( event.getDetail() ) ) {
+            buf.append( "\n" );
+            buf.append( event.getDetail() );
+        }
+        return StringEscapeUtils.escapeHtml( buf.toString() );
     }
 
     /**
@@ -485,7 +507,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         // load cached data
         expressionExperimentReportService.fillLinkStatsFromCache( expressionExperiments );
-
+        
+        // load event data
         expressionExperimentReportService.fillEventInformation( expressionExperiments );
 
         // sort expression experiments by name first
