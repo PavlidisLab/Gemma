@@ -339,11 +339,15 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
                 expressionExperiment );
 
         AuditEvent troubleEvent = getLastTroubleEvent( expressionExperiment );
-        mav.addObject( "troubleEvent", troubleEvent );
-        mav.addObject( "troubleEventDescription", buildAuditEventString( troubleEvent ) );
+        if ( troubleEvent != null ) {
+            mav.addObject( "troubleEvent", troubleEvent );
+            mav.addObject( "troubleEventDescription", StringEscapeUtils.escapeHtml( troubleEvent.toString() ) );
+        }
         AuditEvent validatedEvent = getLastValidationEvent( expressionExperiment );
-        mav.addObject( "validatedEvent", validatedEvent );
-        mav.addObject( "validatedEventDescription", buildAuditEventString( validatedEvent ) );
+        if ( validatedEvent != null ) {
+            mav.addObject( "validatedEvent", validatedEvent );
+            mav.addObject( "validatedEventDescription", StringEscapeUtils.escapeHtml( validatedEvent.toString() ) );
+        }
 
         Collection characteristics = expressionExperiment.getCharacteristics();
         mav.addObject( "characteristics", characteristics );
@@ -386,25 +390,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         }
 
         return mav;
-    }
-
-    private String buildAuditEventString(AuditEvent event) {
-        if ( event == null)
-            return "";
-        StringBuffer buf = new StringBuffer();
-        buf.append( event.getDate() );
-        buf.append( " by " );
-        buf.append( event.getPerformer().getName() );
-        StringUtils su;
-        if ( !StringUtils.isEmpty( event.getNote() ) ) {
-            buf.append( "\n" );
-            buf.append( event.getNote() );
-        }
-        if ( !StringUtils.isEmpty( event.getDetail() ) ) {
-            buf.append( "\n" );
-            buf.append( event.getDetail() );
-        }
-        return StringEscapeUtils.escapeHtml( buf.toString() );
     }
 
     /**

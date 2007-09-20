@@ -26,7 +26,7 @@ Ext.onReady(function() {
 		{name:"note", type:"string"}, 
 		{name:"detail", type:"string"},
 		{name:"performer", convert : convertUser }, 
-		{name:"eventTypeName", type:"string"}]);
+		{name:"eventTypeName", convert : converttype }]);
 		
 	var ds = new Ext.data.Store(
 		{
@@ -49,8 +49,23 @@ Ext.onReady(function() {
 		{ds:ds, cm:cm, loadMask: true });
 	grid.render();
 	grid.on('rowdblclick', function (grid, row, event) {
-		var record = ds.getAt(row);
-		alert(record.data.detail);
+		var record = ds.getAt(row).data;
+		var title = record.date + " by " + record.performer;
+		var note = record.note;
+		var detail = record.detail;
+		var content;
+		if ( note.length > 0 ) {
+			content = note;
+		}
+		if ( detail.length > 0 ) {
+			if ( content.length > 0 )
+				content = content + "\n--\n";
+			content = content + detail;
+		}
+		if ( content.length == 0 ) {
+			content = "no information available";
+		}
+		Ext.MessageBox.alert(title, content);
 	});
 	
 	var addEventDialogDiv = Ext.DomHelper.append(document.body, {
@@ -59,7 +74,7 @@ Ext.onReady(function() {
 	});
 	addEventDialogDiv.width = 300;
 	addEventDialogDiv.height = 200;
-	addEventDialogDiv.style.visibility = 'hidden';
+	addEventDialogDiv.style.visibility = 'hidden'; 
 	var addEventDialog = new Ext.BasicDialog(addEventDialogDiv, {
 		width: 440,
 		height: 400,
@@ -69,6 +84,25 @@ Ext.onReady(function() {
 		proxyDrag: true
 	});
 	addEventDialog.setTitle('Add Audit Event');
+	/*
+	var eventDetailDialogDiv = Ext.DomHelper.append(document.body, {
+		tag: 'div',
+		id: 'eventDetailDialogDiv'
+	});
+	eventDetailDialogDiv.width = 160;
+	eventDetailDialogDiv.height = 120;
+	eventDetailDialogDiv.style.visibility = 'hidden';
+	var eventDetailDialogDiv 
+	var addEventDialog = new Ext.BasicDialog(addEventDialogDiv, {
+		width: 160,
+		height: 120,
+		shadow: true,
+		minWidth: 160,
+		minHeight: 120,
+		proxyDrag: true
+	});
+	addEventDialog.setTitle('Audit Event Details');
+	*/
 	var auditEventTypeStore = new Ext.data.SimpleStore({
 		fields: ['type', 'description'],
 		data: [

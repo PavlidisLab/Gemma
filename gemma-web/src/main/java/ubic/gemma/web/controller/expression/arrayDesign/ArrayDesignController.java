@@ -36,6 +36,7 @@ import net.sf.ehcache.Element;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
 import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -389,10 +390,16 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
         ModelAndView mav = new ModelAndView( "arrayDesign.detail" );
         
-        AuditEvent troubleEvent = getLastTroubleEvent( arrayDesign );
-        mav.addObject( "troubleEvent", troubleEvent );
-        AuditEvent validatedEvent = getLastValidationEvent( arrayDesign );
-        mav.addObject( "validatedEvent", validatedEvent );
+        AuditEvent troubleEvent = auditTrailService.getLastTroubleEvent( arrayDesign );
+        if ( troubleEvent != null ) {
+            mav.addObject( "troubleEvent", troubleEvent );
+            mav.addObject( "troubleEventDescription", StringEscapeUtils.escapeHtml( troubleEvent.toString() ) );
+        }
+        AuditEvent validatedEvent = auditTrailService.getLastValidationEvent( arrayDesign );
+        if ( validatedEvent != null ) {
+            mav.addObject( "validatedEvent", validatedEvent );
+            mav.addObject( "validatedEventDescription", StringEscapeUtils.escapeHtml( validatedEvent.toString() ) );
+        }
 
         Collection<ArrayDesign> subsumees = arrayDesign.getSubsumedArrayDesigns();
         ArrayDesign subsumer = arrayDesign.getSubsumingArrayDesign();
@@ -443,14 +450,6 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             colorString = "No color";
         }
         return colorString;
-    }
-    
-    private AuditEvent getLastTroubleEvent( ArrayDesign ee ) {
-        return auditTrailService.getLastTroubleEvent( ee );
-    }
-    
-    private AuditEvent getLastValidationEvent( ArrayDesign ee ) {
-        return auditTrailService.getLastValidationEvent( ee );
     }
 
     /**

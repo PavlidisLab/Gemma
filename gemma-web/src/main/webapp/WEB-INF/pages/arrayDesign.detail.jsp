@@ -43,8 +43,19 @@
 	Details for
 	<jsp:getProperty name="arrayDesign" property="name" />
 	(<jsp:getProperty name="arrayDesign" property="shortName" />)
+	<c:if test="${ troubleEvent != null}">
+	&nbsp;
+	<img src='<c:url value="/images/icons/warning.png"/>' height='16' width='16' alt='trouble'
+	 title='${ troubleEventDescription }' />
+	</c:if>
+	<c:if test="${ validatedEvent != null}">
+	&nbsp;
+	<img src='<c:url value="/images/icons/ok.png"/>' height='16' width='16' alt='validated'
+	 title='${ validatedEventDescription }' />
+	</c:if>
 </h2>
 
+<!--
 <div style='float:right; width:25em; margin:1em; clear:right;'>
 <c:if test="${ troubleEvent != null}">
 <form name='troubleEvent'>
@@ -60,6 +71,7 @@
 	on <c:out value="${ validatedEvent.date }" /> by <c:out value="${ validatedEvent.performer.name }" />.</p>
 </c:if>
 </div>
+-->
 
 <div id="messages" style="margin: 10px; width: 400px"></div>
 <div id="taskId" style="display: none;"></div>

@@ -27,7 +27,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedMissingValueAnalysisEvent;
@@ -313,12 +312,12 @@ public class ExpressionExperimentWrapper extends TableDecorator {
             buf.append( "</a>" );
             if ( object.getTroubleFlag() != null ) {
                 buf.append( "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt='trouble' title='" );
-                buf.append( buildAuditEventString( object.getTroubleFlag() ) );
+                buf.append(  StringEscapeUtils.escapeHtml( object.getTroubleFlag().toString() ) );
                 buf.append( "' />" );
             }
             if ( object.getValidatedFlag() != null ) {
                 buf.append( "&nbsp;<img src='/Gemma/images/icons/ok.png' height='16' width='16' alt='validated' title='" );
-                buf.append( buildAuditEventString( object.getValidatedFlag() ) );
+                buf.append( StringEscapeUtils.escapeHtml( object.getValidatedFlag().toString() ) );
                 buf.append( "' />" );
             }
             return buf.toString();
@@ -478,23 +477,6 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         if ( linksdate != null && dateObject.before( linksdate ) ) return false;
 
         return true;
-    }
-
-    private String buildAuditEventString(AuditEvent event) {
-        StringBuffer buf = new StringBuffer();
-        buf.append( event.getDate() );
-        buf.append( " by " );
-        buf.append( event.getPerformer().getName() );
-        StringUtils su;
-        if ( !StringUtils.isEmpty( event.getNote() ) ) {
-            buf.append( "\n" );
-            buf.append( event.getNote() );
-        }
-        if ( !StringUtils.isEmpty( event.getDetail() ) ) {
-            buf.append( "\n" );
-            buf.append( event.getDetail() );
-        }
-        return StringEscapeUtils.escapeHtml( buf.toString() );
     }
     
 }

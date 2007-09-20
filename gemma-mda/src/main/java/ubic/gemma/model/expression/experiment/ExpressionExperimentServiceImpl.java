@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -436,14 +435,6 @@ public class ExpressionExperimentServiceImpl extends
             }
         }
         return preferredQuantitationTypes;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.AuditableService#getLastAuditEvent(ubic.gemma.model.common.Auditable, ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)
-     */
-    @Override
-    protected ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastAuditEvent( final Auditable auditable, AuditEventType type ) throws java.lang.Exception {
-        return this.getExpressionExperimentDao().getLastAuditEvent( auditable, type );
     }
     
 }
