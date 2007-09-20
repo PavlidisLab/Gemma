@@ -99,12 +99,16 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
 
         String facts = rc.assignStringList( rFactors );
 
+        String tfacts = "t(" + facts + ")";
+
+        String factor = "factor(" + tfacts + ")";
+
         String matrixName = rc.assignMatrix( namedMatrix );
         StringBuffer command = new StringBuffer();
 
         command.append( "apply(" );
         command.append( matrixName );
-        command.append( ", 1, function(x) {aov(x ~ " + facts + ")$p.value}" );
+        command.append( ", 1, function(x) {aov(x ~ " + factor + ")$p.value}" );
         command.append( ")" );
 
         log.debug( command.toString() );
