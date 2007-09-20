@@ -141,6 +141,7 @@
 							<value>getAnnotation</value>
 							<value>getFactorValues</value>
 							<value>getBioMaterialsForEEWithFactor</value>
+							<value>addFactorValueTo</value>
 						</list>
 					</property>
 				</bean>

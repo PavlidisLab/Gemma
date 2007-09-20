@@ -34,9 +34,11 @@ import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueService;
 import ubic.gemma.ontology.OntologyResource;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.web.controller.BaseMultiActionController;
@@ -54,6 +56,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="methodNameResolver" ref="bioMaterialActions"
  * @spring.property name="ontologyService" ref="ontologyService"
+ * @spring.property name="factorValueService" ref="factorValueService"
  */
 
 public class BioMaterialController extends BaseMultiActionController {
@@ -64,6 +67,7 @@ public class BioMaterialController extends BaseMultiActionController {
     private OntologyService ontologyService = null;
 
     private ExpressionExperimentService expressionExperimentService;
+    private FactorValueService factorValueService;
 
     private boolean AJAX = true;
 
@@ -171,7 +175,8 @@ public class BioMaterialController extends BaseMultiActionController {
      *         Expression Experiment. As a biomaterial can have many factor values for different factors the value
      *         object only contains the factor values for the specified factor
      */
-    public Collection<BioMaterialValueObject> getBioMaterialsForEEWithFactor( EntityDelegator eeId, EntityDelegator factorId ) {
+    public Collection<BioMaterialValueObject> getBioMaterialsForEEWithFactor( EntityDelegator eeId,
+            EntityDelegator factorId ) {
 
         ExpressionExperiment expressionExperiment = expressionExperimentService.load( eeId.getId() );
         if ( expressionExperiment == null ) {
@@ -193,15 +198,26 @@ public class BioMaterialController extends BaseMultiActionController {
                 if ( material.getFactorValues() == null ) continue;
 
                 for ( FactorValue value : material.getFactorValues() ) {
-                    if ( factorId.getId().compareTo( value.getExperimentalFactor().getId() ) == 0)
-                        bmvo.setFactorValue( value.getValue() );
+                    // If the factor value isn't the one we are looking for then just skip it.
+                    if ( factorId.getId().compareTo( value.getExperimentalFactor().getId() ) != 0 )
+                        continue;
+                
+                    
+                    String factorName = "";
+                    if ( value.getCharacteristics().size() > 0 ) {
+                        for ( Characteristic c : value.getCharacteristics() ) 
+                            factorName += c.getValue();                        
+
+                    } else 
+                        factorName += value.getValue();
+                    
+                    bmvo.setFactorValue(factorName );
+                    bioMaterials.add( bmvo );
+
                 }
 
-                bioMaterials.add( bmvo );
-
             }
-
-        }
+         }
 
         return bioMaterials;
 
@@ -250,6 +266,33 @@ public class BioMaterialController extends BaseMultiActionController {
 
     }
 
+    /**
+     * @param bmIds
+     * @param factorValueId given a collection of biomaterial ids, and a factor value id will add that factor value to
+     *        all of the biomaterials in the collection. If the factor is already defined for one of the biomaterials
+     *        will remove the previous one and add the new one.
+     */
+    public void addFactorValueTo( Collection<Long> bmIds, EntityDelegator factorValueId ) {
+
+        Collection<BioMaterial> bms = this.getBioMaterials( bmIds );
+        FactorValue factorVToAdd = factorValueService.load( factorValueId.getId() );
+        ExperimentalFactor eFactor = factorVToAdd.getExperimentalFactor();
+
+        for ( BioMaterial material : bms ) {
+            Collection<FactorValue> oldValues = material.getFactorValues();
+            Collection<FactorValue> updatedValues = new HashSet<FactorValue>();
+
+            // Make sure that the BM doesn't have a FactorValue for the Factor we are adding already
+            for ( FactorValue value : oldValues ) {
+                if ( value.getExperimentalFactor() != eFactor ) updatedValues.add( value );
+            }
+
+            updatedValues.add( factorVToAdd );
+            material.setFactorValues( updatedValues );
+            bioMaterialService.update( material );
+        }
+    }
+
     private String getLabelFromUri( String uri ) {
         OntologyResource resource = ontologyService.getResource( uri );
         if ( resource != null )
@@ -273,6 +316,13 @@ public class BioMaterialController extends BaseMultiActionController {
      */
     public void setOntologyService( OntologyService ontologyService ) {
         this.ontologyService = ontologyService;
+    }
+
+    /**
+     * @param factorValueService the factorValueService to set
+     */
+    public void setFactorValueService( FactorValueService factorValueService ) {
+        this.factorValueService = factorValueService;
     }
 
 }

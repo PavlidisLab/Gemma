@@ -4,13 +4,11 @@
 //================================
 
 //member variables
-var deleteButton;
-var saveButton;
+var saveButton, expFactorsCB, factorValueCB, grid;	//gui components
 var eeID, clazz;
-var factorValueDS;
-var bmDS;
-var bioMaterialList;
-var grid;
+var factorValueDS, bmDS;							//Datastores behind gui components
+var bioMaterialList, selectedFactorId, selectedFactorValueId;	//what is selected by user
+var bmGridRefresh;									//methods
 
 var createFactorComboBox = function(terms){				
 				
@@ -42,7 +40,8 @@ var createFactorComboBox = function(terms){
 					        mode: 'local',
 					        triggerAction: 'all',
 					        emptyText:'Available Factors',
-					        selectOnFocus:true
+					        selectOnFocus:true,
+					        editable: false
 					    });	
 					    					   
 	
@@ -50,11 +49,12 @@ var createFactorComboBox = function(terms){
 					    	
 							//TODO: When a factor is selected refresh the bm table to display the selected factor
 							//update the factor value combo box with the factor values associated with the selected factor
-							
-							factorValueDS.load({params:[{id:record.id, classDelegatingFor:"FactorValueObject"}]});
-							bmDS.load({params:[{id:eeID, classDelegatingFor:"expressionExperimentID"},{id:record.id, classDelegatingFor: "FactorID"}]});
-							grid.getView().refresh(true);
-					    								      						 					    	                        
+
+							selectedFactorId = record.id;
+							factorValueDS.reload({params:[{id:selectedFactorId, classDelegatingFor:"FactorValueObject"}]});
+							factorValueCB.reset();
+							bmGridRefresh(selectedFactorId);
+							saveButton.disable();					    								      						 					    	                        
     	                };
     	                	
 	
@@ -94,9 +94,21 @@ var createFactorValueComboBox = function(){
 					        mode: 'local',
 					        triggerAction: 'all',
 					        emptyText:'Factor Values',
-					        selectOnFocus:true
+					        selectOnFocus:true,
+					        editable: false
 					    });	
-					    					   
+					    			
+					    var comboHandler = function(field,record,index){
+					    	
+							//TODO: When a factor is selected refresh the bm table to display the selected factor
+							//update the factor value combo box with the factor values associated with the selected factor
+
+							selectedFactorValueId = record.id;
+							saveButton.enable();									    								      						 					    	                        
+    	                };
+    	                	
+	
+				  	 	combo.on('select', comboHandler);		   
 	    	                						    
 					    return combo;
 }
@@ -106,16 +118,15 @@ var saveHandler = function(){
 	//Use for debugging. 
 	//console.log(dwr.util.toDescriptiveString(vocabC,10))
 
-	//TODO: updating the selected biomaterials factor to have the value of the selected factor value
+	if ((bioMaterialList === undefined) || (bioMaterialList.length === 0)){
+		alert("Please select a biomaterial");
+		return;
+	}
+	
+	BioMaterialController.addFactorValueTo(bioMaterialList, {id:selectedFactorValueId, classDelegatingFor:"FactorValueObject"}, bmGridRefresh );
+	
 	
 }
-
-var deleteHandler = function(){
-		
-	//TODO: remove the current factor value and factor??? from the selected biomaterials. 
-	
-}
-
 
 
 //=================================================
@@ -123,6 +134,12 @@ var deleteHandler = function(){
 //	Biomateril table with a single experimental factor
 //=================================================
 
+bmGridRefresh = function(){
+	
+	bmDS.reload({params:[{id:eeID, classDelegatingFor:"expressionExperimentID"},{id:selectedFactorId, classDelegatingFor: "FactorID"}]});	
+	grid.getView().refresh(true);	
+	
+}
 
 var initBioMaterialGrid = function(div) {
        var     recordType = Ext.data.Record.create([
@@ -180,10 +197,10 @@ Ext.onReady(function() {
 
 	eeID = dwr.util.getValue("expressionExperimentID");
 	//the mged combo box 
-	var expFactorsCB = createFactorComboBox();   
+	expFactorsCB = createFactorComboBox();   
 	
 	//the lookup combobox
-	var factorValueCB = createFactorValueComboBox();			
+	factorValueCB = createFactorValueComboBox();		
 
 	//The tool bar. 
 	var simpleTB = new Ext.Toolbar("eDesign");
@@ -196,12 +213,6 @@ Ext.onReady(function() {
 						tooltip: 'updates the selected biomaterial with the chosen factor value',								  
 						handler: saveHandler,
 						disabled: true
-					});
-	simpleTB.addSeparator();
-	deleteButton = simpleTB.addButton({text: 'delete',
-						tooltip: 'Removes the desired factor from the selected biomaterial',								
-						handler: deleteHandler,
-						disabled: true						
 					});
 					
 					
