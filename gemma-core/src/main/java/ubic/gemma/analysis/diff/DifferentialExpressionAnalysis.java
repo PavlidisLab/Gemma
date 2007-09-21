@@ -24,6 +24,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -50,7 +51,7 @@ public class DifferentialExpressionAnalysis {
     public void analyze( ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> experimentalFactors,
             int top ) {
 
-        AbstractAnalyzer analyzer = determineAnalysis( experimentalFactors );
+        AbstractAnalyzer analyzer = determineAnalysis( expressionExperiment, experimentalFactors );
 
         pvalues = analyzer.getPValues( expressionExperiment, experimentalFactors );
 
@@ -64,11 +65,14 @@ public class DifferentialExpressionAnalysis {
     }
 
     /**
-     * Determines the analysis to execute based on the experimental factors and factor values.
+     * Determines the analysis to execute based on the experimental factors, factor values, and block design.
      * 
+     * @param expressionExperiment
      * @param experimentalFactors
+     * @return
      */
-    protected AbstractAnalyzer determineAnalysis( Collection<ExperimentalFactor> experimentalFactors ) {
+    protected AbstractAnalyzer determineAnalysis( ExpressionExperiment expressionExperiment,
+            Collection<ExperimentalFactor> experimentalFactors ) {
 
         if ( colIsEmpty( experimentalFactors ) ) {
             throw new RuntimeException(
@@ -89,15 +93,21 @@ public class DifferentialExpressionAnalysis {
             }
 
             else if ( experimentalFactors.size() == FACTOR_VALUE_TWO ) {
+                /*
+                 * Return t-test analyzer. This can be taken care of by the one way anova, but keeping it separate for
+                 * clarity.
+                 */
                 return new TTestAnalyzer();
             }
 
             else {
                 log.debug( experimentalFactors.size() + " experimental factor(s) with " + factorValues.size()
                         + " factor value(s).  Running one way anova." );
-                // execute one way anova ... this can take care of the t-test as well, since a one-way anova with two
-                // groups is just a t-test
-                return null;
+                /*
+                 * Return one way anova analyzer. This can take care of the t-test as well, since a one-way anova with
+                 * two groups is just a t-test
+                 */
+                return new OneWayAnovaAnalyzer();
             }
 
         }
@@ -110,8 +120,15 @@ public class DifferentialExpressionAnalysis {
                             + factorValues.size()
                             + " factor value(s).  Cannot execute differential expression analysis." );
                 }
-                // check for block design and execute two way anova (with or without interactions)
-                return null;
+                /* Check for block design and execute two way anova (with or without interactions). */
+                Collection<BioAssay> assays = expressionExperiment.getBioAssays();
+
+                if ( !AnalyzerHelper.blockComplete( expressionExperiment ) ) {
+                    return new TwoWayAnovaWithoutInteractionsAnalyzer();
+                } else {
+                    // TODO add TwoWayAnovaAnalyzerWithInteractions
+                    return null;
+                }
             }
         }
 

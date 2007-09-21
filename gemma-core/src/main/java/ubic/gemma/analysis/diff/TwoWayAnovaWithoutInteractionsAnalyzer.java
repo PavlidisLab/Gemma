@@ -33,7 +33,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author keshav
  * @version $Id$
  */
-public class TwoWayAnovaAnalyzer extends AbstractAnalyzer {
+public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractAnalyzer {
 
     /*
      * (non-Javadoc)
@@ -74,7 +74,7 @@ public class TwoWayAnovaAnalyzer extends AbstractAnalyzer {
                             + " or experimental factor " + experimentalFactorB.getName() + "." );
         }
 
-        Collection<BioMaterial> biomaterials = AnalyzerHelper.getBioMaterialsForBioAssays( expressionExperiment );
+        Collection<BioMaterial> biomaterials = AnalyzerHelper.getBioMaterialsForBioAssaysWithoutReplicates( expressionExperiment );
 
         // TODO will need to select a quantitation type (see AbstractAnalyzerTest)
         ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( expressionExperiment

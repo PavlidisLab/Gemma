@@ -41,22 +41,68 @@ public class AnalyzerHelper {
     private static Log log = LogFactory.getLog( AnalyzerHelper.class );
 
     /**
-     * Returns a collection of all the different types of biomaterials across all bioassays in the experiment.
-     * 
      * @param expressionExperiment
      * @return
+     * @throws Exception
      */
-    public static Collection<BioMaterial> getBioMaterialsForBioAssays( ExpressionExperiment expressionExperiment ) {
+    private static Collection<BioMaterial> getBioMaterialsForAssaysWithoutReplicates(
+            ExpressionExperiment expressionExperiment ) throws Exception {
+
         Collection<BioMaterial> biomaterials = new ArrayList<BioMaterial>();
 
         Collection<BioAssay> allAssays = expressionExperiment.getBioAssays();
 
         for ( BioAssay assay : allAssays ) {
             Collection<BioMaterial> samplesUsed = assay.getSamplesUsed();
+            if ( samplesUsed.size() > 1 ) throw new Exception( "Supports one biomaterial/bioassay." );
             biomaterials.addAll( samplesUsed );
         }
 
         return biomaterials;
+    }
+
+    /**
+     * Returns a collection of all the different types of biomaterials across all bioassays in the experiment. If there
+     * is more than one biomaterial per bioassay, a {@link RuntimeException} is thrown.
+     * 
+     * @param expressionExperiment
+     * @return Collection<BioMaterial>
+     */
+    public static Collection<BioMaterial> getBioMaterialsForBioAssaysWithoutReplicates(
+            ExpressionExperiment expressionExperiment ) {
+
+        Collection<BioMaterial> biomaterials = null;
+
+        Exception ex = null;
+        try {
+            biomaterials = getBioMaterialsForAssaysWithoutReplicates( expressionExperiment );
+        } catch ( Exception e ) {
+            ex = e;
+        } finally {
+            if ( ex != null ) throw new RuntimeException( ex );
+        }
+
+        return biomaterials;
+    }
+
+    /**
+     * Returns true if the block design is complete, false otherwise.
+     * 
+     * @param expressionExperiment
+     * @return boolean
+     */
+    public static boolean blockComplete( ExpressionExperiment expressionExperiment ) {
+
+        Exception ex = null;
+        try {
+            getBioMaterialsForAssaysWithoutReplicates( expressionExperiment );
+        } catch ( Exception e ) {
+            ex = e;
+        } finally {
+            if ( ex != null ) return false;
+        }
+
+        return true;
     }
 
     /**

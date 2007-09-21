@@ -74,7 +74,7 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
                     "One way anova requires 2 or more factor values (2 factor values is a t-test).  Received "
                             + factorValues.size() + "." );
 
-        Collection<BioMaterial> biomaterials = AnalyzerHelper.getBioMaterialsForBioAssays( expressionExperiment );
+        Collection<BioMaterial> biomaterials = AnalyzerHelper.getBioMaterialsForBioAssaysWithoutReplicates( expressionExperiment );
 
         // TODO will need to select a quantitation type (see AbstractAnalyzerTest)
         ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( expressionExperiment

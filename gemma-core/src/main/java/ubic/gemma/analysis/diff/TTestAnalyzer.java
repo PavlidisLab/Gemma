@@ -89,7 +89,7 @@ public class TTestAnalyzer extends AbstractAnalyzer {
     public Map<DesignElement, Double> tTest( ExpressionExperiment expressionExperiment, FactorValue factorValueA,
             FactorValue factorValueB ) {
 
-        Collection<BioMaterial> biomaterials = AnalyzerHelper.getBioMaterialsForBioAssays( expressionExperiment );
+        Collection<BioMaterial> biomaterials = AnalyzerHelper.getBioMaterialsForBioAssaysWithoutReplicates( expressionExperiment );
 
         // TODO will need to select a quantitation type (see AbstractAnalyzerTest)
         ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( expressionExperiment

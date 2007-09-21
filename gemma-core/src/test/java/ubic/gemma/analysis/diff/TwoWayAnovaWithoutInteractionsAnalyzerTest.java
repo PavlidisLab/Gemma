@@ -28,9 +28,9 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
  * @author keshav
  * @version $Id$
  */
-public class TwoWayAnovaAnalyzerTest extends AbstractAnalyzerTest {
+public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends AbstractAnalyzerTest {
 
-    TwoWayAnovaAnalyzer analyzer = new TwoWayAnovaAnalyzer();
+    TwoWayAnovaWithoutInteractionsAnalyzer analyzer = new TwoWayAnovaWithoutInteractionsAnalyzer();
 
     /**
      * Tests the TwoWayAnova method.
