@@ -31,6 +31,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
+ * A helper class for the analyzers. This class contains helper methods commonly needed when performing an analysis.
+ * 
  * @author keshav
  * @version $Id$
  */
@@ -39,6 +41,8 @@ public class AnalyzerHelper {
     private static Log log = LogFactory.getLog( AnalyzerHelper.class );
 
     /**
+     * Returns a collection of all the different types of biomaterials across all bioassays in the experiment.
+     * 
      * @param expressionExperiment
      * @return
      */
@@ -58,7 +62,6 @@ public class AnalyzerHelper {
     /**
      * Supports 1 factor value per biomaterial and returns a list of values. This is useful for R calls, which takes can
      * take an R-factor for methods like the {@link TTestAnalyzer}.
-     * <p>
      * 
      * @param factorValues
      * @param samplesUsed
