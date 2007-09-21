@@ -20,6 +20,7 @@ package ubic.gemma.web.taglib.displaytag.expression.arrayDesign;
 
 import java.util.Date;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -41,6 +42,24 @@ public class ArrayDesignWrapper extends TableDecorator {
 
     Log log = LogFactory.getLog( this.getClass() );
 
+    public String getNameLink() {
+        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+        
+        StringBuffer buf = new StringBuffer();
+        buf.append( object.getName() );
+        if ( object.getTroubleEvent() != null ) {
+            buf.append( "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt='trouble' title='" );
+            buf.append(  StringEscapeUtils.escapeHtml( object.getTroubleEvent().toString() ) );
+            buf.append( "' />" );
+        }
+        if ( object.getValidationEvent() != null ) {
+            buf.append( "&nbsp;<img src='/Gemma/images/icons/ok.png' height='16' width='16' alt='validated' title='" );
+            buf.append( StringEscapeUtils.escapeHtml( object.getValidationEvent().toString() ) );
+            buf.append( "' />" );
+        }
+        return buf.toString();
+    }
+    
     public String getLastSequenceUpdateDate() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
 

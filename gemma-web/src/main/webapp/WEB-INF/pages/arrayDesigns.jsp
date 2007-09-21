@@ -124,7 +124,7 @@
 
 <display:table name="arrayDesigns" sort="list" requestURI="" id="arrayDesignList" pagesize="50"
 	decorator="ubic.gemma.web.taglib.displaytag.expression.arrayDesign.ArrayDesignWrapper">
-	<display:column property="name" sortable="true"
+	<display:column property="nameLink" sortable="true"
 		comparator="ubic.gemma.web.taglib.displaytag.StringComparator"
 		href="showArrayDesign.html" paramId="id" paramProperty="id"
 		titleKey="arrayDesign.name" />

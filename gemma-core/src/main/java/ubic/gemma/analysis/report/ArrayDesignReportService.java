@@ -112,6 +112,10 @@ public class ArrayDesignReportService {
                     adVo.setLastRepeatMask( event.getDate() );
                 }
             }
+            
+            ArrayDesign ad = arrayDesignService.load( id );
+            adVo.setTroubleEvent( auditTrailService.getLastTroubleEvent( ad ) );
+            adVo.setValidationEvent( auditTrailService.getLastValidationEvent( ad ) );
         }
     }
 

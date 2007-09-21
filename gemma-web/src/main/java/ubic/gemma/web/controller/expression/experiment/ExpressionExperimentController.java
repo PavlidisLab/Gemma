@@ -446,6 +446,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
                 return comparison;
             }
         } );
+        expressionExperimentReportService.fillEventInformation( expressionExperiments );
         Long numExpressionExperiments = new Long( expressionExperiments.size() );
         ModelAndView mav = new ModelAndView( "expressionExperiments" );
         mav.addObject( "expressionExperiments", expressionExperiments );
