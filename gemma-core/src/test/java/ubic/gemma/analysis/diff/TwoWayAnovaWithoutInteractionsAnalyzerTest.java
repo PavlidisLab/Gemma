@@ -41,8 +41,8 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends AbstractAnalyzer
         ExperimentalFactor experimentalFactorA = ( ExperimentalFactor ) iter.next();
         ExperimentalFactor experimentalFactorB = ( ExperimentalFactor ) iter.next();
 
-        analyzer.twoWayAnova( this.ee, experimentalFactorA, experimentalFactorB );
-        // analyzer.twoWayAnova( this.matrix, experimentalFactorA, experimentalFactorB, biomaterials );
+        // analyzer.twoWayAnova( this.ee, experimentalFactorA, experimentalFactorB );
+        analyzer.twoWayAnova( this.matrix, experimentalFactorA, experimentalFactorB, biomaterials );
     }
 
 }

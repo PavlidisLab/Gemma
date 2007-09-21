@@ -31,6 +31,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
+ * A differential expression analysis class that executes the appropriate analysis based on the number of experimental
+ * factors and factor values, as well as the block design.
+ * 
  * @author keshav
  * @version $Id$
  */
@@ -45,6 +48,8 @@ public class DifferentialExpressionAnalysis {
     Map<DesignElement, Double> pvalues = null;
 
     /**
+     * Initiates the differential expression analysis.
+     * 
      * @param expressionExperiment
      * @param experimentalFactors
      */
@@ -58,9 +63,12 @@ public class DifferentialExpressionAnalysis {
     }
 
     /**
+     * Returns the pvalues from the executed analysis.
+     * 
      * @return
      */
     public Map<DesignElement, Double> getPvalues() {
+        if ( pvalues == null ) throw new RuntimeException( "Analysis was never executed.  Run the analysis first." );
         return pvalues;
     }
 

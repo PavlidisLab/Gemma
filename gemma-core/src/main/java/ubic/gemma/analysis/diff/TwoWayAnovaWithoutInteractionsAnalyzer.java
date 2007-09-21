@@ -18,16 +18,20 @@
  */
 package ubic.gemma.analysis.diff;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * @author keshav
@@ -74,7 +78,8 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractAnalyzer {
                             + " or experimental factor " + experimentalFactorB.getName() + "." );
         }
 
-        Collection<BioMaterial> biomaterials = AnalyzerHelper.getBioMaterialsForBioAssaysWithoutReplicates( expressionExperiment );
+        Collection<BioMaterial> biomaterials = AnalyzerHelper
+                .getBioMaterialsForBioAssaysWithoutReplicates( expressionExperiment );
 
         // TODO will need to select a quantitation type (see AbstractAnalyzerTest)
         ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( expressionExperiment
@@ -92,6 +97,30 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractAnalyzer {
      */
     public Map<DesignElement, Double> twoWayAnova( ExpressionDataMatrix matrix, ExperimentalFactor experimentalFactorA,
             ExperimentalFactor experimentalFactorB, Collection<BioMaterial> samplesUsed ) {
+
+        ExpressionDataDoubleMatrix dmatrix = ( ExpressionDataDoubleMatrix ) matrix;
+
+        DoubleMatrixNamed namedMatrix = dmatrix.getNamedMatrix();
+
+        ArrayList<FactorValue> factorValues = new ArrayList<FactorValue>();
+        factorValues.addAll( experimentalFactorA.getFactorValues() );
+        factorValues.addAll( experimentalFactorB.getFactorValues() );
+
+        List<String> rFactors = AnalyzerHelper.getRFactorsFromFactorValues( factorValues, samplesUsed );
+
+        String facts = rc.assignStringList( rFactors );
+
+        // R Call
+        //
+        // bdata<-read.table("/data.txt", header=T,row.names=1, sep="\t");
+        // bfacts<-read.table("/classes.txt", header=T,row.names=1, sep="\t");
+        //
+        // apply(bdata, 1, aof);
+        //
+        // aof <- function(x) {
+        // m<-data.frame(bfacts["area"], bfacts["treat"], x);
+        // anova(aov(x ~ area + treat + area*treat, m))
+        // }
 
         return null;
     }
