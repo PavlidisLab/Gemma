@@ -30,13 +30,14 @@ public class AbstractAnalyzerTest extends BaseSpringContextTest {
 
     private Log log = LogFactory.getLog( this.getClass() );
 
-    ExpressionDataMatrix matrix = null;
+    protected ExpressionDataMatrix matrix = null;
 
-    Collection<BioMaterial> biomaterials = new ArrayList<BioMaterial>();
+    protected Collection<BioMaterial> biomaterials = new ArrayList<BioMaterial>();
 
-    ExpressionExperiment ee = null;
+    protected ExpressionExperiment ee = null;
 
-    ExperimentalFactor ef = null;
+    protected Collection<ExperimentalFactor> efs = null;
+    protected ExperimentalFactor ef = null;
 
     /*
      * (non-Javadoc)
@@ -51,7 +52,7 @@ public class AbstractAnalyzerTest extends BaseSpringContextTest {
         ee = this.getTestPersistentCompleteExpressionExperiment();
 
         // use one experimental factor
-        Collection<ExperimentalFactor> efs = ee.getExperimentalDesign().getExperimentalFactors();
+        efs = ee.getExperimentalDesign().getExperimentalFactors();
         ef = efs.iterator().next();
         Collection<FactorValue> factorValues = ef.getFactorValues();
         Object[] objs = factorValues.toArray();

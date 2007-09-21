@@ -76,11 +76,24 @@ public class TwoWayAnovaAnalyzer extends AbstractAnalyzer {
 
         Collection<BioMaterial> biomaterials = AnalyzerHelper.getBioMaterialsForBioAssays( expressionExperiment );
 
+        // TODO will need to select a quantitation type (see AbstractAnalyzerTest)
         ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( expressionExperiment
                 .getDesignElementDataVectors() );
 
-        // TODO now create another twoWayAnova method that checks the block design.
-        // return twoWayAnova( matrix, factorValues, biomaterials );
+        return twoWayAnova( matrix, experimentalFactorA, experimentalFactorB, biomaterials );
+    }
+
+    /**
+     * @param matrix
+     * @param experimentalFactorA
+     * @param experimentalFactorB
+     * @param samplesUsed
+     * @return
+     */
+    public Map<DesignElement, Double> twoWayAnova( ExpressionDataMatrix matrix, ExperimentalFactor experimentalFactorA,
+            ExperimentalFactor experimentalFactorB, Collection<BioMaterial> samplesUsed ) {
+
         return null;
     }
+
 }

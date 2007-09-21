@@ -18,6 +18,10 @@
  */
 package ubic.gemma.analysis.diff;
 
+import java.util.Iterator;
+
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+
 /**
  * Tests the two way anova analyzer.
  * 
@@ -33,6 +37,12 @@ public class TwoWayAnovaAnalyzerTest extends AbstractAnalyzerTest {
      */
     public void testTwoWayAnova() {
 
+        Iterator iter = this.efs.iterator();
+        ExperimentalFactor experimentalFactorA = ( ExperimentalFactor ) iter.next();
+        ExperimentalFactor experimentalFactorB = ( ExperimentalFactor ) iter.next();
+
+        analyzer.twoWayAnova( this.ee, experimentalFactorA, experimentalFactorB );
+        // analyzer.twoWayAnova( this.matrix, experimentalFactorA, experimentalFactorB, biomaterials );
     }
 
 }
