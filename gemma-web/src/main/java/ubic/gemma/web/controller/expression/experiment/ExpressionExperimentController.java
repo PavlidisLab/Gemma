@@ -56,6 +56,7 @@ import ubic.gemma.ontology.OntologyResource;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.security.SecurityService;
+import ubic.gemma.util.ToStringUtil;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
@@ -341,12 +342,12 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         AuditEvent troubleEvent = getLastTroubleEvent( expressionExperiment );
         if ( troubleEvent != null ) {
             mav.addObject( "troubleEvent", troubleEvent );
-            mav.addObject( "troubleEventDescription", StringEscapeUtils.escapeHtml( troubleEvent.toString() ) );
+            mav.addObject( "troubleEventDescription", StringEscapeUtils.escapeHtml( ToStringUtil.toString( troubleEvent ) ) );
         }
         AuditEvent validatedEvent = getLastValidationEvent( expressionExperiment );
         if ( validatedEvent != null ) {
             mav.addObject( "validatedEvent", validatedEvent );
-            mav.addObject( "validatedEventDescription", StringEscapeUtils.escapeHtml( validatedEvent.toString() ) );
+            mav.addObject( "validatedEventDescription", StringEscapeUtils.escapeHtml( ToStringUtil.toString( validatedEvent ) ) );
         }
 
         Collection characteristics = expressionExperiment.getCharacteristics();

@@ -34,6 +34,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAna
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.util.ToStringUtil;
 
 /**
  * Used to generate hyperlinks in displaytag tables.
@@ -312,12 +313,12 @@ public class ExpressionExperimentWrapper extends TableDecorator {
             buf.append( "</a>" );
             if ( object.getTroubleFlag() != null ) {
                 buf.append( "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt='trouble' title='" );
-                buf.append(  StringEscapeUtils.escapeHtml( object.getTroubleFlag().toString() ) );
+                buf.append(  StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getTroubleFlag() ) ) );
                 buf.append( "' />" );
             }
             if ( object.getValidatedFlag() != null ) {
                 buf.append( "&nbsp;<img src='/Gemma/images/icons/ok.png' height='16' width='16' alt='validated' title='" );
-                buf.append( StringEscapeUtils.escapeHtml( object.getValidatedFlag().toString() ) );
+                buf.append( StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getValidatedFlag() ) ) );
                 buf.append( "' />" );
             }
             return buf.toString();
