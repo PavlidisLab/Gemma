@@ -31,7 +31,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
- * A differential expression analysis class that executes the appropriate analysis based on the number of experimental
+ * A differential expression analysis tool that executes the appropriate analysis based on the number of experimental
  * factors and factor values, as well as the block design.
  * 
  * @author keshav
