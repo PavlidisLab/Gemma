@@ -48,7 +48,7 @@ public class DifferentialExpressionAnalysis {
     Map<DesignElement, Double> pvalues = null;
 
     /**
-     * Initiates the differential expression analysis.
+     * Initiates the differential expression analysis (this is the entry point).
      * 
      * @param expressionExperiment
      * @param experimentalFactors
