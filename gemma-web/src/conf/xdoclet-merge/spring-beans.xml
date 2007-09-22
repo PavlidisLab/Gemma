@@ -194,6 +194,20 @@
 					</property>
 				</bean>
 			</entry>
+			<entry key="ExperimentalDesignController">
+				<bean class="org.directwebremoting.spring.CreatorConfig">
+					<property name="creator">
+						<bean class="org.directwebremoting.spring.BeanCreator">
+							<property name="bean" ref="experimentalDesignController" />
+						</bean>
+					</property>
+					<property name="includes">
+						<list>
+							<value>createNewFactor</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
 			<entry key="userService">
 				<bean class="org.directwebremoting.spring.CreatorConfig">
 					<property name="creator">
@@ -363,14 +377,6 @@
 			<entry key="ubic.gemma.model.common.description.Characteristic">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="characteristicConverter" />
-					<property name="includes">
-						<list>	
-							<value>value</value>
-							<value>properties</value>
-							<value>description</value>
-							<value>category</value>
-						</list>
-					</property>
 				</bean>
 			</entry>
 			<entry key="ubic.gemma.model.common.description.CharacteristicProperty">
@@ -864,7 +870,7 @@
 							<value>factorValue</value>
 							<value>category</value>
 							<value>description</value>
-							
+							<value>categoryCharacteritic</value>							
 						</list>
 					</property>
 				</bean>

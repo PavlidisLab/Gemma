@@ -18,15 +18,22 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignService;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.web.controller.BaseMultiActionController;
+import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
@@ -91,7 +98,36 @@ public class ExperimentalDesignController extends BaseMultiActionController {
         return new ModelAndView( "experimentalDesigns" ).addObject( "experimentalDesigns", experimentalDesignService
                 .loadAll() );
     }
+    
+    
+    
+    /**
+     * Will persist the give vocab characteristic to each expression experiment id supplied in the list
+     * 
+     * @param newFactor to create
+     * @param edId the id of the Experimental design to add the factor to
+     */
+    public void createNewFactor( FactorValueObject newFactor, EntityDelegator edId ) {
 
+        ExperimentalDesign ed = this.experimentalDesignService.load( edId.getId() );
+        
+        ExperimentalFactor createdFactor = ExperimentalFactor.Factory.newInstance();
+        createdFactor.setExperimentalDesign( ed );
+        createdFactor.setCategory( newFactor.getCategoryCharacteritic());
+        createdFactor.setName( newFactor.getCategoryCharacteritic().getCategory());
+        createdFactor.setDescription( newFactor.getDescription() );
+
+         Collection<ExperimentalFactor> current = ed.getExperimentalFactors();
+            if ( current == null )
+                current = new HashSet<ExperimentalFactor>( );
+
+            current.add( createdFactor );
+            
+            ed.setExperimentalFactors(  current );
+            this.experimentalDesignService.update( ed );
+
+        
+    }
     /**
      * TODO add delete to the model
      * 

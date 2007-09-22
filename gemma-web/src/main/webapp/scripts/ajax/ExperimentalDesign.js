@@ -4,12 +4,96 @@
 //================================
 
 //member variables
-var saveButton, expFactorsCB, factorValueCB, bmGrid;	//gui components
-var eeID, clazz;
-var factorValueComboDS, bmDS;							//Datastores behind gui components
+var assignFactorValueToBioMaterialButton, expFactorsCB, factorValueCB, bmGrid, saveNewFactorButton;	//gui components
+var eeID,edID, clazz;
+var factorValueComboDS, bmDS, factorDS;							//Datastores behind gui components
 var bioMaterialList, selectedFactorId, selectedFactorValueId;	//what is selected by user
 var bmGridRefresh;									//methods
+var vocabC = {};
 
+var createMgedComboBox = function(terms){				
+				
+			
+	var     recordType = Ext.data.Record.create([
+					   {name:"id", type:"int"},
+                       {name:"term", type:"string"},
+                       {name:"uri", type:"string"},
+               ]);
+									
+                    	
+                var ds = new Ext.data.Store(
+               {
+                       proxy:new Ext.data.DWRProxy(MgedOntologyService.getUsefulMgedTerms),
+                       reader:new Ext.data.ListRangeReader({id:"id"}, recordType),
+                       remoteSort:false,
+                       sortInfo:{field:'term'}
+               });
+               
+				ds.load();
+						
+					    var combo = new Ext.form.ComboBox({	
+					    	width: 200,				    	
+					        store: ds,
+					        fieldLabel: 'Mged',
+					        displayField:'term',
+					        typeAhead: true,
+					        mode: 'local',
+					        triggerAction: 'all',
+					        emptyText:'Select a term',
+					        selectOnFocus:true
+					    });	
+					    					   
+	
+		    			var comboHandler = function(field,record,index){
+					    	
+					    	vocabC.categoryUri = record.data.uri;
+							vocabC.category = record.data.term;				    	
+							
+							if (vocabC.category == null)	//need to check if we should enable the save button.
+								saveNewFactorButton.disable();
+							else
+								saveNewFactorButton.enable();
+					    								      						 					    	                        
+    	                };
+    	                	
+	
+				  	 	combo.on('select', comboHandler);
+					    
+					    return combo;	
+	
+}
+
+var saveExperimentalFactor = function(){
+
+	//Use for debugging. 
+	//console.log(dwr.util.toDescriptiveString(vocabC,10))
+	//Make a copy, then send it over the wire. 
+	//If there is no valueUri then it is plain text and we don't want dwr to instantiate a
+	//VocabCharacteritic but a Characteritic. 
+	var newVocabC = {};
+	
+	newVocabC.value = vocabC.value;
+	newVocabC.category = vocabC.category;
+	
+	if (vocabC.valueUri){
+		newVocabC.categoryUri = vocabC.categoryUri ;
+		newVocabC.valueUri = vocabC.valueUri;
+	}else if (vocabC.categoryUri){
+		newVocabC.categoryUri = vocabC.categoryUri ;
+		newVocabC.valueUri = vocabC.categoryUri;
+	}
+	
+	var factor = { description: "none", 
+    categoryCharacteritic: newVocabC};
+	
+	ExperimentalDesignController.createNewFactor(factor, {id: edID, classDelegatingFor:"long"}, factorGridRefresh);
+	
+}
+
+
+//===================================
+//
+//===================================
 var createFactorComboBox = function(terms){				
 				
 			
@@ -54,7 +138,7 @@ var createFactorComboBox = function(terms){
 							factorValueComboDS.reload({params:[{id:selectedFactorId, classDelegatingFor:"FactorValueObject"}]});
 							factorValueCB.reset();
 							bmGridRefresh(selectedFactorId);
-							saveButton.disable();					    								      						 					    	                        
+							assignFactorValueToBioMaterialButton.disable();					    								      						 					    	                        
     	                };
     	                	
 	
@@ -104,7 +188,7 @@ var createFactorValueComboBox = function(){
 							//update the factor value combo box with the factor values associated with the selected factor
 
 							selectedFactorValueId = record.id;
-							saveButton.enable();									    								      						 					    	                        
+							assignFactorValueToBioMaterialButton.enable();									    								      						 					    	                        
     	                };
     	                	
 	
@@ -215,7 +299,7 @@ var initFactorGrid = function(div) {
                ]);
 									
                     	
-     var factorDS = new Ext.data.Store(
+     factorDS = new Ext.data.Store(
      { 		           proxy:new Ext.data.DWRProxy(ExpressionExperimentController.getExperimentalFactors),
                        reader:new Ext.data.ListRangeReader({id:"id"}, recordType),
                        remoteSort:false,
@@ -299,7 +383,8 @@ var initFactorValueGrid = function(div) {
        factorValueGrid = new Ext.grid.Grid(div, {autoSizeColumns: true,
        							 ds:factorValueGridDS,
        							 cm:cm,
-       							 loadMask: true });   
+       							 loadMask: true, 
+       							 editable: true });   
       factorValueGrid.render();
 	
 };
@@ -308,6 +393,8 @@ var initFactorValueGrid = function(div) {
 Ext.onReady(function() {
 
 	eeID = dwr.util.getValue("expressionExperimentID");
+	edID = dwr.util.getValue("experimentalDesignID");
+	
 	//the mged combo box 
 	expFactorsCB = createFactorComboBox();   
 	
@@ -321,7 +408,7 @@ Ext.onReady(function() {
 	simpleTB.addSpacer();
 	simpleTB.addField(factorValueCB);
 	simpleTB.addSpacer();
-	saveButton = simpleTB.addButton({text: 'assign',
+	assignFactorValueToBioMaterialButton = simpleTB.addButton({text: 'assign',
 						tooltip: 'assigns the selected Factor Value to the selected BioMaterials',								  
 						handler: saveHandler,
 						disabled: true
@@ -331,6 +418,19 @@ Ext.onReady(function() {
 	initBioMaterialGrid("bmGrid");			
 	
 	initFactorGrid("factorGrid");
- 	initFactorValueGrid("factorValueGrid");		
+ 	initFactorValueGrid("factorValueGrid");	
+ 	
+ 	var factorTB = new Ext.Toolbar("factorGridTB");
+	
+	factorTB.addField(createMgedComboBox());
+	factorTB.addSpacer();
+//	factorTB.addField();
+//	factorTB.addSpacer();
+	saveNewFactorButton = factorTB.addButton({text: 'assign',
+						tooltip: 'creates a new Experimental Factor',								  
+						handler: saveExperimentalFactor,
+						disabled: true
+					});
+ 		
 	
 });

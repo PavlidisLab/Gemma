@@ -12,6 +12,8 @@
 	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/BioMaterialController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/MgedOntologyService.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/ExperimentalDesignController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 
@@ -113,6 +115,7 @@
             <fmt:message key="experimentalFactors.title" />
         </h3>
         
+        <div id="factorGridTB" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630x; height:30px;"></div>
         <div id="factorGrid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:250px;"></div>
         <div id="factorValueGrid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:250px;"></div>
   
@@ -127,7 +130,8 @@
  	<script type="text/javascript" src="<c:url value='/scripts/ajax/ExperimentalDesign.js'/>" type="text/javascript"></script>
     
     <input type="hidden" name="expressionExperimentID" id="expressionExperimentID" value="${expressionExperiment.id}"
-    
+    <input type="hidden" name="experimentalDesignID" id="experimentalDesignID" value="${experimentalDesign.id}"
+ 
     <div id="eDesign" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:30px;"></div>   
 	<div id="bmGrid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:250px;"></div>
 	

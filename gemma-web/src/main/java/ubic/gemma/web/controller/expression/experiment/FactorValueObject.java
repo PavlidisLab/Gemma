@@ -17,6 +17,7 @@ public class FactorValueObject implements Serializable {
     private long id;
     private String category;
     private String description;
+    private Characteristic categoryCharacteritic;
 
     /**
      * @return the category
@@ -46,6 +47,11 @@ public class FactorValueObject implements Serializable {
         this.id = id;
     }
 
+    public FactorValueObject(){
+        super();
+                
+    }
+    
     public FactorValueObject( FactorValue fv ) {
 
         this.id = fv.getId();        
@@ -100,6 +106,20 @@ public class FactorValueObject implements Serializable {
      */
     public void setDescription( String description ) {
         this.description = description;
+    }
+
+    /**
+     * @return the categoryCharacteritic
+     */
+    public Characteristic getCategoryCharacteritic() {
+        return categoryCharacteritic;
+    }
+
+    /**
+     * @param categoryCharacteritic the categoryCharacteritic to set
+     */
+    public void setCategoryCharacteritic( Characteristic categoryCharacteritic ) {
+        this.categoryCharacteritic = categoryCharacteritic;
     }
 
 }
