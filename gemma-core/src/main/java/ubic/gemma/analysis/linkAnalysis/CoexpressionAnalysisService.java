@@ -218,6 +218,9 @@ public class CoexpressionAnalysisService {
 	 */
 	public DoubleMatrixNamed getMaxCorrelationMatrix(
 			DenseDoubleMatrix3DNamed matrix, int n) {
+		log.info("Calculating " + n + "-max matrix");
+		StopWatch watch = new StopWatch();
+		watch.start();
 		DenseDoubleMatrix2DNamed maxMatrix = new DenseDoubleMatrix2DNamed(
 				matrix.rows(), matrix.columns());
 		maxMatrix.setRowNames(matrix.getRowNames());
@@ -238,12 +241,17 @@ public class CoexpressionAnalysisService {
 				maxMatrix.set(i, j, val);
 			}
 		}
+		watch.stop();
+		log.info("Finished calculating " + n + "-max matrix in " + watch);
 		return maxMatrix;
 	}
 
 	public DoubleMatrixNamed calculateMaxCorrelationPValueMatrix(
 			DoubleMatrixNamed maxCorrelationMatrix, int n,
 			Collection<ExpressionExperiment> ees) {
+		log.info("Calculating " + n + "-max p-value matrix");
+		StopWatch watch = new StopWatch();
+		watch.start();
 		DoubleMatrixNamed pMatrix = new DenseDoubleMatrix2DNamed(
 				maxCorrelationMatrix.rows(), maxCorrelationMatrix.columns());
 		pMatrix.setRowNames(maxCorrelationMatrix.getRowNames());
@@ -287,8 +295,9 @@ public class CoexpressionAnalysisService {
 				}
 			}
 		}
+		watch.stop();
+		log.info("Finished calculating " + n + "-max p-value matrix in " + watch);
 		return pMatrix;
-
 	}
 
 	private double getPvalue(Histogram1D histogram, double x) {
@@ -428,7 +437,7 @@ public class CoexpressionAnalysisService {
 				.getCorrelationMatrix();
 		DenseDoubleMatrix3DNamed sampleSizeMatrix = matrices
 				.getSampleSizeMatrix();
-		int count = 0;
+		int count = 1;
 		int numEes = ees.size();
 		// calculate correlations
 		log.info("Calculating correlation and sample size matrices");

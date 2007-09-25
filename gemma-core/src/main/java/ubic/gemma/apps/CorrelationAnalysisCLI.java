@@ -29,20 +29,28 @@ public class CorrelationAnalysisCLI extends
 	private CoexpressionAnalysisService coexpressionAnalysisService;
 
 	private FilterConfig filterConfig;
+	
+	private int kMax;
 
 	public CorrelationAnalysisCLI() {
 		super();
 		filterConfig = new FilterConfig();
+		kMax = 0;
 	}
 
 	@Override
 	protected void buildOptions() {
 		super.buildOptions();
 		Option outputFileOption = OptionBuilder.hasArg().isRequired()
-				.withArgName("outFilePrefix").withDescription(
+				.withArgName("File prefix").withDescription(
 						"File prefix for saving the output").withLongOpt(
 						"outFilePrefix").create('o');
 		addOption(outputFileOption);
+
+		Option kMaxOption = OptionBuilder.hasArg().withArgName("k")
+				.withDescription("Select the kth largest value").withType(Integer.class).withLongOpt(
+						"kValue").create('k');
+		addOption(kMaxOption);
 	}
 
 	@Override
@@ -50,6 +58,9 @@ public class CorrelationAnalysisCLI extends
 		super.processOptions();
 		if (hasOption('o')) {
 			this.outFilePrefix = getOptionValue('o');
+		}
+		if (hasOption('k')) {
+			this.kMax = getIntegerOptionValue('k');
 		}
 		initBeans();
 	}
@@ -86,11 +97,11 @@ public class CorrelationAnalysisCLI extends
 				.getCorrelationMatrix();
 
 		DoubleMatrixNamed maxCorrelationMatrix = coexpressionAnalysisService
-				.getMaxCorrelationMatrix(correlationMatrix, 0);
+				.getMaxCorrelationMatrix(correlationMatrix, kMax);
 		DoubleMatrixNamed correlationMatrix2D = coexpressionAnalysisService
 				.foldCoexpressionMatrix(correlationMatrix);
 		DoubleMatrixNamed pValMatrix = coexpressionAnalysisService
-				.calculateMaxCorrelationPValueMatrix(maxCorrelationMatrix, 0,
+				.calculateMaxCorrelationPValueMatrix(maxCorrelationMatrix, kMax,
 						ees);
 
 		// get row/col name maps
