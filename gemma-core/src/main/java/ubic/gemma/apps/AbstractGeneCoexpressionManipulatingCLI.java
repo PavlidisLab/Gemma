@@ -46,7 +46,6 @@ public abstract class AbstractGeneCoexpressionManipulatingCLI extends AbstractGe
     private String[] targetGeneSymbols;
     private String targetGeneFile;
 
-    protected Taxon taxon;
 
     @SuppressWarnings("static-access")
     @Override
@@ -79,10 +78,6 @@ public abstract class AbstractGeneCoexpressionManipulatingCLI extends AbstractGe
         if ( hasOption( "targetGene" ) ) targetGeneSymbols = getOptionValues( "targetGene" );
 
         geneService = ( GeneService ) getBean( "geneService" );
-    }
-
-    public Taxon getTaxon() {
-        return taxon;
     }
 
     public Collection<Gene> getTargetGenes() throws IOException {
