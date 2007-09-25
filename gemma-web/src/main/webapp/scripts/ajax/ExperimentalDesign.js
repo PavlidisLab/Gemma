@@ -4,10 +4,10 @@
 //================================
 
 //member variables
-var assignFactorValueToBioMaterialButton, expFactorsCB, factorValueCB, bmGrid, saveNewFactorButton;	//gui components
+var assignFactorValueToBioMaterialButton, expFactorsCB, factorValueCB, bmGrid, saveNewFactorButton, removeFactorButton, descriptionField;	//gui components
 var eeID,edID, clazz;
 var factorValueComboDS, bmDS, factorDS;							//Datastores behind gui components
-var bioMaterialList, selectedFactorId, selectedFactorValueId;	//what is selected by user
+var bioMaterialList, selectedFactorId, selectedFactorValueId, selectedFactorsInGrid;	//what is selected by user
 var bmGridRefresh;									//methods
 var vocabC = {};
 
@@ -63,6 +63,12 @@ var createMgedComboBox = function(terms){
 	
 }
 
+var createFactorDescriptionField = function(){
+	
+	descriptionField = new Ext.form.TextField({allowBlank : false, invalidText : "Enter a discription", blankText : "Add a simple description", value : "Description"});
+	return descriptionField;
+}
+
 var saveExperimentalFactor = function(){
 
 	//Use for debugging. 
@@ -70,6 +76,12 @@ var saveExperimentalFactor = function(){
 	//Make a copy, then send it over the wire. 
 	//If there is no valueUri then it is plain text and we don't want dwr to instantiate a
 	//VocabCharacteritic but a Characteritic. 
+	
+	var description = descriptionField.getValue();
+	if ((description === undefined) || (description.length === 0)){
+		alert("Please add a description");
+		return;
+	}
 	var newVocabC = {};
 	
 	newVocabC.value = vocabC.value;
@@ -83,10 +95,16 @@ var saveExperimentalFactor = function(){
 		newVocabC.valueUri = vocabC.categoryUri;
 	}
 	
-	var factor = { description: "none", 
+	var factor = { description: description, 
     categoryCharacteritic: newVocabC};
 	
 	ExperimentalDesignController.createNewFactor(factor, {id: edID, classDelegatingFor:"long"}, factorGridRefresh);
+	
+}
+
+var deleteExperimentalFactor = function(){
+	
+	ExperimentalDesignController.deleteFactor(selectedFactorsInGrid, {id:eeID, classDelegatingFor:"long"}, factorGridRefresh);
 	
 }
 
@@ -197,7 +215,7 @@ var createFactorValueComboBox = function(){
 					    return combo;
 }
 
-var saveHandler = function(){
+var saveFactorValueToBMHandler = function(){
 
 	//Use for debugging. 
 	//console.log(dwr.util.toDescriptiveString(vocabC,10))
@@ -324,9 +342,22 @@ var initFactorGrid = function(div) {
        //todo: change the selection model to just one instead of multiple. factorGrid.getSelectionModel().
        
        var gridClickHandler = function(factorGrid, rowIndex, event){
-       		//TODO once a factor has been selected show its factorvalues in another table
-       		var selected = factorGrid.getSelectionModel().getSelections();
-       		factorValueGridRefresh(selected[0].data.id);
+
+			
+       		var selections =  factorGrid.getSelectionModel().getSelections();
+       		
+       		if (selections.length === 0){
+       			removeFactorButton.disable();
+       			return;
+       		}
+       		
+       		selectedFactorsInGrid = [];
+	    	for(var index=0; index<selections.length; index++) {	    		
+	    		selectedFactorsInGrid.push(selections[index].id);
+	    	}  	
+       		factorValueGridRefresh(selectedFactorsInGrid[0]); //just show the 1st one in the factor value table
+       		removeFactorButton.enable();
+       		
        	
        }
        
@@ -410,7 +441,7 @@ Ext.onReady(function() {
 	simpleTB.addSpacer();
 	assignFactorValueToBioMaterialButton = simpleTB.addButton({text: 'assign',
 						tooltip: 'assigns the selected Factor Value to the selected BioMaterials',								  
-						handler: saveHandler,
+						handler: saveFactorValueToBMHandler,
 						disabled: true
 					});
 					
@@ -424,11 +455,17 @@ Ext.onReady(function() {
 	
 	factorTB.addField(createMgedComboBox());
 	factorTB.addSpacer();
-//	factorTB.addField();
-//	factorTB.addSpacer();
-	saveNewFactorButton = factorTB.addButton({text: 'assign',
+	factorTB.addField(createFactorDescriptionField());
+	factorTB.addSpacer();
+	saveNewFactorButton = factorTB.addButton({text: 'create',
 						tooltip: 'creates a new Experimental Factor',								  
 						handler: saveExperimentalFactor,
+						disabled: true
+					});
+ 	factorTB.addSpacer();
+	removeFactorButton = factorTB.addButton({text: 'remove',
+						tooltip: 'removes the selected Experimental Factor',								  
+						handler: deleteExperimentalFactor,
 						disabled: true
 					});
  		

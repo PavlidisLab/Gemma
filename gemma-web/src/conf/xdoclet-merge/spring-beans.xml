@@ -204,6 +204,7 @@
 					<property name="includes">
 						<list>
 							<value>createNewFactor</value>
+							<value>deleteFactor</value>
 						</list>
 					</property>
 				</bean>

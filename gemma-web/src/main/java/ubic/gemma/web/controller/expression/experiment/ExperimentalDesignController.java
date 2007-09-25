@@ -20,18 +20,23 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueService;
 import ubic.gemma.web.controller.BaseMultiActionController;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.EntityNotFoundException;
@@ -42,20 +47,22 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * @spring.bean id="experimentalDesignController"
  * @spring.property name = "experimentalDesignService" ref="experimentalDesignService"
  * @spring.property name="methodNameResolver" ref="experimentalDesignActions"
+ * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
+ * @spring.property name = "bioMaterialService" ref="bioMaterialService"
+ * @spring.property name = "experimentalFactorService" ref="experimentalFactorService"
+ * @spring.property name = "factorValueService" ref="factorValueService"
  */
 public class ExperimentalDesignController extends BaseMultiActionController {
 
     private ExperimentalDesignService experimentalDesignService = null;
+    private ExpressionExperimentService expressionExperimentService = null;
+    private BioMaterialService bioMaterialService = null;
+    private ExperimentalFactorService experimentalFactorService =  null;
+    private FactorValueService factorValueService = null;
 
     private final String messagePrefix = "ExperimenalDesign with id ";
     private final String identifierNotFound = "Must provide a valid ExperimentalDesign identifier";
 
-    /**
-     * @param experimentalDesignService
-     */
-    public void setExperimentalDesignService( ExperimentalDesignService experimentalDesignService ) {
-        this.experimentalDesignService = experimentalDesignService;
-    }
 
     /**
      * @param request
@@ -77,16 +84,16 @@ public class ExperimentalDesignController extends BaseMultiActionController {
             throw new EntityNotFoundException( id + " not found" );
         }
 
-        ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment(experimentalDesign);
-        
+        ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( experimentalDesign );
+
         request.setAttribute( "id", id );
-        
+
         ModelAndView mnv = new ModelAndView( "experimentalDesign.detail" );
         mnv.addObject( "experimentalDesign", experimentalDesign );
         mnv.addObject( "expressionExperiment", ee );
-        
+
         return mnv;
-     }
+    }
 
     /**
      * @param request
@@ -98,9 +105,7 @@ public class ExperimentalDesignController extends BaseMultiActionController {
         return new ModelAndView( "experimentalDesigns" ).addObject( "experimentalDesigns", experimentalDesignService
                 .loadAll() );
     }
-    
-    
-    
+
     /**
      * Will persist the give vocab characteristic to each expression experiment id supplied in the list
      * 
@@ -110,24 +115,76 @@ public class ExperimentalDesignController extends BaseMultiActionController {
     public void createNewFactor( FactorValueObject newFactor, EntityDelegator edId ) {
 
         ExperimentalDesign ed = this.experimentalDesignService.load( edId.getId() );
-        
+
         ExperimentalFactor createdFactor = ExperimentalFactor.Factory.newInstance();
         createdFactor.setExperimentalDesign( ed );
-        createdFactor.setCategory( newFactor.getCategoryCharacteritic());
-        createdFactor.setName( newFactor.getCategoryCharacteritic().getCategory());
+        createdFactor.setCategory( newFactor.getCategoryCharacteritic() );
+        createdFactor.setName( newFactor.getCategoryCharacteritic().getCategory() );
         createdFactor.setDescription( newFactor.getDescription() );
 
-         Collection<ExperimentalFactor> current = ed.getExperimentalFactors();
-            if ( current == null )
-                current = new HashSet<ExperimentalFactor>( );
+        Collection<ExperimentalFactor> current = ed.getExperimentalFactors();
+        if ( current == null ) current = new HashSet<ExperimentalFactor>();
 
-            current.add( createdFactor );
-            
-            ed.setExperimentalFactors(  current );
-            this.experimentalDesignService.update( ed );
+        current.add( createdFactor );
 
-        
+        ed.setExperimentalFactors( current );
+        this.experimentalDesignService.update( ed );
+
     }
+
+    /**
+     * @param factorIds
+     * @param eeId Removes the selected factors from the expression experiment. also removes the associated factor
+     *        values.
+     */
+    public void deleteFactor( Collection<Long> factorIds, EntityDelegator eeId ) {
+
+        //TODO this should be in the experimentalFactorService, if its too slow we might have to do this with a hibernate query. 
+        
+        // remove relevent factor values from bio-materials
+        ExpressionExperiment ee = this.expressionExperimentService.load( eeId.getId() );
+
+        for ( BioAssay assay : ee.getBioAssays() ) {
+            for ( BioMaterial bm : assay.getSamplesUsed() ) {
+
+                Collection<FactorValue> removeFactorValues = new HashSet<FactorValue>();
+                for ( FactorValue fv : bm.getFactorValues() ) {
+                    if ( factorIds.contains( fv.getExperimentalFactor().getId() ) ) removeFactorValues.add( fv );
+
+                }
+                bm.getFactorValues().removeAll( removeFactorValues );
+                bioMaterialService.update( bm );
+
+            }
+        }
+
+        // remove factor and factor values from factor
+        ExperimentalDesign ed = ee.getExperimentalDesign();
+        Collection<ExperimentalFactor> oldExperimentalFactors = ed.getExperimentalFactors();
+        ed.setExperimentalFactors( new HashSet<ExperimentalFactor>() );      
+        Collection<ExperimentalFactor> factorsToKeep = new HashSet<ExperimentalFactor>();
+        
+        for ( ExperimentalFactor factor : oldExperimentalFactors ) {
+            if ( factorIds.contains( factor.getId() ) ) {
+                for (FactorValue fv : factor.getFactorValues()){
+                    this.factorValueService.delete( fv );
+                }                
+                factor.setFactorValues( new HashSet<FactorValue>() );  //necessary?                
+                this.experimentalFactorService.delete( factor );
+                continue;
+            }
+            factorsToKeep.add( factor );
+            
+        }
+        
+        ed.setExperimentalFactors(factorsToKeep );
+        experimentalDesignService.update( ed );
+        
+        
+       
+
+    }
+
     /**
      * TODO add delete to the model
      * 
@@ -171,4 +228,39 @@ public class ExperimentalDesignController extends BaseMultiActionController {
     // return new ModelAndView("experimentalDesigns",
     // "experimentalDesign", experimentalDesign);
     // }
+    /**
+     * @param expressionExperimentService the expressionExperimentService to set
+     */
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    /**
+     * @param bioMaterialService the bioMaterialService to set
+     */
+    public void setBioMaterialService( BioMaterialService bioMaterialService ) {
+        this.bioMaterialService = bioMaterialService;
+    }
+
+    /**
+     * @param experimentalFactorService the experimentalFactorService to set
+     */
+    public void setExperimentalFactorService( ExperimentalFactorService experimentalFactorService ) {
+        this.experimentalFactorService = experimentalFactorService;
+    }
+
+    /**
+     * @param factorValueService the factorValueService to set
+     */
+    public void setFactorValueService( FactorValueService factorValueService ) {
+        this.factorValueService = factorValueService;
+    }
+    
+    /**
+     * @param experimentalDesignService
+     */
+    public void setExperimentalDesignService( ExperimentalDesignService experimentalDesignService ) {
+        this.experimentalDesignService = experimentalDesignService;
+    }
+    
 }
