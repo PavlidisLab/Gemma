@@ -74,7 +74,7 @@ public class DedvRankService {
 	 * MAX - rank is based on the maximum value of the vector.
 	 */
 	public enum Method {
-		MAX, MIN, MEAN, MEDIAN
+		MAX, MIN, MEAN, MEDIAN, VARIANCE
 	};
 
 	public void setDevService(DesignElementDataVectorService devService) {
@@ -117,6 +117,53 @@ public class DedvRankService {
 			this.devService.update(preferredVectors);
 		}
 
+	}
+	
+	public AbstractNamedMatrix getSampleRankMatrix(Collection<Gene> genes, Collection<ExpressionExperiment> ees) {
+		// TODO: finish implementation
+		Collection<AbstractNamedMatrix> rankMatrices = new HashSet<AbstractNamedMatrix>();
+		int count = 1;
+		for (ExpressionExperiment ee : ees) {
+			log.info("Processing " + ee.getShortName() + " (" + count++ + " of " + ees.size() + ")");
+			
+			eeService.thawLite(ee);
+			Collection<DesignElementDataVector> vectors;
+			try {
+				vectors = eeService.getDesignElementDataVectors(ee,
+						ExpressionDataMatrixBuilder
+								.getUsefulQuantitationTypes(ee));
+			} catch (Exception e) {
+				log.error(e.getMessage());
+				log
+						.error(ee.getShortName()
+								+ ": Unable to retrieve design element data vectors, skipping...");
+				continue;
+			}
+			
+			Map<Gene, Collection<DesignElementDataVector>> gene2dedvMap = getGene2DedvMap(ee, vectors);
+			
+			ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder(
+					vectors);
+			
+			for (ArrayDesign ad : (Collection<ArrayDesign>) this.eeService
+						.getArrayDesignsUsed(ee)) {
+    			ExpressionDataDoubleMatrix intensityMatrix = builder.getIntensity(ad);
+    			AbstractNamedMatrix rankMatrix = computeSampleRanks(intensityMatrix);
+    			rankMatrices.add(rankMatrix);
+			}
+		}
+		int columns = 0;
+		int rows = genes.size();
+		for (AbstractNamedMatrix rankMatrix : rankMatrices) {
+			columns += rankMatrix.columns();
+		}
+		AbstractNamedMatrix rankMatrix = new DenseDoubleMatrix2DNamed(rows, columns);
+		
+		for (Gene gene : genes) {
+			
+		}
+		
+		return null;
 	}
 
 	public AbstractNamedMatrix getRankMatrix(Collection<Gene> genes,
@@ -172,26 +219,7 @@ public class DedvRankService {
 				rankedVectors = vectors;
 			}
 
-			QuantitationType qt = (QuantitationType) eeService
-					.getPreferredQuantitationType(ee).iterator().next();
-			Map<DesignElementDataVector, Collection<Gene>> dedv2geneMap = devService
-					.getDedv2GenesMap(rankedVectors, qt);
-
-			// invert dedv2geneMap
-			Map<Gene, Collection<DesignElementDataVector>> gene2dedvMap = new HashMap<Gene, Collection<DesignElementDataVector>>();
-			for (DesignElementDataVector dedv : dedv2geneMap.keySet()) {
-				Collection<Gene> c = dedv2geneMap.get(dedv);
-				for (Gene gene : c) {
-					Collection<DesignElementDataVector> vs = gene2dedvMap
-							.get(dedv);
-					if (vs == null) {
-						vs = new HashSet<DesignElementDataVector>();
-						gene2dedvMap.put(gene, vs);
-					}
-					vs.add(dedv);
-				}
-
-			}
+			Map<Gene, Collection<DesignElementDataVector>> gene2dedvMap = getGene2DedvMap(ee, rankedVectors);
 			log.info("Loaded design element data vectors");
 
 			// construct the rank matrix
@@ -225,6 +253,53 @@ public class DedvRankService {
 		}
 
 		return matrix;
+	}
+	
+	private Map<Gene, Collection<DesignElementDataVector>> getGene2DedvMap(ExpressionExperiment ee, Collection<DesignElementDataVector> vectors) {
+			QuantitationType qt = (QuantitationType) eeService
+					.getPreferredQuantitationType(ee).iterator().next();
+			Map<DesignElementDataVector, Collection<Gene>> dedv2geneMap = devService
+					.getDedv2GenesMap(vectors, qt);
+
+			// invert dedv2geneMap
+			Map<Gene, Collection<DesignElementDataVector>> gene2dedvMap = new HashMap<Gene, Collection<DesignElementDataVector>>();
+			for (DesignElementDataVector dedv : dedv2geneMap.keySet()) {
+				Collection<Gene> c = dedv2geneMap.get(dedv);
+				for (Gene gene : c) {
+					Collection<DesignElementDataVector> vs = gene2dedvMap
+							.get(dedv);
+					if (vs == null) {
+						vs = new HashSet<DesignElementDataVector>();
+						gene2dedvMap.put(gene, vs);
+					}
+					vs.add(dedv);
+				}
+
+			}
+			return gene2dedvMap;
+	}
+	
+	private AbstractNamedMatrix computeSampleRanks(ExpressionDataDoubleMatrix intensities) {
+		DenseDoubleMatrix2DNamed rankMatrix = new DenseDoubleMatrix2DNamed(intensities.rows(), intensities.columns());
+		rankMatrix.setRowNames(intensities.getRowElements());
+		
+		for (int column = 0; column < intensities.columns(); column++) {
+			DoubleArrayList columnIntensities = new DoubleArrayList(intensities.rows());
+			for (int row = 0; row < intensities.rows(); row++) {
+				Double intensity = intensities.get(row, column);
+				if (intensity != null && !Double.isNaN(intensity))
+					columnIntensities.add(intensity);
+				else
+					columnIntensities.add(Double.MIN_VALUE);
+			}
+			IntArrayList columnRanks = Rank.rankTransform(columnIntensities);
+			for (int row = 0; row < intensities.rows(); row++) {
+				Double value = (double) columnRanks.get(row) / columnRanks.size();
+				rankMatrix.set(row, column, value);
+			}
+		}
+		
+		return rankMatrix;
 	}
 
 	private Collection<DesignElementDataVector> computeRanks(ArrayDesign ad,
@@ -271,7 +346,7 @@ public class DedvRankService {
 		for (ExpressionDataMatrixRowElement de : intensities.getRowElements()) {
 			double[] rowObj = ArrayUtils.toPrimitive(intensities.getRow(de
 					.getDesignElement()));
-			double valueForRank = Double.NaN;
+			double valueForRank = Double.MIN_VALUE;
 			if (rowObj != null) {
 				DoubleArrayList row = new DoubleArrayList(rowObj);
 				switch (method) {
@@ -287,6 +362,8 @@ public class DedvRankService {
 				case MEDIAN:
 					valueForRank = DescriptiveWithMissing.median(row);
 					break;
+				case VARIANCE:
+					valueForRank = DescriptiveWithMissing.variance(row);
 				}
 			}
 			result.add(valueForRank);
