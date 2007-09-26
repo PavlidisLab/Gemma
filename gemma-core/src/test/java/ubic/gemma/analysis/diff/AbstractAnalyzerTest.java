@@ -93,23 +93,14 @@ public class AbstractAnalyzerTest extends BaseSpringContextTest {
             assays.add( bioassays.iterator().next() );
         }
 
-        int i = 0;
         for ( BioAssay assay : assays ) {
             Collection<BioMaterial> materials = assay.getSamplesUsed();
             if ( materials.size() != 1 )
-                throw new RuntimeException( "Invalid number of biomaterials.  Expecting 1 biomaterial/bioassay, got "
+                throw new RuntimeException( "Invalid number of biomaterials. Expecting 1 biomaterial/bioassay, got "
                         + materials.size() + "." );
-            // TODO move this - set factor values on bm in test experiment creation.
-            for ( BioMaterial m : materials ) {
-                Collection<FactorValue> fvs = m.getFactorValues();
-                if ( fvs.size() == 0 ) {
-                    fvs.add( factorValuesAsArray[i % 2] );
-                    m.setFactorValues( fvs );
-                }
-            }
 
             biomaterials.addAll( materials );
-            i++;
+
         }
     }
 }
