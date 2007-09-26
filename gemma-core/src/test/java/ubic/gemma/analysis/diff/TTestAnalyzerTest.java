@@ -19,12 +19,14 @@
 package ubic.gemma.analysis.diff;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
@@ -42,6 +44,11 @@ public class TTestAnalyzerTest extends AbstractAnalyzerTest {
      *
      */
     public void testTTest() {
+
+        /*
+         * Doing this here because the test experiment has 2 experimental factors, each with 2 factor values. To test
+         * the t-test, we only want to use one experimental factor and one factor value for each biomaterial.
+         */
         Collection<FactorValue> factorValues = ef.getFactorValues();
         assertEquals( factorValues.size(), 2 );
 
@@ -50,6 +57,18 @@ public class TTestAnalyzerTest extends AbstractAnalyzerTest {
         FactorValue factorValueA = iter.next();
 
         FactorValue factorValueB = iter.next();
+
+        int i = 0;
+        for ( BioMaterial m : biomaterials ) {
+            Collection<FactorValue> fvs = new HashSet<FactorValue>();
+            if ( i % 2 == 0 )
+                fvs.add( factorValueA );
+            else
+                fvs.add( factorValueB );
+
+            m.setFactorValues( fvs );
+            i++;
+        }
 
         Map pvaluesMap = analyzer.tTest( matrix, factorValueA, factorValueB, biomaterials );
 
