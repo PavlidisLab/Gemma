@@ -39,6 +39,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
+ * A t-test implementation as described by P. Pavlidis, Methods 31 (2003) 282-289.
+ * <p>
+ * See http://www.bioinformatics.ubc.ca/pavlidis/lab/docs/reprints/anova-methods.pdf.
+ * 
  * @author keshav
  * @version $Id$
  */
@@ -89,7 +93,8 @@ public class TTestAnalyzer extends AbstractAnalyzer {
     public Map<DesignElement, Double> tTest( ExpressionExperiment expressionExperiment, FactorValue factorValueA,
             FactorValue factorValueB ) {
 
-        Collection<BioMaterial> biomaterials = AnalyzerHelper.getBioMaterialsForBioAssaysWithoutReplicates( expressionExperiment );
+        Collection<BioMaterial> biomaterials = AnalyzerHelper
+                .getBioMaterialsForBioAssaysWithoutReplicates( expressionExperiment );
 
         // TODO will need to select a quantitation type (see AbstractAnalyzerTest)
         ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( expressionExperiment

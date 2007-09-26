@@ -24,6 +24,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.rosuda.JRclient.REXP;
+
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
@@ -34,6 +36,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
+ * A two way anova without interactions implementation as described by P. Pavlidis, Methods 31 (2003) 282-289.
+ * <p>
+ * See http://www.bioinformatics.ubc.ca/pavlidis/lab/docs/reprints/anova-methods.pdf.
+ * 
  * @author keshav
  * @version $Id$
  */
@@ -113,10 +119,8 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractAnalyzer {
             Collection<FactorValue> fvs = m.getFactorValues();
             for ( FactorValue fv : fvs ) {
                 log.debug( fv.getValue() + " in experimental factor: " + fv.getExperimentalFactor() );
-                if ( fv.getExperimentalFactor() == experimentalFactorA )
-                    samplesUsedA.add( m );
-                else
-                    samplesUsedB.add( m );
+                if ( fv.getExperimentalFactor() == experimentalFactorA ) samplesUsedA.add( m );
+                if ( fv.getExperimentalFactor() == experimentalFactorB ) samplesUsedB.add( m );
 
             }
         }
@@ -138,11 +142,12 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractAnalyzer {
 
         command.append( "apply(" );
         command.append( matrixName );
-        command.append( ", 1, function(x) {t.test(x ~ " + factorA + "+" + factorB + "+" + factorA + "*" + factorB
-                + ")$Pr}" );
+        command.append( ", 1, function(x) {t.test(x ~ " + factorA + "+" + factorB + "+" + ")$Pr}" );
         command.append( ")" );
 
         log.debug( command.toString() );
+
+        REXP regExp = rc.eval( command.toString() );
 
         // R Call
         // The call is: apply(matrix,1,function(x){anova(aov(x~farea+ftreat+farea*ftreat))})

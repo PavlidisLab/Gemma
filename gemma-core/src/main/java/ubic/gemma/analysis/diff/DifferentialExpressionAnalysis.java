@@ -33,6 +33,11 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 /**
  * A differential expression analysis tool that executes the appropriate analysis based on the number of experimental
  * factors and factor values, as well as the block design.
+ * <p>
+ * Implementations of the selected analyses; t-test, one way anova, and two way anova with and without interactions are
+ * based on the details of the paper written by P. Pavlidis, Methods 31 (2003) 282-289.
+ * <p>
+ * See http://www.bioinformatics.ubc.ca/pavlidis/lab/docs/reprints/anova-methods.pdf.
  * 
  * @author keshav
  * @version $Id$
