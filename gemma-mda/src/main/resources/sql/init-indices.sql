@@ -11,5 +11,9 @@ alter table GENE_ALIAS add index `alias` (`ALIAS`);
 alter table DESIGN_ELEMENT add index name (NAME);
 alter table PHYSICAL_LOCATION ADD INDEX BIN_KEY (BIN);
 alter table AUDIT_EVENT_TYPE ADD INDEX class (class);
+alter table CHARACTERISTIC ADD INDEX value (VALUE);
+alter table CHARACTERISTIC ADD INDEX category (CATEGORY);
+alter table CHARACTERISTIC ADD INDEX valueUri (VALUE_URI);
+alter table CHARACTERISTIC ADD INDEX categoryUri (CATEGORY_URI);
 -- Next is not an index, but needed to allow sequences to be long.
 alter table BIO_SEQUENCE modify SEQUENCE LONGTEXT;
