@@ -119,8 +119,13 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractAnalyzer {
             Collection<FactorValue> fvs = m.getFactorValues();
             for ( FactorValue fv : fvs ) {
                 log.debug( fv.getValue() + " in experimental factor: " + fv.getExperimentalFactor() );
-                if ( fv.getExperimentalFactor() == experimentalFactorA ) samplesUsedA.add( m );
-                if ( fv.getExperimentalFactor() == experimentalFactorB ) samplesUsedB.add( m );
+                if ( fv.getExperimentalFactor() == experimentalFactorA )
+                    samplesUsedA.add( m );
+                else if ( fv.getExperimentalFactor() == experimentalFactorB )
+                    samplesUsedB.add( m );
+                else
+                    throw new RuntimeException(
+                            "Experimental factor of factor value of biomaterial does not match either of the supplied experimental factors." );
 
             }
         }
