@@ -102,15 +102,13 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractAnalyzer {
 
         DoubleMatrixNamed namedMatrix = dmatrix.getNamedMatrix();
 
-        ArrayList<FactorValue> factorValues = new ArrayList<FactorValue>();
         Collection<FactorValue> factorValuesA = experimentalFactorA.getFactorValues();
         Collection<FactorValue> factorValuesB = experimentalFactorB.getFactorValues();
-        factorValues.addAll( factorValuesA );
-        factorValues.addAll( factorValuesB );
 
         /* separating the biomaterials according to the experimental factor */
         Collection<BioMaterial> samplesUsedA = new ArrayList<BioMaterial>();
         Collection<BioMaterial> samplesUsedB = new ArrayList<BioMaterial>();
+
         for ( BioMaterial m : samplesUsed ) {
             Collection<FactorValue> fvs = m.getFactorValues();
             for ( FactorValue fv : fvs ) {
@@ -129,9 +127,26 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractAnalyzer {
         String factsA = rc.assignStringList( rFactorsA );
         String factsB = rc.assignStringList( rFactorsB );
 
+        String tfactsA = "t(" + factsA + ")";
+        String factorA = "factor(" + tfactsA + ")";
+
+        String tfactsB = "t(" + factsB + ")";
+        String factorB = "factor(" + tfactsB + ")";
+
+        String matrixName = rc.assignMatrix( namedMatrix );
+        StringBuffer command = new StringBuffer();
+
+        command.append( "apply(" );
+        command.append( matrixName );
+        command.append( ", 1, function(x) {t.test(x ~ " + factorA + "+" + factorB + "+" + factorA + "*" + factorB
+                + ")$Pr}" );
+        command.append( ")" );
+
+        log.debug( command.toString() );
+
         // R Call
         // The call is: apply(matrix,1,function(x){anova(aov(x~farea+ftreat+farea*ftreat))})
-        // where area and treat were first transposed and then factor was called on each to give
+        // where area and treat are first transposed and then factor is called on each to give
         // farea and ftreat.
         // TODO
         // farea and ftreat are just vectors. You'll have to group the biomaterials by experimental factors, so either
@@ -140,5 +155,4 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractAnalyzer {
 
         return null;
     }
-
 }
