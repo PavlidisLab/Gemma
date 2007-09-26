@@ -20,6 +20,7 @@ package ubic.gemma.testing;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 
 import org.acegisecurity.providers.encoding.ShaPasswordEncoder;
 import org.apache.commons.lang.RandomStringUtils;
@@ -91,6 +92,9 @@ public class TestPersistentObjectHelper {
     // private Taxon testTaxon;
 
     private ExternalDatabase pubmed;
+
+    private Collection<FactorValue> allFactorValues = new HashSet<FactorValue>();
+
     protected Log log = LogFactory.getLog( getClass() );
 
     /**
@@ -99,10 +103,26 @@ public class TestPersistentObjectHelper {
     Taxon testTaxon;
 
     private Collection<BioMaterial> getBioMaterials() {
+
+        if ( allFactorValues.isEmpty() )
+            throw new RuntimeException(
+                    "Factor values cannot be associated with biomaterials.  Try creating the experimental design first." );
+
+        Iterator<FactorValue> iter = allFactorValues.iterator();
+
         Collection<BioMaterial> baCol = new HashSet<BioMaterial>();
         // one biomaterial for each set of bioassays
         for ( int j = 0; j < NUM_BIOMATERIALS; j++ ) {
             BioMaterial bm = this.getTestNonPersistentBioMaterial();
+            Collection<FactorValue> fvCol = new HashSet<FactorValue>();
+            if ( iter.hasNext() ) {
+                fvCol.add( iter.next() );
+            } else {
+                iter = allFactorValues.iterator();
+                fvCol.add( iter.next() );
+            }
+
+            bm.setFactorValues( fvCol );
             baCol.add( bm );
         }
         return baCol;
@@ -200,6 +220,7 @@ public class TestPersistentObjectHelper {
      * @return Collection
      */
     public Collection<FactorValue> getFactorValues( ExperimentalFactor ef ) {
+
         Collection<FactorValue> fvCol = new HashSet<FactorValue>();
         for ( int i = 0; i < NUM_FACTOR_VALUES; i++ ) {
             FactorValue fv = FactorValue.Factory.newInstance();
@@ -207,6 +228,9 @@ public class TestPersistentObjectHelper {
             fv.setExperimentalFactor( ef );
             fvCol.add( fv );
         }
+
+        allFactorValues.addAll( fvCol );
+
         return fvCol;
     }
 
@@ -233,6 +257,10 @@ public class TestPersistentObjectHelper {
         ArrayDesign adA = this.getTestPersistentArrayDesign( TEST_ELEMENT_COLLECTION_SIZE, false, dosequence );
         ArrayDesign adB = this.getTestPersistentArrayDesign( TEST_ELEMENT_COLLECTION_SIZE, false, dosequence );
 
+        ExperimentalDesign ed = getExperimentalDesign();
+        ee.setExperimentalDesign( ed );
+        ee.setOwner( this.getTestPersistentContact() );
+
         Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
         Collection<BioMaterial> bioMaterials = getBioMaterials();
         Collection<BioAssay> bioAssaysA = getBioAssays( bioMaterials, adA );
@@ -240,10 +268,6 @@ public class TestPersistentObjectHelper {
         bioAssays.addAll( bioAssaysA );
         bioAssays.addAll( bioAssaysB );
         ee.setBioAssays( bioAssays );
-
-        ExperimentalDesign ed = getExperimentalDesign();
-        ee.setExperimentalDesign( ed );
-        ee.setOwner( this.getTestPersistentContact() );
 
         log.debug( "expression experiment => design element data vectors" );
         Collection<DesignElementDataVector> vectors = new HashSet<DesignElementDataVector>();
