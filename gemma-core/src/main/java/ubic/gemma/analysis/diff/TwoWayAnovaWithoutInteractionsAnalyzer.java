@@ -142,7 +142,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractAnalyzer {
 
         command.append( "apply(" );
         command.append( matrixName );
-        command.append( ", 1, function(x) {t.test(x ~ " + factorA + "+" + factorB + "+" + ")$Pr}" );
+        command.append( ", 1, function(x) {anova(aov(x ~ " + factorA + "+" + factorB + "+" + "))$Pr}" );
         command.append( ")" );
 
         log.debug( command.toString() );
