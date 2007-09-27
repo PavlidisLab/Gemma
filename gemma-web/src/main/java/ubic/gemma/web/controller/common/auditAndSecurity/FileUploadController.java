@@ -18,6 +18,11 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -53,20 +58,47 @@ public class FileUploadController extends BaseFormController {
     @Override
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
+
+        // When this is reached, the file has already been uploaded.
+
         FileUpload fileUpload = ( FileUpload ) command;
 
         // validate a file was entered
         if ( fileUpload.getFile().length == 0 ) {
             Object[] args = new Object[] { getText( "uploadForm.file", request.getLocale() ) };
             errors.rejectValue( "file", "errors.required", args, "File" );
-
-            return showForm( request, response, errors );
+            response.getWriter().write( "{success : false, error : 'File is required'}" );
+            return null;
+        }
+        File copiedFile = null;
+        try {
+            copiedFile = FileUploadUtil.copyUploadedFile( request, fileUpload, "file" );
+            log.info( "Uploaded file!" );
+        } catch ( Exception e ) {
+            response.getWriter().write( "{success : false, error: '" + e.getMessage() + "' }" );
+            return null;
         }
 
-        FileUploadUtil.copyUploadedFile( request, fileUpload, "file" );
-        log.info( "Uploaded file!" );
+        if ( copiedFile == null ) {
+            response.getWriter().write( "{success : false, error : 'unknown problem getting file' }" );
+            return null;
+        }
 
-        return new ModelAndView( getSuccessView() );
+        response.getWriter().write( "{success : true, localFile : '" + copiedFile.getAbsolutePath() + "'}" );
+        response.getWriter().flush();
+        return null;
+    }
+
+    /**
+     * Ajax. DWR can handle this.
+     * 
+     * @throws IOException
+     * @throws FileNotFoundException
+     */
+    public String upload( InputStream is ) throws FileNotFoundException, IOException {
+        File copiedFile = FileUploadUtil.copyUploadedInputStream( is );
+        log.info( "Uploaded file!" );
+        return copiedFile.getAbsolutePath();
     }
 
     /**

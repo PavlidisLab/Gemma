@@ -168,12 +168,11 @@
             <field property="arrayDesign" depends="required" />
             <field property="sequenceType" depends="required" />
         </form>
-        
+         -->
         <form name="simpleExpressionExperimentForm">
-            <field property="dataFile" depends="required" />
-            <field property="arrayDesign" depends="required" />
+			<field property="shortName" depends="required" />
             <field property="name" depends="required" />
             <field property="description" depends="required" />
         </form>
-       -->
+      
     </formset> 

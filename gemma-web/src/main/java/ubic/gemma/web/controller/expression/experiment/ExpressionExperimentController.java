@@ -122,7 +122,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         RemoveExpressionExperimentJob removeExpressionExperimentJob = new RemoveExpressionExperimentJob(
                 expressionExperiment, expressionExperimentService );
 
-        return startJob( request, removeExpressionExperimentJob );
+        return startJob( removeExpressionExperimentJob );
 
     }
 
@@ -189,7 +189,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
         if ( sId == null ) {
-            return startJob( request, new GenerateSummary( expressionExperimentReportService ) );
+            return startJob( new GenerateSummary( expressionExperimentReportService ) );
         } else {
             Collection ids = new ArrayList<Long>();
 
@@ -299,14 +299,14 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
     private AuditEvent getLastValidationEvent( ExpressionExperiment ee ) {
         return auditTrailService.getLastValidationEvent( ee );
-//        if ( event != null ) return event;
-//
-//        for ( Object o : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
-//            event = auditTrailService.getLastValidationEvent( ( ArrayDesign ) o );
-//            if ( event != null ) return event;
-//        }
-//
-//        return null;
+        // if ( event != null ) return event;
+        //
+        // for ( Object o : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
+        // event = auditTrailService.getLastValidationEvent( ( ArrayDesign ) o );
+        // if ( event != null ) return event;
+        // }
+        //
+        // return null;
     }
 
     /**
@@ -342,12 +342,14 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         AuditEvent troubleEvent = getLastTroubleEvent( expressionExperiment );
         if ( troubleEvent != null ) {
             mav.addObject( "troubleEvent", troubleEvent );
-            mav.addObject( "troubleEventDescription", StringEscapeUtils.escapeHtml( ToStringUtil.toString( troubleEvent ) ) );
+            mav.addObject( "troubleEventDescription", StringEscapeUtils.escapeHtml( ToStringUtil
+                    .toString( troubleEvent ) ) );
         }
         AuditEvent validatedEvent = getLastValidationEvent( expressionExperiment );
         if ( validatedEvent != null ) {
             mav.addObject( "validatedEvent", validatedEvent );
-            mav.addObject( "validatedEventDescription", StringEscapeUtils.escapeHtml( ToStringUtil.toString( validatedEvent ) ) );
+            mav.addObject( "validatedEventDescription", StringEscapeUtils.escapeHtml( ToStringUtil
+                    .toString( validatedEvent ) ) );
         }
 
         Collection characteristics = expressionExperiment.getCharacteristics();
@@ -494,7 +496,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         // load cached data
         expressionExperimentReportService.fillLinkStatsFromCache( expressionExperiments );
-        
+
         // load event data
         expressionExperimentReportService.fillEventInformation( expressionExperiments );
 

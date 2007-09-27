@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.web;
+package ubic.gemma.web.taglib;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;

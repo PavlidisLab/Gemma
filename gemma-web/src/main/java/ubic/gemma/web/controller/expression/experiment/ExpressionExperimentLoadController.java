@@ -73,8 +73,6 @@ import ubic.gemma.web.util.MessageUtil;
  */
 public class ExpressionExperimentLoadController extends AbstractGemmaSpacesFormController {
 
-    private static final boolean AJAX = true;
-
     GeoDatasetService geoDatasetService;
     ArrayDesignService arrayDesignService;
     ArrayExpressLoadService arrayExpressLoadService;
@@ -125,6 +123,12 @@ public class ExpressionExperimentLoadController extends AbstractGemmaSpacesFormC
                 .getName(), true );
     }
 
+    /**
+     * Exposed for AJAX calls.
+     * 
+     * @param command
+     * @return
+     */
     public String run( ExpressionExperimentLoadCommand command ) {
         return run( command, GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ExpressionExperimentLoadTask.class.getName(),
                 true );
@@ -290,11 +294,11 @@ public class ExpressionExperimentLoadController extends AbstractGemmaSpacesFormC
                 // Array Express
                 else if ( expressionExperimentLoadCommand.isArrayExpress() ) {
 
-                    if (expressionExperimentLoadCommand.getArrayDesignName() == null){
+                    if ( expressionExperimentLoadCommand.getArrayDesignName() == null ) {
                         this.saveMessage( "Unable to load: Must select an array design to use" );
                         return new ModelAndView( new RedirectView( "/Gemma/loadExpressionExperiment.html" ) );
                     }
-                        
+
                     ExpressionExperiment result = arrayExpressLoadService.load( accesionNum,
                             expressionExperimentLoadCommand.getArrayDesignName() );
 

@@ -125,7 +125,7 @@ public class LinkAnalysisService {
          */
         log.info( "Starting generating Raw Links for " + ee );
         la.analyze();
-        if ( linkAnalysisConfig.isUseDb() ) {
+        if ( linkAnalysisConfig.isUseDb() && !linkAnalysisConfig.isTextOut() ) {
             saveLinks( p2v, la );
         } else if ( linkAnalysisConfig.isTextOut() ) {
             writeLinks( la, new PrintWriter( System.out ) );
@@ -156,13 +156,14 @@ public class LinkAnalysisService {
     }
 
     /**
-     * Write to stdout (TODO allow write to writer)
+     * Write links as text
      * 
-     * @param p2v
      * @param la
+     * @param wr
      */
     private void writeLinks( LinkAnalysis la, Writer wr ) throws IOException {
         wr.write( la.getConfig().toString() );
+        Map<CompositeSequence, Collection<Gene>> probeToGeneMap = la.getProbeToGeneMap();
         ObjectArrayList links = la.getKeep();
         NumberFormat nf = DecimalFormat.getInstance();
         nf.setMaximumFractionDigits( 4 );
@@ -179,7 +180,19 @@ public class LinkAnalysisService {
             DesignElement p1 = la.getMetricMatrix().getProbeForRow( la.getDataMatrix().getRowElement( m.getx() ) );
             DesignElement p2 = la.getMetricMatrix().getProbeForRow( la.getDataMatrix().getRowElement( m.gety() ) );
 
-            wr.write( p1.getId() + "\t" + p2.getId() + "\t" + nf.format( w ) );
+            Collection<Gene> g1 = probeToGeneMap.get( p1 );
+            Collection<Gene> g2 = probeToGeneMap.get( p1 );
+
+            String genes1 = "";
+            for ( Gene g : g1 ) {
+                genes1 = genes1 + g.getOfficialName() + "|";
+            }
+
+            String genes2 = "";
+            for ( Gene g : g2 ) {
+                genes2 = genes2 + g.getOfficialName() + "|";
+            }
+            wr.write( p1.getId() + "\t" + p2.getId() + "\t" + genes1 + "\t" + genes2 + "\t" + nf.format( w ) );
 
             if ( i > 0 && i % 50000 == 0 ) {
                 log.info( i + " links printed" );

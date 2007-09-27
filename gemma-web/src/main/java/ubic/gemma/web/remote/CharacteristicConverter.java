@@ -37,9 +37,14 @@ import org.directwebremoting.extend.TypeHintContext;
 import org.directwebremoting.util.LocalUtil;
 import org.directwebremoting.util.Messages;
 
+/**
+ * @author kelsey
+ * @version $Id$
+ */
 public class CharacteristicConverter extends BeanConverter {
     private static Log log = LogFactory.getLog( CharacteristicConverter.class.getName() );
 
+    @SuppressWarnings("unchecked")
     @Override
     public Object convertInbound( Class paramType, InboundVariable iv, InboundContext inctx ) throws MarshallException {
         String value = iv.getValue();
@@ -130,8 +135,8 @@ public class CharacteristicConverter extends BeanConverter {
                 // ArrayLists... *sigh* Hibernate then dies of a class cast exception. All because of a general type of
                 // Collection
                 if ( ( key.equals( "properties" ) ) && ( output instanceof ArrayList ) ) {
-                    ArrayList propertyList = ( ArrayList ) output;
-                    output = new HashSet( propertyList );
+                    ArrayList<Object> propertyList = ( ArrayList<Object> ) output;
+                    output = new HashSet<Object>( propertyList );
                 }
 
                 property.setValue( bean, output );

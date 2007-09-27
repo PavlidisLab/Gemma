@@ -149,9 +149,7 @@ public abstract class AbstractGemmaSpacesFormController extends BackgroundProces
         } else if ( !updatedContext.containsBean( "gigaspacesTemplate" ) && !runInWebapp ) {
             throw new RuntimeException(
                     "This task must be run on the compute server, but the space is not running. Please try again later" );
-        }
-
-        else {
+        } else {
             taskId = TaskRunningService.generateTaskId();
             job = getRunner( taskId, context, command, this.getMessageUtil() );
         }

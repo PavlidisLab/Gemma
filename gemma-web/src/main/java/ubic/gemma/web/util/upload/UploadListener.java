@@ -23,20 +23,26 @@
  */
 package ubic.gemma.web.util.upload;
 
-import javax.servlet.http.HttpServletRequest;
+import javax.servlet.ServletContext;
 
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.directwebremoting.ServerContext;
+import org.directwebremoting.ServerContextFactory;
+import org.directwebremoting.WebContext;
+import org.directwebremoting.WebContextFactory;
+import org.directwebremoting.proxy.dwr.Util;
 
 import ubic.gemma.util.progress.ProgressData;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
+import ubic.gemma.util.progress.TaskRunningService;
 
 /**
  * @author Original : plosson on 05-janv.-2006 10:46:33 - Last modified by Author: plosson $ on $Date: 2006/01/05
  *         10:09:38
- * @author pavlidis*
+ * @author pavlidis
  * @version $Id$
  */
 public class UploadListener implements OutputStreamListener {
@@ -49,16 +55,22 @@ public class UploadListener implements OutputStreamListener {
     private double totalBytesRead = 0;
     private int totalFiles = -1;
     private ProgressJob pJob;
+    private ServletContext ctx;
+    private String taskId;
 
     /**
      * @param request
      * @param debugDelay
      */
-    public UploadListener( HttpServletRequest request, long debugDelay ) {
-
+    public UploadListener( ServletContext ctx, long debugDelay ) {
         this.delay = debugDelay;
-        totalToRead = request.getContentLength();
+        this.ctx = ctx;
+        start();
+    }
 
+    public UploadListener( ServletContext ctx ) {
+        this.ctx = ctx;
+        start();
     }
 
     /*
@@ -68,11 +80,28 @@ public class UploadListener implements OutputStreamListener {
      */
     public void start() {
         totalFiles++;
-        pJob = ProgressManager.createProgressJob( null, SecurityContextHolder.getContext().getAuthentication()
+        this.taskId = TaskRunningService.generateTaskId();
+        pJob = ProgressManager.createProgressJob( taskId, SecurityContextHolder.getContext().getAuthentication()
                 .getName(), "File Upload" );
-        //If this is set here, then when other programs that have file uploading as a part of their progress they will be forwarded to the wrong place
-        //as the case of just uploading a file isn't really usefull it makes sense for this not to be set
-        pJob.setForwardingURL( " " );
+
+        // Send the task Id back to the client.
+        WebContext wctx = WebContextFactory.get();
+        if ( wctx != null ) {
+            Util cp = new Util( wctx.getScriptSession() );
+            cp.setValue( "taskId", taskId, false );
+        } else {
+            ServerContext sctx = ServerContextFactory.get( ctx );
+            assert sctx != null;
+            Util util = new Util( sctx.getAllScriptSessions() );
+            log.info( util );
+            // cp.setValue( "taskId", taskId, false );
+            // throw new IllegalStateException( "Thread was not started by DWR, cannot monitor" );
+        }
+
+        // If this is set here, then when other programs that have file uploading as a part of their progress they will
+        // be forwarded to the wrong place
+        // as the case of just uploading a file isn't really usefull it makes sense for this not to be set
+        pJob.setForwardWhenDone( false );
         pJob.updateProgress( new ProgressData( 0, "Uploading File..." ) );
     }
 
@@ -86,7 +115,6 @@ public class UploadListener implements OutputStreamListener {
 
         totalBytesRead = totalBytesRead + bytesRead;
         Double newPercent = ( totalBytesRead / totalToRead ) * 100;
-
         if ( newPercent.intValue() > oldPercent ) {
             pJob.nudgeProgress();
             oldPercent = newPercent.intValue();
@@ -119,6 +147,10 @@ public class UploadListener implements OutputStreamListener {
         pJob.updateProgress( new ProgressData( 100, "Finished Uploading. Processing File...", true ) );
         ProgressManager.destroyProgressJob( pJob );
 
+    }
+
+    public String getTaskId() {
+        return taskId;
     }
 
 }

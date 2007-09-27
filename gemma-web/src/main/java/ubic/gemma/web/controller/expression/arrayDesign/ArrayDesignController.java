@@ -113,7 +113,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     private CompositeSequenceService compositeSequenceService = null;
     private final String messageName = "Array design with name";
     private final String identifierNotFound = "Must provide a valid Array Design identifier";
-    
+
     private AuditTrailService auditTrailService;
 
     private Cache cache;
@@ -302,7 +302,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     public String updateReport( EntityDelegator ed ) {
         GenerateSummary runner = new GenerateSummary( null, arrayDesignReportService, ed.getId() );
         runner.setDoForward( false );
-        return ( String ) startJob( null, runner ).getModel().get( "taskId" );
+        return ( String ) super.startJob( runner ).getModel().get( "taskId" );
     }
 
     /**
@@ -339,8 +339,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             throw new IllegalArgumentException( "Cannot delete " + arrayDesign
                     + ", it is used by an expression experiment" );
         }
-        return ( String ) startJob( null, new RemoveArrayJob( null, arrayDesign, arrayDesignService ) ).getModel().get(
-                "taskId" );
+        return ( String ) startJob( new RemoveArrayJob( arrayDesign, arrayDesignService ) ).getModel().get( "taskId" );
     }
 
     /**
@@ -390,16 +389,18 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         String eeIds = formatExpressionExperimentIds( ee );
 
         ModelAndView mav = new ModelAndView( "arrayDesign.detail" );
-        
+
         AuditEvent troubleEvent = auditTrailService.getLastTroubleEvent( arrayDesign );
         if ( troubleEvent != null ) {
             mav.addObject( "troubleEvent", troubleEvent );
-            mav.addObject( "troubleEventDescription", StringEscapeUtils.escapeHtml( ToStringUtil.toString( troubleEvent ) ) );
+            mav.addObject( "troubleEventDescription", StringEscapeUtils.escapeHtml( ToStringUtil
+                    .toString( troubleEvent ) ) );
         }
         AuditEvent validatedEvent = auditTrailService.getLastValidationEvent( arrayDesign );
         if ( validatedEvent != null ) {
             mav.addObject( "validatedEvent", validatedEvent );
-            mav.addObject( "validatedEventDescription", StringEscapeUtils.escapeHtml( ToStringUtil.toString( validatedEvent ) ) );
+            mav.addObject( "validatedEventDescription", StringEscapeUtils.escapeHtml( ToStringUtil
+                    .toString( validatedEvent ) ) );
         }
 
         Collection<ArrayDesign> subsumees = arrayDesign.getSubsumedArrayDesigns();
@@ -516,10 +517,10 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
         // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
         if ( sId == null ) {
-            return startJob( request, new GenerateSummary( request, arrayDesignReportService ) );
+            return startJob( new GenerateSummary( request, arrayDesignReportService ) );
         } else {
             Long id = Long.parseLong( sId );
-            return startJob( request, new GenerateSummary( request, arrayDesignReportService, id ) );
+            return startJob( new GenerateSummary( request, arrayDesignReportService, id ) );
         }
     }
 
@@ -563,7 +564,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) );
         }
 
-        return startJob( request, new RemoveArrayJob( request, arrayDesign, arrayDesignService ) );
+        return startJob( new RemoveArrayJob( arrayDesign, arrayDesignService ) );
 
     }
 
@@ -662,7 +663,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         private ArrayDesignService arrayDesignService;
         private ArrayDesign ad;
 
-        public RemoveArrayJob( HttpServletRequest request, ArrayDesign ad, ArrayDesignService arrayDesignService ) {
+        public RemoveArrayJob( ArrayDesign ad, ArrayDesignService arrayDesignService ) {
             super( getMessageUtil() );
             this.arrayDesignService = arrayDesignService;
             this.ad = ad;
@@ -719,7 +720,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
                 job.updateProgress( "Generated summary for all platforms" );
                 arrayDesignReportService.generateArrayDesignReport();
             } else {
-                if ( this.getDoForward() )  saveMessage( "Generating summary for platform " + id );
+                if ( this.getDoForward() ) saveMessage( "Generating summary for platform " + id );
                 job.updateProgress( "Generating summary for specified platform" );
                 ArrayDesignValueObject report = arrayDesignReportService.generateArrayDesignReport( id );
                 job.setPayload( report );

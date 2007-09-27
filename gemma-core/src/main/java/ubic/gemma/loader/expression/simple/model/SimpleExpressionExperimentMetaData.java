@@ -40,6 +40,8 @@ public class SimpleExpressionExperimentMetaData {
 
     private String name;
 
+    private String shortName;
+
     private String description;
 
     /**
@@ -282,6 +284,14 @@ public class SimpleExpressionExperimentMetaData {
 
     public void setIsRatio( Boolean isRatio ) {
         this.isRatio = isRatio;
+    }
+
+    public String getShortName() {
+        return shortName;
+    }
+
+    public void setShortName( String shortName ) {
+        this.shortName = shortName;
     }
 
 }

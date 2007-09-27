@@ -46,6 +46,8 @@ import org.springframework.web.multipart.MultipartResolver;
 import org.springframework.web.multipart.support.DefaultMultipartHttpServletRequest;
 import org.springframework.web.util.WebUtils;
 
+import ubic.gemma.util.progress.TaskRunningService;
+
 /**
  * An adaptation of the standard Spring CommonsMultipartResolver that uses a MonitoredOutputStream. This allows
  * asynchronous client-side monitoring of the upload process.
@@ -65,14 +67,7 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
 
     private long sizeMax = 4194304L;
 
-    /**
-     * Return the underlying org.apache.commons.fileupload.FileUpload instance. There is hardly any need to access this.
-     * 
-     * @return the underlying FileUpload instance
-     */
-    public ServletFileUpload getFileUpload() {
-        return fileUpload;
-    }
+    private ServletContext servletContext;
 
     /**
      * Set the maximum allowed size (in bytes) before uploads are refused. -1 indicates no limit (the default).
@@ -99,14 +94,11 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
      * @param request
      * @return the new FileUpload instance
      */
-    protected ServletFileUpload newFileUpload( HttpServletRequest request ) {
-        UploadListener listener = new UploadListener( request, 30 );
-
+    protected ServletFileUpload newFileUpload() {
         // Create a factory for disk-based file items
+        UploadListener listener = new UploadListener( this.servletContext );
         DiskFileItemFactory factory = new MonitoredDiskFileItemFactory( listener );
-
         ServletFileUpload upload = new ServletFileUpload( factory );
-
         factory.setRepository( uploadTempDir );
         upload.setSizeMax( sizeMax );
         return upload;
@@ -148,33 +140,30 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
 
     public void setServletContext( ServletContext servletContext ) {
         if ( this.uploadTempDir == null ) {
-            // ( ( DiskFileItemFactory ) this.fileUpload.getFileItemFactory() ).setRepository( WebUtils
-            // .getTempDir( servletContext ) );
-
             this.uploadTempDir = WebUtils.getTempDir( servletContext );
         }
+        this.servletContext = servletContext;
     }
 
     public boolean isMultipart( HttpServletRequest request ) {
         return FileUploadBase.isMultipartContent( request );
     }
 
+    /*
+     * This is called when a multipart HTTP request is received.
+     * 
+     * @see org.springframework.web.multipart.MultipartResolver#resolveMultipart(javax.servlet.http.HttpServletRequest)
+     */
     @SuppressWarnings("unchecked")
     public MultipartHttpServletRequest resolveMultipart( HttpServletRequest request ) throws MultipartException {
-        ServletFileUpload upload = this.fileUpload;
+
         String enc = determineEncoding( request );
 
-        // Use new temporary FileUpload instance if the request specifies
-        // its own encoding that does not match the default encoding.
-        if ( !enc.equals( this.defaultEncoding ) ) {
-            upload = this.newFileUpload( request );
-            // DiskFileItemFactory thisFactory = ( DiskFileItemFactory ) this.fileUpload.getFileItemFactory() ;
-            DiskFileItemFactory newFactory = ( DiskFileItemFactory ) upload.getFileItemFactory();
-            upload.setSizeMax( sizeMax );
-            // newFactory.setSizeThreshold( thisFactory.getSizeThreshold() );
-            newFactory.setRepository( this.uploadTempDir );
-            upload.setHeaderEncoding( enc );
-        }
+        ServletFileUpload upload = this.newFileUpload();
+        DiskFileItemFactory newFactory = ( DiskFileItemFactory ) upload.getFileItemFactory();
+        upload.setSizeMax( sizeMax );
+        newFactory.setRepository( this.uploadTempDir );
+        upload.setHeaderEncoding( enc );
 
         try {
             Map multipartFiles = new HashMap();
@@ -186,21 +175,24 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
                 FileItem fileItem = ( FileItem ) it.next();
                 if ( fileItem.isFormField() ) {
                     String value = null;
+                    String fieldName = fileItem.getFieldName();
+
                     try {
                         value = fileItem.getString( enc );
                     } catch ( UnsupportedEncodingException ex ) {
-                        logger.warn( "Could not decode multipart item '" + fileItem.getFieldName()
-                                + "' with encoding '" + enc + "': using platform default" );
+                        logger.warn( "Could not decode multipart item '" + fieldName + "' with encoding '" + enc
+                                + "': using platform default" );
                         value = fileItem.getString();
                     }
-                    String[] curParam = ( String[] ) multipartParams.get( fileItem.getFieldName() );
+
+                    String[] curParam = ( String[] ) multipartParams.get( fieldName );
                     if ( curParam == null ) {
                         // simple form field
-                        multipartParams.put( fileItem.getFieldName(), new String[] { value } );
+                        multipartParams.put( fieldName, new String[] { value } );
                     } else {
                         // array of simple form fields
                         String[] newParam = StringUtils.addStringToArray( curParam, value );
-                        multipartParams.put( fileItem.getFieldName(), newParam );
+                        multipartParams.put( fieldName, newParam );
                     }
                 } else {
                     // multipart file field

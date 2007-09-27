@@ -40,8 +40,6 @@ import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import com.j_spaces.core.cluster.sync_replication.TodoQueueInitException;
-
 import ubic.basecode.util.FileTools;
 import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
@@ -149,9 +147,9 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
      */
     @SuppressWarnings("unchecked")
     private void populateArrayDesignReferenceData( Map<String, List<? extends Object>> mapping ) {
-        //FIXME replicated code.  also in ExpressionExperimentLoad controller. 
-        //Need to factor out.  Also need to remove AD's that are subsumed or merged into other AD's. 
-        
+        // FIXME replicated code. also in ExpressionExperimentLoad controller.
+        // Need to factor out. Also need to remove AD's that are subsumed or merged into other AD's.
+
         List<ArrayDesign> arrayDesigns = new ArrayList<ArrayDesign>();
         for ( ArrayDesign arrayDesign : ( Collection<ArrayDesign> ) arrayDesignService.loadAll() ) {
             arrayDesigns.add( arrayDesign );
@@ -196,62 +194,84 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
         return command;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.BackgroundProcessingFormController#getRunner(org.acegisecurity.context.SecurityContext,
-     *      java.lang.Object, java.lang.String)
-     */
-    @Override
-    protected BackgroundControllerJob<ModelAndView> getRunner( String taskId, SecurityContext securityContext,
-            Object command, MessageUtil messenger ) {
-        return new BackgroundControllerJob<ModelAndView>( taskId, securityContext, command, messenger ) {
-            @SuppressWarnings("synthetic-access")
-            public ModelAndView call() throws Exception {
-                SecurityContextHolder.setContext( securityContext );
-                Map<Object, Object> model = new HashMap<Object, Object>();
+    // /*
+    // * (non-Javadoc)
+    // *
+    // * @see
+    // ubic.gemma.web.controller.BackgroundProcessingFormController#getRunner(org.acegisecurity.context.SecurityContext,
+    // * java.lang.Object, java.lang.String)
+    // */
+    // @Override
+    // protected BackgroundControllerJob<ModelAndView> getRunner( String taskId, SecurityContext securityContext,
+    // Object command, MessageUtil messenger ) {
+    // BackgroundControllerJob job = new SimpleEELoadJob( null, this.simpleExpressionDataLoaderService );
+    // job.setTaskId( taskId );
+    // }
 
-                SimpleExpressionExperimentLoadCommand commandObject = ( SimpleExpressionExperimentLoadCommand ) command;
+    class SimpleEELoadJob extends BackgroundControllerJob<ModelAndView> {
+        SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
 
-                FileUpload fileUpload = commandObject.getDataFile();
+        public SimpleEELoadJob( SimpleExpressionDataLoaderService simpleExpressionDataLoaderService ) {
+            super( getMessageUtil() );
+            this.simpleExpressionDataLoaderService = simpleExpressionDataLoaderService;
+        }
 
-                Collection<ArrayDesign> arrayDesigns = commandObject.getArrayDesigns();
-                if ( arrayDesigns == null || arrayDesigns.size() == 0 ) {
-                    log.info( "Array design " + commandObject.getArrayDesignName() + " is new, will create from data." );
-                    ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
-                    arrayDesign.setName( commandObject.getArrayDesignName() );
-                    commandObject.getArrayDesigns().add( arrayDesign );
-                }
+        public SimpleEELoadJob( String taskId, SecurityContext parentSecurityContext, Object commandObj,
+                MessageUtil messenger, SimpleExpressionDataLoaderService simpleExpressionDataLoaderService ) {
+            super( taskId, parentSecurityContext, commandObj, messenger );
+            this.simpleExpressionDataLoaderService = simpleExpressionDataLoaderService;
+        }
 
-                Taxon taxon = commandObject.getTaxon();
-                if ( taxon == null || StringUtils.isBlank( taxon.getScientificName() ) ) {
-                    log.info( "Taxon " + commandObject.getTaxonName() + " is new, will create" );
-                    taxon = Taxon.Factory.newInstance();
-                    taxon.setScientificName( commandObject.getTaxonName() );
-                    commandObject.setTaxon( taxon );
-                }
+        @SuppressWarnings("synthetic-access")
+        public ModelAndView call() throws Exception {
+            SecurityContextHolder.setContext( securityContext );
+            Map<Object, Object> model = new HashMap<Object, Object>();
 
-                ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
-                        .getAuthentication().getName(), "Loading data from " + fileUpload.getName() );
+            SimpleExpressionExperimentLoadCommand commandObject = ( SimpleExpressionExperimentLoadCommand ) command;
 
-                File file = fileUpload.getLocalPath();
+            FileUpload fileUpload = commandObject.getDataFile();
 
-                assert file != null;
-
-                InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
-                ExpressionExperiment result = simpleExpressionDataLoaderService.load( commandObject, stream );
-                stream.close();
-
-                this.saveMessage( "Successfully loaded " + result );
-
-                model.put( "expressionExperiment", result );
-
-                ProgressManager.destroyProgressJob( job );
-                // return new ModelAndView( "view", model );
-                return new ModelAndView( new RedirectView(
-                        "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + result.getId() ), model );
+            Collection<ArrayDesign> arrayDesigns = commandObject.getArrayDesigns();
+            if ( arrayDesigns == null || arrayDesigns.size() == 0 ) {
+                log.info( "Array design " + commandObject.getArrayDesignName() + " is new, will create from data." );
+                ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
+                arrayDesign.setName( commandObject.getArrayDesignName() );
+                commandObject.getArrayDesigns().add( arrayDesign );
             }
-        };
+
+            Taxon taxon = commandObject.getTaxon();
+            if ( taxon == null || StringUtils.isBlank( taxon.getScientificName() ) ) {
+                log.info( "Taxon " + commandObject.getTaxonName() + " is new, will create" );
+                taxon = Taxon.Factory.newInstance();
+                taxon.setScientificName( commandObject.getTaxonName() );
+                commandObject.setTaxon( taxon );
+            }
+
+            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
+                    .getName(), "Loading data from " + fileUpload.getName() );
+
+            File file = fileUpload.getLocalPath();
+
+            assert file != null;
+
+            InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
+
+            if ( stream == null ) {
+                throw new IllegalStateException( "Could not read from file " + file.getAbsolutePath() );
+            }
+
+            ExpressionExperiment result = simpleExpressionDataLoaderService.load( commandObject, stream );
+            stream.close();
+
+            this.saveMessage( "Successfully loaded " + result );
+
+            model.put( "expressionExperiment", result );
+
+            ProgressManager.destroyProgressJob( job );
+            // return new ModelAndView( "view", model );
+            return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
+                    + result.getId() ), model );
+        }
     }
 
     @Override
@@ -270,6 +290,13 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
     @Override
     protected ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
+
+        /*
+         * This needs to wait for the file upload to be finished.
+         */
+        String taskId = request.getParameter( "taskId" );
+        log.info( "Upload task id : " + taskId );
+
         SimpleExpressionExperimentLoadCommand commandObject = ( SimpleExpressionExperimentLoadCommand ) command;
         Cookie cookie = new SimpleExpressionExperimentLoadCookie( commandObject );
         response.addCookie( cookie );
@@ -290,6 +317,27 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
 
         return startJob( commandObject );
 
+    }
+
+    /**
+     * AJAX
+     * 
+     * @param ed
+     * @return the taskid
+     */
+    public String load( SimpleExpressionExperimentLoadCommand ed ) {
+
+        FileUpload fileUpload = ed.getDataFile();
+
+        if ( fileUpload == null || fileUpload.getFile() == null ) {
+            throw new IllegalArgumentException( "Must provide a file to upload" );
+        }
+
+        // File file = FileUploadUtil.copyUploadedFile( request, fileUpload, "dataFile.file" );
+
+        SimpleEELoadJob runner = new SimpleEELoadJob( this.simpleExpressionDataLoaderService );
+        runner.setDoForward( true ); // forward to the EE we just loaded.
+        return ( String ) super.startJob( runner ).getModel().get( "taskId" );
     }
 
     /*
@@ -357,4 +405,9 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
 
     }
 
+    @Override
+    protected BackgroundControllerJob<ModelAndView> getRunner( String jobId, SecurityContext securityContext,
+            Object command, MessageUtil messenger ) {
+        return new SimpleEELoadJob( jobId, securityContext, command, messenger, this.simpleExpressionDataLoaderService );
+    }
 }

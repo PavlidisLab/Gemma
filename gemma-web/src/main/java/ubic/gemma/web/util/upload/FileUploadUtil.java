@@ -100,10 +100,21 @@ public class FileUploadUtil {
 
         File copiedFile = new File( uploadDirFile.getAbsolutePath()
                 + File.separatorChar
-                + ( request.getSession() == null ? RandomStringUtils.randomAlphanumeric( 20 ) : request.getSession()
-                        .getId() ) + "__" + file.getOriginalFilename() );
+                + ( request == null || request.getSession() == null ? RandomStringUtils.randomAlphanumeric( 20 )
+                        : request.getSession().getId() ) + "__" + file.getOriginalFilename() );
 
         fileUpload.setLocalPath( copiedFile );
+        return copiedFile;
+    }
+
+    public static File copyUploadedInputStream( InputStream is ) throws IOException, FileNotFoundException {
+        // Create the directory if it doesn't exist
+        String uploadDir = ConfigUtils.getDownloadPath() + "userUploads";
+        File uploadDirFile = FileTools.createDir( uploadDir );
+
+        File copiedFile = new File( uploadDirFile.getAbsolutePath() + File.separatorChar
+                + RandomStringUtils.randomAlphanumeric( 50 ) );
+        copy( copiedFile, is );
         return copiedFile;
     }
 
@@ -115,20 +126,30 @@ public class FileUploadUtil {
      */
     private static void copyFile( CommonsMultipartFile file, File copiedFile ) throws FileNotFoundException,
             IOException {
-        log.info( "Copying file (" + file.getSize() + " bytes)" );
+        log.info( "Copying file " + file + " (" + file.getSize() + " bytes)" );
         // write the file to the file specified
+        InputStream stream = file.getInputStream();
+
+        copy( copiedFile, stream );
+        log.info( "Done copying to " + copiedFile );
+    }
+
+    /**
+     * @param copiedFile
+     * @param stream
+     * @throws FileNotFoundException
+     * @throws IOException
+     */
+    private static void copy( File copiedFile, InputStream stream ) throws FileNotFoundException, IOException {
         OutputStream bos = new FileOutputStream( copiedFile );
         int bytesRead = 0;
         byte[] buffer = new byte[BUF_SIZE];
-
-        InputStream stream = file.getInputStream();
         while ( ( bytesRead = stream.read( buffer, 0, BUF_SIZE ) ) != -1 ) {
             bos.write( buffer, 0, bytesRead );
         }
 
         bos.close();
         stream.close();
-        log.info( "Done copying" );
     }
 
     /**

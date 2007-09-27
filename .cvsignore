@@ -15,3 +15,4 @@ velocity.log.*
 .myumldata
 .fatjar
 .myhibernatedata
+TempFatjarBuildDir_erase_me

@@ -74,6 +74,7 @@ public class ProgressManager {
     }
 
     /**
+     * @param taskId The id of the job to be started.
      * @param UserId This could be a user name or some kind of sessionID that the user is using. If a user name is not
      *        used then the HTTPSessionID must be used for anonymous users. If it is not used there will be no way for
      *        the Ajax call back to get the progress job that it wants to observer. todo: should session id's be

@@ -7,7 +7,7 @@
 
 	<script type="text/javascript" src="<c:url value='/scripts/progressbar.js'/>"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentFormController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentLoadController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/ProgressStatusService.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>

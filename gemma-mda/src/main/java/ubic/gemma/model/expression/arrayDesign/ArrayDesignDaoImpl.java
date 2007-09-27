@@ -18,7 +18,6 @@
  *
  */
 package ubic.gemma.model.expression.arrayDesign;
-
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;

@@ -413,4 +413,8 @@ public class LinkAnalysis {
         return config;
     }
 
+    public Map<CompositeSequence, Collection<Gene>> getProbeToGeneMap() {
+        return probeToGeneMap;
+    }
+
 }

@@ -52,17 +52,15 @@ Ext.extend(progressbar, Ext.util.Observable, {
 	   if (this.determinate == 0){
 			document.getElementById("progressTextArea").innerHTML = "Starting job...";
 		} else {
-			document.getElementById("progressBarText").value = "Please wait...";
+			document.getElementById("progress-bar-text").value = "Please wait...";
 		}
 		
 		var callParams = [dwr.util.getValue("taskId")];
 		var callback = this.updateProgress.createDelegate(this, [], true) ;
 		var errorHandler = this.handleFailure.createDelegate(this, [], true) ;
-		//callParams.push({callback : callback, errorHandler : errorHandler  });
 		callParams.push(callback);
 		callParams.push(errorHandler);
 		var f = this.refreshProgress.createDelegate(this, callParams, false);
-		
 		this.timeoutid = window.setInterval(f, this.BAR_UPDATE_INTERVAL);
 	},
 	
@@ -117,8 +115,8 @@ Ext.extend(progressbar, Ext.util.Observable, {
 			percent = data.percent;
 		}
 	
-		document.getElementById("progressBarText").innerHTML = messages + " " + percent + "%";
-		document.getElementById("progressBarBoxContent").style.width = parseInt(percent * 3.5) + "px";
+		document.getElementById("progress-bar-text").innerHTML = messages + " " + percent + "%";
+		document.getElementById("progress-bar-box-content").style.width = parseInt(percent * 3.5) + "px";
 	},
 
 			
@@ -175,7 +173,7 @@ Ext.extend(progressbar, Ext.util.Observable, {
 		if (this.determinate == 0){
 			document.getElementById("progressTextArea").innerHTML = "Cancelling...";
 		} else {
-			document.getElementById("progressBarText").value = "Cancelling...";
+			document.getElementById("progress-bar-text").value = "Cancelling...";
 		}
 		var f =  this.cancelCallback.createDelegate(this, [], true);
 		ProgressStatusService.cancelJob(taskId, f);
@@ -221,8 +219,10 @@ Ext.extend(progressbar, Ext.util.Observable, {
 	 */
 	createDeterminateProgressBar : function (){
 		this.determinate = 1;
-		var barHtml = '<div id="progressBar" style="display: none;"> <div id="theMeter">  <div id="progressBarText"></div>   <div id="progressBarBox">  <div id="progressBarBoxContent"></div>  </div>  </div>  </div>';
+		var barHtml = '<div id="progressBar" >  <div id="progress-bar-text"></div>   <div id="progress-bar-box">  <div id="progress-bar-box-content"></div>  <input style="float:left" type="button" id="cancel-button" name="Cancel" value="Cancel job" /></div> </div>';
 	 	Ext.DomHelper.overwrite("progress-area", barHtml);
+	 	f = this.cancelJob.createDelegate(this, [], true);
+		Ext.get("cancel-button").on('click', f);
 	},
 	
 	 

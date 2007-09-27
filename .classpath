@@ -98,7 +98,7 @@
 			<attribute name="javadoc_location" value="http://www.jajakarta.org/ant/ant-1.6.1/docs/ja/manual/api/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/rserve/JRclient/RE817/JRclient-RE817.jar" sourcepath="/JAR_SOURCE/Rserve-0.5.0"/>
+	<classpathentry kind="var" path="M2_REPO/rserve/JRclient/RE817/JRclient-RE817.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/springmodules/spring-modules-validation/0.8a/spring-modules-validation-0.8a.jar" sourcepath="/JAR_SOURCE/spring-modules-0.8/sources/spring-modules-validation-src.zip"/>
 	<classpathentry kind="var" path="M2_REPO/commons-codec/commons-codec/1.3/commons-codec-1.3.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-dbcp/commons-dbcp/1.2/commons-dbcp-1.2.jar"/>
@@ -114,7 +114,7 @@
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/jaxen/jaxen/1.1-beta-5/jaxen-1.1-beta-5.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-pool/commons-pool/1.2/commons-pool-1.2.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/directwebremoting/dwr/2.0.1/dwr-2.0.1.jar" sourcepath="/JAR_SOURCE/dwr-2.0.1-src/java"/>
+	<classpathentry kind="var" path="M2_REPO/org/directwebremoting/dwr/2.1.dev/dwr-2.1.dev.jar" sourcepath="/JAR_SOURCE/dwr/java"/>
 	<classpathentry kind="var" path="M2_REPO/opensymphony/clickstream/1.0.2/clickstream-1.0.2.jar"/>
 	<classpathentry kind="var" path="M2_REPO/xalan/xalan/2.6.0/xalan-2.6.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-io/commons-io/1.1/commons-io-1.1.jar"/>
