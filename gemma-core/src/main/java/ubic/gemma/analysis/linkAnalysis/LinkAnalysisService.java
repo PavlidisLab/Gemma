@@ -18,8 +18,14 @@
  */
 package ubic.gemma.analysis.linkAnalysis;
 
+import java.io.IOException;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -121,6 +127,8 @@ public class LinkAnalysisService {
         la.analyze();
         if ( linkAnalysisConfig.isUseDb() ) {
             saveLinks( p2v, la );
+        } else if ( linkAnalysisConfig.isTextOut() ) {
+            writeLinks( la, new PrintWriter( System.out ) );
         }
         log.info( "Done with processing of " + ee );
 
@@ -145,6 +153,40 @@ public class LinkAnalysisService {
         Map<CompositeSequence, Collection<Gene>> probeToGeneMap = csService.getGenes( probesForVectors );
         la.setProbeToGeneMap( probeToGeneMap );
         return p2v;
+    }
+
+    /**
+     * Write to stdout (TODO allow write to writer)
+     * 
+     * @param p2v
+     * @param la
+     */
+    private void writeLinks( LinkAnalysis la, Writer wr ) throws IOException {
+        wr.write( la.getConfig().toString() );
+        ObjectArrayList links = la.getKeep();
+        NumberFormat nf = DecimalFormat.getInstance();
+        nf.setMaximumFractionDigits( 4 );
+
+        int i = 0;
+        for ( int n = links.size(); i < n; i++ ) {
+            Object val = links.getQuick( i );
+            if ( val == null ) continue;
+            Link m = ( Link ) val;
+            Double w = m.getWeight();
+
+            assert w != null;
+
+            DesignElement p1 = la.getMetricMatrix().getProbeForRow( la.getDataMatrix().getRowElement( m.getx() ) );
+            DesignElement p2 = la.getMetricMatrix().getProbeForRow( la.getDataMatrix().getRowElement( m.gety() ) );
+
+            wr.write( p1.getId() + "\t" + p2.getId() + "\t" + nf.format( w ) );
+
+            if ( i > 0 && i % 50000 == 0 ) {
+                log.info( i + " links printed" );
+            }
+
+        }
+        log.info( "Done, " + i + " links printed" );
     }
 
     /**

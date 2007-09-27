@@ -37,6 +37,7 @@ public class LinkAnalysisConfig {
     private boolean useDb = true;
 
     private double correlationCacheThreshold = 0.8;
+    private boolean textOut;
 
     public double getCorrelationCacheThreshold() {
         return correlationCacheThreshold;
@@ -100,6 +101,27 @@ public class LinkAnalysisConfig {
 
     public void setMetric( String metric ) {
         this.metric = metric;
+    }
+
+    public void setTextOut( boolean b ) {
+        this.textOut = b;
+    }
+
+    public boolean isTextOut() {
+        return textOut;
+    }
+
+    public String toString() {
+        StringBuilder buf = new StringBuilder();
+        buf.append( "# AbsoluteValue:" + this.isAbsoluteValue() + "\n" );
+        buf.append( "# cdfCut:" + this.getCdfCut() + "\n" );
+        buf.append( "# cacheCut:" + this.getCorrelationCacheThreshold() + "\n" );
+        buf.append( "# fwe:" + this.getFwe() + "\n" );
+        buf.append( "# metric:" + this.getMetric() + "\n" );
+        buf.append( "# uppercut:" + this.getUpperTailCut() + "\n" );
+        buf.append( "# lowercut:" + this.getLowerTailCut() + "\n" );
+        buf.append( "# useDB:" + this.isUseDb() + "\n" );
+        return buf.toString();
     }
 
 }

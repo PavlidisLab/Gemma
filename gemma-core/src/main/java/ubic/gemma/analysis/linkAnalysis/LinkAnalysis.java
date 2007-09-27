@@ -106,7 +106,7 @@ public class LinkAnalysis {
             throw new RuntimeException( "No genes found for this dataset; make sure the probe -> gene map is complete." );
         }
 
-        this.outputOptions();
+        log.info( "Current Options: \n" + this.config );
         this.calculateDistribution();
         this.writeDistribution();
         this.getLinks();
@@ -352,20 +352,6 @@ public class LinkAnalysis {
     }
 
     /**
-     * 
-     *
-     */
-    private void outputOptions() {
-        log.info( "Current Settings" );
-        log.info( "AbsoluteValue Setting:" + config.isAbsoluteValue() );
-        log.info( "cdfCut:" + config.getCdfCut() );
-        log.info( "cacheCut:" + config.getCorrelationCacheThreshold() );
-        log.info( "Unique Items:" + this.uniqueGenesInDataset );
-        log.info( "fwe:" + config.getFwe() );
-        log.info( "useDB:" + config.isUseDb() );
-    }
-
-    /**
      * @param paraFileName
      */
     protected void writeDataIntoFile( String paraFileName ) throws IOException {
@@ -421,6 +407,10 @@ public class LinkAnalysis {
 
     public QuantitationType getMetric() {
         return this.metricMatrix.getMetricType();
+    }
+
+    public LinkAnalysisConfig getConfig() {
+        return config;
     }
 
 }

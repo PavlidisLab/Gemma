@@ -140,6 +140,9 @@ public class LinkAnalysisCli extends AbstractGeneExpressionExperimentManipulatin
                 .withLongOpt( "nodb" ).create( 'd' );
         addOption( useDB );
 
+        Option textOutOpt = OptionBuilder.withDescription( "Output links as text to STOUT" ).create( "text" );
+        addOption( textOutOpt );
+
     }
 
     @SuppressWarnings("unchecked")
@@ -288,6 +291,9 @@ public class LinkAnalysisCli extends AbstractGeneExpressionExperimentManipulatin
         }
         if ( hasOption( 'd' ) ) {
             this.linkAnalysisConfig.setUseDb( false );
+        }
+        if ( hasOption( "text" ) ) {
+            this.linkAnalysisConfig.setTextOut( true );
         }
         this.expressionExperimentReportService = ( ExpressionExperimentReportService ) this
                 .getBean( "expressionExperimentReportService" );
