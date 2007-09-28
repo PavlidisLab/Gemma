@@ -104,9 +104,9 @@ public class TTestAnalyzer extends AbstractAnalyzer {
     }
 
     /**
-     * Makes the following R call:
+     * R call:
      * <p>
-     * apply(matrix, 1, function(x) {t.test(x ~ factor(t(facts)))$p.value}) <-- R Console
+     * apply(matrix, 1, function(x) {t.test(x ~ factor(t(facts)))$p.value})
      * 
      * @param matrix
      * @param factorValues

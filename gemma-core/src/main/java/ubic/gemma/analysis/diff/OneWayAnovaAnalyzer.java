@@ -89,6 +89,12 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
     }
 
     /**
+     * R Call:
+     * <p>
+     * apply(matrix,1,function(x){anova(aov(x~factor))$Pr})
+     * <p>
+     * where factor is a vector that has first been transposed and then had factor() applied.
+     * 
      * @param matrix
      * @param factorValues
      * @param samplesUsed
@@ -112,10 +118,6 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
         String matrixName = rc.assignMatrix( namedMatrix );
         StringBuffer command = new StringBuffer();
 
-        // R Call
-        // apply(matrix,1,function(x){anova(aov(x~factor))$Pr})
-        // where area and treat are first transposed and then factor is called on each to give
-        // farea and ftreat.
         command.append( "apply(" );
         command.append( matrixName );
         command.append( ", 1, function(x) {anova(aov(x ~ " + factor + "))$Pr}" );
