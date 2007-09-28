@@ -126,15 +126,14 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractAnalyzer {
         String matrixName = rc.assignMatrix( namedMatrix );
         StringBuffer command = new StringBuffer();
 
+        // R Call
+        // The call is: apply(matrix,1,function(x){anova(aov(x~farea+ftreat+farea*ftreat))$Pr})
+        // where area and treat are first transposed and then factor is called on each to give
+        // farea and ftreat.
         command.append( "apply(" );
         command.append( matrixName );
         command.append( ", 1, function(x) {anova(aov(x ~ " + factorA + "+" + factorB + "))$Pr}" );
         command.append( ")" );
-
-        // R Call
-        // The call is: apply(matrix,1,function(x){anova(aov(x~farea+ftreat+farea*ftreat))})
-        // where area and treat are first transposed and then factor is called on each to give
-        // farea and ftreat.
 
         log.debug( command.toString() );
 
