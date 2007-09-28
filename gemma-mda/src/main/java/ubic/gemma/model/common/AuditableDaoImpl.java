@@ -55,13 +55,6 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
 
     }
     
-    protected ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastAuditEvent( Long auditableId, AuditEventType type ) throws java.lang.Exception {
-        
-        log.info("is this method ever called?");
-        return null;
-        
-    }
-    
     @Override
     protected ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastAuditEvent( final Auditable auditable, AuditEventType type ) throws java.lang.Exception {
         return handleGetLastAuditEvent( auditable.getAuditTrail(), type );

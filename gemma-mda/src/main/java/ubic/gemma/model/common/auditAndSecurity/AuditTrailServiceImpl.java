@@ -19,7 +19,6 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 import java.util.Calendar;
-import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -39,7 +38,11 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEvent;
 public class AuditTrailServiceImpl extends ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceBase {
 
     private static Log log = LogFactory.getLog( AuditTrailServiceImpl.class.getName() );
-
+    
+    private static final TroubleStatusFlagEvent TROUBLE_STATUS_FLAG_EVENT = TroubleStatusFlagEvent.Factory.newInstance();
+    private static final OKStatusFlagEvent OK_STATUS_FLAG_EVENT = OKStatusFlagEvent.Factory.newInstance();
+    private static final ValidatedFlagEvent VALIDATED_FLAG_EVENT = ValidatedFlagEvent.Factory.newInstance();
+    
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#audit(ubic.gemma.model.common.Describable,
      *      ubic.gemma.model.common.auditAndSecurity.AuditEvent)
@@ -159,34 +162,43 @@ public class AuditTrailServiceImpl extends ubic.gemma.model.common.auditAndSecur
 
     @Override
     protected AuditEvent handleGetLastTroubleEvent( Auditable auditable ) throws Exception {
-        thaw( auditable );
-        AuditTrail auditTrail = auditable.getAuditTrail();
-        List<AuditEvent> events = ( List<AuditEvent> ) auditTrail.getEvents();
-        AuditEvent lastOK = null;
-        for ( int i = events.size() - 1; i >= 0; i-- ) {
-            AuditEvent e = events.get( i );
-            if ( e.getEventType() instanceof TroubleStatusFlagEvent ) {
-                if ( lastOK == null ) {
-                    return e;
-                }
-            } else if ( e.getEventType() instanceof OKStatusFlagEvent ) {
-                lastOK = e;
-            }
-        }
-        return null;
+        AuditEvent troubleEvent = getAuditableService().getLastAuditEvent( auditable, TROUBLE_STATUS_FLAG_EVENT );
+        if ( troubleEvent == null )
+            return null;
+        AuditEvent okEvent = getAuditableService().getLastAuditEvent( auditable, OK_STATUS_FLAG_EVENT );
+        if ( okEvent != null && okEvent.getDate().after( troubleEvent.getDate() ) )
+            return null;
+        else
+            return troubleEvent;
+//        thaw( auditable );
+//        AuditTrail auditTrail = auditable.getAuditTrail();
+//        List<AuditEvent> events = ( List<AuditEvent> ) auditTrail.getEvents();
+//        AuditEvent lastOK = null;
+//        for ( int i = events.size() - 1; i >= 0; i-- ) {
+//            AuditEvent e = events.get( i );
+//            if ( e.getEventType() instanceof TroubleStatusFlagEvent ) {
+//                if ( lastOK == null ) {
+//                    return e;
+//                }
+//            } else if ( e.getEventType() instanceof OKStatusFlagEvent ) {
+//                lastOK = e;
+//            }
+//        }
+//        return null;
     }
 
     @Override
     protected AuditEvent handleGetLastValidationEvent( Auditable auditable ) throws Exception {
-        thaw( auditable );
-        AuditTrail auditTrail = auditable.getAuditTrail();
-        List<AuditEvent> events = ( List<AuditEvent> ) auditTrail.getEvents();
-        for ( int i = events.size() - 1; i >= 0; i-- ) {
-            AuditEvent e = events.get( i );
-            if ( e.getEventType() instanceof ValidatedFlagEvent ) {
-                return e;
-            }
-        }
-        return null;
+        return getAuditableService().getLastAuditEvent( auditable, VALIDATED_FLAG_EVENT );
+//        thaw( auditable );
+//        AuditTrail auditTrail = auditable.getAuditTrail();
+//        List<AuditEvent> events = ( List<AuditEvent> ) auditTrail.getEvents();
+//        for ( int i = events.size() - 1; i >= 0; i-- ) {
+//            AuditEvent e = events.get( i );
+//            if ( e.getEventType() instanceof ValidatedFlagEvent ) {
+//                return e;
+//            }
+//        }
+//        return null;
     }
 }

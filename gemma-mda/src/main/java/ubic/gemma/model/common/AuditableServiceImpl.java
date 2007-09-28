@@ -22,17 +22,23 @@
  */
 package ubic.gemma.model.common;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.OKStatusFlagEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEvent;
 
 /**
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.common.AuditableService
  */
-public abstract class AuditableServiceImpl extends ubic.gemma.model.common.AuditableServiceBase {
+public class AuditableServiceImpl extends ubic.gemma.model.common.AuditableServiceBase {
 
     /**
      * @see ubic.gemma.model.common.AuditableService#getEvents(ubic.gemma.model.common.Auditable)
@@ -70,5 +76,50 @@ public abstract class AuditableServiceImpl extends ubic.gemma.model.common.Audit
             }
         }
         return lastEvent;
+    }
+    
+    protected AuditEvent getLastOutstandingTroubleEvent( Collection<AuditEvent> events ) {
+        return getLastOutstandingTroubleEventNoSort( events );
+        //return getLastOutstandingTroubleEventWithSort( events );
+    }
+    
+    private AuditEvent getLastOutstandingTroubleEventNoSort( Collection<AuditEvent> events ) {
+        AuditEvent lastTroubleEvent = null;
+        AuditEvent lastOKEvent = null;
+        for ( AuditEvent event : events ) {
+            if ( event.getEventType() == null) {
+                continue;
+            } else if ( OKStatusFlagEvent.class.isAssignableFrom( event.getEventType().getClass() ) ) {
+                if ( lastOKEvent == null || lastOKEvent.getDate().before( event.getDate() ) )
+                    lastOKEvent = event;
+            } else if ( TroubleStatusFlagEvent.class.isAssignableFrom( event.getEventType().getClass() ) ) {
+                if ( lastTroubleEvent == null || lastTroubleEvent.getDate().before( event.getDate() ) )
+                    lastTroubleEvent = event;
+            }
+        }
+        if ( lastTroubleEvent != null )
+            if ( lastOKEvent == null || lastOKEvent.getDate().before( lastTroubleEvent.getDate() ) )
+                return lastTroubleEvent;
+        return null;
+    }
+        
+    private AuditEvent getLastOutstandingTroubleEventWithSort( Collection<AuditEvent> events ) {
+        /* sort by date descending and step through the list; if we come to an OK event
+         * first, there's no problem; if we come to a Trouble before we see an OK event,
+         * there's a problem (in this case, we might go through the whole list...)
+         */
+        List<AuditEvent> eventList = new ArrayList<AuditEvent>( events );
+        Collections.sort( eventList, new Comparator<AuditEvent>() {
+            public int compare( AuditEvent o1, AuditEvent o2 ) {
+                return -1 * o1.getDate().compareTo( o2.getDate() );
+            }
+        } );
+        for ( AuditEvent event : eventList ) {
+            if ( OKStatusFlagEvent.class.isAssignableFrom( event.getEventType().getClass() ) )
+                return null;
+            else if ( TroubleStatusFlagEvent.class.isAssignableFrom( event.getEventType().getClass() ) )
+                return event;
+        }
+        return null;
     }
 }

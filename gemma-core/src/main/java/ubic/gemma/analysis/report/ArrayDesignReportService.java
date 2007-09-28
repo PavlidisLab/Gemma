@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.time.DateFormatUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -70,6 +71,10 @@ public class ArrayDesignReportService {
      */
     @SuppressWarnings("unchecked")
     public void fillEventInformation( Collection<ArrayDesignValueObject> adVos ) {
+
+        StopWatch watch = new StopWatch();
+        watch.start();
+        
         Collection<Long> ids = new ArrayList<Long>();
         for ( Object object : adVos ) {
             ArrayDesignValueObject adVo = ( ArrayDesignValueObject ) object;
@@ -80,7 +85,9 @@ public class ArrayDesignReportService {
         Map<Long, AuditEvent> sequenceUpdateEvents = arrayDesignService.getLastSequenceUpdate( ids );
         Map<Long, AuditEvent> sequenceAnalysisEvents = arrayDesignService.getLastSequenceAnalysis( ids );
         Map<Long, AuditEvent> repeatAnalysisEvents = arrayDesignService.getLastRepeatAnalysis( ids );
-
+        Map<Long, AuditEvent> troubleEvents = arrayDesignService.getLastTroubleEvent( ids );
+        Map<Long, AuditEvent> validationEvents = arrayDesignService.getLastValidationEvent( ids );
+        
         // fill in events for the value objects
         for ( ArrayDesignValueObject adVo : adVos ) {
             // preemptively fill in event dates with None
@@ -112,11 +119,17 @@ public class ArrayDesignReportService {
                     adVo.setLastRepeatMask( event.getDate() );
                 }
             }
+            adVo.setTroubleEvent( troubleEvents.get( id ) );
+            adVo.setValidationEvent( validationEvents.get( id ) );
             
-            ArrayDesign ad = arrayDesignService.load( id );
-            adVo.setTroubleEvent( auditTrailService.getLastTroubleEvent( ad ) );
-            adVo.setValidationEvent( auditTrailService.getLastValidationEvent( ad ) );
+//            ArrayDesign ad = arrayDesignService.load( id );
+//            adVo.setTroubleEvent( auditTrailService.getLastTroubleEvent( ad ) );
+//            adVo.setValidationEvent( auditTrailService.getLastValidationEvent( ad ) );
         }
+
+        watch.stop();
+        log.info( "Added event information in " + watch.getTime() + "ms (wall time)" );
+        
     }
 
     @SuppressWarnings("unchecked")

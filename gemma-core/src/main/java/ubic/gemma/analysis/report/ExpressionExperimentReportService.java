@@ -246,6 +246,10 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
      */
     @SuppressWarnings("unchecked")
     public void fillEventInformation( Collection vos ) {
+        
+        StopWatch watch = new StopWatch();
+        watch.start();
+        
         Collection<Long> ids = new ArrayList<Long>();
         for ( Object object : vos ) {
             ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) object;
@@ -256,6 +260,8 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         Map<Long, AuditEvent> missingValueAnalysisEvents = expressionExperimentService
                 .getLastMissingValueAnalysis( ids );
         Map<Long, AuditEvent> rankComputationEvents = expressionExperimentService.getLastRankComputation( ids );
+        Map<Long, AuditEvent> troubleEvents = expressionExperimentService.getLastTroubleEvent( ids );
+        Map<Long, AuditEvent> validationEvents = expressionExperimentService.getLastValidationEvent( ids );
 
         // add in the last events of interest for all eeVos
         for ( Object object : vos ) {
@@ -284,6 +290,8 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                     eeVo.setRankComputationEventType( event.getEventType() );
                 }
             }
+            eeVo.setTroubleFlag( troubleEvents.get( id ) );
+            eeVo.setValidatedFlag( validationEvents.get( id ) );
 
             
             ExpressionExperiment ee = expressionExperimentService.load( id );
@@ -291,18 +299,15 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
             AuditEvent arrayDesignUpdateEvent = expressionExperimentService.getLastArrayDesignUpdate( ee );
             eeVo.setDateArrayDesignLastUpdated( arrayDesignUpdateEvent.getDate() );
             
-            StopWatch watch = new StopWatch();
-            watch.start();
-            
-            AuditEvent troubleEvent = getLastTroubleEvent( ee );
-            eeVo.setTroubleFlag( troubleEvent );
-            
-            AuditEvent validatedEvent = auditTrailService.getLastValidationEvent( ee );
-            eeVo.setValidatedFlag( validatedEvent );
-
-            watch.stop();
-            log.info( "Added event information in " + watch.getTime() + "ms (wall time)" );
+//            AuditEvent troubleEvent = getLastTroubleEvent( ee );
+//            eeVo.setTroubleFlag( troubleEvent );
+//            
+//            AuditEvent validatedEvent = auditTrailService.getLastValidationEvent( ee );
+//            eeVo.setValidatedFlag( validatedEvent );
         }
+
+        watch.stop();
+        log.info( "Added event information in " + watch.getTime() + "ms (wall time)" );
 
     }
     

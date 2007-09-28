@@ -32,6 +32,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMapping
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEvent;
 import ubic.gemma.model.genome.Taxon;
 
 /**
@@ -609,6 +610,64 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     protected void handleRemoveBiologicalCharacteristics( ArrayDesign arrayDesign ) throws Exception {
         this.getArrayDesignDao().removeBiologicalCharacteristics( arrayDesign );
 
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastTroubleEvent(java.util.Collection)
+     */
+    @Override
+    protected java.util.Map handleGetLastTroubleEvent( Collection ids ) throws Exception {
+        Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
+        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
+        
+        Set<Long> aaIds = eventMap.keySet();
+        for ( Long arrayDesignId : aaIds ) {
+
+            Collection<AuditEvent> events = eventMap.get( arrayDesignId );
+            AuditEvent lastEvent = null;
+            
+            if ( events == null ) {
+                lastEventMap.put( arrayDesignId, null );
+            } else {
+                lastEvent = getLastOutstandingTroubleEvent( events );
+                lastEventMap.put( arrayDesignId, lastEvent );
+                
+                /* TODO how to deal with merged/subsumed arrays in this case?
+                 */
+            }
+            
+        }
+        
+        return lastEventMap;
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastValidationEvent(java.util.Collection)
+     */
+    @Override
+    protected Map handleGetLastValidationEvent( Collection ids ) throws Exception {
+        Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
+        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
+        
+        Set<Long> aaIds = eventMap.keySet();
+        for ( Long arrayDesignId : aaIds ) {
+
+            Collection<AuditEvent> events = eventMap.get( arrayDesignId );
+            AuditEvent lastEvent = null;
+            
+            if ( events == null ) {
+                lastEventMap.put( arrayDesignId, null );
+            } else {
+                lastEvent = getLastEvent( events, ValidatedFlagEvent.class );
+                lastEventMap.put( arrayDesignId, lastEvent );
+                
+                /* TODO how to deal with merged/subsumed arrays in this case?
+                 */
+            }
+            
+        }
+        
+        return lastEventMap;
     }
 
 }
