@@ -12,7 +12,9 @@ import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntClass;
 import com.hp.hpl.jena.ontology.OntResource;
 import com.hp.hpl.jena.ontology.Restriction;
+import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.RDFNode;
+import com.hp.hpl.jena.rdf.model.ResourceFactory;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
 import com.hp.hpl.jena.util.iterator.ExtendedIterator;
@@ -26,6 +28,7 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 public class OntologyTermImpl extends AbstractOntologyResource implements OntologyTerm {
 
     private static final String NOTHING = "http://www.w3.org/2002/07/owl#Nothing";
+    private static final String HAS_ALTERNATE_ID = "http://www.geneontology.org/formats/oboInOwl#hasAlternativeId";
     OntClass ontResource = null;
     String label = null;
 
@@ -261,4 +264,19 @@ public class OntologyTermImpl extends AbstractOntologyResource implements Ontolo
     public String getUri() {
         return this.ontResource.getURI();
     }
+    
+    
+    public Collection<String> getAlternativeIds(){
+        Collection<String> results = new HashSet<String>();
+        
+        Property alternate = ResourceFactory.createProperty(HAS_ALTERNATE_ID);
+        for (java.util.Iterator it = this.ontResource.listProperties( alternate ); it.hasNext();){
+            Statement statement = (Statement) it.next();      
+            results.add( statement.asTriple().getMatchObject().getLiteralLexicalForm() );            
+        }
+
+        return results;
+        
+    }
+    
 }

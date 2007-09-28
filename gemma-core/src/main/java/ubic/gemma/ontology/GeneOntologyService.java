@@ -185,11 +185,10 @@ public class GeneOntologyService implements InitializingBean {
 
         boolean loadOntology = ConfigUtils.getBoolean( "loadOntology", true );
 
-        // if loading ontologies is disabled in the configuration, return
-        if ( !loadOntology ) {
+       if ( !loadOntology ) {
             log.info( "Loading GO is disabled" );
             return;
-        }
+        }        
 
         Thread loadThread = new Thread( new Runnable() {
             public void run() {
@@ -260,7 +259,14 @@ public class GeneOntologyService implements InitializingBean {
         if ( terms == null ) terms = new HashMap<String, OntologyTerm>();
         for ( OntologyResource term : newTerms ) {
             if ( term.getUri() == null ) continue;
-            if ( term instanceof OntologyTerm ) terms.put( term.getUri(), ( OntologyTerm ) term );
+            if ( term instanceof OntologyTerm ){
+                OntologyTerm ontTerm = (OntologyTerm) term;
+                terms.put( term.getUri(), ontTerm);
+                for(String alternativeID: ontTerm.getAlternativeIds()){
+                    log.info( toUri(alternativeID) );
+                    terms.put( toUri(alternativeID), ontTerm );
+                }
+            }
         }
     }
 
@@ -624,8 +630,8 @@ public class GeneOntologyService implements InitializingBean {
             allGOTermSet.add( terms.get( c.getValueUri() ) );
         }
 
-        allGOTermSet = getAllParents( allGOTermSet );
-
+        allGOTermSet.addAll( getAllParents( allGOTermSet ) );
+        
         goTerms.put( gene.getId(), allGOTermSet );
         return allGOTermSet;
     }
