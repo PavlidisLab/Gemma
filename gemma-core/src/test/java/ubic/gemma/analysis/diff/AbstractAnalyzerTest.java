@@ -51,7 +51,6 @@ public class AbstractAnalyzerTest extends BaseSpringContextTest {
 
         ee = this.getTestPersistentCompleteExpressionExperiment();
 
-        // use one experimental factor
         efs = ee.getExperimentalDesign().getExperimentalFactors();
         ef = efs.iterator().next();
         Collection<FactorValue> factorValues = ef.getFactorValues();

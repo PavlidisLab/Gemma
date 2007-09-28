@@ -18,10 +18,16 @@
  */
 package ubic.gemma.analysis.diff;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * Tests the one way anova analyzer.
@@ -39,7 +45,33 @@ public class OneWayAnovaAnalyzerTest extends AbstractAnalyzerTest {
      */
     public void testOneWayAnova() {
 
-        Map pvaluesMap = analyzer.oneWayAnova( matrix, ef.getFactorValues(), biomaterials );
+        List<BioMaterial> alteredBiomaterials = new ArrayList<BioMaterial>();
+
+        /*
+         * Need to make sure all the biomaterials have factor values from the same experimental factor for one way
+         * anova. Also, make sure we only have one factor value per biomaterial.
+         */
+        for ( BioMaterial m : biomaterials ) {
+            log.debug( "Biomaterial: " + m.getName() );
+
+            Collection<FactorValue> factorValuesFromBioMaterial = m.getFactorValues();
+
+            List<FactorValue> alteredFactorValuesFromBioMaterial = new ArrayList<FactorValue>();
+
+            FactorValue f = factorValuesFromBioMaterial.iterator().next();
+            log.debug( "Experimental factor from factor value: " + f.getExperimentalFactor() );
+
+            if ( f.getExperimentalFactor() != ef ) {
+                f.setExperimentalFactor( ef );
+            }
+            alteredFactorValuesFromBioMaterial.add( f );
+
+            m.setFactorValues( alteredFactorValuesFromBioMaterial );
+
+            alteredBiomaterials.add( m );
+        }
+
+        Map pvaluesMap = analyzer.oneWayAnova( matrix, ef.getFactorValues(), alteredBiomaterials );
 
         log.info( pvaluesMap );
 

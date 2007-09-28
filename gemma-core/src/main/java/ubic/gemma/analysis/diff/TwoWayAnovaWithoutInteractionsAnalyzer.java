@@ -18,8 +18,8 @@
  */
 package ubic.gemma.analysis.diff;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -111,35 +111,16 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractAnalyzer {
         Collection<FactorValue> factorValuesA = experimentalFactorA.getFactorValues();
         Collection<FactorValue> factorValuesB = experimentalFactorB.getFactorValues();
 
-        /* separating the biomaterials according to the experimental factor */
-        Collection<BioMaterial> samplesUsedA = new ArrayList<BioMaterial>();
-        Collection<BioMaterial> samplesUsedB = new ArrayList<BioMaterial>();
-
-        for ( BioMaterial m : samplesUsed ) {
-            Collection<FactorValue> fvs = m.getFactorValues();
-            for ( FactorValue fv : fvs ) {
-                log.debug( fv.getValue() + " in experimental factor: " + fv.getExperimentalFactor() );
-                if ( fv.getExperimentalFactor() == experimentalFactorA )
-                    samplesUsedA.add( m );
-                else if ( fv.getExperimentalFactor() == experimentalFactorB )
-                    samplesUsedB.add( m );
-                else
-                    throw new RuntimeException(
-                            "Experimental factor of factor value of biomaterial does not match either of the supplied experimental factors." );
-
-            }
-        }
-
-        List<String> rFactorsA = AnalyzerHelper.getRFactorsFromFactorValues( factorValuesA, samplesUsedA );
-        List<String> rFactorsB = AnalyzerHelper.getRFactorsFromFactorValues( factorValuesB, samplesUsedB );
+        List<String> rFactorsA = AnalyzerHelper.getRFactorsFromFactorValuesForTwoWayAnova( factorValuesA, samplesUsed );
+        List<String> rFactorsB = AnalyzerHelper.getRFactorsFromFactorValuesForTwoWayAnova( factorValuesB, samplesUsed );
 
         String factsA = rc.assignStringList( rFactorsA );
         String factsB = rc.assignStringList( rFactorsB );
 
         String tfactsA = "t(" + factsA + ")";
-        String factorA = "factor(" + tfactsA + ")";
-
         String tfactsB = "t(" + factsB + ")";
+
+        String factorA = "factor(" + tfactsA + ")";
         String factorB = "factor(" + tfactsB + ")";
 
         String matrixName = rc.assignMatrix( namedMatrix );
@@ -147,22 +128,36 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractAnalyzer {
 
         command.append( "apply(" );
         command.append( matrixName );
-        command.append( ", 1, function(x) {anova(aov(x ~ " + factorA + "+" + factorB + "))}" );
+        command.append( ", 1, function(x) {anova(aov(x ~ " + factorA + "+" + factorB + "))$Pr}" );
         command.append( ")" );
-
-        log.debug( command.toString() );
-
-        REXP regExp = rc.eval( command.toString() );
 
         // R Call
         // The call is: apply(matrix,1,function(x){anova(aov(x~farea+ftreat+farea*ftreat))})
         // where area and treat are first transposed and then factor is called on each to give
         // farea and ftreat.
-        // TODO
-        // farea and ftreat are just vectors. You'll have to group the biomaterials by experimental factors, so either
-        // send in two collections of biomaterials, or
-        // separate them here.
 
-        return null;
+        log.debug( command.toString() );
+
+        REXP regExp = rc.eval( command.toString() );
+
+        double[] pvalues = ( double[] ) regExp.getContent();
+
+        double[] filteredPvalues = new double[pvalues.length / 2];// removes the NaN row
+
+        for ( int i = 0, j = 0; j < filteredPvalues.length; i++ ) {
+            if ( i % 3 < 2 ) {
+                filteredPvalues[j] = pvalues[i];
+                j++;
+            }
+        }
+
+        // TODO Use the ExpressionAnalysisResult
+        Map<DesignElement, Double> pvaluesMap = new HashMap<DesignElement, Double>();
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            DesignElement de = matrix.getDesignElementForRow( i );
+            pvaluesMap.put( de, filteredPvalues[i] );
+        }
+
+        return pvaluesMap;
     }
 }

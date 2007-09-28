@@ -121,7 +121,7 @@ public class TTestAnalyzer extends AbstractAnalyzer {
         factorValues.add( factorValueA );
         factorValues.add( factorValueB );
 
-        List<String> rFactors = AnalyzerHelper.getRFactorsFromFactorValues( factorValues, samplesUsed );
+        List<String> rFactors = AnalyzerHelper.getRFactorsFromFactorValuesForOneWayAnova( factorValues, samplesUsed );
 
         ExpressionDataDoubleMatrix dmatrix = ( ExpressionDataDoubleMatrix ) matrix;
 
@@ -148,7 +148,7 @@ public class TTestAnalyzer extends AbstractAnalyzer {
 
         double[] pvalues = ( double[] ) regExp.getContent();
 
-        // TODO can you get the design elements from R?
+        // TODO Use the ExpressionAnalysisResult
         Map pvaluesMap = new HashMap<DesignElement, Double>();
         for ( int i = 0; i < matrix.rows(); i++ ) {
             DesignElement de = matrix.getDesignElementForRow( i );

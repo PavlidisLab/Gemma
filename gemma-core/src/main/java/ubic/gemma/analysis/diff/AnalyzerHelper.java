@@ -106,16 +106,60 @@ public class AnalyzerHelper {
     }
 
     /**
-     * Supports 1 factor value per biomaterial and returns a list of values. This is useful for R calls, which takes can
-     * take an R-factor for methods like the {@link TTestAnalyzer}.
+     * Returns the factors that can be used by R for a two way anova. Each sample must have a factor value equal to one
+     * of the supplied factor values.
      * 
      * @param factorValues
      * @param samplesUsed
      * @return
      */
-    public static List<String> getRFactorsFromFactorValues( Collection<FactorValue> factorValues,
+    public static List<String> getRFactorsFromFactorValuesForTwoWayAnova( Collection<FactorValue> factorValues,
             Collection<BioMaterial> samplesUsed ) {
-        // TODO if this is really just for R, move to an R helper.
+
+        List<String> rFactors = new ArrayList<String>();
+
+        for ( BioMaterial sampleUsed : samplesUsed ) {
+
+            Collection<FactorValue> factorValuesFromBioMaterial = sampleUsed.getFactorValues();
+
+            boolean match = false;
+
+            for ( FactorValue factorValueFromBioMaterial : factorValuesFromBioMaterial ) {
+
+                for ( FactorValue f : factorValues ) {
+                    if ( factorValueFromBioMaterial.getValue() != f.getValue() ) {
+                        continue;
+                    }
+
+                    else if ( factorValueFromBioMaterial.getValue() == f.getValue() ) {
+                        rFactors.add( factorValueFromBioMaterial.getValue() );
+                        match = true;
+                        break;
+                    }
+                }
+            }
+            if ( !match )
+                throw new RuntimeException(
+                        "None of the Factor values of the biomaterial match the supplied factor values." );
+        }
+        return rFactors;
+    }
+
+    /**
+     * Returns the factors that can be used by R for a one way anova. This can also be used for t-tests. There
+     * requirement here is that there is only one factor value per biomaterial, and all factor values are from the same
+     * experimental factor.
+     * 
+     * @param factorValues
+     * @param samplesUsed
+     * @return
+     */
+    public static List<String> getRFactorsFromFactorValuesForOneWayAnova( Collection<FactorValue> factorValues,
+            Collection<BioMaterial> samplesUsed ) {
+
+        // TODO Use the experimental factor as input as this will assure all factor values are from the same
+        // experimental factor.
+
         List<String> rFactors = new ArrayList<String>();
 
         for ( BioMaterial sampleUsed : samplesUsed ) {

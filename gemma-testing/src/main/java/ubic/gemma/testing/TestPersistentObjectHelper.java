@@ -106,7 +106,7 @@ public class TestPersistentObjectHelper {
 
         if ( allFactorValues.isEmpty() )
             throw new RuntimeException(
-                    "Factor values cannot be associated with biomaterials.  Try creating the experimental design first." );
+                    "Factor values have not been associated with biomaterials.  Try creating the experimental design first." );
 
         Iterator<FactorValue> iter = allFactorValues.iterator();
 

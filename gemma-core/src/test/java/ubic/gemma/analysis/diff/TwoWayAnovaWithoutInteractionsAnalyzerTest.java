@@ -18,9 +18,17 @@
  */
 package ubic.gemma.analysis.diff;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * Tests the two way anova analyzer.
@@ -29,6 +37,8 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
  * @version $Id$
  */
 public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends AbstractAnalyzerTest {
+
+    private Log log = LogFactory.getLog( this.getClass() );
 
     TwoWayAnovaWithoutInteractionsAnalyzer analyzer = new TwoWayAnovaWithoutInteractionsAnalyzer();
 
@@ -41,8 +51,39 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends AbstractAnalyzer
         ExperimentalFactor experimentalFactorA = ( ExperimentalFactor ) iter.next();
         ExperimentalFactor experimentalFactorB = ( ExperimentalFactor ) iter.next();
 
-        // analyzer.twoWayAnova( this.ee, experimentalFactorA, experimentalFactorB );
-        analyzer.twoWayAnova( this.matrix, experimentalFactorA, experimentalFactorB, biomaterials );
+        List<BioMaterial> alteredBiomaterials = new ArrayList<BioMaterial>();
+
+        /* is just one fv per biomaterial in the test experiment so we'll add another for the two way anova */
+        for ( BioMaterial m : biomaterials ) {
+
+            Collection<FactorValue> factorValuesFromBioMaterial = m.getFactorValues();
+
+            List<FactorValue> alteredFactorValues = new ArrayList<FactorValue>();
+
+            for ( FactorValue fv : factorValuesFromBioMaterial ) {
+
+                alteredFactorValues.add( fv );
+
+                Collection<FactorValue> fvs = null;
+
+                if ( fv.getExperimentalFactor() == experimentalFactorA ) {
+                    fvs = experimentalFactorB.getFactorValues();
+                } else {
+                    fvs = experimentalFactorA.getFactorValues();
+                }
+                FactorValue anotherFactorValue = fvs.iterator().next();
+                alteredFactorValues.add( anotherFactorValue );
+                break;
+            }
+
+            m.setFactorValues( alteredFactorValues );
+
+            alteredBiomaterials.add( m );
+        }
+
+        analyzer.twoWayAnova( this.matrix, experimentalFactorA, experimentalFactorB, alteredBiomaterials );
+
+        // analyzer.twoWayAnova( this.matrix, experimentalFactorA, experimentalFactorB, biomaterials );
     }
 
 }

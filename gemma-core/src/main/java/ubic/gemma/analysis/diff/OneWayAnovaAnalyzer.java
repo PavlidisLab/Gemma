@@ -101,7 +101,7 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
 
         DoubleMatrixNamed namedMatrix = dmatrix.getNamedMatrix();
 
-        List<String> rFactors = AnalyzerHelper.getRFactorsFromFactorValues( factorValues, samplesUsed );
+        List<String> rFactors = AnalyzerHelper.getRFactorsFromFactorValuesForOneWayAnova( factorValues, samplesUsed );
 
         String facts = rc.assignStringList( rFactors );
 
@@ -125,14 +125,14 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
 
         double[] filteredPvalues = new double[pvalues.length / 2];// removes the NaN row
 
-        for ( int i = 0, j = 0; i < pvalues.length; i++ ) {
+        for ( int i = 0, j = 0; j < filteredPvalues.length; i++ ) {
             if ( i % 2 == 0 ) {
                 filteredPvalues[j] = pvalues[i];
                 j++;
             }
         }
 
-        // TODO can you get the design elements from R?
+        // TODO Use the ExpressionAnalysisResult
         Map<DesignElement, Double> pvaluesMap = new HashMap<DesignElement, Double>();
         for ( int i = 0; i < matrix.rows(); i++ ) {
             DesignElement de = matrix.getDesignElementForRow( i );
