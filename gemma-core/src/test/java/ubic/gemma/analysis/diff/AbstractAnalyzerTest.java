@@ -39,6 +39,8 @@ public class AbstractAnalyzerTest extends BaseSpringContextTest {
     protected Collection<ExperimentalFactor> efs = null;
     protected ExperimentalFactor ef = null;
 
+    protected QuantitationType quantitationTypeToUse = null;
+
     /*
      * (non-Javadoc)
      * 
@@ -61,8 +63,6 @@ public class AbstractAnalyzerTest extends BaseSpringContextTest {
         }
 
         Collection<DesignElementDataVector> dedvs = ee.getDesignElementDataVectors();
-
-        QuantitationType quantitationTypeToUse = null;
 
         Collection<QuantitationType> qts = ee.getQuantitationTypes();
         Collection<BioAssayDimension> dimensions = new HashSet<BioAssayDimension>();

@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import ubic.gemma.analysis.util.RCommander;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -34,10 +35,11 @@ public abstract class AbstractAnalyzer extends RCommander {
 
     /**
      * @param expressionExperiment
+     * @param quantitationType
      * @param experimentalFactors
      * @return
      */
     public abstract Map<DesignElement, Double> getPValues( ExpressionExperiment expressionExperiment,
-            Collection<ExperimentalFactor> experimentalFactors );
+            QuantitationType quantitationType, Collection<ExperimentalFactor> experimentalFactors );
 
 }

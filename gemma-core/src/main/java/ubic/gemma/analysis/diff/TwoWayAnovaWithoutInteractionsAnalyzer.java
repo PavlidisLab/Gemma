@@ -29,6 +29,7 @@ import org.rosuda.JRclient.REXP;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -49,11 +50,11 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractAnalyzer {
      * (non-Javadoc)
      * 
      * @see ubic.gemma.analysis.diff.AbstractAnalyzer#getPValues(ubic.gemma.model.expression.experiment.ExpressionExperiment,
-     *      java.util.Collection)
+     *      ubic.gemma.model.common.quantitationtype.QuantitationType, java.util.Collection)
      */
     @Override
     public Map<DesignElement, Double> getPValues( ExpressionExperiment expressionExperiment,
-            Collection<ExperimentalFactor> experimentalFactors ) {
+            QuantitationType quantitationType, Collection<ExperimentalFactor> experimentalFactors ) {
 
         if ( experimentalFactors.size() != 2 )
             throw new RuntimeException( "Two way anova supports 2 experimental factors.  Received "
@@ -63,16 +64,19 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractAnalyzer {
         ExperimentalFactor experimentalFactorA = ( ExperimentalFactor ) iter.next();
         ExperimentalFactor experimentalFactorB = ( ExperimentalFactor ) iter.next();
 
-        return twoWayAnova( expressionExperiment, experimentalFactorA, experimentalFactorB );
+        return twoWayAnova( expressionExperiment, quantitationType, experimentalFactorA, experimentalFactorB );
     }
 
     /**
      * @param expressionExperiment
-     * @param experimentalFactors
+     * @param quantitationType
+     * @param experimentalFactorA
+     * @param experimentalFactorB
      * @return
      */
     public Map<DesignElement, Double> twoWayAnova( ExpressionExperiment expressionExperiment,
-            ExperimentalFactor experimentalFactorA, ExperimentalFactor experimentalFactorB ) {
+            QuantitationType quantitationType, ExperimentalFactor experimentalFactorA,
+            ExperimentalFactor experimentalFactorB ) {
 
         Collection factorValuesA = experimentalFactorA.getFactorValues();
         Collection factorValuesB = experimentalFactorB.getFactorValues();

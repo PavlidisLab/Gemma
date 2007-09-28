@@ -28,6 +28,7 @@ import org.rosuda.JRclient.REXP;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -48,11 +49,11 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
      * (non-Javadoc)
      * 
      * @see ubic.gemma.analysis.diff.AbstractAnalyzer#getPValues(ubic.gemma.model.expression.experiment.ExpressionExperiment,
-     *      java.util.Collection)
+     *      ubic.gemma.model.common.quantitationtype.QuantitationType, java.util.Collection)
      */
     @Override
     public Map<DesignElement, Double> getPValues( ExpressionExperiment expressionExperiment,
-            Collection<ExperimentalFactor> experimentalFactors ) {
+            QuantitationType quantitationType, Collection<ExperimentalFactor> experimentalFactors ) {
 
         if ( experimentalFactors.size() != 1 )
             throw new RuntimeException( "One way anova supports one experimental factor.  Received "
@@ -60,16 +61,17 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
 
         ExperimentalFactor experimentalFactor = experimentalFactors.iterator().next();
 
-        return oneWayAnova( expressionExperiment, experimentalFactor );
+        return oneWayAnova( expressionExperiment, quantitationType, experimentalFactor );
     }
 
     /**
      * @param expressionExperiment
-     * @param factorValues
+     * @param quantitationType
+     * @param experimentalFactor
      * @return
      */
     public Map<DesignElement, Double> oneWayAnova( ExpressionExperiment expressionExperiment,
-            ExperimentalFactor experimentalFactor ) {
+            QuantitationType quantitationType, ExperimentalFactor experimentalFactor ) {
 
         Collection<FactorValue> factorValues = experimentalFactor.getFactorValues();
 

@@ -39,11 +39,14 @@ public class TTestAnalyzerTest extends AbstractAnalyzerTest {
 
     private Log log = LogFactory.getLog( this.getClass() );
 
-    /**
-     * 
-     *
-     */
-    public void testTTest() {
+    private FactorValue factorValueA = null;
+
+    private FactorValue factorValueB = null;
+
+    @Override
+    protected void onSetUpInTransaction() throws Exception {
+
+        super.onSetUpInTransaction();
 
         /*
          * Doing this here because the test experiment has 2 experimental factors, each with 2 factor values. To test
@@ -54,9 +57,9 @@ public class TTestAnalyzerTest extends AbstractAnalyzerTest {
 
         Iterator<FactorValue> iter = factorValues.iterator();
 
-        FactorValue factorValueA = iter.next();
+        factorValueA = iter.next();
 
-        FactorValue factorValueB = iter.next();
+        factorValueB = iter.next();
 
         int i = 0;
         for ( BioMaterial m : biomaterials ) {
@@ -69,6 +72,13 @@ public class TTestAnalyzerTest extends AbstractAnalyzerTest {
             m.setFactorValues( fvs );
             i++;
         }
+    }
+
+    /**
+     *
+     *
+     */
+    public void testTTestWithNamedMatrix() {
 
         Map pvaluesMap = analyzer.tTest( matrix, factorValueA, factorValueB, biomaterials );
 
@@ -76,5 +86,15 @@ public class TTestAnalyzerTest extends AbstractAnalyzerTest {
 
         assertEquals( pvaluesMap.size(), 6 );
     }
+
+    // public void testTTestWithExpressionExperiment() {
+    //
+    // Map pvaluesMap = analyzer.tTest( ee, quantitationTypeToUse, factorValueA, factorValueB );
+    //
+    // log.info( pvaluesMap );
+    //
+    // assertEquals( pvaluesMap.size(), 6 );
+    //
+    // }
 
 }

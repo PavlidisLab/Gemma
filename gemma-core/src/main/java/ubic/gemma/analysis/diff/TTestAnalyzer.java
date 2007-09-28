@@ -21,6 +21,7 @@ package ubic.gemma.analysis.diff;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,9 @@ import org.rosuda.JRclient.REXP;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -58,11 +62,11 @@ public class TTestAnalyzer extends AbstractAnalyzer {
      * (non-Javadoc)
      * 
      * @see ubic.gemma.analysis.diff.AbstractAnalyzer#getPValues(ubic.gemma.model.expression.experiment.ExpressionExperiment,
-     *      java.util.Collection)
+     *      ubic.gemma.model.common.quantitationtype.QuantitationType, java.util.Collection)
      */
     @Override
     public Map<DesignElement, Double> getPValues( ExpressionExperiment expressionExperiment,
-            Collection<ExperimentalFactor> experimentalFactors ) {
+            QuantitationType quantitationType, Collection<ExperimentalFactor> experimentalFactors ) {
 
         if ( experimentalFactors.size() != 1 )
             throw new RuntimeException( "T-test supports 1 experimental factor.  Received "
@@ -80,25 +84,36 @@ public class TTestAnalyzer extends AbstractAnalyzer {
 
         FactorValue factorValueB = iter.next();
 
-        return tTest( expressionExperiment, factorValueA, factorValueB );
+        return tTest( expressionExperiment, quantitationType, factorValueA, factorValueB );
     }
 
     /**
      * Runs a t-test on the factor values.
      * 
      * @param expressionExperiment
-     * @param factorValues
+     * @param quantitationType
+     * @param factorValueA
+     * @param factorValueB
      * @return
      */
-    public Map<DesignElement, Double> tTest( ExpressionExperiment expressionExperiment, FactorValue factorValueA,
-            FactorValue factorValueB ) {
+    public Map<DesignElement, Double> tTest( ExpressionExperiment expressionExperiment,
+            QuantitationType quantitationType, FactorValue factorValueA, FactorValue factorValueB ) {
 
         Collection<BioMaterial> biomaterials = AnalyzerHelper
                 .getBioMaterialsForBioAssaysWithoutReplicates( expressionExperiment );
 
-        // TODO will need to select a quantitation type (see AbstractAnalyzerTest)
-        ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( expressionExperiment
-                .getDesignElementDataVectors() );
+        Collection<DesignElementDataVector> vectors = expressionExperiment.getDesignElementDataVectors();
+
+        Collection<BioAssayDimension> dimensions = new HashSet<BioAssayDimension>();
+
+        for ( DesignElementDataVector vector : vectors ) {
+            BioAssayDimension dim = vector.getBioAssayDimension();
+            dimensions.add( dim );
+        }
+        // FIXME can I really just do this?
+        BioAssayDimension dim = dimensions.iterator().next();
+
+        ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( vectors, dim, quantitationType );
 
         return tTest( matrix, factorValueA, factorValueB, biomaterials );
     }

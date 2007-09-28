@@ -24,7 +24,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -56,14 +56,16 @@ public class DifferentialExpressionAnalysis {
      * Initiates the differential expression analysis (this is the entry point).
      * 
      * @param expressionExperiment
+     * @param quantitationType
      * @param experimentalFactors
+     * @param top
      */
-    public void analyze( ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> experimentalFactors,
-            int top ) {
+    public void analyze( ExpressionExperiment expressionExperiment, QuantitationType quantitationType,
+            Collection<ExperimentalFactor> experimentalFactors, int top ) {
 
         AbstractAnalyzer analyzer = determineAnalysis( expressionExperiment, experimentalFactors );
 
-        pvalues = analyzer.getPValues( expressionExperiment, experimentalFactors );
+        pvalues = analyzer.getPValues( expressionExperiment, quantitationType, experimentalFactors );
 
     }
 
@@ -134,8 +136,6 @@ public class DifferentialExpressionAnalysis {
                             + " factor value(s).  Cannot execute differential expression analysis." );
                 }
                 /* Check for block design and execute two way anova (with or without interactions). */
-                Collection<BioAssay> assays = expressionExperiment.getBioAssays();
-
                 if ( !AnalyzerHelper.blockComplete( expressionExperiment ) ) {
                     return new TwoWayAnovaWithoutInteractionsAnalyzer();
                 } else {
