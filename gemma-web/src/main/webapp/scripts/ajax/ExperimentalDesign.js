@@ -4,12 +4,13 @@
 //================================
 
 //member variables
-var assignFactorValueToBioMaterialButton, expFactorsCB, factorValueCB, bmGrid, saveNewFactorButton, removeFactorButton, descriptionField;	//gui components
+var assignFactorValueToBioMaterialButton, expFactorsCB, factorValueCB, bmGrid, saveNewFactorButton, removeFactorButton, descriptionField, saveNewFactorValueButton, removeFactorValueButton;	//gui components
 var eeID,edID, clazz;
 var factorValueComboDS, bmDS, factorDS;							//Datastores behind gui components
-var bioMaterialList, selectedFactorId, selectedFactorValueId, selectedFactorsInGrid;	//what is selected by user
+var bioMaterialList, selectedFactorId, selectedFactorValueId, selectedFactorsInGrid, selectedFactorValuesInGrid;	//what is selected by user
 var bmGridRefresh;									//methods
-var vocabC = {};
+var mgedSelectedVocabC = {};
+var ontologySearchVocabC = {};
 
 var createMgedComboBox = function(terms){				
 				
@@ -46,10 +47,10 @@ var createMgedComboBox = function(terms){
 	
 		    			var comboHandler = function(field,record,index){
 					    	
-					    	vocabC.categoryUri = record.data.uri;
-							vocabC.category = record.data.term;				    	
+					    	mgedSelectedVocabC.categoryUri = record.data.uri;
+							mgedSelectedVocabC.category = record.data.term;				    	
 							
-							if (vocabC.category == null)	//need to check if we should enable the save button.
+							if (mgedSelectedVocabC.category == null)	//need to check if we should enable the save button.
 								saveNewFactorButton.disable();
 							else
 								saveNewFactorButton.enable();
@@ -84,15 +85,15 @@ var saveExperimentalFactor = function(){
 	}
 	var newVocabC = {};
 	
-	newVocabC.value = vocabC.value;
-	newVocabC.category = vocabC.category;
+	newVocabC.value = mgedSelectedVocabC.value;
+	newVocabC.category = mgedSelectedVocabC.category;
 	
-	if (vocabC.valueUri){
-		newVocabC.categoryUri = vocabC.categoryUri ;
-		newVocabC.valueUri = vocabC.valueUri;
-	}else if (vocabC.categoryUri){
-		newVocabC.categoryUri = vocabC.categoryUri ;
-		newVocabC.valueUri = vocabC.categoryUri;
+	if (mgedSelectedVocabC.valueUri){
+		newVocabC.categoryUri = mgedSelectedVocabC.categoryUri ;
+		newVocabC.valueUri = mgedSelectedVocabC.valueUri;
+	}else if (mgedSelectedVocabC.categoryUri){
+		newVocabC.categoryUri = mgedSelectedVocabC.categoryUri ;
+		newVocabC.valueUri = mgedSelectedVocabC.categoryUri;
 	}
 	
 	var factor = { description: description, 
@@ -108,6 +109,99 @@ var deleteExperimentalFactor = function(){
 	
 }
 
+var saveExperimentalFactorValue = function(){
+	if(selectedFactorsInGrid.length === 0){
+		alert("No factor is selected");
+		return;
+	}
+	ExperimentalDesignController.createNewFactorValue({id:selectedFactorsInGrid[0], classDelegatingFor:"long"},[ontologySearchVocabC], factorValueGridRefresh);
+}
+
+var deleteExperimentalFactorValue = function(){
+	
+		ExperimentalDesignController.deleteFactorValue(selectedFactorValuesInGrid, {id:selectedFactorsInGrid[0], classDelegatingFor:"long"}, factorValueGridRefresh);
+	
+	
+}
+
+var createOntologySearchComponent = function(){
+	
+	
+	 var searchHandler = function(record, index){
+        	
+        	 
+            if(this.fireEvent('beforeselect', this, record, index) !== false){
+        	    this.setValue(record.data.value);
+            	this.collapse();
+            	this.fireEvent('select', this, record, index);
+							
+				ontologySearchVocabC.valueUri = record.data.valueUri;
+				ontologySearchVocabC.value = record.data.value;
+				saveNewFactorValueButton.enable();
+            }           	
+    	                	
+        }
+        
+        
+	var     recordType = Ext.data.Record.create([
+					   {name:"id", type:"int"},
+                       {name:"value", type:"string"},
+                       {name:"valueUri", type:"string"},
+                       {name:"categoryUri",type:"string"},
+                       {name:"category", type:"string"},                       
+                       {name:"description", type:"string"}
+               ]);
+
+
+       ds = new Ext.data.Store(
+               {
+                       proxy:new Ext.data.DWRProxy(OntologyService.findExactTerm),
+                       reader:new Ext.data.ListRangeReader({id:"id"}, recordType),
+                       remoteSort:false                     
+               });
+
+       var cm = new Ext.grid.ColumnModel([
+                       {header: "term", width: 50, dataIndex:"value"},
+                       {header: "uri",  width: 80, dataIndex:"valueUri"}                       
+                       ]);
+       cm.defaultSortable = true;	
+    
+     // Custom rendering Template
+    var resultTpl = new Ext.Template(
+        '<div class="search-item" title="{description} : {valueUri}">',
+            '{value}',          
+        '</div>'
+    );
+    
+    var search = new Ext.form.ComboBox({
+    	width: 300,
+        store: ds,
+        displayField:'title',
+        fieldLabel: 'Lookup',
+        typeAhead: false,
+        loadingText: 'Searching...',     
+        pageSize:0,
+        minChars: 2,
+        tpl: resultTpl,
+        hideTrigger:true,    
+        onSelect: searchHandler,  
+        getParams: function (q) {	//Need to overide this so that the query data makes it to the client side. Otherwise its not included. 
+    		var p = [q]; 
+    		
+    		ontologySearchVocabC.value = q;	//if the user doesn't select a provided ontolgy term this will set it to be the free text. 
+    		if (!mgedSelectedVocabC.categoryUri)
+    			mgedSelectedVocabC.categoryUri="{}";
+    			
+   		 	p.push(mgedSelectedVocabC.categoryUri);
+   		 		
+   		 	return p;
+		}
+        
+    });
+	
+	return search;
+	
+}
 
 //===================================
 //
@@ -339,7 +433,6 @@ var initFactorGrid = function(div) {
        							 ds:factorDS,
        							 cm:cm,
        							 loadMask: true });
-       //todo: change the selection model to just one instead of multiple. factorGrid.getSelectionModel().
        
        var gridClickHandler = function(factorGrid, rowIndex, event){
 
@@ -355,7 +448,7 @@ var initFactorGrid = function(div) {
 	    	for(var index=0; index<selections.length; index++) {	    		
 	    		selectedFactorsInGrid.push(selections[index].id);
 	    	}  	
-       		factorValueGridRefresh(selectedFactorsInGrid[0]); //just show the 1st one in the factor value table
+       		factorValueGridRefresh(); //just show the 1st one in the factor value table
        		removeFactorButton.enable();
        		
        	
@@ -373,10 +466,16 @@ var initFactorGrid = function(div) {
 //	Factor Value table
 //=================================================
 
-factorValueGridRefresh = function(selectedFactorId){
+factorValueGridRefresh = function(){
 	
-	factorValueGridDS.reload({params:[{id:selectedFactorId, classDelegatingFor:"expressionExperimentID"}]});	
-	factorValueGrid.getView().refresh(true);	
+//	if (!selectedFactorId){
+//		selectedFactorId = selectedFactorsInGrid[0];
+//	}
+	
+	var selections =  factorGrid.getSelectionModel().getSelections();
+	
+	factorValueGridDS.reload({params:[{id:selections[0].id, classDelegatingFor:"long"}]}, function() {factorValueGrid.getView().refresh(true)} );	
+//	factorValueGrid.getView().refresh(true);	
 	
 }
 
@@ -416,6 +515,29 @@ var initFactorValueGrid = function(div) {
        							 cm:cm,
        							 loadMask: true, 
        							 editable: true });   
+
+       var gridClickHandler = function(factorGrid, rowIndex, event){
+
+			
+       		var selections =  factorGrid.getSelectionModel().getSelections();
+       		
+       		if (selections.length === 0){
+       			removeFactorButton.disable();
+       			return;
+       		}
+       		
+       		selectedFactorValuesInGrid = [];
+	    	for(var index=0; index<selections.length; index++) {	    		
+	    		selectedFactorValuesInGrid.push(selections[index].id);
+	    	}  	
+       		
+       		removeFactorValueButton.enable();
+       		
+       	
+       }
+       
+       factorValueGrid.on("rowclick", gridClickHandler);
+       							 
       factorValueGrid.render();
 	
 };
@@ -448,9 +570,8 @@ Ext.onReady(function() {
 					
 	initBioMaterialGrid("bmGrid");			
 	
-	initFactorGrid("factorGrid");
- 	initFactorValueGrid("factorValueGrid");	
- 	
+
+	initFactorGrid("factorGrid"); 	 	
  	var factorTB = new Ext.Toolbar("factorGridTB");
 	
 	factorTB.addField(createMgedComboBox());
@@ -468,6 +589,26 @@ Ext.onReady(function() {
 						handler: deleteExperimentalFactor,
 						disabled: true
 					});
+					
+	initFactorValueGrid("factorValueGrid");	
+
+
+var factorValueTB = new Ext.Toolbar("factorValueTB");
+	
+	factorValueTB.addField(createOntologySearchComponent());	
+	factorValueTB.addSpacer();
+	saveNewFactorValueButton = factorValueTB.addButton({text: 'create',
+						tooltip: 'creates a new Experimental Factor Value',								  
+						handler: saveExperimentalFactorValue,
+						disabled: true
+					});
+ 	factorValueTB.addSpacer();
+	removeFactorValueButton = factorValueTB.addButton({text: 'remove',
+						tooltip: 'removes the selected Experimental Factor Value',								  
+						handler: deleteExperimentalFactorValue,
+						disabled: true
+					});
+
  		
 	
 });

@@ -248,6 +248,8 @@ Mapping URLS to controllers
 						<list>
 							<value>createNewFactor</value>
 							<value>deleteFactor</value>
+							<value>createNewFactorValue</value>
+							<value>deleteFactorValue</value>
 						</list>
 					</property>
 				</bean>

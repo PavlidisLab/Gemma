@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
@@ -57,12 +58,11 @@ public class ExperimentalDesignController extends BaseMultiActionController {
     private ExperimentalDesignService experimentalDesignService = null;
     private ExpressionExperimentService expressionExperimentService = null;
     private BioMaterialService bioMaterialService = null;
-    private ExperimentalFactorService experimentalFactorService =  null;
+    private ExperimentalFactorService experimentalFactorService = null;
     private FactorValueService factorValueService = null;
 
     private final String messagePrefix = "ExperimenalDesign with id ";
     private final String identifierNotFound = "Must provide a valid ExperimentalDesign identifier";
-
 
     /**
      * @param request
@@ -139,9 +139,10 @@ public class ExperimentalDesignController extends BaseMultiActionController {
      */
     public void deleteFactor( Collection<Long> factorIds, EntityDelegator eeId ) {
 
-        //TODO this should be in the experimentalFactorService, if its too slow we might have to do this with a hibernate query. 
-        
+        // TODO this should be in the experimentalFactorService, if its too slow we might have to do this with a
+        // hibernate query.
         // remove relevent factor values from bio-materials
+
         ExpressionExperiment ee = this.expressionExperimentService.load( eeId.getId() );
 
         for ( BioAssay assay : ee.getBioAssays() ) {
@@ -161,27 +162,68 @@ public class ExperimentalDesignController extends BaseMultiActionController {
         // remove factor and factor values from factor
         ExperimentalDesign ed = ee.getExperimentalDesign();
         Collection<ExperimentalFactor> oldExperimentalFactors = ed.getExperimentalFactors();
-        ed.setExperimentalFactors( new HashSet<ExperimentalFactor>() );      
+        ed.setExperimentalFactors( new HashSet<ExperimentalFactor>() );
         Collection<ExperimentalFactor> factorsToKeep = new HashSet<ExperimentalFactor>();
-        
+
         for ( ExperimentalFactor factor : oldExperimentalFactors ) {
             if ( factorIds.contains( factor.getId() ) ) {
-                for (FactorValue fv : factor.getFactorValues()){
+                for ( FactorValue fv : factor.getFactorValues() ) {
                     this.factorValueService.delete( fv );
-                }                
-                factor.setFactorValues( new HashSet<FactorValue>() );  //necessary?                
+                }
+                factor.setFactorValues( new HashSet<FactorValue>() ); // necessary?
                 this.experimentalFactorService.delete( factor );
                 continue;
             }
             factorsToKeep.add( factor );
-            
+
+        }
+
+        ed.setExperimentalFactors( factorsToKeep );
+        experimentalDesignService.update( ed );
+
+    }
+
+    /**
+     * @param factorValueID
+     * 
+     * Deletes the given factorValue.  does not check if there are dependencys on factorvalue before deletion
+     */
+    public void deleteFactorValue( Collection<Long> factorValueIds, EntityDelegator efID ) {
+
+        // todo: check the biomaterials of the expression experiment to see if they use the factor value.
+        // Hibernate should fail to delete if there are bm associations.
+        // question: do we prompt user or just remove the associations and remove the factorValue?
+        ExperimentalFactor ef  = this.experimentalFactorService.load( efID.getId() );        
+        
+        for ( Long fvId : factorValueIds ) {
+            FactorValue fv2Delete = this.factorValueService.load( fvId );
+            ef.getFactorValues().remove( fv2Delete); 
+            factorValueService.delete( fv2Delete );            
         }
         
-        ed.setExperimentalFactors(factorsToKeep );
-        experimentalDesignService.update( ed );
-        
+        this.experimentalFactorService.update( ef );
         
        
+    }
+
+    /**
+     * @param factorID
+     * @param factorValues
+     * 
+     * Creates a new factor value associated with the given factor
+     * 
+     */
+    public void createNewFactorValue( EntityDelegator factorID, Collection<Characteristic> factorValues ) {
+
+        ExperimentalFactor ef = this.experimentalFactorService.load( factorID.getId() );
+        FactorValue newFV = FactorValue.Factory.newInstance( ef );
+
+        //This is a hack.  DWR passes back arraylist which hibernate won't persist!
+        Collection<Characteristic> fvs = new HashSet<Characteristic>(factorValues); 
+        newFV.setCharacteristics( fvs );
+        newFV = this.factorValueService.create( newFV );
+        ef.getFactorValues().add( newFV );
+        this.experimentalFactorService.update( ef );
 
     }
 
@@ -255,12 +297,12 @@ public class ExperimentalDesignController extends BaseMultiActionController {
     public void setFactorValueService( FactorValueService factorValueService ) {
         this.factorValueService = factorValueService;
     }
-    
+
     /**
      * @param experimentalDesignService
      */
     public void setExperimentalDesignService( ExperimentalDesignService experimentalDesignService ) {
         this.experimentalDesignService = experimentalDesignService;
     }
-    
+
 }
