@@ -53,7 +53,10 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends AbstractAnalyzer
 
         List<BioMaterial> alteredBiomaterials = new ArrayList<BioMaterial>();
 
-        /* is just one fv per biomaterial in the test experiment so we'll add another for the two way anova */
+        /*
+         * There is just one factor value per biomaterial in the test experiment so we'll add another for the two way
+         * anova.
+         */
         for ( BioMaterial m : biomaterials ) {
 
             Collection<FactorValue> factorValuesFromBioMaterial = m.getFactorValues();

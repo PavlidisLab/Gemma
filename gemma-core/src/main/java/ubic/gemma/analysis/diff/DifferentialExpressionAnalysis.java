@@ -25,6 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -57,15 +58,15 @@ public class DifferentialExpressionAnalysis {
      * 
      * @param expressionExperiment
      * @param quantitationType
+     * @param bioAssayDimension
      * @param experimentalFactors
-     * @param top
      */
     public void analyze( ExpressionExperiment expressionExperiment, QuantitationType quantitationType,
-            Collection<ExperimentalFactor> experimentalFactors, int top ) {
+            BioAssayDimension bioAssayDimension, Collection<ExperimentalFactor> experimentalFactors ) {
 
         AbstractAnalyzer analyzer = determineAnalysis( expressionExperiment, experimentalFactors );
 
-        pvalues = analyzer.getPValues( expressionExperiment, quantitationType, experimentalFactors );
+        pvalues = analyzer.getPValues( expressionExperiment, quantitationType, bioAssayDimension, experimentalFactors );
 
     }
 

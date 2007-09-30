@@ -29,6 +29,7 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -49,11 +50,13 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
      * (non-Javadoc)
      * 
      * @see ubic.gemma.analysis.diff.AbstractAnalyzer#getPValues(ubic.gemma.model.expression.experiment.ExpressionExperiment,
-     *      ubic.gemma.model.common.quantitationtype.QuantitationType, java.util.Collection)
+     *      ubic.gemma.model.common.quantitationtype.QuantitationType,
+     *      ubic.gemma.model.expression.bioAssayData.BioAssayDimension, java.util.Collection)
      */
     @Override
     public Map<DesignElement, Double> getPValues( ExpressionExperiment expressionExperiment,
-            QuantitationType quantitationType, Collection<ExperimentalFactor> experimentalFactors ) {
+            QuantitationType quantitationType, BioAssayDimension bioAssayDimension,
+            Collection<ExperimentalFactor> experimentalFactors ) {
 
         if ( experimentalFactors.size() != 1 )
             throw new RuntimeException( "One way anova supports one experimental factor.  Received "
@@ -80,12 +83,10 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
                     "One way anova requires 2 or more factor values (2 factor values is a t-test).  Received "
                             + factorValues.size() + "." );
 
-        Collection<BioMaterial> biomaterials = AnalyzerHelper
-                .getBioMaterialsForBioAssaysWithoutReplicates( expressionExperiment );
-
-        // TODO will need to select a quantitation type (see AbstractAnalyzerTest)
         ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( expressionExperiment
                 .getDesignElementDataVectors() );
+
+        Collection<BioMaterial> biomaterials = AnalyzerHelper.getBioMaterialsForBioAssaysWithoutReplicates( matrix );
 
         return oneWayAnova( matrix, factorValues, biomaterials );
     }

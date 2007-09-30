@@ -26,6 +26,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
@@ -74,27 +75,29 @@ public class TTestAnalyzerTest extends AbstractAnalyzerTest {
         }
     }
 
-    /**
-     *
-     *
-     */
-    public void testTTestWithNamedMatrix() {
-
-        Map pvaluesMap = analyzer.tTest( matrix, factorValueA, factorValueB, biomaterials );
-
-        log.info( pvaluesMap );
-
-        assertEquals( pvaluesMap.size(), 6 );
-    }
-
-    // public void testTTestWithExpressionExperiment() {
+    // /**
+    // * Tests the t-test with an {@link ExpressionDataMatrix}.
+    // */
+    // public void testTTestWithNamedMatrix() {
     //
-    // Map pvaluesMap = analyzer.tTest( ee, quantitationTypeToUse, factorValueA, factorValueB );
+    // Map pvaluesMap = analyzer.tTest( matrix, factorValueA, factorValueB, biomaterials );
     //
     // log.info( pvaluesMap );
     //
     // assertEquals( pvaluesMap.size(), 6 );
-    //
     // }
+
+    /**
+     * Tests the t-test with an {@link ExpressionExperiment}.
+     */
+    public void testTTestWithExpressionExperiment() {
+
+        Map pvaluesMap = analyzer.tTest( ee, quantitationTypeToUse, bioAssayDimension, factorValueA, factorValueB );
+
+        log.info( pvaluesMap );
+
+        assertEquals( pvaluesMap.size(), 6 );
+
+    }
 
 }

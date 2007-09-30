@@ -21,7 +21,6 @@ package ubic.gemma.analysis.diff;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -62,11 +61,13 @@ public class TTestAnalyzer extends AbstractAnalyzer {
      * (non-Javadoc)
      * 
      * @see ubic.gemma.analysis.diff.AbstractAnalyzer#getPValues(ubic.gemma.model.expression.experiment.ExpressionExperiment,
-     *      ubic.gemma.model.common.quantitationtype.QuantitationType, java.util.Collection)
+     *      ubic.gemma.model.common.quantitationtype.QuantitationType,
+     *      ubic.gemma.model.expression.bioAssayData.BioAssayDimension, java.util.Collection)
      */
     @Override
     public Map<DesignElement, Double> getPValues( ExpressionExperiment expressionExperiment,
-            QuantitationType quantitationType, Collection<ExperimentalFactor> experimentalFactors ) {
+            QuantitationType quantitationType, BioAssayDimension bioAssayDimension,
+            Collection<ExperimentalFactor> experimentalFactors ) {
 
         if ( experimentalFactors.size() != 1 )
             throw new RuntimeException( "T-test supports 1 experimental factor.  Received "
@@ -84,7 +85,7 @@ public class TTestAnalyzer extends AbstractAnalyzer {
 
         FactorValue factorValueB = iter.next();
 
-        return tTest( expressionExperiment, quantitationType, factorValueA, factorValueB );
+        return tTest( expressionExperiment, quantitationType, bioAssayDimension, factorValueA, factorValueB );
     }
 
     /**
@@ -97,23 +98,22 @@ public class TTestAnalyzer extends AbstractAnalyzer {
      * @return
      */
     public Map<DesignElement, Double> tTest( ExpressionExperiment expressionExperiment,
-            QuantitationType quantitationType, FactorValue factorValueA, FactorValue factorValueB ) {
-
-        Collection<BioMaterial> biomaterials = AnalyzerHelper
-                .getBioMaterialsForBioAssaysWithoutReplicates( expressionExperiment );
+            QuantitationType quantitationType, BioAssayDimension bioAssayDimension, FactorValue factorValueA,
+            FactorValue factorValueB ) {
 
         Collection<DesignElementDataVector> vectors = expressionExperiment.getDesignElementDataVectors();
 
-        Collection<BioAssayDimension> dimensions = new HashSet<BioAssayDimension>();
+        // for ( DesignElementDataVector vector : vectors ) {
+        // BioAssayDimension dim = vector.getBioAssayDimension();
+        //
+        // if ( dim != bioAssayDimension )
+        // throw new RuntimeException(
+        // "Bioassay dimension of design element data vector does not match supplied bioassay dimension." );
+        // }
 
-        for ( DesignElementDataVector vector : vectors ) {
-            BioAssayDimension dim = vector.getBioAssayDimension();
-            dimensions.add( dim );
-        }
-        // FIXME can I really just do this?
-        BioAssayDimension dim = dimensions.iterator().next();
+        ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( vectors, bioAssayDimension, quantitationType );
 
-        ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( vectors, dim, quantitationType );
+        Collection<BioMaterial> biomaterials = AnalyzerHelper.getBioMaterialsForBioAssaysWithoutReplicates( matrix );
 
         return tTest( matrix, factorValueA, factorValueB, biomaterials );
     }

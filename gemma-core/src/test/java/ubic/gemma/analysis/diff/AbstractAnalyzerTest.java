@@ -41,6 +41,8 @@ public class AbstractAnalyzerTest extends BaseSpringContextTest {
 
     protected QuantitationType quantitationTypeToUse = null;
 
+    protected BioAssayDimension bioAssayDimension = null;
+
     /*
      * (non-Javadoc)
      * 
@@ -81,25 +83,9 @@ public class AbstractAnalyzerTest extends BaseSpringContextTest {
         // ExpressionDataMatrixBuilder matrixBuilder = new ExpressionDataMatrixBuilder( dedvs );
         // matrixBuilder.getIntensity( arrayDesign );
 
-        matrix = new ExpressionDataDoubleMatrix( dedvs, dimensions.iterator().next(), quantitationTypeToUse );
+        bioAssayDimension = dimensions.iterator().next();
+        matrix = new ExpressionDataDoubleMatrix( dedvs, bioAssayDimension, quantitationTypeToUse );
 
-        /* look for 1 bioassay/matrix column and 1 biomaterial/bioassay */
-        Collection<BioAssay> assays = new ArrayList<BioAssay>();
-        for ( int i = 0; i < matrix.columns(); i++ ) {
-            Collection<BioAssay> bioassays = matrix.getBioAssaysForColumn( i );
-            if ( bioassays.size() != 1 )
-                throw new RuntimeException( "Invalid number of bioassays.  Expecting 1, got " + bioassays.size() + "." );
-            assays.add( bioassays.iterator().next() );
-        }
-
-        for ( BioAssay assay : assays ) {
-            Collection<BioMaterial> materials = assay.getSamplesUsed();
-            if ( materials.size() != 1 )
-                throw new RuntimeException( "Invalid number of biomaterials. Expecting 1 biomaterial/bioassay, got "
-                        + materials.size() + "." );
-
-            biomaterials.addAll( materials );
-
-        }
+        biomaterials = AnalyzerHelper.getBioMaterialsForBioAssaysWithoutReplicates( matrix );
     }
 }
