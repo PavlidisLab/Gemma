@@ -26,7 +26,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @author keshav
  * @version $Id$
  */
-public class AbstractAnalyzerTest extends BaseSpringContextTest {
+public class BaseAnalyzerTest extends BaseSpringContextTest {
 
     private Log log = LogFactory.getLog( this.getClass() );
 

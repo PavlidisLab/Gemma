@@ -34,7 +34,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @author keshav
  * @version $Id$
  */
-public class TTestAnalyzerTest extends AbstractAnalyzerTest {
+public class TTestAnalyzerTest extends BaseAnalyzerTest {
 
     TTestAnalyzer analyzer = new TTestAnalyzer();
 

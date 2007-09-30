@@ -36,7 +36,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @author keshav
  * @version $Id$
  */
-public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends AbstractAnalyzerTest {
+public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerTest {
 
     private Log log = LogFactory.getLog( this.getClass() );
 
