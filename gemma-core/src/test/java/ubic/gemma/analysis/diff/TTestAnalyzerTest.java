@@ -75,17 +75,17 @@ public class TTestAnalyzerTest extends AbstractAnalyzerTest {
         }
     }
 
-    // /**
-    // * Tests the t-test with an {@link ExpressionDataMatrix}.
-    // */
-    // public void testTTestWithNamedMatrix() {
-    //
-    // Map pvaluesMap = analyzer.tTest( matrix, factorValueA, factorValueB, biomaterials );
-    //
-    // log.info( pvaluesMap );
-    //
-    // assertEquals( pvaluesMap.size(), 6 );
-    // }
+    /**
+     * Tests the t-test with an {@link ExpressionDataMatrix}.
+     */
+    public void testTTestWithNamedMatrix() {
+
+        Map pvaluesMap = analyzer.tTest( matrix, factorValueA, factorValueB, biomaterials );
+
+        log.info( pvaluesMap );
+
+        assertEquals( pvaluesMap.size(), 6 );
+    }
 
     /**
      * Tests the t-test with an {@link ExpressionExperiment}.
