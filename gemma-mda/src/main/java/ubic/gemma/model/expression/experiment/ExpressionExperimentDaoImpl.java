@@ -1014,13 +1014,19 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameterList( "ids", ids );
-            ScrollableResults list = queryObject.scroll();
+//            ScrollableResults list = queryObject.scroll();
+            List result = queryObject.list();
             Map<Long, Map<Long, Collection<AuditEvent>>> eventMap = new HashMap<Long, Map<Long, Collection<AuditEvent>>>();
             // process list of expression experiment ids that have events
-            while ( list.next() ) {
-                Long eeId = list.getLong( 0 );
-                Long adId = list.getLong( 1 );
-                AuditEvent event = ( AuditEvent ) list.get( 2 );
+//            while ( list.next() ) {
+//                Long eeId = list.getLong( 0 );
+//                Long adId = list.getLong( 1 );
+//                AuditEvent event = ( AuditEvent ) list.get( 2 );
+            for ( Object o: result ) {
+                Object[] row = ( Object[] )o;
+                Long eeId = (Long)row[0];
+                Long adId = (Long)row[1];
+                AuditEvent event = (AuditEvent)row[2];
                 
                 Map<Long, Collection<AuditEvent>> adEventMap = eventMap.get( eeId );
                 if ( adEventMap == null ) {
