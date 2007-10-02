@@ -12,9 +12,6 @@ Ext.onReady(function() {
 	// classDelegatingFor is the specific type of auditable.
 	var g = {id:id, classDelegatingFor:clazz};
 
-	var converttype = function(d) {
-		return d.value;
-	};
 	var convertUser = function(d) {
 		return d.userName;
 	};
@@ -26,7 +23,7 @@ Ext.onReady(function() {
 		{name:"note", type:"string"}, 
 		{name:"detail", type:"string"},
 		{name:"performer", convert : convertUser }, 
-		{name:"eventTypeName", convert : converttype }]);
+		{name:"eventTypeName", type:"string" }]);
 		
 	var ds = new Ext.data.Store(
 		{
