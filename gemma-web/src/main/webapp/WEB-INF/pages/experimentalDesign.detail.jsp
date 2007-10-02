@@ -118,8 +118,11 @@
         
         <div id="factorGridTB" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:30px;"></div>
         <div id="factorGrid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:250px;"></div>
-        <div id="factorValueGrid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:250px;"></div>
+        <br />
+        
+        <h3>    <fmt:message key="experimentalDesign.factorValues" />  for factor selected above   </h3>
         <div id="factorValueTB" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:30px;"></div>
+        <div id="factorValueGrid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:250px;"></div>
   
         <br />
         <hr />
@@ -131,6 +134,7 @@
    	 
  	<script type="text/javascript" src="<c:url value='/scripts/ajax/ExperimentalDesign.js'/>" type="text/javascript"></script>
     
+     <h3>  BioMaterials to Factor Value Association     </h3>
     <input type="hidden" name="expressionExperimentID" id="expressionExperimentID" value="${expressionExperiment.id}"
     <input type="hidden" name="experimentalDesignID" id="experimentalDesignID" value="${experimentalDesign.id}"
  

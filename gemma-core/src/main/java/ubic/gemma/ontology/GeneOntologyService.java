@@ -263,7 +263,7 @@ public class GeneOntologyService implements InitializingBean {
                 OntologyTerm ontTerm = (OntologyTerm) term;
                 terms.put( term.getUri(), ontTerm);
                 for(String alternativeID: ontTerm.getAlternativeIds()){
-                    log.info( toUri(alternativeID) );
+                    log.debug( toUri(alternativeID) );
                     terms.put( toUri(alternativeID), ontTerm );
                 }
             }

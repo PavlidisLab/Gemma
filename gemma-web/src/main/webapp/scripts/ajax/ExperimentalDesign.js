@@ -119,7 +119,7 @@ var saveExperimentalFactorValue = function(){
 
 var deleteExperimentalFactorValue = function(){
 	
-		ExperimentalDesignController.deleteFactorValue(selectedFactorValuesInGrid, {id:selectedFactorsInGrid[0], classDelegatingFor:"long"}, factorValueGridRefresh);
+		ExperimentalDesignController.deleteFactorValue(selectedFactorValuesInGrid, {id:selectedFactorsInGrid[0], classDelegatingFor:"long"},{id:eeID, classDelegatingFor:"long"}, factorValueGridRefresh);
 	
 	
 }
@@ -485,8 +485,8 @@ var initFactorValueGrid = function(div) {
 				
 		var     recordType = Ext.data.Record.create([
 				   		{name:"id", type:"int"},
-                       	{name:"factorValue", type:"string"},
-                       	{name:"description", type:"string"},
+                       	{name:"factorValue", type:"string"},    
+                       	{name:"description", type:"string"},                           	                   
                        	{name:"category", type:"string"}
                ]);
 									
@@ -503,10 +503,9 @@ var initFactorValueGrid = function(div) {
 	
 
        var cm = new Ext.grid.ColumnModel([
-                       {header: "Factor Value", width: 50, dataIndex:"factorValue"},
-                       {header: "Description",  width: 100, dataIndex:"description"}, 
-                       {header: "Category",  width: 50, dataIndex:"category"}
-                       
+                       {header: "Factor Value", width: 50, dataIndex:"factorValue"},                      
+                       {header: "Category",  width: 50, dataIndex:"category"},
+                       {header: "Description",  width: 50, dataIndex:"description"}                       
                        ]);
        cm.defaultSortable = true;
 

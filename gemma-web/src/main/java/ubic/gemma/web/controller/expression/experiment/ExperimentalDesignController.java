@@ -167,10 +167,11 @@ public class ExperimentalDesignController extends BaseMultiActionController {
 
         for ( ExperimentalFactor factor : oldExperimentalFactors ) {
             if ( factorIds.contains( factor.getId() ) ) {
-                for ( FactorValue fv : factor.getFactorValues() ) {
+                Collection<FactorValue> fvs = factor.getFactorValues();
+                factor.setFactorValues( new HashSet<FactorValue>() );                
+                for ( FactorValue fv : fvs ) {
                     this.factorValueService.delete( fv );
                 }
-                factor.setFactorValues( new HashSet<FactorValue>() ); // necessary?
                 this.experimentalFactorService.delete( factor );
                 continue;
             }
@@ -184,23 +185,42 @@ public class ExperimentalDesignController extends BaseMultiActionController {
     }
 
     /**
-     * @param factorValueID
+     * @param a collection of factorValueIDs
+     * @param efID id of the experimental factor
+     * @param eeID expresion experiment ID
      * 
-     * Deletes the given factorValue.  does not check if there are dependencys on factorvalue before deletion
+     * 
+     * Deletes the given factorValue.  Removes associations with BioMaterials. Updates the Factor. 
      */
-    public void deleteFactorValue( Collection<Long> factorValueIds, EntityDelegator efID ) {
+    public void deleteFactorValue( Collection<Long> factorValueIds, EntityDelegator efID, EntityDelegator eeID) {
 
-        // todo: check the biomaterials of the expression experiment to see if they use the factor value.
-        // Hibernate should fail to delete if there are bm associations.
-        // question: do we prompt user or just remove the associations and remove the factorValue?
-        ExperimentalFactor ef  = this.experimentalFactorService.load( efID.getId() );        
-        
+        ExpressionExperiment ee = this.expressionExperimentService.load( eeID.getId() );
+        ExperimentalFactor ef  = this.experimentalFactorService.load( efID.getId() );   
+
+        //Remove assocations of factorvalues with biomaterials.
+        //TODO: refactor (check out deleteFactor)
+        for ( BioAssay assay : ee.getBioAssays() ) {
+            for ( BioMaterial bm : assay.getSamplesUsed() ) {
+
+                Collection<FactorValue> removeFactorValues = new HashSet<FactorValue>();
+                for ( FactorValue fv : bm.getFactorValues() ) {
+                    if ( factorValueIds.contains( fv.getExperimentalFactor().getId() ) ) removeFactorValues.add( fv );
+
+                }
+                bm.getFactorValues().removeAll( removeFactorValues );
+                bioMaterialService.update( bm );
+
+            }
+        }
+
+        //Remove assocations between factor and factorValue. delete factorValue      
         for ( Long fvId : factorValueIds ) {
             FactorValue fv2Delete = this.factorValueService.load( fvId );
             ef.getFactorValues().remove( fv2Delete); 
             factorValueService.delete( fv2Delete );            
         }
         
+        //Update the experimental factor. 
         this.experimentalFactorService.update( ef );
         
        

@@ -198,10 +198,12 @@ public class BioMaterialController extends BaseMultiActionController {
                 if ( material.getFactorValues() == null ) continue;
 
                 for ( FactorValue value : material.getFactorValues() ) {
-                    // If the factor value isn't the one we are looking for then just skip it.
-                    if ( factorId.getId().compareTo( value.getExperimentalFactor().getId() ) != 0 )
+                    // If the factor value isn't the one we are looking for then add BMVO but don't fill in factor info.
+                    if ( factorId.getId().compareTo( value.getExperimentalFactor().getId() ) != 0 ){
+                        bmvo.setFactorValue( "None" );
+                        bioMaterials.add(bmvo);
                         continue;
-                
+                    }
                     
                     String factorName = "";
                     if ( value.getCharacteristics().size() > 0 ) {

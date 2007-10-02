@@ -60,6 +60,9 @@ public class FactorValueObject implements Serializable {
         if ( fv.getCharacteristics().size() > 0 ) {
             for ( Characteristic c : fv.getCharacteristics() ) {
                 factor += c.getValue();
+                //FIXME: with will always be the category and description of the last characteristic....
+                category = c.getCategory();     
+                description = c.getDescription();
             }
 
         } else {
