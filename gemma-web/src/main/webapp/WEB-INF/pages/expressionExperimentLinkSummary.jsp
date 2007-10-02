@@ -30,7 +30,14 @@
 	<display:column property="nameLink" sortable="true" sortProperty="name"
 		titleKey="expressionExperiment.name"
 		comparator="ubic.gemma.web.taglib.displaytag.StringComparator" />
-
+	<display:column property="troubleFlag" sortable="true"
+		titleKey="expressionExperiment.trouble" style="text-align:center"
+		comparator="ubic.gemma.web.taglib.displaytag.StringComparator"
+		defaultorder="descending" />
+	<display:column property="validatedFlag" sortable="true"
+		titleKey="expressionExperiment.validated" style="text-align:center"
+		comparator="ubic.gemma.web.taglib.displaytag.StringComparator"
+		defaultorder="descending" />
 	<display:column property="shortName" sortable="true"
 		titleKey="expressionExperiment.shortName"
 		comparator="ubic.gemma.web.taglib.displaytag.StringComparator" />

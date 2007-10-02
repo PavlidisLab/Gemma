@@ -311,19 +311,41 @@ public class ExpressionExperimentWrapper extends TableDecorator {
             buf.append( "\">" );
             buf.append( StringUtils.abbreviate( object.getName(), 75 ) );
             buf.append( "</a>" );
-            if ( object.getTroubleFlag() != null ) {
-                buf.append( "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt='trouble' title='" );
-                buf.append(  StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getTroubleFlag() ) ) );
-                buf.append( "' />" );
-            }
-            if ( object.getValidatedFlag() != null ) {
-                buf.append( "&nbsp;<img src='/Gemma/images/icons/ok.png' height='16' width='16' alt='validated' title='" );
-                buf.append( StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getValidatedFlag() ) ) );
-                buf.append( "' />" );
-            }
+//            if ( object.getTroubleFlag() != null ) {
+//                buf.append( "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt='trouble' title='" );
+//                buf.append(  StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getTroubleFlag() ) ) );
+//                buf.append( "' />" );
+//            }
+//            if ( object.getValidatedFlag() != null ) {
+//                buf.append( "&nbsp;<img src='/Gemma/images/icons/ok.png' height='16' width='16' alt='validated' title='" );
+//                buf.append( StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getValidatedFlag() ) ) );
+//                buf.append( "' />" );
+//            }
             return buf.toString();
         }
         return "No design";
+    }
+    
+    public String getTroubleFlag() {
+        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
+        StringBuffer buf = new StringBuffer();
+        if ( object.getValidatedFlag() != null ) {
+            buf.append( "&nbsp;<img src='/Gemma/images/icons/ok.png' height='16' width='16' alt='validated' title='" );
+            buf.append( StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getValidatedFlag() ) ) );
+            buf.append( "' />" );
+        }
+        return buf.toString();
+    }
+    
+    public String getValidatedFlag() {
+        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
+        StringBuffer buf = new StringBuffer();
+        if ( object.getTroubleFlag() != null ) {
+            buf.append( "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt='trouble' title='" );
+            buf.append(  StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getTroubleFlag() ) ) );
+            buf.append( "' />" );
+        }
+        return buf.toString();
     }
 
     /**
