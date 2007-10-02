@@ -24,7 +24,7 @@ Ext.extend(progressbar, Ext.util.Observable, {
 	timeoutid : null,
 	
 		// time in ms between updates
-	BAR_UPDATE_INTERVAL : 1000,
+	BAR_UPDATE_INTERVAL : 2000,
 	
 	handleFailure : function (data, e) {
 		this.stopProgress();
