@@ -145,7 +145,7 @@ Ext.onReady(function() {
 			auditEventTypeCombo.getValue(),
 			auditEventCommentField.getValue(),
 			auditEventDetailField.getValue(),
-			function() { ds.reload(); grid.getView().refresh(true); }
+			function() { ds.reload( grid.getView().refresh(true) ); }
 		);
 	}, addEventDialog); //.disable();
 	addEventForm.addButton('Cancel', addEventDialog.hide, addEventDialog);
