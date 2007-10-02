@@ -3,23 +3,9 @@
 	width: 500px;
 }
 
-#progressBarBox {
-	height: 20px;
-	border: 1px inset;
-	background: #EEEEEE;
-}
-
-#progressBarBoxContent {
+#progress-bar-box-content {
 	width: 0;
-	height: 20px;
+	height: 10px;
 	border-right: 1px solid #444444;
 	background: #9ACB34;
-}
-
-#progressBarText {
-	
-}
-
-#theMeter {
-       
 }

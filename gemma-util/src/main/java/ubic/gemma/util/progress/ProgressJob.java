@@ -84,9 +84,9 @@ public interface ProgressJob {
     public abstract void setPayload( Object payload );
 
     public abstract Object getPayload();
-    
+
     public boolean forwardWhenDone();
-    
-    public void setForwardWhenDone(boolean value);
+
+    public void setForwardWhenDone( boolean value );
 
 }

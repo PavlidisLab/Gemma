@@ -272,8 +272,21 @@ public class ExpressionExperimentLoadController extends AbstractGemmaSpacesFormC
                         return new ModelAndView(
                                 new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?ids=" + list ) );
                     }
-                    // GEO
-                } else if ( expressionExperimentLoadCommand.isGeo() ) {
+                } else if ( expressionExperimentLoadCommand.isArrayExpress() ) {
+
+                    if ( expressionExperimentLoadCommand.getArrayDesignName() == null ) {
+                        this.saveMessage( "Unable to load: Must select an array design to use" );
+                        return new ModelAndView( new RedirectView( "/Gemma/loadExpressionExperiment.html" ) );
+                    }
+
+                    ExpressionExperiment result = arrayExpressLoadService.load( accesionNum,
+                            expressionExperimentLoadCommand.getArrayDesignName() );
+
+                    this.saveMessage( "Successfully loaded " + result.getName() );
+                    model.put( "expressionExperiment", result );
+                    return new ModelAndView( new RedirectView(
+                            "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + result.getId() ) );
+                } else /* GEO */{
                     Collection<ExpressionExperiment> result = geoDatasetService.fetchAndLoad( accesionNum, false,
                             doSampleMatching, aggressiveQtRemoval );
                     if ( result.size() == 1 ) {
@@ -290,26 +303,6 @@ public class ExpressionExperimentLoadController extends AbstractGemmaSpacesFormC
                         return new ModelAndView( new RedirectView(
                                 "/Gemma/expressionExperiment/showAllExpressionExperiments.html?ids=" + list ) );
                     }
-                }
-                // Array Express
-                else if ( expressionExperimentLoadCommand.isArrayExpress() ) {
-
-                    if ( expressionExperimentLoadCommand.getArrayDesignName() == null ) {
-                        this.saveMessage( "Unable to load: Must select an array design to use" );
-                        return new ModelAndView( new RedirectView( "/Gemma/loadExpressionExperiment.html" ) );
-                    }
-
-                    ExpressionExperiment result = arrayExpressLoadService.load( accesionNum,
-                            expressionExperimentLoadCommand.getArrayDesignName() );
-
-                    this.saveMessage( "Successfully loaded " + result.getName() );
-                    model.put( "expressionExperiment", result );
-                    return new ModelAndView( new RedirectView(
-                            "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + result.getId() ) );
-                } else {
-                    this.saveMessage( "Failed to load: Must select type of file. ie) geo or array express " );
-                    return new ModelAndView( new RedirectView( "/Gemma/loadExpressionExperiment.html" ) );
-
                 }
 
             }

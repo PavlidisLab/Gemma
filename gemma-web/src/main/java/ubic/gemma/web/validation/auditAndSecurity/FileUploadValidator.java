@@ -34,8 +34,6 @@ import ubic.gemma.web.controller.common.auditAndSecurity.FileUpload;
  */
 public class FileUploadValidator implements Validator {
 
-    private static final int MINFILENAMELENGTH = 5;
-
     /*
      * (non-Javadoc)
      * 
@@ -51,14 +49,8 @@ public class FileUploadValidator implements Validator {
      * @see org.springframework.validation.Validator#validate(java.lang.Object, org.springframework.validation.Errors)
      */
     public void validate( Object obj, Errors errors ) {
-        FileUpload a = ( FileUpload ) obj;
-
-        ValidationUtils.rejectIfEmptyOrWhitespace( errors, "file", "errors.required", new Object[] {"File"}, "File is required" );
-
-        if ( StringUtils.isNotBlank( a.getName() ) && a.getName().length() < MINFILENAMELENGTH ) {
-            errors.reject( "errors.required", new Object[] {"File name"}, "File name is too short" );
-        }
-
+        ValidationUtils.rejectIfEmptyOrWhitespace( errors, "file", "errors.required", new Object[] { "File" },
+                "File is  required" );
     }
 
 }

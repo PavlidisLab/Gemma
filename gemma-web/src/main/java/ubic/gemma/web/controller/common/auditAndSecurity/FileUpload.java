@@ -18,13 +18,11 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
-import java.io.File;
 import java.io.Serializable;
 
 /**
  * Command class to handle uploading of a file
  * 
- * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author pavlidis
  * @version $Id$
  */
@@ -35,21 +33,9 @@ public class FileUpload implements Serializable {
      */
     private static final long serialVersionUID = 537156568346654834L;
 
-    /**
-     * Optional friendly name for the file.
-     */
-    private String name;
-
     private byte[] file;
 
-    private File localPath;
-
-    /**
-     * @return Returns the name.
-     */
-    public String getName() {
-        return name;
-    }
+    private String localPath;
 
     /**
      * @return
@@ -65,18 +51,11 @@ public class FileUpload implements Serializable {
         this.file = file;
     }
 
-    /**
-     * @param name The name to set.
-     */
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    public void setLocalPath( File file ) {
+    public void setLocalPath( String file ) {
         this.localPath = file;
     }
 
-    public File getLocalPath() {
+    public String getLocalPath() {
         return localPath;
     }
 }

@@ -57,6 +57,9 @@ public class SimpleExpressionExperimentLoadValidator implements Validator {
 
         ValidationUtils.rejectIfEmptyOrWhitespace( errors, "name", "errors.required", "Name is required" );
         ValidationUtils.rejectIfEmptyOrWhitespace( errors, "description", "errors.required", "Description is required" );
+        ValidationUtils.rejectIfEmptyOrWhitespace( errors, "shortName", "errors.required", "Short name is required" );
+        ValidationUtils.rejectIfEmptyOrWhitespace( errors, "type", "errors.required", "Type is required" ); 
+        
 
     }
 

@@ -23,21 +23,18 @@
  */
 package ubic.gemma.web.util.upload;
 
-import javax.servlet.ServletContext;
+import java.util.Queue;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.directwebremoting.ServerContext;
-import org.directwebremoting.ServerContextFactory;
-import org.directwebremoting.WebContext;
-import org.directwebremoting.WebContextFactory;
-import org.directwebremoting.proxy.dwr.Util;
 
 import ubic.gemma.util.progress.ProgressData;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
-import ubic.gemma.util.progress.TaskRunningService;
 
 /**
  * @author Original : plosson on 05-janv.-2006 10:46:33 - Last modified by Author: plosson $ on $Date: 2006/01/05
@@ -50,27 +47,24 @@ public class UploadListener implements OutputStreamListener {
     private static Log log = LogFactory.getLog( UploadListener.class.getName() );
 
     private long delay = 0;
-
-    private double totalToRead = 0;
-    private double totalBytesRead = 0;
-    private int totalFiles = -1;
+    private long totalToRead = 0;
+    private long totalBytesRead = 0;
     private ProgressJob pJob;
-    private ServletContext ctx;
     private String taskId;
+    private HttpSession session;
 
     /**
      * @param request
      * @param debugDelay
      */
-    public UploadListener( ServletContext ctx, long debugDelay ) {
+    public UploadListener( HttpServletRequest request, long debugDelay ) {
+        this( request );
         this.delay = debugDelay;
-        this.ctx = ctx;
-        start();
     }
 
-    public UploadListener( ServletContext ctx ) {
-        this.ctx = ctx;
-        start();
+    public UploadListener( HttpServletRequest request ) {
+        this.totalToRead = request.getContentLength();
+        this.session = request.getSession();
     }
 
     /*
@@ -79,30 +73,19 @@ public class UploadListener implements OutputStreamListener {
      * @see ubic.gemma.util.upload.OutputStreamListener#start()
      */
     public void start() {
-        totalFiles++;
-        this.taskId = TaskRunningService.generateTaskId();
-        pJob = ProgressManager.createProgressJob( taskId, SecurityContextHolder.getContext().getAuthentication()
+        /*
+         * FIXME this is a temporary fallback until we can get reverse ajax working.
+         */
+        this.taskId = ( String ) this.session.getAttribute( "tmpTaskId" );
+
+        if ( taskId == null ) throw new IllegalStateException( "Task Id could not be located" );
+
+        this.pJob = ProgressManager.createProgressJob( taskId, SecurityContextHolder.getContext().getAuthentication()
                 .getName(), "File Upload" );
 
-        // Send the task Id back to the client.
-        WebContext wctx = WebContextFactory.get();
-        if ( wctx != null ) {
-            Util cp = new Util( wctx.getScriptSession() );
-            cp.setValue( "taskId", taskId, false );
-        } else {
-            ServerContext sctx = ServerContextFactory.get( ctx );
-            assert sctx != null;
-            Util util = new Util( sctx.getAllScriptSessions() );
-            log.info( util );
-            // cp.setValue( "taskId", taskId, false );
-            // throw new IllegalStateException( "Thread was not started by DWR, cannot monitor" );
-        }
-
-        // If this is set here, then when other programs that have file uploading as a part of their progress they will
-        // be forwarded to the wrong place
-        // as the case of just uploading a file isn't really usefull it makes sense for this not to be set
         pJob.setForwardWhenDone( false );
         pJob.updateProgress( new ProgressData( 0, "Uploading File..." ) );
+        log.debug( "Upload monitor started" );
     }
 
     /*
@@ -111,19 +94,26 @@ public class UploadListener implements OutputStreamListener {
      * @see ubic.gemma.util.upload.OutputStreamListener#bytesRead(int)
      */
     public void bytesRead( int bytesRead ) {
-        int oldPercent = pJob.getProgressData().iterator().next().getPercent();
+        Queue<ProgressData> progressData = pJob.getProgressData();
 
-        totalBytesRead = totalBytesRead + bytesRead;
-        Double newPercent = ( totalBytesRead / totalToRead ) * 100;
-        if ( newPercent.intValue() > oldPercent ) {
-            pJob.nudgeProgress();
-            oldPercent = newPercent.intValue();
+        if ( progressData == null || progressData.size() == 0 ) {
+            return; // probably it is finshed.
         }
+        int oldPercent = progressData.peek().getPercent();
 
-        try {
-            Thread.sleep( delay );
-        } catch ( InterruptedException e ) {
-            e.printStackTrace();
+        this.totalBytesRead = totalBytesRead + bytesRead;
+        int newPercent = ( new Double( ( ( double ) totalBytesRead / totalToRead ) * 100.00 ) ).intValue();
+        if ( newPercent > oldPercent + 5 || newPercent == 100 ) {
+            pJob.updateProgress( newPercent );
+            log.debug( newPercent + "% read (" + totalBytesRead + "/" + totalToRead + " bytes)" );
+        }
+       
+        if ( delay > 0 ) {
+            try {
+                Thread.sleep( delay );
+            } catch ( InterruptedException e ) {
+                e.printStackTrace();
+            }
         }
     }
 

@@ -79,6 +79,9 @@ public class SimpleExpressionExperimentMetaData {
     private int pubMedId;
 
     Collection<ArrayDesign> arrayDesigns;
+    
+    // for Ajax
+    Collection<Long> arrayDesignIds;
 
     Taxon taxon;
 
@@ -292,6 +295,14 @@ public class SimpleExpressionExperimentMetaData {
 
     public void setShortName( String shortName ) {
         this.shortName = shortName;
+    }
+
+    public Collection<Long> getArrayDesignIds() {
+        return arrayDesignIds;
+    }
+
+    public void setArrayDesignIds( Collection<Long> arrayDesignIds ) {
+        this.arrayDesignIds = arrayDesignIds;
     }
 
 }

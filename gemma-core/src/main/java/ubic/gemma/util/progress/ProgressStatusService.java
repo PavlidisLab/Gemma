@@ -80,6 +80,7 @@ public class ProgressStatusService {
                     log.debug( "forward to " + data.getForwardingURL() );
                 }
                 progressManager.cleanupJob( taskId );
+                break;
             }
         }
 

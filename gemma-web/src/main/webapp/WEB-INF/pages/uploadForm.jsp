@@ -1,7 +1,8 @@
 <%@ include file="/common/taglibs.jsp"%>
 <jsp:useBean id="fileUpload" scope="request" class="ubic.gemma.web.controller.common.auditAndSecurity.FileUpload" />
 <%--  $Id$ --%>
-<title><fmt:message key="upload.title" /></title>
+<title><fmt:message key="upload.title" />
+</title>
 <content tag="heading">
 <fmt:message key="upload.heading" />
 </content>
@@ -39,17 +40,6 @@
 <form method="post" id="uploadForm" action="<c:url value="/uploadFile.html"/>" enctype="multipart/form-data"
 	onsubmit="startProgress()">
 	<table class="detail">
-		<tr>
-			<th>
-				<Gemma:label key="uploadForm.name" />
-			</th>
-			<td>
-				<spring:bind path="fileUpload.name">
-					<input type="text" name="name" id="name" size="40" value="<c:out value="${status.value}"/>" />
-					<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
-				</spring:bind>
-			</td>
-		</tr>
 		<tr>
 			<th>
 				<Gemma:label key="uploadForm.file" />

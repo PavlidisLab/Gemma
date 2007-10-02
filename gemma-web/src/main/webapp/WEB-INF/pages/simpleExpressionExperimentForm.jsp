@@ -10,12 +10,11 @@
 	<script type='text/javascript' src='/Gemma/dwr/interface/ProgressStatusService.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
-	<script type="text/javascript" src="<c:url value='/scripts/ajax/simpleEELoad.js'/>" ></script>
+	<script type="text/javascript" src="<c:url value='/scripts/ajax/simpleEELoad.js'/>"></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/SimpleExpressionExperimentLoadController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/TaskCompletionController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/FileUploadController.js'></script>
 	<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/progressbar.css'/>" />
-	<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/uploadform.css'/>" />
-	<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/filetree.css'/>" />
 	<title>Load an expression data set from a flat file</title>
 </head>
 <body>
@@ -28,8 +27,9 @@
 	</p>
 
 	<div id="messages" style="margin: 10px; width: 400px"></div>
-	<div id="progress-area" style="padding: 5px;"></div>
-	<div id="taskId" style="display: none;"></div>
+
+	<div id="progress-area" style="margin: 20px; padding: 5px;"></div>
+	<div id="taskId" style="display: none;"><%=request.getSession().getAttribute( "tmpTaskId" )%></div>
 	<spring:bind path="simpleExpressionExperimentLoadCommand">
 		<c:if test="${not empty status.errorMessages}">
 			<div class="error">
@@ -42,20 +42,24 @@
 		</c:if>
 	</spring:bind>
 
-	<table>
-		<tr>
-			<td>
-				<div id="file-upload"></div>
-			</td>
-		</tr>
-	</table>
-	<form id="eeform" method="post" name="simpleExpressionExperimentForm"
-		action="<c:url value="/loadSimpleExpressionExperiment.html"/>">
+
+	<div style="margin: 10px;" id="file-upload"></div>
+
+
+	<form id="simpleEELoad" method="post" name="simpleEELoad"  >
 
 		<table>
+
 			<tr>
 				<td valign='top'>
-					<Gemma:label styleClass="desc" key="expressionExperiment.name" />
+					<Gemma:label styleClass="desc" key="simpleEEForm.file" />
+					<input type="file" name="file" id="file" />
+				</td>
+			</tr>
+
+			<tr>
+				<td valign='top'>
+					<Gemma:label styleClass="desc" key="simpleEEForm.name" />
 					<spring:bind path="simpleExpressionExperimentLoadCommand.name">
 						<input type="text" name="<c:out value="${status.expression}"/>" id="<c:out value="${status.expression}"/>"
 							value="<c:out value="${status.value}"/>" />
@@ -65,7 +69,7 @@
 			</tr>
 			<tr>
 				<td valign='top'>
-					<Gemma:label styleClass="desc" key="expressionExperiment.shortName" />
+					<Gemma:label styleClass="desc" key="simpleEEForm.shortName" />
 					<spring:bind path="simpleExpressionExperimentLoadCommand.shortName">
 						<input type="text" name="<c:out value="${status.expression}"/>" id="<c:out value="${status.expression}"/>"
 							value="<c:out value="${status.value}"/>" />
@@ -76,7 +80,7 @@
 
 			<tr>
 				<td>
-					<Gemma:label styleClass="desc" key="expressionExperiment.description" />
+					<Gemma:label styleClass="desc" key="simpleEEForm.description" />
 					<spring:bind path="simpleExpressionExperimentLoadCommand.description">
 						<input type="textarea" rows="20" cols="120" id="<c:out value="${status.expression}"/>"
 							name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>" />
@@ -87,13 +91,13 @@
 
 			<tr>
 				<td valign='top'>
-					<Gemma:label key="expressionExperiment.arrayDesigns" />
+					<Gemma:label key="simpleEEForm.arrayDesigns" />
 					<spring:bind path="simpleExpressionExperimentLoadCommand.arrayDesigns">
 						<select name="${status.expression}" multiple size='5' id="<c:out value="${status.expression}"/>">
 							<c:forEach items="${arrayDesigns}" var="arrayDesign">
-								<spring:transform value="${arrayDesign.name} (${arrayDesign.shortName })" var="name" />
-								<option value="${name}" <c:if test="${status.value == name}">selected</c:if>>
-									${name}
+								<spring:transform value="${arrayDesign.id }" var="id" />
+								<option value="${id}" <c:if test="${status.value == id}">selected</c:if>>
+									${arrayDesign.name} (${arrayDesign.shortName })
 								</option>
 							</c:forEach>
 						</select>
@@ -103,7 +107,7 @@
 				</td>
 
 				<td valign='top'>
-					<Gemma:label styleClass="desc" key="arrayDesign.name" />
+					<Gemma:label styleClass="desc" key="simpleEEForm.arrayDesign.name" />
 					<spring:bind path="simpleExpressionExperimentLoadCommand.arrayDesignName">
 						<input type="text" name="<c:out value="${status.expression}"/>" id="<c:out value="${status.expression}"/>"
 							value="<c:out value="${status.value}"/>" />
@@ -112,7 +116,7 @@
 				</td>
 
 				<td valign='top'>
-					<Gemma:label styleClass="desc" key="arrayDesign.imageClones" />
+					<Gemma:label styleClass="desc" key="simpleEEForm.probeIdsAreImageClones" />
 					<spring:bind path="simpleExpressionExperimentLoadCommand.probeIdsAreImageClones">
 						<input type="hidden" name="_<c:out value="${status.expression}"/>">
 						<input align="left" type="checkbox" id="<c:out value="${status.expression}"/>"
@@ -125,7 +129,7 @@
 			</tr>
 			<tr>
 				<td valign='top'>
-					<Gemma:label styleClass="desc" key="taxon.title" />
+					<Gemma:label styleClass="desc" key="simpleEEForm.taxon.title" />
 					<spring:bind path="simpleExpressionExperimentLoadCommand.taxon">
 						<select name="${status.expression}" id="<c:out value="${status.expression}"/>">
 							<c:forEach items="${taxa}" var="taxon">
@@ -141,7 +145,7 @@
 				</td>
 
 				<td valign='top'>
-					<Gemma:label styleClass="desc" key="taxon.scientificName" />
+					<Gemma:label styleClass="desc" key="simpleEEForm.taxon.scientificName" />
 					<spring:bind path="simpleExpressionExperimentLoadCommand.taxonName">
 						<input type="text" name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>"
 							id="<c:out value="${status.expression}"/>" />
@@ -150,20 +154,6 @@
 				</td>
 
 			</tr>
-			<%-- <tr>
-			<td colspan="2">
-				<Gemma:label styleClass="desc" key="data.file" />
-				<spring:bind
-					path="simpleExpressionExperimentLoadCommand.dataFile.file">
-					<input type="file" size=30
-						name="<c:out value="${status.expression}" />"
-						id="<c:out value="${status.expression}"/>"
-						value="<c:out value="${status.value}" />" />
-					<span class="fieldError">${status.errorMessage}</span>
-				</spring:bind>
-
-			</td>
-		</tr>--%>
 
 			<tr>
 				<td colspan="2">
@@ -179,7 +169,7 @@
 
 						<tr>
 							<td>
-								<Gemma:label styleClass="desc" key="quantitationType.name" />
+								<Gemma:label styleClass="desc" key="simpleEEForm.quantitationTypeName" />
 								<spring:bind path="simpleExpressionExperimentLoadCommand.quantitationTypeName">
 									<input type="text" name="<c:out value="${status.expression}"/>" id="<c:out value="${status.expression}"/>"
 										value="<c:out value="${status.value}"/>" />
@@ -190,7 +180,7 @@
 
 						<tr>
 							<td>
-								<Gemma:label styleClass="desc" key="quantitationType.description" />
+								<Gemma:label styleClass="desc" key="simpleEEForm.quantitationTypeDescription" />
 								<spring:bind path="simpleExpressionExperimentLoadCommand.quantitationTypeDescription">
 									<input type="textarea" rows="20" cols="120" name="<c:out value="${status.expression}"/>"
 										id="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>" />
@@ -202,7 +192,7 @@
 
 						<tr>
 							<td>
-								<Gemma:label styleClass="desc" key="quantitationType.type" />
+								<Gemma:label styleClass="desc" key="simpleEEForm.type" />
 								<spring:bind path="simpleExpressionExperimentLoadCommand.type">
 									<select name="${status.expression}" id="<c:out value="${status.expression}"/>">
 										<c:forEach items="${standardQuantitationTypes}" var="type">
@@ -219,7 +209,7 @@
 
 						<tr>
 							<td>
-								<Gemma:label styleClass="desc" key="quantitationType.scale" />
+								<Gemma:label styleClass="desc" key="simpleEEForm.scale" />
 								<spring:bind path="simpleExpressionExperimentLoadCommand.scale">
 									<select name="${status.expression}" id="<c:out value="${status.expression}"/>">
 										<c:forEach items="${scaleTypes}" var="type">
@@ -235,7 +225,7 @@
 						</tr>
 						<tr>
 							<td>
-								<Gemma:label styleClass="desc" key="quantitationType.ratios" />
+								<Gemma:label styleClass="desc" key="simpleEEForm.isRatio" />
 								<spring:bind path="simpleExpressionExperimentLoadCommand.isRatio">
 									<input type="hidden" name="_<c:out value="${status.expression}"/>">
 									<input align="left" type="checkbox" id="<c:out value="${status.expression}"/>"
@@ -248,55 +238,13 @@
 					</table>
 				</td>
 			</tr>
-			<%--
-				<tr>
-					<td colspan="2">
-						<table>
-							<tr>
-								<td>
-									<h2>
-										Describe the experimental design
-									</h2>
-								</td>
-							</tr>
-							<tr>
-								<td>
-									<Gemma:label styleClass="desc" key="name" />
-									<spring:bind
-										path="simpleExpressionExperimentLoadCommand.experimentalDesignName">
-										<input type="text"
-											name="<c:out value="${status.expression}"/>"   id="<c:out value="${status.expression}"/>"
-											value="<c:out value="${status.value}"/>" />
-										<span class="fieldError">${status.errorMessage}</span>
-									</spring:bind>
-								</td>
-							</tr>
-							<tr>
-								<td>
-									<Gemma:label styleClass="desc" key="description" />
-									<spring:bind
-										path="simpleExpressionExperimentLoadCommand.experimentalDesignDescription">
-										<input type="textarea" rows="20" cols="120"
-											name="<c:out value="${status.expression}"/>"   id="<c:out value="${status.expression}"/>" 
-											value="<c:out value="${status.value}"/>" />
-										<span class="fieldError">${status.errorMessage}</span>
-									</spring:bind>
-								</td>
-							</tr>
-						</table>
-					</td>
-				</tr>--%>
 
-			<tr>
-				<td colspan="2" style="padding: 10px" align="center" class="buttonBar">
-					<div id="upload-button"></div>
-				</td>
-			</tr>
 
 		</table>
-
-
+		<input id="upload-button" type="submit" onClick="return false;" />
 	</form>
 
+	<validate:javascript formName="simpleEEForm" staticJavascript="false" />
+	<script type="text/javascript" src="<c:url value="/scripts/validator.jsp"/>"></script>
 
 </body>

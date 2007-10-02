@@ -113,7 +113,7 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
 
         // validate a file was entered
         FileUpload fileUpload = commandObject.getSequenceFile();
-        if ( fileUpload.getName() != null && fileUpload.getFile().length == 0 ) {
+        if ( fileUpload.getFile().length == 0 ) {
             Object[] args = new Object[] { getText( "arrayDesignSequenceAddCommand.file", request.getLocale() ) };
             errors.rejectValue( "file", "errors.required", args, "File" );
             return showForm( request, response, errors );
@@ -209,15 +209,15 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
                 SequenceType sequenceType = commandObject.getSequenceType();
 
                 ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
-                        .getAuthentication().getName(), "Loading data from " + fileUpload.getName() );
+                        .getAuthentication().getName(), "Loading data from " + fileUpload.getLocalPath() );
 
                 job.setForwardingURL( "/Gemma/arrayDesign/associateSequences.html" );
 
-                File file = fileUpload.getLocalPath();
+                String filePath = fileUpload.getLocalPath();
 
-                assert file != null;
+                assert filePath != null;
 
-                InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
+                InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( filePath );
 
                 Collection<BioSequence> bioSequences = arrayDesignSequenceProcessingService.processArrayDesign(
                         arrayDesign, stream, sequenceType );

@@ -14,8 +14,6 @@ progressbar = function(){
         cancel : true
     });
     progressbar.superclass.constructor.call(this);
-	
-	
 };
 
 Ext.extend(progressbar, Ext.util.Observable, {
@@ -52,7 +50,7 @@ Ext.extend(progressbar, Ext.util.Observable, {
 	   if (this.determinate == 0){
 			document.getElementById("progressTextArea").innerHTML = "Starting job...";
 		} else {
-			document.getElementById("progress-bar-text").value = "Please wait...";
+//			document.getElementById("progressTextArea").value = "Please wait...";
 		}
 		
 		var callParams = [dwr.util.getValue("taskId")];
@@ -91,7 +89,14 @@ Ext.extend(progressbar, Ext.util.Observable, {
 			for(var i = 0, len = data.length; i < len; i++) {
 				var d = data[i];
 				messages = messages + "<br/>" + d.description;
+				delta = d.percent - percent;
 				percent = d.percent; // use last value.
+				
+				if (delta > 5) {
+			//		document.getElementById("progressTextArea").innerHTML = messages + " " + percent + "%";
+					document.getElementById("progress-bar-box-content").style.width = parseInt(percent * 3.5) + "px";
+				}
+				
 				if (d.failed) {
 					this.stopProgress();
 					return  this.handleFailure(d);
@@ -100,7 +105,10 @@ Ext.extend(progressbar, Ext.util.Observable, {
 					this.stopProgress();
 					if ((d.forwardingURL !== undefined) && (d.forwardingURL !== null)) {
 					  	window.location = d.forwardingURL + "?taskId=" + dwr.util.getValue("taskId");
-					}  
+					}  else {
+						var callback = this.maybeDoForward.createDelegate(this, [], true) ;
+						TaskCompletionController.checkResult(dwr.util.getValue("taskId"), callback);
+					}
 					return;
 				}
 			}	
@@ -115,20 +123,23 @@ Ext.extend(progressbar, Ext.util.Observable, {
 			percent = data.percent;
 		}
 	
-		document.getElementById("progress-bar-text").innerHTML = messages + " " + percent + "%";
+	//	document.getElementById("progressTextArea").innerHTML = messages + " " + percent + "%";
 		document.getElementById("progress-bar-box-content").style.width = parseInt(percent * 3.5) + "px";
 	},
 
+	maybeDoForward : function(url) {
+		if (url) {
+			window.location = url;
+		}	
+	},
 			
 	updateIndeterminateProgress : function (data){
 
 		var messages = "";
-		var percent = 0;
 		if (data.push) {
 			for(var i = 0, len = data.length; i < len; i++) {
 				var d = data[i];
 				messages = messages + "<br/>" + d.description;
-				percent = d.percent; // use last value.
 				if (d.failed) {
 					this.stopProgress();
 					return this.handleFailure(d);
@@ -137,6 +148,9 @@ Ext.extend(progressbar, Ext.util.Observable, {
 					this.stopProgress();
 					if ((d.forwardingURL !== undefined) && (d.forwardingURL !== null)) {
 				  		window.location = d.forwardingURL + "?taskId=" + dwr.util.getValue("taskId");
+					}  else {
+						var callback = this.maybeDoForward.createDelegate(this, [], true) ;
+						TaskCompletionController.checkResult(dwr.util.getValue("taskId"), callback);
 					}
 					return;
 				}
@@ -149,7 +163,6 @@ Ext.extend(progressbar, Ext.util.Observable, {
 				this.fireEvent('done', data.payload);
 				this.stopProgress();
 			}
-			percent = data.percent;
 		}
 		
 		if (!document.getElementById("progressTextArea")) return;
@@ -170,11 +183,11 @@ Ext.extend(progressbar, Ext.util.Observable, {
 	 */
 	cancelJob : function () {
 		var taskId = dwr.util.getValue("taskId");
-		if (this.determinate == 0){
+	//	if (this.determinate == 0){
 			document.getElementById("progressTextArea").innerHTML = "Cancelling...";
-		} else {
-			document.getElementById("progress-bar-text").value = "Cancelling...";
-		}
+	//	} else {
+	//		document.getElementById("progressTextArea").value = "Cancelling...";
+	//	}
 		var f =  this.cancelCallback.createDelegate(this, [], true);
 		ProgressStatusService.cancelJob(taskId, f);
 	},
@@ -219,8 +232,8 @@ Ext.extend(progressbar, Ext.util.Observable, {
 	 */
 	createDeterminateProgressBar : function (){
 		this.determinate = 1;
-		var barHtml = '<div id="progressBar" >  <div id="progress-bar-text"></div>   <div id="progress-bar-box">  <div id="progress-bar-box-content"></div>  <input style="float:left" type="button" id="cancel-button" name="Cancel" value="Cancel job" /></div> </div>';
-	 	Ext.DomHelper.overwrite("progress-area", barHtml);
+		var div = '<div style="width:650px;"><input style="float:left;padding:10px;" type="button" id="cancel-button" name="Cancel" value="Cancel job" /><div id="progbar" style="width:200px;border:1px solid;"><div id="progress-bar-box-content" style="float:right;height:10px;"></div></div></div>';
+	 	Ext.DomHelper.overwrite("progress-area", div);
 	 	f = this.cancelJob.createDelegate(this, [], true);
 		Ext.get("cancel-button").on('click', f);
 	},

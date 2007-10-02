@@ -162,17 +162,26 @@
             </field>
             
         </form>
-     <!--   
         <form name="arrayDesignSequenceAdd">
             <field property="sequenceFile" depends="required" />
-            <field property="arrayDesign" depends="required" />
+            <field property="arrayDesign" depends="required" /> 
             <field property="sequenceType" depends="required" />
         </form>
-         -->
-        <form name="simpleExpressionExperimentForm">
+        <form name="expressionExperimentLoad">
+            <field property="accession" depends="required" />
+        </form>
+        <form name="simpleEEForm">
+			<field property="file" depends="required" />
 			<field property="shortName" depends="required" />
             <field property="name" depends="required" />
             <field property="description" depends="required" />
+			<field property="shortName" depends="required" />
+            <field property="name" depends="required" />
+            <field property="quantitationTypeName" depends="required" />
+ 			<field property="quantitationTypeDescription" depends="required" />
+ 			<field property="type" depends="required" />
+ 			<field property="scale" depends="required" />
+ 			<field property="isRatio" depends="required" />
         </form>
       
     </formset> 

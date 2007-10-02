@@ -59,8 +59,10 @@ public class FileUploadController extends BaseFormController {
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 
+        if ( errors.hasErrors() ) {
+            log.warn( "Errors..." );
+        }
         // When this is reached, the file has already been uploaded.
-
         FileUpload fileUpload = ( FileUpload ) command;
 
         // validate a file was entered

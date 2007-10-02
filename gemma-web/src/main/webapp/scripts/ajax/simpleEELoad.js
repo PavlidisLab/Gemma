@@ -1,53 +1,79 @@
 
 var uploadButton;
-var uploader = new FileUpload();
+var uploader = new FileUpload("simpleEELoad");
+var p ;
 Ext.onReady(function () {
-	uploader.makeUploadForm("file-upload");
-	uploadButton = new Ext.Button("upload-button", {text:"Start loading"});
+	//uploader.makeUploadForm("file-upload");
+	var df = handleAfterUpload.createDelegate(this, [], true);
+	var ff = handleFailure.createDelegate(this, [], true);
+	uploadButton = new Ext.get("upload-button");
+	uploader.on("finish", df);
+	uploader.on("fail", ff);
+	uploader.on("start", function(){uploadButton.disable();});
 	uploadButton.on("click", submitForm);
 });
 function submitForm() {
+	
+	// validate the main form, which is using struts client-side validation.
+	var valid = validateSimpleEEForm(Ext.get("simpleEELoad").dom);
+	
+	// upload the file
+	if (valid) {
+		uploader.startUpload();
+	}
+}
 
-	// first upload the file.
-	uploader.startUpload();
+function handleAfterUpload(data) {
+	Ext.DomHelper.overwrite("messages", {tag:"img", src:"/Gemma/images/default/tree/loading.gif"});
+	Ext.DomHelper.append("messages", "&nbsp;File upload completed, starting data processing ...");
+	var fileOnServer = data.localFile;
+	
+	// This now uses the spring fields.
 	var name = Ext.get("name").dom.value;
-	var shortName = Ext.get("shortName").dom.value;
-	var description = Ext.get("description").dom.value;
-	var arrayDesigns = Ext.get("arrayDesigns").dom.value;
-	var quantitationTypeName = Ext.get("quantitationTypeName").dom.value;
-	var quantitationTypeDescription = Ext.get("quantitationTypeDescription").dom.value;
-	var scale = Ext.get("scale").dom.value;
-	var type = Ext.get("type").dom.value;
-	var isRatio = Ext.get("isRatio").dom.checked;
-	//var file = Ext.get("dataFile.file").dom.value;
+	var shortName = Ext.get("shortName").dom.value || " ";
+	var description = Ext.get("description").dom.value || " ";
+	var arrayDesigns = [];
+	
+	// Copy the short names into this array.
+	var aropts = Ext.get("arrayDesigns").dom.options;
+	var aropt;
+	for (aropt in aropts) {
+		if (aropts[aropt].selected) {
+			arrayDesigns.push( aropts[aropt].value );
+		}
+	}
+	var quantitationTypeName = Ext.get("quantitationTypeName").dom.value || " ";
+	var quantitationTypeDescription = Ext.get("quantitationTypeDescription").dom.value || " ";
+	var scale = Ext.get("scale").dom.value || " ";
+	var type = Ext.get("type").dom.value || " ";
+	var isRatio = Ext.get("isRatio").dom.checked || false;
+	var taxon = Ext.get("taxon").dom.value || Ext.get("taxonName").dom.value;
 	var callParams = [];
-	var commandObj = {name:name, shortName:shortName, description:description, arrayDesigns:arrayDesigns, quantitationTypeName:quantitationTypeName, scale:scale, type:type, isRatio:isRatio};
+	var commandObj = {dataFile:{localPath:fileOnServer}, taxonName : taxon, name:name, shortName:shortName, description:description, arrayDesignIds:arrayDesigns, quantitationTypeName:quantitationTypeName, scale:scale, type:type, isRatio:isRatio};
 	callParams.push(commandObj);
 	var delegate = handleSuccess.createDelegate(this, [], true);
 	var errorHandler = handleFailure.createDelegate(this, [], true);
 	callParams.push({callback:delegate, errorHandler:errorHandler});
-	
-	//Ext.DomHelper.overwrite("messages", {tag:"img", src:"/Gemma/images/default/tree/loading.gif"});
-//	Ext.DomHelper.append("messages", "&nbsp;Submitting job...");
-	//	uploadButton.disable();
-//	SimpleExpressionExperimentLoadController.load.apply(this, callParams);
+	SimpleExpressionExperimentLoadController.load.apply(this, callParams);
 }
-
 function handleFailure(data, e) {
+	reset(data);
+	if (p) {
+		p.stopProgress();
+	}
 	Ext.DomHelper.overwrite("taskId", "");
 	Ext.DomHelper.overwrite("messages", {tag:"img", src:"/Gemma/images/icons/warning.png"});
-	Ext.DomHelper.append("messages", {tag:"span", html:"&nbsp;There was an error while loading data:<br/>" + data});
-	uploadButton.enable();
+	Ext.DomHelper.append("messages", {tag:"span", html:"&nbsp;" + data});
 }
 function reset(data) {
-	uploadButton.enable();
+	//uploadButton.enable();
 }
 function handleSuccess(data) {
 	try {
 		taskId = data;
 		Ext.DomHelper.overwrite("messages", "");
 		Ext.DomHelper.overwrite("taskId", "<input type = 'hidden' name='taskId' id='taskId' value= '" + taskId + "'/> ");
-		var p = new progressbar();
+		p = new progressbar();
 		p.createIndeterminateProgressBar();
 		p.on("fail", handleFailure);
 		p.on("cancel", reset);

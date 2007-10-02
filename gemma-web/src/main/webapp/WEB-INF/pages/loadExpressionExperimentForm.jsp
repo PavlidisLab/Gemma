@@ -21,10 +21,10 @@ by getting the info it needs from the dom.  The initbinder method in the control
 	<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/progressbar.css'/>" />
 </head>
 
-<title><fmt:message key="expressionExperiment.load.title" />
+<title><fmt:message key="expressionExperimentLoad.title" />
 </title>
 <content tag="heading">
-<fmt:message key="expressionExperiment.load.title" />
+<fmt:message key="expressionExperimentLoad.title" />
 </content>
 
 <spring:bind path="command.*">
@@ -40,7 +40,7 @@ by getting the info it needs from the dom.  The initbinder method in the control
 </spring:bind>
 
 
-<fmt:message key="expressionExperiment.load.message" />
+<fmt:message key="expressionExperimentLoad.message" />
 
 <div id="messages" style="margin:10px;width:400px"></div>
 <div id="taskId" style="display: none;"></div>
@@ -48,7 +48,7 @@ by getting the info it needs from the dom.  The initbinder method in the control
 <table class="detail">
 	<tr>
 		<th>
-			<fmt:message key="databaseEntry.accession.title" />
+			<Gemma:label key="expressionExperimentLoad.accession" />
 		</th>
 		<td>
 			<spring:bind path="command.accession">
@@ -59,19 +59,10 @@ by getting the info it needs from the dom.  The initbinder method in the control
 	</tr>	
 	<tr>
 		<th>
-			<fmt:message key="expressionExperiment.load.geo" />
-		</th>
-		<td align="left">
-			<spring:bind path="command.geo">				
-				<input id="geo" align="left" type="checkbox" name="<c:out value="${status.expression}"/>" value="true"
-				  <c:if test="${status.value}">checked</c:if> />
-				<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
-			</spring:bind>
-		</td>
-	</tr>
-	<tr>
-		<th>
-			<fmt:message key="expressionExperiment.load.arrayExpress" />
+			<Gemma:label  key="expressionExperimentLoad.arrayExpress" />
+			<a class="helpLink" href="?"
+				onclick="showHelpTip(event, 'Check if data is to come from ArrayExpress.'); return false"><img
+					src="/Gemma/images/help.png" /> </a>
 		</th>
 		<td align="left">
 			<spring:bind path="command.arrayExpress">	
@@ -84,7 +75,10 @@ by getting the info it needs from the dom.  The initbinder method in the control
 	</tr>		
 	<tr>
 		<th>
-			<fmt:message key="expressionExperiment.load.platformOnly" />
+			<Gemma:label  key="expressionExperimentLoad.platformOnly" />
+			<a class="helpLink" href="?"
+				onclick="showHelpTip(event, 'Load an array design only, not  expression data.'); return false"><img
+					src="/Gemma/images/help.png" /> </a>
 		</th>
 		<td align="left">
 			<spring:bind path="command.loadPlatformOnly">
@@ -97,7 +91,7 @@ by getting the info it needs from the dom.  The initbinder method in the control
 	</tr>
 	<tr>
 		<th>
-			<fmt:message key="expressionExperiment.load.suppressMatching" />
+			<Gemma:label  key="expressionExperimentLoad.suppressMatching" />
 			<a class="helpLink" href="?"
 				onclick="showHelpTip(event, 'Check this box if you know that samples were run on only one platform each. Otherwise an attempt will be made to identify biological replicates on different platforms.'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
@@ -115,12 +109,12 @@ by getting the info it needs from the dom.  The initbinder method in the control
 	
 	<tr>
 				<th>
-					<fmt:message key="expressionExperiment.load.arrayDesign" />
+					<Gemma:label  key="expressionExperimentLoad.arrayDesign" />
 				</th>
 				<td>
 				<spring:bind
 					path="expressionExperimentLoadCommand.arrayDesigns">
-					<select id="arrayDesign" name="${status.expression}" multiple>
+					<select id="arrayDesign" name="${status.expression}" multiple size='5' >
 						<c:forEach items="${arrayDesigns}" var="arrayDesign">
 							<option value="${arrayDesign.name}">
 								${arrayDesign.name}
@@ -141,6 +135,6 @@ by getting the info it needs from the dom.  The initbinder method in the control
 
 <div id="progress-area" style="padding:5px;"></div>
 
-<%--<validate:javascript formName="expressionExperimentLoadCommand" staticJavascript="false" />
-<script type="text/javascript" src="<c:url value="/scripts/validator.jsp"/>"></script> --%>
+<validate:javascript formName="expressionExperimentLoad" staticJavascript="false" />
+<script type="text/javascript" src="<c:url value="/scripts/validator.jsp"/>"></script> 
 

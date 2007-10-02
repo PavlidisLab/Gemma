@@ -64,7 +64,9 @@ public class FileUploadUtil {
             throw new IllegalArgumentException( "File with key " + key + " was not in the request" );
         }
 
-        File copiedFile = getLocalUploadLocation( request, fileUpload, file );
+        String copiedFilePath = getLocalUploadLocation( request, fileUpload, file );
+
+        File copiedFile = new File( copiedFilePath );
 
         copyFile( file, copiedFile );
 
@@ -72,15 +74,16 @@ public class FileUploadUtil {
             throw new IllegalArgumentException( "Uploaded file is not readable or of size zero" );
         }
 
-        String link = getContextUploadPath( request ); // FIXME - this will not yield a valid url.
-        request.setAttribute( "link", link + file.getOriginalFilename() );
+        if ( request != null ) {
+            String link = getContextUploadPath(); // FIXME - this will not yield a valid url.
+            request.setAttribute( "link", link + file.getOriginalFilename() );
 
-        // place the data into the request for retrieval on next page
-        request.setAttribute( "friendlyName", fileUpload.getName() );
-        request.setAttribute( "fileName", file.getOriginalFilename() );
-        request.setAttribute( "contentType", file.getContentType() );
-        request.setAttribute( "size", file.getSize() + " bytes" );
-        request.setAttribute( "location", fileUpload.getLocalPath() );
+            // place the data into the request for retrieval on next page
+            request.setAttribute( "fileName", file.getOriginalFilename() );
+            request.setAttribute( "contentType", file.getContentType() );
+            request.setAttribute( "size", file.getSize() + " bytes" );
+            request.setAttribute( "location", fileUpload.getLocalPath() );
+        }
         return copiedFile;
     }
 
@@ -90,18 +93,18 @@ public class FileUploadUtil {
      * @param file
      * @return
      */
-    private static File getLocalUploadLocation( HttpServletRequest request, FileUpload fileUpload,
+    private static String getLocalUploadLocation( HttpServletRequest request, FileUpload fileUpload,
             CommonsMultipartFile file ) {
         // the directory to upload to - put it in a user-specific directory for now.
-        String uploadDir = getUploadPath( request );
+        String uploadDir = getUploadPath();
 
         // Create the directory if it doesn't exist
         File uploadDirFile = FileTools.createDir( uploadDir );
 
-        File copiedFile = new File( uploadDirFile.getAbsolutePath()
+        String copiedFile = uploadDirFile.getAbsolutePath()
                 + File.separatorChar
                 + ( request == null || request.getSession() == null ? RandomStringUtils.randomAlphanumeric( 20 )
-                        : request.getSession().getId() ) + "__" + file.getOriginalFilename() );
+                        : request.getSession().getId() ) + "__" + file.getOriginalFilename();
 
         fileUpload.setLocalPath( copiedFile );
         return copiedFile;
@@ -156,8 +159,7 @@ public class FileUploadUtil {
      * @param request
      * @return
      */
-    @SuppressWarnings("unused")
-    public static String getUploadPath( HttpServletRequest request ) {
+    public static String getUploadPath() {
         return ConfigUtils.getDownloadPath() + "userUploads";
     }
 
@@ -165,8 +167,8 @@ public class FileUploadUtil {
      * @param request
      * @return
      */
-    public static String getContextUploadPath( HttpServletRequest request ) {
-        return getUploadPath( request ).replace( File.separatorChar, '/' );
+    public static String getContextUploadPath() {
+        return getUploadPath().replace( File.separatorChar, '/' );
     }
 
 }

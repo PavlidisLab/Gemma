@@ -52,11 +52,13 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
+import ubic.gemma.util.gemmaspaces.GemmaSpacesUtil;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
+import ubic.gemma.util.progress.TaskRunningService;
 import ubic.gemma.web.controller.BackgroundControllerJob;
-import ubic.gemma.web.controller.BackgroundProcessingFormController;
 import ubic.gemma.web.controller.common.auditAndSecurity.FileUpload;
+import ubic.gemma.web.controller.gemmaspaces.AbstractGemmaSpacesFormController;
 import ubic.gemma.web.propertyeditor.ArrayDesignPropertyEditor;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
 import ubic.gemma.web.util.ConfigurationCookie;
@@ -79,7 +81,7 @@ import ubic.gemma.web.util.upload.FileUploadUtil;
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
  * @spring.property name="taxonService" ref="taxonService"
  */
-public class SimpleExpressionExperimentLoadController extends BackgroundProcessingFormController {
+public class SimpleExpressionExperimentLoadController extends AbstractGemmaSpacesFormController {
 
     private static final String COOKIE_NAME = "simpleExpressionExperimentLoadCookie";
 
@@ -211,11 +213,6 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
     class SimpleEELoadJob extends BackgroundControllerJob<ModelAndView> {
         SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
 
-        public SimpleEELoadJob( SimpleExpressionDataLoaderService simpleExpressionDataLoaderService ) {
-            super( getMessageUtil() );
-            this.simpleExpressionDataLoaderService = simpleExpressionDataLoaderService;
-        }
-
         public SimpleEELoadJob( String taskId, SecurityContext parentSecurityContext, Object commandObj,
                 MessageUtil messenger, SimpleExpressionDataLoaderService simpleExpressionDataLoaderService ) {
             super( taskId, parentSecurityContext, commandObj, messenger );
@@ -232,7 +229,13 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
             FileUpload fileUpload = commandObject.getDataFile();
 
             Collection<ArrayDesign> arrayDesigns = commandObject.getArrayDesigns();
-            if ( arrayDesigns == null || arrayDesigns.size() == 0 ) {
+            Collection<Long> arrayDesignIds = commandObject.getArrayDesignIds(); // might have used instead of actual
+            // ADs.
+            if ( arrayDesignIds != null && arrayDesignIds.size() > 0 ) {
+                for ( Long adid : arrayDesignIds ) {
+                    arrayDesigns.add( arrayDesignService.load( adid ) );
+                }
+            } else if ( arrayDesigns == null || arrayDesigns.size() == 0 ) {
                 log.info( "Array design " + commandObject.getArrayDesignName() + " is new, will create from data." );
                 ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
                 arrayDesign.setName( commandObject.getArrayDesignName() );
@@ -241,23 +244,23 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
 
             Taxon taxon = commandObject.getTaxon();
             if ( taxon == null || StringUtils.isBlank( taxon.getScientificName() ) ) {
-                log.info( "Taxon " + commandObject.getTaxonName() + " is new, will create" );
+                // log.info( "Taxon " + commandObject.getTaxonName() + " is new, will create" );
                 taxon = Taxon.Factory.newInstance();
                 taxon.setScientificName( commandObject.getTaxonName() );
                 commandObject.setTaxon( taxon );
             }
 
             ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
-                    .getName(), "Loading data from " + fileUpload.getName() );
+                    .getName(), "Loading data from " + fileUpload.getLocalPath() );
 
-            File file = fileUpload.getLocalPath();
+            String filePath = fileUpload.getLocalPath();
 
-            assert file != null;
+            assert filePath != null;
 
-            InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
+            InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( filePath );
 
             if ( stream == null ) {
-                throw new IllegalStateException( "Could not read from file " + file.getAbsolutePath() );
+                throw new IllegalStateException( "Could not read from file " + filePath );
             }
 
             ExpressionExperiment result = simpleExpressionDataLoaderService.load( commandObject, stream );
@@ -268,7 +271,8 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
             model.put( "expressionExperiment", result );
 
             ProgressManager.destroyProgressJob( job );
-            // return new ModelAndView( "view", model );
+
+            // Forward to the details view for the new experiment.
             return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
                     + result.getId() ), model );
         }
@@ -325,19 +329,19 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
      * @param ed
      * @return the taskid
      */
-    public String load( SimpleExpressionExperimentLoadCommand ed ) {
+    public String load( SimpleExpressionExperimentLoadCommand ed ) throws Exception {
 
         FileUpload fileUpload = ed.getDataFile();
 
-        if ( fileUpload == null || fileUpload.getFile() == null ) {
+        if ( fileUpload == null || ( fileUpload.getFile() == null && StringUtils.isBlank( fileUpload.getLocalPath() ) ) ) {
             throw new IllegalArgumentException( "Must provide a file to upload" );
         }
 
-        // File file = FileUploadUtil.copyUploadedFile( request, fileUpload, "dataFile.file" );
+        if ( StringUtils.isBlank( fileUpload.getLocalPath() ) ) {
+            FileUploadUtil.copyUploadedFile( null, fileUpload, "dataFile.file" );
+        }
 
-        SimpleEELoadJob runner = new SimpleEELoadJob( this.simpleExpressionDataLoaderService );
-        runner.setDoForward( true ); // forward to the EE we just loaded.
-        return ( String ) super.startJob( runner ).getModel().get( "taskId" );
+        return ( String ) this.run( ed );
     }
 
     /*
@@ -354,13 +358,13 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
 
         populateTaxonReferenceData( mapping );
 
-        // FIXME currently these don't all make sense (ABSENT_PRESENT for example) because we force user to upload
-        // quantitative data
-        mapping.put( "standardQuantitationTypes", new ArrayList<String>( StandardQuantitationType.literals() ) );
+        List<String> typesToList = new ArrayList<String>();
+        typesToList.add( "AMOUNT" ); // for now this is the only thing that makes sense.
+        mapping.put( "standardQuantitationTypes", typesToList );
 
         mapping.put( "scaleTypes", new ArrayList<String>( ScaleType.literals() ) );
 
-        // in reality currently this has to be "QUANTITIATIVE"
+        // in reality currently this has to be "QUANTITIATIVE" (we're not even listing this on the web interface)
         mapping.put( "generalQuantitationTypes", new ArrayList<String>( GeneralType.literals() ) );
 
         return mapping;
@@ -409,5 +413,23 @@ public class SimpleExpressionExperimentLoadController extends BackgroundProcessi
     protected BackgroundControllerJob<ModelAndView> getRunner( String jobId, SecurityContext securityContext,
             Object command, MessageUtil messenger ) {
         return new SimpleEELoadJob( jobId, securityContext, command, messenger, this.simpleExpressionDataLoaderService );
+    }
+
+    @Override
+    protected BackgroundControllerJob<ModelAndView> getSpaceRunner( String jobId, SecurityContext securityContex,
+            Object command, MessageUtil messenger ) {
+        throw new UnsupportedOperationException( "Not implemented yet" );
+    }
+
+    @Override
+    protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors,
+            Map controlModel ) throws Exception {
+        request.getSession().setAttribute( "tmpTaskId", TaskRunningService.generateTaskId() );
+        return super.showForm( request, response, errors, controlModel );
+    }
+
+    @Override
+    protected void setGemmaSpacesUtil( GemmaSpacesUtil gemmaSpacesUtil ) {
+        this.injectGemmaSpacesUtil( gemmaSpacesUtil );
     }
 }

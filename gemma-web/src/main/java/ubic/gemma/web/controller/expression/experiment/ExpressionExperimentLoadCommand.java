@@ -39,13 +39,11 @@ public class ExpressionExperimentLoadCommand implements Serializable {
     private String datasourceName;
 
     private boolean loadPlatformOnly;
-    
-    private String arrayDesignName;
-    
-    private boolean arrayExpress;
-    
-    private boolean geo;
- 
+
+    private String arrayDesignName; // for AE only
+
+    private boolean arrayExpress = false; // default is GEO
+
     /**
      * Used to turn off 'bioassay to biomaterial' matching.
      */
@@ -59,7 +57,7 @@ public class ExpressionExperimentLoadCommand implements Serializable {
     private boolean aggressiveQtRemoval;
 
     Collection<ArrayDesign> arrayDesigns;
-    
+
     /**
      * @return Returns the accession.
      */
@@ -160,20 +158,6 @@ public class ExpressionExperimentLoadCommand implements Serializable {
      */
     public void setArrayExpress( boolean arrayExpress ) {
         this.arrayExpress = arrayExpress;
-    }
-
-    /**
-     * @return the geo
-     */
-    public boolean isGeo() {
-        return geo;
-    }
-
-    /**
-     * @param geo the geo to set
-     */
-    public void setGeo( boolean geo ) {
-        this.geo = geo;
     }
 
 }

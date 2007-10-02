@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2007 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package ubic.gemma.web.remote;
 
 import java.util.Collection;
@@ -17,6 +35,10 @@ import org.directwebremoting.extend.Property;
 import ubic.gemma.ontology.OntologyClassRestriction;
 import ubic.gemma.ontology.OntologyTerm;
 
+/**
+ * @author kelsey
+ * @version $Id$
+ */
 public class OntologyTermConverter extends BeanConverter {
 
     private static Log log = LogFactory.getLog( OntologyTermConverter.class.getName() );
@@ -42,7 +64,7 @@ public class OntologyTermConverter extends BeanConverter {
                 // Detects self referential loops
                 //
                 if ( data instanceof OntologyTerm && value instanceof Collection ) {// Look for loops in the class
-                                                                                    // restrictions of the ontology term
+                    // restrictions of the ontology term
                     OntologyTerm term = ( OntologyTerm ) data;
                     for ( Object o : ( Collection ) value ) {
 
@@ -50,8 +72,12 @@ public class OntologyTermConverter extends BeanConverter {
 
                             OntologyClassRestriction restriction = ( OntologyClassRestriction ) o;
                             OntologyTerm restrictedTo = restriction.getRestrictedTo();
-                            
-                            if ((restrictedTo != null) && (term != null) && restrictedTo.equals( term ) ) { // is it a self referential loop?
+
+                            if ( ( restrictedTo != null ) && ( term != null ) && restrictedTo.equals( term ) ) { // is
+                                                                                                                    // it a
+                                                                                                                    // self
+                                                                                                                    // referential
+                                                                                                                    // loop?
                                 log.info( "Loop detected" );
                                 // todo: put something special in the returned object so that the java scrip gui knows
                                 // and displays the loop correctly

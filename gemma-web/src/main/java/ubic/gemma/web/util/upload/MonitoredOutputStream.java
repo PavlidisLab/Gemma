@@ -45,13 +45,13 @@ public class MonitoredOutputStream extends OutputStream {
     public MonitoredOutputStream( OutputStream target, OutputStreamListener listener ) {
         this.target = target;
         this.listener = listener;
-      //  this.listener.start();
+        this.listener.start();
     }
 
     @Override
     public void write( byte b[], int off, int len ) throws IOException {
         target.write( b, off, len );
-        listener.bytesRead( len - off );
+        listener.bytesRead( len );
     }
 
     @Override

@@ -126,6 +126,9 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
         notifyObservers( pData );
     }
 
+    /**
+     * Signal completion
+     */
     public void done() {
         Calendar cal = new GregorianCalendar();
         jInfo.setEndTime( cal.getTime() );

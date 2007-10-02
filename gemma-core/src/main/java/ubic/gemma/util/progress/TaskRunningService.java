@@ -33,7 +33,7 @@ public class TaskRunningService {
 
     final Map<Object, Future> cancelledTasks = new ConcurrentHashMap<Object, Future>();
 
-    final Map<Object, Throwable> failedTasks = new ConcurrentHashMap<Object, Throwable>();
+    final Map<Object, Exception> failedTasks = new ConcurrentHashMap<Object, Exception>();
 
     /**
      * Signal that a task should be cancelled.
@@ -67,7 +67,7 @@ public class TaskRunningService {
      * @param taskId
      * @return
      */
-    public synchronized Object checkResult( Object taskId ) throws Throwable {
+    public synchronized Object checkResult( Object taskId ) throws Exception {
         log.debug( "entering" );
         if ( this.finishedTasks.containsKey( taskId ) ) {
             log.debug( "Job is finished" );
@@ -93,8 +93,8 @@ public class TaskRunningService {
      * @param taskId
      * @throws Throwable
      */
-    private void clearFailed( Object taskId ) throws Throwable {
-        Throwable e = failedTasks.get( taskId );
+    private void clearFailed( Object taskId ) throws Exception {
+        Exception e = failedTasks.get( taskId );
         log.debug( "Job failed, rethrowing the exception: " + e.getMessage() );
         failedTasks.remove( taskId );
         throw e;
@@ -104,7 +104,7 @@ public class TaskRunningService {
      * @param taskId
      * @return
      */
-    private Object clearCancelled( Object taskId, boolean doForward ) throws Throwable {
+    private Object clearCancelled( Object taskId, boolean doForward ) throws Exception {
         Future cancelled = cancelledTasks.get( taskId );
         cancelledTasks.remove( taskId );
         try {
@@ -117,7 +117,11 @@ public class TaskRunningService {
             throw new CancellationException( "Job was interrupted:" + e );
         } catch ( ExecutionException e ) {
             ProgressManager.signalFailed( taskId, e );
-            throw e.getCause();
+            try {
+                throw e.getCause();
+            } catch ( Throwable e1 ) {
+                throw new RuntimeException( e1 );
+            }
         }
     }
 
@@ -200,7 +204,7 @@ public class TaskRunningService {
      * @param e
      */
     void handleFailed( final Object taskId, Exception e ) {
-        failedTasks.put( taskId, e.getCause() );
+        failedTasks.put( taskId, e );
         submittedTasks.remove( taskId );
         ProgressManager.signalFailed( taskId, e );
     }

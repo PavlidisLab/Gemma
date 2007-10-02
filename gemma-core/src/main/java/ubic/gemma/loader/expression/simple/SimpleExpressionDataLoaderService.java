@@ -232,6 +232,7 @@ public class SimpleExpressionDataLoaderService {
      * @return
      */
     private Taxon convertTaxon( Taxon taxon ) {
+        if ( taxon == null ) throw new IllegalArgumentException( "Taxon cannot be null" );
         return taxonService.findOrCreate( taxon );
     }
 

@@ -3,62 +3,71 @@
 * AJAX support for file uploads. Uploading a file is done with a multipartform. 
 * $Id$
 */
-FileUpload = function(){
+FileUpload = function(form){
 	Ext.QuickTips.init();
+	this.formId = form;
+	Ext.form.Field.prototype.msgTarget = 'side';
+	Ext.BLANK_IMAGE_URL="/Gemma/images/s.gif"
     this.addEvents({
         finish : true,
         fail : true,
+        start : true,
         cancel : true
     });
-    dwr.engine.setActiveReverseAjax(true);
+    var aform;
     FileUpload.superclass.constructor.call(this);
 };
 
 Ext.extend(FileUpload, Ext.util.Observable, {
-	makeUploadForm : function (divid) {
+	/*makeUploadForm : function (divid) {
 
-		var aform =  new Ext.form.Form({
+		this.aform =  new Ext.form.Form({
    			fileUpload: true,
 	        method: 'POST',
 	        name: 'upload-form',
-	        id: 'upload-form',
+	        id: 'upload-form' ,
 	        url: '/Gemma/uploadFile.html'
 		});
 	
-		aform.add(new Ext.form.TextField({msgTarget: 'side',
-	    	allowBlank: false,
+		this.aform.add(new Ext.form.TextField({msgTarget: 'side',
+	    	allowBlank:false,
 	    	id: 'file',
 	    	inputType: 'file',
 	   	 	name: 'file',
 	    	fieldLabel: 'File',
 	    	blankText: 'You must choose a file' 
 		}));
-		 
-		aform.render(divid); 
-		aform.el.dom.enctype="multipart/form-data";
-		aform.el.dom.action='/Gemma/uploadFile.html';
-	},
-
+		this.aform.render(divid); 
+		this.aform.el.dom.enctype="multipart/form-data";
+		this.aform.el.dom.action='/Gemma/uploadFile.html';
+	},*/
 
 	handleFailure : function(data) {
+		this.fireEvent('fail', data);
 		Ext.DomHelper.overwrite("messages", {tag:"img", src:"/Gemma/images/icons/warning.png"});
-		Ext.DomHelper.append("messages", {tag:"span", html:"&nbsp;There was an error while uploading the file:<br/>" + data});
+		Ext.DomHelper.append("messages", {tag:"span", html:"&nbsp;" + data});
 	},
 	
 	/*
 	* After the upload is completed.
 	*/
-	//handleResponse : function(form, success, response) {
-	//	Ext.DomHelper.append("messages", {tag:"span", html:"&nbsp;It worked"});
-	//	var o = Ext.decode(response.responseText);
-	//	if (o.success == "false") {
-	//		handleFailure("(?)");
-	//	}
-		
-	//},
+	handleResponse : function(form, success, response) {
+		try {
+			var o = Ext.decode(response.responseText);
+		} catch (e) {
+			handleFailure(e); // FIXME get exception from the response.
+		}
+		if (o == null ) {
+			handleFailure("Unknown error");
+		} else if (  !o.success ) {
+			handleFailure(o.error);
+		} else {
+			this.fireEvent('finish', o);
+		}
+	},
 	
-	handleResponse : function(file) {
-		Ext.DomHelper.append("messages", {tag:"span", html:"Uploaded to: " + file});
+	handleCancel : function(data) {
+		this.fireEvent('cancel', data);
 	},
 	
 	/*
@@ -69,14 +78,17 @@ Ext.extend(FileUpload, Ext.util.Observable, {
 			Ext.DomHelper.overwrite("messages", "Upload started ...");
 			var p = new progressbar();
 			p.createDeterminateProgressBar();
-			p.on("fail", handleFailure); 
-			p.on('cancel', reset);
-			p.on('done', handleResponse);
-	//		p.startProgress();
+			p.on("fail", this.handleFailure); 
+			p.on('cancel', this.handleCancel);
+			p.startProgress();
 		} catch (e) {
 			handleFailure(data, e);
 			return;
 		}
+	},
+	
+	isValid : function() {
+		return this.aform.isValid();
 	},
 	
 	startUpload :  function(divid) {
@@ -93,11 +105,12 @@ Ext.extend(FileUpload, Ext.util.Observable, {
 		callParams.push(errorHandler);
 		
 		var cb = this.handleResponse.createDelegate(this,[], true);
-		//	Ext.Ajax.request({form:'upload-form', callback : cb});
-	
-		FileUploadController.upload.apply( this, callParams);
-	
+		Ext.Ajax.request({isUpload:true, url: '/Gemma/uploadFile.html', form:this.formId, callback : cb, clientValidation : 1});
 		this.handleSuccess();
+	
+		//FileUploadController.upload.apply( this, callParams);
+	
+	
 	},
 	
 });

@@ -62,13 +62,13 @@ public class ExceptionTag extends TagSupport {
             if ( this.exception == null ) {
                 buf.append( "Error was not recovered" );
             } else {
-                buf.append( "<p>" );
+                buf.append( "<p id=\"exception-message\">" );
                 buf.append( exception.getMessage() );
                 buf.append( "</p>" );
 
                 if ( showStackTrace ) {
                     buf
-                            .append( "<div class=\"stacktrace\" name=\"stacktrace\" >" );
+                            .append( "<div id=\"stacktrace\" class=\"stacktrace\" name=\"stacktrace\" >" );
                     if ( exception.getStackTrace() != null ) {
                         buf.append( ExceptionUtils.getFullStackTrace( exception ) );
                     } else {

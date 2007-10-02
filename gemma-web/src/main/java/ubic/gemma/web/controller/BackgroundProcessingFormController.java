@@ -69,7 +69,7 @@ public abstract class BackgroundProcessingFormController extends BaseFormControl
      * This method can be exposed via AJAX to allow asynchronous calls
      * 
      * @param command The command object containing parameters.
-     * @return
+     * @return the task id.
      */
     public String run( Object command ) {
         /*
