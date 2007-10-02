@@ -821,12 +821,17 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameterList( "ids", ids );
-            ScrollableResults list = queryObject.scroll();
+//            ScrollableResults list = queryObject.scroll();
+            List result = queryObject.list();
             Map<Long, Collection<AuditEvent>> eventMap = new HashMap<Long, Collection<AuditEvent>>();
             // process list of expression experiment ids that have events
-            while ( list.next() ) {
-                Long id = list.getLong( 0 );
-                AuditEvent event = ( AuditEvent ) list.get( 1 );
+//            while ( list.next() ) {
+//                Long id = list.getLong( 0 );
+//                AuditEvent event = ( AuditEvent ) list.get( 1 );
+            for ( Object o: result ) {
+                Object[] row = ( Object[] )o;
+                Long id = (Long)row[0];
+                AuditEvent event = (AuditEvent)row[1];
 
                 if ( eventMap.containsKey( id ) ) {
                     Collection<AuditEvent> events = eventMap.get( id );

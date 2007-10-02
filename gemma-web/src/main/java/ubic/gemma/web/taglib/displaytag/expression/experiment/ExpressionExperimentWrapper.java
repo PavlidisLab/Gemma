@@ -329,20 +329,19 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     public String getTroubleFlag() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         StringBuffer buf = new StringBuffer();
-        if ( object.getValidatedFlag() != null ) {
-            buf.append( "&nbsp;<img src='/Gemma/images/icons/ok.png' height='16' width='16' alt='validated' title='" );
-            buf.append( StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getValidatedFlag() ) ) );
+        if ( object.getTroubleFlag() != null ) {
+            buf.append( "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt='trouble' title='" );
+            buf.append(  StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getTroubleFlag() ) ) );
             buf.append( "' />" );
         }
         return buf.toString();
     }
     
-    public String getValidatedFlag() {
-        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
+    public String getValidatedFlag() {ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         StringBuffer buf = new StringBuffer();
-        if ( object.getTroubleFlag() != null ) {
-            buf.append( "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt='trouble' title='" );
-            buf.append(  StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getTroubleFlag() ) ) );
+        if ( object.getValidatedFlag() != null ) {
+            buf.append( "&nbsp;<img src='/Gemma/images/icons/ok.png' height='16' width='16' alt='validated' title='" );
+            buf.append( StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getValidatedFlag() ) ) );
             buf.append( "' />" );
         }
         return buf.toString();
