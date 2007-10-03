@@ -64,7 +64,8 @@ public class DifferentialExpressionAnalysis {
     public void analyze( ExpressionExperiment expressionExperiment, QuantitationType quantitationType,
             BioAssayDimension bioAssayDimension, Collection<ExperimentalFactor> experimentalFactors ) {
 
-        AbstractAnalyzer analyzer = determineAnalysis( expressionExperiment, experimentalFactors );
+        AbstractAnalyzer analyzer = determineAnalysis( expressionExperiment, quantitationType, bioAssayDimension,
+                experimentalFactors );
 
         pvalues = analyzer.getPValues( expressionExperiment, quantitationType, bioAssayDimension, experimentalFactors );
 
@@ -88,6 +89,7 @@ public class DifferentialExpressionAnalysis {
      * @return
      */
     protected AbstractAnalyzer determineAnalysis( ExpressionExperiment expressionExperiment,
+            QuantitationType quantitationType, BioAssayDimension bioAssayDimension,
             Collection<ExperimentalFactor> experimentalFactors ) {
 
         if ( colIsEmpty( experimentalFactors ) ) {
@@ -137,7 +139,7 @@ public class DifferentialExpressionAnalysis {
                             + " factor value(s).  Cannot execute differential expression analysis." );
                 }
                 /* Check for block design and execute two way anova (with or without interactions). */
-                if ( !AnalyzerHelper.blockComplete( expressionExperiment ) ) {
+                if ( !AnalyzerHelper.blockComplete( expressionExperiment, quantitationType, bioAssayDimension ) ) {
                     return new TwoWayAnovaWithoutInteractionsAnalyzer();
                 } else {
                     throw new UnsupportedOperationException(

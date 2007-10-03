@@ -113,7 +113,7 @@ public class TTestAnalyzer extends AbstractAnalyzer {
 
         ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( vectors, bioAssayDimension, quantitationType );
 
-        Collection<BioMaterial> biomaterials = AnalyzerHelper.getBioMaterialsForBioAssaysWithoutReplicates( matrix );
+        Collection<BioMaterial> biomaterials = AnalyzerHelper.getBioMaterialsForBioAssays( matrix );
 
         return tTest( matrix, factorValueA, factorValueB, biomaterials );
     }

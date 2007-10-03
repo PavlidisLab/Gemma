@@ -94,7 +94,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractAnalyzer {
         ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( expressionExperiment
                 .getDesignElementDataVectors() );
 
-        Collection<BioMaterial> biomaterials = AnalyzerHelper.getBioMaterialsForBioAssaysWithoutReplicates( matrix );
+        Collection<BioMaterial> biomaterials = AnalyzerHelper.getBioMaterialsForBioAssays( matrix );
 
         return twoWayAnova( matrix, experimentalFactorA, experimentalFactorB, biomaterials );
     }

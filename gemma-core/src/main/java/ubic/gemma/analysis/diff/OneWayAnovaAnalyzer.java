@@ -86,7 +86,7 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
         ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( expressionExperiment
                 .getDesignElementDataVectors() );
 
-        Collection<BioMaterial> biomaterials = AnalyzerHelper.getBioMaterialsForBioAssaysWithoutReplicates( matrix );
+        Collection<BioMaterial> biomaterials = AnalyzerHelper.getBioMaterialsForBioAssays( matrix );
 
         return oneWayAnova( matrix, factorValues, biomaterials );
     }

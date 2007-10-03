@@ -85,6 +85,6 @@ public class BaseAnalyzerTest extends BaseSpringContextTest {
         bioAssayDimension = dimensions.iterator().next();
         matrix = new ExpressionDataDoubleMatrix( dedvs, bioAssayDimension, quantitationTypeToUse );
 
-        biomaterials = AnalyzerHelper.getBioMaterialsForBioAssaysWithoutReplicates( matrix );
+        biomaterials = AnalyzerHelper.getBioMaterialsForBioAssays( matrix );
     }
 }

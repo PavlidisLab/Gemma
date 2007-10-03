@@ -25,9 +25,13 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
@@ -47,11 +51,12 @@ public class AnalyzerHelper {
      * @param expressionExperiment
      * @return boolean
      */
-    public static boolean blockComplete( ExpressionExperiment expressionExperiment ) {
+    public static boolean blockComplete( ExpressionExperiment expressionExperiment, QuantitationType quantitationType,
+            BioAssayDimension bioAssayDimension ) {
 
         Exception ex = null;
         try {
-            getBioMaterialsForAssaysWithoutReplicates( expressionExperiment );
+            checkBlockDesign( expressionExperiment, quantitationType, bioAssayDimension );
         } catch ( Exception e ) {
             ex = e;
         } finally {
@@ -62,19 +67,60 @@ public class AnalyzerHelper {
     }
 
     /**
+     * @param expressionExperiment
+     * @return
+     * @throws Exception
+     */
+    private static Collection<BioMaterial> checkBlockDesign( ExpressionExperiment expressionExperiment,
+            QuantitationType quantitationType, BioAssayDimension bioAssayDimension ) throws Exception {
+
+        ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( expressionExperiment, bioAssayDimension,
+                quantitationType );
+
+        /* first, get all the biomaterials */
+        Collection<BioMaterial> biomaterials = getBioMaterialsForAssays( matrix );
+
+        /* second, make sure each biomaterial has a factor value from one of the experimental factors */
+        Collection<ExperimentalFactor> efs = expressionExperiment.getExperimentalDesign().getExperimentalFactors();
+
+        for ( BioMaterial m : biomaterials ) {
+
+            Collection<FactorValue> factorValuesFromBioMaterial = m.getFactorValues();
+
+            for ( FactorValue fv : factorValuesFromBioMaterial ) {
+
+                boolean matched = false;
+                for ( ExperimentalFactor ef : efs ) {
+                    if ( fv.getExperimentalFactor() == ef ) {
+                        matched = true;
+                        break;
+                    }
+                }
+                if ( !matched )
+                    throw new Exception(
+                            "Biomaterial does not have a factor value from one of the experimental factors in the experimental design." );
+            }
+        }
+
+        /* third, make sure you have replicates */
+        // TODO implement this part
+        return biomaterials;
+    }
+
+    /**
      * Returns a collection of all the different types of biomaterials across all bioassays in the experiment. If there
      * is more than one biomaterial per bioassay, a {@link RuntimeException} is thrown.
      * 
      * @param expressionExperiment
      * @return Collection<BioMaterial>
      */
-    public static Collection<BioMaterial> getBioMaterialsForBioAssaysWithoutReplicates( ExpressionDataMatrix matrix ) {
+    public static Collection<BioMaterial> getBioMaterialsForBioAssays( ExpressionDataMatrix matrix ) {
 
         Collection<BioMaterial> biomaterials = null;
 
         Exception ex = null;
         try {
-            biomaterials = getBioMaterialsForAssaysWithoutReplicates( matrix );
+            biomaterials = getBioMaterialsForAssays( matrix );
         } catch ( Exception e ) {
             ex = e;
         } finally {
@@ -89,29 +135,7 @@ public class AnalyzerHelper {
      * @return
      * @throws Exception
      */
-    private static Collection<BioMaterial> getBioMaterialsForAssaysWithoutReplicates(
-            ExpressionExperiment expressionExperiment ) throws Exception {
-
-        Collection<BioMaterial> biomaterials = new ArrayList<BioMaterial>();
-
-        Collection<BioAssay> allAssays = expressionExperiment.getBioAssays();
-
-        for ( BioAssay assay : allAssays ) {
-            Collection<BioMaterial> samplesUsed = assay.getSamplesUsed();
-            if ( samplesUsed.size() > 1 ) throw new Exception( "Supports one biomaterial/bioassay." );
-            biomaterials.addAll( samplesUsed );
-        }
-
-        return biomaterials;
-    }
-
-    /**
-     * @param expressionExperiment
-     * @return
-     * @throws Exception
-     */
-    private static Collection<BioMaterial> getBioMaterialsForAssaysWithoutReplicates( ExpressionDataMatrix matrix )
-            throws Exception {
+    private static Collection<BioMaterial> getBioMaterialsForAssays( ExpressionDataMatrix matrix ) throws Exception {
 
         Collection<BioMaterial> biomaterials = new ArrayList<BioMaterial>();
 
@@ -120,14 +144,15 @@ public class AnalyzerHelper {
         for ( int i = 0; i < matrix.columns(); i++ ) {
             Collection<BioAssay> bioassays = matrix.getBioAssaysForColumn( i );
             if ( bioassays.size() != 1 )
-                throw new RuntimeException( "Invalid number of bioassays.  Expecting 1, got " + bioassays.size() + "." );
+                throw new Exception( "Invalid number of bioassays for column " + i
+                        + " of the matrix.  Expecting 1, got " + bioassays.size() + "." );
             assays.add( bioassays.iterator().next() );
         }
 
         for ( BioAssay assay : assays ) {
             Collection<BioMaterial> materials = assay.getSamplesUsed();
             if ( materials.size() != 1 )
-                throw new RuntimeException( "Invalid number of biomaterials. Expecting 1 biomaterial/bioassay, got "
+                throw new Exception( "Invalid number of biomaterials. Expecting 1 biomaterial/bioassay, got "
                         + materials.size() + "." );
 
             biomaterials.addAll( materials );
