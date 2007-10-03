@@ -45,6 +45,7 @@ import org.hibernate.type.LongType;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -372,7 +373,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 expressionExperiment.getSubsets().size();
                 if ( expressionExperiment.getAccession() != null )
                     expressionExperiment.getAccession().getExternalDatabase();
-                thawPrimaryReference( expressionExperiment, session );
+                thawReferences( expressionExperiment, session );
                 for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
                     ba.getSamplesUsed().size();
                     ba.getDerivedDataFiles().size();
@@ -387,13 +388,21 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      * @param expressionExperiment
      * @param session
      */
-    private void thawPrimaryReference( final ExpressionExperiment expressionExperiment, org.hibernate.Session session ) {
+    private void thawReferences( final ExpressionExperiment expressionExperiment, org.hibernate.Session session ) {
         if ( expressionExperiment.getPrimaryPublication() != null ) {
             session.update( expressionExperiment.getPrimaryPublication() );
             session.update( expressionExperiment.getPrimaryPublication().getPubAccession() );
             session.update( expressionExperiment.getPrimaryPublication().getPubAccession().getExternalDatabase() );
             expressionExperiment.getPrimaryPublication().getAuthors().size();
         }
+		if (expressionExperiment.getOtherRelevantPublications() != null) {
+			for (BibliographicReference bf : expressionExperiment
+					.getOtherRelevantPublications()) {
+				session.update(bf.getPubAccession());
+				session.update(bf.getPubAccession().getExternalDatabase());
+			}
+		}
+
     }
 
     // thaw lite.
@@ -410,7 +419,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                     session.evict( type );
                 }
                 expressionExperiment.getAuditTrail().getEvents().size();
-                thawPrimaryReference( expressionExperiment, session );
+                thawReferences( expressionExperiment, session );
                 if ( expressionExperiment.getAccession() != null )
                     expressionExperiment.getAccession().getExternalDatabase();
                 for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
