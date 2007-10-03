@@ -97,7 +97,7 @@ public class SimpleExpressionDataLoaderService {
 
         ExpressionExperiment experiment = ExpressionExperiment.Factory.newInstance();
         experiment.setName( metaData.getName() );
-        experiment.setShortName( experiment.getName() );
+        experiment.setShortName( metaData.getShortName() );
         experiment.setDescription( metaData.getDescription() );
 
         experiment
