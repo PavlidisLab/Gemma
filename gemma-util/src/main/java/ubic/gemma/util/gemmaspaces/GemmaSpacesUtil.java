@@ -55,6 +55,13 @@ import com.j_spaces.core.exception.StatisticsNotAvailable;
  */
 public class GemmaSpacesUtil implements ApplicationContextAware {
 
+    /**
+     * FIXME Document me
+     */
+    private static final int VERY_BIG_NUMBER_FOR_SOME_REASON = 600000000;
+
+    private static final String GIGASPACES_TEMPLATE = "gigaspacesTemplate";
+
     private static Log log = LogFactory.getLog( GemmaSpacesUtil.class );
 
     private static final String GIGASPACES_SPRING_CONTEXT = "ubic/gemma/gigaspaces.xml";
@@ -65,9 +72,7 @@ public class GemmaSpacesUtil implements ApplicationContextAware {
      * Determines if the {@link ApplicationContext} contains gigaspaces beans.
      */
     private boolean contextContainsGigaspaces() {
-
-        return applicationContext.containsBean( "gigaspacesTemplate" );
-
+        return applicationContext.containsBean( GIGASPACES_TEMPLATE );
     }
 
     /**
@@ -85,9 +90,8 @@ public class GemmaSpacesUtil implements ApplicationContextAware {
             running = false;
             log.error( "Error finding space at: " + url + "." );
             // e.printStackTrace();
-        } finally {
-            return running;
         }
+        return running;
     }
 
     /**
@@ -350,19 +354,19 @@ public class GemmaSpacesUtil implements ApplicationContextAware {
         ApplicationContext updatedContext = addGemmaSpacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE
                 .getSpaceUrl() );
 
-        if ( !updatedContext.containsBean( "gigaspacesTemplate" ) ) {
-            log.error( "Cannot cancel space task because the space is not running" );
+        if ( !updatedContext.containsBean( GIGASPACES_TEMPLATE ) ) {
+            log.warn( "Cannot cancel space task because the space is not running. This might be benign." );
             return;
         }
 
-        GigaSpacesTemplate template = ( GigaSpacesTemplate ) updatedContext.getBean( "gigaspacesTemplate" );
+        GigaSpacesTemplate template = ( GigaSpacesTemplate ) updatedContext.getBean( GIGASPACES_TEMPLATE );
 
         IJSpace space = ( IJSpace ) template.getSpace();
 
         GemmaSpacesCancellationEntry cancellationEntry = new GemmaSpacesCancellationEntry();
         cancellationEntry.taskId = taskId;
         try {
-            space.write( cancellationEntry, null, 600000000 );
+            space.write( cancellationEntry, null, VERY_BIG_NUMBER_FOR_SOME_REASON );
         } catch ( Exception e ) {
             throw new RuntimeException( "Cannot cancel task " + taskId + ".  Exception is: " + e );
         }
