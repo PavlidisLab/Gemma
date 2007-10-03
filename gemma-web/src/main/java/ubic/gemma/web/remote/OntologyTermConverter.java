@@ -74,11 +74,11 @@ public class OntologyTermConverter extends BeanConverter {
                             OntologyTerm restrictedTo = restriction.getRestrictedTo();
 
                             if ( ( restrictedTo != null ) && ( term != null ) && restrictedTo.equals( term ) ) { // is
-                                                                                                                    // it a
-                                                                                                                    // self
-                                                                                                                    // referential
-                                                                                                                    // loop?
-                                log.info( "Loop detected" );
+                                // it a
+                                // self
+                                // referential
+                                // loop?
+                                if ( log.isDebugEnabled() ) log.debug( "Loop detected" );
                                 // todo: put something special in the returned object so that the java scrip gui knows
                                 // and displays the loop correctly
                                 continue props; // if a loop is detected don't try to convert it!
