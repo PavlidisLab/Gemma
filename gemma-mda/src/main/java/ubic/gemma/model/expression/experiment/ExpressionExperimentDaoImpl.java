@@ -400,6 +400,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 					.getOtherRelevantPublications()) {
 				session.update(bf.getPubAccession());
 				session.update(bf.getPubAccession().getExternalDatabase());
+				bf.getAuthors().size();
 			}
 		}
 
