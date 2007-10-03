@@ -141,7 +141,11 @@ public class LabelTag extends TagSupport {
         try {
             message = getMessageSource().getMessage( key, null, locale );
         } catch ( NoSuchMessageException nsm ) {
-            message = "???" + key + "???";
+            if ( fieldName != null ) {
+                message = "[" + fieldName + "]";
+            } else {
+                message = "[" + key + "]";
+            }
         }
 
         String cssClass = null;
