@@ -25,7 +25,7 @@
 
 <display:table pagesize="50" name="expressionExperiments" sort="list"
 	class="list" requestURI="" id="expressionExperimentList"
-	decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
+	decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper" defaultSort="9" >
 
 	<display:column property="nameLink" sortable="true" sortProperty="name"
 		titleKey="expressionExperiment.name"
