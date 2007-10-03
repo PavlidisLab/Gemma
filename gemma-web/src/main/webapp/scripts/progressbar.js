@@ -18,10 +18,12 @@ progressbar = function(){
 
 Ext.extend(progressbar, Ext.util.Observable, {
 
+	waiting : false,
 	bar : null,
 	determinate : false,
 	previousMessage :  "",
 	timeoutid : null,
+	detbarwidth : 200,
 	
 		// time in ms between updates
 	BAR_UPDATE_INTERVAL : 2000,
@@ -67,6 +69,7 @@ Ext.extend(progressbar, Ext.util.Observable, {
 	    window.clearInterval(this.timeoutid);
 		Ext.DomHelper.overwrite("progress-area", "");
 	    this.previousMessage = null;
+	    this.waiting = false;
 	},
 	
 	
@@ -75,6 +78,7 @@ Ext.extend(progressbar, Ext.util.Observable, {
 	 * @param {Object} data
 	 */
 	updateProgress : function (data) {	 
+		this.waiting = false;
 	 	if (this.determinate == 1) {
 	 		this.updateDeterminateProgress(data);
 	 	} else { 
@@ -94,7 +98,7 @@ Ext.extend(progressbar, Ext.util.Observable, {
 				
 				if (delta > 5) {
 			//		document.getElementById("progressTextArea").innerHTML = messages + " " + percent + "%";
-					document.getElementById("progress-bar-box-content").style.width = parseInt(percent * 3.5) + "px";
+					document.getElementById("progress-bar-box-content").style.width = parseInt(percent * detbarwidth/100) + "px";
 				}
 				
 				if (d.failed) {
@@ -124,7 +128,7 @@ Ext.extend(progressbar, Ext.util.Observable, {
 		}
 	
 	//	document.getElementById("progressTextArea").innerHTML = messages + " " + percent + "%";
-		document.getElementById("progress-bar-box-content").style.width = parseInt(percent * 3.5) + "px";
+		document.getElementById("progress-bar-box-content").style.width = parseInt(percent * this.detbarwidth/100) + "px";
 	},
 
 	maybeDoForward : function(url) {
@@ -182,12 +186,9 @@ Ext.extend(progressbar, Ext.util.Observable, {
 	 * Send a cancel notification to the server.
 	 */
 	cancelJob : function () {
+		this.waiting = false;
 		var taskId = dwr.util.getValue("taskId");
-	//	if (this.determinate == 0){
-			document.getElementById("progressTextArea").innerHTML = "Cancelling...";
-	//	} else {
-	//		document.getElementById("progressTextArea").value = "Cancelling...";
-	//	}
+		document.getElementById("progressTextArea").innerHTML = "Cancelling...";
 		var f =  this.cancelCallback.createDelegate(this, [], true);
 		ProgressStatusService.cancelJob(taskId, f);
 	},
@@ -196,7 +197,11 @@ Ext.extend(progressbar, Ext.util.Observable, {
 	 * Check for status from server.
 	 */
 	refreshProgress : function (taskId, callback, errorHandler) {
-		ProgressStatusService.getProgressStatus(taskId, {callback:callback, errorHandler:errorHandler});
+		// only check for status if we aren't already waiting for a reply.
+		if (!this.waiting) { 
+			ProgressStatusService.getProgressStatus(taskId, {callback:callback, errorHandler:errorHandler});
+			this.waiting = true;
+		}
 	},
 	
 	/* Private
@@ -232,8 +237,8 @@ Ext.extend(progressbar, Ext.util.Observable, {
 	 */
 	createDeterminateProgressBar : function (){
 		this.determinate = 1;
-		var div = '<div style="width:650px;"><input style="float:left;padding:10px;" type="button" id="cancel-button" name="Cancel" value="Cancel job" /><div id="progbar" style="width:200px;border:1px solid;"><div id="progress-bar-box-content" style="float:right;height:10px;"></div></div></div>';
-	 	Ext.DomHelper.overwrite("progress-area", div);
+		var div = '<div style="width:350px;margin:10px;">	<input style="float:left;margin:0px;" type="button" id="cancel-button" name="Cancel" value="Cancel job" />	<div id="progbar" style="margin:5px;width:' + detbarwidth + 'x;float:right;border:1px solid;">		<div id="progress-bar-box-content" style="float:left;height:10px;width:40px;">		</div>	</div></div>'
+		Ext.DomHelper.overwrite("progress-area", div);
 	 	f = this.cancelJob.createDelegate(this, [], true);
 		Ext.get("cancel-button").on('click', f);
 	},

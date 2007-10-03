@@ -2,6 +2,7 @@
 var uploadButton;
 var uploader = new FileUpload("simpleEELoad");
 var p ;
+var wasCancelled = false;
 Ext.onReady(function () {
 	//uploader.makeUploadForm("file-upload");
 	var df = handleAfterUpload.createDelegate(this, [], true);
@@ -13,7 +14,7 @@ Ext.onReady(function () {
 	uploadButton.on("click", submitForm);
 });
 function submitForm() {
-	
+	wasCancelled = false;
 	// validate the main form, which is using struts client-side validation.
 	var valid = validateSimpleEEForm(Ext.get("simpleEELoad").dom);
 	
@@ -24,6 +25,10 @@ function submitForm() {
 }
 
 function handleAfterUpload(data) {
+	if (wasCancelled) {
+		wasCancelled = false;
+		return;
+	}
 	Ext.DomHelper.overwrite("messages", {tag:"img", src:"/Gemma/images/default/tree/loading.gif"});
 	Ext.DomHelper.append("messages", "&nbsp;File upload completed, starting data processing ...");
 	var fileOnServer = data.localFile;
@@ -56,6 +61,10 @@ function handleAfterUpload(data) {
 	callParams.push({callback:delegate, errorHandler:errorHandler});
 	SimpleExpressionExperimentLoadController.load.apply(this, callParams);
 }
+function handleCancel() {
+	Ext.DomHelper.overwrite("taskId", "");
+	wasCancelled = true;
+}
 function handleFailure(data, e) {
 	reset(data);
 	if (p) {
@@ -76,7 +85,7 @@ function handleSuccess(data) {
 		p = new progressbar();
 		p.createIndeterminateProgressBar();
 		p.on("fail", handleFailure);
-		p.on("cancel", reset);
+		p.on("cancel", handleCancel);
 		p.startProgress();
 	}
 	catch (e) {
