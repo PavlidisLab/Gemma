@@ -69,7 +69,7 @@ public class CoexpressionTypeValueObject {
      * @param probeID
      * @param geneID
      */
-    public void addSpecifityInfo( Long eeID, Long probeID, Long geneID ) {
+    public void addSpecificityInfo( Long eeID, Long probeID, Long geneID ) {
         if ( crossHybridizingProbes.containsKey( eeID ) ) {
             Map<Long, Collection<Long>> probe2geneMap = crossHybridizingProbes.get( eeID );
             if ( probe2geneMap.containsKey( probeID ) )

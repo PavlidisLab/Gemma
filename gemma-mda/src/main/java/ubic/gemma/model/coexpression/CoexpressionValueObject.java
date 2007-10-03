@@ -42,7 +42,8 @@ public class CoexpressionValueObject {
     private Long geneId;
     private String geneOfficialName;
     private String geneType;
-
+    private Long taxonId;
+    
     private Map<Long, Map<Long, Double>> positiveScores;
     private Map<Long, Map<Long, Double>> negativeScores;
     private Map<Long, Map<Long, Double>> pValues;
@@ -440,5 +441,13 @@ public class CoexpressionValueObject {
      */
     public void setHybridizesWithQueryGene( boolean hybridizesWithQueryGene ) {
         this.hybridizesWithQueryGene = hybridizesWithQueryGene;
+    }
+
+    public Long getTaxonId() {
+        return taxonId;
+    }
+
+    public void setTaxonId( Long taxonId ) {
+        this.taxonId = taxonId;
     }
 }

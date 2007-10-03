@@ -555,11 +555,12 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /**
      * Process a single query result from the coexpression search.
+     * @param queryGene 
      * 
      * @param geneMap
      * @param scroll
      */
-    private void processCoexpQueryResult( GeneMap geneMap, ScrollableResults scroll,
+    private void processCoexpQueryResult( Gene queryGene, GeneMap geneMap, ScrollableResults scroll,
             CoexpressionCollectionValueObject coexpressions ) {
         CoexpressionValueObject vo;
         Long geneId = scroll.getLong( 0 );
@@ -577,6 +578,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             geneMap.put( vo );
         }
 
+        vo.setTaxonId( queryGene.getTaxon().getId() );
+        
         // add the expression experiment
         Long eeID = scroll.getLong( 3 );
         ExpressionExperimentValueObject eeVo = coexpressions.getExpressionExperiment( vo.getGeneType(), eeID );
@@ -595,25 +598,26 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         vo.addPValue( eeID, scroll.getDouble( 4 ), probeID );
 
         if ( vo.getGeneType().equalsIgnoreCase( CoexpressionCollectionValueObject.GENE_IMPL ) ) {
-            coexpressions.getGeneCoexpressionType().addSpecifityInfo( eeID, probeID, geneId );
+            coexpressions.getGeneCoexpressionType().addSpecificityInfo( eeID, probeID, geneId );
             coexpressions.addQuerySpecifityInfo( eeID, scroll.getLong( 6 ) );
         } else if ( vo.getGeneType().equalsIgnoreCase( CoexpressionCollectionValueObject.PREDICTED_GENE_IMPL ) ) {
-            coexpressions.getPredictedCoexpressionType().addSpecifityInfo( eeID, probeID, geneId );
+            coexpressions.getPredictedCoexpressionType().addSpecificityInfo( eeID, probeID, geneId );
         } else if ( vo.getGeneType().equalsIgnoreCase( CoexpressionCollectionValueObject.PROBE_ALIGNED_REGION_IMPL ) ) {
-            coexpressions.getProbeAlignedCoexpressionType().addSpecifityInfo( eeID, probeID, geneId );
+            coexpressions.getProbeAlignedCoexpressionType().addSpecificityInfo( eeID, probeID, geneId );
         }
     }
 
     /**
+     * @param queryGene
      * @param geneMap
      * @param queryObject
      */
-    private void processCoexpQuery( GeneMap geneMap, org.hibernate.Query queryObject,
+    private void processCoexpQuery( Gene queryGene, GeneMap geneMap, org.hibernate.Query queryObject,
             CoexpressionCollectionValueObject coexpressions ) {
         ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
 
         while ( scroll.next() ) {
-            processCoexpQueryResult( geneMap, scroll, coexpressions );
+            processCoexpQueryResult(queryGene, geneMap, scroll, coexpressions );
         }
     }
 
@@ -713,7 +717,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         Session session = getSessionFactory().openSession();
         org.hibernate.Query queryObject = setCoexpQueryParameters( session, gene, id, queryString );
-        processCoexpQuery( geneMap, queryObject, coexpressions );
+        processCoexpQuery( gene, geneMap, queryObject, coexpressions );
         session.close();
 
         overallWatch.stop();

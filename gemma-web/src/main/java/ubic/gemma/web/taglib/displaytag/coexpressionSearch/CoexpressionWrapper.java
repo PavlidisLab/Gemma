@@ -218,13 +218,13 @@ public class CoexpressionWrapper extends TableDecorator {
         Collection<String> paramList = new ArrayList<String>();
         Collection<String> includeList = new ArrayList<String>();
         // include just taxon params
-        includeList.add( "taxon" );
         includeList.add( "stringency" );
         includeList.add( "eeSearchString" );
         extractParameters( paramList, includeList );
         // add in the current gene with exactSearch
         // paramList.add( "searchString=" + object.getGeneName() );
         paramList.add( "id=" + object.getGeneId() );
+        paramList.add("taxon=" + object.getTaxonId());
         paramList.add( "exactSearch=on" );
 
         // put in the tmm link
