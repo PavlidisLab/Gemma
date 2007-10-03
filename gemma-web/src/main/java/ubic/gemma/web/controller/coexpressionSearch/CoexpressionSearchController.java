@@ -154,10 +154,9 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         // if exact search is on, find only by official symbol
         // if exact search is auto (usually from the front page), check if there is an exact search match. If there is
         // none, do inexact search.
-        if ( commandObject.getId() != null ) {
+        if ( commandObject.getId() != null && StringUtils.isEmpty( commandObject.getSearchString() ) ) {
             Gene g = geneService.load( Long.parseLong( commandObject.getId() ) );
             genesFound.add( g );
-            commandObject.setExactSearch( g.getOfficialName() );
         } else if ( commandObject.getExactSearch() == null ) {
             genesFound.addAll( searchService.geneDbSearch( commandObject.getSearchString() ) );
             genesFound.addAll( searchService.compassGeneSearch( commandObject.getSearchString() ) );
@@ -246,6 +245,8 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         // set command object to reflect that only one gene has been found
         commandObject.setSearchString( sourceGene.getOfficialSymbol() );
         commandObject.setGeneIdSearch( "false" );
+        commandObject.setId( null );
+        
 
         Integer numExpressionExperiments = 0;
         Collection<Long> possibleEEs = expressionExperimentService.findByGene( sourceGene );
