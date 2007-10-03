@@ -388,9 +388,7 @@ public class ProgressManager {
     public static synchronized void signalCancelled( Object key ) {
         log.debug( key + " Cancelled" );
         ProgressJob job = progressJobsByTaskId.get( key );
-        assert job != null : "No job of id " + key;
         if ( job != null ) job.getJobInfo().setFailedMessage( "Cancellation was signalled by user" );
-
         destroyProgressJob( job, false ); // never forward.
     }
 
