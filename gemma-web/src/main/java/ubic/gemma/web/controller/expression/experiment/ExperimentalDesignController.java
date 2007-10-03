@@ -204,7 +204,7 @@ public class ExperimentalDesignController extends BaseMultiActionController {
 
                 Collection<FactorValue> removeFactorValues = new HashSet<FactorValue>();
                 for ( FactorValue fv : bm.getFactorValues() ) {
-                    if ( factorValueIds.contains( fv.getExperimentalFactor().getId() ) ) removeFactorValues.add( fv );
+                    if ( factorValueIds.contains( fv.getId() ) ) removeFactorValues.add( fv );
 
                 }
                 bm.getFactorValues().removeAll( removeFactorValues );

@@ -4,9 +4,9 @@
 //================================
 
 //member variables
-var assignFactorValueToBioMaterialButton, expFactorsCB, factorValueCB, bmGrid, saveNewFactorButton, removeFactorButton, descriptionField, saveNewFactorValueButton, removeFactorValueButton;	//gui components
+var assignFactorValueToBioMaterialButton, expFactorsCB, factorValueCB, bmGrid, saveNewFactorButton, removeFactorButton, factorDescriptionField,factorValueDescriptionField, saveNewFactorValueButton, removeFactorValueButton;	//gui components
 var eeID,edID, clazz;
-var factorValueComboDS, bmDS, factorDS;							//Datastores behind gui components
+var factorValueComboDS, bmDS, factorDS, factorComboDS;							//Datastores behind gui components
 var bioMaterialList, selectedFactorId, selectedFactorValueId, selectedFactorsInGrid, selectedFactorValuesInGrid;	//what is selected by user
 var bmGridRefresh;									//methods
 var mgedSelectedVocabC = {};
@@ -66,9 +66,16 @@ var createMgedComboBox = function(terms){
 
 var createFactorDescriptionField = function(){
 	
-	descriptionField = new Ext.form.TextField({allowBlank : false, invalidText : "Enter a discription", blankText : "Add a simple description", value : "Description"});
-	return descriptionField;
+	factorDescriptionField = new Ext.form.TextField({allowBlank : false, invalidText : "Enter a discription", blankText : "Add a simple description", value : "Description"});
+	return factorDescriptionField;
 }
+
+var createFactorValueDescriptionField = function(){
+	
+	factorValueDescriptionField = new Ext.form.TextField({allowBlank : false, invalidText : "Enter a discription", blankText : "Add a simple description", value : "Description"});
+	return factorValueDescriptionField;
+}
+
 
 var saveExperimentalFactor = function(){
 
@@ -78,7 +85,7 @@ var saveExperimentalFactor = function(){
 	//If there is no valueUri then it is plain text and we don't want dwr to instantiate a
 	//VocabCharacteritic but a Characteritic. 
 	
-	var description = descriptionField.getValue();
+	var description = factorDescriptionField.getValue();
 	if ((description === undefined) || (description.length === 0)){
 		alert("Please add a description");
 		return;
@@ -91,7 +98,7 @@ var saveExperimentalFactor = function(){
 	if (mgedSelectedVocabC.valueUri){
 		newVocabC.categoryUri = mgedSelectedVocabC.categoryUri ;
 		newVocabC.valueUri = mgedSelectedVocabC.valueUri;
-	}else if (mgedSelectedVocabC.categoryUri){
+	}else if (mgedSelectedVocabC.categoryUri){  //Possible to have a categoryURI and no valueUri
 		newVocabC.categoryUri = mgedSelectedVocabC.categoryUri ;
 		newVocabC.valueUri = mgedSelectedVocabC.categoryUri;
 	}
@@ -106,7 +113,7 @@ var saveExperimentalFactor = function(){
 var deleteExperimentalFactor = function(){
 	
 	ExperimentalDesignController.deleteFactor(selectedFactorsInGrid, {id:eeID, classDelegatingFor:"long"}, factorGridRefresh);
-	
+		
 }
 
 var saveExperimentalFactorValue = function(){
@@ -114,14 +121,38 @@ var saveExperimentalFactorValue = function(){
 		alert("No factor is selected");
 		return;
 	}
-	ExperimentalDesignController.createNewFactorValue({id:selectedFactorsInGrid[0], classDelegatingFor:"long"},[ontologySearchVocabC], factorValueGridRefresh);
+	
+	var newVocabC = {};
+	newVocabC.value = ontologySearchVocabC.value;
+	newVocabC.valueUri = ontologySearchVocabC.valueUri;
+	newVocabC.category = mgedSelectedVocabC.category;
+	newVocabC.categoryUri = mgedSelectedVocabC.categoryUri ;
+	
+
+	
+	var description = factorValueDescriptionField.getValue();
+	if ((description === undefined) || (description.length === 0)){
+		alert("Please add a description");
+		return;
+	}
+	newVocabC.description = description;
+	
+//	if (ontologySearchVocabC.valueUri){
+//		newVocabC.categoryUri = ontologySearchVocabC.categoryUri ;
+//		newVocabC.valueUri = ontologySearchVocabC.valueUri;
+//	}else if (mgedSelectedVocabC.categoryUri){
+//		newVocabC.categoryUri = mgedSelectedVocabC.categoryUri ;
+//		newVocabC.valueUri = mgedSelectedVocabC.categoryUri;
+//	}
+	
+	ExperimentalDesignController.createNewFactorValue({id:selectedFactorsInGrid[0], classDelegatingFor:"long"},[newVocabC], factorValueGridRefresh);
+	
 }
 
 var deleteExperimentalFactorValue = function(){
 	
 		ExperimentalDesignController.deleteFactorValue(selectedFactorValuesInGrid, {id:selectedFactorsInGrid[0], classDelegatingFor:"long"},{id:eeID, classDelegatingFor:"long"}, factorValueGridRefresh);
-	
-	
+		
 }
 
 var createOntologySearchComponent = function(){
@@ -217,7 +248,7 @@ var createFactorComboBox = function(terms){
                ]);
 									
                     	
-                var factorComboDS = new Ext.data.Store(
+                factorComboDS = new Ext.data.Store(
                {
                        proxy:new Ext.data.DWRProxy(ExpressionExperimentController.getExperimentalFactors),
                        reader:new Ext.data.ListRangeReader({id:"id"}, recordType),
@@ -241,10 +272,7 @@ var createFactorComboBox = function(terms){
 					    });	
 					    					   
 	
-		    			var comboHandler = function(field,record,index){
-					    	
-							//TODO: When a factor is selected refresh the bm table to display the selected factor
-							//update the factor value combo box with the factor values associated with the selected factor
+		    			var comboHandler = function(field,record,index){					    						
 
 							selectedFactorId = record.id;
 							factorValueComboDS.reload({params:[{id:selectedFactorId, classDelegatingFor:"FactorValueObject"}]});
@@ -295,10 +323,7 @@ var createFactorValueComboBox = function(){
 					    });	
 					    			
 					    var comboHandler = function(field,record,index){
-					    	
-							//TODO: When a factor is selected refresh the bm table to display the selected factor
-							//update the factor value combo box with the factor values associated with the selected factor
-
+					    				
 							selectedFactorValueId = record.id;
 							assignFactorValueToBioMaterialButton.enable();									    								      						 					    	                        
     	                };
@@ -308,6 +333,20 @@ var createFactorValueComboBox = function(){
 	    	                						    
 					    return combo;
 }
+
+
+var refreshBMFactorComboBoxes = function(){
+	
+//refresh experimental factor combo box		
+	factorComboDS.reload({params:[{id:eeID, classDelegatingFor:"long"}]}, function() {expFactorsCB.getView().refresh(true)});
+	//expFactorsCB.getView().refresh(true);
+	
+//refresh factor value combo box
+	factorValueComboDS.reload({params:[{id:selectedFactorId, classDelegatingFor:"Long"}]}, function() {factorValueCB.getView().refresh(true)} );
+	//factorValueCB.getView().refresh(true);
+	
+}
+
 
 var saveFactorValueToBMHandler = function(){
 
@@ -396,6 +435,7 @@ factorGridRefresh = function(){
 	
 	factorDS.reload({params:[{id:eeID, classDelegatingFor:"expressionExperimentID"}]});	
 	factorGrid.getView().refresh(true);	
+	refreshBMFactorComboBoxes();
 	
 }
 
@@ -440,6 +480,7 @@ var initFactorGrid = function(div) {
        		var selections =  factorGrid.getSelectionModel().getSelections();
        		
        		if (selections.length === 0){
+       			if (removeFactorButton)
        			removeFactorButton.disable();
        			return;
        		}
@@ -448,8 +489,13 @@ var initFactorGrid = function(div) {
 	    	for(var index=0; index<selections.length; index++) {	    		
 	    		selectedFactorsInGrid.push(selections[index].id);
 	    	}  	
-       		factorValueGridRefresh(); //just show the 1st one in the factor value table
-       		removeFactorButton.enable();
+	    	
+	    	mgedSelectedVocabC.categoryUri = selections[0].data.category;
+			mgedSelectedVocabC.category = selections[0].data.factorValue;
+			
+			factorValueGridRefresh(); //just show the 1st one in the factor value table
+			if (removeFactorButton)
+			 		removeFactorButton.enable();
        		
        	
        }
@@ -476,7 +522,7 @@ factorValueGridRefresh = function(){
 	
 	factorValueGridDS.reload({params:[{id:selections[0].id, classDelegatingFor:"long"}]}, function() {factorValueGrid.getView().refresh(true)} );	
 //	factorValueGrid.getView().refresh(true);	
-	
+	refreshBMFactorComboBoxes();	
 }
 
 var initFactorValueGrid = function(div) {
@@ -521,7 +567,8 @@ var initFactorValueGrid = function(div) {
        		var selections =  factorGrid.getSelectionModel().getSelections();
        		
        		if (selections.length === 0){
-       			removeFactorButton.disable();
+       			if (removeFactorButton)
+       				removeFactorButton.disable();
        			return;
        		}
        		
@@ -530,7 +577,8 @@ var initFactorValueGrid = function(div) {
 	    		selectedFactorValuesInGrid.push(selections[index].id);
 	    	}  	
        		
-       		removeFactorValueButton.enable();
+       		if (removeFactorValueButton)
+       			removeFactorValueButton.enable();
        		
        	
        }
@@ -554,60 +602,66 @@ Ext.onReady(function() {
 	factorValueCB = createFactorValueComboBox();		
 
 	//The tool bar. 
-	var simpleTB = new Ext.Toolbar("eDesign");
+	 if (Ext.get("eDesign")){
+		var simpleTB = new Ext.Toolbar("eDesign");
 	
-	simpleTB.addField(expFactorsCB);
-	simpleTB.addSpacer();
-	simpleTB.addField(factorValueCB);
-	simpleTB.addSpacer();
-	assignFactorValueToBioMaterialButton = simpleTB.addButton({text: 'assign',
-						tooltip: 'assigns the selected Factor Value to the selected BioMaterials',								  
-						handler: saveFactorValueToBMHandler,
-						disabled: true
-					});
+		simpleTB.addField(expFactorsCB);
+		simpleTB.addSpacer();
+		simpleTB.addField(factorValueCB);
+		simpleTB.addSpacer();
+		assignFactorValueToBioMaterialButton = simpleTB.addButton({text: 'assign',
+							tooltip: 'assigns the selected Factor Value to the selected BioMaterials',								  
+							handler: saveFactorValueToBMHandler,
+							disabled: true
+						});
 					
-					
-	initBioMaterialGrid("bmGrid");			
+		initBioMaterialGrid("bmGrid");
+	 }				
+				
 	
-
 	initFactorGrid("factorGrid"); 	 	
- 	var factorTB = new Ext.Toolbar("factorGridTB");
+	if (Ext.get("factorGridTB")){
 	
-	factorTB.addField(createMgedComboBox());
-	factorTB.addSpacer();
-	factorTB.addField(createFactorDescriptionField());
-	factorTB.addSpacer();
-	saveNewFactorButton = factorTB.addButton({text: 'create',
-						tooltip: 'creates a new Experimental Factor',								  
-						handler: saveExperimentalFactor,
-						disabled: true
-					});
- 	factorTB.addSpacer();
-	removeFactorButton = factorTB.addButton({text: 'remove',
-						tooltip: 'removes the selected Experimental Factor',								  
-						handler: deleteExperimentalFactor,
-						disabled: true
-					});
-					
+	 	var factorTB = new Ext.Toolbar("factorGridTB");	
+		factorTB.addField(createMgedComboBox());
+		factorTB.addSpacer();
+		factorTB.addField(createFactorDescriptionField());
+		factorTB.addSpacer();
+		saveNewFactorButton = factorTB.addButton({text: 'create',
+							tooltip: 'creates a new Experimental Factor',								  
+							handler: saveExperimentalFactor,
+							disabled: true
+						});
+	 	factorTB.addSpacer();
+		removeFactorButton = factorTB.addButton({text: 'remove',
+							tooltip: 'removes the selected Experimental Factor',								  
+							handler: deleteExperimentalFactor,
+							disabled: true
+						});
+	}
+						
 	initFactorValueGrid("factorValueGrid");	
 
-
-var factorValueTB = new Ext.Toolbar("factorValueTB");
-	
-	factorValueTB.addField(createOntologySearchComponent());	
-	factorValueTB.addSpacer();
-	saveNewFactorValueButton = factorValueTB.addButton({text: 'create',
-						tooltip: 'creates a new Experimental Factor Value',								  
-						handler: saveExperimentalFactorValue,
-						disabled: true
-					});
- 	factorValueTB.addSpacer();
-	removeFactorValueButton = factorValueTB.addButton({text: 'remove',
-						tooltip: 'removes the selected Experimental Factor Value',								  
-						handler: deleteExperimentalFactorValue,
-						disabled: true
-					});
-
+	if (Ext.get("factorValueTB")){
+		
+		var factorValueTB = new Ext.Toolbar("factorValueTB");	
+		factorValueTB.addField(createOntologySearchComponent());	
+		factorValueTB.addSpacer();
+		factorValueTB.addField(createFactorValueDescriptionField());
+		factorValueTB.addSpacer();
+		
+		saveNewFactorValueButton = factorValueTB.addButton({text: 'create',
+							tooltip: 'creates a new Experimental Factor Value',								  
+							handler: saveExperimentalFactorValue,
+							disabled: true
+						});
+	 	factorValueTB.addSpacer();
+		removeFactorValueButton = factorValueTB.addButton({text: 'remove',
+							tooltip: 'removes the selected Experimental Factor Value',								  
+							handler: deleteExperimentalFactorValue,
+							disabled: true
+						});
+	}
  		
 	
 });

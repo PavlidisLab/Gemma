@@ -813,6 +813,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         if ( e == null || e.getId() == null ) return null;
 
         ExperimentalFactor ef = this.experimentalFactorService.load( e.getId() );
+        if (ef == null) return null;
+        
         Collection<FactorValueObject> result = new HashSet<FactorValueObject>();
 
         Collection<FactorValue> values = ef.getFactorValues();

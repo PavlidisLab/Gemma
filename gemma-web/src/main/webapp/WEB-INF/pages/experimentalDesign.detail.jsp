@@ -116,12 +116,16 @@
             <fmt:message key="experimentalFactors.title" />
         </h3>
         
-        <div id="factorGridTB" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:30px;"></div>
+        <authz:authorize ifAllGranted="admin">
+        	<div id="factorGridTB" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:30px;"></div>
+        </authz:authorize>
         <div id="factorGrid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:250px;"></div>
         <br />
         
         <h3>    <fmt:message key="experimentalDesign.factorValues" />  for factor selected above   </h3>
-        <div id="factorValueTB" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:30px;"></div>
+        <authz:authorize ifAllGranted="admin">
+	        <div id="factorValueTB" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:30px;"></div>    	
+        </authz:authorize>
         <div id="factorValueGrid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:250px;"></div>
   
         <br />
@@ -134,13 +138,14 @@
    	 
  	<script type="text/javascript" src="<c:url value='/scripts/ajax/ExperimentalDesign.js'/>" type="text/javascript"></script>
     
-     <h3>  BioMaterials to Factor Value Association     </h3>
     <input type="hidden" name="expressionExperimentID" id="expressionExperimentID" value="${expressionExperiment.id}"
     <input type="hidden" name="experimentalDesignID" id="experimentalDesignID" value="${experimentalDesign.id}"
  
-    <div id="eDesign" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:30px;"></div>   
-	<div id="bmGrid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:250px;"></div>
-	
+    <authz:authorize ifAllGranted="admin">
+         <h3>  BioMaterials to Factor Value Association     </h3>   
+	    <div id="eDesign" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:30px;"></div>      
+		<div id="bmGrid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:250px;"></div>
+	 </authz:authorize>
         
     <table>
     <tr>
