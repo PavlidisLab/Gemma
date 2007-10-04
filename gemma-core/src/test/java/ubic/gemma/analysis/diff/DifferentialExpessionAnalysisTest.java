@@ -31,7 +31,22 @@ public class DifferentialExpessionAnalysisTest extends BaseAnalyzerTest {
 
     private Log log = LogFactory.getLog( this.getClass() );
 
-    DifferentialExpressionAnalysis analysis = new DifferentialExpressionAnalysis();
+    DifferentialExpressionAnalysis analysis = null;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.diff.BaseAnalyzerTest#onSetUpInTransaction()
+     */
+    @Override
+    protected void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
+        analysis = new DifferentialExpressionAnalysis();
+    }
+
+    public void testDetermineAnalysis() {
+        analysis.determineAnalysis( ee, quantitationTypeToUse, bioAssayDimension, efs );
+    }
 
     /**
      * Tests Analyze.
@@ -41,10 +56,12 @@ public class DifferentialExpessionAnalysisTest extends BaseAnalyzerTest {
      * @throws Exception
      */
     public void testAnalyze() {
+        // TODO FIXME
         UnsupportedOperationException ex = null;
         try {
-            analysis.analyze( ee, quantitationTypeToUse, bioAssayDimension, efs );
+            // analysis.analyze( ee, quantitationTypeToUse, bioAssayDimension, efs );
         } catch ( UnsupportedOperationException e ) {
+            e.printStackTrace();
             ex = e;
         } finally {
             assertNotNull( ex );

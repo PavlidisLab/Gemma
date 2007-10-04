@@ -57,6 +57,7 @@ public class AnalyzerHelper {
         Exception ex = null;
         try {
             checkBlockDesign( expressionExperiment, quantitationType, bioAssayDimension );
+            checkBiologicalReplicates( expressionExperiment, quantitationType, bioAssayDimension );
         } catch ( Exception e ) {
             ex = e;
         } finally {
@@ -67,11 +68,14 @@ public class AnalyzerHelper {
     }
 
     /**
+     * Determines if each biomaterial in the expression experiment for the given quantitation type for the given
+     * bioassay dimension has a factor value from each of the experimental factors.
+     * 
      * @param expressionExperiment
      * @return
      * @throws Exception
      */
-    private static Collection<BioMaterial> checkBlockDesign( ExpressionExperiment expressionExperiment,
+    protected static void checkBlockDesign( ExpressionExperiment expressionExperiment,
             QuantitationType quantitationType, BioAssayDimension bioAssayDimension ) throws Exception {
 
         ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( expressionExperiment, bioAssayDimension,
@@ -83,28 +87,75 @@ public class AnalyzerHelper {
         /* second, make sure each biomaterial has a factor value from one of the experimental factors */
         Collection<ExperimentalFactor> efs = expressionExperiment.getExperimentalDesign().getExperimentalFactors();
 
+        for ( ExperimentalFactor ef : efs ) {
+            checkBlockDesign( biomaterials, ef.getFactorValues() );
+        }
+    }
+
+    /**
+     * Determines if each biomaterial has factor value from an experimental factor equal to experimental factor of one
+     * of the supplied factor values.
+     * 
+     * @param biomaterials
+     * @param factorValues
+     * @throws Exception
+     */
+    protected static void checkBlockDesign( Collection<BioMaterial> biomaterials, Collection<FactorValue> factorValues )
+            throws Exception {
+
+        ExperimentalFactor ef = factorValues.iterator().next().getExperimentalFactor();
+
         for ( BioMaterial m : biomaterials ) {
 
             Collection<FactorValue> factorValuesFromBioMaterial = m.getFactorValues();
 
-            for ( FactorValue fv : factorValuesFromBioMaterial ) {
+            if ( factorValuesFromBioMaterial.size() < 2 )
+                throw new Exception( "Biomaterial must have more than 1 factor value." );
 
-                boolean matched = false;
-                for ( ExperimentalFactor ef : efs ) {
-                    if ( fv.getExperimentalFactor() == ef ) {
-                        matched = true;
-                        break;
-                    }
+            boolean match = false;
+            for ( FactorValue fv : factorValuesFromBioMaterial ) {
+                if ( fv.getExperimentalFactor() == ef ) {
+                    match = true;
+                    break;
                 }
-                if ( !matched )
-                    throw new Exception(
-                            "Biomaterial does not have a factor value from one of the experimental factors in the experimental design." );
+            }
+            if ( !match ) {
+                throw new Exception( "None of the factor values have an experimental factor that matches " + ef );
             }
         }
+    }
 
-        /* third, make sure you have replicates */
-        // TODO implement this part
-        return biomaterials;
+    /**
+     * Checks if there are at at least 2 biological replicates for all of the groups.
+     * 
+     * @param expressionExperiment
+     * @param quantitationType
+     * @param bioAssayDimension
+     * @throws Exception
+     */
+    protected static void checkBiologicalReplicates( ExpressionExperiment expressionExperiment,
+            QuantitationType quantitationType, BioAssayDimension bioAssayDimension ) throws Exception {
+
+        ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( expressionExperiment, bioAssayDimension,
+                quantitationType );
+
+        /* first, get all the biomaterials */
+        Collection<BioMaterial> biomaterials = getBioMaterialsForAssays( matrix );
+
+        /* second, make sure we have biological replicates */
+        for ( BioMaterial m : biomaterials ) {// FIXME you can do this more efficiently
+            Collection<BioMaterial> otherBioMaterials = biomaterials;
+            otherBioMaterials.remove( m );
+
+            boolean match = false;
+            for ( BioMaterial otherM : otherBioMaterials ) {
+                if ( m.equals( otherM ) ) {
+                    log.debug( "Replicate found for bioassay with biomaterial " + m );
+                    match = true;
+                }
+            }
+            if ( !match ) throw new Exception( "No replicates found for bioassay with biomaterial " + m );
+        }
     }
 
     /**
@@ -135,7 +186,7 @@ public class AnalyzerHelper {
      * @return
      * @throws Exception
      */
-    private static Collection<BioMaterial> getBioMaterialsForAssays( ExpressionDataMatrix matrix ) throws Exception {
+    protected static Collection<BioMaterial> getBioMaterialsForAssays( ExpressionDataMatrix matrix ) throws Exception {
 
         Collection<BioMaterial> biomaterials = new ArrayList<BioMaterial>();
 
@@ -199,6 +250,7 @@ public class AnalyzerHelper {
                 throw new RuntimeException(
                         "None of the Factor values of the biomaterial match the supplied factor values." );
         }
+
         return rFactors;
     }
 
@@ -223,7 +275,7 @@ public class AnalyzerHelper {
             Collection<FactorValue> factorValuesFromBioMaterial = sampleUsed.getFactorValues();
 
             if ( factorValuesFromBioMaterial.size() != 1 ) {
-                throw new RuntimeException( "Only supports one factor value per biomaterial." );
+                throw new RuntimeException( "Only supports 1 factor value per biomaterial." );
             }
 
             FactorValue fv = factorValuesFromBioMaterial.iterator().next();
