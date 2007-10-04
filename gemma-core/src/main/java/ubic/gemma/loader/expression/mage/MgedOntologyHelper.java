@@ -53,8 +53,6 @@ import org.xml.sax.helpers.XMLReaderFactory;
  */
 public class MgedOntologyHelper {
 
-    public static final String MGED_ONTO_BASE_URL = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#";
-
     private static int enumID = 0;
 
     private static Log log = LogFactory.getLog( MgedOntologyHelper.class.getName() );
