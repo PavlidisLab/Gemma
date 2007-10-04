@@ -276,21 +276,21 @@ function validateRequired(form) {
     var fields = new Array();                                                                           
     oRequired = new required();                                                                         
                                                                                                         
-    for (x in oRequired) {                                                                              
-        if ((form[oRequired[x][0]].type == 'select-multiple' ||form[oRequired[x][0]].type == 'file' || form[oRequired[x][0]].type == 'text' || form[oRequired[x][0]].type == 'textarea' || form[oRequired[x][0]].type == 'select-one' || form[oRequired[x][0]].type == 'radio' || form[oRequired[x][0]].type == 'password') && form[oRequired[x][0]].value == '') {
+    for (x in oRequired) {
+	    formid = oRequired[x][0] + ".label" ;
+        labelel = document.getElementById(formid);
+        if ((form[oRequired[x][0]].type == 'select-multiple' | form[oRequired[x][0]].type == 'file' || form[oRequired[x][0]].type == 'text' || form[oRequired[x][0]].type == 'textarea' || form[oRequired[x][0]].type == 'select-one' || form[oRequired[x][0]].type == 'radio' || form[oRequired[x][0]].type == 'password') && form[oRequired[x][0]].value == '') {
            if (i == 0)
               focusField = form[oRequired[x][0]]; 
               
            fields[i++] = oRequired[x][1];
-            
-           formid = oRequired[x][0] + ".label" ;
-           
-           labelel = document.getElementById(formid);
-           
            labelel.setAttribute("class", "x-form-invalid");
+           labelel.setAttribute("title", oRequired[x][1]);
            
            bValid = false;                                                                             
-        }                                                                                               
+        } else {
+        	labelel.setAttribute("class", "");
+        }                                                                                              
     }                                                                                                   
                                                                                                        
     if (fields.length > 0) {
