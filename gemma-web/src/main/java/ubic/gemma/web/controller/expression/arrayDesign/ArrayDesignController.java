@@ -64,6 +64,7 @@ import ubic.gemma.web.controller.BackgroundProcessingMultiActionController;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.remote.ListRange;
 import ubic.gemma.web.taglib.arrayDesign.ArrayDesignHtmlUtil;
+import ubic.gemma.web.taglib.displaytag.ArrayDesignValueObjectComparator;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
@@ -495,6 +496,11 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
          * arrayDesignReportService.getLastSequenceUpdateEvent( ad.getId() ) ); }
          */
 
+        //Sort the ArrayDesigns
+        Collections.sort( ( List<ArrayDesignValueObject> ) valueObjects,  new ArrayDesignValueObjectComparator());
+        
+        
+        
         Long numArrayDesigns = new Long( valueObjects.size() );
         ModelAndView mav = new ModelAndView( "arrayDesigns" );
         mav.addObject( "arrayDesigns", valueObjects );

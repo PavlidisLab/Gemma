@@ -21,6 +21,7 @@ package ubic.gemma.model.expression.arrayDesign;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -569,6 +570,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     }
 
     @Override
+    //fixme:  why is this so much different than handleLoadAllValueObjects(collection)?
+    //refarctoring is necessary
+   
     protected Collection handleLoadAllValueObjects() throws Exception {
 
         // get the expression experiment counts
@@ -576,9 +580,16 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
         Collection<ArrayDesignValueObject> result = new ArrayList<ArrayDesignValueObject>();
 
-        final String queryString = "select ad.id as id, " + " ad.name as name, " + " ad.shortName as shortName, "
-                + " ad.technologyType from ArrayDesignImpl as ad " + " group by ad order by ad.name";
-
+        final String queryString =  "select ad.id as id, " +
+                                    "ad.name as name, " +
+                                    "ad.shortName as shortName, " +
+                                    "ad.technologyType, " +
+                                    "event.date as createdDate " +
+                                    "from ArrayDesignImpl ad " +
+                                    "left join ad.auditTrail as trail " +
+                                    "inner join trail.events as event " +
+                                    "where event.action='C' group by ad order by ad.name";
+        
         // separated out composite sequence query to grab just one to make it easier to join to the taxon
         final String csString = "select ad.id, cs.id from ArrayDesignImpl as ad inner join ad.compositeSequences as cs where cs.biologicalCharacteristic IS NOT NULL group by ad";
         final String taxonString = "select cs.id, taxon.commonName from CompositeSequenceImpl as cs inner join cs.biologicalCharacteristic as bioC inner join bioC.taxon as taxon"
@@ -627,6 +638,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
                     v.setTaxon( arrayToTaxon.get( v.getId() ) );
                     v.setExpressionExperimentCount( ( Long ) eeCounts.get( v.getId() ) );
+                    v.setDateCreated( (Date ) list.getDate( 4 ));
                     result.add( v );
                 }
             }
@@ -687,10 +699,18 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
         // get the expression experiment counts
         Map eeCounts = this.getExpressionExperimentCountMap();
-
-        final String queryString = "select ad.id as id, ad.name as name, ad.shortName as shortName, "
-                + " ad.technologyType" + " from ArrayDesignImpl ad "
-                + " where ad.id in (:ids) group by ad order by ad.name";
+        
+        //FIXME  is it necessary to order this query?
+        final String queryString = 
+            "select ad.id as id, " +
+                "ad.name as name, " +
+                "ad.shortName as shortName, " +
+                "ad.technologyType, " +
+                "event.date as createdDate " +
+            "from ArrayDesignImpl ad " +
+                "left join ad.auditTrail as trail " +
+                "inner join trail.events as event " +
+            " where ad.id in (:ids) and event.action='C' group by ad order by ad.name";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
@@ -704,6 +724,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 TechnologyType color = ( TechnologyType ) list.get( 3 );
                 v.setColor( color.getValue() );
                 v.setExpressionExperimentCount( ( Long ) eeCounts.get( v.getId() ) );
+                v.setDateCreated( (Date) list.getDate( 4 ) );
 
                 vo.add( v );
             }

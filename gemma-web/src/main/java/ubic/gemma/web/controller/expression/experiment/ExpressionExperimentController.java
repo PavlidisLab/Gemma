@@ -62,6 +62,7 @@ import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BackgroundProcessingMultiActionController;
 import ubic.gemma.web.remote.EntityDelegator;
+import ubic.gemma.web.taglib.displaytag.ExpressionExperimentValueObjectComparator;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
@@ -441,14 +442,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             expressionExperiments.addAll( eeValObjectCol );
         }
         // sort expression experiments by name first
-        Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments, new Comparator() {
-            public int compare( Object o1, Object o2 ) {
-                String s1 = ( ( ExpressionExperimentValueObject ) o1 ).getName();
-                String s2 = ( ( ExpressionExperimentValueObject ) o2 ).getName();
-                int comparison = s1.compareToIgnoreCase( s2 );
-                return comparison;
-            }
-        } );
+        Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments, new ExpressionExperimentValueObjectComparator());
         expressionExperimentReportService.fillEventInformation( expressionExperiments );
         Long numExpressionExperiments = new Long( expressionExperiments.size() );
         ModelAndView mav = new ModelAndView( "expressionExperiments" );
