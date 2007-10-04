@@ -52,14 +52,14 @@
 
 			<tr>
 				<td valign='top'>
-					<fmt:message key="simpleEEForm.file" />
+					<Gemma:label helpTip="true" key="simpleEEForm.file" />
 					<input type="file" name="file" id="file" />
 				</td>
 			</tr>
 
 			<tr>
 				<td valign='top'>
-					<fmt:message key="simpleEEForm.name" />
+					<Gemma:label key="simpleEEForm.name" />
 					<spring:bind path="simpleExpressionExperimentLoadCommand.name">
 						<input type="text" name="<c:out value="${status.expression}"/>" id="<c:out value="${status.expression}"/>"
 							value="<c:out value="${status.value}"/>" />
@@ -69,7 +69,7 @@
 			</tr>
 			<tr>
 				<td valign='top'>
-					<fmt:message key="simpleEEForm.shortName" />
+					<Gemma:label key="simpleEEForm.shortName" />
 					<spring:bind path="simpleExpressionExperimentLoadCommand.shortName">
 						<input type="text" name="<c:out value="${status.expression}"/>" id="<c:out value="${status.expression}"/>"
 							value="<c:out value="${status.value}"/>" />
@@ -80,7 +80,7 @@
 
 			<tr>
 				<td>
-					<fmt:message key="simpleEEForm.description" />
+					<Gemma:label key="simpleEEForm.description" />
 					<spring:bind path="simpleExpressionExperimentLoadCommand.description">
 						<input type="textarea" rows="20" cols="120" id="<c:out value="${status.expression}"/>"
 							name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>" />
@@ -91,7 +91,7 @@
 
 			<tr>
 				<td valign='top'>
-					<fmt:message key="simpleEEForm.arrayDesigns" />
+					<Gemma:label key="simpleEEForm.arrayDesigns" />
 					<spring:bind path="simpleExpressionExperimentLoadCommand.arrayDesigns">
 						<select name="${status.expression}" multiple size='5' id="<c:out value="${status.expression}"/>">
 							<c:forEach items="${arrayDesigns}" var="arrayDesign">
@@ -107,7 +107,7 @@
 				</td>
 
 				<td valign='top'>
-					<fmt:message key="simpleEEForm.arrayDesign.name" />
+					<Gemma:label key="simpleEEForm.arrayDesign.name" />
 					<spring:bind path="simpleExpressionExperimentLoadCommand.arrayDesignName">
 						<input type="text" name="<c:out value="${status.expression}"/>" id="<c:out value="${status.expression}"/>"
 							value="<c:out value="${status.value}"/>" />
@@ -116,7 +116,7 @@
 				</td>
 
 				<td valign='top'>
-					<fmt:message key="simpleEEForm.probeIdsAreImageClones" />
+					<Gemma:label key="simpleEEForm.probeIdsAreImageClones" />
 					<spring:bind path="simpleExpressionExperimentLoadCommand.probeIdsAreImageClones">
 						<input type="hidden" name="_<c:out value="${status.expression}"/>">
 						<input align="left" type="checkbox" id="<c:out value="${status.expression}"/>"
@@ -129,7 +129,7 @@
 			</tr>
 			<tr>
 				<td valign='top'>
-					<fmt:message key="simpleEEForm.taxon.title" />
+					<Gemma:label key="simpleEEForm.taxon.title" />
 					<spring:bind path="simpleExpressionExperimentLoadCommand.taxon">
 						<select name="${status.expression}" id="<c:out value="${status.expression}"/>">
 							<c:forEach items="${taxa}" var="taxon">
@@ -145,7 +145,7 @@
 				</td>
 
 				<td valign='top'>
-					<fmt:message key="simpleEEForm.taxon.scientificName" />
+					<Gemma:label key="simpleEEForm.taxon.scientificName" />
 					<spring:bind path="simpleExpressionExperimentLoadCommand.taxonName">
 						<input type="text" name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>"
 							id="<c:out value="${status.expression}"/>" />
@@ -169,7 +169,7 @@
 
 						<tr>
 							<td>
-								<fmt:message key="simpleEEForm.quantitationTypeName" />
+								<Gemma:label key="simpleEEForm.quantitationTypeName" />
 								<spring:bind path="simpleExpressionExperimentLoadCommand.quantitationTypeName">
 									<input type="text" name="<c:out value="${status.expression}"/>" id="<c:out value="${status.expression}"/>"
 										value="<c:out value="${status.value}"/>" />
@@ -180,7 +180,7 @@
 
 						<tr>
 							<td>
-								<fmt:message key="simpleEEForm.quantitationTypeDescription" />
+								<Gemma:label key="simpleEEForm.quantitationTypeDescription" />
 								<spring:bind path="simpleExpressionExperimentLoadCommand.quantitationTypeDescription">
 									<input type="textarea" rows="20" cols="120" name="<c:out value="${status.expression}"/>"
 										id="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>" />
@@ -192,7 +192,7 @@
 
 						<tr>
 							<td>
-								<fmt:message key="simpleEEForm.type" />
+								<Gemma:label key="simpleEEForm.type" />
 								<spring:bind path="simpleExpressionExperimentLoadCommand.type">
 									<select name="${status.expression}" id="<c:out value="${status.expression}"/>">
 										<c:forEach items="${standardQuantitationTypes}" var="type">
@@ -209,7 +209,7 @@
 
 						<tr>
 							<td>
-								<fmt:message key="simpleEEForm.scale" />
+								<Gemma:label key="simpleEEForm.scale" />
 								<spring:bind path="simpleExpressionExperimentLoadCommand.scale">
 									<select name="${status.expression}" id="<c:out value="${status.expression}"/>">
 										<c:forEach items="${scaleTypes}" var="type">
@@ -225,7 +225,7 @@
 						</tr>
 						<tr>
 							<td>
-								<fmt:message key="simpleEEForm.isRatio" />
+								<Gemma:label key="simpleEEForm.isRatio" />
 								<spring:bind path="simpleExpressionExperimentLoadCommand.isRatio">
 									<input type="hidden" name="_<c:out value="${status.expression}"/>">
 									<input align="left" type="checkbox" id="<c:out value="${status.expression}"/>"

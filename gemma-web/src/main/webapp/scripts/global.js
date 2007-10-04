@@ -266,8 +266,9 @@ function trim(str) {
     }
 } 
 
-// This function is used by the login screen to validate user/pass
-// are entered. 
+/*
+* This method is used for client-side validation in the commons-validation framework. The original version used an 'alert'. We changed this to update style of the invalid field.
+*/
 function validateRequired(form) {                                    
     var bValid = true;
     var focusField = null;
@@ -276,19 +277,25 @@ function validateRequired(form) {
     oRequired = new required();                                                                         
                                                                                                         
     for (x in oRequired) {                                                                              
-        if ((form[oRequired[x][0]].type == 'text' || form[oRequired[x][0]].type == 'textarea' || form[oRequired[x][0]].type == 'select-one' || form[oRequired[x][0]].type == 'radio' || form[oRequired[x][0]].type == 'password') && form[oRequired[x][0]].value == '') {
+        if ((form[oRequired[x][0]].type == 'select-multiple' ||form[oRequired[x][0]].type == 'file' || form[oRequired[x][0]].type == 'text' || form[oRequired[x][0]].type == 'textarea' || form[oRequired[x][0]].type == 'select-one' || form[oRequired[x][0]].type == 'radio' || form[oRequired[x][0]].type == 'password') && form[oRequired[x][0]].value == '') {
            if (i == 0)
               focusField = form[oRequired[x][0]]; 
               
            fields[i++] = oRequired[x][1];
             
+           formid = oRequired[x][0] + ".label" ;
+           
+           labelel = document.getElementById(formid);
+           
+           labelel.setAttribute("class", "x-form-invalid");
+           
            bValid = false;                                                                             
         }                                                                                               
     }                                                                                                   
                                                                                                        
     if (fields.length > 0) {
        focusField.focus();
-       alert(fields.join('\n'));                                                                      
+    //   alert(fields.join('\n'));                                                                      
     }                                                                                                   
                                                                                                        
     return bValid;                                                                                      

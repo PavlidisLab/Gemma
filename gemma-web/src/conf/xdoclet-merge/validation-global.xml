@@ -21,48 +21,48 @@
     <formset>
         <form name="databaseEntry">
             <field property="accession" depends="required">
-                <arg0 key="databaseEntry.accession"/>
+                <arg position="0"  key="databaseEntry.accession"/>
             </field>
         </form>
         
         <form name="bioAssay">
             <field property="name" depends="required">
-                <arg0 key="bioAssay.name"/>
+                <arg position="0"  key="bioAssay.name"/>
             </field>
             <field property="description" depends="required">
-                <arg0 key="bioAssay.description"/>
+                <arg position="0"  key="bioAssay.description"/>
             </field>
         </form>
         <form name="bioMaterial">
             <field property="name" depends="required">
-                <arg0 key="bioMaterial.name"/>
+                <arg position="0"  key="bioMaterial.name"/>
             </field>
             <field property="description" depends="required">
-                <arg0 key="bioMaterial.description"/>
+                <arg position="0"  key="bioMaterial.description"/>
             </field>
         </form>
         <form name="expressionExperiment">
             <field property="name" depends="required">
-                <arg0 key="expressionExperiment.name"/>
+                <arg position="0"  key="expressionExperiment.name"/>
             </field>
             <field property="description" depends="required">
-                <arg0 key="expressionExperiment.description"/>
+                <arg position="0"  key="expressionExperiment.description"/>
             </field>
         </form>
         
         <form name="expressionExperimentVisualizationCommand">
             <field property="searchString" depends="required">
-                <arg0 key="expressionExperimentVisualizationCommand.searchString"/>
+                <arg position="0"  key="expressionExperimentVisualizationCommand.searchString"/>
             </field>
             <field property="viewSampling" depends="required">
-                <arg0 key="expressionExperimentVisualizationCommand.viewSampling"/>
+                <arg position="0"  key="expressionExperimentVisualizationCommand.viewSampling"/>
             </field>
         </form>
         
         <form name="coexpressionSearchCommand">
             <field property="searchString" depends="required,minlength">
-                <arg0 key="coexpressionSearchCommand.searchString"/>
-                <arg1 name="minlength" key="${var:minlength}" resource="false"/>
+                <arg position="0"  key="coexpressionSearchCommand.searchString"/>
+                <arg position="1"  name="minlength" key="${var:minlength}" resource="false"/>
                 <var>
                     <var-name>minlength</var-name>
                     <var-value>3</var-value>
@@ -70,14 +70,14 @@
                 
             </field>
             <field property="stringency" depends="required">
-                <arg0 key="coexpressionSearchCommand.stringency"/>
+                <arg position="0"  key="coexpressionSearchCommand.stringency"/>
             </field>
         </form>
         
         <form name="multipleCoexpressionSearchCommand">
             <field property="geneListString" depends="required,minlength">
-                <arg0 key="multipleCoexpressionSearchCommand.geneListString"/>
-                <arg1 name="minlength" key="${var:minlength}" resource="false"/>
+                <arg position="0"  key="multipleCoexpressionSearchCommand.geneListString"/>
+                <arg position="1"  name="minlength" key="${var:minlength}" resource="false"/>
                 <var>
                     <var-name>minlength</var-name>
                     <var-value>3</var-value>
@@ -85,30 +85,30 @@
                 
             </field>
             <field property="stringency" depends="required">
-                <arg0 key="multipleCoexpressionSearchCommand.stringency"/>
+                <arg position="0"  key="multipleCoexpressionSearchCommand.stringency"/>
             </field>
         </form>
         
         <form name="arrayDesign">
             <field property="name" depends="required">
-                <arg0 key="arrayDesign.name"/>
+                <arg position="0"  key="arrayDesign.name"/>
             </field>
             <field property="description" depends="required">
-                <arg0 key="arrayDesign.description"/>
+                <arg position="0"  key="arrayDesign.description"/>
             </field>
         </form>
         
         <form name="bibliographicReference">
             <field property="pubAccession" depends="required">
-                <arg0 key="bibliographicReference.pubAccession"/>
+                <arg position="0"  key="bibliographicReference.pubAccession"/>
             </field>
         </form>
         
         <form name="user">
             <field property="userName" depends="required,lengthRange">
                 
-                <arg0 key="user.username"/>
-                <arg1 name="minlength" key="${var:minlength}" resource="false"/>
+                <arg position="0"  key="user.username"/>
+                <arg position="1"  name="minlength" key="${var:minlength}" resource="false"/>
                 <arg2 name="maxlength" key="${var:maxlength}" resource="false"/>
                 <var>
                     <var-name>minlength</var-name>
@@ -123,8 +123,8 @@
             
               <field property="newPassword" depends="minlength,validwhen">
                 <msg name="minLength" key="errors.minlength"/>
-                <arg0 key="user.newpassword"/>
-                <arg1 name="minlength" key="${var:minlength}" resource="false"/>
+                <arg position="0"  key="user.newpassword"/>
+                <arg position="1"  name="minlength" key="${var:minlength}" resource="false"/>
                 <var>
                     <var-name>minlength</var-name>
                     <var-value>5</var-value>
@@ -137,8 +137,8 @@
             
             <field property="confirmNewPassword" depends="validwhen">
                 <msg name="validwhen" key="errors.twofields"/>
-                <arg0 key="user.confirmNewPassword"/>
-                <arg1 key="user.newPassword"/>
+                <arg position="0"  key="user.confirmNewPassword"/>
+                <arg position="1"  key="user.newPassword"/>
                 <var>
                     <var-name>test</var-name>
                     <var-value> (newPassword == *this*) </var-value>
@@ -146,19 +146,19 @@
             </field>
             
             <field property="name" depends="required">
-                <arg0 key="user.name"/>
+                <arg position="0"  key="user.name"/>
             </field>
             
              <field property="lastName" depends="required">
-                <arg0 key="user.lastName"/>
+                <arg position="0"  key="user.lastName"/>
             </field>
             
             <field property="email" depends="required,email">
-                <arg0 key="user.email"/>
+                <arg position="0"  key="user.email"/>
             </field>
             
             <field property="passwordHint" depends="required">
-                <arg0 key="user.passwordHint"/>
+                <arg position="0"  key="user.passwordHint"/>
             </field>
             
         </form>
@@ -168,20 +168,19 @@
             <field property="sequenceType" depends="required" />
         </form>
         <form name="expressionExperimentLoad">
-            <field property="accession" depends="required" />
+            <field property="accession" depends="required"><arg position="0"  key="expressionExperimentLoad.accession" /></field>
         </form>
         <form name="simpleEEForm">
-			<field property="file" depends="required" />
-			<field property="shortName" depends="required" />
-            <field property="name" depends="required" />
-            <field property="description" depends="required" />
-			<field property="shortName" depends="required" />
-            <field property="name" depends="required" />
-            <field property="quantitationTypeName" depends="required" />
- 			<field property="quantitationTypeDescription" depends="required" />
- 			<field property="type" depends="required" />
- 			<field property="scale" depends="required" />
- 			<field property="isRatio" depends="required" />
+			<field property="file" depends="required"><arg position="0" key="simpleEEForm.file" /></field>
+			<field property="arrayDesigns" depends="required"><arg position="0"  key="simpleEEForm.arrayDesigns" /></field>
+			<field property="shortName" depends="required"><arg position="0"  key="simpleEEForm.shortName" /></field>
+            <field property="name" depends="required" ><arg position="0"  key="simpleEEForm.name" /></field>
+            <field property="description" depends="required"><arg position="0"  key="simpleEEForm.description" /></field>
+            <field property="quantitationTypeName" depends="required"><arg position="0"  key="simpleEEForm.quantitationTypeName" /></field>
+ 			<field property="quantitationTypeDescription" depends="required"><arg position="0"  key="simpleEEForm.quantitationTypeDescription" /></field>
+ 			<field property="type" depends="required"><arg position="0"  key="simpleEEForm.type" /></field>
+ 			<field property="scale" depends="required"><arg position="0"  key="simpleEEForm.scale" /></field>
+ 			<field property="isRatio" depends="required"><arg position="0"  key="simpleEEForm.isRatio" /></field>
         </form>
       
     </formset> 
