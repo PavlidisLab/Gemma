@@ -141,8 +141,9 @@ public class LabelTag extends TagSupport {
         try {
             message = getMessageSource().getMessage( key, null, locale );
         } catch ( NoSuchMessageException nsm ) {
-            log.warn(nsm, nsm);
-            log.warn("Locale = " + locale);
+            log.warn( nsm, nsm );
+            log.warn( "Message source is: " + getMessageSource().getClass() );
+            log.warn( "Locale = " + locale );
             log.warn( "Key = " + key );
             if ( fieldName != null ) {
                 message = "[" + fieldName + "]";
@@ -165,7 +166,7 @@ public class LabelTag extends TagSupport {
             label.append( "" );
         } else {
             label.append( "<label for=\"" + fieldName + "\"" );
-            label.append( " id =\"" + fieldName +".label\""  );
+            label.append( " id =\"" + fieldName + ".label\"" );
             if ( validationError ) {
                 label.append( " class=\"" + cssErrorClass + "\"" );
             } else if ( cssClass != null ) {
