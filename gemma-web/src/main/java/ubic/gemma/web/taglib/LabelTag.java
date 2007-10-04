@@ -320,7 +320,8 @@ public class LabelTag extends TagSupport {
      * Use the application context itself for default message resolution.
      */
     private MessageSource getMessageSource() {
-        return requestContext.getWebApplicationContext();
+        // we should be able to do return requestContext.getWebApplicationContext(), but that doesn't work on production, for some reason.
+        return ( MessageSource ) requestContext.getWebApplicationContext().getBean( "messageSource" );
     }
 
 }
