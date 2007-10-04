@@ -318,6 +318,8 @@
                 ubic.gemma.model.expression.designElement.ReporterService.remove=user,admin
                 ubic.gemma.model.expression.designElement.ReporterService.create=user,admin
                 ubic.gemma.model.expression.designElement.ReporterService.find=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.expression.arrayDesign.ArrayDesignService.load=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.expression.arrayDesign.ArrayDesignService.loadMultiple=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ             
                 ubic.gemma.model.expression.arrayDesign.ArrayDesignService.loadAll=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.arrayDesign.ArrayDesignService.findOrCreate=ACL_SECURABLE_EDIT,admin,user
                 ubic.gemma.model.expression.arrayDesign.ArrayDesignService.remove=admin,ACL_SECURABLE_EDIT

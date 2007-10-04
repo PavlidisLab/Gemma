@@ -585,6 +585,11 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     protected void handleThawLite( ArrayDesign arrayDesign ) throws Exception {
         this.getArrayDesignDao().thawLite( arrayDesign );
     }
+    
+    @Override
+    protected Collection<ArrayDesign> handleLoadMultiple( Collection ids ) throws Exception {
+        return this.getArrayDesignDao().loadMultiple( ids );
+    }
 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#updateArrayDesign(ubic.gemma.model.expression.arrayDesign.ArrayDesign)

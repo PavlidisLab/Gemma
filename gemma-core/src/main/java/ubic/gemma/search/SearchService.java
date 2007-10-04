@@ -249,7 +249,7 @@ public class SearchService {
         Collection<Long> adIds = convert2IdList( searchResults.getHits() );
 
         // return convert2ArrayDesignList( searchResults.getHits() );
-        return this.arrayDesignDbSearch( adIds );
+        return this.arrayDesignDbLoad( adIds );
     }
 
     /**
@@ -276,16 +276,10 @@ public class SearchService {
      * @param ids
      * @return {@link Collection}
      */
-    private Collection<ArrayDesign> arrayDesignDbSearch( Collection<Long> ids ) {
+    private Collection<ArrayDesign> arrayDesignDbLoad( Collection<Long> ids ) {
 
-        Collection<ArrayDesign> results = new HashSet<ArrayDesign>();
-
-        for ( Long id : ids ) {
-            ArrayDesign ad = arrayDesignService.load( id );
-
-            if ( ad != null ) results.add( ad );
-        }
-
+        Collection<ArrayDesign> results = arrayDesignService.loadMultiple(ids);
+        
         return results;
     }
 
