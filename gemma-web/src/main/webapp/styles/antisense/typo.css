@@ -240,5 +240,9 @@
     	padding: 1px;
     }
     
+    .error {
+    	background:#fff url(../../images/default/grid/invalid_line.gif) repeat-x bottom;
+    }
+    
     
 /* END TYPOGRAPHY */

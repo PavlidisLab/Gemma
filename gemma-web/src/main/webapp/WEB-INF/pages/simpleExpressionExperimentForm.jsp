@@ -82,8 +82,8 @@
 				<td>
 					<Gemma:label key="simpleEEForm.description" />
 					<spring:bind path="simpleExpressionExperimentLoadCommand.description">
-						<input type="textarea" rows="20" cols="120" id="<c:out value="${status.expression}"/>"
-							name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>" />
+						<textarea rows="5" cols="60" id="<c:out value="${status.expression}"/>"
+							name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>" /></textarea>
 						<span class="fieldError">${status.errorMessage}</span>
 					</spring:bind>
 				</td>

@@ -284,7 +284,7 @@ function validateRequired(form) {
               focusField = form[oRequired[x][0]]; 
               
            fields[i++] = oRequired[x][1];
-           labelel.setAttribute("class", "x-form-invalid");
+           labelel.setAttribute("class", "error");
            labelel.setAttribute("title", oRequired[x][1]);
            
            bValid = false;                                                                             
