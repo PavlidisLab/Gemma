@@ -420,7 +420,11 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                     session.evict( type );
                 }
                 expressionExperiment.getAuditTrail().getEvents().size();
+                
                 thawReferences( expressionExperiment, session );
+                
+                expressionExperiment.getExperimentalDesign().getExperimentalFactors().size();
+                
                 if ( expressionExperiment.getAccession() != null )
                     expressionExperiment.getAccession().getExternalDatabase();
                 for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
