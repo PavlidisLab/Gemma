@@ -136,5 +136,3 @@ by getting the info it needs from the dom.  The initbinder method in the control
 <div id="progress-area" style="padding:5px;"></div>
 
 <validate:javascript formName="expressionExperimentLoad" staticJavascript="false" />
-<script type="text/javascript" src="<c:url value="/scripts/validator.jsp"/>"></script> 
-

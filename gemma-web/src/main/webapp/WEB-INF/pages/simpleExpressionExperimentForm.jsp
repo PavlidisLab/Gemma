@@ -244,7 +244,5 @@
 		<input id="upload-button" type="submit" onClick="return false;" />
 	</form>
 
-	<validate:javascript formName="simpleEEForm" staticJavascript="false" />
-	<script type="text/javascript" src="<c:url value="/scripts/validator.jsp"/>"></script>
-
+	<validate:javascript formName="simpleEEForm" staticJavascript="false" cdata="false" xhtml="true" />
 </body>
