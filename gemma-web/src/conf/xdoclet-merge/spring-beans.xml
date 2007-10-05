@@ -402,6 +402,7 @@ Mapping URLS to controllers
 							<value>getAnnotation</value>
 							<value>getExperimentalFactors</value>
 							<value>getFactorValues</value>
+							<value>getDesignMatrixRows</value>
 						</list>
 					</property>
 				</bean>
@@ -417,6 +418,21 @@ Mapping URLS to controllers
 						<list>
 							<value>getEvents</value>
 							<value>addAuditEvent</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="GenePickerController">
+				<bean class="org.directwebremoting.spring.CreatorConfig">
+					<property name="creator">
+						<bean class="org.directwebremoting.spring.BeanCreator">
+							<property name="bean" ref="genePickerController" />
+						</bean>
+					</property>
+					<property name="includes">
+						<list>
+							<value>getTaxa</value>
+							<value>searchGenes</value>
 						</list>
 					</property>
 				</bean>
@@ -956,6 +972,19 @@ Mapping URLS to controllers
 							<value>id</value>
 							<value>className</value>
 							<value>termName</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry
+				key="ubic.gemma.web.controller.expression.experiment.DesignMatrixRowValueObject">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean"/>
+					<property name="includes">
+						<list>
+							<value>factors</value>
+							<value>factorValueMap</value>
+							<value>count</value>						
 						</list>
 					</property>
 				</bean>

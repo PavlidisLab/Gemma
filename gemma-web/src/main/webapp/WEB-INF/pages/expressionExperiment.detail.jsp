@@ -20,6 +20,7 @@
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/eeAnnotations.js'/>"></script>
+	<script type='text/javascript' src="<c:url value='/scripts/ajax/eeDesignMatrix.js'/>"></script>
 
 </head>
 
@@ -298,8 +299,8 @@ if ( expressionExperiment.getName() != null ) {
 
 	<Gemma:eeDesign
 		experimentalDesign="${expressionExperiment.experimentalDesign}"></Gemma:eeDesign>
-	<Gemma:eeDesignMatrix
-		expressionExperiment="${expressionExperiment}"></Gemma:eeDesignMatrix>
+	
+	<div id="eeDesignMatrix" class="x-grid-mso" style="overflow: hidden;"></div>
 	<%
 	}
 	%>

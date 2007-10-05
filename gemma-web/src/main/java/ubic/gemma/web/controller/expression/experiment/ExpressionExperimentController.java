@@ -818,5 +818,16 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         return result;
     }
+    
+    public Collection<DesignMatrixRowValueObject> getDesignMatrixRows( EntityDelegator e ) {
+        
+        if ( e == null || e.getId() == null )
+            return null;
+        ExpressionExperiment ee = this.expressionExperimentService.load( e.getId() );
+        if (ee == null)
+            return null;
+        
+        return DesignMatrixRowValueObject.Factory.getDesignMatrix( ee );
+    }
 
 }

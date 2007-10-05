@@ -47,6 +47,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * 
  * @jsp.tag name="eeDesignMatrix" body-content="empty"
  * @author luke
+ * @deprecated use eeDesignMatrix.js (Ext table)
  * @version $Id$
  */
 public class ExperimentalDesignMatrixTag extends TagSupport {
