@@ -46,7 +46,8 @@ public class AnalyzerHelper {
     private static Log log = LogFactory.getLog( AnalyzerHelper.class );
 
     /**
-     * Returns true if the block design is complete, false otherwise.
+     * Returns true if the block design is complete and there are at least 2 biological replicates for each "group",
+     * false otherwise.
      * 
      * @param expressionExperiment
      * @return boolean
