@@ -38,8 +38,10 @@ import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Session;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
@@ -465,6 +467,9 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     @SuppressWarnings("unchecked")
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
 
+        StopWatch overallWatch = new StopWatch();
+        overallWatch.start();
+        
         String sId = request.getParameter( "id" );
         Collection<ArrayDesignValueObject> valueObjects = new ArrayList<ArrayDesignValueObject>();
         ArrayDesignValueObject summary = arrayDesignReportService.getSummaryObject();
@@ -484,6 +489,8 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
                 ids.add( new Long( idList[i] ) );
             }
             valueObjects.addAll( arrayDesignService.loadValueObjects( ids ) );
+            log.info( "List of AD ids to load value objets for: " + idList );
+            log.info( "Loading AD value objects took: " + overallWatch.getTime()/1000 );
         }
 
         arrayDesignReportService.fillEventInformation( valueObjects );
@@ -507,6 +514,8 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         mav.addObject( "numArrayDesigns", numArrayDesigns );
         mav.addObject( "summary", summary );
 
+        log.info( "ArrayDesign.showall took: " + overallWatch.getTime()/1000 );
+       
         return mav;
     }
 
@@ -614,6 +623,10 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      * @return
      */
     public ModelAndView filter( HttpServletRequest request, HttpServletResponse response ) {
+        
+        StopWatch overallWatch = new StopWatch();
+        overallWatch.start();
+        
         String filter = request.getParameter( "filter" );
 
         // Validate the filtering search criteria.
@@ -626,6 +639,8 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
         if ( ( searchResults == null ) || ( searchResults.size() == 0 ) ) {
             this.saveMessage( request, "Your search yielded no results" );
+            Long overallElapsed = overallWatch.getTime();
+            log.info( "No results found. Search took: " + overallElapsed/1000 + "s "  );
             return showAll( request, response );
         }
 
@@ -635,6 +650,9 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             ArrayDesign arrayDesign = searchResults.iterator().next();
             this.saveMessage( request, "Matched one : " + arrayDesign.getName() + "(" + arrayDesign.getShortName()
                     + ")" );
+            overallWatch.stop();
+            Long overallElapsed = overallWatch.getTime();
+            log.info( "Filter found 1 AD:  " + arrayDesign.getName() + " took: " + overallElapsed/1000 + "s "  );
             return new ModelAndView( new RedirectView( "/Gemma/arrays/showArrayDesign.html?id=" + arrayDesign.getId() ) );
         } else {
             for ( ArrayDesign ad : searchResults )
@@ -642,6 +660,11 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
             this.saveMessage( request, "Search Criteria: " + filter );
             this.saveMessage( request, searchResults.size() + " Array Designs matched your search." );
+            
+            overallWatch.stop();
+            Long overallElapsed = overallWatch.getTime();
+            log.info( "Generating the AD list:  (" + list + ") took: " + overallElapsed/1000 + "s "  );
+
             return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?id=" + list ) );
         }
 
