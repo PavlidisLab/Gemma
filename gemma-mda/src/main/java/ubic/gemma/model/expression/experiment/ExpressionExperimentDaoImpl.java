@@ -423,7 +423,11 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 
                 thawReferences( expressionExperiment, session );
                 
-                expressionExperiment.getExperimentalDesign().getExperimentalFactors().size();
+                ExperimentalDesign experimentalDesign = expressionExperiment.getExperimentalDesign();
+				if (experimentalDesign != null) {
+                    session.update(experimentalDesign);
+                    experimentalDesign.getExperimentalFactors().size();
+				}
                 
                 if ( expressionExperiment.getAccession() != null )
                     expressionExperiment.getAccession().getExternalDatabase();
