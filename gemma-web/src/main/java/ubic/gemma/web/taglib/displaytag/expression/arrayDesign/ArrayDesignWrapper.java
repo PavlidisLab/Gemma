@@ -45,12 +45,13 @@ public class ArrayDesignWrapper extends TableDecorator {
 
     public String getName() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
-        
+
         StringBuffer buf = new StringBuffer();
         buf.append( object.getName() );
         if ( object.getTroubleEvent() != null ) {
-            buf.append( "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt='trouble' title='" );
-            buf.append(  StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getTroubleEvent() ) ) );
+            buf
+                    .append( "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt='trouble' title='" );
+            buf.append( StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getTroubleEvent() ) ) );
             buf.append( "' />" );
         }
         if ( object.getValidationEvent() != null ) {
@@ -60,7 +61,7 @@ public class ArrayDesignWrapper extends TableDecorator {
         }
         return buf.toString();
     }
-    
+
     public String getLastSequenceUpdateDate() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
 
@@ -210,31 +211,28 @@ public class ArrayDesignWrapper extends TableDecorator {
     public String getSummaryTable() {
         StringBuilder buf = new StringBuilder();
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
-
-        // check if the summary numbers exist
-        // if they donn't, just return not available
-        if ( object.getNumProbeAlignments() == null ) {
-            return "[Not avail.]";
-        }
-
         String arraySummary = "arraySummary_" + object.getId();
 
-        buf
-                .append( "<span class=\"" + arraySummary + "\" onclick=\"return toggleVisibility('" + arraySummary
-                        + "')\">" );
-        buf.append( "<img src=\"/Gemma/images/chart_organisation_add.png\" /></span>" );
-
-        buf.append( "<span class=\"" + arraySummary + "\" name=\"" + arraySummary
-                + "\" style=\"display:none\" onclick=\"return toggleVisibility('" + arraySummary + "')\">" );
-        buf.append( "<img src=\"/Gemma/images/plus.png\" /></span>" );
-
-        buf.append( "<a href=\"#\" onclick=\"return toggleVisibility('" + arraySummary + "')\" >Summary</a>" );
-
-        buf.append( "<div id=\"" + arraySummary + "\" class=\"" + arraySummary + "\" style=\"display:none\">" );
-
-        buf.append( ArrayDesignHtmlUtil.getSummaryHtml( object ) );
+        buf.append( "<div style=\"float:left\" onclick=\"Effect.toggle('" + arraySummary + "', 'blind', {duration:0.5})\">" );
+        buf.append( "<img src=\"/Gemma/images/plus.gif\" />" );
 
         buf.append( "</div>" );
+
+        String style = "";
+        if ( object.getNumProbeAlignments() != null ) {
+            style = "display:none";
+        }
+
+        // inner div needed for Effect.toggle
+        buf.append( "<div id=\"" + arraySummary + "\"  style=\"" + style + "\"><div>" );
+
+        if ( object.getNumProbeAlignments() != null ) {
+            buf.append( ArrayDesignHtmlUtil.getSummaryHtml( object ) );
+        } else {
+            buf.append( "[Not avail.]" ); // This isn't a perfect solution; you can still hide this.
+        }
+
+        buf.append( "</div></div>" );
         return buf.toString();
     }
 
@@ -247,8 +245,8 @@ public class ArrayDesignWrapper extends TableDecorator {
             long id = object.getId();
 
             return object.getExpressionExperimentCount()
-                    + " <a href=\"showExpressionExperimentsFromArrayDesign.html?id=" + id + "\">"
-                    + "<img src=\"/Gemma/images/magnifier.png\" height=10 width=10/></a>";
+                    + " <a title=\"Click for details\" href=\"showExpressionExperimentsFromArrayDesign.html?id=" + id
+                    + "\">" + "<img src=\"/Gemma/images/magnifier.png\" height=10 width=10/></a>";
         }
 
         return "0";

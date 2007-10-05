@@ -11,7 +11,6 @@ function updateReport(id) {
 	
 	callParams.push({callback : delegate, errorHandler : errorHandler  });
 	
-	// this should return quickly, with the task id.
 	Ext.DomHelper.overwrite("messages", {tag : 'img', src:'/Gemma/images/default/tree/loading.gif' });  
 	Ext.DomHelper.append("messages", "&nbsp;Submitting ...");  
 	
@@ -27,7 +26,7 @@ function remove(id) {
 function handleFailure(data, e) {
 	Ext.DomHelper.overwrite("taskId", "");
 	Ext.DomHelper.overwrite("messages", {tag : 'img', src:'/Gemma/images/icons/warning.png' });  
-	Ext.DomHelper.append("messages", {tag : 'span', html : "&nbsp;There was an error:<br/>" + data });  
+	Ext.DomHelper.append("messages", {tag : 'span', html : "&nbsp;There was an error:<br/>" + data + e });  
 };
 
 function reset(data) {
@@ -57,8 +56,9 @@ function handleReportLoadSuccess(data) {
 	try {
 	    Ext.DomHelper.overwrite("messages", "");
 	    var arrayDesignSummaryDiv = "arraySummary_" + data.id;
-		Ext.DomHelper.overwrite(arrayDesignSummaryDiv, data.html);  
-	//	changeObjectVisibility(arrayDesignSummaryDiv, true);
+	    if (Ext.get(arrayDesignSummaryDiv) != null) {
+			Ext.DomHelper.overwrite(arrayDesignSummaryDiv, data.html);
+		}  
 	} catch (e) {
 		handleFailure(data, e);
 		return;

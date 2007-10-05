@@ -31,7 +31,7 @@ function isUndefined(value) {
     return value == undef; 
 }
 
-/* Function for showing and hiding elements that use 'display:none' to hide */
+/* Function for showing and hiding elements that use 'display:none' to hide
 function toggleDisplay(targetId)
 {
     if (document.getElementById) {
@@ -43,8 +43,7 @@ function toggleDisplay(targetId)
     	}
     }
 }
-
-// toggle visibility 
+ 
 function toggleVisibility(targetId) {
     if (document.getElementById) {
         target = document.getElementById(targetId);
@@ -55,7 +54,8 @@ function toggleVisibility(targetId) {
     	}
     }
 }
-
+ */
+ 
 function checkAll(theForm) { // check all the checkboxes in the list
   for (var i=0;i<theForm.elements.length;i++) {
     var e = theForm.elements[i];

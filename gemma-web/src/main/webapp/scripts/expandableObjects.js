@@ -31,6 +31,10 @@ function changeObjectVisibility(objectName, newVisibility) {
     }
 	return false;
 }
+
+/*
+* @deprecated in favor of Effects.toggle
+*/
 function toggleVisibility(objectName) {
 	// get the objects with the given name
 	var elements = document.getElementsByClassName(objectName);
