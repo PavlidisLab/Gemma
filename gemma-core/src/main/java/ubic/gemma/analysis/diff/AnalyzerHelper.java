@@ -20,6 +20,7 @@ package ubic.gemma.analysis.diff;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -147,19 +148,27 @@ public class AnalyzerHelper {
         /* first, get all the biomaterials */
         Collection<BioMaterial> biomaterials = getBioMaterialsForAssays( matrix );
 
+        Collection<BioMaterial> copyOfBiomaterials = biomaterials;
+
         /* second, make sure we have biological replicates */
-        for ( BioMaterial m : biomaterials ) {// FIXME you can do this more efficiently
-            Collection<BioMaterial> otherBioMaterials = biomaterials;
-            otherBioMaterials.remove( m );
+        for ( BioMaterial biomaterial : biomaterials ) {
+
+            Collection<FactorValue> factorValues = biomaterial.getFactorValues();
 
             boolean match = false;
-            for ( BioMaterial otherM : otherBioMaterials ) {
-                if ( m.equals( otherM ) ) {
-                    log.debug( "Replicate found for bioassay with biomaterial " + m );
+            for ( BioMaterial m : copyOfBiomaterials ) {
+
+                if ( biomaterial.equals( m ) ) continue;
+
+                Collection<FactorValue> fvs = m.getFactorValues();
+
+                if ( fvs.equals( factorValues ) ) {
+                    log.debug( "Replicate found for biomaterial " + biomaterial + "." );
                     match = true;
+                    break;
                 }
             }
-            if ( !match ) throw new Exception( "No replicates found for bioassay with biomaterial " + m );
+            if ( !match ) throw new Exception( "No replicate found for biomaterial " + biomaterial + "." );
         }
     }
 

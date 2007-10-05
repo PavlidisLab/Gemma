@@ -40,13 +40,11 @@ public class AnalyzerHelperTest extends BaseAnalyzerConfigurationTest {
      *
      *
      */
-    public void testCheckBlockDesign() {
-        // TODO FIXME
+    public void testCheckBiologicalReplicates() {
+
         Exception ex = null;
         try {
-            // AnalyzerHelper.checkBlockDesign( biomaterials, experimentalFactorA.getFactorValues() );
-
-            // AnalyzerHelper.checkBlockDesign( biomaterials, experimentalFactorB.getFactorValues() );
+            AnalyzerHelper.checkBiologicalReplicates( expressionExperiment, quantitationType, bioAssayDimension );
         } catch ( Exception e ) {
             ex = e;
             e.printStackTrace();

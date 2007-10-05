@@ -146,42 +146,50 @@ public class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
 
         // 2 replicates
         biomaterial0a = BioMaterial.Factory.newInstance();
+        biomaterial0a.setName( "0a" );
         Collection<FactorValue> factorValuesForBioMaterial0 = new HashSet<FactorValue>();
         factorValuesForBioMaterial0.add( factorValueA1 );
         factorValuesForBioMaterial0.add( factorValueB1 );
         biomaterial0a.setFactorValues( factorValuesForBioMaterial0 );
 
         biomaterial0b = BioMaterial.Factory.newInstance();
+        biomaterial0b.setName( "0b" );
         biomaterial0b.setFactorValues( factorValuesForBioMaterial0 );
 
         // 2 replicates
         biomaterial1a = BioMaterial.Factory.newInstance();
+        biomaterial1a.setName( "1a" );
         Collection<FactorValue> factorValuesForBioMaterial1 = new HashSet<FactorValue>();
         factorValuesForBioMaterial1.add( factorValueA1 );
         factorValuesForBioMaterial1.add( factorValueB2 );
         biomaterial1a.setFactorValues( factorValuesForBioMaterial1 );
 
         biomaterial1b = BioMaterial.Factory.newInstance();
+        biomaterial1b.setName( "1b" );
         biomaterial1b.setFactorValues( factorValuesForBioMaterial1 );
 
         // 2 replicates
         biomaterial2a = BioMaterial.Factory.newInstance();
+        biomaterial2a.setName( "2a" );
         Collection<FactorValue> factorValuesForBioMaterial3 = new HashSet<FactorValue>();
         factorValuesForBioMaterial3.add( factorValueA2 );
         factorValuesForBioMaterial3.add( factorValueB1 );
         biomaterial2a.setFactorValues( factorValuesForBioMaterial3 );
 
         biomaterial2b = BioMaterial.Factory.newInstance();
+        biomaterial2b.setName( "2b" );
         biomaterial2b.setFactorValues( factorValuesForBioMaterial3 );
 
         // 2 replicates
         biomaterial3a = BioMaterial.Factory.newInstance();
+        biomaterial3a.setName( "3a" );
         Collection<FactorValue> factorValuesForBioMaterial4 = new HashSet<FactorValue>();
         factorValuesForBioMaterial4.add( factorValueA2 );
         factorValuesForBioMaterial4.add( factorValueB2 );
         biomaterial3a.setFactorValues( factorValuesForBioMaterial4 );
 
         biomaterial3b = BioMaterial.Factory.newInstance();
+        biomaterial3b.setName( "3b" );
         biomaterial3b.setFactorValues( factorValuesForBioMaterial4 );
 
         biomaterials.add( biomaterial0a );

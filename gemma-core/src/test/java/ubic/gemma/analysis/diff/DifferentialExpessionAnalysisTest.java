@@ -45,23 +45,6 @@ public class DifferentialExpessionAnalysisTest extends BaseAnalyzerConfiguration
         analysis = new DifferentialExpressionAnalysis();
     }
 
-    // /**
-    // * Tests determineAnalysis.
-    // * <p>
-    // * 2 experimental factors
-    // * <p>
-    // * 2 factor value / experimental factor
-    // * <p>
-    // * complete block design and biological replicates
-    // * <p>
-    // * Expected analyzer: {@link TwoWayAnovaWithInteractionsAnalyzer}
-    // */
-    // public void testDetermineAnalysisA() {
-    // AbstractAnalyzer analyzer = analysis.determineAnalysis( expressionExperiment, quantitationType,
-    // bioAssayDimension );
-    // assertTrue( analyzer instanceof TwoWayAnovaWithInteractionsAnalyzer );
-    // }
-
     /**
      * Tests determineAnalysis.
      * <p>
@@ -69,15 +52,32 @@ public class DifferentialExpessionAnalysisTest extends BaseAnalyzerConfiguration
      * <p>
      * 2 factor value / experimental factor
      * <p>
-     * no replicates
+     * complete block design and biological replicates
      * <p>
-     * Expected analyzer: {@link TwoWayAnovaWithoutInteractionsAnalyzer}
+     * Expected analyzer: {@link TwoWayAnovaWithInteractionsAnalyzer}
      */
-    public void testDetermineAnalysisB() {
-        super.configureTestDataForTwoWayAnovaWithoutInteractions();
+    public void testDetermineAnalysisA() {
         AbstractAnalyzer analyzer = analysis.determineAnalysis( expressionExperiment, quantitationType,
                 bioAssayDimension );
-        assertTrue( analyzer instanceof TwoWayAnovaWithoutInteractionsAnalyzer );
+        assertTrue( analyzer instanceof TwoWayAnovaWithInteractionsAnalyzer );
     }
+
+//    /**
+//     * Tests determineAnalysis.
+//     * <p>
+//     * 2 experimental factors
+//     * <p>
+//     * 2 factor value / experimental factor
+//     * <p>
+//     * no replicates
+//     * <p>
+//     * Expected analyzer: {@link TwoWayAnovaWithoutInteractionsAnalyzer}
+//     */
+//    public void testDetermineAnalysisB() {
+//        super.configureTestDataForTwoWayAnovaWithoutInteractions();
+//        AbstractAnalyzer analyzer = analysis.determineAnalysis( expressionExperiment, quantitationType,
+//                bioAssayDimension );
+//        assertTrue( analyzer instanceof TwoWayAnovaWithoutInteractionsAnalyzer );
+//    }
 
 }
