@@ -42,6 +42,11 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerTest
 
     TwoWayAnovaWithoutInteractionsAnalyzer analyzer = new TwoWayAnovaWithoutInteractionsAnalyzer();
 
+    @Override
+    protected void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
+    }
+
     /**
      * Tests the TwoWayAnova method.
      */

@@ -41,31 +41,42 @@ public class DifferentialExpessionAnalysisTest extends BaseAnalyzerTest {
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
+
         analysis = new DifferentialExpressionAnalysis();
     }
 
+    /**
+     * Tests determineAnalysis.
+     * <p>
+     * 2 experimental factors
+     * <p>
+     * 2 factor value / experimental factor
+     * <p>
+     * Expected analyzer: {@link TwoWayAnovaWithoutInteractionsAnalyzer}
+     */
     public void testDetermineAnalysis() {
-        analysis.determineAnalysis( ee, quantitationTypeToUse, bioAssayDimension, efs );
+        AbstractAnalyzer analyzer = analysis.determineAnalysis( ee, quantitationTypeToUse, bioAssayDimension );
+        assertTrue( analyzer instanceof TwoWayAnovaWithoutInteractionsAnalyzer );
     }
 
-    /**
-     * Tests Analyze.
-     * <p>
-     * Expected Result: UnsupportedOperationException not null.
-     * 
-     * @throws Exception
-     */
-    public void testAnalyze() {
-        // TODO FIXME
-        UnsupportedOperationException ex = null;
-        try {
-            // analysis.analyze( ee, quantitationTypeToUse, bioAssayDimension, efs );
-        } catch ( UnsupportedOperationException e ) {
-            e.printStackTrace();
-            ex = e;
-        } finally {
-            assertNotNull( ex );
-        }
-    }
+    // /**
+    // * Tests analyze.
+    // * <p>
+    // * Expected Result: UnsupportedOperationException not null.
+    // *
+    // * @throws Exception
+    // */
+    // public void testAnalyze() {
+    // TODO FIXME
+    // UnsupportedOperationException ex = null;
+    // try {
+    // analysis.analyze( ee, quantitationTypeToUse, bioAssayDimension );
+    // } catch ( UnsupportedOperationException e ) {
+    // e.printStackTrace();
+    // ex = e;
+    // } finally {
+    // assertNull( ex );
+    // }
+    // }
 
 }

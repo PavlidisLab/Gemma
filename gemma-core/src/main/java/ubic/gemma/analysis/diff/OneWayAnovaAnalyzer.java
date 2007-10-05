@@ -55,8 +55,10 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
      */
     @Override
     public Map<DesignElement, Double> getPValues( ExpressionExperiment expressionExperiment,
-            QuantitationType quantitationType, BioAssayDimension bioAssayDimension,
-            Collection<ExperimentalFactor> experimentalFactors ) {
+            QuantitationType quantitationType, BioAssayDimension bioAssayDimension ) {
+
+        Collection<ExperimentalFactor> experimentalFactors = expressionExperiment.getExperimentalDesign()
+                .getExperimentalFactors();
 
         if ( experimentalFactors.size() != 1 )
             throw new RuntimeException( "One way anova supports one experimental factor.  Received "

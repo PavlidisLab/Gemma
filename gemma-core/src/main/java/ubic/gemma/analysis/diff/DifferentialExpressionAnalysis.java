@@ -59,15 +59,13 @@ public class DifferentialExpressionAnalysis {
      * @param expressionExperiment
      * @param quantitationType
      * @param bioAssayDimension
-     * @param experimentalFactors
      */
     public void analyze( ExpressionExperiment expressionExperiment, QuantitationType quantitationType,
-            BioAssayDimension bioAssayDimension, Collection<ExperimentalFactor> experimentalFactors ) {
+            BioAssayDimension bioAssayDimension ) {
 
-        AbstractAnalyzer analyzer = determineAnalysis( expressionExperiment, quantitationType, bioAssayDimension,
-                experimentalFactors );
+        AbstractAnalyzer analyzer = determineAnalysis( expressionExperiment, quantitationType, bioAssayDimension );
 
-        pvalues = analyzer.getPValues( expressionExperiment, quantitationType, bioAssayDimension, experimentalFactors );
+        pvalues = analyzer.getPValues( expressionExperiment, quantitationType, bioAssayDimension );
 
     }
 
@@ -89,8 +87,10 @@ public class DifferentialExpressionAnalysis {
      * @return
      */
     protected AbstractAnalyzer determineAnalysis( ExpressionExperiment expressionExperiment,
-            QuantitationType quantitationType, BioAssayDimension bioAssayDimension,
-            Collection<ExperimentalFactor> experimentalFactors ) {
+            QuantitationType quantitationType, BioAssayDimension bioAssayDimension ) {
+
+        Collection<ExperimentalFactor> experimentalFactors = expressionExperiment.getExperimentalDesign()
+                .getExperimentalFactors();
 
         if ( colIsEmpty( experimentalFactors ) ) {
             throw new RuntimeException(
@@ -138,13 +138,12 @@ public class DifferentialExpressionAnalysis {
                             + factorValues.size()
                             + " factor value(s).  Cannot execute differential expression analysis." );
                 }
-                /* Check for block design and execute two way anova (with or without interactions). */
-                if ( !AnalyzerHelper.blockComplete( expressionExperiment, quantitationType, bioAssayDimension ) ) {
-                    return new TwoWayAnovaWithoutInteractionsAnalyzer();
-                } else {
-                    throw new UnsupportedOperationException(
-                            "Two way ANOVA with interactions unsupported at this time." );
-                }
+            }
+            /* Check for block design and execute two way anova (with or without interactions). */
+            if ( !AnalyzerHelper.blockComplete( expressionExperiment, quantitationType, bioAssayDimension ) ) {
+                return new TwoWayAnovaWithoutInteractionsAnalyzer();
+            } else {
+                throw new UnsupportedOperationException( "Two way ANOVA with interactions unsupported at this time." );
             }
         }
 

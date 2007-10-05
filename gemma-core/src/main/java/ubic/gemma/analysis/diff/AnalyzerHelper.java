@@ -84,7 +84,10 @@ public class AnalyzerHelper {
         /* first, get all the biomaterials */
         Collection<BioMaterial> biomaterials = getBioMaterialsForAssays( matrix );
 
-        /* second, make sure each biomaterial has a factor value from one of the experimental factors */
+        /*
+         * second, make sure each biomaterial has factor values from one experimental factor paired with factor values
+         * from the other experimental factors
+         */
         Collection<ExperimentalFactor> efs = expressionExperiment.getExperimentalDesign().getExperimentalFactors();
 
         for ( ExperimentalFactor ef : efs ) {

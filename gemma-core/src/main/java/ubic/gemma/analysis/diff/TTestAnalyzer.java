@@ -66,8 +66,10 @@ public class TTestAnalyzer extends AbstractAnalyzer {
      */
     @Override
     public Map<DesignElement, Double> getPValues( ExpressionExperiment expressionExperiment,
-            QuantitationType quantitationType, BioAssayDimension bioAssayDimension,
-            Collection<ExperimentalFactor> experimentalFactors ) {
+            QuantitationType quantitationType, BioAssayDimension bioAssayDimension ) {
+
+        Collection<ExperimentalFactor> experimentalFactors = expressionExperiment.getExperimentalDesign()
+                .getExperimentalFactors();
 
         if ( experimentalFactors.size() != 1 )
             throw new RuntimeException( "T-test supports 1 experimental factor.  Received "

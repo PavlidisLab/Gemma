@@ -56,8 +56,10 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractAnalyzer {
      */
     @Override
     public Map<DesignElement, Double> getPValues( ExpressionExperiment expressionExperiment,
-            QuantitationType quantitationType, BioAssayDimension bioAssayDimension,
-            Collection<ExperimentalFactor> experimentalFactors ) {
+            QuantitationType quantitationType, BioAssayDimension bioAssayDimension ) {
+
+        Collection<ExperimentalFactor> experimentalFactors = expressionExperiment.getExperimentalDesign()
+                .getExperimentalFactors();
 
         if ( experimentalFactors.size() != 2 )
             throw new RuntimeException( "Two way anova supports 2 experimental factors.  Received "
