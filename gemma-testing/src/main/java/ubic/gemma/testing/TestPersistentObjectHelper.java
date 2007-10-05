@@ -73,12 +73,9 @@ import ubic.gemma.util.UserConstants;
 public class TestPersistentObjectHelper {
 
     public static final int NUM_FACTOR_VALUES = 2;
-    /**
-     * 
-     */
     public static final int NUM_EXPERIMENTAL_FACTORS = 2;
     public static final int NUM_QUANTITATION_TYPES = 2;
-    public static final int NUM_BIOMATERIALS = 6;
+    public static final int NUM_BIOMATERIALS = 8;
     private static final int RANDOM_STRING_LENGTH = 10;
     public static final int TEST_ELEMENT_COLLECTION_SIZE = 6;
     private PersisterHelper persisterHelper;
