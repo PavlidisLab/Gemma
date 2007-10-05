@@ -24,6 +24,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
  */
 public class CoexpressionWrapper extends TableDecorator {
 
+    private static final String GEMMA_ICON = "<img src=\"/Gemma/images/logo/gemmaTiny.gif\" />";
     Log log = LogFactory.getLog( this.getClass() );
 
     /**
@@ -41,9 +42,6 @@ public class CoexpressionWrapper extends TableDecorator {
         link.append( "\">" );
         link.append( StringUtils.abbreviate( object.getGeneName(), 20 ) );
         link.append( "</a>" );
-
-        // build the GET parameters
-        link.append( getCoexpressionLink( object, "<img src=\"/Gemma/images/logo/gemmaTiny.gif\" />" ) );
 
         return link.toString();
     }
@@ -206,6 +204,11 @@ public class CoexpressionWrapper extends TableDecorator {
                 + "&height=10&color=black&spacing=0&data=" + object.getExperimentBitList() + "\" /></span>";
     }
 
+    public String getGemmaLink() {
+        CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
+        return getCoexpressionLink( object, GEMMA_ICON );
+    }
+
     /**
      * Function to build a GET coexpression link, given a coexpressionValueObect
      * 
@@ -224,7 +227,7 @@ public class CoexpressionWrapper extends TableDecorator {
         // add in the current gene with exactSearch
         // paramList.add( "searchString=" + object.getGeneName() );
         paramList.add( "id=" + object.getGeneId() );
-        paramList.add("taxon=" + object.getTaxonId());
+        paramList.add( "taxon=" + object.getTaxonId() );
         paramList.add( "exactSearch=on" );
 
         // put in the tmm link
@@ -243,7 +246,7 @@ public class CoexpressionWrapper extends TableDecorator {
      */
     public String getCoexpressionLink() {
         CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
-        return getCoexpressionLink( object, "<img src=\"/Gemma/images/logo/gemmaTiny.gif\" />" );
+        return getCoexpressionLink( object, GEMMA_ICON );
     }
 
     /**

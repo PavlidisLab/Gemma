@@ -7,8 +7,7 @@
 	<c:if test="${not empty status.errorMessages}">
 		<div class="error">
 			<c:forEach var="error" items="${status.errorMessages}">
-				<img src="<c:url value="/images/iconWarning.gif"/>"
-					alt="<fmt:message key="icon.warning"/>" class="icon" />
+				<img src="<c:url value="/images/iconWarning.gif"/>" alt="<fmt:message key="icon.warning"/>" class="icon" />
 				<c:out value="${error}" escapeXml="false" />
 				<br />
 			</c:forEach>
@@ -24,14 +23,12 @@
 </c:if>
 
 <c:if test="${coexpressedGenes != null}">
-	<title>Coexpression search for <c:out
-			value="${sourceGene.officialSymbol}" /> (<c:out
+	<title>Coexpression search for <c:out value="${sourceGene.officialSymbol}" /> (<c:out
 			value="${sourceGene.officialName}" />)</title>
 	<h2>
 		Results for
-		<a
-			href="/Gemma/gene/showGene.html?id=<c:out value="${sourceGene.id}" />">
-			<c:out value="${sourceGene.officialSymbol}" /> </a> (
+		<a href="/Gemma/gene/showGene.html?id=<c:out value="${sourceGene.id}" />"> <c:out
+				value="${sourceGene.officialSymbol}" /> </a> (
 		<c:out value="${sourceGene.officialName}" />
 		)
 		<br />
@@ -53,7 +50,7 @@
 
 	</h4>
 
-	<table class="datasummary" style="float:right">
+	<table class="datasummary" style="float: right">
 		<tr>
 			<td colspan=2 align=center>
 				<b> Search Summary </b>
@@ -143,8 +140,7 @@
 	</table>
 </c:if>
 
-<form method="post" name="coexpressionSearch"
-	action="<c:url value="/searchCoexpression.html"/>">
+<form method="post" name="coexpressionSearch" action="<c:url value="/searchCoexpression.html"/>">
 
 	<table class='searchTable'>
 		<tr>
@@ -185,33 +181,27 @@
 							</c:forEach>
 						</select>
 
-						<input id="searchStringTextInput" disabled style="display:none"
-							type="text" size=15 name="<c:out value="${status.expression}"/>"
-							value="${status.value}" />
-						<input id="geneIdSearch" style="display:none" type="text" size=15
-							name="geneIdSearch" value="true" />
+						<input id="searchStringTextInput" disabled style="display: none" type="text" size=15
+							name="<c:out value="${status.expression}"/>" value="${status.value}" />
+						<input id="geneIdSearch" style="display: none" type="text" size=15 name="geneIdSearch" value="true" />
 					</spring:bind>
 					<spring:bind path="coexpressionSearchCommand.exactSearch">
-						<input style="display:none" id="exactSearchCheckbox"
-							type="checkbox" name="${status.expression}"
+						<input style="display: none" id="exactSearchCheckbox" type="checkbox" name="${status.expression}"
 							<c:if test="${status.value == 'on'}">checked="checked"</c:if> />
 						<input type="hidden" name="_<c:out value="${status.expression}"/>">
 					</spring:bind>
-					<span id="exactSearchLabel" style="display:none"> Exact
-						search </span>
+					<span id="exactSearchLabel" style="display: none"> Exact search </span>
 				</c:if>
 
 
 
 				<c:if test="${genes == null}">
 					<spring:bind path="coexpressionSearchCommand.searchString">
-						<input type="text" size=15
-							name="<c:out value="${status.expression}"/>"
+						<input type="text" size=15 name="<c:out value="${status.expression}"/>"
 							value="<c:out value="${sourceGene.officialSymbol}"/>" />
 					</spring:bind>
 					<spring:bind path="coexpressionSearchCommand.exactSearch">
-						<input id="exactSearchCheckbox" type="checkbox"
-							name="${status.expression}"
+						<input id="exactSearchCheckbox" type="checkbox" name="${status.expression}"
 							<c:if test="${status.value == 'on'}">checked="checked"</c:if> />
 						<input type="hidden" name="_<c:out value="${status.expression}"/>">
 					</spring:bind>
@@ -232,9 +222,7 @@
 			</td>
 			<td>
 				<spring:bind path="coexpressionSearchCommand.eeSearchString">
-					<input type="text" size=30
-						name="<c:out value="${status.expression}"/>"
-						value="<c:out value="${status.value}"/>" />
+					<input type="text" size=30 name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>" />
 				</spring:bind>
 			</td>
 			<td>
@@ -256,8 +244,7 @@
 					<select name="${status.expression}">
 						<c:forEach items="${taxa}" var="taxon">
 							<spring:transform value="${taxon}" var="scientificName" />
-							<option value="${scientificName}"
-								<c:if test="${status.value == scientificName}">selected </c:if>>
+							<option value="${scientificName}" <c:if test="${status.value == scientificName}">selected </c:if>>
 								${scientificName}
 							</option>
 						</c:forEach>
@@ -268,8 +255,8 @@
 			<td>
 				<a class="helpLink" href="?"
 					onclick="showHelpTip(event, 
-				'Species to use in the coexpression search'); return false">
-					<img src="/Gemma/images/help.png" /> </a>
+				'Species to use in the coexpression search'); return false"> <img
+						src="/Gemma/images/help.png" /> </a>
 			</td>
 		</tr>
 
@@ -279,9 +266,7 @@
 			</td>
 			<td>
 				<spring:bind path="coexpressionSearchCommand.stringency">
-					<input type="text" size=1
-						name="<c:out value="${status.expression}"/>"
-						value="<c:out value="${status.value}"/>" />
+					<input type="text" size=1 name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>" />
 				</spring:bind>
 			</td>
 			<td>
@@ -296,8 +281,7 @@
 				&nbsp;
 			</td>
 			<td>
-				<input type="submit" class="button" name="submit"
-					value="<fmt:message key="button.search"/>" />
+				<input type="submit" class="button" name="submit" value="<fmt:message key="button.search"/>" />
 			</td>
 			<td>
 				&nbsp;
@@ -311,62 +295,41 @@
 	<c:if test="${numLinkedExpressionExperiments != 0}">
 
 		<script type='text/javascript' src='/Gemma/scripts/prototype.js'></script>
-		<script type='text/javascript'
-			src='/Gemma/scripts/expandableObjects.js'></script>
+		<script type='text/javascript' src='/Gemma/scripts/expandableObjects.js'></script>
 
-		<!-- Toggles for the expand/hide datasetList table -->
-		<span class="datasetList"
-			onclick="return toggleVisibility('datasetList')"> <img
-				src="/Gemma/images/chart_organisation_add.png" /> </span>
-		<span class="datasetList" style="display:none"
-			onclick="return toggleVisibility('datasetList')"> <img
-				src="/Gemma/images/chart_organisation_delete.png" /> </span>
+		<div style="float: left; padding: 2px;" onclick="Effect.toggle('datasetList', 'blind', {duration:0.1})">
+			<img src="/Gemma/images/plus.gif" />
+		</div>
 	</c:if>
-	<b> <c:out value="${numUsedExpressionExperiments}" /> datasets had
-		relevent coexpression data <br /> &emsp;&nbsp; <c:out
-			value="${numQuerySpecificEEs}" /> datasets probes for <c:out
-			value="${sourceGene.officialSymbol}" /> without detected
-		cross-hybridization potential. <c:if
-			test="${numLinkedExpressionExperiments != 0}">
-			<a href="#" onclick="return toggleVisibility('datasetList')">(details)</a>
-		</c:if> </b>
+	<div style="margin-left: 16px;">
+		<b> <c:out value="${numUsedExpressionExperiments}" /> datasets have relevent coexpression data <br /> <c:out
+				value="${numQuerySpecificEEs}" /> datasets have <c:out value="${sourceGene.officialSymbol}" /> probes with no
+			detected cross-hybridization potential</b>
+		<br />
+	</div>
+	<div id="datasetList" style="display: none">
+		<%-- inner div needed by Effect.toggle  --%>
+		<div>
 
-	<br />
-	<div class="datasetList" style="display:none">
+			<display:table pagesize="200" name="expressionExperiments" sort="list" defaultsort="2" class="list" requestURI=""
+				id="expressionExperimentList"
+				decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
 
-		<display:table pagesize="200" name="expressionExperiments" sort="list"
-			defaultsort="2" class="list" requestURI=""
-			id="expressionExperimentList"
-			decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
+				<display:column property="rawCoexpressionLinkCount" sortable="true" defaultorder="descending"
+					titleKey="expressionExperiment.rawLinkcount" />
 
-			<display:column property="rawCoexpressionLinkCount" sortable="true"
-				defaultorder="descending"
-				titleKey="expressionExperiment.rawLinkcount" />
-
-			<display:column property="coexpressionLinkCount" sortable="true"
-				defaultorder="ascending" titleKey="expressionExperiment.linkcount" />
-
-			<display:column property="nameLink" sortable="true"
-				sortProperty="name" titleKey="expressionExperiment.name" />
-
-			<display:column property="shortName" sortable="true"
-				titleKey="expressionExperiment.shortName" />
-
-			<display:column property="specific" sortable="true"
-				titleKey="expressionExperiment.specific" />
-
-
-			<authz:authorize ifAnyGranted="admin">
-				<display:column property="arrayDesignLink" sortable="true"
-					title="Arrays" />
-			</authz:authorize>
-
-
-			<display:column property="assaysLink" sortable="true"
-				titleKey="bioAssays.title" />
-
-			<display:setProperty name="basic.empty.showtable" value="false" />
-		</display:table>
+				<display:column property="coexpressionLinkCount" sortable="true" defaultorder="ascending"
+					titleKey="expressionExperiment.linkcount" />
+				<display:column property="nameLink" sortable="true" sortProperty="name" titleKey="expressionExperiment.name" />
+				<display:column property="shortName" sortable="true" titleKey="expressionExperiment.shortName" />
+				<display:column property="specific" sortable="true" titleKey="expressionExperiment.specific" />
+				<authz:authorize ifAnyGranted="admin">
+					<display:column property="arrayDesignLink" sortable="true" title="Arrays" />
+				</authz:authorize>
+				<display:column property="assaysLink" sortable="true" titleKey="bioAssays.title" />
+				<display:setProperty name="basic.empty.showtable" value="false" />
+			</display:table>
+		</div>
 	</div>
 </c:if>
 
@@ -383,27 +346,24 @@
 			
 			var text3 = '<Gemma:help helpFile="ExpressionExperimentBits.html"/>';
 			function getExpBitsHelp(event) {showWideHelpTip(event,text3); }
-		</script>
+			
+			var text4 = 'Make a gene in the list the query';
+			function getQueryHelp(event) {showWideHelpTip(event,text4); }
+</script>
 
-<div id="coexpressed-genes" style="width:600px;">
-	<display:table name="coexpressedGenes" class="list" sort="list"
-		requestURI="" id="foundGenes"
-		decorator="ubic.gemma.web.taglib.displaytag.coexpressionSearch.CoexpressionWrapper"
-		pagesize="200">
-		<display:column property="nameLink" sortable="true"
-			sortProperty="geneName" titleKey="gene.name" />
-		<display:column property="geneOfficialName" maxLength="50"
-			sortable="true" titleKey="gene.officialName" />
-		<display:column property="linkCount" sortable="true"
-			sortProperty="maxLinkCount"
-			title="Support <a class='helpLink' name='?' href='' onclick='getCoexpressionHelp(event);return false;'>
-					<img src='/Gemma/images/help.png' /> </a>" />
-		<display:column property="goOverlap" sortable="true"
-			title="GO overlap <a  class='helpLink' name='?' href='' onclick='getOverlapHelp(event);return false;'>
-					<img src='/Gemma/images/help.png' /> </a>" />
+<div id="coexpressed-genes" style="width: 600px;">
+	<display:table name="coexpressedGenes" class="list" sort="list" requestURI="" id="foundGenes"
+		decorator="ubic.gemma.web.taglib.displaytag.coexpressionSearch.CoexpressionWrapper" pagesize="200">
+		<display:column property="gemmaLink" sortable="false"
+			title="<a class='helpLink' name='?' href='' onclick='getQueryHelp(event);return false;' <img src='/Gemma/images/help.png' /> </a>" />
+		<display:column property="nameLink" sortable="true" sortProperty="geneName" title="Gene" />
+		<display:column property="geneOfficialName" maxLength="40" sortable="true" titleKey="gene.officialName" />
+		<display:column property="linkCount" sortable="true" sortProperty="maxLinkCount" style="width:50px;"
+			title="Support <a class='helpLink' name='?' href='' onclick='getCoexpressionHelp(event);return false;'><img style='float:right' src='/Gemma/images/help.png' /> </a>" />
+		<display:column property="goOverlap" sortable="true" style="width:50px;"
+			title="GO <a  class='helpLink' name='?' href='' onclick='getOverlapHelp(event);return false;'><img style='float:right' src='/Gemma/images/help.png' /> </a>" />
 		<display:column property="experimentBitImage" sortable="false"
-			title="exps <a  class='helpLink' name='?' href='' onclick='getExpBitsHelp(event);return false;'>
-					<img src='/Gemma/images/help.png' /> </a>" />
+			title="Exprs <a  class='helpLink' name='?' href='' onclick='getExpBitsHelp(event);return false;'><img style='float:right' src='/Gemma/images/help.png' /> </a>" />
 		<display:setProperty name="basic.empty.showtable" value="false" />
 	</display:table>
 </div>
@@ -417,49 +377,39 @@
 		<c:if test="${numLinkedPredictedExpressionExperiments != 0}">
 
 			<!-- Toggles for the expand/hide datasetList table -->
-			<span class="predictedDatasetList"
-				onclick="return toggleVisibility('predictedDatasetList')"> <img
+			<span class="predictedDatasetList" onclick="return toggleVisibility('predictedDatasetList')"> <img
 					src="/Gemma/images/chart_organisation_add.png" /> </span>
-			<span class="predictedDatasetList" style="display:none"
-				onclick="return toggleVisibility('predictedDatasetList')"> <img
-					src="/Gemma/images/chart_organisation_delete.png" /> </span>
+			<span class="predictedDatasetList" style="display: none" onclick="return toggleVisibility('predictedDatasetList')">
+				<img src="/Gemma/images/chart_organisation_delete.png" /> </span>
 		</c:if>
-		<b> <c:out value="${numUsedPredictedExpressionExperiments}" />
-			datasets that had relevent Predicted Gene Coexpression data <c:if
-				test="${numLinkedPredictedExpressionExperiments != 0}">
-				<a href="#"
-					onclick="return toggleVisibility('predictedDatasetList')">(details)</a>
+		<b> <c:out value="${numUsedPredictedExpressionExperiments}" /> datasets that had relevent Predicted Gene
+			Coexpression data <c:if test="${numLinkedPredictedExpressionExperiments != 0}">
+				<a href="#" onclick="return toggleVisibility('predictedDatasetList')">(details)</a>
 			</c:if> </b>
 
 		<br />
-		<div class="predictedDatasetList" style="display:none">
+		<div class="predictedDatasetList" style="display: none">
 
-			<display:table pagesize="100" name="predictedExpressionExperiments"
-				sort="list" defaultsort="2" class="list" requestURI=""
-				id="predictedExpressionExperimentList"
+			<display:table pagesize="100" name="predictedExpressionExperiments" sort="list" defaultsort="2" class="list"
+				requestURI="" id="predictedExpressionExperimentList"
 				decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
 
-				<display:column property="rawCoexpressionLinkCount" sortable="true"
-					defaultorder="descending"
+				<display:column property="rawCoexpressionLinkCount" sortable="true" defaultorder="descending"
 					titleKey="expressionExperiment.rawLinkcount" />
 
-				<display:column property="coexpressionLinkCount" sortable="true"
-					defaultorder="descending" titleKey="expressionExperiment.linkcount" />
+				<display:column property="coexpressionLinkCount" sortable="true" defaultorder="descending"
+					titleKey="expressionExperiment.linkcount" />
 
-				<display:column property="nameLink" sortable="true"
-					sortProperty="name" titleKey="expressionExperiment.name" />
+				<display:column property="nameLink" sortable="true" sortProperty="name" titleKey="expressionExperiment.name" />
 
-				<display:column property="shortName" sortable="true"
-					titleKey="expressionExperiment.shortName" />
+				<display:column property="shortName" sortable="true" titleKey="expressionExperiment.shortName" />
 
 				<authz:authorize ifAnyGranted="admin">
-					<display:column property="arrayDesignLink" sortable="true"
-						title="Arrays" />
+					<display:column property="arrayDesignLink" sortable="true" title="Arrays" />
 				</authz:authorize>
 
 
-				<display:column property="assaysLink" sortable="true"
-					titleKey="bioAssays.title" />
+				<display:column property="assaysLink" sortable="true" titleKey="bioAssays.title" />
 
 				<display:setProperty name="basic.empty.showtable" value="false" />
 			</display:table>
@@ -469,16 +419,11 @@
 	<br />
 
 
-	<display:table name="coexpressedPredictedGenes" class="list"
-		sort="list" requestURI="" id="predictedFoundGenes"
-		decorator="ubic.gemma.web.taglib.displaytag.coexpressionSearch.CoexpressionWrapper"
-		pagesize="200">
-		<display:column property="nameLink" sortable="true"
-			sortProperty="geneName" titleKey="gene.name" />
-		<display:column property="geneOfficialName" maxLength="50"
-			sortable="true" titleKey="gene.officialName" />
-		<display:column property="simpleLinkCount" sortable="true"
-			sortProperty="maxLinkCount"
+	<display:table name="coexpressedPredictedGenes" class="list" sort="list" requestURI="" id="predictedFoundGenes"
+		decorator="ubic.gemma.web.taglib.displaytag.coexpressionSearch.CoexpressionWrapper" pagesize="200">
+		<display:column property="nameLink" sortable="true" sortProperty="geneName" titleKey="gene.name" />
+		<display:column property="geneOfficialName" maxLength="50" sortable="true" titleKey="gene.officialName" />
+		<display:column property="simpleLinkCount" sortable="true" sortProperty="maxLinkCount"
 			title="Support <a class='helpLink' name='?' href='' onclick='getCoexpressionHelp(event);return false;'>
 					<img src='/Gemma/images/help.png' /> </a>" />
 		<display:column property="goOverlap" sortable="true"
@@ -498,48 +443,39 @@
 		<c:if test="${numLinkedAlignedExpressionExperiments != 0}">
 
 			<!-- Toggles for the expand/hide datasetList table -->
-			<span class="alignedDatasetList"
-				onclick="return toggleVisibility('alignedDatasetList')"> <img
+			<span class="alignedDatasetList" onclick="return toggleVisibility('alignedDatasetList')"> <img
 					src="/Gemma/images/chart_organisation_add.png" /> </span>
-			<span class="alignedDatasetList" style="display:none"
-				onclick="return toggleVisibility('alignedDatasetList')"> <img
-					src="/Gemma/images/chart_organisation_delete.png" /> </span>
+			<span class="alignedDatasetList" style="display: none" onclick="return toggleVisibility('alignedDatasetList')">
+				<img src="/Gemma/images/chart_organisation_delete.png" /> </span>
 		</c:if>
-		<b> <c:out value="${numUsedAlignedExpressionExperiments}" />
-			datasets had relevent Probe Aligned Region Coexpression data <c:if
-				test="${numLinkedAlignedExpressionExperiments != 0}">
+		<b> <c:out value="${numUsedAlignedExpressionExperiments}" /> datasets had relevent Probe Aligned Region
+			Coexpression data <c:if test="${numLinkedAlignedExpressionExperiments != 0}">
 				<a href="#" onclick="return toggleVisibility('alignedDatasetList')">(details)</a>
 			</c:if> </b>
 
 		<br />
-		<div class="alignedDatasetList" style="display:none">
+		<div class="alignedDatasetList" style="display: none">
 
-			<display:table pagesize="100" name="alignedExpressionExperiments"
-				sort="list" defaultsort="2" class="list" requestURI=""
-				id="alignedExpressionExperimentList"
+			<display:table pagesize="100" name="alignedExpressionExperiments" sort="list" defaultsort="2" class="list"
+				requestURI="" id="alignedExpressionExperimentList"
 				decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
 
-				<display:column property="rawCoexpressionLinkCount" sortable="true"
-					defaultorder="descending"
+				<display:column property="rawCoexpressionLinkCount" sortable="true" defaultorder="descending"
 					titleKey="expressionExperiment.rawLinkcount" />
 
-				<display:column property="coexpressionLinkCount" sortable="true"
-					defaultorder="descending" titleKey="expressionExperiment.linkcount" />
+				<display:column property="coexpressionLinkCount" sortable="true" defaultorder="descending"
+					titleKey="expressionExperiment.linkcount" />
 
-				<display:column property="nameLink" sortable="true"
-					sortProperty="name" titleKey="expressionExperiment.name" />
+				<display:column property="nameLink" sortable="true" sortProperty="name" titleKey="expressionExperiment.name" />
 
-				<display:column property="shortName" sortable="true"
-					titleKey="expressionExperiment.shortName" />
+				<display:column property="shortName" sortable="true" titleKey="expressionExperiment.shortName" />
 
 				<authz:authorize ifAnyGranted="admin">
-					<display:column property="arrayDesignLink" sortable="true"
-						title="Arrays" />
+					<display:column property="arrayDesignLink" sortable="true" title="Arrays" />
 				</authz:authorize>
 
 
-				<display:column property="assaysLink" sortable="true"
-					titleKey="bioAssays.title" />
+				<display:column property="assaysLink" sortable="true" titleKey="bioAssays.title" />
 
 				<display:setProperty name="basic.empty.showtable" value="false" />
 			</display:table>
@@ -549,16 +485,11 @@
 	<br />
 
 
-	<display:table name="coexpressedAlignedRegions" class="list"
-		sort="list" requestURI="" id="alignedFoundGenes"
-		decorator="ubic.gemma.web.taglib.displaytag.coexpressionSearch.CoexpressionWrapper"
-		pagesize="200">
-		<display:column property="nameLink" sortable="true"
-			sortProperty="geneName" titleKey="gene.name" />
-		<display:column property="geneOfficialName" maxLength="50"
-			sortable="true" titleKey="gene.officialName" />
-		<display:column property="simpleLinkCount" sortable="true"
-			sortProperty="maxLinkCount"
+	<display:table name="coexpressedAlignedRegions" class="list" sort="list" requestURI="" id="alignedFoundGenes"
+		decorator="ubic.gemma.web.taglib.displaytag.coexpressionSearch.CoexpressionWrapper" pagesize="200">
+		<display:column property="nameLink" sortable="true" sortProperty="geneName" titleKey="gene.name" />
+		<display:column property="geneOfficialName" maxLength="50" sortable="true" titleKey="gene.officialName" />
+		<display:column property="simpleLinkCount" sortable="true" sortProperty="maxLinkCount"
 			title="Support <a class='helpLink' name='?' href='' onclick='getCoexpressionHelp(event);return false;'>
 					<img src='/Gemma/images/help.png' /> </a>" />
 		<display:column property="goOverlap" sortable="true"

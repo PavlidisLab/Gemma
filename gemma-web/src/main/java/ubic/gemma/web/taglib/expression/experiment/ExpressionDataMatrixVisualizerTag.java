@@ -56,7 +56,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
     private static final double IMAGE_HEADER_EM_HEIGHT = 8.5;
 
     // Was 0.825, which doesn't work any more.
-    private static final double MAGIC_EM_SIZE = .755; 
+    private static final double MAGIC_EM_SIZE = .70; 
 
     private static final long serialVersionUID = 6403196597063627020L;
 
