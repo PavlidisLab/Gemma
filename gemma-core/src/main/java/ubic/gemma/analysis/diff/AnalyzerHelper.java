@@ -59,6 +59,7 @@ public class AnalyzerHelper {
             checkBlockDesign( expressionExperiment, quantitationType, bioAssayDimension );
             checkBiologicalReplicates( expressionExperiment, quantitationType, bioAssayDimension );
         } catch ( Exception e ) {
+            e.printStackTrace();
             ex = e;
         } finally {
             if ( ex != null ) return false;

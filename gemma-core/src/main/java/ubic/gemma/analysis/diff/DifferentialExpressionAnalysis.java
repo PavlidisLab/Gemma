@@ -143,7 +143,7 @@ public class DifferentialExpressionAnalysis {
             if ( !AnalyzerHelper.blockComplete( expressionExperiment, quantitationType, bioAssayDimension ) ) {
                 return new TwoWayAnovaWithoutInteractionsAnalyzer();
             } else {
-                throw new UnsupportedOperationException( "Two way ANOVA with interactions unsupported at this time." );
+                return new TwoWayAnovaWithInteractionsAnalyzer();
             }
         }
 

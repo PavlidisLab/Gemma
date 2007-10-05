@@ -27,7 +27,7 @@ import org.apache.commons.logging.LogFactory;
  * @author keshav
  * @version $Id$
  */
-public class DifferentialExpessionAnalysisTest extends BaseAnalyzerTest {
+public class DifferentialExpessionAnalysisTest extends BaseAnalyzerConfigurationTest {
 
     private Log log = LogFactory.getLog( this.getClass() );
 
@@ -36,14 +36,31 @@ public class DifferentialExpessionAnalysisTest extends BaseAnalyzerTest {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.analysis.diff.BaseAnalyzerTest#onSetUpInTransaction()
+     * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#onSetUpInTransaction()
      */
     @Override
-    protected void onSetUpInTransaction() throws Exception {
+    public void onSetUpInTransaction() {
         super.onSetUpInTransaction();
 
         analysis = new DifferentialExpressionAnalysis();
     }
+
+    // /**
+    // * Tests determineAnalysis.
+    // * <p>
+    // * 2 experimental factors
+    // * <p>
+    // * 2 factor value / experimental factor
+    // * <p>
+    // * complete block design and biological replicates
+    // * <p>
+    // * Expected analyzer: {@link TwoWayAnovaWithInteractionsAnalyzer}
+    // */
+    // public void testDetermineAnalysisA() {
+    // AbstractAnalyzer analyzer = analysis.determineAnalysis( expressionExperiment, quantitationType,
+    // bioAssayDimension );
+    // assertTrue( analyzer instanceof TwoWayAnovaWithInteractionsAnalyzer );
+    // }
 
     /**
      * Tests determineAnalysis.
@@ -52,31 +69,15 @@ public class DifferentialExpessionAnalysisTest extends BaseAnalyzerTest {
      * <p>
      * 2 factor value / experimental factor
      * <p>
+     * no replicates
+     * <p>
      * Expected analyzer: {@link TwoWayAnovaWithoutInteractionsAnalyzer}
      */
-    public void testDetermineAnalysis() {
-        AbstractAnalyzer analyzer = analysis.determineAnalysis( ee, quantitationTypeToUse, bioAssayDimension );
+    public void testDetermineAnalysisB() {
+        super.configureTestDataForTwoWayAnovaWithoutInteractions();
+        AbstractAnalyzer analyzer = analysis.determineAnalysis( expressionExperiment, quantitationType,
+                bioAssayDimension );
         assertTrue( analyzer instanceof TwoWayAnovaWithoutInteractionsAnalyzer );
     }
-
-    // /**
-    // * Tests analyze.
-    // * <p>
-    // * Expected Result: UnsupportedOperationException not null.
-    // *
-    // * @throws Exception
-    // */
-    // public void testAnalyze() {
-    // TODO FIXME
-    // UnsupportedOperationException ex = null;
-    // try {
-    // analysis.analyze( ee, quantitationTypeToUse, bioAssayDimension );
-    // } catch ( UnsupportedOperationException e ) {
-    // e.printStackTrace();
-    // ex = e;
-    // } finally {
-    // assertNull( ex );
-    // }
-    // }
 
 }
