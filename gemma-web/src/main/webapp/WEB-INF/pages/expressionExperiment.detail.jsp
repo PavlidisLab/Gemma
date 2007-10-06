@@ -3,14 +3,13 @@
 <jsp:useBean id="expressionExperiment" scope="request"
 	class="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" />
 <head>
-<title>
-	Expression experiment <%
+	<title>Expression experiment <%
 	if ( expressionExperiment.getName() != null ) {
 	%>: <jsp:getProperty name="expressionExperiment" property="name" /> <%
  }
  %>
- </title>
- 
+	</title>
+
 	<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
 	<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
@@ -24,10 +23,8 @@
 
 </head>
 
-<form style="float: right;" name="ExpresssionExperimentFilter"
-	action="filterExpressionExperiments.html" method="POST">
-	<a class="helpLink" href="?"
-		onclick="showHelpTip(event, 'Search for another experiment'); return false"><img
+<form style="float: right;" name="ExpresssionExperimentFilter" action="filterExpressionExperiments.html" method="POST">
+	<a class="helpLink" href="?" onclick="showHelpTip(event, 'Search for another experiment'); return false"><img
 			src="<c:url value="/images/help.png"/>" alt="help"> </a>
 	<input type="text" name="filter" size="38" />
 	<input type="submit" value="Find a dataset" />
@@ -52,12 +49,12 @@ if ( expressionExperiment.getName() != null ) {
 <c:if test="${ troubleEvent != null}">
 &nbsp;
 <img src='<c:url value="/images/icons/warning.png"/>' height='16' width='16' alt='trouble'
- title='${ troubleEventDescription }' />
+		title='${ troubleEventDescription }' />
 </c:if>
 <c:if test="${ validatedEvent != null}">
 &nbsp;
 <img src='<c:url value="/images/icons/ok.png"/>' height='16' width='16' alt='validated'
- title='${ validatedEventDescription }' />
+		title='${ validatedEventDescription }' />
 </c:if>
 </content>
 
@@ -105,7 +102,7 @@ if ( expressionExperiment.getName() != null ) {
 			<%
 			if ( expressionExperiment.getDescription() != null ) {
 			%>
-			<div class="clob" style="width:40%;">
+			<div class="clob" style="width: 40%;">
 				<jsp:getProperty name="expressionExperiment" property="description" />
 			</div>
 
@@ -157,8 +154,7 @@ if ( expressionExperiment.getName() != null ) {
 			                    if ( ( expressionExperiment.getInvestigators() ) != null
 			                    && ( expressionExperiment.getInvestigators().size() > 0 ) ) {
 			%>
-			<c:forEach end="0" var="investigator"
-				items="${ expressionExperiment.investigators }">
+			<c:forEach end="0" var="investigator" items="${ expressionExperiment.investigators }">
 				<c:out value="${ investigator.name}" />
 			</c:forEach>
 			<%
@@ -177,8 +173,7 @@ if ( expressionExperiment.getName() != null ) {
 			<fmt:message key="databaseEntry.title" />
 		</td>
 		<td>
-			<Gemma:databaseEntry
-				databaseEntry="${expressionExperiment.accession}" />
+			<Gemma:databaseEntry databaseEntry="${expressionExperiment.accession}" />
 		</td>
 	</tr>
 	<tr>
@@ -189,8 +184,7 @@ if ( expressionExperiment.getName() != null ) {
 			<%
 			if ( expressionExperiment.getPrimaryPublication() != null ) {
 			%>
-			<Gemma:citation
-				citation="${expressionExperiment.primaryPublication }" />
+			<Gemma:citation citation="${expressionExperiment.primaryPublication }" />
 			<%
 			                } else {
 			                out.print( "Primary publication unavailable" );
@@ -205,11 +199,11 @@ if ( expressionExperiment.getName() != null ) {
 			</td>
 			<td>
 				<%
-				                    if ( expressionExperiment.getAuditTrail() != null ) {
-				                    out.print( expressionExperiment.getAuditTrail().getCreationEvent().getDate() );
-				                } else {
-				                    out.print( "Create date unavailable" );
-				                }
+				                if ( expressionExperiment.getAuditTrail() != null ) {
+				                out.print( expressionExperiment.getAuditTrail().getCreationEvent().getDate() );
+				            } else {
+				                out.print( "Create date unavailable" );
+				            }
 				%>
 			</td>
 		</tr>
@@ -245,9 +239,8 @@ if ( expressionExperiment.getName() != null ) {
 		<td>
 			<c:forEach var="arrayDesign" items="${ arrayDesigns }">
 				<c:out value="${ arrayDesign.name}" />
-				<a
-					href="/Gemma/arrays/showArrayDesign.html?id=<c:out value="${ arrayDesign.id}" />">
-					<img src="/Gemma/images/magnifier.png" /> </a>
+				<a href="/Gemma/arrays/showArrayDesign.html?id=<c:out value="${ arrayDesign.id}" />"> <img
+						src="/Gemma/images/magnifier.png" /> </a>
 				<br />
 			</c:forEach>
 
@@ -269,33 +262,42 @@ if ( expressionExperiment.getName() != null ) {
 	</authz:authorize>
 </table>
 
-<h3>Annotation</h3>
+<h3>
+	Annotation
+</h3>
 <authz:authorize ifAnyGranted="admin">
-<!-- This is for the EE annotator  -->
-		<div id="eeAnnotator" class="x-grid-mso" style="padding-left: 2px; padding-right: 2px; overflow: hidden; width:650px; height:30px;"></div>
-		  <script type="text/javascript" src='/Gemma/dwr/interface/OntologyService.js'></script>
-		  <script type='text/javascript' src='/Gemma/dwr/interface/MgedOntologyService.js'></script>
-		  <script type="text/javascript" src="<c:url value='/scripts/ajax/eeAnnotator.js'/>"></script>
+	<!-- This is for the EE annotator  -->
+	<div id="eeAnnotator" class="x-grid-mso"
+		style="padding-left: 2px; padding-right: 2px; overflow: hidden; width: 650px; height: 30px;"></div>
+	<script type="text/javascript" src='/Gemma/dwr/interface/OntologyService.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/MgedOntologyService.js'></script>
+	<script type="text/javascript" src="<c:url value='/scripts/ajax/eeAnnotator.js'/>"></script>
 </authz:authorize>
 
-	<div id="eeAnnotations" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:650px; height:150px;"></div>
-	<input type="hidden" name="eeId" id="eeId" value="${expressionExperiment.id}" />
-	<input type="hidden" name="eeClass" id="eeClass" value="${expressionExperiment.class.name}" />
+<div id="eeAnnotations" class="x-grid-mso"
+	style="border: 1px solid #c3daf9; overflow: hidden; width: 650px; height: 150px;"></div>
+<input type="hidden" name="eeId" id="eeId" value="${expressionExperiment.id}" />
+<input type="hidden" name="eeClass" id="eeClass" value="${expressionExperiment.class.name}" />
 
 <%
-	if ( expressionExperiment.getExperimentalDesign() != null ) {
-	%>
-	<h3>
-		<fmt:message key="experimentalDesign.title" />
-		&nbsp;
-		<a
-			href="/Gemma/experimentalDesign/showExperimentalDesign.html?id=<%out.print(expressionExperiment.getExperimentalDesign().getId());%> ">
-			<%
-			out.print( expressionExperiment.getExperimentalDesign().getName() );
-			%>
-			<img src="/Gemma/images/magnifier.png" />
-		</a>
-	</h3>
+if ( expressionExperiment.getExperimentalDesign() != null ) {
+%>
+<h3>
+	<fmt:message key="experimentalDesign.title" />
+	&nbsp;
+	<a
+		href="/Gemma/experimentalDesign/showExperimentalDesign.html?id=<%out.print(expressionExperiment.getExperimentalDesign().getId());%> ">
+		<%
+		out.print( expressionExperiment.getExperimentalDesign().getName() );
+		%> <img src="/Gemma/images/magnifier.png" /> </a>
+</h3>
+
+<Gemma:eeDesign experimentalDesign="${expressionExperiment.experimentalDesign}"></Gemma:eeDesign>
+<Gemma:eeDesignMatrix expressionExperiment="${expressionExperiment}"></Gemma:eeDesignMatrix>
+<%
+}
+%>
+
 
 	<Gemma:eeDesign
 		experimentalDesign="${expressionExperiment.experimentalDesign}"></Gemma:eeDesign>
@@ -313,51 +315,67 @@ if ( expressionExperiment.getName() != null ) {
 				'Quantitation types are the different measurements available for this experiment.'); return false">
 		<img src="/Gemma/images/help.png" /> </a>
 </h3>
-<div id="tableContainer" class="tableContainer">
-	<display:table name="quantitationTypes" class="scrollTable"
-		requestURI="/Gemma/expressionExperiment/showExpressionExperiment.html"
-		id="dataVectorList" pagesize="30"
-		decorator="ubic.gemma.web.taglib.displaytag.quantitationType.QuantitationTypeWrapper">
-		<%-- <display:column property="data" sortable="false" title="Get data" /> --%>
-		<display:column property="qtName" sortable="true" maxWords="20"
-			titleKey="name" />
-		<display:column property="description" sortable="true" maxLength="20"
-			titleKey="description" />
-		<display:column property="qtPreferredStatus" sortable="true"
-			maxWords="20" titleKey="quantitationType.preferred" />
-		<display:column property="qtRatioStatus" sortable="true" maxWords="20"
-			titleKey="quantitationType.ratio" />
-		<display:column property="qtBackground" sortable="true" maxWords="20"
-			titleKey="quantitationType.background" />
-		<display:column property="qtBackgroundSubtracted" sortable="true"
-			maxWords="20" titleKey="quantitationType.backgroundSubtracted" />
-		<display:column property="qtNormalized" sortable="true" maxWords="20"
-			titleKey="quantitationType.normalized" />
-		<display:column property="generalType" sortable="true" />
-		<display:column property="type" sortable="true" />
-		<display:column property="representation" sortable="true"
-			title="Repr." />
-		<display:column property="scale" sortable="true" />
-		<display:setProperty name="basic.empty.showtable" value="false" />
-	</display:table>
+<div style="padding: 2px;" onclick="Effect.toggle('qts', 'blind', {duration:0.1})">
+	<img src="/Gemma/images/plus.gif" /><br/>
 </div>
+<div id="qts" style="display: none">
+	<div>
+		<%-- inner div needed for effect  --%>
+		<display:table name="quantitationTypes" class="scrollTable"
+			requestURI="/Gemma/expressionExperiment/showExpressionExperiment.html" id="dataVectorList" pagesize="100"
+			decorator="ubic.gemma.web.taglib.displaytag.quantitationType.QuantitationTypeWrapper">
+			<%-- <display:column property="data" sortable="false" title="Get data" /> --%>
+			<display:column property="qtName" sortable="true" maxWords="20" titleKey="name" />
+			<display:column property="description" sortable="true" maxLength="20" titleKey="description" />
+			<display:column property="qtPreferredStatus" sortable="true" maxWords="20" titleKey="quantitationType.preferred" />
+			<display:column property="qtRatioStatus" sortable="true" maxWords="20" titleKey="quantitationType.ratio" />
+			<display:column property="qtBackground" sortable="true" maxWords="20" titleKey="quantitationType.background" />
+			<display:column property="qtBackgroundSubtracted" sortable="true" maxWords="20"
+				titleKey="quantitationType.backgroundSubtracted" />
+			<display:column property="qtNormalized" sortable="true" maxWords="20" titleKey="quantitationType.normalized" />
+			<display:column property="generalType" sortable="true" />
+			<display:column property="type" sortable="true" />
+			<display:column property="representation" sortable="true" title="Repr." />
+			<display:column property="scale" sortable="true" />
+			<display:setProperty name="basic.empty.showtable" value="false" />
+		</display:table>
+	</div>
+</div>
+
 <authz:authorize ifAnyGranted="admin">
 	<h3>
-		Biomaterials and Assays <a href="/Gemma/expressionExperiment/showBioMaterialsFromExpressionExperiment.html?id=<%=request.getAttribute( "id" )%>">(list samples)</a>
+		Biomaterials and Assays
+		<a
+			href="/Gemma/expressionExperiment/showBioMaterialsFromExpressionExperiment.html?id=<%=request.getAttribute( "id" )%>">(list
+			samples)</a>
 	</h3>
-	<Gemma:assayView expressionExperiment="${expressionExperiment}"></Gemma:assayView>
+	<div style="padding: 2px;" onclick="Effect.toggle('bms', 'blind', {duration:0.1})">
+		<img src="/Gemma/images/plus.gif" /><br />
+	</div>
+	<div id="bms" style="display: none">
+		<div>
+			<%-- inner div needed for effect  --%>
+			<Gemma:assayView expressionExperiment="${expressionExperiment}" />
+		</div>
+	</div>
+	<br />
 </authz:authorize>
 
 
 <authz:authorize ifAnyGranted="admin">
 	<!-- the import of auditTrail.js has to happen here or non-admin users
 	     will see an error because auditableId isn't defined; -->
-    <script type="text/javascript" src="<c:url value='/scripts/ajax/auditTrail.js'/>" type="text/javascript"></script>
-    
-  	<h3>History</h3>
-	<div id="auditTrail" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:250px;"></div>
-	 <c:if test="${ lastArrayDesignUpdate != null}">
-				<p>The last time an array design associated with this experiment was updated: ${lastArrayDesignUpdate.date}</p>
+	<script type="text/javascript" src="<c:url value='/scripts/ajax/auditTrail.js'/>" type="text/javascript"></script>
+
+	<h3>
+		History
+	</h3>
+	<div id="auditTrail" class="x-grid-mso"
+		style="border: 1px solid #c3daf9; overflow: hidden; width: 630px; height: 250px;"></div>
+	<c:if test="${ lastArrayDesignUpdate != null}">
+		<p>
+			The last time an array design associated with this experiment was updated: ${lastArrayDesignUpdate.date}
+		</p>
 	</c:if>
 	<input type="hidden" name="auditableId" id="auditableId" value="${expressionExperiment.id}" />
 	<input type="hidden" name="auditableClass" id="auditableClass" value="${expressionExperiment.class.name}" />
@@ -368,9 +386,7 @@ if ( expressionExperiment.getName() != null ) {
 	<tr>
 		<td COLSPAN="2">
 			<div align="left">
-				<input type="button"
-					onclick="location.href='showAllExpressionExperiments.html'"
-					value="Back">
+				<input type="button" onclick="location.href='showAllExpressionExperiments.html'" value="Back">
 			</div>
 		</td>
 
@@ -385,8 +401,7 @@ if ( expressionExperiment.getName() != null ) {
 		<authz:authorize ifAnyGranted="admin">
 			<td COLSPAN="2">
 				<div align="left">
-					<input type="button"
-						onclick="location.href='editExpressionExperiment.html?id=<%=request.getAttribute( "id" )%>'"
+					<input type="button" onclick="location.href='editExpressionExperiment.html?id=<%=request.getAttribute( "id" )%>'"
 						value="Edit">
 				</div>
 			</td>

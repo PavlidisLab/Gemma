@@ -9,8 +9,7 @@
 	<c:if test="${not empty status.errorMessages}">
 		<div class="error">
 			<c:forEach var="error" items="${status.errorMessages}">
-				<img src="<c:url value="/images/iconWarning.gif"/>"
-					alt="<fmt:message key="icon.warning"/>" class="icon" />
+				<img src="<c:url value="/images/iconWarning.gif"/>" alt="<fmt:message key="icon.warning"/>" class="icon" />
 				<c:out value="${error}" escapeXml="false" />
 				<br />
 			</c:forEach>
@@ -35,85 +34,74 @@
 	<input type="submit" value="search" />
 
 
-	<script type='text/javascript'
-		src='/Gemma/scripts/expandableObjects.js'></script>
 
-	<script language="javascript">
+	<br />
+	<div style="padding: 2px;" onclick="toggleDisable();Effect.toggle('advancedSearch', 'blind', {duration:0.3})">
+		<img src="/Gemma/images/plus.gif" />
+		Advanced Search
+		<br />
+	</div>
+
+	<div id="advancedSearch" style="display: none">
+		<div>
+			<script language="javascript">
 		function toggleDisable()
 		{
-			if (document.getElementById('advancedSelect').disabled){
+			if (document.getElementById('advancedSelect').disabled) {
 				document.getElementById('advancedSelect').disabled = false;
 				document.getElementById('advancedTaxon').disabled = false;
-				}
+			}
 			else{
 				document.getElementById('advancedSelect').disabled = true;
 				document.getElementById('advancedTaxon').disabled = true;
-				}
+			}
 		}
  	</script>
-
-	<!-- Toggles for the expand/hide datasetList table -->
-	<span class="advancedSearch"
-		onclick="toggleDisable(); return toggleVisibility('advancedSearch')">
-		<img src="/Gemma/images/chart_organisation_add.png" /> </span>
-	<span class="advancedSearch" style="display:none"
-		onclick="toggleDisable(); return toggleVisibility('advancedSearch')">
-		<img src="/Gemma/images/chart_organisation_delete.png" /> </span>
-
-	<a href="#"
-		onclick="toggleDisable(); return toggleVisibility('advancedSearch')">(Advanced
-		Search)</a>
-
-	<br />
-	<br />
-	<div class="advancedSearch" style="display:none">
-		<h4>
-			Select a search Mode:
-		</h4>
-		<select id="advancedSelect" name="advancedSelect" multiple size=5
-			disabled="true">
-			<option selected value="Gene">
-				Search Gene Database
-			</option>
-			<option selected value="DataSet">
-				Search DataSet Database
-			</option>
-			<option selected value="Array">
-				Search Array Database
-			</option>
-			<option selected value="CompositeSequence">
-				Search Probe Database
-			</option>
-			<option selected value="bioSequence">
-				Search Sequence Database
-			</option>
-			<option value="bibliographicReference">
-				Search Bibliographic Database
-			</option>
-			<option value="GoID">
-				Find Genes by Gene Ontology Id
-			</option>
-			<option value="ontology">
-				Search Ontology Database
-			</option>
-		</select>
-		<br />
-		<h4>
-			Reduce Results by Taxon:
-		</h4>
-		<spring:bind path="coexpressionSearchCommand.taxon">
-			<select id="advancedTaxon" name="${status.expression}"
-				disabled="true">
-				<c:forEach items="${taxa}" var="taxon">
-					<spring:transform value="${taxon}" var="scientificName" />
-					<option value="${scientificName}"
-						<c:if test="${status.value == scientificName}">selected </c:if>>
-						${scientificName}
-					</option>
-				</c:forEach>
+			<h4>
+				Select a search Mode:
+			</h4>
+			<select id="advancedSelect" name="advancedSelect" multiple size=5 disabled="true">
+				<option selected value="Gene">
+					Search Gene Database
+				</option>
+				<option selected value="DataSet">
+					Search DataSet Database
+				</option>
+				<option selected value="Array">
+					Search Array Database
+				</option>
+				<option selected value="CompositeSequence">
+					Search Probe Database
+				</option>
+				<option selected value="bioSequence">
+					Search Sequence Database
+				</option>
+				<option value="bibliographicReference">
+					Search Bibliographic Database
+				</option>
+				<option value="GoID">
+					Find Genes by Gene Ontology Id
+				</option>
+				<option value="ontology">
+					Search Ontology Database
+				</option>
 			</select>
+			<br />
+			<h4>
+				Reduce Results by Taxon:
+			</h4>
+			<spring:bind path="coexpressionSearchCommand.taxon">
+				<select id="advancedTaxon" name="${status.expression}" disabled="true">
+					<c:forEach items="${taxa}" var="taxon">
+						<spring:transform value="${taxon}" var="scientificName" />
+						<option value="${scientificName}" <c:if test="${status.value == scientificName}">selected </c:if>>
+							${scientificName}
+						</option>
+					</c:forEach>
+				</select>
 
-		</spring:bind>
+			</spring:bind>
+		</div>
 	</div>
 </form>
 
@@ -141,14 +129,10 @@
 
 
 <display:table name="geneList" class="list" requestURI="" id="genesList"
-	decorator="ubic.gemma.web.taglib.displaytag.gene.GeneFinderWrapper"
-	pagesize="20">
-	<display:column property="nameLink" sortable="true"
-		titleKey="gene.officialSymbol" maxWords="20" />
-	<display:column property="taxon" sortable="true" titleKey="taxon.title"
-		maxWords="20" />
-	<display:column property="officialName" sortable="true"
-		titleKey="gene.officialName" maxWords="20" />
+	decorator="ubic.gemma.web.taglib.displaytag.gene.GeneFinderWrapper" pagesize="20">
+	<display:column property="nameLink" sortable="true" titleKey="gene.officialSymbol" maxWords="20" />
+	<display:column property="taxon" sortable="true" titleKey="taxon.title" maxWords="20" />
+	<display:column property="officialName" sortable="true" titleKey="gene.officialName" maxWords="20" />
 	<display:setProperty name="basic.empty.showtable" value="false" />
 </display:table>
 
@@ -162,19 +146,14 @@
 	<br />
 </c:if>
 
-<display:table pagesize="20" name="expressionList" sort="list"
-	class="list" requestURI="" id="expressionExperimentList"
+<display:table pagesize="20" name="expressionList" sort="list" class="list" requestURI="" id="expressionExperimentList"
 	decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
-	<display:column property="nameLink" sortable="true" sortProperty="name"
-		titleKey="expressionExperiment.name" />
-	<display:column property="shortName" sortable="true"
-		titleKey="expressionExperiment.shortName" />
+	<display:column property="nameLink" sortable="true" sortProperty="name" titleKey="expressionExperiment.name" />
+	<display:column property="shortName" sortable="true" titleKey="expressionExperiment.shortName" />
 	<authz:authorize ifAnyGranted="admin">
-		<display:column property="arrayDesignLink" sortable="true"
-			title="Arrays" />
+		<display:column property="arrayDesignLink" sortable="true" title="Arrays" />
 	</authz:authorize>
-	<display:column property="assaysLink" sortable="true"
-		titleKey="bioAssays.title" />
+	<display:column property="assaysLink" sortable="true" titleKey="bioAssays.title" />
 	<display:column property="taxon" sortable="true" titleKey="taxon.title" />
 	<display:setProperty name="basic.empty.showtable" value="false" />
 </display:table>
@@ -189,19 +168,14 @@
 	<br />
 </c:if>
 
-<display:table name="arrayList" sort="list" class="list" requestURI=""
-	id="arrayDesignList" pagesize="20"
+<display:table name="arrayList" sort="list" class="list" requestURI="" id="arrayDesignList" pagesize="20"
 	decorator="ubic.gemma.web.taglib.displaytag.expression.arrayDesign.ArrayDesignWrapper">
-	<display:column property="name" sortable="true"
-		href="arrays/showArrayDesign.html" paramId="id" paramProperty="id"
+	<display:column property="name" sortable="true" href="arrays/showArrayDesign.html" paramId="id" paramProperty="id"
 		titleKey="arrayDesign.name" />
-	<display:column property="shortName" sortable="true"
-		titleKey="arrayDesign.shortName" />
-	<display:column property="expressionExperimentCountLink"
-		sortable="true" title="Expts" />
+	<display:column property="shortName" sortable="true" titleKey="arrayDesign.shortName" />
+	<display:column property="expressionExperimentCountLink" sortable="true" title="Expts" />
 	<authz:authorize ifAnyGranted="admin">
-		<display:column property="color" sortable="true"
-			titleKey="arrayDesign.technologyType" />
+		<display:column property="color" sortable="true" titleKey="arrayDesign.technologyType" />
 	</authz:authorize>
 	<display:setProperty name="basic.empty.showtable" value="false" />
 </display:table>
@@ -210,21 +184,17 @@
 	<h3>
 		Your search for
 		<b> <c:out value="${SearchString}" /> </b> found
-		<b> <c:out value="${numCompositeSequenceList}" /> </b> Composite
-		Sequences
+		<b> <c:out value="${numCompositeSequenceList}" /> </b> Composite Sequences
 	</h3>
 	<br />
 </c:if>
 
-<display:table pagesize="20" name="compositeSequenceList" sort="list"
-	class="list" requestURI="" id="compositeSequenceList">
-	<display:column property="name" sortable="true"
-		href="/Gemma/compositeSequence/show.html" paramId="id"
+<display:table pagesize="20" name="compositeSequenceList" sort="list" class="list" requestURI=""
+	id="compositeSequenceList">
+	<display:column property="name" sortable="true" href="/Gemma/compositeSequence/show.html" paramId="id"
 		paramProperty="id" titleKey="compositeSequence.name" maxLength="50" />
-	<display:column property="arrayDesign.shortName" sortable="true"
-		titleKey="arrayDesign" maxLength="50" />
-	<display:column property="description" sortable="true"
-		titleKey="compositeSequence.description" maxLength="50" />
+	<display:column property="arrayDesign.shortName" sortable="true" titleKey="arrayDesign" maxLength="50" />
+	<display:column property="description" sortable="true" titleKey="compositeSequence.description" maxLength="50" />
 </display:table>
 
 <%-- Display GO--%>
@@ -238,16 +208,11 @@
 </c:if>
 
 
-<display:table name="goGeneList" class="list" requestURI=""
-	id="goGeneList"
-	decorator="ubic.gemma.web.taglib.displaytag.gene.GeneFinderWrapper"
-	pagesize="20">
-	<display:column property="nameLink" sortable="true"
-		titleKey="gene.officialSymbol" maxWords="20" />
-	<display:column property="taxon" sortable="true" titleKey="taxon.title"
-		maxWords="20" />
-	<display:column property="officialName" sortable="true"
-		titleKey="gene.officialName" maxWords="20" />
+<display:table name="goGeneList" class="list" requestURI="" id="goGeneList"
+	decorator="ubic.gemma.web.taglib.displaytag.gene.GeneFinderWrapper" pagesize="20">
+	<display:column property="nameLink" sortable="true" titleKey="gene.officialSymbol" maxWords="20" />
+	<display:column property="taxon" sortable="true" titleKey="taxon.title" maxWords="20" />
+	<display:column property="officialName" sortable="true" titleKey="gene.officialName" maxWords="20" />
 	<display:setProperty name="basic.empty.showtable" value="false" />
 </display:table>
 
@@ -260,8 +225,7 @@
 	</h3>
 </c:if>
 
-<display:table name="ontologyList" class="list" requestURI=""
-	id="ontologyList" pagesize="10"
+<display:table name="ontologyList" class="list" requestURI="" id="ontologyList" pagesize="10"
 	decorator="ubic.gemma.web.taglib.displaytag.OntologyWrapper">
 	<display:column property="accession" sortable="true" maxWords="20" />
 	<display:column property="value" sortable="true" maxWords="20" />
@@ -279,19 +243,14 @@
 	<br />
 </c:if>
 
-<display:table name="goArrayList" sort="list" class="list" requestURI=""
-	id="goArrayList" pagesize="20"
+<display:table name="goArrayList" sort="list" class="list" requestURI="" id="goArrayList" pagesize="20"
 	decorator="ubic.gemma.web.taglib.displaytag.expression.arrayDesign.ArrayDesignWrapper">
-	<display:column property="name" sortable="true"
-		href="arrays/showArrayDesign.html" paramId="id" paramProperty="id"
+	<display:column property="name" sortable="true" href="arrays/showArrayDesign.html" paramId="id" paramProperty="id"
 		titleKey="arrayDesign.name" />
-	<display:column property="shortName" sortable="true"
-		titleKey="arrayDesign.shortName" />
-	<display:column property="expressionExperimentCountLink"
-		sortable="true" title="Expts" />
+	<display:column property="shortName" sortable="true" titleKey="arrayDesign.shortName" />
+	<display:column property="expressionExperimentCountLink" sortable="true" title="Expts" />
 	<authz:authorize ifAnyGranted="admin">
-		<display:column property="color" sortable="true"
-			titleKey="arrayDesign.technologyType" />
+		<display:column property="color" sortable="true" titleKey="arrayDesign.technologyType" />
 	</authz:authorize>
 	<display:setProperty name="basic.empty.showtable" value="false" />
 </display:table>
@@ -300,37 +259,32 @@
 	<h3>
 		The Bibliographic Reference term
 		<b> <c:out value="${SearchString}" /> </b> is related to
-		<b> <c:out value="${numBibliographicReferenceList}" /> </b>
-		Bibliographic References
+		<b> <c:out value="${numBibliographicReferenceList}" /> </b> Bibliographic References
 	</h3>
 	<br />
 </c:if>
 
 <%-- Display Bibliographic References--%>
-<display:table cellpadding="4" pagesize="20"
-	name="bibliographicReferenceList" sort="list" class="list"
-	requestURI="" id="bibliographicReferenceList"
+<display:table cellpadding="4" pagesize="20" name="bibliographicReferenceList" sort="list" class="list" requestURI=""
+	id="bibliographicReferenceList"
 	decorator="ubic.gemma.web.taglib.displaytag.common.description.BibliographicReferenceWrapper">
-	
-	<display:column sortable="true" href="bibRef/bibRefView.html"
-		paramId="accession" paramProperty="pubAccession.accession" title="">
+
+	<display:column sortable="true" href="bibRef/bibRefView.html" paramId="accession"
+		paramProperty="pubAccession.accession" title="">
 		<img src="/Gemma/images/magnifier.png" />
 	</display:column>
 	<%-- 
 	<display:column property="accessionLink"
 		sortable="true" title="Accession" />
 	--%>
-	<display:column property="title" sortable="true"
-		titleKey="pubMed.title" maxLength="50" />
-	<display:column property="authorList" sortable="true"
-		titleKey="pubMed.authors" maxLength="20" />
+	<display:column property="title" sortable="true" titleKey="pubMed.title" maxLength="50" />
+	<display:column property="authorList" sortable="true" titleKey="pubMed.authors" maxLength="20" />
 	<%-- <display:column property="year" titleKey="pubMed.year" />
 	<display:column property="citation" sortable="true"
 		titleKey="pubMed.cite" />--%>
 	<display:column sortable="true"
 		href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&db=pubmed&dopt=Abstract&list_uids=ID&query_hl=3"
-		paramId="list_uids" paramProperty="pubAccession.accession"
-		title="PubMed">
+		paramId="list_uids" paramProperty="pubAccession.accession" title="PubMed">
 		<%="<img src='/Gemma/images/pubmed.gif' />"%>
 	</display:column>
 	<%-- <display:column title="Experiments" property="experiments" /> 
@@ -350,15 +304,11 @@
 	<br />
 </c:if>
 
-<display:table pagesize="20" name="bioSequenceList" sort="list"
-	class="list" requestURI="" id="bioSequenceList">
-	<display:column property="name" sortable="true"
-		href="/Gemma/genome/bioSequence/showBioSequence.html" paramId="id"
+<display:table pagesize="20" name="bioSequenceList" sort="list" class="list" requestURI="" id="bioSequenceList">
+	<display:column property="name" sortable="true" href="/Gemma/genome/bioSequence/showBioSequence.html" paramId="id"
 		paramProperty="id" titleKey="bioSequence.name" maxLength="50" />
-	<display:column property="sequence" sortable="true"
-		titleKey="bioSequence.sequence" maxLength="50" />
-	<display:column property="length" sortable="true"
-		titleKey="bioSequence.length" />
+	<display:column property="sequence" sortable="true" titleKey="bioSequence.sequence" maxLength="50" />
+	<display:column property="length" sortable="true" titleKey="bioSequence.length" />
 </display:table>
 
 

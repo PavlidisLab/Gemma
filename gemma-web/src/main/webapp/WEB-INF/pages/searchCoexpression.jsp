@@ -293,10 +293,6 @@
 
 <c:if test="${coexpressedGenes != null}">
 	<c:if test="${numLinkedExpressionExperiments != 0}">
-
-		<script type='text/javascript' src='/Gemma/scripts/prototype.js'></script>
-		<script type='text/javascript' src='/Gemma/scripts/expandableObjects.js'></script>
-
 		<div style="float: left; padding: 2px;" onclick="Effect.toggle('datasetList', 'blind', {duration:0.1})">
 			<img src="/Gemma/images/plus.gif" />
 		</div>

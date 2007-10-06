@@ -6,6 +6,8 @@
 <fmt:message key="userProfile.heading" />
 </content>
 <meta name="menu" content="UserMenu" />
+
+<%-- used for role-picker --%>
 <script type="text/javascript"
 	src="<c:url value='/scripts/selectbox.js'/>"></script>
 

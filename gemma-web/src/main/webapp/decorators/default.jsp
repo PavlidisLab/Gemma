@@ -17,7 +17,7 @@
 		<!--[if gte IE 6]><link rel="stylesheet" type="text/css" media="screen" href="/styles/css/ie-standards.css" /><![endif]-->
 
 		<script type="text/javascript" src="<c:url value='/scripts/prototype.js'/>"></script>
-		<script type="text/javascript" src="<c:url value='/scripts/scriptaculous.js'/>"></script>
+		<script type="text/javascript" src="<c:url value='/scripts/scriptaculous/scriptaculous.js'/>"></script>
 		<script type="text/javascript" src="<c:url value='/scripts/global.js'/>"></script>
 		<script type="text/javascript" src="<c:url value='/scripts/helptip.js'/>"></script>
 		<decorator:head />
