@@ -292,13 +292,6 @@ if ( expressionExperiment.getExperimentalDesign() != null ) {
 		%> <img src="/Gemma/images/magnifier.png" /> </a>
 </h3>
 
-<Gemma:eeDesign experimentalDesign="${expressionExperiment.experimentalDesign}"></Gemma:eeDesign>
-<Gemma:eeDesignMatrix expressionExperiment="${expressionExperiment}"></Gemma:eeDesignMatrix>
-<%
-}
-%>
-
-
 	<Gemma:eeDesign
 		experimentalDesign="${expressionExperiment.experimentalDesign}"></Gemma:eeDesign>
 	
@@ -306,6 +299,7 @@ if ( expressionExperiment.getExperimentalDesign() != null ) {
 	<%
 	}
 	%>
+	
 	
  
 <h3>
