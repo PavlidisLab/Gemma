@@ -48,6 +48,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
@@ -105,7 +106,7 @@ public class SimpleExpressionDataLoaderService {
                         + ( StringUtils.isBlank( metaData.getSourceUrl() ) ? "" : "Downloaded from "
                                 + metaData.getSourceUrl() ) );
 
-        // ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
         // ed.setName( metaData.getExperimentalDesignName() );
         // ed.setDescription( metaData.getExperimentalDesignDescription() );
         // ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
@@ -115,7 +116,7 @@ public class SimpleExpressionDataLoaderService {
         // fv.setValue( "default" );
         // ef.getFactorValues().add( fv );
         // ed.getExperimentalFactors().add( ef );
-        // experiment.setExperimentalDesign( ed );
+        experiment.setExperimentalDesign( ed );
 
         if ( metaData.getPubMedId() != null ) {
             PubMedXMLFetcher pubfetch = new PubMedXMLFetcher();
