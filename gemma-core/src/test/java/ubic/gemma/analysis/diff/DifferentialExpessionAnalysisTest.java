@@ -62,22 +62,22 @@ public class DifferentialExpessionAnalysisTest extends BaseAnalyzerConfiguration
         assertTrue( analyzer instanceof TwoWayAnovaWithInteractionsAnalyzer );
     }
 
-//    /**
-//     * Tests determineAnalysis.
-//     * <p>
-//     * 2 experimental factors
-//     * <p>
-//     * 2 factor value / experimental factor
-//     * <p>
-//     * no replicates
-//     * <p>
-//     * Expected analyzer: {@link TwoWayAnovaWithoutInteractionsAnalyzer}
-//     */
-//    public void testDetermineAnalysisB() {
-//        super.configureTestDataForTwoWayAnovaWithoutInteractions();
-//        AbstractAnalyzer analyzer = analysis.determineAnalysis( expressionExperiment, quantitationType,
-//                bioAssayDimension );
-//        assertTrue( analyzer instanceof TwoWayAnovaWithoutInteractionsAnalyzer );
-//    }
+    /**
+     * Tests determineAnalysis.
+     * <p>
+     * 2 experimental factors
+     * <p>
+     * 2 factor value / experimental factor
+     * <p>
+     * no replicates
+     * <p>
+     * Expected analyzer: {@link TwoWayAnovaWithoutInteractionsAnalyzer}
+     */
+    public void testDetermineAnalysisB() {
+        super.configureTestDataForTwoWayAnovaWithoutInteractions();
+        AbstractAnalyzer analyzer = analysis.determineAnalysis( expressionExperiment, quantitationType,
+                bioAssayDimension );
+        assertTrue( analyzer instanceof TwoWayAnovaWithoutInteractionsAnalyzer );
+    }
 
 }
