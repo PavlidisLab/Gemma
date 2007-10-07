@@ -18,31 +18,98 @@
  */
 package ubic.gemma.analysis.diff;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import org.rosuda.JRclient.REXP;
+
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
+ * A two way anova implementation with interactions.
+ * 
  * @author keshav
  * @version $Id$
+ * @see AbstractTwoWayAnovaAnalyzer
  */
-public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractAnalyzer {
+public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnalyzer {
 
-    /*
-     * (non-Javadoc)
+    /**
+     * R Call:
+     * <p>
+     * apply(matrix,1,function(x){anova(aov(x~farea+ftreat+farea*ftreat))$Pr})
+     * <p>
+     * where area and treat are first transposed and then factor is called on each to give farea and ftreat.
      * 
-     * @see ubic.gemma.analysis.diff.AbstractAnalyzer#getPValues(ubic.gemma.model.expression.experiment.ExpressionExperiment,
-     *      ubic.gemma.model.common.quantitationtype.QuantitationType,
-     *      ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
+     * @see AbstractTwoWayAnovaAnalyzer
+     * @param matrix
+     * @param experimentalFactorA
+     * @param experimentalFactorB
+     * @param samplesUsed
+     * @return
      */
     @Override
-    public Map<DesignElement, Double> getPValues( ExpressionExperiment expressionExperiment,
-            QuantitationType quantitationType, BioAssayDimension bioAssayDimension ) {
-        // TODO Auto-generated method stub
-        return null;
-    }
+    public Map<DesignElement, Double> twoWayAnova( ExpressionDataMatrix matrix, ExperimentalFactor experimentalFactorA,
+            ExperimentalFactor experimentalFactorB, Collection<BioMaterial> samplesUsed ) {
 
+        ExpressionDataDoubleMatrix dmatrix = ( ExpressionDataDoubleMatrix ) matrix;
+
+        DoubleMatrixNamed namedMatrix = dmatrix.getNamedMatrix();
+
+        Collection<FactorValue> factorValuesA = experimentalFactorA.getFactorValues();
+        Collection<FactorValue> factorValuesB = experimentalFactorB.getFactorValues();
+
+        List<String> rFactorsA = AnalyzerHelper.getRFactorsFromFactorValuesForTwoWayAnova( factorValuesA, samplesUsed );
+        List<String> rFactorsB = AnalyzerHelper.getRFactorsFromFactorValuesForTwoWayAnova( factorValuesB, samplesUsed );
+
+        String factsA = rc.assignStringList( rFactorsA );
+        String factsB = rc.assignStringList( rFactorsB );
+
+        String tfactsA = "t(" + factsA + ")";
+        String tfactsB = "t(" + factsB + ")";
+
+        String factorA = "factor(" + tfactsA + ")";
+        String factorB = "factor(" + tfactsB + ")";
+
+        String matrixName = rc.assignMatrix( namedMatrix );
+        StringBuffer command = new StringBuffer();
+
+        command.append( "apply(" );
+        command.append( matrixName );
+        command.append( ", 1, function(x) {anova(aov(x ~ " + factorA + "+" + factorB + "+" + factorA + "*" + factorB
+                + "))$Pr}" );
+        command.append( ")" );
+
+        log.debug( command.toString() );
+
+        REXP regExp = rc.eval( command.toString() );
+
+        double[] pvalues = ( double[] ) regExp.getContent();
+
+        double[] filteredPvalues = new double[pvalues.length / 2];// removes the NaN row
+
+        for ( int i = 0, j = 0; j < filteredPvalues.length; i++ ) {
+            if ( i % 3 < 2 ) {
+                filteredPvalues[j] = pvalues[i];
+                j++;
+            }
+        }
+
+        // TODO Use the ExpressionAnalysisResult
+        Map<DesignElement, Double> pvaluesMap = new HashMap<DesignElement, Double>();
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            DesignElement de = matrix.getDesignElementForRow( i );
+            pvaluesMap.put( de, filteredPvalues[i] );
+        }
+
+        return pvaluesMap;
+    }
 }
