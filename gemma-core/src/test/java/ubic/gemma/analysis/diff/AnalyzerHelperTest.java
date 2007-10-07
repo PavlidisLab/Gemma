@@ -37,14 +37,32 @@ public class AnalyzerHelperTest extends BaseAnalyzerConfigurationTest {
     }
 
     /**
-     *
-     *
+     * Tests the AnalyzerHelper.checkBiologicalReplicates method.
+     * <p>
+     * Expected result: null exception
      */
     public void testCheckBiologicalReplicates() {
 
         Exception ex = null;
         try {
             AnalyzerHelper.checkBiologicalReplicates( expressionExperiment, quantitationType, bioAssayDimension );
+        } catch ( Exception e ) {
+            ex = e;
+            e.printStackTrace();
+        } finally {
+            assertNull( ex );
+        }
+    }
+
+    /**
+     * Tests the AnalyzerHelper.checkBlockDesign method.
+     * <p>
+     * Expected result: null exception
+     */
+    public void testCheckBlockDesign() {
+        Exception ex = null;
+        try {
+            AnalyzerHelper.checkBlockDesign( expressionExperiment, quantitationType, bioAssayDimension );
         } catch ( Exception e ) {
             ex = e;
             e.printStackTrace();
