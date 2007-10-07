@@ -171,26 +171,26 @@ public class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
         // 2 replicates
         biomaterial2a = BioMaterial.Factory.newInstance();
         biomaterial2a.setName( "2a" );
-        Collection<FactorValue> factorValuesForBioMaterial3 = new HashSet<FactorValue>();
-        factorValuesForBioMaterial3.add( factorValueA2 );
-        factorValuesForBioMaterial3.add( factorValueB1 );
-        biomaterial2a.setFactorValues( factorValuesForBioMaterial3 );
+        Collection<FactorValue> factorValuesForBioMaterial2 = new HashSet<FactorValue>();
+        factorValuesForBioMaterial2.add( factorValueA2 );
+        factorValuesForBioMaterial2.add( factorValueB1 );
+        biomaterial2a.setFactorValues( factorValuesForBioMaterial2 );
 
         biomaterial2b = BioMaterial.Factory.newInstance();
         biomaterial2b.setName( "2b" );
-        biomaterial2b.setFactorValues( factorValuesForBioMaterial3 );
+        biomaterial2b.setFactorValues( factorValuesForBioMaterial2 );
 
         // 2 replicates
         biomaterial3a = BioMaterial.Factory.newInstance();
         biomaterial3a.setName( "3a" );
-        Collection<FactorValue> factorValuesForBioMaterial4 = new HashSet<FactorValue>();
-        factorValuesForBioMaterial4.add( factorValueA2 );
-        factorValuesForBioMaterial4.add( factorValueB2 );
-        biomaterial3a.setFactorValues( factorValuesForBioMaterial4 );
+        Collection<FactorValue> factorValuesForBioMaterial3 = new HashSet<FactorValue>();
+        factorValuesForBioMaterial3.add( factorValueA2 );
+        factorValuesForBioMaterial3.add( factorValueB2 );
+        biomaterial3a.setFactorValues( factorValuesForBioMaterial3 );
 
         biomaterial3b = BioMaterial.Factory.newInstance();
         biomaterial3b.setName( "3b" );
-        biomaterial3b.setFactorValues( factorValuesForBioMaterial4 );
+        biomaterial3b.setFactorValues( factorValuesForBioMaterial3 );
 
         biomaterials.add( biomaterial0a );
         biomaterials.add( biomaterial0b );

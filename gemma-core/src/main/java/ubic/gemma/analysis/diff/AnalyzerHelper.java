@@ -20,6 +20,7 @@ package ubic.gemma.analysis.diff;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -91,10 +92,7 @@ public class AnalyzerHelper {
          * from the other experimental factors
          */
         Collection<ExperimentalFactor> efs = expressionExperiment.getExperimentalDesign().getExperimentalFactors();
-
-        for ( ExperimentalFactor ef : efs ) {
-            checkBlockDesign( biomaterials, ef.getFactorValues() );
-        }
+        checkBlockDesign( biomaterials, efs );
     }
 
     /**
@@ -105,10 +103,8 @@ public class AnalyzerHelper {
      * @param factorValues
      * @throws Exception
      */
-    protected static void checkBlockDesign( Collection<BioMaterial> biomaterials, Collection<FactorValue> factorValues )
-            throws Exception {
-
-        ExperimentalFactor ef = factorValues.iterator().next().getExperimentalFactor();
+    protected static void checkBlockDesign( Collection<BioMaterial> biomaterials,
+            Collection<ExperimentalFactor> experimentalFactors ) throws Exception {
 
         for ( BioMaterial m : biomaterials ) {
 
@@ -117,17 +113,19 @@ public class AnalyzerHelper {
             if ( factorValuesFromBioMaterial.size() < 2 )
                 throw new Exception( "Biomaterial must have more than 1 factor value." );
 
-            boolean match = false;
-            for ( FactorValue fv : factorValuesFromBioMaterial ) {
-                if ( fv.getExperimentalFactor() == ef ) {
-                    match = true;
-                    break;
-                }
+            Collection<ExperimentalFactor> experimentalFactorsFromBioMaterial = new HashSet<ExperimentalFactor>();
+            for ( FactorValue factorValueFromBioMaterial : factorValuesFromBioMaterial ) {
+                ExperimentalFactor ef = factorValueFromBioMaterial.getExperimentalFactor();
+                experimentalFactorsFromBioMaterial.add( ef );
             }
-            if ( !match ) {
-                throw new Exception( "None of the factor values have an experimental factor that matches " + ef );
-            }
+
+            // TODO this is a rough check ... increase granularity to the level of factor values
+            if ( !experimentalFactorsFromBioMaterial.equals( experimentalFactors ) )
+                throw new Exception(
+                        "Biomaterial does not have a factor value from one of the experimental factors.  Incomplete block design." );
+
         }
+
     }
 
     /**
