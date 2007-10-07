@@ -157,9 +157,7 @@ public class DifferentialExpressionAnalysis {
      * @return
      */
     private boolean colIsEmpty( Collection col ) {
-        if ( col == null ) return true;
-
-        if ( col.size() == 0 ) return true;
+        if ( col == null || col.size() == 0 ) return true;
 
         return false;
     }
