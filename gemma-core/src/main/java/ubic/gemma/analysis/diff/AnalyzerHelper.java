@@ -106,6 +106,9 @@ public class AnalyzerHelper {
     protected static void checkBlockDesign( Collection<BioMaterial> biomaterials,
             Collection<ExperimentalFactor> experimentalFactors ) throws Exception {
 
+        Collection<HashSet> factorValuePairings = generateFactorValuePairings( experimentalFactors );
+
+        /* check to see if the biomaterial's factor value pairing is one of the possible combinations */
         for ( BioMaterial m : biomaterials ) {
 
             Collection<FactorValue> factorValuesFromBioMaterial = m.getFactorValues();
@@ -113,19 +116,45 @@ public class AnalyzerHelper {
             if ( factorValuesFromBioMaterial.size() < 2 )
                 throw new Exception( "Biomaterial must have more than 1 factor value." );
 
-            Collection<ExperimentalFactor> experimentalFactorsFromBioMaterial = new HashSet<ExperimentalFactor>();
-            for ( FactorValue factorValueFromBioMaterial : factorValuesFromBioMaterial ) {
-                ExperimentalFactor ef = factorValueFromBioMaterial.getExperimentalFactor();
-                experimentalFactorsFromBioMaterial.add( ef );
-            }
-
-            // TODO this is a rough check ... increase granularity to the level of factor values
-            if ( !experimentalFactorsFromBioMaterial.equals( experimentalFactors ) )
+            if ( !factorValuePairings.contains( factorValuesFromBioMaterial ) )
                 throw new Exception(
                         "Biomaterial does not have a factor value from one of the experimental factors.  Incomplete block design." );
 
         }
 
+    }
+
+    /**
+     * Generates all possible factor value pairings for the given experimental factors.
+     * 
+     * @param experimentalFactors
+     * @return A collection of hashsets, where each hashset is a pairing.
+     */
+    protected static Collection<HashSet> generateFactorValuePairings( Collection<ExperimentalFactor> experimentalFactors ) {
+        /* set up the possible pairings */
+        Collection<FactorValue> allFactorValues = new HashSet<FactorValue>();
+        for ( ExperimentalFactor experimentalFactor : experimentalFactors ) {
+            allFactorValues.addAll( experimentalFactor.getFactorValues() );
+        }
+
+        Collection<FactorValue> allFactorValuesCopy = allFactorValues;
+
+        Collection<HashSet> factorValuePairings = new HashSet<HashSet>();
+
+        for ( FactorValue factorValue : allFactorValues ) {
+            for ( FactorValue f : allFactorValuesCopy ) {
+                if ( f.getExperimentalFactor().equals( factorValue.getExperimentalFactor() ) ) continue;
+
+                HashSet<FactorValue> factorValuePairing = new HashSet<FactorValue>();
+                factorValuePairing.add( factorValue );
+                factorValuePairing.add( f );
+
+                if ( !factorValuePairings.contains( factorValuePairing ) ) {
+                    factorValuePairings.add( factorValuePairing );
+                }
+            }
+        }
+        return factorValuePairings;
     }
 
     /**
