@@ -22,6 +22,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
 /**
  * A useful test class to be extended by analyzers that need an expression experiment.
  * 
+ * @deprecated This class will be removed.
  * @author keshav
  * @version $Id$
  */
