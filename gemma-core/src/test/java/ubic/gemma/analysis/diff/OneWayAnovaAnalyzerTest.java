@@ -18,16 +18,10 @@
  */
 package ubic.gemma.analysis.diff;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * Tests the one way anova analyzer.
@@ -35,47 +29,34 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @author keshav
  * @version $Id$
  */
-public class OneWayAnovaAnalyzerTest extends BaseAnalyzerTest {
+public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
     private Log log = LogFactory.getLog( this.getClass() );
 
     OneWayAnovaAnalyzer analyzer = new OneWayAnovaAnalyzer();
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#onSetUpInTransaction()
+     */
+    @Override
+    public void onSetUpInTransaction() {
+        super.onSetUpInTransaction();
+    }
 
     /**
      * Tests the OneWayAnova method.
      */
     public void testOneWayAnova() {
 
-        List<BioMaterial> alteredBiomaterials = new ArrayList<BioMaterial>();
+        super.configureTestDataForOneWayAnova();
 
-        /*
-         * Need to make sure all the biomaterials have factor values from the same experimental factor for one way
-         * anova. Also, make sure we only have one factor value per biomaterial.
-         */
-        for ( BioMaterial m : biomaterials ) {
-            log.debug( "Biomaterial: " + m.getName() );
-
-            Collection<FactorValue> factorValuesFromBioMaterial = m.getFactorValues();
-
-            List<FactorValue> alteredFactorValuesFromBioMaterial = new ArrayList<FactorValue>();
-
-            FactorValue f = factorValuesFromBioMaterial.iterator().next();
-            log.debug( "Experimental factor from factor value: " + f.getExperimentalFactor() );
-
-            if ( f.getExperimentalFactor() != ef ) {
-                f.setExperimentalFactor( ef );
-            }
-            alteredFactorValuesFromBioMaterial.add( f );
-
-            m.setFactorValues( alteredFactorValuesFromBioMaterial );
-
-            alteredBiomaterials.add( m );
-        }
-
-        Map pvaluesMap = analyzer.oneWayAnova( matrix, ef.getFactorValues(), alteredBiomaterials );
+        Map pvaluesMap = analyzer.oneWayAnova( expressionExperiment, quantitationType, experimentalFactors.iterator()
+                .next() );
 
         log.info( pvaluesMap );
 
-        assertEquals( pvaluesMap.size(), 6 );
+        assertEquals( pvaluesMap.size(), 4 );
 
     }
 

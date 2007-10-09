@@ -47,7 +47,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
 
-    private static final int NUM_DESIGN_ELEMENTS = 10;
+    private static final int NUM_DESIGN_ELEMENTS = 4;
 
     private static final int NUM_BIOASSAYS = 8;
 
@@ -58,14 +58,16 @@ public class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
 
     protected ExperimentalDesign experimentalDesign = null;
 
-    protected ExperimentalFactor experimentalFactorA = null;
-    protected ExperimentalFactor experimentalFactorB = null;
-
     protected Collection<BioMaterial> biomaterials = null;
 
     protected QuantitationType quantitationType = null;
 
     protected BioAssayDimension bioAssayDimension = null;
+
+    protected Collection<ExperimentalFactor> experimentalFactors = null;
+
+    private ExperimentalFactor experimentalFactorA = null;
+    private ExperimentalFactor experimentalFactorB = null;
 
     private BioMaterial biomaterial0a = null;
     private BioMaterial biomaterial0b = null;
@@ -75,8 +77,6 @@ public class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
     private BioMaterial biomaterial2b = null;
     private BioMaterial biomaterial3a = null;
     private BioMaterial biomaterial3b = null;
-
-    private Collection<ExperimentalFactor> experimentalFactors = null;
 
     private Collection<FactorValue> factorValuesA = null;
 
@@ -97,6 +97,11 @@ public class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
 
     private ByteArrayConverter bac = new ByteArrayConverter();
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.testing.BaseSpringContextTest#onSetUpInTransaction()
+     */
     @Override
     public void onSetUpInTransaction() {
 
@@ -290,6 +295,9 @@ public class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
         expressionExperiment.setDesignElementDataVectors( vectors );
     }
 
+    /**
+     * @param numAssays
+     */
     private void configureVectors( int numAssays ) {
         vectors = new HashSet<DesignElementDataVector>();
         for ( int i = 0; i < NUM_DESIGN_ELEMENTS; i++ ) {
@@ -306,17 +314,23 @@ public class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
             for ( int j = 0; j < dvals.length; j++ ) {
                 dvals[j] = RandomUtils.nextDouble();
             }
+
             byte[] bvals = bac.doubleArrayToBytes( dvals );
             vector.setData( bvals );
         }
     }
 
+    /**
+     * The default test data configuration.
+     */
     public void configureTestDataForTwoWayAnovaWithInteractions() {
 
         /* this is the default configuration */
     }
 
     /**
+     * Configure the test data for two way anova without interactions.
+     * <p>
      * Removes the replicates.
      */
     public void configureTestDataForTwoWayAnovaWithoutInteractions() {
@@ -335,6 +349,9 @@ public class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
 
     }
 
+    /**
+     * Configure the test data for one way anova.
+     */
     public void configureTestDataForOneWayAnova() {
 
         Collection<BioMaterial> updatedBiomaterials = new HashSet<BioMaterial>();
@@ -342,12 +359,16 @@ public class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
             Collection<FactorValue> fvs = m.getFactorValues();
             for ( FactorValue fv : fvs ) {
                 if ( fv.getExperimentalFactor().getName() != experimentalFactorB.getName() ) {
+                    fvs.remove( fv );
+                    m.setFactorValues( fvs );
                     updatedBiomaterials.add( m );
                 }
             }
         }
 
         biomaterials = updatedBiomaterials;
+
+        configureVectors( biomaterials.size() );
 
         experimentalFactors.remove( experimentalFactorB );
         experimentalDesign.setExperimentalFactors( experimentalFactors );
