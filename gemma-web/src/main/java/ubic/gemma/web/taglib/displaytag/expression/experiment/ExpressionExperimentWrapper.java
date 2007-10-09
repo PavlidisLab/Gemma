@@ -343,7 +343,8 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         return buf.toString();
     }
     
-    public String getValidatedFlag() {ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
+    public String getValidatedFlag() {
+        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         StringBuffer buf = new StringBuffer();
         if ( object.getValidatedFlag() != null ) {
             buf.append( "&nbsp;<img src='/Gemma/images/icons/ok.png' height='16' width='16' alt='validated' title='" );

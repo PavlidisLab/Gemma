@@ -42,18 +42,21 @@ import ubic.gemma.web.taglib.arrayDesign.ArrayDesignHtmlUtil;
 public class ArrayDesignWrapper extends TableDecorator {
 
     Log log = LogFactory.getLog( this.getClass() );
-
-    public String getName() {
+    
+    public String getTroubleFlag() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
-
         StringBuffer buf = new StringBuffer();
-        buf.append( object.getName() );
         if ( object.getTroubleEvent() != null ) {
-            buf
-                    .append( "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt='trouble' title='" );
-            buf.append( StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getTroubleEvent() ) ) );
+            buf.append( "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt='trouble' title='" );
+            buf.append(  StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getTroubleEvent() ) ) );
             buf.append( "' />" );
         }
+        return buf.toString();
+    }
+    
+    public String getValidatedFlag() {
+        ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
+        StringBuffer buf = new StringBuffer();
         if ( object.getValidationEvent() != null ) {
             buf.append( "&nbsp;<img src='/Gemma/images/icons/ok.png' height='16' width='16' alt='validated' title='" );
             buf.append( StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getValidationEvent() ) ) );

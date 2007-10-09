@@ -128,6 +128,12 @@
 		comparator="ubic.gemma.web.taglib.displaytag.StringComparator"
 		href="showArrayDesign.html" paramId="id" paramProperty="id"
 		titleKey="arrayDesign.name" />
+	<authz:authorize ifAnyGranted="admin">
+		<display:column property="troubleFlag" sortable="true" titleKey="expressionExperiment.trouble"
+			style="text-align:center; vertical-align:middle;" comparator="ubic.gemma.web.taglib.displaytag.StringComparator" defaultorder="descending" />
+		<display:column property="validatedFlag" sortable="true" titleKey="expressionExperiment.validated"
+			style="text-align:center; vertical-align:middle;" comparator="ubic.gemma.web.taglib.displaytag.StringComparator" defaultorder="descending" />
+	</authz:authorize>
 	<display:column property="shortName" sortable="true"
 		titleKey="arrayDesign.shortName"
 		comparator="ubic.gemma.web.taglib.displaytag.StringComparator" />
