@@ -26,15 +26,15 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * @author keshav
  * @version $Id$
  */
-public class TTestAnalyzerTest extends BaseAnalyzerTest {
+public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
     TTestAnalyzer analyzer = new TTestAnalyzer();
 
@@ -45,7 +45,7 @@ public class TTestAnalyzerTest extends BaseAnalyzerTest {
     private FactorValue factorValueB = null;
 
     @Override
-    protected void onSetUpInTransaction() throws Exception {
+    public void onSetUpInTransaction() {
 
         super.onSetUpInTransaction();
 
@@ -53,7 +53,7 @@ public class TTestAnalyzerTest extends BaseAnalyzerTest {
          * Doing this here because the test experiment has 2 experimental factors, each with 2 factor values. To test
          * the t-test, we only want to use one experimental factor and one factor value for each biomaterial.
          */
-        Collection<FactorValue> factorValues = ef.getFactorValues();
+        Collection<FactorValue> factorValues = experimentalFactors.iterator().next().getFactorValues();
         assertEquals( factorValues.size(), 2 );
 
         Iterator<FactorValue> iter = factorValues.iterator();
@@ -76,27 +76,16 @@ public class TTestAnalyzerTest extends BaseAnalyzerTest {
     }
 
     /**
-     * Tests the t-test with an {@link ExpressionDataMatrix}.
-     */
-    public void testTTestWithNamedMatrix() {
-
-        Map pvaluesMap = analyzer.tTest( matrix, factorValueA, factorValueB, biomaterials );
-
-        log.info( pvaluesMap );
-
-        assertEquals( pvaluesMap.size(), 6 );
-    }
-
-    /**
      * Tests the t-test with an {@link ExpressionExperiment}.
      */
     public void testTTestWithExpressionExperiment() {
 
-        Map pvaluesMap = analyzer.tTest( ee, quantitationTypeToUse, bioAssayDimension, factorValueA, factorValueB );
+        Map pvaluesMap = analyzer.tTest( expressionExperiment, quantitationType, bioAssayDimension, factorValueA,
+                factorValueB );
 
         log.info( pvaluesMap );
 
-        assertEquals( pvaluesMap.size(), 6 );
+        assertEquals( pvaluesMap.size(), 4 );
 
     }
 
