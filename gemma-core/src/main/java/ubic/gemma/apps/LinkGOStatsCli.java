@@ -47,6 +47,14 @@ import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
+ * <p>
+ * Collect the statistics of GO similarities of the computed linkss from compared to random generated links.
+ * </p>
+ * 
+ * <pre>
+ * java -Xmx5000M -XX:+UseParallelGC  -jar LinkGOStatsCli.jar -f mouse_brain_dataset.txt  -t mouse -u administrator -p testing -v 3
+ * </pre>
+ * 
  * @author xwan
  * @version $Id$
  */
@@ -56,6 +64,24 @@ public class LinkGOStatsCli extends AbstractSpringAwareCLI {
     private final static int MAXIMUM_LINK_NUM = 20;
     private final static int ITERATION_NUM = 100;
     private final static int CHUNK_NUM = 20;
+    /**
+     * @param args
+     */
+    public static void main( String[] args ) {
+        LinkGOStatsCli goStats = new LinkGOStatsCli();
+        StopWatch watch = new StopWatch();
+        watch.start();
+        try {
+            Exception ex = goStats.doWork( args );
+            if ( ex != null ) {
+                ex.printStackTrace();
+            }
+            watch.stop();
+            log.info( watch.getTime() / 1000 );
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+    }
     private Probe2ProbeCoexpressionService p2pService = null;
     private LinkAnalysisUtilService linkAnalysisUtilService = null;
     private ExpressionExperimentService eeService = null;
@@ -68,59 +94,54 @@ public class LinkGOStatsCli extends AbstractSpringAwareCLI {
     private Map<Long, Integer> eeIndexMap = new HashMap<Long, Integer>();
     private Map<Long, Gene> geneMap = new HashMap<Long, Gene>();
     private Collection<Gene> coveredGenes = new HashSet<Gene>();
+
     private int[] goTermsDistribution = null;
 
-    @SuppressWarnings("static-access")
-    @Override
-    protected void buildOptions() {
-        Option taxonOption = OptionBuilder.hasArg().withArgName( "Taxon" ).withDescription( "the taxon name" )
-                .withLongOpt( "Taxon" ).create( 't' );
-        addOption( taxonOption );
-        Option eeNameFile = OptionBuilder.hasArg().withArgName( "File having Expression Experiment Names" )
-                .withDescription( "File having Expression Experiment Names" ).withLongOpt( "eeFileName" ).create( 'f' );
-        addOption( eeNameFile );
-
-    }
-
-    protected void processOptions() {
-        super.processOptions();
-        if ( hasOption( 't' ) ) {
-            this.taxonName = getOptionValue( 't' );
-        }
-        if ( hasOption( 'f' ) ) {
-            this.eeNameFile = getOptionValue( 'f' );
-        }
-
-        p2pService = ( Probe2ProbeCoexpressionService ) this.getBean( "probe2ProbeCoexpressionService" );
-        linkAnalysisUtilService = ( LinkAnalysisUtilService ) this.getBean( "linkAnalysisUtilService" );
-        eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-        geneService = ( GeneService ) this.getBean( "geneService" );
-        realStats = new int[MAXIMUM_LINK_NUM][GO_MAXIMUM_COUNT];
-        simulatedStats = new int[ITERATION_NUM / CHUNK_NUM + 1][GO_MAXIMUM_COUNT];
-        goTermsDistribution = new int[GO_MAXIMUM_COUNT];
-    }
-
-    private Collection<ExpressionExperiment> getCandidateEE( String fileName, Collection<ExpressionExperiment> ees ) {
-        if ( fileName == null ) return ees;
-        Collection<ExpressionExperiment> candidates = new HashSet<ExpressionExperiment>();
-        Collection<String> eeNames = new HashSet<String>();
-        try {
-            InputStream is = new FileInputStream( fileName );
-            BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-            String shortName = null;
-            while ( ( shortName = br.readLine() ) != null ) {
-                if ( StringUtils.isBlank( shortName ) ) continue;
-                eeNames.add( shortName.trim().toUpperCase() );
+    /**
+     * 
+     */
+    private void counting() {
+        int rows = linkCount.rows();
+        int cols = linkCount.columns();
+        for ( int i = 0; i < rows; i++ ) {
+            if ( i % 1000 == 0 ) System.err.println( "Current Row: " + i );
+            int[] bits = linkCount.getRowBitCount( i );
+            for ( int j = i + 1; j < cols; j++ ) {
+                int bit = bits[j];
+                if ( bit > 0 ) {
+                    if ( bit >= MAXIMUM_LINK_NUM ) bit = MAXIMUM_LINK_NUM - 1;
+                    Gene gene1 = geneMap.get( ( Long ) linkCount.getRowName( i ) );
+                    Gene gene2 = geneMap.get( ( Long ) linkCount.getRowName( j ) );
+                    if ( gene1 == null || gene2 == null ) {
+                        log.info( "Wrong setting for gene" + ( Long ) linkCount.getRowName( i ) + "\t"
+                                + ( Long ) linkCount.getRowName( j ) );
+                        continue;
+                    }
+                    int goOverlap = linkAnalysisUtilService.computeGOOverlap( gene1, gene2 );
+                    if ( !coveredGenes.contains( gene1 ) ) coveredGenes.add( gene1 );
+                    if ( !coveredGenes.contains( gene2 ) ) coveredGenes.add( gene2 );
+                    if ( goOverlap >= GO_MAXIMUM_COUNT )
+                        realStats[bit][GO_MAXIMUM_COUNT - 1]++;
+                    else
+                        realStats[bit][goOverlap]++;
+                }
             }
-        } catch ( Exception e ) {
-            e.printStackTrace();
-            return candidates;
         }
-        for ( ExpressionExperiment ee : ees ) {
-            String shortName = ee.getShortName();
-            if ( eeNames.contains( shortName.trim().toUpperCase() ) ) candidates.add( ee );
+
+    }
+
+    private void counting( Gene[] genes, Gene[] shuffledGenes, int iterationIndex ) {
+        for ( int i = 0; i < genes.length; i++ ) {
+            if ( genes[i].getId() == shuffledGenes[i].getId() ) continue;
+            int goOverlap = linkAnalysisUtilService.computeGOOverlap( genes[i], shuffledGenes[i] );
+            if ( goOverlap >= GO_MAXIMUM_COUNT ) {
+                simulatedStats[iterationIndex][GO_MAXIMUM_COUNT - 1]++;
+                simulatedStats[ITERATION_NUM / CHUNK_NUM][GO_MAXIMUM_COUNT - 1]++;
+            } else {
+                simulatedStats[iterationIndex][goOverlap]++;
+                simulatedStats[ITERATION_NUM / CHUNK_NUM][goOverlap]++;
+            }
         }
-        return candidates;
     }
 
     @SuppressWarnings("unchecked")
@@ -164,64 +185,27 @@ public class LinkGOStatsCli extends AbstractSpringAwareCLI {
         }
     }
 
-    /**
-     * 
-     */
-    private void counting() {
-        int rows = linkCount.rows();
-        int cols = linkCount.columns();
-        for ( int i = 0; i < rows; i++ ) {
-            if ( i % 1000 == 0 ) System.err.println( "Current Row: " + i );
-            int[] bits = linkCount.getRowBitCount( i );
-            for ( int j = i + 1; j < cols; j++ ) {
-                int bit = bits[j];
-                if ( bit > 0 ) {
-                    if ( bit >= MAXIMUM_LINK_NUM ) bit = MAXIMUM_LINK_NUM - 1;
-                    Gene gene1 = geneMap.get( ( Long ) linkCount.getRowName( i ) );
-                    Gene gene2 = geneMap.get( ( Long ) linkCount.getRowName( j ) );
-                    if ( gene1 == null || gene2 == null ) {
-                        log.info( "Wrong setting for gene" + ( Long ) linkCount.getRowName( i ) + "\t"
-                                + ( Long ) linkCount.getRowName( j ) );
-                        continue;
-                    }
-                    int goOverlap = linkAnalysisUtilService.computeGOOverlap( gene1, gene2 );
-                    if ( !coveredGenes.contains( gene1 ) ) coveredGenes.add( gene1 );
-                    if ( !coveredGenes.contains( gene2 ) ) coveredGenes.add( gene2 );
-                    if ( goOverlap >= GO_MAXIMUM_COUNT )
-                        realStats[bit][GO_MAXIMUM_COUNT - 1]++;
-                    else
-                        realStats[bit][goOverlap]++;
-                }
+    private Collection<ExpressionExperiment> getCandidateEE( String fileName, Collection<ExpressionExperiment> ees ) {
+        if ( fileName == null ) return ees;
+        Collection<ExpressionExperiment> candidates = new HashSet<ExpressionExperiment>();
+        Collection<String> eeNames = new HashSet<String>();
+        try {
+            InputStream is = new FileInputStream( fileName );
+            BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+            String shortName = null;
+            while ( ( shortName = br.readLine() ) != null ) {
+                if ( StringUtils.isBlank( shortName ) ) continue;
+                eeNames.add( shortName.trim().toUpperCase() );
             }
+        } catch ( Exception e ) {
+            e.printStackTrace();
+            return candidates;
         }
-
-    }
-
-    private Gene[] shuffling( Gene[] genes ) {
-        Gene[] shuffledGenes = new Gene[genes.length];
-        System.arraycopy( genes, 0, shuffledGenes, 0, genes.length );
-        Random random = new Random();
-        for ( int i = genes.length - 1; i >= 0; i-- ) {
-            int pos = random.nextInt( i + 1 );
-            Gene tmp = shuffledGenes[pos];
-            shuffledGenes[pos] = shuffledGenes[i];
-            shuffledGenes[i] = tmp;
+        for ( ExpressionExperiment ee : ees ) {
+            String shortName = ee.getShortName();
+            if ( eeNames.contains( shortName.trim().toUpperCase() ) ) candidates.add( ee );
         }
-        return shuffledGenes;
-    }
-
-    private void counting( Gene[] genes, Gene[] shuffledGenes, int iterationIndex ) {
-        for ( int i = 0; i < genes.length; i++ ) {
-            if ( genes[i].getId() == shuffledGenes[i].getId() ) continue;
-            int goOverlap = linkAnalysisUtilService.computeGOOverlap( genes[i], shuffledGenes[i] );
-            if ( goOverlap >= GO_MAXIMUM_COUNT ) {
-                simulatedStats[iterationIndex][GO_MAXIMUM_COUNT - 1]++;
-                simulatedStats[ITERATION_NUM / CHUNK_NUM][GO_MAXIMUM_COUNT - 1]++;
-            } else {
-                simulatedStats[iterationIndex][goOverlap]++;
-                simulatedStats[ITERATION_NUM / CHUNK_NUM][goOverlap]++;
-            }
-        }
+        return candidates;
     }
 
     private void output() {
@@ -287,6 +271,31 @@ public class LinkGOStatsCli extends AbstractSpringAwareCLI {
         }
     }
 
+    private Gene[] shuffling( Gene[] genes ) {
+        Gene[] shuffledGenes = new Gene[genes.length];
+        System.arraycopy( genes, 0, shuffledGenes, 0, genes.length );
+        Random random = new Random();
+        for ( int i = genes.length - 1; i >= 0; i-- ) {
+            int pos = random.nextInt( i + 1 );
+            Gene tmp = shuffledGenes[pos];
+            shuffledGenes[pos] = shuffledGenes[i];
+            shuffledGenes[i] = tmp;
+        }
+        return shuffledGenes;
+    }
+
+    @SuppressWarnings("static-access")
+    @Override
+    protected void buildOptions() {
+        Option taxonOption = OptionBuilder.hasArg().withArgName( "Taxon" ).withDescription( "the taxon name" )
+                .withLongOpt( "Taxon" ).create( 't' );
+        addOption( taxonOption );
+        Option eeNameFile = OptionBuilder.hasArg().withArgName( "File having Expression Experiment Names" )
+                .withDescription( "File having Expression Experiment Names" ).withLongOpt( "eeFileName" ).create( 'f' );
+        addOption( eeNameFile );
+
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     protected Exception doWork( String[] args ) {
@@ -341,23 +350,22 @@ public class LinkGOStatsCli extends AbstractSpringAwareCLI {
         return null;
     }
 
-    /**
-     * @param args
-     */
-    public static void main( String[] args ) {
-        LinkGOStatsCli goStats = new LinkGOStatsCli();
-        StopWatch watch = new StopWatch();
-        watch.start();
-        try {
-            Exception ex = goStats.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-            watch.stop();
-            log.info( watch.getTime() / 1000 );
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
+    protected void processOptions() {
+        super.processOptions();
+        if ( hasOption( 't' ) ) {
+            this.taxonName = getOptionValue( 't' );
         }
+        if ( hasOption( 'f' ) ) {
+            this.eeNameFile = getOptionValue( 'f' );
+        }
+
+        p2pService = ( Probe2ProbeCoexpressionService ) this.getBean( "probe2ProbeCoexpressionService" );
+        linkAnalysisUtilService = ( LinkAnalysisUtilService ) this.getBean( "linkAnalysisUtilService" );
+        eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
+        geneService = ( GeneService ) this.getBean( "geneService" );
+        realStats = new int[MAXIMUM_LINK_NUM][GO_MAXIMUM_COUNT];
+        simulatedStats = new int[ITERATION_NUM / CHUNK_NUM + 1][GO_MAXIMUM_COUNT];
+        goTermsDistribution = new int[GO_MAXIMUM_COUNT];
     }
 
 }
