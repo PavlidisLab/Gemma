@@ -36,6 +36,16 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  */
 public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
+    /**
+     * The following has been confirmed with the results from the R console:
+     * <p>
+     * data (for one design element): 0.654, 0.277, 0.999, 0.0989, 0.963, 0.747, 0.726, 0.426
+     * <p>
+     * factor: "no pcp", "no pcp", "no pcp", "pcp", "pcp", "pcp", "no pcp", "pcp"
+     * <p>
+     * resulting p-value: 0.67697
+     */
+
     TTestAnalyzer analyzer = new TTestAnalyzer();
 
     private Log log = LogFactory.getLog( this.getClass() );
