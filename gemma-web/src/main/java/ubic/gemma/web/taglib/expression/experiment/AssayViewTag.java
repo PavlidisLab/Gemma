@@ -252,6 +252,9 @@ public class AssayViewTag extends TagSupport {
             buf.append( "<input type='hidden' id='assayToMaterialMap' name='assayToMaterialMap' value='"
                     + jsonSerialization + "'/>" );
         }
+        
+        buf.append( "</div>" );
+        
         try {
             pageContext.getOut().print( buf.toString() );
         } catch ( Exception ex ) {
