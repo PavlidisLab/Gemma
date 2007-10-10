@@ -89,6 +89,7 @@ public class GeneOntologyService implements InitializingBean {
     private static final AtomicBoolean running = new AtomicBoolean( false );
 
     private static final String BASE_GO_URI = "http://purl.org/obo/owl/GO#";
+    private static final String ALL_ROOT = BASE_GO_URI + "ALL";
 
     /*
      * (non-Javadoc)
@@ -116,6 +117,14 @@ public class GeneOntologyService implements InitializingBean {
         if ( terms == null ) return null;
         return terms.get( toUri( goId ) );
     }
+    
+    /* @param goURI e.g. GO:0001312
+    * @return null if not found
+    */
+   public static OntologyTerm getTermForURI( String uri ) {
+       if ( terms == null ) return null;
+       return terms.get( uri );
+   }
 
     /**
      * Return human-readable term ("protein kinase") for a GO Id.
@@ -185,6 +194,7 @@ public class GeneOntologyService implements InitializingBean {
 
         boolean loadOntology = ConfigUtils.getBoolean( "loadOntology", true );
 
+      
        if ( !loadOntology ) {
             log.info( "Loading GO is disabled" );
             return;
@@ -263,7 +273,7 @@ public class GeneOntologyService implements InitializingBean {
                 OntologyTerm ontTerm = (OntologyTerm) term;
                 terms.put( term.getUri(), ontTerm);
                 for(String alternativeID: ontTerm.getAlternativeIds()){
-                    log.debug( toUri(alternativeID) );
+                    log.info( toUri(alternativeID) );
                     terms.put( toUri(alternativeID), ontTerm );
                 }
             }
@@ -292,7 +302,11 @@ public class GeneOntologyService implements InitializingBean {
         Collection<OntologyTerm> parents = entry.getParents( true );
         Collection<OntologyTerm> results = new HashSet<OntologyTerm>();
         for ( OntologyTerm term : parents ) {
-            if ( term.isRoot() ) continue;
+            //The isRoot() returns true for the MolecularFunction, BiologicalProcess, CellularComponent
+            //if ( term.isRoot() ) continue;
+            if (term.getUri().equalsIgnoreCase(ALL_ROOT ))
+                continue;
+            
             if ( term instanceof OntologyClassRestriction ) {
                 // log.info( "Skipping " + term );
                 // OntologyProperty restrictionOn = ( ( OntologyClassRestriction ) term ).getRestrictionOn();
@@ -302,6 +316,7 @@ public class GeneOntologyService implements InitializingBean {
                 // }
             } else {
                 // log.info( "Adding " + term );
+
                 results.add( term );
             }
         }
@@ -345,7 +360,7 @@ public class GeneOntologyService implements InitializingBean {
         }
 
         for ( OntologyTerm entry2 : immediateParents ) {
-            if ( entry2.isRoot() ) continue;
+            //if ( entry2.isRoot() ) continue;
             parents.add( entry2 );
             Collection<OntologyTerm> entry2Parents = new HashSet<OntologyTerm>();
             getAllParents( entry2, entry2Parents );
