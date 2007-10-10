@@ -43,7 +43,7 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
      * <p>
      * factor: "no pcp", "no pcp", "no pcp", "pcp", "pcp", "pcp", "no pcp", "pcp"
      * <p>
-     * resulting p-value: 0.67697
+     * resulting p-value: 0.677
      */
 
     TTestAnalyzer analyzer = new TTestAnalyzer();
