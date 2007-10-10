@@ -18,14 +18,8 @@
  */
 package ubic.gemma.analysis.diff;
 
-import java.util.Collection;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 /**
  * Tests the {@link DifferentialExpessionAnalysis} tool.

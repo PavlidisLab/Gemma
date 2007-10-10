@@ -40,7 +40,7 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
      * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#onSetUpInTransaction()
      */
     @Override
-    public void onSetUpInTransaction() {
+    public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
     }
 
@@ -51,8 +51,7 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         super.configureTestDataForOneWayAnova();
 
-        Map pvaluesMap = analyzer.oneWayAnova( expressionExperiment, quantitationType, experimentalFactors.iterator()
-                .next() );
+        Map pvaluesMap = analyzer.oneWayAnova( expressionExperiment, quantitationType, bioAssayDimension );
 
         log.info( pvaluesMap );
 

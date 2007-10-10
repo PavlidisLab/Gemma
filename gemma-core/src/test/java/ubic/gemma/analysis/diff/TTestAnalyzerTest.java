@@ -44,8 +44,13 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
     private FactorValue factorValueB = null;
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#onSetUpInTransaction()
+     */
     @Override
-    public void onSetUpInTransaction() {
+    public void onSetUpInTransaction() throws Exception {
 
         super.onSetUpInTransaction();
 
