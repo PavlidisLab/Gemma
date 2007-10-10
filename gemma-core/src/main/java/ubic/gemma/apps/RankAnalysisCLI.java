@@ -9,49 +9,81 @@ import java.util.Collection;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.lang.time.StopWatch;
 
 import ubic.basecode.dataStructure.matrix.AbstractNamedMatrix;
 import ubic.basecode.io.writer.MatrixWriter;
 import ubic.gemma.analysis.preprocess.DedvRankService;
+import ubic.gemma.analysis.preprocess.DedvRankService.Method;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 
 public class RankAnalysisCLI extends
 		AbstractGeneExpressionExperimentManipulatingCLI {
-	
+
 	private DedvRankService dedvRankService;
-	
+
 	private String outFilePrefix;
 	
+	private DedvRankService.Method method;
+	
+	public RankAnalysisCLI() {
+		method = Method.MAX;
+	}
+
 	protected void buildOptions() {
 		super.buildOptions();
-		
-		Option outFilePrefixOption = OptionBuilder.isRequired().hasArg().withDescription("File prefix for saved rank matrix files").withArgName("File prefix").withLongOpt("outFilePrefix").create('o');
+
+		Option outFilePrefixOption = OptionBuilder.isRequired().hasArg()
+				.withDescription("File prefix for saved rank matrix files")
+				.withArgName("File prefix").withLongOpt("outFilePrefix")
+				.create('o');
 		addOption(outFilePrefixOption);
+
+		Option methodOption = OptionBuilder.hasArg().withDescription(
+				"Method to use to calculate rank").withArgName("Method").withLongOpt("method")
+				.create('m');
+		addOption(methodOption);
 	}
-	
+
 	protected void processOptions() {
 		super.processOptions();
-		
+
 		outFilePrefix = getOptionValue('o');
-		
+
 		dedvRankService = (DedvRankService) getBean("dedvRankService");
+		
+		if (hasOption('m')) {
+			String methodString = getOptionValue('m');
+			if (methodString.equalsIgnoreCase("MEDIAN")) {
+				method = DedvRankService.Method.MEDIAN;
+			} else if (methodString.equalsIgnoreCase("MEAN")) {
+				method = Method.MEAN;
+			} else if (methodString.equalsIgnoreCase("MAX")) {
+				method = Method.MAX;
+			} else if (methodString.equalsIgnoreCase("VARIANCE")) {
+				method = Method.VARIANCE;
+			} else if (methodString.equalsIgnoreCase("MIN")) {
+				method = Method.MIN;
+			}
+		}
 	}
 
 	@Override
 	protected Exception doWork(String[] args) {
 		processCommandLine("RankAnalysisCLI", args);
-		
+
 		Collection<ExpressionExperiment> ees;
 		try {
-			 ees = getExpressionExperiments(taxon);
+			ees = getExpressionExperiments(taxon);
 		} catch (IOException e) {
 			return e;
 		}
-		
+
 		Collection<Gene> genes = geneService.loadGenes(taxon);
-		AbstractNamedMatrix rankMatrix = dedvRankService.getRankMatrix(genes, ees, DedvRankService.Method.MEDIAN);
-		
+		AbstractNamedMatrix rankMatrix = dedvRankService.getRankMatrix(genes,
+				ees, method);
+
 		// gene names
 		Collection<Gene> rowGenes = rankMatrix.getRowNames();
 		try {
@@ -80,7 +112,7 @@ public class RankAnalysisCLI extends
 		} catch (IOException exc) {
 			return exc;
 		}
-		
+
 		DecimalFormat formatter = (DecimalFormat) DecimalFormat
 				.getNumberInstance();
 		formatter.applyPattern("0.0000");
@@ -88,17 +120,23 @@ public class RankAnalysisCLI extends
 		symbols.setNaN("NaN");
 		formatter.setDecimalFormatSymbols(symbols);
 		try {
-			MatrixWriter out = new MatrixWriter(outFilePrefix + ".txt", formatter);
+			MatrixWriter out = new MatrixWriter(outFilePrefix + ".txt",
+					formatter);
 			out.writeMatrix(rankMatrix, false);
+			out.close();
 		} catch (IOException e) {
 			return e;
 		}
 		return null;
 	}
-	
+
 	public static void main(String[] args) {
 		RankAnalysisCLI analysis = new RankAnalysisCLI();
+		StopWatch watch = new StopWatch();
+		watch.start();
 		Exception e = analysis.doWork(args);
+		watch.stop();
+		log.info("Finished analysis in " + watch);
 		if (e != null)
 			log.error(e.getMessage());
 	}
