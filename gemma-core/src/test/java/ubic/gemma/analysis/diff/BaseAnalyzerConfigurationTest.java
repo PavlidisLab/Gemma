@@ -327,6 +327,7 @@ public class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
     public void configureTestDataForTwoWayAnovaWithInteractions() {
 
         /* this is the default configuration */
+        log.info( "This is the default configuration of the test data." );
     }
 
     /**
@@ -335,6 +336,8 @@ public class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
      * Removes the replicates.
      */
     public void configureTestDataForTwoWayAnovaWithoutInteractions() {
+
+        log.info( "Configuring test data for two way anova without interactions." );
 
         /* remove the "replicates" */
         bioAssays.remove( bioAssay0b );
@@ -354,6 +357,13 @@ public class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
      * Configure the test data for one way anova.
      */
     public void configureTestDataForOneWayAnova() {
+
+        /*
+         * TODO This really configures it for a t-test, which is just a one way anova if there are only 2 factor values.
+         * Rename this to configureTestDataForTTest and create a separate method with test data for one way anova with 3
+         * (or more factor value).
+         */
+        log.info( "Configuring test data for one way anova." );
 
         Collection<BioMaterial> updatedBiomaterials = new HashSet<BioMaterial>();
         for ( BioMaterial m : biomaterials ) {
