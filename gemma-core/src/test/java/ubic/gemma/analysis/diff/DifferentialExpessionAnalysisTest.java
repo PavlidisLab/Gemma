@@ -18,8 +18,14 @@
  */
 package ubic.gemma.analysis.diff;
 
+import java.util.Collection;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 /**
  * Tests the {@link DifferentialExpessionAnalysis} tool.
@@ -39,11 +45,40 @@ public class DifferentialExpessionAnalysisTest extends BaseAnalyzerConfiguration
      * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#onSetUpInTransaction()
      */
     @Override
-    public void onSetUpInTransaction() {
+    public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
 
         analysis = new DifferentialExpressionAnalysis();
     }
+
+    // /**
+    // * Determines the analysis for GSE23.
+    // * <p>
+    // * Expected Analyzer: {@link OneWayAnovaAnalyzer}
+    // */
+    // public void testDetermineAnalysisForGSE23() {
+    // ExpressionExperimentService service = ( ExpressionExperimentService ) this
+    // .getBean( "expressionExperimentService" );
+    // expressionExperiment = service.findByShortName( "GSE23" );
+    // Collection<QuantitationType> quantitationTypes = expressionExperiment.getQuantitationTypes();
+    //
+    // for ( QuantitationType qt : quantitationTypes ) {
+    // log.debug( qt );
+    // if ( qt.getIsBackground() ) {
+    // quantitationType = qt;
+    // break;
+    // }
+    // }
+    // assertNotNull( quantitationType );
+    // Collection<DesignElementDataVector> vectors = expressionExperiment.getDesignElementDataVectors();
+    // bioAssayDimension = vectors.iterator().next().getBioAssayDimension();
+    //
+    // AbstractAnalyzer analyzer = analysis.determineAnalysis( expressionExperiment, quantitationType,
+    // bioAssayDimension );
+    // assertEquals( analyzer.getClass(), OneWayAnovaAnalyzer.class );
+    //
+    // analyzer.getPValues( expressionExperiment, quantitationType, bioAssayDimension );
+    // }
 
     /**
      * Tests determineAnalysis.

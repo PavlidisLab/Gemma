@@ -57,6 +57,18 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
     public Map<DesignElement, Double> getPValues( ExpressionExperiment expressionExperiment,
             QuantitationType quantitationType, BioAssayDimension bioAssayDimension ) {
 
+        return oneWayAnova( expressionExperiment, quantitationType, bioAssayDimension );
+    }
+
+    /**
+     * @param expressionExperiment
+     * @param quantitationType
+     * @param bioAssayDimension
+     * @return
+     */
+    public Map<DesignElement, Double> oneWayAnova( ExpressionExperiment expressionExperiment,
+            QuantitationType quantitationType, BioAssayDimension bioAssayDimension ) {
+
         Collection<ExperimentalFactor> experimentalFactors = expressionExperiment.getExperimentalDesign()
                 .getExperimentalFactors();
 
@@ -66,18 +78,6 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
 
         ExperimentalFactor experimentalFactor = experimentalFactors.iterator().next();
 
-        return oneWayAnova( expressionExperiment, quantitationType, experimentalFactor );
-    }
-
-    /**
-     * @param expressionExperiment
-     * @param quantitationType
-     * @param experimentalFactor
-     * @return
-     */
-    public Map<DesignElement, Double> oneWayAnova( ExpressionExperiment expressionExperiment,
-            QuantitationType quantitationType, ExperimentalFactor experimentalFactor ) {
-
         Collection<FactorValue> factorValues = experimentalFactor.getFactorValues();
 
         if ( factorValues.size() < 2 )
@@ -86,7 +86,7 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
                             + factorValues.size() + "." );
 
         ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( expressionExperiment
-                .getDesignElementDataVectors() );
+                .getDesignElementDataVectors(), bioAssayDimension, quantitationType );
 
         Collection<BioMaterial> biomaterials = AnalyzerHelper.getBioMaterialsForBioAssays( matrix );
 

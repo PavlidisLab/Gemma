@@ -33,10 +33,10 @@ public class AllDifferentialExpressionTests {
         TestSuite suite = new TestSuite( "Test for ubic.gemma.analysis.diff" );
         // $JUnit-BEGIN$
         suite.addTestSuite( AnalyzerHelperTest.class );
-        suite.addTestSuite( DifferentialExpessionAnalysisTest.class );
-        suite.addTestSuite( TwoWayAnovaWithoutInteractionsAnalyzerTest.class );
         suite.addTestSuite( OneWayAnovaAnalyzerTest.class );
         suite.addTestSuite( TTestAnalyzerTest.class );
+        suite.addTestSuite( TwoWayAnovaWithoutInteractionsAnalyzerTest.class );
+        suite.addTestSuite( DifferentialExpessionAnalysisTest.class );
         // no tests in these ...they are extended
         // suite.addTestSuite( BaseAnalyzerConfigurationTest.class );
         // suite.addTestSuite( BaseAnalyzerTest.class );

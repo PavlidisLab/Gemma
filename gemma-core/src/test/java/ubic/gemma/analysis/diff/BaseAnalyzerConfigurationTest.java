@@ -103,7 +103,8 @@ public class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
      * @see ubic.gemma.testing.BaseSpringContextTest#onSetUpInTransaction()
      */
     @Override
-    public void onSetUpInTransaction() {
+    public void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
 
         expressionExperiment = ExpressionExperiment.Factory.newInstance();
         expressionExperiment.setName( "a test expression experiment" );

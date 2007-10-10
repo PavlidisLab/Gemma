@@ -32,7 +32,7 @@ public class AnalyzerHelperTest extends BaseAnalyzerConfigurationTest {
      * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#onSetUpInTransaction()
      */
     @Override
-    public void onSetUpInTransaction() {
+    public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
     }
 

@@ -66,19 +66,21 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractAnalyzer {
         ExperimentalFactor experimentalFactorA = ( ExperimentalFactor ) iter.next();
         ExperimentalFactor experimentalFactorB = ( ExperimentalFactor ) iter.next();
 
-        return twoWayAnova( expressionExperiment, quantitationType, experimentalFactorA, experimentalFactorB );
+        return twoWayAnova( expressionExperiment, quantitationType, bioAssayDimension, experimentalFactorA,
+                experimentalFactorB );
     }
 
     /**
      * @param expressionExperiment
      * @param quantitationType
+     * @param bioAssayDimension
      * @param experimentalFactorA
      * @param experimentalFactorB
      * @return
      */
     public Map<DesignElement, Double> twoWayAnova( ExpressionExperiment expressionExperiment,
-            QuantitationType quantitationType, ExperimentalFactor experimentalFactorA,
-            ExperimentalFactor experimentalFactorB ) {
+            QuantitationType quantitationType, BioAssayDimension bioAssayDimension,
+            ExperimentalFactor experimentalFactorA, ExperimentalFactor experimentalFactorB ) {
 
         Collection factorValuesA = experimentalFactorA.getFactorValues();
         Collection factorValuesB = experimentalFactorB.getFactorValues();
@@ -91,7 +93,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractAnalyzer {
         }
 
         ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( expressionExperiment
-                .getDesignElementDataVectors() );
+                .getDesignElementDataVectors(), bioAssayDimension, quantitationType );
 
         Collection<BioMaterial> biomaterials = AnalyzerHelper.getBioMaterialsForBioAssays( matrix );
 
