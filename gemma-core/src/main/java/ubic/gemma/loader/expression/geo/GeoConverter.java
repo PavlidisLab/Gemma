@@ -1017,8 +1017,11 @@ public class GeoConverter implements Converter {
         Collection<String> organisms = platform.getOrganisms();
 
         if ( organisms.size() > 1 ) {
-            log.warn( "!!!! Multiple organisms represented on platform " + platform
+            log.warn( "!!!! " + organisms.size() + " organisms represented on platform " + platform
                     + " --- BioSequences will be associated with the first one found." );
+            for ( String org : organisms ) {
+                log.warn( org );
+            }
         }
 
         if ( organisms.size() == 0 ) {
@@ -1026,7 +1029,12 @@ public class GeoConverter implements Converter {
             return null;
         }
 
-        String organism = organisms.iterator().next();
+        String organism = null;
+        for ( String org : organisms ) {
+            if ( org == null ) continue;
+            organism = org;
+        }
+        assert organism != null;
         log.debug( "Organism: " + organism );
 
         /* see if taxon exists in map */
