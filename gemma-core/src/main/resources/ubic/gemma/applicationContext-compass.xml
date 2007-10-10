@@ -149,6 +149,22 @@
 			</list>
 		</property>
 	</bean>
+		<bean id="probeGps"
+		class="org.compass.gps.impl.SingleCompassGps" init-method="start"
+		destroy-method="stop">
+		<property name="compass">
+			<ref bean="compassProbe" />
+		</property>
+		<property name="gpsDevices">
+			<list>
+				<bean
+					class="org.compass.spring.device.SpringSyncTransactionGpsDeviceWrapper">
+					<property name="gpsDevice" ref="hibernateGpsDevice" />
+				</bean>
+			</list>
+		</property>
+	</bean>
+	
 	<!-- Quartz Indexing Configuration -->
 	<bean id="schedulerFactoryBean"
 		class="org.springframework.scheduling.quartz.SchedulerFactoryBean">

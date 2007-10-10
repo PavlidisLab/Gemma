@@ -97,6 +97,7 @@ public class SearchService {
     private Compass arrayBean;
     private Compass ontologyBean;
     private Compass bibliographicReferenceBean;
+    private Compass probeBean;
 
     /* EXPRESSION EXPERIMENT SEARCHES */
 
@@ -213,9 +214,17 @@ public class SearchService {
         Collection<ArrayDesign> adCompassList = compassArrayDesignSearch( searchString );
         Collection<ArrayDesign> adCsList = arrayDesignCompositeSequenceDbSearch( searchString );
 
+        Collection<Long> probeAdIdList = new HashSet<Long>();
+        for(CompositeSequence cs :  compassProbeSearch( searchString )){
+            probeAdIdList.add( cs.getArrayDesign().getId());
+        }
+        Collection<ArrayDesign> adProbeList = arrayDesignDbLoad( probeAdIdList );
+        
         Collection<ArrayDesign> combinedList = new HashSet<ArrayDesign>();
         combinedList.addAll( adCompassList );
         combinedList.addAll( adCsList );
+        combinedList.addAll( adProbeList );
+        
         if ( adQueryResult != null ) combinedList.add( adQueryResult );
 
         return combinedList;
@@ -247,8 +256,7 @@ public class SearchService {
         if ( searchResults == null ) return new HashSet<ArrayDesign>();
 
         Collection<Long> adIds = convert2IdList( searchResults.getHits() );
-
-        // return convert2ArrayDesignList( searchResults.getHits() );
+     
         return this.arrayDesignDbLoad( adIds );
     }
 
@@ -276,6 +284,7 @@ public class SearchService {
      * @param ids
      * @return {@link Collection}
      */
+    @SuppressWarnings("unchecked")
     private Collection<ArrayDesign> arrayDesignDbLoad( Collection<Long> ids ) {
 
         Collection<ArrayDesign> results = arrayDesignService.loadMultiple(ids);
@@ -490,6 +499,21 @@ public class SearchService {
         return converted;
 
     }
+    
+    /**
+     * @param anOntology
+     * @return
+     */
+    protected Collection<CompositeSequence> convert2ProbeList( CompassHit[] anOntology ) {
+
+        Collection<CompositeSequence> converted = new HashSet<CompositeSequence>( anOntology.length );
+
+        for ( int i = 0; i < anOntology.length; i++ )
+            converted.add( ( CompositeSequence ) anOntology[i].getData() );
+
+        return converted;
+
+    }
 
     /* BIBLIOGRAPHIC REFERENCE SEARCHES */
     /**
@@ -657,6 +681,27 @@ public class SearchService {
         return bioSequenceList.subList( 0, Math.min( bioSequenceList.size(), MAX_SEARCH_RESULTS ) );
 
     }
+    
+    public Collection<CompositeSequence> compassProbeSearch(String searchString) throws Exception{
+        
+        
+        final String query = searchString.trim();
+        CompassSearchResults searchResults;
+
+        CompassTemplate template = new CompassTemplate( probeBean );
+
+        searchResults = ( CompassSearchResults ) template.execute(
+                CompassTransaction.TransactionIsolation.READ_ONLY_READ_COMMITTED, new CompassCallback() {
+                    public Object doInCompass( CompassSession session ) throws CompassException {
+                        return performSearch( query, session );
+                    }
+                } );
+
+        if ( searchResults == null ) return new HashSet<CompositeSequence>();
+        
+        return convert2ProbeList( searchResults.getHits() );
+        
+    }
 
     /**
      * @return the bioSequenceService
@@ -677,14 +722,13 @@ public class SearchService {
         if ( StringUtils.isBlank( query ) ) return null;
         if ( query.equals( "*" ) ) return null;
 
-        CompassQuery compassQuery = session.queryBuilder().queryString( query.trim() ).toQuery();
-
+        CompassQuery compassQuery = session.queryBuilder().queryString( query.trim() ).toQuery();        
         CompassHits hits = compassQuery.hits();
-        CompassDetachedHits detachedHits = hits.detach();
+        CompassDetachedHits detachedHits = hits.detach(1,50);
         time = System.currentTimeMillis() - time;
         CompassSearchResults searchResults = new CompassSearchResults( detachedHits.getHits(), time, detachedHits
                 .getHits().length );
-
+        
         return searchResults;
     }
 
@@ -790,6 +834,13 @@ public class SearchService {
      */
     public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
         this.bibliographicReferenceService = bibliographicReferenceService;
+    }
+
+    /**
+     * @param probeBean the probeBean to set
+     */
+    public void setProbeBean( Compass probeBean ) {
+        this.probeBean = probeBean;
     }
 
 }

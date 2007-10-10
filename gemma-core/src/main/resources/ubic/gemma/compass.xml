@@ -92,6 +92,9 @@
 					key="compass.engine.indexManagerScheduleInterval">
 					-1
 				</prop>
+				<prop key="compass.engine.mergeFactor">1000</prop>
+				<prop key="compass.engine.maxBufferedDocs">1000</prop>
+				
 			</props>
 		</property>
 		<property name="transactionManager">
@@ -182,16 +185,62 @@
 				<prop key="compass.engine.optimizer.type">
 					org.compass.core.lucene.engine.optimizer.NullOptimizer
 				</prop>
-				<prop
-					key="compass.engine.indexManagerScheduleInterval">
-					-1
-				</prop>
+				<prop key="compass.engine.indexManagerScheduleInterval"> -1	</prop>
+				<prop key="compass.engine.mergeFactor">1000</prop>
+				<prop key="compass.engine.maxBufferedDocs">1000</prop>
+				
 			</props>
 		</property>
 		<property name="transactionManager">
 			<ref bean="transactionManager" />
 		</property>
 	</bean>
+	
+	<bean id="compassProbe"
+		class="org.compass.spring.LocalCompassBean">
+		<property name="resourceLocations">
+			<list>
+				<value>
+					classpath:ubic/gemma/compass/probe_mappings.cpm.xml
+				</value>
+			</list>
+		</property>
+		<property name="compassSettings">
+			<props>
+				<prop key="compass.engine.connection">
+					file://${gemma.appdata.home}/compass/gemma/probe
+				</prop>
+				<prop key="compass.engine.lockFile">
+					file://${gemma.appdata.home}/compass/gemma/probe/probe.lock
+				</prop>
+				<prop key="compass.transaction.factory">
+					org.compass.spring.transaction.SpringSyncTransactionFactory
+				</prop>
+				<prop key="compass.transaction.lockTimeout">20</prop>
+				<prop key="compass.engine.analyzer.default.type">
+					Snowball
+				</prop>				
+				<prop key="compass.engine.analyzer.default.name">
+					English
+				</prop>
+				<prop key="compass.engine.optimizer.schedule">
+					false
+				</prop>
+				<prop key="compass.engine.optimizer.type">
+					org.compass.core.lucene.engine.optimizer.NullOptimizer
+				</prop>
+				<prop key="compass.engine.indexManagerScheduleInterval"> -1	</prop>
+				<prop key="compass.engine.mergeFactor">500</prop>
+				<prop key="compass.engine.maxBufferedDocs">500</prop>
+	
+				
+			</props>
+		</property>
+		<property name="transactionManager">
+			<ref bean="transactionManager" />
+		</property>
+	</bean>
+	
 	<bean id="compassBibliographic"
 		class="org.compass.spring.LocalCompassBean">
 		<property name="resourceLocations">
