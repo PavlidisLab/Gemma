@@ -91,6 +91,8 @@ public class GeneOntologyService implements InitializingBean {
     private static final String BASE_GO_URI = "http://purl.org/obo/owl/GO#";
     private static final String ALL_ROOT = BASE_GO_URI + "ALL";
 
+    private static final String PART_OF_URI = "http://purl.org/obo/owl/OBO_REL#OBO_REL_part_of";
+
     /*
      * (non-Javadoc)
      * 
@@ -117,14 +119,14 @@ public class GeneOntologyService implements InitializingBean {
         if ( terms == null ) return null;
         return terms.get( toUri( goId ) );
     }
-    
-    /* @param goURI e.g. GO:0001312
-    * @return null if not found
-    */
-   public static OntologyTerm getTermForURI( String uri ) {
-       if ( terms == null ) return null;
-       return terms.get( uri );
-   }
+
+    /*
+     * @param goURI e.g. GO:0001312 @return null if not found
+     */
+    public static OntologyTerm getTermForURI( String uri ) {
+        if ( terms == null ) return null;
+        return terms.get( uri );
+    }
 
     /**
      * Return human-readable term ("protein kinase") for a GO Id.
@@ -194,11 +196,10 @@ public class GeneOntologyService implements InitializingBean {
 
         boolean loadOntology = ConfigUtils.getBoolean( "loadOntology", true );
 
-      
-       if ( !loadOntology ) {
+        if ( !loadOntology ) {
             log.info( "Loading GO is disabled" );
             return;
-        }        
+        }
 
         Thread loadThread = new Thread( new Runnable() {
             public void run() {
@@ -269,12 +270,12 @@ public class GeneOntologyService implements InitializingBean {
         if ( terms == null ) terms = new HashMap<String, OntologyTerm>();
         for ( OntologyResource term : newTerms ) {
             if ( term.getUri() == null ) continue;
-            if ( term instanceof OntologyTerm ){
-                OntologyTerm ontTerm = (OntologyTerm) term;
-                terms.put( term.getUri(), ontTerm);
-                for(String alternativeID: ontTerm.getAlternativeIds()){
-                    log.info( toUri(alternativeID) );
-                    terms.put( toUri(alternativeID), ontTerm );
+            if ( term instanceof OntologyTerm ) {
+                OntologyTerm ontTerm = ( OntologyTerm ) term;
+                terms.put( term.getUri(), ontTerm );
+                for ( String alternativeID : ontTerm.getAlternativeIds() ) {
+                    log.info( toUri( alternativeID ) );
+                    terms.put( toUri( alternativeID ), ontTerm );
                 }
             }
         }
@@ -302,11 +303,10 @@ public class GeneOntologyService implements InitializingBean {
         Collection<OntologyTerm> parents = entry.getParents( true );
         Collection<OntologyTerm> results = new HashSet<OntologyTerm>();
         for ( OntologyTerm term : parents ) {
-            //The isRoot() returns true for the MolecularFunction, BiologicalProcess, CellularComponent
-            //if ( term.isRoot() ) continue;
-            if (term.getUri().equalsIgnoreCase(ALL_ROOT ))
-                continue;
-            
+            // The isRoot() returns true for the MolecularFunction, BiologicalProcess, CellularComponent
+            // if ( term.isRoot() ) continue;
+            if ( term.getUri().equalsIgnoreCase( ALL_ROOT ) ) continue;
+
             if ( term instanceof OntologyClassRestriction ) {
                 // log.info( "Skipping " + term );
                 // OntologyProperty restrictionOn = ( ( OntologyClassRestriction ) term ).getRestrictionOn();
@@ -360,7 +360,7 @@ public class GeneOntologyService implements InitializingBean {
         }
 
         for ( OntologyTerm entry2 : immediateParents ) {
-            //if ( entry2.isRoot() ) continue;
+            // if ( entry2.isRoot() ) continue;
             parents.add( entry2 );
             Collection<OntologyTerm> entry2Parents = new HashSet<OntologyTerm>();
             getAllParents( entry2, entry2Parents );
@@ -487,7 +487,7 @@ public class GeneOntologyService implements InitializingBean {
         Collection<OntologyTerm> r = new HashSet<OntologyTerm>();
         String u = entry.getUri();
         String queryString = "SELECT ?x WHERE {" + "?x <http://www.w3.org/2000/01/rdf-schema#subClassOf> ?v . "
-                + "?v <http://www.w3.org/2002/07/owl#onProperty>  <http://purl.org/obo/owl/obo#part_of> . "
+                + "?v <http://www.w3.org/2002/07/owl#onProperty> <" + PART_OF_URI + ">  . "
                 + "?v <http://www.w3.org/2002/07/owl#someValuesFrom> <" + u + "> . }";
         Query q = QueryFactory.create( queryString );
         QueryExecution qexec = QueryExecutionFactory.create( q, ( Model ) entry.getModel() );
@@ -517,7 +517,7 @@ public class GeneOntologyService implements InitializingBean {
         Collection<OntologyTerm> r = new HashSet<OntologyTerm>();
         String u = entry.getUri();
         String queryString = "SELECT ?x WHERE {  <" + u + ">  <http://www.w3.org/2000/01/rdf-schema#subClassOf> ?v . "
-                + "?v <http://www.w3.org/2002/07/owl#onProperty>  <http://purl.org/obo/owl/obo#part_of> . "
+                + "?v <http://www.w3.org/2002/07/owl#onProperty>  <" + PART_OF_URI + "> . "
                 + "?v <http://www.w3.org/2002/07/owl#someValuesFrom> ?x . }";
         Query q = QueryFactory.create( queryString );
         QueryExecution qexec = QueryExecutionFactory.create( q, ( Model ) entry.getModel() );
@@ -646,7 +646,7 @@ public class GeneOntologyService implements InitializingBean {
         }
 
         allGOTermSet.addAll( getAllParents( allGOTermSet ) );
-        
+
         goTerms.put( gene.getId(), allGOTermSet );
         return allGOTermSet;
     }
