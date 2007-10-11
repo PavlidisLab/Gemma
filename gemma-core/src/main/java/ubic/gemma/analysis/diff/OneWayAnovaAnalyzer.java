@@ -116,16 +116,16 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
         String matrixName = rc.assignMatrix( namedMatrix );
 
         /* p-values */
-        StringBuffer command = new StringBuffer();
+        StringBuffer pvalueCommand = new StringBuffer();
 
-        command.append( "apply(" );
-        command.append( matrixName );
-        command.append( ", 1, function(x) {anova(aov(x ~ " + factor + "))$Pr}" );
-        command.append( ")" );
+        pvalueCommand.append( "apply(" );
+        pvalueCommand.append( matrixName );
+        pvalueCommand.append( ", 1, function(x) {anova(aov(x ~ " + factor + "))$Pr}" );
+        pvalueCommand.append( ")" );
 
-        log.info( command.toString() );
+        log.info( pvalueCommand.toString() );
 
-        REXP regExp = rc.eval( command.toString() );
+        REXP regExp = rc.eval( pvalueCommand.toString() );
 
         double[] pvalues = ( double[] ) regExp.getContent();
 

@@ -144,17 +144,17 @@ public class TTestAnalyzer extends AbstractAnalyzer {
         String factor = "factor(" + tfacts + ")";
 
         String matrixName = rc.assignMatrix( namedMatrix );
-        StringBuffer command = new StringBuffer();
+        StringBuffer pvalueCommand = new StringBuffer();
 
         /* handle the p-values */
-        command.append( "apply(" );
-        command.append( matrixName );
-        command.append( ", 1, function(x) {t.test(x ~ " + factor + ")$p.value}" );
-        command.append( ")" );
+        pvalueCommand.append( "apply(" );
+        pvalueCommand.append( matrixName );
+        pvalueCommand.append( ", 1, function(x) {t.test(x ~ " + factor + ")$p.value}" );
+        pvalueCommand.append( ")" );
 
-        log.debug( command.toString() );
+        log.debug( pvalueCommand.toString() );
 
-        REXP regExpPValues = rc.eval( command.toString() );
+        REXP regExpPValues = rc.eval( pvalueCommand.toString() );
 
         double[] pvalues = ( double[] ) regExpPValues.getContent();
 
