@@ -36,7 +36,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @author klc
  * @version $Id$
  */
-public class AddExperimentalDesign extends AbstractSpringAwareCLI {
+public class AddExperimentalDesignCLI extends AbstractSpringAwareCLI {
 
 //These were the previous EE ids that had no experimentalDesign
 //The easiest way to get this set is to use a sql query like: select ee.id from expression_experiment as ee where ee.experimental_design is null
@@ -76,7 +76,7 @@ public class AddExperimentalDesign extends AbstractSpringAwareCLI {
      * @param args
      */
     public static void main( String[] args ) {
-        AddExperimentalDesign p = new AddExperimentalDesign();
+        AddExperimentalDesignCLI p = new AddExperimentalDesignCLI();
         StopWatch watch = new StopWatch();
         watch.start();
         try {
