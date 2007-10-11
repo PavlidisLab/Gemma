@@ -18,8 +18,10 @@
  */
 package ubic.gemma.analysis.diff;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -27,11 +29,13 @@ import org.rosuda.JRclient.REXP;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
+import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
+import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -45,6 +49,8 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * R Call:
  * <p>
  * apply(matrix,1,function(x){anova(aov(x~factor))$Pr})
+ * <p>
+ * apply(matrix,1,function(x){anova(aov(x~factor))$F})
  * <p>
  * where factor is a vector that has first been transposed and then had factor() applied.
  * 
@@ -61,8 +67,8 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
      *      ubic.gemma.model.expression.bioAssayData.BioAssayDimension, java.util.Collection)
      */
     @Override
-    public ExpressionAnalysis getExpressionAnalysis( ExpressionExperiment expressionExperiment, QuantitationType quantitationType,
-            BioAssayDimension bioAssayDimension ) {
+    public ExpressionAnalysis getExpressionAnalysis( ExpressionExperiment expressionExperiment,
+            QuantitationType quantitationType, BioAssayDimension bioAssayDimension ) {
 
         return oneWayAnova( expressionExperiment, quantitationType, bioAssayDimension );
     }
@@ -70,9 +76,9 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
     /**
      * See class level javadoc for R Call.
      * 
-     * @param expressionExperiment
-     * @param quantitationType
-     * @param bioAssayDimension
+     * @param matrix
+     * @param factorValues
+     * @param samplesUsed
      * @return
      */
     public ExpressionAnalysis oneWayAnova( ExpressionExperiment expressionExperiment,
@@ -94,26 +100,10 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
                     "One way anova requires 2 or more factor values (2 factor values is a t-test).  Received "
                             + factorValues.size() + "." );
 
-        ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( expressionExperiment
+        ExpressionDataDoubleMatrix dmatrix = new ExpressionDataDoubleMatrix( expressionExperiment
                 .getDesignElementDataVectors(), bioAssayDimension, quantitationType );
 
-        Collection<BioMaterial> biomaterials = AnalyzerHelper.getBioMaterialsForBioAssays( matrix );
-
-        return oneWayAnova( matrix, factorValues, biomaterials );
-    }
-
-    /**
-     * See class level javadoc for R Call.
-     * 
-     * @param matrix
-     * @param factorValues
-     * @param samplesUsed
-     * @return
-     */
-    public ExpressionAnalysis oneWayAnova( ExpressionDataMatrix matrix, Collection<FactorValue> factorValues,
-            Collection<BioMaterial> samplesUsed ) {
-
-        ExpressionDataDoubleMatrix dmatrix = ( ExpressionDataDoubleMatrix ) matrix;
+        Collection<BioMaterial> samplesUsed = AnalyzerHelper.getBioMaterialsForBioAssays( dmatrix );
 
         DoubleMatrixNamed namedMatrix = dmatrix.getNamedMatrix();
 
@@ -126,6 +116,8 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
         String factor = "factor(" + tfacts + ")";
 
         String matrixName = rc.assignMatrix( namedMatrix );
+
+        /* p-values */
         StringBuffer command = new StringBuffer();
 
         command.append( "apply(" );
@@ -148,13 +140,52 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
             }
         }
 
-        // TODO Use the ExpressionAnalysisResult
-        Map<DesignElement, Double> pvaluesMap = new HashMap<DesignElement, Double>();
-        for ( int i = 0; i < matrix.rows(); i++ ) {
-            DesignElement de = matrix.getDesignElementForRow( i );
-            pvaluesMap.put( de, filteredPvalues[i] );
+        /* f-statistic */
+        StringBuffer fStatisticCommand = new StringBuffer();
+
+        fStatisticCommand.append( "apply(" );
+        fStatisticCommand.append( matrixName );
+        fStatisticCommand.append( ", 1, function(x) {anova(aov(x ~ " + factor + "))$F}" );
+        fStatisticCommand.append( ")" );
+
+        log.info( fStatisticCommand.toString() );
+
+        REXP fRegExp = rc.eval( fStatisticCommand.toString() );
+
+        double[] fstatistics = ( double[] ) fRegExp.getContent();
+
+        double[] filteredFStatistics = new double[fstatistics.length / 2];// removes the NaN row
+
+        for ( int i = 0, j = 0; j < filteredFStatistics.length; i++ ) {
+            if ( i % 2 == 0 ) {
+                filteredFStatistics[j] = fstatistics[i];
+                j++;
+            }
         }
 
-        return null;
+        /* Create the expression analysis and pack the results. */
+        ExpressionAnalysis expressionAnalysis = ExpressionAnalysis.Factory.newInstance();
+
+        Collection<ExpressionExperiment> experimentsAnalyzed = new HashSet<ExpressionExperiment>();
+        expressionAnalysis.setExperimentsAnalyzed( experimentsAnalyzed );
+
+        List<ExpressionAnalysisResult> analysisResults = new ArrayList<ExpressionAnalysisResult>();
+        for ( int i = 0; i < dmatrix.rows(); i++ ) {
+            DesignElement de = dmatrix.getDesignElementForRow( i );
+            // FIXME maybe ProbeAnalysisResult should have a DesignElement to avoid typecasting
+            CompositeSequence cs = ( CompositeSequence ) de;
+
+            ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();
+            probeAnalysisResult.setProbe( cs );
+            probeAnalysisResult.setPvalue( filteredPvalues[i] );
+            probeAnalysisResult.setScore( filteredFStatistics[i] );
+            probeAnalysisResult.setQuantitationType( quantitationType );
+
+            analysisResults.add( probeAnalysisResult );
+        }
+
+        expressionAnalysis.setAnalysisResults( analysisResults );
+
+        return expressionAnalysis;
     }
 }
