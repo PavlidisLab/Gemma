@@ -113,10 +113,8 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
 
         double[] pvalues = ( double[] ) regExp.getContent();
 
-        double[] filteredPvalues = new double[( pvalues.length / NUM_RESULTS_FROM_R ) * ACTUAL_NUM_RESULTS];// removes
-        // the
-        // NaN
-        // row
+        // removes NA row
+        double[] filteredPvalues = new double[( pvalues.length / NUM_RESULTS_FROM_R ) * ACTUAL_NUM_RESULTS];
 
         for ( int i = 0, j = 0; j < filteredPvalues.length; i++ ) {
             if ( i % NUM_RESULTS_FROM_R < ACTUAL_NUM_RESULTS ) {
@@ -140,10 +138,8 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
 
         double[] fstatistics = ( double[] ) fregExp.getContent();
 
-        double[] filteredFStatistics = new double[( fstatistics.length / NUM_RESULTS_FROM_R ) * ACTUAL_NUM_RESULTS];// removes
-                                                                                                                // the
-                                                                                                                // NaN
-                                                                                                                // row
+        // removes NA row
+        double[] filteredFStatistics = new double[( fstatistics.length / NUM_RESULTS_FROM_R ) * ACTUAL_NUM_RESULTS];
 
         for ( int i = 0, j = 0; j < filteredFStatistics.length; i++ ) {
             if ( i % NUM_RESULTS_FROM_R < ACTUAL_NUM_RESULTS ) {
