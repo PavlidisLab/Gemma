@@ -159,7 +159,6 @@ public class TTestAnalyzer extends AbstractAnalyzer {
         double[] pvalues = ( double[] ) regExpPValues.getContent();
 
         /* handle the t-statistics */
-
         StringBuffer tstatisticCommand = new StringBuffer();
         tstatisticCommand.append( "apply(" );
         tstatisticCommand.append( matrixName );
