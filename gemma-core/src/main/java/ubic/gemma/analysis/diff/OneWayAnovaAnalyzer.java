@@ -40,6 +40,12 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * A one way anova implementation as described by P. Pavlidis, Methods 31 (2003) 282-289.
  * <p>
  * See http://www.bioinformatics.ubc.ca/pavlidis/lab/docs/reprints/anova-methods.pdf.
+ * <p>
+ * R Call:
+ * <p>
+ * apply(matrix,1,function(x){anova(aov(x~factor))$Pr})
+ * <p>
+ * where factor is a vector that has first been transposed and then had factor() applied.
  * 
  * @author keshav
  * @version $Id$
@@ -61,6 +67,8 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
     }
 
     /**
+     * See class level javadoc for R Call.
+     * 
      * @param expressionExperiment
      * @param quantitationType
      * @param bioAssayDimension
@@ -94,11 +102,7 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
     }
 
     /**
-     * R Call:
-     * <p>
-     * apply(matrix,1,function(x){anova(aov(x~factor))$Pr})
-     * <p>
-     * where factor is a vector that has first been transposed and then had factor() applied.
+     * See class level javadoc for R Call.
      * 
      * @param matrix
      * @param factorValues

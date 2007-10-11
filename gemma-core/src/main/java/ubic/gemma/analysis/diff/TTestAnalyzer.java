@@ -45,6 +45,10 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * A t-test implementation as described by P. Pavlidis, Methods 31 (2003) 282-289.
  * <p>
  * See http://www.bioinformatics.ubc.ca/pavlidis/lab/docs/reprints/anova-methods.pdf.
+ * <p>
+ * R call:
+ * <p>
+ * apply(matrix, 1, function(x) {t.test(x ~ factor(t(facts)))$p.value})
  * 
  * @author keshav
  * @version $Id$
@@ -91,7 +95,7 @@ public class TTestAnalyzer extends AbstractAnalyzer {
     }
 
     /**
-     * Runs a t-test on the factor values.
+     * See class level javadoc for R Call.
      * 
      * @param expressionExperiment
      * @param quantitationType
@@ -121,9 +125,7 @@ public class TTestAnalyzer extends AbstractAnalyzer {
     }
 
     /**
-     * R call:
-     * <p>
-     * apply(matrix, 1, function(x) {t.test(x ~ factor(t(facts)))$p.value})
+     * See class level javadoc for R Call.
      * 
      * @param matrix
      * @param factorValues
