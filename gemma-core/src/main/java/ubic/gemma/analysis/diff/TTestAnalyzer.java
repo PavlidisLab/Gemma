@@ -188,7 +188,8 @@ public class TTestAnalyzer extends AbstractAnalyzer {
             ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();
             probeAnalysisResult.setProbe( cs );
             probeAnalysisResult.setPvalue( pvalues[i] );
-            probeAnalysisResult.setPvalue( tstatistics[i] );
+            probeAnalysisResult.setScore( tstatistics[i] );
+            probeAnalysisResult.setQuantitationType( quantitationType );
 
             analysisResults.add( probeAnalysisResult );
         }
