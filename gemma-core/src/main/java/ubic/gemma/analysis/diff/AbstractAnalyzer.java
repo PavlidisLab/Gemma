@@ -18,15 +18,15 @@
  */
 package ubic.gemma.analysis.diff;
 
-import java.util.Map;
-
 import ubic.gemma.analysis.util.RCommander;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
+ * An abstract analyzer to be extended by analyzers which will make use of R.
+ * 
  * @author keshav
  * @version $Id$
  */
@@ -38,7 +38,7 @@ public abstract class AbstractAnalyzer extends RCommander {
      * @param bioAssayDimension
      * @return
      */
-    public abstract Map<DesignElement, Double> getPValues( ExpressionExperiment expressionExperiment,
+    public abstract ExpressionAnalysis getExpressionAnalysis( ExpressionExperiment expressionExperiment,
             QuantitationType quantitationType, BioAssayDimension bioAssayDimension );
 
 }

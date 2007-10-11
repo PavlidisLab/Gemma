@@ -29,6 +29,7 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -60,8 +61,8 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
      *      ubic.gemma.model.expression.bioAssayData.BioAssayDimension, java.util.Collection)
      */
     @Override
-    public Map<DesignElement, Double> getPValues( ExpressionExperiment expressionExperiment,
-            QuantitationType quantitationType, BioAssayDimension bioAssayDimension ) {
+    public ExpressionAnalysis getExpressionAnalysis( ExpressionExperiment expressionExperiment, QuantitationType quantitationType,
+            BioAssayDimension bioAssayDimension ) {
 
         return oneWayAnova( expressionExperiment, quantitationType, bioAssayDimension );
     }
@@ -74,7 +75,7 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
      * @param bioAssayDimension
      * @return
      */
-    public Map<DesignElement, Double> oneWayAnova( ExpressionExperiment expressionExperiment,
+    public ExpressionAnalysis oneWayAnova( ExpressionExperiment expressionExperiment,
             QuantitationType quantitationType, BioAssayDimension bioAssayDimension ) {
 
         Collection<ExperimentalFactor> experimentalFactors = expressionExperiment.getExperimentalDesign()
@@ -109,7 +110,7 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
      * @param samplesUsed
      * @return
      */
-    public Map<DesignElement, Double> oneWayAnova( ExpressionDataMatrix matrix, Collection<FactorValue> factorValues,
+    public ExpressionAnalysis oneWayAnova( ExpressionDataMatrix matrix, Collection<FactorValue> factorValues,
             Collection<BioMaterial> samplesUsed ) {
 
         ExpressionDataDoubleMatrix dmatrix = ( ExpressionDataDoubleMatrix ) matrix;
@@ -154,6 +155,6 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
             pvaluesMap.put( de, filteredPvalues[i] );
         }
 
-        return pvaluesMap;
+        return null;
     }
 }

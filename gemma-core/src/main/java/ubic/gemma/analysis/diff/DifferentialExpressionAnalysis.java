@@ -25,6 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -51,7 +52,7 @@ public class DifferentialExpressionAnalysis {
     private int FACTOR_VALUE_ONE = 1;
     private int FACTOR_VALUE_TWO = 2;
 
-    Map<DesignElement, Double> pvalues = null;
+    ExpressionAnalysis expressionAnalysis = null;
 
     /**
      * Initiates the differential expression analysis (this is the entry point).
@@ -65,18 +66,19 @@ public class DifferentialExpressionAnalysis {
 
         AbstractAnalyzer analyzer = determineAnalysis( expressionExperiment, quantitationType, bioAssayDimension );
 
-        pvalues = analyzer.getPValues( expressionExperiment, quantitationType, bioAssayDimension );
+        expressionAnalysis = analyzer.getExpressionAnalysis( expressionExperiment, quantitationType, bioAssayDimension );
 
     }
 
     /**
-     * Returns the pvalues from the executed analysis.
+     * Returns the expression analysis and results from the executed analysis.
      * 
      * @return
      */
-    public Map<DesignElement, Double> getPvalues() {
-        if ( pvalues == null ) throw new RuntimeException( "Analysis was never executed.  Run the analysis first." );
-        return pvalues;
+    public ExpressionAnalysis getPvalues() {
+        if ( expressionAnalysis == null )
+            throw new RuntimeException( "Analysis was never executed.  Run the analysis first." );
+        return expressionAnalysis;
     }
 
     /**

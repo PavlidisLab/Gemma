@@ -18,10 +18,10 @@
  */
 package ubic.gemma.analysis.diff;
 
-import java.util.Map;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 
 /**
  * Tests the two way anova analyzer.
@@ -54,9 +54,11 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
 
         super.configureTestDataForTwoWayAnovaWithoutInteractions();
 
-        Map pvaluesMap = analyzer.getPValues( expressionExperiment, quantitationType, bioAssayDimension );
+        ExpressionAnalysis expressionAnalysis = analyzer.getExpressionAnalysis( expressionExperiment, quantitationType,
+                bioAssayDimension );
 
-        assertEquals( pvaluesMap.size(), NUM_DESIGN_ELEMENTS ); // FIXME use the ExpressionAnalysisResult framework
+        // TODO assert on the expressionAnalysis.getResults().size
+        // assertEquals( pvaluesMap.size(), NUM_DESIGN_ELEMENTS );
     }
 
 }

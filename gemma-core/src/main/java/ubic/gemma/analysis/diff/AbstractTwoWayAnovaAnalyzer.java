@@ -25,6 +25,7 @@ import java.util.Map;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -52,7 +53,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractAnalyzer {
      *      ubic.gemma.model.expression.bioAssayData.BioAssayDimension, java.util.Collection)
      */
     @Override
-    public Map<DesignElement, Double> getPValues( ExpressionExperiment expressionExperiment,
+    public ExpressionAnalysis getExpressionAnalysis( ExpressionExperiment expressionExperiment,
             QuantitationType quantitationType, BioAssayDimension bioAssayDimension ) {
 
         Collection<ExperimentalFactor> experimentalFactors = expressionExperiment.getExperimentalDesign()
@@ -78,7 +79,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractAnalyzer {
      * @param experimentalFactorB
      * @return
      */
-    public Map<DesignElement, Double> twoWayAnova( ExpressionExperiment expressionExperiment,
+    public ExpressionAnalysis twoWayAnova( ExpressionExperiment expressionExperiment,
             QuantitationType quantitationType, BioAssayDimension bioAssayDimension,
             ExperimentalFactor experimentalFactorA, ExperimentalFactor experimentalFactorB ) {
 
@@ -109,7 +110,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractAnalyzer {
      * @param samplesUsed
      * @return
      */
-    public abstract Map<DesignElement, Double> twoWayAnova( ExpressionDataMatrix matrix,
+    public abstract ExpressionAnalysis twoWayAnova( ExpressionDataMatrix matrix,
             ExperimentalFactor experimentalFactorA, ExperimentalFactor experimentalFactorB,
             Collection<BioMaterial> samplesUsed );
 

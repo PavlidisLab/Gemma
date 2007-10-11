@@ -21,11 +21,11 @@ package ubic.gemma.analysis.diff;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -95,12 +95,14 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
      */
     public void testTTestWithExpressionExperiment() {
 
-        Map pvaluesMap = analyzer.tTest( expressionExperiment, quantitationType, bioAssayDimension, factorValueA,
-                factorValueB );
+        ExpressionAnalysis expressionAnalysis = analyzer.tTest( expressionExperiment, quantitationType,
+                bioAssayDimension, factorValueA, factorValueB );
 
-        log.info( pvaluesMap );
+        log.info( expressionAnalysis );
 
-        assertEquals( pvaluesMap.size(), 4 );
+        int numResults = expressionAnalysis.getAnalysisResults().size();
+
+        assertEquals( numResults, NUM_DESIGN_ELEMENTS );
 
     }
 

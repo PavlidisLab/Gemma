@@ -20,7 +20,7 @@ package ubic.gemma.analysis.diff;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -33,9 +33,13 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
+import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
+import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -46,9 +50,13 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * <p>
  * See http://www.bioinformatics.ubc.ca/pavlidis/lab/docs/reprints/anova-methods.pdf.
  * <p>
- * R call:
+ * R calls:
  * <p>
  * apply(matrix, 1, function(x) {t.test(x ~ factor(t(facts)))$p.value})
+ * <p>
+ * apply(matrix, 1, function(x) {t.test(x ~ factor(t(facts)))$statistic})
+ * <p>
+ * NOTE: facts is first transposed and then factor is applied (as indicated in the equations above)
  * 
  * @author keshav
  * @version $Id$
@@ -69,8 +77,8 @@ public class TTestAnalyzer extends AbstractAnalyzer {
      *      ubic.gemma.model.expression.bioAssayData.BioAssayDimension, java.util.Collection)
      */
     @Override
-    public Map<DesignElement, Double> getPValues( ExpressionExperiment expressionExperiment,
-            QuantitationType quantitationType, BioAssayDimension bioAssayDimension ) {
+    public ExpressionAnalysis getExpressionAnalysis( ExpressionExperiment expressionExperiment, QuantitationType quantitationType,
+            BioAssayDimension bioAssayDimension ) {
 
         Collection<ExperimentalFactor> experimentalFactors = expressionExperiment.getExperimentalDesign()
                 .getExperimentalFactors();
@@ -97,15 +105,14 @@ public class TTestAnalyzer extends AbstractAnalyzer {
     /**
      * See class level javadoc for R Call.
      * 
-     * @param expressionExperiment
-     * @param quantitationType
-     * @param factorValueA
-     * @param factorValueB
+     * @param matrix
+     * @param factorValues
+     * @param samplesUsed
      * @return
      */
-    public Map<DesignElement, Double> tTest( ExpressionExperiment expressionExperiment,
-            QuantitationType quantitationType, BioAssayDimension bioAssayDimension, FactorValue factorValueA,
-            FactorValue factorValueB ) {
+    @SuppressWarnings("unchecked")
+    protected ExpressionAnalysis tTest( ExpressionExperiment expressionExperiment, QuantitationType quantitationType,
+            BioAssayDimension bioAssayDimension, FactorValue factorValueA, FactorValue factorValueB ) {
 
         Collection<DesignElementDataVector> vectors = expressionExperiment.getDesignElementDataVectors();
 
@@ -119,22 +126,7 @@ public class TTestAnalyzer extends AbstractAnalyzer {
 
         ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( vectors, bioAssayDimension, quantitationType );
 
-        Collection<BioMaterial> biomaterials = AnalyzerHelper.getBioMaterialsForBioAssays( matrix );
-
-        return tTest( matrix, factorValueA, factorValueB, biomaterials );
-    }
-
-    /**
-     * See class level javadoc for R Call.
-     * 
-     * @param matrix
-     * @param factorValues
-     * @param samplesUsed
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    protected Map<DesignElement, Double> tTest( ExpressionDataMatrix matrix, FactorValue factorValueA,
-            FactorValue factorValueB, Collection<BioMaterial> samplesUsed ) {
+        Collection<BioMaterial> samplesUsed = AnalyzerHelper.getBioMaterialsForBioAssays( matrix );
 
         Collection<FactorValue> factorValues = new ArrayList<FactorValue>();
         factorValues.add( factorValueA );
@@ -155,26 +147,55 @@ public class TTestAnalyzer extends AbstractAnalyzer {
         String matrixName = rc.assignMatrix( namedMatrix );
         StringBuffer command = new StringBuffer();
 
+        /* handle the p-values */
         command.append( "apply(" );
         command.append( matrixName );
-        // command.append( ", 1, function(x) {t.test(x[1:3],x[4:6])}" ); <-- Useful Test
         command.append( ", 1, function(x) {t.test(x ~ " + factor + ")$p.value}" );
         command.append( ")" );
 
         log.debug( command.toString() );
 
-        REXP regExp = rc.eval( command.toString() );
+        REXP regExpPValues = rc.eval( command.toString() );
 
-        double[] pvalues = ( double[] ) regExp.getContent();
+        double[] pvalues = ( double[] ) regExpPValues.getContent();
 
-        // TODO Use the ExpressionAnalysisResult
-        Map pvaluesMap = new HashMap<DesignElement, Double>();
+        /* handle the t-statistics */
+
+        StringBuffer tstatisticCommand = new StringBuffer();
+        tstatisticCommand.append( "apply(" );
+        tstatisticCommand.append( matrixName );
+        tstatisticCommand.append( ", 1, function(x) {t.test(x ~ " + factor + ")$statistic}" );
+        tstatisticCommand.append( ")" );
+
+        log.debug( tstatisticCommand.toString() );
+
+        REXP regExpTStatistics = rc.eval( tstatisticCommand.toString() );
+
+        double[] tstatistics = ( double[] ) regExpTStatistics.getContent();
+
+        ExpressionAnalysis expressionAnalysis = ExpressionAnalysis.Factory.newInstance();
+
+        Collection<ExpressionExperiment> experimentsAnalyzed = new HashSet<ExpressionExperiment>();
+        expressionAnalysis.setExperimentsAnalyzed( experimentsAnalyzed );
+
+        List<ExpressionAnalysisResult> analysisResults = new ArrayList<ExpressionAnalysisResult>();
+
         for ( int i = 0; i < matrix.rows(); i++ ) {
             DesignElement de = matrix.getDesignElementForRow( i );
-            pvaluesMap.put( de, pvalues[i] );
+            // FIXME maybe ProbeAnalysisResult should have a DesignElement to avoid typecasting
+            CompositeSequence cs = ( CompositeSequence ) de;
+
+            ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();
+            probeAnalysisResult.setProbe( cs );
+            probeAnalysisResult.setPvalue( pvalues[i] );
+            probeAnalysisResult.setPvalue( tstatistics[i] );
+
+            analysisResults.add( probeAnalysisResult );
         }
 
-        return pvaluesMap;
+        expressionAnalysis.setAnalysisResults( analysisResults );
+
+        return expressionAnalysis;
     }
 
 }
