@@ -57,6 +57,8 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  */
 public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
 
+    private static final int NUM_RESULTS_FROM_R = 2;
+
     /*
      * (non-Javadoc)
      * 
@@ -129,10 +131,10 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
 
         double[] pvalues = ( double[] ) regExp.getContent();
 
-        double[] filteredPvalues = new double[pvalues.length / 2];// removes the NaN row
+        double[] filteredPvalues = new double[pvalues.length / NUM_RESULTS_FROM_R];// removes the NaN row
 
         for ( int i = 0, j = 0; j < filteredPvalues.length; i++ ) {
-            if ( i % 2 == 0 ) {
+            if ( i % NUM_RESULTS_FROM_R == 0 ) {
                 filteredPvalues[j] = pvalues[i];
                 j++;
             }
@@ -152,10 +154,10 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
 
         double[] fstatistics = ( double[] ) fRegExp.getContent();
 
-        double[] filteredFStatistics = new double[fstatistics.length / 2];// removes the NaN row
+        double[] filteredFStatistics = new double[fstatistics.length / NUM_RESULTS_FROM_R];// removes the NaN row
 
         for ( int i = 0, j = 0; j < filteredFStatistics.length; i++ ) {
-            if ( i % 2 == 0 ) {
+            if ( i % NUM_RESULTS_FROM_R == 0 ) {
                 filteredFStatistics[j] = fstatistics[i];
                 j++;
             }
