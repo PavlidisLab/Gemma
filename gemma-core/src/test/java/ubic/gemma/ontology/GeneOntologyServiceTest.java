@@ -98,7 +98,7 @@ public class GeneOntologyServiceTest extends TestCase {
     
     
     public final void testGetChildrenPartOf() throws Exception {
-        String id = "GO:0003674";  
+        String id = "GO:0003720";  
         OntologyTerm termForId = gos.getTermForId( id );
         assertNotNull( termForId );
         Collection<OntologyTerm> terms = gos.getAllChildren( termForId );
@@ -106,8 +106,8 @@ public class GeneOntologyServiceTest extends TestCase {
         for ( OntologyTerm term : terms ) {
             log.info( term );
         }
-        // has subclass and a partof.
-        assertEquals( 2, terms.size() );
+        // has a part.
+        assertEquals( 1, terms.size() );
     }
     
     public final void testGetParentsPartOf() throws Exception {

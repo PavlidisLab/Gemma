@@ -1045,6 +1045,21 @@
     <oboInOwl:hasOBONamespace>molecular_function</oboInOwl:hasOBONamespace>
   </owl:Class>
   
+  <owl:Class rdf:about="http://purl.org/obo/owl/GO#GO_0003720">
+    <rdfs:label xml:lang="en">I am a test as well, really</rdfs:label>
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Me too. I am here for testing purposes only as well.</rdfs:label>
+        <oboInOwl:hasDbXref>
+          <oboInOwl:DbXref>
+            <rdfs:label>GOC:krc</rdfs:label>
+            <oboInOwl:hasURI rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://purl.org/obo/owl/GOC#GOC_krc</oboInOwl:hasURI>
+          </oboInOwl:DbXref>
+        </oboInOwl:hasDbXref>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+    <oboInOwl:hasOBONamespace>molecular_function</oboInOwl:hasOBONamespace>
+  </owl:Class>
   
   <owl:Class rdf:about="http://purl.org/obo/owl/GO#GO_0000224">
     <rdfs:label xml:lang="en">peptide-N4-(N-acetyl-beta-glucosaminyl)asparagine amidase activity</rdfs:label>
