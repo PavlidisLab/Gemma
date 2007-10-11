@@ -18,17 +18,10 @@
  */
 package ubic.gemma.analysis.diff;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * Tests the two way anova analyzer.
@@ -36,14 +29,19 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @author keshav
  * @version $Id$
  */
-public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerTest {
+public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
     private Log log = LogFactory.getLog( this.getClass() );
 
     TwoWayAnovaWithoutInteractionsAnalyzer analyzer = new TwoWayAnovaWithoutInteractionsAnalyzer();
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#onSetUpInTransaction()
+     */
     @Override
-    protected void onSetUpInTransaction() throws Exception {
+    public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
     }
 
@@ -52,46 +50,13 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerTest
      */
     public void testTwoWayAnova() {
 
-        Iterator iter = this.efs.iterator();
-        ExperimentalFactor experimentalFactorA = ( ExperimentalFactor ) iter.next();
-        ExperimentalFactor experimentalFactorB = ( ExperimentalFactor ) iter.next();
+        log.debug( "Testing getPValues method in " + TwoWayAnovaWithoutInteractionsAnalyzer.class.getName() );
 
-        List<BioMaterial> alteredBiomaterials = new ArrayList<BioMaterial>();
+        super.configureTestDataForTwoWayAnovaWithoutInteractions();
 
-        /*
-         * There is just one factor value per biomaterial in the test experiment so we'll add another for the two way
-         * anova.
-         */
-        for ( BioMaterial m : biomaterials ) {
+        Map pvaluesMap = analyzer.getPValues( expressionExperiment, quantitationType, bioAssayDimension );
 
-            Collection<FactorValue> factorValuesFromBioMaterial = m.getFactorValues();
-
-            List<FactorValue> alteredFactorValues = new ArrayList<FactorValue>();
-
-            for ( FactorValue fv : factorValuesFromBioMaterial ) {
-
-                alteredFactorValues.add( fv );
-
-                Collection<FactorValue> fvs = null;
-
-                if ( fv.getExperimentalFactor() == experimentalFactorA ) {
-                    fvs = experimentalFactorB.getFactorValues();
-                } else {
-                    fvs = experimentalFactorA.getFactorValues();
-                }
-                FactorValue anotherFactorValue = fvs.iterator().next();
-                alteredFactorValues.add( anotherFactorValue );
-                break;
-            }
-
-            m.setFactorValues( alteredFactorValues );
-
-            alteredBiomaterials.add( m );
-        }
-
-        analyzer.twoWayAnova( this.matrix, experimentalFactorA, experimentalFactorB, alteredBiomaterials );
-
-        // analyzer.twoWayAnova( this.matrix, experimentalFactorA, experimentalFactorB, biomaterials );
+        assertEquals( pvaluesMap.size(), NUM_DESIGN_ELEMENTS ); // FIXME use the ExpressionAnalysisResult framework
     }
 
 }

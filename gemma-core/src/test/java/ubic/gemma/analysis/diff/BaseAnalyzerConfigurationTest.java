@@ -47,12 +47,9 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
 
-    private static final int NUM_DESIGN_ELEMENTS = 4;
+    protected static final int NUM_DESIGN_ELEMENTS = 4;
 
-    private static final int NUM_BIOASSAYS = 8;
-
-    // TODO consolidate the test data here and in the BaseAnalyzerTest. This class is
-    // easier to work with, but it doesn't have any data in the vectors.
+    protected static final int NUM_BIOASSAYS = 8;
 
     protected ExpressionExperiment expressionExperiment = null;
 

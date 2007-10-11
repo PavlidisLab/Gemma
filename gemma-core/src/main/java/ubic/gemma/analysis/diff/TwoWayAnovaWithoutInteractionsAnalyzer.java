@@ -100,7 +100,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
         double[] filteredPvalues = new double[( pvalues.length / 4 ) * 3];// removes the NaN row
 
         for ( int i = 0, j = 0; j < filteredPvalues.length; i++ ) {
-            if ( i % 3 < 2 ) {
+            if ( i % 4 < 3 ) {
                 filteredPvalues[j] = pvalues[i];
                 j++;
             }
