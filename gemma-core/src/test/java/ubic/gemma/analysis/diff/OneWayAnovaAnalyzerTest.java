@@ -68,8 +68,9 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
         ExpressionAnalysis expressionAnalysis = analyzer.oneWayAnova( expressionExperiment, quantitationType,
                 bioAssayDimension );
 
-        // TODO assert on the expressionAnalysis.getResults().size
-        // assertEquals( pvaluesMap.size(), 4 );
+        int size = expressionAnalysis.getAnalysisResults().size();
+
+        assertEquals( size, 4 );
 
     }
 
