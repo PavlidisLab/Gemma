@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -77,8 +76,8 @@ public class TTestAnalyzer extends AbstractAnalyzer {
      *      ubic.gemma.model.expression.bioAssayData.BioAssayDimension, java.util.Collection)
      */
     @Override
-    public ExpressionAnalysis getExpressionAnalysis( ExpressionExperiment expressionExperiment, QuantitationType quantitationType,
-            BioAssayDimension bioAssayDimension ) {
+    public ExpressionAnalysis getExpressionAnalysis( ExpressionExperiment expressionExperiment,
+            QuantitationType quantitationType, BioAssayDimension bioAssayDimension ) {
 
         Collection<ExperimentalFactor> experimentalFactors = expressionExperiment.getExperimentalDesign()
                 .getExperimentalFactors();
@@ -173,6 +172,7 @@ public class TTestAnalyzer extends AbstractAnalyzer {
 
         double[] tstatistics = ( double[] ) regExpTStatistics.getContent();
 
+        /* Create the expression analysis and pack the results. */
         ExpressionAnalysis expressionAnalysis = ExpressionAnalysis.Factory.newInstance();
 
         Collection<ExpressionExperiment> experimentsAnalyzed = new HashSet<ExpressionExperiment>();
