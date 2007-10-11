@@ -6,6 +6,8 @@ package ubic.gemma.ontology;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang.ObjectUtils;
+
 import ubic.gemma.model.common.description.ExternalDatabase;
 
 import com.hp.hpl.jena.ontology.Individual;
@@ -44,22 +46,31 @@ public class OntologyTermImpl extends AbstractOntologyResource implements Ontolo
 
     @Override
     public int hashCode() {
-        if ( ontResource == null ) return 0;
-        return ontResource.hashCode();
+    if ( ontResource == null ) {
+    log.warn( "ontResource is null in hashCode()" );
+    return 0;
+    }
+    return getUri().hashCode();
     }
 
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( !super.equals( obj ) ) return false;
-        if ( getClass() != obj.getClass() ) return false;
-        final OntologyTermImpl other = ( OntologyTermImpl ) obj;
-        if ( ontResource == null ) {
-            if ( other.ontResource != null ) return false;
-        } else if ( !ontResource.equals( other.ontResource ) ) return false;
-        return true;
+    if ( this == obj ) return true;
+
+    if ( !super.equals( obj ) ) return false;
+    if ( getClass() != obj.getClass() ) return false;
+
+    final OntologyTermImpl that = ( OntologyTermImpl ) obj;
+    if ( ontResource == null ) {
+    log.warn( "ontResource is null in equals()" );
+    }
+    if ( that.ontResource == null ) {
+    log.warn( "argument ontResource is null in equals()" );
     }
 
+    return ObjectUtils.equals( this.getUri(), that.getUri() );
+
+    }
     public OntologyTermImpl( OntClass resource, ExternalDatabase source ) {
         this.ontResource = resource;
         this.sourceOntology = source;
