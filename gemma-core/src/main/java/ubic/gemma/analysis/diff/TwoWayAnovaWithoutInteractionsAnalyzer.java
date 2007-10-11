@@ -19,19 +19,18 @@
 package ubic.gemma.analysis.diff;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.rosuda.JRclient.REXP;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
@@ -51,26 +50,39 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  */
 public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaAnalyzer {
 
-    /**
-     * See class level javadoc for R Call.
+    private static final int ACTUAL_NUM_RESULTS = 2;
+    private static final int NUM_RESULTS_FROM_R = ACTUAL_NUM_RESULTS + 1;
+
+    /*
+     * (non-Javadoc)
      * 
-     * @see AbstractTwoWayAnovaAnalyzer
-     * @param matrix
-     * @param experimentalFactorA
-     * @param experimentalFactorB
-     * @param samplesUsed
-     * @return
+     * @see ubic.gemma.analysis.diff.AbstractTwoWayAnovaAnalyzer#twoWayAnova(ubic.gemma.model.expression.experiment.ExpressionExperiment,
+     *      ubic.gemma.model.common.quantitationtype.QuantitationType,
+     *      ubic.gemma.model.expression.bioAssayData.BioAssayDimension,
+     *      ubic.gemma.model.expression.experiment.ExperimentalFactor,
+     *      ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
     @Override
-    public ExpressionAnalysis twoWayAnova( ExpressionDataMatrix matrix, ExperimentalFactor experimentalFactorA,
-            ExperimentalFactor experimentalFactorB, Collection<BioMaterial> samplesUsed ) {
-
-        ExpressionDataDoubleMatrix dmatrix = ( ExpressionDataDoubleMatrix ) matrix;
-
-        DoubleMatrixNamed namedMatrix = dmatrix.getNamedMatrix();
+    public ExpressionAnalysis twoWayAnova( ExpressionExperiment expressionExperiment,
+            QuantitationType quantitationType, BioAssayDimension bioAssayDimension,
+            ExperimentalFactor experimentalFactorA, ExperimentalFactor experimentalFactorB ) {
 
         Collection<FactorValue> factorValuesA = experimentalFactorA.getFactorValues();
         Collection<FactorValue> factorValuesB = experimentalFactorB.getFactorValues();
+
+        if ( factorValuesA.size() < 2 || factorValuesB.size() < 2 ) {
+            throw new RuntimeException(
+                    "Two way anova requires 2 or more factor values per experimental factor.  Received "
+                            + factorValuesA.size() + " for either experimental factor " + experimentalFactorA.getName()
+                            + " or experimental factor " + experimentalFactorB.getName() + "." );
+        }
+
+        ExpressionDataDoubleMatrix dmatrix = new ExpressionDataDoubleMatrix( expressionExperiment
+                .getDesignElementDataVectors(), bioAssayDimension, quantitationType );
+
+        Collection<BioMaterial> samplesUsed = AnalyzerHelper.getBioMaterialsForBioAssays( dmatrix );
+
+        DoubleMatrixNamed namedMatrix = dmatrix.getNamedMatrix();
 
         List<String> rFactorsA = AnalyzerHelper.getRFactorsFromFactorValuesForTwoWayAnova( factorValuesA, samplesUsed );
         List<String> rFactorsB = AnalyzerHelper.getRFactorsFromFactorValuesForTwoWayAnova( factorValuesB, samplesUsed );
@@ -85,6 +97,8 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
         String factorB = "factor(" + tfactsB + ")";
 
         String matrixName = rc.assignMatrix( namedMatrix );
+
+        /* p-values */
         StringBuffer command = new StringBuffer();
 
         command.append( "apply(" );
@@ -98,23 +112,44 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
 
         double[] pvalues = ( double[] ) regExp.getContent();
 
-        double[] filteredPvalues = new double[( pvalues.length / 4 ) * 3];// removes the NaN row
+        double[] filteredPvalues = new double[( pvalues.length / NUM_RESULTS_FROM_R ) * ACTUAL_NUM_RESULTS];// removes the
+                                                                                                        // NaN row
 
         for ( int i = 0, j = 0; j < filteredPvalues.length; i++ ) {
-            if ( i % 4 < 3 ) {
+            if ( i % NUM_RESULTS_FROM_R < ACTUAL_NUM_RESULTS ) {
                 filteredPvalues[j] = pvalues[i];
                 j++;
             }
         }
 
-        // TODO Use the ExpressionAnalysisResult
-        Map<DesignElement, Double> pvaluesMap = new HashMap<DesignElement, Double>();
-        for ( int i = 0; i < matrix.rows(); i++ ) {
-            DesignElement de = matrix.getDesignElementForRow( i );
-            pvaluesMap.put( de, filteredPvalues[i] );
+        /* F-statistics */
+        StringBuffer fstatisticCommand = new StringBuffer();
+
+        fstatisticCommand.append( "apply(" );
+        fstatisticCommand.append( matrixName );
+        fstatisticCommand.append( ", 1, function(x) {anova(aov(x ~ " + factorA + "+" + factorB + "))$F}" );
+        fstatisticCommand.append( ")" );
+
+        log.debug( fstatisticCommand.toString() );
+
+        REXP fregExp = rc.eval( fstatisticCommand.toString() );
+
+        double[] fstatistics = ( double[] ) fregExp.getContent();
+
+        double[] filteredFStatistics = new double[( fstatistics.length / NUM_RESULTS_FROM_R ) * ACTUAL_NUM_RESULTS];// removes
+                                                                                                                // the
+                                                                                                                // NaN
+                                                                                                                // row
+
+        for ( int i = 0, j = 0; j < filteredFStatistics.length; i++ ) {
+            if ( i % NUM_RESULTS_FROM_R < ACTUAL_NUM_RESULTS ) {
+                filteredFStatistics[j] = fstatistics[i];
+                j++;
+            }
         }
 
-        return null;
+        return createExpressionAnalysis( quantitationType, dmatrix, filteredPvalues, filteredFStatistics,
+                ACTUAL_NUM_RESULTS );
     }
 
 }

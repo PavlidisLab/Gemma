@@ -33,7 +33,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
 
     private Log log = LogFactory.getLog( this.getClass() );
 
-    TwoWayAnovaWithoutInteractionsAnalyzer analyzer = new TwoWayAnovaWithoutInteractionsAnalyzer();
+    TwoWayAnovaWithoutInteractionsAnalyzer analyzer = null;
 
     /*
      * (non-Javadoc)
@@ -43,6 +43,8 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
     @Override
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
+
+        analyzer = new TwoWayAnovaWithoutInteractionsAnalyzer();
     }
 
     /**
@@ -57,8 +59,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
         ExpressionAnalysis expressionAnalysis = analyzer.getExpressionAnalysis( expressionExperiment, quantitationType,
                 bioAssayDimension );
 
-        // TODO assert on the expressionAnalysis.getResults().size
-        // assertEquals( pvaluesMap.size(), NUM_DESIGN_ELEMENTS );
+        assertEquals( expressionAnalysis.getAnalysisResults().size(), NUM_DESIGN_ELEMENTS * 2 );
     }
 
 }

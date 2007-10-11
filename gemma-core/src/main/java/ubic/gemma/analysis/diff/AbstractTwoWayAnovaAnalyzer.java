@@ -18,16 +18,19 @@
  */
 package ubic.gemma.analysis.diff;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
 
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
+import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
+import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -45,12 +48,64 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractAnalyzer {
 
+    /**
+     * Creates and returns an {@link ExpressionAnalysis} and fills in the expression analysis results.
+     * 
+     * @param quantitationType
+     * @param dmatrix
+     * @param filteredPvalues
+     * @param filteredFStatistics
+     * @param numResultsFromR
+     * @return
+     */
+    protected ExpressionAnalysis createExpressionAnalysis( QuantitationType quantitationType,
+            ExpressionDataDoubleMatrix dmatrix, double[] filteredPvalues, double[] filteredFStatistics,
+            int numResultsFromR ) {
+
+        /* Create the expression analysis and pack the results. */
+        ExpressionAnalysis expressionAnalysis = ExpressionAnalysis.Factory.newInstance();
+
+        Collection<ExpressionExperiment> experimentsAnalyzed = new HashSet<ExpressionExperiment>();
+        expressionAnalysis.setExperimentsAnalyzed( experimentsAnalyzed );
+
+        List<ExpressionAnalysisResult> analysisResults = new ArrayList<ExpressionAnalysisResult>();
+
+        int k = 0;
+        for ( int i = 0; i < dmatrix.rows(); i++ ) {
+
+            DesignElement de = dmatrix.getDesignElementForRow( i );
+
+            CompositeSequence cs = ( CompositeSequence ) de;
+
+            for ( int j = 0; j < numResultsFromR; j++ ) {
+
+                ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();
+                probeAnalysisResult.setProbe( cs );
+                probeAnalysisResult.setQuantitationType( quantitationType );
+
+                probeAnalysisResult.setPvalue( filteredPvalues[k] );
+                probeAnalysisResult.setScore( filteredFStatistics[k] );
+                // probeAnalysisResult.setCorrectedPvalue( correctedPvalue );
+                // probeAnalysisResult.setParameters( parameters );
+
+                analysisResults.add( probeAnalysisResult );
+
+                k++;
+            }
+
+        }
+
+        expressionAnalysis.setAnalysisResults( analysisResults );
+
+        return expressionAnalysis;
+    }
+
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.analysis.diff.AbstractAnalyzer#getPValues(ubic.gemma.model.expression.experiment.ExpressionExperiment,
+     * @see ubic.gemma.analysis.diff.AbstractAnalyzer#getExpressionAnalysis(ubic.gemma.model.expression.experiment.ExpressionExperiment,
      *      ubic.gemma.model.common.quantitationtype.QuantitationType,
-     *      ubic.gemma.model.expression.bioAssayData.BioAssayDimension, java.util.Collection)
+     *      ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
      */
     @Override
     public ExpressionAnalysis getExpressionAnalysis( ExpressionExperiment expressionExperiment,
@@ -72,6 +127,10 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractAnalyzer {
     }
 
     /**
+     * Two be implemented by the two way anova analyzer.
+     * <p>
+     * See class level javadoc of two way anova anlayzer for R Call.
+     * 
      * @param expressionExperiment
      * @param quantitationType
      * @param bioAssayDimension
@@ -79,39 +138,8 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractAnalyzer {
      * @param experimentalFactorB
      * @return
      */
-    public ExpressionAnalysis twoWayAnova( ExpressionExperiment expressionExperiment,
+    public abstract ExpressionAnalysis twoWayAnova( ExpressionExperiment expressionExperiment,
             QuantitationType quantitationType, BioAssayDimension bioAssayDimension,
-            ExperimentalFactor experimentalFactorA, ExperimentalFactor experimentalFactorB ) {
-
-        Collection factorValuesA = experimentalFactorA.getFactorValues();
-        Collection factorValuesB = experimentalFactorB.getFactorValues();
-
-        if ( factorValuesA.size() < 2 || factorValuesB.size() < 2 ) {
-            throw new RuntimeException(
-                    "Two way anova requires 2 or more factor values per experimental factor.  Received "
-                            + factorValuesA.size() + " for either experimental factor " + experimentalFactorA.getName()
-                            + " or experimental factor " + experimentalFactorB.getName() + "." );
-        }
-
-        ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( expressionExperiment
-                .getDesignElementDataVectors(), bioAssayDimension, quantitationType );
-
-        Collection<BioMaterial> biomaterials = AnalyzerHelper.getBioMaterialsForBioAssays( matrix );
-
-        return twoWayAnova( matrix, experimentalFactorA, experimentalFactorB, biomaterials );
-    }
-
-    /**
-     * Two be implemented by the two way anova analyzer.
-     * 
-     * @param matrix
-     * @param experimentalFactorA
-     * @param experimentalFactorB
-     * @param samplesUsed
-     * @return
-     */
-    public abstract ExpressionAnalysis twoWayAnova( ExpressionDataMatrix matrix,
-            ExperimentalFactor experimentalFactorA, ExperimentalFactor experimentalFactorB,
-            Collection<BioMaterial> samplesUsed );
+            ExperimentalFactor experimentalFactorA, ExperimentalFactor experimentalFactorB );
 
 }

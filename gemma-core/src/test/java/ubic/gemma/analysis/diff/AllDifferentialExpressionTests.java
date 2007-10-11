@@ -36,10 +36,10 @@ public class AllDifferentialExpressionTests {
         suite.addTestSuite( OneWayAnovaAnalyzerTest.class );
         suite.addTestSuite( TTestAnalyzerTest.class );
         suite.addTestSuite( TwoWayAnovaWithoutInteractionsAnalyzerTest.class );
+        suite.addTestSuite( TwoWayAnovaWithInteractionsAnalyzerTest.class );
         suite.addTestSuite( DifferentialExpessionAnalysisTest.class );
         // no tests in these ...they are extended
         // suite.addTestSuite( BaseAnalyzerConfigurationTest.class );
-        // suite.addTestSuite( BaseAnalyzerTest.class );
         // $JUnit-END$
         return suite;
     }
