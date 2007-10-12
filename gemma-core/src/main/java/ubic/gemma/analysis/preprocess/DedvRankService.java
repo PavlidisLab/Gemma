@@ -165,6 +165,22 @@ public class DedvRankService {
 		
 		return null;
 	}
+	
+	private String getMethodName(Method method) {
+		switch(method) {
+		case MEDIAN:
+			return "median";
+		case MEAN:
+			return "mean";
+		case VARIANCE:
+			return "variance";
+		case MAX:
+			return "max";
+		case MIN:
+			return "min";
+		}
+		return null;
+	}
 
 	public AbstractNamedMatrix getRankMatrix(Collection<Gene> genes,
 			Collection<ExpressionExperiment> ees, Method method) {
@@ -178,8 +194,9 @@ public class DedvRankService {
 			}
 		}
 
+		int count = 1;
 		EE: for (ExpressionExperiment ee : ees) {
-			log.info(ee.getShortName() + ": processing...");
+			log.info(ee.getShortName() + ": processing " + count++ + " of " + ees.size());
 			eeService.thawLite(ee);
 			Collection<DesignElementDataVector> vectors;
 
@@ -196,8 +213,8 @@ public class DedvRankService {
 			}
 
 			Collection<DesignElementDataVector> rankedVectors;
-			if (method != null) {
-				// recompute ranks
+			if (method != null && method != Method.MAX) {
+				log.info("Recomputing ranks as " + getMethodName(method) + "s");
 				rankedVectors = new HashSet<DesignElementDataVector>();
 				devService.thaw(vectors);
 
@@ -215,7 +232,7 @@ public class DedvRankService {
 					rankedVectors.addAll(preferredVectors);
 				}
 			} else {
-				// use stored ranks
+				log.info("Using stored ranks (maximums)");
 				rankedVectors = vectors;
 			}
 
@@ -365,6 +382,7 @@ public class DedvRankService {
 				case VARIANCE:
 					valueForRank = DescriptiveWithMissing.variance(row);
 				}
+				
 			}
 			result.add(valueForRank);
 		}
