@@ -28,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -320,15 +321,35 @@ public class AnalyzerHelper {
 
             FactorValue fv = factorValuesFromBioMaterial.iterator().next();
 
+            Collection<Characteristic> chs = fv.getCharacteristics();
+
+            Characteristic ch = chs.iterator().next();
+
             for ( FactorValue f : factorValues ) {
-                if ( fv.getValue() == f.getValue() ) {
-                    log.debug( "factor value match" );
+
+                if ( fv.getValue() == null && f.getValue() == null ) {
+                    log.debug( "null factor value values.  Using characteristic value for the factor value check." );
+
+                    Collection<Characteristic> cs = f.getCharacteristics();
+
+                    if ( chs.size() != 1 || cs.size() != 1 )
+                        throw new RuntimeException( "Only supports 1 characteristic per factor value." );
+
+                    Characteristic c = cs.iterator().next();
+
+                    if ( ch.getValue() == c.getValue() ) {
+                        rFactors.add( ch.getValue() );
+                        break;
+                    }
+
+                }
+
+                else if ( fv.getValue() == f.getValue() ) {
+                    rFactors.add( fv.getValue() );
                     break;
                 }
 
             }
-
-            rFactors.add( fv.getValue() );
         }
         return rFactors;
     }
