@@ -185,12 +185,12 @@ public class LinkAnalysisService {
 
             String genes1 = "";
             for ( Gene g : g1 ) {
-                genes1 = genes1 + g.getOfficialName() + "|";
+                genes1 = genes1 + g.getOfficialSymbol() + "|";
             }
 
             String genes2 = "";
             for ( Gene g : g2 ) {
-                genes2 = genes2 + g.getOfficialName() + "|";
+                genes2 = genes2 + g.getOfficialSymbol() + "|";
             }
             wr.write( p1.getId() + "\t" + p2.getId() + "\t" + genes1 + "\t" + genes2 + "\t" + nf.format( w ) );
 
