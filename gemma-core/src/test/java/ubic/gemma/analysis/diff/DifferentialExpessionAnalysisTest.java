@@ -45,6 +45,9 @@ public class DifferentialExpessionAnalysisTest extends BaseAnalyzerConfiguration
         analysis = new DifferentialExpressionAnalysis();
     }
 
+    /**
+     * Works with GSE22, GSE23.
+     */
     // /**
     // * Determines the analysis for GSE23.
     // * <p>
@@ -71,9 +74,14 @@ public class DifferentialExpessionAnalysisTest extends BaseAnalyzerConfiguration
     // bioAssayDimension );
     // assertEquals( analyzer.getClass(), OneWayAnovaAnalyzer.class );
     //
-    // analyzer.getPValues( expressionExperiment, quantitationType, bioAssayDimension );
+    // ExpressionAnalysis expressionAnalysis = analyzer.getExpressionAnalysis( expressionExperiment, quantitationType,
+    // bioAssayDimension );
+    //
+    // Collection<ExpressionAnalysisResult> results = expressionAnalysis.getAnalysisResults();
+    // for ( ExpressionAnalysisResult result : results ) {
+    // log.info( "p-value: " + result.getPvalue() + ", score: " + result.getScore() );
     // }
-
+    // }
     /**
      * Tests determineAnalysis.
      * <p>
