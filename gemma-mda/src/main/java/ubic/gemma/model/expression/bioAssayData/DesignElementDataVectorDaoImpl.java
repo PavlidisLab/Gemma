@@ -575,6 +575,7 @@ public class DesignElementDataVectorDaoImpl extends
     @Override
     protected Map handleGetDedv2GenesMap( Collection dedvs, QuantitationType qt ) throws Exception {
         Map<DesignElementDataVector, Collection<Gene>> dedv2genes = new HashMap<DesignElementDataVector, Collection<Gene>>();
+        Map<Long, DesignElementDataVector> dedvMap = new HashMap<Long, DesignElementDataVector>();
 
         StringBuffer dedvIdList = new StringBuffer();
 
@@ -583,13 +584,14 @@ public class DesignElementDataVectorDaoImpl extends
                 DesignElementDataVector dedv = ( DesignElementDataVector ) object;
                 dedvIdList.append( dedv.getId() );
                 dedvIdList.append( ',' );
+	            dedvMap.put(dedv.getId(), dedv);
             }
         }
         
         dedvIdList.deleteCharAt( dedvIdList.length() - 1 );
 
         // Native query - faster? Fetches all data for that QT and throws away unneeded portion
-        String queryString = "SELECT DESIGN_ELEMENT_DATA_VECTOR.ID as dedvId, DATA as dedvData, DESIGN_ELEMENT_FK as csId, RANK as dedvRank, GENE as geneId, CHROMOSOME_FEATURE.ID as featureID, "
+        String queryString = "SELECT DESIGN_ELEMENT_DATA_VECTOR.ID as dedvId, DESIGN_ELEMENT_FK as csId, GENE as geneId, CHROMOSOME_FEATURE.ID as featureID, "
                 + " CHROMOSOME_FEATURE.OFFICIAL_NAME as officialName, CHROMOSOME_FEATURE.OFFICIAL_SYMBOL as officialSymbol FROM DESIGN_ELEMENT_DATA_VECTOR, GENE2CS, CHROMOSOME_FEATURE WHERE "
                 + " QUANTITATION_TYPE_FK = "
                 + qt.getId()
@@ -599,9 +601,6 @@ public class DesignElementDataVectorDaoImpl extends
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
 
         queryObject.addScalar( "dedvId", new LongType() );
-        queryObject.addScalar( "dedvData", new BlobType() );
-        queryObject.addScalar( "csId", new LongType() );
-        queryObject.addScalar( "dedvRank", new DoubleType() );
         queryObject.addScalar( "geneId", new LongType() );
         queryObject.addScalar( "featureID", new LongType() );
         queryObject.addScalar( "officialName", new StringType());
@@ -613,25 +612,18 @@ public class DesignElementDataVectorDaoImpl extends
 
             // get the data returned from the query
             Long dedvId = scroll.getLong( 0 );
-            Blob dedvData = scroll.getBlob( 1 );
-            byte data[] = dedvData.getBytes( 1, ( int ) dedvData.length() );
-            Long fetchedCsId = scroll.getLong( 2 );
-            Double rank = scroll.getDouble( 3 );
-            Long geneId = scroll.getLong( 4 );
-            Long featureId = scroll.getLong( 5 );
-            String officialName = scroll.getString( 6 );
-            String officialSymbol = scroll.getString( 7 );
+            Long geneId = scroll.getLong( 1 );
+            Long featureId = scroll.getLong( 2 );
+            String officialName = scroll.getString( 3 );
+            String officialSymbol = scroll.getString( 4 );
 
             // Create the objects we want to put in the hashmap
             Gene gene = Gene.Factory.newInstance();
             gene.setOfficialName( officialName );
             gene.setOfficialSymbol( officialSymbol );
             gene.setId( geneId );
-
-            DesignElementDataVector dedv = DesignElementDataVector.Factory.newInstance();
-            dedv.setId( dedvId );
-            dedv.setData( data );
-            dedv.setRank( rank );
+            
+            DesignElementDataVector dedv = dedvMap.get(dedvId);
 
             // Test to see if we can just add or if we have to make a collection
             // TODO: this might be problomatic due to the == operator and the hash function for DEDV
