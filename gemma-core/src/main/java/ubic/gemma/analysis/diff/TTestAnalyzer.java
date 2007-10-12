@@ -144,9 +144,9 @@ public class TTestAnalyzer extends AbstractAnalyzer {
         String factor = "factor(" + tfacts + ")";
 
         String matrixName = rc.assignMatrix( namedMatrix );
-        StringBuffer pvalueCommand = new StringBuffer();
 
         /* handle the p-values */
+        StringBuffer pvalueCommand = new StringBuffer();
         pvalueCommand.append( "apply(" );
         pvalueCommand.append( matrixName );
         pvalueCommand.append( ", 1, function(x) {t.test(x ~ " + factor + ")$p.value}" );
