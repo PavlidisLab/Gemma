@@ -50,7 +50,7 @@ public abstract class AbstractGeneExpressionExperimentManipulatingCLI extends
 	protected ExpressionExperimentService eeService;
 
 	protected GeneService geneService;
-	
+
 	protected TaxonService taxonService;
 
 	private String experimentShortName = null;
@@ -58,7 +58,7 @@ public abstract class AbstractGeneExpressionExperimentManipulatingCLI extends
 	private String excludeEeFileName;
 
 	protected String experimentListFile = null;
-	
+
 	protected Taxon taxon = null;
 
 	@SuppressWarnings("static-access")
@@ -131,13 +131,13 @@ public abstract class AbstractGeneExpressionExperimentManipulatingCLI extends
 		eeService = (ExpressionExperimentService) this
 				.getBean("expressionExperimentService");
 		geneService = (GeneService) this.getBean("geneService");
-        taxonService = ( TaxonService ) getBean( "taxonService" );
+		taxonService = (TaxonService) getBean("taxonService");
 		if (hasOption('t')) {
 			String taxonName = getOptionValue('t');
-	        taxon = taxonService.findByCommonName(taxonName);
-	        if (taxon == null) {
-	        	log.error("ERROR: Cannot find taxon " + taxonName);
-	        }
+			taxon = taxonService.findByCommonName(taxonName);
+			if (taxon == null) {
+				log.error("ERROR: Cannot find taxon " + taxonName);
+			}
 		}
 
 	}
@@ -158,10 +158,19 @@ public abstract class AbstractGeneExpressionExperimentManipulatingCLI extends
 				ees.add(ee);
 		}
 		if (experimentListFile != null) {
+			log.info("Reading list of expression experiments from "
+					+ experimentListFile);
 			ees.addAll(readExpressionExperimentListFile(experimentListFile));
 		}
-		if (ees.size() == 0 && taxon != null) {
-			ees.addAll(eeService.findByTaxon(taxon));
+		if (ees.isEmpty()) {
+			if (taxon != null) {
+				log.info("Loading expression experiments for "
+						+ taxon.getCommonName());
+				ees.addAll(eeService.findByTaxon(taxon));
+			} else {
+				log.info("Loading all expression experiments");
+				ees.addAll(eeService.loadAll());
+			}
 		}
 		if (excludeEeFileName != null) {
 			Collection<String> excludedEeNames = readExpressionExperimentListFileToStrings(excludeEeFileName);
@@ -240,8 +249,9 @@ public abstract class AbstractGeneExpressionExperimentManipulatingCLI extends
 	}
 
 	@SuppressWarnings("unchecked")
-    protected Gene findGeneByOfficialSymbol(String symbol, Taxon taxon) { 
-		Collection<Gene> genes = geneService.findByOfficialSymbolInexact( symbol );
+	protected Gene findGeneByOfficialSymbol(String symbol, Taxon taxon) {
+		Collection<Gene> genes = geneService
+				.findByOfficialSymbolInexact(symbol);
 		for (Gene gene : genes) {
 			if (taxon.equals(gene.getTaxon()))
 				return gene;
