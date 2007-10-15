@@ -99,6 +99,8 @@ public class DifferentialExpressionAnalysis {
 
         if ( experimentalFactors.size() == EXPERIMENTAL_FACTOR_ONE ) {
 
+            log.info( "1 experimental factor found." );
+
             ExperimentalFactor experimentalFactor = experimentalFactors.iterator().next();
             Collection<FactorValue> factorValues = experimentalFactor.getFactorValues();
 
@@ -131,6 +133,9 @@ public class DifferentialExpressionAnalysis {
         }
 
         else if ( experimentalFactors.size() == EXPERIMENTAL_FACTOR_TWO ) {
+
+            log.info( "2 experimental factors found." );
+
             for ( ExperimentalFactor f : experimentalFactors ) {
                 Collection<FactorValue> factorValues = f.getFactorValues();
                 if ( colIsEmpty( factorValues ) || factorValues.size() < FACTOR_VALUE_TWO ) {

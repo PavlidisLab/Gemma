@@ -65,9 +65,13 @@ public class AnalyzerHelper {
             e.printStackTrace();
             ex = e;
         } finally {
-            if ( ex != null ) return false;
+            if ( ex != null ) {
+                log.info( "Incomplete block design." );
+                return false;
+            }
         }
 
+        log.info( "Complete block design." );
         return true;
     }
 
