@@ -19,14 +19,18 @@
 package ubic.gemma.apps;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -96,6 +100,7 @@ public class DifferentialExpressionAnalysisCli extends AbstractGeneExpressionExp
         if ( this.getExperimentShortName() != null ) {
             String[] shortNames = this.getExperimentShortName().split( "," );
 
+            // TODO remove this check
             if ( shortNames.length > 1 )
                 throw new RuntimeException( this.getClass().getName()
                         + " supports 1 expression experiment at this time." );
@@ -107,20 +112,56 @@ public class DifferentialExpressionAnalysisCli extends AbstractGeneExpressionExp
 
                 eeService.thaw( expressionExperiment );
 
-                // Collection<QuantitationType> quantitationTypes = expressionExperiment.getQuantitationTypes();
-                // quantitationTypeService.
-                // for ( QuantitationType qt : quantitationTypes ) {
-                // log.info( qt );
-                // }
+                // TODO refactor how you will handle which qt to use
+                Collection<QuantitationType> valueQuantitationTypes = new HashSet<QuantitationType>();
+
+                Collection<QuantitationType> quantitativeQuantitationTypes = new HashSet<QuantitationType>();
+
+                QuantitationType preferredQuantitationType = null;
+
+                Collection<QuantitationType> quantitationTypes = expressionExperiment.getQuantitationTypes();
+                for ( QuantitationType qt : quantitationTypes ) {
+
+                    if ( qt.getIsPreferred() ) {
+                        preferredQuantitationType = qt;
+                        break;
+                    }
+
+                    if ( qt.getType().getValue().equals( "VALUE" ) ) {
+                        valueQuantitationTypes.add( qt );
+                    }
+
+                    else if ( qt.getType().getValue().equals( "QUANTITATIVE" ) ) {
+                        quantitativeQuantitationTypes.add( qt );
+                    }
+
+                }
+
+                if ( preferredQuantitationType != null ) {
+                    log.info( "Preferred quantitation type: " + preferredQuantitationType.getName() + "; Value: "
+                            + preferredQuantitationType.getType().getValue() );
+                } else {
+                    log.info( "# VALUE quantitation types: " + valueQuantitationTypes.size() );
+
+                    log.info( "# QUANTITATIVE quantitation types: " + quantitativeQuantitationTypes.size() );
+                }
 
                 Collection<DesignElementDataVector> vectors = expressionExperiment.getDesignElementDataVectors();
                 designElementDataVectorService.thaw( vectors );
 
-                // for ( DesignElementDataVector vector : vectors ) {
-                // log.info( vector.getBioAssayDimension() );
-                // }
+                Collection<BioAssayDimension> bioAssayDimensions = new HashSet<BioAssayDimension>();
+                for ( DesignElementDataVector vector : vectors ) {
+                    bioAssayDimensions.add( vector.getBioAssayDimension() );
+                }
 
-                // analysis.analyze( expressionExperiment, quantitationType, bioAssayDimension );
+                log.debug( "# bioassay dimensions: " + bioAssayDimensions.size() );
+                if ( bioAssayDimensions.size() != 1 )
+                    throw new RuntimeException( "Cannot process " + bioAssayDimensions.size()
+                            + " bioAssay dimensions.  Can handle 1 dimension only." );
+
+                BioAssayDimension bioAssayDimension = bioAssayDimensions.iterator().next();
+
+                analysis.analyze( expressionExperiment, preferredQuantitationType, bioAssayDimension );
             }
 
         }

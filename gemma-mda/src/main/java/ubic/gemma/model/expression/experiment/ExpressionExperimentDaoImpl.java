@@ -372,13 +372,21 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 expressionExperiment.getQuantitationTypes().size();
                 expressionExperiment.getBioAssays().size();
                 expressionExperiment.getSubsets().size();
+
+                expressionExperiment.getExperimentalDesign().getExperimentalFactors().size();
+                for ( ExperimentalFactor ef : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
+                    ef.getFactorValues().size();
+                }
+
                 if ( expressionExperiment.getAccession() != null )
                     expressionExperiment.getAccession().getExternalDatabase();
                 thawReferences( expressionExperiment, session );
+
                 for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
                     ba.getSamplesUsed().size();
                     ba.getDerivedDataFiles().size();
                 }
+
                 return null;
             }
 
