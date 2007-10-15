@@ -18,9 +18,16 @@
  */
 package ubic.gemma.apps;
 
+import java.util.Collection;
+
 import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * A command line interface to the {@link DifferentialExpressionAnalysis}.
@@ -29,8 +36,11 @@ import ubic.gemma.analysis.diff.DifferentialExpressionAnalysis;
  * @version $Id$
  */
 public class DifferentialExpressionAnalysisCli extends AbstractGeneExpressionExperimentManipulatingCLI {
+    private static Log log = LogFactory.getLog( DifferentialExpressionAnalysisCli.class );
 
     // private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
+
+    private DesignElementDataVectorService designElementDataVectorService = null;
 
     /*
      * (non-Javadoc)
@@ -74,9 +84,46 @@ public class DifferentialExpressionAnalysisCli extends AbstractGeneExpressionExp
             return err;
         }
 
+        DifferentialExpressionAnalysis analysis = new DifferentialExpressionAnalysis();
+
+        designElementDataVectorService = ( DesignElementDataVectorService ) this
+                .getBean( "designElementDataVectorService" );
+
         // TODO add a DifferentialExpressionAnalysisService
         // differentialExpressionAnalysisService = ( DifferentialExpressionAnalysisService ) this
         // .getBean( "differentialExpressionAnalysisService" );
+
+        if ( this.getExperimentShortName() != null ) {
+            String[] shortNames = this.getExperimentShortName().split( "," );
+
+            if ( shortNames.length > 1 )
+                throw new RuntimeException( this.getClass().getName()
+                        + " supports 1 expression experiment at this time." );
+
+            for ( String shortName : shortNames ) {
+                ExpressionExperiment expressionExperiment = locateExpressionExperiment( shortName );
+
+                if ( expressionExperiment == null ) continue;
+
+                eeService.thaw( expressionExperiment );
+
+                // Collection<QuantitationType> quantitationTypes = expressionExperiment.getQuantitationTypes();
+                // quantitationTypeService.
+                // for ( QuantitationType qt : quantitationTypes ) {
+                // log.info( qt );
+                // }
+
+                Collection<DesignElementDataVector> vectors = expressionExperiment.getDesignElementDataVectors();
+                designElementDataVectorService.thaw( vectors );
+
+                // for ( DesignElementDataVector vector : vectors ) {
+                // log.info( vector.getBioAssayDimension() );
+                // }
+
+                // analysis.analyze( expressionExperiment, quantitationType, bioAssayDimension );
+            }
+
+        }
 
         return null;
     }
@@ -85,11 +132,11 @@ public class DifferentialExpressionAnalysisCli extends AbstractGeneExpressionExp
      * @param args
      */
     public static void main( String[] args ) {
-        DifferentialExpressionAnalysisCli analysis = new DifferentialExpressionAnalysisCli();
+        DifferentialExpressionAnalysisCli analysisCli = new DifferentialExpressionAnalysisCli();
         StopWatch watch = new StopWatch();
         watch.start();
         try {
-            Exception ex = analysis.doWork( args );
+            Exception ex = analysisCli.doWork( args );
             if ( ex != null ) {
                 ex.printStackTrace();
             }
