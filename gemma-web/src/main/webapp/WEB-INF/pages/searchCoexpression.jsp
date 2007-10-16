@@ -348,18 +348,22 @@
 </script>
 
 <div id="coexpressed-genes" style="width: 600px;">
-	<display:table name="coexpressedGenes" class="list" sort="list" requestURI="" id="foundGenes"
+	<!--  -->
+	<display:table name="coexpressedGenes" export="true" class="list" sort="list" requestURI="" id="foundGenes"
 		decorator="ubic.gemma.web.taglib.displaytag.coexpressionSearch.CoexpressionWrapper" pagesize="200">
-		<display:column property="gemmaLink" sortable="false"
-			title="<a class='helpLink' name='?' href='' onclick='getQueryHelp(event);return false;' <img src='/Gemma/images/help.png' /> </a>" />
-		<display:column property="nameLink" sortable="true" sortProperty="geneName" title="Gene" />
+		<display:column media="html" property="gemmaLink" sortable="false"
+			title="<a class='helpLink' name='?' href='' onclick='getQueryHelp(event);return false;'><img src='/Gemma/images/help.png' /></a>" />
+		<display:column media="html" property="nameLink" sortable="true" sortProperty="geneName" title="Gene" />
+		<display:column media="excel" property="geneName" title="Gene" />
 		<display:column property="geneOfficialName" maxLength="40" sortable="true" titleKey="gene.officialName" />
-		<display:column property="linkCount" sortable="true" sortProperty="maxLinkCount" style="width:50px;"
-			title="Support <a class='helpLink' name='?' href='' onclick='getCoexpressionHelp(event);return false;'><img style='float:right' src='/Gemma/images/help.png' /> </a>" />
-		<display:column property="goOverlap" sortable="true" style="width:50px;"
-			title="GO <a  class='helpLink' name='?' href='' onclick='getOverlapHelp(event);return false;'><img style='float:right' src='/Gemma/images/help.png' /> </a>" />
-		<display:column property="experimentBitImage" sortable="false"
-			title="Exprs <a  class='helpLink' name='?' href='' onclick='getExpBitsHelp(event);return false;'><img style='float:right' src='/Gemma/images/help.png' /> </a>" />
+		<display:column media="html" property="linkCount" sortable="true" sortProperty="maxLinkCount" style="width:50px;"
+			title="Support&nbsp;<a class='helpLink' href='' onclick='getCoexpressionHelp(event);return false;'><img src='/Gemma/images/help.png' /></a>" />
+		<display:column media="excel" property="linkCountExport" title="Support" />
+		<display:column media="html" property="goOverlap" sortable="true" style="width:50px;"
+			title="GO&nbsp;<a class='helpLink' href='' onclick='getOverlapHelp(event);return false;'><img src='/Gemma/images/help.png' /></a>" />
+		<display:column media="excel" property="goOverlap" title="GO Overlap" />
+		<display:column media="html" property="experimentBitImage" sortable="false"
+			title="Exprs&nbsp;<a class='helpLink' href='' onclick='getExpBitsHelp(event);return false;'><img src='/Gemma/images/help.png' /></a>" />
 		<display:setProperty name="basic.empty.showtable" value="false" />
 	</display:table>
 </div>
@@ -415,19 +419,21 @@
 	<br />
 
 
-	<display:table name="coexpressedPredictedGenes" class="list" sort="list" requestURI="" id="predictedFoundGenes"
+	<display:table name="coexpressedPredictedGenes" export="true" class="list" sort="list" requestURI="" id="predictedFoundGenes"
 		decorator="ubic.gemma.web.taglib.displaytag.coexpressionSearch.CoexpressionWrapper" pagesize="200">
-		<display:column property="nameLink" sortable="true" sortProperty="geneName" titleKey="gene.name" />
-		<display:column property="geneOfficialName" maxLength="50" sortable="true" titleKey="gene.officialName" />
-		<display:column property="simpleLinkCount" sortable="true" sortProperty="maxLinkCount"
-			title="Support <a class='helpLink' name='?' href='' onclick='getCoexpressionHelp(event);return false;'>
-					<img src='/Gemma/images/help.png' /> </a>" />
-		<display:column property="goOverlap" sortable="true"
-			title="GO overlap <a  class='helpLink' name='?' href='' onclick='getOverlapHelp(event);return false;'>
-					<img src='/Gemma/images/help.png' /> </a>" />
-		<display:column property="experimentBitImage" sortable="false"
-			title="exps <a  class='helpLink' name='?' href='' onclick='getExpBitsHelp(event);return false;'>
-					<img src='/Gemma/images/help.png' /> </a>" />
+		<display:column media="html" property="gemmaLink" sortable="false"
+			title="<a class='helpLink' name='?' href='' onclick='getQueryHelp(event);return false;'><img src='/Gemma/images/help.png' /></a>" />
+		<display:column media="html" property="nameLink" sortable="true" sortProperty="geneName" title="Gene" />
+		<display:column media="excel" property="geneName" title="Gene" />
+		<display:column property="geneOfficialName" maxLength="40" sortable="true" titleKey="gene.officialName" />
+		<display:column media="html" property="simpleLinkCount" sortable="true" sortProperty="maxLinkCount" style="width:50px;"
+			title="Support&nbsp;<a class='helpLink' href='' onclick='getCoexpressionHelp(event);return false;'><img src='/Gemma/images/help.png' /></a>" />
+		<display:column media="excel" property="simpleLinkCountExport" title="Support" />
+		<display:column media="html" property="goOverlap" sortable="true" style="width:50px;"
+			title="GO&nbsp;<a class='helpLink' href='' onclick='getOverlapHelp(event);return false;'><img src='/Gemma/images/help.png' /></a>" />
+		<display:column media="excel" property="goOverlap" title="GO Overlap" />
+		<display:column media="html" property="experimentBitImage" sortable="false"
+			title="Exprs&nbsp;<a class='helpLink' href='' onclick='getExpBitsHelp(event);return false;'><img src='/Gemma/images/help.png' /></a>" />
 		<display:setProperty name="basic.empty.showtable" value="false" />
 	</display:table>
 
@@ -481,19 +487,21 @@
 	<br />
 
 
-	<display:table name="coexpressedAlignedRegions" class="list" sort="list" requestURI="" id="alignedFoundGenes"
+	<display:table name="coexpressedAlignedRegions" export="true" class="list" sort="list" requestURI="" id="alignedFoundGenes"
 		decorator="ubic.gemma.web.taglib.displaytag.coexpressionSearch.CoexpressionWrapper" pagesize="200">
-		<display:column property="nameLink" sortable="true" sortProperty="geneName" titleKey="gene.name" />
-		<display:column property="geneOfficialName" maxLength="50" sortable="true" titleKey="gene.officialName" />
-		<display:column property="simpleLinkCount" sortable="true" sortProperty="maxLinkCount"
-			title="Support <a class='helpLink' name='?' href='' onclick='getCoexpressionHelp(event);return false;'>
-					<img src='/Gemma/images/help.png' /> </a>" />
-		<display:column property="goOverlap" sortable="true"
-			title="GO overlap <a  class='helpLink' name='?' href='' onclick='getOverlapHelp(event);return false;'>
-					<img src='/Gemma/images/help.png' /> </a>" />
-		<display:column property="experimentBitImage" sortable="false"
-			title="exps <a  class='helpLink' name='?' href='' onclick='getExpBitsHelp(event);return false;'>
-					<img src='/Gemma/images/help.png' /> </a>" />
+		<display:column media="html" property="gemmaLink" sortable="false"
+			title="<a class='helpLink' name='?' href='' onclick='getQueryHelp(event);return false;'><img src='/Gemma/images/help.png' /></a>" />
+		<display:column media="html" property="nameLink" sortable="true" sortProperty="geneName" title="Gene" />
+		<display:column media="excel" property="geneName" title="Gene" />
+		<display:column property="geneOfficialName" maxLength="40" sortable="true" titleKey="gene.officialName" />
+		<display:column media="html" property="simpleLinkCount" sortable="true" sortProperty="maxLinkCount" style="width:50px;"
+			title="Support&nbsp;<a class='helpLink' href='' onclick='getCoexpressionHelp(event);return false;'><img src='/Gemma/images/help.png' /></a>" />
+		<display:column media="excel" property="simpleLinkCountExport" title="Support" />
+		<display:column media="html" property="goOverlap" sortable="true" style="width:50px;"
+			title="GO&nbsp;<a class='helpLink' href='' onclick='getOverlapHelp(event);return false;'><img src='/Gemma/images/help.png' /></a>" />
+		<display:column media="excel" property="goOverlap" title="GO Overlap" />
+		<display:column media="html" property="experimentBitImage" sortable="false"
+			title="Exprs&nbsp;<a class='helpLink' href='' onclick='getExpBitsHelp(event);return false;'><img src='/Gemma/images/help.png' /></a>" />
 		<display:setProperty name="basic.empty.showtable" value="false" />
 	</display:table>
 </authz:authorize>

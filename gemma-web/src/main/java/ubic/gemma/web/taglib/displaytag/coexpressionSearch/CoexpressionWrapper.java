@@ -19,7 +19,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
  * See http://displaytag.sourceforge.net/10/tut_decorators.html and http://displaytag.sourceforge.net/10/tut_links.html
  * for explanation of how this works.
  * 
- * @author jsantos, klc
+ * @author jsantos, klc, luke
  * @version $Id $
  */
 public class CoexpressionWrapper extends TableDecorator {
@@ -281,5 +281,98 @@ public class CoexpressionWrapper extends TableDecorator {
             }
         }
         return false;
+    }
+
+    /**
+     * Function to return the number of data sets for a coexpression match
+     * 
+     * @return the data set count column
+     */
+    public String getLinkCountExport() {
+        StringBuffer buf = new StringBuffer();
+        CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
+        Integer positiveLinks = object.getPositiveLinkCount();
+        Integer negativeLinks = object.getNegativeLinkCount();
+
+        if ( positiveLinks != null && positiveLinks != 0 ) {
+            buf.append( positiveLinks );
+            if ( !object.getExpressionExperiments().isEmpty() )
+                buf.append( getNonSpecificStringExport( object, object.getEEContributing2PositiveLinks(), positiveLinks ) );
+        }
+
+        if ( negativeLinks != null && negativeLinks != 0 ) {
+            if ( buf.length() > 0 )
+                buf.append( " / " );
+            buf.append( negativeLinks );
+            if ( !object.getExpressionExperiments().isEmpty() )
+                buf.append( getNonSpecificStringExport( object, object.getEEContributing2NegativeLinks(), negativeLinks ) );
+        }
+        
+        return buf.toString();
+    }
+    
+    private String getNonSpecificStringExport( CoexpressionValueObject cvo, Collection<Long> contributingEE,
+            Integer numTotalLinks ) {
+
+        Collection<Long> allNonSpecificEE = cvo.getNonspecificEE();
+        Collection<String> nonSpecificGenes = cvo.getNonSpecificGenes();
+        boolean hybridizesWithQueryGene = cvo.isHybridizesWithQueryGene();
+        String coexpressedGeneName = cvo.getGeneName();
+
+        
+        String nonSpecificList = "";
+        String hybridizes = "";
+
+        int nonSpecific = 0;
+        for ( Long id : contributingEE ) {
+            if ( allNonSpecificEE.contains( id ) ) {
+                nonSpecific++;
+            }
+        }
+        
+        StringBuffer buf = new StringBuffer();
+        if ( nonSpecific > 0 ) {
+            buf.append( " ( " );
+            buf.append( numTotalLinks - nonSpecific );
+            if ( hybridizesWithQueryGene )
+                buf.append( "*" );
+            buf.append( " )" );
+        }
+        return buf.toString();
+    }
+
+    public String getSimpleLinkCountExport() {
+        StringBuffer buf = new StringBuffer();
+        CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
+        Integer positiveLinks = object.getPositiveLinkCount();
+        Integer negativeLinks = object.getNegativeLinkCount();
+
+        if ( positiveLinks != null && positiveLinks != 0 ) {
+            buf.append( positiveLinks );
+        }
+
+        if ( negativeLinks != null && negativeLinks != 0 ) {
+            if ( buf.length() > 0 )
+                buf.append( " / " );
+            buf.append( negativeLinks );
+        }
+        
+        return buf.toString();
+    }
+    
+    /**
+     * Function to return the data sets for a coexpression match
+     * 
+     * @return the data set column
+     */
+    @SuppressWarnings("unchecked")
+    public String getDataSetsExport() {
+        CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
+        Collection<ExpressionExperimentValueObject> ees = object.getExpressionExperimentValueObjects();
+        Collection<String> dsNames = new ArrayList<String>();
+        for ( ExpressionExperimentValueObject ee : ees ) {
+            dsNames.add( ee.getShortName() );
+        }
+        return StringUtils.join( dsNames.toArray(), "," );
     }
 }
