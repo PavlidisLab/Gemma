@@ -38,6 +38,7 @@ import org.hibernate.Session;
 import org.hibernate.type.DoubleType;
 import org.hibernate.type.LongType;
 
+import ubic.gemma.model.coexpression.Link;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -54,6 +55,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase {
 
     private static final int LINK_DELETE_BATCH_SIZE = 100000;
+    private static final String TMP_TABLE_PREFIX = "TMP_";
     private static Log log = LogFactory.getLog( Probe2ProbeCoexpressionDaoImpl.class.getName() );
 
     private long eeId = 0L;
@@ -142,6 +144,11 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         Session session = getSessionFactory().openSession();
         Connection conn = session.connection();
         Statement s = conn.createStatement();
+
+        // guard against mistakes...
+        if ( !tableName.startsWith( TMP_TABLE_PREFIX ) ) {
+            throw new IllegalStateException( "Attempt to create table named " + tableName );
+        }
         String queryString = "DROP TABLE IF EXISTS " + tableName + ";";
         s.executeUpdate( queryString );
         queryString = "CREATE TABLE " + tableName
@@ -161,16 +168,16 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      */
     private void doFiltering( ExpressionExperiment ee, String taxon ) throws Exception {
         String tableName = getTableName( taxon, false );
-        Collection<Link> links = getLinks( ee, tableName );
+        Collection<ProbeLink> links = getLinks( ee, tableName );
         Set<Long> csIds = new HashSet<Long>();
-        for ( Link link : links ) {
-            csIds.add( link.getFirst_design_element_fk() );
-            csIds.add( link.getSecond_design_element_fk() );
+        for ( ProbeLink link : links ) {
+            csIds.add( link.getFirstDesignElementId() );
+            csIds.add( link.getSecondDesignElementId() );
         }
         Map<Long, Collection<Long>> cs2genes = getCs2GenesMap( csIds );
-        links = filtering( links, cs2genes );
-        String cleanedTableName = getTableName( taxon, true );
-        saveLinks( links, ee, cleanedTableName );
+        links = filterNonSpecificAndRedundant( links, cs2genes );
+        String workingTableName = getTableName( taxon, true );
+        saveLinks( links, ee, workingTableName );
 
     }
 
@@ -179,38 +186,37 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * @param cs2genes
      * @return
      */
-    private Collection<Link> filtering( Collection<Link> links, Map<Long, Collection<Long>> cs2genes ) {
-        Collection<Link> specificLinks = new ArrayList<Link>();
-        Collection<Link> nonRedudantLinks = new ArrayList<Link>();
+    private Collection<ProbeLink> filterNonSpecificAndRedundant( Collection<ProbeLink> links,
+            Map<Long, Collection<Long>> cs2genes ) {
+        Collection<ProbeLink> specificLinks = new ArrayList<ProbeLink>();
+        Collection<ProbeLink> nonRedudantLinks = new ArrayList<ProbeLink>();
         Collection<Long> mergedCsIds = new HashSet<Long>();
         long maximumId = 0;
-        for ( Link link : links ) {
-            Collection<Long> firstGenes = cs2genes.get( link.getFirst_design_element_fk() );
-            Collection<Long> secondGenes = cs2genes.get( link.getSecond_design_element_fk() );
+        for ( ProbeLink link : links ) {
+            Collection<Long> firstGenes = cs2genes.get( link.getFirstDesignElementId() );
+            Collection<Long> secondGenes = cs2genes.get( link.getSecondDesignElementId() );
             if ( firstGenes == null || secondGenes == null ) {
                 // log.error("inconsistent links for csId (" + link.getFirst_design_element_fk() + ", " +
                 // link.getSecond_design_element_fk() + ") Problem: No genes for these two composite sequence id");
                 continue;
             }
-            // boolean filtered = false;
-            // for ( Long firstGene : firstGenes ) {
-            // if ( secondGenes.contains( firstGene ) ) // probe1 is hybridized with probe2
-            // filtered = true;
-            // }
-            // if ( filtered ) continue;
-            if ( link.getFirst_design_element_fk() > maximumId ) maximumId = link.getFirst_design_element_fk();
-            if ( link.getSecond_design_element_fk() > maximumId ) maximumId = link.getSecond_design_element_fk();
+
+            // probes that hit more than one gene are excluded here. (should be optional)
+            if ( firstGenes.size() > 1 || secondGenes.size() > 1 ) continue;
+
+            if ( link.getFirstDesignElementId() > maximumId ) maximumId = link.getFirstDesignElementId();
+            if ( link.getSecondDesignElementId() > maximumId ) maximumId = link.getSecondDesignElementId();
             specificLinks.add( link );
         }
         maximumId = maximumId + 1;
         if ( maximumId * maximumId > Long.MAX_VALUE ) {
-            log.warn( "The maximum key value is too big. the redundant detection may not correct" );
+            log.warn( "The maximum key value is too big. Redundancy detection may be incorrect" );
             maximumId = ( long ) Math.sqrt( ( double ) Long.MAX_VALUE );
         }
-        // remove redundancy
-        for ( Link link : specificLinks ) {
-            Long forwardMerged = link.getFirst_design_element_fk() * maximumId + link.getSecond_design_element_fk();
-            Long backwardMerged = link.getSecond_design_element_fk() * maximumId + link.getFirst_design_element_fk();
+        // remove redundancy (links which are already listed)
+        for ( ProbeLink link : specificLinks ) {
+            Long forwardMerged = link.getFirstDesignElementId() * maximumId + link.getSecondDesignElementId();
+            Long backwardMerged = link.getSecondDesignElementId() * maximumId + link.getFirstDesignElementId();
             if ( !mergedCsIds.contains( backwardMerged ) ) {
                 nonRedudantLinks.add( link );
                 mergedCsIds.add( forwardMerged );
@@ -269,13 +275,14 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * @return
      * @throws Exception
      */
-    private Collection<Link> getLinks( ExpressionExperiment expressionExperiment, String tableName ) throws Exception {
+    private Collection<ProbeLink> getLinks( ExpressionExperiment expressionExperiment, String tableName )
+            throws Exception {
         String baseQueryString = "SELECT FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK, SCORE FROM " + tableName
                 + " WHERE EXPRESSION_EXPERIMENT_FK = " + expressionExperiment.getId() + " limit ";
         int chunkSize = 1000000;
         Session session = getSessionFactory().openSession();
         long start = 0;
-        Collection<Link> links = new ArrayList<Link>();
+        Collection<ProbeLink> links = new ArrayList<ProbeLink>();
         while ( true ) {
             String queryString = baseQueryString + start + "," + chunkSize + ";";
 
@@ -292,9 +299,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
                 Long second_design_element_fk = scroll.getLong( 1 );
                 Double score = scroll.getDouble( 2 );
 
-                Link oneLink = new Link();
-                oneLink.setFirst_design_element_fk( first_design_element_fk );
-                oneLink.setSecond_design_element_fk( second_design_element_fk );
+                ProbeLink oneLink = new ProbeLink();
+                oneLink.setFirstDesignElementId( first_design_element_fk );
+                oneLink.setSecondDesignElementId( second_design_element_fk );
                 oneLink.setScore( score );
                 links.add( oneLink );
                 count++;
@@ -331,28 +338,26 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     }
 
     /**
+     * Generate a name for the table to be used for coexpression analysis.
+     * 
      * @param taxon
-     * @param cleanedTable
+     * @param tmpTable if true, the table used is a temporary table.
      * @return
      */
-    private String getTableName( String taxon, boolean cleanedTable ) {
-        int tableIndex = -1;
+    private String getTableName( String taxon, boolean tmpTable ) {
         String tableName = "";
-        String[] tableNames = new String[] { "HUMAN_PROBE_CO_EXPRESSION", "MOUSE_PROBE_CO_EXPRESSION",
-                "RAT_PROBE_CO_EXPRESSION", "OTHER_PROBE_CO_EXPRESSION" };
 
         if ( taxon.equalsIgnoreCase( "human" ) )
-            tableIndex = 0;
+            tableName = "HUMAN_PROBE_CO_EXPRESSION";
         else if ( taxon.equalsIgnoreCase( "mouse" ) )
-            tableIndex = 1;
+            tableName = "MOUSE_PROBE_CO_EXPRESSION";
         else if ( taxon.equalsIgnoreCase( "rat" ) )
-            tableIndex = 2;
+            tableName = "RAT_PROBE_CO_EXPRESSION";
         else
-            tableIndex = 3;
-        if ( cleanedTable )
-            tableName = "CLEANED_" + tableNames[tableIndex];
-        else
-            tableName = tableNames[tableIndex];
+            tableName = "OTHER_PROBE_CO_EXPRESSION";
+
+        if ( tmpTable ) tableName = TMP_TABLE_PREFIX + tableName;
+
         return tableName;
     }
 
@@ -362,7 +367,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * @param tableName
      * @throws Exception
      */
-    private void saveLinks( Collection<Link> links, ExpressionExperiment ee, String tableName ) throws Exception {
+    private void saveLinks( Collection<ProbeLink> links, ExpressionExperiment ee, String tableName ) throws Exception {
         if ( links == null || links.size() == 0 ) return;
         String queryString = "";
         Session session = getSessionFactory().openSession();
@@ -373,10 +378,10 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         int count = 0;
         int CHUNK_LIMIT = 10000;
         int total = links.size();
-        Collection<Link> linksInOneChunk = new ArrayList<Link>();
-        log.info( "Writing" + links.size() + " links into tables" );
+        Collection<ProbeLink> linksInOneChunk = new ArrayList<ProbeLink>();
+        log.info( "Writing " + links.size() + " links into tables" );
         int chunkNum = 0;
-        for ( Link link : links ) {
+        for ( ProbeLink link : links ) {
             linksInOneChunk.add( link );
             count++;
             total--;
@@ -393,7 +398,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
                 if ( chunkNum % 20 == 0 ) System.err.println();
             }
         }
-        log.info( " Finish writing " );
+        log.info( " Finisheds writing " );
         conn.close();
         session.close();
 
@@ -639,7 +644,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     protected Collection handleGetProbeCoExpression( ExpressionExperiment expressionExperiment, String taxon,
             boolean cleaned ) throws Exception {
         String tableName = getTableName( taxon, cleaned );
-        Collection<Link> links = getLinks( expressionExperiment, tableName );
+        Collection<ProbeLink> links = getLinks( expressionExperiment, tableName );
         return links;
     }
 
@@ -656,45 +661,40 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         }
     }
 
-    /**
-     * @author pavlidis
-     * @version $Id$
-     */
-    public class Link {
-        private Long first_design_element_fk = 0L;
-        private Long second_design_element_fk = 0L;
+    public class ProbeLink implements Link {
+        private Long firstDesignElementId = 0L;
+        private Long secondDesignElementId = 0L;
         private Double score = 0.0;
 
-        Link() {
+        public ProbeLink() {
         }
 
-        public Long getFirst_design_element_fk() {
-            return first_design_element_fk;
+        public Long getFirstDesignElementId() {
+            return firstDesignElementId;
         }
 
         public Double getScore() {
             return score;
         }
 
-        public Long getSecond_design_element_fk() {
-            return second_design_element_fk;
+        public Long getSecondDesignElementId() {
+            return secondDesignElementId;
         }
 
-        public void setFirst_design_element_fk( Long first_design_element_fk ) {
-            this.first_design_element_fk = first_design_element_fk;
+        public void setFirstDesignElementId( Long first_design_element_fk ) {
+            this.firstDesignElementId = first_design_element_fk;
         }
 
         public void setScore( Double score ) {
             this.score = score;
         }
 
-        public void setSecond_design_element_fk( Long second_design_element_fk ) {
-            this.second_design_element_fk = second_design_element_fk;
+        public void setSecondDesignElementId( Long second_design_element_fk ) {
+            this.secondDesignElementId = second_design_element_fk;
         }
 
         public String toString() {
-            String res = "(" + first_design_element_fk + "," + second_design_element_fk + ", " + score + ", " + eeId
-                    + ")";
+            String res = "(" + firstDesignElementId + "," + secondDesignElementId + ", " + score + ", " + eeId + ")";
             return res;
         }
     }

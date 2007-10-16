@@ -44,7 +44,7 @@ import ubic.basecode.gui.ColorMatrix;
 import ubic.basecode.gui.JMatrixDisplay;
 import ubic.gemma.analysis.linkAnalysis.LinkAnalysisUtilService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
-import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImpl.Link;
+import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImpl.ProbeLink;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
@@ -127,17 +127,17 @@ public class LinkGOAnalysisCli extends AbstractSpringAwareCLI {
     }
 
     @SuppressWarnings("unchecked")
-    private void counting( int[] stats, Collection<Link> links ) {
+    private void counting( int[] stats, Collection<ProbeLink> links ) {
         Collection<Long> csIds = new HashSet<Long>();
-        for ( Link link : links ) {
-            csIds.add( link.getFirst_design_element_fk() );
-            csIds.add( link.getSecond_design_element_fk() );
+        for ( ProbeLink link : links ) {
+            csIds.add( link.getFirstDesignElementId() );
+            csIds.add( link.getSecondDesignElementId() );
         }
         Map<Long, Collection<Long>> cs2genes = geneService.getCS2GeneMap( csIds );
-        for ( Link link : links ) {
-            if ( link.getFirst_design_element_fk() == link.getSecond_design_element_fk() ) continue;
-            Collection<Long> firstGeneIds = cs2genes.get( link.getFirst_design_element_fk() );
-            Collection<Long> secondGeneIds = cs2genes.get( link.getSecond_design_element_fk() );
+        for ( ProbeLink link : links ) {
+            if ( link.getFirstDesignElementId() == link.getSecondDesignElementId() ) continue;
+            Collection<Long> firstGeneIds = cs2genes.get( link.getFirstDesignElementId() );
+            Collection<Long> secondGeneIds = cs2genes.get( link.getSecondDesignElementId() );
             if ( firstGeneIds == null || secondGeneIds == null ) {
                 continue;
             }
@@ -163,16 +163,16 @@ public class LinkGOAnalysisCli extends AbstractSpringAwareCLI {
         }
     }
 
-    private void shuffleLinks( Collection<Link> links ) {
+    private void shuffleLinks( Collection<ProbeLink> links ) {
         // Do shuffling
         Random random = new Random();
         Object[] linksInArray = links.toArray();
         for ( int i = linksInArray.length - 1; i >= 0; i-- ) {
             int pos = random.nextInt( i + 1 );
-            Long tmpId = ( ( Link ) linksInArray[pos] ).getSecond_design_element_fk();
-            ( ( Link ) linksInArray[pos] ).setSecond_design_element_fk( ( ( Link ) linksInArray[i] )
-                    .getSecond_design_element_fk() );
-            ( ( Link ) linksInArray[i] ).setSecond_design_element_fk( tmpId );
+            Long tmpId = ( ( ProbeLink ) linksInArray[pos] ).getSecondDesignElementId();
+            ( ( ProbeLink ) linksInArray[pos] ).setSecondDesignElementId( ( ( ProbeLink ) linksInArray[i] )
+                    .getSecondDesignElementId() );
+            ( ( ProbeLink ) linksInArray[i] ).setSecondDesignElementId( tmpId );
         }
     }
 
@@ -269,7 +269,7 @@ public class LinkGOAnalysisCli extends AbstractSpringAwareCLI {
 
         for ( ExpressionExperiment ee : eeCandidates ) {
             log.info( "Shuffling " + ee.getShortName() );
-            Collection<Link> links = p2pService.getProbeCoExpression( ee, this.taxonName, false );
+            Collection<ProbeLink> links = p2pService.getProbeCoExpression( ee, this.taxonName, false );
             coveredGenes = new HashSet<Gene>();
 
             if ( links == null || links.size() == 0 ) {

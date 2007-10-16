@@ -540,7 +540,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         /*
          * This query does not return 'self-links' (gene coexpressed with itself) which happens when two probes for the
-         * same gene are correlated. STRAIGHT_JOIN is to ensure that mysql doesn't do something goofy with the index use.
+         * same gene are correlated. STRAIGHT_JOIN is to ensure that mysql doesn't do something goofy with the index
+         * use.
          */
         String query = "SELECT STRAIGHT_JOIN geneout.ID as id, geneout.NAME as genesymb, "
                 + "geneout.OFFICIAL_NAME as genename, coexp.EXPRESSION_EXPERIMENT_FK as exper, coexp.PVALUE as pvalue, coexp.SCORE as score, "
@@ -555,8 +556,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /**
      * Process a single query result from the coexpression search.
-     * @param queryGene 
      * 
+     * @param queryGene
      * @param geneMap
      * @param scroll
      */
@@ -579,7 +580,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         }
 
         vo.setTaxonId( queryGene.getTaxon().getId() );
-        
+
         // add the expression experiment
         Long eeID = scroll.getLong( 3 );
         ExpressionExperimentValueObject eeVo = coexpressions.getExpressionExperiment( vo.getGeneType(), eeID );
@@ -617,7 +618,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
 
         while ( scroll.next() ) {
-            processCoexpQueryResult(queryGene, geneMap, scroll, coexpressions );
+            processCoexpQueryResult( queryGene, geneMap, scroll, coexpressions );
         }
     }
 
@@ -1114,28 +1115,47 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         throw new UnsupportedOperationException( "Sorry, you shouldn't use this" );
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected Map handleGetCS2GeneMap( Collection css ) throws Exception {
-        Map<Long, CompositeSequence> csId2cs = new HashMap<Long, CompositeSequence>();
-        for (CompositeSequence cs : (Collection<CompositeSequence>) css) {
-            csId2cs.put( cs.getId(), cs );
-        }
-        Collection<Long> csIds = csId2cs.keySet();
-        
+        // One of these is our return value, depending on whether we need entities or not.
         Map<Long, Collection<Long>> csId2geneIds = new HashMap<Long, Collection<Long>>();
         Map<CompositeSequence, Collection<Gene>> cs2genes = new HashMap<CompositeSequence, Collection<Gene>>();
-        if ( css == null || css.size() == 0 ) return cs2genes;
+
+        if ( css == null || css.size() == 0 ) {
+            return cs2genes;
+        }
+
+        /*
+         * If true, return a map of ids to ids. Otherwise return map of CS to Genes. This is a little dumb, but keeps us
+         * from having two very similar methods. Some code uses ids (for simplicity) but really entity objects should be
+         * preferred where possible (for type safety and other object-oriented goodness).
+         */
+        boolean useIds = css.iterator().next() instanceof Long;
+
+        Map<Long, CompositeSequence> csId2cs = new HashMap<Long, CompositeSequence>();
+        Collection<Long> csIds = null;
+        if ( useIds ) {
+            csIds = css;
+        } else {
+            for ( CompositeSequence cs : ( Collection<CompositeSequence> ) css ) {
+                csId2cs.put( cs.getId(), cs );
+            }
+            csIds = csId2cs.keySet();
+        }
+
         int count = 0;
         int CHUNK_SIZE = 100000;
         Collection<Long> csIdChunk = new HashSet<Long>();
         Session session = getSessionFactory().openSession();
 
-        for ( Long csId : csIds) {
-            csIdChunk.add( csId);
+        for ( Long csId : csIds ) {
+            csIdChunk.add( csId );
             count++;
             if ( count % CHUNK_SIZE == 0 || count == csIds.size() ) {
-                String queryString = "SELECT CS as id, GENE as geneId FROM GENE2CS, CHROMOSOME_FEATURE as C WHERE GENE2CS.GENE = C.ID and C.CLASS = 'GeneImpl' and"
-                        + " CS in (" + StringUtils.join( csIdChunk.iterator(), "," ) + ")";
+                String queryString = "SELECT CS as id, GENE as geneId FROM GENE2CS, CHROMOSOME_FEATURE as C"
+                        + " WHERE GENE2CS.GENE = C.ID and C.CLASS = 'GeneImpl' and" + " CS in ("
+                        + StringUtils.join( csIdChunk.iterator(), "," ) + ")";
 
                 org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
                 queryObject.addScalar( "id", new LongType() );
@@ -1156,8 +1176,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             }
         }
         session.close();
-        for (Map.Entry<Long, Collection<Long>> ent : csId2geneIds.entrySet()) {
-            Collection<Gene> genes = handleLoad(ent.getValue());
+        if ( useIds ) return csId2geneIds;
+
+        // get the gene objects so we can return them.
+        for ( Map.Entry<Long, Collection<Long>> ent : csId2geneIds.entrySet() ) {
+            Collection<Gene> genes = load( ent.getValue() );
             cs2genes.put( csId2cs.get( ent.getKey() ), genes );
         }
         return cs2genes;

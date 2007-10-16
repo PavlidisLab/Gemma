@@ -38,7 +38,7 @@ import org.apache.commons.lang.time.StopWatch;
 import ubic.basecode.dataStructure.matrix.CompressedNamedBitMatrix;
 import ubic.gemma.analysis.linkAnalysis.LinkAnalysisUtilService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
-import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImpl.Link;
+import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImpl.ProbeLink;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
@@ -54,6 +54,9 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * <pre>
  * java -Xmx5000M -XX:+UseParallelGC  -jar LinkGOStatsCli.jar -f mouse_brain_dataset.txt  -t mouse -u administrator -p testing -v 3
  * </pre>
+ * 
+ * <p>
+ * FIXME this class reproduces code in the ShuffleLinksCli. This should also load links from a file.
  * 
  * @author xwan
  * @version $Id$
@@ -145,20 +148,20 @@ public class LinkGOStatsCli extends AbstractSpringAwareCLI {
     }
 
     @SuppressWarnings("unchecked")
-    private void fillingMatrix( Collection<Link> links, ExpressionExperiment ee ) {
+    private void fillingMatrix( Collection<ProbeLink> links, ExpressionExperiment ee ) {
         Collection<Long> csIds = new HashSet<Long>();
-        for ( Link link : links ) {
-            csIds.add( link.getFirst_design_element_fk() );
-            csIds.add( link.getSecond_design_element_fk() );
+        for ( ProbeLink link : links ) {
+            csIds.add( link.getFirstDesignElementId() );
+            csIds.add( link.getSecondDesignElementId() );
         }
         Map<Long, Collection<Long>> cs2genes = geneService.getCS2GeneMap( csIds );
         int eeIndex = eeIndexMap.get( ee.getId() );
-        for ( Link link : links ) {
-            Collection<Long> firstGeneIds = cs2genes.get( link.getFirst_design_element_fk() );
-            Collection<Long> secondGeneIds = cs2genes.get( link.getSecond_design_element_fk() );
+        for ( ProbeLink link : links ) {
+            Collection<Long> firstGeneIds = cs2genes.get( link.getFirstDesignElementId() );
+            Collection<Long> secondGeneIds = cs2genes.get( link.getSecondDesignElementId() );
             if ( firstGeneIds == null || secondGeneIds == null ) {
-                log.info( " Preparation is not correct (get null genes) " + link.getFirst_design_element_fk() + ","
-                        + link.getSecond_design_element_fk() );
+                log.info( " Preparation is not correct (get null genes) " + link.getFirstDesignElementId() + ","
+                        + link.getSecondDesignElementId() );
                 continue;
             }
             // if(firstGeneIds.size() != 1 || secondGeneIds.size() != 1){
@@ -325,7 +328,7 @@ public class LinkGOStatsCli extends AbstractSpringAwareCLI {
         }
         for ( ExpressionExperiment ee : eeCandidates ) {
             log.info( "Shuffling " + ee.getShortName() );
-            Collection<Link> links = p2pService.getProbeCoExpression( ee, this.taxonName, true );
+            Collection<ProbeLink> links = p2pService.getProbeCoExpression( ee, this.taxonName, true );
             if ( links == null || links.size() == 0 ) continue;
             fillingMatrix( links, ee );
         }

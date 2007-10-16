@@ -18,7 +18,7 @@ import org.apache.commons.lang.time.StopWatch;
 
 import ubic.basecode.dataStructure.matrix.CompressedNamedBitMatrix;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
-import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImpl.Link;
+import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImpl.ProbeLink;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -182,17 +182,17 @@ public class ProbeAlignedRegionAnalysisCLI extends AbstractSpringAwareCLI {
 
         for ( ExpressionExperiment EE : EEs ) {
             int eeIndex = eeId2IndexMap.get( EE.getId() );
-            Collection<Link> links = p2pService.getProbeCoExpression( EE, taxon.getCommonName(), false );
+            Collection<ProbeLink> links = p2pService.getProbeCoExpression( EE, taxon.getCommonName(), false );
             if ( links == null || links.size() == 0 ) continue;
             Collection<Long> csIds = new HashSet<Long>();
-            for ( Link link : links ) {
-                csIds.add( link.getFirst_design_element_fk() );
-                csIds.add( link.getSecond_design_element_fk() );
+            for ( ProbeLink link : links ) {
+                csIds.add( link.getFirstDesignElementId() );
+                csIds.add( link.getSecondDesignElementId() );
             }
             Map<Long, Collection<Long>> cs2geneMap = geneService.getCS2GeneMap( csIds );
-            for ( Link link : links ) {
-                Collection<Long> firstGeneIds = cs2geneMap.get( link.getFirst_design_element_fk() );
-                Collection<Long> secondGeneIds = cs2geneMap.get( link.getSecond_design_element_fk() );
+            for ( ProbeLink link : links ) {
+                Collection<Long> firstGeneIds = cs2geneMap.get( link.getFirstDesignElementId() );
+                Collection<Long> secondGeneIds = cs2geneMap.get( link.getSecondDesignElementId() );
                 for ( Long firstGeneId : firstGeneIds ) {
                     for ( Long secondGeneId : secondGeneIds ) {
                         int rowIndex = linkMatrix.getRowIndexByName( firstGeneId );
