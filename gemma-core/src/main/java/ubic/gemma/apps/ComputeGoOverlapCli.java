@@ -75,9 +75,18 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
     // a hashmap for each mouse gene and its GO terms + parents
 
     private Map<String, Integer> rootMap = new HashMap<String, Integer>();
+    Map<String, Integer> GOcountMap = new HashMap<String, Integer>();
 
     private String HASH_MAP_RETURN = "HashMapReturn";
     private String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
+    private boolean partOf = true;
+
+    private String proccess = "GO:0008150";
+    private String function = "GO:0003674";
+    private String component = "GO:0005575";
+    private int pCount = 0;
+    private int fCount = 0;
+    private int cCount = 0;
 
     protected void initBeans() {
         geneService = ( GeneService ) getBean( "geneService" );
@@ -117,12 +126,6 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
 
         Collection<Gene> masterGenes = getGeneObject( goID, commonName );
 
-        Set<Gene> allGenes = new HashSet<Gene>( masterGenes );
-        // a hashset containing all genes (master genes and coexpressed genes)
-
-        Set<Gene> coExpGenes = new HashSet<Gene>();
-        // a hashset containing all coexpressed genes
-
         final int stringincy = 6;
 
         Map<Gene, Collection<Gene>> geneExpMap = new HashMap<Gene, Collection<Gene>>();
@@ -151,16 +154,9 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
             if ( ( foundGenes == null ) || ( foundGenes.isEmpty() ) )
                 continue;
             else {
-
                 geneExpMap.put( gene, foundGenes );
-                allGenes.addAll( foundGenes );
-                coExpGenes.addAll( foundGenes );
             }
-
         }
-
-        log.debug( "Total coexpressed genes:" + coExpGenes.size() );
-        // log.debug( "The following genes: " + allGenes.size() );
 
         // new GOTermOverlap code
         Set<String> allGOTerms = new HashSet<String>();
@@ -179,31 +175,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
             }
             log.info( "Got allGOTerm set!" );
 
-            for ( String t : allGOTerms ) {
-                OntologyTerm term = GeneOntologyService.getTermForURI( t );
-                Collection<OntologyTerm> parents = ontologyEntryService.getAllParents( term );
-
-                for ( OntologyTerm p : parents ) {
-                    String id = GeneOntologyService.asRegularGoId( p );
-                    if ( id.equalsIgnoreCase( "GO:0008150" ) ) {
-                        rootMap.put( t, 1 );
-                        log.info( t + "has root process" );
-                        break;
-                    }
-                    if ( id.equalsIgnoreCase( "GO:0003674" ) ) {
-                        rootMap.put( t, 2 );
-                        log.info( t + "has root function" );
-                        break;
-                    }
-                    if ( id.equalsIgnoreCase( "GO:0005575" ) ) {
-                        rootMap.put( t, 3 );
-                        log.info( t + "has root component" );
-                        break;
-                    }
-                }
-            }
-
-            saveMapToDisk( rootMap, "rootMap_return" );
+            makeRootMap( allGOTerms );
         }
 
         else {
@@ -224,117 +196,33 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
                 mouseGeneGOMap.put( gene.getId(), termString );
 
             }
-
-            saveMapToDisk( rootMap, "rootMap_return" );
             saveMapToDisk( mouseGeneGOMap, HASH_MAP_RETURN );
 
         }
 
         // Calculating the probability of each term
-        Map<String, Integer> GOcountMap = new HashMap<String, Integer>();
-
-        String proc = GeneOntologyService.getTermForId( "GO:0008150" ).getUri();
-        String func = GeneOntologyService.getTermForId( "GO:0003674" ).getUri();
-        String comp = GeneOntologyService.getTermForId( "GO:0005575" ).getUri();
-
         log.info( "Entering GO Map...." );
         for ( Long gene : mouseGeneGOMap.keySet() ) {
             Collection<String> GO = mouseGeneGOMap.get( gene );
-
-            for ( String ontM : GO ) {
-
-                if ( ontM.equalsIgnoreCase( proc ) || ontM.equalsIgnoreCase( func ) || ontM.equalsIgnoreCase( comp ) )
-                    continue;
-
-                if ( GOcountMap.containsKey( ontM ) ) {
-                    int value = GOcountMap.get( ontM );
-                    value++;
-                    GOcountMap.put( ontM, value );
-                    continue;
-                }
-
-                GOcountMap.put( ontM, 1 );
-            }
-
+            addTermOccurrence( GO );
         }
 
         Long overallElapsed = overallWatch.getTime();
         log.info( "Creating GOcountMap took: " + overallElapsed / 1000 + "s " );
 
-        log.info( "Counting for children terms.." );
-        int pCount = 0;
-        int fCount = 0;
-        int cCount = 0;
+        Map<String, Integer> newCountMap = new HashMap<String, Integer>();
 
+
+        log.info( "Calculating probabilities... " );
         for ( String term : GOcountMap.keySet() ) {
-
-            int termCount = 0;
-            termCount = GOcountMap.get( term );
-
-            if ( rootMap.get( term ) == null ) {
-                log.warn( term + " was not in the root map" );
-                continue;
-            }
-
-            int root = rootMap.get( term );
-
-            switch ( root ) {
-                case 1:
-                    pCount += termCount;
-                    break;
-                case 2:
-                    fCount += termCount;
-                    break;
-                case 3:
-                    cCount += termCount;
-                    break;
-            }
-
-            Collection<OntologyTerm> children = ontologyEntryService.getAllChildren( GeneOntologyService
-                    .getTermForURI( term ) );
-            log.info( "got " + children.size() + "children terms for " + term );
-
-            if ( children.isEmpty() || children == null ) {
-                GOcountMap.put( term, termCount );
-                log.info( "No children for term " + term + " termcount is " + termCount );
-                continue;
-            }
-
-            for ( OntologyTerm child : children ) {
-                if ( GOcountMap.containsKey( child.getUri() ) ) {
-                    int count = GOcountMap.get( child.getUri() );
-                    termCount += count;
-                }
-            }
-            GOcountMap.put( term, termCount );
-            log.info( "The term count for term " + term + " is " + termCount );
+            newCountMap.put( term, countChildren(term) );
         }
-
-        for ( String term : GOcountMap.keySet() ) {
-
-            if ( rootMap.get( term ) == null ) {
-                log.warn( term + " was not in the root map" );
-                continue;
-            }
-            int root = rootMap.get( term );
-            int total = 0;
-
-            switch ( root ) {
-                case 1:
-                    total = pCount;
-                    break;
-                case 2:
-                    total = fCount;
-                    break;
-                case 3:
-                    total = cCount;
-                    break;
-            }
-            double prob = ( double )( GOcountMap.get( term ) ) / total;
-
-            GOProbMap.put( term, prob );
-            log.info( "The probability for " + term + "is " + prob );
-        }
+        
+        log.info( "The total process associations: " + pCount);
+        log.info( "The total function associations: " + fCount);
+        log.info( "The total component associations: " + cCount);
+        
+        GOProbMap = getProb( newCountMap );
 
         this.saveMapToDisk( GOProbMap, "GoProbMap" );
         Long Elapsed = overallWatch.getTime();
@@ -381,7 +269,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
                 }
             }
             overallWatch.stop();
-            log.info( "Compute GoOverlap takes " + overallWatch.getTime() + "ms");
+            log.info( "Compute GoOverlap takes " + overallWatch.getTime() + "ms" );
 
             // printResults(masterTermCountMap);
         } catch ( IOException ioe ) {
@@ -405,7 +293,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         for ( String ontologyEntry : masterGO ) {
             for ( String ontologyEntryC : coExpGO ) {
 
-                if ( ontologyEntry.equalsIgnoreCase( ontologyEntryC ))
+                if ( ontologyEntry.equalsIgnoreCase( ontologyEntryC ) )
                     overlapTerms.add( GeneOntologyService.getTermForURI( ontologyEntry ) );
             }
         }
@@ -523,29 +411,27 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
                         pterm = ontoM.getTerm();
 
                     } else {
-                        Collection<OntologyTerm> parentM = ontologyEntryService.getAllParents( ontoM );
+                        Collection<OntologyTerm> parentM = ontologyEntryService.getAllParents( ontoM, partOf );
                         parentM.add( ontoM );
-                        Collection<OntologyTerm> parentC = ontologyEntryService.getAllParents( ontoC );
+                        Collection<OntologyTerm> parentC = ontologyEntryService.getAllParents( ontoC, partOf );
                         parentC.add( ontoC );
 
                         for ( OntologyTerm termM : parentM ) {
                             String id = GeneOntologyService.asRegularGoId( termM );
-                            if ( ( id.equalsIgnoreCase( "GO:0005575" ) ) || ( id.equalsIgnoreCase( "GO:0008150" ) )
-                                    || ( id.equalsIgnoreCase( "GO:0003674" ) ) ) {
-                                log.info( "Removing Ontology entry" );
-                                continue;
-                            }
+                            if ( ( id.equalsIgnoreCase( proccess ) ) || ( id.equalsIgnoreCase( function ) )
+                                    || ( id.equalsIgnoreCase( component ) ) ) continue;
+
                             for ( OntologyTerm termC : parentC ) {
                                 String id2 = GeneOntologyService.asRegularGoId( termM );
-                                if ( ( id2.equalsIgnoreCase( "GO:0005575" ) )
-                                        || ( id2.equalsIgnoreCase( "GO:0008150" ) )
-                                        || ( id2.equalsIgnoreCase( "GO:0003674" ) ) ) {
-                                    log.info( "Removing Ontology entry" );
-                                    continue;
-                                }
-                                if ( termM.getUri().equals( termC.getUri() ) ) {
-                                    if ( ( GOProbMap.get( termM.getUri() ) ) < pmin ) {
-                                        pmin = GOProbMap.get( termM.getUri() );
+                                if ( ( id2.equalsIgnoreCase( proccess ) ) || ( id2.equalsIgnoreCase( function ) )
+                                        || ( id2.equalsIgnoreCase( component ) ) ) continue;
+
+                                if ( ( termM.getUri().equalsIgnoreCase( termC.getUri() ) )
+                                        && ( GOProbMap.get( termM.getUri() ) != null ) ) {
+
+                                    double value = GOProbMap.get( termM.getUri() );
+                                    if ( value < pmin ) {
+                                        pmin = value;
                                         pterm = termM.getTerm();
                                     }
                                 }
@@ -574,9 +460,10 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
                 avgScore = total / count;
                 scoreMap.put( gene, avgScore );
                 log.info( "Average score for gene " + gene + " is " + avgScore );
-            } else
+            } else {
                 scoreMap.put( gene, 1000.0 );
-            log.info( "No overlapping terms" );
+                log.info( "No overlapping terms" );
+            }
 
         }
         return scoreMap;
@@ -590,39 +477,162 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
     private Set<OntologyTerm> getGOTerms( Gene gene ) {
 
         Set<OntologyTerm> allGOTermSet = new HashSet<OntologyTerm>();
-        Set<OntologyTerm> terms = new HashSet<OntologyTerm>();
 
         Collection<VocabCharacteristic> stringTerms = gene2GOAssociationService.findByGene( gene );
+        Set<String> uriTerms = new HashSet<String>();
 
         for ( VocabCharacteristic characteristic : stringTerms ) {
-            OntologyTerm term = GeneOntologyService.getTermForId( characteristic.getValue() );
-            if ( ( term != null ) ) terms.add( term );
+            String term = characteristic.getValueUri();
+            if ( ( term != null ) ) {
+                allGOTermSet.add( GeneOntologyService.getTermForURI( term ) );
+                uriTerms.add( term );
+            }
         }
-        allGOTermSet.addAll( terms ); // add the children terms
 
-        for ( OntologyTerm t : terms ) {
-            Collection<OntologyTerm> parents = ontologyEntryService.getAllParents( t );
+        allGOTermSet.addAll( makeRootMap( uriTerms ) );
+
+        return allGOTermSet;
+    }
+
+    /**
+     * @param take a collection of GOTerm URIs
+     * @return Identify the root of each term and put it in the rootMap and return GOTermSet containing all parents NOT
+     *         including root terms
+     */
+    private Set<OntologyTerm> makeRootMap( Collection<String> terms ) {
+
+        Set<OntologyTerm> allGOTermSet = new HashSet<OntologyTerm>();
+        for ( String t : terms ) {
+            Collection<OntologyTerm> parents = ontologyEntryService.getAllParents( GeneOntologyService
+                    .getTermForURI( t ), partOf );
 
             for ( OntologyTerm p : parents ) {
                 String id = GeneOntologyService.asRegularGoId( p );
-                if ( id.equalsIgnoreCase( "GO:0008150" ) ) {
-                    rootMap.put( t.getUri(), 1 );
+                if ( id.equalsIgnoreCase( proccess ) ) {
+                    rootMap.put( t, 1 );
                     continue;
                 }
-                if ( id.equalsIgnoreCase( "GO:0003674" ) ) {
-                    rootMap.put( t.getUri(), 2 );
+                if ( id.equalsIgnoreCase( function ) ) {
+                    rootMap.put( t, 2 );
                     continue;
                 }
-                if ( id.equalsIgnoreCase( "GO:0005575" ) ) {
-                    rootMap.put( t.getUri(), 3 );
+                if ( id.equalsIgnoreCase( component ) ) {
+                    rootMap.put( t, 3 );
                     continue;
                 }
 
                 allGOTermSet.add( p );
             }
         }
-
         return allGOTermSet;
+    }
+
+    private Map<String, Integer> addTermOccurrence( Collection<String> GO ) {
+
+        for ( String ontM : GO ) {
+
+            String ontId = GeneOntologyService.asRegularGoId( GeneOntologyService.getTermForURI( ontM ) );
+
+            if ( ontId.equalsIgnoreCase( proccess ) || ontId.equalsIgnoreCase( function )
+                    || ontId.equalsIgnoreCase( component ) ) continue;
+
+            if ( GOcountMap.containsKey( ontM ) ) {
+                int value = GOcountMap.get( ontM );
+                value++;
+                GOcountMap.put( ontM, value );
+                continue;
+            }
+
+            GOcountMap.put( ontM, 1 );
+        }
+        return GOcountMap;
+    }
+
+    /**
+     * @param GOcountMap of terms and their occurrence
+     * @return a new countMap of each term and how many times it occurs and its children occur
+     */
+    private Integer countChildren (String term) {
+
+          
+            int termCount = GOcountMap.get( term );
+
+            if ( rootMap.get( term ) == null ) {
+                log.warn( term + " was not in the root map" );
+                return null;
+            }
+
+            int root = rootMap.get( term );
+
+            switch ( root ) {
+                case 1:
+                    pCount += termCount;
+                    break;
+                case 2:
+                    fCount += termCount;
+                    break;
+                case 3:
+                    cCount += termCount;
+                    break;
+            }
+
+            Collection<OntologyTerm> children = ontologyEntryService.getAllChildren( GeneOntologyService
+                    .getTermForURI( term ), partOf );
+            log.info( "got " + children.size() + " children terms for " + term );
+
+            if ( children.isEmpty() || children == null ) {
+                log.info( "No children for term " + term + " termcount is " + termCount );
+                return termCount;
+            }
+
+            for ( OntologyTerm child : children ) {
+                if ( GOcountMap.containsKey( child.getUri() ) ) {
+                    int count = GOcountMap.get( child.getUri() );
+                    termCount += count;
+                }
+            }
+            
+            log.info( "The term count for term " + term + " is " + termCount );
+            return termCount;
+            
+        }
+
+    /**
+     * @param newCountMap
+     * @return the probability for each GO term based on its occurrence
+     */
+    private Map<String, Double> getProb( Map<String, Integer> newCountMap ) {
+
+        Map<String, Double> ProbMap = new HashMap<String, Double>();
+
+        for ( String term : newCountMap.keySet() ) {
+
+            if ( rootMap.get( term ) == null ) {
+                log.warn( term + " was not in the root map" );
+                continue;
+            }
+            int root = rootMap.get( term );
+            int total = 0;
+
+            switch ( root ) {
+                case 1:
+                    total = pCount;
+                    break;
+                case 2:
+                    total = fCount;
+                    break;
+                case 3:
+                    total = cCount;
+                    break;
+            }
+            double prob = ( double ) ( newCountMap.get( term ) ) / total;
+
+            ProbMap.put( term, prob );
+            log.info( "The probability for " + term + "is " + prob );
+        }
+
+        return ProbMap;
+
     }
 
     /**
