@@ -95,7 +95,7 @@ var createSearchComponent = function(){
                        {name:"value", type:"string"},
                        {name:"valueUri", type:"string"},
                        {name:"categoryUri",type:"string"},
-                       {name:"category", type:"string"},                       
+                       {name:"category", type:"string"},
                        {name:"description", mapping:"this", convert:getDescription},
                        {name:"style", mapping:"this", convert:getStyle}
                ]);
