@@ -240,6 +240,20 @@ a.info{
 	color: darkgreen;
 }
 
+/* colours for characteristics */
+.usedWithUri {
+	background: lightgreen;
+	font-weight: bold;
+}
+.usedNoUri {
+	font-weight: bold;
+}
+.unusedWithUri {
+	background: lightgreen;
+}
+.unusedNoUri {
+}
+
 a.info:hover{
 	z-index:25; 
 	background-color:#ff0;
