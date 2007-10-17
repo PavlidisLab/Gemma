@@ -724,7 +724,7 @@ public class SearchService {
 
         CompassQuery compassQuery = session.queryBuilder().queryString( query.trim() ).toQuery();        
         CompassHits hits = compassQuery.hits();
-        CompassDetachedHits detachedHits = hits.detach(1,50);
+        CompassDetachedHits detachedHits = hits.detach();
         time = System.currentTimeMillis() - time;
         CompassSearchResults searchResults = new CompassSearchResults( detachedHits.getHits(), time, detachedHits
                 .getHits().length );

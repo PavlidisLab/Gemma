@@ -75,14 +75,29 @@ var createSearchComponent = function(){
     	                	
         }
         
+        var getStyle = function(record) {
+        	if ( record.description.substring(0, 8) == " -USED- ")
+        		return record.valueUri ? "usedWithUri" : "usedNoUri";
+        	else
+        		return record.valueUri ? "unusedWithUri" : "unusedNoUri";
+        }
         
-	var     recordType = Ext.data.Record.create([
+        var getDescription = function(record) {
+        	if ( record.valueUri )
+        		return record.valueUri;
+        	else
+        		return ( record.description.substring(0, 8) == " -USED- " ) ?
+        			record.description.substring(8) : record.description;
+        }
+        
+		var recordType = Ext.data.Record.create([
 					   {name:"id", type:"int"},
                        {name:"value", type:"string"},
                        {name:"valueUri", type:"string"},
                        {name:"categoryUri",type:"string"},
                        {name:"category", type:"string"},                       
-                       {name:"description", type:"string"}
+                       {name:"description", mapping:"this", convert:getDescription},
+                       {name:"style", mapping:"this", convert:getStyle}
                ]);
 
 
@@ -101,8 +116,8 @@ var createSearchComponent = function(){
     
      // Custom rendering Template
     var resultTpl = new Ext.Template(
-        '<div class="search-item" title="{description} : {valueUri}">',
-            '{value}',          
+        '<div class="search-item">',
+            '<div class="{style}" title="{description}">{value}</div>',
         '</div>'
     );
     

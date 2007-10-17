@@ -19,9 +19,15 @@ Ext.extend(Ext.data.ListRangeReader, Ext.data.DataReader, {
 		var re = /[\[\.]/;
 		return function (expr) {
 			try {
-				return (re.test(expr)) ? new Function("obj", "return obj." + expr) : function (obj) {
-					return obj[expr];
-				};
+				if ( expr == "this" )
+					return function (obj) { return obj; };
+				else if ( re.test(expr) )
+					return new Function("obj", "return obj." + expr);
+				else
+					return function (obj) { return obj[expr]; };
+	//			return (re.test(expr)) ? new Function("obj", "return obj." + expr) : function (obj) {
+	//				return obj[expr];
+	//			};
 			}
 			catch (e) {
 			}
