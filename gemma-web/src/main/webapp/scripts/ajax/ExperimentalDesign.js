@@ -12,7 +12,7 @@ var bmGridRefresh;									//methods
 var mgedSelectedVocabC = {};
 var ontologySearchVocabC = {};
 
-var createMgedComboBox = function(terms){				
+var createMgedComboBox = function(comboHandler){				
 				
 			
 	var     recordType = Ext.data.Record.create([
@@ -44,18 +44,7 @@ var createMgedComboBox = function(terms){
 					        selectOnFocus:true
 					    });	
 					    					   
-	
-		    			var comboHandler = function(field,record,index){
-					    	
-					    	mgedSelectedVocabC.categoryUri = record.data.uri;
-							mgedSelectedVocabC.category = record.data.term;				    	
-							
-							if (mgedSelectedVocabC.category == null)	//need to check if we should enable the save button.
-								saveNewFactorButton.disable();
-							else
-								saveNewFactorButton.enable();
-					    								      						 					    	                        
-    	                };
+
     	                	
 	
 				  	 	combo.on('select', comboHandler);
@@ -125,8 +114,8 @@ var saveExperimentalFactorValue = function(){
 	var newVocabC = {};
 	newVocabC.value = ontologySearchVocabC.value;
 	newVocabC.valueUri = ontologySearchVocabC.valueUri;
-	newVocabC.category = mgedSelectedVocabC.category;
-	newVocabC.categoryUri = mgedSelectedVocabC.categoryUri ;
+	newVocabC.category = ontologySearchVocabC.category;
+	newVocabC.categoryUri = ontologySearchVocabC.categoryUri ;
 	
 
 	
@@ -172,8 +161,6 @@ var createOntologySearchComponent = function(){
             }           	
     	                	
         }
-    
-    
         
     var getStyle = function(record) {
     	if ( record.description.substring(0, 8) == " -USED- ")
@@ -221,8 +208,7 @@ var createOntologySearchComponent = function(){
         '</div>'
     );
     
-    var search = new Ext.form.ComboBox({
-    	width: 300,
+    var search = new Ext.form.ComboBox({    	
         store: ds,
         displayField:'title',
         fieldLabel: 'Lookup',
@@ -237,10 +223,10 @@ var createOntologySearchComponent = function(){
     		var p = [q]; 
     		
     		ontologySearchVocabC.value = q;	//if the user doesn't select a provided ontolgy term this will set it to be the free text. 
-    		if (!mgedSelectedVocabC.categoryUri)
-    			mgedSelectedVocabC.categoryUri="{}";
+    		if (!ontologySearchVocabC.categoryUri)
+    			ontologySearchVocabC.categoryUri="{}";
     			
-   		 	p.push(mgedSelectedVocabC.categoryUri);
+   		 	p.push(ontologySearchVocabC.categoryUri);
    		 		
    		 	return p;
 		}
@@ -639,8 +625,20 @@ Ext.onReady(function() {
 	initFactorGrid("factorGrid"); 	 	
 	if (Ext.get("factorGridTB")){
 	
+	var factorMgedComboHandler = function(field,record,index){
+    	
+    	mgedSelectedVocabC.categoryUri = record.data.uri;
+		mgedSelectedVocabC.category = record.data.term;				    	
+		
+		if (mgedSelectedVocabC.category == null)	//need to check if we should enable the save button.
+			saveNewFactorButton.disable();
+		else
+			saveNewFactorButton.enable();
+    								      						 					    	                        
+    };
+    
 	 	var factorTB = new Ext.Toolbar("factorGridTB");	
-		factorTB.addField(createMgedComboBox());
+		factorTB.addField(createMgedComboBox(factorMgedComboHandler));
 		factorTB.addSpacer();
 		factorTB.addField(createFactorDescriptionField());
 		factorTB.addSpacer();
@@ -661,7 +659,17 @@ Ext.onReady(function() {
 
 	if (Ext.get("factorValueTB")){
 		
-		var factorValueTB = new Ext.Toolbar("factorValueTB");	
+	var factorValueMgedComboHandler = function(field,record,index){
+    	
+    	ontologySearchVocabC.categoryUri = record.data.uri;
+		ontologySearchVocabC.category = record.data.term;				    	
+		
+    								      						 					    	                        
+    };
+		
+		var factorValueTB = new Ext.Toolbar("factorValueTB");
+		factorValueTB.addField(createMgedComboBox(factorValueMgedComboHandler));
+		factorValueTB.addSpacer();	
 		factorValueTB.addField(createOntologySearchComponent());	
 		factorValueTB.addSpacer();
 		factorValueTB.addField(createFactorValueDescriptionField());
