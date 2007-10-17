@@ -265,19 +265,25 @@ if ( expressionExperiment.getName() != null ) {
 <h3>
 	Annotation
 </h3>
-<authz:authorize ifAnyGranted="admin">
-	<!-- This is for the EE annotator  -->
-	<div id="eeAnnotator" class="x-grid-mso"
-		style="padding-left: 2px; padding-right: 2px; overflow: hidden; width: 650px; height: 30px;"></div>
-	<script type="text/javascript" src='/Gemma/dwr/interface/OntologyService.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/MgedOntologyService.js'></script>
-	<script type="text/javascript" src="<c:url value='/scripts/ajax/eeAnnotator.js'/>"></script>
-</authz:authorize>
+<div style="padding: 2px;" onclick="Effect.toggle('annots', 'blind', {duration:0.1})">
+	<img src="/Gemma/images/plus.gif" />
+	<br />
+</div>
+<div id="annots"">
+	<authz:authorize ifAnyGranted="admin">
+		<!-- This is for the EE annotator  -->
+		<div id="eeAnnotator" class="x-grid-mso"
+			style="padding-left: 2px; padding-right: 2px; overflow: hidden; width: 650px; height: 30px;"></div>
+		<script type="text/javascript" src='/Gemma/dwr/interface/OntologyService.js'></script>
+		<script type='text/javascript' src='/Gemma/dwr/interface/MgedOntologyService.js'></script>
+		<script type="text/javascript" src="<c:url value='/scripts/ajax/eeAnnotator.js'/>"></script>
+	</authz:authorize>
 
-<div id="eeAnnotations" class="x-grid-mso"
-	style="border: 1px solid #c3daf9; overflow: hidden; width: 650px; height: 150px;"></div>
-<input type="hidden" name="eeId" id="eeId" value="${expressionExperiment.id}" />
-<input type="hidden" name="eeClass" id="eeClass" value="${expressionExperiment.class.name}" />
+	<div id="eeAnnotations" class="x-grid-mso"
+		style="border: 1px solid #c3daf9; overflow: hidden; width: 650px; height: 150px;"></div>
+	<input type="hidden" name="eeId" id="eeId" value="${expressionExperiment.id}" />
+	<input type="hidden" name="eeClass" id="eeClass" value="${expressionExperiment.class.name}" />
+</div>
 
 <%
 if ( expressionExperiment.getExperimentalDesign() != null ) {
@@ -291,17 +297,21 @@ if ( expressionExperiment.getExperimentalDesign() != null ) {
 		out.print( expressionExperiment.getExperimentalDesign().getName() );
 		%> <img src="/Gemma/images/magnifier.png" /> </a>
 </h3>
+<div style="padding: 2px;" onclick="Effect.toggle('design', 'blind', {duration:0.1})">
+	<img src="/Gemma/images/plus.gif" />
+	<br />
+</div>
+<div id="design" >
+	<Gemma:eeDesign experimentalDesign="${expressionExperiment.experimentalDesign}"></Gemma:eeDesign>
 
-	<Gemma:eeDesign
-		experimentalDesign="${expressionExperiment.experimentalDesign}"></Gemma:eeDesign>
-	
 	<div id="eeDesignMatrix" class="x-grid-mso" style="overflow: hidden;"></div>
-	<%
-	}
-	%>
-	
-	
- 
+</div>
+<%
+}
+%>
+
+
+
 <h3>
 	Quantitation Types
 	<a class="helpLink" href="?"
@@ -310,7 +320,8 @@ if ( expressionExperiment.getExperimentalDesign() != null ) {
 		<img src="/Gemma/images/help.png" /> </a>
 </h3>
 <div style="padding: 2px;" onclick="Effect.toggle('qts', 'blind', {duration:0.1})">
-	<img src="/Gemma/images/plus.gif" /><br/>
+	<img src="/Gemma/images/plus.gif" />
+	<br />
 </div>
 <div id="qts" style="display: none">
 	<div>
@@ -344,7 +355,8 @@ if ( expressionExperiment.getExperimentalDesign() != null ) {
 			samples)</a>
 	</h3>
 	<div style="padding: 2px;" onclick="Effect.toggle('bms', 'blind', {duration:0.1})">
-		<img src="/Gemma/images/plus.gif" /><br />
+		<img src="/Gemma/images/plus.gif" />
+		<br />
 	</div>
 	<div id="bms" style="display: none">
 		<div>

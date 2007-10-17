@@ -37,7 +37,7 @@ public class LinkBitMatrixUtil {
     protected static final Log log = LogFactory.getLog( LinkBitMatrixUtil.class );
     private GeneService geneService = null;
     private ExpressionExperimentService eeService = null;
-    private LinkAnalysisUtilService utilService = null;
+    private CommandLineToolUtilService utilService = null;
     private int stringency = 2;
 
     public LinkBitMatrixUtil() {
@@ -455,11 +455,11 @@ public class LinkBitMatrixUtil {
         this.eeService = eeService;
     }
 
-    public void setUtilService( LinkAnalysisUtilService utilService ) {
+    public void setUtilService( CommandLineToolUtilService utilService ) {
         this.utilService = utilService;
     }
 
-    public LinkAnalysisUtilService getUtilService() {
+    public CommandLineToolUtilService getUtilService() {
         return this.utilService;
     }
 

@@ -42,7 +42,7 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.gui.ColorMap;
 import ubic.basecode.gui.ColorMatrix;
 import ubic.basecode.gui.JMatrixDisplay;
-import ubic.gemma.analysis.linkAnalysis.LinkAnalysisUtilService;
+import ubic.gemma.analysis.linkAnalysis.CommandLineToolUtilService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImpl.ProbeLink;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -61,7 +61,7 @@ public class LinkGOAnalysisCli extends AbstractSpringAwareCLI {
     private final static int GO_MAXIMUM_COUNT = 50;
     private final static int ITERATION_NUM = 1;
     private Probe2ProbeCoexpressionService p2pService = null;
-    private LinkAnalysisUtilService linkAnalysisUtilService = null;
+    private CommandLineToolUtilService linkAnalysisUtilService = null;
     private ExpressionExperimentService eeService = null;
     private GeneService geneService = null;
 
@@ -97,7 +97,7 @@ public class LinkGOAnalysisCli extends AbstractSpringAwareCLI {
         }
 
         p2pService = ( Probe2ProbeCoexpressionService ) this.getBean( "probe2ProbeCoexpressionService" );
-        linkAnalysisUtilService = ( LinkAnalysisUtilService ) this.getBean( "linkAnalysisUtilService" );
+        linkAnalysisUtilService = ( CommandLineToolUtilService ) this.getBean( "linkAnalysisUtilService" );
         eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
         geneService = ( GeneService ) this.getBean( "geneService" );
         noLinkEEs = new HashSet<ExpressionExperiment>();
@@ -252,7 +252,7 @@ public class LinkGOAnalysisCli extends AbstractSpringAwareCLI {
         Taxon taxon = linkAnalysisUtilService.getTaxon( taxonName );
         Collection<ExpressionExperiment> ees = eeService.findByTaxon( taxon );
         Collection<ExpressionExperiment> eeCandidates = getCandidateEE( this.eeNameFile, ees );
-        Collection<Gene> allGenes = linkAnalysisUtilService.loadGenes( taxon );
+        Collection<Gene> allGenes = linkAnalysisUtilService.loadKnownGenes( taxon );
 
         log.info( "Load " + allGenes.size() + " genes" );
 

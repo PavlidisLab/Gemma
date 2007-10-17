@@ -16,25 +16,29 @@ import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.ontology.OntologyTerm;
 
 /**
- * Providing the function
+ * Provides some commonly used methods that CLIs can use. In some cases you can subclass one of the specialized CLI
+ * classes.
  * 
- * @spring.bean id="linkAnalysisUtilService"
+ * @spring.bean id="commandLineToolUtilService"
  * @spring.property name="goService" ref="geneOntologyService"
  * @spring.property name="taxonService" ref="taxonService"
  * @spring.property name="geneService" ref="geneService"
+ * @deprecated This entire class is not needed badly. Most of the methods simply delegate to methods that are found
+ *             elsewhere.
  */
-public class LinkAnalysisUtilService {
+public class CommandLineToolUtilService {
     private GeneOntologyService goService = null;
-    private TaxonService taxonService = null;
     private GeneService geneService = null;
+    private TaxonService taxonService;
     private static Map<Long, Collection<OntologyTerm>> goTermsCache = Collections
             .synchronizedMap( new HashMap<Long, Collection<OntologyTerm>>() );
 
+    /**
+     * @param name
+     * @return
+     */
     public Taxon getTaxon( String name ) {
-        Taxon taxon = Taxon.Factory.newInstance();
-        taxon.setCommonName( name );
-        taxon = taxonService.find( taxon );
-        return taxon;
+        return this.taxonService.findByCommonName( name );
     }
 
     public int computeGOOverlap( Gene gene1, Gene gene2 ) {
@@ -54,6 +58,11 @@ public class LinkAnalysisUtilService {
         return computeGOOverlap( gene1, gene2 );
     }
 
+    /**
+     * @param gene
+     * @return
+     * @deprecated duplicates functionality found elsewhere.
+     */
     public Collection<OntologyTerm> getGOTerms( Gene gene ) {
         if ( goTermsCache.containsKey( gene.getId() ) ) return goTermsCache.get( gene.getId() );
         Collection<OntologyTerm> goTerms = goService.getGOTerms( gene );
@@ -66,6 +75,7 @@ public class LinkAnalysisUtilService {
      * @param queryGene2
      * @returns Collection<OntologyEntries>
      * @throws Exception
+     * @deprecated this duplicates functionality implemented elsewhere.
      */
     @SuppressWarnings("unchecked")
     public Collection<OntologyTerm> calculateGoTermOverlap( Gene queryGene1, Gene queryGene2 ) throws Exception {
@@ -83,7 +93,11 @@ public class LinkAnalysisUtilService {
         return overlap;
     }
 
-    public Collection<Gene> loadGenes( Taxon taxon ) {
+    /**
+     * @param taxon
+     * @return Known genes (not predicted, not probe aligned regions)
+     */
+    public Collection<Gene> loadKnownGenes( Taxon taxon ) {
         Collection<Gene> allGenes = geneService.getGenesByTaxon( taxon );
         Collection<Gene> genes = new HashSet<Gene>();
         for ( Gene gene : allGenes ) {

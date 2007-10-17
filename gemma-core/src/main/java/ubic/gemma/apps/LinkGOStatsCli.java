@@ -18,33 +18,23 @@
  */
 package ubic.gemma.apps;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileWriter;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 
 import ubic.basecode.dataStructure.matrix.CompressedNamedBitMatrix;
-import ubic.gemma.analysis.linkAnalysis.LinkAnalysisUtilService;
+import ubic.gemma.analysis.linkAnalysis.CommandLineToolUtilService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImpl.ProbeLink;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
  * <p>
@@ -52,7 +42,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * </p>
  * 
  * <pre>
- * java -Xmx5000M -XX:+UseParallelGC  -jar LinkGOStatsCli.jar -f mouse_brain_dataset.txt  -t mouse -u administrator -p testing -v 3
+ * java -Xmx5G  -jar linkGOStats.jar -f mouse_brain_dataset.txt  -t mouse -u administrator -p xxxxx -v 3
  * </pre>
  * 
  * <p>
@@ -61,12 +51,13 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @author xwan
  * @version $Id$
  */
-public class LinkGOStatsCli extends AbstractSpringAwareCLI {
+public class LinkGOStatsCli extends AbstractGeneExpressionExperimentManipulatingCLI {
 
     private final static int GO_MAXIMUM_COUNT = 50;
     private final static int MAXIMUM_LINK_NUM = 20;
     private final static int ITERATION_NUM = 100;
     private final static int CHUNK_NUM = 20;
+
     /**
      * @param args
      */
@@ -85,15 +76,12 @@ public class LinkGOStatsCli extends AbstractSpringAwareCLI {
             throw new RuntimeException( e );
         }
     }
+
     private Probe2ProbeCoexpressionService p2pService = null;
-    private LinkAnalysisUtilService linkAnalysisUtilService = null;
-    private ExpressionExperimentService eeService = null;
-    private GeneService geneService = null;
+    private CommandLineToolUtilService linkAnalysisUtilService = null;
     private CompressedNamedBitMatrix linkCount = null;
     private int[][] realStats = null;
     private int[][] simulatedStats = null;
-    private String taxonName = "mouse";
-    private String eeNameFile = null;
     private Map<Long, Integer> eeIndexMap = new HashMap<Long, Integer>();
     private Map<Long, Gene> geneMap = new HashMap<Long, Gene>();
     private Collection<Gene> coveredGenes = new HashSet<Gene>();
@@ -188,29 +176,6 @@ public class LinkGOStatsCli extends AbstractSpringAwareCLI {
         }
     }
 
-    private Collection<ExpressionExperiment> getCandidateEE( String fileName, Collection<ExpressionExperiment> ees ) {
-        if ( fileName == null ) return ees;
-        Collection<ExpressionExperiment> candidates = new HashSet<ExpressionExperiment>();
-        Collection<String> eeNames = new HashSet<String>();
-        try {
-            InputStream is = new FileInputStream( fileName );
-            BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-            String shortName = null;
-            while ( ( shortName = br.readLine() ) != null ) {
-                if ( StringUtils.isBlank( shortName ) ) continue;
-                eeNames.add( shortName.trim().toUpperCase() );
-            }
-        } catch ( Exception e ) {
-            e.printStackTrace();
-            return candidates;
-        }
-        for ( ExpressionExperiment ee : ees ) {
-            String shortName = ee.getShortName();
-            if ( eeNames.contains( shortName.trim().toUpperCase() ) ) candidates.add( ee );
-        }
-        return candidates;
-    }
-
     private void output() {
         int totalSimulatedLinks[] = new int[ITERATION_NUM / CHUNK_NUM + 1], totalRealLinks[] = new int[MAXIMUM_LINK_NUM];
         for ( int i = 0; i < ITERATION_NUM / CHUNK_NUM + 1; i++ ) {
@@ -287,16 +252,9 @@ public class LinkGOStatsCli extends AbstractSpringAwareCLI {
         return shuffledGenes;
     }
 
-    @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        Option taxonOption = OptionBuilder.hasArg().withArgName( "Taxon" ).withDescription( "the taxon name" )
-                .withLongOpt( "Taxon" ).create( 't' );
-        addOption( taxonOption );
-        Option eeNameFile = OptionBuilder.hasArg().withArgName( "File having Expression Experiment Names" )
-                .withDescription( "File having Expression Experiment Names" ).withLongOpt( "eeFileName" ).create( 'f' );
-        addOption( eeNameFile );
-
+        // no-op.
     }
 
     @SuppressWarnings("unchecked")
@@ -306,29 +264,40 @@ public class LinkGOStatsCli extends AbstractSpringAwareCLI {
         if ( err != null ) {
             return err;
         }
-        Taxon taxon = linkAnalysisUtilService.getTaxon( taxonName );
-        Collection<ExpressionExperiment> ees = eeService.findByTaxon( taxon );
-        Collection<ExpressionExperiment> eeCandidates = getCandidateEE( this.eeNameFile, ees );
-        Collection<Gene> allGenes = linkAnalysisUtilService.loadGenes( taxon );
 
-        log.info( "Load " + allGenes.size() + " genes" );
+        Collection<ExpressionExperiment> ees = null;
+        if ( this.experimentListFile != null ) {
+            try {
+                ees = readExpressionExperimentListFile( this.experimentListFile );
+            } catch ( IOException e ) {
+                return e;
+            }
+        } else if ( taxon != null ) {
+            ees = eeService.findByTaxon( taxon );
+        } else {
+            log.error( "You must provide either the taxon or a list of expression experiments in a file" );
+            bail( ErrorCode.MISSING_OPTION );
+        }
+
+        Collection<Gene> allGenes = linkAnalysisUtilService.loadKnownGenes( taxon );
+        log.info( "Loaded " + allGenes.size() + " genes" );
 
         for ( Gene gene : allGenes ) {
             geneMap.put( gene.getId(), gene );
         }
         int index = 0;
-        for ( ExpressionExperiment ee : eeCandidates ) {
+        for ( ExpressionExperiment ee : ees ) {
             eeIndexMap.put( ee.getId(), index );
             index++;
         }
-        linkCount = new CompressedNamedBitMatrix( allGenes.size(), allGenes.size(), eeCandidates.size() );
+        linkCount = new CompressedNamedBitMatrix( allGenes.size(), allGenes.size(), ees.size() );
         for ( Gene geneIter : allGenes ) {
             linkCount.addRowName( geneIter.getId() );
             linkCount.addColumnName( geneIter.getId() );
         }
-        for ( ExpressionExperiment ee : eeCandidates ) {
+        for ( ExpressionExperiment ee : ees ) {
             log.info( "Shuffling " + ee.getShortName() );
-            Collection<ProbeLink> links = p2pService.getProbeCoExpression( ee, this.taxonName, true );
+            Collection<ProbeLink> links = p2pService.getProbeCoExpression( ee, this.taxon.getCommonName(), true );
             if ( links == null || links.size() == 0 ) continue;
             fillingMatrix( links, ee );
         }
@@ -355,17 +324,9 @@ public class LinkGOStatsCli extends AbstractSpringAwareCLI {
 
     protected void processOptions() {
         super.processOptions();
-        if ( hasOption( 't' ) ) {
-            this.taxonName = getOptionValue( 't' );
-        }
-        if ( hasOption( 'f' ) ) {
-            this.eeNameFile = getOptionValue( 'f' );
-        }
 
         p2pService = ( Probe2ProbeCoexpressionService ) this.getBean( "probe2ProbeCoexpressionService" );
-        linkAnalysisUtilService = ( LinkAnalysisUtilService ) this.getBean( "linkAnalysisUtilService" );
-        eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-        geneService = ( GeneService ) this.getBean( "geneService" );
+        linkAnalysisUtilService = ( CommandLineToolUtilService ) this.getBean( "linkAnalysisUtilService" );
         realStats = new int[MAXIMUM_LINK_NUM][GO_MAXIMUM_COUNT];
         simulatedStats = new int[ITERATION_NUM / CHUNK_NUM + 1][GO_MAXIMUM_COUNT];
         goTermsDistribution = new int[GO_MAXIMUM_COUNT];

@@ -36,6 +36,7 @@ import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImpl.ProbeLink;
 import ubic.gemma.model.coexpression.Link;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 
@@ -50,6 +51,7 @@ import com.ibm.icu.text.NumberFormat;
  * @spring.bean id="linkStatisticsService"
  * @spring.property name="geneService" ref="geneService"
  * @spring.property name="p2pService" ref="probe2ProbeCoexpressionService"
+ * @spring.property name="eeService" ref="expressionExperimentService"
  */
 public class LinkStatisticsService {
 
@@ -59,6 +61,8 @@ public class LinkStatisticsService {
 
     private Probe2ProbeCoexpressionService p2pService = null;
 
+    private ExpressionExperimentService eeService = null;
+
     /**
      * @param ees ExpressionExperiments to use
      * @param genes Genes to consider
@@ -67,7 +71,8 @@ public class LinkStatisticsService {
     public LinkStatistics analyze( Collection<ExpressionExperiment> ees, Collection<Gene> genes, String taxonName,
             boolean shuffle ) {
         LinkStatistics stats = new LinkStatistics( ees, genes );
-        this.countGeneLinks( stats, ees, shuffle, taxonName );
+        // this.countGeneLinks( stats, ees, shuffle, taxonName );
+        this.countProbeLinks( stats, ees, shuffle, taxonName );
         return stats;
     }
 
@@ -128,7 +133,6 @@ public class LinkStatisticsService {
                 }
             }
         }
-        // FIXME output standard deviation?
         for ( int j = 1; j < maxSupport; j++ ) {
             out.write( "\t" + nf.format( falsePositiveRates[j] / shuffleStats.size() ) );
         }
@@ -150,57 +154,36 @@ public class LinkStatisticsService {
         }
     }
 
-    //
-    // @SuppressWarnings("unchecked")
-    // private void collectLinks( boolean shuffle, Collection<ExpressionExperiment> ees, String taxonName, int[][]
-    // stats,
-    // CompressedNamedBitMatrix linkCount, CompressedNamedBitMatrix negativeLinkCount ) {
-    // int total = 0;
-    //
-    // for ( ExpressionExperiment ee : ees ) {
-    // log.info( "Shuffling " + ee.getShortName() );
-    // // Loads the links for the experiment.
-    // Collection<ProbeLink> links = p2pService.getProbeCoExpression( ee, taxonName, true );
-    // Collection<GeneLink> geneLinks = getGeneLinks( links );
-    //
-    // if ( links == null || links.size() == 0 ) continue;
-    // if ( shuffle ) {
-    // total = total + links.size();
-    // shuffleGeneLinks( geneLinks );
-    // }
-    // fillMatrixFromGeneLinks( eeMap, geneLinks, ee );
-    // }
-    // countLinks( stats[iteration], linkCount, negativeLinkCount );
-    // log.info( " Shuffled " + total + " links" );
-    // }
-
     /**
      * Do shuffling at probe level
      * 
      * @param links
      */
-    private void shuffleLinks( List<ProbeLink> links ) {
+    private void shuffleProbeLinks( List<ProbeLink> links ) {
         Random random = new Random();
-        for ( int i = links.size() - 1; i >= 0; i-- ) {
-            int pos = random.nextInt( i + 1 );
-            Long tmpId = links.get( pos ).getSecondDesignElementId();
-            links.get( pos ).setSecondDesignElementId( links.get( i ).getSecondDesignElementId() );
-            links.get( i ).setSecondDesignElementId( tmpId );
+        int i = links.size();
+        while ( --i > 0 ) {
+            int k = random.nextInt( i + 1 );
+            Long tmpId = links.get( k ).getSecondDesignElementId();
+            links.get( i ).setSecondDesignElementId( links.get( k ).getSecondDesignElementId() );
+            links.get( k ).setSecondDesignElementId( tmpId );
         }
     }
 
     /**
-     * Do shuffling at gene level
+     * Do shuffling at gene level. We simply shuffle the identify of the second gene. This guarantees that links per
+     * gene is constant under shuffling.
      * 
      * @param links
      */
     private void shuffleGeneLinks( List<GeneLink> links ) {
         Random random = new Random();
-        for ( int i = links.size() - 1; i >= 0; i-- ) {
-            int pos = random.nextInt( i + 1 );
-            Long tmpId = links.get( pos ).getSecondGene();
-            links.get( pos ).setSecondGene( links.get( i ).getSecondGene() );
-            links.get( i ).setSecondGene( tmpId );
+        int i = links.size();
+        while ( --i > 0 ) {
+            int k = random.nextInt( i + 1 );
+            Long tmpId = links.get( k ).getSecondGene();
+            links.get( i ).setSecondGene( links.get( k ).getSecondGene() );
+            links.get( k ).setSecondGene( tmpId );
         }
     }
 
@@ -232,28 +215,6 @@ public class LinkStatisticsService {
         return result;
     }
 
-    // /**
-    // * @param ees
-    // */
-    // @SuppressWarnings("unchecked")
-    // private void doShuffling( Collection<ExpressionExperiment> ees, String taxonName, int currentIteration,
-    // int[][] stats, CompressedNamedBitMatrix linkCount, CompressedNamedBitMatrix negativeLinkCount ) {
-    // int total = 0;
-    // for ( ExpressionExperiment ee : ees ) {
-    // log.info( "Shuffling " + ee.getShortName() );
-    // // Loads the links for the experiment.
-    // Collection<ProbeLink> links = p2pService.getProbeCoExpression( ee, taxonName, true );
-    // if ( links == null || links.size() == 0 ) continue;
-    // if ( currentIteration != 0 ) {
-    // total = total + links.size();
-    // shuffleLinks( links );
-    // }
-    // fillMatrix( eeMap, links, ee );
-    // }
-    // countLinks( stats, currentIteration, linkCount, negativeLinkCount );
-    // log.info( " Shuffled " + total + " links" );
-    // }
-
     /**
      * @param stats object to hold the results
      * @param ees ExpressionExperiments to analyze.
@@ -281,38 +242,38 @@ public class LinkStatisticsService {
         }
     }
 
-    // /**
-    // * Add the links to the matrix.
-    // *
-    // * @param links
-    // * @param ee
-    // */
-    // @SuppressWarnings("unchecked")
-    // private void fillMatrix( Map<Long, Integer> eeMap, Collection<ProbeLink> links, ExpressionExperiment ee ) {
-    // Map<Long, Collection<Long>> cs2genes = getCS2GeneMap( links );
-    // int eeIndex = eeMap.get( ee.getId() );
-    // for ( ProbeLink link : links ) {
-    // Collection<Long> firstGeneIds = cs2genes.get( link.getFirstDesignElementId() );
-    // Collection<Long> secondGeneIds = cs2genes.get( link.getSecondDesignElementId() );
-    // if ( firstGeneIds == null || secondGeneIds == null ) {
-    // log.info( " Preparation is not correct (get null genes) for: " + link.getFirstDesignElementId() + ","
-    // + link.getSecondDesignElementId() );
-    // continue;
-    // }
-    //
-    // for ( Long firstGeneId : firstGeneIds ) {
-    // for ( Long secondGeneId : secondGeneIds ) {
-    //
-    // // skip self-links
-    // if ( firstGeneId.equals( secondGeneId ) ) continue;
-    //
-    // addLinkToMatrix( geneCoverage, linkCount, negativeLinkCount, eeIndex, link, firstGeneId,
-    // secondGeneId );
-    // }
-    // }
-    // // totalLinks++;
-    // }
-    // }
+    /**
+     * @param stats object to hold the results
+     * @param ees ExpressionExperiments to analyze.
+     * @param shuffle if true, the links are shuffled before being tabulated
+     * @param taxonName
+     */
+    @SuppressWarnings("unchecked")
+    private void countProbeLinks( LinkStatistics stats, Collection<ExpressionExperiment> ees, boolean shuffle,
+            String taxonName ) {
+        for ( ExpressionExperiment ee : ees ) {
+            assert ee != null;
+            log.info( "Loading links for  " + ee.getShortName() );
+
+            // FIXME if not shuffling, don't use the working table, so we can 'get on with it' without worrying about
+            // creating that table first.
+            Collection<ProbeLink> links = p2pService.getProbeCoExpression( ee, taxonName, true );
+
+            // FIXME 0.3 is the threshold for genes that are expressed used in link analysis. The actual filtering might
+            // be more complex (remove invariant genes etc.) But this should be close. The paramter 0.3 really should be
+            // determined programatically, as it might have been set during the analysis.
+
+            Collection<Gene> genesAssayed = eeService.getAssayedGenes( ee, 0.3 );
+
+            if ( links == null || links.size() == 0 ) continue;
+            if ( shuffle ) {
+                log.info( "Shuffling links for  " + ee.getShortName() );
+                shuffleProbeLinks( new ArrayList<ProbeLink>( links ) );
+            }
+
+            stats.addLinks( getGeneLinks( links ), ee );
+        }
+    }
 
     /**
      * This must be run just the first time you want to analyze some data sets.
@@ -328,25 +289,6 @@ public class LinkStatisticsService {
         watch.stop();
         log.info( " Spent " + watch.getTime() / 1000 + "s preparing the database" );
     }
-
-    // /**
-    // * @param geneLinks
-    // * @param ee
-    // */
-    // private void fillMatrixFromGeneLinks( Map<Long, Integer> eeMap, Collection<GeneLink> geneLinks,
-    // ExpressionExperiment ee ) {
-    // int eeIndex = eeMap.get( ee.getId() );
-    // for ( GeneLink geneLink : geneLinks ) {
-    // Long firstGeneId = geneLink.getFirstGene();
-    // Long secondGeneId = geneLink.getSecondGene();
-    //
-    // // skip self-links
-    // if ( firstGeneId.equals( secondGeneId ) ) continue;
-    //
-    // addLinkToMatrix( geneCoverage, linkCount, negativeLinkCount, eeIndex, geneLink, firstGeneId, secondGeneId );
-    //
-    // }
-    // }
 
     @SuppressWarnings("unchecked")
     private Map<Long, Collection<Long>> getCS2GeneMap( Collection<ProbeLink> links ) {
@@ -365,6 +307,10 @@ public class LinkStatisticsService {
 
     public void setP2pService( Probe2ProbeCoexpressionService service ) {
         p2pService = service;
+    }
+
+    public void setEeService( ExpressionExperimentService eeService ) {
+        this.eeService = eeService;
     }
 }
 

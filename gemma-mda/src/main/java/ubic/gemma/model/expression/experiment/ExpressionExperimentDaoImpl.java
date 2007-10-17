@@ -1079,4 +1079,45 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         }
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetAssayedGenes(ubic.gemma.model.expression.experiment.ExpressionExperiment,
+     *      java.lang.Double)
+     */
+    @Override
+    protected Collection handleGetAssayedGenes( ExpressionExperiment ee, Double rankThreshold ) throws Exception {
+        // this is actually a real pain to do using HQL.
+
+        // default: no threshold.
+        Double thresh = rankThreshold == null ? 0 : rankThreshold;
+
+        final String queryString = "SELECT g.GENE from DESIGN_ELEMENT_DATA_VECTOR d"
+                + " inner join COMPOSITE_SEQUENCE cs ON cs.ID=d.DESIGN_ELEMENT_FK"
+                + " inner join GENE2CS g2c ON g2c.CS=cs.ID WHERE d.EXPRESSION_EXPERIMENT_FK = ? AND d.RANK > ?";
+        Session session = getSessionFactory().openSession();
+        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+        queryObject.setParameter( 0, ee.getId() );
+        queryObject.setParameter( 1, thresh );
+
+        queryObject.addScalar( "id", new LongType() );
+        ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        Collection<Long> geneIds = new HashSet<Long>();
+        while ( scroll.next() ) {
+            Long id = scroll.getLong( 0 );
+            geneIds.add( id );
+        }
+        session.close();
+        log.debug( "Loading " + geneIds.size() + " assayed genes" );
+        // NB this repeats code from GeneDaoImpl, but it's pretty trivial.
+        final String gqs = "select distinct gene from GeneImpl gene where gene.id in (:ids)";
+        try {
+            org.hibernate.Query qo = super.getSession( false ).createQuery( gqs );
+            queryObject.setParameterList( "ids", geneIds );
+            return qo.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
 }

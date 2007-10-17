@@ -47,7 +47,7 @@ import ubic.basecode.gui.JMatrixDisplay;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.CorrelationStats;
 import ubic.gemma.analysis.coexpression.GeneCoExpressionAnalysis;
-import ubic.gemma.analysis.linkAnalysis.LinkAnalysisUtilService;
+import ubic.gemma.analysis.linkAnalysis.CommandLineToolUtilService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -64,15 +64,12 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @author raymond,xwan
  * @version $Id$
  */
-public class CorrelationDistCli extends AbstractSpringAwareCLI {
+public class CorrelationDistCli extends AbstractGeneExpressionExperimentManipulatingCLI {
 
-    private GeneService geneService = null;
-    private ExpressionExperimentService eeService = null;
-    private LinkAnalysisUtilService linkAnalysisUtilService = null;
+    private CommandLineToolUtilService linkAnalysisUtilService = null;
     private ArrayDesignService adService = null;
-    private String taxonName = null;
+
     private int binNum = 100;
-    private String eeNameFile = null;
     private int[][] histogram = null;
     private Map<ExpressionExperiment, Integer> eeIndexMap = null;
     private Collection<ExpressionExperiment> noLinkEEs = null;
@@ -81,12 +78,7 @@ public class CorrelationDistCli extends AbstractSpringAwareCLI {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        Option taxonOption = OptionBuilder.hasArg().isRequired().withArgName( "Taxon" ).withDescription(
-                "the taxon name" ).withLongOpt( "Taxon" ).create( 't' );
-        addOption( taxonOption );
-        Option eeNameFileOption = OptionBuilder.hasArg().withArgName( "File having Expression Experiment Names" )
-                .withDescription( "File having Expression Experiment Names" ).withLongOpt( "eeFileName" ).create( 'f' );
-        addOption( eeNameFileOption );
+
         Option binNumOption = OptionBuilder.hasArg().withArgName( "Bin Num for Histogram" ).withDescription(
                 "Bin Num for Histogram" ).withLongOpt( "binNum" ).create( 'b' );
         addOption( binNumOption );
@@ -94,18 +86,11 @@ public class CorrelationDistCli extends AbstractSpringAwareCLI {
 
     protected void processOptions() {
         super.processOptions();
-        if ( hasOption( 't' ) ) {
-            this.taxonName = getOptionValue( 't' );
-        }
-        if ( hasOption( 'f' ) ) {
-            this.eeNameFile = getOptionValue( 'f' );
-        }
+
         if ( hasOption( 'b' ) ) {
             this.binNum = Integer.valueOf( getOptionValue( 'b' ) );
         }
-        geneService = ( GeneService ) this.getBean( "geneService" );
-        eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-        linkAnalysisUtilService = ( LinkAnalysisUtilService ) this.getBean( "linkAnalysisUtilService" );
+        linkAnalysisUtilService = ( CommandLineToolUtilService ) this.getBean( "linkAnalysisUtilService" );
         adService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
         noLinkEEs = new HashSet<ExpressionExperiment>();
     }
@@ -323,28 +308,33 @@ public class CorrelationDistCli extends AbstractSpringAwareCLI {
         if ( err != null ) {
             return err;
         }
-        Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
-        Taxon taxon = null;
-        taxon = linkAnalysisUtilService.getTaxon( taxonName );
-        ees.addAll( eeService.findByTaxon( taxon ) );
 
-        Collection<ExpressionExperiment> candidates = getCandidateEE( this.eeNameFile, ees );
-        histogram = new int[candidates.size()][binNum];
-        eeIndexMap = new HashMap<ExpressionExperiment, Integer>();
-        int index = 0;
-        for ( ExpressionExperiment ee : candidates ) {
-            eeIndexMap.put( ee, index );
-            index++;
+        try {
+            Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
+            if ( taxon != null ) {
+                ees.addAll( eeService.findByTaxon( taxon ) );
+            } else {
+                ees = this.readExpressionExperimentListFile( this.experimentListFile );
+            }
+            histogram = new int[ees.size()][binNum];
+            eeIndexMap = new HashMap<ExpressionExperiment, Integer>();
+            int index = 0;
+            for ( ExpressionExperiment ee : ees ) {
+                eeIndexMap.put( ee, index );
+                index++;
+            }
+            Collection<Gene> genes = linkAnalysisUtilService.loadKnownGenes( taxon );
+            Collection<Long> geneIds = new HashSet<Long>();
+            for ( Gene gene : genes )
+                geneIds.add( gene.getId() );
+            for ( ExpressionExperiment ee : ees ) {
+                fillHistogram( ee, geneIds );
+            }
+            saveHistogram();
+            return null;
+        } catch ( Exception e ) {
+            return e;
         }
-        Collection<Gene> genes = linkAnalysisUtilService.loadGenes( taxon );
-        Collection<Long> geneIds = new HashSet<Long>();
-        for ( Gene gene : genes )
-            geneIds.add( gene.getId() );
-        for ( ExpressionExperiment ee : candidates ) {
-            fillHistogram( ee, geneIds );
-        }
-        saveHistogram();
-        return null;
     }
 
     /**

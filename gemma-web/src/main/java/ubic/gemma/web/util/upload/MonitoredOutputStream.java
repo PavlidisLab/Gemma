@@ -38,6 +38,8 @@ public class MonitoredOutputStream extends OutputStream {
     private OutputStream target;
     private OutputStreamListener listener;
 
+    private int totalBytes = 0;
+    
     /**
      * @param target
      * @param listener
@@ -51,18 +53,21 @@ public class MonitoredOutputStream extends OutputStream {
     @Override
     public void write( byte b[], int off, int len ) throws IOException {
         target.write( b, off, len );
+        totalBytes += len;
         listener.bytesRead( len );
     }
 
     @Override
     public void write( byte b[] ) throws IOException {
         target.write( b );
+        totalBytes += b.length;
         listener.bytesRead( b.length );
     }
 
     @Override
     public void write( int b ) throws IOException {
         target.write( b );
+        totalBytes += 1;
         listener.bytesRead( 1 );
     }
 

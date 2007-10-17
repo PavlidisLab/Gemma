@@ -315,45 +315,6 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
     // }
     // }
 
-    /**
-     * @param geneOntologyTerms
-     * @param masterGene
-     * @param masterGO
-     * @param coExpGene
-     * @return a map of each gene pair (gene + coexpressed gene) mapped to its GOterm overlap value If the collection of
-     *         go terms passed in is null this method returns null.
-     */
-    private Map<Gene, Integer> computeOverlap( Collection<String> masterGO, Collection<Gene> coExpGene ) {
-
-        Map<Gene, Integer> ontologyTermCount = new HashMap<Gene, Integer>();
-
-        if ( ( masterGO == null ) || ( masterGO.isEmpty() ) ) return null;
-
-        // for each Go term associated with the master gene compare the GO term for each coexpressed gene
-        for ( Gene gene : coExpGene ) {
-            Collection<String> coExpGO = mouseGeneGOMap.get( gene.getId() );
-            Integer count = 0;
-
-            if ( ( coExpGO == null ) || coExpGO.isEmpty() )
-                count = -1;
-
-            else {
-                for ( String ontologyEntry : masterGO ) {
-                    for ( String ontologyEntryC : coExpGO ) {
-
-                        if ( ontologyEntry.equals( ontologyEntryC ) ) ++count;
-                    }
-                }
-                // the count value tells us the number of GO term matches of the coexpressed gene with the master gene
-                // put count into a table with the pair of genes
-            }
-
-            log.debug( "Term overlap: " + count );
-            ontologyTermCount.put( gene, count );
-        }
-
-        return ontologyTermCount;
-    }
 
     /**
      * @param masterGO
@@ -533,6 +494,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
 
             String ontId = GeneOntologyService.asRegularGoId( GeneOntologyService.getTermForURI( ontM ) );
 
+            // skip roots
             if ( ontId.equalsIgnoreCase( proccess ) || ontId.equalsIgnoreCase( function )
                     || ontId.equalsIgnoreCase( component ) ) continue;
 

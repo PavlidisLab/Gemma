@@ -18,35 +18,25 @@
  */
 package ubic.gemma.apps;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 
-import ubic.gemma.analysis.linkAnalysis.LinkAnalysisUtilService;
+import ubic.gemma.analysis.linkAnalysis.CommandLineToolUtilService;
 import ubic.gemma.analysis.linkAnalysis.LinkConfirmationStatistics;
 import ubic.gemma.analysis.linkAnalysis.LinkStatistics;
 import ubic.gemma.analysis.linkAnalysis.LinkStatisticsService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
  * Used to count up links and to generate the link(gene pair) background distribution, which could be used to estimate
@@ -82,7 +72,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @author xwan
  * @version $Id$
  */
-public class LinkStatisticsCLI extends AbstractSpringAwareCLI {
+public class LinkStatisticsCLI extends AbstractGeneExpressionExperimentManipulatingCLI {
 
     public static void main( String[] args ) {
         LinkStatisticsCLI shuffle = new LinkStatisticsCLI();
@@ -100,69 +90,34 @@ public class LinkStatisticsCLI extends AbstractSpringAwareCLI {
         }
     }
 
-    private String taxonName = "mouse";
     private boolean prepared = true;
-    private String eeNameFile = null;
 
-    private ExpressionExperimentService eeService = null;
-    private LinkAnalysisUtilService linkAnalysisUtilService = null;
     private int numIterationsToDo = 0;
 
     private int currentIteration = 0;
     private int linkStringency = 0;
     private boolean doShuffledOutput = false;
 
-    /**
-     * @param fileName Contains list of EE short names to use (essentially filters)
-     * @param ees All the EEs for the chosen taxon.
-     * @return
-     * @throws IOException
-     */
-    private Collection<ExpressionExperiment> loadExpressionExperiments( String fileName,
-            Collection<ExpressionExperiment> ees ) throws IOException {
-        if ( fileName == null ) return ees;
-        Collection<ExpressionExperiment> desiredEes = new HashSet<ExpressionExperiment>();
-        Collection<String> eeNames = new HashSet<String>();
-
-        InputStream is = new FileInputStream( fileName );
-        BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-        String shortName = null;
-        while ( ( shortName = br.readLine() ) != null ) {
-            if ( StringUtils.isBlank( shortName ) ) continue;
-            eeNames.add( shortName.trim().toUpperCase() );
-        }
-
-        for ( ExpressionExperiment ee : ees ) {
-            shortName = ee.getShortName();
-            if ( eeNames.contains( shortName.trim().toUpperCase() ) ) desiredEes.add( ee );
-        }
-        return desiredEes;
-    }
+    private CommandLineToolUtilService linkAnalysisUtilService;
 
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        Option taxonOption = OptionBuilder.hasArg().withArgName( "Taxon" ).withDescription(
-                "the taxon name (default=mouse)s" ).withLongOpt( "Taxon" ).create( 't' );
-        addOption( taxonOption );
 
-        Option eeNameFile = OptionBuilder.hasArg().withArgName( "File having Expression Experiment Names" )
-                .withDescription( "File having Expression Experiment Names" ).withLongOpt( "eeFileName" ).create( 'f' );
-        addOption( eeNameFile );
-        Option startPreparing = OptionBuilder.withArgName( " Starting preparing " ).withDescription(
-                " Starting preparing the temporary tables " ).withLongOpt( "startPreparing" ).create( 's' );
+        Option startPreparing = OptionBuilder.withArgName( "Prepare only" ).withDescription(
+                "Prepare temorary table for analysis" ).withLongOpt( "prepare" ).create( 's' );
         addOption( startPreparing );
 
         Option iterationNum = OptionBuilder.hasArg().withArgName( " The number of iteration for shuffling " )
-                .withDescription( " The number of iterations for shuffling (default = 100 " ).withLongOpt(
-                        "iterationNum" ).create( 'i' );
+                .withDescription( " The number of iterations for shuffling (default = 0 " )
+                .withLongOpt( "iterationNum" ).create( 'i' );
         addOption( iterationNum );
 
         /*
          * Not sure what this does.
          */
-        Option linkStringency = OptionBuilder.hasArg().withArgName( " The Link Stringency " ).withDescription(
-                " The link Stringency " ).withLongOpt( "linkStringency" ).create( 'l' );
+        Option linkStringency = OptionBuilder.hasArg().withArgName( "Link support threshold (stringency)" )
+                .withDescription( "Link Stringency " ).withLongOpt( "linkStringency" ).create( 'l' );
         addOption( linkStringency );
     }
 
@@ -174,22 +129,27 @@ public class LinkStatisticsCLI extends AbstractSpringAwareCLI {
             return err;
         }
 
-        Taxon taxon = linkAnalysisUtilService.getTaxon( taxonName );
-        Collection<ExpressionExperiment> eesForTaxon = eeService.findByTaxon( taxon );
-        Collection<ExpressionExperiment> eesToAnalyze;
-        try {
-            eesToAnalyze = loadExpressionExperiments( this.eeNameFile, eesForTaxon );
-        } catch ( IOException e ) {
-            return e;
+        Collection<ExpressionExperiment> ees = null;
+        if ( this.experimentListFile != null ) {
+            try {
+                ees = readExpressionExperimentListFile( this.experimentListFile );
+            } catch ( IOException e ) {
+                return e;
+            }
+        } else if ( taxon != null ) {
+            ees = eeService.findByTaxon( taxon );
+        } else {
+            log.error( "You must provide either the taxon or a list of expression experiments in a file" );
+            bail( ErrorCode.MISSING_OPTION );
         }
         LinkStatisticsService lss = ( LinkStatisticsService ) this.getBean( "linkStatisticsService" );
 
         if ( !prepared ) {
-            lss.prepareDatabase( eesToAnalyze, taxonName );
+            lss.prepareDatabase( ees, taxon.getCommonName() );
             return null;
         }
 
-        Collection<Gene> genes = linkAnalysisUtilService.loadGenes( taxon );
+        Collection<Gene> genes = linkAnalysisUtilService.loadKnownGenes( taxon );
 
         if ( linkStringency != 0 ) {
             //
@@ -209,7 +169,7 @@ public class LinkStatisticsCLI extends AbstractSpringAwareCLI {
             // log.info( "Covered Gene " + geneCoverage.size() );
         } else {
 
-            LinkStatistics realStats = lss.analyze( eesToAnalyze, genes, taxonName, false );
+            LinkStatistics realStats = lss.analyze( ees, genes, taxon.getCommonName(), false );
             LinkConfirmationStatistics confStats = realStats.getLinkConfirmationStats();
 
             try {
@@ -225,7 +185,7 @@ public class LinkStatisticsCLI extends AbstractSpringAwareCLI {
                 for ( currentIteration = 0; currentIteration < numIterationsToDo + 1; currentIteration++ ) {
                     log.info( "*** Iteration " + currentIteration + " ****" );
 
-                    LinkStatistics sr = lss.analyze( eesForTaxon, genes, taxonName, true );
+                    LinkStatistics sr = lss.analyze( ees, genes, taxon.getCommonName(), true );
                     shuffleRuns.add( sr.getLinkConfirmationStats() );
 
                 }
@@ -243,12 +203,7 @@ public class LinkStatisticsCLI extends AbstractSpringAwareCLI {
      */
     protected void processOptions() {
         super.processOptions();
-        if ( hasOption( 't' ) ) {
-            this.taxonName = getOptionValue( 't' );
-        }
-        if ( hasOption( 'f' ) ) {
-            this.eeNameFile = getOptionValue( 'f' );
-        }
+
         if ( hasOption( 's' ) ) {
             this.prepared = false;
         }
@@ -259,8 +214,7 @@ public class LinkStatisticsCLI extends AbstractSpringAwareCLI {
             this.linkStringency = Integer.valueOf( getOptionValue( 'l' ) );
         }
 
-        eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-        linkAnalysisUtilService = ( LinkAnalysisUtilService ) this.getBean( "linkAnalysisUtilService" );
+        linkAnalysisUtilService = ( CommandLineToolUtilService ) this.getBean( "commandLineToolUtilService" );
     }
 
 }

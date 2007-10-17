@@ -105,7 +105,8 @@ public class UploadListener implements OutputStreamListener {
         int newPercent = ( new Double( ( ( double ) totalBytesRead / totalToRead ) * 100.00 ) ).intValue();
         if ( newPercent > oldPercent + 5 || newPercent == 100 ) {
             pJob.updateProgress( newPercent );
-            log.debug( newPercent + "% read (" + totalBytesRead + "/" + totalToRead + " bytes)" );
+            // FIXME the oldPercent is always zero.
+            log.debug( newPercent + "% read (" + totalBytesRead + "/" + totalToRead + " bytes) old percent=" + oldPercent );
         }
        
         if ( delay > 0 ) {

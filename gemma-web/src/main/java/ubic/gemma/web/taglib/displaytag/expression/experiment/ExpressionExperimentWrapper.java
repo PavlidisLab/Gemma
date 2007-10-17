@@ -194,7 +194,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
             return "<span " + style + " title='" + fullDate + "'>" + shortDate + "</span>";
         } else {
             // FIXME if the data set is too small, show "-"
-            if (object.getBioMaterialCount() < 4) {
+            if (object.getBioMaterialCount() <= 4) {
                 return "-";
             }
             return "[None]";

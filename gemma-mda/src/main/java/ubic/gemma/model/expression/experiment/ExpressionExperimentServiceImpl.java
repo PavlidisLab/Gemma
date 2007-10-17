@@ -427,7 +427,7 @@ public class ExpressionExperimentServiceImpl extends
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByBibliographicReference(ubic.gemma.model.common.description.BibliographicReference)
      */
     protected Collection handleGetPreferredQuantitationType( ExpressionExperiment EE ) throws Exception {
-        Collection preferredQuantitationTypes = new HashSet();
+        Collection<QuantitationType> preferredQuantitationTypes = new HashSet<QuantitationType>();
         handleThawLite( EE );
         for ( QuantitationType qt : EE.getQuantitationTypes() ) {
             if ( qt.getIsPreferred() ) {
@@ -437,17 +437,22 @@ public class ExpressionExperimentServiceImpl extends
         return preferredQuantitationTypes;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastTroubleEvent(java.util.Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Map handleGetLastTroubleEvent( Collection ids ) throws Exception {
-        Map <Long, Collection<AuditEvent>> eeEvents = this.getExpressionExperimentDao().getAuditEvents( ids );
-        Map <Long, Map<Long, Collection<AuditEvent>>> adEvents = this.getExpressionExperimentDao().getArrayDesignAuditEvents( ids );
-        Map <Long, AuditEvent> troubleMap = new HashMap<Long, AuditEvent>();
+        Map<Long, Collection<AuditEvent>> eeEvents = this.getExpressionExperimentDao().getAuditEvents( ids );
+        Map<Long, Map<Long, Collection<AuditEvent>>> adEvents = this.getExpressionExperimentDao()
+                .getArrayDesignAuditEvents( ids );
+        Map<Long, AuditEvent> troubleMap = new HashMap<Long, AuditEvent>();
         for ( Long eeId : eeEvents.keySet() ) {
 
-            /* first check for trouble events on the expression experiment itself...
+            /*
+             * first check for trouble events on the expression experiment itself...
              */
             Collection<AuditEvent> events = eeEvents.get( eeId );
             AuditEvent troubleEvent = null;
@@ -458,46 +463,45 @@ public class ExpressionExperimentServiceImpl extends
                     continue;
                 }
             }
-            
-            /* if there was no trouble on the expression experiment, check the component
-             * array designs...
+
+            /*
+             * if there was no trouble on the expression experiment, check the component array designs...
              */
-            Map <Long, Collection<AuditEvent>> myAdEvents = adEvents.get( eeId );
+            Map<Long, Collection<AuditEvent>> myAdEvents = adEvents.get( eeId );
             if ( myAdEvents != null ) {
                 for ( Long adId : myAdEvents.keySet() ) {
 
                     events = myAdEvents.get( adId );
-                    if ( events == null )
-                        continue;
+                    if ( events == null ) continue;
 
                     AuditEvent adTroubleEvent = getLastOutstandingTroubleEvent( events );
-                    if ( adTroubleEvent != null)
+                    if ( adTroubleEvent != null )
                         if ( troubleEvent == null || troubleEvent.getDate().before( adTroubleEvent.getDate() ) )
                             troubleEvent = adTroubleEvent;
 
                 }
-            
-                if ( troubleEvent != null )
-                    troubleMap.put( eeId, troubleEvent );
+
+                if ( troubleEvent != null ) troubleMap.put( eeId, troubleEvent );
             }
         }
         return troubleMap;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastValidationEvent(java.util.Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Map handleGetLastValidationEvent( Collection ids ) throws Exception {
         return getLastEvent( ids, ValidatedFlagEvent.Factory.newInstance() );
     }
-    
-//    /**
-//     * @see ubic.gemma.model.common.AuditableService#getLastAuditEvent(ubic.gemma.model.common.Auditable, ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)
-//     */
-//    @Override
-//    protected ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastAuditEvent( final Auditable auditable, AuditEventType type ) throws java.lang.Exception {
-//        return this.getExpressionExperimentDao().getLastAuditEvent( auditable, type );
-//    }
-    
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection<Gene> handleGetAssayedGenes( ExpressionExperiment ee, Double rankThreshold ) throws Exception {
+        return this.getExpressionExperimentDao().getAssayedGenes( ee, rankThreshold );
+    }
+
 }
