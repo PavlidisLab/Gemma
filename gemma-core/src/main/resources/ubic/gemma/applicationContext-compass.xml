@@ -58,6 +58,9 @@
 		<property name="bibliographicReferenceBean">
 			<ref bean="compassBibliographic" />
 		</property>
+				<property name="probeBean">
+			<ref bean="compassProbe" />
+		</property>
 	</bean>
 	<!-- Generic compass configuration bean - for the rest see compass.xml and compasstest.xml -->
 	<bean id="hibernateGpsDevice"

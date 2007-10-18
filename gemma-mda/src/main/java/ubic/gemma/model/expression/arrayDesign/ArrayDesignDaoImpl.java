@@ -1227,6 +1227,10 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
        
     @Override
     protected Collection<ArrayDesign> handleLoadMultiple( Collection ids ) throws Exception {
+    	
+    	if (ids == null || ids.isEmpty())
+    		return new HashSet<ArrayDesign>();
+    	
         Collection<ArrayDesign> ads = null;
         final String queryString = "select ad from ArrayDesignImpl as ad " + " where ad.id in (:ids) ";
 
