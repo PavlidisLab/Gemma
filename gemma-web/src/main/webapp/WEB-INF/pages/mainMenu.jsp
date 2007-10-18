@@ -18,6 +18,9 @@
 
 
 <title><fmt:message key="mainMenu.title" /></title>
+
+
+
 <table class="datasummary">
 	<tr>
 		<td colspan="2">
@@ -66,7 +69,9 @@
 		</td>
 	</tr>
 </table>
-
+<div style="width: 165px; margin-top: 10px; clear:both; float:right;">
+	<%@ include file="/common/search.jsp"%>
+</div>
 
 <div class="separator"></div>
 
@@ -145,7 +150,6 @@
 	</spring:bind>
 
 </form>
-
 
 <authz:authorize ifAnyGranted="admin">
 	<hr />
