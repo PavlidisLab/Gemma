@@ -54,6 +54,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.BusinessKey;
@@ -1086,13 +1087,13 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      *      java.lang.Double)
      */
     @Override
-    protected Collection handleGetAssayedGenes( ExpressionExperiment ee, Double rankThreshold ) throws Exception {
+    protected Collection<Gene> handleGetAssayedGenes( ExpressionExperiment ee, Double rankThreshold ) throws Exception {
         // this is actually a real pain to do using HQL.
 
         // default: no threshold.
         Double thresh = rankThreshold == null ? 0 : rankThreshold;
 
-        final String queryString = "SELECT g.GENE from DESIGN_ELEMENT_DATA_VECTOR d"
+        final String queryString = "SELECT DISTINCT g2c.GENE as id from DESIGN_ELEMENT_DATA_VECTOR d"
                 + " inner join COMPOSITE_SEQUENCE cs ON cs.ID=d.DESIGN_ELEMENT_FK"
                 + " inner join GENE2CS g2c ON g2c.CS=cs.ID WHERE d.EXPRESSION_EXPERIMENT_FK = ? AND d.RANK > ?";
         Session session = getSessionFactory().openSession();
@@ -1113,9 +1114,41 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         final String gqs = "select distinct gene from GeneImpl gene where gene.id in (:ids)";
         try {
             org.hibernate.Query qo = super.getSession( false ).createQuery( gqs );
-            queryObject.setParameterList( "ids", geneIds );
+            qo.setParameterList( "ids", geneIds );
             return qo.list();
 
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection<CompositeSequence> handleGetAssayedProbes( ExpressionExperiment ee, Double rankThreshold )
+            throws Exception {
+        // default: no threshold.
+        Double thresh = rankThreshold == null ? 0 : rankThreshold;
+
+        final String queryString = "SELECT DISTINCT d.DESIGN_ELEMENT_FK as id from DESIGN_ELEMENT_DATA_VECTOR d WHERE d.EXPRESSION_EXPERIMENT_FK = ? AND d.RANK > ?";
+        Session session = getSessionFactory().openSession();
+        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+        queryObject.setParameter( 0, ee.getId() );
+        queryObject.setParameter( 1, thresh );
+
+        queryObject.addScalar( "id", new LongType() );
+        ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        Collection<Long> probeIds = new HashSet<Long>();
+        while ( scroll.next() ) {
+            Long id = scroll.getLong( 0 );
+            probeIds.add( id );
+        }
+        session.close();
+        log.debug( "Loading " + probeIds.size() + " assayed probes" );
+        final String gqs = "select distinct cs from CompositeSequenceImpl cs where cs.id in (:ids)";
+        try {
+            org.hibernate.Query qo = super.getSession( false ).createQuery( gqs );
+            qo.setParameterList( "ids", probeIds );
+            return qo.list();
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }

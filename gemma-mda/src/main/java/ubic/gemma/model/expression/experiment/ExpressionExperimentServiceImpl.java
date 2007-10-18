@@ -35,6 +35,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
@@ -502,6 +503,13 @@ public class ExpressionExperimentServiceImpl extends
     @Override
     protected Collection<Gene> handleGetAssayedGenes( ExpressionExperiment ee, Double rankThreshold ) throws Exception {
         return this.getExpressionExperimentDao().getAssayedGenes( ee, rankThreshold );
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection<CompositeSequence> handleGetAssayedProbes( ExpressionExperiment expressionExperiment,
+            Double rankThreshold ) throws Exception {
+        return this.getExpressionExperimentDao().getAssayedProbes( expressionExperiment, rankThreshold );
     }
 
 }
