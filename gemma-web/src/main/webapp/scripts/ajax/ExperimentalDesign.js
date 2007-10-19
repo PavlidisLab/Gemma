@@ -11,6 +11,7 @@ var bioMaterialList, selectedFactorId, selectedFactorValueId, selectedFactorsInG
 var bmGridRefresh;									//methods
 var mgedSelectedVocabC = {};
 var ontologySearchVocabC = {};
+var lookup;
 
 var createMgedComboBox = function(comboHandler){				
 				
@@ -112,6 +113,10 @@ var saveExperimentalFactorValue = function(){
 	}
 	
 	var newVocabC = {};
+	if ( lookup.getValue() != ontologySearchVocabC.value ) {	// user typed something, no meaningful URI anymore...
+		ontologySearchVocabC.value = lookup.getValue();
+		delete ontologySearchVocabC.valueUri;
+	}
 	newVocabC.value = ontologySearchVocabC.value;
 	newVocabC.valueUri = ontologySearchVocabC.valueUri;
 	newVocabC.category = ontologySearchVocabC.category;
@@ -222,7 +227,6 @@ var createOntologySearchComponent = function(){
         getParams: function (q) {	//Need to overide this so that the query data makes it to the client side. Otherwise its not included. 
     		var p = [q]; 
     		
-    		ontologySearchVocabC.value = q;	//if the user doesn't select a provided ontolgy term this will set it to be the free text. 
     		if (!ontologySearchVocabC.categoryUri)
     			ontologySearchVocabC.categoryUri="{}";
     			
@@ -669,8 +673,9 @@ Ext.onReady(function() {
 		
 		var factorValueTB = new Ext.Toolbar("factorValueTB");
 		factorValueTB.addField(createMgedComboBox(factorValueMgedComboHandler));
-		factorValueTB.addSpacer();	
-		factorValueTB.addField(createOntologySearchComponent());	
+		factorValueTB.addSpacer();
+		lookup = createOntologySearchComponent();
+		factorValueTB.addField(lookup);	
 		factorValueTB.addSpacer();
 		factorValueTB.addField(createFactorValueDescriptionField());
 		factorValueTB.addSpacer();

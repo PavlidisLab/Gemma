@@ -5,6 +5,7 @@ var vocabC = {};
 var eeid;
 var deleteButton;
 var saveButton;
+var lookup
 
 var createMgedComboBox = function(terms){				
 				
@@ -136,7 +137,6 @@ var createSearchComponent = function(){
         getParams: function (q) {	//Need to overide this so that the query data makes it to the client side. Otherwise its not included. 
     		var p = [q]; 
     		
-    		vocabC.value = q;	//if the user doesn't select a provided ontolgy term this will set it to be the free text. 
     		if (!vocabC.categoryUri)
     			vocabC.categoryUri="{}";
     			
@@ -160,6 +160,11 @@ var saveHandler = function(){
 	//VocabCharacteritic but a Characteritic. 
 	var newVocabC = {};
 	
+	if ( lookup.getValue() != vocabC.value ) {	// user typed something, no meaningful URI anymore...
+		vocabC.value = lookup.getValue();
+		delete vocabC.valueUri;
+	}
+		
 	newVocabC.value = vocabC.value;
 	newVocabC.category = vocabC.category;
 	
@@ -194,7 +199,7 @@ Ext.onReady(function() {
 	var mgedComboBox = createMgedComboBox();   
 	
 	//the lookup combobox
-	var lookup = createSearchComponent();			
+	lookup = createSearchComponent();			
 
 	
 	var simpleTB = new Ext.Toolbar("eeAnnotator");
