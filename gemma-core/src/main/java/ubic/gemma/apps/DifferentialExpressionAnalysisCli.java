@@ -113,32 +113,31 @@ public class DifferentialExpressionAnalysisCli extends AbstractGeneExpressionExp
 
                 eeService.thaw( expressionExperiment );
 
-                QuantitationType preferredQuantitationType = null;
+                QuantitationType quantitationTypeToUse = null;
 
                 Collection<QuantitationType> quantitationTypes = expressionExperiment.getQuantitationTypes();
                 for ( QuantitationType qt : quantitationTypes ) {
 
                     if ( qt.getIsPreferred() ) {
-                        preferredQuantitationType = qt;
+                        quantitationTypeToUse = qt;
                         break;
                     }
 
-                    if ( qt.getGeneralType().getValue().equals( "QUANTITATIVE" )
+                    if ( qt.getName().equals( "VALUE" ) && qt.getGeneralType().getValue().equals( "QUANTITATIVE" )
                             && qt.getType().getValue().equals( "AMOUNT" ) ) {
-                        preferredQuantitationType = qt;
-                        break;
+                        quantitationTypeToUse = qt;
                     }
 
                 }
 
-                if ( preferredQuantitationType == null )
+                if ( quantitationTypeToUse == null )
                     throw new RuntimeException(
                             "Could not determine correct quantitation type.  Either preferred quantitation type not set or quantitation type does not have a general type of QUANTITATIVE and a  standard type of AMOUNT." );
 
-                log.info( "Using quantitation type: " + preferredQuantitationType.getName() + "; is preferred? "
-                        + preferredQuantitationType.getIsPreferred() + "; general type: "
-                        + preferredQuantitationType.getGeneralType().getValue() + "; standard type: "
-                        + preferredQuantitationType.getType().getValue() );
+                log.info( "Using quantitation type: " + quantitationTypeToUse.getName() + "; is preferred? "
+                        + quantitationTypeToUse.getIsPreferred() + "; general type: "
+                        + quantitationTypeToUse.getGeneralType().getValue() + "; standard type: "
+                        + quantitationTypeToUse.getType().getValue() );
 
                 Collection<DesignElementDataVector> vectors = expressionExperiment.getDesignElementDataVectors();
                 designElementDataVectorService.thaw( vectors );
@@ -155,7 +154,7 @@ public class DifferentialExpressionAnalysisCli extends AbstractGeneExpressionExp
 
                 BioAssayDimension bioAssayDimension = bioAssayDimensions.iterator().next();
 
-                analysis.analyze( expressionExperiment, preferredQuantitationType, bioAssayDimension );
+                analysis.analyze( expressionExperiment, quantitationTypeToUse, bioAssayDimension );
 
                 summarizeProcessing( analysis.getExpressionAnalysis() );
             }
