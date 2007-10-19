@@ -18,6 +18,7 @@
  */
 package ubic.gemma.apps;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -92,18 +93,32 @@ public class LinkStatisticsCLI extends AbstractGeneExpressionExperimentManipulat
 
     private boolean prepared = true;
 
+    private CommandLineToolUtilService linkAnalysisUtilService;
+
+    /*
+     * How many shuffled runs to do. 2 or 3 is enough to get a quick idea of what the results will look like; 100 is
+     * better for final analysis.
+     */
     private int numIterationsToDo = 0;
 
     private int currentIteration = 0;
+
     private int linkStringency = 0;
+
+    /*
+     * Print out the link details for shuffled data sets. This is only useful for debugging (big files).
+     */
     private boolean doShuffledOutput = false;
 
-    private CommandLineToolUtilService linkAnalysisUtilService;
+    /*
+     * If false, just do shuffling.
+     */
+    private boolean doRealAnalysis = true;
 
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-
+        super.buildOptions();
         Option startPreparing = OptionBuilder.withArgName( "Prepare only" ).withDescription(
                 "Prepare temorary table for analysis" ).withLongOpt( "prepare" ).create( 's' );
         addOption( startPreparing );
@@ -114,7 +129,7 @@ public class LinkStatisticsCLI extends AbstractGeneExpressionExperimentManipulat
         addOption( iterationNum );
 
         /*
-         * Not sure what this does.
+         * Not sure exactly what this is for.
          */
         Option linkStringency = OptionBuilder.hasArg().withArgName( "Link support threshold (stringency)" )
                 .withDescription( "Link Stringency " ).withLongOpt( "linkStringency" ).create( 'l' );
@@ -169,14 +184,19 @@ public class LinkStatisticsCLI extends AbstractGeneExpressionExperimentManipulat
             // log.info( "Covered Gene " + geneCoverage.size() );
         } else {
 
-            LinkStatistics realStats = lss.analyze( ees, genes, taxon.getCommonName(), false );
-            LinkConfirmationStatistics confStats = realStats.getLinkConfirmationStats();
+            LinkConfirmationStatistics confStats = null;
 
-            try {
-                Writer linksOut = new FileWriter( new File( "link-data.txt" ) );
-                realStats.writeLinks( linksOut, 0 );
-            } catch ( IOException e ) {
-                return e;
+            if ( doRealAnalysis ) { // Currently this is really just for debugging purposes, though reading in from a
+                // file might be useful.
+                LinkStatistics realStats = lss.analyze( ees, genes, taxon.getCommonName(), false );
+                confStats = realStats.getLinkConfirmationStats();
+
+                try {
+                    Writer linksOut = new BufferedWriter( new FileWriter( new File( "link-data.txt" ) ) );
+                    realStats.writeLinks( linksOut, 0 );
+                } catch ( IOException e ) {
+                    return e;
+                }
             }
 
             List<LinkConfirmationStatistics> shuffleRuns = new ArrayList<LinkConfirmationStatistics>();

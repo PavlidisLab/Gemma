@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +36,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImpl.ProbeLink;
 import ubic.gemma.model.coexpression.Link;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
@@ -83,6 +85,11 @@ public class LinkStatisticsService {
      */
     public void writeStats( Writer out, LinkConfirmationStatistics realStats,
             Collection<LinkConfirmationStatistics> shuffleStats ) {
+        if ( realStats == null ) {
+            log.warn( "No 'real' statistics available, bailing out of printing the shuffle statistics" );
+            // FIXME at least print the raw stats.
+            return;
+        }
         try {
             NumberFormat nf = NumberFormat.getInstance();
             nf.setMaximumFractionDigits( 3 );
@@ -164,7 +171,7 @@ public class LinkStatisticsService {
         int i = links.size();
         while ( --i > 0 ) {
             int k = random.nextInt( i + 1 );
-            Long tmpId = links.get( k ).getSecondDesignElementId();
+            Long tmpId = links.get( i ).getSecondDesignElementId();
             links.get( i ).setSecondDesignElementId( links.get( k ).getSecondDesignElementId() );
             links.get( k ).setSecondDesignElementId( tmpId );
         }
@@ -181,7 +188,7 @@ public class LinkStatisticsService {
         int i = links.size();
         while ( --i > 0 ) {
             int k = random.nextInt( i + 1 );
-            Long tmpId = links.get( k ).getSecondGene();
+            Long tmpId = links.get( i ).getSecondGene();
             links.get( i ).setSecondGene( links.get( k ).getSecondGene() );
             links.get( k ).setSecondGene( tmpId );
         }
@@ -200,7 +207,7 @@ public class LinkStatisticsService {
             Collection<Long> firstGeneIds = cs2genes.get( link.getFirstDesignElementId() );
             Collection<Long> secondGeneIds = cs2genes.get( link.getSecondDesignElementId() );
             if ( firstGeneIds == null || secondGeneIds == null ) {
-                log.info( " Preparation is not correct (get null genes) for:  " + link.getFirstDesignElementId() + ","
+                log.warn( "No gene found for one/both of CS:  " + link.getFirstDesignElementId() + ","
                         + link.getSecondDesignElementId() );
                 continue;
             }
@@ -259,19 +266,92 @@ public class LinkStatisticsService {
             // creating that table first.
             Collection<ProbeLink> links = p2pService.getProbeCoExpression( ee, taxonName, true );
 
-            // FIXME 0.3 is the threshold for genes that are expressed used in link analysis. The actual filtering might
-            // be more complex (remove invariant genes etc.) But this should be close. The paramter 0.3 really should be
-            // determined programatically, as it might have been set during the analysis.
-
-            Collection<Gene> genesAssayed = eeService.getAssayedGenes( ee, 0.3 );
-
             if ( links == null || links.size() == 0 ) continue;
             if ( shuffle ) {
+
+                /*
+                 * FIXME 0.3 is the threshold for genes that are expressed used in link analysis. The actual filtering
+                 * might be more complex (remove invariant genes etc.) But this should be close. The paramter 0.3 really
+                 * should be determined programatically, as it might have been set during the analysis.
+                 */
+                Collection<CompositeSequence> probesAssayed = eeService.getAssayedProbes( ee, 0.3 );
+
+                /*
+                 * the probes that are returned are ones that map to all, not just known genes.
+                 */
+                log.info( ee + " has " + probesAssayed.size() + " assayed probes" );
+
+                List<Long> assayedProbeIdsforShuffle = new ArrayList<Long>();
+                List<Long> assayedProbeIds = new ArrayList<Long>();
+
+                for ( CompositeSequence g : probesAssayed ) {
+                    assayedProbeIds.add( g.getId() );
+                }
+
+                /*
+                 * This is a funky way of restricting us to just known genes.
+                 */
+                Collection<Long> knownGeneProbesOnly = geneService.getCS2GeneMap( assayedProbeIds ).keySet();
+                log.info( ee + " has " + knownGeneProbesOnly.size() + " assayed probes for 'known' genes." );
+
+                /*
+                 * Convert to list, make a copy so we can make a shuffled mapping
+                 */
+                for ( Long id : knownGeneProbesOnly ) {
+                    assayedProbeIds.add( id );
+                    assayedProbeIdsforShuffle.add( id );
+                }
+
+                // FIXME get these out of scope.
+                probesAssayed = null; // make sure we don't use this again.
+                knownGeneProbesOnly = null; // make sure we don't use again.
+
+                /*
+                 * Shuffle the probes and create map
+                 */
+                shuffleList( assayedProbeIdsforShuffle );
+                Map<Long, Long> shuffleMap = new HashMap<Long, Long>();
+                for ( int i = 0; i < assayedProbeIdsforShuffle.size(); i++ ) {
+                    shuffleMap.put( assayedProbeIds.get( i ), assayedProbeIdsforShuffle.get( i ) );
+                }
+
+                // Now replace them in the probes in the links. Now the links are among random probes, but number per
+                // probe is the same.
+                for ( ProbeLink p : links ) {
+
+                    // These are just sanity checks. They have to be there!
+                    if ( !shuffleMap.containsKey( p.getFirstDesignElementId() ) ) {
+                        throw new IllegalStateException( "Probe " + p.getFirstDesignElementId()
+                                + " was used in the links but doesn't show up in the 'assayedProbes'" );
+                    }
+                    if ( !shuffleMap.containsKey( p.getSecondDesignElementId() ) ) {
+                        throw new IllegalStateException( "Probe " + p.getSecondDesignElementId()
+                                + " was used in the links but doesn't show up in the 'assayedProbes'" );
+                    }
+
+                    // Replace with the shuffled replacement.
+                    p.setFirstDesignElementId( shuffleMap.get( p.getFirstDesignElementId() ) );
+                    p.setSecondDesignElementId( shuffleMap.get( p.getSecondDesignElementId() ) );
+                }
+
+                // this step might be redundant.
                 log.info( "Shuffling links for  " + ee.getShortName() );
                 shuffleProbeLinks( new ArrayList<ProbeLink>( links ) );
             }
 
             stats.addLinks( getGeneLinks( links ), ee );
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    void shuffleList( List list ) {
+        Random random = new Random();
+        int i = list.size();
+        while ( --i > 0 ) {
+            int k = random.nextInt( i + 1 );
+            Object tmpId = list.get( i );
+            list.set( i, list.get( k ) );
+            list.set( k, tmpId );
         }
     }
 
@@ -282,12 +362,12 @@ public class LinkStatisticsService {
      * @param taxonName to figure out which table to get the links from (FIXME should not be needed)
      */
     public void prepareDatabase( Collection<ExpressionExperiment> ees, String taxonName ) {
-        log.info( " Creating intermediate table for link analysis" );
+        log.info( "Creating working table for link analysis" );
         StopWatch watch = new StopWatch();
         watch.start();
         p2pService.prepareForShuffling( ees, taxonName );
         watch.stop();
-        log.info( " Spent " + watch.getTime() / 1000 + "s preparing the database" );
+        log.info( "Done, spent " + watch.getTime() / 1000 + "s preparing the database" );
     }
 
     @SuppressWarnings("unchecked")
@@ -297,8 +377,7 @@ public class LinkStatisticsService {
             csIds.add( link.getFirstDesignElementId() );
             csIds.add( link.getSecondDesignElementId() );
         }
-        Map<Long, Collection<Long>> cs2genes = geneService.getCS2GeneMap( csIds );
-        return cs2genes;
+        return geneService.getCS2GeneMap( csIds );
     }
 
     public void setGeneService( GeneService geneService ) {

@@ -1086,6 +1086,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetAssayedGenes(ubic.gemma.model.expression.experiment.ExpressionExperiment,
      *      java.lang.Double)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection<Gene> handleGetAssayedGenes( ExpressionExperiment ee, Double rankThreshold ) throws Exception {
         // this is actually a real pain to do using HQL.
@@ -1095,7 +1096,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
         final String queryString = "SELECT DISTINCT g2c.GENE as id from DESIGN_ELEMENT_DATA_VECTOR d"
                 + " inner join COMPOSITE_SEQUENCE cs ON cs.ID=d.DESIGN_ELEMENT_FK"
-                + " inner join GENE2CS g2c ON g2c.CS=cs.ID WHERE d.EXPRESSION_EXPERIMENT_FK = ? AND d.RANK > ?";
+                + " inner join GENE2CS g2c ON g2c.CS=cs.ID INNER JOIN QUANTITATION_TYPE q ON q.ID=d.QUANTIATION_TYPE_FK"
+                + " WHERE d.EXPRESSION_EXPERIMENT_FK = ?AND (d.RANK > ? OR d.RANK IS NULL) AND q.IS_PREFERRED = 1";
         Session session = getSessionFactory().openSession();
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
         queryObject.setParameter( 0, ee.getId() );
@@ -1129,7 +1131,11 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         // default: no threshold.
         Double thresh = rankThreshold == null ? 0 : rankThreshold;
 
-        final String queryString = "SELECT DISTINCT d.DESIGN_ELEMENT_FK as id from DESIGN_ELEMENT_DATA_VECTOR d WHERE d.EXPRESSION_EXPERIMENT_FK = ? AND d.RANK > ?";
+        // FIXME this could just be HQL.
+
+        final String queryString = "SELECT DISTINCT d.DESIGN_ELEMENT_FK as id from DESIGN_ELEMENT_DATA_VECTOR d"
+                + "  INNER JOIN QUANTITATION_TYPE q ON q.ID=d.QUANTITATION_TYPE_FK"
+                + " WHERE d.EXPRESSION_EXPERIMENT_FK = ? AND (d.RANK > ? OR d.RANK IS NULL) AND q.IS_PREFERRED = 1";
         Session session = getSessionFactory().openSession();
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
         queryObject.setParameter( 0, ee.getId() );
@@ -1143,6 +1149,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             probeIds.add( id );
         }
         session.close();
+
+        if ( probeIds.size() == 0 ) return new HashSet<CompositeSequence>();
+
         log.debug( "Loading " + probeIds.size() + " assayed probes" );
         final String gqs = "select distinct cs from CompositeSequenceImpl cs where cs.id in (:ids)";
         try {

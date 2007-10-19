@@ -379,7 +379,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         int CHUNK_LIMIT = 10000;
         int total = links.size();
         Collection<ProbeLink> linksInOneChunk = new ArrayList<ProbeLink>();
-        log.info( "Writing " + links.size() + " links into tables" );
+        log.info( ee + ": Writing " + links.size() + " links into tables" );
         int chunkNum = 0;
         for ( ProbeLink link : links ) {
             linksInOneChunk.add( link );
@@ -398,7 +398,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
                 if ( chunkNum % 20 == 0 ) System.err.println();
             }
         }
-        log.info( " Finisheds writing " );
+        log.info( " Finished writing " + links.size() + " links." );
         conn.close();
         session.close();
 

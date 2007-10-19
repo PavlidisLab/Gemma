@@ -25,6 +25,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import ubic.basecode.dataStructure.matrix.CompressedNamedBitMatrix;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -37,6 +40,11 @@ import ubic.gemma.model.genome.Gene;
  */
 public class LinkStatistics {
 
+    private static Log log = LogFactory.getLog( LinkStatistics.class.getName() );
+
+    /*
+     * Map of EE to location in the bitstrings.
+     */
     private Map<Long, Integer> eeMap;
 
     /*
@@ -45,9 +53,13 @@ public class LinkStatistics {
     private Collection<Gene> genes;
     private CompressedNamedBitMatrix posLinkCounts = null;
     private CompressedNamedBitMatrix negLinkCounts = null;
-    private int totalLinks = 0;
+    // private int totalLinks = 0;
     private Set<Long> geneCoverage = new HashSet<Long>();
 
+    /**
+     * @param ees
+     * @param genes Needed so output contains gene symbols, not just IDs.
+     */
     public LinkStatistics( Collection<ExpressionExperiment> ees, Collection<Gene> genes ) {
         this.eeMap = new HashMap<Long, Integer>();
         int index = 0;
@@ -104,18 +116,20 @@ public class LinkStatistics {
 
         geneCoverage.add( firstGeneId );
         geneCoverage.add( secondGeneId );
-        try {
-            int rowIndex = posLinkCounts.getRowIndexByName( firstGeneId );
-            int colIndex = posLinkCounts.getColIndexByName( secondGeneId );
-            if ( geneLink.getScore() > 0 ) {
-                posLinkCounts.set( rowIndex, colIndex, eeIndex );
-            } else {
-                negLinkCounts.set( rowIndex, colIndex, eeIndex );
-            }
-        } catch ( Exception e ) {
-            throw new RuntimeException( " No Gene Definition " + firstGeneId + "," + secondGeneId );
-            // Aligned Region and Predicted Gene
+
+        if ( !posLinkCounts.containsRowName( firstGeneId ) || !posLinkCounts.containsRowName( secondGeneId ) ) {
+            throw new IllegalStateException( "Link matrix does not contain rows for one or both of " + firstGeneId
+                    + "," + secondGeneId );
         }
+
+        int rowIndex = posLinkCounts.getRowIndexByName( firstGeneId );
+        int colIndex = posLinkCounts.getColIndexByName( secondGeneId );
+        if ( geneLink.getScore() > 0 ) {
+            posLinkCounts.set( rowIndex, colIndex, eeIndex );
+        } else {
+            negLinkCounts.set( rowIndex, colIndex, eeIndex );
+        }
+
     }
 
     /**
