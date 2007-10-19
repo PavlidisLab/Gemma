@@ -279,8 +279,31 @@ public class AnalyzerHelper {
 
             for ( FactorValue factorValueFromBioMaterial : factorValuesFromBioMaterial ) {
 
+                Collection<Characteristic> chs = factorValueFromBioMaterial.getCharacteristics();
+
+                Characteristic ch = chs.iterator().next();
+
                 for ( FactorValue f : factorValues ) {
-                    if ( factorValueFromBioMaterial.getValue() != f.getValue() ) {
+
+                    if ( factorValueFromBioMaterial.getValue() == null && f.getValue() == null ) {
+                        log.debug( "null factor value values.  Using characteristic value for the factor value check." );
+
+                        Collection<Characteristic> cs = f.getCharacteristics();
+
+                        if ( chs.size() != 1 || cs.size() != 1 )
+                            throw new RuntimeException( "Only supports 1 characteristic per factor value." );
+
+                        Characteristic c = cs.iterator().next();
+
+                        if ( ch.getValue() == c.getValue() ) {
+                            rFactors.add( ch.getValue() );
+                            match = true;
+                            break;
+                        }
+
+                    }
+
+                    else if ( factorValueFromBioMaterial.getValue() != f.getValue() ) {
                         continue;
                     }
 

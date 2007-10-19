@@ -24,6 +24,7 @@ import java.util.HashSet;
 import org.apache.commons.lang.math.RandomUtils;
 
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -114,10 +115,20 @@ public class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
 
         FactorValue factorValueA1 = FactorValue.Factory.newInstance();
         factorValueA1.setValue( "cerebellum" );
+        Characteristic characteristicA1 = Characteristic.Factory.newInstance();
+        characteristicA1.setValue( factorValueA1.getValue() );
+        Collection<Characteristic> characteristicsA1 = new HashSet<Characteristic>();
+        characteristicsA1.add( characteristicA1 );
+        factorValueA1.setCharacteristics( characteristicsA1 );
         factorValueA1.setExperimentalFactor( experimentalFactorA );
 
         FactorValue factorValueA2 = FactorValue.Factory.newInstance();
         factorValueA2.setValue( "amygdala" );
+        Characteristic characteristicA2 = Characteristic.Factory.newInstance();
+        characteristicA2.setValue( factorValueA2.getValue() );
+        Collection<Characteristic> characteristicsA2 = new HashSet<Characteristic>();
+        characteristicsA2.add( characteristicA2 );
+        factorValueA2.setCharacteristics( characteristicsA2 );
         factorValueA2.setExperimentalFactor( experimentalFactorA );
 
         factorValuesA.add( factorValueA1 );
@@ -133,10 +144,20 @@ public class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
 
         FactorValue factorValueB1 = FactorValue.Factory.newInstance();
         factorValueB1.setValue( "no pcp" );
+        Characteristic characteristicB1 = Characteristic.Factory.newInstance();
+        characteristicB1.setValue( factorValueB1.getValue() );
+        Collection<Characteristic> characteristicsB1 = new HashSet<Characteristic>();
+        characteristicsB1.add( characteristicB1 );
+        factorValueB1.setCharacteristics( characteristicsB1 );
         factorValueB1.setExperimentalFactor( experimentalFactorB );
 
         FactorValue factorValueB2 = FactorValue.Factory.newInstance();
         factorValueB2.setValue( "pcp" );
+        Characteristic characteristicB2 = Characteristic.Factory.newInstance();
+        characteristicB2.setValue( factorValueB2.getValue() );
+        Collection<Characteristic> characteristicsB2 = new HashSet<Characteristic>();
+        characteristicsB2.add( characteristicB2 );
+        factorValueB2.setCharacteristics( characteristicsB2 );
         factorValueB2.setExperimentalFactor( experimentalFactorB );
 
         factorValuesB.add( factorValueB1 );
@@ -378,7 +399,7 @@ public class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
 
         configureVectors( biomaterials.size() );
 
-        experimentalFactors.remove( experimentalFactorB );
+        experimentalFactors.remove( experimentalFactorA );
         experimentalDesign.setExperimentalFactors( experimentalFactors );
         expressionExperiment.setExperimentalDesign( experimentalDesign );
     }
