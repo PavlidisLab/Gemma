@@ -73,7 +73,7 @@ public class DifferentialExpressionAnalysis {
      * 
      * @return
      */
-    public ExpressionAnalysis getPvalues() {
+    public ExpressionAnalysis getExpressionAnalysis() {
         if ( expressionAnalysis == null )
             throw new RuntimeException( "Analysis was never executed.  Run the analysis first." );
         return expressionAnalysis;

@@ -27,6 +27,8 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
+import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
@@ -82,7 +84,7 @@ public class DifferentialExpressionAnalysisCli extends AbstractGeneExpressionExp
     @Override
     protected Exception doWork( String[] args ) {
 
-        Exception err = processCommandLine( "Link Analysis Data Loader", args );
+        Exception err = processCommandLine( "Differential Expression Analysis", args );
         if ( err != null ) {
             return err;
         }
@@ -111,11 +113,6 @@ public class DifferentialExpressionAnalysisCli extends AbstractGeneExpressionExp
 
                 eeService.thaw( expressionExperiment );
 
-                // TODO refactor how you will handle which qt to use
-                Collection<QuantitationType> valueQuantitationTypes = new HashSet<QuantitationType>();
-
-                Collection<QuantitationType> quantitativeQuantitationTypes = new HashSet<QuantitationType>();
-
                 QuantitationType preferredQuantitationType = null;
 
                 Collection<QuantitationType> quantitationTypes = expressionExperiment.getQuantitationTypes();
@@ -126,24 +123,22 @@ public class DifferentialExpressionAnalysisCli extends AbstractGeneExpressionExp
                         break;
                     }
 
-                    if ( qt.getType().getValue().equals( "VALUE" ) ) {
-                        valueQuantitationTypes.add( qt );
-                    }
-
-                    else if ( qt.getType().getValue().equals( "QUANTITATIVE" ) ) {
-                        quantitativeQuantitationTypes.add( qt );
+                    if ( qt.getGeneralType().getValue().equals( "QUANTITATIVE" )
+                            && qt.getType().getValue().equals( "AMOUNT" ) ) {
+                        preferredQuantitationType = qt;
+                        break;
                     }
 
                 }
 
-                if ( preferredQuantitationType != null ) {
-                    log.info( "Preferred quantitation type: " + preferredQuantitationType.getName() + "; Value: "
-                            + preferredQuantitationType.getType().getValue() );
-                } else {
-                    log.info( "# VALUE quantitation types: " + valueQuantitationTypes.size() );
+                if ( preferredQuantitationType == null )
+                    throw new RuntimeException(
+                            "Could not determine correct quantitation type.  Either preferred quantitation type not set or quantitation type does not have a general type of QUANTITATIVE and a  standard type of AMOUNT." );
 
-                    log.info( "# QUANTITATIVE quantitation types: " + quantitativeQuantitationTypes.size() );
-                }
+                log.info( "Using quantitation type: " + preferredQuantitationType.getName() + "; is preferred? "
+                        + preferredQuantitationType.getIsPreferred() + "; general type: "
+                        + preferredQuantitationType.getGeneralType().getValue() + "; standard type: "
+                        + preferredQuantitationType.getType().getValue() );
 
                 Collection<DesignElementDataVector> vectors = expressionExperiment.getDesignElementDataVectors();
                 designElementDataVectorService.thaw( vectors );
@@ -153,7 +148,7 @@ public class DifferentialExpressionAnalysisCli extends AbstractGeneExpressionExp
                     bioAssayDimensions.add( vector.getBioAssayDimension() );
                 }
 
-                log.debug( "# bioassay dimensions: " + bioAssayDimensions.size() );
+                log.info( "# different bioassay dimensions: " + bioAssayDimensions.size() );
                 if ( bioAssayDimensions.size() != 1 )
                     throw new RuntimeException( "Cannot process " + bioAssayDimensions.size()
                             + " bioAssay dimensions.  Can handle 1 dimension only." );
@@ -161,11 +156,26 @@ public class DifferentialExpressionAnalysisCli extends AbstractGeneExpressionExp
                 BioAssayDimension bioAssayDimension = bioAssayDimensions.iterator().next();
 
                 analysis.analyze( expressionExperiment, preferredQuantitationType, bioAssayDimension );
+
+                summarizeProcessing( analysis.getExpressionAnalysis() );
             }
 
         }
 
         return null;
+    }
+
+    /**
+     * @param expressionAnalysis
+     */
+    private void summarizeProcessing( ExpressionAnalysis expressionAnalysis ) {
+
+        Collection<ExpressionAnalysisResult> results = expressionAnalysis.getAnalysisResults();
+        log.info( "# results: " + results.size() );
+        for ( ExpressionAnalysisResult result : results ) {
+            log.info( "p-value: " + result.getPvalue() + ", score: " + result.getScore() );
+        }
+
     }
 
     /**
