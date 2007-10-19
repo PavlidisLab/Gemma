@@ -127,8 +127,14 @@
 		src='/Gemma/dwr/interface/OntologyService.js'></script>
 	<script type='text/javascript'
 		src='/Gemma/dwr/interface/MgedOntologyService.js'></script>
-	<script type="text/javascript"
-		src="<c:url value='/scripts/ajax/bmAnnotator.js'/>"></script>
+	<!-- <script type="text/javascript"
+		src="<c:url value='/scripts/ajax/bmAnnotator.js'/>"></script> -->
+	<script type='text/javascript'
+	 src="<c:url value='/scripts/ajax/annotation/CharacteristicCombo.js'/>"></script>
+	<script type='text/javascript'
+	 src="<c:url value='/scripts/ajax/annotation/MGEDCombo.js'/>"></script>
+	<script type='text/javascript'
+	 src="<c:url value='/scripts/ajax/annotation/BioMaterialToolBar.js'/>"></script>
 </authz:authorize>
 
 <div id="bmAnnotations" class="x-grid-mso"

@@ -276,7 +276,10 @@ if ( expressionExperiment.getName() != null ) {
 			style="padding-left: 2px; padding-right: 2px; overflow: hidden; width: 650px; height: 30px;"></div>
 		<script type="text/javascript" src='/Gemma/dwr/interface/OntologyService.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/MgedOntologyService.js'></script>
-		<script type="text/javascript" src="<c:url value='/scripts/ajax/eeAnnotator.js'/>"></script>
+		<!--  <script type="text/javascript" src="<c:url value='/scripts/ajax/eeAnnotator.js'/>"></script> -->
+		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/CharacteristicCombo.js'/>"></script>
+		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/MGEDCombo.js'/>"></script>
+		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/ExpressionExperimentToolBar.js'/>"></script>
 	</authz:authorize>
 
 	<div id="eeAnnotations" class="x-grid-mso"

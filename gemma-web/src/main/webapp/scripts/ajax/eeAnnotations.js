@@ -1,6 +1,7 @@
 var eeDS;
 var eeGrid;
 var characteristicIdList;
+var deleteButton;
 
 function refreshEEAnnotations() {
 	eeDs.reload();
@@ -17,7 +18,7 @@ function refreshEEAnnotations() {
 	    		characteristicIdList.push(selected[index].id);
 	    	}  	
 	    	
-	    	if (deleteButton !== undefined) {
+	    	if (deleteButton) {
 	    		if (characteristicIdList.length == 0)
 	    			deleteButton.disable();
 	    		else
@@ -51,7 +52,7 @@ Ext.onReady(function() {
 	var cm = new Ext.grid.ColumnModel([
 			{header: "Class",  width: 150, dataIndex:"className"}, 
 			{header: "Term", width: 500, dataIndex:"termName" }]);
-	cm.defaultSortable = false;
+	cm.defaultSortable = true;
  
 	eeGrid = new Ext.grid.Grid("eeAnnotations", {
 		ds:eeDs,
