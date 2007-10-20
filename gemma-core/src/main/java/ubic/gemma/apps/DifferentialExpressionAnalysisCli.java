@@ -170,11 +170,10 @@ public class DifferentialExpressionAnalysisCli extends AbstractGeneExpressionExp
     private void summarizeProcessing( ExpressionAnalysis expressionAnalysis ) {
 
         Collection<ExpressionAnalysisResult> results = expressionAnalysis.getAnalysisResults();
-        log.info( "# results: " + results.size() );
         for ( ExpressionAnalysisResult result : results ) {
             log.info( "p-value: " + result.getPvalue() + ", score: " + result.getScore() );
         }
-
+        log.info( "# results: " + results.size() );
     }
 
     /**
