@@ -33,7 +33,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.time.StopWatch;
 
-import ubic.gemma.analysis.linkAnalysis.CommandLineToolUtilService;
 import ubic.gemma.analysis.linkAnalysis.LinkConfirmationStatistics;
 import ubic.gemma.analysis.linkAnalysis.LinkStatistics;
 import ubic.gemma.analysis.linkAnalysis.LinkStatisticsService;
@@ -116,6 +115,8 @@ public class LinkStatisticsCLI extends AbstractGeneExpressionExperimentManipulat
      */
     private boolean doRealAnalysis = true;
 
+    private boolean filterNonSpecific = true;
+
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
@@ -161,7 +162,7 @@ public class LinkStatisticsCLI extends AbstractGeneExpressionExperimentManipulat
         LinkStatisticsService lss = ( LinkStatisticsService ) this.getBean( "linkStatisticsService" );
 
         if ( !prepared ) {
-            lss.prepareDatabase( ees, taxon.getCommonName() );
+            lss.prepareDatabase( ees, taxon.getCommonName(), filterNonSpecific );
             return null;
         }
         Collection<Gene> genes = getKnownGenes();
@@ -188,7 +189,7 @@ public class LinkStatisticsCLI extends AbstractGeneExpressionExperimentManipulat
 
             if ( doRealAnalysis ) { // Currently this is really just for debugging purposes, though reading in from a
                 // file might be useful.
-                LinkStatistics realStats = lss.analyze( ees, genes, taxon.getCommonName(), false, true );
+                LinkStatistics realStats = lss.analyze( ees, genes, taxon.getCommonName(), false, filterNonSpecific );
                 confStats = realStats.getLinkConfirmationStats();
 
                 // try {
@@ -205,7 +206,7 @@ public class LinkStatisticsCLI extends AbstractGeneExpressionExperimentManipulat
                 for ( currentIteration = 1; currentIteration < numIterationsToDo + 1; currentIteration++ ) {
                     log.info( "*** Iteration " + currentIteration + " ****" );
 
-                    LinkStatistics sr = lss.analyze( ees, genes, taxon.getCommonName(), true, true );
+                    LinkStatistics sr = lss.analyze( ees, genes, taxon.getCommonName(), true, filterNonSpecific );
                     shuffleRuns.add( sr.getLinkConfirmationStats() );
 
                     if ( doShuffledOutput ) {
