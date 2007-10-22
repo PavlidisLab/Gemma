@@ -82,7 +82,7 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/ognl/ognl/2.6.7/ognl-2.6.7.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/hibernate/hibernate/3.2.3.ga/hibernate-3.2.3.ga.jar">
+	<classpathentry kind="var" path="M2_REPO/org/hibernate/hibernate/3.2.5.ga/hibernate-3.2.5.ga.jar" sourcepath="/JAR_SOURCE/hibernate-3.2/src">
 		<attributes>
 			<attribute name="javadoc_location" value="http://www.hibernate.org/hib_docs/v3/api/"/>
 		</attributes>
@@ -173,7 +173,7 @@
 	<classpathentry kind="var" path="M2_REPO/quartz/quartz/1.5.2/quartz-1.5.2.jar"/>
 	<classpathentry kind="var" path="M2_REPO/com/sdicons/jsontools/jsontools-core/1.4/jsontools-core-1.4.jar"/>
 	<classpathentry kind="var" path="M2_REPO/prefuse/prefuse/beta/prefuse-beta.jar"/>
-	<classpathentry kind="var" path="M2_REPO/mtj/mtj/0.9.8/mtj-0.9.8.jar"/>
+	<classpathentry kind="var" path="M2_REPO/mtj/mtj/0.9.8/mtj-0.9.8.jar" sourcepath="/JAR_SOURCE/mtj/src"/>
 	<classpathentry kind="var" path="M2_REPO/spring/spring-modules-javaspaces/0.8/spring-modules-javaspaces-0.8.jar" sourcepath="/JAR_SOURCE/spring-modules-0.8/sources/spring-modules-javaspaces-src.zip"/>
 	<classpathentry kind="var" path="M2_REPO/jini/jini-core/2.1/jini-core-2.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/jini/jini-ext/2.1/jini-ext-2.1.jar"/>
