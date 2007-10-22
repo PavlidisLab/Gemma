@@ -232,6 +232,7 @@ public class CorrelationDistCli extends AbstractGeneExpressionExperimentManipula
         for ( DesignElement cs : allCSs ) {
             csIds.add( cs.getId() );
         }
+        // FIXME this used to provide only known genes.
         Map<Long, Collection<Long>> cs2genes = geneService.getCS2GeneMap( csIds );
         Map<Long, Collection<Long>> cs2knowngenes = new HashMap<Long, Collection<Long>>();
         for ( Long csId : cs2genes.keySet() ) {

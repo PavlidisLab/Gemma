@@ -58,8 +58,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     private static final String TMP_TABLE_PREFIX = "TMP_";
     private static Log log = LogFactory.getLog( Probe2ProbeCoexpressionDaoImpl.class.getName() );
 
-    private long eeId = 0L;
-
     /*
      * (non-Javadoc) This should be faster than doing it one at a time; uses the "DML-style" syntax. This implementation
      * assumes all the links in the collection are of the same class!F
@@ -141,7 +139,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * @throws Exception
      */
     private void createTable( String tableName ) throws Exception {
-        Session session = getSessionFactory().openSession();
+        Session session = getSession();
         Connection conn = session.connection();
         Statement s = conn.createStatement();
 
@@ -157,8 +155,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
                 + "PRIMARY KEY(id), KEY(EXPRESSION_EXPERIMENT_FK)) " + "ENGINE=MYISAM";
         s.executeUpdate( queryString );
         conn.close();
-        session.close();
-
     }
 
     /**
@@ -166,7 +162,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * @param taxon
      * @throws Exception
      */
-    private void doFiltering( ExpressionExperiment ee, String taxon ) throws Exception {
+    private void doFiltering( ExpressionExperiment ee, String taxon, boolean filterNonSpecific ) throws Exception {
         String tableName = getTableName( taxon, false );
         Collection<ProbeLink> links = getLinks( ee, tableName );
         Set<Long> csIds = new HashSet<Long>();
@@ -175,7 +171,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             csIds.add( link.getSecondDesignElementId() );
         }
         Map<Long, Collection<Long>> cs2genes = getCs2GenesMap( csIds );
-        links = filterNonSpecificAndRedundant( links, cs2genes );
+        links = filterNonSpecificAndRedundant( links, cs2genes, filterNonSpecific );
         String workingTableName = getTableName( taxon, true );
         saveLinks( links, ee, workingTableName );
 
@@ -187,7 +183,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * @return
      */
     private Collection<ProbeLink> filterNonSpecificAndRedundant( Collection<ProbeLink> links,
-            Map<Long, Collection<Long>> cs2genes ) {
+            Map<Long, Collection<Long>> cs2genes, boolean filterNonSpecific ) {
         Collection<ProbeLink> specificLinks = new ArrayList<ProbeLink>();
         Collection<ProbeLink> nonRedudantLinks = new ArrayList<ProbeLink>();
         Collection<Long> mergedCsIds = new HashSet<Long>();
@@ -201,8 +197,8 @@ public class Probe2ProbeCoexpressionDaoImpl extends
                 continue;
             }
 
-            // probes that hit more than one gene are excluded here. (should be optional)
-            if ( firstGenes.size() > 1 || secondGenes.size() > 1 ) continue;
+            // probes that hit more than one gene are excluded here.FIXME this must be made optional.
+            if ( filterNonSpecific && ( firstGenes.size() > 1 || secondGenes.size() > 1 ) ) continue;
 
             if ( link.getFirstDesignElementId() > maximumId ) maximumId = link.getFirstDesignElementId();
             if ( link.getSecondDesignElementId() > maximumId ) maximumId = link.getSecondDesignElementId();
@@ -236,7 +232,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         int CHUNK_LIMIT = 10000;
         int total = csIds.size();
         Collection<Long> idsInOneChunk = new HashSet<Long>();
-        Session session = getSessionFactory().openSession();
+        Session session = getSession();
 
         for ( Long csId : csIds ) {
             idsInOneChunk.add( csId );
@@ -265,7 +261,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
                 idsInOneChunk.clear();
             }
         }
-        session.close();
         return cs2genes;
     }
 
@@ -280,7 +275,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         String baseQueryString = "SELECT FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK, SCORE FROM " + tableName
                 + " WHERE EXPRESSION_EXPERIMENT_FK = " + expressionExperiment.getId() + " limit ";
         int chunkSize = 1000000;
-        Session session = getSessionFactory().openSession();
+        Session session = this.getSession();
         long start = 0;
         Collection<ProbeLink> links = new ArrayList<ProbeLink>();
         while ( true ) {
@@ -314,8 +309,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             }
             if ( count < chunkSize ) break;
         }
-        log.info( "Load " + links.size() );
-        session.close();
+        log.info( "Loaded " + links.size() + " probe links" );
         return links;
     }
 
@@ -370,11 +364,10 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     private void saveLinks( Collection<ProbeLink> links, ExpressionExperiment ee, String tableName ) throws Exception {
         if ( links == null || links.size() == 0 ) return;
         String queryString = "";
-        Session session = getSessionFactory().openSession();
+        Session session = getSession();
         Connection conn = session.connection();
         Statement s = conn.createStatement();
 
-        this.eeId = ee.getId();
         int count = 0;
         int CHUNK_LIMIT = 10000;
         int total = links.size();
@@ -400,8 +393,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         }
         log.info( " Finished writing " + links.size() + " links." );
         conn.close();
-        session.close();
-
     }
 
     @Override
@@ -642,21 +633,21 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     @Override
     protected Collection handleGetProbeCoExpression( ExpressionExperiment expressionExperiment, String taxon,
-            boolean cleaned ) throws Exception {
-        String tableName = getTableName( taxon, cleaned );
+            boolean useWorkingTable ) throws Exception {
+        String tableName = getTableName( taxon, useWorkingTable );
         Collection<ProbeLink> links = getLinks( expressionExperiment, tableName );
         return links;
     }
 
     @Override
-    protected void handlePrepareForShuffling( Collection ees, String taxon ) throws Exception {
+    protected void handlePrepareForShuffling( Collection ees, String taxon, boolean filterNonSpecific ) throws Exception {
         String tableName = getTableName( taxon, true );
         createTable( tableName );
         int i = 1;
         for ( Object ee : ees ) {
             log.info( "Filtering EE " + ( ( ExpressionExperiment ) ee ).getShortName() + "(" + i + "/" + ees.size()
                     + ")" );
-            doFiltering( ( ExpressionExperiment ) ee, taxon );
+            doFiltering( ( ExpressionExperiment ) ee, taxon, filterNonSpecific );
             i++;
         }
     }
@@ -694,7 +685,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         }
 
         public String toString() {
-            String res = "(" + firstDesignElementId + "," + secondDesignElementId + ", " + score + ", " + eeId + ")";
+            String res = "(" + firstDesignElementId + "," + secondDesignElementId + ", " + score + ")";
             return res;
         }
     }

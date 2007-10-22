@@ -112,14 +112,19 @@ public class LinkStatistics {
         Long secondGeneId = geneLink.getSecondGene();
 
         // skip self-links
-        if ( firstGeneId.equals( secondGeneId ) ) return;
+        if ( firstGeneId.equals( secondGeneId ) ) {
+            if ( log.isTraceEnabled() ) log.trace( "Skipping self link for gene=" + firstGeneId );
+            return;
+        }
 
         geneCoverage.add( firstGeneId );
         geneCoverage.add( secondGeneId );
 
         if ( !posLinkCounts.containsRowName( firstGeneId ) || !posLinkCounts.containsRowName( secondGeneId ) ) {
-            throw new IllegalStateException( "Link matrix does not contain rows for one or both of " + firstGeneId
-                    + "," + secondGeneId );
+            // this is okay, it happens if we are limiting to 'known genes' but we gathered links for all genes.
+            return;
+            // throw new IllegalStateException( "Link matrix does not contain rows for one or both of " + firstGeneId
+            // + "," + secondGeneId );
         }
 
         int rowIndex = posLinkCounts.getRowIndexByName( firstGeneId );
@@ -142,6 +147,7 @@ public class LinkStatistics {
 
         LinkConfirmationStatistics results = new LinkConfirmationStatistics();
 
+        log.info( "Summarizing ... " );
         // The filling process only filled one item. So the matrix is not symmetric
         for ( int i = 0; i < rows; i++ ) {
             int[] positiveBits = this.posLinkCounts.getRowBitCount( i );
@@ -155,6 +161,9 @@ public class LinkStatistics {
                 if ( negativeBit > 0 ) {
                     results.addNeg( negativeBit );
                 }
+            }
+            if ( i > 0 && i % 10000 == 0 ) {
+                log.info( "Summarized results for " + i + " genes" );
             }
         }
         return results;
@@ -170,46 +179,80 @@ public class LinkStatistics {
      * @param linkStringency
      */
     public void writeLinks( Writer out, int linkStringency ) {
+        log.info( "Writing links with support >=" + linkStringency );
         Map<Long, String> geneId2Name = new HashMap<Long, String>();
         for ( Gene gene : genes ) {
             geneId2Name.put( gene.getId(), gene.getName() );
         }
+        int count = 0;
         try {
             int rows = posLinkCounts.rows();
             int cols = posLinkCounts.columns();
 
             // header
-            out.write( "Gene1\tGene2\tPosLinks\tNegLinks\n" );
+            if ( linkStringency == 0 ) {
+                out.write( "Gene1\tGene2\tPosLinks\tNegLinks\n" );
+            } else {
+                out.write( "Gene1\tGene2\tSupport\tCorrSign\n" );
+            }
 
             // The filling process only filled one item. So the matrix is not symmetric
             for ( int i = 0; i < rows; i++ ) {
                 int[] positiveBits = posLinkCounts.getRowBitCount( i );
                 int[] negativeBits = negLinkCounts.getRowBitCount( i );
+                String gene1Name = geneId2Name.get( posLinkCounts.getRowName( i ) );
 
                 for ( int j = 0; j < cols; j++ ) {
                     int positiveBit = positiveBits[j];
                     int negativeBit = negativeBits[j];
 
-                    String gene1Name = geneId2Name.get( posLinkCounts.getRowName( i ) );
                     String gene2Name = geneId2Name.get( posLinkCounts.getColName( j ) );
 
                     if ( linkStringency > 0 ) { // limit to links above this
                         if ( positiveBit >= linkStringency ) {
                             out.write( gene1Name + "\t" + gene2Name + "\t" + positiveBit + "\t" + "+" + "\n" );
+                            count++;
                         }
                         if ( negativeBit >= linkStringency ) {
                             out.write( gene1Name + "\t" + gene2Name + "\t" + negativeBit + "\t" + "-" + "\n" );
+                            count++;
                         }
                     } else { // print all links.
                         if ( positiveBit > 0 || negativeBit > 0 ) {
                             out.write( gene1Name + "\t" + gene2Name + "\t" + positiveBit + "\t" + negativeBit + "\n" );
+                            count++;
                         }
                     }
+                    if ( count > 0 && count % 100000 == 0 ) {
+                        log.info( count + " links written" );
+                    }
+                }
+                if ( i > 0 && i % 1000 == 0 ) {
+                    log.info( "Links for " + i + " genes written" );
                 }
             }
+            log.info( count + " links written" );
             out.close();
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
+    }
+
+    /**
+     * @return Collection of genes used as an "axis" in the gene x gene link matrix.
+     */
+    public Collection<Gene> getGenes() {
+        return genes;
+    }
+
+    /**
+     * @return Collection of gene ids used as an "axis" in the gene x gene link matrix.
+     */
+    public Collection<Long> getGeneIds() {
+        Collection<Long> result = new HashSet<Long>();
+        for ( Gene g : this.genes ) {
+            result.add( g.getId() );
+        }
+        return result;
     }
 }

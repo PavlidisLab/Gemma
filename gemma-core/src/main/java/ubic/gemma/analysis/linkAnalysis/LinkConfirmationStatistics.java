@@ -102,7 +102,8 @@ public class LinkConfirmationStatistics {
 
     /**
      * @param r
-     * @return how many correlation links are replicated in exactly r data sets
+     * @return how many correlation links are replicated in exactly r data sets (including both positive and negative
+     *         correlations).
      */
     public int getRepCount( int r ) {
         return posLinkStats[r] + negLinkStats[r];
@@ -110,7 +111,8 @@ public class LinkConfirmationStatistics {
 
     /**
      * @param r
-     * @return how many positive correlation links are replicated in r or more data sets.
+     * @return how many positive correlation links are replicated in r or more data sets (including both positive and
+     *         negative correlations).
      */
     public int getCumulativePosRepCount( int r ) {
         cuPosLinkStats[LINK_MAXIMUM_COUNT - 1] = posLinkStats[LINK_MAXIMUM_COUNT - 1];

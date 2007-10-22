@@ -55,6 +55,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
 /**
  * @author xwan
  * @version $Id$
+ * @deprecated because we don't know what this is for. see LinkGOStatsCli.
  */
 public class LinkGOAnalysisCli extends AbstractSpringAwareCLI {
 

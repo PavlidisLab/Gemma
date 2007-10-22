@@ -113,6 +113,7 @@ public class ProbeAlignedRegionAnalysisCLI extends AbstractSpringAwareCLI {
                     csIds.add( CS.getId() );
                 }
             }
+            // FIXME this use dto return only known genes.
             Map<Long, Collection<Long>> cs2geneMap = geneService.getCS2GeneMap( csIds );
 
             Map<DesignElementDataVector, Collection<Long>> dedv2geneMap = eeService.getDesignElementDataVectors(
@@ -189,6 +190,7 @@ public class ProbeAlignedRegionAnalysisCLI extends AbstractSpringAwareCLI {
                 csIds.add( link.getFirstDesignElementId() );
                 csIds.add( link.getSecondDesignElementId() );
             }
+            // FIXME this used to provide only known genes.
             Map<Long, Collection<Long>> cs2geneMap = geneService.getCS2GeneMap( csIds );
             for ( ProbeLink link : links ) {
                 Collection<Long> firstGeneIds = cs2geneMap.get( link.getFirstDesignElementId() );

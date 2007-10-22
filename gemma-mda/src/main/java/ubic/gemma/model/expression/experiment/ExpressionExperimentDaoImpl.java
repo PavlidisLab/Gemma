@@ -1154,10 +1154,24 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
         log.debug( "Loading " + probeIds.size() + " assayed probes" );
         final String gqs = "select distinct cs from CompositeSequenceImpl cs where cs.id in (:ids)";
+        Collection<CompositeSequence> result = new HashSet<CompositeSequence>();
+        Collection<Long> batch = new ArrayList<Long>();
+        final int BATCH_SIZE = 1000;
         try {
             org.hibernate.Query qo = super.getSession( false ).createQuery( gqs );
-            qo.setParameterList( "ids", probeIds );
-            return qo.list();
+            for ( Long probeId : probeIds ) {
+                batch.add( probeId );
+                if ( batch.size() == BATCH_SIZE ) {
+                    qo.setParameterList( "ids", batch );
+                    result.addAll( ( Collection<CompositeSequence> ) qo.list() );
+                    batch.clear();
+                }
+            }
+            if ( batch.size() > 0 ) {
+                qo.setParameterList( "ids", batch );
+                result.addAll( ( Collection<CompositeSequence> ) qo.list() );
+            }
+            return result;
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }

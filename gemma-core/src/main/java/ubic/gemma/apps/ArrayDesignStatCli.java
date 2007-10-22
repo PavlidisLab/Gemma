@@ -138,6 +138,7 @@ public class ArrayDesignStatCli extends ArrayDesignSequenceManipulatingCli {
         			Collection<Long> csIds = new HashSet<Long>();
         			for(DesignElement cs:allCSs)
         				csIds.add(cs.getId());
+                    // FIXME this used to provide only known genes.
         			Map<Long, Collection<Long>> csId2geneIds = geneService.getCS2GeneMap( csIds );
         			Map<Long, Collection<Long>> geneId2csIds = getGeneId2CSIdsMap(csId2geneIds);
         			int[] csStats = getStats(csId2geneIds, false);

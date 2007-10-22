@@ -353,6 +353,7 @@ public class CoexpressionAnalysisService {
 
 	public Map<Gene, Collection<CompositeSequence>> getGene2CsMap(
 			Collection<CompositeSequence> css) {
+        // FIXME this used to return only known genes.
 		Map<CompositeSequence, Collection<Gene>> cs2gene = geneService
 				.getCS2GeneMap(css);
 		// filter for specific cs 2 gene

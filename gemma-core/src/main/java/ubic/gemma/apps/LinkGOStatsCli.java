@@ -142,6 +142,7 @@ public class LinkGOStatsCli extends AbstractGeneExpressionExperimentManipulating
             csIds.add( link.getFirstDesignElementId() );
             csIds.add( link.getSecondDesignElementId() );
         }
+        // FIXME this used to only return known genes.
         Map<Long, Collection<Long>> cs2genes = geneService.getCS2GeneMap( csIds );
         int eeIndex = eeIndexMap.get( ee.getId() );
         for ( ProbeLink link : links ) {

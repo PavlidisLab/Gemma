@@ -1077,7 +1077,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         String queryString = "SELECT GENE as geneId,CS as csId FROM GENE2CS WHERE " + " GENE in ("
                 + StringUtils.join( geneIdList.iterator(), "," ) + ")";
 
-        Session session = getSessionFactory().openSession();
+        Session session = this.getSession();
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
 
         queryObject.addScalar( "geneId", new LongType() );
@@ -1100,7 +1100,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 geneMap.put( geneId, csIds );
             }
         }
-        session.close();
         return geneMap;
     }
 
@@ -1145,16 +1144,15 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         }
 
         int count = 0;
-        int CHUNK_SIZE = 100000;
+        int CHUNK_SIZE = 1000;
         Collection<Long> csIdChunk = new HashSet<Long>();
-        Session session = getSessionFactory().openSession();
+        Session session = this.getSession();
 
         for ( Long csId : csIds ) {
             csIdChunk.add( csId );
             count++;
             if ( count % CHUNK_SIZE == 0 || count == csIds.size() ) {
-                String queryString = "SELECT CS as id, GENE as geneId FROM GENE2CS, CHROMOSOME_FEATURE as C"
-                        + " WHERE GENE2CS.GENE = C.ID and C.CLASS = 'GeneImpl' and" + " CS in ("
+                String queryString = "SELECT CS as id, GENE as geneId FROM GENE2CS WHERE CS in ("
                         + StringUtils.join( csIdChunk.iterator(), "," ) + ")";
 
                 org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
@@ -1162,6 +1160,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 queryObject.addScalar( "geneId", new LongType() );
 
                 ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+
                 while ( scroll.next() ) {
                     Long id = scroll.getLong( 0 );
                     Long geneId = scroll.getLong( 1 );
@@ -1172,10 +1171,18 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                     }
                     geneIds.add( geneId );
                 }
+
                 csIdChunk.clear();
+                log.debug( "Processed " + count + " probes" );
             }
+
         }
-        session.close();
+
+        if ( csId2geneIds.keySet().size() != csIds.size() ) {
+            log.info( "There were " + ( csIds.size() - csId2geneIds.keySet().size() ) + "/" + csIds.size()
+                    + " probes that have no gene mapping." );
+        }
+
         if ( useIds ) return csId2geneIds;
 
         // get the gene objects so we can return them.

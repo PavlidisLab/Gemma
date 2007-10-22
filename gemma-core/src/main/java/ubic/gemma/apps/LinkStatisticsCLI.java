@@ -26,6 +26,7 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.cli.Option;
@@ -38,6 +39,8 @@ import ubic.gemma.analysis.linkAnalysis.LinkStatistics;
 import ubic.gemma.analysis.linkAnalysis.LinkStatisticsService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.PredictedGene;
+import ubic.gemma.model.genome.ProbeAlignedRegion;
 
 /**
  * Used to count up links and to generate the link(gene pair) background distribution, which could be used to estimate
@@ -93,8 +96,6 @@ public class LinkStatisticsCLI extends AbstractGeneExpressionExperimentManipulat
 
     private boolean prepared = true;
 
-    private CommandLineToolUtilService linkAnalysisUtilService;
-
     /*
      * How many shuffled runs to do. 2 or 3 is enough to get a quick idea of what the results will look like; 100 is
      * better for final analysis.
@@ -111,7 +112,7 @@ public class LinkStatisticsCLI extends AbstractGeneExpressionExperimentManipulat
     private boolean doShuffledOutput = false;
 
     /*
-     * If false, just do shuffling.
+     * If false, just do shuffling. This is primarily for debugging.
      */
     private boolean doRealAnalysis = true;
 
@@ -163,8 +164,7 @@ public class LinkStatisticsCLI extends AbstractGeneExpressionExperimentManipulat
             lss.prepareDatabase( ees, taxon.getCommonName() );
             return null;
         }
-
-        Collection<Gene> genes = linkAnalysisUtilService.loadKnownGenes( taxon );
+        Collection<Gene> genes = getKnownGenes();
 
         if ( linkStringency != 0 ) {
             //
@@ -188,25 +188,35 @@ public class LinkStatisticsCLI extends AbstractGeneExpressionExperimentManipulat
 
             if ( doRealAnalysis ) { // Currently this is really just for debugging purposes, though reading in from a
                 // file might be useful.
-                LinkStatistics realStats = lss.analyze( ees, genes, taxon.getCommonName(), false );
+                LinkStatistics realStats = lss.analyze( ees, genes, taxon.getCommonName(), false, true );
                 confStats = realStats.getLinkConfirmationStats();
 
-                try {
-                    Writer linksOut = new BufferedWriter( new FileWriter( new File( "link-data.txt" ) ) );
-                    realStats.writeLinks( linksOut, 0 );
-                } catch ( IOException e ) {
-                    return e;
-                }
+                // try {
+                // Writer linksOut = new BufferedWriter( new FileWriter( new File( "link-data.txt" ) ) );
+                // realStats.writeLinks( linksOut, 0 );
+                // } catch ( IOException e ) {
+                // return e;
+                // }
             }
 
             List<LinkConfirmationStatistics> shuffleRuns = new ArrayList<LinkConfirmationStatistics>();
             if ( this.numIterationsToDo > 0 ) {
                 log.info( "Running shuffled runs" );
-                for ( currentIteration = 0; currentIteration < numIterationsToDo + 1; currentIteration++ ) {
+                for ( currentIteration = 1; currentIteration < numIterationsToDo + 1; currentIteration++ ) {
                     log.info( "*** Iteration " + currentIteration + " ****" );
 
-                    LinkStatistics sr = lss.analyze( ees, genes, taxon.getCommonName(), true );
+                    LinkStatistics sr = lss.analyze( ees, genes, taxon.getCommonName(), true, true );
                     shuffleRuns.add( sr.getLinkConfirmationStats() );
+
+                    if ( doShuffledOutput ) {
+                        try {
+                            Writer linksOut = new BufferedWriter( new FileWriter( new File( "shuffled-link-data-"
+                                    + currentIteration + ".txt" ) ) );
+                            sr.writeLinks( linksOut, 2 );
+                        } catch ( IOException e ) {
+                            return e;
+                        }
+                    }
 
                 }
             }
@@ -216,6 +226,25 @@ public class LinkStatisticsCLI extends AbstractGeneExpressionExperimentManipulat
         }
 
         return null;
+    }
+
+    /**
+     * @return collection of known genes for the taxon selected on the command line. Known genes basically means NCBI
+     *         genes (not PARs and not "predicted").
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<Gene> getKnownGenes() {
+        log.info( "Loading genes ..." );
+        Collection<Gene> genes = geneService.getGenesByTaxon( taxon );
+        Collection<Gene> knownGenes = new HashSet<Gene>();
+        for ( Gene g : genes ) {
+            // FIXME this should be optional, though the number of all genes together is really big.
+            if ( !( g instanceof ProbeAlignedRegion ) && !( g instanceof PredictedGene ) ) {
+                knownGenes.add( g );
+            }
+        }
+        log.info( "Using " + knownGenes.size() + " 'known genes' for analysis" );
+        return knownGenes;
     }
 
     /**
@@ -234,7 +263,6 @@ public class LinkStatisticsCLI extends AbstractGeneExpressionExperimentManipulat
             this.linkStringency = Integer.valueOf( getOptionValue( 'l' ) );
         }
 
-        linkAnalysisUtilService = ( CommandLineToolUtilService ) this.getBean( "commandLineToolUtilService" );
     }
 
 }

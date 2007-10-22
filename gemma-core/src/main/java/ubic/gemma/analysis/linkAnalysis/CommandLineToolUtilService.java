@@ -34,13 +34,18 @@ public class CommandLineToolUtilService {
             .synchronizedMap( new HashMap<Long, Collection<OntologyTerm>>() );
 
     /**
-     * @param name
+     * @param name common name of a taxon.
      * @return
      */
     public Taxon getTaxon( String name ) {
         return this.taxonService.findByCommonName( name );
     }
 
+    /**
+     * @param gene1
+     * @param gene2
+     * @return
+     */
     public int computeGOOverlap( Gene gene1, Gene gene2 ) {
         int res = 0;
         try {
@@ -52,6 +57,11 @@ public class CommandLineToolUtilService {
         return res;
     }
 
+    /**
+     * @param id1 gene primary key
+     * @param id2 gene primary key
+     * @return
+     */
     public int computeGOOverlap( long id1, long id2 ) {
         Gene gene1 = geneService.load( id1 );
         Gene gene2 = geneService.load( id2 );
@@ -97,6 +107,7 @@ public class CommandLineToolUtilService {
      * @param taxon
      * @return Known genes (not predicted, not probe aligned regions)
      */
+    @SuppressWarnings("unchecked")
     public Collection<Gene> loadKnownGenes( Taxon taxon ) {
         Collection<Gene> allGenes = geneService.getGenesByTaxon( taxon );
         Collection<Gene> genes = new HashSet<Gene>();
@@ -108,9 +119,16 @@ public class CommandLineToolUtilService {
         return genes;
     }
 
-    public Gene getGene( String geneName, Taxon taxon ) {
+    /**
+     * Load a gene by symbol
+     * 
+     * @param symbol official symbol of the gene
+     * @param taxon
+     * @return
+     */
+    public Gene getGene( String symbol, Taxon taxon ) {
         Gene gene = Gene.Factory.newInstance();
-        gene.setOfficialSymbol( geneName.trim() );
+        gene.setOfficialSymbol( symbol.trim() );
         gene.setTaxon( taxon );
         gene = geneService.find( gene );
         return gene;
