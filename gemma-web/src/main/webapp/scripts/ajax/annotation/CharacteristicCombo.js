@@ -2,7 +2,7 @@ Ext.namespace('Ext.Gemma');
 
 /* Ext.Gemma.CharacteristicCombo constructor...
  */
-Ext.Gemma.CharacteristicCombo = function (config) {
+Ext.Gemma.CharacteristicCombo = function ( config ) {
 
 	Ext.Gemma.CharacteristicCombo.superclass.constructor.call( this, config );
 	

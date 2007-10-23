@@ -25,7 +25,9 @@ package ubic.gemma.web.controller.expression.experiment;
 public class AnnotationValueObject  {
 
     private long   id;
+    private String classUri;
     private String className;
+    private String termUri;
     private String termName;
     
     
@@ -56,5 +58,33 @@ public class AnnotationValueObject  {
      */
     public void setId( long id ) {
         this.id = id;
+    }
+
+    /**
+     * @return the classUri
+     */
+    public String getClassUri() {
+        return classUri;
+    }
+
+    /**
+     * @param classUri the classUri to set
+     */
+    public void setClassUri( String classUri ) {
+        this.classUri = classUri;
+    }
+
+    /**
+     * @return the termUri
+     */
+    public String getTermUri() {
+        return termUri;
+    }
+
+    /**
+     * @param termUri the termUri to set
+     */
+    public void setTermUri( String termUri ) {
+        this.termUri = termUri;
     }
 }

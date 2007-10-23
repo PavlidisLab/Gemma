@@ -242,8 +242,10 @@ public class BioMaterialController extends BaseMultiActionController {
             annotationValue.setTermName( c.getValue() );
             if ( c instanceof VocabCharacteristic ) {
                 VocabCharacteristic vc = ( VocabCharacteristic ) c;
+                annotationValue.setClassUri( vc.getCategoryUri() );
                 String className = getLabelFromUri( vc.getCategoryUri() );
                 if ( className != null ) annotationValue.setClassName( className );
+                annotationValue.setTermUri( vc.getValueUri() );
                 String termName = getLabelFromUri( vc.getValueUri() );
                 if ( termName != null ) annotationValue.setTermName( termName );
             }

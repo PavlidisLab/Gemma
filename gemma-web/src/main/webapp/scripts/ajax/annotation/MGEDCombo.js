@@ -2,7 +2,7 @@ Ext.namespace('Ext.Gemma');
 
 /* Ext.Gemma.MGEDCombo constructor...
  */
-Ext.Gemma.MGEDCombo = function (config) {
+Ext.Gemma.MGEDCombo = function ( config ) {
 
 	Ext.Gemma.MGEDCombo.superclass.constructor.call( this, config );
 	

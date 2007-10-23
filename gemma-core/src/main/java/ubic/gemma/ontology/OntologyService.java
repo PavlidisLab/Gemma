@@ -210,6 +210,7 @@ public class OntologyService {
                 filtered.add( vc );
             }
         }
+        log.info( "returning " + filtered.size() + " terms after filter" );
 
         return filtered;
     }
@@ -224,7 +225,8 @@ public class OntologyService {
      * @return
      */
     public Collection<Characteristic> findExactTerm( String search, String categoryUri ) {
-
+        log.info( "starting findExactTerm for " + search );
+        
         if ( search == null ) return null;
 
         // TODO: this is poorly named. changed to findExactResource, add findExactIndividual Factor out common code
@@ -237,6 +239,7 @@ public class OntologyService {
             results = new HashSet<OntologyResource>( mgedOntologyService.getTermIndividuals( categoryUri ) );
             if ( results != null ) individualResults.addAll( convert( results ) );
         }
+        log.info( "found " + individualResults.size() + " individuals from ontology term " + categoryUri );
 
         Collection<String> foundValues = new HashSet<String>();
         List<Characteristic> alreadyUsedResults = new ArrayList<Characteristic>();
@@ -255,16 +258,20 @@ public class OntologyService {
                 }
             }
         }
+        log.info( "found " + alreadyUsedResults.size() + " matching characteristics used in the database" );
 
         List<Characteristic> searchResults = new ArrayList<Characteristic>();
 
         results = birnLexOntologyService.findResources( search );
+        log.info( "found " + ( results == null ? "null" : results.size() ) + " terms from birnLex" );
         if ( results != null ) searchResults.addAll( filter( results, search ) );
 
         results = oboDiseaseOntologyService.findResources( search );
+        log.info( "found " + ( results == null ? "null" : results.size() ) + " terms from obo" );
         if ( results != null ) searchResults.addAll( filter( results, search ) );
 
         results = fmaOntologyService.findResources( search );
+        log.info( "found " + ( results == null ? "null" : results.size() ) + " terms from fma" );
         if ( results != null ) searchResults.addAll( filter( results, search ) );
 
         // Sort the individual results.
@@ -371,7 +378,7 @@ public class OntologyService {
      */
     public void saveBioMaterialStatement( Characteristic vc, Collection<Long> bioMaterialIdList ) {
 
-        log.debug( "Vocab Characteristic: " + vc.getDescription() );
+        log.debug( "Vocab Characteristic: " + vc );
         log.debug( "Biomaterial ID List: " + bioMaterialIdList );
 
         Set<Characteristic> chars = new HashSet<Characteristic>();
@@ -401,7 +408,7 @@ public class OntologyService {
      */
     public void saveExpressionExperimentStatement( Characteristic vc, Collection<Long> bmIdList ) {
 
-        log.info( "Vocab Characteristic: " + vc.getDescription() );
+        log.info( "Vocab Characteristic: " + vc );
         log.info( "Expression Experiment ID List: " + bmIdList );
 
         Set<Characteristic> chars = new HashSet<Characteristic>();

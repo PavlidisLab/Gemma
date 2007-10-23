@@ -14,11 +14,13 @@
 	<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentController.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/AuditController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
-	<script type='text/javascript' src="<c:url value='/scripts/ajax/eeAnnotations.js'/>"></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/AuditController.js'></script>
+	<!-- <script type='text/javascript' src="<c:url value='/scripts/ajax/eeAnnotations.js'/>"></script> -->
+	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/AnnotationGrid.js'/>"></script>
+	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/ExpressionExperimentGrid.js'/>"></script>
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/eeDesignMatrix.js'/>"></script>
 
 </head>
@@ -276,9 +278,10 @@ if ( expressionExperiment.getName() != null ) {
 			style="padding-left: 2px; padding-right: 2px; overflow: hidden; width: 650px; height: 30px;"></div>
 		<script type="text/javascript" src='/Gemma/dwr/interface/OntologyService.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/MgedOntologyService.js'></script>
-		<!--  <script type="text/javascript" src="<c:url value='/scripts/ajax/eeAnnotator.js'/>"></script> -->
+		<!-- <script type="text/javascript" src="<c:url value='/scripts/ajax/eeAnnotator.js'/>"></script> -->
 		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/CharacteristicCombo.js'/>"></script>
 		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/MGEDCombo.js'/>"></script>
+		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/AnnotationToolBar.js'/>"></script>
 		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/ExpressionExperimentToolBar.js'/>"></script>
 	</authz:authorize>
 
