@@ -22,6 +22,9 @@
  */
 package ubic.gemma.model.common.description;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @see ubic.gemma.model.common.description.CharacteristicService
  */
@@ -32,6 +35,16 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
      */
     protected java.util.Collection handleFindByValue( java.lang.String search ) throws java.lang.Exception {
         return this.getCharacteristicDao().findByvalue( search + '%');
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.CharacteristicServiceBase#handleFindByParentClass(java.lang.Object)
+     */
+    @Override
+    protected Map handleFindByParentClass( Object parentClass ) throws Exception {
+        Map charToParent = new HashMap<Characteristic, Object>();
+        
+        return charToParent;
     }
 
 }
