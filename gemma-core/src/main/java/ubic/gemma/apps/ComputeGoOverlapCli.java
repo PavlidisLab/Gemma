@@ -145,8 +145,6 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
             }
         }
 
-        // new GOTermOverlap code
-
         log.info( "Checking for file..." );
 
         File f = new File( HOME_DIR + File.separatorChar + HASH_MAP_RETURN );
@@ -176,29 +174,35 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
 
         }
 
-        log.info( "Calculating probabilities... " );
         Map<String, Double> GOProbMap = new HashMap<String, Double>();
-        GOcountMap = getGoCount(mouseGeneGOMap);
-        makeRootMap( GOcountMap.keySet() );
-
-        log.info( "The total pCount is: " + pCount );
-        log.info( "The total fCount is: " + fCount );
-        log.info( "The total cCount is: " + cCount );
-
-        for ( String uri : GOcountMap.keySet() ) {
-            int total = 0;
-            log.info( "Counting children for " + uri );
-            int count = goMetric.getChildrenOccurrence( GOcountMap, uri );
-            if ( rootMap.get( uri ) == 1 ) total = pCount;
-            if ( rootMap.get( uri ) == 2 ) total = fCount;
-            if ( rootMap.get( uri ) == 3 ) total = cCount;
-
-            GOProbMap.put( uri, ( double ) count / total );
+        
+        File f2 = new File( HOME_DIR + File.separatorChar + "GOProbMap" );
+        if ( f2.exists() ) {
+            GOProbMap  = getMapFromDisk( f2 );
+            log.info( "Found probability file!" );
         }
+        
+        else{
+            log.info( "Calculating probabilities... " );
+            
+            GOcountMap = getGoCount(mouseGeneGOMap);
+            makeRootMap( GOcountMap.keySet() );
 
-        this.saveMapToDisk( GOProbMap, "GoProbMap" );
-        Long Elapsed = overallWatch.getTime();
-        log.info( "Creating GO probability map took: " + Elapsed / 1000 + "s " );
+            for ( String uri : GOcountMap.keySet() ) {
+                int total = 0;
+                log.info( "Counting children for " + uri );
+                int count = goMetric.getChildrenOccurrence( GOcountMap, uri );
+                if ( rootMap.get( uri ) == 1 ) total = pCount;
+                if ( rootMap.get( uri ) == 2 ) total = fCount;
+                if ( rootMap.get( uri ) == 3 ) total = cCount;
+
+                GOProbMap.put( uri, ( double ) count / total );
+            }
+
+            this.saveMapToDisk( GOProbMap, "GoProbMap" );
+            Long Elapsed = overallWatch.getTime();
+            log.info( "Creating GO probability map took: " + Elapsed / 1000 + "s " );
+        }
 
         Map<Gene, Map<Gene, Double>> masterTermCountMap = new HashMap<Gene, Map<Gene, Double>>();
 
@@ -207,7 +211,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
             Collection<Gene> coExpGene = geneExpMap.get( masterGene );
 
             for ( Gene cGene : coExpGene ) {
-                Double score = goMetric.computeSimilarityOverlap( masterGene, cGene, GOProbMap, GoMetric.Metric.jiang );
+                Double score = goMetric.computeSimilarityOverlap( masterGene, cGene, GOProbMap, GoMetric.Metric.simple );
                 if ( score != null )
                     scoreMap.put( cGene, score );
                 else
