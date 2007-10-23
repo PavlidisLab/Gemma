@@ -145,20 +145,12 @@ public class GoMetric {
         if ( metric.equals( GoMetric.Metric.simple ) ) {
 
             try {
-                masterGO.addAll( geneOntologyService.getAllParents( masterGO, true ) );
-                coExpGO.addAll( geneOntologyService.getAllParents( coExpGO, true ) );
+                double score = computeSimpleOverlap( masterGO, coExpGO );
+                return score;
 
-                Collection<OntologyTerm> overlap = geneOntologyService.computerOverlap( masterGO, coExpGO );
-                Collection<OntologyTerm> noRoots = new HashSet<OntologyTerm>(); 
-                for (OntologyTerm o : overlap){
-                    if (!isRoot (o)) noRoots.add (o);
-                }
-                double avgScore = ( double ) noRoots.size();
-                return avgScore;
             } catch ( Exception e ) {
                 Log.info( "Could not calculate simple overlap!" );
             }
-
         }
 
         double total = 0;
@@ -242,6 +234,20 @@ public class GoMetric {
             }
         }
         return pmin;
+    }
+
+    private Double computeSimpleOverlap( Collection<OntologyTerm> masterGO, Collection<OntologyTerm> coExpGO ) {
+
+        masterGO.addAll( geneOntologyService.getAllParents( masterGO, true ) );
+        coExpGO.addAll( geneOntologyService.getAllParents( coExpGO, true ) );
+
+        Collection<OntologyTerm> overlap = geneOntologyService.computerOverlap( masterGO, coExpGO );
+        Collection<OntologyTerm> noRoots = new HashSet<OntologyTerm>();
+        for ( OntologyTerm o : overlap ) {
+            if ( !isRoot( o ) ) noRoots.add( o );
+        }
+        double avgScore = ( double ) noRoots.size();
+        return avgScore;
     }
 
     private boolean isRoot( OntologyTerm term ) {
