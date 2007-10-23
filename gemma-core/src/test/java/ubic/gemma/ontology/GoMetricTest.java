@@ -121,8 +121,8 @@ public class GoMetricTest extends BaseSpringContextTest {
 
     public final void testComputeSimilarityOverlap() throws Exception {
 
-        Gene gene1 = geneService.load( ( long ) 26562 );
-        Gene gene2 = geneService.load( ( long ) 65945 );
+        Gene gene1 = geneService.load( 599683 );
+        Gene gene2 = geneService.load( 640008 );
         
         log.info( "The genes retrieved: " + gene1 + gene2 );
 
