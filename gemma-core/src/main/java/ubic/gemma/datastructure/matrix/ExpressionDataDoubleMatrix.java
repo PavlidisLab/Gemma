@@ -469,7 +469,9 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
      * @return
      */
     public DoubleMatrixNamed getNamedMatrix() {
-        // TODO maybe this should be abstract and implemented here
+
+        // TODO replace this with a call to createMatrix above and then just set the column names
+
         Double[][] data = ( Double[][] ) getMatrix();
         double[][] ddata = new double[data.length][];
         for ( int i = 0; i < data.length; i++ ) {
