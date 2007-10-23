@@ -81,15 +81,11 @@ public class GoMetric {
 
         for ( Long gene : Gene2GOMap.keySet() ) {
 
-            Collection<String> GO = Gene2GOMap.get( gene );
+            for ( String uri : Gene2GOMap.get( gene ) ) {
 
-            for ( String uri : GO ) {
+                if ( isRoot( GeneOntologyService.getTermForURI( uri ) ) ) continue;
 
                 String ontId = GeneOntologyService.asRegularGoId( GeneOntologyService.getTermForURI( uri ) );
-
-                if ( ontId.equalsIgnoreCase( "GO:0008150" ) || ontId.equalsIgnoreCase( "GO:0003674" )
-                        || ontId.equalsIgnoreCase( "GO:0005575" ) ) continue;
-
                 if ( ontId.equalsIgnoreCase( termId ) ) {
                     value++;
                     break;
@@ -139,18 +135,25 @@ public class GoMetric {
             Metric metric ) {
 
         Collection<VocabCharacteristic> masterVoc = gene2GOAssociationService.findByGene( queryGene );
-        HashSet<OntologyTerm> masterGO = getOntologyTerms( masterVoc );
+        Collection<OntologyTerm> masterGO = getOntologyTerms( masterVoc );
         if ( ( masterGO == null ) || masterGO.isEmpty() ) return null;
 
         Collection<VocabCharacteristic> coExpVoc = gene2GOAssociationService.findByGene( targetGene );
-        HashSet<OntologyTerm> coExpGO = getOntologyTerms( coExpVoc );
+        Collection<OntologyTerm> coExpGO = getOntologyTerms( coExpVoc );
         if ( ( coExpGO == null ) || coExpGO.isEmpty() ) return null;
 
         if ( metric.equals( GoMetric.Metric.simple ) ) {
 
             try {
-                Collection<OntologyTerm> overlap = geneOntologyService.calculateGoTermOverlap( queryGene, targetGene );
-                double avgScore = ( double ) overlap.size();
+                masterGO.addAll( geneOntologyService.getAllParents( masterGO, true ) );
+                coExpGO.addAll( geneOntologyService.getAllParents( coExpGO, true ) );
+
+                Collection<OntologyTerm> overlap = geneOntologyService.computerOverlap( masterGO, coExpGO );
+                Collection<OntologyTerm> noRoots = new HashSet<OntologyTerm>(); 
+                for (OntologyTerm o : overlap){
+                    if (!isRoot (o)) noRoots.add (o);
+                }
+                double avgScore = ( double ) noRoots.size();
                 return avgScore;
             } catch ( Exception e ) {
                 Log.info( "Could not calculate simple overlap!" );
@@ -223,14 +226,10 @@ public class GoMetric {
         double pmin = 1;
 
         for ( OntologyTerm termM : parentM ) {
-            String id = GeneOntologyService.asRegularGoId( termM );
-            if ( ( id.equalsIgnoreCase( "GO:0008150" ) ) || ( id.equalsIgnoreCase( "GO:0003674" ) )
-                    || ( id.equalsIgnoreCase( "GO:0005575" ) ) ) continue;
+            if ( isRoot( termM ) ) continue;
 
             for ( OntologyTerm termC : parentC ) {
-                String id2 = GeneOntologyService.asRegularGoId( termM );
-                if ( ( id2.equalsIgnoreCase( "GO:0008150" ) ) || ( id2.equalsIgnoreCase( "GO:0003674" ) )
-                        || ( id2.equalsIgnoreCase( "GO:0005575" ) ) ) continue;
+                if ( isRoot( termC ) ) continue;
 
                 if ( ( termM.getUri().equalsIgnoreCase( termC.getUri() ) )
                         && ( GOProbMap.get( termM.getUri() ) != null ) ) {
@@ -243,6 +242,15 @@ public class GoMetric {
             }
         }
         return pmin;
+    }
+
+    private boolean isRoot( OntologyTerm term ) {
+
+        String id = GeneOntologyService.asRegularGoId( term );
+        boolean root = false;
+        if ( ( id.equalsIgnoreCase( "GO:0008150" ) ) || ( id.equalsIgnoreCase( "GO:0003674" ) )
+                || ( id.equalsIgnoreCase( "GO:0005575" ) ) ) root = true;
+        return root;
     }
 
     /**
