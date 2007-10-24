@@ -21,9 +21,10 @@ package ubic.gemma.ontology;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 
-import org.jfree.util.Log;
+import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -44,6 +45,8 @@ public class GoMetric {
     private GeneService geneService;
     private GeneOntologyService geneOntologyService;
     private boolean partOf = true;
+
+    private static org.apache.commons.logging.Log log = LogFactory.getLog( GoMetricTest.class.getName() );
 
     public enum Metric {
         jiang, lin, resnik, simple
@@ -134,6 +137,11 @@ public class GoMetric {
     public Double computeSimilarityOverlap( Gene queryGene, Gene targetGene, Map<String, Double> GOProbMap,
             Metric metric ) {
 
+        if ( metric.equals( GoMetric.Metric.simple ) ) {
+            double score = computeSimpleOverlap( queryGene, targetGene );
+            return score;
+        }
+
         Collection<VocabCharacteristic> masterVoc = gene2GOAssociationService.findByGene( queryGene );
         Collection<OntologyTerm> masterGO = getOntologyTerms( masterVoc );
         if ( ( masterGO == null ) || masterGO.isEmpty() ) return null;
@@ -142,54 +150,32 @@ public class GoMetric {
         Collection<OntologyTerm> coExpGO = getOntologyTerms( coExpVoc );
         if ( ( coExpGO == null ) || coExpGO.isEmpty() ) return null;
 
-        if ( metric.equals( GoMetric.Metric.simple ) ) {
-
-            try {
-                double score = computeSimpleOverlap( masterGO, coExpGO );
-                return score;
-
-            } catch ( Exception e ) {
-                Log.info( "Could not calculate simple overlap!" );
-            }
-        }
-
         double total = 0;
         int count = 0;
 
         for ( OntologyTerm ontoM : masterGO ) {
             if ( !GOProbMap.containsKey( ontoM.getUri() ) ) {
-                Log.info( "Go probe map doesn't contain " + ontoM );
+                log.info( "Go probe map doesn't contain " + ontoM );
                 continue;
             }
             double probM = GOProbMap.get( ontoM.getUri() );
 
             for ( OntologyTerm ontoC : coExpGO ) {
                 if ( !GOProbMap.containsKey( ontoC.getUri() ) ) {
-                    Log.info( "Go probe map doesn't contain " + ontoC );
+                    log.info( "Go probe map doesn't contain " + ontoC );
                     continue;
                 }
                 Double probC = GOProbMap.get( ontoC.getUri() );
                 Double pmin = 1.0;
                 Double score = 0.0;
 
-                if ( ontoM.equals( ontoC ) ) {
+                if ( ontoM.equals( ontoC ) )
                     pmin = GOProbMap.get( ontoM.getUri() );
-                } else
+                else
                     pmin = checkParents( ontoM, ontoC, GOProbMap );
 
                 if ( pmin < 1 ) {
-                    switch ( metric ) {
-                        case lin:
-                            score = calcLin( pmin, probM, probC );
-                            break;
-                        case jiang:
-                            score = calcJiang( pmin, probM, probC );
-                            break;
-                        case resnik:
-                            score = calcResnik( pmin );
-                            break;
-                    }
-                    Log.info( "score for " + ontoM + " and " + ontoC + " is " + score );
+                    score = getMetric( metric, pmin, probM, probC );
                     total += score;
                     count++;
                 }
@@ -197,9 +183,12 @@ public class GoMetric {
         }
         if ( total > 0 ) {
             double avgScore = total / count;
+            log.info( "score for " + queryGene + " and " + targetGene + " is " + avgScore );
             return avgScore;
-        } else
+        } else {
+            log.info( "NO score for " + queryGene + " and " + targetGene );
             return null;
+        }
     }
 
     /**
@@ -237,20 +226,43 @@ public class GoMetric {
         return pmin;
     }
 
-    private Double computeSimpleOverlap( Collection<OntologyTerm> masterGO, Collection<OntologyTerm> coExpGO ) {
+    protected void logIds( String prefix, Collection<OntologyTerm> terms ) {
+        StringBuffer buf = new StringBuffer( prefix );
+        buf.append( ": [ " );
+        Iterator<OntologyTerm> i = terms.iterator();
+        while ( i.hasNext() ) {
+            buf.append( i.next().getUri() );
+            if ( i.hasNext() ) buf.append( ", " );
+        }
+        buf.append( " ]" );
+        log.info( buf.toString() );
+    }
 
-        masterGO.addAll( geneOntologyService.getAllParents( masterGO, true ) );
-        coExpGO.addAll( geneOntologyService.getAllParents( coExpGO, true ) );
+    /**
+     * @param masterGO terms
+     * @param coExpGO terms
+     * @return number of overlapping terms
+     */
+    private Double computeSimpleOverlap( Gene gene1, Gene gene2 ) {
 
-        Collection<OntologyTerm> overlap = geneOntologyService.computerOverlap( masterGO, coExpGO );
+        Collection<OntologyTerm> masterGO = geneOntologyService.getGOTerms( gene1 );
+        Collection<OntologyTerm> coExpGO = geneOntologyService.getGOTerms( gene2 );
+
+        masterGO.retainAll( coExpGO );
+
         Collection<OntologyTerm> noRoots = new HashSet<OntologyTerm>();
-        for ( OntologyTerm o : overlap ) {
+        for ( OntologyTerm o : masterGO ) {
             if ( !isRoot( o ) ) noRoots.add( o );
         }
+
         double avgScore = ( double ) noRoots.size();
         return avgScore;
     }
 
+    /**
+     * @param term
+     * @return boolean whether it is a root term or not
+     */
     private boolean isRoot( OntologyTerm term ) {
 
         String id = GeneOntologyService.asRegularGoId( term );
@@ -258,6 +270,31 @@ public class GoMetric {
         if ( ( id.equalsIgnoreCase( "GO:0008150" ) ) || ( id.equalsIgnoreCase( "GO:0003674" ) )
                 || ( id.equalsIgnoreCase( "GO:0005575" ) ) ) root = true;
         return root;
+    }
+
+    /**
+     * @param metric
+     * @param pmin
+     * @param probM
+     * @param probC
+     * @return a score given the choice of metric and all parameters
+     */
+    private Double getMetric( Metric metric, Double pmin, Double probM, Double probC ) {
+
+        double score = 0;
+        switch ( metric ) {
+            case lin:
+                score = calcLin( pmin, probM, probC );
+                break;
+            case jiang:
+                score = calcJiang( pmin, probM, probC );
+                break;
+            case resnik:
+                score = calcResnik( pmin );
+                break;
+        }
+
+        return score;
     }
 
     /**
@@ -280,8 +317,8 @@ public class GoMetric {
      */
     private Double calcLin( Double pmin, Double probM, Double probC ) {
 
-        double scoreLin = ( 2 * ( StrictMath.log10( pmin ) ) )
-                / ( ( StrictMath.log10( probM ) ) + ( StrictMath.log10( probC ) ) );
+        double scoreLin = ( 2 * ( StrictMath.log( pmin ) ) )
+                / ( ( StrictMath.log( probM ) ) + ( StrictMath.log( probC ) ) );
 
         return scoreLin;
     }
@@ -291,8 +328,8 @@ public class GoMetric {
      */
     private Double calcJiang( Double pmin, Double probM, Double probC ) {
 
-        double scoreJiang = 1 / ( ( StrictMath.log10( probM ) ) + ( StrictMath.log10( probC ) ) - 2
-                * ( StrictMath.log10( pmin ) ) + 1 );
+        double scoreJiang = 1 / ( ( StrictMath.log( probM ) ) + ( StrictMath.log( probC ) ) - 2
+                * ( StrictMath.log( pmin ) ) + 1 );
 
         return scoreJiang;
     }
