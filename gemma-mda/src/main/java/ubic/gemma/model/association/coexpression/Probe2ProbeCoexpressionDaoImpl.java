@@ -378,11 +378,11 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         int count = 0;
         int CHUNK_LIMIT = 10000;
         int total = links.size();
-        Collection<ProbeLink> linksInOneChunk = new ArrayList<ProbeLink>();
+        Collection<String> linksInOneChunk = new ArrayList<String>();
         log.info( ee + ": Writing " + links.size() + " links into tables" );
         int chunkNum = 0;
         for ( ProbeLink link : links ) {
-            linksInOneChunk.add( link );
+            linksInOneChunk.add( link.toSqlString() );
             count++;
             total--;
             if ( count == CHUNK_LIMIT || total == 0 ) {
@@ -662,6 +662,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         }
     }
 
+    /**
+     *
+     */
     public class ProbeLink implements Link {
         private Long firstDesignElementId = 0L;
         private Long secondDesignElementId = 0L;
@@ -695,8 +698,12 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         }
 
         public String toString() {
-            String res = "(" + firstDesignElementId + "," + secondDesignElementId + ", " + score + ", " + eeId + ")";
-            return res;
+            return "DE1=" + firstDesignElementId + ", DE2=" + secondDesignElementId + ", SCORE=s" + score + ", EE="
+                    + eeId;
+        }
+
+        public String toSqlString() {
+            return "(" + firstDesignElementId + ", " + secondDesignElementId + ",  " + score + ", " + eeId + ")";
         }
     }
 }
