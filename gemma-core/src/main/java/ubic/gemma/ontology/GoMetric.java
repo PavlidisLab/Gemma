@@ -46,7 +46,7 @@ public class GoMetric {
     private GeneOntologyService geneOntologyService;
     private boolean partOf = true;
 
-    private static org.apache.commons.logging.Log log = LogFactory.getLog( GoMetricTest.class.getName() );
+    private static org.apache.commons.logging.Log log = LogFactory.getLog( GoMetric.class.getName() );
 
     public enum Metric {
         jiang, lin, resnik, simple
