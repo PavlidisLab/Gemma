@@ -241,10 +241,10 @@ public class GeneOntologyService implements InitializingBean {
 
         boolean loadOntology = ConfigUtils.getBoolean( "loadOntology", true );
 
-//        if ( !loadOntology ) {
-//            log.info( "Loading GO is disabled" );
-//            return;
-//        }
+        if ( !loadOntology ) {
+            log.info( "Loading GO is disabled" );
+            return;
+       }
 
         initilizeGoOntology();
 
