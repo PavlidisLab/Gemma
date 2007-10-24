@@ -20,6 +20,7 @@ package ubic.gemma.analysis.linkAnalysis;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -41,9 +42,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
-
-import com.ibm.icu.text.NumberFormat;
-import com.sdicons.json.validator.impl.predicates.Array;
 
 /**
  * Methods for analyzing links from the database.
