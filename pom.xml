@@ -21,9 +21,9 @@
 	</modules>
 	<packaging>pom</packaging>
 	<scm>
-		<connection>scm:cvs:ext:continuum@broca.ubic.ca:/cvs:Gemma</connection>
+		<connection>scm:cvs:local:/cvs:Gemma</connection>
 		<developerConnection>
-			scm:cvs:ext:continuum@broca.ubic.ca:/cvs:Gemma
+			scm:cvs:local:/cvs:Gemma
 		</developerConnection>
 		<url>http://broca.ubic.ca:8081/viewrep/pavlab/Gemma</url>
 	</scm>
@@ -42,7 +42,7 @@
 				<sendOnSuccess>true</sendOnSuccess>
 				<sendOnWarning>true</sendOnWarning>
 				<configuration>
-					<address>joseph@bioinformatics.ubc.ca</address>
+					<address>paul@bioinformatics.ubc.ca</address>
 				</configuration>
 			</notifier>
 		</notifiers>
