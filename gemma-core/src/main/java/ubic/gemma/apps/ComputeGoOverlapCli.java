@@ -211,7 +211,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
             Collection<Gene> coExpGene = geneExpMap.get( masterGene );
 
             for ( Gene cGene : coExpGene ) {
-                Double score = goMetric.computeSimilarityOverlap( masterGene, cGene, GOProbMap, GoMetric.Metric.simple );
+                Double score = goMetric.computeSimilarityOverlap( masterGene, cGene, GOProbMap, GoMetric.Metric.resnik );
                 if ( score != null )
                     scoreMap.put( cGene, score );
                 else
@@ -221,7 +221,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         }
 
         try {
-            Writer write = initOutputFile( "Lin_overlapResults" );
+            Writer write = initOutputFile( "Resnik_overlapResults" );
             String masterGene;
             String geneCoexpressed;
             double overlap;
