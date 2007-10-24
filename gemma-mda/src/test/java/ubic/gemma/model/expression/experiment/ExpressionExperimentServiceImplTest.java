@@ -65,15 +65,17 @@ public class ExpressionExperimentServiceImplTest extends TestCase {
         ee.setOwner( nobody );
 
         ArrayDesign ad1 = ArrayDesign.Factory.newInstance();
+        ad1.setShortName( "foo" );
         ArrayDesign ad2 = ArrayDesign.Factory.newInstance();
+        ad2.setShortName( "bar" );
 
-        for ( int i = 0; i < 10; i++ ) {
+        for ( long i = 0; i < 10; i++ ) {
             BioAssay ba = BioAssay.Factory.newInstance();
-
+            ba.setId( i + 1 );
             if ( i % 2 == 0 ) {
-              ba.setArrayDesignUsed( ad1 );
+                ba.setArrayDesignUsed( ad1 );
             } else {
-              ba.setArrayDesignUsed( ad2 );
+                ba.setArrayDesignUsed( ad2 );
             }
             ee.getBioAssays().add( ba );
         }
@@ -96,8 +98,9 @@ public class ExpressionExperimentServiceImplTest extends TestCase {
     @SuppressWarnings("unchecked")
     public void testGetArrayDesignsUsed() throws Exception {
         assert ee != null;
+        // this is a method implemented by the service using just a thaw.
         Collection<ArrayDesign> ads = svc.getArrayDesignsUsed( ee );
-        assertTrue( ads.size() == 2 );
+        assertEquals( 2, ads.size() );
     }
 
     public void testExpressionExperimentFindByInvestigator() {
@@ -117,8 +120,6 @@ public class ExpressionExperimentServiceImplTest extends TestCase {
         svc.loadAll();
         verify( eeDao );
     }
-    
- 
 
     @Override
     protected void tearDown() throws Exception {
