@@ -375,7 +375,7 @@ public class LinkBitMatrixUtil {
     public boolean checkEEConfirmation( long id, int eeIndex ) {
         int rows = ( int ) ( id / shift );
         int cols = ( int ) ( id % shift );
-        return linkCountMatrix.check( rows, cols, eeIndex );
+        return linkCountMatrix.get( rows, cols, eeIndex );
     }
 
     public boolean filter( int i, int j ) {
@@ -389,9 +389,9 @@ public class LinkBitMatrixUtil {
     public Collection getEENames( long[] mask ) {
         HashSet<String> returnedSet = new HashSet<String>();
         for ( int i = 0; i < mask.length; i++ ) {
-            for ( int j = 0; j < CompressedNamedBitMatrix.DOUBLE_LENGTH; j++ )
+            for ( int j = 0; j < CompressedNamedBitMatrix.BITS_PER_ELEMENT; j++ )
                 if ( ( mask[i] & ( CompressedNamedBitMatrix.BIT1 << j ) ) != 0 ) {
-                    returnedSet.add( getEEName( j + i * CompressedNamedBitMatrix.DOUBLE_LENGTH ) );
+                    returnedSet.add( getEEName( j + i * CompressedNamedBitMatrix.BITS_PER_ELEMENT ) );
                 }
         }
         return returnedSet;
@@ -430,8 +430,8 @@ public class LinkBitMatrixUtil {
     }
 
     public static boolean checkBits( long[] mask, int index ) {
-        int num = ( int ) ( index / CompressedNamedBitMatrix.DOUBLE_LENGTH );
-        int bit_index = index % CompressedNamedBitMatrix.DOUBLE_LENGTH;
+        int num = ( int ) ( index / CompressedNamedBitMatrix.BITS_PER_ELEMENT );
+        int bit_index = index % CompressedNamedBitMatrix.BITS_PER_ELEMENT;
         long res = mask[num] & CompressedNamedBitMatrix.BIT1 << bit_index;
         if ( res == 0 ) return false;
         return true;

@@ -148,12 +148,14 @@ public class LinkStatisticsCLI extends AbstractGeneExpressionExperimentManipulat
 
         Collection<ExpressionExperiment> ees = null;
         if ( this.experimentListFile != null ) {
+            log.info( "Loading experiments from list in " + ees );
             try {
                 ees = readExpressionExperimentListFile( this.experimentListFile );
             } catch ( IOException e ) {
                 return e;
             }
         } else if ( taxon != null ) {
+            log.info( "Loading all expermients for " + taxon );
             ees = eeService.findByTaxon( taxon );
         } else {
             log.error( "You must provide either the taxon or a list of expression experiments in a file" );
@@ -190,14 +192,15 @@ public class LinkStatisticsCLI extends AbstractGeneExpressionExperimentManipulat
             if ( doRealAnalysis ) { // Currently this is really just for debugging purposes, though reading in from a
                 // file might be useful.
                 LinkStatistics realStats = lss.analyze( ees, genes, taxon.getCommonName(), false, filterNonSpecific );
+                log.info( realStats.getTotalLinkCount() + " gene links in total" );
                 confStats = realStats.getLinkConfirmationStats();
 
-                // try {
-                // Writer linksOut = new BufferedWriter( new FileWriter( new File( "link-data.txt" ) ) );
-                // realStats.writeLinks( linksOut, 0 );
-                // } catch ( IOException e ) {
-                // return e;
-                // }
+                try {
+                    Writer linksOut = new BufferedWriter( new FileWriter( new File( "link-data.txt" ) ) );
+                    realStats.writeLinks( linksOut, 0 );
+                } catch ( IOException e ) {
+                    return e;
+                }
             }
 
             List<LinkConfirmationStatistics> shuffleRuns = new ArrayList<LinkConfirmationStatistics>();
@@ -207,6 +210,8 @@ public class LinkStatisticsCLI extends AbstractGeneExpressionExperimentManipulat
                     log.info( "*** Iteration " + currentIteration + " ****" );
 
                     LinkStatistics sr = lss.analyze( ees, genes, taxon.getCommonName(), true, filterNonSpecific );
+                    log.info( sr.getTotalLinkCount() + " gene links in total" );
+
                     shuffleRuns.add( sr.getLinkConfirmationStats() );
 
                     if ( doShuffledOutput ) {

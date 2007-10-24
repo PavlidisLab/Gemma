@@ -19,7 +19,7 @@ public class FrequentLinkSetFinder {
     public FrequentLinkSetFinder( int threshold, LinkBitMatrixUtil linkMatrix) {
         super();
         Threshold = threshold;
-        int num = ( int ) ( linkMatrix.getMatrix().getBitNum() / CompressedNamedBitMatrix.DOUBLE_LENGTH ) + 1;
+        int num = ( int ) ( linkMatrix.getMatrix().getBitNum() / CompressedNamedBitMatrix.BITS_PER_ELEMENT ) + 1;
         root = new TreeNode( 0, new long[num], null );
         root.level = 0;
         candidatesNodes = new ObjectArrayList();
@@ -138,7 +138,7 @@ public class FrequentLinkSetFinder {
         TreeNode iter = leafNode;
         System.err.print( leafNode.maskBits + "\t" );
         for ( int i = 0; i < leafNode.mask.length; i++ ) {
-            for ( int j = 0; j < CompressedNamedBitMatrix.DOUBLE_LENGTH; j++ )
+            for ( int j = 0; j < CompressedNamedBitMatrix.BITS_PER_ELEMENT; j++ )
                 if ( ( leafNode.mask[i] & ( CompressedNamedBitMatrix.BIT1 << j ) ) != 0 ) {
                     System.err.print( "1" );
                 } else {
@@ -153,9 +153,9 @@ public class FrequentLinkSetFinder {
             iter = iter.parent;
         }
         for ( int i = 0; i < leafNode.mask.length; i++ ) {
-            for ( int j = 0; j < CompressedNamedBitMatrix.DOUBLE_LENGTH; j++ )
+            for ( int j = 0; j < CompressedNamedBitMatrix.BITS_PER_ELEMENT; j++ )
                 if ( ( leafNode.mask[i] & ( CompressedNamedBitMatrix.BIT1 << j ) ) != 0 ) {
-                    System.err.print( linkMatrix.getEEName( j + i * CompressedNamedBitMatrix.DOUBLE_LENGTH ) + " " );
+                    System.err.print( linkMatrix.getEEName( j + i * CompressedNamedBitMatrix.BITS_PER_ELEMENT ) + " " );
                 }
         }
         System.err.println( "" );

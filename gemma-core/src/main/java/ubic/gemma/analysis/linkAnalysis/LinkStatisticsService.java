@@ -43,6 +43,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 
 import com.ibm.icu.text.NumberFormat;
+import com.sdicons.json.validator.impl.predicates.Array;
 
 /**
  * Methods for analyzing links from the database.
@@ -80,7 +81,8 @@ public class LinkStatisticsService {
     public LinkStatistics analyze( Collection<ExpressionExperiment> ees, Collection<Gene> genes, String taxonName,
             boolean shuffle, boolean filterNonSpecific ) {
         LinkStatistics stats = new LinkStatistics( ees, genes );
-        this.countProbeLinks( stats, ees, shuffle, filterNonSpecific, taxonName );
+        int numLinks = this.countLinks( stats, ees, shuffle, filterNonSpecific, taxonName );
+        log.info( numLinks + " gene links in total for " + ees.size() + " expression experiments " );
         return stats;
     }
 
@@ -119,8 +121,16 @@ public class LinkStatisticsService {
     public void writeStats( Writer out, LinkConfirmationStatistics realStats,
             Collection<LinkConfirmationStatistics> shuffleStats ) {
 
-        // Determine the largest number of data sets any link was seen in, in the 'real' data.
-        int maxSupport = realStats.getMaxLinkSupport();
+        // Determine the largest number of data sets any link was seen in.
+        int maxSupport = -1;
+        if ( realStats != null ) {
+            maxSupport = realStats.getMaxLinkSupport();
+        } else {
+            for ( LinkConfirmationStatistics statistics : shuffleStats ) {
+                int s = statistics.getMaxLinkSupport();
+                if ( s > maxSupport ) maxSupport = s;
+            }
+        }
 
         try {
             NumberFormat nf = NumberFormat.getInstance();
@@ -133,11 +143,13 @@ public class LinkStatisticsService {
             out.write( "\n" );
 
             // True links
-            out.write( "RealLinks" );
-            for ( int j = 1; j <= maxSupport; j++ ) {
-                out.write( "\t" + realStats.getRepCount( j ) );
+            if ( realStats != null ) {
+                out.write( "RealLinks" );
+                for ( int j = 1; j <= maxSupport; j++ ) {
+                    out.write( "\t" + realStats.getRepCount( j ) );
+                }
+                out.write( "\n" );
             }
-            out.write( "\n" );
 
             if ( shuffleStats != null && shuffleStats.size() > 0 ) {
                 // number of shuffled links / # of real links
@@ -156,11 +168,13 @@ public class LinkStatisticsService {
      * @param filterNonSpecific
      * @param taxonName common name e.g. mouse
      */
-    private void countProbeLinks( LinkStatistics stats, Collection<ExpressionExperiment> ees, boolean shuffle,
+    private int countLinks( LinkStatistics stats, Collection<ExpressionExperiment> ees, boolean shuffle,
             boolean filterNonSpecific, String taxonName ) {
+        int totalLinks = 0;
         for ( ExpressionExperiment ee : ees ) {
-            countProbeLinks( stats, shuffle, filterNonSpecific, taxonName, ee );
+            totalLinks += countLinks( stats, shuffle, filterNonSpecific, taxonName, ee );
         }
+        return totalLinks;
     }
 
     /**
@@ -170,7 +184,7 @@ public class LinkStatisticsService {
      * @param ee
      */
     @SuppressWarnings("unchecked")
-    private void countProbeLinks( LinkStatistics stats, boolean shuffle, boolean filterNonSpecific, String taxonName,
+    private int countLinks( LinkStatistics stats, boolean shuffle, boolean filterNonSpecific, String taxonName,
             ExpressionExperiment ee ) {
         assert ee != null;
         log.info( "Loading links for  " + ee.getShortName() );
@@ -182,7 +196,7 @@ public class LinkStatisticsService {
 
         Collection<ProbeLink> filteredLinks = filterLinks( stats, links, filterNonSpecific );
 
-        if ( filteredLinks == null || filteredLinks.size() == 0 ) return;
+        if ( filteredLinks == null || filteredLinks.size() == 0 ) return 0;
 
         Collection<GeneLink> geneLinks = null;
         if ( shuffle ) {
@@ -194,12 +208,13 @@ public class LinkStatisticsService {
             /* for shuffling at the probe level */
             // shuffleProbeLinks( stats, ee, filteredLinks, assayedProbes );
             // geneLinks = getGeneLinks( filteredLinks, stats );
+            /* shuffle at gene level */
             geneLinks = shuffleGeneLinks( stats, filteredLinks, assayedProbes );
 
         } else {
             geneLinks = getGeneLinks( filteredLinks, stats );
         }
-        stats.addLinks( geneLinks, ee );
+        return stats.addLinks( geneLinks, ee );
     }
 
     /**
@@ -224,14 +239,18 @@ public class LinkStatisticsService {
 
         // shuffle the genes.
         shuffleList( geneIdListForShuffle );
-        log.info( geneIdList.size() + " genes to shuffle" );
+        shuffleList( geneIdListForShuffle );
+        shuffleList( geneIdListForShuffle );
+        log.debug( geneIdList.size() + " genes to shuffle" );
         Map<Long, Long> shuffleMap = new HashMap<Long, Long>();
         for ( int i = 0, j = geneIdList.size(); i < j; i++ ) {
             shuffleMap.put( geneIdList.get( i ), geneIdListForShuffle.get( i ) );
         }
 
         geneLinks = getGeneLinks( filteredLinks, stats );
+        log.info( geneLinks.size() + " gene links to shuffle" );
 
+        Set<Long> usedGeneList = new HashSet<Long>();
         for ( GeneLink gl : geneLinks ) {
             if ( !shuffleMap.containsKey( gl.getFirstGene() ) ) {
                 throw new IllegalStateException();
@@ -239,11 +258,28 @@ public class LinkStatisticsService {
             if ( !shuffleMap.containsKey( gl.getSecondGene() ) ) {
                 throw new IllegalStateException();
             }
+
+            usedGeneList.add( gl.getFirstGene() );
+            usedGeneList.add( gl.getSecondGene() );
+
             gl.setFirstGene( shuffleMap.get( gl.getFirstGene() ) );
             gl.setSecondGene( shuffleMap.get( gl.getSecondGene() ) );
         }
 
-        shuffleGeneLinks( new ArrayList<GeneLink>( geneLinks ) );
+        log.info( "Gene links used a total of " + usedGeneList.size() + " genes, we shuffled using "
+                + geneIdList.size() + " available genes" );
+
+        // usedGeneList.clear();
+        // for ( GeneLink gl : geneLinks ) {
+        //
+        // usedGeneList.add( gl.getFirstGene() );
+        // usedGeneList.add( gl.getSecondGene() );
+        // }
+        // log.info( "After shuffling, Gene links used a total of " + usedGeneList.size() );
+        // log.info( geneLinks.size() + " links after first phase of shuffling" );
+
+        // shuffleGeneLinks( new ArrayList<GeneLink>( geneLinks ) );
+        log.debug( geneLinks.size() + " links after shuffling" );
         return geneLinks;
     }
 
@@ -257,8 +293,8 @@ public class LinkStatisticsService {
      * @param linksToShuffle
      * @return
      */
-    private void shuffleProbeLinks( LinkStatistics stats, ExpressionExperiment ee,
-            Collection<ProbeLink> linksToShuffle, Map<Long, Collection<Long>> probeUniverse ) {
+    void shuffleProbeLinks( LinkStatistics stats, ExpressionExperiment ee, Collection<ProbeLink> linksToShuffle,
+            Map<Long, Collection<Long>> probeUniverse ) {
         log.info( "Shuffling links for " + ee.getShortName() );
 
         /*
@@ -297,8 +333,8 @@ public class LinkStatisticsService {
             }
 
             // Replace with the shuffled replacement.
-            // p.setFirstDesignElementId( shuffleMap.get( p.getFirstDesignElementId() ) );
-            // p.setSecondDesignElementId( shuffleMap.get( p.getSecondDesignElementId() ) );
+            p.setFirstDesignElementId( shuffleMap.get( p.getFirstDesignElementId() ) );
+            p.setSecondDesignElementId( shuffleMap.get( p.getSecondDesignElementId() ) );
         }
 
         // this step might be redundant.
@@ -366,6 +402,7 @@ public class LinkStatisticsService {
                 }
             }
         }
+        log.info( "Kept " + probeIdsToKeepLinksFor.size() + "/" + cs2genes.keySet().size() + " probes" );
         return probeIdsToKeepLinksFor;
     }
 
@@ -391,7 +428,7 @@ public class LinkStatisticsService {
      * @return collection of GeneLink objects.
      */
     private Collection<GeneLink> getGeneLinks( Collection<ProbeLink> links, LinkStatistics stats ) {
-        log.info( "Converting probe links to gene links ..." );
+        log.info( "Converting " + links.size() + " probe links to gene links ..." );
         Collection<GeneLink> result = new HashSet<GeneLink>();
         Map<Long, Collection<Long>> cs2genes = getCS2GeneMap( links );
 
@@ -420,7 +457,7 @@ public class LinkStatisticsService {
                     result.add( new GeneLink( firstGeneId, secondGeneId, link.getScore() ) );
                 }
             }
-            if ( ++count % 100000 == 0 ) {
+            if ( ++count % 5e5 == 0 ) {
                 log.info( count + " links converted" );
             }
         }
@@ -543,21 +580,24 @@ public class LinkStatisticsService {
             Collection<LinkConfirmationStatistics> shuffleStats, int maxSupport ) throws IOException {
         NumberFormat nf = NumberFormat.getInstance();
         nf.setMaximumFractionDigits( 3 );
-        out.write( "ShuffleMean" );
-        double[] falsePositiveRates = new double[maxSupport + 1];
-        for ( LinkConfirmationStatistics shuffleStat : shuffleStats ) {
 
-            for ( int j = 1; j <= maxSupport; j++ ) {
-                if ( realStats.getRepCount( j ) != 0 ) {
-                    falsePositiveRates[j] = falsePositiveRates[j] + ( double ) shuffleStat.getRepCount( j )
-                            / ( double ) realStats.getRepCount( j );
+        if ( realStats != null ) {
+            out.write( "ShuffleMean" );
+            double[] falsePositiveRates = new double[maxSupport + 1];
+            for ( LinkConfirmationStatistics shuffleStat : shuffleStats ) {
+
+                for ( int j = 1; j <= maxSupport; j++ ) {
+                    if ( realStats.getRepCount( j ) != 0 ) {
+                        falsePositiveRates[j] = falsePositiveRates[j] + ( double ) shuffleStat.getRepCount( j )
+                                / ( double ) realStats.getRepCount( j );
+                    }
                 }
             }
+            for ( int j = 1; j <= maxSupport; j++ ) {
+                out.write( "\t" + nf.format( falsePositiveRates[j] / shuffleStats.size() ) );
+            }
+            out.write( "\n" );
         }
-        for ( int j = 1; j <= maxSupport; j++ ) {
-            out.write( "\t" + nf.format( falsePositiveRates[j] / shuffleStats.size() ) );
-        }
-        out.write( "\n" );
 
         // FP rates for each run.
         int i = 1;
@@ -589,9 +629,9 @@ class GeneLink implements Link {
 
     @Override
     public boolean equals( Object obj ) {
-        GeneLink g = ( GeneLink ) obj;
-        return g.getFirstGene().equals( this.firstGene ) && g.getSecondGene().equals( this.secondGene )
-                && Math.signum( this.score ) == Math.signum( g.getScore() );
+        GeneLink that = ( GeneLink ) obj;
+        return that.getFirstGene().equals( this.firstGene ) && that.getSecondGene().equals( this.secondGene )
+                && Math.signum( this.score ) == Math.signum( that.getScore() );
     }
 
     public Long getFirstGene() {

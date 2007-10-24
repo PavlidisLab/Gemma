@@ -92,12 +92,16 @@ public class LinkStatistics {
      * @param geneLinks
      * @param ee
      */
-    public void addLinks( Collection<GeneLink> geneLinks, ExpressionExperiment ee ) {
+    public int addLinks( Collection<GeneLink> geneLinks, ExpressionExperiment ee ) {
         assert eeMap != null;
         int eeIndex = eeMap.get( ee.getId() );
+        log.debug( ee.getShortName() + ": " + geneLinks.size() + " links to add to the matrix (bit# " + eeIndex + ")" );
+        int count = 0;
         for ( GeneLink geneLink : geneLinks ) {
-            addLinks( eeIndex, geneLink );
+            boolean added = addLink( eeIndex, geneLink );
+            if ( added ) count++;
         }
+        return count;
     }
 
     /**
@@ -105,8 +109,9 @@ public class LinkStatistics {
      * @param link
      * @param firstGeneId
      * @param secondGeneId
+     * @return true if the link was actually added, false otherwise.
      */
-    private void addLinks( int eeIndex, GeneLink geneLink ) {
+    private boolean addLink( int eeIndex, GeneLink geneLink ) {
 
         Long firstGeneId = geneLink.getFirstGene();
         Long secondGeneId = geneLink.getSecondGene();
@@ -114,17 +119,18 @@ public class LinkStatistics {
         // skip self-links
         if ( firstGeneId.equals( secondGeneId ) ) {
             if ( log.isTraceEnabled() ) log.trace( "Skipping self link for gene=" + firstGeneId );
-            return;
+            // return false;
         }
-
-        geneCoverage.add( firstGeneId );
-        geneCoverage.add( secondGeneId );
 
         if ( !posLinkCounts.containsRowName( firstGeneId ) || !posLinkCounts.containsRowName( secondGeneId ) ) {
             // this is okay, it happens if we are limiting to 'known genes' but we gathered links for all genes.
-            return;
+            // 
             // throw new IllegalStateException( "Link matrix does not contain rows for one or both of " + firstGeneId
             // + "," + secondGeneId );
+
+            // this warning is probably too verbose - turn down to debug if necessary.
+            log.warn( "Link matrix does not contain rows for one or both of " + firstGeneId + "," + secondGeneId );
+            return false;
         }
 
         int rowIndex = posLinkCounts.getRowIndexByName( firstGeneId );
@@ -135,6 +141,10 @@ public class LinkStatistics {
             negLinkCounts.set( rowIndex, colIndex, eeIndex );
         }
 
+        geneCoverage.add( firstGeneId );
+        geneCoverage.add( secondGeneId );
+
+        return true;
     }
 
     /**
@@ -148,24 +158,37 @@ public class LinkStatistics {
         LinkConfirmationStatistics results = new LinkConfirmationStatistics();
 
         log.info( "Summarizing ... " );
-        // The filling process only filled one item. So the matrix is not symmetric
+        int totalCounted = 0;
+
+        /*
+         * Note this iterates over every element in the gene x gene matrix. The matrix is not symmetric (link count is
+         * bumped in either triangle, whichever order the genes were encountered)
+         */
         for ( int i = 0; i < rows; i++ ) {
+
+            /*
+             * these bits arrays are, for each link (with the gene for the row), the total 'support' for the link.
+             */
             int[] positiveBits = this.posLinkCounts.getRowBitCount( i );
             int[] negativeBits = this.negLinkCounts.getRowBitCount( i );
+
             for ( int j = 0; j < cols; j++ ) {
-                int positiveBit = positiveBits[j];
-                int negativeBit = negativeBits[j];
-                if ( positiveBit > 0 ) {
-                    results.addPos( positiveBit );
+                int supportForPosCorr = positiveBits[j];
+                int supportForNegCorr = negativeBits[j];
+                if ( supportForPosCorr > 0 ) {
+                    results.addPos( supportForPosCorr );
+                    totalCounted++;
                 }
-                if ( negativeBit > 0 ) {
-                    results.addNeg( negativeBit );
+                if ( supportForNegCorr > 0 ) {
+                    results.addNeg( supportForNegCorr );
+                    totalCounted++;
                 }
             }
             if ( i > 0 && i % 10000 == 0 ) {
-                log.info( "Summarized results for " + i + " genes" );
+                log.info( "Summarized results for " + i + " genes, " + totalCounted + " links." );
             }
         }
+        log.info( "Summarized results for " + rows + " genes, " + totalCounted + " links." );
         return results;
     }
 
@@ -236,6 +259,10 @@ public class LinkStatistics {
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
+    }
+
+    public long getTotalLinkCount() {
+        return posLinkCounts.totalBitCount() + negLinkCounts.totalBitCount();
     }
 
     /**
