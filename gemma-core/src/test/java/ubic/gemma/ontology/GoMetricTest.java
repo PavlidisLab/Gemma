@@ -23,6 +23,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -34,6 +35,7 @@ import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.GeneServiceImpl;
+import ubic.gemma.ontology.GoMetric.Metric;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -56,7 +58,7 @@ public class GoMetricTest extends BaseSpringContextTest {
         geneOntologyService = ( GeneOntologyService ) this.getBean( "geneOntologyService" );
         geneService = ( GeneService ) this.getBean( "geneService" );
         goMetric = ( GoMetric ) this.getBean( "goMetric" );
-        
+
         while ( !geneOntologyService.isReady() ) {
             try {
                 Thread.sleep( 1000 );
@@ -69,6 +71,7 @@ public class GoMetricTest extends BaseSpringContextTest {
         terms = geneOntologyService.getAllChildren( entry, true );
         terms.add( entry );
     }
+
 
     public final void testGetTermOccurrence() throws Exception {
 
@@ -118,40 +121,41 @@ public class GoMetricTest extends BaseSpringContextTest {
         assertEquals( expected, value );
 
     }
-
+    
     public final void testComputeSimilarityOverlap() throws Exception {
+
+        Metric chooseMetric = Metric.jiang;
 
         Gene gene1 = geneService.load( 599683 );
         Gene gene2 = geneService.load( 640008 );
-        
+
         log.info( "The genes retrieved: " + gene1 + gene2 );
 
         Collection<OntologyTerm> probTerms = geneOntologyService.getGOTerms( gene1 );
-        probTerms.addAll( geneOntologyService.getGOTerms( gene2 ) );
+        goMetric.logIds( "computeSimilarityOverlap gene1 terms", probTerms );
+        Collection<OntologyTerm> terms2 = geneOntologyService.getGOTerms( gene2 );
+        goMetric.logIds( "computeSimilarityOverlap gene2 terms", terms2 );
+        probTerms.addAll( terms2 );
 
         Map<String, Double> probMap = new HashMap<String, Double>();
 
         for ( OntologyTerm t : probTerms ) {
 
-            double threshold = 0.0001;
             if ( t.getUri().equalsIgnoreCase( "http://purl.org/obo/owl/GO#GO_0042592" ) )
-                probMap.put( t.getUri(), threshold );
-
-            else {
-                double r = Math.random();
-                do {
-                    r = Math.random();
-                } while ( r < threshold );
-                probMap.put( t.getUri(), r );
-            }
+                probMap.put( t.getUri(), 0.1 );
+            else
+                probMap.put( t.getUri(), 0.5 );
         }
-        
-        Double value = goMetric.computeSimilarityOverlap( gene1, gene2, probMap, GoMetric.Metric.simple );
-        Double expected = 3.00;
-        
-        assertEquals( expected, value );
-    }
 
+        Double value = goMetric.computeSimilarityOverlap( gene1, gene2, probMap, chooseMetric );
+
+        if ( chooseMetric.equals( Metric.simple ) ) assertEquals( 3.0, value );
+        if ( chooseMetric.equals( Metric.resnik ) ) assertEquals( 1.4978661367769954, value );
+        if ( chooseMetric.equals( Metric.lin ) ) assertEquals( 2.160964047443681, value );
+        if ( chooseMetric.equals( Metric.jiang ) ) assertEquals( 0.6185149837908823, value );
+    }
+    
+    
     /**
      * @param geneOntologyService the geneOntologyService to set
      */
