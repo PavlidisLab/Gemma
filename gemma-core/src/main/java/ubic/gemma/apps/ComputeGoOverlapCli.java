@@ -221,7 +221,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         }
 
         try {
-            Writer write = initOutputFile( "Resnik_overlapResults" );
+            Writer write = initOutputFile( "Resnik_overlapResults2" );
             String masterGene;
             String geneCoexpressed;
             double overlap;
