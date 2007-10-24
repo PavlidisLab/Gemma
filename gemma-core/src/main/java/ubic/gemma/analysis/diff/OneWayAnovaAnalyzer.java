@@ -20,12 +20,15 @@ package ubic.gemma.analysis.diff;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.rosuda.JRclient.REXP;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.FastRowAccessDoubleMatrix2DNamed;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
@@ -58,6 +61,10 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
 
     private static final int NUM_RESULTS_FROM_R = 2;
+
+    private List<String> rFactors = null;
+
+    private Map<Integer, DesignElement> filteredMatrixDesignElementIndexMap = null;
 
     /*
      * (non-Javadoc)
@@ -103,11 +110,7 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
         ExpressionDataDoubleMatrix dmatrix = new ExpressionDataDoubleMatrix( expressionExperiment
                 .getDesignElementDataVectors(), bioAssayDimension, quantitationType );
 
-        Collection<BioMaterial> samplesUsed = AnalyzerHelper.getBioMaterialsForBioAssays( dmatrix );
-
-        DoubleMatrixNamed namedMatrix = dmatrix.getNamedMatrix();
-
-        List<String> rFactors = AnalyzerHelper.getRFactorsFromFactorValuesForOneWayAnova( factorValues, samplesUsed );
+        DoubleMatrixNamed filteredNamedMatrix = this.filterMatrix( dmatrix, factorValues );
 
         String facts = rc.assignStringList( rFactors );
 
@@ -115,7 +118,7 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
 
         String factor = "factor(" + tfacts + ")";
 
-        String matrixName = rc.assignMatrix( namedMatrix );
+        String matrixName = rc.assignMatrix( filteredNamedMatrix );
 
         /* p-values */
         StringBuffer pvalueCommand = new StringBuffer();
@@ -172,9 +175,10 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
         expressionAnalysis.setExperimentsAnalyzed( experimentsAnalyzed );
 
         List<ExpressionAnalysisResult> analysisResults = new ArrayList<ExpressionAnalysisResult>();
-        for ( int i = 0; i < dmatrix.rows(); i++ ) {
-            DesignElement de = dmatrix.getDesignElementForRow( i );
-            // FIXME maybe ProbeAnalysisResult should have a DesignElement to avoid typecasting
+        for ( int i = 0; i < filteredNamedMatrix.rows(); i++ ) {
+
+            DesignElement de = filteredMatrixDesignElementIndexMap.get( i );
+
             CompositeSequence cs = ( CompositeSequence ) de;
 
             ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();
@@ -189,5 +193,90 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
         expressionAnalysis.setAnalysisResults( analysisResults );
 
         return expressionAnalysis;
+    }
+
+    /**
+     * Filters the {@link ExpressionDataDoubleMatrix} and removes rows with too many missing values. This filtering is
+     * based on the R interpretation of too many missing values.
+     * 
+     * @param matrix
+     * @param factorValues
+     * @return
+     */
+    private DoubleMatrixNamed filterMatrix( ExpressionDataDoubleMatrix matrix, Collection<FactorValue> factorValues ) {
+        // TODO make this a requirement in the abstract analyzer.
+        Collection<BioMaterial> samplesUsed = AnalyzerHelper.getBioMaterialsForBioAssays( matrix );
+
+        rFactors = AnalyzerHelper.getRFactorsFromFactorValuesForOneWayAnova( factorValues, samplesUsed );
+
+        return filterDoubleMatrixNamedForValidRows( matrix, rFactors );
+    }
+
+    /**
+     * @param matrix
+     * @param rFactors
+     * @return
+     */
+    private DoubleMatrixNamed filterDoubleMatrixNamedForValidRows( ExpressionDataDoubleMatrix matrix,
+            List<String> rFactors ) {
+
+        ArrayList<double[]> filteredRows = new ArrayList<double[]>();
+
+        Collection<String> factorLevels = new HashSet<String>( rFactors );
+
+        DoubleMatrixNamed matrixNamed = matrix.getNamedMatrix();
+
+        filteredMatrixDesignElementIndexMap = new HashMap<Integer, DesignElement>();
+
+        for ( int i = 0; i < matrixNamed.rows(); i++ ) {
+
+            DesignElement de = matrix.getDesignElementForRow( i );
+
+            double[] row = matrixNamed.getRow( i );
+
+            Collection<String> seenFactors = new HashSet<String>();
+
+            for ( int j = 0; j < row.length; j++ ) {
+
+                String rFactor = rFactors.get( j );
+
+                if ( Double.isNaN( row[j] ) && !seenFactors.contains( rFactor ) ) {
+
+                    log.debug( "Looking for valid data points in row with factor " + rFactor + "." );
+
+                    /* find all columns with the same factor as row[j] */
+                    boolean skipRow = true;
+                    for ( int k = 0; k < rFactors.size(); k++ ) {
+                        // TODO optimize this loop
+                        if ( k == j ) continue;
+
+                        if ( !Double.isNaN( row[k] ) ) {
+
+                            if ( rFactors.get( k ).equals( rFactor ) ) {
+                                skipRow = false;
+                                log.debug( "Valid data point found for factor " + rFactor + "." );
+                                break;
+                            }
+                        }
+                    }
+                    if ( skipRow ) break;
+
+                }
+                seenFactors.add( rFactor );
+                if ( seenFactors.size() == factorLevels.size() ) {// seen all factors?
+                    filteredRows.add( row );
+                    filteredMatrixDesignElementIndexMap.put( filteredRows.indexOf( row ), de );
+                    break;
+                }
+
+            }
+        }
+
+        double[][] ddata = new double[filteredRows.size()][];
+        for ( int i = 0; i < ddata.length; i++ ) {
+            ddata[i] = filteredRows.get( i );
+        }
+
+        return new FastRowAccessDoubleMatrix2DNamed( ddata );
     }
 }

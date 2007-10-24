@@ -29,6 +29,7 @@ import ubic.gemma.analysis.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
+import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
@@ -171,7 +172,9 @@ public class DifferentialExpressionAnalysisCli extends AbstractGeneExpressionExp
 
         Collection<ExpressionAnalysisResult> results = expressionAnalysis.getAnalysisResults();
         for ( ExpressionAnalysisResult result : results ) {
-            log.info( "p-value: " + result.getPvalue() + ", score: " + result.getScore() );
+            ProbeAnalysisResult probeResult = ( ProbeAnalysisResult ) result;
+            log.info( "probe: " + probeResult.getProbe().getName() + ", p-value: " + probeResult.getPvalue()
+                    + ", score: " + probeResult.getScore() );
         }
         log.info( "# results: " + results.size() );
     }
