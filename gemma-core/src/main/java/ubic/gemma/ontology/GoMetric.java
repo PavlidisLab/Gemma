@@ -172,7 +172,7 @@ public class GoMetric {
                 Double pmin = 1.0;
                 Double score = 0.0;
 
-                if ( ontoM == ontoC ) {
+                if ( ontoM.equals( ontoC ) ) {
                     pmin = GOProbMap.get( ontoM.getUri() );
                 } else
                     pmin = checkParents( ontoM, ontoC, GOProbMap );
@@ -229,6 +229,7 @@ public class GoMetric {
                     double value = GOProbMap.get( termM.getUri() );
                     if ( value < pmin ) {
                         pmin = value;
+                        break;
                     }
                 }
             }
@@ -301,7 +302,7 @@ public class GoMetric {
      */
     private Double calcResnik( Double pmin ) {
 
-        double scoreResnik = -1 * ( StrictMath.log10( pmin ) );
+        double scoreResnik = -1 * ( StrictMath.log( pmin ) );
 
         return scoreResnik;
     }
