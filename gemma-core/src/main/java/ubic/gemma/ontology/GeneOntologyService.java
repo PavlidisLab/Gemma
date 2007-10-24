@@ -241,10 +241,10 @@ public class GeneOntologyService implements InitializingBean {
 
         boolean loadOntology = ConfigUtils.getBoolean( "loadOntology", true );
 
-        if ( !loadOntology ) {
-            log.info( "Loading GO is disabled" );
-            return;
-        }
+//        if ( !loadOntology ) {
+//            log.info( "Loading GO is disabled" );
+//            return;
+//        }
 
         initilizeGoOntology();
 
@@ -730,7 +730,7 @@ public class GeneOntologyService implements InitializingBean {
      * @param comparisonOntos
      * @return
      */
-    private Collection<OntologyTerm> computerOverlap( Collection<OntologyTerm> masterOntos,
+    public Collection<OntologyTerm> computerOverlap( Collection<OntologyTerm> masterOntos,
             Collection<OntologyTerm> comparisonOntos ) {
         Collection<OntologyTerm> overlapTerms = new HashSet<OntologyTerm>( masterOntos );
         overlapTerms.retainAll( comparisonOntos );
