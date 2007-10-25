@@ -54,7 +54,7 @@ public class PubMedXMLFetcherTest extends TestCase {
             assertEquals( "Coexpression analysis of human genes across many microarray data sets.", br.getTitle() );
 
             SimpleDateFormat f = new SimpleDateFormat( "mm/HH/MM/dd/yyyy" );
-            assertEquals( "00/05/06/03/2004", f.format( br.getPublicationDate() ) );
+            assertEquals( "00/00/06/01/2004", f.format( br.getPublicationDate() ) );
         } catch ( RuntimeException e ) {
             if ( e.getCause() instanceof java.net.ConnectException ) {
                 log.warn( "Test skipped due to connection exception" );

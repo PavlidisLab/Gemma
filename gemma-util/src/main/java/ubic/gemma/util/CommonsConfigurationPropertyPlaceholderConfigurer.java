@@ -24,7 +24,7 @@ import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 public class CommonsConfigurationPropertyPlaceholderConfigurer extends PropertyPlaceholderConfigurer {
 
     private Log log = LogFactory.getLog( CommonsConfigurationPropertyPlaceholderConfigurer.class.getName() );
-     Configuration configuration;
+    Configuration configuration;
 
     /**
      * @param conf the conf to set
@@ -33,61 +33,22 @@ public class CommonsConfigurationPropertyPlaceholderConfigurer extends PropertyP
         this.configuration = configuration;
     }
 
-//    luke: this results in the properties from the configuration converted twice;
-//      easier to override mergeProperties, which will be called by super.postProcessBeanFactory()
-//    @Override
-//    public void postProcessBeanFactory( ConfigurableListableBeanFactory beanFactory ) throws BeansException {
-//        log.debug( "Entering postProcessBeanFactory" );
-//
-//        Properties mergedProps = convertConfiguration();
-//
-//        // Convert the merged properties, if necessary.
-//        convertProperties( mergedProps );
-//
-//        super.postProcessBeanFactory( beanFactory );
-//    }
-//
-//    /**
-//     * @return
-//     */
-//    protected Properties convertConfiguration() {
-//        Properties result = new Properties();
-//
-//        if ( this.configuration != null ) {
-//
-//            for ( Iterator it = configuration.getKeys(); it.hasNext(); ) {
-//                String key = ( String ) it.next();
-//                result.setProperty( key, configuration.getString( key ) );
-//                log.debug( key + "=" + configuration.getString( key ) );
-//            }
-//
-//        } else {
-//            log.warn( "Configuration was null" );
-//        }
-//        try {
-//            this.setProperties( result );
-//            return super.mergeProperties();
-//        } catch ( IOException e ) {
-//            throw new RuntimeException( e );
-//        }
-//    }
-    
     @Override
     protected Properties mergeProperties() throws IOException {
         Properties result = super.mergeProperties();
-        
+
         // now load properties from configuration (build.properties), to override the
         // earlier properties from the xml
-        if ( this.configuration != null) {
+        if ( this.configuration != null ) {
             for ( Iterator it = configuration.getKeys(); it.hasNext(); ) {
-              String key = ( String ) it.next();
-              result.setProperty( key, configuration.getString( key ) );
-              log.debug( key + "=" + configuration.getString( key ) );
+                String key = ( String ) it.next();
+                result.setProperty( key, configuration.getString( key ) );
+                log.debug( key + "=" + configuration.getString( key ) );
             }
         } else {
             log.warn( "Configuration was null" );
         }
-        
+
         return result;
     }
 }

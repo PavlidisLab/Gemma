@@ -120,8 +120,9 @@ public class SimpleFastaCmd implements FastaCmd {
         String[] opts = new String[] { "BLASTDB=" + blastHome };
         String command = fastaCmdExecutable + " -d " + database + " -i " + tmp.getAbsolutePath();
         log.debug( command );
+        Process pr = null;
         log.debug( "BLASTDB=" + blastHome );
-        Process pr = Runtime.getRuntime().exec( command, opts );
+        pr = Runtime.getRuntime().exec( command, opts );
 
         Collection<BioSequence> sequences = getSequencesFromFastaCmdOutput( pr );
         tmp.delete();

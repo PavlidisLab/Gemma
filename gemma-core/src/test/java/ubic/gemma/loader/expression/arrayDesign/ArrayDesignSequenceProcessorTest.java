@@ -144,16 +144,25 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                 + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT ) );
-        final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL226", true, true , false );
+        final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL226", true, true,
+                false );
         final ArrayDesign ad = ads.iterator().next();
         arrayDesignService.thaw( ad );
-        Collection<BioSequence> res = app.processArrayDesign( ad, new String[] { "testblastdb", "testblastdbPartTwo" },
-                ConfigUtils.getString( "gemma.home" ) + "/gemma-core/src/test/resources/data/loader/genome/blast",
-                false );
-        assertNotNull( res );
-        for ( BioSequence sequence : res ) {
-            assertNotNull( sequence.getSequence() );
+        try {
+            Collection<BioSequence> res = app.processArrayDesign( ad, new String[] { "testblastdb",
+                    "testblastdbPartTwo" }, ConfigUtils.getString( "gemma.home" )
+                    + "/gemma-core/src/test/resources/data/loader/genome/blast", false );
+            assertNotNull( res );
+            for ( BioSequence sequence : res ) {
+                assertNotNull( sequence.getSequence() );
+            }
+        } catch ( Exception e ) {
+            if ( e.getMessage().contains( "not found" ) ) {
+                log.error( "fastacmd is not installed or is misconfigured.  Test skipped" );
+                return;
+            }
         }
+
     }
 
     @SuppressWarnings("unchecked")
@@ -164,7 +173,8 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                 + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT ) );
 
-        final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL226", true, true , false );
+        final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL226", true, true,
+                false );
         final ArrayDesign ad = ads.iterator().next();
         arrayDesignService.thaw( ad );
 
@@ -186,7 +196,8 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         // first load the GPL88 - small
         AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-        final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL88", true, true , false );
+        final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL88", true, true,
+                false );
         final ArrayDesign ad = ads.iterator().next();
         arrayDesignService.thaw( ad );
 
