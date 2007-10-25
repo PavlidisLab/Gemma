@@ -76,10 +76,10 @@ public class SimpleExpressionExperimentMetaData {
     /**
      * Publication reference.
      */
-    private int pubMedId;
+    private Integer pubMedId = null;
 
     Collection<ArrayDesign> arrayDesigns;
-    
+
     // for Ajax
     Collection<Long> arrayDesignIds;
 
@@ -198,7 +198,7 @@ public class SimpleExpressionExperimentMetaData {
     /**
      * @param pubMedId the pubMedId to set
      */
-    public void setPubMedId( int pubMedId ) {
+    public void setPubMedId( Integer pubMedId ) {
         this.pubMedId = pubMedId;
     }
 
