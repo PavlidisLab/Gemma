@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -35,6 +36,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -350,7 +352,11 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         DoubleMatrixNamed matrix = DoubleMatrix2DNamedFactory.fastrow( numRows, maxSize );
 
         for ( int j = 0; j < matrix.columns(); j++ ) {
-            matrix.addColumnName( j );
+            BioMaterial bm = this.getBioMaterialForColumn( j );
+            if ( bm == null || StringUtils.isEmpty( bm.getName() ) )
+                matrix.addColumnName( j );
+            else
+                matrix.addColumnName( bm.getName() );
         }
 
         // initialize the matrix to -Infinity; this marks values that are not yet initialized.
@@ -371,7 +377,11 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
 
             // Rows are indexed by the underlying designElement.
             // if ( log.isTraceEnabled() ) log.trace( "Adding row " + rowIndex );
-            matrix.addRowName( rowIndex );
+            if ( StringUtils.isEmpty( designElement.getName() ) ) {
+                matrix.addRowName( rowIndex );
+            } else {
+                matrix.addRowName( designElement.getName() );
+            }
 
             byte[] bytes = vector.getData();
             double[] vals = bac.byteArrayToDoubles( bytes );
