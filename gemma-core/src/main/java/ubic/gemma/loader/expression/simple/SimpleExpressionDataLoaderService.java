@@ -94,9 +94,11 @@ public class SimpleExpressionDataLoaderService {
         if ( matrix == null || metaData == null ) {
             throw new IllegalArgumentException( "One or all of method arguments was null" );
         }
-        Taxon taxon = convertTaxon( metaData.getTaxon() );
-
+        
         ExpressionExperiment experiment = ExpressionExperiment.Factory.newInstance();
+        
+        Taxon taxon = convertTaxon( metaData.getTaxon() );
+      
         experiment.setName( metaData.getName() );
         experiment.setShortName( metaData.getShortName() );
         experiment.setDescription( metaData.getDescription() );
@@ -107,15 +109,6 @@ public class SimpleExpressionDataLoaderService {
                                 + metaData.getSourceUrl() ) );
 
         ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
-        // ed.setName( metaData.getExperimentalDesignName() );
-        // ed.setDescription( metaData.getExperimentalDesignDescription() );
-        // ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
-        // ef.setName( "Placeholder" );
-        // ef.setDescription( "Awaiting curation" );
-        // FactorValue fv = FactorValue.Factory.newInstance( ef );
-        // fv.setValue( "default" );
-        // ef.getFactorValues().add( fv );
-        // ed.getExperimentalFactors().add( ef );
         experiment.setExperimentalDesign( ed );
 
         if ( metaData.getPubMedId() != null ) {

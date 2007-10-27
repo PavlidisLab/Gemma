@@ -59,6 +59,7 @@ public class CustomMethodSecurityInterceptor extends AbstractSecurityInterceptor
         return this.objectDefinitionSource;
     }
 
+    @Override
     public Class getSecureObjectClass() {
         return MethodInvocation.class;
     }
@@ -99,6 +100,7 @@ public class CustomMethodSecurityInterceptor extends AbstractSecurityInterceptor
         return result;
     }
 
+    @Override
     public ObjectDefinitionSource obtainObjectDefinitionSource() {
         return this.objectDefinitionSource;
     }

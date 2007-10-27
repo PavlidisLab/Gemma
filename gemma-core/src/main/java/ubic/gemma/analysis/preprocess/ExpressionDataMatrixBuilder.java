@@ -42,7 +42,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * Utility methods for taking an ExpressionExperiment and returning various types of ExpressionDataMatrices, such as the
- * preferred data, background, etc.
+ * preferred data, background, etc. This class is not database aware; use the ExpressionDataMatrixService to get
+ * ready-to-use matrices starting from an ExpressionExperiment.
  * <p>
  * This handles complexities such as experiments that contain multiple array designs with differing quantitation types.
  * 
@@ -149,7 +150,8 @@ public class ExpressionDataMatrixBuilder {
 
     /**
      * @return a matrix of booleans, or null if a missing value quantitation type ("absent/present", which may have been
-     *         computed by our system) is not found.
+     *         computed by our system) is not found. This will return the values whether the array design is two-color
+     *         or not. 
      */
     public ExpressionDataBooleanMatrix getMissingValueData( ArrayDesign arrayDesign ) {
         List<QuantitationType> qtypes = this.getMissingValueQTypes( arrayDesign );
@@ -251,9 +253,8 @@ public class ExpressionDataMatrixBuilder {
             addBackgroundBack( signalDataA, bkgDataA );
             return signalDataA;
 
-        } else {
-            return getSignalChannelA( arrayDesign );
         }
+        return getSignalChannelA( arrayDesign );
 
     }
 
@@ -373,16 +374,18 @@ public class ExpressionDataMatrixBuilder {
 
             if ( signalA == null ) {
                 return signalB;
-            } else {
-                return signalA; // now this contains the answer
             }
+            return signalA; // now this contains the answer
 
-        } else {
-            return getPreferredData( arrayDesign );
         }
+        return getPreferredData( arrayDesign );
+
     }
 
     /**
+     * Masking is done even if the array design is not two-color, so the decision whether to mask or not must be done
+     * elsewhere.
+     * 
      * @param inMatrix
      * @param missingValueMatrix
      */
@@ -444,12 +447,12 @@ public class ExpressionDataMatrixBuilder {
             if ( signalChannelB != null && bkgSubChannelA != null && backgroundChannelA != null ) {
                 log.info( "Invoking work-around for missing channel 1 intensities" );
                 return true;
-            } else {
-                log.warn( "Could not find signals for both channels: " + "Channel A =" + signalChannelA
-                        + ", Channel B=" + signalChannelB + " and backgroundChannelA =" + backgroundChannelA
-                        + " and background-subtracted channel A =" + bkgSubChannelA );
-                return false;
             }
+            log.warn( "Could not find signals for both channels: " + "Channel A =" + signalChannelA + ", Channel B="
+                    + signalChannelB + " and backgroundChannelA =" + backgroundChannelA
+                    + " and background-subtracted channel A =" + bkgSubChannelA );
+            return false;
+
         }
         return false;
     }
@@ -552,10 +555,57 @@ public class ExpressionDataMatrixBuilder {
             } else if ( isSignalChannelB( name ) ) {
                 neededQtTypes.add( qType );
                 log.info( "Signal B=" + qType );
-            } else if ( name.matches( "CH1D_MEAN" ) ) {
+            } else if ( name.matches( "CH1D_MEAN" ) ) { // FIXME This is a bit strange...
                 neededQtTypes.add( qType );
             } else if ( qType.getType().equals( StandardQuantitationType.PRESENTABSENT ) ) {
                 log.info( "Present/absent=" + qType );
+                neededQtTypes.add( qType );
+            }
+        }
+
+        return neededQtTypes;
+    }
+
+    public static Collection<QuantitationType> getPreferredQuantitationTypes( ExpressionExperiment expressionExperiment ) {
+        Collection<QuantitationType> neededQtTypes = new HashSet<QuantitationType>();
+
+        Collection<QuantitationType> eeQtTypes = expressionExperiment.getQuantitationTypes();
+
+        if ( eeQtTypes.size() == 0 )
+            throw new IllegalArgumentException( "No quantitation types for " + expressionExperiment );
+
+        log.debug( "Experiment has " + eeQtTypes.size() + " quantitation types" );
+
+        for ( QuantitationType qType : eeQtTypes ) {
+            if ( qType.getIsPreferred() ) {
+                log.debug( "Preferred=" + qType );
+                neededQtTypes.add( qType );
+            }
+        }
+
+        return neededQtTypes;
+    }
+
+    /**
+     * @param expressionExperiment (should be lightly thawed)
+     * @return
+     */
+    public static Collection<QuantitationType> getMissingValueQuantitationTypes(
+            ExpressionExperiment expressionExperiment ) {
+        Collection<QuantitationType> neededQtTypes = new HashSet<QuantitationType>();
+
+        Collection<QuantitationType> eeQtTypes = expressionExperiment.getQuantitationTypes();
+
+        if ( eeQtTypes.size() == 0 )
+            throw new IllegalArgumentException( "No quantitation types for " + expressionExperiment );
+
+        log.debug( "Experiment has " + eeQtTypes.size() + " quantitation types" );
+
+        for ( QuantitationType qType : eeQtTypes ) {
+
+            String name = qType.getName();
+            if ( qType.getType().equals( StandardQuantitationType.PRESENTABSENT ) ) {
+                log.debug( "Present/absent=" + qType );
                 neededQtTypes.add( qType );
             }
         }
@@ -652,7 +702,7 @@ public class ExpressionDataMatrixBuilder {
                 || name.toLowerCase().matches( "ch1_smtm" ) || name.equals( "G_MEAN" ) || name.equals( "Ch1SigMedian" )
                 || name.equals( "ch1.Intensity" ) || name.equals( "CH1_SIG_MEAN" ) || name.equals( "CH1_ Median" )
                 || name.toUpperCase().matches( "\\w{2}\\d{3}_CY3" ) || name.toUpperCase().matches( "NORM(.*)CH1" )
-                || name.equals( "CH1Mean" ) || name.equals( "CH1_SIGNAL" ) || name.equals("\"log2(532), gN\"");
+                || name.equals( "CH1Mean" ) || name.equals( "CH1_SIGNAL" ) || name.equals( "\"log2(532), gN\"" );
     }
 
     /**
@@ -667,7 +717,7 @@ public class ExpressionDataMatrixBuilder {
                 || name.toLowerCase().matches( "ch2_smtm" ) || name.equals( "R_MEAN" ) || name.equals( "Ch2SigMedian" )
                 || name.equals( "ch2.Intensity" ) || name.equals( "CH2_SIG_MEAN" ) || name.equals( "CH2_ Median" )
                 || name.toUpperCase().matches( "\\w{2}\\d{3}_CY5" ) || name.toUpperCase().matches( "NORM(.*)CH2" )
-                || name.equals( "CH2Mean" ) || name.equals( "CH2_SIGNAL" )|| name.equals("\"log2(635), gN\"");
+                || name.equals( "CH2Mean" ) || name.equals( "CH2_SIGNAL" ) || name.equals( "\"log2(635), gN\"" );
     }
 
     /**

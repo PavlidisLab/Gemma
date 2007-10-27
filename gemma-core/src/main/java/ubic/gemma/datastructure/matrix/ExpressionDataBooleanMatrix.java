@@ -113,7 +113,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
             Iterator<BioAssay> it = bioAssays.iterator();
             assert bioAssays.size() == vals.length : "Expected " + vals.length + " got " + bioAssays.size();
             for ( int j = 0; j < bioAssays.size(); j++ ) {
-                BioAssay bioAssay = ( BioAssay ) it.next();
+                BioAssay bioAssay = it.next();
                 Integer column = this.columnAssayMap.get( bioAssay );
                 assert column != null;
                 matrix.setQuick( rowIndex, column, vals[j] );

@@ -31,7 +31,6 @@ import ubic.gemma.datastructure.matrix.ExpressionDataBooleanMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
-import ubic.gemma.model.expression.arrayDesign.TechnologyTypeEnum;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -117,16 +116,16 @@ public class ExpressionExperimentFilter {
 
     /**
      * Determine if the expression experiment uses two-color arrays. This is not guaranteed to give the right answer if
-     * the experiment uses both types of technologies.F
+     * the experiment uses both types of technologies.
      * 
      * @param ee
      * @return
      */
     @SuppressWarnings("unchecked")
     private boolean isTwoColor() {
-        ArrayDesign arrayDesign = ( ArrayDesign ) arrayDesignsUsed.iterator().next();
+        ArrayDesign arrayDesign = arrayDesignsUsed.iterator().next();
         TechnologyType techType = arrayDesign.getTechnologyType();
-        return techType.equals( TechnologyTypeEnum.TWOCOLOR ) || techType.equals( TechnologyType.DUALMODE );
+        return techType.equals( TechnologyType.TWOCOLOR ) || techType.equals( TechnologyType.DUALMODE );
     }
 
     @SuppressWarnings("unchecked")
@@ -249,7 +248,7 @@ public class ExpressionExperimentFilter {
             rowMissingFilter.setAbsentPresentCalls( absentPresent );
         }
         rowMissingFilter.setMinPresentFraction( config.getMinPresentFraction() );
-        return ( ExpressionDataDoubleMatrix ) rowMissingFilter.filter( matrix );
+        return rowMissingFilter.filter( matrix );
     }
 
 }

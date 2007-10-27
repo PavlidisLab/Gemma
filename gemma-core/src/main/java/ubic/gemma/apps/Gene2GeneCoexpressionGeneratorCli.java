@@ -220,6 +220,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
      * 
      */
 
+    @Override
     protected void processOptions() {
 
         super.processOptions();

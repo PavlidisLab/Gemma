@@ -243,7 +243,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
         try {
             ExpressionExperiment aeExperiment = aeService.load( accession, adName );
             successObjects.add( ( ( Describable ) aeExperiment ).getName() + " ("
-                    + ( ( ExpressionExperiment ) aeExperiment ).getShortName() + ")" );
+                    + ( aeExperiment ).getShortName() + ")" );
 
         } catch ( Exception e ) {
             errorObjects.add( accession + ": " + e.getMessage() );

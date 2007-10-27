@@ -89,7 +89,7 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
         }
 
         if ( this.hasOption( 'b' ) ) {
-            this.file = ( String ) getOptionValue( 'b' );
+            this.file = getOptionValue( 'b' );
         }
 
         bss = ( BioSequenceService ) this.getBean( "bioSequenceService" );

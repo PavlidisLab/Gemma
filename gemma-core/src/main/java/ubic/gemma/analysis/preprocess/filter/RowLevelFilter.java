@@ -248,7 +248,7 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
         DoubleArrayList rowAsList = new DoubleArrayList( new double[numCols] );
         int numAllNeg = 0;
         for ( int i = 0; i < numRows; i++ ) {
-            Double[] row = ( Double[] ) data.getRow( i );
+            Double[] row = data.getRow( i );
             int numNeg = 0;
             /* stupid, copy into a DoubleArrayList so we can do stats */
             for ( int j = 0; j < numCols; j++ ) {
@@ -325,7 +325,7 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
             log.warn( "All rows filtered out!" );
             return;
         }
-        NumberFormat nf = DecimalFormat.getNumberInstance();
+        NumberFormat nf = NumberFormat.getNumberInstance();
         nf.setMaximumFractionDigits( 2 );
 
         double fracFiltered = ( double ) ( numRows - kept.size() ) / numRows;

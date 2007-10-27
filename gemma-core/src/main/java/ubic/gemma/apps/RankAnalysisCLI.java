@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.text.NumberFormat;
 import java.util.Collection;
 
 import org.apache.commons.cli.Option;
@@ -31,10 +32,12 @@ public class RankAnalysisCLI extends
 		method = Method.MAX;
 	}
 
-	protected void buildOptions() {
+	@Override
+    @SuppressWarnings("static-access")
+    protected void buildOptions() {
 		super.buildOptions();
 
-		Option outFilePrefixOption = OptionBuilder.isRequired().hasArg()
+ 		Option outFilePrefixOption = OptionBuilder.isRequired().hasArg()
 				.withDescription("File prefix for saved rank matrix files")
 				.withArgName("File prefix").withLongOpt("outFilePrefix")
 				.create('o');
@@ -46,7 +49,8 @@ public class RankAnalysisCLI extends
 		addOption(methodOption);
 	}
 
-	protected void processOptions() {
+	@Override
+    protected void processOptions() {
 		super.processOptions();
 
 		outFilePrefix = getOptionValue('o');
@@ -113,7 +117,7 @@ public class RankAnalysisCLI extends
 			return exc;
 		}
 
-		DecimalFormat formatter = (DecimalFormat) DecimalFormat
+		DecimalFormat formatter = (DecimalFormat) NumberFormat
 				.getNumberInstance();
 		formatter.applyPattern("0.0000");
 		DecimalFormatSymbols symbols = formatter.getDecimalFormatSymbols();

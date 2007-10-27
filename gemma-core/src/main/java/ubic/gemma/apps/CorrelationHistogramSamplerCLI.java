@@ -4,8 +4,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collection;
-import java.util.Map;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.time.StopWatch;
@@ -31,27 +29,15 @@ public class CorrelationHistogramSamplerCLI extends
 	@Override
 	protected void buildOptions() {
 		super.buildOptions();
-		Option taxonOption = OptionBuilder.hasArg().isRequired().withArgName(
-				"taxon").withDescription("The taxon of the genes").withLongOpt(
-				"taxon").create('t');
+		Option taxonOption = OptionBuilder.create('t');
 		addOption(taxonOption);
-		Option numSamplesOption = OptionBuilder.hasArg().withArgName(
-				"Number of samples").withDescription(
-				"Number of times to sample each correlation histogram")
-				.withLongOpt("numSamples").withType(Integer.class).create('n');
+		Option numSamplesOption = OptionBuilder.create('n');
 		addOption(numSamplesOption);
 
-		Option outFileOption = OptionBuilder.hasArg().isRequired().withArgName(
-				"Output file").withDescription("File to write samples to")
-				.withLongOpt("out").create('o');
+		Option outFileOption = OptionBuilder.create('o');
 		addOption(outFileOption);
 
-		Option kMaxOption = OptionBuilder
-				.hasArg()
-				.withArgName("kth largest value")
-				.withDescription(
-						"Select the kth largest sample from the correlation histogram samples")
-				.withLongOpt("kMax").create('k');
+		Option kMaxOption = OptionBuilder.create('k');
 		addOption(kMaxOption);
 
 	}

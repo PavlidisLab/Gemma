@@ -289,7 +289,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                         pl.setNucleotide( rs.getLong( 3 ) );
                         pl.setNucleotideLength( rs.getInt( 4 ) - rs.getInt( 3 ) );
                         pl.setStrand( rs.getString( 5 ) );
-                        pl.setBin( SequenceBinUtils.binFromRange( ( int ) rs.getLong( 3 ), ( int ) rs.getInt( 4 ) ) );
+                        pl.setBin( SequenceBinUtils.binFromRange( ( int ) rs.getLong( 3 ), rs.getInt( 4 ) ) );
                         PhysicalLocation genePl = PhysicalLocation.Factory.newInstance();
                         genePl.setStrand( pl.getStrand() );
 
@@ -399,7 +399,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                         pl.setNucleotide( rs.getLong( 3 ) );
                         pl.setNucleotideLength( rs.getInt( 4 ) - rs.getInt( 3 ) );
                         pl.setStrand( rs.getString( 5 ) );
-                        pl.setBin( SequenceBinUtils.binFromRange( ( int ) rs.getLong( 3 ), ( int ) rs.getInt( 4 ) ) );
+                        pl.setBin( SequenceBinUtils.binFromRange( ( int ) rs.getLong( 3 ), rs.getInt( 4 ) ) );
 
                         PhysicalLocation genePl = PhysicalLocation.Factory.newInstance();
                         genePl.setStrand( pl.getStrand() );
@@ -687,7 +687,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                         pl.setNucleotide( rs.getLong( 3 ) );
                         pl.setNucleotideLength( rs.getInt( 4 ) - rs.getInt( 3 ) );
                         pl.setStrand( rs.getString( 5 ) );
-                        pl.setBin( SequenceBinUtils.binFromRange( ( int ) rs.getLong( 3 ), ( int ) rs.getInt( 4 ) ) );
+                        pl.setBin( SequenceBinUtils.binFromRange( ( int ) rs.getLong( 3 ), rs.getInt( 4 ) ) );
 
                         Chromosome c = Chromosome.Factory.newInstance();
                         c.setName( SequenceManipulation.deBlatFormatChromosomeName( chromosome ) );

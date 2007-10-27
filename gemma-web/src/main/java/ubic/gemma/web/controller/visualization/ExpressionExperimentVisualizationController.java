@@ -66,9 +66,9 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
     @SuppressWarnings("unused")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
 
-        String type = ( String ) request.getParameter( "type" );
+        String type = request.getParameter( "type" );
 
-        String id = ( String ) request.getParameter( "id" );
+        String id = request.getParameter( "id" );
 
         if ( id == null ) {
             log.warn( "No id!" );

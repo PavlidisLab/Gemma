@@ -50,7 +50,7 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix {
      *      ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
     public Integer get( DesignElement designElement, BioMaterial bioMaterial ) {
-        return ( Integer ) this.matrix.get( matrix.getRowIndexByName( designElement ), matrix
+        return this.matrix.get( matrix.getRowIndexByName( designElement ), matrix
                 .getColIndexByName( this.columnBioMaterialMap.get( bioMaterial ) ) );
     }
 

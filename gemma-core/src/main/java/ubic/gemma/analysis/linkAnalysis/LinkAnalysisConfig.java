@@ -111,6 +111,7 @@ public class LinkAnalysisConfig {
         return textOut;
     }
 
+    @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
         buf.append( "# AbsoluteValue:" + this.isAbsoluteValue() + "\n" );

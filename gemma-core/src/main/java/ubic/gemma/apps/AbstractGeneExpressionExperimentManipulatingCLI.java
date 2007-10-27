@@ -59,6 +59,7 @@ public abstract class AbstractGeneExpressionExperimentManipulatingCLI extends Ab
 
     protected Taxon taxon = null;
 
+    @Override
     @SuppressWarnings("static-access")
     protected void buildOptions() {
         Option expOption = OptionBuilder.hasArg().withArgName( "Expression experiment name" ).withDescription(

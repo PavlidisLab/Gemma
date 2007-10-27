@@ -427,6 +427,7 @@ public class ExpressionExperimentServiceImpl extends
      * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByBibliographicReference(ubic.gemma.model.common.description.BibliographicReference)
      */
+    @Override
     protected Collection handleGetPreferredQuantitationType( ExpressionExperiment EE ) throws Exception {
         Collection<QuantitationType> preferredQuantitationTypes = new HashSet<QuantitationType>();
         handleThawLite( EE );

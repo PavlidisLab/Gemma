@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Conjunction;
+import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Restrictions;
 
@@ -638,7 +639,7 @@ public class BusinessKey {
             // really work.
         }
 
-        queryObject.setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY );
+        queryObject.setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY );
     }
 
     /**

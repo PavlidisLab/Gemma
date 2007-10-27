@@ -63,6 +63,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
 
+    @Override
     protected void buildOptions() {
     }
 

@@ -19,12 +19,10 @@
 package ubic.gemma.analysis.linkAnalysis;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.Comparator;
@@ -78,7 +76,7 @@ import cern.colt.list.ObjectArrayList;
  */
 public class LinkAnalysisService {
 
-    private static final int LINK_BATCH_SIZE = 10000;
+    private static final int LINK_BATCH_SIZE = 1000;
 
     private static final boolean useDB = true; // useful for debugging.
 
@@ -165,7 +163,7 @@ public class LinkAnalysisService {
         wr.write( la.getConfig().toString() );
         Map<CompositeSequence, Collection<Gene>> probeToGeneMap = la.getProbeToGeneMap();
         ObjectArrayList links = la.getKeep();
-        NumberFormat nf = DecimalFormat.getInstance();
+        NumberFormat nf = NumberFormat.getInstance();
         nf.setMaximumFractionDigits( 4 );
 
         int i = 0;
@@ -278,8 +276,7 @@ public class LinkAnalysisService {
         }
 
         watch.stop();
-        log.info( "Seconds to process " + links.size() + " links plus flipped versions:" + ( double ) watch.getTime()
-                / 1000.0 );
+        log.info( "Seconds to process " + links.size() + " links plus flipped versions:" + watch.getTime() / 1000.0 );
     }
 
     // Delete old links for this expressionexperiment

@@ -84,6 +84,7 @@ public class Probe2ProbeCoexpressionServiceImpl extends
     /**
      * Performs the core logic for {@link #delete(ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression)}
      */
+    @Override
     protected void handleDelete( ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression toDelete )
             throws java.lang.Exception {
 
@@ -106,6 +107,7 @@ public class Probe2ProbeCoexpressionServiceImpl extends
     /**
      * Performs the core logic for {@link #delete(java.util.Collection)}
      */
+    @Override
     protected void handleDelete( java.util.Collection deletes ) throws java.lang.Exception {
 
         if ( !this.validCollection( deletes ) ) return;

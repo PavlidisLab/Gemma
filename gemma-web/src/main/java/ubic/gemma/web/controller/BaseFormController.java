@@ -82,12 +82,13 @@ public abstract class BaseFormController extends SimpleFormController {
      * 
      * @return the user's populated form from the session
      */
-    public Map getConfiguration() {
-        Map config = ( HashMap ) getServletContext().getAttribute( Constants.CONFIG );
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getConfiguration() {
+        Map<String, Object> config = ( Map<String, Object> ) getServletContext().getAttribute( Constants.CONFIG );
 
         // so unit tests don't puke when nothing's been set
         if ( config == null ) {
-            return new HashMap();
+            return new HashMap<String, Object>();
         }
         return config;
     }

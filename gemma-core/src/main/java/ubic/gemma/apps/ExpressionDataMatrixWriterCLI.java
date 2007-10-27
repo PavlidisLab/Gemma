@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2007 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package ubic.gemma.apps;
 
 import java.io.IOException;
@@ -10,82 +28,79 @@ import org.apache.commons.cli.OptionBuilder;
 import ubic.gemma.analysis.preprocess.filter.ExpressionExperimentFilter;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrixService;
 import ubic.gemma.datastructure.matrix.MatrixWriter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-public class ExpressionDataMatrixWriterCLI extends
-		AbstractGeneExpressionExperimentManipulatingCLI {
-	
-	private DesignElementDataVectorService dedvService;
-	
-	private String outFileName;
-	protected void buildOptions() {
-		super.buildOptions();
-		Option outputFileOption = OptionBuilder.hasArg().isRequired()
-				.withArgName("outFilePrefix").withDescription(
-						"File prefix for saving the output").withLongOpt(
-						"outFilePrefix").create('o');
-		addOption(outputFileOption);
-	}
-	
-	protected void processOptions() {
-		super.processOptions();
-		
-		outFileName = getOptionValue('o');
-		
-		dedvService = (DesignElementDataVectorService) getBean("designElementDataVectorService");
-		
-	}
-	
-	@Override
-	protected Exception doWork(String[] args) {
-		processCommandLine("expressionDataMatrixWriterCLI", args);
-		
-		Collection<ExpressionExperiment> ees;
-		try {
-    		ees = getExpressionExperiments(null);
-		} catch (IOException e) {
-			return e;
-		}
-		FilterConfig filterConfig = new FilterConfig();
-		
-		for (ExpressionExperiment ee : ees) {
-            // get quantitation types
-            Collection<QuantitationType> qts;
-            qts = ( Collection<QuantitationType> ) eeService.getPreferredQuantitationType( ee );
-            if ( qts.size() < 1 ) {
-                return null;
-            }
+/**
+ * Prints preferred data matrix to a file.
+ * 
+ * @author Paul
+ * @version $Id$
+ */
+public class ExpressionDataMatrixWriterCLI extends AbstractGeneExpressionExperimentManipulatingCLI {
 
-            // get dedvs to build expression data matrix
-            Collection<DesignElementDataVector> dedvs;
-            dedvs = eeService.getDesignElementDataVectors(ee, qts);
-            dedvService.thaw(dedvs);
-            ExpressionExperimentFilter filter = new ExpressionExperimentFilter( ee, eeService.getArrayDesignsUsed( ee ),
-                    filterConfig );
-            ExpressionDataDoubleMatrix dataMatrix = filter.getFilteredMatrix( dedvs );
-            
+    private DesignElementDataVectorService dedvService;
+
+    private String outFileName;
+
+    @Override
+    @SuppressWarnings("static-access")
+    protected void buildOptions() {
+        super.buildOptions();
+        Option outputFileOption = OptionBuilder.hasArg().isRequired().withArgName( "outFilePrefix" ).withDescription(
+                "File prefix for saving the output" ).withLongOpt( "outFilePrefix" ).create( 'o' );
+        addOption( outputFileOption );
+    }
+
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+
+        outFileName = getOptionValue( 'o' );
+
+        dedvService = ( DesignElementDataVectorService ) getBean( "designElementDataVectorService" );
+
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Exception doWork( String[] args ) {
+        processCommandLine( "expressionDataMatrixWriterCLI", args );
+
+        Collection<ExpressionExperiment> ees;
+        try {
+            ees = getExpressionExperiments( null );
+        } catch ( IOException e ) {
+            return e;
+        }
+
+        ExpressionDataMatrixService eeds = ( ExpressionDataMatrixService ) this.getBean( "expressionDataMatrixService" );
+        for ( ExpressionExperiment ee : ees ) {
+
+            ExpressionDataDoubleMatrix dataMatrix = eeds.getPreferredDataMatrix( ee, true );
+
             try {
                 MatrixWriter out = new MatrixWriter();
-                PrintWriter writer = new PrintWriter(outFileName);
-                out.write(writer, dataMatrix, true, false);
-            } catch (IOException e) {
-            	return e;
+                PrintWriter writer = new PrintWriter( outFileName );
+                out.write( writer, dataMatrix, true, false );
+            } catch ( IOException e ) {
+                return e;
             }
-		}
-		
-		return null;
-	}
-	
-	public static void main(String[] args) {
-		ExpressionDataMatrixWriterCLI cli = new ExpressionDataMatrixWriterCLI();
-		Exception exc = cli.doWork(args);
-		if (exc != null) {
-			log.error(exc.getMessage());
-		}
-	}
+        }
+
+        return null;
+    }
+
+    public static void main( String[] args ) {
+        ExpressionDataMatrixWriterCLI cli = new ExpressionDataMatrixWriterCLI();
+        Exception exc = cli.doWork( args );
+        if ( exc != null ) {
+            log.error( exc.getMessage() );
+        }
+    }
 
 }

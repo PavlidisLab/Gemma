@@ -38,6 +38,7 @@ public class DataStatementImpl extends AbstractStatement implements DataStatemen
         this.data = data;
     }
 
+    @Override
     protected CharacteristicProperty makeProperty() {
         DataProperty prop = DataProperty.Factory.newInstance();
 

@@ -33,6 +33,7 @@ public class PredictedGeneDaoImpl
     /* (non-Javadoc)
      * @see ubic.gemma.model.genome.GeneDao#geneValueObjectToEntity(ubic.gemma.model.genome.gene.GeneValueObject)
      */
+    @Override
     public PredictedGene geneValueObjectToEntity( GeneValueObject geneValueObject ) {
         final String queryString = "select distinct gene from PredictedGeneImpl gene where gene.id = :id";
         

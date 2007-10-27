@@ -3,6 +3,7 @@ package ubic.gemma.apps;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.Map;
 
@@ -153,7 +154,7 @@ public class EffectSizeCalculationCli extends AbstractGeneCoexpressionManipulati
         // create row/col name maps
         Map<ExpressionExperiment, String> eeNameMap = matrices.getEeNameMap();
 
-        DecimalFormat formatter = (DecimalFormat) DecimalFormat.getNumberInstance();
+        DecimalFormat formatter = (DecimalFormat) NumberFormat.getNumberInstance();
         formatter.applyPattern("0.0000");
 		DecimalFormatSymbols symbols = formatter.getDecimalFormatSymbols();
 		symbols.setNaN("");

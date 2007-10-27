@@ -2,6 +2,7 @@ package ubic.gemma.apps;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.Locale;
 
@@ -32,15 +33,14 @@ public class CorrelationPValueMatrixCalculatorCLI extends
 	@Override
 	protected void buildOptions() {
 		super.buildOptions();
-		Option inFile = OptionBuilder.hasArg().isRequired().withDescription(
-				"Input file").withArgName("File name").create('i');
+		Option inFile = OptionBuilder.create('i');
 		addOption(inFile);
-		Option outFile = OptionBuilder.hasArg().isRequired().withDescription(
-				"Output file").withArgName("File name").create('o');
+		Option outFile = OptionBuilder.create('o');
 		addOption(outFile);
 	}
 
-	protected void processOptions() {
+	@Override
+    protected void processOptions() {
 		super.processOptions();
 		inFile = getOptionValue('i');
 		outFile = getOptionValue('o');
@@ -64,7 +64,7 @@ public class CorrelationPValueMatrixCalculatorCLI extends
 			return e;
 		}
 
-		DecimalFormat formatter = (DecimalFormat) DecimalFormat
+		DecimalFormat formatter = (DecimalFormat) NumberFormat
 				.getNumberInstance(Locale.US);
 		// formatter.applyPattern("0.0000");
 

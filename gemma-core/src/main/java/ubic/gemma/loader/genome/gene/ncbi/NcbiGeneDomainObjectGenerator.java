@@ -34,7 +34,6 @@ import org.apache.commons.logging.LogFactory;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGene2Accession;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGeneInfo;
-import ubic.gemma.loader.util.sdo.SourceDomainObjectGenerator;
 import ubic.gemma.model.common.description.LocalFile;
 
 /**

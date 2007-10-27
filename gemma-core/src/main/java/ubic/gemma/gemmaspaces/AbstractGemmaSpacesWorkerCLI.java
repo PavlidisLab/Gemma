@@ -150,6 +150,7 @@ public abstract class AbstractGemmaSpacesWorkerCLI extends AbstractSpringAwareCL
      * @author keshav
      */
     public class ShutdownHook extends Thread {
+        @Override
         public void run() {
             log.info( "Worker shut down.  Running shutdown hook ... cleaning up registered entries for this worker." );
             if ( space != null ) {
@@ -178,7 +179,7 @@ public abstract class AbstractGemmaSpacesWorkerCLI extends AbstractSpringAwareCL
 
             log.debug( "event: " + arrivedRemoteEvent );
             ExternalEntry entry = ( ExternalEntry ) arrivedRemoteEvent.getEntry( true );
-            Object taskId = ( Object ) entry.getFieldValue( "taskId" );
+            Object taskId = entry.getFieldValue( "taskId" );
 
             if ( taskId.equals( worker.getTaskId() ) ) {
                 log.info( "Stopping execution of task: " + taskId );

@@ -49,8 +49,9 @@ public class ProbeAlignedRegionAnalysisCLI extends AbstractSpringAwareCLI {
 
     public static final double DEFAULT_THRESHOLD = 0.5;
 
+    @SuppressWarnings("static-access")
     @Override
-    protected void buildOptions() {
+     protected void buildOptions() {
         Option taxonOption = OptionBuilder.hasArg().isRequired().withArgName( "taxon" ).withDescription(
                 "the taxon of the genes" ).withLongOpt( "taxon" ).create( 't' );
         addOption( taxonOption );
@@ -65,6 +66,7 @@ public class ProbeAlignedRegionAnalysisCLI extends AbstractSpringAwareCLI {
         addOption( inputFileOption );
     }
 
+    @Override
     protected void processOptions() {
         super.processOptions();
         String taxonName = getOptionValue( 't' );
@@ -97,7 +99,7 @@ public class ProbeAlignedRegionAnalysisCLI extends AbstractSpringAwareCLI {
         Map<Long, List<Double>> parId2eeRankMap = new HashMap<Long, List<Double>>();
         for ( ExpressionExperiment EE : EEs ) {
             // get quantitation type
-            Collection<QuantitationType> qts = ( Collection<QuantitationType> ) eeService
+            Collection<QuantitationType> qts = eeService
                     .getPreferredQuantitationType( EE );
             if ( qts.size() < 1 ) {
                 return null;

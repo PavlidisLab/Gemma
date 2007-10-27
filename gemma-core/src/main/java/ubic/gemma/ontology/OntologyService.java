@@ -382,7 +382,7 @@ public class OntologyService {
         log.debug( "Biomaterial ID List: " + bioMaterialIdList );
 
         Set<Characteristic> chars = new HashSet<Characteristic>();
-        chars.add( ( Characteristic ) vc );
+        chars.add( vc );
         Collection<BioMaterial> biomaterials = bioMaterialService.loadMultiple( bioMaterialIdList );
 
         for ( BioMaterial bioM : biomaterials ) {
@@ -412,7 +412,7 @@ public class OntologyService {
         log.info( "Expression Experiment ID List: " + bmIdList );
 
         Set<Characteristic> chars = new HashSet<Characteristic>();
-        chars.add( ( Characteristic ) vc );
+        chars.add( vc );
         Collection<ExpressionExperiment> ees = eeService.loadMultiple( bmIdList );
 
         for ( ExpressionExperiment ee : ees ) {

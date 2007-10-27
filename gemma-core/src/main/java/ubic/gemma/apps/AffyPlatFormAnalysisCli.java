@@ -48,6 +48,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.list.ObjectArrayList;
+import cern.jet.stat.Descriptive;
 
 /**
  * @author xwan
@@ -117,6 +118,7 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
     private ExpressionExperimentService eeService = null;
     private Map<Object, Set> probeToGeneAssociation = null;
 
+    @Override
     protected void processOptions() {
         super.processOptions();
         if ( hasOption( 'a' ) ) {
@@ -287,7 +289,7 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
                 int N = valList.size();
                 double sum = DescriptiveWithMissing.sum( valList );
                 double ss = DescriptiveWithMissing.sumOfSquares( valList );
-                value = DescriptiveWithMissing.standardDeviation( DescriptiveWithMissing.variance( N, sum, ss ) );
+                value = Descriptive.standardDeviation( DescriptiveWithMissing.variance( N, sum, ss ) );
                 break;
         }
         if ( Double.isNaN( value ) ) value = 0.0;
@@ -328,8 +330,8 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
         // adService.thaw(arrayDesign);
         Collection<CompositeSequence> allCSs = adService.loadCompositeSequences( arrayDesign );
         for ( CompositeSequence cs : allCSs ) {
-            this.rankData.put( ( DesignElement ) cs, new DoubleArrayList() );
-            this.presentAbsentData.put( ( DesignElement ) cs, new DoubleArrayList() );
+            this.rankData.put( cs, new DoubleArrayList() );
+            this.presentAbsentData.put( cs, new DoubleArrayList() );
         }
 
         Collection<ExpressionExperiment> relatedEEs = adService.getExpressionExperiments( arrayDesign );
@@ -338,7 +340,7 @@ public class AffyPlatFormAnalysisCli extends AbstractSpringAwareCLI {
         for ( ExpressionExperiment ee : relatedEEs ) {
             System.err.println( ee.getName() );
             if ( this.processEEForPercentage( ee ) != null ) continue;
-            ;
+
             if ( this.processEE( ee ) != null ) continue;
             numberofAllArrays = numberofAllArrays + this.getNumberofArraysinEE( ee, arrayDesign );
         }

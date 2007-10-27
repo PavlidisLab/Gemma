@@ -116,7 +116,7 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
      */
     @Override
     protected BioMaterial handleCopy( BioMaterial bioMaterial ) throws Exception {
-        return ( BioMaterial ) this.getBioMaterialDao().copy( bioMaterial );
+        return this.getBioMaterialDao().copy( bioMaterial );
     }
 
     /*

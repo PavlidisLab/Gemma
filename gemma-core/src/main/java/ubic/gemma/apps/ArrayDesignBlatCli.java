@@ -28,7 +28,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 
-import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
 import ubic.gemma.loader.genome.BlatResultParser;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent;

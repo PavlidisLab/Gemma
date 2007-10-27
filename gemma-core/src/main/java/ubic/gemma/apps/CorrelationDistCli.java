@@ -54,11 +54,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
  * @author raymond,xwan
@@ -84,6 +80,7 @@ public class CorrelationDistCli extends AbstractGeneExpressionExperimentManipula
         addOption( binNumOption );
     }
 
+    @Override
     protected void processOptions() {
         super.processOptions();
 

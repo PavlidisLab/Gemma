@@ -34,6 +34,7 @@ public class SecurableDaoImpl extends ubic.gemma.model.common.SecurableDaoBase {
      * 
      * @see ubic.gemma.model.common.SecurableDaoBase#getRecipient(java.lang.Long)
      */
+    @Override
     public String getRecipient( Long id ) {
 
         String queryString = "SELECT recipient FROM acl_permission WHERE id= " + id;
@@ -51,6 +52,7 @@ public class SecurableDaoImpl extends ubic.gemma.model.common.SecurableDaoBase {
      * 
      * @see ubic.gemma.model.common.SecurableDaoBase#getAclObjectIdentityId(java.lang.Object, java.lang.Long)
      */
+    @Override
     public Long getAclObjectIdentityId( Object target, Long id ) {
 
         String objectIdentity = createObjectIdentityFromObject( target, id );

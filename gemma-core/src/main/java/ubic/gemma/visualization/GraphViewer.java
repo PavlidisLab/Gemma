@@ -104,7 +104,7 @@ public class GraphViewer implements PropertyChangeListener, ActionListener, Wind
     private Map<OntologyTerm, Integer> goTermsCounter = null;
     private static String SelectedGoTerm = "";
 
-    private Visualization vis = new Visualization();;
+    private Visualization vis = new Visualization();
     private Display display = null;
     private JFrame frame = null;
     private int currentGraphIndex = 0;
@@ -288,7 +288,7 @@ public class GraphViewer implements PropertyChangeListener, ActionListener, Wind
         Collection<Long> treeIds = new HashSet<Long>();
         for ( int i = 0; i < leafNodes.size(); i++ ) {
             TreeNode treeNode = ( TreeNode ) leafNodes.get( i );
-            treeIds.add( ( ( TreeNode ) treeNode ).id );
+            treeIds.add( treeNode.id );
         }
         goTermsCounter = linkMatrix.computeGOOverlap( treeIds, 20 );
         for ( OntologyTerm ontologyTerm : goTermsCounter.keySet() ) {

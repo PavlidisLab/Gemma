@@ -3,8 +3,8 @@ package ubic.gemma.apps;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.text.NumberFormat;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -41,15 +41,10 @@ public class CorrelationAnalysisCLI extends
 	@Override
 	protected void buildOptions() {
 		super.buildOptions();
-		Option outputFileOption = OptionBuilder.hasArg().isRequired()
-				.withArgName("File prefix").withDescription(
-						"File prefix for saving the output").withLongOpt(
-						"outFilePrefix").create('o');
+		Option outputFileOption = OptionBuilder.create('o');
 		addOption(outputFileOption);
 
-		Option kMaxOption = OptionBuilder.hasArg().withArgName("k")
-				.withDescription("Select the kth largest value").withType(Integer.class).withLongOpt(
-						"kValue").create('k');
+		Option kMaxOption = OptionBuilder.create('k');
 		addOption(kMaxOption);
 	}
 
@@ -109,7 +104,7 @@ public class CorrelationAnalysisCLI extends
 		Map<ExpressionExperiment, String> eeNameMap = matrices.getEeNameMap();
 
 		String topLeft = "GenePair";
-		DecimalFormat formatter = (DecimalFormat) DecimalFormat
+		DecimalFormat formatter = (DecimalFormat) NumberFormat
 				.getNumberInstance(Locale.US);
 		formatter.applyPattern("0.0000");
 		DecimalFormatSymbols symbols = formatter.getDecimalFormatSymbols();

@@ -51,6 +51,7 @@ public class BlastResultServiceImpl extends ubic.gemma.model.genome.sequenceAnal
      * 
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultServiceBase#handleFindOrCreate(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
      */
+    @Override
     protected ubic.gemma.model.genome.sequenceAnalysis.BlastResult handleFindOrCreate(
             ubic.gemma.model.genome.sequenceAnalysis.BlastResult resultToFindOrCreate ) throws java.lang.Exception {
 
@@ -62,6 +63,7 @@ public class BlastResultServiceImpl extends ubic.gemma.model.genome.sequenceAnal
      * 
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultServiceBase#handleFind(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
      */
+    @Override
     protected ubic.gemma.model.genome.sequenceAnalysis.BlastResult handleFind(
             ubic.gemma.model.genome.sequenceAnalysis.BlastResult resultToFind ) {
 

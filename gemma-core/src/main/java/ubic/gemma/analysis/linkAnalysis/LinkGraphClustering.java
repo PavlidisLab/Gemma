@@ -6,11 +6,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Queue;
 import java.util.Stack;
 
 import cern.colt.list.ObjectArrayList;
@@ -289,7 +285,7 @@ public class LinkGraphClustering{
     			String leftChild = nodeNames.get(oneNode.child.getQuick(0));
     			String rightChild = nodeNames.get(oneNode.child.getQuick(1));
     			int bits = LinkBitMatrixUtil.countBits(oneNode.mask);
-    			gtrOut.write(parent+"\t"+leftChild+"\t"+rightChild+"\t"+(double)bits/(((double)maximalCommonBits)+0.0001)+"\n");
+    			gtrOut.write(parent+"\t"+leftChild+"\t"+rightChild+"\t"+bits/((maximalCommonBits)+0.0001)+"\n");
     			/*
     			for(int childIndex = 0; childIndex < oneNode.child.length; childIndex++){
     				if(oneNode.child[childIndex].child == null){
@@ -363,7 +359,7 @@ public class LinkGraphClustering{
 
     public void run(){
     	this.init();
-    	run((int)((2)*this.Threshold));
+    	run(((2)*this.Threshold));
     }
     private void run(int stopStringency){
     	int i = 0;

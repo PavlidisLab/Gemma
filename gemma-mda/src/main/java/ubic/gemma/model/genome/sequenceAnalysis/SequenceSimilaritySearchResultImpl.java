@@ -36,6 +36,7 @@ public class SequenceSimilaritySearchResultImpl
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult#toString()
      */
+    @Override
     public java.lang.String toString()
     {
         // @todo implement public java.lang.String toString()

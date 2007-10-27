@@ -341,7 +341,7 @@ public class LinkAnalysis {
 
         this.uniqueGenesInDataset = this.geneToProbeMap.keySet().size();
         watch.stop();
-        log.info( "Finished mapping in " + ( double ) watch.getTime() / 1000.0 + " seconds" );
+        log.info( "Finished mapping in " + watch.getTime() / 1000.0 + " seconds" );
         log.info( "Mapping Stats " + ArrayUtils.toString( stats ) );
         if ( this.uniqueGenesInDataset == 0 ) return;
 

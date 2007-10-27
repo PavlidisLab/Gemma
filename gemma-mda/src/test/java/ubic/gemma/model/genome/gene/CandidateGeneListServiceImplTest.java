@@ -43,7 +43,7 @@ import ubic.gemma.model.genome.TaxonDao;
  */
 public class CandidateGeneListServiceImplTest extends TestCase {
 
-    private CandidateGeneDao candidateGeneDaoMock;;
+    private CandidateGeneDao candidateGeneDaoMock;
     private CandidateGeneListDao candidateGeneListDaoMock;
     private Gene g, g2, g3, g4 = null;
 

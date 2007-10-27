@@ -188,7 +188,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
         log.info( "Finished processing platform: " + arrayDesignName );
 
         successObjects.add( ( ( Describable ) arrayDesign ).getName() + " ("
-                + ( ( ArrayDesign ) arrayDesign ).getExternalReferences().iterator().next().getAccession() + ")" );
+                + ( arrayDesign ).getExternalReferences().iterator().next().getAccession() + ")" );
 
         if ( StringUtils.isBlank( fileName ) ) {
             log.info( "Processed " + numProcessed + " composite sequences" );
@@ -452,7 +452,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
         Collection<OntologyTerm> results = new HashSet<OntologyTerm>();
         for ( VocabCharacteristic vc : ontos ) {
-            results.add( this.goService.getTermForId( vc.getValue() ) );
+            results.add( GeneOntologyService.getTermForId( vc.getValue() ) );
         }
 
         if ( ( ontos == null ) || ( ontos.size() == 0 ) ) return results;

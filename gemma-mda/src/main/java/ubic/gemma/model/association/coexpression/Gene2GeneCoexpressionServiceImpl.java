@@ -33,6 +33,7 @@ public class Gene2GeneCoexpressionServiceImpl extends
     /**
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService#create(ubic.gemma.model.association.coexpression.Gene2GeneCoexpression)
      */
+    @Override
     protected ubic.gemma.model.association.coexpression.Gene2GeneCoexpression handleCreate(
             ubic.gemma.model.association.coexpression.Gene2GeneCoexpression gene2gene ) throws java.lang.Exception {
 
@@ -55,6 +56,7 @@ public class Gene2GeneCoexpressionServiceImpl extends
     /**
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService#create(java.util.Collection)
      */
+    @Override
     protected java.util.Collection handleCreate( java.util.Collection genes ) throws java.lang.Exception {
 
         if ( !this.validCollection( genes ) ) return null;
@@ -77,6 +79,7 @@ public class Gene2GeneCoexpressionServiceImpl extends
     /**
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService#delete(ubic.gemma.model.association.coexpression.Gene2GeneCoexpression)
      */
+    @Override
     protected void handleDelete( ubic.gemma.model.association.coexpression.Gene2GeneCoexpression toDelete )
             throws java.lang.Exception {
 
@@ -124,6 +127,7 @@ public class Gene2GeneCoexpressionServiceImpl extends
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService#findCoexpressionRelationships(ubic.gemma.model.genome.Gene,
      *      java.util.Collection)
      */
+    @Override
     protected java.util.Collection handleFindCoexpressionRelationships( ubic.gemma.model.genome.Gene gene,
             Analysis analysis, int stringency ) throws java.lang.Exception {
         return this.getGene2GeneCoexpressionDao().findCoexpressionRelationships( gene, analysis, stringency );

@@ -37,6 +37,7 @@ public class Gene2GeneCoexpressionDaoImpl extends
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao#findCoexpressionRelationships(null,
      *      java.util.Collection)
      */
+    @Override
     protected java.util.Collection handleFindCoexpressionRelationships( Gene gene, Analysis analysis, int stringency ) {
         String g2gClassName;
 

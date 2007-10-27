@@ -149,6 +149,7 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
     /* (non-Javadoc)
      * @see ubic.gemma.model.common.auditAndSecurity.UserService#handleLoadAllRoles()
      */
+    @Override
     public Collection handleLoadAllRoles() {
         return this.getUserRoleDao().loadAll();
     }

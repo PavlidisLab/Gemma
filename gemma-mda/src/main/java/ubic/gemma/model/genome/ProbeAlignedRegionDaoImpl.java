@@ -97,6 +97,7 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
      * 
      * @see ubic.gemma.model.genome.GeneDao#geneValueObjectToEntity(ubic.gemma.model.genome.gene.GeneValueObject)
      */
+    @Override
     public ProbeAlignedRegion geneValueObjectToEntity( GeneValueObject geneValueObject ) {
         final String queryString = "select distinct gene from ProbeAlignedRegionImpl gene where gene.id = :id";
 

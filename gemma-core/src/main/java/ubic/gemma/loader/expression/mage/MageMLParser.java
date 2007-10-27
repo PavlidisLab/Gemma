@@ -18,7 +18,6 @@
  */
 package ubic.gemma.loader.expression.mage;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -202,6 +201,7 @@ public class MageMLParser extends AbstractMageTool implements Parser {
      * @param istXSL XSL for transforming the MAGE-ML into a simpler format preserving key structure
      * @deprecated We no longer need to do this.
      */
+    @Deprecated
     private void createSimplifiedXml( InputStream istMageXml, InputStream istXsl ) throws IOException,
             TransformerException {
 
@@ -252,6 +252,7 @@ public class MageMLParser extends AbstractMageTool implements Parser {
      * @throws FileNotFoundException
      * @deprecated We no longer need to do this.
      */
+    @Deprecated
     private void createSimplifiedXml( String fileName ) throws IOException, FileNotFoundException, TransformerException {
         InputStream is;
         is = FileTools.getInputStreamFromPlainOrCompressedFile( fileName );

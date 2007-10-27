@@ -33,7 +33,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  */
 public class MatrixWriter<T> {
 
-    private static NumberFormat nf = DecimalFormat.getInstance();
+    private static NumberFormat nf = NumberFormat.getInstance();
     static {
         nf.setMaximumFractionDigits( 4 );
     }

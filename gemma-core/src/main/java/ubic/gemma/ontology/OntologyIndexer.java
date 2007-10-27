@@ -31,7 +31,6 @@ import ubic.gemma.util.ConfigUtils;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.query.larq.IndexBuilderSubject;
 import com.hp.hpl.jena.query.larq.IndexLARQ;
-import com.hp.hpl.jena.util.FileManager;
 
 /**
  * @author pavlidis

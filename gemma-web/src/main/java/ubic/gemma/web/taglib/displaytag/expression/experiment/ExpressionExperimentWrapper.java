@@ -57,13 +57,11 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         if ( object.getDateCached() == null ) {
             return "";
-        } else {
-            if ( object.getDateCached().length() > 10 ) {
-                return object.getDateCached().substring( 0, 10 );
-            } else {
-                return object.getDateCached();
-            }
         }
+        if ( object.getDateCached().length() > 10 ) {
+            return object.getDateCached().substring( 0, 10 );
+        }
+        return object.getDateCached();
     }
 
     /**
@@ -73,13 +71,11 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         if ( object.getDateCreated() == null ) {
             return "";
-        } else {
-            if ( object.getDateCreated().length() > 10 ) {
-                return object.getDateCreated().substring( 0, 10 );
-            } else {
-                return object.getDateCreated();
-            }
         }
+        if ( object.getDateCreated().length() > 10 ) {
+            return object.getDateCreated().substring( 0, 10 );
+        }
+        return object.getDateCreated();
     }
 
     /**
@@ -94,9 +90,8 @@ public class ExpressionExperimentWrapper extends TableDecorator {
             String shortDate = StringUtils.left( fullDate, 10 );
             shortDate = formatIfRecent( mostRecent, shortDate );
             return "<span title='" + fullDate + "'>" + shortDate + "</span>";
-        } else {
-            return "[None]";
         }
+        return "[None]";
     }
 
     /**
@@ -111,9 +106,8 @@ public class ExpressionExperimentWrapper extends TableDecorator {
             String shortDate = StringUtils.left( fullDate, 10 );
             shortDate = formatIfRecent( mostRecent, shortDate );
             return "<span title='" + fullDate + "'>" + shortDate + "</span>";
-        } else {
-            return "[None]";
         }
+        return "[None]";
     }
 
     /**
@@ -137,10 +131,9 @@ public class ExpressionExperimentWrapper extends TableDecorator {
             }
 
             return "<span " + style + " title='" + fullDate + "'>" + shortDate + "</span>";
-        } else {
-            // FIXME : show '-' if this experiment doesn't use two-color arrays
-            return "[None]";
         }
+        // FIXME : show '-' if this experiment doesn't use two-color arrays
+        return "[None]";
     }
 
     private String formatIfRecent( boolean mostRecent, String shortDate ) {
@@ -164,10 +157,9 @@ public class ExpressionExperimentWrapper extends TableDecorator {
             String shortDate = StringUtils.left( fullDate, 10 );
             shortDate = formatIfRecent( mostRecent, shortDate );
             return "<span title='" + fullDate + "'>" + shortDate + "</span>";
-        } else {
-            // FIXME: show '-' if the ranks cannot be computed.
-            return "[None]";
         }
+        // FIXME: show '-' if the ranks cannot be computed.
+        return "[None]";
     }
 
     /**
@@ -175,6 +167,10 @@ public class ExpressionExperimentWrapper extends TableDecorator {
      */
     public String getDateLinkAnalysisNoTime() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
+        // if the data set is too small, show "-"
+        if ( object.getBioMaterialCount() <= 4 ) {
+            return "-";
+        }
         Date dateObject = object.getDateLinkAnalysis();
         if ( dateObject != null ) {
             boolean mostRecent = determineIfMostRecent( dateObject, object );
@@ -192,13 +188,9 @@ public class ExpressionExperimentWrapper extends TableDecorator {
             String shortDate = StringUtils.left( fullDate, 10 );
             shortDate = formatIfRecent( mostRecent, shortDate );
             return "<span " + style + " title='" + fullDate + "'>" + shortDate + "</span>";
-        } else {
-            // FIXME if the data set is too small, show "-"
-            if (object.getBioMaterialCount() <= 4) {
-                return "-";
-            }
-            return "[None]";
         }
+
+        return "[None]";
     }
 
     /**
@@ -306,9 +298,9 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     public String getNameLink() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         if ( object != null ) {
-//            return "<a title=\"" + object.getName()
-//                    + "\" href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + object.getId()
-//                    + "\">" + StringUtils.abbreviate( object.getName(), 75 ) + "</a>";
+            // return "<a title=\"" + object.getName()
+            // + "\" href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + object.getId()
+            // + "\">" + StringUtils.abbreviate( object.getName(), 75 ) + "</a>";
             StringBuffer buf = new StringBuffer();
             buf.append( "<a title=\"" );
             buf.append( object.getName() );
@@ -317,32 +309,35 @@ public class ExpressionExperimentWrapper extends TableDecorator {
             buf.append( "\">" );
             buf.append( StringUtils.abbreviate( object.getName(), 75 ) );
             buf.append( "</a>" );
-//            if ( object.getTroubleFlag() != null ) {
-//                buf.append( "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt='trouble' title='" );
-//                buf.append(  StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getTroubleFlag() ) ) );
-//                buf.append( "' />" );
-//            }
-//            if ( object.getValidatedFlag() != null ) {
-//                buf.append( "&nbsp;<img src='/Gemma/images/icons/ok.png' height='16' width='16' alt='validated' title='" );
-//                buf.append( StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getValidatedFlag() ) ) );
-//                buf.append( "' />" );
-//            }
+            // if ( object.getTroubleFlag() != null ) {
+            // buf.append( "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt='trouble'
+            // title='" );
+            // buf.append( StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getTroubleFlag() ) ) );
+            // buf.append( "' />" );
+            // }
+            // if ( object.getValidatedFlag() != null ) {
+            // buf.append( "&nbsp;<img src='/Gemma/images/icons/ok.png' height='16' width='16' alt='validated' title='"
+            // );
+            // buf.append( StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getValidatedFlag() ) ) );
+            // buf.append( "' />" );
+            // }
             return buf.toString();
         }
         return "No design";
     }
-    
+
     public String getTroubleFlag() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         StringBuffer buf = new StringBuffer();
         if ( object.getTroubleFlag() != null ) {
-            buf.append( "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt='trouble' title='" );
-            buf.append(  StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getTroubleFlag() ) ) );
+            buf
+                    .append( "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt='trouble' title='" );
+            buf.append( StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getTroubleFlag() ) ) );
             buf.append( "' />" );
         }
         return buf.toString();
     }
-    
+
     public String getValidatedFlag() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         StringBuffer buf = new StringBuffer();
@@ -382,9 +377,8 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         Map.Entry entry = ( Map.Entry ) getCurrentRowObject();
         if ( ( ( QuantitationType ) entry.getKey() ).getIsPreferred() ) {
             return "<input type=checkbox checked disabled></input>";
-        } else {
-            return "<input type=checkbox disabled></input>";
         }
+        return "<input type=checkbox disabled></input>";
     }
 
     /**
@@ -394,9 +388,8 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         Map.Entry entry = ( Map.Entry ) getCurrentRowObject();
         if ( ( ( QuantitationType ) entry.getKey() ).getIsBackground() ) {
             return "<input type=checkbox checked disabled></input>";
-        } else {
-            return "<input type=checkbox disabled></input>";
         }
+        return "<input type=checkbox disabled></input>";
     }
 
     /**
@@ -406,9 +399,8 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         Map.Entry entry = ( Map.Entry ) getCurrentRowObject();
         if ( ( ( QuantitationType ) entry.getKey() ).getIsBackgroundSubtracted() ) {
             return "<input type=checkbox checked disabled></input>";
-        } else {
-            return "<input type=checkbox disabled></input>";
         }
+        return "<input type=checkbox disabled></input>";
     }
 
     /**
@@ -418,9 +410,8 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         Map.Entry entry = ( Map.Entry ) getCurrentRowObject();
         if ( ( ( QuantitationType ) entry.getKey() ).getIsNormalized() ) {
             return "<input type=checkbox checked disabled></input>";
-        } else {
-            return "<input type=checkbox disabled></input>";
         }
+        return "<input type=checkbox disabled></input>";
     }
 
     /**
@@ -507,5 +498,5 @@ public class ExpressionExperimentWrapper extends TableDecorator {
 
         return true;
     }
-    
+
 }

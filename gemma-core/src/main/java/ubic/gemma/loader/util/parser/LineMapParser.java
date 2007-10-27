@@ -35,10 +35,12 @@ import ubic.gemma.util.progress.ProgressManager;
  */
 public abstract class LineMapParser extends BasicLineMapParser {
 
+    @Override
     public final Object getKey( Object o ) {
         throw new UnsupportedOperationException( "The subclass must handle adding to the map" );
     }
 
+    @Override
     protected final void put( Object key, Object value ) {
         throw new UnsupportedOperationException( "The subclass must handle adding to the map" );
     }
@@ -48,6 +50,7 @@ public abstract class LineMapParser extends BasicLineMapParser {
      * 
      * @see baseCode.io.reader.LineParser#parse(java.io.InputStream)
      */
+    @Override
     public void parse( InputStream is ) throws IOException {
 
         if ( is == null ) {

@@ -51,6 +51,7 @@ import org.xml.sax.helpers.XMLReaderFactory;
  * @deprecated We are still using the OntologyHelper, this class isn't necessary. In addition, functionality we need in
  *             this class could be merged with our own MgedOntologyService.
  */
+@Deprecated
 public class MgedOntologyHelper {
 
     private static int enumID = 0;

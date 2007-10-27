@@ -45,10 +45,12 @@ public class OntologyIndividualImpl extends AbstractOntologyResource implements 
         this.uri = ind.getURI();
     }
 
+    @Override
     public ExternalDatabase getSourceOntology() {
         return sourceOntology;
     }
 
+    @Override
     public String getUri() {
         return uri;
     }
@@ -57,6 +59,7 @@ public class OntologyIndividualImpl extends AbstractOntologyResource implements 
         return this.toString();
     }
 
+    @Override
     public String toString() {
         String label = ind.getLabel( null );
         if ( label == null ) label = ind.getLocalName();

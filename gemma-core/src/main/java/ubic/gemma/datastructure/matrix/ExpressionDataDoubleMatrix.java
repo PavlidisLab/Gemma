@@ -18,19 +18,18 @@
  */
 package ubic.gemma.datastructure.matrix;
 
-import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.FastRowAccessDoubleMatrix2DNamed;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -167,6 +166,14 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         return result;
     }
 
+    /**
+     * @param index
+     * @return
+     */
+    public double[] getColumn( int index ) {
+        return this.matrix.getColumn( index );
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -296,7 +303,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         int columns = this.columns();
         int rows = this.rows();
 
-        NumberFormat nf = DecimalFormat.getInstance();
+        NumberFormat nf = NumberFormat.getInstance();
         nf.setMaximumFractionDigits( 4 );
 
         StringBuffer buf = new StringBuffer();
@@ -352,11 +359,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         DoubleMatrixNamed matrix = DoubleMatrix2DNamedFactory.fastrow( numRows, maxSize );
 
         for ( int j = 0; j < matrix.columns(); j++ ) {
-            BioMaterial bm = this.getBioMaterialForColumn( j );
-            if ( bm == null || StringUtils.isEmpty( bm.getName() ) )
-                matrix.addColumnName( j );
-            else
-                matrix.addColumnName( bm.getName() );
+            matrix.addColumnName( j );
         }
 
         // initialize the matrix to -Infinity; this marks values that are not yet initialized.
@@ -377,11 +380,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
 
             // Rows are indexed by the underlying designElement.
             // if ( log.isTraceEnabled() ) log.trace( "Adding row " + rowIndex );
-            if ( StringUtils.isEmpty( designElement.getName() ) ) {
-                matrix.addRowName( rowIndex );
-            } else {
-                matrix.addRowName( designElement.getName() );
-            }
+            matrix.addRowName( rowIndex );
 
             byte[] bytes = vector.getData();
             double[] vals = bac.byteArrayToDoubles( bytes );
@@ -430,6 +429,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
      * @param vectors
      * @return DoubleMatrixNamed
      */
+    @Override
     protected void vectorsToMatrix( Collection<DesignElementDataVector> vectors ) {
         if ( vectors == null || vectors.size() == 0 ) {
             throw new IllegalArgumentException( "No vectors!" );
@@ -477,7 +477,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
      * @return
      */
     public DoubleMatrixNamed getNamedMatrix() {
-
         return matrix;
     }
 

@@ -52,7 +52,7 @@ public class ChainedStatementImpl extends AbstractStatement implements ChainedSt
     }
 
     public void setObject( ChainedStatementObject object ) {
-        this.object = ( ChainedStatementObject ) object;
+        this.object = object;
     }
 
     public ChainedStatementObject getObject() {

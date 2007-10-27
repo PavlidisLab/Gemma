@@ -43,6 +43,7 @@ public class DataPropertyImpl extends ubic.gemma.model.common.description.DataPr
         return buf.toString();
     }
 
+    @Override
     protected String toString( int indent ) {
         String ind = StringUtils.repeat( "   ", indent );
         StringBuilder buf = new StringBuilder();

@@ -75,6 +75,7 @@ public class ExpressionExperimentPrimaryPubCli extends AbstractSpringAwareCLI {
         return null;
     }
 
+    @Override
     protected void processOptions() {
         super.processOptions();
     }

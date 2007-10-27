@@ -128,7 +128,7 @@ public class BlatAssociationDaoImpl extends ubic.gemma.model.genome.sequenceAnal
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 for ( Object object : blatAssociations ) {
                     BlatAssociation blatAssociation = ( BlatAssociation ) object;
-                    if ( ( ( BlatAssociation ) blatAssociation ).getId() == null ) continue;
+                    if ( ( blatAssociation ).getId() == null ) continue;
                     thawBlatAssociation( session, blatAssociation );
                 }
 

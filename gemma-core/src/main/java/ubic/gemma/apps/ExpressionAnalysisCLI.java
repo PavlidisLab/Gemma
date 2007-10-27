@@ -7,6 +7,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -64,18 +65,16 @@ public class ExpressionAnalysisCLI extends
 	protected void buildOptions() {
 		super.buildOptions();
 
-		Option outFileOption = OptionBuilder.hasArg().isRequired().withArgName(
-				"File prefix").withDescription("File prefix for output files")
-				.withLongOpt("outFilePrefix").create('o');
+		Option outFileOption = OptionBuilder.create('o');
 		addOption(outFileOption);
 
-		Option filterOption = OptionBuilder.hasArg().withArgName("threshold")
-				.withDescription("Fraction of data sets with ranks threshold")
+		Option filterOption = OptionBuilder
 				.create("threshold");
 		addOption(filterOption);
 	}
 
-	protected void processOptions() {
+	@Override
+    protected void processOptions() {
 		super.processOptions();
 		if (hasOption('o')) {
 			outFilePrefix = getOptionValue('o');
@@ -297,7 +296,7 @@ public class ExpressionAnalysisCLI extends
 			return exc;
 		}
 		
-		DecimalFormat formatter = (DecimalFormat) DecimalFormat
+		DecimalFormat formatter = (DecimalFormat) NumberFormat
 				.getNumberInstance(Locale.US);
 		formatter.applyPattern("0.0000");
 		formatter.getDecimalFormatSymbols().setNaN("NaN");

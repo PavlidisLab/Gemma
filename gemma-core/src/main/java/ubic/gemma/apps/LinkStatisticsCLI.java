@@ -256,6 +256,7 @@ public class LinkStatisticsCLI extends AbstractGeneExpressionExperimentManipulat
     /**
      * 
      */
+    @Override
     protected void processOptions() {
         super.processOptions();
 

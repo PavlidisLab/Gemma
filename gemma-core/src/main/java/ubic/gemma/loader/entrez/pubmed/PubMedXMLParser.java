@@ -397,7 +397,7 @@ public class PubMedXMLParser {
                     vc.setIsMajorTopic( dmajorB );
                 } else {
                     MedicalSubjectHeading qual = MedicalSubjectHeading.Factory.newInstance();
-                    String q = XMLUtils.getTextValue( ( Element ) descriptor );
+                    String q = XMLUtils.getTextValue( descriptor );
                     boolean qmajorB = isMajorHeading( descriptor );
                     qual.setIsMajorTopic( qmajorB );
                     qual.setTerm( q );

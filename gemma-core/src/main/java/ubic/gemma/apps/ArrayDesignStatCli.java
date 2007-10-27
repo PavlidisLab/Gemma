@@ -7,8 +7,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
-import ubic.gemma.analysis.sequence.CompositeSequenceMapSummary;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.DesignElement;

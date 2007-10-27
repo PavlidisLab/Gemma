@@ -131,11 +131,12 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
      * @param config
      * @param ctx
      */
+    @SuppressWarnings("unchecked")
     private void loadRememberMeStatus( Map<String, Object> config, ApplicationContext ctx ) {
         try {
             ProviderManager provider = ( ProviderManager ) ctx.getBean( "authenticationManager" );
-            for ( Iterator it = provider.getProviders().iterator(); it.hasNext(); ) {
-                AuthenticationProvider p = ( AuthenticationProvider ) it.next();
+            for ( Iterator<AuthenticationProvider> it = provider.getProviders().iterator(); it.hasNext(); ) {
+                AuthenticationProvider p = it.next();
                 if ( p instanceof RememberMeAuthenticationProvider ) {
                     config.put( "rememberMeEnabled", Boolean.TRUE );
                     log.debug( "Remember Me is enabled" );

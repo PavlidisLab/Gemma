@@ -60,7 +60,7 @@ public class ExpressionExperimentLoadTaskImpl extends BaseGemmaSpacesTask implem
 
         super.initProgressAppender( this.getClass() );
 
-        GemmaSpacesExpressionExperimentLoadCommand jsEeLoadCommand = ( GemmaSpacesExpressionExperimentLoadCommand ) javaSpacesExpressionExperimentLoadCommand;
+        GemmaSpacesExpressionExperimentLoadCommand jsEeLoadCommand = javaSpacesExpressionExperimentLoadCommand;
         String geoAccession = jsEeLoadCommand.getAccession();
         boolean loadPlatformOnly = jsEeLoadCommand.isLoadPlatformOnly();
         boolean doSampleMatching = jsEeLoadCommand.isSuppressMatching();
@@ -90,6 +90,7 @@ public class ExpressionExperimentLoadTaskImpl extends BaseGemmaSpacesTask implem
     /**
      * @param gigaSpacesTemplate
      */
+    @Override
     public void setGigaSpacesTemplate( GigaSpacesTemplate gigaSpacesTemplate ) {
         super.setGigaSpacesTemplate( gigaSpacesTemplate );
     }

@@ -341,7 +341,7 @@ public class SimpleExpressionExperimentLoadController extends AbstractGemmaSpace
             FileUploadUtil.copyUploadedFile( null, fileUpload, "dataFile.file" );
         }
 
-        return ( String ) this.run( ed );
+        return this.run( ed );
     }
 
     /*

@@ -22,7 +22,6 @@ import java.awt.Font;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -46,11 +45,9 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
-import ubic.basecode.dataStructure.matrix.FastRowAccessDoubleMatrix2DNamed;
 import ubic.basecode.gui.ColorMatrix;
 import ubic.basecode.gui.JMatrixDisplay;
-import ubic.gemma.loader.util.converter.SimpleExpressionExperimentConverter;
-import ubic.gemma.loader.util.parser.TabDelimParser;
+import ubic.basecode.io.reader.DoubleMatrixReader;
 
 /**
  * @author keshav
@@ -59,9 +56,7 @@ import ubic.gemma.loader.util.parser.TabDelimParser;
 public class VisualizeDataSetApp {
     private static Log log = LogFactory.getLog( VisualizeDataSetApp.class );
 
-    private String filename = "aov.results-2-monocyte-data-bytime.bypat.data.sort";
-
-    private SimpleExpressionExperimentConverter converter = null;
+    private String filePath = "aov.results-2-monocyte-data-bytime.bypat.data.sort";
 
     private static final int DEFAULT_MAX_SIZE = 3;
 
@@ -120,11 +115,7 @@ public class VisualizeDataSetApp {
         XYSeriesCollection xySeriesCollection = new XYSeriesCollection();
         Iterator iter = dataCol.iterator();
         for ( int j = 0; j < numProfiles; j++ ) {
-            double[] data = ( double[] ) iter.next();
-            XYSeries series = new XYSeries( j, true, true );
-            for ( int i = 0; i < data.length; i++ ) {
-                series.add( i, data[i] );
-            }
+            XYSeries series = getSeries( j, ( double[] ) iter.next() );
             xySeriesCollection.addSeries( series );
         }
 
@@ -136,6 +127,13 @@ public class VisualizeDataSetApp {
 
         ChartFrame frame = new ChartFrame( title, chart, true );
 
+        showWindow( frame );
+    }
+
+    /**
+     * @param frame
+     */
+    private void showWindow( ChartFrame frame ) {
         // Display the window.
         frame.setLocationRelativeTo( null );
         frame.pack();
@@ -160,21 +158,26 @@ public class VisualizeDataSetApp {
 
         Iterator iter = dataCol.iterator();
         for ( int j = 0; j < numProfiles; j++ ) {
-            double[] data = ( double[] ) iter.next();
-            XYSeries series = new XYSeries( "" );
-            for ( int i = 0; i < data.length; i++ ) {
-                series.add( i, data[i] );
-            }
+            XYSeries series = getSeries( j, ( double[] ) iter.next() );
             PolarPlot plot = ( PolarPlot ) chart.getPlot();
             plot.setDataset( new XYSeriesCollection( series ) );
         }
 
         ChartFrame frame = new ChartFrame( title, chart, true );
 
-        // Display the window.
-        frame.setLocationRelativeTo( null );
-        frame.pack();
-        frame.setVisible( true );
+        showWindow( frame );
+    }
+
+    /**
+     * @param iter
+     * @return
+     */
+    private XYSeries getSeries( Comparable key, double[] data ) {
+        XYSeries series = new XYSeries( key, true, true );
+        for ( int i = 0; i < data.length; i++ ) {
+            series.add( i, data[i] );
+        }
+        return series;
     }
 
     /**
@@ -195,10 +198,7 @@ public class VisualizeDataSetApp {
 
         ChartFrame frame = new ChartFrame( title, chart, true );
 
-        // Display the window.
-        frame.setLocationRelativeTo( null );
-        frame.pack();
-        frame.setVisible( true );
+        showWindow( frame );
     }
 
     /**
@@ -206,53 +206,11 @@ public class VisualizeDataSetApp {
      * @return
      * @throws IOException
      */
-    private Collection<String[]> parseData( boolean headerExists ) throws IOException {
-
-        InputStream is = VisualizeDataSetApp.class.getResourceAsStream( "/data/loader/" + filename );
-
-        TabDelimParser parser = new TabDelimParser();
-        parser.parse( is );
-
-        Collection<String[]> results = parser.getResults();
-
-        return results;
-    }
-
-    /**
-     * @param dataCol
-     * @return Collection<String[]>
-     */
-    private Collection<String[]> prepareData( Collection<String[]> dataCol ) {
-
-        if ( converter == null ) {
-            log.info( "Null converter.  Creating a new one" );
-            converter = new SimpleExpressionExperimentConverter( "Expression experiment " + filename,
-                    "An expression experiment based on data from " + filename, "Pappapanou", "Pavlidis collaboration" );
-        }
-        Collection<String[]> rawDataCol = converter.prepareData( dataCol, true, true );
-        return rawDataCol;
-
-    }
-
-    /**
-     * 
-     *
-     */
-    private double[][] parsePrepareAndConvertRawData() {
-
-        try {
-            Collection<String[]> results = parseData( true );
-            assert 201 == results.size();
-
-            Collection<String[]> data = prepareData( results );
-            assert 200 == results.size();
-
-            return converter.convertRawData( data );
-
-        } catch ( IOException e ) {
-            e.printStackTrace();
-            return null;
-        }
+    private DoubleMatrixNamed parseData( boolean headerExists ) throws IOException {
+        InputStream is = this.getClass().getResourceAsStream( "/data/loader/" + filePath );
+        if ( is == null ) throw new RuntimeException( "could not load data" );
+        DoubleMatrixReader reader = new DoubleMatrixReader();
+        return ( DoubleMatrixNamed ) reader.read( is );
     }
 
     /**
@@ -262,32 +220,28 @@ public class VisualizeDataSetApp {
 
         VisualizeDataSetApp visualizeDataSet = new VisualizeDataSetApp();
 
-        double[][] rawData = visualizeDataSet.parsePrepareAndConvertRawData();
+        DoubleMatrixNamed matrix = null;
+        try {
+            matrix = visualizeDataSet.parseData( true );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
 
-        ExpressionDataMatrixVisualizationService visualizationService = new ExpressionDataMatrixVisualizationService();
-
-        DoubleMatrixNamed m = new FastRowAccessDoubleMatrix2DNamed( rawData );
-        m.setRowNames( Arrays.asList( visualizeDataSet.converter.getRowNames() ) );
-        m.setColumnNames( Arrays.asList( visualizeDataSet.converter.getHeader() ) );
-        ColorMatrix colorMatrix = new ColorMatrix( m );
-        // ColorMatrix colorMatrix = visualizationService.createColorMatrix( rawData, new LinkedHashSet( Arrays
-        // .asList( visualizeDataSet.converter.getRowNames() ) ), new LinkedHashSet( Arrays
-        // .asList( visualizeDataSet.converter.getHeader() ) ) );
-
-        visualizeDataSet.showDataMatrix( "aov.results-2-monocyte-data-bytime.bypat.data.sort", new JMatrixDisplay(
-                colorMatrix ) );
+        ColorMatrix colorMatrix = new ColorMatrix( matrix );
+        visualizeDataSet.showDataMatrix( "A heat map", new JMatrixDisplay( colorMatrix ) );
 
         List<double[]> data = new ArrayList<double[]>();
 
-        data.add( rawData[4] );
-        data.add( rawData[13] );
-        data.add( rawData[22] );
-        data.add( rawData[26] );
-        data.add( rawData[36] );
+        data.add( matrix.getRow( 4 ) );
+        data.add( matrix.getRow( 16 ) );
+        data.add( matrix.getRow( 22 ) );
+        data.add( matrix.getRow( 26 ) );
+        data.add( matrix.getRow( 36 ) );
 
-        visualizeDataSet.showProfilesLineChartView( "aov.results-2-monocyte-data-bytime.bypat.data.sort", data, 5 );
+        visualizeDataSet.showProfilesLineChartView( "A line chart", data, 5 );
 
-        visualizeDataSet.showProfilesPolarView( "aov.results-2-monocyte-data-bytime.bypat.data.sort", data, 5 );
+        visualizeDataSet.showProfilesPolarView( "A polar chart", data, 5 );
 
     }
+
 }

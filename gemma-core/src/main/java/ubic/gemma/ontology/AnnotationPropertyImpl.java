@@ -96,6 +96,7 @@ public class AnnotationPropertyImpl implements AnnotationProperty {
         return true;
     }
 
+    @Override
     public String toString() {
         return property.getLocalName() + " " + contents;
     }

@@ -45,6 +45,7 @@ public class LinkConfirmationStatistics {
         }
     }
 
+    @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
         NumberFormat nf = NumberFormat.getInstance();

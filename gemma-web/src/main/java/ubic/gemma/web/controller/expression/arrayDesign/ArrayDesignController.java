@@ -41,7 +41,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.Session;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
@@ -240,7 +239,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
                         if ( property == null || property2 == null ) return 0;
 
                         if ( property instanceof Comparable ) {
-                            return desc * ( ( Comparable ) property ).compareTo( ( ( Comparable ) property2 ) );
+                            return desc * ( ( Comparable ) property ).compareTo( property2 );
                         } else if ( property instanceof Collection ) {
                             // This is lame - sort by size. Should sort by members themselves.
                             return desc * ( ( ( Collection ) property ).size() - ( ( Collection ) property2 ).size() );
@@ -255,23 +254,6 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
                     return 0;
                 }
 
-                // /**
-                // * FIXME this isn't used.
-                // *
-                // * @param it
-                // * @param it2
-                // * @return
-                // */
-                // private int compareCollections( Iterator it, Iterator it2 ) {
-                // while ( it.hasNext() ) {
-                // if ( it2.hasNext() ) {
-                // return ( ( Comparable ) it.next() ).compareTo( ( Comparable ) it2.next() );
-                // } else {
-                // return 1;
-                // }
-                // }
-                // return 0;
-                // }
             } );
 
             // return just the values.
@@ -469,7 +451,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
         StopWatch overallWatch = new StopWatch();
         overallWatch.start();
-        
+
         String sId = request.getParameter( "id" );
         Collection<ArrayDesignValueObject> valueObjects = new ArrayList<ArrayDesignValueObject>();
         ArrayDesignValueObject summary = arrayDesignReportService.getSummaryObject();
@@ -490,7 +472,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             }
             valueObjects.addAll( arrayDesignService.loadValueObjects( ids ) );
             log.info( "List of AD ids to load value objets for: " + idList );
-            log.info( "Loading AD value objects took: " + overallWatch.getTime()/1000 );
+            log.info( "Loading AD value objects took: " + overallWatch.getTime() / 1000 );
         }
 
         arrayDesignReportService.fillEventInformation( valueObjects );
@@ -503,19 +485,17 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
          * arrayDesignReportService.getLastSequenceUpdateEvent( ad.getId() ) ); }
          */
 
-        //Sort the ArrayDesigns
-        Collections.sort( ( List<ArrayDesignValueObject> ) valueObjects,  new ArrayDesignValueObjectComparator());
-        
-        
-        
+        // Sort the ArrayDesigns
+        Collections.sort( ( List<ArrayDesignValueObject> ) valueObjects, new ArrayDesignValueObjectComparator() );
+
         Long numArrayDesigns = new Long( valueObjects.size() );
         ModelAndView mav = new ModelAndView( "arrayDesigns" );
         mav.addObject( "arrayDesigns", valueObjects );
         mav.addObject( "numArrayDesigns", numArrayDesigns );
         mav.addObject( "summary", summary );
 
-        log.info( "ArrayDesign.showall took: " + overallWatch.getTime()/1000 );
-       
+        log.info( "ArrayDesign.showall took: " + overallWatch.getTime() / 1000 );
+
         return mav;
     }
 
@@ -533,10 +513,9 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
         if ( sId == null ) {
             return startJob( new GenerateSummary( request, arrayDesignReportService ) );
-        } else {
-            Long id = Long.parseLong( sId );
-            return startJob( new GenerateSummary( request, arrayDesignReportService, id ) );
         }
+        Long id = Long.parseLong( sId );
+        return startJob( new GenerateSummary( request, arrayDesignReportService, id ) );
     }
 
     /**
@@ -623,10 +602,10 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      * @return
      */
     public ModelAndView filter( HttpServletRequest request, HttpServletResponse response ) {
-        
+
         StopWatch overallWatch = new StopWatch();
         overallWatch.start();
-        
+
         String filter = request.getParameter( "filter" );
 
         // Validate the filtering search criteria.
@@ -640,7 +619,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         if ( ( searchResults == null ) || ( searchResults.size() == 0 ) ) {
             this.saveMessage( request, "Your search yielded no results" );
             Long overallElapsed = overallWatch.getTime();
-            log.info( "No results found. Search took: " + overallElapsed/1000 + "s "  );
+            log.info( "No results found. Search took: " + overallElapsed / 1000 + "s " );
             return showAll( request, response );
         }
 
@@ -652,21 +631,21 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
                     + ")" );
             overallWatch.stop();
             Long overallElapsed = overallWatch.getTime();
-            log.info( "Filter found 1 AD:  " + arrayDesign.getName() + " took: " + overallElapsed/1000 + "s "  );
+            log.info( "Filter found 1 AD:  " + arrayDesign.getName() + " took: " + overallElapsed / 1000 + "s " );
             return new ModelAndView( new RedirectView( "/Gemma/arrays/showArrayDesign.html?id=" + arrayDesign.getId() ) );
-        } else {
-            for ( ArrayDesign ad : searchResults )
-                list += ad.getId() + ",";
-
-            this.saveMessage( request, "Search Criteria: " + filter );
-            this.saveMessage( request, searchResults.size() + " Array Designs matched your search." );
-            
-            overallWatch.stop();
-            Long overallElapsed = overallWatch.getTime();
-            log.info( "Generating the AD list:  (" + list + ") took: " + overallElapsed/1000 + "s "  );
-
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?id=" + list ) );
         }
+
+        for ( ArrayDesign ad : searchResults )
+            list += ad.getId() + ",";
+
+        this.saveMessage( request, "Search Criteria: " + filter );
+        this.saveMessage( request, searchResults.size() + " Array Designs matched your search." );
+
+        overallWatch.stop();
+        Long overallElapsed = overallWatch.getTime();
+        log.info( "Generating the AD list:  (" + list + ") took: " + overallElapsed / 1000 + "s " );
+
+        return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?id=" + list ) );
 
     }
 
@@ -724,12 +703,14 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         private ArrayDesignReportService arrayDesignReportService;
         private Long id;
 
+        @SuppressWarnings("unused")
         public GenerateSummary( HttpServletRequest request, ArrayDesignReportService arrayDesignReportService ) {
             super( getMessageUtil() );
             this.arrayDesignReportService = arrayDesignReportService;
             id = null;
         }
 
+        @SuppressWarnings("unused")
         public GenerateSummary( HttpServletRequest request, ArrayDesignReportService arrayDesignReportService, Long id ) {
             super( getMessageUtil() );
             this.arrayDesignReportService = arrayDesignReportService;

@@ -57,6 +57,7 @@ public class ExpressionExperimentManager extends AbstractSpringAwareCLI {
 
     }
 
+    @Override
     protected void processOptions() {
         super.processOptions();
         if ( hasOption( 'x' ) ) {

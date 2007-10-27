@@ -105,6 +105,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }
 
+    @Override
     protected void processOptions() {
         super.processOptions();
         if ( this.hasOption( 'o' ) ) {

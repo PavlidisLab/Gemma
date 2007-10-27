@@ -40,6 +40,7 @@ public class QuantitationTypeServiceImpl extends ubic.gemma.model.common.quantit
     /**
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#create(ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
+    @Override
     protected ubic.gemma.model.common.quantitationtype.QuantitationType handleCreate(
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) throws java.lang.Exception {
         return ( QuantitationType ) this.getQuantitationTypeDao().create( quantitationType );

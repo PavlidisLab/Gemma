@@ -343,7 +343,7 @@ public class GeneCoExpressionAnalysis {
                 
                 for(Object coExpressedGeneId:correlationDataMatrix.getRowNames()){
                 	if(coExpressedGeneId.equals(queryGeneId)) continue;
-                    Object[] dedvJ = gene2dedvs.get( (Long)coExpressedGeneId  ).toArray();
+                    Object[] dedvJ = gene2dedvs.get( coExpressedGeneId  ).toArray();
                     //"shift" is used to code two integer (X,Y) into one bigger integer X*shift+Y 
                     int shift = dedvI.length > dedvJ.length ? dedvI.length : dedvJ.length;
                     TreeMap<Double, Integer> sortedData = new TreeMap<Double, Integer>();
@@ -546,7 +546,7 @@ public class GeneCoExpressionAnalysis {
      * @param devToGenes
      */
     public void setDedv2Genes( Map<DesignElementDataVector, Collection<Gene>> dedv2genes ) {
-        this.dedv2genes = ( HashMap<DesignElementDataVector, Collection<Gene>> ) dedv2genes;
+        this.dedv2genes = dedv2genes;
     }
 
     /**

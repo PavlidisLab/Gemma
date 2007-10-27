@@ -48,6 +48,7 @@ public class ExpressionExperimentReportGenerationService extends AbstractGemmaSp
      * 
      * @see ubic.gemma.gemmaspaces.AbstractGemmaSpacesService#runLocally(java.lang.String)
      */
+    @Override
     public void runLocally( String taskId ) {
         expressionExperimentReportService.generateSummaryObjects();
     }
@@ -57,6 +58,7 @@ public class ExpressionExperimentReportGenerationService extends AbstractGemmaSp
      * 
      * @see ubic.gemma.gemmaspaces.AbstractGemmaSpacesService#runRemotely(java.lang.String)
      */
+    @Override
     public void runRemotely( String taskId ) {
         // ExpressionExperimentReportTask reportProxy = ( ExpressionExperimentReportTask ) updatedContext
         // .getBean( "expressionExperimentReportTask" );

@@ -24,7 +24,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.util.BusinessKey;
 
 /**

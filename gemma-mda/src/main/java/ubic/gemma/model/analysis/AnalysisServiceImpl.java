@@ -98,6 +98,7 @@ public class AnalysisServiceImpl extends ubic.gemma.model.analysis.AnalysisServi
     /**
      * @see ubic.gemma.model.analysis.AnalysisService#load(java.lang.Long)
      */
+    @Override
     protected ubic.gemma.model.analysis.Analysis handleLoad( java.lang.Long id ) throws java.lang.Exception {
         return ( Analysis ) this.getAnalysisDao().load( id );
     }
@@ -105,6 +106,7 @@ public class AnalysisServiceImpl extends ubic.gemma.model.analysis.AnalysisServi
     /**
      * @see ubic.gemma.model.analysis.AnalysisService#loadAll()
      */
+    @Override
     protected java.util.Collection handleLoadAll() throws java.lang.Exception {
         return this.getAnalysisDao().loadAll();
     }
@@ -112,6 +114,7 @@ public class AnalysisServiceImpl extends ubic.gemma.model.analysis.AnalysisServi
     /**
      * @see ubic.gemma.model.analysis.AnalysisService#create(ubic.gemma.model.analysis.Analysis)
      */
+    @Override
     protected ubic.gemma.model.analysis.Analysis handleCreate( ubic.gemma.model.analysis.Analysis analysis )
             throws java.lang.Exception {
         if ( analysis instanceof ExpressionAnalysis )
@@ -123,6 +126,7 @@ public class AnalysisServiceImpl extends ubic.gemma.model.analysis.AnalysisServi
     /**
      * @see ubic.gemma.model.analysis.AnalysisService#delete(ubic.gemma.model.analysis.Analysis)
      */
+    @Override
     protected void handleDelete( ubic.gemma.model.analysis.Analysis toDelete ) throws java.lang.Exception {
         this.getAnalysisDao().remove( toDelete );
     }
@@ -130,6 +134,7 @@ public class AnalysisServiceImpl extends ubic.gemma.model.analysis.AnalysisServi
     /**
      * @see ubic.gemma.model.analysis.AnalysisService#delete(java.lang.Long)
      */
+    @Override
     protected void handleDelete( java.lang.Long idToDelete ) throws java.lang.Exception {
 
         this.getAnalysisDao().remove( idToDelete );

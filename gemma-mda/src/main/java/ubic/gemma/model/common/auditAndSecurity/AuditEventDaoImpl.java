@@ -46,6 +46,7 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getUpdatedSinceDate(java.util.Date)
      * @return Collection of Auditables
      */
+    @Override
     @SuppressWarnings("unchecked")
     protected java.util.Collection handleGetUpdatedSinceDate( java.util.Date date ) {
         Collection<Auditable> result = new HashSet<Auditable>();
@@ -70,6 +71,7 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getNewSinceDate(java.util.Date)
      * @return Collection of Auditables
      */
+    @Override
     @SuppressWarnings("unchecked")
     protected java.util.Collection<Auditable> handleGetNewSinceDate( java.util.Date date ) {
         Collection<Auditable> result = new HashSet<Auditable>();

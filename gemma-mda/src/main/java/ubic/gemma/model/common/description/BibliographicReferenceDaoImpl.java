@@ -97,6 +97,7 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
         return ( BibliographicReference ) create( bibliographicReference );
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public Collection<BibliographicReference> handleGetAllExperimentLinkedReferences() {
         final String query = "select distinct e.primaryPublication from ExpressionExperimentImpl e ";

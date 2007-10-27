@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
-import java.sql.Blob;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -35,8 +34,6 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.type.BlobType;
-import org.hibernate.type.DoubleType;
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
 import org.springframework.orm.hibernate3.HibernateTemplate;
@@ -205,6 +202,7 @@ public class DesignElementDataVectorDaoImpl extends
      * @param genes
      * @return
      */
+    @Override
     protected Map handleGetVectors( Collection ees, Collection genes ) throws Exception {
         Map<DesignElementDataVector, Collection<Gene>> dedv2genes = new HashMap<DesignElementDataVector, Collection<Gene>>();
 

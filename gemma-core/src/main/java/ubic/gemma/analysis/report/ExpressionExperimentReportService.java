@@ -366,7 +366,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                 if ( f.exists() ) {
                     FileInputStream fis = new FileInputStream( getReportPath( id ) );
                     ObjectInputStream ois = new ObjectInputStream( fis );
-                    eeValueObjects.add( ( ExpressionExperimentValueObject ) ois.readObject() );
+                    eeValueObjects.add( ois.readObject() );
                     ois.close();
                     fis.close();
                 } else {
