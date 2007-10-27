@@ -43,7 +43,7 @@ import ubic.gemma.util.ConfigUtils;
 public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayDesignProcessingTest {
     private Log log = LogFactory.getLog( this.getClass() );
 
-    Blat blat = new Blat();
+    Blat blat;
 
     @Override
     protected void onTearDownInTransaction() throws Exception {
@@ -137,5 +137,11 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
          * anonymous product of TDG. CR541839 (HMOX2) CR456760 (HMOX2)
          */
 
+    }
+
+    @Override
+    protected void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
+        blat = new Blat();
     }
 }

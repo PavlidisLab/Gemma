@@ -200,6 +200,7 @@ public class ArrayDesignDaoImplTest extends BaseSpringContextTest {
     }
 
     public void testLoadCompositeSequences() {
+       
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
         Collection actualValue = arrayDesignDao.loadCompositeSequences( ad.getId() );
         assertEquals( 3, actualValue.size() );
@@ -325,11 +326,12 @@ public class ArrayDesignDaoImplTest extends BaseSpringContextTest {
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-        // / endTransaction();
+        endTransaction();
 
         // Create Array design
         ad = ArrayDesign.Factory.newInstance();
         ad.setName( RandomStringUtils.randomAlphabetic( 20 ) + "_arraydesign" );
+        ad.setShortName( ad.getName() );
 
         // Create the composite Sequences
         CompositeSequence c1 = CompositeSequence.Factory.newInstance();
@@ -383,7 +385,7 @@ public class ArrayDesignDaoImplTest extends BaseSpringContextTest {
         if ( ad != null && ad.getId() != null ) {
             log.info( "Deleting " + ad );
             // also remove the sequences
-            arrayDesignDao.thaw( ad );
+            // arrayDesignDao.thaw( ad );
             for ( CompositeSequence cs : ad.getCompositeSequences() ) {
                 bioSequenceDao.remove( cs.getBiologicalCharacteristic() );
             }

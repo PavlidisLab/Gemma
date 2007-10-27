@@ -26,6 +26,7 @@ import org.acegisecurity.acl.basic.BasicAclExtendedDao;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.RandomStringUtils;
 
+import ubic.gemma.model.common.SecurableDao;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -101,7 +102,7 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
     public void testMakePrivate() throws Exception {
         ArrayDesign ad = arrayDesignService.findArrayDesignByName( arrayDesignName );
         SecurityService securityService = new SecurityService();
-
+        securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
         securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
         securityService.changePermission( ad, SecurityService.PRIVATE_MASK, new HashSet<Object>() );
         /*

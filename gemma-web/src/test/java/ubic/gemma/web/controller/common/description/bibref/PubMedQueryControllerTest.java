@@ -54,7 +54,7 @@ public class PubMedQueryControllerTest extends BaseSpringWebTest {
         // verify that success messages are in the request
         assertNotNull( mv.getModel().get( "bibliographicReference" ) );
         assertNotNull( request.getSession().getAttribute( "messages" ) );
-        assertEquals( "bibliographicReferenceView", mv.getViewName() );
+        assertEquals( "bibRefView", mv.getViewName() );
 
     }
 
@@ -71,7 +71,7 @@ public class PubMedQueryControllerTest extends BaseSpringWebTest {
         // verify that success messages are in the request
         assertNotNull( mv.getModel().get( "bibliographicReference" ) );
         assertNotNull( request.getSession().getAttribute( "messages" ) );
-        assertEquals( "bibliographicReferenceView", mv.getViewName() );
+        assertEquals( "bibRefView", mv.getViewName() );
     }
 
     public final void testOnSubmitInvalidValue() throws Exception {

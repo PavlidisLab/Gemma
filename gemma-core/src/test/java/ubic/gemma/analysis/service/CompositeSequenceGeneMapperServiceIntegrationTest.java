@@ -91,7 +91,7 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-
+        endTransaction();
         compositeSequenceGeneMapperService = ( CompositeSequenceGeneMapperService ) this
                 .getBean( "compositeSequenceGeneMapperService" );
 

@@ -51,7 +51,7 @@ public class LocalSeriesFetcher extends SeriesFetcher {
     public Collection<LocalFile> fetch( String accession ) {
         log.info( "Seeking GSE  file for " + accession );
         assert localPath != null;
-        String seekFileName = localPath + "/" + accession + "_family.soft.gz";
+        String seekFileName = localPath + File.separatorChar + accession + "_family.soft.gz";
         File seekFile = new File( seekFileName );
 
         if ( seekFile.canRead() ) {

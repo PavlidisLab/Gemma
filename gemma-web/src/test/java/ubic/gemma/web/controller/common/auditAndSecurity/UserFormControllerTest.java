@@ -135,7 +135,7 @@ public class UserFormControllerTest extends BaseSpringWebTest {
         Errors errors = ( Errors ) mv.getModel().get( BindingResult.MODEL_KEY_PREFIX + "user" );
         assertNull( "Errors returned in model: " + errors, errors );
 
-        assertEquals( "/mainMenu.html", ( ( RedirectView ) mv.getView() ).getUrl() );// getViewName() );
+        assertEquals( "/Gemma/mainMenu.html", ( ( RedirectView ) mv.getView() ).getUrl() );// getViewName() );
 
     }
 
@@ -201,7 +201,7 @@ public class UserFormControllerTest extends BaseSpringWebTest {
 
         Errors errors = ( Errors ) mv.getModel().get( BindingResult.MODEL_KEY_PREFIX + "user" );
         assertNull( "Errors returned in model: " + errors, errors );
-        assertEquals( "/mainMenu.html", ( ( RedirectView ) mv.getView() ).getUrl() );// getViewName() );
+        assertEquals( "/Gemma/mainMenu.html", ( ( RedirectView ) mv.getView() ).getUrl() );// getViewName() );
 
     }
 
@@ -229,7 +229,7 @@ public class UserFormControllerTest extends BaseSpringWebTest {
 
         Errors errors = ( Errors ) mv.getModel().get( BindingResult.MODEL_KEY_PREFIX + "user" );
         assertNull( "Errors returned in model: " + errors, errors );
-        assertEquals( "/mainMenu.html", ( ( RedirectView ) mv.getView() ).getUrl() );// getViewName() );
+        assertEquals( "/Gemma/mainMenu.html", ( ( RedirectView ) mv.getView() ).getUrl() );// getViewName() );
 
         // make sure the user actualy has the roles
 

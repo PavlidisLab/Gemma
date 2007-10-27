@@ -186,7 +186,7 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
 
     @Override
     protected String[] getConfigLocations() {
-        return SpringContextUtil.getConfigLocations( true, false, false, this.isWebapp() );
+        return SpringContextUtil.getConfigLocations( true, true, false, this.isWebapp() );
     }
 
     /**

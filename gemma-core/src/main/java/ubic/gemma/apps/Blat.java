@@ -91,17 +91,23 @@ public class Blat {
      */
     private static final int MAX_SEQ_IDENTIFIER_LENGTH = 50;
 
+    private static boolean hasNativeLibrary;
+
     static {
         if ( !os.toLowerCase().startsWith( "windows" ) ) {
             try {
                 log.debug( "Loading gfClient library, looking in " + System.getProperty( "java.library.path" ) );
                 System.loadLibrary( "Blat" );
                 log.info( "Loaded Blat native library successfully" );
+                hasNativeLibrary = true;
             } catch ( UnsatisfiedLinkError e ) {
                 log.error( e, e );
-                throw new ExceptionInInitializerError( "Unable to locate or load the Blat native library: "
-                        + e.getMessage() );
+                // throw new ExceptionInInitializerError( "Unable to locate or load the Blat native library: "
+                // + e.getMessage() );
+                hasNativeLibrary = false;
             }
+        } else {
+            hasNativeLibrary = false;
         }
     }
 
@@ -629,7 +635,7 @@ public class Blat {
      */
     private Collection<BlatResult> gfClient( File querySequenceFile, String outputPath, int portToUse )
             throws IOException {
-        if ( !os.startsWith( "windows" ) ) return jniGfClientCall( querySequenceFile, outputPath, portToUse );
+        if ( hasNativeLibrary ) return jniGfClientCall( querySequenceFile, outputPath, portToUse );
 
         return execGfClient( querySequenceFile, outputPath, portToUse );
     }

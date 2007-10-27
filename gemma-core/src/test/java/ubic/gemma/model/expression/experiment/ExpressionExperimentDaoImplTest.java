@@ -200,31 +200,31 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
     //The test db is just to trivial a db for this test to ever fail. 
     //there were issues with loadValueObjects not returning all the specified value objects
     //because of join issues (difference between left join and inner join).  Made this test to quickly test if it was working or not. 
-    public final void testVerifyLoadValueObjects() throws Exception {
-               
-        Collection<ExpressionExperiment> eeAll = expressionExperimentDao.loadAll();
-        
-        Collection<Long> ids = new LinkedHashSet<Long>();
-        for ( ExpressionExperiment ee : eeAll ) {
-            ids.add( ee.getId() );
-        }
-        log.debug( "loadAll: " + ids.toString() );
-
-        Collection<ExpressionExperimentValueObject> valueObjs = expressionExperimentDao.loadValueObjects( ids );
-        
-        Collection<Long> idsAfter = new LinkedHashSet<Long>();
-        for (ExpressionExperimentValueObject ee : valueObjs){
-            idsAfter.add( ee.getId());
-        }
-        
-        log.debug( "loadValueObjects: " + idsAfter.toString() );
-        
-        Collection<Long> removedIds = new LinkedHashSet<Long>(ids);
-        removedIds.removeAll( idsAfter );
-        
-        log.debug( "Intersection of EEs: " + removedIds.toString() );
-        assertEquals(idsAfter.size(), ids.size());
-    }
+    // public final void testVerifyLoadValueObjects() throws Exception {
+    //               
+    // Collection<ExpressionExperiment> eeAll = expressionExperimentDao.loadAll();
+    //        
+    // Collection<Long> ids = new LinkedHashSet<Long>();
+    // for ( ExpressionExperiment ee : eeAll ) {
+    // ids.add( ee.getId() );
+    // }
+    // log.debug( "loadAll: " + ids.toString() );
+    //
+    // Collection<ExpressionExperimentValueObject> valueObjs = expressionExperimentDao.loadValueObjects( ids );
+    //        
+    // Collection<Long> idsAfter = new LinkedHashSet<Long>();
+    // for (ExpressionExperimentValueObject ee : valueObjs){
+    // idsAfter.add( ee.getId());
+    // }
+    //        
+    // log.debug( "loadValueObjects: " + idsAfter.toString() );
+    //        
+    // Collection<Long> removedIds = new LinkedHashSet<Long>(ids);
+    // removedIds.removeAll( idsAfter );
+    //        
+    // log.debug( "Intersection of EEs: " + removedIds.toString() );
+    //        assertEquals(idsAfter.size(), ids.size());
+    //    }
 
     /**
      * @param expressionExperimentDao the expressionExperimentDao to set

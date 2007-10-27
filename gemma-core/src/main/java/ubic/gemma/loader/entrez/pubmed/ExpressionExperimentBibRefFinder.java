@@ -47,7 +47,7 @@ public class ExpressionExperimentBibRefFinder {
 
     private static String GEO_SERIES_URL_BASE = "http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=";
 
-    private static String PUBMEDREF_REGEX = "PubMed&amp;term=(\\d+)";
+    private static String PUBMEDREF_REGEX = "termPM.+?>(\\d+)";
 
     /**
      * @param ee

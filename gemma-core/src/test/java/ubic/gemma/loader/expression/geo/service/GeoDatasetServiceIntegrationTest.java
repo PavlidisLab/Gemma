@@ -36,9 +36,11 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.testing.AbstractGeoServiceTest;
 import ubic.gemma.util.ConfigUtils;
 
@@ -300,7 +302,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                    + "gds999short" ) );
+                    + "gds999Short" ) );
             Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
                     "GDS999", false, true, false );
             ee = results.iterator().next();
@@ -458,9 +460,10 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         /*
          * Test for bug 468 (merging of subsets across GDS's)
          */
-        assertEquals( 2, newee.getSubsets().size() ); // otherwise get 4.
-        for ( ExpressionExperimentSubSet s : newee.getSubsets() ) {
-            if ( s.getName().equals( "20-29 years" ) ) assertEquals( 14, s.getBioAssays().size() );
+        ExperimentalFactor factor = newee.getExperimentalDesign().getExperimentalFactors().iterator().next();
+        assertEquals( 2, factor.getFactorValues().size() ); // otherwise get 4.
+        for ( FactorValue s : factor.getFactorValues()) {
+         //   if ( s.getValue().equals( "20-29 years" ) ) assertEquals( 14, s..size() );
         }
 
         // Collection<QuantitationType> qTypes = expressionExperimentService.getQuantitationTypes( ee );

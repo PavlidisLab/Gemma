@@ -279,6 +279,7 @@ public class DatasetCombiner {
         if ( dataSets.size() == 0 ) {
             throw new IllegalArgumentException( "No datasets!" );
         }
+        fillAccessionMaps( dataSets );
         int numDatasets = dataSets.size();
         return findCorrespondence( numDatasets );
     }

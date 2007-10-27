@@ -139,7 +139,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
 
     @SuppressWarnings("unchecked")
     public void testFetchAndLoadWithSequences() throws Exception {
-        endTransaction();
+       
         String path = ConfigUtils.getString( "gemma.home" );
         AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path

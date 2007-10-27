@@ -647,13 +647,13 @@ public class DatasetCombinerTest extends TestCase {
         GeoFamilyParser parser = new GeoFamilyParser();
 
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE106Short/GDS186.soft.gz" ) );
+                "/data/loader/expression/geo/gse106Short/GDS186.soft.gz" ) );
         parser.parse( is );
         assert is != null;
         is.close();
 
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE106Short/GSE106.soft.gz" ) );
+                "/data/loader/expression/geo/gse106Short/GSE106.soft.gz" ) );
         parser.parse( is );
         assert is != null;
         is.close();

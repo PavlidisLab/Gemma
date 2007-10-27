@@ -312,7 +312,7 @@ public class TestPersistentObjectHelper {
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
 
         ad.setName( "arrayDesign_" + RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH ) );
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+      //  ad = ( ArrayDesign ) persisterHelper.persist( ad );
 
         for ( int i = 0; i < numCompositeSequences; i++ ) {
 

@@ -48,7 +48,7 @@ public class BioAssayDimensionDaoImplTest extends BaseSpringContextTest {
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-
+        endTransaction();
         List<BioAssay> bas = new ArrayList<BioAssay>();
         ExpressionExperiment ee = this.getTestPersistentExpressionExperiment();
         bad = ( BioAssayDimension ) bioAssayDimensionDao.create( BioAssayDimension.Factory.newInstance() );

@@ -25,7 +25,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.Person;
+import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.PersisterHelper;
@@ -54,6 +56,10 @@ public class CandidateGeneListDaoImplTest extends BaseSpringContextTest {
         candidateGeneList = CandidateGeneList.Factory.newInstance();
 
         AuditTrail ad = AuditTrail.Factory.newInstance();
+//        User u = User.Factory.newInstance();
+//        u.setUserName( J"joe" );
+//        ad.set
+        
         ad = ( AuditTrail ) persisterHelper.persist( ad );
         candidateGeneList.setAuditTrail( ad );
 
