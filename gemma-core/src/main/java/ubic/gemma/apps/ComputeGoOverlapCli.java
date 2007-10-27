@@ -212,7 +212,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
             Collection<Gene> coExpGene = geneExpMap.get( masterGene );
 
             for ( Gene cGene : coExpGene ) {
-                Double score = goMetric.computeSimilarityOverlap( masterGene, cGene, GOProbMap, GoMetric.Metric.resnik );
+                Double score = goMetric.computeSimilarity( masterGene, cGene, GOProbMap, GoMetric.Metric.resnik );
                 if ( score != null )
                     scoreMap.put( cGene, score );
                 else

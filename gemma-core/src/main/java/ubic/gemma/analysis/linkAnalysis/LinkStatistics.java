@@ -119,7 +119,7 @@ public class LinkStatistics {
         // skip self-links
         if ( firstGeneId.equals( secondGeneId ) ) {
             if ( log.isTraceEnabled() ) log.trace( "Skipping self link for gene=" + firstGeneId );
-            // return false;
+            return false;
         }
 
         if ( !posLinkCounts.containsRowName( firstGeneId ) || !posLinkCounts.containsRowName( secondGeneId ) ) {
@@ -246,9 +246,9 @@ public class LinkStatistics {
                             count++;
                         }
                     }
-                    if ( count > 0 && count % 100000 == 0 ) {
-                        log.info( count + " links written" );
-                    }
+                }
+                if ( count > 0 && count % 100000 == 0 ) {
+                    log.info( count + " links written" );
                 }
                 if ( i > 0 && i % 1000 == 0 ) {
                     log.info( "Links for " + i + " genes written" );

@@ -29,20 +29,16 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.gene.GeneService;
 
 /**
  * @author meeta
  * @spring.bean id="goMetric"
  * @spring.property name="gene2GOAssociationService" ref="gene2GOAssociationService"
- * @spring.property name="geneService" ref="geneService"
  * @spring.property name="geneOntologyService" ref="geneOntologyService"
  */
-
 public class GoMetric {
 
     private Gene2GOAssociationService gene2GOAssociationService;
-    private GeneService geneService;
     private GeneOntologyService geneOntologyService;
     private boolean partOf = true;
 
@@ -57,13 +53,6 @@ public class GoMetric {
      */
     public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
         this.gene2GOAssociationService = gene2GOAssociationService;
-    }
-
-    /**
-     * @param geneService the geneService to set
-     */
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
     }
 
     /**
@@ -131,13 +120,12 @@ public class GoMetric {
      * @param targetGene
      * @param GOProbMap
      * @param metric
-     * @return the overlap score between two genes
-     * @throws Exception
+     * @return the GO term similarity of the two genes
      */
-    public Double computeSimilarityOverlap( Gene queryGene, Gene targetGene, Map<String, Double> GOProbMap,
-            Metric metric ) {
+    @SuppressWarnings("unchecked")
+    public Double computeSimilarity( Gene queryGene, Gene targetGene, Map<String, Double> GOProbMap, Metric metric ) {
 
-        if ( metric.equals( GoMetric.Metric.simple ) ) {
+        if ( metric.equals( Metric.simple ) ) {
             double score = computeSimpleOverlap( queryGene, targetGene );
             return score;
         }
@@ -153,6 +141,7 @@ public class GoMetric {
         double total = 0;
         int count = 0;
 
+        assert GOProbMap != null;
         for ( OntologyTerm ontoM : masterGO ) {
             if ( !GOProbMap.containsKey( ontoM.getUri() ) ) {
                 log.info( "Go probe map doesn't contain " + ontoM );
@@ -169,10 +158,11 @@ public class GoMetric {
                 Double pmin = 1.0;
                 Double score = 0.0;
 
-                if ( ontoM.equals( ontoC ) )
+                if ( ontoM.equals( ontoC ) ) {
                     pmin = GOProbMap.get( ontoM.getUri() );
-                else
+                } else {
                     pmin = checkParents( ontoM, ontoC, GOProbMap );
+                }
 
                 if ( pmin < 1 ) {
                     score = getMetric( metric, pmin, probM, probC );

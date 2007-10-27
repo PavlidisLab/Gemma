@@ -147,7 +147,7 @@ public class GoMetricTest extends BaseSpringContextTest {
                 probMap.put( t.getUri(), 0.5 );
         }
 
-        Double value = goMetric.computeSimilarityOverlap( gene1, gene2, probMap, chooseMetric );
+        Double value = goMetric.computeSimilarity( gene1, gene2, probMap, chooseMetric );
 
         if ( chooseMetric.equals( Metric.simple ) ) assertEquals( 3.0, value );
         if ( chooseMetric.equals( Metric.resnik ) ) assertEquals( 1.4978661367769954, value );

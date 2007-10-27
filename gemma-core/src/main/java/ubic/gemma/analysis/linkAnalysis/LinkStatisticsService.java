@@ -20,7 +20,6 @@ package ubic.gemma.analysis.linkAnalysis;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -36,12 +35,13 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImpl.ProbeLink;
-import ubic.gemma.model.coexpression.Link;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
+
+import com.ibm.icu.text.NumberFormat;
 
 /**
  * Methods for analyzing links from the database.
@@ -251,10 +251,12 @@ public class LinkStatisticsService {
         Set<Long> usedGeneList = new HashSet<Long>();
         for ( GeneLink gl : geneLinks ) {
             if ( !shuffleMap.containsKey( gl.getFirstGene() ) ) {
-                throw new IllegalStateException();
+                log.error( "Shuffle map did not contain gene used in links: " + gl.getFirstGene() );
+                continue;
             }
             if ( !shuffleMap.containsKey( gl.getSecondGene() ) ) {
-                throw new IllegalStateException();
+                log.error( "Shuffle map did not contain gene used in links: " + gl.getSecondGene() );
+                continue;
             }
 
             usedGeneList.add( gl.getFirstGene() );
@@ -612,53 +614,4 @@ public class LinkStatisticsService {
             out.write( "\n" );
         }
     }
-}
-
-class GeneLink implements Link {
-    Long firstGene;
-    Long secondGene;
-    Double score;
-
-    public GeneLink( Long firstGeneId, Long secondGeneId, double score ) {
-        this.firstGene = firstGeneId;
-        this.secondGene = secondGeneId;
-        this.score = score;
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        GeneLink that = ( GeneLink ) obj;
-        return that.getFirstGene().equals( this.firstGene ) && that.getSecondGene().equals( this.secondGene )
-                && Math.signum( this.score ) == Math.signum( that.getScore() );
-    }
-
-    public Long getFirstGene() {
-        return firstGene;
-    }
-
-    public Double getScore() {
-        return score;
-    }
-
-    public Long getSecondGene() {
-        return secondGene;
-    }
-
-    @Override
-    public int hashCode() {
-        return 29 * ( int ) Math.signum( this.score ) * this.firstGene.hashCode() + this.secondGene.hashCode();
-    }
-
-    public void setFirstGene( Long firstGene ) {
-        this.firstGene = firstGene;
-    }
-
-    public void setScore( Double score ) {
-        this.score = score;
-    }
-
-    public void setSecondGene( Long secondGene ) {
-        this.secondGene = secondGene;
-    }
-
 }

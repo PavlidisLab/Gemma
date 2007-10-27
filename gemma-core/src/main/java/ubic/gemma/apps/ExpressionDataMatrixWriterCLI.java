@@ -25,14 +25,9 @@ import java.util.Collection;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
-import ubic.gemma.analysis.preprocess.filter.ExpressionExperimentFilter;
-import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixService;
 import ubic.gemma.datastructure.matrix.MatrixWriter;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -42,8 +37,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @version $Id$
  */
 public class ExpressionDataMatrixWriterCLI extends AbstractGeneExpressionExperimentManipulatingCLI {
-
-    private DesignElementDataVectorService dedvService;
 
     private String outFileName;
 
@@ -59,11 +52,7 @@ public class ExpressionDataMatrixWriterCLI extends AbstractGeneExpressionExperim
     @Override
     protected void processOptions() {
         super.processOptions();
-
         outFileName = getOptionValue( 'o' );
-
-        dedvService = ( DesignElementDataVectorService ) getBean( "designElementDataVectorService" );
-
     }
 
     @SuppressWarnings("unchecked")
