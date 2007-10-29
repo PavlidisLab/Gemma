@@ -215,7 +215,7 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
 
         Collection<String> keyset = genesMap.keySet();
         for ( String key : keyset ) {
-            log.info( "key: " + key + " , gene: " + genesMap.get( key ) );
+            // log.info( "key: " + key + " , gene: " + genesMap.get( key ) );
         }
         assertNotNull( genesMap );
         // assertEquals( keyset.size(), 1 );
