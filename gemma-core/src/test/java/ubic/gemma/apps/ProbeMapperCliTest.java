@@ -76,6 +76,7 @@ public class ProbeMapperCliTest extends AbstractCLITestCase {
                 tempFile.getAbsolutePath(), "-b", blatFile, "-d", "hg18", "-testing" } );
         if ( result != null ) {
             result.printStackTrace();
+
             throw ( result );
         }
     }
