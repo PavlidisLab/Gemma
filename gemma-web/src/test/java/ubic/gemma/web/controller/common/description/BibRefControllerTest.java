@@ -103,10 +103,11 @@ public class BibRefControllerTest extends BaseSpringContextTest {
 
         req = new MockHttpServletRequest( "POST", "/bibRef/deleteBibRef.html" );
         req.addParameter( "_eventId", "delete" );
-        req.addParameter( "pubMedId", br.getPubAccession().getAccession() );
+        req.addParameter( "acc", br.getPubAccession().getAccession() );
+
         ModelAndView mav = brc.handleRequest( req, new MockHttpServletResponse() );
         assertTrue( mav != null );
-        assertEquals( "bibRefSearch", mav.getViewName() );
+        assertEquals( "bibRefView", mav.getViewName() );
     }
 
     /**
@@ -122,17 +123,17 @@ public class BibRefControllerTest extends BaseSpringContextTest {
         }
         /* set pubMedId to a non-existent id in gemdtest. */
         req = new MockHttpServletRequest( "POST", "/bibRef/deleteBibRef.html" );
-        req.addParameter( "_eventId", "delete" );
-        req.addParameter( "accession", "00000000" );
+        String nonexistentpubmedid = "00000000";
+        req.addParameter( "acc", nonexistentpubmedid );
         BibliographicReferenceController brc = ( BibliographicReferenceController ) getBean( "bibliographicReferenceController" );
 
         ModelAndView b = brc.handleRequest( req, new MockHttpServletResponse() );
         assert b != null; // ?
-        assertEquals( "bibRefSearch", b.getViewName() );
+        assertEquals( "bibRefView", b.getViewName() );
         // in addition there should be a message "0000000 not found".
         Collection<String> errors = ( Collection<String> ) req.getAttribute( "errors" );
         assertTrue( errors.size() > 0 );
-        assertTrue( errors.iterator().next().startsWith( "00000000" ) );
+        assertTrue( "Got: " + errors.iterator().next(), errors.iterator().next().startsWith( nonexistentpubmedid ) );
 
     }
 
@@ -150,13 +151,13 @@ public class BibRefControllerTest extends BaseSpringContextTest {
         }
         BibliographicReferenceController brc = ( BibliographicReferenceController ) getBean( "bibliographicReferenceController" );
 
-        req = new MockHttpServletRequest( "GET", "/bibRef/showAllBibRef.html" );
+        req = new MockHttpServletRequest( "GET", "/bibRef/showAllEeBibRefs.html" );
 
         ModelAndView mav = brc.handleRequest( req, new MockHttpServletResponse() );
         assertTrue( mav != null );
         Map m = mav.getModel();
 
         assertNotNull( m.get( "bibliographicReferences" ) );
-        assertEquals( mav.getViewName(), "pubMed.GetAll.results.view" );
+        assertEquals( "bibRefList", mav.getViewName() );
     }
 }
