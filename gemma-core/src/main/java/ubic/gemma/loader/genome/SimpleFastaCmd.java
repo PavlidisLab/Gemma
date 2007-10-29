@@ -43,7 +43,7 @@ import ubic.gemma.util.concurrent.ParsingStreamConsumer;
  */
 public class SimpleFastaCmd implements FastaCmd {
 
-    private static final String FASTA_CMD_ENV_VAR = "fastaCmd.exe";
+    public static final String FASTA_CMD_ENV_VAR = "fastaCmd.exe";
 
     private static Log log = LogFactory.getLog( SimpleFastaCmd.class.getName() );
 
