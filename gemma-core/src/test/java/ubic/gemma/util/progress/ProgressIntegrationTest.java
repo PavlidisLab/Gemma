@@ -64,7 +64,8 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
      */
     public void testCreateProgressJob() {
 
-        pJob = ProgressManager.createProgressJob( null, ConfigUtils.getString( "gemma.admin.user" ),
+        String taskid = TaskRunningService.generateTaskId();
+        pJob = ProgressManager.createProgressJob( taskid, ConfigUtils.getString( "gemma.admin.user" ),
                 "Testing the Progress Manager" );
         assertEquals( pJob.getUser(), ConfigUtils.getString( "gemma.admin.user" ) );
    //     assertEquals( pJob.getProgressData().getDescription(), "Testing the Progress Manager" );
@@ -96,8 +97,9 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
      */
 
     public void testDestroyProgressJob() {
+        String taskid = TaskRunningService.generateTaskId();
    //     pObserver = new HttpProgressObserver( ConfigUtils.getString( "gemma.admin.user" ) );
-        pJob = ProgressManager.createProgressJob( null, ConfigUtils.getString( "gemma.admin.user" ),
+        pJob = ProgressManager.createProgressJob( taskid, ConfigUtils.getString( "gemma.admin.user" ),
                 "Testing the Progress Manager" );
 
         // single case
@@ -329,7 +331,8 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
      * Tests if the thread local variable gets inherited to new threads
      */
     public void testMultipleThreads() {
-        ProgressJob pj = ProgressManager.createProgressJob( null, ConfigUtils.getString( "gemma.admin.user" ),
+        String taskid = TaskRunningService.generateTaskId();
+        ProgressJob pj = ProgressManager.createProgressJob( taskid, ConfigUtils.getString( "gemma.admin.user" ),
                 "i luve tests" );
   //      MockProgress mProgress = new MockProgress( 3, ConfigUtils.getString( "gemma.admin.user" ), "test runs", pj
   //              .getId() );
