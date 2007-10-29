@@ -82,7 +82,7 @@ public class GeneOntologyService implements InitializingBean {
     private Map<String, Collection<OntologyTerm>> parentsCache = Collections
             .synchronizedMap( new HashMap<String, Collection<OntologyTerm>>() );
 
-    private Map<Long, Collection<OntologyTerm>> goTerms = new HashMap<Long, Collection<OntologyTerm>>();
+    private Map<Gene, Collection<OntologyTerm>> goTerms = new HashMap<Gene, Collection<OntologyTerm>>();
 
     private static final AtomicBoolean ready = new AtomicBoolean( false );
 
@@ -728,10 +728,12 @@ public class GeneOntologyService implements InitializingBean {
     public Collection<OntologyTerm> getGOTerms( Gene gene ) {
 
         if ( goTerms.containsKey( gene.getId() ) ) {
-         //   log.info( "    cached: GO terms for " + gene.getOfficialSymbol() + " (id " + gene.getId() + ")" );
+            if ( log.isTraceEnabled() )
+                log.trace( " cached: GO terms for " + gene.getOfficialSymbol() + " (id " + gene.getId() + ")" );
             return goTerms.get( gene.getId() );
         }
-      //  log.info( "not cached: GO terms for " + gene.getOfficialSymbol() + " (id " + gene.getId() + ")" );
+        if ( log.isTraceEnabled() )
+            log.trace( "not cached: GO terms for " + gene.getOfficialSymbol() + " (id " + gene.getId() + ")" );
         Collection<VocabCharacteristic> annotations = gene2GOAssociationService.findByGene( gene );
 
         Collection<OntologyTerm> allGOTermSet = new HashSet<OntologyTerm>();
@@ -744,8 +746,7 @@ public class GeneOntologyService implements InitializingBean {
         }
 
         allGOTermSet.addAll( getAllParents( allGOTermSet ) );
-
-        goTerms.put( gene.getId(), allGOTermSet );
+        goTerms.put( gene, allGOTermSet );
         return allGOTermSet;
     }
 
