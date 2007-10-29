@@ -32,6 +32,7 @@ public class ArrayDesignImpl extends ubic.gemma.model.expression.arrayDesign.Arr
 
     @Override
     public boolean equals( Object object ) {
+        if ( !( object instanceof ArrayDesign ) ) return false;
         ArrayDesign that = ( ArrayDesign ) object;
         if ( this.getId() != null && that.getId() != null ) return this.getId().equals( that.getId() );
 
