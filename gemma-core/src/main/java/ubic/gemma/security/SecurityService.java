@@ -70,13 +70,13 @@ public class SecurityService {
      * @param visited A Collection of objects already visited. This is need so objects in a bi-directional relationship
      *        are not processed twice.
      */
-    public void changePermission( Object object, int mask, Collection<Object> visited ) {
+    public void setPermissions( Object object, int mask, Collection<Object> visited ) {
 
         log.debug( "Changing acl of object " + object + "." );
 
         if ( mask != PUBLIC_MASK && mask != PRIVATE_MASK ) {
             throw new RuntimeException( "Supported masks are " + PRIVATE_MASK + " (PRIVATE) and " + PUBLIC_MASK
-                    + "(PUBLIC)." );
+                    + " (PUBLIC)." );
         }
 
         SecurityContext securityCtx = SecurityContextHolder.getContext();
@@ -91,8 +91,8 @@ public class SecurityService {
                 log.debug( "Object " + object.getClass() + " already visited." );
             }
         } else {
-            throw new RuntimeException( "Object not Securable.  Cannot change permissions for object of type " + object
-                    + "." );
+            throw new RuntimeException( "Object not Securable.  Cannot change permissions for object of type "
+                    + object.getClass().getName() + "." );
         }
 
     }
@@ -151,7 +151,7 @@ public class SecurityService {
                             while ( iter.hasNext() ) {
                                 Object ob = iter.next();
                                 log.debug( "process " + ob );
-                                changePermission( ob, mask, visited );// recursive
+                                setPermissions( ob, mask, visited );// recursive
                             }
                         }
                     } else {
@@ -161,11 +161,10 @@ public class SecurityService {
 
                         if ( ob == null || unsecuredClasses.contains( ob.getClass() )
                                 || ( ( Securable ) ob ).getId() == null ) continue;
-                        changePermission( ob, mask, visited );// recursive
+                        setPermissions( ob, mask, visited );// recursive
                     }
                 } catch ( Exception e ) {
-                    e.printStackTrace();
-                    throw new RuntimeException( "Error is: " + e );
+                    throw new RuntimeException( e );
                 }
             }
 
@@ -197,7 +196,7 @@ public class SecurityService {
      * @param principal
      */
     private String configureWhoToRunAs( Object object, int mask, Authentication authentication, Object principal ) {
-
+        assert principal != null;
         Securable securedObject = ( Securable ) object;
         /* id of target object */
         Long id = securedObject.getId();
@@ -210,6 +209,10 @@ public class SecurityService {
 
         recipient = securableDao.getRecipient( objectIdentityId );
 
+        if ( recipient == null ) {
+            throw new IllegalStateException( "No recipient for object " + objectIdentityId );
+        }
+
         if ( principal.toString().equals( ADMINISTRATOR ) ) {
             if ( !recipient.equals( principal.toString() ) ) {
                 RunAsManager runAsManager = new RunAsManager();
@@ -219,7 +222,8 @@ public class SecurityService {
                 recipient = principal.toString();
             }
         } else {
-            throw new RuntimeException( "User " + principal + " not authorized to execute this method." );
+            throw new RuntimeException( "User '" + principal
+                    + "' is not authorized to execute this method, you must be '" + ADMINISTRATOR + "'" );
         }
         return recipient;
     }
