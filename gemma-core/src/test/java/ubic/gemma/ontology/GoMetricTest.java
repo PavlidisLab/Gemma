@@ -82,12 +82,16 @@ public class GoMetricTest extends BaseSpringContextTest {
         Map<Long, Collection<String>> gene2GOMap = new HashMap<Long, Collection<String>>();
         gene2GOMap.put( ( long ) 14415, stringTerms );
         gene2GOMap.put( ( long ) 22129, stringTerms );
+        
 
-        Integer expected = 2;
+        Map<String, Integer> countMap = goMetric.getTermOccurrence( gene2GOMap );
+        int expected = 0;
+        
+        for (String uri : countMap.keySet()){
+            expected += countMap.get( uri );
+        }
 
-        Integer count = goMetric.getTermOccurrence( gene2GOMap, entry.getUri() );
-
-        assertEquals( expected, count );
+        assertEquals( expected, (2* stringTerms.size()) );
     }
 
     public final void testGetChildrenOccurrence() throws Exception {
@@ -122,19 +126,19 @@ public class GoMetricTest extends BaseSpringContextTest {
 
     }
     
-    public final void testComputeSimilarityOverlap() throws Exception {
+    public final void testComputeSimilarity() throws Exception {
 
-        Metric chooseMetric = Metric.jiang;
+        Metric chooseMetric = Metric.simple;
 
         Gene gene1 = geneService.load( 599683 );
         Gene gene2 = geneService.load( 640008 );
 
         log.info( "The genes retrieved: " + gene1 + gene2 );
 
-        Collection<OntologyTerm> probTerms = geneOntologyService.getGOTerms( gene1 );
-        goMetric.logIds( "computeSimilarityOverlap gene1 terms", probTerms );
-        Collection<OntologyTerm> terms2 = geneOntologyService.getGOTerms( gene2 );
-        goMetric.logIds( "computeSimilarityOverlap gene2 terms", terms2 );
+        Collection<OntologyTerm> probTerms = geneOntologyService.getGOTerms( gene1, true );
+        //goMetric.logIds( "computeSimilarityOverlap gene1 terms", probTerms );
+        Collection<OntologyTerm> terms2 = geneOntologyService.getGOTerms( gene2, true );
+        //goMetric.logIds( "computeSimilarityOverlap gene2 terms", terms2 );
         probTerms.addAll( terms2 );
 
         Map<String, Double> probMap = new HashMap<String, Double>();
@@ -149,7 +153,7 @@ public class GoMetricTest extends BaseSpringContextTest {
 
         Double value = goMetric.computeSimilarity( gene1, gene2, probMap, chooseMetric );
 
-        if ( chooseMetric.equals( Metric.simple ) ) assertEquals( 3.0, value );
+        if ( chooseMetric.equals( Metric.simple ) ) assertEquals( 4.0, value );
         if ( chooseMetric.equals( Metric.resnik ) ) assertEquals( 1.4978661367769954, value );
         if ( chooseMetric.equals( Metric.lin ) ) assertEquals( 2.160964047443681, value );
         if ( chooseMetric.equals( Metric.jiang ) ) assertEquals( 0.6185149837908823, value );
