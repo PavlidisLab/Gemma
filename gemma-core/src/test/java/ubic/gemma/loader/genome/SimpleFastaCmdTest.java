@@ -18,8 +18,12 @@
  */
 package ubic.gemma.loader.genome;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.util.ConfigUtils;
@@ -30,6 +34,8 @@ import junit.framework.TestCase;
  * @version $Id$
  */
 public class SimpleFastaCmdTest extends TestCase {
+
+    private static Log log = LogFactory.getLog( SimpleFastaCmdTest.class.getName() );
 
     /*
      * (non-Javadoc)
@@ -51,7 +57,25 @@ public class SimpleFastaCmdTest extends TestCase {
         super.tearDown();
     }
 
+    private boolean fastaCmdExecutableExists() {
+        String fastacmdExe = ConfigUtils.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
+        if ( fastacmdExe == null ) {
+            log.warn( "No fastacmd executable is configured, skipping test" );
+            return false;
+        }
+
+        File fi = new File( fastacmdExe );
+        if ( !fi.canRead() ) {
+            log.warn( fastacmdExe + " not found, skipping test" );
+            return false;
+        }
+        return true;
+    }
+
     public void testGetSingle() throws Exception {
+        if ( !fastaCmdExecutableExists() ) {
+            return;
+        }
         SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
         BioSequence bs = fastaCmd.getByIdentifier( 1435867, "testblastdb", ConfigUtils.getString( "gemma.home" )
                 + "/gemma-core/src/test/resources/data/loader/genome/blast" );
@@ -66,6 +90,9 @@ public class SimpleFastaCmdTest extends TestCase {
     }
 
     public void testGetMultiple() throws Exception {
+        if ( !fastaCmdExecutableExists() ) {
+            return;
+        }
         SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
 
         Collection<Integer> input = new ArrayList<Integer>();
@@ -80,6 +107,9 @@ public class SimpleFastaCmdTest extends TestCase {
     }
 
     public void testGetSingleAcc() throws Exception {
+        if ( !fastaCmdExecutableExists() ) {
+            return;
+        }
         SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
         BioSequence bs = fastaCmd.getByAccession( "AA000002", "testblastdb", ConfigUtils.getString( "gemma.home" )
                 + "/gemma-core/src/test/resources/data/loader/genome/blast" );
@@ -94,6 +124,9 @@ public class SimpleFastaCmdTest extends TestCase {
     }
 
     public void testGetSingleAccNotFound() throws Exception {
+        if ( !fastaCmdExecutableExists() ) {
+            return;
+        }
         SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
         BioSequence bs = fastaCmd.getByAccession( "FAKE.1", "testblastdb", ConfigUtils.getString( "gemma.home" )
                 + "/gemma-core/src/test/resources/data/loader/genome/blast" );
@@ -101,6 +134,9 @@ public class SimpleFastaCmdTest extends TestCase {
     }
 
     public void testGetMultipleAcc() throws Exception {
+        if ( !fastaCmdExecutableExists() ) {
+            return;
+        }
         SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
 
         Collection<String> input = new ArrayList<String>();
@@ -115,6 +151,9 @@ public class SimpleFastaCmdTest extends TestCase {
     }
 
     public void testGetMultipleAccSomeNotFound() throws Exception {
+        if ( !fastaCmdExecutableExists() ) {
+            return;
+        }
         SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
 
         Collection<String> input = new ArrayList<String>();
