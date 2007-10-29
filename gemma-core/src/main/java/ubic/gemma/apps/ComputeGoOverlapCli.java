@@ -186,7 +186,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         else{
             log.info( "Calculating probabilities... " );
             
-            GOcountMap = getGoCount(mouseGeneGOMap);
+            GOcountMap = goMetric.getTermOccurrence( mouseGeneGOMap );
             makeRootMap( GOcountMap.keySet() );
 
             for ( String uri : GOcountMap.keySet() ) {
@@ -212,7 +212,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
             Collection<Gene> coExpGene = geneExpMap.get( masterGene );
 
             for ( Gene cGene : coExpGene ) {
-                Double score = goMetric.computeSimilarity( masterGene, cGene, GOProbMap, GoMetric.Metric.resnik );
+                Double score = goMetric.computeSimilarity( masterGene, cGene, GOProbMap, GoMetric.Metric.simple);
                 if ( score != null )
                     scoreMap.put( cGene, score );
                 else
@@ -222,7 +222,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         }
 
         try {
-            Writer write = initOutputFile( "Resnik_overlapResults2" );
+            Writer write = initOutputFile( "newSimpleOverlap" );
             String masterGene;
             String geneCoexpressed;
             double overlap;
@@ -267,7 +267,12 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         if ( ( masterGO == null ) || masterGO.isEmpty() ) return null;
 
         for ( String ontologyEntry : masterGO ) {
+            if ( ontologyEntry.equalsIgnoreCase( process ) || ontologyEntry.equalsIgnoreCase( function )
+                    || ontologyEntry.equalsIgnoreCase( component ) ) continue;
             for ( String ontologyEntryC : coExpGO ) {
+
+                if ( ontologyEntry.equalsIgnoreCase( process ) || ontologyEntry.equalsIgnoreCase( function )
+                        || ontologyEntry.equalsIgnoreCase( component ) ) continue;
 
                 if ( ontologyEntry.equalsIgnoreCase( ontologyEntryC ) )
                     overlapTerms.add( GeneOntologyService.getTermForURI( ontologyEntry ) );
@@ -334,23 +339,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         return termSet;
     }
 
-    private Map<String, Integer> getGoCount (Map<Long, Collection<String>> gene2GOMap){
-        
-        Map<String, Integer> countMap = new HashMap<String, Integer>();
-        
-        for(Long gene : gene2GOMap.keySet()){  
-            Collection<String> terms = new HashSet<String>();
-            
-            for (String uri : terms){     
-                if (!countMap.containsKey( uri )){
-                    int value = goMetric.getTermOccurrence( gene2GOMap, uri );
-                    countMap.put( uri, value );
-                }   
-            }
-        }
-        
-        return countMap;
-    }
+
     /**
      * @param take a collection of GOTerm URIs
      * @return Identify the root of each term and put it in the rootMap
