@@ -30,9 +30,14 @@ import junit.framework.TestCase;
  */
 public class ImageCumulativePlatesFetcherTest extends TestCase {
 
+    /**
+     * See {@link ftp://image.llnl.gov/image/outgoing/arrayed_plate_data/cumulative/} for appropriate test files.
+     * 
+     * @throws Exception
+     */
     public void testFetch() throws Exception {
         ImageCumulativePlatesFetcher fetcher = new ImageCumulativePlatesFetcher();
-        Collection<LocalFile> files = fetcher.fetch( "20060901" );
+        Collection<LocalFile> files = fetcher.fetch( "20070801" );
         assertEquals( 1, files.size() );
     }
 
