@@ -243,8 +243,7 @@ public class BusinessKey {
 
         if ( characteristic.getCategoryUri() != null ) {
             queryObject.add( Restrictions.eq( "categoryUri", characteristic.getCategoryUri() ) );
-        } else {
-            assert characteristic.getCategory() != null;
+        } else if ( characteristic.getCategory() != null ) {
             queryObject.add( Restrictions.eq( "category", characteristic.getCategory() ) );
         }
 
