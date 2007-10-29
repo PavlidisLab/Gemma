@@ -49,7 +49,7 @@ public class SchedulerFactoryBeanTest extends BaseSpringContextTest {
             for ( String name : names ) {
                 log.info( name );
             }
-            Trigger newTrigger = ( scheduler.getTrigger( "indexTrigger", null ) );
+            Trigger newTrigger = scheduler.getTrigger( "indexTrigger", null );
             newTrigger.setStartTime( new Date() );
             scheduler.rescheduleJob( "indexTrigger", null, newTrigger );
             scheduler.start();
