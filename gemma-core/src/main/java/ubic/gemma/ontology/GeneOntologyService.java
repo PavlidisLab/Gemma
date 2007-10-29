@@ -357,9 +357,8 @@ public class GeneOntologyService implements InitializingBean {
      * @param entry
      * @return parents (excluding the root)
      */
-
     public Collection<OntologyTerm> getAllParents( OntologyTerm entry ) {
-        return getAllParents( entry, false );
+        return getAllParents( entry, true );
     }
 
     public Collection<OntologyTerm> getAllParents( OntologyTerm entry, boolean includePartOf ) {
@@ -378,11 +377,10 @@ public class GeneOntologyService implements InitializingBean {
     private void getAllParents( OntologyTerm entry, Collection<OntologyTerm> parents, boolean includePartOf ) {
         if ( parents == null ) throw new IllegalArgumentException();
 
-        // if ( parentsCache.containsKey( entry.getUri() ) ) {
-        // if ( parentsCache.get( entry.getUri() ) != null ) parents.addAll( parentsCache.get( entry.getUri() ) );
-        //
-        // return;
-        // }
+        if ( parentsCache.containsKey( entry.getUri() ) && parentsCache.get( entry.getUri() ) != null ) {
+            parents.addAll( parentsCache.get( entry.getUri() ) );
+            return;
+        }
 
         Collection<OntologyTerm> immediateParents = getParents( entry, includePartOf );
         if ( immediateParents == null ) {
@@ -398,7 +396,7 @@ public class GeneOntologyService implements InitializingBean {
             parents.addAll( entry2Parents );
         }
 
-        // parentsCache.put( entry.getUri(), new HashSet<OntologyTerm>( parents ) );
+        parentsCache.put( entry.getUri(), new HashSet<OntologyTerm>( parents ) );
 
     }
 
@@ -426,7 +424,7 @@ public class GeneOntologyService implements InitializingBean {
 
     public Collection<OntologyTerm> getAllChildren( OntologyTerm entry ) {
         // return getAllChildren( entry, false );
-        return getDescendants( entry, false );
+        return getDescendants( entry, true );
     }
 
     /**
@@ -728,10 +726,12 @@ public class GeneOntologyService implements InitializingBean {
     public Collection<OntologyTerm> getGOTerms( Gene gene ) {
 
         if ( goTerms.containsKey( gene.getId() ) ) {
+            // log.info( " cached: GO terms for " + gene.getOfficialSymbol() + " (id " + gene.getId() + ")" );
             if ( log.isTraceEnabled() )
                 log.trace( " cached: GO terms for " + gene.getOfficialSymbol() + " (id " + gene.getId() + ")" );
             return goTerms.get( gene.getId() );
         }
+        // log.info( "not cached: GO terms for " + gene.getOfficialSymbol() + " (id " + gene.getId() + ")" );
         if ( log.isTraceEnabled() )
             log.trace( "not cached: GO terms for " + gene.getOfficialSymbol() + " (id " + gene.getId() + ")" );
         Collection<VocabCharacteristic> annotations = gene2GOAssociationService.findByGene( gene );
