@@ -21,7 +21,6 @@ package ubic.gemma.model.expression.experiment;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.Map;
 
 import org.apache.commons.lang.RandomStringUtils;
@@ -113,15 +112,6 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
         }
     }
 
-    /**
-     * @throws Exception
-     */
-    public void testGetOwner() throws Exception {
-        // what is this testing exactly?
-        ExpressionExperiment expressionExperiment = expressionExperimentDao.findByName( EE_NAME );
-        assertNotNull( expressionExperiment );
-    }
-
     public final void testFindByAccession() throws Exception {
         DatabaseEntry accessionEntry = DatabaseEntry.Factory.newInstance( ed );
         accessionEntry.setAccession( accession );
@@ -130,7 +120,6 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
         assertNotNull( expressionExperiment );
     }
 
-   
     @SuppressWarnings("unchecked")
     public final void testGetDesignElementDataVectors() throws Exception {
         Collection<DesignElement> designElements = new HashSet<DesignElement>();
@@ -195,11 +184,13 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
         Collection list = expressionExperimentDao.loadAllValueObjects();
         assertNotNull( list );
     }
-    
-    //Test needs to be run against the production db. Comment out the onsetup and on tear down before running on production. 
-    //The test db is just to trivial a db for this test to ever fail. 
-    //there were issues with loadValueObjects not returning all the specified value objects
-    //because of join issues (difference between left join and inner join).  Made this test to quickly test if it was working or not. 
+
+    // Test needs to be run against the production db. Comment out the onsetup and on tear down before running on
+    // production.
+    // The test db is just to trivial a db for this test to ever fail.
+    // there were issues with loadValueObjects not returning all the specified value objects
+    // because of join issues (difference between left join and inner join). Made this test to quickly test if it was
+    // working or not.
     // public final void testVerifyLoadValueObjects() throws Exception {
     //               
     // Collection<ExpressionExperiment> eeAll = expressionExperimentDao.loadAll();
@@ -223,8 +214,8 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
     // removedIds.removeAll( idsAfter );
     //        
     // log.debug( "Intersection of EEs: " + removedIds.toString() );
-    //        assertEquals(idsAfter.size(), ids.size());
-    //    }
+    // assertEquals(idsAfter.size(), ids.size());
+    // }
 
     /**
      * @param expressionExperimentDao the expressionExperimentDao to set
