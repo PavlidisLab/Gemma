@@ -151,7 +151,7 @@ public class ExpressionDataMatrixBuilder {
     /**
      * @return a matrix of booleans, or null if a missing value quantitation type ("absent/present", which may have been
      *         computed by our system) is not found. This will return the values whether the array design is two-color
-     *         or not. 
+     *         or not.
      */
     public ExpressionDataBooleanMatrix getMissingValueData( ArrayDesign arrayDesign ) {
         List<QuantitationType> qtypes = this.getMissingValueQTypes( arrayDesign );
@@ -380,6 +380,23 @@ public class ExpressionDataMatrixBuilder {
         }
         return getPreferredData( arrayDesign );
 
+    }
+
+    /**
+     * Returns the {@link ExpressionDataDoubleMatrix}. For two color arrays, the missing values are masked.
+     * 
+     * @param arrayDesign
+     * @return ExpressionDataDoubleMatrix - For two color arrays, the missing values are masked.
+     */
+    public ExpressionDataDoubleMatrix getMaskedIntensity( ArrayDesign arrayDesign ) {
+
+        ExpressionDataDoubleMatrix intensityMatrix = this.getIntensity( arrayDesign );
+
+        if ( arrayDesign.getTechnologyType().equals( TechnologyType.TWOCOLOR ) ) {
+            maskMissingValues( intensityMatrix, arrayDesign );
+        }
+
+        return intensityMatrix;
     }
 
     /**
