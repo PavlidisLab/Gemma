@@ -47,7 +47,7 @@ public class DataFileFetcherIntegrationTest extends TestCase {
      * Test method for 'ubic.gemma.loader.expression.arrayExpress.DataFileFetcher.fetch(String)'
      */
     public void testFetch() throws Exception {
-        Collection<LocalFile> files = faf.fetch( "SMDB-14" );
+        Collection<LocalFile> files = faf.fetch( "E-SMDB-14" );
         assertTrue( files.size() > 0 );
     }
 }

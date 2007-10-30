@@ -105,8 +105,9 @@ public class TwoChannelMissingValues {
             double signalToNoiseThreshold, Collection<Double> extraMissingValueIndicators ) {
 
         expressionExperimentService.thawLite( expExp );
+        Collection<QuantitationType> usefulQuantitationTypes = ExpressionDataMatrixBuilder.getUsefulQuantitationTypes( expExp );
         Collection<DesignElementDataVector> vectors = expressionExperimentService.getDesignElementDataVectors( expExp,
-                ExpressionDataMatrixBuilder.getUsefulQuantitationTypes( expExp ) );
+                usefulQuantitationTypes );
 
         designElementDataVectorService.thaw( vectors );
 

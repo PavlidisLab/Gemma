@@ -139,6 +139,7 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
         for ( ExperimentalFactor factor : haystack ) {
             for ( FactorValue factorValue : factor.getFactorValues() ) {
                 // TODO find a better way to equate factor values
+                log.info(factorValue);
                 if ( needle.toString().equals( factorValue.toString() ) )
                     return factorValue;
             }

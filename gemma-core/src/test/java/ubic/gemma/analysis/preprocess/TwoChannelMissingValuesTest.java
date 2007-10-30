@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.zip.GZIPInputStream;
 
+import org.apache.commons.lang.RandomStringUtils;
+
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.loader.expression.geo.DatasetCombiner;
 import ubic.gemma.loader.expression.geo.GeoConverter;
@@ -77,6 +79,12 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         Object result = this.gc.convert( series );
         assertNotNull( result );
         ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection ) result ).iterator().next();
+
+        // make sure we don't run into bad data that already is in the DB
+        expExp.setShortName( RandomStringUtils.randomAlphabetic( 20 ) );
+        expExp.setName( RandomStringUtils.randomAlphabetic( 200 ) );
+        expExp.setAccession( null );
+
         expExp = ( ExpressionExperiment ) persisterHelper.persist( expExp );
         Collection<DesignElementDataVector> calls = tcmv.computeMissingValues( expExp, null, 2.0,
                 new ArrayList<Double>() );
@@ -99,6 +107,10 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         Object result = this.gc.convert( series );
         assertNotNull( result );
         ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection ) result ).iterator().next();
+        // make sure we don't run into bad data that already is in the DB
+        expExp.setShortName( RandomStringUtils.randomAlphabetic( 20 ) );
+        expExp.setName( RandomStringUtils.randomAlphabetic( 200 ) );
+        expExp.setAccession( null );
         expExp = ( ExpressionExperiment ) persisterHelper.persist( expExp );
         Collection<DesignElementDataVector> calls = tcmv.computeMissingValues( expExp, null, 2.0,
                 new ArrayList<Double>() );
@@ -125,6 +137,10 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         Object result = this.gc.convert( series );
         assertNotNull( result );
         ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection<?> ) result ).iterator().next();
+        // make sure we don't run into bad data that already is in the DB
+        expExp.setShortName( RandomStringUtils.randomAlphabetic( 20 ) );
+        expExp.setName( RandomStringUtils.randomAlphabetic( 200 ) );
+        expExp.setAccession( null );
         expExp = ( ExpressionExperiment ) persisterHelper.persist( expExp );
 
         Collection<DesignElementDataVector> calls = tcmv.computeMissingValues( expExp, null, 2.0,

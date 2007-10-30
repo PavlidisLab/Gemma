@@ -52,10 +52,7 @@ public class ExperimentalDesignControllerTest extends BaseSpringContextTest {
      */
     public void testShowExperimentalDesign() throws Exception {
 
-        // setFlushModeCommit();
-
         /* uncomment to use prod environment as opposed to the test environment */
-        // this.setDisableTestEnv( true );
         ExperimentalDesignController c = ( ExperimentalDesignController ) getBean( "experimentalDesignController" );
 
         MockHttpServletRequest req = new MockHttpServletRequest( "GET",

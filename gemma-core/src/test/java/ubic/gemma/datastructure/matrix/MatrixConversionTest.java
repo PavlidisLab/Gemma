@@ -25,6 +25,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -44,6 +46,7 @@ import junit.framework.TestCase;
  */
 public class MatrixConversionTest extends TestCase {
 
+    private static Log log = LogFactory.getLog( MatrixConversionTest.class.getName() );
     private static final int NUM_BIOMATERIALS = 40;
     private static final int NUM_CS = 200;
 
@@ -58,6 +61,7 @@ public class MatrixConversionTest extends TestCase {
 
         Collection<DesignElementDataVector> vectors = getDesignElementDataVectors( quantTypes );
         ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectors );
+        log.debug( vectors.size() + " vectors" );
         assertEquals( NUM_CS, mat.rows() );
         assertEquals( NUM_BIOMATERIALS, mat.columns() );
 

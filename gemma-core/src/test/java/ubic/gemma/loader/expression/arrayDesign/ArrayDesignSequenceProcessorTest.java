@@ -18,6 +18,7 @@
  */
 package ubic.gemma.loader.expression.arrayDesign;
 
+import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
@@ -28,6 +29,7 @@ import org.apache.commons.lang.RandomStringUtils;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
+import ubic.gemma.loader.genome.SimpleFastaCmd;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -139,7 +141,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
 
     @SuppressWarnings("unchecked")
     public void testFetchAndLoadWithSequences() throws Exception {
-       
+
         String path = ConfigUtils.getString( "gemma.home" );
         AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
@@ -168,6 +170,18 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
     @SuppressWarnings("unchecked")
     public void testFetchAndLoadWithIdentifiers() throws Exception {
         endTransaction();
+        String fastacmdExe = ConfigUtils.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
+        if ( fastacmdExe == null ) {
+            log.warn( "No fastacmd executable is configured, skipping test" );
+            return;
+        }
+
+        File fi = new File( fastacmdExe );
+        if ( !fi.canRead() ) {
+            log.warn( fastacmdExe + " not found, skipping test" );
+            return;
+        }
+
         String path = ConfigUtils.getString( "gemma.home" );
         AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path

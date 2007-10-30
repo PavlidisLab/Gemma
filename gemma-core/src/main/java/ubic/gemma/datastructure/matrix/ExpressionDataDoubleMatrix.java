@@ -131,8 +131,12 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
      *      ubic.gemma.model.expression.bioAssay.BioAssay)
      */
     public Double get( DesignElement designElement, BioAssay bioAssay ) {
-        int i = this.rowElementMap.get( designElement );
-        int j = this.columnAssayMap.get( bioAssay );
+        Integer i = this.rowElementMap.get( designElement );
+        Integer j = this.columnAssayMap.get( bioAssay );
+        if ( i == null || j == null ) {
+            log.warn( "No matrix element for " + designElement + ", " + bioAssay );
+            return null;
+        }
         return this.matrix.get( i, j );
     }
 
@@ -319,12 +323,23 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         }
         buf.append( "\n" );
 
+        boolean warned = false;
         for ( int j = 0; j < rows; j++ ) {
 
             buf.append( this.rowDesignElementMapByInteger.get( j ).getName() );
             BioSequence biologicalCharacteristic = ( ( CompositeSequence ) this.rowDesignElementMapByInteger.get( j ) )
                     .getBiologicalCharacteristic();
-            if ( biologicalCharacteristic != null ) buf.append( " [" + biologicalCharacteristic.getName() + "]" );
+            if ( biologicalCharacteristic != null ) {
+                try {
+               //     buf.append( " [" + biologicalCharacteristic.getName() + "]" );
+                } catch ( org.hibernate.LazyInitializationException e ) {
+                    if ( !warned ) {
+                        warned = true;
+                        log
+                                .warn( "Unable to print sequence data: information has not been retrieved from the database" );
+                    }
+                }
+            }
 
             for ( int i = 0; i < columns; i++ ) {
                 Double val = this.get( j, i );

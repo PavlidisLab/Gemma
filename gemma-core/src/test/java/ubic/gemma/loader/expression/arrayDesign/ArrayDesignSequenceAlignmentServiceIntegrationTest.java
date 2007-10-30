@@ -18,10 +18,12 @@
  */
 package ubic.gemma.loader.expression.arrayDesign;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 
 import ubic.gemma.apps.Blat;
+import ubic.gemma.loader.genome.SimpleFastaCmd;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.util.ConfigUtils;
 
@@ -39,6 +41,19 @@ public class ArrayDesignSequenceAlignmentServiceIntegrationTest extends Abstract
      * {@link ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService#processArrayDesign(ubic.gemma.model.expression.arrayDesign.ArrayDesign, ubic.gemma.model.genome.Taxon)}.
      */
     public final void testProcessArrayDesign() throws Exception {
+
+        String gfClientExe = ConfigUtils.getString( "gfClient.exe" );
+
+        if ( gfClientExe == null ) {
+            log.warn( "No gfClient executable is configured, skipping test" );
+            return;
+        }
+
+        File fi = new File( gfClientExe );
+        if ( !fi.canRead() ) {
+            log.warn( gfClientExe + " not found, skipping test" );
+            return;
+        }
 
         ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
         try {

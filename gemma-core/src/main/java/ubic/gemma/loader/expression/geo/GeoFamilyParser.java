@@ -207,7 +207,7 @@ public class GeoFamilyParser implements Parser {
         executor.shutdownNow();
 
         assert future.isDone();
-        assert executor.isTerminated();
+    //    assert executor.isTerminated();
 
         log.info( "Done parsing." );
     }

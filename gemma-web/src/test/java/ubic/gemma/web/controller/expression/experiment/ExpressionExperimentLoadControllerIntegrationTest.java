@@ -118,8 +118,8 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
         // goes to the progress page...
         controller.handleRequest( request, response );
 
-        String taskId = ( String ) request.getSession().getAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE );
-        assertNotNull( taskId );
+        String taskId = ( String ) request.getAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE );
+        assertNotNull( "No task Id", taskId );
 
         MockClient.monitorTask( taskId );
 
@@ -147,7 +147,7 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
         assertNotNull( mv );
         Map model = mv.getModel();
         ee = ( ExpressionExperiment ) model.get( "expressionExperiment" );
-        assertNotNull( ee.getId() );
+        assertNotNull( "EE was not persistent", ee.getId() );
 
     }
 
@@ -200,7 +200,7 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
 
         Map model = mv.getModel();
         ee = ( ExpressionExperiment ) model.get( "expressionExperiment" );
-        assertNotNull( ee.getId() );
+        assertNotNull( "EE was not persistent", ee.getId() );
 
     }
 

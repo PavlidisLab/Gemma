@@ -100,7 +100,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
         securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
         securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
-        securityService.changePermission( ad, 0, new HashSet<Object>() );
+        securityService.setPermissions( ad, 0, new HashSet<Object>() );
         /*
          * uncomment so you can see the acl permission has been changed in the database.
          */
@@ -125,7 +125,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
         boolean fail = false;
         try {
-            securityService.changePermission( ad, 0, new HashSet<Object>() );
+            securityService.setPermissions( ad, 0, new HashSet<Object>() );
         } catch ( Exception e ) {
             fail = true;
             log.error( "TEST SUCCESSFULLY FAILED WITH: " );
@@ -139,12 +139,13 @@ public class SecurityServiceTest extends BaseSpringContextTest {
      * @throws Exception
      */
     public void testMakeTestExpressionExperimentPrivate() throws Exception {
+        endTransaction();
         ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
 
         SecurityService securityService = new SecurityService();
         securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
         securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
-        securityService.changePermission( ee, 6, new HashSet<Object>() );
+        securityService.setPermissions( ee, SecurityService.PRIVATE_MASK, new HashSet<Object>() );
         /*
          * uncomment so you can see the acl permission has been changed in the database.
          */
@@ -166,7 +167,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
             securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
             securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
-            securityService.changePermission( ee, 0, new HashSet<Object>() );
+            securityService.setPermissions( ee, SecurityService.PRIVATE_MASK, new HashSet<Object>() );
             /*
              * uncomment so you can see the acl permission has been changed in the database.
              */

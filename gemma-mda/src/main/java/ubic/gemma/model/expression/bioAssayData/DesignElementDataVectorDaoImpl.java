@@ -326,7 +326,11 @@ public class DesignElementDataVectorDaoImpl extends
                 int count = 0;
                 for ( Object object : designElementDataVectors ) {
                     DesignElementDataVector designElementDataVector = ( DesignElementDataVector ) object;
-                    thaw( session, designElementDataVector );
+                    try {
+                        thaw( session, designElementDataVector );
+                    } catch ( org.hibernate.NonUniqueObjectException e ) {
+                        // no problem. Ignore it. This happens in tests.
+                    }
                     session.clear();
                     if ( ++count % 10000 == 0 ) {
                         log.info( "Thawed " + count + " vectors" );
@@ -555,20 +559,21 @@ public class DesignElementDataVectorDaoImpl extends
         } );
 
     }
-    
-//    protected Map handleGetGene2DedvsMap(Collection genes, QuantitationType qt) {
-//        Map<Gene, Collection<DesignElementDataVector>> gene2dedvs = new HashMap<Gene, Collection<DesignElementDataVector>>();
-//        StringBuffer geneIdList = new StringBuffer();
-//        for (Object obj : genes) {
-//            if (obj instanceof Gene) {
-//                Gene gene = (Gene) obj;
-//                geneIdList.append( gene.getId() );
-//                geneIdList.append( ',' );
-//            }
-//        }
-//        geneIdList.deleteCharAt( geneIdList.length() - 1 );
-//        String queryString = "SELECT "
-//    }
+
+    // protected Map handleGetGene2DedvsMap(Collection genes, QuantitationType qt) {
+    // Map<Gene, Collection<DesignElementDataVector>> gene2dedvs = new HashMap<Gene,
+    // Collection<DesignElementDataVector>>();
+    // StringBuffer geneIdList = new StringBuffer();
+    // for (Object obj : genes) {
+    // if (obj instanceof Gene) {
+    // Gene gene = (Gene) obj;
+    // geneIdList.append( gene.getId() );
+    // geneIdList.append( ',' );
+    // }
+    // }
+    // geneIdList.deleteCharAt( geneIdList.length() - 1 );
+    // String queryString = "SELECT "
+    // }
 
     @Override
     protected Map handleGetDedv2GenesMap( Collection dedvs, QuantitationType qt ) throws Exception {
@@ -582,10 +587,10 @@ public class DesignElementDataVectorDaoImpl extends
                 DesignElementDataVector dedv = ( DesignElementDataVector ) object;
                 dedvIdList.append( dedv.getId() );
                 dedvIdList.append( ',' );
-	            dedvMap.put(dedv.getId(), dedv);
+                dedvMap.put( dedv.getId(), dedv );
             }
         }
-        
+
         dedvIdList.deleteCharAt( dedvIdList.length() - 1 );
 
         // Native query - faster? Fetches all data for that QT and throws away unneeded portion
@@ -593,7 +598,8 @@ public class DesignElementDataVectorDaoImpl extends
                 + " CHROMOSOME_FEATURE.OFFICIAL_NAME as officialName, CHROMOSOME_FEATURE.OFFICIAL_SYMBOL as officialSymbol FROM DESIGN_ELEMENT_DATA_VECTOR, GENE2CS, CHROMOSOME_FEATURE WHERE "
                 + " QUANTITATION_TYPE_FK = "
                 + qt.getId()
-                + " AND GENE2CS.CS=DESIGN_ELEMENT_FK AND GENE2CS.GENE=CHROMOSOME_FEATURE.ID AND DESIGN_ELEMENT_DATA_VECTOR.ID in (" + dedvIdList + ")";
+                + " AND GENE2CS.CS=DESIGN_ELEMENT_FK AND GENE2CS.GENE=CHROMOSOME_FEATURE.ID AND DESIGN_ELEMENT_DATA_VECTOR.ID in ("
+                + dedvIdList + ")";
 
         Session session = getSessionFactory().openSession();
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
@@ -601,7 +607,7 @@ public class DesignElementDataVectorDaoImpl extends
         queryObject.addScalar( "dedvId", new LongType() );
         queryObject.addScalar( "geneId", new LongType() );
         queryObject.addScalar( "featureID", new LongType() );
-        queryObject.addScalar( "officialName", new StringType());
+        queryObject.addScalar( "officialName", new StringType() );
         queryObject.addScalar( "officialSymbol", new StringType() );
 
         ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
@@ -620,8 +626,8 @@ public class DesignElementDataVectorDaoImpl extends
             gene.setOfficialName( officialName );
             gene.setOfficialSymbol( officialSymbol );
             gene.setId( geneId );
-            
-            DesignElementDataVector dedv = dedvMap.get(dedvId);
+
+            DesignElementDataVector dedv = dedvMap.get( dedvId );
 
             // Test to see if we can just add or if we have to make a collection
             // TODO: this might be problomatic due to the == operator and the hash function for DEDV

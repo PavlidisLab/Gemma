@@ -28,6 +28,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.apps.Blat;
+import ubic.gemma.loader.genome.SimpleFastaCmd;
 import ubic.gemma.loader.genome.gene.ncbi.NcbiGeneLoader;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
@@ -51,11 +52,27 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
         // TODO: delete blat results that were loaded.
     }
 
+    private boolean fastaCmdExecutableExists() {
+        String fastacmdExe = ConfigUtils.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
+        if ( fastacmdExe == null ) {
+            log.warn( "No fastacmd executable is configured, skipping test" );
+            return false;
+        }
+
+        File fi = new File( fastacmdExe );
+        if ( !fi.canRead() ) {
+            log.warn( fastacmdExe + " not found, skipping test" );
+            return false;
+        }
+        return true;
+    }
+
     /**
      * Test method for
      * {@link ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService#processArrayDesign(ubic.gemma.model.expression.arrayDesign.ArrayDesign, ubic.gemma.model.genome.Taxon)}.
      */
     public final void testProcessArrayDesign() throws Exception {
+        if ( !fastaCmdExecutableExists() ) return;
         ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
 
         try {
