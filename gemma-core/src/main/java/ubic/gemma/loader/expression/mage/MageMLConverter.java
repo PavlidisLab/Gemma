@@ -99,54 +99,53 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
             }
         }
 
-        fillInBioMaterialFactorValues( convertedResult );
+    //    fillInBioMaterialFactorValues( convertedResult );
 
         this.isConverted = true;
         return convertedResult;
     }
+//
+//    /**
+//     * @param convertedResult
+//     */
+//    private void fillInBioMaterialFactorValues( Collection<Object> convertedResult ) {
+//        ExpressionExperiment ee = null;
+//        for ( Object object : convertedResult ) {
+//            if ( object instanceof ExpressionExperiment ) ee = ( ExpressionExperiment ) object;
+//        }
+//        assert ee != null;
+//
+//        Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
+//        Collection<BioAssay> bioAssays = ee.getBioAssays();
+//        for ( BioAssay assay : bioAssays ) {
+//            for ( BioMaterial bm : assay.getSamplesUsed() ) {
+//                log.info( "checking factor values on biomaterial " + bm );
+//                Collection<FactorValue> factorValues = new HashSet<FactorValue>();
+//                for ( FactorValue value : bm.getFactorValues() ) {
+//                    FactorValue efFactorValue = findMatchingFactorValue( value, experimentalFactors );
+//                    if ( efFactorValue == null )
+//                        throw new IllegalStateException( "No experimental-factor bound factor value found for " + value );
+//                    if ( efFactorValue.getExperimentalFactor() == null )
+//                        log.info( "experimental-factor bound factor value " + efFactorValue
+//                                + " has null experimental factor" );
+//                    factorValues.add( efFactorValue );
+//                }
+//                bm.setFactorValues( factorValues );
+//                log.info( "biomaterial " + bm + " has " + factorValues.size() + " factor values: " + factorValues );
+//            }
+//        }
+//    }
 
-    /**
-     * @param convertedResult
-     */
-    private void fillInBioMaterialFactorValues( Collection<Object> convertedResult ) {
-        ExpressionExperiment ee = null;
-        for ( Object object : convertedResult ) {
-            if ( object instanceof ExpressionExperiment ) ee = ( ExpressionExperiment ) object;
-        }
-        assert ee != null;
-
-        Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
-        Collection<BioAssay> bioAssays = ee.getBioAssays();
-        for ( BioAssay assay : bioAssays ) {
-            for ( BioMaterial bm : assay.getSamplesUsed() ) {
-                log.info( "checking factor values on biomaterial " + bm );
-                Collection<FactorValue> factorValues = new HashSet<FactorValue>();
-                for ( FactorValue value : bm.getFactorValues() ) {
-                    FactorValue efFactorValue = findMatchingFactorValue( value, experimentalFactors );
-                    if ( efFactorValue == null )
-                        throw new IllegalStateException( "No experimental-factor bound factor value found for " + value );
-                    if ( efFactorValue.getExperimentalFactor() == null )
-                        log.info( "experimental-factor bound factor value " + efFactorValue + " has null experimental factor"  );
-                    factorValues.add( efFactorValue );
-                }
-                bm.setFactorValues( factorValues );
-                log.info( "biomaterial " + bm + " has " + factorValues.size() + " factor values: " + factorValues );
-            }
-        }
-    }
-    
-    private FactorValue findMatchingFactorValue(FactorValue needle, Collection<ExperimentalFactor> haystack) {
-        for ( ExperimentalFactor factor : haystack ) {
-            for ( FactorValue factorValue : factor.getFactorValues() ) {
-                // TODO find a better way to equate factor values
-                log.info(factorValue);
-                if ( needle.toString().equals( factorValue.toString() ) )
-                    return factorValue;
-            }
-        }
-        return null;
-    }
-    
+//    private FactorValue findMatchingFactorValue( FactorValue needle, Collection<ExperimentalFactor> haystack ) {
+//        for ( ExperimentalFactor factor : haystack ) {
+//            for ( FactorValue factorValue : factor.getFactorValues() ) {
+//                // TODO find a better way to equate factor values
+//                log.info( factorValue );
+//                if ( needle.toString().equals( factorValue.toString() ) ) return factorValue;
+//            }
+//        }
+//        return null;
+//    }
 
     /*
      * (non-Javadoc)

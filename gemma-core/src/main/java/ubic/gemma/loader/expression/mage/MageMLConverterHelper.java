@@ -1525,10 +1525,15 @@ public class MageMLConverterHelper {
      */
     public FactorValue convertFactorValue( org.biomage.Experiment.FactorValue mageObj ) {
         if ( mageObj == null ) return null;
-
-        FactorValue result = FactorValue.Factory.newInstance();
-        convertAssociations( mageObj, result );
-        return result;
+        String identifier = mageObj.getIdentifier();
+        if ( fvMap.containsKey( identifier ) ) {
+            return fvMap.get( identifier );
+        } else {
+            FactorValue result = FactorValue.Factory.newInstance();
+            convertAssociations( mageObj, result );
+            fvMap.put( identifier, result );
+            return result;
+        }
     }
 
     /**
@@ -1750,6 +1755,8 @@ public class MageMLConverterHelper {
 
     }
 
+    Map<String, FactorValue> fvMap = new HashMap<String, FactorValue>();
+
     /**
      * @param mageObj
      * @param gemmaObj
@@ -1771,6 +1778,7 @@ public class MageMLConverterHelper {
 
             for ( org.biomage.Experiment.FactorValue magefv : ( Collection<org.biomage.Experiment.FactorValue> ) mageObj
                     .getBioAssayFactorValues() ) {
+
                 FactorValue factorValue = convertFactorValue( magefv );
                 bioAssayFactors.get( gemmaObj.getName() ).add( factorValue );
             }
