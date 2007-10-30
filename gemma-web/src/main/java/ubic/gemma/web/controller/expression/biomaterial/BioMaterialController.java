@@ -219,6 +219,7 @@ public class BioMaterialController extends BaseMultiActionController {
                     
                     bmvo.setFactorValue(factorName );
                     bmvo.setBioAssayDescription(assay.getDescription());
+                    bmvo.setBioAssayName(assay.getName());
                     bioMaterials.add( bmvo );
 
                 }
@@ -229,7 +230,7 @@ public class BioMaterialController extends BaseMultiActionController {
         return bioMaterials;
 
     }
-
+    
     public Collection<BioMaterial> getBioMaterials( Collection<Long> ids ) {
         return bioMaterialService.loadMultiple( ids );
     }

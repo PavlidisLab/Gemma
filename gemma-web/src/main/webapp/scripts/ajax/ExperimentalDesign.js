@@ -389,7 +389,8 @@ var initBioMaterialGrid = function(div) {
                        {name:"id", type:"int"},
                        {name:"name", type:"string"},
                        {name:"description", type:"string"},
-                       {name:"bioAssayDescription", type:"string"},                       
+                       {name:"bioAssayDescription", type:"string"},   
+                       {name:"bioAssayName", type:"string"},                                              
                        {name:"factorValue", type:"string"}
                        
                        
@@ -407,7 +408,8 @@ var initBioMaterialGrid = function(div) {
        var cm = new Ext.grid.ColumnModel([
                        {header: "Name", width: 50, dataIndex:"name"},
                        {header: "Description",  width: 100, dataIndex:"description"}, 
-                       {header: "BioAssay Info",  width: 100, dataIndex:"bioAssayDescription"},                        
+                       {header: "BioAssay Info",  width: 100, dataIndex:"bioAssayDescription"},   
+                       {header: "BioAssay Name",  width: 100, dataIndex:"bioAssayName"},                                               
                        {header: "Factor Value",  width: 50, dataIndex:"factorValue"}
                        
                        ]);

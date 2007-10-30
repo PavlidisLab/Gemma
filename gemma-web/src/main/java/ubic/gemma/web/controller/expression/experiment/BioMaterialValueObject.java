@@ -17,6 +17,7 @@ public class BioMaterialValueObject implements Serializable {
     private String factorValue;
     private String name;
     private String bioAssayDescription;
+    private String bioAssayName;
     
     
     
@@ -95,6 +96,16 @@ public class BioMaterialValueObject implements Serializable {
 
 	public void setBioAssayDescription(String bioAssayDescription) {
 		this.bioAssayDescription = bioAssayDescription;
+	}
+
+
+	public String getBioAssayName() {
+		return bioAssayName;
+	}
+
+
+	public void setBioAssayName(String bioAssayName) {
+		this.bioAssayName = bioAssayName;
 	}
     
     

@@ -590,6 +590,7 @@ Mapping URLS to controllers
 							<value>description</value>
 							<value>factorValue</value>
 							<value>bioAssayDescription</value>							
+							<value>bioAssayName</value>							
 						</list>
 					</property>
 				</bean>
