@@ -378,8 +378,9 @@ var saveFactorValueToBMHandler = function(){
 
 bmGridRefresh = function(){
 	
-	bmDS.reload({params:[{id:eeID, classDelegatingFor:"expressionExperimentID"},{id:selectedFactorId, classDelegatingFor: "FactorID"}]});	
-	bmGrid.getView().refresh(true);	
+	bmDS.reload({params:[{id:eeID, classDelegatingFor:"expressionExperimentID"},{id:selectedFactorId, classDelegatingFor: "FactorID"}]}, function() {
+		bmGrid.getView().refresh(true);
+	});		
 	
 }
 
@@ -440,9 +441,10 @@ var initBioMaterialGrid = function(div) {
 
 factorGridRefresh = function(){
 	
-	factorDS.reload({params:[{id:eeID, classDelegatingFor:"expressionExperimentID"}]});	
-	factorGrid.getView().refresh(true);	
-	refreshBMFactorComboBoxes();
+	factorDS.reload({params:[{id:eeID, classDelegatingFor:"expressionExperimentID"}]}, function() {	
+		factorGrid.getView().refresh(true);	
+		refreshBMFactorComboBoxes();
+	});
 	
 }
 
@@ -527,9 +529,10 @@ factorValueGridRefresh = function(){
 	
 	var selections =  factorGrid.getSelectionModel().getSelections();
 	
-	factorValueGridDS.reload({params:[{id:selections[0].id, classDelegatingFor:"long"}]}, function() {factorValueGrid.getView().refresh(true)} );	
-//	factorValueGrid.getView().refresh(true);	
-	refreshBMFactorComboBoxes();	
+	factorValueGridDS.reload({params:[{id:selections[0].id, classDelegatingFor:"long"}]}, function() {
+		factorValueGrid.getView().refresh(true);
+		refreshBMFactorComboBoxes();
+	});
 }
 
 var initFactorValueGrid = function(div) {
