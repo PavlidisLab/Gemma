@@ -185,7 +185,11 @@ public class BioMaterialController extends BaseMultiActionController {
 
         expressionExperimentService.thawLite( expressionExperiment );
         Collection<BioAssay> bioAssays = expressionExperiment.getBioAssays();
-        Collection<BioMaterialValueObject> bioMaterials = new ArrayList<BioMaterialValueObject>();
+        Collection<BioMaterialValueObject> bioMaterials = new HashSet<BioMaterialValueObject>();
+
+        
+        //There could be an issue here with attempting to add the same bioMaterail more than once if it is found
+        //in more than one bioAssay for the experiment. This should only cause a loss of information regarding which bioAssayDescription is displayed
 
         for ( BioAssay assay : bioAssays ) {
             Collection<BioMaterial> materials = assay.getSamplesUsed();
@@ -198,10 +202,10 @@ public class BioMaterialController extends BaseMultiActionController {
                 if ( material.getFactorValues() == null ) continue;
 
                 for ( FactorValue value : material.getFactorValues() ) {
-                    // If the factor value isn't the one we are looking for then add BMVO but don't fill in factor info.
+                    // If the factor isn't the one we are looking for then just skip it.
                     if ( factorId.getId().compareTo( value.getExperimentalFactor().getId() ) != 0 ){
-                        bmvo.setFactorValue( "None" );
-                        bioMaterials.add(bmvo);
+                        //bmvo.setFactorValue( "None" );
+                        //bioMaterials.add(bmvo);
                         continue;
                     }
                     
@@ -214,6 +218,7 @@ public class BioMaterialController extends BaseMultiActionController {
                         factorName += value.getValue();
                     
                     bmvo.setFactorValue(factorName );
+                    bmvo.setBioAssayDescription(assay.getDescription());
                     bioMaterials.add( bmvo );
 
                 }
