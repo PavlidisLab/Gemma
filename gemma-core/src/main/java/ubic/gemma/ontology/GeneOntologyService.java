@@ -363,10 +363,10 @@ public class GeneOntologyService implements InitializingBean {
 
     public Collection<OntologyTerm> getAllParents( OntologyTerm entry, boolean includePartOf ) {
         return getAncestors( entry, includePartOf );
-        // Collection<OntologyTerm> parents = new HashSet<OntologyTerm>();
-        // getAllParents( entry, parents, includePartOf );
-        //
-        // return parents;
+//        Collection<OntologyTerm> parents = new HashSet<OntologyTerm>();
+//        getAllParents( entry, parents, includePartOf );     
+//
+//        return parents;
 
     }
 
@@ -724,16 +724,20 @@ public class GeneOntologyService implements InitializingBean {
      */
     @SuppressWarnings("unchecked")
     public Collection<OntologyTerm> getGOTerms( Gene gene ) {
+        return getGOTerms( gene, true );
+    }
+    
+    public Collection<OntologyTerm> getGOTerms( Gene gene, boolean includePartOf ) {
 
-        if ( goTerms.containsKey( gene.getId() ) ) {
-            // log.info( " cached: GO terms for " + gene.getOfficialSymbol() + " (id " + gene.getId() + ")" );
-            if ( log.isTraceEnabled() )
-                log.trace( " cached: GO terms for " + gene.getOfficialSymbol() + " (id " + gene.getId() + ")" );
-            return goTerms.get( gene.getId() );
-        }
+//      if ( goTerms.containsKey( gene ) ) {
+//            // log.info( " cached: GO terms for " + gene.getOfficialSymbol() + " (id " + gene.getId() + ")" );
+//            if ( log.isTraceEnabled() )
+//                log.trace( " cached: GO terms for " + gene.getOfficialSymbol() + " (id " + gene.getId() + ")" );
+//            return goTerms.get( gene );
+//        }
         // log.info( "not cached: GO terms for " + gene.getOfficialSymbol() + " (id " + gene.getId() + ")" );
         if ( log.isTraceEnabled() )
-            log.trace( "not cached: GO terms for " + gene.getOfficialSymbol() + " (id " + gene.getId() + ")" );
+            log.trace( "not cached: GO terms for " + gene.getOfficialSymbol() + " (id " + gene + ")" );
         Collection<VocabCharacteristic> annotations = gene2GOAssociationService.findByGene( gene );
 
         Collection<OntologyTerm> allGOTermSet = new HashSet<OntologyTerm>();
@@ -745,8 +749,9 @@ public class GeneOntologyService implements InitializingBean {
             allGOTermSet.add( terms.get( c.getValueUri() ) );
         }
 
-        allGOTermSet.addAll( getAllParents( allGOTermSet ) );
-        goTerms.put( gene, allGOTermSet );
+        allGOTermSet.addAll( getAllParents( allGOTermSet, includePartOf ) );
+
+//        goTerms.put( gene, allGOTermSet );
         return allGOTermSet;
     }
 
