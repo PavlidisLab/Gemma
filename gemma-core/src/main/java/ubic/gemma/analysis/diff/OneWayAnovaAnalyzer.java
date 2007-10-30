@@ -109,9 +109,6 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
                     "One way anova requires 2 or more factor values (2 factor values is a t-test).  Received "
                             + factorValues.size() + "." );
 
-        // ExpressionDataDoubleMatrix dmatrix = new ExpressionDataDoubleMatrix( expressionExperiment
-        // .getDesignElementDataVectors(), bioAssayDimension, quantitationType );
-
         ArrayDesign arrayDesign = expressionExperiment.getDesignElementDataVectors().iterator().next()
                 .getDesignElement().getArrayDesign();
 

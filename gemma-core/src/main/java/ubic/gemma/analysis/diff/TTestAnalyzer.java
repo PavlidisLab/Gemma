@@ -29,12 +29,13 @@ import org.apache.commons.logging.LogFactory;
 import org.rosuda.JRclient.REXP;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
 import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -123,7 +124,12 @@ public class TTestAnalyzer extends AbstractAnalyzer {
         // "Bioassay dimension of design element data vector does not match supplied bioassay dimension." );
         // }
 
-        ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( vectors, bioAssayDimension, quantitationType );
+        ArrayDesign arrayDesign = expressionExperiment.getDesignElementDataVectors().iterator().next()
+                .getDesignElement().getArrayDesign();
+
+        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( expressionExperiment
+                .getDesignElementDataVectors() );
+        ExpressionDataDoubleMatrix matrix = builder.getMaskedIntensity( arrayDesign );
 
         Collection<BioMaterial> samplesUsed = AnalyzerHelper.getBioMaterialsForBioAssays( matrix );
 
