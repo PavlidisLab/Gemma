@@ -62,144 +62,11 @@ public class GeoSample extends GeoData implements Comparable {
 
     private boolean isGenePix = false;
 
-    /**
-     * These are ignored by the Gemma system so don't need to be parsed (saves memory during import)
-     */
-    // private static Collection<String> skippableQuantitationTypes = new HashSet<String>();
-    // static {
-    //
-    // // These are from GenePix files. In Stanford files they are named differently than described here:
-    // // http://www.moleculardevices.com/pages/software/gn_genepix_file_formats.html
-    //
-    // // these are location and spot size information.
-    // skippableQuantitationTypes.add( "X_COORD" );
-    // skippableQuantitationTypes.add( "Y_COORD" );
-    // skippableQuantitationTypes.add( "TOP" );
-    // skippableQuantitationTypes.add( "BOT" );
-    // skippableQuantitationTypes.add( "LEFT" );
-    // skippableQuantitationTypes.add( "RIGHT" );
-    // skippableQuantitationTypes.add( "DIAMETER" );
-    // skippableQuantitationTypes.add( "TOT_SPIX" );
-    // skippableQuantitationTypes.add( "TOT_BPIX" );
-    //
-    // // the following are background-subtracted values that can be easily computed from the raw values
-    // skippableQuantitationTypes.add( "CH1D_MEAN" );
-    // skippableQuantitationTypes.add( "CH2D_MEAN" );
-    // skippableQuantitationTypes.add( "CH1D_MEDIAN" );
-    // skippableQuantitationTypes.add( "CH2D_MEDIAN" );
-    //
-    // // some raw items are skippable.(assumes we use median)
-    // skippableQuantitationTypes.add( "SUM_MEAN" );
-    // skippableQuantitationTypes.add( "RAT1_MEAN" );
-    // skippableQuantitationTypes.add( "RAT2_MEAN" );
-    // skippableQuantitationTypes.add( "PIX_RAT2_MEAN" );
-    // skippableQuantitationTypes.add( "PIX_RAT2_MEDIAN" );
-    //
-    // // otherwise deemed skippable.
-    // skippableQuantitationTypes.add( "PERGTBCH1I_1SD" );
-    // skippableQuantitationTypes.add( "PERGTBCH2I_1SD" );
-    // skippableQuantitationTypes.add( "PERGTBCH1I_2SD" );
-    // skippableQuantitationTypes.add( "PERGTBCH2I_2SD" );
-    //
-    // // these removed just in the interest of saving memory!
-    // skippableQuantitationTypes.add( "SUM_MEAN" );
-    // skippableQuantitationTypes.add( "SUM_MEDIAN" );
-    // skippableQuantitationTypes.add( "REGR" );
-    // skippableQuantitationTypes.add( "CORR" );
-    // skippableQuantitationTypes.add( "UNF_VALUE" ); // this is the same as 'value' but with the flagged points still
-    // // in.
-    //
-    // }
     Collection<GeoPlatform> platforms;
 
     Collection<GeoReplication> replicates;
     Collection<GeoVariable> variables;
 
-    // Map<String, Class> quantitationTypeRepresentations = new HashMap<String, Class>();
-
-    /**
-     * quantitationType -> designelement -> value
-     */
-    // Map<String, Map<String, Object>> data = new HashMap<String, Map<String, Object>>();
-    // /* Ignore some data types */
-    // private boolean shouldAdd( String columnName ) {
-    // return !( isGenePix && skippableQuantitationTypes.contains( columnName ) );
-    // }
-    // /**
-    // * @param designElement The probe name
-    // * @param quantitationType The column name used in the SOFT file.
-    // * @param value The data point to be stored.
-    // */
-    // public void addDatum( String designElement, String quantitationType, String value ) {
-    //
-    // if ( !shouldAdd( quantitationType ) ) {
-    // return;
-    // }
-    //
-    // if ( !data.containsKey( quantitationType ) ) {
-    // data.put( quantitationType, new HashMap<String, Object>() );
-    // inferRepresentation( quantitationType );
-    // // getColumnNames().add( quantitationType );
-    // }
-    //
-    // Object convertedValue = convertValue( quantitationType, value );
-    //
-    // /*
-    // * Make sure we aren't getting duplicate data. This happens in some corrupt files?
-    // */
-    // if ( data.get( quantitationType ).containsKey( designElement ) ) {
-    // throw new IllegalStateException( "There is already a " + quantitationType + " datum for " + designElement
-    // + " in " + geoAccession );
-    // }
-    // data.get( quantitationType ).put( designElement, convertedValue );
-    // }
-    //
-    // public Object convertValue( String quantitationType, String value ) {
-    // Object convertedValue = value; // if it is a string
-    // Class representation = quantitationTypeRepresentations.get( quantitationType );
-    //
-    // try {
-    // if ( representation.equals( Double.class ) ) {
-    // convertedValue = Double.parseDouble( value );
-    // } else if ( representation.equals( Integer.class ) ) {
-    // convertedValue = Integer.parseInt( value );
-    // } else if ( representation.equals( Boolean.class ) ) {
-    // convertedValue = Boolean.parseBoolean( value );
-    // }
-    // } catch ( NumberFormatException e ) {
-    // convertedValue = handleMissing( representation );
-    // }
-    // return convertedValue;
-    // }
-    // private Object handleMissing( Class representation ) {
-    // if ( representation.equals( Double.class ) ) {
-    // return Double.NaN;
-    // } else if ( representation.equals( Integer.class ) ) {
-    // return 0;
-    // } else if ( representation.equals( Boolean.class ) ) {
-    // return false;
-    // } else {
-    // throw new IllegalArgumentException( "Don't know how to deal with a missing " + representation );
-    // }
-    // }
-    //
-    // /**
-    // * @param quantitationType
-    // */
-    // private void inferRepresentation( String quantitationType ) {
-    // Class representation = Double.class;
-    //
-    // if ( quantitationType.contains( "Probe ID" ) || quantitationType.equalsIgnoreCase( "Probe Set ID" ) ) {
-    // /*
-    // * special case...not a quantitation type.
-    // */
-    // representation = String.class;
-    // } else if ( quantitationType.matches( "ABS_CALL" ) ) {
-    // representation = String.class;
-    // }
-    //
-    // quantitationTypeRepresentations.put( quantitationType, representation );
-    // }
     /**
      * Given a column number (count starts from zero) get the name of the corresponding quantitation type for this
      * sample.
@@ -209,37 +76,11 @@ public class GeoSample extends GeoData implements Comparable {
      */
     public String getNthQuantitationType( int n ) {
         if ( n < 0 || n > getColumnNames().size() - 1 ) {
-            // throw new IllegalArgumentException( "Only " + getColumnNames().size() + " columns, requested index " + n
-            // );
             return null; // This can happen if not every sample has the same quantitation types (happens in rare
             // cases)
         }
         return getColumnNames().get( n );
     }
-
-    // /**
-    // * @param designElement
-    // * @param quantitationType
-    // * @return
-    // */
-    // public Object getDatum( String designElement, String quantitationType ) {
-    // if ( !data.containsKey( quantitationType ) ) {
-    // // throw new IllegalArgumentException( "No such quantitation type \"" + quantitationType + "\"" );
-    // return null;
-    // }
-    // return data.get( quantitationType ).get( designElement );
-    // }
-
-    // /**
-    // * @param designElement
-    // * @param columnNumber
-    // * @return
-    // */
-    // public Object getDatum( String designElement, int columnNumber ) {
-    // String quantitationType = getNthQuantitationType( columnNumber );
-    // if ( quantitationType == null ) return null;
-    // return this.getDatum( designElement, quantitationType );
-    // }
 
     // SAGE items.
     String anchor;
@@ -256,7 +97,7 @@ public class GeoSample extends GeoData implements Comparable {
     }
 
     public void addPlatform( GeoPlatform platform ) {
-        log.info( this + " is on " + platform );
+        if ( log.isDebugEnabled() ) log.debug( this + " is on " + platform );
         this.platforms.add( platform );
     }
 
@@ -534,7 +375,6 @@ public class GeoSample extends GeoData implements Comparable {
      * @param value
      */
     public void addSeriesAppearsIn( String value ) {
-
         this.getSeriesAppearsIn().add( value );
         if ( this.getSeriesAppearsIn().size() > 1 ) {
             if ( log.isDebugEnabled() ) log.debug( this.getGeoAccession() + " appears in more than one series" );
