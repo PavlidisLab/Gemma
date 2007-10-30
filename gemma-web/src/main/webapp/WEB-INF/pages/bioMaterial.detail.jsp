@@ -9,7 +9,7 @@
 <script
 	src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>"
 	type="text/javascript"></script>
-<script src="<c:url value='/scripts/ext/ext-all-debug.js'/>"
+<script src="<c:url value='/scripts/ext/ext-all.js'/>"
 	type="text/javascript"></script>
 <script type="text/javascript"
 	src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
