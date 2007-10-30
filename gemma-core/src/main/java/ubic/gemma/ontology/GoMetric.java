@@ -171,7 +171,7 @@ public class GoMetric {
                 Double pmin = 1.0;
                 Double score = 0.0;
 
-                if ( ontoM.equals( ontoC ) )
+                if ( ontoM.getUri().equalsIgnoreCase( ontoC.getUri() ) )
                     pmin = GOProbMap.get( ontoM.getUri() );
                 else
                     pmin = checkParents( ontoM, ontoC, GOProbMap );
