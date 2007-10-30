@@ -42,7 +42,7 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
      * @see ubic.gemma.model.common.description.CharacteristicServiceBase#handleFindByParentClass(java.lang.Object)
      */
     @Override
-    protected Map handleFindByParentClass( Object parentClass ) throws Exception {
+    protected Map handleFindByParentClass( java.lang.Class parentClass ) {
         Map charToParent = new HashMap<Characteristic, Object>();
         
         return charToParent;
