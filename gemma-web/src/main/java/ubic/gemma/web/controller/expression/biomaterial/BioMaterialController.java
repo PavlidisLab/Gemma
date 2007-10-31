@@ -50,10 +50,12 @@ import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
  * @author keshav
- * @version $Id$
+ * @version $Id: BioMaterialController.java,v 1.16 2007/10/30 22:17:58 kelsey
+ *          Exp $
  * @spring.bean id="bioMaterialController"
  * @spring.property name = "bioMaterialService" ref="bioMaterialService"
- * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
+ * @spring.property name="expressionExperimentService"
+ *                  ref="expressionExperimentService"
  * @spring.property name="methodNameResolver" ref="bioMaterialActions"
  * @spring.property name="ontologyService" ref="ontologyService"
  * @spring.property name="factorValueService" ref="factorValueService"
@@ -61,278 +63,321 @@ import ubic.gemma.web.util.EntityNotFoundException;
 
 public class BioMaterialController extends BaseMultiActionController {
 
-    private static Log log = LogFactory.getLog( BioMaterialController.class.getName() );
+	private static Log log = LogFactory.getLog(BioMaterialController.class
+			.getName());
 
-    private BioMaterialService bioMaterialService = null;
-    private OntologyService ontologyService = null;
+	private BioMaterialService bioMaterialService = null;
 
-    private ExpressionExperimentService expressionExperimentService;
-    private FactorValueService factorValueService;
+	private OntologyService ontologyService = null;
 
-    private boolean AJAX = true;
+	private ExpressionExperimentService expressionExperimentService;
 
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
+	private FactorValueService factorValueService;
 
-    /**
-     * @param bioMaterialService
-     */
-    public void setBioMaterialService( BioMaterialService bioMaterialService ) {
-        this.bioMaterialService = bioMaterialService;
-    }
+	private boolean AJAX = true;
 
-    /**
-     * @param request
-     * @param response
-     * @param errors
-     * @return ModelAndView
-     */
-    @SuppressWarnings("unused")
-    public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
+	public void setExpressionExperimentService(
+			ExpressionExperimentService expressionExperimentService) {
+		this.expressionExperimentService = expressionExperimentService;
+	}
 
-        log.debug( request.getParameter( "id" ) );
+	/**
+	 * @param bioMaterialService
+	 */
+	public void setBioMaterialService(BioMaterialService bioMaterialService) {
+		this.bioMaterialService = bioMaterialService;
+	}
 
-        Long id = Long.parseLong( request.getParameter( "id" ) );
+	/**
+	 * @param request
+	 * @param response
+	 * @param errors
+	 * @return ModelAndView
+	 */
+	@SuppressWarnings("unused")
+	public ModelAndView show(HttpServletRequest request,
+			HttpServletResponse response) {
 
-        if ( id == null ) {
-            // should be a validation error, on 'submit'.
-            throw new EntityNotFoundException( "Must provide a biomaterial id" );
-        }
+		log.debug(request.getParameter("id"));
 
-        BioMaterial bioMaterial = bioMaterialService.load( id );
-        if ( bioMaterial == null ) {
-            throw new EntityNotFoundException( id + " not found" );
-        }
+		Long id = Long.parseLong(request.getParameter("id"));
 
-        this.saveMessage( request, "biomaterial with id " + id + " found" );
-        request.setAttribute( "id", id );
-        ModelAndView mnv = new ModelAndView( "bioMaterial.detail" ).addObject( "bioMaterial", bioMaterial );
+		if (id == null) {
+			// should be a validation error, on 'submit'.
+			throw new EntityNotFoundException("Must provide a biomaterial id");
+		}
 
-        return mnv;
-    }
+		BioMaterial bioMaterial = bioMaterialService.load(id);
+		if (bioMaterial == null) {
+			throw new EntityNotFoundException(id + " not found");
+		}
 
-    /**
-     * @param request
-     * @param response
-     * @return
-     */
-    public ModelAndView annot( HttpServletRequest request, HttpServletResponse response ) {
+		this.saveMessage(request, "biomaterial with id " + id + " found");
+		request.setAttribute("id", id);
+		ModelAndView mnv = new ModelAndView("bioMaterial.detail").addObject(
+				"bioMaterial", bioMaterial);
 
-        log.debug( request.getParameter( "eeid" ) );
+		return mnv;
+	}
 
-        Long id = Long.parseLong( request.getParameter( "eeid" ) );
+	/**
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	public ModelAndView annot(HttpServletRequest request,
+			HttpServletResponse response) {
 
-        if ( id == null ) {
-            // should be a validation error, on 'submit'.
-            throw new EntityNotFoundException( "Must provide an expression experiment id" );
-        }
+		log.debug(request.getParameter("eeid"));
 
-        Collection<BioMaterial> bioMaterials = getBioMaterialsForEE( id );
+		Long id = Long.parseLong(request.getParameter("eeid"));
 
-        ModelAndView mav = new ModelAndView( "bioMaterialAnnotator" );
-        if ( AJAX ) {
-            StringBuilder buf = new StringBuilder();
-            for ( BioMaterial bm : bioMaterials ) {
-                buf.append( bm.getId() );
-                buf.append( "," );
-            }
-            mav.addObject( "bioMaterialIdList", buf.toString().replaceAll( ",$", "" ) );
-        }
+		if (id == null) {
+			// should be a validation error, on 'submit'.
+			throw new EntityNotFoundException(
+					"Must provide an expression experiment id");
+		}
 
-        Long numBioMaterials = new Long( bioMaterials.size() );
-        mav.addObject( "numBioMaterials", numBioMaterials );
-        mav.addObject( "bioMaterials", bioMaterials );
-        return mav;
-    }
+		Collection<BioMaterial> bioMaterials = getBioMaterialsForEE(id);
 
-    /**
-     * @param id of experiment
-     * @return
-     */
-    public Collection<BioMaterial> getBioMaterialsForEE( Long id ) {
-        ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
-        if ( expressionExperiment == null ) {
-            throw new EntityNotFoundException( "Expression experiment with id=" + id + " not found" );
-        }
+		ModelAndView mav = new ModelAndView("bioMaterialAnnotator");
+		if (AJAX) {
+			StringBuilder buf = new StringBuilder();
+			for (BioMaterial bm : bioMaterials) {
+				buf.append(bm.getId());
+				buf.append(",");
+			}
+			mav.addObject("bioMaterialIdList", buf.toString().replaceAll(",$",
+					""));
+		}
 
-        expressionExperimentService.thawLite( expressionExperiment );
-        Collection<BioAssay> bioAssays = expressionExperiment.getBioAssays();
-        Collection<BioMaterial> bioMaterials = new ArrayList<BioMaterial>();
-        for ( BioAssay assay : bioAssays ) {
-            Collection<BioMaterial> materials = assay.getSamplesUsed();
-            if ( materials != null ) {
-                bioMaterials.addAll( materials );
-            }
-        }
-        return bioMaterials;
-    }
+		Long numBioMaterials = new Long(bioMaterials.size());
+		mav.addObject("numBioMaterials", numBioMaterials);
+		mav.addObject("bioMaterials", bioMaterials);
+		return mav;
+	}
 
-    /**
-     * @param eeId
-     * @param factorId
-     * @return A collection of BioMaterialValueObjects. These value objects are all the biomaterials for the given
-     *         Expression Experiment. As a biomaterial can have many factor values for different factors the value
-     *         object only contains the factor values for the specified factor
-     */
-    public Collection<BioMaterialValueObject> getBioMaterialsForEEWithFactor( EntityDelegator eeId,
-            EntityDelegator factorId ) {
+	/**
+	 * @param id
+	 *            of experiment
+	 * @return
+	 */
+	public Collection<BioMaterial> getBioMaterialsForEE(Long id) {
+		ExpressionExperiment expressionExperiment = expressionExperimentService
+				.load(id);
+		if (expressionExperiment == null) {
+			throw new EntityNotFoundException("Expression experiment with id="
+					+ id + " not found");
+		}
 
-        ExpressionExperiment expressionExperiment = expressionExperimentService.load( eeId.getId() );
-        if ( expressionExperiment == null ) {
-            throw new EntityNotFoundException( "Expression experiment with id=" + eeId + " not found" );
-        }
+		expressionExperimentService.thawLite(expressionExperiment);
+		Collection<BioAssay> bioAssays = expressionExperiment.getBioAssays();
+		Collection<BioMaterial> bioMaterials = new ArrayList<BioMaterial>();
+		for (BioAssay assay : bioAssays) {
+			Collection<BioMaterial> materials = assay.getSamplesUsed();
+			if (materials != null) {
+				bioMaterials.addAll(materials);
+			}
+		}
+		return bioMaterials;
+	}
 
-        expressionExperimentService.thawLite( expressionExperiment );
-        Collection<BioAssay> bioAssays = expressionExperiment.getBioAssays();
-        Collection<BioMaterialValueObject> bioMaterials = new HashSet<BioMaterialValueObject>();
+	/**
+	 * @param eeId
+	 * @param factorId
+	 * @return A collection of BioMaterialValueObjects. These value objects are
+	 *         all the biomaterials for the given Expression Experiment. As a
+	 *         biomaterial can have many factor values for different factors the
+	 *         value object only contains the factor values for the specified
+	 *         factor
+	 */
+	public Collection<BioMaterialValueObject> getBioMaterialsForEEWithFactor(
+			EntityDelegator eeId, EntityDelegator factorId) {
 
-        
-        //There could be an issue here with attempting to add the same bioMaterail more than once if it is found
-        //in more than one bioAssay for the experiment. This should only cause a loss of information regarding which bioAssayDescription is displayed
+		ExpressionExperiment expressionExperiment = expressionExperimentService
+				.load(eeId.getId());
+		if (expressionExperiment == null) {
+			throw new EntityNotFoundException("Expression experiment with id="
+					+ eeId + " not found");
+		}
 
-        for ( BioAssay assay : bioAssays ) {
-            Collection<BioMaterial> materials = assay.getSamplesUsed();
+		expressionExperimentService.thawLite(expressionExperiment);
+		Collection<BioAssay> bioAssays = expressionExperiment.getBioAssays();
+		Collection<BioMaterialValueObject> bioMaterials = new HashSet<BioMaterialValueObject>();
 
-            if ( materials == null ) continue;
+		// There could be an issue here with attempting to add the same
+		// bioMaterail more than once if it is found
+		// in more than one bioAssay for the experiment. This should only cause
+		// a loss of information regarding which bioAssayDescription is
+		// displayed
 
-            for ( BioMaterial material : materials ) {
-                BioMaterialValueObject bmvo = new BioMaterialValueObject( material );
+		for (BioAssay assay : bioAssays) {
+			Collection<BioMaterial> materials = assay.getSamplesUsed();
 
-                if ( material.getFactorValues() == null ) continue;
+			if (materials == null)
+				continue;
 
-                for ( FactorValue value : material.getFactorValues() ) {
-                    // If the factor isn't the one we are looking for then just skip it.
-                    if ( factorId.getId().compareTo( value.getExperimentalFactor().getId() ) != 0 ){
-                        //bmvo.setFactorValue( "None" );
-                        //bioMaterials.add(bmvo);
-                        continue;
-                    }
-                    
-                    String factorName = "";
-                    if ( value.getCharacteristics().size() > 0 ) {
-                        for ( Characteristic c : value.getCharacteristics() ) 
-                            factorName += c.getValue();                        
+			for (BioMaterial material : materials) {
+				BioMaterialValueObject bmvo = new BioMaterialValueObject(
+						material);
+				bmvo.setFactorValue("None");
+				bmvo.setBioAssayDescription(assay.getDescription());
+				bmvo.setBioAssayName(assay.getName());
+				bioMaterials.add(bmvo); // a hashset won't add the same thing
+										// twice no worries about duplicates
 
-                    } else 
-                        factorName += value.getValue();
-                    
-                    bmvo.setFactorValue(factorName );
-                    bmvo.setBioAssayDescription(assay.getDescription());
-                    bmvo.setBioAssayName(assay.getName());
-                    bioMaterials.add( bmvo );
+				// If there exisits a bioMaterial with the factor we are looking
+				// for then we want to make sure
+				// that bioM gets added instead of the one with "none" for
+				// factorvalue
+				if (material.getFactorValues() == null)
+					continue;
 
-                }
+				for (FactorValue value : material.getFactorValues()) {
+					if (factorId.getId().equals(value.getExperimentalFactor().getId())) {
 
-            }
-         }
+						String factorName = "";
+						if (value.getCharacteristics().size() > 0) {
+							for (Characteristic c : value.getCharacteristics())
+								factorName += c.getValue();
 
-        return bioMaterials;
+						} else
+							factorName += value.getValue();
 
-    }
-    
-    public Collection<BioMaterial> getBioMaterials( Collection<Long> ids ) {
-        return bioMaterialService.loadMultiple( ids );
-    }
+						bmvo.setFactorValue(factorName);
 
-    public Collection<AnnotationValueObject> getAnnotation( EntityDelegator bm ) {
-        if ( bm == null || bm.getId() == null ) return null;
-        BioMaterial bioM = bioMaterialService.load( bm.getId() );
+						if (bioMaterials.contains(bmvo))
+							bioMaterials.remove(bmvo);
 
-        Collection<AnnotationValueObject> annotation = new ArrayList<AnnotationValueObject>();
+						bioMaterials.add(bmvo);
 
-        for ( Characteristic c : bioM.getCharacteristics() ) {
-            AnnotationValueObject annotationValue = new AnnotationValueObject();
-            annotationValue.setId( c.getId() );
-            annotationValue.setClassName( c.getCategory() );
-            annotationValue.setTermName( c.getValue() );
-            if ( c instanceof VocabCharacteristic ) {
-                VocabCharacteristic vc = ( VocabCharacteristic ) c;
-                annotationValue.setClassUri( vc.getCategoryUri() );
-                String className = getLabelFromUri( vc.getCategoryUri() );
-                if ( className != null ) annotationValue.setClassName( className );
-                annotationValue.setTermUri( vc.getValueUri() );
-                String termName = getLabelFromUri( vc.getValueUri() );
-                if ( termName != null ) annotationValue.setTermName( termName );
-            }
-            annotation.add( annotationValue );
-        }
-        return annotation;
-    }
+					}
+				}
 
-    public Collection<FactorValueObject> getFactorValues( EntityDelegator bm ) {
+			}
 
-        if ( bm == null || bm.getId() == null ) return null;
+		}
 
-        BioMaterial bioM = bioMaterialService.load( bm.getId() );
+		return bioMaterials;
 
-        Collection<FactorValueObject> results = new HashSet<FactorValueObject>();
-        Collection<FactorValue> factorValues = bioM.getFactorValues();
+	}
 
-        for ( FactorValue value : factorValues )
-            results.add( new FactorValueObject( value ) );
+	public Collection<BioMaterial> getBioMaterials(Collection<Long> ids) {
+		return bioMaterialService.loadMultiple(ids);
+	}
 
-        return results;
+	public Collection<AnnotationValueObject> getAnnotation(EntityDelegator bm) {
+		if (bm == null || bm.getId() == null)
+			return null;
+		BioMaterial bioM = bioMaterialService.load(bm.getId());
 
-    }
+		Collection<AnnotationValueObject> annotation = new ArrayList<AnnotationValueObject>();
 
-    /**
-     * @param bmIds
-     * @param factorValueId given a collection of biomaterial ids, and a factor value id will add that factor value to
-     *        all of the biomaterials in the collection. If the factor is already defined for one of the biomaterials
-     *        will remove the previous one and add the new one.
-     */
-    public void addFactorValueTo( Collection<Long> bmIds, EntityDelegator factorValueId ) {
+		for (Characteristic c : bioM.getCharacteristics()) {
+			AnnotationValueObject annotationValue = new AnnotationValueObject();
+			annotationValue.setId(c.getId());
+			annotationValue.setClassName(c.getCategory());
+			annotationValue.setTermName(c.getValue());
+			if (c instanceof VocabCharacteristic) {
+				VocabCharacteristic vc = (VocabCharacteristic) c;
+				annotationValue.setClassUri(vc.getCategoryUri());
+				String className = getLabelFromUri(vc.getCategoryUri());
+				if (className != null)
+					annotationValue.setClassName(className);
+				annotationValue.setTermUri(vc.getValueUri());
+				String termName = getLabelFromUri(vc.getValueUri());
+				if (termName != null)
+					annotationValue.setTermName(termName);
+			}
+			annotation.add(annotationValue);
+		}
+		return annotation;
+	}
 
-        Collection<BioMaterial> bms = this.getBioMaterials( bmIds );
-        FactorValue factorVToAdd = factorValueService.load( factorValueId.getId() );
-        ExperimentalFactor eFactor = factorVToAdd.getExperimentalFactor();
+	public Collection<FactorValueObject> getFactorValues(EntityDelegator bm) {
 
-        for ( BioMaterial material : bms ) {
-            Collection<FactorValue> oldValues = material.getFactorValues();
-            Collection<FactorValue> updatedValues = new HashSet<FactorValue>();
+		if (bm == null || bm.getId() == null)
+			return null;
 
-            // Make sure that the BM doesn't have a FactorValue for the Factor we are adding already
-            for ( FactorValue value : oldValues ) {
-                if ( value.getExperimentalFactor() != eFactor ) updatedValues.add( value );
-            }
+		BioMaterial bioM = bioMaterialService.load(bm.getId());
 
-            updatedValues.add( factorVToAdd );
-            material.setFactorValues( updatedValues );
-            bioMaterialService.update( material );
-        }
-    }
+		Collection<FactorValueObject> results = new HashSet<FactorValueObject>();
+		Collection<FactorValue> factorValues = bioM.getFactorValues();
 
-    private String getLabelFromUri( String uri ) {
-        OntologyResource resource = ontologyService.getResource( uri );
-        if ( resource != null )
-            return resource.getLabel();
-        else
-            return null;
-    }
+		for (FactorValue value : factorValues)
+			results.add(new FactorValueObject(value));
 
-    /**
-     * @param request
-     * @param response
-     * @return
-     */
-    @SuppressWarnings("unused")
-    public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
-        return new ModelAndView( "bioMaterials" ).addObject( "bioMaterials", bioMaterialService.loadAll() );
-    }
+		return results;
 
-    /**
-     * @param searchService the searchService to set
-     */
-    public void setOntologyService( OntologyService ontologyService ) {
-        this.ontologyService = ontologyService;
-    }
+	}
 
-    /**
-     * @param factorValueService the factorValueService to set
-     */
-    public void setFactorValueService( FactorValueService factorValueService ) {
-        this.factorValueService = factorValueService;
-    }
+	/**
+	 * @param bmIds
+	 * @param factorValueId
+	 *            given a collection of biomaterial ids, and a factor value id
+	 *            will add that factor value to all of the biomaterials in the
+	 *            collection. If the factor is already defined for one of the
+	 *            biomaterials will remove the previous one and add the new one.
+	 */
+	public void addFactorValueTo(Collection<Long> bmIds,
+			EntityDelegator factorValueId) {
+
+		Collection<BioMaterial> bms = this.getBioMaterials(bmIds);
+		FactorValue factorVToAdd = factorValueService.load(factorValueId
+				.getId());
+		ExperimentalFactor eFactor = factorVToAdd.getExperimentalFactor();
+
+		for (BioMaterial material : bms) {
+			Collection<FactorValue> oldValues = material.getFactorValues();
+			Collection<FactorValue> updatedValues = new HashSet<FactorValue>();
+
+			// Make sure that the BM doesn't have a FactorValue for the Factor
+			// we are adding already
+			for (FactorValue value : oldValues) {
+				if (value.getExperimentalFactor() != eFactor)
+					updatedValues.add(value);
+			}
+
+			updatedValues.add(factorVToAdd);
+			material.setFactorValues(updatedValues);
+			bioMaterialService.update(material);
+		}
+	}
+
+	private String getLabelFromUri(String uri) {
+		OntologyResource resource = ontologyService.getResource(uri);
+		if (resource != null)
+			return resource.getLabel();
+		else
+			return null;
+	}
+
+	/**
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@SuppressWarnings("unused")
+	public ModelAndView showAll(HttpServletRequest request,
+			HttpServletResponse response) {
+		return new ModelAndView("bioMaterials").addObject("bioMaterials",
+				bioMaterialService.loadAll());
+	}
+
+	/**
+	 * @param searchService
+	 *            the searchService to set
+	 */
+	public void setOntologyService(OntologyService ontologyService) {
+		this.ontologyService = ontologyService;
+	}
+
+	/**
+	 * @param factorValueService
+	 *            the factorValueService to set
+	 */
+	public void setFactorValueService(FactorValueService factorValueService) {
+		this.factorValueService = factorValueService;
+	}
 
 }

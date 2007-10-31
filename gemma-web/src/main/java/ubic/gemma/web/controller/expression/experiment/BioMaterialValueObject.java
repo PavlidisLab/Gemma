@@ -38,6 +38,15 @@ public class BioMaterialValueObject implements Serializable {
         this.name = bm.getName();
         
     }
+    @Override
+    public int hashCode(){    	
+    	return this.id.hashCode();    	
+    }
+    
+    @Override
+    public boolean equals(Object bmvo){    	    
+    	return this.hashCode() == bmvo.hashCode();
+    }
     
     /**
      * @return the description
