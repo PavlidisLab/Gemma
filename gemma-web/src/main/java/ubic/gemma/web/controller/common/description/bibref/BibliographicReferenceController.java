@@ -176,8 +176,9 @@ public class BibliographicReferenceController extends BaseMultiActionController 
 
         BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( pubMedId );
         if ( bibRef == null ) {
-            saveMessage( request, "There is no reference with accession=" + pubMedId + " in the system any more." );
-            return this.show( request, response );
+            String message = "There is no reference with accession=" + pubMedId + " in the system any more.";
+            saveMessage( request, message );
+            return new ModelAndView( "bibRefView" ).addObject( "errors", message );
         }
 
         return doDelete( request, bibRef );

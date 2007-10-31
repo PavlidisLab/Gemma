@@ -81,6 +81,7 @@ public class ExperimentalDesignDaoImpl extends ubic.gemma.model.expression.exper
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected ExpressionExperiment handleGetExpressionExperiment( ExperimentalDesign ed ) {
 
@@ -93,7 +94,7 @@ public class ExperimentalDesignDaoImpl extends ubic.gemma.model.expression.exper
             queryObject.setParameter( "ed", ed );
 
             Collection<ExpressionExperiment> results = queryObject.list();
-            if ( results == null ) {
+            if ( results == null || results.size() == 0 ) {
                 log.info( "There is no expression experiment that has experimental design id = " + ed.getId() );
                 return null;
             }

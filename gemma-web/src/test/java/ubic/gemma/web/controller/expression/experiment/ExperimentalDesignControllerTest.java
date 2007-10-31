@@ -51,8 +51,7 @@ public class ExperimentalDesignControllerTest extends BaseSpringContextTest {
      * @throws Exception
      */
     public void testShowExperimentalDesign() throws Exception {
-
-        /* uncomment to use prod environment as opposed to the test environment */
+        endTransaction();
         ExperimentalDesignController c = ( ExperimentalDesignController ) getBean( "experimentalDesignController" );
 
         MockHttpServletRequest req = new MockHttpServletRequest( "GET",
@@ -62,7 +61,6 @@ public class ExperimentalDesignControllerTest extends BaseSpringContextTest {
         if ( ed == null ) {
             ed = ExperimentalDesign.Factory.newInstance();
             ed.setName( "Experimental Design 0" );
-            // set ed = experimentalDesignService.create gives me the persistent instance
             ed = experimentalDesignService.create( ed );
         }
 
