@@ -27,12 +27,13 @@ import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -51,6 +52,8 @@ public class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
     protected static final int NUM_DESIGN_ELEMENTS = 4;
 
     protected static final int NUM_BIOASSAYS = 8;
+
+    protected ArrayDesign arrayDesign = null;
 
     protected ExpressionExperiment expressionExperiment = null;
 
@@ -103,6 +106,12 @@ public class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
     @Override
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
+
+        /* array designs */
+        arrayDesign = ArrayDesign.Factory.newInstance();
+        arrayDesign.setTechnologyType( TechnologyType.ONECOLOR );
+        arrayDesign.setId( 1L );
+        arrayDesign.setName( "MG-U74Test" );
 
         expressionExperiment = ExpressionExperiment.Factory.newInstance();
         expressionExperiment.setName( "a test expression experiment" );
@@ -231,48 +240,56 @@ public class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
         Collection<BioMaterial> samplesUsed0a = new HashSet<BioMaterial>();
         samplesUsed0a.add( biomaterial0a );
         bioAssay0a.setSamplesUsed( samplesUsed0a );
+        bioAssay0a.setArrayDesignUsed( arrayDesign );
 
         bioAssay0b = BioAssay.Factory.newInstance();
         bioAssay0b.setName( "a test bioassay 0b" );
         Collection<BioMaterial> samplesUsed0b = new HashSet<BioMaterial>();
         samplesUsed0b.add( biomaterial0b );
         bioAssay0b.setSamplesUsed( samplesUsed0b );
+        bioAssay0b.setArrayDesignUsed( arrayDesign );
 
         bioAssay1a = BioAssay.Factory.newInstance();
         bioAssay1a.setName( "a test bioassay 1a" );
         Collection<BioMaterial> samplesUsed1a = new HashSet<BioMaterial>();
         samplesUsed1a.add( biomaterial1a );
         bioAssay1a.setSamplesUsed( samplesUsed1a );
+        bioAssay1a.setArrayDesignUsed( arrayDesign );
 
         bioAssay1b = BioAssay.Factory.newInstance();
         bioAssay1b.setName( "a test bioassay 1b" );
         Collection<BioMaterial> samplesUsed1b = new HashSet<BioMaterial>();
         samplesUsed1b.add( biomaterial1b );
         bioAssay1b.setSamplesUsed( samplesUsed1b );
+        bioAssay1b.setArrayDesignUsed( arrayDesign );
 
         bioAssay2a = BioAssay.Factory.newInstance();
         bioAssay2a.setName( "a test bioassay 2a" );
         Collection<BioMaterial> samplesUsed2a = new HashSet<BioMaterial>();
         samplesUsed2a.add( biomaterial2a );
         bioAssay2a.setSamplesUsed( samplesUsed2a );
+        bioAssay2a.setArrayDesignUsed( arrayDesign );
 
         bioAssay2b = BioAssay.Factory.newInstance();
         bioAssay2b.setName( "a test bioassay 2b" );
         Collection<BioMaterial> samplesUsed2b = new HashSet<BioMaterial>();
         samplesUsed2b.add( biomaterial2b );
         bioAssay2b.setSamplesUsed( samplesUsed2b );
+        bioAssay2b.setArrayDesignUsed( arrayDesign );
 
         bioAssay3a = BioAssay.Factory.newInstance();
         bioAssay3a.setName( "a test bioassay 3a" );
         Collection<BioMaterial> samplesUsed3a = new HashSet<BioMaterial>();
         samplesUsed3a.add( biomaterial3a );
         bioAssay3a.setSamplesUsed( samplesUsed3a );
+        bioAssay3a.setArrayDesignUsed( arrayDesign );
 
         BioAssay bioAssay3b = BioAssay.Factory.newInstance();
         bioAssay3b.setName( "a test bioassay 3b" );
         Collection<BioMaterial> samplesUsed3b = new HashSet<BioMaterial>();
         samplesUsed3b.add( biomaterial3b );
         bioAssay3b.setSamplesUsed( samplesUsed3b );
+        bioAssay3b.setArrayDesignUsed( arrayDesign );
 
         bioAssays = new HashSet<BioAssay>();
         bioAssays.add( bioAssay0a );
@@ -319,14 +336,17 @@ public class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
      */
     private void configureVectors( int numAssays ) {
         vectors = new HashSet<DesignElementDataVector>();
+
+        Collection<CompositeSequence> compositeSequences = new HashSet<CompositeSequence>();
         for ( int i = 0; i < NUM_DESIGN_ELEMENTS; i++ ) {
             DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
             vector.setBioAssayDimension( bioAssayDimension );
             vector.setQuantitationType( quantitationType );
 
-            DesignElement de = CompositeSequence.Factory.newInstance();
-            de.setName( String.valueOf( i ) );
-            vector.setDesignElement( de );
+            CompositeSequence cs = CompositeSequence.Factory.newInstance();
+            cs.setName( String.valueOf( i ) );
+            cs.setArrayDesign( arrayDesign );
+            vector.setDesignElement( cs );
             vectors.add( vector );
 
             double[] dvals = new double[numAssays];
@@ -336,7 +356,11 @@ public class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
 
             byte[] bvals = bac.doubleArrayToBytes( dvals );
             vector.setData( bvals );
+
+            compositeSequences.add( cs );
         }
+
+        arrayDesign.setCompositeSequences( compositeSequences );
     }
 
     /**
