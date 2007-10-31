@@ -18,8 +18,10 @@
  */
 package ubic.gemma.loader.expression.arrayDesign;
 
+import java.io.File;
 import java.util.Collection;
 
+import ubic.gemma.loader.genome.SimpleFastaCmd;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.util.ConfigUtils;
 
@@ -29,8 +31,29 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesignProcessingTest {
 
+    // fixme duplicated from SimpleFastaCmdTest
+    private boolean fastaCmdExecutableExists() {
+        String fastacmdExe = ConfigUtils.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
+        if ( fastacmdExe == null ) {
+            log.warn( "No fastacmd executable is configured, skipping test" );
+            return false;
+        }
+
+        File fi = new File( fastacmdExe );
+        if ( !fi.canRead() ) {
+            log.warn( fastacmdExe + " not found, skipping test" );
+            return false;
+        }
+        return true;
+    }
+
     @SuppressWarnings("unchecked")
     public void testProcessArrayDesignWithFastaCmdFetch() throws Exception {
+
+        if ( !fastaCmdExecutableExists() ) {
+            return;
+        }
+
         ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
         try {
             // finally the real business. There are 243 sequences on the array.

@@ -19,6 +19,7 @@
 package ubic.gemma.loader.genome.gene;
 
 import java.io.InputStream;
+import java.util.Collection;
 
 import ubic.gemma.loader.util.parser.Parser;
 import junit.framework.TestCase;
@@ -33,10 +34,16 @@ public class SwissProtParserTest extends TestCase {
 
         InputStream is = this.getClass()
                 .getResourceAsStream( "/data/loader/genome/gene/uniprot_sprot_human.sample.dat" );
+        assertNotNull( is );
         Parser p = new SwissProtParser();
         p.parse( is );
         is.close();
-        p.getResults();
+        Collection results = p.getResults();
+
+        /*
+         * Parser not fully implemented, doesn't return anything.
+         */
+        assertEquals( 0, results.size() );
 
     }
 

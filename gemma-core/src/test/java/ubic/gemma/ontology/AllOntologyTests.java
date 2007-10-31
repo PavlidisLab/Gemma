@@ -16,25 +16,29 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.datastructure.matrix;
+package ubic.gemma.ontology;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
 /**
- * @author pavlidis
+ * @author paul
  * @version $Id$
  */
-public class AllExpressionMatrixTests {
+public class AllOntologyTests {
 
     public static Test suite() {
-        TestSuite suite = new TestSuite( "Test for ubic.gemma.datastructure.matrix" );
-        // $JUnit-BEGIN$
-        suite.addTestSuite( ExpressionDataDoubleMatrixTest.class );
-        suite.addTestSuite( MatrixConversionTest.class );
-        suite.addTestSuite( ExpressionDataMatrixVectorMergingTest.class );
-        // $JUnit-END$
+        TestSuite suite = new TestSuite( "Ontology-related tests" );
+
+        suite.addTestSuite( GeneOntologyServiceTest.class );
+        suite.addTestSuite( GoMetricTest.class );
+        suite.addTestSuite( MeshServiceTest.class );
+        suite.addTestSuite( OntologyIndexerTest.class );
+        suite.addTestSuite( OntologyLoaderTest.class );
+        suite.addTestSuite( OntologyServiceTest.class );
+    //    suite.addTestSuite( StatementTest.class );
         return suite;
+
     }
 
 }

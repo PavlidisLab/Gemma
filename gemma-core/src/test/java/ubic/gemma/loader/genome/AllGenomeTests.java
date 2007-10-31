@@ -18,6 +18,7 @@
  */
 package ubic.gemma.loader.genome;
 
+import ubic.gemma.loader.genome.gene.SwissProtParserTest;
 import ubic.gemma.loader.genome.gene.ncbi.NCBIGeneIntegrationTest;
 import ubic.gemma.loader.genome.gene.ncbi.NCBIGeneParserTest;
 import ubic.gemma.loader.genome.goldenpath.GoldenPathBioSequenceLoaderTest;
@@ -56,6 +57,7 @@ public class AllGenomeTests {
         suite.addTestSuite( SupportedTaxaTest.class );
         suite.addTestSuite( SimpleFastaCmdTest.class );
         suite.addTestSuite( GffParserTest.class );
+        suite.addTestSuite( SwissProtParserTest.class );
         // $JUnit-END$
         return suite;
     }

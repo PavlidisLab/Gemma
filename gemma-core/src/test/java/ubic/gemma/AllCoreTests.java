@@ -20,6 +20,8 @@ package ubic.gemma;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
+import ubic.gemma.analysis.AnalysisServiceTest;
+import ubic.gemma.analysis.diff.AllDifferentialExpressionTests;
 import ubic.gemma.analysis.preprocess.AllPreProcessTests;
 import ubic.gemma.analysis.sequence.ProbeMapperTest;
 import ubic.gemma.apps.ProbeMapperCliTest;
@@ -36,13 +38,15 @@ import ubic.gemma.loader.genome.AllGenomeTests;
 import ubic.gemma.loader.util.HttpFetcherTest;
 import ubic.gemma.loader.util.fetcher.AbstractFetcherTest;
 import ubic.gemma.model.AllModelTests;
-import ubic.gemma.ontology.GeneOntologyServiceTest;
+import ubic.gemma.ontology.AllOntologyTests;
 import ubic.gemma.persistence.AllPersistenceTests;
 import ubic.gemma.persistence.GenomePersisterTest;
 import ubic.gemma.persistence.PersisterTest;
 import ubic.gemma.scheduler.SchedulerFactoryBeanTest;
 import ubic.gemma.security.AllSecurityTests;
+import ubic.gemma.util.BusinessKeyTest;
 import ubic.gemma.util.TaxonUtilityTest;
+import ubic.gemma.util.gemmaspaces.GemmaSpacesUtilTest;
 import ubic.gemma.util.progress.ProgressAppenderTest;
 import ubic.gemma.util.progress.ProgressIntegrationTest;
 import ubic.gemma.visualization.ExpressionDataMatrixVisualizationServiceTest;
@@ -68,7 +72,7 @@ public class AllCoreTests {
 
         suite.addTest( AllArrayDesignTests.suite() );
         suite.addTest( AllPreProcessTests.suite() );
-
+        suite.addTest( AllDifferentialExpressionTests.suite() );
         suite.addTest( AllGenomeTests.suite() );
         suite.addTest( AllModelTests.suite() );
 
@@ -77,25 +81,31 @@ public class AllCoreTests {
 
         suite.addTest( AllExpressionMatrixTests.suite() );
 
+        suite.addTest( AllOntologyTests.suite() );
+
+        suite.addTestSuite( AnalysisServiceTest.class);
+        
         suite.addTestSuite( HttpFetcherTest.class );
         suite.addTestSuite( AbstractFetcherTest.class );
 
         suite.addTestSuite( ExternalDatabaseTest.class );
         suite.addTestSuite( ProbeMapperCliTest.class );
         suite.addTestSuite( ProbeMapperTest.class );
-        suite.addTestSuite( GeneOntologyServiceTest.class );
 
         suite.addTestSuite( NCBIGene2GOAssociationParserTest.class );
         suite.addTestSuite( DataFileFetcherIntegrationTest.class );
 
         suite.addTestSuite( ExpressionDataMatrixVisualizationServiceTest.class );
 
-        suite.addTestSuite( ProgressAppenderTest.class );
         suite.addTestSuite( PersisterTest.class );
         suite.addTestSuite( GenomePersisterTest.class );
         suite.addTestSuite( SchedulerFactoryBeanTest.class );
 
+        suite.addTestSuite( ProgressAppenderTest.class );
+        suite.addTestSuite( ProgressIntegrationTest.class );
         suite.addTestSuite( TaxonUtilityTest.class );
+        suite.addTestSuite( BusinessKeyTest.class );
+        suite.addTestSuite( GemmaSpacesUtilTest.class );
 
         System.out.print( "----------------------\nGemma Core Tests\n" + suite.countTestCases()
                 + " Tests to run\n----------------------\n" );
