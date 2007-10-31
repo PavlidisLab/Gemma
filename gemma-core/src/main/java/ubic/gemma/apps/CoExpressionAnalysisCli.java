@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -77,6 +78,8 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
     private String outputFile = null;
     private int stringency = 3;
     private static String DIVIDOR = "-----";
+    private String experimentListFile;
+    private String eeExcludeFile;
 
     @SuppressWarnings("static-access")
     @Override
@@ -88,12 +91,21 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
                 "the taxon of the genes to analyze" ).withLongOpt( "Taxon" ).create( 't' );
         addOption( taxonOption );
         Option outputFileOption = OptionBuilder.hasArg().isRequired().withArgName( "outFile" ).withDescription(
-                "File for saving the corelation data" ).withLongOpt( "outFile" ).create( 'o' );
+                "File for saving the correlation data" ).withLongOpt( "outFile" ).create( 'o' );
         addOption( outputFileOption );
         Option stringencyFileOption = OptionBuilder.hasArg().withArgName( "stringency" ).withDescription(
-                "The stringency for the number of co-expression link(Default 3)" ).withLongOpt( "stringency" ).create(
-                's' );
+                "The minimum support for links to be selected (Default 3)" ).withLongOpt( "stringency" ).create( 's' );
         addOption( stringencyFileOption );
+
+        Option eeListOption = OptionBuilder.hasArg().withArgName( "Expression experiment list file" ).withDescription(
+                "File with list of short names of expression experiments to use" ).withLongOpt( "eeListfile" ).create(
+                'f' );
+        addOption( eeListOption );
+
+        Option eeExcludeListFile = OptionBuilder.hasArg().withArgName( "Expression experiment exclude list file" )
+                .withDescription( "File with list of short names of expression experiments to exclude" ).withLongOpt(
+                        "eeExcludefile" ).create( 'x' );
+        addOption( eeExcludeListFile );
     }
 
     /**
@@ -113,6 +125,12 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         }
         if ( hasOption( 's' ) ) {
             this.stringency = Integer.parseInt( getOptionValue( 's' ) );
+        }
+        if ( hasOption( 'f' ) ) {
+            this.experimentListFile = getOptionValue( 'f' );
+        }
+        if ( hasOption( 'x' ) ) {
+            this.eeExcludeFile = getOptionValue( 'x' );
         }
         dedvService = ( DesignElementDataVectorService ) this.getBean( "designElementDataVectorService" );
         eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
@@ -288,7 +306,28 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         }
 
         Taxon taxon = getTaxon();
-        Collection<ExpressionExperiment> allEEs = eeService.findByTaxon( taxon );
+        Collection<ExpressionExperiment> allEEs = null;
+        if ( this.experimentListFile != null ) {
+            try {
+                allEEs = readExpressionExperimentListFile( this.experimentListFile );
+            } catch ( IOException e ) {
+                return e;
+            }
+        } else if ( taxon != null ) {
+            allEEs = eeService.findByTaxon( taxon );
+            if ( this.eeExcludeFile != null ) {
+                try {
+                    Collection<ExpressionExperiment> eesToExclude = readExpressionExperimentListFile( this.eeExcludeFile );
+                    allEEs.removeAll( eesToExclude );
+                } catch ( IOException e ) {
+                    return e;
+                }
+            }
+        } else {
+            log.error( "You must provide either the taxon or a list of expression experiments in a file" );
+            bail( ErrorCode.MISSING_OPTION );
+        }
+
         Collection<String> queryGeneNames = new HashSet<String>();
         Collection<String> coExpressedGeneNames = new HashSet<String>();
         boolean readingQueryGene = true;
@@ -344,10 +383,12 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         coExpression.setExpressionExperimentService( eeService );
         coExpression.analysis( dedv2genes.keySet() );
 
-        try {
-            makeClusterGrams( coExpression );
-        } catch ( Exception e ) {
-            return e;
+        for ( Gene gene : queryGenes ) {
+            try {
+                makeClusterGrams( coExpression, gene );
+            } catch ( Exception e ) {
+                return e;
+            }
         }
         coExpression.calculateMatrixEffectSize();
         return null;
@@ -371,12 +412,13 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
      * @throws IOException
      * @throws InterruptedException
      */
-    private void makeClusterGrams( GeneCoExpressionAnalysis coExpression ) throws FileNotFoundException, IOException,
-            InterruptedException {
+    private void makeClusterGrams( GeneCoExpressionAnalysis coExpression, Gene inputGene )
+            throws FileNotFoundException, IOException, InterruptedException {
+        String filebaseName = inputGene.getOfficialSymbol() + "_coexp";
         // Generate the data file for Cluster3
-        PrintStream output = new PrintStream( new FileOutputStream( new File( this.outputFile ) ) );
-        double presencePercent = 0.5;
-        coExpression.output( output, presencePercent );
+        PrintStream output = new PrintStream( new FileOutputStream( new File( filebaseName ) ) );
+        double presencePercent = 0.8;
+        coExpression.output( output, presencePercent, inputGene );
         output.close();
 
         // Running Cluster3 to geneate .cdt file
@@ -384,12 +426,14 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         Process clearOldFiles = rt.exec( "rm *.cdt -f" );
         clearOldFiles.waitFor();
 
-        String clusterCmd = "cluster";
+        String clusterCmd = "eisen-cluster";
         String commonOptions = "-g 7 -e 7 -m c";
-        Process cluster = rt.exec( clusterCmd + " -f " + this.outputFile + " " + commonOptions );
+        String cmdToRun = clusterCmd + " -f " + filebaseName + " " + commonOptions;
+        log.info( "Running: " + cmdToRun );
+        Process cluster = rt.exec( cmdToRun );
         cluster.waitFor();
 
-        DoubleMatrixNamed dataMatrix = getClusteredMatrix();
+        DoubleMatrixNamed dataMatrix = getClusteredMatrix( filebaseName );
 
         // Get the rank Matrix
         DoubleMatrixNamed rankMatrix = coExpression.getRankMatrix( dataMatrix );
@@ -403,19 +447,19 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         JMatrixDisplay dataMatrixDisplay = new JMatrixDisplay( dataColorMatrix );
         JMatrixDisplay rankMatrixDisplay = new JMatrixDisplay( rankColorMatrix );
 
-        dataMatrixDisplay.saveImage( "dataMatrix.png", true );
-        rankMatrixDisplay.saveImage( "rankMatrix.png", true );
+        dataMatrixDisplay.saveImage( filebaseName + ".png", true );
+        rankMatrixDisplay.saveImage( filebaseName + ".ranks.png", true );
     }
 
     /**
      * @return
      * @throws IOException
      */
-    private DoubleMatrixNamed getClusteredMatrix() throws IOException {
+    private DoubleMatrixNamed getClusteredMatrix( String baseName ) throws IOException {
         // Read the generated file into a String Matrix
         StringMatrixReader mReader = new StringMatrixReader();
-        int dotIndex = this.outputFile.lastIndexOf( '.' );
-        String CDTMatrixFile = this.outputFile.substring( 0, dotIndex );
+
+        String CDTMatrixFile = baseName;
         StringMatrix2DNamed cdtMatrix = ( StringMatrix2DNamed ) mReader.read( CDTMatrixFile + ".cdt" );
 
         // Read String Matrix and convert into DenseDoubleMatrix
@@ -461,10 +505,52 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
                 ex.printStackTrace();
             }
             watch.stop();
-            log.info( watch.getTime() );
+            log.info( "Time elapsed: " + watch.getTime() );
+            System.exit( 0 );
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
+    }
+
+    /**
+     * FIXME duplicated code from AbstractedGeneExpressionExperimentManipulatingCli
+     * 
+     * @param fileName
+     * @return
+     * @throws IOException
+     */
+    private Collection<String> readExpressionExperimentListFileToStrings( String fileName ) throws IOException {
+        Collection<String> eeNames = new HashSet<String>();
+        BufferedReader in = new BufferedReader( new FileReader( fileName ) );
+        while ( in.ready() ) {
+            String eeName = in.readLine().trim();
+            if ( eeName.startsWith( "#" ) ) {
+                continue;
+            }
+            eeNames.add( eeName );
+        }
+        return eeNames;
+    }
+
+    /**
+     * Load expression experiments based on a list of short names in a file. FIXME duplicated code from
+     * AbstractedGeneExpressionExperimentManipulatingCli
+     * 
+     * @param fileName
+     * @return
+     * @throws IOException
+     */
+    public Collection<ExpressionExperiment> readExpressionExperimentListFile( String fileName ) throws IOException {
+        Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
+        for ( String eeName : readExpressionExperimentListFileToStrings( fileName ) ) {
+            ExpressionExperiment ee = eeService.findByShortName( eeName );
+            if ( ee == null ) {
+                log.error( "No experiment " + eeName + " found" );
+                continue;
+            }
+            ees.add( ee );
+        }
+        return ees;
     }
 
 }

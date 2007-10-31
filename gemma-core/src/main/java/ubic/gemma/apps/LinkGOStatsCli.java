@@ -89,7 +89,7 @@ public class LinkGOStatsCli extends AbstractGeneExpressionExperimentManipulating
                 ex.printStackTrace();
             }
             watch.stop();
-            log.info( watch.getTime() / 1000 );
+            log.info( "Finished: elapsed time=" + watch.getTime() / 1000 );
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
@@ -144,6 +144,8 @@ public class LinkGOStatsCli extends AbstractGeneExpressionExperimentManipulating
     }
 
     private void count( Collection<GeneLink> links ) {
+        int count = 0;
+        int numToDo = links.size();
         for ( GeneLink link : links ) {
             Gene gene1 = geneMap.get( link.getFirstGene() );
             Gene gene2 = geneMap.get( link.getSecondGene() );
@@ -153,14 +155,18 @@ public class LinkGOStatsCli extends AbstractGeneExpressionExperimentManipulating
 
             int goOverlap = goMetricService.computeSimilarity( gene1, gene2, null, Metric.simple ).intValue();
             int support = link.getScore().intValue();
-            assert support > 0; // why bother ...
+            assert support > 0; // should have filtered these out by now.
             if ( support >= MAXIMUM_LINK_NUM ) support = MAXIMUM_LINK_NUM - 1;
             if ( goOverlap >= GO_MAXIMUM_COUNT ) {
                 realStats[support][GO_MAXIMUM_COUNT - 1]++;
             } else {
                 realStats[support][goOverlap]++;
             }
+            if ( ++count % 5e4 == 0 ) {
+                log.info( "Counted GO similarity for " + count + "/" + numToDo + " links ... " );
+            }
         }
+        log.info( "Counted GO similarity for " + count + " links." );
     }
 
     private void counting( Gene[] genes, Gene[] shuffledGenes, int iterationIndex ) {
