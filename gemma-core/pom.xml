@@ -525,6 +525,10 @@
 					<include>**/*.probes</include>
 					<include>**/*.txt.short</include>
 					<include>**/*.sort</include>
+					<include>**/*.dat</include>
+					<include>**/*.owl</include>
+					<include>**/*.fasta</include>
+					<include>**/*.nib</include>
 				</includes>
 			</testResource>
 		</testResources>
