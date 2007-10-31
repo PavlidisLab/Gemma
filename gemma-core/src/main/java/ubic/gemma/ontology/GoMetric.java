@@ -246,18 +246,19 @@ public class GoMetric {
      * @return number of overlapping terms
      */
     private Double computeSimpleOverlap( Gene gene1, Gene gene2, boolean includePartOf ) {
+        if ( !geneOntologyService.isReady() )
+            log.error( "computeSimpleOverlap called before geneOntologyService is ready!!!" );
 
         Collection<OntologyTerm> masterGO = geneOntologyService.getGOTerms( gene1, includePartOf );
         Collection<OntologyTerm> coExpGO = geneOntologyService.getGOTerms( gene2, includePartOf );
 
-        masterGO.retainAll( coExpGO );
-
-        Collection<OntologyTerm> noRoots = new HashSet<OntologyTerm>();
+        Collection<OntologyTerm> overlappingTerms = new HashSet<OntologyTerm>( );
         for ( OntologyTerm o : masterGO ) {
-            if ( !isRoot( o ) ) noRoots.add( o );
+            if ( coExpGO.contains( o ) && !isRoot( o ) )
+                overlappingTerms.add( o );
         }
 
-        double avgScore = ( double ) noRoots.size();
+        double avgScore = ( double ) overlappingTerms.size();
         return avgScore;
     }
 

@@ -100,21 +100,19 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
     private int cCount = 0;
 
     protected void initBeans() {
+        taxonService = ( TaxonService ) getBean( "taxonService" );
         geneService = ( GeneService ) getBean( "geneService" );
         gene2GOAssociationService = ( Gene2GOAssociationService ) getBean( "gene2GOAssociationService" );
         ontologyEntryService = ( GeneOntologyService ) getBean( "geneOntologyService" );
-        taxonService = ( TaxonService ) getBean( "taxonService" );
         goMetric = (GoMetric) getBean("goMetric");
 
-        try {
-            while ( !ontologyEntryService.isReady() ) {
-                log.info( "waiting for ontology load.." );
+        while ( !ontologyEntryService.isReady() ) {
+            log.info( "waiting for ontology load.." );
+            try {
                 Thread.sleep( 1000 );
+            } catch ( InterruptedException e ) {
             }
-        } catch ( Exception e ) {
-            log.error( "Was unable to suspend this thread and wait for the gene ontology service to ready itself" );
         }
-
     }
 
     /*

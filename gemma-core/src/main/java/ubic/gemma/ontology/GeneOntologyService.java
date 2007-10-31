@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -673,7 +674,7 @@ public class GeneOntologyService implements InitializingBean {
                 continue;
             }
 
-            overlap.put( gene.getId(), computerOverlap( queryGeneTerms, comparisonOntos ) );
+            overlap.put( gene.getId(), computeOverlap( queryGeneTerms, comparisonOntos ) );
         }
 
         return overlap;
@@ -692,12 +693,8 @@ public class GeneOntologyService implements InitializingBean {
 
         Collection<OntologyTerm> queryGeneTerms1 = getGOTerms( queryGene1 );
         Collection<OntologyTerm> queryGeneTerms2 = getGOTerms( queryGene2 );
-
-        // nothing to do.
-        if ( ( queryGeneTerms1 == null ) || ( queryGeneTerms1.isEmpty() ) ) return null;
-        if ( ( queryGeneTerms2 == null ) || ( queryGeneTerms2.isEmpty() ) ) return null;
-        queryGeneTerms1.retainAll( queryGeneTerms2 );
-        return queryGeneTerms1;
+        
+        return computeOverlap( queryGeneTerms1, queryGeneTerms2 );
     }
 
     /**
@@ -728,32 +725,41 @@ public class GeneOntologyService implements InitializingBean {
         return getGOTerms( gene, true );
     }
     
-    public Collection<OntologyTerm> getGOTerms( Gene gene, boolean includePartOf ) {
-
-//      if ( goTerms.containsKey( gene ) ) {
-//            // log.info( " cached: GO terms for " + gene.getOfficialSymbol() + " (id " + gene.getId() + ")" );
-//            if ( log.isTraceEnabled() )
-//                log.trace( " cached: GO terms for " + gene.getOfficialSymbol() + " (id " + gene.getId() + ")" );
-//            return goTerms.get( gene );
-//        }
-        // log.info( "not cached: GO terms for " + gene.getOfficialSymbol() + " (id " + gene.getId() + ")" );
-        if ( log.isTraceEnabled() )
-            log.trace( "not cached: GO terms for " + gene.getOfficialSymbol() + " (id " + gene + ")" );
-        Collection<VocabCharacteristic> annotations = gene2GOAssociationService.findByGene( gene );
-
-        Collection<OntologyTerm> allGOTermSet = new HashSet<OntologyTerm>();
-        for ( VocabCharacteristic c : annotations ) {
-            if ( !terms.containsKey( c.getValueUri() ) ) {
-                log.warn( "Term " + c.getValueUri() + " not found in term list cant add to results" );
-                continue;
-            }
-            allGOTermSet.add( terms.get( c.getValueUri() ) );
+    private void logIds( String prefix, Collection<OntologyTerm> terms ) {
+        StringBuffer buf = new StringBuffer( prefix );
+        buf.append( ": [ " );
+        Iterator<OntologyTerm> i = terms.iterator();
+        while ( i.hasNext() ) {
+            buf.append( GeneOntologyService.asRegularGoId( i.next() ) );
+            if ( i.hasNext() ) buf.append( ", " );
         }
+        buf.append( " ]" );
+        log.trace( buf.toString() );
+    }
+    
+    public Collection<OntologyTerm> getGOTerms( Gene gene, boolean includePartOf ) {
+        Collection<OntologyTerm> cachedTerms = goTerms.get( gene );
+        if ( log.isTraceEnabled() && cachedTerms != null )
+            logIds( "found cached GO terms for " + gene.getOfficialSymbol(), goTerms.get( gene ) );
+        if ( cachedTerms == null ) {
+            Collection<OntologyTerm> allGOTermSet = new HashSet<OntologyTerm>();
+            
+            Collection<VocabCharacteristic> annotations = gene2GOAssociationService.findByGene( gene );
+            for ( VocabCharacteristic c : annotations ) {
+                if ( !terms.containsKey( c.getValueUri() ) ) {
+                    log.warn( "Term " + c.getValueUri() + " not found in term list cant add to results" );
+                    continue;
+                }
+                allGOTermSet.add( terms.get( c.getValueUri() ) );
+            }
 
-        allGOTermSet.addAll( getAllParents( allGOTermSet, includePartOf ) );
-
-//        goTerms.put( gene, allGOTermSet );
-        return allGOTermSet;
+            allGOTermSet.addAll( getAllParents( allGOTermSet, includePartOf ) );
+            
+            cachedTerms = Collections.unmodifiableCollection( allGOTermSet );if ( log.isTraceEnabled() )
+                logIds( "caching GO terms for " + gene.getOfficialSymbol(), allGOTermSet );
+            goTerms.put( gene, cachedTerms );
+        }
+        return cachedTerms;
     }
 
     /**
@@ -761,7 +767,7 @@ public class GeneOntologyService implements InitializingBean {
      * @param comparisonOntos
      * @return
      */
-    public Collection<OntologyTerm> computerOverlap( Collection<OntologyTerm> masterOntos,
+    public Collection<OntologyTerm> computeOverlap( Collection<OntologyTerm> masterOntos,
             Collection<OntologyTerm> comparisonOntos ) {
         Collection<OntologyTerm> overlapTerms = new HashSet<OntologyTerm>( masterOntos );
         overlapTerms.retainAll( comparisonOntos );
