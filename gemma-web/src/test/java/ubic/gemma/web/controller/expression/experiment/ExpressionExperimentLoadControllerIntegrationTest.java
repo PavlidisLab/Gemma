@@ -170,7 +170,7 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
         controller.handleRequest( request, response );
 
         String taskId = ( String ) request.getSession().getAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE );
-        assertNotNull( taskId );
+        assertNotNull( "No task id", taskId );
 
         MockClient.monitorTask( taskId );
 
