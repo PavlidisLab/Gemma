@@ -12,7 +12,9 @@
 </h2>
 <li>
 	Expression Experiment:
-	<i><c:out value="${expressionExperiment.name}" /> (<a href="<c:url value="/expressionExperiment/showExpressionExperiment.html?id=${expressionExperiment.id}"/>"><c:out value="${expressionExperiment.shortName }"/>)</a></i>
+	<i><c:out value="${expressionExperiment.name}" /> (<a
+		href="<c:url value="/expressionExperiment/showExpressionExperiment.html?id=${expressionExperiment.id}"/>"><c:out
+				value="${expressionExperiment.shortName }" />)</a> </i>
 </li>
 <br />
 <li>
@@ -29,6 +31,12 @@
 		<i>(Viewing a sampling of the data)</i>
 	</c:if>
 </li>
+<br />
+<c:if test="${maskMissing}">
+	<li>
+		<i>(Masking missing values)</i>
+	</li>
+</c:if>
 <br />
 
 <div id="logo">

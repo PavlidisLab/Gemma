@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2006 Columbia University
+ * Copyright (c) 2006 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,6 +42,8 @@ public class ExpressionExperimentVisualizationCommand implements Serializable {
     private String searchString = null;
 
     private boolean viewSampling;
+
+    private boolean maskMissing = false;
 
     private QuantitationType quantitationType = null;
 
@@ -131,6 +133,20 @@ public class ExpressionExperimentVisualizationCommand implements Serializable {
      */
     public void setQuantitationType( QuantitationType quantitationType ) {
         this.quantitationType = quantitationType;
+    }
+
+    /**
+     * @return
+     */
+    public boolean isMaskMissing() {
+        return maskMissing;
+    }
+
+    /**
+     * @param maskMissing
+     */
+    public void setMaskMissing( boolean maskMissing ) {
+        this.maskMissing = maskMissing;
     }
 
 }

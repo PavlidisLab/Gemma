@@ -4,7 +4,8 @@
 	scope="request"
 	class="ubic.gemma.web.controller.visualization.ExpressionExperimentVisualizationCommand" />
 
-<title> <fmt:message key="expressionExperimentVisualization.title" /> </title>
+<title><fmt:message
+		key="expressionExperimentVisualization.title" /></title>
 
 <spring:bind path="expressionExperimentVisualizationCommand.*">
 	<c:if test="${not empty status.errorMessages}">
@@ -111,19 +112,32 @@
 			</td>
 		</tr>
 
-
-
 		<tr>
 			<td valign="top">
-				<b> <fmt:message key="label.viewSampling" /> <br/>(Get a glimpse
-				of the data) </b>
+				<b> <fmt:message key="label.viewSampling" /> <br />(Get a
+					glimpse of the data) </b>
 			</td>
 			<td>
 				<spring:bind
 					path="expressionExperimentVisualizationCommand.viewSampling">
 					<input type="hidden" name="_${status.expression}" />
 					<input type="checkbox" name="${status.expression}" value="true"
-						<c:if test="${status.value}">checked="checked"</c:if>/>
+						<c:if test="${status.value}">checked="checked"</c:if> />
+					<span class="fieldError">${status.errorMessage}</span>
+				</spring:bind>
+			</td>
+		</tr>
+
+		<tr>
+			<td valign="top">
+				<b> <fmt:message key="label.maskMissing" /> </b>
+			</td>
+			<td>
+				<spring:bind
+					path="expressionExperimentVisualizationCommand.maskMissing">
+					<input type="hidden" name="_${status.expression}" />
+					<input type="checkbox" name="${status.expression}" value="true"
+						<c:if test="${status.value}">checked="checked"</c:if> />
 					<span class="fieldError">${status.errorMessage}</span>
 				</spring:bind>
 			</td>

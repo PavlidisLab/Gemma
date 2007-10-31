@@ -42,6 +42,7 @@ import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.analysis.service.CompositeSequenceGeneMapperService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
@@ -61,7 +62,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.ontology.CharacteristicUtils;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.propertyeditor.QuantitationTypePropertyEditor;
 import ubic.gemma.web.util.ConfigurationCookie;
@@ -72,6 +72,8 @@ import ubic.gemma.web.util.ConfigurationCookie;
  * <p>
  * {@link viewSampling} sets whether or not just some randomly selected vectors will be shown, and {@link species} sets
  * the type of species to search. {@link keywords} restrict the search.
+ * <p>
+ * {@link maskMissing} masks the missing values.
  * 
  * @author keshav
  * @version $Id$
@@ -172,6 +174,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
                     eevc.setSearchString( cookie.getString( "searchString" ) );
                     eevc.setSearchCriteria( cookie.getString( SEARCH_CRITERIA ) );
                     eevc.setViewSampling( cookie.getBoolean( "viewSampling" ) );
+                    eevc.setMaskMissing( cookie.getBoolean( "maskMissing" ) );
 
                     /* determine which quantitation type was previously selected */
                     String qtName = cookie.getString( "quantitationTypeName" );
@@ -348,7 +351,11 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             }
         }
 
-        ExpressionDataDoubleMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( dataVectors );
+        ExpressionDataMatrixBuilder matrixBuilder = new ExpressionDataMatrixBuilder( dataVectors );
+        ArrayDesign arrayDesign = dataVectors.iterator().next().getDesignElement().getArrayDesign();
+        ExpressionDataDoubleMatrix expressionDataMatrix = matrixBuilder.getIntensity( arrayDesign );
+
+        if ( eevc.isMaskMissing() ) matrixBuilder.maskMissingValues( expressionDataMatrix, arrayDesign );
 
         /* deals with the case where probes don't match for the given quantitation type. */
         if ( expressionDataMatrix.rows() == 0 ) {
@@ -370,6 +377,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         mav.addObject( SEARCH_CRITERIA, eevc.getSearchCriteria() );
         mav.addObject( "searchString", eevc.getSearchString() );
         mav.addObject( "viewSampling", new Boolean( eevc.isViewSampling() ) );
+        mav.addObject( "maskMissing", new Boolean( eevc.isMaskMissing() ) );
         return mav;
     }
 
@@ -535,6 +543,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
             this.setProperty( "searchString", command.getSearchString() );
             this.setProperty( "viewSampling", command.isViewSampling() );
+            this.setProperty( "maskMissing", command.isMaskMissing() );
             this.setProperty( SEARCH_CRITERIA, command.getSearchCriteria() );
             this.setProperty( "quantitationTypeName", command.getQuantitationType().getName() );
 
