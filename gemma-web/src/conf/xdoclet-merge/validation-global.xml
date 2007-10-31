@@ -51,8 +51,8 @@
         </form>
         
         <form name="expressionExperimentVisualizationCommand">
-            <field property="searchString" depends="required">
-                <arg position="0"  key="expressionExperimentVisualizationCommand.searchString"/>
+            <field property="searchCriteria" depends="required">
+                <arg position="0"  key="expressionExperimentVisualizationCommand.searchCriteria"/>
             </field>
             <field property="viewSampling" depends="required">
                 <arg position="0"  key="expressionExperimentVisualizationCommand.viewSampling"/>

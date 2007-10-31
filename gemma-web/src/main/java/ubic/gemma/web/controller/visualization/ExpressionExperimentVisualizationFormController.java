@@ -89,6 +89,8 @@ import ubic.gemma.web.util.ConfigurationCookie;
  */
 public class ExpressionExperimentVisualizationFormController extends BaseFormController {
 
+    private static final String SEARCH_CRITERIA = "searchCriteria";
+
     private static Log log = LogFactory.getLog( ExpressionExperimentVisualizationFormController.class.getName() );
 
     public static final String SEARCH_BY_PROBE = "probe set id";
@@ -135,7 +137,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         eevc.setExpressionExperimentId( ee.getId() );
         eevc.setName( ee.getName() );
 
-        if ( StringUtils.isBlank( request.getParameter( "searchString" ) ) ) {
+        if ( StringUtils.isBlank( request.getParameter( SEARCH_CRITERIA ) ) ) {
             eevc = loadCookie( request, eevc );
         }
 
@@ -168,7 +170,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
                 try {
                     ConfigurationCookie cookie = new ConfigurationCookie( cook );
                     eevc.setSearchString( cookie.getString( "searchString" ) );
-                    eevc.setSearchCriteria( cookie.getString( "searchCriteria" ) );
+                    eevc.setSearchCriteria( cookie.getString( SEARCH_CRITERIA ) );
                     eevc.setViewSampling( cookie.getBoolean( "viewSampling" ) );
 
                     /* determine which quantitation type was previously selected */
@@ -340,7 +342,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
                 // find the factor with the fewest values.
 
                 // sort biomaterials by that; anybody who doesn't have a value for it gets put at the end
-                
+
                 // impose the ordering on the samples.
 
             }
@@ -365,7 +367,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         mav.addObject( "genes", genes );
         mav.addObject( "expressionExperiment", expressionExperiment );
         mav.addObject( "quantitationType", eevc.getQuantitationType() );
-        mav.addObject( "searchCriteria", eevc.getSearchCriteria() );
+        mav.addObject( SEARCH_CRITERIA, eevc.getSearchCriteria() );
         mav.addObject( "searchString", eevc.getSearchString() );
         mav.addObject( "viewSampling", new Boolean( eevc.isViewSampling() ) );
         return mav;
@@ -533,7 +535,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
             this.setProperty( "searchString", command.getSearchString() );
             this.setProperty( "viewSampling", command.isViewSampling() );
-            this.setProperty( "searchCriteria", command.getSearchCriteria() );
+            this.setProperty( SEARCH_CRITERIA, command.getSearchCriteria() );
             this.setProperty( "quantitationTypeName", command.getQuantitationType().getName() );
 
             /* set cookie to expire after 2 days. */
@@ -551,7 +553,7 @@ class FactorValueComparator implements Comparator<FactorValue> {
             return ( new MeasurementComparator() ).compare( arg0.getMeasurement(), arg1.getMeasurement() );
         } else if ( arg0.getCharacteristics().size() > 0 && arg1.getCharacteristics().size() > 0 ) {
             // FIXME implement real comparison.
-        //    return CharacteristicUtils.compare( arg0.getCharacteristics().size(), arg1.getCharacteristics().size() );
+            // return CharacteristicUtils.compare( arg0.getCharacteristics().size(), arg1.getCharacteristics().size() );
             return -1;
         } else if ( arg0.getValue() != null && arg1.getValue() != null ) {
             return arg0.getValue().compareTo( arg1.getValue() );
