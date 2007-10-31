@@ -31,6 +31,7 @@ import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.testing.TestPersistentObjectHelper;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
+import ubic.gemma.util.progress.TaskRunningService;
 
 /**
  * Add test data to the system at the press of a button. .
@@ -69,7 +70,7 @@ public class TestDataAddingController extends SimpleFormController {
         helper.setPersisterHelper( this.persisterHelper );
         helper.setExternalDatabaseService( externalDatabaseService );
 
-        ProgressJob job = ProgressManager.createProgressJob( null, request.getRemoteUser(),
+        ProgressJob job = ProgressManager.createProgressJob( TaskRunningService.generateTaskId(), request.getRemoteUser(),
                 "Test data adding to the database" );
         ExpressionExperiment ee = helper.getTestExpressionExperimentWithAllDependencies();
         ProgressManager.destroyProgressJob( job );

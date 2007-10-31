@@ -54,6 +54,7 @@ public class DedvRankServiceTest extends AbstractGeoServiceTest {
         if ( existing != null ) {
             eeService.delete( existing );
         }
+
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "gds999Short" ) );
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(

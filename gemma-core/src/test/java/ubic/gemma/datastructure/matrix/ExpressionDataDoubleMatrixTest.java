@@ -140,19 +140,20 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
      */
     @SuppressWarnings("unchecked")
     public void testMatrixConversionGSE611() throws Exception {
-        // endTransaction();
+        endTransaction();
         ExpressionExperiment newee;
-        try {
-            String path = ConfigUtils.getString( "gemma.home" );
-            assert path != null;
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
-                    + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE611Short" ) );
-            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                    "GSE611", false, true, false );
-            newee = results.iterator().next();
-        } catch ( AlreadyExistsInSystemException e ) {
-            newee = ( ExpressionExperiment ) e.getData();
+
+        newee = this.expressionExperimentService.findByShortName( "GSE611" );
+        if ( newee != null ) {
+            expressionExperimentService.delete( newee );
         }
+        String path = ConfigUtils.getString( "gemma.home" );
+        assert path != null;
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
+                + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE611Short" ) );
+        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
+                "GSE611", false, true, false );
+        newee = results.iterator().next();
 
         expressionExperimentService.thaw( newee );
         // make sure we really thaw them, so we can get the design element sequences.

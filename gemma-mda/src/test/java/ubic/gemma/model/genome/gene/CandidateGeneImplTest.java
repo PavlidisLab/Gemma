@@ -34,7 +34,7 @@ public class CandidateGeneImplTest extends TestCase {
     private final Log log = LogFactory.getLog( CandidateGeneImplTest.class );
 
     public void testSetCandidateGene() {
-        log.info( "test setting of CandidateGene" );
+        log.debug( "test setting of CandidateGene" );
         // SET UP
         Gene g = null;
         Taxon t = null;

@@ -37,6 +37,7 @@ import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.testing.AbstractGeoServiceTest;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -56,6 +57,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
     ArrayDesignSequenceProcessingService app;
     ArrayDesignService arrayDesignService;
     Taxon taxon;
+    BioSequenceService bss;
 
     @Override
     protected void onSetUpInTransaction() throws Exception {
@@ -65,22 +67,31 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         TaxonService taxonService = ( TaxonService ) getBean( "taxonService" );
         taxon = taxonService.findByCommonName( "mouse" );
 
-        // note that the name MG-U74A is not used by the result.
+        // note that the name MG-U74A is not used by the result. this defines genbank ids etc.
         designElementStream = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/MG-U74A.txt" );
+        
+        //
         app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
+        
+        // Target sequences
         seqFile = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/MG-U74A_target" );
 
         probeFile = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/MG-U74A_probe" );
 
         arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
+        bss = ( BioSequenceService ) this.getBean( "bioSequenceService" );
 
     }
 
     @Override
     protected void onTearDownInTransaction() throws Exception {
         if ( result != null ) {
-            ArrayDesignService svc = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
-            svc.remove( result );
+            arrayDesignService.thaw( result );
+            BioSequenceService bss = ( BioSequenceService ) this.getBean( "bioSequenceService" );
+            for ( CompositeSequence cs : result.getCompositeSequences() ) {
+                bss.remove( cs.getBiologicalCharacteristic() );
+            }
+            arrayDesignService.remove( result );
         }
     }
 
@@ -148,10 +159,10 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
                 + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT ) );
         final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL226", true, true,
                 false );
-        final ArrayDesign ad = ads.iterator().next();
-        arrayDesignService.thaw( ad );
+        result = ads.iterator().next();
+        arrayDesignService.thaw( result );
         try {
-            Collection<BioSequence> res = app.processArrayDesign( ad, new String[] { "testblastdb",
+            Collection<BioSequence> res = app.processArrayDesign( result, new String[] { "testblastdb",
                     "testblastdbPartTwo" }, ConfigUtils.getString( "gemma.home" )
                     + "/gemma-core/src/test/resources/data/loader/genome/blast", false );
             assertNotNull( res );
@@ -189,18 +200,18 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
 
         final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL226", true, true,
                 false );
-        final ArrayDesign ad = ads.iterator().next();
-        arrayDesignService.thaw( ad );
+        result = ads.iterator().next();
+        arrayDesignService.thaw( result );
 
         InputStream f = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/identifierTest.txt" );
-        Collection<BioSequence> res = app.processArrayDesign( ad, f,
-                new String[] { "testblastdb", "testblastdbPartTwo" }, ConfigUtils.getString( "gemma.home" )
-                        + "/gemma-core/src/test/resources/data/loader/genome/blast", true );
+        Collection<BioSequence> res = app.processArrayDesign( result, f, new String[] { "testblastdb",
+                "testblastdbPartTwo" }, ConfigUtils.getString( "gemma.home" )
+                + "/gemma-core/src/test/resources/data/loader/genome/blast", true );
         assertNotNull( res );
         for ( BioSequence sequence : res ) {
             assertNotNull( sequence.getSequence() );
         }
-        for ( CompositeSequence cs : ad.getCompositeSequences() ) {
+        for ( CompositeSequence cs : result.getCompositeSequences() ) {
             assert cs.getBiologicalCharacteristic() != null;
         }
     }
@@ -212,8 +223,8 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
         final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL88", true, true,
                 false );
-        final ArrayDesign ad = ads.iterator().next();
-        arrayDesignService.thaw( ad );
+        result = ads.iterator().next();
+        arrayDesignService.thaw( result );
 
         // now do the sequences.
         ZipInputStream z = new ZipInputStream( this.getClass().getResourceAsStream(
@@ -221,7 +232,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
 
         z.getNextEntry();
 
-        Collection<BioSequence> res = app.processArrayDesign( ad, z, SequenceType.AFFY_PROBE );
+        Collection<BioSequence> res = app.processArrayDesign( result, z, SequenceType.AFFY_PROBE );
         assertEquals( 1322, res.size() );
     }
 

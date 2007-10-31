@@ -1145,16 +1145,16 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
                     // Sequences can show up more than once per arraydesign. Skipping this check will result in a
                     // hibernate exception.
-                    if ( !seen.contains( bs ) ) {
-                        try { // just in case...
+                    try { // just in case...
+                        if ( !seen.contains( bs ) ) {
                             // note: LockMode.NONE results in lazy errors in TESTS but not actual runs.
                             session.lock( bs, LockMode.READ );
                             seen.add( bs );
-                        } catch ( org.hibernate.NonUniqueObjectException e ) {
-                            continue; // no need to process it then, we've already thawed it.
-                        } catch ( org.hibernate.HibernateException e ) {
-                            continue; // during tests.
                         }
+                    } catch ( org.hibernate.NonUniqueObjectException e ) {
+                        continue; // no need to process it then, we've already thawed it.
+                    } catch ( org.hibernate.HibernateException e ) {
+                        continue; // during tests.
                     }
 
                     bs.getTaxon();

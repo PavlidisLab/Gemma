@@ -127,7 +127,9 @@ public class BusinessKey {
         }
 
         attachCriteria( queryObject, bioSequence.getTaxon(), "taxon" );
-        // The finder now does the additional checking for equality of sequence and/or database entry.
+
+        // The finder now has to do the additional checking for equality of sequence and/or database entry.
+
         // if ( bioSequence.getSequenceDatabaseEntry() != null ) {
         // // this is problematic - sometimes the old entry doesn't have the database entry.
         // queryObject.createCriteria( "sequenceDatabaseEntry" ).add(
@@ -352,7 +354,9 @@ public class BusinessKey {
      */
     private static void attachCriteria( Criteria queryObject, Taxon taxon ) {
         if ( taxon == null ) throw new IllegalArgumentException( "Taxon was null" );
-        if ( taxon.getNcbiId() != null ) {
+        if ( taxon.getId() != null ) {
+            queryObject.add( Restrictions.eq( "id", taxon.getId() ) );
+        } else if ( taxon.getNcbiId() != null ) {
             queryObject.add( Restrictions.eq( "ncbiId", taxon.getNcbiId() ) );
         } else if ( StringUtils.isNotBlank( taxon.getScientificName() ) ) {
             queryObject.add( Restrictions.eq( "scientificName", taxon.getScientificName() ) );
@@ -463,12 +467,12 @@ public class BusinessKey {
      * @param bioSequence
      */
     public static void checkValidKey( BioSequence bioSequence ) {
-        if ( bioSequence == null
-                || bioSequence.getTaxon() == null
-                || ( StringUtils.isBlank( bioSequence.getName() ) && StringUtils.isBlank( bioSequence.getSequence() ) && bioSequence
-                        .getSequenceDatabaseEntry() == null ) ) {
+        if ( bioSequence == null || bioSequence.getTaxon() == null || StringUtils.isBlank( bioSequence.getName() ) ) {
             throw new IllegalArgumentException( bioSequence + " did not have a valid key" );
         }
+        // these are no longer used.s
+        // ) && StringUtils.isBlank( bioSequence.getSequence() ) && bioSequence
+        // .getSequenceDatabaseEntry() == null )
     }
 
     /**

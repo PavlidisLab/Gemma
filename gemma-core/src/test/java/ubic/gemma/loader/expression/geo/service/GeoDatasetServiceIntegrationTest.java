@@ -58,8 +58,8 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
     @SuppressWarnings("unchecked")
     @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
+    protected void onSetUp() throws Exception {
+        super.onSetUp();
         ads = new HashSet<ArrayDesign>();
 
         eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
@@ -71,8 +71,8 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
     @SuppressWarnings("unchecked")
     @Override
-    protected void onTearDownAfterTransaction() throws Exception {
-        super.onTearDownAfterTransaction();
+    protected void onTearDown() throws Exception {
+        super.onTearDown();
         try {
             if ( ee != null ) {
                 eeService.delete( ee );
@@ -221,7 +221,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
      */
     @SuppressWarnings("unchecked")
     public void testFetchAndLoadGSE1133() throws Exception {
-        endTransaction();
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "gse1133Short" ) );
@@ -264,7 +263,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
      */
     @SuppressWarnings("unchecked")
     public void testFetchAndLoadSeriesOnly() throws Exception {
-        endTransaction();
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
             Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
@@ -292,7 +290,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
      */
     @SuppressWarnings("unchecked")
     public void testFetchAndLoadGDS775() throws Exception {
-        endTransaction();
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "gds775short" ) );
@@ -311,20 +308,20 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
     @SuppressWarnings("unchecked")
     public void testFetchAndLoadGDS999() throws Exception {
-        endTransaction();
         int expectedValue = 20;
         String path = getTestFileBasePath();
 
-        try {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                    + "gds999Short" ) );
-            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                    "GDS999", false, true, false );
-            ee = results.iterator().next();
-        } catch ( AlreadyExistsInSystemException e ) {
-            ee = ( ExpressionExperiment ) e.getData();
+        ee = eeService.findByShortName( "GSE2018" );
+        if ( ee != null ) {
+            eeService.delete( ee );
         }
-        eeService.thaw( ee );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
+                + "gds999Short" ) );
+        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
+                "GDS999", false, true, false );
+        ee = results.iterator().next();
+
+        eeService.thawLite( ee );
         assertEquals( 34, ee.getBioAssays().size() );
 
         assertEquals( 1, ee.getExperimentalDesign().getExperimentalFactors().size() );
@@ -404,7 +401,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
      */
     @SuppressWarnings("unchecked")
     public void testFetchAndLoadGDS994() throws Exception {
-        endTransaction();
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "gds994Short" ) );
@@ -445,7 +441,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
     @SuppressWarnings("unchecked")
     public void testFetchAndLoadMultiChipPerSeriesShort() throws Exception {
-        endTransaction();
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "shortTest" ) );
@@ -551,8 +546,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
      */
     @SuppressWarnings("unchecked")
     public void testConversionGDS825Family() throws Exception {
-        endTransaction();
-
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "complexShortTest" ) );
@@ -618,7 +611,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
     @SuppressWarnings("unchecked")
     public void testLoadDeleteLoadGSE3434() throws Exception {
-        endTransaction();
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "GSE3434" ) );
@@ -684,8 +676,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
      */
     @SuppressWarnings("unchecked")
     public void testFetchAndLoadGSE3193() throws Exception {
-        endTransaction();
-
         String path = ConfigUtils.getString( "gemma.home" );
 
         // First load the data set that has overlapping samples with GSE3193, GSE61.

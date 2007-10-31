@@ -40,7 +40,7 @@ public class ExpressionExperimentControllerTest extends BaseSpringContextTest {
      */
     @Override
     @SuppressWarnings("unchecked")
-    public void onSetUpInTransaction() throws Exception {
+    public void onSetUp() throws Exception {
         super.onSetUpInTransaction();
 
     }

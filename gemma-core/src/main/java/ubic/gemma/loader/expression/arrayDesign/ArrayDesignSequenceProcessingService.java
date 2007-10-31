@@ -463,10 +463,12 @@ public class ArrayDesignSequenceProcessingService {
      * Create a new Affymetrix design from scratch, given the name.
      * 
      * @param arrayDesignName design name.
-     * @param arrayDesignFile design file in our 'old fashioned' format.
+     * @param arrayDesignFile design file in our 'old fashioned' format, but sequence information is ignored.
      * @param probeSequenceFile probe file
      * @return ArrayDesign with CompositeSequences, Reporters, ImmobilizedCharacteristics and BiologicalCharacteristics
      *         filled in.
+     * @deprecated This method creates the Affymetrix array design using an input file format we no longer really
+     *             support, so it should be avoided (for Affymetrix).
      */
     protected ArrayDesign processAffymetrixDesign( String arrayDesignName, Taxon taxon, InputStream arrayDesignFile,
             InputStream probeSequenceFile ) throws IOException {
@@ -484,6 +486,7 @@ public class ArrayDesignSequenceProcessingService {
         Collection<CompositeSequence> rawCompositeSequences = csp.getResults();
         for ( CompositeSequence sequence : rawCompositeSequences ) {
             sequence.setArrayDesign( result );
+            sequence.setBiologicalCharacteristic( null ); // we don't want the sequence information from these files.
         }
         result.setCompositeSequences( rawCompositeSequences );
 
@@ -501,6 +504,7 @@ public class ArrayDesignSequenceProcessingService {
      * @param taxon
      * @return ArrayDesign with CompositeSequences, Reporters, ImmobilizedCharacteristics and BiologicalCharacteristics
      *         filled in.
+     * @deprecated {@see processAffymetrixDesign}
      */
     public ArrayDesign processAffymetrixDesign( String arrayDesignName, String arrayDesignFile,
             String probeSequenceFile, Taxon taxon ) throws IOException {
