@@ -48,6 +48,7 @@ import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.ontology.GoMetric;
 import ubic.gemma.ontology.OntologyTerm;
+import ubic.gemma.ontology.GoMetric.Metric;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 import ubic.gemma.util.ConfigUtils;
 
@@ -75,13 +76,19 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
     private GoMetric goMetric;
 
     private Map<Long, Collection<String>> mouseGeneGOMap = new HashMap<Long, Collection<String>>();
-    // a hashmap for each mouse gene and its GO terms + parents
 
     private Map<String, Integer> rootMap = new HashMap<String, Integer>();
     Map<String, Integer> GOcountMap = new HashMap<String, Integer>();
 
     private String HASH_MAP_RETURN = "HashMapReturn";
+    private String GO_PROB_MAP = "GoProbMap";
     private String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
+    
+    //CHANGE METRIC AND OUTPUT FILE NAME
+    private Metric metric = GoMetric.Metric.simple;
+    private String OUT_FILE = "SimpleOverlap";
+    
+    //INCLUDE PARTOF OR CHANGE STRINGENCY
     private boolean partOf = true;
     final int stringincy = 6;
 
@@ -177,7 +184,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
 
         Map<String, Double> GOProbMap = new HashMap<String, Double>();
         
-        File f2 = new File( HOME_DIR + File.separatorChar + "GOProbMap" );
+        File f2 = new File( HOME_DIR + File.separatorChar + GO_PROB_MAP );
         if ( f2.exists() ) {
             GOProbMap  = getMapFromDisk( f2 );
             log.info( "Found probability file!" );
@@ -200,7 +207,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
                 GOProbMap.put( uri, ( double ) count / total );
             }
 
-            this.saveMapToDisk( GOProbMap, "GoProbMap" );
+            this.saveMapToDisk( GOProbMap, GO_PROB_MAP );
             Long Elapsed = overallWatch.getTime();
             log.info( "Creating GO probability map took: " + Elapsed / 1000 + "s " );
         }
@@ -212,7 +219,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
             Collection<Gene> coExpGene = geneExpMap.get( masterGene );
 
             for ( Gene cGene : coExpGene ) {
-                Double score = goMetric.computeSimilarity( masterGene, cGene, GOProbMap, GoMetric.Metric.simple);
+                Double score = goMetric.computeSimilarity( masterGene, cGene, GOProbMap, metric);
                 if ( score != null )
                     scoreMap.put( cGene, score );
                 else
@@ -222,7 +229,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         }
 
         try {
-            Writer write = initOutputFile( "newSimpleOverlap" );
+            Writer write = initOutputFile( OUT_FILE );
             String masterGene;
             String geneCoexpressed;
             double overlap;
