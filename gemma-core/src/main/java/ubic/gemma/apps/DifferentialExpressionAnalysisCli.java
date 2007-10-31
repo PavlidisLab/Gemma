@@ -58,8 +58,8 @@ public class DifferentialExpressionAnalysisCli extends AbstractGeneExpressionExp
     protected void buildOptions() {
 
         /*
-         * These options from the super class support: runing on one data set, running on list of data sets from a file,
-         * running on all data sets.
+         * These options from the super class support: running on one data set, running on list of data sets from a
+         * file, running on all data sets.
          */
         super.buildOptions();
 
