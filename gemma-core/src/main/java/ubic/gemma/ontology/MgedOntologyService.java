@@ -21,7 +21,9 @@ package ubic.gemma.ontology;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -43,7 +45,21 @@ import com.hp.hpl.jena.ontology.OntModelSpec;
 public class MgedOntologyService extends AbstractOntologyService {
 
     public static final String MGED_ONTO_BASE_URL = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl";
+    
+    private static final Collection<String> TermsToRemove = Collections.synchronizedList(Arrays.asList( new String[] {"BioMaterialPackage",
+    		"BioMaterialCharacteristics",
+    		"BioMaterial",
+    		"BiologicalProperty",
+    		"ExperimentalDesign",
+    		"ExperimentalFactor",
+    		"ExperimentalFactorCategory",
+    		"Experiment",
+    		"NormalizationDescriptionType",
+    		"NormalizationDescription",
+    		"QualityControlDescriptionType"} ));
 
+    
+    
     /*
      * (non-Javadoc)
      * 
@@ -98,12 +114,22 @@ public class MgedOntologyService extends AbstractOntologyService {
         if ( !ready.get() ) return null;
         
         Collection<OntologyTerm> results = getBioMaterialTerms();
+        results = Collections.synchronizedCollection(results);
         
         //A bunch of terms not in the biomaterial package that we need. (special cases)
         OntologyTerm term = terms.get( MGED_ONTO_BASE_URL + "#ExperimentPackage" );
         results.addAll( getAllTerms( term ));
         
-        return results;
+        //trim some terms out:  
+        Collection<OntologyTerm> trimmed  = Collections.synchronizedSet(new HashSet<OntologyTerm>());
+        for(OntologyTerm mgedTerm : results){
+        	if (!TermsToRemove.contains(mgedTerm.getTerm())){
+        		trimmed.add(mgedTerm);        		
+        	}
+        }
+        
+        
+        return trimmed;
         
         
     }
