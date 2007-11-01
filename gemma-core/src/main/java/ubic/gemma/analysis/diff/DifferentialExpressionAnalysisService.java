@@ -41,6 +41,8 @@ public class DifferentialExpressionAnalysisService {
 
     ExpressionExperimentService expressionExperimentService = null;
 
+    DifferentialExpressionAnalysis analysis = null;
+
     /**
      * @param expressionExperiment
      * @param quantitationType
@@ -51,7 +53,7 @@ public class DifferentialExpressionAnalysisService {
 
         // TODO allow method to take in some config attributes, like whether or not to persist.
 
-        DifferentialExpressionAnalysis analysis = new DifferentialExpressionAnalysis();
+        analysis = new DifferentialExpressionAnalysis();
 
         analysis.analyze( expressionExperiment, quantitationType, bioAssayDimension );
 
@@ -85,10 +87,16 @@ public class DifferentialExpressionAnalysisService {
     }
 
     /**
+     * @return
+     */
+    public ExpressionAnalysis getExpressionAnalysis() {
+        return analysis.getExpressionAnalysis();
+    }
+
+    /**
      * @param expressionExperimentService
      */
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
     }
-
 }
