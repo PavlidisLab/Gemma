@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -225,7 +226,10 @@ public class OntologyService {
      * @return
      */
     public Collection<Characteristic> findExactTerm( String search, String categoryUri ) {
-        log.info( "starting findExactTerm for " + search );
+    	
+        StopWatch watch = new StopWatch();
+        watch.start();
+        log.info( "starting findExactTerm for " + search + ". Timining information begins from here");
         
         if ( search == null ) return null;
 
@@ -239,7 +243,7 @@ public class OntologyService {
             results = new HashSet<OntologyResource>( mgedOntologyService.getTermIndividuals( categoryUri ) );
             if ( results != null ) individualResults.addAll( convert( results ) );
         }
-        log.info( "found " + individualResults.size() + " individuals from ontology term " + categoryUri );
+        log.info( "found " + individualResults.size() + " individuals from ontology term " + categoryUri + " in " + watch.getTime()/1000 + " seconds");
 
         Collection<String> foundValues = new HashSet<String>();
         List<Characteristic> alreadyUsedResults = new ArrayList<Characteristic>();
@@ -258,27 +262,30 @@ public class OntologyService {
                 }
             }
         }
-        log.info( "found " + alreadyUsedResults.size() + " matching characteristics used in the database" );
+        log.info( "found " + alreadyUsedResults.size() + " matching characteristics used in the database" + " in " + watch.getTime()/1000 + " seconds" );
 
         List<Characteristic> searchResults = new ArrayList<Characteristic>();
 
         results = birnLexOntologyService.findResources( search );
-        log.info( "found " + ( results == null ? "null" : results.size() ) + " terms from birnLex" );
+        log.info( "found " + ( results == null ? "null" : results.size() ) + " terms from birnLex in " + watch.getTime()/1000 + " seconds" );
         if ( results != null ) searchResults.addAll( filter( results, search ) );
 
         results = oboDiseaseOntologyService.findResources( search );
-        log.info( "found " + ( results == null ? "null" : results.size() ) + " terms from obo" );
+        log.info( "found " + ( results == null ? "null" : results.size() ) + " terms from obo in " + watch.getTime()/1000 + " seconds" );
         if ( results != null ) searchResults.addAll( filter( results, search ) );
 
         results = fmaOntologyService.findResources( search );
-        log.info( "found " + ( results == null ? "null" : results.size() ) + " terms from fma" );
+        log.info( "found " + ( results == null ? "null" : results.size() ) + " terms from fma in " + watch.getTime()/1000 + " seconds" );
         if ( results != null ) searchResults.addAll( filter( results, search ) );
 
         // Sort the individual results.
-
-        return sort( individualResults, alreadyUsedResults, searchResults, search );
+        Collection<Characteristic>  sortedResults = sort( individualResults, alreadyUsedResults, searchResults, search );
+        log.info( "sorted " + sortedResults.size() + " in " + watch.getTime()/1000 + " seconds" );
+        
+        return sortedResults; 
 
     }
+    
 
     private Collection<Characteristic> sort( List<Characteristic> individualResults,
             List<Characteristic> alreadyUsedResults, List<Characteristic> searchResults, String searchTerm ) {
