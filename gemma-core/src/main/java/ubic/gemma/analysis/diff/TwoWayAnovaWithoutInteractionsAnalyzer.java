@@ -21,6 +21,8 @@ package ubic.gemma.analysis.diff;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.rosuda.JRclient.REXP;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
@@ -56,6 +58,8 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  */
 public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaAnalyzer {
 
+    private Log log = LogFactory.getLog( this.getClass() );
+
     private static final int ACTUAL_NUM_RESULTS = 2;
     private static final int NUM_RESULTS_FROM_R = ACTUAL_NUM_RESULTS + 1;
 
@@ -71,6 +75,8 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
     @Override
     public ExpressionAnalysis twoWayAnova( ExpressionExperiment expressionExperiment,
             ExperimentalFactor experimentalFactorA, ExperimentalFactor experimentalFactorB ) {
+
+        connectToR();
 
         Collection<FactorValue> factorValuesA = experimentalFactorA.getFactorValues();
         Collection<FactorValue> factorValuesB = experimentalFactorB.getFactorValues();

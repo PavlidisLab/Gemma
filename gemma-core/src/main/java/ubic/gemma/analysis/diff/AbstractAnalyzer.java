@@ -18,7 +18,8 @@
  */
 package ubic.gemma.analysis.diff;
 
-import ubic.gemma.analysis.util.RCommander;
+import ubic.basecode.util.RCommand;
+import ubic.gemma.analysis.util.RCommanderWrapper;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -28,12 +29,21 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author keshav
  * @version $Id$
  */
-public abstract class AbstractAnalyzer extends RCommander {
+public abstract class AbstractAnalyzer {
+
+    private RCommanderWrapper rCommanderWrapper = null;
+
+    protected RCommand rc = null;
 
     /**
      * @param expressionExperiment
      * @return
      */
     public abstract ExpressionAnalysis getExpressionAnalysis( ExpressionExperiment expressionExperiment );
+
+    public void connectToR() {
+        rCommanderWrapper = new RCommanderWrapper();
+        rc = rCommanderWrapper.getRCommandObject();
+    }
 
 }

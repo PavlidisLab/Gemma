@@ -25,6 +25,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.rosuda.JRclient.REXP;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
@@ -63,6 +65,8 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  */
 public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
 
+    private Log log = LogFactory.getLog( this.getClass() );
+
     private static final int NUM_RESULTS_FROM_R = 2;
 
     private List<String> rFactors = null;
@@ -89,6 +93,8 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
      * @return
      */
     public ExpressionAnalysis oneWayAnova( ExpressionExperiment expressionExperiment ) {
+
+        connectToR();
 
         Collection<ExperimentalFactor> experimentalFactors = expressionExperiment.getExperimentalDesign()
                 .getExperimentalFactors();

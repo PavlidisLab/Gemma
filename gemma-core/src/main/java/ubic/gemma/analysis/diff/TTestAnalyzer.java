@@ -113,6 +113,8 @@ public class TTestAnalyzer extends AbstractAnalyzer {
     protected ExpressionAnalysis tTest( ExpressionExperiment expressionExperiment, FactorValue factorValueA,
             FactorValue factorValueB ) {
 
+        connectToR();
+
         Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
 

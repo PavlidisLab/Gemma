@@ -122,11 +122,12 @@ public class DifferentialExpressionAnalysis {
                  * Return t-test analyzer. This can be taken care of by the one way anova, but keeping it separate for
                  * clarity.
                  */
+                log.info( "Running t test." );
                 return studenttTestAnalyzer;
             }
 
             else {
-                log.debug( experimentalFactors.size() + " experimental factor(s) with " + factorValues.size()
+                log.info( experimentalFactors.size() + " experimental factor(s) with " + factorValues.size()
                         + " factor value(s).  Running one way anova." );
                 /*
                  * Return one way anova analyzer. This can take care of the t-test as well, since a one-way anova with
@@ -151,8 +152,10 @@ public class DifferentialExpressionAnalysis {
             }
             /* Check for block design and execute two way anova (with or without interactions). */
             if ( analyzerHelper.blockComplete( expressionExperiment ) ) {
+                log.info( "Running two way anova without interactions." );
                 return twoWayAnovaWithoutInteractionsAnalyzer;
             } else {
+                log.info( "Running two way anova with interactions." );
                 return twoWayAnovaWithInteractionsAnalyzer;
             }
         }
