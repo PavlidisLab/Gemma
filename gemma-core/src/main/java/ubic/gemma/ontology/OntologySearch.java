@@ -20,6 +20,7 @@ package ubic.gemma.ontology;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -70,23 +71,21 @@ public class OntologySearch {
      */
     public static Collection<OntologyTerm> matchClasses( OntModel model, IndexLARQ index, String queryString ) {
 
-        Collection<OntologyTerm> results = new HashSet<OntologyTerm>();
+        Set<OntologyTerm> results = new HashSet<OntologyTerm>();
         NodeIterator iterator = index.searchModelByIndex( model, queryString );
 
         while ( iterator.hasNext() ) {
             RDFNode r = ( RDFNode ) iterator.next();
             r = r.inModel( model );
+            log.info( "Search results: " + r );
             if ( r.isURIResource() ) {
                 try {
                     OntClass cl = ( OntClass ) r.as( OntClass.class );
                     OntologyTermImpl impl2 = new OntologyTermImpl( cl, null );
-                    if ( !results.contains( impl2 ) )
-                        results.add( impl2 );
-                    else
-                        continue;
+                    results.add( impl2 );
                     log.debug( impl2 );
                 } catch ( Exception e ) {
-                    log.debug( e );
+                    log.error( e, e );
                 }
             }
 
@@ -95,8 +94,7 @@ public class OntologySearch {
         //
 
     }
-    
-    
+
     /**
      * Find individuals that match the query string
      * 
@@ -107,24 +105,21 @@ public class OntologySearch {
      */
     public static Collection<OntologyIndividual> matchIndividuals( OntModel model, IndexLARQ index, String queryString ) {
 
-        Collection<OntologyIndividual> results = new HashSet<OntologyIndividual>();
+        Set<OntologyIndividual> results = new HashSet<OntologyIndividual>();
         NodeIterator iterator = index.searchModelByIndex( model, queryString );
 
         while ( iterator.hasNext() ) {
             RDFNode r = ( RDFNode ) iterator.next();
             r = r.inModel( model );
-
-            if ( r.isResource() && ( r instanceof IndividualImpl)) {
+            log.info( "Search results: " + r );
+            if ( r.isResource() && ( r instanceof IndividualImpl ) ) {
                 try {
                     Individual cl = ( Individual ) r.as( Individual.class );
                     OntologyIndividual impl2 = new OntologyIndividualImpl( cl, null );
-                    if ( !results.contains( impl2 ) )
-                        results.add( impl2 );
-                    else
-                        continue;
+                    results.add( impl2 );
                     log.debug( impl2 );
                 } catch ( Exception e ) {
-                    log.debug( e );
+                    log.error( e, e );
                 }
             }
 
@@ -132,8 +127,7 @@ public class OntologySearch {
         return results;
 
     }
-    
-    
+
     /**
      * Find OntologyIndividuals and OntologyTerms that match the query string
      * 
@@ -144,40 +138,32 @@ public class OntologySearch {
      */
     public static Collection<OntologyResource> matchResources( OntModel model, IndexLARQ index, String queryString ) {
 
-        Collection<OntologyResource> results = new HashSet<OntologyResource>();
+        Set<OntologyResource> results = new HashSet<OntologyResource>();
         NodeIterator iterator = index.searchModelByIndex( model, queryString );
 
         while ( iterator.hasNext() ) {
             RDFNode r = ( RDFNode ) iterator.next();
-            r = r.inModel( model );      
-            
+            r = r.inModel( model );
+            log.info( "Search results: " + r );
             if ( r.isURIResource() ) {
                 try {
                     OntClass cl = ( OntClass ) r.as( OntClass.class );
                     OntologyTermImpl impl2 = new OntologyTermImpl( cl, null );
-                    if ( !results.contains( impl2 ) )
-                        results.add( impl2 );
-                    else
-                        continue;
+                    results.add( impl2 );
                     log.debug( impl2 );
                 } catch ( Exception e ) {
-                    log.debug( e );
+                    log.error( e, e );
                 }
-            }
-            else if ( r.isResource() && ( r instanceof IndividualImpl)) {
+            } else if ( r.isResource() && ( r instanceof IndividualImpl ) ) {
                 try {
                     Individual cl = ( Individual ) r.as( Individual.class );
                     OntologyIndividual impl2 = new OntologyIndividualImpl( cl, null );
-                    if ( !results.contains( impl2 ) )
-                        results.add( impl2 );
-                    else
-                        continue;
+                    results.add( impl2 );
                     log.debug( impl2 );
                 } catch ( Exception e ) {
-                    log.debug( e );
+                    log.error( e, e );
                 }
-            }
-            else
+            } else
                 log.debug( "This search term not included in the results: " + r );
 
         }
