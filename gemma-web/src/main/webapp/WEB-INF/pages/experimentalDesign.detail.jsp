@@ -118,26 +118,32 @@
 			</authz:authorize>
         </table>
 
+<table>
+<tr> <td>
         <h3>
             <fmt:message key="experimentalFactors.title" />
         </h3>
         
         <authz:authorize ifAllGranted="admin">
-        	<div id="factorGridTB" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:30px;"></div>
+        	<div id="factorGridTB" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:350px; height:30px;"></div>
         </authz:authorize>
-        <div id="factorGrid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:250px;"></div>
+        <div id="factorGrid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:350px; height:250px;"></div>
         <br />
+     </td>
+     <td>
         
         <h3>    <fmt:message key="experimentalDesign.factorValues" />  for factor selected above   </h3>
         <authz:authorize ifAllGranted="admin">
-	        <div id="factorValueTB" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:30px;"></div>    	
+	        <div id="factorValueTB" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:350px; height:30px;"></div>    	
         </authz:authorize>
-        <div id="factorValueGrid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:250px;"></div>
+        <div id="factorValueGrid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:350px; height:250px;"></div>
   
         <br />
         <hr />
         <hr />
-    
+  	</td>
+  </tr>  
+  <tr><td colspan=2>
     <h3>
     	
    	</h3>
@@ -149,10 +155,12 @@
  
     <authz:authorize ifAllGranted="admin">
          <h3>  BioMaterials to Factor Value Association     </h3>   
-	    <div id="eDesign" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:30px;"></div>      
-		<div id="bmGrid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:250px;"></div>
+	    <div id="eDesign" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:700px; height:30px;"></div>      
+		<div id="bmGrid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:700px; height:400px;"></div>
 	 </authz:authorize>
-        
+	 </td>
+     </tr>
+     </table>   
     <table>
     <tr>
     <td COLSPAN="2">    
