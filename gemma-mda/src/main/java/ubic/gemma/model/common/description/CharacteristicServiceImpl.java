@@ -36,7 +36,7 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
      */
     @Override
     protected java.util.Collection handleFindByValue( java.lang.String search ) throws java.lang.Exception {
-        return this.getCharacteristicDao().findByvalue( search + '%');
+        return this.getCharacteristicDao().findByValue( search + '%');
     }
 
     /**
@@ -44,9 +44,7 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
      */
     @Override
     protected Map handleFindByParentClass( java.lang.Class parentClass ) {
-        Map charToParent = new HashMap<Characteristic, Object>();
-        
-        return charToParent;
+        return this.getCharacteristicDao().findByParentClass( parentClass );
     }
 
     /* (non-Javadoc)

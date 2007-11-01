@@ -23,6 +23,8 @@
 package ubic.gemma.model.common.description;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @see ubic.gemma.model.common.description.Characteristic
@@ -35,7 +37,7 @@ public class CharacteristicDaoImpl
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByvalue(java.lang.String)
      */
     @Override
-    protected Collection handleFindByvalue( String search ) throws Exception {
+    protected Collection handleFindByValue( String search ) throws Exception {
         final String queryString = "select distinct char from CharacteristicImpl as char where lower(char.value) like :search";
 
         try {
@@ -46,5 +48,25 @@ public class CharacteristicDaoImpl
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByParentClass(java.lang.Class)
+     */
+    @Override
+    protected Map handleFindByParentClass( Class parentClass ) throws Exception {
+        Map charToParent = new HashMap<Characteristic, Object>();
+        
+        return charToParent;
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindParents(java.lang.Class, java.util.Collection)
+     */
+    @Override
+    protected Map handleGetParents( Class parentClass, Collection characteristics ) throws Exception {
+        Map charToParent = new HashMap<Characteristic, Object>();
+        
+        return charToParent;
     }
 }
