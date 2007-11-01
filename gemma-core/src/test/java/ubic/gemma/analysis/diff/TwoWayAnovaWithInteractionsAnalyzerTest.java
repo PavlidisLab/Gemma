@@ -77,8 +77,8 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
 
         ExperimentalFactor experimentalFactorB = iter.next();
 
-        ExpressionAnalysis expressionAnalysis = analyzer.twoWayAnova( expressionExperiment, quantitationType,
-                bioAssayDimension, experimentalFactorA, experimentalFactorB );
+        ExpressionAnalysis expressionAnalysis = analyzer.twoWayAnova( expressionExperiment, experimentalFactorA,
+                experimentalFactorB );
 
         assertEquals( expressionAnalysis.getAnalysisResults().size(), NUM_DESIGN_ELEMENTS * 3 );
 

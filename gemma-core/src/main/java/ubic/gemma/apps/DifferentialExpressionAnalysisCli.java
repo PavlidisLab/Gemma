@@ -19,19 +19,15 @@
 package ubic.gemma.apps;
 
 import java.util.Collection;
-import java.util.HashSet;
 
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
 import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -90,7 +86,8 @@ public class DifferentialExpressionAnalysisCli extends AbstractGeneExpressionExp
             return err;
         }
 
-        DifferentialExpressionAnalysis analysis = new DifferentialExpressionAnalysis();
+        DifferentialExpressionAnalysis analysis = ( DifferentialExpressionAnalysis ) this
+                .getBean( "differentialExpressionAnalysis" );
 
         designElementDataVectorService = ( DesignElementDataVectorService ) this
                 .getBean( "designElementDataVectorService" );
@@ -114,48 +111,7 @@ public class DifferentialExpressionAnalysisCli extends AbstractGeneExpressionExp
 
                 eeService.thaw( expressionExperiment );
 
-                QuantitationType quantitationTypeToUse = null;
-
-                Collection<QuantitationType> quantitationTypes = expressionExperiment.getQuantitationTypes();
-                for ( QuantitationType qt : quantitationTypes ) {
-
-                    if ( qt.getIsPreferred() ) {
-                        quantitationTypeToUse = qt;
-                        break;
-                    }
-
-                    if ( qt.getName().equals( "VALUE" ) && qt.getGeneralType().getValue().equals( "QUANTITATIVE" )
-                            && qt.getType().getValue().equals( "AMOUNT" ) ) {
-                        quantitationTypeToUse = qt;
-                    }
-
-                }
-
-                if ( quantitationTypeToUse == null )
-                    throw new RuntimeException(
-                            "Could not determine correct quantitation type.  Either preferred quantitation type not set or quantitation type does not have a general type of QUANTITATIVE and a  standard type of AMOUNT." );
-
-                log.info( "Using quantitation type: " + quantitationTypeToUse.getName() + "; is preferred? "
-                        + quantitationTypeToUse.getIsPreferred() + "; general type: "
-                        + quantitationTypeToUse.getGeneralType().getValue() + "; standard type: "
-                        + quantitationTypeToUse.getType().getValue() );
-
-                Collection<DesignElementDataVector> vectors = expressionExperiment.getDesignElementDataVectors();
-                designElementDataVectorService.thaw( vectors );
-
-                Collection<BioAssayDimension> bioAssayDimensions = new HashSet<BioAssayDimension>();
-                for ( DesignElementDataVector vector : vectors ) {
-                    bioAssayDimensions.add( vector.getBioAssayDimension() );
-                }
-
-                log.info( "# different bioassay dimensions: " + bioAssayDimensions.size() );
-                if ( bioAssayDimensions.size() != 1 )
-                    throw new RuntimeException( "Cannot process " + bioAssayDimensions.size()
-                            + " bioAssay dimensions.  Can handle 1 dimension only." );
-
-                BioAssayDimension bioAssayDimension = bioAssayDimensions.iterator().next();
-
-                analysis.analyze( expressionExperiment, quantitationTypeToUse, bioAssayDimension );
+                analysis.analyze( expressionExperiment );
 
                 summarizeProcessing( analysis.getExpressionAnalysis() );
             }

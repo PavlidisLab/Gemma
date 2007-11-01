@@ -48,7 +48,7 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
     private Log log = LogFactory.getLog( this.getClass() );
 
-    OneWayAnovaAnalyzer analyzer = new OneWayAnovaAnalyzer();
+    OneWayAnovaAnalyzer analyzer = null;
 
     /*
      * (non-Javadoc)
@@ -58,6 +58,8 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
     @Override
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
+
+        analyzer = ( OneWayAnovaAnalyzer ) this.getBean( "oneWayAnovaAnalyzer" );
     }
 
     /**
@@ -67,8 +69,7 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         super.configureTestDataForOneWayAnova();
 
-        ExpressionAnalysis expressionAnalysis = analyzer.oneWayAnova( expressionExperiment, quantitationType,
-                bioAssayDimension );
+        ExpressionAnalysis expressionAnalysis = analyzer.oneWayAnova( expressionExperiment );
 
         int size = expressionAnalysis.getAnalysisResults().size();
 

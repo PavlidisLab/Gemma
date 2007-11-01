@@ -94,8 +94,7 @@ public class DifferentialExpessionAnalysisTest extends BaseAnalyzerConfiguration
      * Expected analyzer: {@link TwoWayAnovaWithInteractionsAnalyzer}
      */
     public void testDetermineAnalysisA() {
-        AbstractAnalyzer analyzer = analysis.determineAnalysis( expressionExperiment, quantitationType,
-                bioAssayDimension );
+        AbstractAnalyzer analyzer = analysis.determineAnalysis( expressionExperiment );
         assertTrue( analyzer instanceof TwoWayAnovaWithInteractionsAnalyzer );
     }
 
@@ -112,8 +111,7 @@ public class DifferentialExpessionAnalysisTest extends BaseAnalyzerConfiguration
      */
     public void testDetermineAnalysisB() {
         super.configureTestDataForTwoWayAnovaWithoutInteractions();
-        AbstractAnalyzer analyzer = analysis.determineAnalysis( expressionExperiment, quantitationType,
-                bioAssayDimension );
+        AbstractAnalyzer analyzer = analysis.determineAnalysis( expressionExperiment );
         assertTrue( analyzer instanceof TwoWayAnovaWithoutInteractionsAnalyzer );
     }
 

@@ -95,8 +95,7 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
      */
     public void testTTestWithExpressionExperiment() {
 
-        ExpressionAnalysis expressionAnalysis = analyzer.tTest( expressionExperiment, quantitationType,
-                bioAssayDimension, factorValueA, factorValueB );
+        ExpressionAnalysis expressionAnalysis = analyzer.tTest( expressionExperiment, factorValueA, factorValueB );
 
         log.info( expressionAnalysis );
 

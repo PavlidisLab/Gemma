@@ -342,7 +342,7 @@ public class ExpressionDataMatrixBuilder {
      * @return
      */
     public ExpressionDataDoubleMatrix getIntensity( ArrayDesign arrayDesign ) {
-        if ( arrayDesign.getTechnologyType().equals( TechnologyType.TWOCOLOR ) ) {
+        if ( arrayDesign != null && arrayDesign.getTechnologyType().equals( TechnologyType.TWOCOLOR ) ) {
 
             ExpressionDataDoubleMatrix signalA = this.getSignalChannelA( arrayDesign );
             ExpressionDataDoubleMatrix signalB = this.getSignalChannelB( arrayDesign );
@@ -392,7 +392,7 @@ public class ExpressionDataMatrixBuilder {
 
         ExpressionDataDoubleMatrix intensityMatrix = this.getIntensity( arrayDesign );
 
-        if ( arrayDesign.getTechnologyType().equals( TechnologyType.TWOCOLOR ) ) {
+        if ( arrayDesign != null && arrayDesign.getTechnologyType().equals( TechnologyType.TWOCOLOR ) ) {
             maskMissingValues( intensityMatrix, arrayDesign );
         }
 

@@ -26,6 +26,8 @@ package ubic.gemma.analysis.diff;
  */
 public class AnalyzerHelperTest extends BaseAnalyzerConfigurationTest {
 
+    private AnalyzerHelper analyzerHelper = null;
+
     /*
      * (non-Javadoc)
      * 
@@ -34,6 +36,8 @@ public class AnalyzerHelperTest extends BaseAnalyzerConfigurationTest {
     @Override
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
+
+        AnalyzerHelper analyzerHelper = ( AnalyzerHelper ) this.getBean( "analyzerHelper" );
     }
 
     /**
@@ -45,7 +49,7 @@ public class AnalyzerHelperTest extends BaseAnalyzerConfigurationTest {
 
         Exception ex = null;
         try {
-            AnalyzerHelper.checkBiologicalReplicates( expressionExperiment, quantitationType, bioAssayDimension );
+            analyzerHelper.checkBiologicalReplicates( expressionExperiment );
         } catch ( Exception e ) {
             ex = e;
             e.printStackTrace();
@@ -62,7 +66,7 @@ public class AnalyzerHelperTest extends BaseAnalyzerConfigurationTest {
     public void testCheckBlockDesign() {
         Exception ex = null;
         try {
-            AnalyzerHelper.checkBlockDesign( expressionExperiment, quantitationType, bioAssayDimension );
+            analyzerHelper.checkBlockDesign( expressionExperiment );
         } catch ( Exception e ) {
             ex = e;
             e.printStackTrace();

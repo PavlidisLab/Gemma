@@ -56,8 +56,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
 
         super.configureTestDataForTwoWayAnovaWithoutInteractions();
 
-        ExpressionAnalysis expressionAnalysis = analyzer.getExpressionAnalysis( expressionExperiment, quantitationType,
-                bioAssayDimension );
+        ExpressionAnalysis expressionAnalysis = analyzer.getExpressionAnalysis( expressionExperiment );
 
         assertEquals( expressionAnalysis.getAnalysisResults().size(), NUM_DESIGN_ELEMENTS * 2 );
     }
