@@ -127,8 +127,7 @@ public class DifferentialExpressionAnalysis {
             }
 
             else {
-                log.info( experimentalFactors.size() + " experimental factor(s) with " + factorValues.size()
-                        + " factor value(s).  Running one way anova." );
+                log.info( factorValues.size() + " factor values.  Running one way anova." );
                 /*
                  * Return one way anova analyzer. This can take care of the t-test as well, since a one-way anova with
                  * two groups is just a t-test
