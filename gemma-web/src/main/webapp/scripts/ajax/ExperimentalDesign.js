@@ -16,7 +16,8 @@ var createMgedComboBox = function(comboHandler){
 				
 	var mgedCombo = new Ext.Gemma.MGEDCombo( {
 		emptyText : "Select a class",
-		selectOnFocus : true
+		selectOnFocus : true,
+		width : 125
 	} );
 	
 	mgedCombo.on('select', comboHandler);
@@ -27,7 +28,7 @@ var createMgedComboBox = function(comboHandler){
 
 var createFactorDescriptionField = function(){
 	
-	factorDescriptionField = new Ext.form.TextField({allowBlank : false, invalidText : "Enter a description", blankText : "Add a simple description", emptyText : "Description"});
+	factorDescriptionField = new Ext.form.TextField({allowBlank : false, invalidText : "Enter a description", blankText : "Add a simple description", emptyText : "Description", width: 150});
 	return factorDescriptionField;
 }
 
@@ -499,13 +500,13 @@ Ext.onReady(function() {
 		factorTB.addSpacer();
 		factorTB.addField(createFactorDescriptionField());
 		factorTB.addSpacer();
-		saveNewFactorButton = factorTB.addButton({text: '+',
+		saveNewFactorButton = factorTB.addButton({text: 'save',
 							tooltip: 'creates a new Experimental Factor',								  
 							handler: saveExperimentalFactor,
 							disabled: true
 						});
 	 	factorTB.addSeparator();
-		removeFactorButton = factorTB.addButton({text: '-',
+		removeFactorButton = factorTB.addButton({text: 'delete',
 							tooltip: 'removes the selected Experimental Factor',								  
 							handler: deleteExperimentalFactor,
 							disabled: true
