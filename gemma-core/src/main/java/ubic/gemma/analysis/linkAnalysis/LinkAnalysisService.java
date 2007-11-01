@@ -36,9 +36,9 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.math.CorrelationStats;
-import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.analysis.preprocess.filter.ExpressionExperimentFilter;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.association.coexpression.HumanProbeCoExpression;
 import ubic.gemma.model.association.coexpression.MouseProbeCoExpression;
@@ -48,8 +48,6 @@ import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.association.coexpression.RatProbeCoExpression;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -71,6 +69,7 @@ import cern.colt.list.ObjectArrayList;
  * @spring.property name="ppService" ref="probe2ProbeCoexpressionService"
  * @spring.property name="csService" ref="compositeSequenceService"
  * @spring.property name="quantitationTypeService" ref="quantitationTypeService"
+ * @spring.property name="analysisHelperService" ref="analysisHelperService"
  * @author Paul
  * @version $Id$
  */
@@ -86,6 +85,7 @@ public class LinkAnalysisService {
     CompositeSequenceService csService;
     DesignElementDataVectorService vectorService;
     private Probe2ProbeCoexpressionService ppService = null;
+    private AnalysisHelperService analysisHelperService = null;
 
     /**
      * Run a link analysis on an experiment, and persist the results if the configuration says to.
@@ -103,7 +103,7 @@ public class LinkAnalysisService {
         la.clear();
 
         log.info( "Begin link processing: " + ee );
-        Collection<DesignElementDataVector> dataVectors = getVectors( ee );
+        Collection<DesignElementDataVector> dataVectors = analysisHelperService.getVectors( ee );
 
         if ( dataVectors == null ) throw new IllegalArgumentException( "No data vectors in " + ee );
 
@@ -286,49 +286,6 @@ public class LinkAnalysisService {
         ppService.deleteLinks( expressionExperiment );
     }
 
-    /**
-     * @param ee
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private Collection<ArrayDesign> checkForMixedTechnologies( ExpressionExperiment ee ) {
-        Collection<ArrayDesign> arrayDesignsUsed = this.eeService.getArrayDesignsUsed( ee );
-        if ( arrayDesignsUsed.size() > 1 ) {
-            boolean containsTwoColor = false;
-            boolean containsOneColor = false;
-            for ( ArrayDesign arrayDesign : arrayDesignsUsed ) {
-                if ( arrayDesign.getTechnologyType().equals( TechnologyType.ONECOLOR ) ) {
-                    containsOneColor = true;
-                }
-                if ( !arrayDesign.getTechnologyType().equals( TechnologyType.ONECOLOR ) ) {
-                    containsTwoColor = true;
-                }
-            }
-
-            if ( containsTwoColor && containsOneColor ) {
-                throw new UnsupportedOperationException(
-                        "Can't correctly handle expression experiments that combine different array technologies." );
-            }
-        }
-        return arrayDesignsUsed;
-    }
-
-    /**
-     * @param ee
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private Collection<DesignElementDataVector> getVectors( ExpressionExperiment ee ) {
-        checkForMixedTechnologies( ee );
-        Collection<QuantitationType> qts = ExpressionDataMatrixBuilder.getUsefulQuantitationTypes( ee );
-        if ( qts.size() == 0 ) throw new IllegalArgumentException( "No usable quantitation type in " + ee );
-
-        log.info( "Loading vectors..." );
-        Collection<DesignElementDataVector> dataVectors = eeService.getDesignElementDataVectors( ee, qts );
-        vectorService.thaw( dataVectors );
-        return dataVectors;
-    }
-
     // a closure would be just the thing here.
     private class Creator {
 
@@ -475,6 +432,10 @@ public class LinkAnalysisService {
 
     public void setQuantitationTypeService( QuantitationTypeService quantitationTypeService ) {
         this.quantitationTypeService = quantitationTypeService;
+    }
+
+    public void setAnalysisHelperService( AnalysisHelperService analysisHelperService ) {
+        this.analysisHelperService = analysisHelperService;
     }
 
 }

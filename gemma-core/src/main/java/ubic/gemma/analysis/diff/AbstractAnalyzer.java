@@ -19,9 +19,7 @@
 package ubic.gemma.analysis.diff;
 
 import ubic.gemma.analysis.util.RCommander;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -34,11 +32,8 @@ public abstract class AbstractAnalyzer extends RCommander {
 
     /**
      * @param expressionExperiment
-     * @param quantitationType
-     * @param bioAssayDimension
      * @return
      */
-    public abstract ExpressionAnalysis getExpressionAnalysis( ExpressionExperiment expressionExperiment,
-            QuantitationType quantitationType, BioAssayDimension bioAssayDimension );
+    public abstract ExpressionAnalysis getExpressionAnalysis( ExpressionExperiment expressionExperiment );
 
 }

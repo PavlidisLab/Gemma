@@ -30,13 +30,11 @@ import org.rosuda.JRclient.REXP;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
+import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
 import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -58,12 +56,16 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * <p>
  * NOTE: facts is first transposed and then factor is applied (as indicated in the equations above)
  * 
+ * @spring.bean id="tTestAnalyzer"
+ * @spring.property name="analysisHelperService" ref="analysisHelperService"
  * @author keshav
  * @version $Id$
  */
 public class TTestAnalyzer extends AbstractAnalyzer {
 
     private Log log = LogFactory.getLog( this.getClass() );
+
+    private AnalysisHelperService analysisHelperService = null;
 
     public TTestAnalyzer() {
         super();
@@ -72,13 +74,10 @@ public class TTestAnalyzer extends AbstractAnalyzer {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.analysis.diff.AbstractAnalyzer#getPValues(ubic.gemma.model.expression.experiment.ExpressionExperiment,
-     *      ubic.gemma.model.common.quantitationtype.QuantitationType,
-     *      ubic.gemma.model.expression.bioAssayData.BioAssayDimension, java.util.Collection)
+     * @see ubic.gemma.analysis.diff.AbstractAnalyzer#getExpressionAnalysis(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
-    public ExpressionAnalysis getExpressionAnalysis( ExpressionExperiment expressionExperiment,
-            QuantitationType quantitationType, BioAssayDimension bioAssayDimension ) {
+    public ExpressionAnalysis getExpressionAnalysis( ExpressionExperiment expressionExperiment ) {
 
         Collection<ExperimentalFactor> experimentalFactors = expressionExperiment.getExperimentalDesign()
                 .getExperimentalFactors();
@@ -99,37 +98,25 @@ public class TTestAnalyzer extends AbstractAnalyzer {
 
         FactorValue factorValueB = iter.next();
 
-        return tTest( expressionExperiment, quantitationType, bioAssayDimension, factorValueA, factorValueB );
+        return tTest( expressionExperiment, factorValueA, factorValueB );
     }
 
     /**
      * See class level javadoc for R Call.
      * 
-     * @param matrix
-     * @param factorValues
-     * @param samplesUsed
+     * @param expressionExperiment
+     * @param factorValueA
+     * @param factorValueB
      * @return
      */
     @SuppressWarnings("unchecked")
-    protected ExpressionAnalysis tTest( ExpressionExperiment expressionExperiment, QuantitationType quantitationType,
-            BioAssayDimension bioAssayDimension, FactorValue factorValueA, FactorValue factorValueB ) {
+    protected ExpressionAnalysis tTest( ExpressionExperiment expressionExperiment, FactorValue factorValueA,
+            FactorValue factorValueB ) {
 
-        Collection<DesignElementDataVector> vectors = expressionExperiment.getDesignElementDataVectors();
+        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
+        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
 
-        // for ( DesignElementDataVector vector : vectors ) {
-        // BioAssayDimension dim = vector.getBioAssayDimension();
-        //
-        // if ( dim != bioAssayDimension )
-        // throw new RuntimeException(
-        // "Bioassay dimension of design element data vector does not match supplied bioassay dimension." );
-        // }
-
-        ArrayDesign arrayDesign = expressionExperiment.getDesignElementDataVectors().iterator().next()
-                .getDesignElement().getArrayDesign();
-
-        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( expressionExperiment
-                .getDesignElementDataVectors() );
-        ExpressionDataDoubleMatrix matrix = builder.getMaskedIntensity( arrayDesign );
+        ExpressionDataDoubleMatrix matrix = builder.getMaskedIntensity( null );
 
         Collection<BioMaterial> samplesUsed = AnalyzerHelper.getBioMaterialsForBioAssays( matrix );
 
@@ -194,7 +181,7 @@ public class TTestAnalyzer extends AbstractAnalyzer {
             probeAnalysisResult.setProbe( cs );
             probeAnalysisResult.setPvalue( pvalues[i] );
             probeAnalysisResult.setScore( tstatistics[i] );
-            probeAnalysisResult.setQuantitationType( quantitationType );
+            // probeAnalysisResult.setQuantitationType( quantitationType );
 
             analysisResults.add( probeAnalysisResult );
         }
@@ -202,6 +189,10 @@ public class TTestAnalyzer extends AbstractAnalyzer {
         expressionAnalysis.setAnalysisResults( analysisResults );
 
         return expressionAnalysis;
+    }
+
+    public void setAnalysisHelperService( AnalysisHelperService analysisHelperService ) {
+        this.analysisHelperService = analysisHelperService;
     }
 
 }

@@ -25,11 +25,9 @@ import java.util.Iterator;
 import java.util.List;
 
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
 import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -51,16 +49,14 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractAnalyzer {
     /**
      * Creates and returns an {@link ExpressionAnalysis} and fills in the expression analysis results.
      * 
-     * @param quantitationType
      * @param dmatrix
      * @param filteredPvalues
      * @param filteredFStatistics
      * @param numResultsFromR
      * @return
      */
-    protected ExpressionAnalysis createExpressionAnalysis( QuantitationType quantitationType,
-            ExpressionDataDoubleMatrix dmatrix, double[] filteredPvalues, double[] filteredFStatistics,
-            int numResultsFromR ) {
+    protected ExpressionAnalysis createExpressionAnalysis( ExpressionDataDoubleMatrix dmatrix,
+            double[] filteredPvalues, double[] filteredFStatistics, int numResultsFromR ) {
 
         /* Create the expression analysis and pack the results. */
         ExpressionAnalysis expressionAnalysis = ExpressionAnalysis.Factory.newInstance();
@@ -81,7 +77,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractAnalyzer {
 
                 ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();
                 probeAnalysisResult.setProbe( cs );
-                probeAnalysisResult.setQuantitationType( quantitationType );
+                // probeAnalysisResult.setQuantitationType( quantitationType );
 
                 probeAnalysisResult.setPvalue( filteredPvalues[k] );
                 probeAnalysisResult.setScore( filteredFStatistics[k] );
@@ -103,13 +99,10 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractAnalyzer {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.analysis.diff.AbstractAnalyzer#getExpressionAnalysis(ubic.gemma.model.expression.experiment.ExpressionExperiment,
-     *      ubic.gemma.model.common.quantitationtype.QuantitationType,
-     *      ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
+     * @see ubic.gemma.analysis.diff.AbstractAnalyzer#getExpressionAnalysis(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
-    public ExpressionAnalysis getExpressionAnalysis( ExpressionExperiment expressionExperiment,
-            QuantitationType quantitationType, BioAssayDimension bioAssayDimension ) {
+    public ExpressionAnalysis getExpressionAnalysis( ExpressionExperiment expressionExperiment ) {
 
         Collection<ExperimentalFactor> experimentalFactors = expressionExperiment.getExperimentalDesign()
                 .getExperimentalFactors();
@@ -122,8 +115,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractAnalyzer {
         ExperimentalFactor experimentalFactorA = ( ExperimentalFactor ) iter.next();
         ExperimentalFactor experimentalFactorB = ( ExperimentalFactor ) iter.next();
 
-        return twoWayAnova( expressionExperiment, quantitationType, bioAssayDimension, experimentalFactorA,
-                experimentalFactorB );
+        return twoWayAnova( expressionExperiment, experimentalFactorA, experimentalFactorB );
     }
 
     /**
@@ -132,14 +124,11 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractAnalyzer {
      * See class level javadoc of two way anova anlayzer for R Call.
      * 
      * @param expressionExperiment
-     * @param quantitationType
-     * @param bioAssayDimension
      * @param experimentalFactorA
      * @param experimentalFactorB
      * @return
      */
     public abstract ExpressionAnalysis twoWayAnova( ExpressionExperiment expressionExperiment,
-            QuantitationType quantitationType, BioAssayDimension bioAssayDimension,
             ExperimentalFactor experimentalFactorA, ExperimentalFactor experimentalFactorB );
 
 }

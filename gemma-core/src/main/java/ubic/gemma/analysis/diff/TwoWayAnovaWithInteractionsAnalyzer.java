@@ -25,11 +25,10 @@ import org.rosuda.JRclient.REXP;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
+import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -48,6 +47,8 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * <p>
  * where area and treat are first transposed and then factor is called on each to give farea and ftreat.
  * 
+ * @spring.bean id="twoWayAnovaWithInteractionsAnalyzer"
+ * @spring.property name="analysisHelperService" ref="analysisHelperService"
  * @author keshav
  * @version $Id$
  * @see AbstractTwoWayAnovaAnalyzer
@@ -56,6 +57,8 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
 
     private static final int ACTUAL_NUM_RESULTS = 3;
     private static final int NUM_RESULTS_FROM_R = ACTUAL_NUM_RESULTS + 1;
+
+    private AnalysisHelperService analysisHelperService = null;
 
     /*
      * (non-Javadoc)
@@ -68,7 +71,6 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
      */
     @Override
     public ExpressionAnalysis twoWayAnova( ExpressionExperiment expressionExperiment,
-            QuantitationType quantitationType, BioAssayDimension bioAssayDimension,
             ExperimentalFactor experimentalFactorA, ExperimentalFactor experimentalFactorB ) {
 
         Collection<FactorValue> factorValuesA = experimentalFactorA.getFactorValues();
@@ -81,12 +83,10 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
                             + " or experimental factor " + experimentalFactorB.getName() + "." );
         }
 
-        ArrayDesign arrayDesign = expressionExperiment.getDesignElementDataVectors().iterator().next()
-                .getDesignElement().getArrayDesign();
+        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
+        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
 
-        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( expressionExperiment
-                .getDesignElementDataVectors() );
-        ExpressionDataDoubleMatrix dmatrix = builder.getMaskedIntensity( arrayDesign );
+        ExpressionDataDoubleMatrix dmatrix = builder.getMaskedIntensity( null );
 
         Collection<BioMaterial> samplesUsed = AnalyzerHelper.getBioMaterialsForBioAssays( dmatrix );
 
@@ -156,8 +156,11 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
             }
         }
 
-        return createExpressionAnalysis( quantitationType, dmatrix, filteredPvalues, filteredFStatistics,
-                ACTUAL_NUM_RESULTS );
+        return createExpressionAnalysis( dmatrix, filteredPvalues, filteredFStatistics, ACTUAL_NUM_RESULTS );
 
+    }
+
+    public void setAnalysisHelperService( AnalysisHelperService analysisHelperService ) {
+        this.analysisHelperService = analysisHelperService;
     }
 }

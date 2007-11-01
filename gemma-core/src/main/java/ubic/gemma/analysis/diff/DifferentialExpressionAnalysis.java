@@ -23,9 +23,7 @@ import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -39,6 +37,12 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * <p>
  * See http://www.bioinformatics.ubc.ca/pavlidis/lab/docs/reprints/anova-methods.pdf.
  * 
+ * @spring.bean id="differentialExpressionAnalysis"
+ * @spring.property name="studenttTestAnalyzer" ref="tTestAnalyzer"
+ * @spring.property name="oneWayAnovaAnalyzer" ref="oneWayAnovaAnalyzer"
+ * @spring.property name="twoWayAnovaWithInteractionsAnalyzer" ref="twoWayAnovaWithInteractionsAnalyzer"
+ * @spring.property name="twoWayAnovaWithoutInteractionsAnalyzer" ref="twoWayAnovaWithoutInteractionsAnalyzer"
+ * @spring.property name="analyzerHelper" ref="analyzerHelper"
  * @author keshav
  * @version $Id$
  */
@@ -50,21 +54,24 @@ public class DifferentialExpressionAnalysis {
     private int FACTOR_VALUE_ONE = 1;
     private int FACTOR_VALUE_TWO = 2;
 
+    private TTestAnalyzer studenttTestAnalyzer = null;
+    private OneWayAnovaAnalyzer oneWayAnovaAnalyzer = null;
+    private TwoWayAnovaWithInteractionsAnalyzer twoWayAnovaWithInteractionsAnalyzer = null;
+    private TwoWayAnovaWithoutInteractionsAnalyzer twoWayAnovaWithoutInteractionsAnalyzer = null;
+    private AnalyzerHelper analyzerHelper = null;
+
     ExpressionAnalysis expressionAnalysis = null;
 
     /**
      * Initiates the differential expression analysis (this is the entry point).
      * 
      * @param expressionExperiment
-     * @param quantitationType
-     * @param bioAssayDimension
      */
-    public void analyze( ExpressionExperiment expressionExperiment, QuantitationType quantitationType,
-            BioAssayDimension bioAssayDimension ) {
+    public void analyze( ExpressionExperiment expressionExperiment ) {
 
-        AbstractAnalyzer analyzer = determineAnalysis( expressionExperiment, quantitationType, bioAssayDimension );
+        AbstractAnalyzer analyzer = determineAnalysis( expressionExperiment );
 
-        expressionAnalysis = analyzer.getExpressionAnalysis( expressionExperiment, quantitationType, bioAssayDimension );
+        expressionAnalysis = analyzer.getExpressionAnalysis( expressionExperiment );
 
     }
 
@@ -83,11 +90,9 @@ public class DifferentialExpressionAnalysis {
      * Determines the analysis to execute based on the experimental factors, factor values, and block design.
      * 
      * @param expressionExperiment
-     * @param experimentalFactors
      * @return
      */
-    protected AbstractAnalyzer determineAnalysis( ExpressionExperiment expressionExperiment,
-            QuantitationType quantitationType, BioAssayDimension bioAssayDimension ) {
+    protected AbstractAnalyzer determineAnalysis( ExpressionExperiment expressionExperiment ) {
 
         Collection<ExperimentalFactor> experimentalFactors = expressionExperiment.getExperimentalDesign()
                 .getExperimentalFactors();
@@ -117,7 +122,7 @@ public class DifferentialExpressionAnalysis {
                  * Return t-test analyzer. This can be taken care of by the one way anova, but keeping it separate for
                  * clarity.
                  */
-                return new TTestAnalyzer();
+                return studenttTestAnalyzer;
             }
 
             else {
@@ -127,7 +132,7 @@ public class DifferentialExpressionAnalysis {
                  * Return one way anova analyzer. This can take care of the t-test as well, since a one-way anova with
                  * two groups is just a t-test
                  */
-                return new OneWayAnovaAnalyzer();
+                return oneWayAnovaAnalyzer;
             }
 
         }
@@ -145,10 +150,10 @@ public class DifferentialExpressionAnalysis {
                 }
             }
             /* Check for block design and execute two way anova (with or without interactions). */
-            if ( !AnalyzerHelper.blockComplete( expressionExperiment, quantitationType, bioAssayDimension ) ) {
-                return new TwoWayAnovaWithoutInteractionsAnalyzer();
+            if ( analyzerHelper.blockComplete( expressionExperiment ) ) {
+                return twoWayAnovaWithoutInteractionsAnalyzer;
             } else {
-                return new TwoWayAnovaWithInteractionsAnalyzer();
+                return twoWayAnovaWithInteractionsAnalyzer;
             }
         }
 
@@ -165,5 +170,27 @@ public class DifferentialExpressionAnalysis {
         if ( col == null || col.size() == 0 ) return true;
 
         return false;
+    }
+
+    public void setOneWayAnovaAnalyzer( OneWayAnovaAnalyzer oneWayAnovaAnalyzer ) {
+        this.oneWayAnovaAnalyzer = oneWayAnovaAnalyzer;
+    }
+
+    public void setTwoWayAnovaWithInteractionsAnalyzer(
+            TwoWayAnovaWithInteractionsAnalyzer twoWayAnovaWithInteractionsAnalyzer ) {
+        this.twoWayAnovaWithInteractionsAnalyzer = twoWayAnovaWithInteractionsAnalyzer;
+    }
+
+    public void setTwoWayAnovaWithoutInteractionsAnalyzer(
+            TwoWayAnovaWithoutInteractionsAnalyzer twoWayAnovaWithoutInteractionsAnalyzer ) {
+        this.twoWayAnovaWithoutInteractionsAnalyzer = twoWayAnovaWithoutInteractionsAnalyzer;
+    }
+
+    public void setStudenttTestAnalyzer( TTestAnalyzer studenttTestAnalyzer ) {
+        this.studenttTestAnalyzer = studenttTestAnalyzer;
+    }
+
+    public void setAnalyzerHelper( AnalyzerHelper analyzerHelper ) {
+        this.analyzerHelper = analyzerHelper;
     }
 }

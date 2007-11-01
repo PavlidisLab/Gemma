@@ -55,7 +55,7 @@ public class DifferentialExpressionAnalysisService {
 
         analysis = new DifferentialExpressionAnalysis();
 
-        analysis.analyze( expressionExperiment, quantitationType, bioAssayDimension );
+        analysis.analyze( expressionExperiment );
 
     }
 

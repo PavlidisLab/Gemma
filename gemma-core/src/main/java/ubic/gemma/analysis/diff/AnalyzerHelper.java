@@ -26,12 +26,13 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
+import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -40,12 +41,16 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 /**
  * A helper class for the analyzers. This class contains helper methods commonly needed when performing an analysis.
  * 
+ * @spring.bean id="analyzerHelper"
+ * @spring.property name="analysisHelperService" ref="analysisHelperService"
  * @author keshav
  * @version $Id$
  */
 public class AnalyzerHelper {
 
     private static Log log = LogFactory.getLog( AnalyzerHelper.class );
+
+    private AnalysisHelperService analysisHelperService = null;
 
     /**
      * Returns true if the block design is complete and there are at least 2 biological replicates for each "group",
@@ -54,13 +59,12 @@ public class AnalyzerHelper {
      * @param expressionExperiment
      * @return boolean
      */
-    public static boolean blockComplete( ExpressionExperiment expressionExperiment, QuantitationType quantitationType,
-            BioAssayDimension bioAssayDimension ) {
+    public boolean blockComplete( ExpressionExperiment expressionExperiment ) {
 
         Exception ex = null;
         try {
-            checkBlockDesign( expressionExperiment, quantitationType, bioAssayDimension );
-            checkBiologicalReplicates( expressionExperiment, quantitationType, bioAssayDimension );
+            checkBlockDesign( expressionExperiment );
+            checkBiologicalReplicates( expressionExperiment );
         } catch ( Exception e ) {
             e.printStackTrace();
             ex = e;
@@ -83,11 +87,11 @@ public class AnalyzerHelper {
      * @return
      * @throws Exception
      */
-    protected static void checkBlockDesign( ExpressionExperiment expressionExperiment,
-            QuantitationType quantitationType, BioAssayDimension bioAssayDimension ) throws Exception {
+    protected void checkBlockDesign( ExpressionExperiment expressionExperiment ) throws Exception {
 
-        ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( expressionExperiment, bioAssayDimension,
-                quantitationType );
+        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
+        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
+        ExpressionDataDoubleMatrix matrix = builder.getMaskedIntensity( null );
 
         /* first, get all the biomaterials */
         Collection<BioMaterial> biomaterials = getBioMaterialsForAssays( matrix );
@@ -108,7 +112,7 @@ public class AnalyzerHelper {
      * @param factorValues
      * @throws Exception
      */
-    protected static void checkBlockDesign( Collection<BioMaterial> biomaterials,
+    protected void checkBlockDesign( Collection<BioMaterial> biomaterials,
             Collection<ExperimentalFactor> experimentalFactors ) throws Exception {
 
         Collection<HashSet> factorValuePairings = generateFactorValuePairings( experimentalFactors );
@@ -170,11 +174,11 @@ public class AnalyzerHelper {
      * @param bioAssayDimension
      * @throws Exception
      */
-    protected static void checkBiologicalReplicates( ExpressionExperiment expressionExperiment,
-            QuantitationType quantitationType, BioAssayDimension bioAssayDimension ) throws Exception {
+    protected void checkBiologicalReplicates( ExpressionExperiment expressionExperiment ) throws Exception {
 
-        ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( expressionExperiment, bioAssayDimension,
-                quantitationType );
+        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
+        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
+        ExpressionDataDoubleMatrix matrix = builder.getMaskedIntensity( null );
 
         /* first, get all the biomaterials */
         Collection<BioMaterial> biomaterials = getBioMaterialsForAssays( matrix );
@@ -379,5 +383,9 @@ public class AnalyzerHelper {
             }
         }
         return rFactors;
+    }
+
+    public void setAnalysisHelperService( AnalysisHelperService analysisHelperService ) {
+        this.analysisHelperService = analysisHelperService;
     }
 }

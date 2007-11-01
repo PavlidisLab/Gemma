@@ -30,13 +30,12 @@ import org.rosuda.JRclient.REXP;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.dataStructure.matrix.FastRowAccessDoubleMatrix2DNamed;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
+import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
 import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -57,6 +56,8 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * <p>
  * where factor is a vector that has first been transposed and then had factor() applied.
  * 
+ * @spring.bean id="oneWayAnovaAnalyzer"
+ * @spring.property name="analysisHelperService" ref="analysisHelperService"
  * @author keshav
  * @version $Id$
  */
@@ -68,6 +69,8 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
 
     private Map<Integer, DesignElement> filteredMatrixDesignElementIndexMap = null;
 
+    private AnalysisHelperService analysisHelperService = null;
+
     /*
      * (non-Javadoc)
      * 
@@ -76,22 +79,16 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
      *      ubic.gemma.model.expression.bioAssayData.BioAssayDimension, java.util.Collection)
      */
     @Override
-    public ExpressionAnalysis getExpressionAnalysis( ExpressionExperiment expressionExperiment,
-            QuantitationType quantitationType, BioAssayDimension bioAssayDimension ) {
+    public ExpressionAnalysis getExpressionAnalysis( ExpressionExperiment expressionExperiment ) {
 
-        return oneWayAnova( expressionExperiment, quantitationType, bioAssayDimension );
+        return oneWayAnova( expressionExperiment );
     }
 
     /**
-     * See class level javadoc for R Call.
-     * 
-     * @param matrix
-     * @param factorValues
-     * @param samplesUsed
+     * @param expressionExperiment
      * @return
      */
-    public ExpressionAnalysis oneWayAnova( ExpressionExperiment expressionExperiment,
-            QuantitationType quantitationType, BioAssayDimension bioAssayDimension ) {
+    public ExpressionAnalysis oneWayAnova( ExpressionExperiment expressionExperiment ) {
 
         Collection<ExperimentalFactor> experimentalFactors = expressionExperiment.getExperimentalDesign()
                 .getExperimentalFactors();
@@ -109,12 +106,10 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
                     "One way anova requires 2 or more factor values (2 factor values is a t-test).  Received "
                             + factorValues.size() + "." );
 
-        ArrayDesign arrayDesign = expressionExperiment.getDesignElementDataVectors().iterator().next()
-                .getDesignElement().getArrayDesign();
+        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
+        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
 
-        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( expressionExperiment
-                .getDesignElementDataVectors() );
-        ExpressionDataDoubleMatrix dmatrix = builder.getMaskedIntensity( arrayDesign );
+        ExpressionDataDoubleMatrix dmatrix = builder.getMaskedIntensity( null );
 
         DoubleMatrixNamed filteredNamedMatrix = this.filterMatrix( dmatrix, factorValues );
 
@@ -191,7 +186,7 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
             probeAnalysisResult.setProbe( cs );
             probeAnalysisResult.setPvalue( filteredPvalues[i] );
             probeAnalysisResult.setScore( filteredFStatistics[i] );
-            probeAnalysisResult.setQuantitationType( quantitationType );
+            // probeAnalysisResult.setQuantitationType( quantitationType );
 
             analysisResults.add( probeAnalysisResult );
         }
@@ -284,5 +279,9 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
         }
 
         return new FastRowAccessDoubleMatrix2DNamed( ddata );
+    }
+
+    public void setAnalysisHelperService( AnalysisHelperService analysisHelperService ) {
+        this.analysisHelperService = analysisHelperService;
     }
 }
