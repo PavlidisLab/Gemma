@@ -156,17 +156,12 @@ public class GoMetric {
         int count = 0;
 
         for ( OntologyTerm ontoM : masterGO ) {
-            if ( !GOProbMap.containsKey( ontoM.getUri() ) ) {
-                log.info( "Go probe map doesn't contain " + ontoM );
-                continue;
-            }
+            if ( isRoot( ontoM) )continue;
             double probM = GOProbMap.get( ontoM.getUri() );
 
             for ( OntologyTerm ontoC : coExpGO ) {
-                if ( !GOProbMap.containsKey( ontoC.getUri() ) ) {
-                    log.info( "Go probe map doesn't contain " + ontoC );
-                    continue;
-                }
+                if ( isRoot (ontoC))continue;
+             
                 Double probC = GOProbMap.get( ontoC.getUri() );
                 Double pmin = 1.0;
                 Double score = 0.0;
