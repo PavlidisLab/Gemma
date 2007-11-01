@@ -118,17 +118,15 @@ public class TTestAnalyzer extends AbstractAnalyzer {
         Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
 
-        ExpressionDataDoubleMatrix matrix = builder.getMaskedIntensity( null );
+        ExpressionDataDoubleMatrix dmatrix = builder.getMaskedIntensity( null );
 
-        Collection<BioMaterial> samplesUsed = AnalyzerHelper.getBioMaterialsForBioAssays( matrix );
+        Collection<BioMaterial> samplesUsed = AnalyzerHelper.getBioMaterialsForBioAssays( dmatrix );
 
         Collection<FactorValue> factorValues = new ArrayList<FactorValue>();
         factorValues.add( factorValueA );
         factorValues.add( factorValueB );
 
         List<String> rFactors = AnalyzerHelper.getRFactorsFromFactorValuesForOneWayAnova( factorValues, samplesUsed );
-
-        ExpressionDataDoubleMatrix dmatrix = ( ExpressionDataDoubleMatrix ) matrix;
 
         DoubleMatrixNamed namedMatrix = dmatrix.getNamedMatrix();
 
@@ -174,8 +172,8 @@ public class TTestAnalyzer extends AbstractAnalyzer {
 
         List<ExpressionAnalysisResult> analysisResults = new ArrayList<ExpressionAnalysisResult>();
 
-        for ( int i = 0; i < matrix.rows(); i++ ) {
-            DesignElement de = matrix.getDesignElementForRow( i );
+        for ( int i = 0; i < dmatrix.rows(); i++ ) {
+            DesignElement de = dmatrix.getDesignElementForRow( i );
             // FIXME maybe ProbeAnalysisResult should have a DesignElement to avoid typecasting
             CompositeSequence cs = ( CompositeSequence ) de;
 

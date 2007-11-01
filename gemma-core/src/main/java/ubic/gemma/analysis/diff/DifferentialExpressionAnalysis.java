@@ -151,7 +151,7 @@ public class DifferentialExpressionAnalysis {
                 }
             }
             /* Check for block design and execute two way anova (with or without interactions). */
-            if ( analyzerHelper.blockComplete( expressionExperiment ) ) {
+            if ( !analyzerHelper.blockComplete( expressionExperiment ) ) {
                 log.info( "Running two way anova without interactions." );
                 return twoWayAnovaWithoutInteractionsAnalyzer;
             } else {
