@@ -134,39 +134,6 @@ public class AnalyzerHelper {
     }
 
     /**
-     * Generates all possible factor value pairings for the given experimental factors.
-     * 
-     * @param experimentalFactors
-     * @return A collection of hashsets, where each hashset is a pairing.
-     */
-    protected static Collection<HashSet> generateFactorValuePairings( Collection<ExperimentalFactor> experimentalFactors ) {
-        /* set up the possible pairings */
-        Collection<FactorValue> allFactorValues = new HashSet<FactorValue>();
-        for ( ExperimentalFactor experimentalFactor : experimentalFactors ) {
-            allFactorValues.addAll( experimentalFactor.getFactorValues() );
-        }
-
-        Collection<FactorValue> allFactorValuesCopy = allFactorValues;
-
-        Collection<HashSet> factorValuePairings = new HashSet<HashSet>();
-
-        for ( FactorValue factorValue : allFactorValues ) {
-            for ( FactorValue f : allFactorValuesCopy ) {
-                if ( f.getExperimentalFactor().equals( factorValue.getExperimentalFactor() ) ) continue;
-
-                HashSet<FactorValue> factorValuePairing = new HashSet<FactorValue>();
-                factorValuePairing.add( factorValue );
-                factorValuePairing.add( f );
-
-                if ( !factorValuePairings.contains( factorValuePairing ) ) {
-                    factorValuePairings.add( factorValuePairing );
-                }
-            }
-        }
-        return factorValuePairings;
-    }
-
-    /**
      * Checks if there are at at least 2 biological replicates for all of the groups.
      * 
      * @param expressionExperiment
@@ -205,6 +172,39 @@ public class AnalyzerHelper {
             }
             if ( !match ) throw new Exception( "No replicate found for biomaterial " + biomaterial + "." );
         }
+    }
+
+    /**
+     * Generates all possible factor value pairings for the given experimental factors.
+     * 
+     * @param experimentalFactors
+     * @return A collection of hashsets, where each hashset is a pairing.
+     */
+    protected static Collection<HashSet> generateFactorValuePairings( Collection<ExperimentalFactor> experimentalFactors ) {
+        /* set up the possible pairings */
+        Collection<FactorValue> allFactorValues = new HashSet<FactorValue>();
+        for ( ExperimentalFactor experimentalFactor : experimentalFactors ) {
+            allFactorValues.addAll( experimentalFactor.getFactorValues() );
+        }
+
+        Collection<FactorValue> allFactorValuesCopy = allFactorValues;
+
+        Collection<HashSet> factorValuePairings = new HashSet<HashSet>();
+
+        for ( FactorValue factorValue : allFactorValues ) {
+            for ( FactorValue f : allFactorValuesCopy ) {
+                if ( f.getExperimentalFactor().equals( factorValue.getExperimentalFactor() ) ) continue;
+
+                HashSet<FactorValue> factorValuePairing = new HashSet<FactorValue>();
+                factorValuePairing.add( factorValue );
+                factorValuePairing.add( f );
+
+                if ( !factorValuePairings.contains( factorValuePairing ) ) {
+                    factorValuePairings.add( factorValuePairing );
+                }
+            }
+        }
+        return factorValuePairings;
     }
 
     /**

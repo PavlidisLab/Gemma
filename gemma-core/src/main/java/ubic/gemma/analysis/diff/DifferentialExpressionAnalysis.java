@@ -117,7 +117,7 @@ public class DifferentialExpressionAnalysis {
                         + factorValues.size() + " factor value(s).  Cannot execute differential expression analysis." );
             }
 
-            else if ( experimentalFactors.size() == FACTOR_VALUE_TWO ) {
+            else if ( factorValues.size() == FACTOR_VALUE_TWO ) {
                 /*
                  * Return t-test analyzer. This can be taken care of by the one way anova, but keeping it separate for
                  * clarity.
