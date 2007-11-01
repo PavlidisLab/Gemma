@@ -22,6 +22,7 @@
  */
 package ubic.gemma.model.common.description;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,6 +44,25 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
      */
     @Override
     protected Map handleFindByParentClass( java.lang.Class parentClass ) {
+        Map charToParent = new HashMap<Characteristic, Object>();
+        
+        return charToParent;
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.common.description.CharacteristicServiceBase#handleGetParent(ubic.gemma.model.common.description.Characteristic)
+     */
+    @Override
+    protected Object handleGetParent( Characteristic characteristic ) throws Exception {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.common.description.CharacteristicServiceBase#handleGetParents(java.util.Collection)
+     */
+    @Override
+    protected Map handleGetParents( Collection characteristics ) throws Exception {
         Map charToParent = new HashMap<Characteristic, Object>();
         
         return charToParent;
