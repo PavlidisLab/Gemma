@@ -163,7 +163,8 @@ public abstract class AbstractOntologyService implements InitializingBean {
 
         if ( !isOntologyLoaded() ) return null;
 
-        if ( index == null ) index = OntologyIndexer.indexOntology( ontology_name, model );
+        assert index != null : "attempt to search " + this.getOntologyName() + " when index is null";
+//        if ( index == null ) index = OntologyIndexer.indexOntology( ontology_name, model );
 
         Collection<OntologyTerm> name = OntologySearch.matchClasses( model, index, search );
 
@@ -179,7 +180,8 @@ public abstract class AbstractOntologyService implements InitializingBean {
         
         if ( !isOntologyLoaded() ) return null;
 
-        if ( index == null ) index = OntologyIndexer.indexOntology( ontology_name, model );
+        assert index != null : "attempt to search " + this.getOntologyName() + " when index is null";
+//        if ( index == null ) index = OntologyIndexer.indexOntology( ontology_name, model );
 
         Collection<OntologyResource> res = OntologySearch.matchResources( model, index, search );
 
@@ -195,7 +197,8 @@ public abstract class AbstractOntologyService implements InitializingBean {
         
         if ( !isOntologyLoaded() ) return null;
 
-        if ( index == null ) index = OntologyIndexer.indexOntology( ontology_name, model );
+        assert index != null : "attempt to search " + this.getOntologyName() + " when index is null";
+//        if ( index == null ) index = OntologyIndexer.indexOntology( ontology_name, model );
 
         Collection<OntologyIndividual> indis = OntologySearch.matchIndividuals( model, index, search );
 

@@ -13,24 +13,37 @@ Ext.namespace('Ext.Gemma');
  *  addDescription if defined will create a description field that the user must fill in
  */
  
-Ext.Gemma.AnnotationToolBar = function ( div, annotationGrid, saveHandler, deleteHandler, addDescription ) {
+Ext.Gemma.AnnotationToolBar = function ( div, annotationGrid, saveHandler, deleteHandler, addDescription, opts ) {
 
 	Ext.Gemma.AnnotationToolBar.superclass.constructor.call( this, div );
 	
-	var charCombo = new Ext.Gemma.CharacteristicCombo( {
-	} );
+	var charComboOpts = { };
+	if ( opts && opts.charComboWidth ) {
+		charComboOpts.width = opts.charComboWidth
+	}
+	var charCombo = new Ext.Gemma.CharacteristicCombo( charComboOpts );
 	
-	var mgedCombo = new Ext.Gemma.MGEDCombo( {
+	var mgedComboOpts = {
 		emptyText : "Select a class",
 		selectOnFocus : true
-	} );
+	};
+	if ( opts && opts.mgedComboWidth ) {
+		mgedComboOpts.width = opts.mgedComboWidth;
+	}
+	var mgedCombo = new Ext.Gemma.MGEDCombo( mgedComboOpts );
 	mgedCombo.on( "select", function ( combo, record, index ) {
 		charCombo.setCategory( record.data.term, record.data.uri );
 		saveButton.enable();
 	} );
 	
 	
-	var descriptionField = new Ext.form.TextField({allowBlank : false, invalidText : "Enter a discription", blankText : "Add a simple description", value : "Description"});
+	var descriptionField = new Ext.form.TextField( {
+		allowBlank : true,
+		invalidText : "Enter a description",
+		blankText : "Add a simple description",
+		emptyText : "Description",
+		width : 75
+	} );
 	
 	
 	var saveButton = new Ext.Toolbar.Button( {
@@ -40,7 +53,7 @@ Ext.Gemma.AnnotationToolBar = function ( div, annotationGrid, saveHandler, delet
 		handler : function() {
 			var characteristic = charCombo.getCharacteristic();
 			
-				if (addDescription){				
+				if (addDescription) {				
 					var description = descriptionField.getValue();
 					if ((description === undefined) || (description.length === 0) || (description === "Description")){
 						alert("Please add a description");
@@ -79,7 +92,7 @@ Ext.Gemma.AnnotationToolBar = function ( div, annotationGrid, saveHandler, delet
 	this.addField( charCombo );
 	this.addSpacer();
 	
-	if (addDescription){
+	if (addDescription) {
 		this.addField( descriptionField );
 		this.addSpacer();
 	}

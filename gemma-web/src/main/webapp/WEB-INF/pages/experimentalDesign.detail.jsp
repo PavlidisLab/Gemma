@@ -23,10 +23,15 @@
 	
 	
 	
-
-<h2>
-	<fmt:message key="experimentalDesign.details" />
-</h2>
+<div style="padding: 2px;" onclick="Effect.toggle('edDetail', 'blind', {duration:0.1})">
+	<h2>
+		<img src="/Gemma/images/plus.gif" />
+		<fmt:message key="experimentalDesign.details" />
+	</h2>
+</div>
+<div id="edDetail" style="display: none">
+	<div>
+		<%-- inner div needed for effect  --%>
 <table cellspacing="10">
 	<tr>
     	<td class="label">
@@ -116,51 +121,45 @@
 					</td>
 				</tr>
 			</authz:authorize>
-        </table>
+</table>
+	</div>
+</div>
+
+<script type="text/javascript" src="<c:url value='/scripts/ajax/ExperimentalDesign.js'/>" type="text/javascript"></script>
+<input type="hidden" name="expressionExperimentID" id="expressionExperimentID" value="${expressionExperiment.id}" />
+<input type="hidden" name="experimentalDesignID" id="experimentalDesignID" value="${experimentalDesign.id}" />
+<authz:authorize ifAllGranted="admin">
+	<input type="hidden" name="experimentalDesignAdmin" value="true" />
+</authz:authorize>
 
 <table>
-<tr> <td>
-        <h3>
-            <fmt:message key="experimentalFactors.title" />
-        </h3>
-        
-        <authz:authorize ifAllGranted="admin">
-        	<div id="factorGridTB" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:350px; height:30px;"></div>
-        </authz:authorize>
-        <div id="factorGrid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:350px; height:250px;"></div>
-        <br />
-     </td>
-     <td>
-        
-        <h3>    <fmt:message key="experimentalDesign.factorValues" />  for factor selected above   </h3>
-        <authz:authorize ifAllGranted="admin">
-	        <div id="factorValueTB" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:350px; height:30px;"></div>    	
-        </authz:authorize>
-        <div id="factorValueGrid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:350px; height:250px;"></div>
-  
-        <br />
-        <hr />
-        <hr />
-  	</td>
-  </tr>  
-  <tr><td colspan=2>
-    <h3>
-    	
-   	</h3>
-   	 
- 	<script type="text/javascript" src="<c:url value='/scripts/ajax/ExperimentalDesign.js'/>" type="text/javascript"></script>
-    
-    <input type="hidden" name="expressionExperimentID" id="expressionExperimentID" value="${expressionExperiment.id}"
-    <input type="hidden" name="experimentalDesignID" id="experimentalDesignID" value="${experimentalDesign.id}"
- 
-    <authz:authorize ifAllGranted="admin">
-         <h3>  BioMaterials to Factor Value Association     </h3>   
-	    <div id="eDesign" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:700px; height:30px;"></div>      
-		<div id="bmGrid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:700px; height:400px;"></div>
-	 </authz:authorize>
-	 </td>
-     </tr>
-     </table>   
+	<tr>
+		<td>
+        	<h3><fmt:message key="experimentalFactors.title" /></h3>
+        	<authz:authorize ifAllGranted="admin">
+        		<div id="factorGridTB" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:400px; height:30px;"></div>
+	        </authz:authorize>
+    	    <div id="factorGrid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:400px; height:150px;"></div>
+	     </td>
+    	 <td>
+        	<h3><fmt:message key="experimentalDesign.factorValues" />  for selected factor</h3>
+	        <authz:authorize ifAllGranted="admin">
+		        <div id="factorValueTB" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:400px; height:30px;"></div>    	
+	        </authz:authorize>
+    	    <div id="factorValueGrid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:400px; height:150px;"></div>
+	  	</td>
+	</tr>
+ 	<authz:authorize ifAllGranted="admin">  
+  	<tr>
+  		<td colspan=2>
+			<h3>BioMaterial to Factor Value Association</h3>
+	    	<div id="eDesign" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:800px; height:30px;"></div>      
+			<div id="bmGrid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:800px; height:400px;"></div>
+		</td>
+	</tr>
+	</authz:authorize>
+</table>
+
     <table>
     <tr>
     <td COLSPAN="2">    

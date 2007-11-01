@@ -82,7 +82,7 @@ public class FactorValueObject implements Serializable {
            this.category =  "none";        
         else if ( category instanceof VocabCharacteristic ) {
             VocabCharacteristic vc = ( VocabCharacteristic ) category;
-            this.category =  vc.getCategoryUri();
+            this.category =  vc.getCategory();
         } else
             this.category = category.getCategory();
     }

@@ -71,7 +71,7 @@ public class OntologyIndexer {
     }
 
     /**
-     * Create an index from an existing OntModel. Any existing index will be overwritten.
+     * Create an on-disk index from an existing OntModel. Any existing index will be overwritten.
      * 
      * @param datafile or uri
      * @param name used to refer to this index later

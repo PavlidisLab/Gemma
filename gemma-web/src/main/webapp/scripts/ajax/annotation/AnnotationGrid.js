@@ -9,6 +9,7 @@ Ext.Gemma.AnnotationGrid = function ( div, config ) {
 	 * 		( e.g.: ExpressionExperimentController.getAnnotation )
 	 * 	readParams : an array of parameters that will be passed to the readMethod
 	 * 		( e.e.: [ { id:x, classDelegatingFor:"ExpressionExperimentImpl" } ] )
+	 * 	             or a pointer to a function that will return the array of parameters
 	 */
 	this.readMethod = config.readMethod;
 	this.readParams = config.readParams;
@@ -29,7 +30,7 @@ Ext.Gemma.AnnotationGrid = function ( div, config ) {
 		} );
 		config.ds.setDefaultSort('className');
 	}
-	config.ds.load( { params : this.readParams } );
+	config.ds.load( { params : ( typeof this.readParams == "function" ) ? this.readParams() : this.readParams } );
 	
 	if ( Ext.Gemma.AnnotationGrid.styler == undefined ) {
 		/* apply a CSS class depending on whether or not the characteristic has a URI.
@@ -67,9 +68,14 @@ Ext.extend( Ext.Gemma.AnnotationGrid, Ext.grid.Grid, {
 		return ids;	
 	},
 	
+	formatWithStyle : function( value, uri ) {
+		var class = uri ? "unusedWithUri" : "unusedNoUri";
+		var description = uri || "free text";
+		return String.format( "<span class='{0}' title='{2}'>{1}</span>", class, value, description );
+	},
+	
 	refresh : function() {
-		this.getDataSource().reload();
-		this.getView().refresh();
+		this.getDataSource().reload( { callback: this.getView().refresh } );
 	}
 	
 } );

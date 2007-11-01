@@ -27,7 +27,7 @@ var createMgedComboBox = function(comboHandler){
 
 var createFactorDescriptionField = function(){
 	
-	factorDescriptionField = new Ext.form.TextField({allowBlank : false, invalidText : "Enter a discription", blankText : "Add a simple description", value : "Description"});
+	factorDescriptionField = new Ext.form.TextField({allowBlank : false, invalidText : "Enter a description", blankText : "Add a simple description", emptyText : "Description"});
 	return factorDescriptionField;
 }
 
@@ -194,12 +194,12 @@ var createFactorValueComboBox = function(){
 var refreshBMFactorComboBoxes = function(){
 	
 //refresh experimental factor combo box		
-	factorComboDS.reload({params:[{id:eeID, classDelegatingFor:"long"}]}, function() {expFactorsCB.getView().refresh(true)});
-	//expFactorsCB.getView().refresh(true);
+	factorComboDS.reload({params:[{id:eeID, classDelegatingFor:"long"}]});
+	expFactorsCB.reset();
 	
 //refresh factor value combo box
 	factorValueComboDS.reload({params:[{id:selectedFactorId, classDelegatingFor:"Long"}]}, function() {factorValueCB.getView().refresh(true)} );
-	//factorValueCB.getView().refresh(true);
+	factorValueCB.reset();
 	
 }
 
@@ -227,9 +227,12 @@ var saveFactorValueToBMHandler = function(){
 
 bmGridRefresh = function(){	
 		
-	bmDS.reload({params:[{id:eeID, classDelegatingFor:"expressionExperimentID"},{id:selectedFactorId, classDelegatingFor: "FactorID"}]}, function() {
-		bmGrid.getView().refresh(true);
-	});		
+	bmDS.reload( {
+		params : [ {id:eeID, classDelegatingFor:"expressionExperimentID"}, {id:selectedFactorId, classDelegatingFor: "FactorID"} ],
+		callback : function() {
+			bmGrid.getView().refresh(true);
+		}
+	} );		
 	
 }
 
@@ -296,10 +299,13 @@ var initBioMaterialGrid = function(div) {
 
 factorGridRefresh = function(){
 	
-	factorDS.reload({params:[{id:eeID, classDelegatingFor:"expressionExperimentID"}]}, function() {	
-		factorGrid.getView().refresh(true);	
-		refreshBMFactorComboBoxes();
-	});
+	factorDS.reload( {
+		params : [{id:eeID, classDelegatingFor:"expressionExperimentID"}],
+		callback : function() {	
+			factorGrid.getView().refresh(true);	
+			refreshBMFactorComboBoxes();
+		}
+	} );
 	
 }
 
@@ -321,14 +327,17 @@ var initFactorGrid = function(div) {
                        remoteSort:false,
                        sortInfo:{field:'factorValue'}
       });
+     factorDS.on( "load", function() {
+       	factorGrid.getView().autoSizeColumns();
+     } );
                
 	   factorDS.load({params:[{id:eeID, classDelegatingFor:"FactorValueObject"}]});
 	
 
        var cm = new Ext.grid.ColumnModel([
-                       {header: "Factor", width: 50, dataIndex:"factorValue"},
-                       {header: "Description",  width: 100, dataIndex:"description"}, 
-                       {header: "Category",  width: 50, dataIndex:"category"}
+                       {header: "Factor", width: 50, dataIndex:"factorValue"}, 
+                       {header: "Category",  width: 50, dataIndex:"category"},
+                       {header: "Description",  width: 100, dataIndex:"description"}
                        
                        ]);
        cm.defaultSortable = true;
@@ -378,10 +387,13 @@ factorValueGridRefresh = function(){
 		
 	var selections =  factorGrid.getSelectionModel().getSelections();
 	
-	factorValueGridDS.reload({params:[{id:selections[0].id, classDelegatingFor:"long"}]}, function() {
-		factorValueGrid.getView().refresh(true);
-		refreshBMFactorComboBoxes();
-	});
+	factorValueGridDS.reload( {
+		params : [{id:selections[0].id, classDelegatingFor:"long"}],
+		callback : function() {
+			factorValueGrid.getView().refresh(true);
+			refreshBMFactorComboBoxes();
+		}
+	} );
 }
 
 factorValueGridGetSelectedIds = function() {
@@ -413,6 +425,9 @@ var initFactorValueGrid = function(div) {
                        remoteSort:false,
                        sortInfo:{field:'factorValue'}
                });
+     factorValueGridDS.on( "load", function() {
+       	factorValueGrid.getView().autoSizeColumns();
+     } );
                           
 	  
 	
@@ -484,13 +499,13 @@ Ext.onReady(function() {
 		factorTB.addSpacer();
 		factorTB.addField(createFactorDescriptionField());
 		factorTB.addSpacer();
-		saveNewFactorButton = factorTB.addButton({text: 'create',
+		saveNewFactorButton = factorTB.addButton({text: '+',
 							tooltip: 'creates a new Experimental Factor',								  
 							handler: saveExperimentalFactor,
 							disabled: true
 						});
-	 	factorTB.addSpacer();
-		removeFactorButton = factorTB.addButton({text: 'remove',
+	 	factorTB.addSeparator();
+		removeFactorButton = factorTB.addButton({text: '-',
 							tooltip: 'removes the selected Experimental Factor',								  
 							handler: deleteExperimentalFactor,
 							disabled: true
@@ -507,7 +522,7 @@ Ext.onReady(function() {
 	if (Ext.get("factorValueTB")){
 		
 		var factorValueTB = new Ext.Gemma.AnnotationToolBar( "factorValueTB",
-			factorValueGrid, saveExperimentalFactorValue, deleteExperimentalFactorValue, true );
+			factorValueGrid, saveExperimentalFactorValue, deleteExperimentalFactorValue, true, { mgedComboWidth: 125, charComboWidth: 100 } );
 					
 	}
  		

@@ -68,6 +68,8 @@ public class GeneOntologyService implements InitializingBean {
 
     private final static String MF_URL = "http://www.berkeleybop.org/ontologies/obo-all/molecular_function/molecular_function.owl";
 
+    private final static boolean LOAD_BY_DEFAULT = true;
+    
     private static Log log = LogFactory.getLog( GeneOntologyService.class.getName() );
 
     private Gene2GOAssociationService gene2GOAssociationService;
@@ -240,7 +242,7 @@ public class GeneOntologyService implements InitializingBean {
 
     protected synchronized void init() {
 
-        boolean loadOntology = ConfigUtils.getBoolean( "loadGeneOntology", false );
+        boolean loadOntology = ConfigUtils.getBoolean( "loadGeneOntology", LOAD_BY_DEFAULT );
 
         if ( !loadOntology ) {
             log.info( "Loading Gene Ontology is disabled.");
