@@ -17,6 +17,12 @@
 	 <script type="text/javascript" src='/Gemma/dwr/interface/OntologyService.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
+	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/CharacteristicCombo.js'/>"></script>
+	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/MGEDCombo.js'/>"></script>
+	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/AnnotationToolBar.js'/>"></script>
+	
+	
+	
 
 <h2>
 	<fmt:message key="experimentalDesign.details" />

@@ -25,10 +25,18 @@ Ext.Gemma.MGEDCombo = function ( config ) {
 	this.mode = config.mode || "local";
 	this.triggerAction = config.triggerAction || "all";
 	this.typeAhead = config.typeAhead || true;
+	
+	this.on( "select", function ( combo, record, index ) {
+		this.selectedTerm = record.data;
+	} );
 }
 
 /* other public methods...
  */
 Ext.extend( Ext.Gemma.MGEDCombo, Ext.form.ComboBox, {
-		
+	
+	getTerm : function () {
+		return this.selectedTerm;
+	}
+	
 } );

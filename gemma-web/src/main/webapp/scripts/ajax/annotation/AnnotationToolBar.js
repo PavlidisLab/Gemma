@@ -9,8 +9,11 @@ Ext.namespace('Ext.Gemma');
  * 	deleteHandler is a function with arguments ( ids, callback )
  * 		where ids is an array of characteristic ids to remove
  * 		  and callback is the function to be called when the characteristics have been removed
+ * 
+ *  addDescription if defined will create a description field that the user must fill in
  */
-Ext.Gemma.AnnotationToolBar = function ( div, annotationGrid, saveHandler, deleteHandler ) {
+ 
+Ext.Gemma.AnnotationToolBar = function ( div, annotationGrid, saveHandler, deleteHandler, addDescription ) {
 
 	Ext.Gemma.AnnotationToolBar.superclass.constructor.call( this, div );
 	
@@ -26,14 +29,30 @@ Ext.Gemma.AnnotationToolBar = function ( div, annotationGrid, saveHandler, delet
 		saveButton.enable();
 	} );
 	
+	
+	var descriptionField = new Ext.form.TextField({allowBlank : false, invalidText : "Enter a discription", blankText : "Add a simple description", value : "Description"});
+	
+	
 	var saveButton = new Ext.Toolbar.Button( {
 		text : "save",
 		tooltip : "Adds the new annotation",
 		disabled : true,
 		handler : function() {
-			saveHandler( charCombo.getCharacteristic(), annotationGrid.refresh.bind( annotationGrid ) );
+			var characteristic = charCombo.getCharacteristic();
+			
+				if (addDescription){				
+					var description = descriptionField.getValue();
+					if ((description === undefined) || (description.length === 0) || (description === "Description")){
+						alert("Please add a description");
+						return;
+					}
+					characteristic.description = description;
+				}			
+			
+			saveHandler( characteristic, annotationGrid.refresh.bind( annotationGrid ) );
 			mgedCombo.reset();
 			charCombo.reset();
+			descriptionField.reset();			
 			saveButton.disable();
 		}
 	} );
@@ -59,6 +78,12 @@ Ext.Gemma.AnnotationToolBar = function ( div, annotationGrid, saveHandler, delet
 	this.addSpacer();
 	this.addField( charCombo );
 	this.addSpacer();
+	
+	if (addDescription){
+		this.addField( descriptionField );
+		this.addSpacer();
+	}
+	
 	this.addField( saveButton );
 	this.addSeparator();
 	this.addField( deleteButton );
