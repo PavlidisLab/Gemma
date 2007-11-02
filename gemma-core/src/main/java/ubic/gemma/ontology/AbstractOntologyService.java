@@ -36,6 +36,10 @@ import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.query.larq.IndexLARQ;
 
+/**
+ * @author kelsey
+ * @version $Id$
+ */
 public abstract class AbstractOntologyService implements InitializingBean {
 
     protected static final Log log = LogFactory.getLog( AbstractOntologyService.class );
@@ -98,7 +102,7 @@ public abstract class AbstractOntologyService implements InitializingBean {
      */
     public OntologyTerm getTerm( String uri ) {
 
-        if (( uri == null ) || (!ready.get())) return null;
+        if ( ( uri == null ) || ( !ready.get() ) ) return null;
 
         OntologyTerm term = terms.get( uri );
 
@@ -113,7 +117,7 @@ public abstract class AbstractOntologyService implements InitializingBean {
      */
     public OntologyIndividual getIndividual( String uri ) {
 
-        if (( uri == null ) || (!ready.get())) return null;
+        if ( ( uri == null ) || ( !ready.get() ) ) return null;
 
         OntologyIndividual indi = individuals.get( uri );
 
@@ -129,7 +133,7 @@ public abstract class AbstractOntologyService implements InitializingBean {
      */
     public OntologyResource getResource( String uri ) {
 
-        if (( uri == null ) || (!ready.get())) return null;
+        if ( ( uri == null ) || ( !ready.get() ) ) return null;
 
         OntologyResource resource = terms.get( uri );
 
@@ -138,24 +142,46 @@ public abstract class AbstractOntologyService implements InitializingBean {
         return resource;
     }
 
-    public Collection<OntologyRestriction> getTermRestrictions( String id ) {
+    /**
+     * 
+     * @param uri
+     * @return
+     */
+    public Collection<OntologyRestriction> getTermRestrictions( String uri ) {
 
-        OntologyTerm term = terms.get( id );
-
+        OntologyTerm term = terms.get( uri );
+        if ( term == null ) {
+            /*
+             * Either the onology hasn't been loaded, or the id was not valid.
+             */
+            throw new IllegalArgumentException( "No term for URI=" + uri + " in " + this.getOntologyName()
+                    + "; make sure ontology is loaded and uri is valid" );
+        }
         return term.getRestrictions();
 
     }
 
-    public Collection<OntologyIndividual> getTermIndividuals( String id ) {
-
-        OntologyTerm term = terms.get( id );
-
+    /**
+     * 
+     * @param uri
+     * @return
+     */
+    public Collection<OntologyIndividual> getTermIndividuals( String uri ) {
+        OntologyTerm term = terms.get( uri );
+        if ( term == null ) {
+            /*
+             * Either the onology hasn't been loaded, or the id was not valid.
+             */
+            throw new IllegalArgumentException( "No term for URI=" + uri + " in " + this.getOntologyName()
+                    + "; make sure ontology is loaded and uri is valid" );
+        }
         return term.getIndividuals( true );
 
     }
 
     /**
      * Looks for any ontologyTerms that match the given search string
+     * 
      * @param search
      * @return
      */
@@ -164,41 +190,43 @@ public abstract class AbstractOntologyService implements InitializingBean {
         if ( !isOntologyLoaded() ) return null;
 
         assert index != null : "attempt to search " + this.getOntologyName() + " when index is null";
-//        if ( index == null ) index = OntologyIndexer.indexOntology( ontology_name, model );
+        // if ( index == null ) index = OntologyIndexer.indexOntology( ontology_name, model );
 
         Collection<OntologyTerm> name = OntologySearch.matchClasses( model, index, search );
 
         return name;
     }
-    
+
     /**
      * Looks for any OntologyIndividuals or ontologyTerms that match the given search string
+     * 
      * @param search
      * @return
      */
-    public Collection<OntologyResource> findResources( String search){
-        
+    public Collection<OntologyResource> findResources( String search ) {
+
         if ( !isOntologyLoaded() ) return null;
 
         assert index != null : "attempt to search " + this.getOntologyName() + " when index is null";
-//        if ( index == null ) index = OntologyIndexer.indexOntology( ontology_name, model );
+        // if ( index == null ) index = OntologyIndexer.indexOntology( ontology_name, model );
 
         Collection<OntologyResource> res = OntologySearch.matchResources( model, index, search );
 
         return res;
     }
-    
+
     /**
      * Looks for any OntologyIndividuals that match the given search string
+     * 
      * @param search
      * @return
      */
-    public Collection<OntologyIndividual> findIndividuals( String search){
-        
+    public Collection<OntologyIndividual> findIndividuals( String search ) {
+
         if ( !isOntologyLoaded() ) return null;
 
         assert index != null : "attempt to search " + this.getOntologyName() + " when index is null";
-//        if ( index == null ) index = OntologyIndexer.indexOntology( ontology_name, model );
+        // if ( index == null ) index = OntologyIndexer.indexOntology( ontology_name, model );
 
         Collection<OntologyIndividual> indis = OntologySearch.matchIndividuals( model, index, search );
 
@@ -207,7 +235,7 @@ public abstract class AbstractOntologyService implements InitializingBean {
 
     protected synchronized void init() {
 
-        boolean loadOntology = ConfigUtils.getBoolean( "loadOntology", true );
+        boolean loadOntology = ConfigUtils.getBoolean( "load." + ontology_name, true );
 
         // if loading ontologies is disabled in the configuration, return
         if ( !loadOntology ) {
