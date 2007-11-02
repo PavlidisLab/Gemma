@@ -55,7 +55,7 @@ public class AnalysisHelperService {
      */
     @SuppressWarnings("unchecked")
     private Collection<ArrayDesign> checkForMixedTechnologies( ExpressionExperiment ee ) {
-        // TODO move this to a new service
+
         Collection<ArrayDesign> arrayDesignsUsed = this.expressionExperimentService.getArrayDesignsUsed( ee );
         if ( arrayDesignsUsed.size() > 1 ) {
             boolean containsTwoColor = false;
@@ -83,7 +83,7 @@ public class AnalysisHelperService {
      */
     @SuppressWarnings("unchecked")
     public Collection<DesignElementDataVector> getVectors( ExpressionExperiment ee ) {
-        // TODO move this to a new service
+
         checkForMixedTechnologies( ee );
         Collection<QuantitationType> qts = ExpressionDataMatrixBuilder.getUsefulQuantitationTypes( ee );
         if ( qts.size() == 0 ) throw new IllegalArgumentException( "No usable quantitation type in " + ee );
