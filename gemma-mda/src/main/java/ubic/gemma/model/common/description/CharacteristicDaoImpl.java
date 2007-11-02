@@ -69,4 +69,20 @@ public class CharacteristicDaoImpl
         
         return charToParent;
     }
+    
+    @Override
+    protected Collection<Characteristic> handleFindByUri( String searchString ) throws Exception {
+        final String queryString = "select distinct char from VocabCharacteristicImpl as char where lower(char.valueUri) = :search";
+
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setString( "search", searchString.toLowerCase() );
+            return queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+}
+    
+    
 }
