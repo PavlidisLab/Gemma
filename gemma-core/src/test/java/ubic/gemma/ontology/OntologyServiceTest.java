@@ -20,9 +20,23 @@ package ubic.gemma.ontology;
 
 import java.util.Collection;
 
-import junit.framework.TestCase;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.testing.BaseSpringContextTest;
 
-public class OntologyServiceTest extends TestCase {
+/**
+ * @author paul
+ */
+public class OntologyServiceTest extends BaseSpringContextTest {
+
+    @Override
+    protected void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
+        MgedOntologyService mgo = ( MgedOntologyService ) this.getBean( "mgedOntologyService" );
+        while ( !mgo.isOntologyLoaded() ) {
+            Thread.sleep( 1000 );
+            log.info( "Waiting for Ontology to laod" );
+        }
+    }
 
     public void testListAvailableOntologies() {
         Collection<Ontology> name = OntologyService.listAvailableOntologies();
@@ -30,6 +44,13 @@ public class OntologyServiceTest extends TestCase {
             if ( ontology == null ) continue;
             System.err.println( ontology );
         }
+    }
+
+    public final void testFindExactMatch() throws Exception {
+        OntologyService os = ( OntologyService ) this.getBean( "ontologyService" );
+        Collection<Characteristic> name = os.findExactTerm( "male",
+                "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Sex" );
+        assertEquals( 1, name.size() );
     }
 
 }
