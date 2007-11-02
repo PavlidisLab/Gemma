@@ -299,7 +299,7 @@ public class AnalyzerHelper {
 
                         Characteristic c = cs.iterator().next();
 
-                        if ( ch.getValue() == c.getValue() ) {
+                        if ( ch.getValue().equals( c.getValue() ) ) {
                             rFactors.add( ch.getValue() );
                             match = true;
                             break;
@@ -307,11 +307,11 @@ public class AnalyzerHelper {
 
                     }
 
-                    else if ( factorValueFromBioMaterial.getValue() != f.getValue() ) {
+                    else if ( !factorValueFromBioMaterial.getValue().equals( f.getValue() ) ) {
                         continue;
                     }
 
-                    else if ( factorValueFromBioMaterial.getValue() == f.getValue() ) {
+                    else if ( factorValueFromBioMaterial.getValue().equals( f.getValue() ) ) {
                         rFactors.add( factorValueFromBioMaterial.getValue() );
                         match = true;
                         break;
@@ -368,14 +368,14 @@ public class AnalyzerHelper {
 
                     Characteristic c = cs.iterator().next();
 
-                    if ( ch.getValue() == c.getValue() ) {
+                    if ( ch.getValue().equals( c.getValue() ) ) {
                         rFactors.add( ch.getValue() );
                         break;
                     }
 
                 }
 
-                else if ( fv.getValue() == f.getValue() ) {
+                else if ( fv.getValue().equals( f.getValue() ) ) {
                     rFactors.add( fv.getValue() );
                     break;
                 }
