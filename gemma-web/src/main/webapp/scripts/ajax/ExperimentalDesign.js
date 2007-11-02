@@ -43,10 +43,11 @@ var saveExperimentalFactor = function(){
 	//VocabCharacteritic but a Characteritic. 
 	
 	var description = factorDescriptionField.getValue();
-	if ((description === undefined) || (description.length === 0) || description === "description"){
-		alert("Please add a description");
-		return;
-	}
+	//Don't want description to be a mandatory field	
+	//	if ((description === undefined) || (description.length === 0) || description === "description"){
+	//		alert("Please add a description");
+	//		return;
+	//	}
 	
 	var term = factorMgedComboBox.getTerm();	
 	

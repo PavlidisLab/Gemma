@@ -53,12 +53,13 @@ Ext.Gemma.AnnotationToolBar = function ( div, annotationGrid, saveHandler, delet
 		handler : function() {
 			var characteristic = charCombo.getCharacteristic();
 			
-				if (addDescription) {				
-					var description = descriptionField.getValue();
-					if ((description === undefined) || (description.length === 0) || (description === "Description")){
-						alert("Please add a description");
-						return;
-					}
+				if (addDescription) {		
+//Don't want description to be mandatory anymore							
+//					var description = descriptionField.getValue();
+//					if ((description === undefined) || (description.length === 0) || (description === "Description")){
+//						alert("Please add a description");
+//						return;
+//					}
 					characteristic.description = description;
 				}			
 			
