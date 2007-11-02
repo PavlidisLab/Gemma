@@ -427,7 +427,7 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         clearOldFiles.waitFor();
 
         String clusterCmd = "eisen-cluster";
-        String commonOptions = "-g 7 -e 7 -m c";
+        String commonOptions = "-g 2 -e 2 -m a"; // pearson, average linkage.
         String cmdToRun = clusterCmd + " -f " + filebaseName + " " + commonOptions;
         log.info( "Running: " + cmdToRun );
         Process cluster = rt.exec( cmdToRun );
