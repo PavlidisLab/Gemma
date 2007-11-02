@@ -199,7 +199,7 @@ public class DifferentialExpressionAnalysisCli extends AbstractGeneExpressionExp
     private void summarizeProcessing( ExpressionAnalysis expressionAnalysis ) {
         // FIXME - fix this summarization
 
-        super.summarizeProcessing();
+        // super.summarizeProcessing();
 
         Collection<ExpressionAnalysisResult> results = expressionAnalysis.getAnalysisResults();
         for ( ExpressionAnalysisResult result : results ) {
