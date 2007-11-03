@@ -3109,7 +3109,8 @@ public class MageMLConverterHelper {
         try {
             mgedOntologyHelper = new OntologyHelper( MGED_ONTOLOGY_URL );
         } catch ( Exception e ) {
-            throw new RuntimeException( e );
+          //  throw new RuntimeException( e );
+            log.error("Unable to initialize MGED Ontology for MAGE-ML conversion.");
         }
     }
 

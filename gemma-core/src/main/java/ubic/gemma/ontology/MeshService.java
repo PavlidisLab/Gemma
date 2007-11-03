@@ -18,7 +18,6 @@
  */
 package ubic.gemma.ontology;
 
-import java.io.IOException;
 import java.util.Collection;
 
 import org.apache.commons.logging.Log;
@@ -48,15 +47,11 @@ public class MeshService {
     private static IndexLARQ index;
     private static ExternalDatabase meshdb;
     static {
-        try {
-            model = OntologyLoader.loadPersistentModel( MESH_ONT_URL, false );
-            index = OntologyIndexer.getSubjectIndex( MESH_INDEX_NAME );
-            meshdb = ExternalDatabase.Factory.newInstance();
-            meshdb.setName( "mesh" );
-            meshdb.setWebUri( MESH_ONT_URL );
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
+        model = OntologyLoader.loadPersistentModel( MESH_ONT_URL, false );
+        index = OntologyIndexer.getSubjectIndex( MESH_INDEX_NAME );
+        meshdb = ExternalDatabase.Factory.newInstance();
+        meshdb.setName( "mesh" );
+        meshdb.setWebUri( MESH_ONT_URL );
     }
 
     /**

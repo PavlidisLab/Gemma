@@ -77,7 +77,7 @@ public class OntologyLoader {
         ExternalDatabase ontology = ExternalDatabase.Factory.newInstance();
         ontology.setType( DatabaseType.ONTOLOGY );
         ontology.setWebUri( url );
-        //Ontology ont = getOntology( url );
+        // Ontology ont = getOntology( url );
 
         // if ( ont != null ) {
         // log.info( "Getting information about " + ont );
@@ -134,7 +134,8 @@ public class OntologyLoader {
     public static String asString( RDFNode object ) {
         return ( String ) object.visitWith( new RDFVisitor() {
 
-            public Object visitBlank( Resource r, AnonId id ) {
+            public Object visitBlank( Resource r, @SuppressWarnings("unused")
+            AnonId id ) {
                 return r.getLocalName();
             }
 
@@ -142,7 +143,8 @@ public class OntologyLoader {
                 return l.toString().replaceAll( "\\^\\^.+", "" );
             }
 
-            public Object visitURI( Resource r, String uri ) {
+            public Object visitURI( Resource r, @SuppressWarnings("unused")
+            String uri ) {
                 return r.getLocalName();
             }
         } );
@@ -174,7 +176,7 @@ public class OntologyLoader {
      * Deletes all cached ontologies from the system. Use with care!
      */
     protected static void wipePersistentStore() {
-        //PersistentOntology po = new PersistentOntology();
+        // PersistentOntology po = new PersistentOntology();
         String dbUrl = ConfigUtils.getString( "gemma.jena.db.url" );
         String user = ConfigUtils.getString( "gemma.jena.db.user" );
         String pwd = ConfigUtils.getString( "gemma.jena.db.password" );
@@ -204,7 +206,7 @@ public class OntologyLoader {
      * @return
      * @throws IOException
      */
-    public static OntModel loadMemoryModel( String url, OntModelSpec spec ) throws IOException {
+    public static OntModel loadMemoryModel( String url, OntModelSpec spec ) {
         OntModel model = getMemoryModel( url, spec );
         model.read( url );
         return model;
@@ -218,8 +220,7 @@ public class OntologyLoader {
      * @return
      * @throws IOException
      */
-    public static OntModel loadMemoryModel( InputStream is, String name, OntModelSpec spec )
-            throws IOException {
+    public static OntModel loadMemoryModel( InputStream is, String name, OntModelSpec spec ) {
         OntModel model = getMemoryModel( name, spec );
         model.read( is, null );
         return model;
@@ -234,7 +235,7 @@ public class OntologyLoader {
      * @return
      * @throws IOException
      */
-    public static OntModel loadPersistentModel( String url, boolean force ) throws IOException {
+    public static OntModel loadPersistentModel( String url, boolean force ) {
         return persistModelIfNecessary( url, force );
     }
 
@@ -329,7 +330,7 @@ public class OntologyLoader {
         return model;
     }
 
-    public static OntModel load( String url ) throws IOException {
+    public static OntModel load( String url ) {
         return loadPersistentModel( url, false );
     }
 

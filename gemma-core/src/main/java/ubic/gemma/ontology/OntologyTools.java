@@ -18,7 +18,6 @@
  */
 package ubic.gemma.ontology;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
@@ -40,7 +39,6 @@ import ubic.gemma.ontology.cache.OntologyCache;
  */
 public class OntologyTools {
 
-    
     private static OntologyCache cache;
 
     static {
@@ -49,11 +47,8 @@ public class OntologyTools {
 
     public static void initOntology( InputStream is, String name, OntModelSpec spec ) {
         Collection<OntologyResource> terms;
-        try {
-            terms = OntologyLoader.initialize( name,OntologyLoader.loadMemoryModel( is, name, spec ));
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
+        terms = OntologyLoader.initialize( name, OntologyLoader.loadMemoryModel( is, name, spec ) );
+
         for ( OntologyResource term : terms ) {
             if ( term == null ) continue; // why does this happen?
             cache.put( term );
@@ -62,11 +57,7 @@ public class OntologyTools {
 
     public static void initOntology( String url, OntModelSpec spec ) {
         Collection<OntologyResource> terms;
-        try {
-            terms = OntologyLoader.initialize( url, OntologyLoader.loadMemoryModel( url, spec ));
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
+        terms = OntologyLoader.initialize( url, OntologyLoader.loadMemoryModel( url, spec ) );
         for ( OntologyResource term : terms ) {
             cache.put( term );
         }
@@ -155,16 +146,15 @@ public class OntologyTools {
         }
         return result;
     }
-    
-    
+
     /**
-     * Given a variable for a sparql query and a solution/result set it will give you a string to represent it. 
+     * Given a variable for a sparql query and a solution/result set it will give you a string to represent it.
      * 
      * @param var
      * @param soln
      * @return String to represent the var
      */
-    
+
     public static String varToString( String var, QuerySolution soln ) {
         try {
             Resource r = soln.getResource( var );
@@ -174,6 +164,5 @@ public class OntologyTools {
             return l.getString();
         }
     }
-
 
 }
