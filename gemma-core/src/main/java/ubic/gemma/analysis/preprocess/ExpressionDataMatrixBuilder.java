@@ -383,7 +383,8 @@ public class ExpressionDataMatrixBuilder {
     }
 
     /**
-     * Returns the {@link ExpressionDataDoubleMatrix}. For two color arrays, the missing values are masked.
+     * Returns the {@link ExpressionDataDoubleMatrix}. For two color arrays, the missing values are masked. If
+     * arrayDesign is null, all array designs will be used to get the intensity results.
      * 
      * @param arrayDesign
      * @return ExpressionDataDoubleMatrix - For two color arrays, the missing values are masked.
