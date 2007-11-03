@@ -20,6 +20,7 @@ package ubic.gemma.web.taglib.common.auditAndSecurity;
 
 import java.text.NumberFormat;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 
 import javax.servlet.jsp.JspException;
@@ -28,6 +29,8 @@ import javax.servlet.jsp.tagext.TagSupport;
 import org.apache.commons.lang.time.DateUtils;
 
 import ubic.gemma.analysis.report.WhatsNew;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * Tag to show 'what's new in Gemma' on home page.
@@ -60,8 +63,7 @@ public class WhatsNewBoxTag extends TagSupport {
     }
 
     public int doStartTag() throws JspException {
-        int numNew = whatsNew.getNewObjects().size();
-        int numUpdated = whatsNew.getUpdatedObjects().size();
+      
 
         StringBuilder buf = new StringBuilder();
         buf.append( "<h2>What's new in Gemma in the " );
@@ -79,30 +81,60 @@ public class WhatsNewBoxTag extends TagSupport {
         }
         buf.append( "</h2>" );
         buf.append( "<p>" );
+        
+        int numNew = whatsNew.getNewObjects().size();
+        Collection<ExpressionExperiment> newExpressionExperiments = whatsNew.getNewExpressionExperiments();
+        Collection<ArrayDesign> newArrayDesigns = whatsNew.getNewArrayDesigns();
+        
         if ( numNew > 0 ) {
-            int numEEs = whatsNew.getNewExpressionExperiments().size(); // FIXME make a link to see them.
-            int numADs = whatsNew.getNewArrayDesigns().size(); // FIXME make a link to see them.
+           
+            int numEEs = newExpressionExperiments.size();
+          
+            int numADs = newArrayDesigns.size();
             if ( numEEs > 0 ) {
-                buf.append( numEEs + " new data set" + ( numEEs > 1 ? "s" : "" ) + ".<br />" );
+                buf.append( "<a href=\"/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=" );
+                for ( ExpressionExperiment ee : newExpressionExperiments ) {
+                    buf.append( ee.getId() + "," );
+                }
+                buf.append( "\">" + numEEs + " new data set" + ( numEEs > 1 ? "s" : "" ) + "</a>.<br />" );
             }
             if ( numADs > 0 ) {
-                buf.append( numADs + " new array design" + ( numADs > 1 ? "s" : "" ) + ".<br />" );
+                buf.append( "<a href=\"/Gemma/arrays/showAllArrayDesigns.html?id=" );
+                for ( ArrayDesign ad : newArrayDesigns ) {
+                    buf.append( ad.getId() + "," );
+                }
+                buf.append( "\">" + numADs + " new array design" + ( numADs > 1 ? "s" : "" ) + "</a>.<br />" );
             }
         } else {
-            buf.append( "[No new experiments or platforms]<br />" );
+            buf.append( "Nothing new<br />" );
         }
 
-        if ( numUpdated > 0 ) {
-            int numEEs = whatsNew.getUpdatedExpressionExperiments().size(); // FIXME make a link to see them.
-            int numADs = whatsNew.getUpdatedArrayDesigns().size(); // FIXME make a link to see them.
+        Collection<ExpressionExperiment> updatedExpressionExperiments = whatsNew.getUpdatedExpressionExperiments();
+        Collection<ArrayDesign> updatedArrayDesigns = whatsNew.getUpdatedArrayDesigns();
+        // don't show things that are "new" as "updated" too.
+        updatedExpressionExperiments.removeAll( newExpressionExperiments );
+        updatedArrayDesigns.removeAll(newArrayDesigns);
+        if ( newArrayDesigns.size() + newExpressionExperiments.size() > 0 ) {
+            
+            int numEEs = updatedExpressionExperiments.size();
+            
+            int numADs = updatedArrayDesigns.size();
             if ( numEEs > 0 ) {
-                buf.append( numEEs + " updated data set" + ( numEEs > 1 ? "s" : "" ) + ".<br />" );
+                buf.append( "<a href=\"/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=" );
+                for ( ExpressionExperiment ee : updatedExpressionExperiments ) {
+                    buf.append( ee.getId() + "," );
+                }
+                buf.append( "\">" + numEEs + " updated data set" + ( numEEs > 1 ? "s" : "" ) + ".<br />" );
             }
             if ( numADs > 0 ) {
-                buf.append( numADs + " updated array design" + ( numADs > 1 ? "s" : "" ) + ".<br />" );
+                buf.append( "<a href=\"/Gemma/arrays/showAllArrayDesigns.html?id=" );
+                for ( ArrayDesign ad : updatedArrayDesigns ) {
+                    buf.append( ad.getId() + "," );
+                }
+                buf.append( "\">" + numADs + " updated array design" + ( numADs > 1 ? "s" : "" ) + ".<br />" );
             }
         } else {
-            buf.append( "[No experiments or platforms updated]<br />" );
+            buf.append( "No updates<br />" );
         }
 
         buf.append( "</p>" );
