@@ -82,14 +82,13 @@ public class GemmaSpacesUtil implements ApplicationContextAware {
      * @return boolean
      */
     public static boolean isSpaceRunning( String url ) {
-
+        if ( url == null ) return false;
         boolean running = true;
         try {
             SpaceFinder.find( url );
         } catch ( FinderException e ) {
             running = false;
             log.error( "Error finding space at: " + url + "." );
-            // e.printStackTrace();
         }
         return running;
     }
