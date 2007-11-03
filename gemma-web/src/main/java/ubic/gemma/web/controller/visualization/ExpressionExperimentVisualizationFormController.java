@@ -352,10 +352,12 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         }
 
         ExpressionDataMatrixBuilder matrixBuilder = new ExpressionDataMatrixBuilder( dataVectors );
-        ArrayDesign arrayDesign = dataVectors.iterator().next().getDesignElement().getArrayDesign();
-        ExpressionDataDoubleMatrix expressionDataMatrix = matrixBuilder.getIntensity( arrayDesign );
-
-        if ( eevc.isMaskMissing() ) matrixBuilder.maskMissingValues( expressionDataMatrix, arrayDesign );
+        ExpressionDataDoubleMatrix expressionDataMatrix = null;
+        if ( eevc.isMaskMissing() ) {
+            expressionDataMatrix = matrixBuilder.getMaskedIntensity( null );
+        } else {
+            expressionDataMatrix = matrixBuilder.getIntensity( null );
+        }
 
         /* deals with the case where probes don't match for the given quantitation type. */
         if ( expressionDataMatrix.rows() == 0 ) {
