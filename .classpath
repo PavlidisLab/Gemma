@@ -212,5 +212,6 @@
 	<classpathentry kind="var" path="M2_REPO/aopalliance/aopalliance/1.0/aopalliance-1.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/asm/asm/1.5.3/asm-1.5.3.jar"/>
 	<classpathentry kind="var" path="M2_REPO/javax/servlet/servlet-api/2.4/servlet-api-2.4.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/easymock/easymockclassextension/2.2/easymockclassextension-2.2.jar"/>
 	<classpathentry kind="output" path="build/Gemma/WEB-INF/classes"/>
 </classpath>
