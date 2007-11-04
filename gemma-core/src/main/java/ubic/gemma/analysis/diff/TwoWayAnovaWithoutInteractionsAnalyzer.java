@@ -27,7 +27,6 @@ import org.rosuda.JRclient.REXP;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
-import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -50,7 +49,6 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * where area and treat are first transposed and then factor is called on each to give farea and ftreat.
  * 
  * @spring.bean id="twoWayAnovaWithoutInteractionsAnalyzer"
- * @spring.property name="analysisHelperService" ref="analysisHelperService"
  * @author keshav
  * @version $Id$
  * @see AbstractTwoWayAnovaAnalyzer
@@ -61,8 +59,6 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
 
     private static final int ACTUAL_NUM_RESULTS = 2;
     private static final int NUM_RESULTS_FROM_R = ACTUAL_NUM_RESULTS + 1;
-
-    private AnalysisHelperService analysisHelperService = null;
 
     /*
      * (non-Javadoc)
@@ -159,9 +155,5 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
         }
 
         return createExpressionAnalysis( dmatrix, filteredPvalues, filteredFStatistics, ACTUAL_NUM_RESULTS );
-    }
-
-    public void setAnalysisHelperService( AnalysisHelperService analysisHelperService ) {
-        this.analysisHelperService = analysisHelperService;
     }
 }

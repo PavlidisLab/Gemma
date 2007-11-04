@@ -19,6 +19,7 @@
 package ubic.gemma.analysis.diff;
 
 import ubic.basecode.util.RCommand;
+import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.analysis.util.RCommanderWrapper;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -26,6 +27,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 /**
  * An abstract analyzer to be extended by analyzers which will make use of R.
  * 
+ * @spring.property name="analysisHelperService" ref="analysisHelperService"
  * @author keshav
  * @version $Id$
  */
@@ -35,15 +37,28 @@ public abstract class AbstractAnalyzer {
 
     protected RCommand rc = null;
 
+    protected AnalysisHelperService analysisHelperService = null;
+
     /**
      * @param expressionExperiment
      * @return
      */
     public abstract ExpressionAnalysis getExpressionAnalysis( ExpressionExperiment expressionExperiment );
 
+    /**
+     * 
+     *
+     */
     public void connectToR() {
         rCommanderWrapper = new RCommanderWrapper();
         rc = rCommanderWrapper.getRCommandObject();
+    }
+
+    /**
+     * @param analysisHelperService
+     */
+    public void setAnalysisHelperService( AnalysisHelperService analysisHelperService ) {
+        this.analysisHelperService = analysisHelperService;
     }
 
 }

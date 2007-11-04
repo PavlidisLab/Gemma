@@ -32,7 +32,6 @@ import org.rosuda.JRclient.REXP;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.dataStructure.matrix.FastRowAccessDoubleMatrix2DNamed;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
-import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
@@ -59,7 +58,6 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * where factor is a vector that has first been transposed and then had factor() applied.
  * 
  * @spring.bean id="oneWayAnovaAnalyzer"
- * @spring.property name="analysisHelperService" ref="analysisHelperService"
  * @author keshav
  * @version $Id$
  */
@@ -72,8 +70,6 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
     private List<String> rFactors = null;
 
     private Map<Integer, DesignElement> filteredMatrixDesignElementIndexMap = null;
-
-    private AnalysisHelperService analysisHelperService = null;
 
     /*
      * (non-Javadoc)
@@ -285,9 +281,5 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
         }
 
         return new FastRowAccessDoubleMatrix2DNamed( ddata );
-    }
-
-    public void setAnalysisHelperService( AnalysisHelperService analysisHelperService ) {
-        this.analysisHelperService = analysisHelperService;
     }
 }
