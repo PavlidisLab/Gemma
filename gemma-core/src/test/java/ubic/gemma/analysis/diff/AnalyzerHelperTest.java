@@ -18,6 +18,15 @@
  */
 package ubic.gemma.analysis.diff;
 
+import java.lang.reflect.Method;
+import java.util.Collection;
+
+import org.easymock.classextension.MockClassControl;
+
+import ubic.gemma.analysis.service.AnalysisHelperService;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
 /**
  * Tests the {@link AnalyzerHelper}.
  * 
@@ -28,6 +37,8 @@ public class AnalyzerHelperTest extends BaseAnalyzerConfigurationTest {
 
     private AnalyzerHelper analyzerHelper = null;
 
+    private AnalysisHelperService analysisHelperService = null;
+
     /*
      * (non-Javadoc)
      * 
@@ -37,7 +48,24 @@ public class AnalyzerHelperTest extends BaseAnalyzerConfigurationTest {
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
 
-        AnalyzerHelper analyzerHelper = ( AnalyzerHelper ) this.getBean( "analyzerHelper" );
+        this.analyzerHelper = ( AnalyzerHelper ) this.getBean( "analyzerHelper" );
+
+        // TODO replace with non-deprecated metods
+
+        MockClassControl control = MockClassControl.createControl( AnalysisHelperService.class,
+                new Method[] { AnalysisHelperService.class.getMethod( "getVectors", ExpressionExperiment.class ) } );
+
+        analysisHelperService = ( AnalysisHelperService ) control.getMock();
+
+        analysisHelperService.getVectors( expressionExperiment );
+
+        Collection<DesignElementDataVector> vectorsToReturn = expressionExperiment.getDesignElementDataVectors();
+        control.setReturnValue( vectorsToReturn );
+
+        control.replay();
+
+        analyzerHelper.setAnalysisHelperService( analysisHelperService );
+
     }
 
     /**
