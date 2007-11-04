@@ -44,7 +44,9 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
 
-        analyzer = new TwoWayAnovaWithoutInteractionsAnalyzer();
+        analyzer = ( TwoWayAnovaWithoutInteractionsAnalyzer ) this.getBean( "twoWayAnovaWithoutInteractionsAnalyzer" );
+
+        analyzer.setAnalysisHelperService( analysisHelperService );
     }
 
     /**

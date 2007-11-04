@@ -18,12 +18,15 @@
  */
 package ubic.gemma.analysis.diff;
 
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashSet;
 
 import org.apache.commons.lang.math.RandomUtils;
+import org.easymock.classextension.MockClassControl;
 
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -97,6 +100,8 @@ public class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
     private Collection<DesignElementDataVector> vectors = null;
 
     private ByteArrayConverter bac = new ByteArrayConverter();
+
+    protected AnalysisHelperService analysisHelperService = null;
 
     /*
      * (non-Javadoc)
@@ -329,6 +334,25 @@ public class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
         configureVectors( NUM_BIOASSAYS );
 
         expressionExperiment.setDesignElementDataVectors( vectors );
+
+        startMocking();
+    }
+
+    private void startMocking() throws Exception {
+        // TODO replace with non-deprecated metods
+
+        MockClassControl control = MockClassControl.createControl( AnalysisHelperService.class,
+                new Method[] { AnalysisHelperService.class.getMethod( "getVectors", ExpressionExperiment.class ) } );
+
+        analysisHelperService = ( AnalysisHelperService ) control.getMock();
+
+        analysisHelperService.getVectors( expressionExperiment );
+
+        Collection<DesignElementDataVector> vectorsToReturn = expressionExperiment.getDesignElementDataVectors();
+        control.setReturnValue( vectorsToReturn );
+
+        control.replay();
+
     }
 
     /**

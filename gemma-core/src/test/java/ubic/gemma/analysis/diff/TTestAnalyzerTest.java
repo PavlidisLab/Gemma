@@ -46,7 +46,7 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
      * resulting p-value: 0.677
      */
 
-    TTestAnalyzer analyzer = new TTestAnalyzer();
+    TTestAnalyzer analyzer = null;
 
     private Log log = LogFactory.getLog( this.getClass() );
 
@@ -63,6 +63,10 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
     public void onSetUpInTransaction() throws Exception {
 
         super.onSetUpInTransaction();
+
+        analyzer = ( TTestAnalyzer ) this.getBean( "tTestAnalyzer" );
+
+        analyzer.setAnalysisHelperService( analysisHelperService );
 
         /*
          * Doing this here because the test experiment has 2 experimental factors, each with 2 factor values. To test

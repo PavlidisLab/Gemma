@@ -60,6 +60,8 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
         super.onSetUpInTransaction();
 
         analyzer = ( OneWayAnovaAnalyzer ) this.getBean( "oneWayAnovaAnalyzer" );
+
+        analyzer.setAnalysisHelperService( analysisHelperService );
     }
 
     /**
