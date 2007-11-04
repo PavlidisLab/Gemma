@@ -338,6 +338,9 @@ public class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
         startMocking();
     }
 
+    /**
+     * @throws Exception
+     */
     private void startMocking() throws Exception {
         // TODO replace with non-deprecated metods
 
