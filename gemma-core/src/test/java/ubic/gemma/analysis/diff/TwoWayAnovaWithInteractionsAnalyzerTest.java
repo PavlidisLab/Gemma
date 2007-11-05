@@ -63,7 +63,7 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
 
         analyzer = ( TwoWayAnovaWithInteractionsAnalyzer ) this.getBean( "twoWayAnovaWithInteractionsAnalyzer" );
 
-        analyzer.setAnalysisHelperService( analysisHelperService );
+        configureMocks();
     }
 
     /**
@@ -83,6 +83,20 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
                 experimentalFactorB );
 
         assertEquals( expressionAnalysis.getAnalysisResults().size(), NUM_DESIGN_ELEMENTS * 3 );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
+     */
+    @Override
+    public void configureMocks() throws Exception {
+
+        configureMockAnalysisServiceHelper();
+
+        analyzer.setAnalysisHelperService( analysisHelperService );
 
     }
 }

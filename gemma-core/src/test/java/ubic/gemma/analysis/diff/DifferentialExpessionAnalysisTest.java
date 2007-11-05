@@ -43,6 +43,8 @@ public class DifferentialExpessionAnalysisTest extends BaseAnalyzerConfiguration
         super.onSetUpInTransaction();
 
         analysis = ( DifferentialExpressionAnalysis ) this.getBean( "differentialExpressionAnalysis" );
+
+        configureMocks();
     }
 
     /**
@@ -113,6 +115,22 @@ public class DifferentialExpessionAnalysisTest extends BaseAnalyzerConfiguration
         super.configureTestDataForTwoWayAnovaWithoutInteractions();
         AbstractAnalyzer analyzer = analysis.determineAnalysis( expressionExperiment );
         assertTrue( analyzer instanceof TwoWayAnovaWithoutInteractionsAnalyzer );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
+     */
+    @Override
+    public void configureMocks() throws Exception {
+
+        configureMockAnalysisServiceHelper();
+
+        AnalyzerHelper analyzerHelper = ( AnalyzerHelper ) this.getBean( "analyzerHelper" );
+        analyzerHelper.setAnalysisHelperService( analysisHelperService );
+        analysis.setAnalyzerHelper( analyzerHelper );
+
     }
 
 }

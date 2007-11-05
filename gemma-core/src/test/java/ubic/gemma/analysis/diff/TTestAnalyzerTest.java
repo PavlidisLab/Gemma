@@ -66,7 +66,7 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         analyzer = ( TTestAnalyzer ) this.getBean( "tTestAnalyzer" );
 
-        analyzer.setAnalysisHelperService( analysisHelperService );
+        configureMocks();
 
         /*
          * Doing this here because the test experiment has 2 experimental factors, each with 2 factor values. To test
@@ -106,6 +106,20 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
         int numResults = expressionAnalysis.getAnalysisResults().size();
 
         assertEquals( numResults, NUM_DESIGN_ELEMENTS );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
+     */
+    @Override
+    public void configureMocks() throws Exception {
+
+        configureMockAnalysisServiceHelper();
+
+        analyzer.setAnalysisHelperService( analysisHelperService );
 
     }
 

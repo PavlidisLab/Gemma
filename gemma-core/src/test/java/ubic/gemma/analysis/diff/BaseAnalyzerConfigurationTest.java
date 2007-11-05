@@ -50,7 +50,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @author keshav
  * @version $Id$
  */
-public class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
+public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
 
     protected static final int NUM_DESIGN_ELEMENTS = 4;
 
@@ -334,28 +334,6 @@ public class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
         configureVectors( NUM_BIOASSAYS );
 
         expressionExperiment.setDesignElementDataVectors( vectors );
-
-        configureMockAnalysisServiceHelper();
-    }
-
-    /**
-     * @throws Exception
-     */
-    private void configureMockAnalysisServiceHelper() throws Exception {
-        // TODO replace with non-deprecated metods
-
-        MockClassControl control = MockClassControl.createControl( AnalysisHelperService.class,
-                new Method[] { AnalysisHelperService.class.getMethod( "getVectors", ExpressionExperiment.class ) } );
-
-        analysisHelperService = ( AnalysisHelperService ) control.getMock();
-
-        analysisHelperService.getVectors( expressionExperiment );
-
-        Collection<DesignElementDataVector> vectorsToReturn = expressionExperiment.getDesignElementDataVectors();
-        control.setReturnValue( vectorsToReturn );
-
-        control.replay();
-
     }
 
     /**
@@ -454,4 +432,29 @@ public class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
         experimentalDesign.setExperimentalFactors( experimentalFactors );
         expressionExperiment.setExperimentalDesign( experimentalDesign );
     }
+
+    /**
+     * @throws Exception
+     */
+    protected void configureMockAnalysisServiceHelper() throws Exception {
+        // TODO replace with non-deprecated metods
+
+        MockClassControl control = MockClassControl.createControl( AnalysisHelperService.class,
+                new Method[] { AnalysisHelperService.class.getMethod( "getVectors", ExpressionExperiment.class ) } );
+
+        analysisHelperService = ( AnalysisHelperService ) control.getMock();
+
+        analysisHelperService.getVectors( expressionExperiment );
+
+        Collection<DesignElementDataVector> vectorsToReturn = expressionExperiment.getDesignElementDataVectors();
+        control.setReturnValue( vectorsToReturn );
+
+        control.replay();
+
+    }
+
+    /**
+     * @throws Exception
+     */
+    public abstract void configureMocks() throws Exception;
 }

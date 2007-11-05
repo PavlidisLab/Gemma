@@ -39,7 +39,7 @@ public class AnalyzerHelperTest extends BaseAnalyzerConfigurationTest {
 
         this.analyzerHelper = ( AnalyzerHelper ) this.getBean( "analyzerHelper" );
 
-        analyzerHelper.setAnalysisHelperService( analysisHelperService );
+        configureMocks();
 
     }
 
@@ -76,6 +76,20 @@ public class AnalyzerHelperTest extends BaseAnalyzerConfigurationTest {
         } finally {
             assertNull( ex );
         }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
+     */
+    @Override
+    public void configureMocks() throws Exception {
+
+        configureMockAnalysisServiceHelper();
+
+        analyzerHelper.setAnalysisHelperService( analysisHelperService );
+
     }
 
 }

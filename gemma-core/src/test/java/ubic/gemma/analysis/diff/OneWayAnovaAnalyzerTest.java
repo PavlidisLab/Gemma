@@ -61,7 +61,7 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         analyzer = ( OneWayAnovaAnalyzer ) this.getBean( "oneWayAnovaAnalyzer" );
 
-        analyzer.setAnalysisHelperService( analysisHelperService );
+        configureMocks();
     }
 
     /**
@@ -81,6 +81,20 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
             ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
             log.debug( "probe: " + probeAnalysisResult.getProbe() + "; p-value: " + probeAnalysisResult.getPvalue() );
         }
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
+     */
+    @Override
+    public void configureMocks() throws Exception {
+
+        configureMockAnalysisServiceHelper();
+
+        analyzer.setAnalysisHelperService( analysisHelperService );
 
     }
 
