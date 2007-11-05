@@ -335,13 +335,13 @@ public class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
 
         expressionExperiment.setDesignElementDataVectors( vectors );
 
-        getMockAnalysisServiceHelper();
+        configureMockAnalysisServiceHelper();
     }
 
     /**
      * @throws Exception
      */
-    private void getMockAnalysisServiceHelper() throws Exception {
+    private void configureMockAnalysisServiceHelper() throws Exception {
         // TODO replace with non-deprecated metods
 
         MockClassControl control = MockClassControl.createControl( AnalysisHelperService.class,
