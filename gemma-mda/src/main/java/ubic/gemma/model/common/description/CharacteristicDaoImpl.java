@@ -44,7 +44,6 @@ public class CharacteristicDaoImpl
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setString( "search", search.toLowerCase() );
             return queryObject.list();
-
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
@@ -55,9 +54,22 @@ public class CharacteristicDaoImpl
      */
     @Override
     protected Map handleFindByParentClass( Class parentClass ) throws Exception {
-        Map charToParent = new HashMap<Characteristic, Object>();
+        final String queryString =
+            "select parent, char from " + parentClass.getSimpleName() + " as parent " +
+                "inner join parent.characteristics as char";
+//            "from " + parentClass.getSimpleName();
         
-        return charToParent;
+        try {
+            Map charToParent = new HashMap<Characteristic, Object>();
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            for ( Object o : queryObject.list() ) {
+                Object[] row = (Object[])o;
+                charToParent.put( (Characteristic)row[1], row[0] );
+            }
+            return charToParent;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
     }
 
     /* (non-Javadoc)
@@ -65,9 +77,23 @@ public class CharacteristicDaoImpl
      */
     @Override
     protected Map handleGetParents( Class parentClass, Collection characteristics ) throws Exception {
-        Map charToParent = new HashMap<Characteristic, Object>();
+        final String queryString =
+            "select parent, char from " + parentClass.getSimpleName() + " as parent " +
+                "inner join parent.characteristics as char " +
+                "where char in (:chars)";
         
-        return charToParent;
+        try {
+            Map charToParent = new HashMap<Characteristic, Object>();
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameterList( "chars", characteristics );
+            for ( Object o : queryObject.list() ) {
+                Object[] row = (Object[])o;
+                charToParent.put( (Characteristic)row[1], row[0] );
+            }
+            return charToParent;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
     }
     
     @Override
@@ -82,7 +108,6 @@ public class CharacteristicDaoImpl
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
-}
-    
-    
+	}
+	
 }

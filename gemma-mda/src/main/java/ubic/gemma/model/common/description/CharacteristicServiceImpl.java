@@ -22,15 +22,24 @@
  */
 package ubic.gemma.model.common.description;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+
+import ubic.gemma.model.expression.biomaterial.BioMaterialImpl;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
+import ubic.gemma.model.expression.experiment.FactorValueImpl;
 
 /**
  * @see ubic.gemma.model.common.description.CharacteristicService
  */
 public class CharacteristicServiceImpl extends ubic.gemma.model.common.description.CharacteristicServiceBase {
 
+    private static final Class[] CLASSES_WITH_CHARACTERISTICS = new Class[] {
+        ExpressionExperimentImpl.class, BioMaterialImpl.class, FactorValueImpl.class
+    };
+    
     /**
      * @see ubic.gemma.model.common.description.CharacteristicService#findByValue(java.lang.String)
      */
@@ -52,7 +61,12 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
      */
     @Override
     protected Object handleGetParent( Characteristic characteristic ) throws Exception {
-        // TODO Auto-generated method stub
+        Collection chars = Arrays.asList( new Characteristic[] { characteristic } );
+        for ( Class parentClass : CLASSES_WITH_CHARACTERISTICS ) {
+           Map<Characteristic, Object> charToParent = this.getCharacteristicDao().getParents( parentClass, chars );
+           if ( charToParent.containsKey( characteristic ) )
+               return charToParent.get( characteristic );
+        }
         return null;
     }
 
@@ -62,7 +76,9 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
     @Override
     protected Map handleGetParents( Collection characteristics ) throws Exception {
         Map charToParent = new HashMap<Characteristic, Object>();
-        
+        for ( Class parentClass : CLASSES_WITH_CHARACTERISTICS ) {
+            charToParent.putAll( this.getCharacteristicDao().getParents( parentClass, characteristics ) );
+        }
         return charToParent;
     }
 
