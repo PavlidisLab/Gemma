@@ -18,14 +18,18 @@
  */
 package ubic.gemma.analysis.diff;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
+import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
@@ -47,23 +51,61 @@ public class DifferentialExpressionAnalysisService {
     DifferentialExpressionAnalysis differentialExpressionAnalysis = null;
 
     /**
+     * Returns the top persistent analysis results for the experiment with shortName. If the expression experiment given
+     * by shortName is not found, returns null.
+     * 
+     * @param shortName
+     * @param top
+     * @return
+     */
+    public Collection<ExpressionAnalysisResult> getTopPersistentExpressionAnalysisResults( String shortName, int top ) {
+        // FIXME you need to differentiate between different analyses for a given experiment ... by name?
+
+        Collection<ExpressionAnalysis> analyses = this.getPersistentExpressionAnalyses( shortName );
+        if ( analyses == null ) return null;
+
+        // FIXME for now, as a test, just do something stupid and use the first analysis.
+
+        ExpressionAnalysis analysis = analyses.iterator().next();
+
+        Collection<ExpressionAnalysisResult> analysisResults = analysis.getAnalysisResults();
+        Iterator<ExpressionAnalysisResult> iter = analysisResults.iterator();
+
+        if ( top > analysisResults.size() ) {
+            log.warn( "Number of desired results, " + top
+                    + ", is greater than the number of analysis results for experiment with short name " + shortName
+                    + ".  Will return all results." );
+            top = analysisResults.size();
+        }
+
+        List<ExpressionAnalysisResult> topResults = new ArrayList<ExpressionAnalysisResult>();
+        // FIXME use a comparator to sort the results. again, something stupid as a test for now.
+        for ( int i = 0; i < top; i++ ) {
+            topResults.add( iter.next() );
+        }
+
+        return topResults;
+    }
+
+    /**
      * Finds the persistent expression experiment. If there are no associated analyses with this experiment, the
      * differential expression analysis is first run, the analysis is persisted and then returned.
      * 
      * @param expressionExperiment
      * @return
      */
-    public Collection<Analysis> getPersistentAnalyses( ExpressionExperiment expressionExperiment ) {
+    public Collection<ExpressionAnalysis> getPersistentExpressionAnalyses( ExpressionExperiment expressionExperiment ) {
 
         Collection<Analysis> analyses = expressionExperiment.getAnalyses();
 
+        Collection<ExpressionAnalysis> expressionAnalyses = null;
         if ( analyses == null || analyses.isEmpty() ) {
             log
                     .warn( "Experiment "
                             + expressionExperiment.getShortName()
                             + " does not have any associated analyses.  Running differenial expression analysis and persisting results.  This may take some time." );
 
-            analyses = new HashSet<Analysis>();
+            expressionAnalyses = new HashSet<ExpressionAnalysis>();
 
             differentialExpressionAnalysis.analyze( expressionExperiment );
 
@@ -74,15 +116,22 @@ public class DifferentialExpressionAnalysisService {
 
             expressionAnalysis.setExperimentsAnalyzed( experimentsAnalyzed );
 
-            analyses.add( expressionAnalysis );
+            expressionAnalyses.add( expressionAnalysis );
 
-            expressionExperiment.setAnalyses( analyses );
+            // FIXME should we have a setExpressionAnalysis.
+            // expressionExperiment.setAnalyses( expressionAnalyses );
+            // expressionExperimentService.update( expressionExperiment );
 
-            expressionExperimentService.update( expressionExperiment );
+        } else {
+            for ( Analysis a : analyses ) {
+                if ( a instanceof ExpressionAnalysis ) {
+                    expressionAnalyses.add( ( ExpressionAnalysis ) a );
+                }
 
+            }
         }
 
-        return analyses;
+        return expressionAnalyses;
     }
 
     /**
@@ -92,13 +141,13 @@ public class DifferentialExpressionAnalysisService {
      * @param shortName
      * @return
      */
-    public Collection<Analysis> getPersistentAnalyses( String shortName ) {
+    public Collection<ExpressionAnalysis> getPersistentExpressionAnalyses( String shortName ) {
 
         ExpressionExperiment ee = expressionExperimentService.findByShortName( shortName );
 
         if ( ee == null ) return null;
 
-        return this.getPersistentAnalyses( ee );
+        return this.getPersistentExpressionAnalyses( ee );
 
     }
 

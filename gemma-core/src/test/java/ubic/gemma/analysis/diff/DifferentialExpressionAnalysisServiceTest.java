@@ -20,9 +20,7 @@ package ubic.gemma.analysis.diff;
 
 import java.util.Collection;
 
-import ubic.gemma.model.analysis.Analysis;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -33,7 +31,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
 
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
 
-    private ExpressionExperimentService expressionExperimentService = null;
+    private String shortName = "GSE1077";
 
     /*
      * (non-Javadoc)
@@ -46,25 +44,62 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
 
         differentialExpressionAnalysisService = ( DifferentialExpressionAnalysisService ) this
                 .getBean( "differentialExpressionAnalysisService" );
-
-        expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
     }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.testing.BaseSpringContextTest#onTearDownInTransaction()
+     */
+    @Override
+    protected void onTearDownInTransaction() throws Exception {
+        super.onTearDownInTransaction();
+    }
+
+    // /**
+    // * @throws Exception
+    // */
+    // public void testGetPersistentAnalyses() throws Exception {
+    //
+    // Collection<Analysis> analyses = differentialExpressionAnalysisService.getPersistentAnalyses( shortName );
+    //
+    // if ( analyses == null ) {
+    // log.warn( "Could not find analyses for expression experiment with short name " + shortName
+    // + ". Expression experiment probably does not exist. Skipping test ..." );
+    // return;
+    // }
+    //
+    // log.debug( analyses.size() );
+    //
+    // Analysis analysis = analyses.iterator().next();
+    //
+    // ExpressionAnalysis expressionAnalysis = ( ExpressionAnalysis ) analysis;
+    // Collection<ExpressionAnalysisResult> results = expressionAnalysis.getAnalysisResults();
+    // log.debug( results.size() );
+    //
+    // assertFalse( analyses.isEmpty() );
+    //
+    // }
 
     /**
      * @throws Exception
      */
-    public void testGetPersistentExpressionAnalyses() throws Exception {
+    public void testGetTopPersistentAnalysisResults() throws Exception {
 
-        String shortName = "GSE1077";
-        ExpressionExperiment persistentEE = expressionExperimentService.findByShortName( shortName );
-        if ( persistentEE == null ) {
-            log.warn( "Could not find expression experiment " + shortName + ".  Skipping test ..." );
+        Collection<ExpressionAnalysisResult> analysisResults = differentialExpressionAnalysisService
+                .getTopPersistentExpressionAnalysisResults( shortName, 100 );
+
+        if ( analysisResults == null ) {
+            log.warn( "Could not find analyses for expression experiment with short name " + shortName
+                    + ". Expression experiment probably does not exist. Skipping test ..." );
             return;
         }
 
-        Collection<Analysis> analyses = differentialExpressionAnalysisService.getPersistentAnalyses( shortName );
+        for ( ExpressionAnalysisResult result : analysisResults ) {
+            log.debug( result.getPvalue() );
+        }
 
-        assertNotNull( analyses );
+        assertFalse( analysisResults.isEmpty() );
 
     }
 }
