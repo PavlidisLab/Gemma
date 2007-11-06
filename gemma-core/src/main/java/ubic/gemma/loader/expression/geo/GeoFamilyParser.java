@@ -207,7 +207,7 @@ public class GeoFamilyParser implements Parser {
         executor.shutdownNow();
 
         assert future.isDone();
-    //    assert executor.isTerminated();
+        // assert executor.isTerminated();
 
         log.info( "Done parsing." );
     }
@@ -245,6 +245,8 @@ public class GeoFamilyParser implements Parser {
             sample.setType( "MPSS" );
         } else if ( string.equalsIgnoreCase( "SARST" ) ) {
             sample.setType( "protein" );
+        } else if ( string.equalsIgnoreCase( "other" ) ) {
+            sample.setType( "other" );
         } else {
             throw new IllegalArgumentException( "Unknown sample type " + string );
         }

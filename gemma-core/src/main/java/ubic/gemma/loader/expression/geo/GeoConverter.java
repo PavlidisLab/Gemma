@@ -417,14 +417,14 @@ public class GeoConverter implements Converter {
                     if ( pt.equals( PrimitiveType.DOUBLE ) ) {
                         toConvert.add( Double.parseDouble( ( String ) rawValue ) );
                     } else if ( pt.equals( PrimitiveType.STRING ) ) {
-                        toConvert.add( ( String ) rawValue );
+                        toConvert.add( rawValue );
                     } else if ( pt.equals( PrimitiveType.CHAR ) ) {
                         if ( ( ( String ) rawValue ).length() != 1 ) {
                             throw new IllegalStateException( "Attempt to cast a string of length "
                                     + ( ( String ) rawValue ).length() + " to a char: " + rawValue
                                     + "(quantitation type =" + qt );
                         }
-                        toConvert.add( ( Character ) ( ( String ) rawValue ).toCharArray()[0] );
+                        toConvert.add( ( ( String ) rawValue ).toCharArray()[0] );
                     } else if ( pt.equals( PrimitiveType.INT ) ) {
                         toConvert.add( Integer.parseInt( ( String ) rawValue ) );
                     } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
@@ -619,10 +619,9 @@ public class GeoConverter implements Converter {
             if ( dataVectors == null ) {
                 // log.info( "No data for " + quantitationType + " (column=" + quantitationTypeIndex + ")" );
                 continue;
-            } else {
-                // log.info( "Got " + dataVectors.size() + " data vectors for " + quantitationType + " (column="
-                // + quantitationTypeIndex + ")" );
             }
+            // log.info( "Got " + dataVectors.size() + " data vectors for " + quantitationType + " (column="
+            // + quantitationTypeIndex + ")" );
 
             QuantitationType qt = QuantitationType.Factory.newInstance();
             qt.setName( quantitationType );
