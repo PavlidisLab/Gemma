@@ -21,10 +21,11 @@ package ubic.gemma.analysis.diff;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import ubic.gemma.model.analysis.Analysis;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
@@ -34,63 +35,71 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * 
  * @spring.bean id="differentialExpressionAnalysisService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
+ * @spring.property name="differentialExpressionAnalysis" ref="differentialExpressionAnalysis"
  * @author keshav
  * @version $Id$
  */
 public class DifferentialExpressionAnalysisService {
 
+    private Log log = LogFactory.getLog( this.getClass() );
     ExpressionExperimentService expressionExperimentService = null;
 
-    DifferentialExpressionAnalysis analysis = null;
+    DifferentialExpressionAnalysis differentialExpressionAnalysis = null;
 
     /**
+     * Finds the persistent expression experiment. If there are no associated analyses with this experiment, the
+     * differential expression analysis is first run, the analysis is persisted and then returned.
+     * 
      * @param expressionExperiment
-     * @param quantitationType
-     * @param bioAssayDimension
-     */
-    public void analyze( ExpressionExperiment expressionExperiment, QuantitationType quantitationType,
-            BioAssayDimension bioAssayDimension ) {
-
-        // TODO allow method to take in some config attributes, like whether or not to persist.
-
-        analysis = new DifferentialExpressionAnalysis();
-
-        analysis.analyze( expressionExperiment );
-
-    }
-
-    /**
      * @return
      */
-    public Collection<ExpressionAnalysis> getExpressionAnalysis( ExpressionExperiment expressionExperiment ) {
+    public Collection<Analysis> getPersistentAnalyses( ExpressionExperiment expressionExperiment ) {
 
-        Collection<ExpressionAnalysis> expressionAnalyses = new HashSet<ExpressionAnalysis>();
         Collection<Analysis> analyses = expressionExperiment.getAnalyses();
 
-        for ( Analysis analysis : analyses ) {
-            if ( analysis instanceof ExpressionAnalysis ) {
-                expressionAnalyses.add( ( ExpressionAnalysis ) analysis );
-            }
+        if ( analyses == null || analyses.isEmpty() ) {
+            log
+                    .warn( "Experiment "
+                            + expressionExperiment.getShortName()
+                            + " does not have any associated analyses.  Running differenial expression analysis and persisting results.  This may take some time." );
+
+            analyses = new HashSet<Analysis>();
+
+            differentialExpressionAnalysis.analyze( expressionExperiment );
+
+            ExpressionAnalysis expressionAnalysis = differentialExpressionAnalysis.getExpressionAnalysis();
+
+            Collection<ExpressionExperiment> experimentsAnalyzed = new HashSet<ExpressionExperiment>();
+            experimentsAnalyzed.add( expressionExperiment );
+
+            expressionAnalysis.setExperimentsAnalyzed( experimentsAnalyzed );
+
+            analyses.add( expressionAnalysis );
+
+            expressionExperiment.setAnalyses( analyses );
+
+            expressionExperimentService.update( expressionExperiment );
+
         }
-        return expressionAnalyses;
+
+        return analyses;
     }
 
     /**
+     * Finds the persistent expression experiment by the shortName and returns the analyses. If the expression
+     * experiment does not exist, returns null.
+     * 
+     * @param shortName
      * @return
      */
-    public Collection<ExpressionAnalysis> getExpressionAnalysis( String shortName ) {
+    public Collection<Analysis> getPersistentAnalyses( String shortName ) {
 
         ExpressionExperiment ee = expressionExperimentService.findByShortName( shortName );
 
-        return this.getExpressionAnalysis( ee );
+        if ( ee == null ) return null;
 
-    }
+        return this.getPersistentAnalyses( ee );
 
-    /**
-     * @return
-     */
-    public ExpressionAnalysis getExpressionAnalysis() {
-        return analysis.getExpressionAnalysis();
     }
 
     /**
@@ -98,5 +107,12 @@ public class DifferentialExpressionAnalysisService {
      */
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
+    }
+
+    /**
+     * @param differentialExpressionAnalysis
+     */
+    public void setDifferentialExpressionAnalysis( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
+        this.differentialExpressionAnalysis = differentialExpressionAnalysis;
     }
 }
