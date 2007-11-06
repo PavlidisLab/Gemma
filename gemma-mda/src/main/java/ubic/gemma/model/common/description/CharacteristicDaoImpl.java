@@ -98,7 +98,7 @@ public class CharacteristicDaoImpl
     
     @Override
     protected Collection<Characteristic> handleFindByUri( String searchString ) throws Exception {
-        final String queryString = "select distinct char from VocabCharacteristicImpl as char where lower(char.valueUri) = :search";
+        final String queryString = "select char from VocabCharacteristicImpl as char where lower(char.valueUri) = :search";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
