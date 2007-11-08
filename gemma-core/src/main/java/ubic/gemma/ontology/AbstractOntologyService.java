@@ -21,6 +21,7 @@ package ubic.gemma.ontology;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -290,6 +291,7 @@ public abstract class AbstractOntologyService implements InitializingBean {
             loadThread.start();
         }
 
+        startKeepAliveThread();
     }
 
     /**
@@ -323,4 +325,40 @@ public abstract class AbstractOntologyService implements InitializingBean {
         return ready.get();
     }
 
+    /* a collection of the keep-alive threads for each concrete subclass; a single variable
+     * here wouldn't work because all of the subclasses would be using the same variable.
+     */
+    private static Map keepAliveThreads = Collections.synchronizedMap( new HashMap<Class, Thread>() );
+    
+    /* the number of milliseconds between keep-alive queries; this should be less than or
+     * equal to MySQL wait_timeout server variable.
+     */
+    private static final int KEEPALIVE_PING_DELAY = 28800 * 1000;
+    
+    /* a term to search for; matters not at all...
+     */
+    private static final String KEEPALIVE_SEARCH_TERM = "dummy";
+    
+    private synchronized void startKeepAliveThread() {
+        if ( keepAliveThreads.containsKey( this.getClass() ) )
+            return;
+        Thread keepAliveThread = new KeepAliveThread();
+        keepAliveThread.start();
+        keepAliveThreads.put( this.getClass(), keepAliveThread );
+    }
+    
+    private class KeepAliveThread extends Thread {
+        public void run() {
+            for (;;) {
+                try {
+                    Thread.sleep( KEEPALIVE_PING_DELAY );
+                } catch ( InterruptedException e ) {
+                }
+                if ( isOntologyLoaded() ) {
+                    log.info( "sending keep-alive query to " + getOntologyName() );
+                    findResources( KEEPALIVE_SEARCH_TERM );
+                }
+            }
+        }
+    }
 }
