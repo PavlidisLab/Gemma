@@ -27,7 +27,6 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -96,10 +95,8 @@ public class DifferentialExpressionAnalysisService {
      */
     public Collection<ExpressionAnalysis> getPersistentExpressionAnalyses( ExpressionExperiment expressionExperiment ) {
 
-        Collection<Analysis> analyses = expressionExperiment.getAnalyses();
-
-        Collection<ExpressionAnalysis> expressionAnalyses = null;
-        if ( analyses == null || analyses.isEmpty() ) {
+        Collection<ExpressionAnalysis> expressionAnalyses = expressionExperiment.getExpressionAnalyses();
+        if ( expressionAnalyses == null || expressionAnalyses.isEmpty() ) {
             log
                     .warn( "Experiment "
                             + expressionExperiment.getShortName()
@@ -119,16 +116,9 @@ public class DifferentialExpressionAnalysisService {
             expressionAnalyses.add( expressionAnalysis );
 
             // FIXME should we have a setExpressionAnalysis.
-            // expressionExperiment.setAnalyses( expressionAnalyses );
-            // expressionExperimentService.update( expressionExperiment );
+            expressionExperiment.setExpressionAnalyses( expressionAnalyses );
+            expressionExperimentService.update( expressionExperiment );
 
-        } else {
-            for ( Analysis a : analyses ) {
-                if ( a instanceof ExpressionAnalysis ) {
-                    expressionAnalyses.add( ( ExpressionAnalysis ) a );
-                }
-
-            }
         }
 
         return expressionAnalyses;
