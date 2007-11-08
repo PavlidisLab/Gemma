@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,8 +51,11 @@ import ubic.gemma.model.common.Securable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicService;
+import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -62,6 +66,7 @@ import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.OntologyService;
+import ubic.gemma.ontology.OntologyTerm;
 
 /**
  * This service is used for performing searches. There are generally two kinds
@@ -79,6 +84,9 @@ import ubic.gemma.ontology.OntologyService;
  * pertinent when the programmer wishes to use this class in a declarative
  * security environment, such as ACEGI {@link http://acegisecurity.org/}.
  * <p>
+ * 
+ * NOTE: to add more dependencies to this Service edit the
+ * applicationContext-compass.xml
  * 
  * @author klc
  * @author paul
@@ -108,6 +116,10 @@ public class SearchService {
 
 	private BioSequenceService bioSequenceService;
 
+	private CharacteristicService characteristicService;
+
+	private OntologyService ontologyService;
+
 	private Compass geneBean;
 
 	private Compass eeBean;
@@ -131,17 +143,18 @@ public class SearchService {
 	 */
 	public Collection<ExpressionExperiment> expressionExperimentSearch(
 			final String query) {
-		
+
 		StopWatch watch = new StopWatch();
-        watch.start();
+		watch.start();
 
 		String tq = StringUtils.strip(query);
 		Collection<ExpressionExperiment> results = expressionExperimentDbSearch(tq);
 		results.addAll(compassExpressionSearch(tq));
 
 		watch.stop();
-        log.info( "General Expression Experiment search for " + query + " took " + watch.getTime()/1000 + " seconds");
-        
+		log.info("General Expression Experiment search for " + query + " took "
+				+ watch.getTime() + " ms");
+
 		return results;
 	}
 
@@ -190,11 +203,10 @@ public class SearchService {
 	 */
 	public Collection<ExpressionExperiment> expressionExperimentDbSearch(
 			final String query) {
-		
-		StopWatch watch = new StopWatch();
-        watch.start();
 
-		
+		StopWatch watch = new StopWatch();
+		watch.start();
+
 		String tq = StringUtils.strip(query);
 		Collection<ExpressionExperiment> results = new HashSet<ExpressionExperiment>();
 		ExpressionExperiment ee = expressionExperimentService.findByName(tq);
@@ -208,12 +220,13 @@ public class SearchService {
 			if (ee != null)
 				results.add(ee);
 		} catch (NumberFormatException e) {
-			// noop
+			log.error(e,e);
 		}
-		
+
 		watch.stop();
-        log.info( "DB Expression Experiment search for " + query + " took " + watch.getTime()/1000 + " seconds");
-       
+		log.info("DB Expression Experiment search for " + query + " took "
+				+ watch.getTime() + " ms");
+
 		return results;
 	}
 
@@ -261,8 +274,8 @@ public class SearchService {
 			throws Exception {
 
 		StopWatch watch = new StopWatch();
-        watch.start();
-		
+		watch.start();
+
 		searchString = searchString.trim();
 		ArrayDesign adQueryResult = arrayDesignService
 				.findArrayDesignByName(searchString);
@@ -284,8 +297,9 @@ public class SearchService {
 			combinedList.add(adQueryResult);
 
 		watch.stop();
-        log.info( "General Array Design search for " + searchString + " took " + watch.getTime()/1000 + " seconds");
-       
+		log.info("General Array Design search for " + searchString + " took "
+				+ watch.getTime() + " ms");
+
 		return combinedList;
 	}
 
@@ -374,8 +388,8 @@ public class SearchService {
 			String searchString) throws Exception {
 
 		StopWatch watch = new StopWatch();
-        watch.start();
-        
+		watch.start();
+
 		searchString = searchString.trim();
 		Set<ArrayDesign> adSet = new HashSet<ArrayDesign>();
 
@@ -386,10 +400,10 @@ public class SearchService {
 			adSet.add(sequence.getArrayDesign());
 		}
 
-		
 		watch.stop();
-        log.info( "Array Design Compositesequence DB search for " + searchString + " took " + watch.getTime()/1000 + " seconds");
-    
+		log.info("Array Design Compositesequence DB search for " + searchString
+				+ " took " + watch.getTime() + " ms");
+
 		return adSet;
 
 	}
@@ -434,8 +448,8 @@ public class SearchService {
 			throws Exception {
 
 		StopWatch watch = new StopWatch();
-        watch.start();
-        
+		watch.start();
+
 		searchString = searchString.trim();
 		Set<Gene> geneSet = new HashSet<Gene>();
 
@@ -451,10 +465,11 @@ public class SearchService {
 		Collections.sort(geneList, comparator);
 		if (geneList.size() == 0)
 			return geneList;
-		
+
 		watch.stop();
-        log.info( "Gene composite sequence DB search " + searchString + " took " + watch.getTime()/1000 + " seconds");
-    
+		log.info("Gene composite sequence DB search " + searchString + " took "
+				+ watch.getTime() + " ms");
+
 		return geneList.subList(0, Math
 				.min(geneList.size(), MAX_SEARCH_RESULTS));
 
@@ -472,10 +487,9 @@ public class SearchService {
 	public Collection<Gene> geneDbSearch(String searchString) throws Exception {
 
 		searchString = searchString.trim();
-		
+
 		StopWatch watch = new StopWatch();
-        watch.start();
-        
+		watch.start();
 
 		// search by inexact symbol
 		Set<Gene> geneSet = new HashSet<Gene>();
@@ -514,11 +528,11 @@ public class SearchService {
 		Collections.sort(geneList, comparator);
 		if (geneList.size() == 0)
 			return geneList;
-		
+
 		watch.stop();
-        log.info( "Gene DB search for " + searchString + " took " + watch.getTime()/1000 + " seconds");
-   
-		
+		log.info("Gene DB search for " + searchString + " took "
+				+ watch.getTime() + " ms");
+
 		return geneList.subList(0, Math
 				.min(geneList.size(), MAX_SEARCH_RESULTS));
 
@@ -535,8 +549,8 @@ public class SearchService {
 	public Collection<Gene> geneSearch(String searchString) throws Exception {
 
 		StopWatch watch = new StopWatch();
-        watch.start();
-        
+		watch.start();
+
 		searchString = searchString.trim();
 		Collection<Gene> geneDbList = geneDbSearch(searchString);
 		Collection<Gene> geneCompassList = compassGeneSearch(searchString);
@@ -557,8 +571,9 @@ public class SearchService {
 
 		if (combinedGeneList.size() == 0)
 			return combinedGeneList;
-		
-		  log.info( "General Gene search for " + searchString + " took " + watch.getTime()/1000 + " seconds");
+
+		log.info("General Gene search for " + searchString + " took "
+				+ watch.getTime() + " ms");
 
 		return combinedGeneList.subList(0, Math.min(combinedGeneList.size(),
 				MAX_SEARCH_RESULTS));
@@ -609,16 +624,119 @@ public class SearchService {
 	}
 
 	/**
-	 * Attempts to find the search term's parents and then also look for them in
-	 * the system
+	 * Attempts to find an exact match for the search term in the characteristic
+	 * table. If the search term is found then uses that URI to find the children
+	 * and returns a collection of that characteritic and its children
 	 * 
 	 * @param searchString
 	 * @return
 	 */
-	public Collection<Characteristic> compassSearch(String searchString) {
+	public Collection<VocabCharacteristic> ontologySearchIncludeChildren(
+			String searchString) {
 
-		//TODO:  make work as should
-		return this.compassOntologySearch(searchString);
+		StopWatch watch = new StopWatch();
+		watch.start();
+		
+		Collection<OntologyTerm> possibleTerms = ontologyService.findTerms(searchString);
+
+		log.info("Found " + possibleTerms.size() + " matching terms in " + watch.getTime() + "ms");
+		watch.reset();
+		watch.start();
+		
+		if ((possibleTerms == null) || possibleTerms.isEmpty())
+			return new HashSet<VocabCharacteristic>();
+
+		Collection<String> characteristicUris = new HashSet<String>();
+		StopWatch loopWatch = new StopWatch();
+		
+		for (OntologyTerm term : possibleTerms) {
+			loopWatch.start();
+						
+			characteristicUris.add(term.getUri());
+			for(OntologyTerm child : term.getChildren(false))
+				characteristicUris.add(child.getUri());
+			
+			log.info("==== Added Term and Children for  " + term.getUri() + "  in " + loopWatch.getTime() + "ms");			
+			loopWatch.reset();
+			
+		}		
+		
+		log.info("Found " + characteristicUris.size() + " possible matches with children in " + watch.getTime() + "ms");
+		watch.reset();
+		watch.start();
+		
+		Collection<VocabCharacteristic> inSystem = characteristicService.findByUri(characteristicUris);
+		log.info("Found " + inSystem.size() + " matches in our system in " + watch.getTime() + "ms");
+
+		watch.stop();
+		return inSystem; 
+	}
+
+	/**
+	 * Attempts to find an exact match for the search term in the characteristic
+	 * table. If the search term is found then uses that URI to find the parents
+	 * and returns a collection of that characteritic and its parents
+	 * 
+	 * @param searchString
+	 * @return
+	 */
+	public Collection<ExpressionExperiment> ontologySearchForExpressionExperiments(
+			String searchString) {
+		
+		StopWatch watch = new StopWatch();
+		watch.start();
+		Collection<ExpressionExperiment> results = new HashSet<ExpressionExperiment>();
+		
+		Collection<VocabCharacteristic> characterResults = ontologySearchIncludeChildren(searchString);
+
+		log.info("OntologySearchIncludeParents returned " + characterResults.size() + " results in " + watch.getTime() + "ms");
+		watch.reset();
+		watch.start();
+		
+		if (characterResults.isEmpty())
+			return results;
+		
+		Map<Characteristic, Object> mapResults = characteristicService
+				.getParents(characterResults);
+
+
+		log.info("Found " + mapResults.size() + " parents/owners for characteristics returned in " + watch.getTime() + "ms");
+
+		watch.reset();
+		watch.start();
+		
+		Collection<BioMaterial> bmResults = new HashSet<BioMaterial>();
+		for (Object obj : mapResults.values()) {
+			// Need to filter out just the EE's
+			if (obj instanceof ExpressionExperiment)
+				results.add((ExpressionExperiment) obj);
+			else if (obj instanceof BioMaterial)
+				bmResults.add((BioMaterial) obj);
+
+		}
+		
+
+
+		// If any BioMaterials were returned then get their ExpressionExperiment
+		// and add it as well.
+
+		for (BioMaterial bm : bmResults) {
+			ExpressionExperiment ee = expressionExperimentService
+					.findByBioMaterial(bm);
+			if (ee != null)
+				results.add(ee);
+
+		}
+		
+		log.info("Added " + bmResults.size() + " bioMaterial related results in " + watch.getTime() + " ms");
+
+
+		Collection<Long> eeIds = new HashSet<Long>();
+		for (ExpressionExperiment ee : results)
+			eeIds.add(ee.getId());
+
+		return this.expressionExperimentDbLoad(eeIds);
+		
 	}
 
 	/**
@@ -739,8 +857,8 @@ public class SearchService {
 			String searchString) {
 
 		StopWatch watch = new StopWatch();
-        watch.start();
-        
+		watch.start();
+
 		Collection<CompositeSequence> nameMatch = null;
 
 		if (StringUtils.isBlank(searchString))
@@ -751,7 +869,8 @@ public class SearchService {
 		nameMatch = compositeSequenceService.findByName(cleanedSearchString);
 
 		watch.stop();
-	    log.info( "Composite sequence DB search for " + searchString + " took " + watch.getTime()/1000 + " seconds");
+		log.info("Composite sequence DB search for " + searchString + " took "
+				+ watch.getTime() + " ms");
 
 		return nameMatch;
 	}
@@ -769,8 +888,8 @@ public class SearchService {
 			ArrayDesign arrayDesign) {
 
 		StopWatch watch = new StopWatch();
-        watch.start();
-        
+		watch.start();
+
 		List<CompositeSequence> allResults = new ArrayList<CompositeSequence>();
 		if (StringUtils.isBlank(searchString))
 			return allResults;
@@ -795,7 +914,7 @@ public class SearchService {
 		try {
 			geneResults = geneSearch(searchString);
 		} catch (Exception e) {
-			// fail quietly
+			log.error(e,e);
 		}
 		// if there have been any genes returned, find the compositeSequences
 		// associated with the genes
@@ -818,9 +937,10 @@ public class SearchService {
 		Collections.sort(allResults, new DescribableComparator());
 		if (allResults.size() == 0)
 			return allResults;
-		
+
 		watch.stop();
-	    log.info( "Composite sequence DB search for " + searchString + " took " + watch.getTime()/1000 + " seconds");
+		log.info("Composite sequence DB search for " + searchString + " took "
+				+ watch.getTime() + " ms");
 
 		return allResults.subList(0, Math.min(allResults.size(),
 				MAX_SEARCH_RESULTS));
@@ -840,10 +960,10 @@ public class SearchService {
 			throws Exception {
 		// TODO add in search for actual sequence, not just the sequence name.
 		// Use the wildcard plumbing.
-		
+
 		StopWatch watch = new StopWatch();
-        watch.start();
-        
+		watch.start();
+
 		searchString = searchString.trim();
 
 		// search by inexact symbol
@@ -863,9 +983,10 @@ public class SearchService {
 		Collections.sort(bioSequenceList, comparator);
 		if (bioSequenceList.size() == 0)
 			return bioSequenceList;
-		
+
 		watch.stop();
-	    log.info( "BioSequence DB search for " + searchString + " took " + watch.getTime()/1000 + " seconds");
+		log.info("BioSequence DB search for " + searchString + " took "
+				+ watch.getTime() + " ms");
 
 		return bioSequenceList.subList(0, Math.min(bioSequenceList.size(),
 				MAX_SEARCH_RESULTS));
@@ -913,9 +1034,8 @@ public class SearchService {
 			CompassSession session) {
 
 		StopWatch watch = new StopWatch();
-	        watch.start();
-	        log.info( "Preforming compass search for " + query);
-	  
+		watch.start();
+		log.info("Preforming compass search for " + query);
 
 		query = query.trim();
 		if (StringUtils.isBlank(query))
@@ -928,20 +1048,25 @@ public class SearchService {
 				query.trim()).toQuery();
 		CompassHits hits = compassQuery.hits();
 		CompassDetachedHits detachedHits;
-        log.info( "===== Getting " + hits.getLength() + " hits for " + query + " took " + watch.getTime()/1000 + " seconds");
-			
-		//Put a limit on the number of hits to detach.
-		//Detaching hits can be time consuming (somewhat like thawing). 
-		
+		log.info("===== Getting " + hits.getLength() + " hits for " + query
+				+ " took " + watch.getTime() + " ms");
+		watch.reset();
+		watch.start();
+
+		// Put a limit on the number of hits to detach.
+		// Detaching hits can be time consuming (somewhat like thawing).
+
 		if (hits.getLength() > MAX_SEARCH_RESULTS)
 			detachedHits = hits.detach(0, MAX_SEARCH_RESULTS);
 		else
 			detachedHits = hits.detach();
 
-        log.info( "===== Detaching" + detachedHits.getLength() + " hits for " + query + " took " + watch.getTime()/1000 + " seconds");
+		log.info("===== Detaching" + detachedHits.getLength() + " hits for "
+				+ query + " took " + watch.getTime() + " ms");
 
 		CompassSearchResults searchResults = new CompassSearchResults(
-				detachedHits.getHits(), watch.getTime(), detachedHits.getHits().length);
+				detachedHits.getHits(), watch.getTime(),
+				detachedHits.getHits().length);
 
 		watch.stop();
 		return searchResults;
@@ -1070,6 +1195,15 @@ public class SearchService {
 	 */
 	public void setProbeBean(Compass probeBean) {
 		this.probeBean = probeBean;
+	}
+
+	public void setCharacteristicService(
+			CharacteristicService characteristicService) {
+		this.characteristicService = characteristicService;
+	}
+
+	public void setOntologyService(OntologyService ontologyService) {
+		this.ontologyService = ontologyService;
 	}
 
 }

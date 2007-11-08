@@ -86,5 +86,10 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
 	protected Collection handleFindByUri(String searchString) throws Exception {
 		return this.getCharacteristicDao().findByUri(searchString);
 	}
+	
+	@Override
+	protected Collection handleFindByUri(Collection uris) throws Exception {
+		return this.getCharacteristicDao().findByUri(uris);
+	}
 
 }

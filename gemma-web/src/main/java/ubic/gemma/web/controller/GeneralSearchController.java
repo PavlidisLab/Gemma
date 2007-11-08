@@ -227,6 +227,12 @@ public class GeneralSearchController extends BaseFormController {
             Collection<Characteristic> ontolgyEntries = searchService.compassOntologySearch( searchString );
             mav.addObject( "ontologyList", ontolgyEntries );
             mav.addObject( "numOntologyList", ontolgyEntries.size() );
+            
+            Collection<ExpressionExperiment> eesFromOntology = searchService.ontologySearchForExpressionExperiments( searchString );
+            Collection<ExpressionExperimentValueObject> valueEEs = expressionExperimentService.loadValueObjects( generateEEIdList( eesFromOntology ) );
+            mav.addObject( "eeOntologyList", valueEEs );
+            mav.addObject( "numEEOntologyList", eesFromOntology.size() );
+            
 
         }
 

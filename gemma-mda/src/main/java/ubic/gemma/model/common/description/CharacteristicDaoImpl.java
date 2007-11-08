@@ -109,5 +109,19 @@ public class CharacteristicDaoImpl
             throw super.convertHibernateAccessException( ex );
         }
 	}
+    
+    @Override
+    protected Collection<Characteristic> handleFindByUri( Collection uris ) throws Exception {
+        final String queryString = "from VocabCharacteristicImpl where valueUri in (:uris)";
+
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameterList( "uris", uris);
+            return queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+	}
 	
 }

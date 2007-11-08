@@ -29,6 +29,7 @@ import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntClass;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.impl.IndividualImpl;
+import com.hp.hpl.jena.ontology.impl.OntClassImpl;
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
@@ -77,9 +78,15 @@ public class OntologySearch {
         while ( iterator.hasNext() ) {
             RDFNode r = ( RDFNode ) iterator.next();
             r = r.inModel( model );
-            log.info( "Search results: " + r );
+            log.debug( "Search results: " + r );
             if ( r.isURIResource() ) {
                 try {
+                	
+                	if (!r.canAs(OntClass.class)){
+                		log.info("Unable to convert jena resource to OntClass.class, skipping. Resource: " + r.toString());                		
+                		continue;
+                	}
+                	
                     OntClass cl = ( OntClass ) r.as( OntClass.class );
                     OntologyTermImpl impl2 = new OntologyTermImpl( cl, null );
                     results.add( impl2 );
@@ -111,9 +118,15 @@ public class OntologySearch {
         while ( iterator.hasNext() ) {
             RDFNode r = ( RDFNode ) iterator.next();
             r = r.inModel( model );
-            log.info( "Search results: " + r );
-            if ( r.isResource() && ( r instanceof IndividualImpl ) ) {
+            log.debug( "Search results: " + r );
+            if ( r.isResource() ) {
                 try {
+                	
+                	if (!r.canAs(Individual.class)){
+                		log.info("Unable to convert jena resource to Individual.class, skipping. Resource: " + r.toString());                		
+                		continue;
+                	}
+                	
                     Individual cl = ( Individual ) r.as( Individual.class );
                     OntologyIndividual impl2 = new OntologyIndividualImpl( cl, null );
                     results.add( impl2 );
@@ -144,9 +157,15 @@ public class OntologySearch {
         while ( iterator.hasNext() ) {
             RDFNode r = ( RDFNode ) iterator.next();
             r = r.inModel( model );
-            log.info( "Search results: " + r );
+            log.debug( "Search results: " + r );
             if ( r.isURIResource() ) {
                 try {
+                	
+                	if (!r.canAs(OntClass.class)){
+                		log.info("Unable to convert jena resource to OntClass.class, skipping. Resource: " + r.toString());                		
+                		continue;
+                	}
+                	
                     OntClass cl = ( OntClass ) r.as( OntClass.class );
                     OntologyTermImpl impl2 = new OntologyTermImpl( cl, null );
                     results.add( impl2 );
@@ -154,8 +173,14 @@ public class OntologySearch {
                 } catch ( Exception e ) {
                     log.error( e, e );
                 }
-            } else if ( r.isResource() && ( r instanceof IndividualImpl ) ) {
+            } else if ( r.isResource() ) {
                 try {
+                	
+                	if (!r.canAs(Individual.class)){
+                		log.info("Unable to convert jena resource to Individual.class, skipping. Resource: " + r.toString());                		
+                		continue;
+                	}
+                	
                     Individual cl = ( Individual ) r.as( Individual.class );
                     OntologyIndividual impl2 = new OntologyIndividualImpl( cl, null );
                     results.add( impl2 );

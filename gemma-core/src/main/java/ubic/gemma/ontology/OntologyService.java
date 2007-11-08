@@ -155,13 +155,13 @@ public class OntologyService {
     }
 
     /**
-     * Given a search string will look through the birnlex, obo Disease Ontology and FMA Ontology for terms that match
+     * Given a search string will look through the Mged, birnlex, obo Disease Ontology and FMA Ontology for terms that match
      * the search term. this a lucene backed search, is inexact and for general terms can return alot of results.
      * 
      * @param search
-     * @return
+     * @return a collection of VocabCharacteristics that are backed by the corresponding found OntologyTerm
      */
-    public Collection<VocabCharacteristic> findTerm( String search ) {
+    public Collection<VocabCharacteristic> findTermAsCharacteristic( String search ) {
 
         Collection<VocabCharacteristic> terms = new HashSet<VocabCharacteristic>();
         Collection<OntologyTerm> results;
@@ -172,6 +172,28 @@ public class OntologyService {
         }
 
         return terms;
+    }
+    
+    
+    
+    /**
+     * Given a search string will look through the Mged, birnlex, obo Disease Ontology and FMA Ontology for terms that match
+     * the search term. this a lucene backed search, is inexact and for general terms can return alot of results.
+     * 
+     * @param search
+     * @return returns a collection of ontologyTerm's
+     */
+    public Collection<OntologyTerm> findTerms( String search ) {
+      
+        Collection<OntologyTerm> results = new HashSet<OntologyTerm>();
+
+        for ( AbstractOntologyService ontology : ontologyServices ) {
+        	Collection<OntologyTerm> found = ontology.findTerm( search );
+        	if (found != null)
+        		results.addAll(found);            
+        }
+
+        return results;
     }
 
     /**
@@ -211,7 +233,7 @@ public class OntologyService {
                 filtered.add( vc );
             }
         }
-        log.info( "returning " + filtered.size() + " terms after filter" );
+        log.debug( "returning " + filtered.size() + " terms after filter" );
 
         return filtered;
     }
@@ -229,7 +251,7 @@ public class OntologyService {
     	
         StopWatch watch = new StopWatch();
         watch.start();
-        log.info( "starting findExactTerm for " + search + ". Timining information begins from here");
+        log.debug( "starting findExactTerm for " + search + ". Timining information begins from here");
         
         if ( search == null ) return null;
 
@@ -243,7 +265,7 @@ public class OntologyService {
             results = new HashSet<OntologyResource>( mgedOntologyService.getTermIndividuals( categoryUri ) );
             if ( results != null ) individualResults.addAll( convert( results ) );
         }
-        log.info( "found " + individualResults.size() + " individuals from ontology term " + categoryUri + " in " + watch.getTime()/1000 + " seconds");
+        log.debug( "found " + individualResults.size() + " individuals from ontology term " + categoryUri + " in " + watch.getTime() + " ms");
 
         Collection<String> foundValues = new HashSet<String>();
         List<Characteristic> alreadyUsedResults = new ArrayList<Characteristic>();
@@ -262,25 +284,25 @@ public class OntologyService {
                 }
             }
         }
-        log.info( "found " + alreadyUsedResults.size() + " matching characteristics used in the database" + " in " + watch.getTime()/1000 + " seconds" );
+        log.debug( "found " + alreadyUsedResults.size() + " matching characteristics used in the database" + " in " + watch.getTime()+ " ms" );
 
         List<Characteristic> searchResults = new ArrayList<Characteristic>();
 
         results = birnLexOntologyService.findResources( search );
-        log.info( "found " + ( results == null ? "null" : results.size() ) + " terms from birnLex in " + watch.getTime()/1000 + " seconds" );
+        log.debug( "found " + ( results == null ? "null" : results.size() ) + " terms from birnLex in " + watch.getTime() + " ms" );
         if ( results != null ) searchResults.addAll( filter( results, search ) );
 
         results = oboDiseaseOntologyService.findResources( search );
-        log.info( "found " + ( results == null ? "null" : results.size() ) + " terms from obo in " + watch.getTime()/1000 + " seconds" );
+        log.debug( "found " + ( results == null ? "null" : results.size() ) + " terms from obo in " + watch.getTime() + " ms" );
         if ( results != null ) searchResults.addAll( filter( results, search ) );
 
         results = fmaOntologyService.findResources( search );
-        log.info( "found " + ( results == null ? "null" : results.size() ) + " terms from fma in " + watch.getTime()/1000 + " seconds" );
+        log.debug( "found " + ( results == null ? "null" : results.size() ) + " terms from fma in " + watch.getTime() + " ms" );
         if ( results != null ) searchResults.addAll( filter( results, search ) );
 
         // Sort the individual results.
         Collection<Characteristic>  sortedResults = sort( individualResults, alreadyUsedResults, searchResults, search );
-        log.info( "sorted " + sortedResults.size() + " in " + watch.getTime()/1000 + " seconds" );
+        log.debug( "sorted " + sortedResults.size() + " in " + watch.getTime() + " ms" );
         
         return sortedResults; 
 
@@ -415,8 +437,8 @@ public class OntologyService {
      */
     public void saveExpressionExperimentStatement( Characteristic vc, Collection<Long> bmIdList ) {
 
-        log.info( "Vocab Characteristic: " + vc );
-        log.info( "Expression Experiment ID List: " + bmIdList );
+        log.debug( "Vocab Characteristic: " + vc );
+        log.debug( "Expression Experiment ID List: " + bmIdList );
 
         Set<Characteristic> chars = new HashSet<Characteristic>();
         chars.add( vc );
@@ -444,8 +466,8 @@ public class OntologyService {
      */
     public void removeExpressionExperimentStatement( Collection<Long> characterIds, Collection<Long> bmIdList ) {
 
-        log.info( "Vocab Characteristic: " + characterIds );
-        log.info( "Expression Experiment ID List: " + bmIdList );
+        log.debug( "Vocab Characteristic: " + characterIds );
+        log.debug( "Expression Experiment ID List: " + bmIdList );
 
         Collection<ExpressionExperiment> ees = eeService.loadMultiple( bmIdList );
 
@@ -477,8 +499,8 @@ public class OntologyService {
      */
     public void removeBioMaterialStatement( Collection<Long> characterIds, Collection<Long> bmIdList ) {
 
-        log.info( "Vocab Characteristic: " + characterIds );
-        log.info( "biomaterial ID List: " + bmIdList );
+        log.debug( "Vocab Characteristic: " + characterIds );
+        log.debug( "biomaterial ID List: " + bmIdList );
 
         Collection<BioMaterial> bms = bioMaterialService.loadMultiple( bmIdList );
 
