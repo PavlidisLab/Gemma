@@ -124,14 +124,14 @@ public class WhatsNewBoxTag extends TagSupport {
                 for ( ExpressionExperiment ee : updatedExpressionExperiments ) {
                     buf.append( ee.getId() + "," );
                 }
-                buf.append( "\">" + numEEs + " updated data set" + ( numEEs > 1 ? "s" : "" ) + ".<br />" );
+                buf.append( "\">" + numEEs + " updated data set" + ( numEEs > 1 ? "s" : "" ) + "</a>.<br />" );
             }
             if ( numADs > 0 ) {
                 buf.append( "<a href=\"/Gemma/arrays/showAllArrayDesigns.html?id=" );
                 for ( ArrayDesign ad : updatedArrayDesigns ) {
                     buf.append( ad.getId() + "," );
                 }
-                buf.append( "\">" + numADs + " updated array design" + ( numADs > 1 ? "s" : "" ) + ".<br />" );
+                buf.append( "\">" + numADs + " updated array design" + ( numADs > 1 ? "s" : "" ) + "</a>.<br />" );
             }
         } else {
             buf.append( "No updates<br />" );
