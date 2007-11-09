@@ -190,7 +190,7 @@ public class LinkAnalysisService {
             for ( Gene g : g2 ) {
                 genes2 = genes2 + g.getOfficialSymbol() + "|";
             }
-            wr.write( p1.getId() + "\t" + p2.getId() + "\t" + genes1 + "\t" + genes2 + "\t" + nf.format( w ) );
+            wr.write( p1.getId() + "\t" + p2.getId() + "\t" + genes1 + "\t" + genes2 + "\t" + nf.format( w ) + "\n" );
 
             if ( i > 0 && i % 50000 == 0 ) {
                 log.info( i + " links printed" );
