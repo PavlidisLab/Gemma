@@ -87,7 +87,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
     public void testGetTopPersistentAnalysisResults() throws Exception {
 
         Collection<ExpressionAnalysisResult> analysisResults = differentialExpressionAnalysisService
-                .getTopPersistentExpressionAnalysisResults( shortName, 100 );
+                .getTopExpressionAnalysisResults( shortName, 100 );
 
         if ( analysisResults == null ) {
             log.warn( "Could not find analyses for expression experiment with short name " + shortName

@@ -128,7 +128,6 @@ public class DifferentialExpressionAnalysisService {
 
             expressionAnalyses.add( expressionAnalysis );
 
-            // FIXME should we have a setExpressionAnalysis.
             expressionExperiment.setExpressionAnalyses( expressionAnalyses );
             expressionExperimentService.update( expressionExperiment );
 
