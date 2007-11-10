@@ -21,6 +21,7 @@ package ubic.gemma.analysis.diff;
 import java.util.Collection;
 
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
+import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -96,7 +97,14 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         }
 
         for ( ExpressionAnalysisResult result : analysisResults ) {
-            log.debug( result.getPvalue() );
+            if ( result instanceof ProbeAnalysisResult ) {
+
+                ProbeAnalysisResult presult = ( ProbeAnalysisResult ) result;
+                log.debug( presult.getProbe().getName() + "; " + presult.getPvalue() );
+            } else {
+                assertFalse( "Invalid result type.  Expected a " + ProbeAnalysisResult.class.getName() + ", received "
+                        + result.getClass().getClass().getName(), false );
+            }
         }
 
         assertFalse( analysisResults.isEmpty() );
