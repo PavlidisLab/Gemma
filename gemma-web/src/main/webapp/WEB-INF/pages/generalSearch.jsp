@@ -82,7 +82,7 @@
 				<option value="GoID">
 					Find Genes by Gene Ontology Id
 				</option>
-				<option value="ontology">
+				<option selected value="ontology">
 					Search Ontology Database
 				</option>
 			</select>
@@ -221,7 +221,7 @@
 	<h3>
 		Your search for
 		<b> <c:out value="${SearchString}" /> </b> found
-		<b> <c:out value="${numOntologyList}" /> </b> Ontology Terms
+		<b> <c:out value="${numOntologyList}" /> </b> matching ontology Terms and their children
 	</h3>
 </c:if>
 
@@ -239,7 +239,7 @@
 	<h3>
 		Your search for
 		<b> <c:out value="${SearchString}" /> </b> found
-		<b> <c:out value="${numEEOntologyList}" /> </b> Expression Experiments with matching Ontology Terms
+		<b> <c:out value="${numEEOntologyList}" /> </b> Expression Experiments with matching Characterstics found in system
 	</h3>
 </c:if>
 
