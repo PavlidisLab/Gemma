@@ -106,7 +106,7 @@ public class GeneralSearchController extends BaseFormController {
             compositeSequence = true;
             bioSequence = true;
             goID = false;
-            ontology = true;
+            ontology = false;
             goArray = false;
             bibliographicReference = false;
 
@@ -115,7 +115,6 @@ public class GeneralSearchController extends BaseFormController {
             mav.addObject( "searchArray", "Array" );
             mav.addObject( "searchCompositeSequence", "CompositeSequence" );
             mav.addObject( "searchBioSequence", "bioSequence" );
-            mav.addObject( "searchOntology", "ontology" );
 
         } else {
             for ( String types : advanced ) {
@@ -197,6 +196,11 @@ public class GeneralSearchController extends BaseFormController {
 
             mav.addObject( "expressionList", valueEEs );
             mav.addObject( "numEEs", valueEEs.size() );
+            
+            Collection<ExpressionExperiment> eesFromOntology = searchService.ontologySearchForExpressionExperiments( searchString );
+            Collection<ExpressionExperimentValueObject> valueOntEEs = expressionExperimentService.loadValueObjects( generateEEIdList( eesFromOntology ) );
+            mav.addObject( "eeOntologyList", valueOntEEs );
+            mav.addObject( "numEEOntologyList", eesFromOntology.size() );
         }
 
         if ( array ) {
@@ -227,14 +231,7 @@ public class GeneralSearchController extends BaseFormController {
         if ( ontology ) {
             Collection<VocabCharacteristic> ontolgyEntries = searchService.ontologySearchIncludeChildren( searchString );
             mav.addObject( "ontologyList", ontolgyEntries );
-            mav.addObject( "numOntologyList", ontolgyEntries.size() );
-            
-            Collection<ExpressionExperiment> eesFromOntology = searchService.ontologySearchForExpressionExperiments( searchString );
-            Collection<ExpressionExperimentValueObject> valueEEs = expressionExperimentService.loadValueObjects( generateEEIdList( eesFromOntology ) );
-            mav.addObject( "eeOntologyList", valueEEs );
-            mav.addObject( "numEEOntologyList", eesFromOntology.size() );
-            
-
+            mav.addObject( "numOntologyList", ontolgyEntries.size() );            
         }
 
         if ( goArray ) {

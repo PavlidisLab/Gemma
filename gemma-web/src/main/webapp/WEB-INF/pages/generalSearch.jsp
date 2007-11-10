@@ -82,7 +82,7 @@
 				<option value="GoID">
 					Find Genes by Gene Ontology Id
 				</option>
-				<option selected value="ontology">
+				<option value="ontology">
 					Search Ontology Database
 				</option>
 			</select>
@@ -158,6 +158,27 @@
 	<display:setProperty name="basic.empty.showtable" value="false" />
 </display:table>
 
+
+<c:if test="${numEEOntologyList > 0 }">
+	<h3>
+		Your search for
+		<b> <c:out value="${SearchString}" /> </b> found
+		<b> <c:out value="${numEEOntologyList}" /> </b> Datasets with matching Characterstics in system
+	</h3>
+</c:if>
+
+<display:table name="eeOntologyList" class="list" requestURI="" id="eeOntologyList" pagesize="10"
+ decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
+	<display:column property="nameLink" sortable="true" sortProperty="name" titleKey="expressionExperiment.name" />
+	<display:column property="shortName" sortable="true" titleKey="expressionExperiment.shortName" />
+	<authz:authorize ifAnyGranted="admin">
+		<display:column property="arrayDesignLink" sortable="true" title="Arrays" />
+	</authz:authorize>
+	<display:column property="assaysLink" sortable="true" titleKey="bioAssays.title" />
+	<display:column property="taxon" sortable="true" titleKey="taxon.title" />
+	<display:setProperty name="basic.empty.showtable" value="false" />
+</display:table>
+
 <%-- Display Array Designs--%>
 <c:if test="${numADs != null}">
 	<h3>
@@ -221,7 +242,7 @@
 	<h3>
 		Your search for
 		<b> <c:out value="${SearchString}" /> </b> found
-		<b> <c:out value="${numOntologyList}" /> </b> matching ontology Terms and their children
+		<b> <c:out value="${numOntologyList}" /> </b> possibly matching characteristics in the system 
 	</h3>
 </c:if>
 
@@ -231,27 +252,6 @@
 	<display:column property="value" sortable="true" maxWords="20" />
 	<display:column property="category" sortable="true" maxWords="20" />
 	<display:column property="description" sortable="true" maxWords="20" />
-	<display:setProperty name="basic.empty.showtable" value="false" />
-</display:table>
-
-
-<c:if test="${numEEOntologyList > 0 }">
-	<h3>
-		Your search for
-		<b> <c:out value="${SearchString}" /> </b> found
-		<b> <c:out value="${numEEOntologyList}" /> </b> Expression Experiments with matching Characterstics found in system
-	</h3>
-</c:if>
-
-<display:table name="eeOntologyList" class="list" requestURI="" id="eeOntologyList" pagesize="10"
- decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
-	<display:column property="nameLink" sortable="true" sortProperty="name" titleKey="expressionExperiment.name" />
-	<display:column property="shortName" sortable="true" titleKey="expressionExperiment.shortName" />
-	<authz:authorize ifAnyGranted="admin">
-		<display:column property="arrayDesignLink" sortable="true" title="Arrays" />
-	</authz:authorize>
-	<display:column property="assaysLink" sortable="true" titleKey="bioAssays.title" />
-	<display:column property="taxon" sortable="true" titleKey="taxon.title" />
 	<display:setProperty name="basic.empty.showtable" value="false" />
 </display:table>
 
