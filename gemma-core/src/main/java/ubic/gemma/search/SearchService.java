@@ -46,6 +46,7 @@ import org.compass.core.CompassTemplate;
 import org.compass.core.CompassTransaction;
 import org.compass.core.support.search.CompassSearchResults;
 
+import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.Securable;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -99,6 +100,7 @@ public class SearchService {
 	 * Global maximum number of search results that will be returned.
 	 */
 	public static final int MAX_SEARCH_RESULTS = 100;
+	public static final int MAX_DETACHHITS = 1000;
 
 	private static Log log = LogFactory.getLog(SearchService.class.getName());
 
@@ -701,7 +703,14 @@ public class SearchService {
 
 
 		log.info("Found " + mapResults.size() + " parents/owners for characteristics returned in " + watch.getTime() + "ms");
-
+		for (Object obj : mapResults.values()){
+			if (obj instanceof Auditable)
+				log.info("==== Parent Id: " + ((Auditable)obj).getId() + " Parent Class: " + obj.getClass());
+			else
+				log.info("==== Parent : " + obj.toString() + " Parent Class: " + obj.getClass());
+			
+		}
+		
 		watch.reset();
 		watch.start();
 		
@@ -1056,11 +1065,8 @@ public class SearchService {
 		// Put a limit on the number of hits to detach.
 		// Detaching hits can be time consuming (somewhat like thawing).
 
-		if (hits.getLength() > MAX_SEARCH_RESULTS)
-			detachedHits = hits.detach(0, MAX_SEARCH_RESULTS);
-		else
-			detachedHits = hits.detach();
-
+		detachedHits = hits.detach(0, Math.min(hits.getLength(),MAX_SEARCH_RESULTS));
+		
 		log.info("===== Detaching" + detachedHits.getLength() + " hits for "
 				+ query + " took " + watch.getTime() + " ms");
 
