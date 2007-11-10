@@ -39,7 +39,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.loader.genome.taxon.SupportedTaxa;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -106,7 +106,7 @@ public class GeneralSearchController extends BaseFormController {
             compositeSequence = true;
             bioSequence = true;
             goID = false;
-            ontology = false;
+            ontology = true;
             goArray = false;
             bibliographicReference = false;
 
@@ -115,6 +115,7 @@ public class GeneralSearchController extends BaseFormController {
             mav.addObject( "searchArray", "Array" );
             mav.addObject( "searchCompositeSequence", "CompositeSequence" );
             mav.addObject( "searchBioSequence", "bioSequence" );
+            mav.addObject( "searchOntology", "ontology" );
 
         } else {
             for ( String types : advanced ) {
@@ -224,7 +225,7 @@ public class GeneralSearchController extends BaseFormController {
         }
 
         if ( ontology ) {
-            Collection<Characteristic> ontolgyEntries = searchService.compassOntologySearch( searchString );
+            Collection<VocabCharacteristic> ontolgyEntries = searchService.ontologySearchIncludeChildren( searchString );
             mav.addObject( "ontologyList", ontolgyEntries );
             mav.addObject( "numOntologyList", ontolgyEntries.size() );
             
