@@ -60,7 +60,7 @@ public class DifferentialExpressionAnalysisService {
      * @param top
      * @return
      */
-    public Collection<ExpressionAnalysisResult> getTopPersistentExpressionAnalysisResults( String shortName, int top ) {
+    public Collection<ExpressionAnalysisResult> getTopExpressionAnalysisResults( String shortName, int top ) {
         // FIXME you need to differentiate between different analyses for a given experiment ... by name?
 
         Collection<ExpressionAnalysis> analyses = this.getPersistentExpressionAnalyses( shortName );
@@ -84,8 +84,9 @@ public class DifferentialExpressionAnalysisService {
         ExpressionAnalysisResult[] analysisResultsAsArray = analysisResults
                 .toArray( new ExpressionAnalysisResult[analysisResults.size()] );
         List<ExpressionAnalysisResult> analysisResultsAsList = Arrays.asList( analysisResultsAsArray );
-        Collections.sort( analysisResultsAsList, ExpressionAnalysisResultComparator.Factory.newInstance() );
         // end fixme
+
+        Collections.sort( analysisResultsAsList, ExpressionAnalysisResultComparator.Factory.newInstance() );
 
         Iterator<ExpressionAnalysisResult> iter = analysisResultsAsList.iterator();
 
