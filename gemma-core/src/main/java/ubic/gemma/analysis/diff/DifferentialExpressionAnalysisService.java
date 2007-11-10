@@ -19,7 +19,9 @@
 package ubic.gemma.analysis.diff;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -31,6 +33,7 @@ import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.util.ExpressionAnalysisResultComparator;
 
 /**
  * A spring loaded differential expression service to run the differential expression analysis (and persist the results
@@ -68,7 +71,6 @@ public class DifferentialExpressionAnalysisService {
         ExpressionAnalysis analysis = analyses.iterator().next();
 
         Collection<ExpressionAnalysisResult> analysisResults = analysis.getAnalysisResults();
-        Iterator<ExpressionAnalysisResult> iter = analysisResults.iterator();
 
         if ( top > analysisResults.size() ) {
             log.warn( "Number of desired results, " + top
@@ -77,8 +79,18 @@ public class DifferentialExpressionAnalysisService {
             top = analysisResults.size();
         }
 
+        // FIXME This is a silly hack. Return a list with analysis.getAnalysisResults since you know this has to be
+        // sorted (don't want to edit the model just yet).
+        ExpressionAnalysisResult[] analysisResultsAsArray = analysisResults
+                .toArray( new ExpressionAnalysisResult[analysisResults.size()] );
+        List<ExpressionAnalysisResult> analysisResultsAsList = Arrays.asList( analysisResultsAsArray );
+        Collections.sort( analysisResultsAsList, ExpressionAnalysisResultComparator.Factory.newInstance() );
+        // end fixme
+
+        Iterator<ExpressionAnalysisResult> iter = analysisResultsAsList.iterator();
+
         List<ExpressionAnalysisResult> topResults = new ArrayList<ExpressionAnalysisResult>();
-        // FIXME use a comparator to sort the results. again, something stupid as a test for now.
+
         for ( int i = 0; i < top; i++ ) {
             topResults.add( iter.next() );
         }
