@@ -356,7 +356,11 @@ public abstract class AbstractOntologyService implements InitializingBean {
                 }
                 if ( isOntologyLoaded() ) {
                     log.info( "sending keep-alive query to " + getOntologyName() );
-                    findResources( KEEPALIVE_SEARCH_TERM );
+                    try {
+                        findResources( KEEPALIVE_SEARCH_TERM );
+                    } catch ( Exception e ) {
+                        log.error( "error sending keep-alive query to " + getOntologyName(), e );
+                    }
                 }
             }
         }

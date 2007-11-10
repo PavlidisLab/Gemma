@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import org.acegisecurity.Authentication;
+import org.acegisecurity.GrantedAuthority;
 import org.acegisecurity.acl.basic.BasicAclExtendedDao;
 import org.acegisecurity.acl.basic.NamedEntityObjectIdentity;
 import org.acegisecurity.context.SecurityContext;
@@ -46,6 +47,8 @@ import ubic.gemma.util.SecurityUtil;
  * @spring.property name="securableDao" ref="securableDao"
  */
 public class SecurityService {
+
+    public static final String ADMIN_AUTHORITY = "admin";
 
     private static final String NET_SF = "net.sf";
 
@@ -271,6 +274,21 @@ public class SecurityService {
         if ( authentication == null ) throw new RuntimeException( "Null authentication object" );
 
         return authentication;
+    }
+    
+    /**
+     * Returns true if the current user has admin authority.
+     * @return true if the current user has admin authority
+     */
+    public static boolean isUserAdmin() {
+        GrantedAuthority[] authorities = getAuthentication().getAuthorities();
+        assert authorities != null;
+        for ( GrantedAuthority authority : authorities ) {
+            if ( authority.getAuthority().equals( ADMIN_AUTHORITY ) ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

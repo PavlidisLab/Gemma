@@ -54,15 +54,7 @@ public class MaintenanceModeController extends BaseFormController {
         /*
          * check that the user is admin!
          */
-        GrantedAuthority[] authorities = SecurityService.getAuthentication().getAuthorities();
-        assert authorities != null;
-        boolean isAdmin = false;
-        for ( GrantedAuthority authority : authorities ) {
-            if ( authority.getAuthority().equals( "admin" ) ) {
-                isAdmin = true;
-                break;
-            }
-        }
+        boolean isAdmin = SecurityService.isUserAdmin();
 
         if ( !isAdmin ) {
             log.warn( "Attempt by non-admin to alter system maintenance mode status!" );
