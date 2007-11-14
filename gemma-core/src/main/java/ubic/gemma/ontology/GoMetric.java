@@ -80,19 +80,17 @@ public class GoMetric {
      */
     public Map<String, Integer> getTermOccurrence( Map<Long, Collection<String>> Gene2GOMap ) {
 
-
         Map<String, Integer> countMap = new HashMap<String, Integer>();
         for ( Long gene : Gene2GOMap.keySet() ) {
 
             for ( String uri : Gene2GOMap.get( gene ) ) {
 
                 if ( isRoot( GeneOntologyService.getTermForURI( uri ) ) ) continue;
-                
-                if (countMap.containsKey( uri )){
+
+                if ( countMap.containsKey( uri ) ) {
                     int value = countMap.get( uri );
                     countMap.put( uri, ++value );
-                }
-                else{
+                } else {
                     countMap.put( uri, 1 );
                 }
             }
@@ -133,35 +131,79 @@ public class GoMetric {
      * @param targetGene
      * @param GOProbMap
      * @param metric
+     * @return the MAX overlap score between two genes
+     * @throws Exception
+     */
+    public Double computeMaxSimilarity( Gene queryGene, Gene targetGene, Map<String, Double> GOProbMap, Metric metric ) {
+
+        HashSet<OntologyTerm> masterGO = getOntologyTerms( queryGene );
+        if ( ( masterGO == null ) || masterGO.isEmpty() ) return 0.0;
+
+        HashSet<OntologyTerm> coExpGO = getOntologyTerms( targetGene );
+        if ( ( coExpGO == null ) || coExpGO.isEmpty() ) return 0.0;
+
+        double checkScore = 0.0;
+
+        for ( OntologyTerm ontoM : masterGO ) {
+            if ( isRoot( ontoM ) ) continue;
+            double probM = GOProbMap.get( ontoM.getUri() );
+
+            for ( OntologyTerm ontoC : coExpGO ) {
+                if ( isRoot( ontoC ) ) continue;
+
+                Double probC = GOProbMap.get( ontoC.getUri() );
+                Double pmin = 1.0;
+                Double score = 0.0;
+
+                if ( ontoM.getUri().equalsIgnoreCase( ontoC.getUri() ) )
+                    pmin = GOProbMap.get( ontoM.getUri() );
+                else
+                    pmin = checkParents( ontoM, ontoC, GOProbMap );
+
+                if ( pmin < 1 ) {
+                    score = getMetric( metric, pmin, probM, probC );
+                    if ( score > checkScore ) checkScore = score;
+                }
+          
+            }
+        }
+        log.info( "score for " + queryGene + " and " + targetGene + " is " + checkScore );
+        return checkScore;
+    }
+
+    
+    
+    /**
+     * @param queryGene
+     * @param targetGene
+     * @param GOProbMap
+     * @param metric
      * @return the overlap score between two genes
      * @throws Exception
      */
-    public Double computeSimilarity( Gene queryGene, Gene targetGene, Map<String, Double> GOProbMap,
-            Metric metric ) {
+    public Double computeSimilarity( Gene queryGene, Gene targetGene, Map<String, Double> GOProbMap, Metric metric ) {
 
         if ( metric.equals( GoMetric.Metric.simple ) ) {
             double score = computeSimpleOverlap( queryGene, targetGene, partOf );
             return score;
         }
 
-        Collection<VocabCharacteristic> masterVoc = gene2GOAssociationService.findByGene( queryGene );
-        Collection<OntologyTerm> masterGO = getOntologyTerms( masterVoc );
+        HashSet<OntologyTerm> masterGO = getOntologyTerms( queryGene );
         if ( ( masterGO == null ) || masterGO.isEmpty() ) return null;
 
-        Collection<VocabCharacteristic> coExpVoc = gene2GOAssociationService.findByGene( targetGene );
-        Collection<OntologyTerm> coExpGO = getOntologyTerms( coExpVoc );
+        HashSet<OntologyTerm> coExpGO = getOntologyTerms( targetGene );
         if ( ( coExpGO == null ) || coExpGO.isEmpty() ) return null;
-
+        
         double total = 0;
         int count = 0;
 
         for ( OntologyTerm ontoM : masterGO ) {
-            if ( isRoot( ontoM) )continue;
+            if ( isRoot( ontoM ) ) continue;
             double probM = GOProbMap.get( ontoM.getUri() );
 
             for ( OntologyTerm ontoC : coExpGO ) {
-                if ( isRoot (ontoC))continue;
-             
+                if ( isRoot( ontoC ) ) continue;
+
                 Double probC = GOProbMap.get( ontoC.getUri() );
                 Double pmin = 1.0;
                 Double score = 0.0;
@@ -184,7 +226,7 @@ public class GoMetric {
             return avgScore;
         } else {
             log.info( "NO score for " + queryGene + " and " + targetGene );
-            return null;
+            return 0.0;
         }
     }
 
@@ -247,10 +289,9 @@ public class GoMetric {
         Collection<OntologyTerm> masterGO = geneOntologyService.getGOTerms( gene1, includePartOf );
         Collection<OntologyTerm> coExpGO = geneOntologyService.getGOTerms( gene2, includePartOf );
 
-        Collection<OntologyTerm> overlappingTerms = new HashSet<OntologyTerm>( );
+        Collection<OntologyTerm> overlappingTerms = new HashSet<OntologyTerm>();
         for ( OntologyTerm o : masterGO ) {
-            if ( coExpGO.contains( o ) && !isRoot( o ) )
-                overlappingTerms.add( o );
+            if ( coExpGO.contains( o ) && !isRoot( o ) ) overlappingTerms.add( o );
         }
 
         double avgScore = ( double ) overlappingTerms.size();
@@ -295,19 +336,21 @@ public class GoMetric {
         return score;
     }
 
+
     /**
-     * @param vocab characteristics
-     * @return GO terms
+     * @param gene
+     * @returndirect GO annotation terms
      */
-    private HashSet<OntologyTerm> getOntologyTerms( Collection<VocabCharacteristic> voc ) {
+    private HashSet<OntologyTerm> getOntologyTerms( Gene gene ) {
+ 
+        Collection<VocabCharacteristic> termsVoc = gene2GOAssociationService.findByGene( gene );
+        HashSet<OntologyTerm> termsGO = new HashSet<OntologyTerm>();
 
-        HashSet<OntologyTerm> ontTerms = new HashSet();
-
-        for ( VocabCharacteristic characteristic : voc ) {
+        for ( VocabCharacteristic characteristic : termsVoc ) {
             OntologyTerm term = GeneOntologyService.getTermForId( characteristic.getValue() );
-            if ( ( term != null ) ) ontTerms.add( term );
+            if ( ( term != null ) ) termsGO.add( term );
         }
-        return ontTerms;
+        return termsGO;
     }
 
     /**
@@ -326,8 +369,8 @@ public class GoMetric {
      */
     private Double calcJiang( Double pmin, Double probM, Double probC ) {
 
-        double scoreJiang = 1 / ( ( StrictMath.log( probM ) ) + ( StrictMath.log( probC ) ) - 2
-                * ( StrictMath.log( pmin ) ) + 1 );
+        double scoreJiang = 1 / ( ( -1 * StrictMath.log( probM ) ) + ( -1 * StrictMath.log( probC ) )
+                - ( -2 * StrictMath.log( pmin ) ) + 1 );
 
         return scoreJiang;
     }
