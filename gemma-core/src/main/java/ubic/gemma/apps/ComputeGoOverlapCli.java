@@ -34,6 +34,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 
@@ -65,7 +67,45 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
      */
 
     @Override
+    @SuppressWarnings("static-access")
     protected void buildOptions() {
+        Option goMetricOption = OptionBuilder.hasArg().withArgName( "Choice of GO Metric" ).withDescription(
+                "resnik, lin, jiang; default = simple" ).withLongOpt( "metric" ).create( 'm' );
+
+        addOption( goMetricOption );
+
+        Option maxOption = OptionBuilder.hasArg().withArgName( "Choice of using MAX calculation" ).withDescription(
+                "MAX" ).withLongOpt( "max" ).create( 'x' );
+
+        addOption( maxOption );
+
+    }
+
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+
+        if ( hasOption( 'x' ) ) {
+            String max = getOptionValue( 'x' );
+            if ( max.equalsIgnoreCase( "MAX" ) )
+                this.max = true;
+            else
+                this.max = false;
+        }
+        
+        if ( hasOption( 'm' ) ) {
+            String metricName = getOptionValue( 'm' );
+            if ( metricName.equalsIgnoreCase( "resnik" ) )
+                this.metric = GoMetric.Metric.resnik;
+            else if ( metricName.equalsIgnoreCase( "lin" ) )
+                this.metric = GoMetric.Metric.lin;
+            else if ( metricName.equalsIgnoreCase( "jiang" ) )
+                this.metric = GoMetric.Metric.jiang;
+            else{
+                this.metric = GoMetric.Metric.simple;
+                this.max = false;
+            }
+        }
     }
 
     // A list of service beans
@@ -83,12 +123,12 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
     private String HASH_MAP_RETURN = "HashMapReturn";
     private String GO_PROB_MAP = "GoProbMap";
     private String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
-    
-    //CHANGE METRIC AND OUTPUT FILE NAME
+
     private Metric metric = GoMetric.Metric.simple;
-    private String OUT_FILE = "SimpleOverlap";
-    
-    //INCLUDE PARTOF OR CHANGE STRINGENCY
+    private boolean max = false;
+    private String OUT_FILE = "JiangMaxFile";
+
+    // INCLUDE PARTOF OR CHANGE STRINGENCY
     private boolean partOf = true;
     final int stringincy = 6;
 
@@ -104,7 +144,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         geneService = ( GeneService ) getBean( "geneService" );
         gene2GOAssociationService = ( Gene2GOAssociationService ) getBean( "gene2GOAssociationService" );
         ontologyEntryService = ( GeneOntologyService ) getBean( "geneOntologyService" );
-        goMetric = (GoMetric) getBean("goMetric");
+        goMetric = ( GoMetric ) getBean( "goMetric" );
 
         while ( !ontologyEntryService.isReady() ) {
             log.info( "waiting for ontology load.." );
@@ -127,7 +167,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         if ( err != null ) return err;
 
         initBeans();
-        
+
         StopWatch overallWatch = new StopWatch();
         overallWatch.start();
 
@@ -136,8 +176,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
 
         Collection<Gene> masterGenes = getGeneObject( goID, commonName );
 
-        
-       Map<Gene, Collection<Gene>> geneExpMap = new HashMap<Gene, Collection<Gene>>();
+        Map<Gene, Collection<Gene>> geneExpMap = new HashMap<Gene, Collection<Gene>>();
 
         log.debug( "Total master genes:" + masterGenes.size() );
 
@@ -181,16 +220,16 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         }
 
         Map<String, Double> GOProbMap = new HashMap<String, Double>();
-        
+
         File f2 = new File( HOME_DIR + File.separatorChar + GO_PROB_MAP );
         if ( f2.exists() ) {
-            GOProbMap  = getMapFromDisk( f2 );
+            GOProbMap = getMapFromDisk( f2 );
             log.info( "Found probability file!" );
         }
-        
-        else{
+
+        else {
             log.info( "Calculating probabilities... " );
-            
+
             GOcountMap = goMetric.getTermOccurrence( mouseGeneGOMap );
             makeRootMap( GOcountMap.keySet() );
 
@@ -217,11 +256,16 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
             Collection<Gene> coExpGene = geneExpMap.get( masterGene );
 
             for ( Gene cGene : coExpGene ) {
-                Double score = goMetric.computeSimilarity( masterGene, cGene, GOProbMap, metric);
-                if ( score != null )
-                    scoreMap.put( cGene, score );
+                double score = 0;
+                if ( max ){
+                    log.info( "getting MAX scores for " + metric  );
+                    score = goMetric.computeMaxSimilarity( masterGene, cGene, GOProbMap, metric );
+                }
+                    
                 else
-                    scoreMap.put( cGene, 1000.00 );
+                    score = goMetric.computeSimilarity( masterGene, cGene, GOProbMap, metric );
+
+                scoreMap.put( cGene, score );
             }
             masterTermCountMap.put( masterGene, scoreMap );
         }
@@ -344,7 +388,6 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         return termSet;
     }
 
-
     /**
      * @param take a collection of GOTerm URIs
      * @return Identify the root of each term and put it in the rootMap
@@ -352,7 +395,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
     private void makeRootMap( Collection<String> terms ) {
 
         Collection<String> remove = new HashSet<String>();
-        
+
         for ( String t : terms ) {
             Collection<OntologyTerm> parents = ontologyEntryService.getAllParents( GeneOntologyService
                     .getTermForURI( t ), partOf );
@@ -360,29 +403,29 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
             for ( OntologyTerm p : parents ) {
                 if ( p.getUri().equalsIgnoreCase( process ) ) {
                     rootMap.put( t, 1 );
-                    pCount+=GOcountMap.get( t );
+                    pCount += GOcountMap.get( t );
                     break;
                 }
                 if ( p.getUri().equalsIgnoreCase( function ) ) {
                     rootMap.put( t, 2 );
-                    fCount+=GOcountMap.get( t );
+                    fCount += GOcountMap.get( t );
                     break;
                 }
                 if ( p.getUri().equalsIgnoreCase( component ) ) {
                     rootMap.put( t, 3 );
-                    cCount+= GOcountMap.get( t );
+                    cCount += GOcountMap.get( t );
                     break;
                 }
             }
-            if ( !( rootMap.containsKey( t ) ) ){
+            if ( !( rootMap.containsKey( t ) ) ) {
                 log.warn( "Couldn't get root for term: " + t );
                 remove.add( t );
             }
         }
-        
-        for (String s : remove){
+
+        for ( String s : remove ) {
             GOcountMap.remove( s );
-        }      
+        }
     }
 
     /**
