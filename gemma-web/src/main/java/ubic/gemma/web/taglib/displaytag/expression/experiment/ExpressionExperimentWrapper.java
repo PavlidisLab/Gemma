@@ -34,6 +34,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAna
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.util.GemmaLinkUtils;
 import ubic.gemma.util.ToStringUtil;
 
 /**
@@ -168,7 +169,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     public String getDateLinkAnalysisNoTime() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         // if the data set is too small, show "-"
-        if ( object.getBioMaterialCount() <= 4 ) {
+        if ( object.getBioMaterialCount() == null || object.getBioMaterialCount() <= 4 ) {
             return "-";
         }
         Date dateObject = object.getDateLinkAnalysis();
@@ -298,30 +299,31 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     public String getNameLink() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         if ( object != null ) {
-            // return "<a title=\"" + object.getName()
-            // + "\" href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + object.getId()
-            // + "\">" + StringUtils.abbreviate( object.getName(), 75 ) + "</a>";
-            StringBuffer buf = new StringBuffer();
-            buf.append( "<a title=\"" );
-            buf.append( object.getName() );
-            buf.append( "\" href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id=" );
-            buf.append( object.getId() );
-            buf.append( "\">" );
-            buf.append( StringUtils.abbreviate( object.getName(), 75 ) );
-            buf.append( "</a>" );
-            // if ( object.getTroubleFlag() != null ) {
-            // buf.append( "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt='trouble'
-            // title='" );
-            // buf.append( StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getTroubleFlag() ) ) );
-            // buf.append( "' />" );
-            // }
-            // if ( object.getValidatedFlag() != null ) {
-            // buf.append( "&nbsp;<img src='/Gemma/images/icons/ok.png' height='16' width='16' alt='validated' title='"
-            // );
-            // buf.append( StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getValidatedFlag() ) ) );
-            // buf.append( "' />" );
-            // }
-            return buf.toString();
+            return GemmaLinkUtils.getExpressionExperimentLink( object.getId(), StringUtils.abbreviate( object.getName(), 75 ), object.getName() );
+//            // return "<a title=\"" + object.getName()
+//            // + "\" href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + object.getId()
+//            // + "\">" + StringUtils.abbreviate( object.getName(), 75 ) + "</a>";
+//            StringBuffer buf = new StringBuffer();
+//            buf.append( "<a title=\"" );
+//            buf.append( object.getName() );
+//            buf.append( "\" href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id=" );
+//            buf.append( object.getId() );
+//            buf.append( "\">" );
+//            buf.append( StringUtils.abbreviate( object.getName(), 75 ) );
+//            buf.append( "</a>" );
+//            // if ( object.getTroubleFlag() != null ) {
+//            // buf.append( "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt='trouble'
+//            // title='" );
+//            // buf.append( StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getTroubleFlag() ) ) );
+//            // buf.append( "' />" );
+//            // }
+//            // if ( object.getValidatedFlag() != null ) {
+//            // buf.append( "&nbsp;<img src='/Gemma/images/icons/ok.png' height='16' width='16' alt='validated' title='"
+//            // );
+//            // buf.append( StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getValidatedFlag() ) ) );
+//            // buf.append( "' />" );
+//            // }
+//            return buf.toString();
         }
         return "No design";
     }

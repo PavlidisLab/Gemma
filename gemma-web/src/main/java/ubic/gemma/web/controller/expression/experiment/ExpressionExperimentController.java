@@ -445,7 +445,9 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         }
         // sort expression experiments by name first
         Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments, new ExpressionExperimentValueObjectComparator());
-        expressionExperimentReportService.fillEventInformation( expressionExperiments );
+        if ( SecurityService.isUserAdmin() ) {
+            expressionExperimentReportService.fillEventInformation( expressionExperiments );
+        }
         Long numExpressionExperiments = new Long( expressionExperiments.size() );
         ModelAndView mav = new ModelAndView( "expressionExperiments" );
         mav.addObject( "expressionExperiments", expressionExperiments );

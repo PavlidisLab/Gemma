@@ -23,9 +23,9 @@
 	</p>
 </authz:authorize>
 
-<display:table pagesize="50" name="expressionExperiments" sort="list"
+<display:table pagesize="50" name="expressionExperiments" sort="list" defaultsort="9" defaultorder="descending"
 	class="list" requestURI="" id="expressionExperimentList"
-	decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper" defaultSort="9" >
+	decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
 
 	<display:column property="nameLink" sortable="true" sortProperty="name"
 		titleKey="expressionExperiment.name"

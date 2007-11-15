@@ -18,8 +18,8 @@
 </h3>
 <a class="helpLink" href="?" onclick="showHelpTip(event, 'Summarizes multiple expression experiments.'); return false">Help</a>
 
-<display:table pagesize="50" name="expressionExperiments" sort="list" class="list" requestURI=""
-	id="expressionExperimentList"
+<display:table pagesize="50" name="expressionExperiments" sort="list" 
+	class="list" requestURI="" id="expressionExperimentList"
 	decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
 
 	<display:column property="nameLink" sortable="true" sortProperty="name" titleKey="expressionExperiment.name"
