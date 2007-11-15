@@ -150,15 +150,11 @@
 			<attribute name="javadoc_location" value="http://people.apache.org/~andyc/neko/doc/html/javadoc/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/compass/compass/1.1.1/compass-1.1.1.jar" sourcepath="/JAR_SOURCE/compass-1.1.1/src/main/src">
-		<attributes>
-			<attribute name="javadoc_location" value="http://www.opensymphony.com/compass/versions/1.1/api/"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/lucene/lucene-core/2.0.0/lucene-core-2.0.0.jar" sourcepath="/JAR_SOURCE/lucene-2.0.0/src/java"/>
-	<classpathentry kind="var" path="M2_REPO/lucene/lucene-analyzers/2.0.0/lucene-analyzers-2.0.0.jar"/>
-	<classpathentry kind="var" path="M2_REPO/lucene/lucene-highlighter/2.0.0/lucene-highlighter-2.0.0.jar"/>
-	<classpathentry kind="var" path="M2_REPO/lucene/lucene-snowball/2.0.0/lucene-snowball-2.0.0.jar"/>
+	<classpathentry kind="var" path="M2_REPO/compass/compass/1.2.0/compass-1.2.0.jar"/>
+	<classpathentry kind="var" path="M2_REPO/lucene/lucene-core/2.2.0/lucene-core-2.2.0.jar"/>
+	<classpathentry kind="var" path="M2_REPO/lucene/lucene-analyzers/2.2.0/lucene-analyzers-2.2.0.jar"/>
+	<classpathentry kind="var" path="M2_REPO/lucene/lucene-highlighter/2.2.0/lucene-highlighter-2.2.0.jar"/>
+	<classpathentry kind="var" path="M2_REPO/lucene/lucene-snowball/2.2.0/lucene-snowball-2.2.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/dumbster/dumbster/1.6/dumbster-1.6.jar"/>
 	<classpathentry kind="var" path="M2_REPO/velocity-tools/velocity-tools-view/1.0/velocity-tools-view-1.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/jtidy/jtidy/4aug2000r7-dev/jtidy-4aug2000r7-dev.jar">
