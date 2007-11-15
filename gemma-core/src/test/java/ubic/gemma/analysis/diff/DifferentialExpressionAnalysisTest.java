@@ -27,7 +27,7 @@ import org.apache.commons.logging.LogFactory;
  * @author keshav
  * @version $Id$
  */
-public class DifferentialExpessionAnalysisTest extends BaseAnalyzerConfigurationTest {
+public class DifferentialExpressionAnalysisTest extends BaseAnalyzerConfigurationTest {
 
     private Log log = LogFactory.getLog( this.getClass() );
 
