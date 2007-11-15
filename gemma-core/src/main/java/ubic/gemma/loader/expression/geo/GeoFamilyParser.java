@@ -249,6 +249,7 @@ public class GeoFamilyParser implements Parser {
             sample.setType( "other" );
         } else {
             throw new IllegalArgumentException( "Unknown sample type " + string );
+            // sample.setType("other");
         }
     }
 
