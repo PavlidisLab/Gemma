@@ -87,6 +87,9 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
      */
     public void testGetTopPersistentAnalysisResults() throws Exception {
 
+        // differentialExpressionAnalysisService.getTopExpressionAnalysisResults( shortName, "differential", "anova",
+        // null, 100 );
+
         Collection<ExpressionAnalysisResult> analysisResults = differentialExpressionAnalysisService
                 .getTopExpressionAnalysisResults( shortName, 100 );
 
