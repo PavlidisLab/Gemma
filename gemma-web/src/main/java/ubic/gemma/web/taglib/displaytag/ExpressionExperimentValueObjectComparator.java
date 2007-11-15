@@ -34,7 +34,7 @@ public class ExpressionExperimentValueObjectComparator extends DateStringCompara
        ExpressionExperimentValueObject eevo0 = (ExpressionExperimentValueObject) arg0;
        ExpressionExperimentValueObject eevo1 = (ExpressionExperimentValueObject) arg1;
        
-       return super.compare( eevo0.getDateCreated(), eevo1.getDateCreated() );
+       return super.compare( eevo1.getDateCreated(), eevo0.getDateCreated() );
     }
     
 }
