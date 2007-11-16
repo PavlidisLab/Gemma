@@ -143,13 +143,12 @@ public class EffectSizeCalculationCli extends AbstractGeneCoexpressionManipulati
         DenseDoubleMatrix3DNamed correlationMatrix = matrices.getCorrelationMatrix();
         DenseDoubleMatrix3DNamed sampleSizeMatrix = matrices.getSampleSizeMatrix();
         DoubleMatrixNamed effectSizeMatrix = coexpressionAnalysisService.calculateEffectSizeMatrix( correlationMatrix, sampleSizeMatrix );
-        DoubleMatrixNamed correlationMatrix2D = coexpressionAnalysisService.foldCoexpressionMatrix( correlationMatrix );
         
         // create 2D correlation heat map
-        ColorMatrix dataColorMatrix = new ColorMatrix( correlationMatrix2D );
-        dataColorMatrix.setColorMap( ColorMap.GREENRED_COLORMAP );
-        JMatrixDisplay dataMatrixDisplay = new JMatrixDisplay( dataColorMatrix );
-        String figureFileName = outFilePrefix + ".corr.png";
+//        ColorMatrix dataColorMatrix = new ColorMatrix( correlationMatrix2D );
+//        dataColorMatrix.setColorMap( ColorMap.GREENRED_COLORMAP );
+//        JMatrixDisplay dataMatrixDisplay = new JMatrixDisplay( dataColorMatrix );
+//        String figureFileName = outFilePrefix + ".corr.png";
         
         // create row/col name maps
         Map<ExpressionExperiment, String> eeNameMap = matrices.getEeNameMap();
@@ -164,7 +163,7 @@ public class EffectSizeCalculationCli extends AbstractGeneCoexpressionManipulati
             MatrixWriter out = new MatrixWriter( outFilePrefix + ".corr.txt", formatter);
             out.setColNameMap(eeNameMap);
             out.setTopLeft(topLeft);
-            out.writeMatrix( correlationMatrix2D, true );
+            out.writeMatrix( correlationMatrix, true );
             out.close();
             
             out = new MatrixWriter( outFilePrefix + ".effect_size.txt", formatter);
@@ -173,8 +172,8 @@ public class EffectSizeCalculationCli extends AbstractGeneCoexpressionManipulati
             out.writeMatrix( effectSizeMatrix, true );
             out.close();
             
-            dataMatrixDisplay.saveImage( figureFileName, true );
-            log.info( "Saved correlation image to " + figureFileName );
+//            dataMatrixDisplay.saveImage( figureFileName, true );
+//            log.info( "Saved correlation image to " + figureFileName );
         } catch ( IOException e ) {
             return e;
         }
