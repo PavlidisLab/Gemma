@@ -81,6 +81,9 @@
       <property name="fetchCount">
 			<value>100</value>
   	  </property>
+  	  <property name="mirrorDataChanges">
+			<value>false</value>
+	   </property>
     </bean>
 	
 	<bean id="expressionGps"
