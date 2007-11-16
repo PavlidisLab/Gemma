@@ -25,7 +25,6 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -444,7 +443,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             expressionExperiments.addAll( eeValObjectCol );
         }
         // sort expression experiments by name first
-        Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments, new ExpressionExperimentValueObjectComparator());
+        Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments,
+                new ExpressionExperimentValueObjectComparator() );
         if ( SecurityService.isUserAdmin() ) {
             expressionExperimentReportService.fillEventInformation( expressionExperiments );
         }
@@ -532,7 +532,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         Long id = Long.parseLong( idStr );
 
         ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
-        Map m = expressionExperimentService.getQuantitationTypeCountById( id );
         if ( expressionExperiment == null ) {
             throw new EntityNotFoundException( id + " not found" );
         }
@@ -811,8 +810,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         if ( e == null || e.getId() == null ) return null;
 
         ExperimentalFactor ef = this.experimentalFactorService.load( e.getId() );
-        if (ef == null) return null;
-        
+        if ( ef == null ) return null;
+
         Collection<FactorValueObject> result = new HashSet<FactorValueObject>();
 
         Collection<FactorValue> values = ef.getFactorValues();
@@ -822,15 +821,13 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         return result;
     }
-    
+
     public Collection<DesignMatrixRowValueObject> getDesignMatrixRows( EntityDelegator e ) {
-        
-        if ( e == null || e.getId() == null )
-            return null;
+
+        if ( e == null || e.getId() == null ) return null;
         ExpressionExperiment ee = this.expressionExperimentService.load( e.getId() );
-        if (ee == null)
-            return null;
-        
+        if ( ee == null ) return null;
+
         return DesignMatrixRowValueObject.Factory.getDesignMatrix( ee );
     }
 
