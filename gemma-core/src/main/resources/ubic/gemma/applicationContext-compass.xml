@@ -78,6 +78,9 @@
       <property name="sessionFactory" ref="sessionFactory" />
       <property name="nativeExtractor"><bean class="org.compass.spring.device.hibernate.SpringNativeHibernateExtractor" /></property>
       <property name="entitiesIndexer"><bean class="org.compass.gps.device.hibernate.indexer.ScrollableHibernateIndexEntitiesIndexer" /> </property>
+      <property name="fetchCount">
+			<value>100</value>
+  	  </property>
     </bean>
 	
 	<bean id="expressionGps"
