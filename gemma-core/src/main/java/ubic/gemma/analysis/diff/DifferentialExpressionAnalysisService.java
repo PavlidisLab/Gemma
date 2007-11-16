@@ -147,6 +147,8 @@ public class DifferentialExpressionAnalysisService {
 
         ExpressionExperiment ee = expressionExperimentService.findByShortName( shortName );
 
+        expressionExperimentService.thaw( ee );
+
         if ( ee == null ) return null;
 
         return this.getPersistentExpressionAnalyses( ee );
