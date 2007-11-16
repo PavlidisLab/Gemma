@@ -22,9 +22,12 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.VocabCharacteristic;
 
 /**
  * @author pavlidis
@@ -36,6 +39,44 @@ public class FactorValueImpl extends ubic.gemma.model.expression.experiment.Fact
      */
     private static final long serialVersionUID = -5395878022298281346L;
 
+    @Override
+    public boolean equals( Object object ) {
+        if ( object == null )
+            return false;
+        if ( this == object )
+            return true;
+        if ( !(object instanceof FactorValue) )
+            return false;
+        FactorValue that = (FactorValue)object;
+        if ( this.getId() != null && that.getId() != null )
+            return this.getId().equals( that.getId() );
+        
+        /* at this point, we know we have two FactorValues, at least one of which is
+         * transient, so we have to look at the fields; to do this, just compare the
+         * hashcodes, which already incorporate all of the important fields...
+         */
+        return ObjectUtils.equals( this.getExperimentalFactor(), that.getExperimentalFactor() )
+            && ObjectUtils.equals( this.getMeasurement(), that.getMeasurement() )
+            && ObjectUtils.equals( this.getCharacteristics(), that.getCharacteristics() );
+    }
+
+    @Override
+    public int hashCode() {
+        HashCodeBuilder builder = new HashCodeBuilder(17, 7)
+            .append( this.getId() )
+            .append( this.getExperimentalFactor() )
+            .append( this.getMeasurement() );
+        if ( this.getCharacteristics() != null ) {
+            for ( Characteristic c : this.getCharacteristics() ) {
+                if ( c instanceof VocabCharacteristic )
+                    builder.append( ( (VocabCharacteristic)c ).hashCode() );
+                else
+                    builder.append( c.hashCode() );
+            }
+        }
+        return builder.toHashCode();
+    }
+    
     /**
      * @see ubic.gemma.model.expression.experiment.FactorValue#toString()
      */

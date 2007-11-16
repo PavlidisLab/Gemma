@@ -22,6 +22,9 @@
  */
 package ubic.gemma.model.common.description;
 
+import org.apache.commons.lang.ObjectUtils;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 /**
  * @see ubic.gemma.model.common.description.Characteristic
  * @author pavlidis
@@ -32,12 +35,37 @@ public class CharacteristicImpl extends ubic.gemma.model.common.description.Char
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 163962374233046021L;
+    
+    @Override
+    public boolean equals( Object object ) {
+        if ( object == null )
+            return false;
+        if ( this == object )
+            return true;
+        if ( !(object instanceof Characteristic) )
+            return false;
+        Characteristic that = (Characteristic)object;
+        if ( this.getId() != null && that.getId() != null )
+            return this.getId().equals( that.getId() );
+        
+        /* at this point, we know we have two Characteristics, at least one of which is
+         * transient, so we have to look at the fields; we can't just compare the
+         * hashcodes because they also look at the id, so comparing one transient and
+         * one persistent would always fail...
+         */
+        return ObjectUtils.equals( this.getCategory(), that.getCategory() )
+            && ObjectUtils.equals( this.getValue(), that.getValue() );
+    }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.description.Characteristic#toString()
-     */
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 1).
+            append( this.getId() ).
+            append( this.getCategory() ).
+            append( this.getValue() ).
+            toHashCode();
+    }
+    
     @Override
     public String toString() {
         return "Category = " + this.getCategory() + " Value = " + this.getValue();

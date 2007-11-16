@@ -1782,8 +1782,7 @@ public class GeoConverter implements Converter {
 
         for ( FactorValue fv : experimentalFactor.getFactorValues() ) {
             if ( fv.equals( factorValue ) ) {
-                /* please change to log.debug once this works */
-                log.info( factorValue + " is matched by existing factorValue for " + experimentalFactor );
+                log.debug( factorValue + " is matched by existing factorValue for " + experimentalFactor );
                 return fv;
             }
         }

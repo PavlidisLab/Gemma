@@ -22,7 +22,9 @@
  */
 package ubic.gemma.model.common.description;
 
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 
 /**
  * @see ubic.gemma.model.common.description.VocabCharacteristic
@@ -32,6 +34,27 @@ public class VocabCharacteristicImpl extends ubic.gemma.model.common.description
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 8530426256054538222L;
+    
+    @Override
+    public boolean equals( Object object )
+    {
+        if ( !super.equals( object ) )
+            return false;
+        if ( !(object instanceof VocabCharacteristic) )
+            return false;
+        VocabCharacteristic that = (VocabCharacteristic)object;
+        return ObjectUtils.equals( this.getCategoryUri(), that.getCategoryUri() )
+            && ObjectUtils.equals( this.getValueUri(), that.getValueUri() );
+    }
+    
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 3).
+            appendSuper( super.hashCode() ).
+            append( this.getCategoryUri() ).
+            append( this.getValueUri() ).
+            toHashCode();
+    }
 
     /**
      * @see ubic.gemma.model.common.description.Characteristic#toString()
