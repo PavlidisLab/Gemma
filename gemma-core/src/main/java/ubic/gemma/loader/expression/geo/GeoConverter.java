@@ -1757,14 +1757,13 @@ public class GeoConverter implements Converter {
         experimentalFactor.setExperimentalDesign( experimentalDesign );
 
         FactorValue factorValue = convertSubsetDescriptionToFactorValue( geoSubSet, experimentalFactor );
-
-        // would be preferable.
-        experimentalFactor.getFactorValues().add( factorValue );
-
         addFactorValueToBioMaterial( expExp, geoSubSet, factorValue );
     }
 
     /**
+     * Creates a new factorValue, or identifies an existing one, matching the subset. If it is a new one it adds it to
+     * the given experimentalFactor.
+     * 
      * @param geoSubSet
      * @param experimentalFactor
      * @return
@@ -1778,6 +1777,17 @@ public class GeoConverter implements Converter {
         term.setDescription( "Converted from GEO subset " + geoSubSet.getGeoAccession() );
         factorValue.getCharacteristics().add( term );
         factorValue.setExperimentalFactor( experimentalFactor );
+
+        /* Check that there isn't already a factor value for this in the factor */
+
+        for ( FactorValue fv : experimentalFactor.getFactorValues() ) {
+            if ( fv.equals( factorValue ) ) {
+                /* please change to log.debug once this works */
+                log.info( factorValue + " is matched by existing factorValue for " + experimentalFactor );
+                return fv;
+            }
+        }
+        experimentalFactor.getFactorValues().add( factorValue );
         return factorValue;
     }
 
