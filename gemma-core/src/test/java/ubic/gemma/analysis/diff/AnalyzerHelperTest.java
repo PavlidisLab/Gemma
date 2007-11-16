@@ -86,7 +86,7 @@ public class AnalyzerHelperTest extends BaseAnalyzerConfigurationTest {
     @Override
     public void configureMocks() throws Exception {
 
-        configureMockAnalysisServiceHelper();
+        configureMockAnalysisServiceHelper( 1 );
 
         analyzerHelper.setAnalysisHelperService( analysisHelperService );
 

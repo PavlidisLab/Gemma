@@ -446,9 +446,10 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
     }
 
     /**
+     * @param numMethodCalls The number of times the mocked method will be called.
      * @throws Exception
      */
-    protected void configureMockAnalysisServiceHelper() throws Exception {
+    protected void configureMockAnalysisServiceHelper( int numMethodCalls ) throws Exception {
         // TODO replace with non-deprecated metods
 
         MockClassControl control = MockClassControl.createControl( AnalysisHelperService.class,
@@ -459,7 +460,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         analysisHelperService.getVectors( expressionExperiment );
 
         Collection<DesignElementDataVector> vectorsToReturn = expressionExperiment.getDesignElementDataVectors();
-        control.setReturnValue( vectorsToReturn );
+        control.setReturnValue( vectorsToReturn, numMethodCalls );
 
         control.replay();
 

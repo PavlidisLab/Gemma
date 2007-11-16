@@ -125,7 +125,7 @@ public class DifferentialExpressionAnalysisTest extends BaseAnalyzerConfiguratio
     @Override
     protected void configureMocks() throws Exception {
 
-        configureMockAnalysisServiceHelper();
+        configureMockAnalysisServiceHelper( 2 );
 
         AnalyzerHelper analyzerHelper = ( AnalyzerHelper ) this.getBean( "analyzerHelper" );
         analyzerHelper.setAnalysisHelperService( analysisHelperService );
