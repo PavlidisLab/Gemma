@@ -446,6 +446,8 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
     }
 
     /**
+     * Mocks the method getVectors in the {@link AnalysisHelperService}.
+     * 
      * @param numMethodCalls The number of times the mocked method will be called.
      * @throws Exception
      */
