@@ -327,6 +327,10 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         }
         return "No design";
     }
+    
+    public String getStatus() {
+        return getTroubleFlag().concat( getValidatedFlag() );
+    }
 
     public String getTroubleFlag() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();

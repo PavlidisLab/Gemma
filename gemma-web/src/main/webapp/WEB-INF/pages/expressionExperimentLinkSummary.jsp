@@ -21,19 +21,15 @@
 			Regenerate Expression Experiment Link Summaries </a>
 
 	</p>
-	<display:table pagesize="50" name="expressionExperiments" sort="list" defaultsort="9" defaultorder="descending"
+	<display:table pagesize="50" name="expressionExperiments" sort="list" defaultsort="8" defaultorder="descending"
 		class="list" requestURI="" id="expressionExperimentList"
 		decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
 	
 		<display:column property="nameLink" sortable="true" sortProperty="name"
 			titleKey="expressionExperiment.name"
 			comparator="ubic.gemma.web.taglib.displaytag.StringComparator" />
-		<display:column property="troubleFlag" sortable="true"
-			titleKey="expressionExperiment.trouble" style="text-align:center; vertical-align:middle;"
-			comparator="ubic.gemma.web.taglib.displaytag.StringComparator"
-			defaultorder="descending" />
-		<display:column property="validatedFlag" sortable="true"
-			titleKey="expressionExperiment.validated" style="text-align:center; vertical-align:middle;"
+		<display:column property="status" sortable="true"
+			titleKey="expressionExperiment.status" style="text-align:center; vertical-align:middle;"
 			comparator="ubic.gemma.web.taglib.displaytag.StringComparator"
 			defaultorder="descending" />
 		<display:column property="shortName" sortable="true"

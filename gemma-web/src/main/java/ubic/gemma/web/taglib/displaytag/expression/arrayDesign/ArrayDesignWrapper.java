@@ -43,6 +43,10 @@ public class ArrayDesignWrapper extends TableDecorator {
 
     Log log = LogFactory.getLog( this.getClass() );
     
+    public String getStatus() {
+        return getTroubleFlag().concat( getValidatedFlag() );
+    }
+    
     public String getTroubleFlag() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
         StringBuffer buf = new StringBuffer();
