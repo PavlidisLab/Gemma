@@ -134,8 +134,8 @@ public class OntologyLoader {
     public static String asString( RDFNode object ) {
         return ( String ) object.visitWith( new RDFVisitor() {
 
-            public Object visitBlank( Resource r, @SuppressWarnings("unused")
-            AnonId id ) {
+            @SuppressWarnings("unused")
+            public Object visitBlank( Resource r, AnonId id ) {
                 return r.getLocalName();
             }
 
@@ -143,8 +143,8 @@ public class OntologyLoader {
                 return l.toString().replaceAll( "\\^\\^.+", "" );
             }
 
-            public Object visitURI( Resource r, @SuppressWarnings("unused")
-            String uri ) {
+            @SuppressWarnings("unused")
+            public Object visitURI( Resource r, String uri ) {
                 return r.getLocalName();
             }
         } );
