@@ -543,12 +543,17 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
          * same gene are correlated. STRAIGHT_JOIN is to ensure that mysql doesn't do something goofy with the index
          * use.
          */
-        String query = "SELECT STRAIGHT_JOIN geneout.ID as id, geneout.NAME as genesymb, "
+        String query =
+            "SELECT STRAIGHT_JOIN geneout.ID as id, geneout.NAME as genesymb, "
                 + "geneout.OFFICIAL_NAME as genename, coexp.EXPRESSION_EXPERIMENT_FK as exper, coexp.PVALUE as pvalue, coexp.SCORE as score, "
-                + "gcIn.CS as csIdIn, gcOut.CS as csIdOut, geneout.class as geneType  FROM " + " GENE2CS gcIn "
+                + "gcIn.CS as csIdIn, gcOut.CS as csIdOut, geneout.class as geneType, "
+                + "ee.NAME as eeName "
+            + "FROM GENE2CS gcIn "
                 + " INNER JOIN " + p2pClass + " coexp ON gcIn.CS=coexp." + inKey + " "
                 + " INNER JOIN GENE2CS gcOut ON gcOut.CS=coexp." + outKey + " "
-                + " INNER JOIN CHROMOSOME_FEATURE geneout ON geneout.ID=gcOut.GENE" + " where " + eeClause
+                + " INNER JOIN CHROMOSOME_FEATURE geneout ON geneout.ID=gcOut.GENE "
+                + " INNER JOIN INVESTIGATION ee ON ee.ID=coexp.EXPRESSION_EXPERIMENT_FK "
+            + "WHERE " + eeClause
                 + " gcIn.GENE=:id AND geneout.ID <> :id  ";
 
         return query;
@@ -588,6 +593,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         if ( eeVo == null ) {
             eeVo = new ExpressionExperimentValueObject();
             eeVo.setId( eeID );
+            eeVo.setName( scroll.getString( 9 ) );
             coexpressions.addExpressionExperiment( vo.getGeneType(), eeVo );
         }
 
@@ -643,6 +649,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         queryObject.addScalar( "csIdIn", new LongType() );
         queryObject.addScalar( "csIdOut", new LongType() );
         queryObject.addScalar( "geneType", new StringType() );
+        queryObject.addScalar( "eeName", new StringType() );
 
         queryObject.setLong( "id", id );
         // this is to make the query faster by narrowing down the gene join

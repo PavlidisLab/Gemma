@@ -23,10 +23,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.ontology.OntologyTerm;
@@ -51,12 +50,34 @@ public class CoexpressionValueObject {
     private Collection<Long> nonspecificEE;
     private int possibleOverlap;
     private Collection<OntologyTerm> goOverlap;
-    private List<Integer> experimentBitList = new ArrayList<Integer>();
+    private List<Long> experimentBitList = new ArrayList<Long>();
     private Collection<String> nonSpecificGenes = new HashSet<String>();
     private boolean hybridizesWithQueryGene;
 
+    public String getImageMapName() {
+        StringBuffer buf = new StringBuffer();
+        buf.append( "map." );
+        buf.append( geneType );
+        buf.append( ".gene" );
+        buf.append( geneId );
+        buf.append( ".taxon" );
+        buf.append( taxonId );
+        return buf.toString();
+    }
+    
     public String getExperimentBitList() {
-        return StringUtils.join( experimentBitList, "," );
+        StringBuffer buf = new StringBuffer();
+        for ( Iterator<Long> it = experimentBitList.iterator(); it.hasNext(); ) {
+            long i = it.next();
+            buf.append( i == 0 ? 0 : 20 );
+            if ( it.hasNext() )
+                buf.append( "," );
+        }
+        return buf.toString();
+    }
+    
+    public List<Long> getExperimentBitIds() {
+        return experimentBitList;
     }
 
     /**
@@ -67,11 +88,11 @@ public class CoexpressionValueObject {
     public void computeExperimentBits( List<Long> eeIds ) {
         experimentBitList.clear();
         Collection<Long> thisUsed = expressionExperimentValueObjects.keySet();
-        for ( Long long1 : eeIds ) {
-            if ( thisUsed.contains( long1 ) ) {
-                experimentBitList.add( 20 );
+        for ( Long eeId : eeIds ) {
+            if ( thisUsed.contains( eeId ) ) {
+                experimentBitList.add( eeId );
             } else {
-                experimentBitList.add( 1 );
+                experimentBitList.add( 0l );
             }
         }
     }

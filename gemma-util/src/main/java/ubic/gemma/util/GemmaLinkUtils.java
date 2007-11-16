@@ -43,12 +43,16 @@ public class GemmaLinkUtils {
         return buf.toString();
     }
     
+    public static String getExpressionExperimentUrl( long eeId ) {
+        return String.format( "/Gemma/expressionExperiment/showExpressionExperiment.html?id=%d", eeId );
+    }
+    
     public static String getExpressionExperimentLink( Long eeId, String link ) {
         return getExpressionExperimentLink( eeId, link, null );
     }
     
     public static String getExpressionExperimentLink( Long eeId, String link, String hover ) {
-        return getLink( String.format( "/Gemma/expressionExperiment/showExpressionExperiment.html?id=%d", eeId ), link, hover );
+        return getLink( getExpressionExperimentUrl( eeId ), link, hover );
     }
     
     public static String getExperimentalDesignLink( Long edId, String link ) {

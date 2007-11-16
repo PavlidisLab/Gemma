@@ -56,12 +56,12 @@ import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.ontology.OntologyTerm;
 import ubic.gemma.search.SearchService;
-import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BackgroundProcessingFormBindController;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
+import ubic.gemma.web.taglib.displaytag.coexpressionSearch.CoexpressionWrapper;
 import ubic.gemma.web.util.ConfigurationCookie;
 import ubic.gemma.web.util.MessageUtil;
 
@@ -605,7 +605,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
             throws Exception {
 
         // streamlining: don't compute this if we aren't loading GO into memory.
-        boolean loadOntology = ConfigUtils.getBoolean( "loadOntology" );
+        boolean loadOntology = geneOntologyService.isGeneOntologyLoaded();
         if ( !loadOntology ) {
             log.warn( "Won't compute GO overlaps, it will take too long without GO cache." );
             return 0;

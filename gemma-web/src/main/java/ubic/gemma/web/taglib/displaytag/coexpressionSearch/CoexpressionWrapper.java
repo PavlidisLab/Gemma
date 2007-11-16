@@ -12,6 +12,7 @@ import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.model.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.util.GemmaLinkUtils;
 
 /**
  * Used to generate hyperlinks in displaytag tables.
@@ -200,8 +201,35 @@ public class CoexpressionWrapper extends TableDecorator {
         // title='" + eeList + "'
 
         int width = object.getExperimentBitList().length() - 1; // probably okay
-        return "<span style=\"background-color:#DDDDDD;\"><img src=\"/Gemma/spark?type=bar&width=" + width
-                + "&height=10&color=black&spacing=0&data=" + object.getExperimentBitList() + "\" /></span>";
+        int height = 10;
+        
+        StringBuffer buf = new StringBuffer();
+        buf.append( "<span style=\"background-color:#DDDDDD;\"><img src=\"/Gemma/spark?type=bar&width=" );
+        buf.append( width );
+        buf.append( "&height=" );
+        buf.append( height );
+        buf.append( "&color=black&spacing=0&data=" );
+        buf.append( object.getExperimentBitList() );
+        buf.append( "\" usemap=\"" );
+        buf.append( object.getImageMapName() );
+        buf.append( "\" /></span>");
+        buf.append( "<map name=\"" );
+        buf.append( object.getImageMapName() );
+        buf.append( "\">" );
+        int x=0, y=0, barWidth=2;
+        for ( Long eeId : object.getExperimentBitIds() ) {
+            if ( eeId != 0 ) {
+                ExpressionExperimentValueObject eevo = object.getExpressionExperimentValueObject( eeId );
+                buf.append( String.format( "<area shape=\"rect\" coords=\"%d,%d,%d,%d\" href=\"%s\" alt=\"%s\" title=\"%s\" />",
+                    x, y, x+barWidth, height-1, GemmaLinkUtils.getExpressionExperimentUrl( eeId ), eevo.getName(), eevo.getName() ) );
+            }
+            x += barWidth;
+        }
+        buf.append( "</map>" );
+        
+        return buf.toString();
+//        return "<span style=\"background-color:#DDDDDD;\"><img src=\"/Gemma/spark?type=bar&width=" + width
+//                + "&height=10&color=black&spacing=0&data=" + object.getExperimentBitList() + "\" /></span>";
     }
 
     public String getGemmaLink() {
