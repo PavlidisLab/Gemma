@@ -99,6 +99,11 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
      */
     public void testTTestWithExpressionExperiment() {
 
+        if ( !connected ) {
+            log.warn( "Could not establish R connection.  Skipping test ..." );
+            return;
+        }
+
         ExpressionAnalysis expressionAnalysis = analyzer.tTest( expressionExperiment, factorValueA, factorValueB );
 
         log.info( expressionAnalysis );
@@ -115,7 +120,7 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
      * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
      */
     @Override
-    public void configureMocks() throws Exception {
+    protected void configureMocks() throws Exception {
 
         configureMockAnalysisServiceHelper();
 

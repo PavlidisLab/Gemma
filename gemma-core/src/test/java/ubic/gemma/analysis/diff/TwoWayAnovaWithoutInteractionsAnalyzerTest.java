@@ -56,6 +56,11 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
 
         log.debug( "Testing getPValues method in " + TwoWayAnovaWithoutInteractionsAnalyzer.class.getName() );
 
+        if ( !connected ) {
+            log.warn( "Could not establish R connection.  Skipping test ..." );
+            return;
+        }
+
         super.configureTestDataForTwoWayAnovaWithoutInteractions();
 
         ExpressionAnalysis expressionAnalysis = analyzer.getExpressionAnalysis( expressionExperiment );
@@ -69,7 +74,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
      * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
      */
     @Override
-    public void configureMocks() throws Exception {
+    protected void configureMocks() throws Exception {
 
         configureMockAnalysisServiceHelper();
 

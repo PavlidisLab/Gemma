@@ -72,6 +72,13 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
      */
     public void testTwoWayAnova() {
 
+        log.debug( "Testing TwoWayAnova method in " + TwoWayAnovaWithInteractionsAnalyzer.class.getName() );
+
+        if ( !connected ) {
+            log.warn( "Could not establish R connection.  Skipping test ..." );
+            return;
+        }
+
         Iterator<ExperimentalFactor> iter = expressionExperiment.getExperimentalDesign().getExperimentalFactors()
                 .iterator();
 
@@ -92,7 +99,7 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
      * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
      */
     @Override
-    public void configureMocks() throws Exception {
+    protected void configureMocks() throws Exception {
 
         configureMockAnalysisServiceHelper();
 

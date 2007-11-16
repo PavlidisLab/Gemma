@@ -26,6 +26,7 @@ import org.apache.commons.lang.math.RandomUtils;
 import org.easymock.classextension.MockClassControl;
 
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.basecode.util.RCommand;
 import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -101,6 +102,9 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
     private ByteArrayConverter bac = new ByteArrayConverter();
 
+    private RCommand rc = null;
+    protected boolean connected = false;
+
     protected AnalysisHelperService analysisHelperService = null;
 
     /*
@@ -111,6 +115,14 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
     @Override
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
+
+        /* Decide whether to skip test based on R connection. */
+        try {
+            rc = RCommand.newInstance( 20000 );
+            connected = rc == null;
+        } catch ( RuntimeException e ) {
+            connected = false;
+        }
 
         /* array designs */
         arrayDesign = ArrayDesign.Factory.newInstance();
@@ -456,5 +468,5 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
     /**
      * @throws Exception
      */
-    public abstract void configureMocks() throws Exception;
+    protected abstract void configureMocks() throws Exception;
 }

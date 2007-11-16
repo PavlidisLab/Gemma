@@ -69,6 +69,13 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
      */
     public void testOneWayAnova() {
 
+        log.debug( "Testing OneWayAnova method in " + OneWayAnovaAnalyzer.class.getName() );
+
+        if ( !connected ) {
+            log.warn( "Could not establish R connection.  Skipping test ..." );
+            return;
+        }
+
         super.configureTestDataForOneWayAnova();
 
         ExpressionAnalysis expressionAnalysis = analyzer.oneWayAnova( expressionExperiment );
@@ -90,7 +97,7 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
      * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
      */
     @Override
-    public void configureMocks() throws Exception {
+    protected void configureMocks() throws Exception {
 
         configureMockAnalysisServiceHelper();
 
