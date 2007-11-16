@@ -179,4 +179,9 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
 
     }
 
+    @Override
+    protected void handleThaw( BioAssay bioAssay ) throws Exception {
+        this.getBioAssayDao().thaw( bioAssay );
+    }
+
 }

@@ -21,7 +21,10 @@ package ubic.gemma.model.expression.bioAssay;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
+import org.hibernate.LockMode;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 
 /**
  * @author pavlidis
@@ -64,7 +67,6 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
         }
     }
 
-   
     @Override
     public BioAssay findOrCreate( BioAssay bioAssay ) {
         if ( bioAssay == null || bioAssay.getName() == null ) {
@@ -80,12 +82,25 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
     }
 
     @Override
+    public void handleThaw( final BioAssay bioAssay ) throws Exception {
+        HibernateTemplate templ = this.getHibernateTemplate();
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                session.lock( bioAssay, LockMode.READ );
+                bioAssay.getSamplesUsed().size();
+                bioAssay.getDerivedDataFiles().size();
+                return null;
+            }
+        }, true );
+    }
+
+    @Override
     protected Integer handleCountAll() throws Exception {
         final String query = "select count(*) from BioAssayImpl";
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
 
-            return (( Long ) queryObject.iterate().next()).intValue();
+            return ( ( Long ) queryObject.iterate().next() ).intValue();
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
