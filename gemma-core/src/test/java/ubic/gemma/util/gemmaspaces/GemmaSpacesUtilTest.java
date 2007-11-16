@@ -23,8 +23,6 @@ import org.springframework.context.ApplicationContext;
 
 import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.SpringContextUtil;
-import ubic.gemma.util.gemmaspaces.GemmaSpacesEnum;
-import ubic.gemma.util.gemmaspaces.GemmaSpacesUtil;
 
 /**
  * A test class for {@link GemmaSpacesUtil}.
@@ -60,7 +58,7 @@ public class GemmaSpacesUtilTest extends BaseSpringContextTest {
         String gigaspacesTemplate = "gigaspacesTemplate";
         assertFalse( withoutGigaspacesCtx.containsBean( gigaspacesTemplate ) );
 
-        GemmaSpacesUtil gigaspacesUtil = ( GemmaSpacesUtil ) this.getBean( "gigaSpacesUtil" );
+        GemmaSpacesUtil gigaspacesUtil = ( GemmaSpacesUtil ) this.getBean( "gemmaSpacesUtil" );
 
         BeanFactory updatedCtx = gigaspacesUtil.addGemmaSpacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE
                 .getSpaceUrl() );
@@ -94,9 +92,9 @@ public class GemmaSpacesUtilTest extends BaseSpringContextTest {
      */
     public void testAreWorkersRegistered() {
 
-        GemmaSpacesUtil gigaspacesUtil = ( GemmaSpacesUtil ) this.getBean( "gigaSpacesUtil" );
-        ApplicationContext updatedCtx = gigaspacesUtil.addGemmaSpacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE
-                .getSpaceUrl() );
+        GemmaSpacesUtil gigaspacesUtil = ( GemmaSpacesUtil ) this.getBean( "gemmaSpacesUtil" );
+        ApplicationContext updatedCtx = gigaspacesUtil
+                .addGemmaSpacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
 
         /*
          * NOTE: These assertions do not test anything ... I've added them for the sake of the unit test. This test
@@ -116,9 +114,9 @@ public class GemmaSpacesUtilTest extends BaseSpringContextTest {
      * Tests the number of workers registered.
      */
     public void testNumWorkersRegistered() {
-        GemmaSpacesUtil gigaspacesUtil = ( GemmaSpacesUtil ) this.getBean( "gigaSpacesUtil" );
-        ApplicationContext updatedCtx = gigaspacesUtil.addGemmaSpacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE
-                .getSpaceUrl() );
+        GemmaSpacesUtil gigaspacesUtil = ( GemmaSpacesUtil ) this.getBean( "gemmaSpacesUtil" );
+        ApplicationContext updatedCtx = gigaspacesUtil
+                .addGemmaSpacesToApplicationContext( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
 
         int count = gigaspacesUtil.numWorkersRegistered( GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
         log.info( count );
