@@ -1201,9 +1201,8 @@ Mapping urls to views. List views here that are just jsps and that don't need a 
 	<property name="mappings">
 		<props>
 			<prop key="/bioAssay/showAllBioAssays.html">showAll</prop>
-			
-			<!--  <prop key="/expressionExperiment/deleteExpressionExperiment.html">delete</prop> -->
 			<prop key="/bioAssay/showBioAssay.html">show</prop>
+			<prop key="/bioAssay/markBioAssayOutlier.html">makeOutlier</prop>
 		</props>
 	</property>
 </bean>
@@ -1212,8 +1211,6 @@ Mapping urls to views. List views here that are just jsps and that don't need a 
 	<property name="mappings">
 		<props>
 			<prop key="/bioMaterial/showAllBioMaterials.html">showAll</prop>
-			
-			<!--  <prop key="/bioMaterial/deleteBioMaterial.html">delete</prop> -->
 			<prop key="/bioMaterial/showBioMaterial.html">show</prop>
 			<prop key="/bioMaterial/annotate.html">annot</prop>
 		</props>

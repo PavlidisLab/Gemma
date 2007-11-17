@@ -22,6 +22,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 /**
@@ -40,19 +43,6 @@ public class BioAssayWrapper extends TableDecorator {
     /**
      * @return String
      */
-    public String getFactorValuesLink() {
-// FIXME:  GetFactorValuesLink has no meaning for bioassays as they do not contain factor values anymore.         
-//        BioAssay object = ( BioAssay ) getCurrentRowObject();
-//        if ( object.getFactorValues() != null ) {
-//            return "<a href=\"/Gemma/bioAssay/showBioAssay.html?id=" + object.getId() + "\">"
-//                    + object.getFactorValues().size() + "</a>";
-//        }
-        return "No factor values";
-    }
-    
-    /**
-     * @return String
-     */
     public String getNameLink() {
         BioAssay object = ( BioAssay ) getCurrentRowObject();
         String name = object.getName();
@@ -61,7 +51,27 @@ public class BioAssayWrapper extends TableDecorator {
             name = "No name";
         }
 
-        return "<a href=\"/Gemma/bioAssay/showBioAssay.html?id=" + object.getId() + "\">"
-        + name + "</a>";
+        return "<a href=\"/Gemma/bioAssay/showBioAssay.html?id=" + object.getId() + "\">" + name + "</a>";
     }
+
+    /**
+     * @return
+     */
+    public String getDelete() {
+        BioAssay object = ( BioAssay ) getCurrentRowObject();
+
+        AuditTrail auditTrail = object.getAuditTrail();
+        for ( AuditEvent ae : auditTrail.getEvents() ) {
+            if ( ae.getEventType() != null && ae.getEventType() instanceof SampleRemovalEvent ) {
+                return "Outlier";
+            }
+        }
+
+        // FIXME wire to AJAX call.
+        return "<form action=\"/Gemma/bioAssay/markBioAssayOutlier.html?id=" + object.getId()
+                + "\" onSubmit=\"return confirmDelete('Bioassay " + object.getName()
+                + "')\" method=\"post\"><input type=\"submit\"  value=\"Outlier\" /></form>";
+
+    }
+
 }

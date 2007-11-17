@@ -460,10 +460,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             this.saveMessage( request, "Displaying all Arrays" );
             valueObjects.addAll( arrayDesignService.loadAllValueObjects() );
             arrayDesignReportService.fillInValueObjects( valueObjects );
-        }
-
-        // if ids are specified, then display only those arrayDesigns
-        else {
+        } else {// if ids are specified, then display only those arrayDesigns
             Collection ids = new ArrayList<Long>();
 
             String[] idList = StringUtils.split( sId, ',' );
