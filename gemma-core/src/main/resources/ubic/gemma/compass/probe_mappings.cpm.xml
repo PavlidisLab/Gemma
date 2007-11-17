@@ -31,8 +31,10 @@
 			<meta-data store="no">description</meta-data>
 		</property>
 
-		<component name="biologicalCharacteristic"	ref-alias="biologicalCharacteristic" />			
-		<component name="componentReporters" ref-alias="componentReporters" />
+		<component name="biologicalCharacteristic"	ref-alias="biologicalCharacteristic" />		
+			
+		<component name="arrayDesign"	ref-alias="arrayDesign" />		
+
 
 
 	</class>
@@ -53,22 +55,10 @@
 		
 	</class>
 	
-	<class name="expression.designElement.ReporterImpl"
-		alias="componentReporters" root="false">
+	<class name="expression.arrayDesign.ArrayDesign"
+		alias="arrayDesign" root="false">
 
 		<id name="id" />
-
-		<property name="name">
-			<meta-data store="no">name</meta-data>
-		</property>
-
-		<property name="description">
-			<meta-data store="no">name</meta-data>
-		</property>
-		
-		<property name="strand">
-			<meta-data store="no">name</meta-data>
-		</property>
 
 	</class>
 	

@@ -286,6 +286,10 @@ public class SearchService {
 
 		Collection<Long> probeAdIdList = new HashSet<Long>();
 		for (CompositeSequence cs : compassProbeSearch(searchString)) {
+			
+			if (cs.getArrayDesign() == null)	//This might happen as compass might not have indexed the AD for the CS
+				continue;
+			
 			probeAdIdList.add(cs.getArrayDesign().getId());
 		}
 		Collection<ArrayDesign> adProbeList = arrayDesignDbLoad(probeAdIdList);
