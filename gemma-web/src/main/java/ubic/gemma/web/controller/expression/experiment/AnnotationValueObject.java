@@ -29,9 +29,27 @@ public class AnnotationValueObject  {
     private String className;
     private String termUri;
     private String termName;
+    private String description;
+    private String evidenceCode;
     
     
-    public AnnotationValueObject() {
+    public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public String getEvidenceCode() {
+		return evidenceCode;
+	}
+
+	public void setEvidenceCode(String evidenceCode) {
+		this.evidenceCode = evidenceCode;
+	}
+
+	public AnnotationValueObject() {
     }
     
     public String getClassName() { return className; }

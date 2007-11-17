@@ -163,4 +163,21 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
         return results;
     }
 
+	/* (non-Javadoc)
+	 * @see ubic.gemma.model.association.Gene2GOAssociationDaoBase#handleFindAssociationByGene(ubic.gemma.model.genome.Gene)
+	 */
+	@Override
+	protected Collection handleFindAssociationByGene(Gene gene) throws Exception {
+        final String queryString = "from Gene2GOAssociationImpl where gene = :gene";
+
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameter( "gene", gene );
+            return queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+	}
+
 }

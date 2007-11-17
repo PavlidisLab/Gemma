@@ -79,5 +79,15 @@ public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.
             ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) throws java.lang.Exception {
         return this.getGene2GOAssociationDao().findOrCreate( gene2GOAssociation );
     }
+    
+   
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.association.Gene2GOAssociationServiceBase#handleFindAssociationByGene(ubic.gemma.model.genome.Gene)
+     */
+    @Override
+    protected Collection handleFindAssociationByGene(
+    		Gene gene ) throws java.lang.Exception {
+        return this.getGene2GOAssociationDao().findAssociationByGene( gene );
+    }
 
 }

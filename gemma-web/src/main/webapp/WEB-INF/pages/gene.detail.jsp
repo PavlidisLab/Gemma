@@ -168,7 +168,7 @@
 </h3>
 
 <div id="go-grid" class="x-grid-mso"
-	style="border: 1px solid #c3daf9; overflow: hidden; width:430px; height:250px;"></div>
+	style="border: 1px solid #c3daf9; overflow: hidden; width:550px; height:250px;"></div>
 <input type="hidden" name="gene" id="gene" value="${gene.id}" />
 
 

@@ -10,7 +10,7 @@ var goTermGrid = function () {
 	};
 	
 	function initDataSource() {
-		var recordType = Ext.data.Record.create([{name:"id", type:"int"}, {name:"value", type:"string"}, {name:"description", type:"string"}]);
+		var recordType = Ext.data.Record.create([{name:"id", type:"int"}, {name:"termUri", type:"string"}, {name:"termName", type:"string"}, {name:"evidenceCode", type:"string"}]);
 		ds = new Ext.data.Store({proxy:new Ext.data.DWRProxy(GeneController.findGOTerms), reader:new Ext.data.ListRangeReader({id:"id"}, recordType), remoteSort:false});
 		ds.on("load", function () {
 		});
@@ -19,8 +19,10 @@ var goTermGrid = function () {
 	function getColumnModel() {
 		if (!columnModel) {
 			columnModel = new Ext.grid.ColumnModel([
-				{header:"ID", dataIndex:"value", renderer : golink, width: 75 }, 
-				{header:"Term", dataIndex:"description", width: 370 }
+				{header:"ID", dataIndex:"termUri", renderer : golink, width: 75 }, 
+				{header:"Term", dataIndex:"termName", width: 375 },
+				{header:"Evidence Code", dataIndex:"evidenceCode", width: 100 }
+				
 			]);
 			columnModel.defaultSortable = true;
 		}

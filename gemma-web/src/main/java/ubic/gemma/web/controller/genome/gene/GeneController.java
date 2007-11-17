@@ -20,6 +20,7 @@ package ubic.gemma.web.controller.genome.gene;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -29,6 +30,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject;
+import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -37,6 +39,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.web.controller.BaseMultiActionController;
+import ubic.gemma.web.controller.expression.experiment.AnnotationValueObject;
 import ubic.gemma.web.remote.EntityDelegator;
 
 /**
@@ -88,8 +91,26 @@ public class GeneController extends BaseMultiActionController {
     public Collection findGOTerms( EntityDelegator geneDelegator ) {
         Gene g = Gene.Factory.newInstance();
         g.setId( geneDelegator.getId() );
-        Collection<VocabCharacteristic> ontos = gene2GOAssociationService.findByGene( g );
-        fillInTermNames( ontos );
+        Collection<Gene2GOAssociation> associations = gene2GOAssociationService.findAssociationByGene( g );
+        Collection<AnnotationValueObject> ontos = new HashSet<AnnotationValueObject>();
+        for(Gene2GOAssociation assoc : associations){
+        	
+        	if (assoc.getOntologyEntry() == null)
+        		continue;
+        	
+        	AnnotationValueObject annot = new AnnotationValueObject();
+
+        	annot.setId(assoc.getOntologyEntry().getId());
+        	annot.setTermName(geneOntologyService.getTermName( assoc.getOntologyEntry().getValue() ));
+        	annot.setTermUri(assoc.getOntologyEntry().getValue());
+        	annot.setEvidenceCode(assoc.getEvidenceCode().getValue());
+        	annot.setDescription(assoc.getOntologyEntry().getDescription());
+        	annot.setClassUri(assoc.getOntologyEntry().getCategoryUri());
+        	annot.setClassName(assoc.getOntologyEntry().getCategory());
+        	
+        	ontos.add(annot);
+        }
+        
         return ontos;
     }
 
