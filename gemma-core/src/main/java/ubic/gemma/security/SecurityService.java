@@ -19,7 +19,6 @@
 package ubic.gemma.security;
 
 import java.lang.reflect.Method;
-import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -32,7 +31,6 @@ import org.acegisecurity.context.SecurityContextHolder;
 import org.acegisecurity.userdetails.UserDetails;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.proxy.LazyInitializer;
 import org.springframework.util.StringUtils;
 
 import ubic.gemma.model.common.Securable;
@@ -50,8 +48,6 @@ public class SecurityService {
 
     public static final String ADMIN_AUTHORITY = "admin";
 
-    private static final String NET_SF = "net.sf";
-
     private Log log = LogFactory.getLog( SecurityService.class );
 
     private BasicAclExtendedDao basicAclExtendedDao = null;
@@ -62,8 +58,7 @@ public class SecurityService {
     private static final String ADMINISTRATOR = "administrator";
     private static final String ACCESSOR_PREFIX = "get";
 
-    private Class[] additionalClasses = { Timestamp.class };
-    private UnsecuredSet unsecuredClasses = new UnsecuredSet( additionalClasses );
+    private UnsecuredSet unsecuredClasses = new UnsecuredSet( null );
 
     /**
      * Changes the acl_permission of the object to either administrator/PRIVATE (mask=0), or read-write/PUBLIC (mask=6).
@@ -118,22 +113,8 @@ public class SecurityService {
             String name = method.getName();
             if ( StringUtils.startsWithIgnoreCase( name, ACCESSOR_PREFIX ) ) {
                 Class returnType = method.getReturnType();
-                if ( returnType.getName().contains( NET_SF ) ) {
-                    continue;
-                }
-                if ( returnType.getName().equalsIgnoreCase( LazyInitializer.class.getName() ) ) {
-                    continue;
-                }
-                if ( returnType.getName().equalsIgnoreCase( String.class.getName() ) ) {
-                    continue;
-                }
-                if ( returnType.getName().equalsIgnoreCase( Integer.class.getName() ) ) {
-                    continue;
-                }
-                if ( returnType.getName().equalsIgnoreCase( Long.class.getName() ) ) {
-                    continue;
-                }
-                if ( returnType.getName().equalsIgnoreCase( Class.class.getName() ) ) {
+                if ( unsecuredClasses.contains( returnType )
+                        || ( returnType != java.util.Collection.class && !returnType.isAssignableFrom( Securable.class ) ) ) {
                     continue;
                 }
 
@@ -146,10 +127,11 @@ public class SecurityService {
 
                         /* check if an object in collection is in unsecuredCol */
                         Object objInCol = returnedCollection.iterator().next();
-                        if ( unsecuredClasses.contains( objInCol.getClass() ) ) {
+                        if ( unsecuredClasses.contains( objInCol.getClass() )
+                                || !objInCol.getClass().isAssignableFrom( Securable.class ) ) {
                             continue;
                         } else {
-                            /* if object in collectin is not in unsecuredCol, process */
+                            /* if object in collection is not in unsecuredCol and is a Securable, process */
                             Iterator iter = returnedCollection.iterator();
                             while ( iter.hasNext() ) {
                                 Object ob = iter.next();
@@ -163,7 +145,10 @@ public class SecurityService {
                         ob = SecurityUtil.getImplementationFromProxy( ob );
 
                         if ( ob == null || unsecuredClasses.contains( ob.getClass() )
-                                || ( ( Securable ) ob ).getId() == null ) continue;
+                                || !ob.getClass().isAssignableFrom( Securable.class )
+                                || ( ( Securable ) ob ).getId() == null ) {
+                            continue;
+                        }
                         setPermissions( ob, mask, visited );// recursive
                     }
                 } catch ( Exception e ) {
@@ -275,9 +260,10 @@ public class SecurityService {
 
         return authentication;
     }
-    
+
     /**
      * Returns true if the current user has admin authority.
+     * 
      * @return true if the current user has admin authority
      */
     public static boolean isUserAdmin() {
