@@ -55,7 +55,7 @@ public class SecurityService {
 
     public static final int PUBLIC_MASK = 6;
     public static final int PRIVATE_MASK = 0;
-    private static final String ADMINISTRATOR = "administrator";
+
     private static final String ACCESSOR_PREFIX = "get";
 
     private UnsecuredSet unsecuredClasses = new UnsecuredSet( null );
@@ -201,7 +201,7 @@ public class SecurityService {
             throw new IllegalStateException( "No recipient for object " + objectIdentityId );
         }
 
-        if ( principal.toString().equals( ADMINISTRATOR ) ) {
+        if ( isUserAdmin() ) {
             if ( !recipient.equals( principal.toString() ) ) {
                 RunAsManager runAsManager = new RunAsManager();
                 runAsManager.buildRunAs( object, authentication, recipient );
@@ -211,7 +211,7 @@ public class SecurityService {
             }
         } else {
             throw new RuntimeException( "User '" + principal
-                    + "' is not authorized to execute this method, you must be '" + ADMINISTRATOR + "'" );
+                    + "' is not authorized to execute this method, you must be an 'administrator'." );
         }
         return recipient;
     }

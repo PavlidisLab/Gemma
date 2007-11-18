@@ -109,7 +109,7 @@
 			</tr>
 			<tr>
 				<th>
-					<fmt:message key="user.adminUser" />
+					<fmt:message key="user.isAdmin" />
 				</th>
 				<td>
 					<spring:bind path="user.adminUser">
