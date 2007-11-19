@@ -65,8 +65,8 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
          */
         log.info( "Turn up the logging levels to DEBUG on the acegi and gemma security packages" );
 
-        // super.onSetUpInTransaction(); //admin
-        super.onSetUpInTransactionGrantingUserAuthority( username ); // user
+        super.onSetUpInTransaction(); // admin
+        // super.onSetUpInTransactionGrantingUserAuthority( username ); // user
 
         arrayDesign = ArrayDesign.Factory.newInstance();
         arrayDesign.setName( arrayDesignName );
