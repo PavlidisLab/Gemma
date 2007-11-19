@@ -21,7 +21,6 @@ package ubic.gemma.model.expression.bioAssay;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
-import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.criterion.Restrictions;
@@ -90,7 +89,7 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
                 try {
                     session.lock( bioAssay, LockMode.READ );
                 } catch ( HibernateException e ) {
-                    // 
+                    return null;
                 }
                 bioAssay.getSamplesUsed().size();
                 bioAssay.getDerivedDataFiles().size();
