@@ -220,7 +220,7 @@ public class GeneCoExpressionAnalysis {
      * @param dedvJ
      * @return
      */
-    private double CoRelation_Pvalue( DesignElementDataVector dedvI, DesignElementDataVector dedvJ ) {
+    private double correlationPvalue( DesignElementDataVector dedvI, DesignElementDataVector dedvJ ) {
         double corr = coRelation( dedvI, dedvJ );
         if ( !Double.isNaN( corr ) ) {
             ByteArrayConverter bac = new ByteArrayConverter();
@@ -245,6 +245,10 @@ public class GeneCoExpressionAnalysis {
         return corr;
     }
 
+    /**
+     * @param dedv
+     * @return
+     */
     private int getSampleSize( DesignElementDataVector dedv ) {
         byte[] bytes = dedv.getData();
         ByteArrayConverter bac = new ByteArrayConverter();
@@ -380,6 +384,9 @@ public class GeneCoExpressionAnalysis {
         }
     }
 
+    /**
+     * @return
+     */
     public Map calculateMatrixEffectSize() {
         Map<Long, Double> effectSizeMap = new HashMap<Long, Double>();
         double matrixEffectSize = 0.0;
@@ -389,7 +396,6 @@ public class GeneCoExpressionAnalysis {
         DoubleArrayList effectSizes = new DoubleArrayList();
         for ( Long queryGeneId : queryGene2correlationData.keySet() ) {
             DenseDoubleMatrix2DNamed correlationDataMatrix = queryGene2correlationData.get( queryGeneId );
-            String queryGeneName = geneNames.get( queryGeneId );
             for ( Object coExpressedGeneId : correlationDataMatrix.getRowNames() ) {
                 if ( coExpressedGeneId.equals( queryGeneId ) ) continue;
                 int rowIndex = correlationDataMatrix.getRowIndexByName( coExpressedGeneId );
