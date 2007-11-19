@@ -162,6 +162,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
         if ( ee == null ) {
             log.error( "Cannot find experiment " + expName + " in database.  Skipping test." );
+            return;
         } else {
             SecurityService securityService = new SecurityService();
 
