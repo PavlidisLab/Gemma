@@ -53,7 +53,7 @@ public class SecurityService {
 
     private BasicAclExtendedDao basicAclExtendedDao = null;
     private SecurableDao securableDao = null;
-    private UnsecuredSet unsecuredClasses = new UnsecuredSet( null );
+    private UnsecuredSecurableSet unsecuredClasses = new UnsecuredSecurableSet( null );
 
     public static final String ADMIN_AUTHORITY = "admin";
     public static final int PUBLIC_MASK = SimpleAclEntry.READ_WRITE;

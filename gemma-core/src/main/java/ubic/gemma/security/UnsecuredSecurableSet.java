@@ -28,15 +28,14 @@ import ubic.gemma.model.genome.biosequence.BioSequenceImpl;
 import ubic.gemma.model.genome.gene.GeneProductImpl;
 
 /**
- * A datastructure to hold unsecured classes. These classes either do not implement {@link Securable} or do not have acl
- * permissions applied to them directly.
+ * A datastructure to hold {@link Securable} classes that are not to be secured directly.
  * <p>
  * Example: We secure the ArrayDesign, but not the CompositeSequence.
  * 
  * @author keshav
  * @version $Id$
  */
-public class UnsecuredSet extends HashSet {
+public class UnsecuredSecurableSet extends HashSet {
 
     /**
      * 
@@ -49,7 +48,7 @@ public class UnsecuredSet extends HashSet {
      * @param additionalClasses Additional classes to add to the initial set of unsecured classes.
      */
     @SuppressWarnings("unchecked")
-    public UnsecuredSet( Class[] additionalClasses ) {
+    public UnsecuredSecurableSet( Class[] additionalClasses ) {
         // these are Securable but we don't use acls on them directly
         this.add( BioSequenceImpl.class );
         this.add( CompositeSequenceImpl.class );
