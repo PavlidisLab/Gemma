@@ -46,19 +46,18 @@ import ubic.gemma.util.SecurityUtil;
  */
 public class SecurityService {
 
-    public static final String ADMIN_AUTHORITY = "admin";
-
     private Log log = LogFactory.getLog( SecurityService.class );
 
-    private BasicAclExtendedDao basicAclExtendedDao = null;
-    private SecurableDao securableDao = null;
-
+    public static final String ADMIN_AUTHORITY = "admin";
     public static final int PUBLIC_MASK = 6;
     public static final int PRIVATE_MASK = 0;
 
     private static final String ACCESSOR_PREFIX = "get";
 
     private UnsecuredSet unsecuredClasses = new UnsecuredSet( null );
+
+    private BasicAclExtendedDao basicAclExtendedDao = null;
+    private SecurableDao securableDao = null;
 
     /**
      * Changes the acl_permission of the object to either administrator/PRIVATE (mask=0), or read-write/PUBLIC (mask=6).
