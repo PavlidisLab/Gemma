@@ -26,6 +26,7 @@ import org.acegisecurity.Authentication;
 import org.acegisecurity.GrantedAuthority;
 import org.acegisecurity.acl.basic.BasicAclExtendedDao;
 import org.acegisecurity.acl.basic.NamedEntityObjectIdentity;
+import org.acegisecurity.acl.basic.SimpleAclEntry;
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.acegisecurity.userdetails.UserDetails;
@@ -49,8 +50,8 @@ public class SecurityService {
     private Log log = LogFactory.getLog( SecurityService.class );
 
     public static final String ADMIN_AUTHORITY = "admin";
-    public static final int PUBLIC_MASK = 6;
-    public static final int PRIVATE_MASK = 0;
+    public static final int PUBLIC_MASK = SimpleAclEntry.READ_WRITE;
+    public static final int PRIVATE_MASK = SimpleAclEntry.NOTHING;
 
     private static final String ACCESSOR_PREFIX = "get";
 
