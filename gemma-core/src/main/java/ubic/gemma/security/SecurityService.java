@@ -49,16 +49,15 @@ public class SecurityService {
 
     private Log log = LogFactory.getLog( SecurityService.class );
 
-    public static final String ADMIN_AUTHORITY = "admin";
-    public static final int PUBLIC_MASK = SimpleAclEntry.READ_WRITE;
-    public static final int PRIVATE_MASK = SimpleAclEntry.NOTHING;
-
     private static final String ACCESSOR_PREFIX = "get";
-
-    private UnsecuredSet unsecuredClasses = new UnsecuredSet( null );
 
     private BasicAclExtendedDao basicAclExtendedDao = null;
     private SecurableDao securableDao = null;
+    private UnsecuredSet unsecuredClasses = new UnsecuredSet( null );
+
+    public static final String ADMIN_AUTHORITY = "admin";
+    public static final int PUBLIC_MASK = SimpleAclEntry.READ_WRITE;
+    public static final int PRIVATE_MASK = SimpleAclEntry.NOTHING;
 
     /**
      * Changes the acl_permission of the object to either administrator/PRIVATE (mask=0), or read-write/PUBLIC (mask=6).
