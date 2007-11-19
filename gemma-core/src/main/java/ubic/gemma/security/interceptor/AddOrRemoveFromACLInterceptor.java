@@ -120,7 +120,7 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      * composition. In principle this shouldn't needed in most cases because the methods for the corresponding services
      * are not interccepted anyway.
      */
-    static {
+    static {// FIXME can we use the UnsecuredSecurableSet instead?
         unsecuredClasses.add( DataVector.class );
         unsecuredClasses.add( DatabaseEntry.class );
         unsecuredClasses.add( BioSequence.class );
