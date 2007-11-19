@@ -113,7 +113,8 @@ public class SecurityService {
             if ( StringUtils.startsWithIgnoreCase( name, ACCESSOR_PREFIX ) ) {
                 Class returnType = method.getReturnType();
                 if ( unsecuredClasses.contains( returnType )
-                        || ( returnType != java.util.Collection.class && !returnType.isAssignableFrom( Securable.class ) ) ) {
+                        || ( returnType != java.util.Collection.class && !Securable.class.isAssignableFrom( returnType
+                                .getClass() ) ) ) {
                     continue;
                 }
 
@@ -127,7 +128,7 @@ public class SecurityService {
                         /* check if an object in collection is in unsecuredCol */
                         Object objInCol = returnedCollection.iterator().next();
                         if ( unsecuredClasses.contains( objInCol.getClass() )
-                                || !objInCol.getClass().isAssignableFrom( Securable.class ) ) {
+                                || !Securable.class.isAssignableFrom( objInCol.getClass() ) ) {
                             continue;
                         } else {
                             /* if object in collection is not in unsecuredCol and is a Securable, process */
@@ -144,7 +145,7 @@ public class SecurityService {
                         ob = SecurityUtil.getImplementationFromProxy( ob );
 
                         if ( ob == null || unsecuredClasses.contains( ob.getClass() )
-                                || !ob.getClass().isAssignableFrom( Securable.class )
+                                || !Securable.class.isAssignableFrom( ob.getClass() )
                                 || ( ( Securable ) ob ).getId() == null ) {
                             continue;
                         }
