@@ -37,6 +37,10 @@ Ext.extend(progressbar, Ext.util.Observable, {
 				messageText = data.description;
 			} else if (!e) {
 				messageText = data;
+			} else if  (e.message) {
+				messageText = e.message;
+			} else {
+				messageText = e;
 			}
 	       this.fireEvent("fail", messageText);
 		} else {
@@ -154,7 +158,8 @@ Ext.extend(progressbar, Ext.util.Observable, {
 				  		window.location = d.forwardingURL + "?taskId=" + dwr.util.getValue("taskId");
 					}  else {
 						var callback = this.maybeDoForward.createDelegate(this, [], true) ;
-						TaskCompletionController.checkResult(dwr.util.getValue("taskId"), callback);
+					    var errorHandler = this.handleFailure.createDelegate(this, [], true) ;
+						TaskCompletionController.checkResult(dwr.util.getValue("taskId"), {callback:callback, errorHandler:errorHandler});
 					}
 					return;
 				}
