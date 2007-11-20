@@ -4,10 +4,10 @@
 //================================
 
 //member variables
-var assignFactorValueToBioMaterialButton, expFactorsCB, factorValueCB, bmGrid, saveNewFactorButton, removeFactorButton, factorDescriptionField;	//gui components
+var assignFactorValueToBioMaterialButton, expFactorsCB, factorValueCB, bmGrid, saveNewFactorButton, removeFactorButton, factorDescriptionField, expFactorLabel, factorValueLabel;	//gui components
 var eeID,edID, clazz;
 var factorValueComboDS, bmDS, factorDS, factorComboDS;							//Datastores behind gui components
-var bioMaterialList, selectedFactorId = 0, selectedFactorValueId, selectedFactorsInGrid	//what is selected by user
+var selectedFactorId = 0, selectedFactorValueId	//what is selected by user
 var bmGridRefresh;									//methods
 
 var factorMgedComboBox;
@@ -70,26 +70,30 @@ var saveExperimentalFactor = function(){
 
 var deleteExperimentalFactor = function(){
 	
-	//TODO:  get the selection model explicitly and remove the intermediate variable of selectedFactorsInGrid
-	ExperimentalDesignController.deleteFactor(selectedFactorsInGrid, {id:eeID, classDelegatingFor:"long"}, factorGridRefresh);
+	var selectedGridFactors = factorGridGetSelectedIds();
+	
+	ExperimentalDesignController.deleteFactor(selectedGridFactors, {id:eeID, classDelegatingFor:"long"}, factorGridRefresh);
 	
 	removeFactorButton.disable();
 		
 }
 
 var saveExperimentalFactorValue = function(characteristic, callback){
-	if(selectedFactorsInGrid.length === 0){
+	var selectedGridFactors = factorGridGetSelectedIds();
+	
+	if(selectedGridFactors.length === 0){
 		alert("No factor is selected");
 		return;
 	}
 		
-	ExperimentalDesignController.createNewFactorValue({id:selectedFactorsInGrid[0], classDelegatingFor:"long"},[characteristic], callback);
+	ExperimentalDesignController.createNewFactorValue({id:selectedGridFactors[0], classDelegatingFor:"long"},[characteristic], callback);
 	
 }
 
 var deleteExperimentalFactorValue = function(characteristic, callback){
 	
-		ExperimentalDesignController.deleteFactorValue(factorValueGridGetSelectedIds(), {id:selectedFactorsInGrid[0], classDelegatingFor:"long"},{id:eeID, classDelegatingFor:"long"}, callback);
+		var selectedGridFactors = factorGridGetSelectedIds();
+		ExperimentalDesignController.deleteFactorValue(factorValueGridGetSelectedIds(), {id:selectedGridFactors[0], classDelegatingFor:"long"},{id:eeID, classDelegatingFor:"long"}, callback);
 		
 }
 
@@ -211,12 +215,21 @@ var saveFactorValueToBMHandler = function(){
 	//Use for debugging. 
 	//console.log(dwr.util.toDescriptiveString(vocabC,10))
 
-	if ((bioMaterialList === undefined) || (bioMaterialList.length === 0)){
+	var bioMaterialIds = bioMaterialListGetSelectedIds();
+	if ((bioMaterialIds === undefined) || (bioMaterialIds.length === 0)){
 		alert("Please select a biomaterial");
 		return;
 	}
+	 
+	var factorValueIds = factorValueGridGetSelectedIds();
+		
+	if ((factorValueIds === undefined) || (factorValueIds.length === 0)){
+		alert("Please select a factor value");
+		return;
+	}
 	
-	BioMaterialController.addFactorValueTo(bioMaterialList, {id:selectedFactorValueId, classDelegatingFor:"FactorValueObject"}, bmGridRefresh );
+	
+	BioMaterialController.addFactorValueTo(bioMaterialIds, {id:factorValueIds[0], classDelegatingFor:"FactorValueObject"}, bmGridRefresh );
 	
 	
 }
@@ -228,7 +241,10 @@ var saveFactorValueToBMHandler = function(){
 //=================================================
 
 bmGridRefresh = function(){	
-		
+	
+	if (!bmGrid)	//is the user logged in?
+		return;
+			
 	bmDS.reload( {
 		params : [ {id:eeID, classDelegatingFor:"expressionExperimentID"}, {id:selectedFactorId, classDelegatingFor: "FactorID"} ],
 		callback : function() {
@@ -274,19 +290,28 @@ var initBioMaterialGrid = function(div) {
        							 cm:cm,
        							 loadMask: true });
        
-       var gridClickHandler = function(bmGrid, rowIndex, event){
-       		//Get the ids of the selected biomaterials and put them in BiomatierialList
-	       	var selected = bmGrid.getSelectionModel().getSelections();	
-	   
-	    	bioMaterialList = [];
-	    	for(var index=0; index<selected.length; index++) {	    		
-	    		bioMaterialList.push(selected[index].id);
-	    	}  	
-       	
+
+        var bmClickHandler = function(bmGrid, rowIndex, event){
+
+			var selections =  bmGrid.getSelectionModel().getSelections();       		       	
+			if (selections.length === 0){				
+				assignFactorValueToBioMaterialButton.disable();
+			}
+			else{	
+				assignFactorValueToBioMaterialButton.enable();
+			}
+			
+			var fvSelections =  factorValueGrid.getSelectionModel().getSelections();  
+			if (fvSelections.length === 0){
+				factorValueLabel.reset();
+				assignFactorValueToBioMaterialButton.disable();
+			}
+		
        }
        
-       bmGrid.on("rowclick", gridClickHandler);
-       
+       bmGrid.on("rowclick", bmClickHandler);
+
+      
        bmGrid.render();
        
       bmGridRefresh();
@@ -352,25 +377,40 @@ var initFactorGrid = function(div) {
        var gridClickHandler = function(factorGrid, rowIndex, event){
 
 			
-       		var selections =  factorGrid.getSelectionModel().getSelections();
+			var selections =  factorGrid.getSelectionModel().getSelections();       		       	
        		
-       		if (selections.length === 0){
+       		var selectedGridFactors = [];
+       		
+	    	for(var index=0; index<selections.length; index++) {	    		
+	    		selectedGridFactors.push(selections[index].id);
+	    	} 
+	    	
+			
+       		
+       		if (selectedGridFactors.length === 0){
        			if (removeFactorButton)
        			removeFactorButton.disable();
        			return;
        		}
        		
-       		selectedFactorsInGrid = [];
-	    	for(var index=0; index<selections.length; index++) {	    		
-	    		selectedFactorsInGrid.push(selections[index].id);
-	    	}  	
-	    		 
 			
 			factorValueGridRefresh(); //just show the 1st one in the factor value table
 			if (removeFactorButton)
 			 		removeFactorButton.enable();
        		
        	
+       		//update the BMGrid with the selected Factor
+       		
+			selectedFactorId = selectedGridFactors[0];
+			//factorValueComboDS.reload({params:[{id:selectedFactorId, classDelegatingFor:"FactorValueObject"}]});
+			//factorValueCB.reset();
+			if (bmGrid){				
+				bmGridRefresh(selectedFactorId);
+				//assignFactorValueToBioMaterialButton.disable();	
+				expFactorLabel.setValue(selections[0].data.factorValue);
+				//expFactorsCB.setValue(selections[0].data.factorValue);
+			}
+
        }
        
        factorGrid.on("rowclick", gridClickHandler);
@@ -406,6 +446,30 @@ factorValueGridGetSelectedIds = function() {
 			ids.push( selected[i].id );
 		}
 		return ids;	
+}
+
+factorGridGetSelectedIds = function(){
+	
+			var selections =  factorGrid.getSelectionModel().getSelections();       		       	
+       		factorsInGrid = [];
+       		
+	    	for(var index=0; index<selections.length; index++) {	    		
+	    		factorsInGrid.push(selections[index].id);
+	    	} 
+	    	
+	    	return factorsInGrid;
+	
+}
+
+bioMaterialListGetSelectedIds = function(){
+       		//Get the ids of the selected biomaterials and put them in BiomatierialList
+	       	var selected = bmGrid.getSelectionModel().getSelections();	
+	   
+	    	var bioMaterialIds = [];
+	    	for(var index=0; index<selected.length; index++) {	    		
+	    		bioMaterialIds.push(selected[index].id);
+	    	}  	
+	return   bioMaterialIds;    	
 }
 
 var initFactorValueGrid = function(div) {
@@ -446,12 +510,43 @@ var initFactorValueGrid = function(div) {
        							 ds:factorValueGridDS,
        							 cm:cm,
        							 loadMask: true, 
-       							 editable: true}
+       							 editable: true, 
+       							 singleSelect : true}
        							 );
 
 		//Need two extra methods because annotationGrid defines refresh and getSelected      							 
        factorValueGrid.refresh = factorValueGridRefresh;
        factorValueGrid.getSelectedIds = factorValueGridGetSelectedIds;
+       
+       
+       
+       
+        var factorValueGridClickHandler = function(factorGrid, rowIndex, event){
+
+			if (!factorValueLabel)	//If we are not logged in don't bother updating
+				return;
+				
+			var fvSelections =  factorValueGrid.getSelectionModel().getSelections();  
+			var bmSelections =  bmGrid.getSelectionModel().getSelections();    
+			 		       	
+			if (fvSelections.length === 0){
+				factorValueLabel.reset();
+				assignFactorValueToBioMaterialButton.disable();
+			}
+			else{	
+				factorValueLabel.setValue(fvSelections[0].data.factorValue);
+				assignFactorValueToBioMaterialButton.enable();
+			}
+			
+			if (bmSelections.length === 0){				
+				assignFactorValueToBioMaterialButton.disable();
+			}
+			
+		
+       }
+       
+       factorValueGrid.on("rowclick", factorValueGridClickHandler);
+       
               							 
       factorValueGrid.render();
 	
@@ -471,13 +566,20 @@ Ext.onReady(function() {
 	//TODO: rename the div to be more obvious to its purpose
 	 if (Ext.get("eDesign")){	//Don't show anything unless this div exists
 	
-		expFactorsCB = createFactorComboBox();   				//the available expimental factors  
-		factorValueCB = createFactorValueComboBox();			//the availiable factor values
+		//expFactorsCB = createFactorComboBox();   				//the available expimental factors  
+		//factorValueCB = createFactorValueComboBox();			//the availiable factor values
+		
+		expFactorLabel = new Ext.form.TextField({readOnly: true, allowBlank : false, invalidText : "Selected Factor", blankText : "Selected Factor", emptyText : "Selected Factor", width: 200});
+		factorValueLabel = new Ext.form.TextField({readOnly: true, allowBlank : false, invalidText : "Select a factor value", blankText : "Selected Factor Value", emptyText : "Factor Value", width: 200});
+		
 
 		var simpleTB = new Ext.Toolbar("eDesign");				//Tool bar to rule them all	
-		simpleTB.addField(expFactorsCB);
+		simpleTB.addText("Displaying BioMaterials for: ");
+		simpleTB.addField(expFactorLabel);
 		simpleTB.addSpacer();
-		simpleTB.addField(factorValueCB);
+		simpleTB.addSpacer();
+		simpleTB.addText("Factor Value to assign: ");
+		simpleTB.addField(factorValueLabel);
 		simpleTB.addSpacer();
 		assignFactorValueToBioMaterialButton = simpleTB.addButton({text: 'assign',
 							tooltip: 'assigns the selected Factor Value to the selected BioMaterials',								  

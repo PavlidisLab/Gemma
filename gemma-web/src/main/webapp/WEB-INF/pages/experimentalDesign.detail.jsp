@@ -1,6 +1,8 @@
 <%@ include file="/common/taglibs.jsp"%>
 <jsp:useBean id="experimentalDesign" scope="request"
     class="ubic.gemma.model.expression.experiment.ExperimentalDesignImpl" />
+<jsp:useBean id="expressionExperiment" scope="request"
+	class="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" />
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 
 <title>  <fmt:message key="experimentalDesign.details" />  </title>
@@ -41,13 +43,12 @@
         <%if (experimentalDesign.getName() != null){%>
         	<jsp:getProperty name="experimentalDesign" property="name" />
         <%}else{
-        	out.print("Name unavailable");
+        	out.print("Experimental Design Name unavailable");
         }%>
     	</td>
-    </tr>
-        
-            <tr>
-                <td class="label">
+    </tr>        
+    <tr>
+       <td class="label">
                     <b>
                         <fmt:message key="experimentalDesign.description" />
                     </b>
@@ -125,6 +126,81 @@
 	</div>
 </div>
 
+
+
+<!-- Expression Experiment Details  -->	
+
+<div style="padding: 2px;" onclick="Effect.toggle('eeDetail', 'blind', {duration:0.1})">
+	<h2>
+		<img src="/Gemma/images/plus.gif" />
+		<fmt:message key="expressionExperiment.details" />
+	</h2>
+</div>
+<div id="eeDetail" style="display: none">
+	<div>
+		<%-- inner div needed for effect  --%>
+<table cellspacing="10">		
+			    <tr>
+    	<td class="label">
+        	<b><fmt:message key="expressionExperiment.name" /></b>
+        </td>
+		<td>
+        <%if (expressionExperiment.getName() != null){%>
+        	<jsp:getProperty name="expressionExperiment" property="name" />
+        <%}else{
+        	out.print("Expression Experiment Name unavailable");
+        }%>
+    	</td>
+    </tr>
+    <tr>
+		<td class="label">
+			<fmt:message key="expressionExperiment.description" />
+		</td>
+		<td>
+			<%
+			if ( expressionExperiment.getDescription() != null ) {
+			%>
+			<div class="clob" style="width: 40%;">
+				<jsp:getProperty name="expressionExperiment" property="description" />
+			</div>
+
+			<%
+			                } else {
+			                out.print( "Description unavailable" );
+			            }
+			%>
+		</td>
+	</tr>
+		<tr>
+		<td class="label">
+			<fmt:message key="databaseEntry.title" />
+		</td>
+		<td>
+			<Gemma:databaseEntry databaseEntry="${expressionExperiment.accession}" />
+		</td>
+	</tr>
+	<tr>
+		<td class="label">
+			<fmt:message key="pubMed.publication" />
+		</td>
+		<td>
+			<%
+			if ( expressionExperiment.getPrimaryPublication() != null ) {
+			%>
+			<Gemma:citation citation="${expressionExperiment.primaryPublication }" />
+			<%
+			                } else {
+			                out.print( "Primary publication unavailable" );
+			            }
+			%>
+		</td>
+	</tr>
+</table>
+	</div>
+</div>
+		
+
+
 <script type="text/javascript" src="<c:url value='/scripts/ajax/ExperimentalDesign.js'/>" type="text/javascript"></script>
 <input type="hidden" name="expressionExperimentID" id="expressionExperimentID" value="${expressionExperiment.id}" />
 <input type="hidden" name="experimentalDesignID" id="experimentalDesignID" value="${experimentalDesign.id}" />
@@ -161,6 +237,7 @@
 </table>
 
     <table>
+    <!-- Doesn't work so comment out. 
     <tr>
     <td COLSPAN="2">    
             <div align="left"><input type="button"
@@ -175,4 +252,6 @@
             </td>
         </authz:acl>
     </tr>
+    -->
+    
     </table>

@@ -60,7 +60,7 @@ Ext.Gemma.AnnotationToolBar = function ( div, annotationGrid, saveHandler, delet
 //						alert("Please add a description");
 //						return;
 //					}
-					characteristic.description = description;
+					characteristic.description = descriptionField.getValue();
 				}			
 			
 			saveHandler( characteristic, annotationGrid.refresh.bind( annotationGrid ) );
