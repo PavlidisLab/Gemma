@@ -77,6 +77,9 @@ public class CharacteristicDaoImpl
      */
     @Override
     protected Map handleGetParents( Class parentClass, Collection characteristics ) throws Exception {
+        if ( characteristics.isEmpty() )
+            return new HashMap();
+        
         final String queryString =
             "select parent, char from " + parentClass.getSimpleName() + " as parent " +
                 "inner join parent.characteristics as char " +

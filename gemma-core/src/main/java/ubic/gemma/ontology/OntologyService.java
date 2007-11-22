@@ -464,12 +464,12 @@ public class OntologyService {
      * @param vc
      * @param bmIdList
      */
-    public void removeExpressionExperimentStatement( Collection<Long> characterIds, Collection<Long> bmIdList ) {
+    public void removeExpressionExperimentStatement( Collection<Long> characterIds, Collection<Long> eeIdList ) {
 
         log.debug( "Vocab Characteristic: " + characterIds );
-        log.debug( "Expression Experiment ID List: " + bmIdList );
+        log.debug( "Expression Experiment ID List: " + eeIdList );
 
-        Collection<ExpressionExperiment> ees = eeService.loadMultiple( bmIdList );
+        Collection<ExpressionExperiment> ees = eeService.loadMultiple( eeIdList );
 
         for ( ExpressionExperiment ee : ees ) {
 
@@ -488,6 +488,10 @@ public class OntologyService {
             ee.setCharacteristics( current );
             eeService.update( ee );
 
+        }
+        
+        for ( Long id : characterIds ) {
+            characteristicService.remove( id );
         }
     }
 
@@ -521,6 +525,10 @@ public class OntologyService {
             bm.setCharacteristics( current );
             bioMaterialService.update( bm );
 
+        }
+        
+        for ( Long id : characterIds ) {
+            characteristicService.remove( id );
         }
     }
 

@@ -92,4 +92,19 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
 		return this.getCharacteristicDao().findByUri(uris);
 	}
 
+    @Override
+    protected Characteristic handleLoad( Long id ) throws Exception {
+        return (Characteristic)this.getCharacteristicDao().load( id );
+    }
+
+    @Override
+    protected void handleRemove( Long id ) throws Exception {
+        this.getCharacteristicDao().remove( id );
+    }
+
+    @Override
+    protected void handleUpdate( Characteristic c ) throws Exception {
+        this.getCharacteristicDao().update( c );
+    }
+
 }
