@@ -44,7 +44,7 @@ public class ArrayExpressLoadServiceTest extends BaseSpringContextTest {
     final public void testLoadWithNameMismatch() throws Exception {
         endTransaction();
         ArrayExpressLoadService svc = ( ArrayExpressLoadService ) this.getBean( "arrayExpressLoadService" );
-        ExpressionExperiment experiment = svc.load( "E-TAMB-302", "GPL81" );
+        ExpressionExperiment experiment = svc.load( "E-TABM-302", "GPL81" );
         assertNotNull( experiment );
     }
 

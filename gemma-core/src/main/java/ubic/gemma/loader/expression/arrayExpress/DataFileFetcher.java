@@ -38,7 +38,10 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class DataFileFetcher extends FtpArchiveFetcher {
 
-    private static final String MAGE_ML_SUFFIX = ".mageml.tgz";
+    /*
+     * FIXME they seem to change this from mageml.tgz 
+     */
+    private static final String MAGE_ML_SUFFIX = ".mageml.tar.gz";
 
     public DataFileFetcher() {
         super();

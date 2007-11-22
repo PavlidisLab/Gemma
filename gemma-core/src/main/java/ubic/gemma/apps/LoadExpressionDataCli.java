@@ -50,9 +50,9 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  */
 public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
 
-    // Constants
-    private final static String ARRAY_EXPRESS = "AE";
-    private final static String GEO = "GEO";
+    private enum Formats {
+        AE, GEO
+    };
 
     // Command line Options
     protected String accessionFile = null;
@@ -60,7 +60,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
     protected boolean platformOnly = false;
     protected boolean doMatching = true;
     protected boolean force = false;
-    protected String fileFormat = "none";
+    protected String fileFormat = Formats.GEO.toString();
     protected String adName = "none";
     protected boolean aggressive;
 
@@ -77,12 +77,12 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
     @Override
     protected void buildOptions() {
         Option fileOption = OptionBuilder.hasArg().withArgName( "Input file" ).withDescription(
-                "Optional path to file (one columns of accessions)" ).withLongOpt( "file" ).create( 'f' );
+                "Optional path to file with list of experiment accessions to load" ).withLongOpt( "file" ).create( 'f' );
 
         addOption( fileOption );
 
-        Option accessionOption = OptionBuilder.hasArg().withArgName( "Accessions" ).withDescription(
-                "Optional comma-delimited list of accessions (GSE or GDS)" ).withLongOpt( "acc" ).create( 'a' );
+        Option accessionOption = OptionBuilder.hasArg().withArgName( "Accession(s)" ).withDescription(
+                "Optional comma-delimited list of accessions (GSE or GDS) to load" ).withLongOpt( "acc" ).create( 'e' );
         addOption( accessionOption );
 
         Option platformOnlyOption = OptionBuilder.withArgName( "Platforms only" ).withDescription(
@@ -104,14 +104,14 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
         addOption( aggressiveQtRemoval );
 
         Option fileFormat = OptionBuilder.hasArg().withArgName( "File Format" ).withDescription(
-                "Either AE or GEO defaults to GEO (using batch file does not work with Array Express)" ).withLongOpt(
+                "Either AE or GEO; defaults to GEO (using batch file does not work with Array Express)" ).withLongOpt(
                 "format" ).create( 'm' );
 
         addOption( fileFormat );
 
-        Option arrayDesign = OptionBuilder.hasArg().withArgName( "Array Name" ).withDescription(
-                "Required for Array Express format.  Specify the name of the platform the experiment uses" )
-                .withLongOpt( "Array" ).create( 'd' );
+        Option arrayDesign = OptionBuilder.hasArg().withArgName( "array design name" ).withDescription(
+                "Specify the name or short name of the platform the experiment uses (AE only)" ).withLongOpt( "array" )
+                .create( 'a' );
 
         addOption( arrayDesign );
 
@@ -162,10 +162,10 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
 
             Boolean aeFlag = false;
             ArrayDesign ad;
-            if ( StringUtils.equalsIgnoreCase( ARRAY_EXPRESS, fileFormat ) ) {
+            if ( StringUtils.equalsIgnoreCase( Formats.AE.toString(), fileFormat ) ) {
 
                 if ( platformOnly )
-                    return new IllegalArgumentException( "Loading platform only not supported for Array Express. " );
+                    return new IllegalArgumentException( "Loading 'platform only' not supported for Array Express. " );
 
                 if ( accessionFile != null )
                     return new IllegalArgumentException(
@@ -179,6 +179,8 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
                             + " Either name is incorrect that Array Design is not in Gemma:" );
                 }
                 aeFlag = true;
+            } else if ( !StringUtils.equalsIgnoreCase( Formats.GEO.toString(), fileFormat ) ) {
+                return new IllegalArgumentException( "File format '" + fileFormat + "' is not understood" );
             }
 
             if ( accessions != null ) {
@@ -242,8 +244,8 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
 
         try {
             ExpressionExperiment aeExperiment = aeService.load( accession, adName );
-            successObjects.add( ( ( Describable ) aeExperiment ).getName() + " ("
-                    + ( aeExperiment ).getShortName() + ")" );
+            successObjects.add( ( ( Describable ) aeExperiment ).getName() + " (" + ( aeExperiment ).getShortName()
+                    + ")" );
 
         } catch ( Exception e ) {
             errorObjects.add( accession + ": " + e.getMessage() );
@@ -302,8 +304,8 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
             accessionFile = getOptionValue( 'f' );
         }
 
-        if ( hasOption( 'a' ) ) {
-            accessions = getOptionValue( 'a' );
+        if ( hasOption( 'e' ) ) {
+            accessions = getOptionValue( 'e' );
         }
 
         if ( hasOption( 'y' ) ) {
@@ -326,8 +328,8 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
             this.fileFormat = getOptionValue( 'm' );
         }
 
-        if ( hasOption( 'd' ) ) {
-            this.adName = getOptionValue( 'd' );
+        if ( hasOption( 'a' ) ) {
+            this.adName = getOptionValue( 'a' );
         }
 
         this.eeService = ( ExpressionExperimentService ) getBean( "expressionExperimentService" );

@@ -59,18 +59,16 @@ public class ArrayExpressLoadService {
     ArrayDesignService arrayDesignService;
 
     public ExpressionExperiment load( String accession ) throws IOException {
-
         return this.load( accession, null );
-
     }
 
     /**
      * NOTE this currently will not handle data sets that have multiple array designs.
      * 
      * @param accession e.g. E-AFMX-4
+     * @param adAccession accession for the array design, either short name or name.
      * @return
      */
-
     public ExpressionExperiment load( String accession, String adAccession ) throws IOException {
         DataFileFetcher dfFetcher = new DataFileFetcher();
         ProcessedDataFetcher pdFetcher = new ProcessedDataFetcher();
@@ -80,10 +78,9 @@ public class ArrayExpressLoadService {
         ArrayDesign selectedAd = null;
         if ( adAccession != null ) {
             selectedAd = this.arrayDesignService.findArrayDesignByName( adAccession );
-            
-            //what if short name was specified....
-            if (selectedAd == null)
-                selectedAd = this.arrayDesignService.findByShortName(  adAccession );
+
+            // what if short name was specified....
+            if ( selectedAd == null ) selectedAd = this.arrayDesignService.findByShortName( adAccession );
 
             if ( selectedAd == null ) {
                 log.error( "The array design selected doesn't exist in the system: " + adAccession
@@ -154,10 +151,14 @@ public class ArrayExpressLoadService {
 
     }
 
+    /**
+     * @param bioAssays
+     * @param ad
+     */
     private void processArrayDesignInfo( Collection<BioAssay> bioAssays, ArrayDesign ad ) {
 
         arrayDesignService.thaw( ad );
-        
+
         Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
 
         for ( BioAssay assay : bioAssays ) {
@@ -181,7 +182,6 @@ public class ArrayExpressLoadService {
     /**
      * @param bioAssays
      */
-
     private void processArrayDesignInfo( Collection<BioAssay> bioAssays ) {
         ArrayDesignFetcher adFetcher = new ArrayDesignFetcher();
         ArrayDesignParser adParser = new ArrayDesignParser();
@@ -254,6 +254,10 @@ public class ArrayExpressLoadService {
         return ee;
     }
 
+    /**
+     * @param objects
+     * @return
+     */
     private Collection<QuantitationType> locateQuantitationTypesInMageResults( Collection<Object> objects ) {
         Collection<QuantitationType> result = new HashSet<QuantitationType>();
         for ( Object object : objects ) {
