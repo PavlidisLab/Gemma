@@ -367,16 +367,13 @@ public class GeneOntologyService implements InitializingBean {
 
     public Collection<OntologyTerm> getAllParents( OntologyTerm entry, boolean includePartOf ) {
         return getAncestors( entry, includePartOf );
-//        Collection<OntologyTerm> parents = new HashSet<OntologyTerm>();
-//        getAllParents( entry, parents, includePartOf );     
-//
-//        return parents;
 
     }
 
     /**
      * @param entry
      * @param parents (excluding the root)
+     * @deprecated
      */
     private void getAllParents( OntologyTerm entry, Collection<OntologyTerm> parents, boolean includePartOf ) {
         if ( parents == null ) throw new IllegalArgumentException();
@@ -414,38 +411,32 @@ public class GeneOntologyService implements InitializingBean {
         return getAllParents( entries, false );
     }
 
+    /**
+     * @param entries
+     * @param includePartOf
+     * @return
+     */
     public Collection<OntologyTerm> getAllParents( Collection<OntologyTerm> entries, boolean includePartOf ) {
         if ( entries == null ) return null;
         Collection<OntologyTerm> result = new HashSet<OntologyTerm>();
         for ( OntologyTerm entry : entries ) {
             result.addAll( getAncestors( entry, includePartOf ) );
-            // Collection<OntologyTerm> parents = new HashSet<OntologyTerm>();
-            // getAllParents( entry, parents, includePartOf );
-            // result.addAll( parents );
         }
         return result;
     }
 
     public Collection<OntologyTerm> getAllChildren( OntologyTerm entry ) {
-        // return getAllChildren( entry, false );
-        return getDescendants( entry, true );
+        return getAllChildren( entry, false );
     }
 
-    /**
-     * @param entry
-     * @return
-     */
     public Collection<OntologyTerm> getAllChildren( OntologyTerm entry, boolean includePartOf ) {
-
-        Collection<OntologyTerm> children = new HashSet<OntologyTerm>();
-        getAllChildren( entry, children, includePartOf );
-
-        return children;
+        return getDescendants( entry, includePartOf );
     }
 
     /**
      * @param entry
      * @param children
+     * @deprecated
      */
     private void getAllChildren( OntologyTerm entry, Collection<OntologyTerm> children, boolean includePartOf ) {
 
@@ -538,7 +529,7 @@ public class GeneOntologyService implements InitializingBean {
      */
     private synchronized Collection<OntologyTerm> getDescendants( OntologyTerm entry, boolean includePartOf ) {
 
-        Collection<OntologyTerm> descendants = null; // childrenCache.get( entry.getUri() );
+        Collection<OntologyTerm> descendants = null;
         if ( descendants == null ) {
             descendants = new HashSet<OntologyTerm>();
 
@@ -550,7 +541,8 @@ public class GeneOntologyService implements InitializingBean {
                 }
             }
 
-            // childrenCache.put( entry.getUri(), descendants );
+            descendants = Collections.unmodifiableCollection( descendants );
+            childrenCache.put( entry.getUri(), descendants );
         }
         return descendants;
 
@@ -558,7 +550,7 @@ public class GeneOntologyService implements InitializingBean {
 
     private synchronized Collection<OntologyTerm> getAncestors( OntologyTerm entry, boolean includePartOf ) {
 
-        Collection<OntologyTerm> ancestors = null; // parentsCache.get( entry.getUri() );
+        Collection<OntologyTerm> ancestors = parentsCache.get( entry.getUri() );
         if ( ancestors == null ) {
             ancestors = new HashSet<OntologyTerm>();
 
@@ -570,7 +562,8 @@ public class GeneOntologyService implements InitializingBean {
                 }
             }
 
-            // parentsCache.put( entry.getUri(), ancestors );
+            ancestors = Collections.unmodifiableCollection( ancestors );
+            parentsCache.put( entry.getUri(), ancestors );
         }
         return ancestors;
     }
