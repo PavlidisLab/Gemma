@@ -72,6 +72,7 @@ Mapping URLS to controllers
 			<prop key="/candidateGeneList*">candidateGeneListController</prop>
 			<prop key="/gene/*">geneController</prop>
 			<prop key="/geneFinder.html">geneFinderController</prop>
+			<prop key="/characteristicBrowser.html">characteristicBrowserController</prop>
 			<prop key="/addTestData.html">testDataAddingController</prop>
 			<prop key="/genome/goldenPathSequenceLoad.html">
 				goldenPathSequenceLoadController</prop>
@@ -255,6 +256,22 @@ Mapping URLS to controllers
 							<value>deleteFactor</value>
 							<value>createNewFactorValue</value>
 							<value>deleteFactorValue</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="CharacteristicBrowserController">
+				<bean class="org.directwebremoting.spring.CreatorConfig">
+					<property name="creator">
+						<bean class="org.directwebremoting.spring.BeanCreator">
+							<property name="bean" ref="characteristicBrowserController" />
+						</bean>
+					</property>
+					<property name="includes">
+						<list>
+							<value>findCharacteristics</value>
+							<value>updateCharacteristics</value>
+							<value>removeCharacteristics</value>
 						</list>
 					</property>
 				</bean>
@@ -462,12 +479,13 @@ Mapping URLS to controllers
 					<property name="type" value="characteristicConverter"/>
 					<property name="includes">
 						<list>
+							<value>value</value>
 							<value>valueUri</value>
+							<value>category</value>
 							<value>categoryUri</value>
 							<value>properties</value>
-							<value>value</value>
 							<value>description</value>
-							<value>category</value>
+							<value>evidenceCode</value>
 						</list>
 					</property>
 				</bean>
@@ -475,6 +493,15 @@ Mapping URLS to controllers
 			<entry key="ubic.gemma.model.common.description.Characteristic">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="characteristicConverter" />
+					<property name="includes">
+						<list>
+							<value>value</value>
+							<value>category</value>
+							<value>properties</value>
+							<value>description</value>
+							<value>evidenceCode</value>
+						</list>
+					</property>
 				</bean>
 			</entry>
 			<entry
