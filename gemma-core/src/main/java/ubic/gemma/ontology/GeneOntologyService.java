@@ -246,7 +246,7 @@ public class GeneOntologyService implements InitializingBean {
 
         if ( !loadOntology ) {
             log.info( "Loading Gene Ontology is disabled.");
-            log.info("To turn add add loadGeneOntology=true to build.properties" );
+            log.info("To turn on add loadGeneOntology=true to build.properties" );
             return;
         }
 
