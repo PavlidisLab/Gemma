@@ -529,7 +529,7 @@ public class GeneOntologyService implements InitializingBean {
      */
     private synchronized Collection<OntologyTerm> getDescendants( OntologyTerm entry, boolean includePartOf ) {
 
-        Collection<OntologyTerm> descendants = null;
+        Collection<OntologyTerm> descendants = childrenCache.get( entry.getUri() );
         if ( descendants == null ) {
             descendants = new HashSet<OntologyTerm>();
 
@@ -544,7 +544,7 @@ public class GeneOntologyService implements InitializingBean {
             descendants = Collections.unmodifiableCollection( descendants );
             childrenCache.put( entry.getUri(), descendants );
         }
-        return descendants;
+        return new HashSet<OntologyTerm>( descendants );
 
     }
 
@@ -565,7 +565,7 @@ public class GeneOntologyService implements InitializingBean {
             ancestors = Collections.unmodifiableCollection( ancestors );
             parentsCache.put( entry.getUri(), ancestors );
         }
-        return ancestors;
+        return new HashSet<OntologyTerm>( ancestors );
     }
 
     /**
