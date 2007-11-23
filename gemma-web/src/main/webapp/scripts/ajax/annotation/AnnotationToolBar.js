@@ -98,9 +98,9 @@ Ext.Gemma.AnnotationToolBar = function ( div, annotationGrid, saveHandler, delet
 		this.addSpacer();
 	}
 	
-	this.addField( saveButton );
-	this.addSeparator();
-	this.addField( deleteButton );
+	if ( saveHandler ) { this.addField( saveButton ); }
+	if ( saveHandler && deleteHandler ) { this.addSeparator(); }
+	if ( deleteHandler ) { this.addField( deleteButton ); }
 	
 }
 

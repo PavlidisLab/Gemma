@@ -19,8 +19,10 @@ Ext.Gemma.AnnotationGrid = function ( div, config ) {
 			{ name:"id", type:"int" },
 			{ name:"classUri", type:"string" },
 			{ name:"className", type:"string" },
-			{ name:"termUri",type:"string" },
-			{ name:"termName", type:"string" }
+			{ name:"termUri", type:"string" },
+			{ name:"termName", type:"string" },
+			{ name:"parentDescription", type:"string" },
+			{ name:"parentLink", type:"string" }
 		] );
 	}
 	if ( !config.ds ) {
@@ -32,6 +34,26 @@ Ext.Gemma.AnnotationGrid = function ( div, config ) {
 	}
 	config.ds.load( { params : ( typeof this.readParams == "function" ) ? this.readParams() : this.readParams } );
 	
+	
+	if ( !config.cm ) {
+		config.cm = new Ext.grid.ColumnModel( [
+			{ header: "Class", width: 150, dataIndex: "className" },
+			{ header: "Term", width: 500, dataIndex: "termName", renderer: Ext.Gemma.AnnotationGrid.getStyler() }
+		] );
+		config.cm.defaultSortable = true;
+	}
+	
+	if ( ! config.selModel ) {
+		config.selModel = new Ext.grid.RowSelectionModel();
+	}
+	
+	config.loadMask = config.loadMask || true;
+	config.autoExpandColumn = config.autoExpandColumn || 1;
+
+	Ext.Gemma.AnnotationGrid.superclass.constructor.call( this, div, config );
+}
+
+Ext.Gemma.AnnotationGrid.getStyler = function() {
 	if ( Ext.Gemma.AnnotationGrid.styler == undefined ) {
 		/* apply a CSS class depending on whether or not the characteristic has a URI.
 		 */
@@ -41,23 +63,25 @@ Ext.Gemma.AnnotationGrid = function ( div, config ) {
 			return String.format( "<span class='{0}' title='{2}'>{1}</span>", class, value, description );
 		}
 	}
-	if ( !config.cm ) {
-		config.cm = new Ext.grid.ColumnModel( [
-			{ header: "Class", width: 150, dataIndex: "className" },
-			{ header: "Term", width: 500, dataIndex: "termName", renderer: Ext.Gemma.AnnotationGrid.styler }
-		] );
-		config.cm.defaultSortable = true;
-	}
-	
-	config.loadMask = config.loadMask || true;
-	config.autoExpandColumn = config.autoExpandColumn || 1;
+	return Ext.Gemma.AnnotationGrid.styler;
+}
 
-	Ext.Gemma.AnnotationGrid.superclass.constructor.call( this, div, config );
+Ext.Gemma.AnnotationGrid.convertToCharacteristic = function( annot ) {
+	var c = {
+		id : annot.id,
+		category : annot.className,
+		value : annot.termName
+	};
+	if ( annot.termUri ) {
+		c.categoryUri = annot.classUri;
+		c.valueUri = annot.termUri;
+	}
+	return c;
 }
 
 /* other public methods...
  */
-Ext.extend( Ext.Gemma.AnnotationGrid, Ext.grid.Grid, {
+Ext.extend( Ext.Gemma.AnnotationGrid, Ext.grid.EditorGrid, {
 
 	getSelectedIds : function() {
 		var selected = this.getSelectionModel().getSelections();
@@ -68,14 +92,28 @@ Ext.extend( Ext.Gemma.AnnotationGrid, Ext.grid.Grid, {
 		return ids;	
 	},
 	
+	getSelectedCharacteristics : function() {
+		var selected = this.getSelectionModel().getSelections();
+		var chars = [];
+		for ( var i=0; i<selected.length; ++i ) {
+			var row = selected[i].data;
+			chars.push( Ext.Gemma.AnnotationGrid.convertToCharacteristic( row ) );
+		}
+		return chars;	
+	},
+	
 	formatWithStyle : function( value, uri ) {
 		var class = uri ? "unusedWithUri" : "unusedNoUri";
 		var description = uri || "free text";
 		return String.format( "<span class='{0}' title='{2}'>{1}</span>", class, value, description );
 	},
 	
-	refresh : function() {
-		this.getDataSource().reload( { callback: this.getView().refresh } );
+	refresh : function( params ) {
+		var reloadOpts = { callback: this.getView().refresh };
+		if ( params ) {
+			reloadOpts.params = params
+		}
+		this.getDataSource().reload( reloadOpts );
 	}
 	
 } );

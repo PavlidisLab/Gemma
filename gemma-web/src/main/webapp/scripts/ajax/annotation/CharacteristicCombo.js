@@ -59,6 +59,7 @@ Ext.Gemma.CharacteristicCombo = function ( config ) {
 	this.loadingText = config.loadingText || "Searching...";
 	this.minChars = config.minChars || 2;
 	this.pageSize = config.pageSize || 0;
+	this.selectOnFocus = config.selectOnFocus || true;
 	this.typeAhead = config.typeAhead || false;
 	
 	this.characteristic = {

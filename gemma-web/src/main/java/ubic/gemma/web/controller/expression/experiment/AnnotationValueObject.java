@@ -29,9 +29,13 @@ public class AnnotationValueObject  {
     private String className;
     private String termUri;
     private String termName;
+    private String parentDescription;
+    private String parentLink;
     private String description;
     private String evidenceCode;
     
+    public AnnotationValueObject() {
+    }
     
     public String getDescription() {
 		return description;
@@ -48,9 +52,6 @@ public class AnnotationValueObject  {
 	public void setEvidenceCode(String evidenceCode) {
 		this.evidenceCode = evidenceCode;
 	}
-
-	public AnnotationValueObject() {
-    }
     
     public String getClassName() { return className; }
     
@@ -104,5 +105,33 @@ public class AnnotationValueObject  {
      */
     public void setTermUri( String termUri ) {
         this.termUri = termUri;
+    }
+
+    /**
+     * @return the parentDescription
+     */
+    public String getParentDescription() {
+        return parentDescription;
+    }
+
+    /**
+     * @param parentDescription the parentDescription to set
+     */
+    public void setParentDescription( String parentDescription ) {
+        this.parentDescription = parentDescription;
+    }
+
+    /**
+     * @return the parentLink
+     */
+    public String getParentLink() {
+        return parentLink;
+    }
+
+    /**
+     * @param parentLink the parentLink to set
+     */
+    public void setParentLink( String parentLink ) {
+        this.parentLink = parentLink;
     }
 }

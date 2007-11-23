@@ -261,7 +261,7 @@ public class OntologyService {
         List<Characteristic> individualResults = new ArrayList<Characteristic>();
 
         // Add the matching individuals 1st
-        if ( categoryUri != null && !categoryUri.equals( "{}" ) ) {
+        if ( categoryUri != null && !categoryUri.equals( "" ) && !categoryUri.equals( "{}" ) ) {
             results = new HashSet<OntologyResource>( mgedOntologyService.getTermIndividuals( categoryUri ) );
             if ( results != null ) individualResults.addAll( convert( results ) );
         }
@@ -491,7 +491,7 @@ public class OntologyService {
         }
         
         for ( Long id : characterIds ) {
-            characteristicService.remove( id );
+            characteristicService.delete( id );
         }
     }
 
@@ -528,7 +528,7 @@ public class OntologyService {
         }
         
         for ( Long id : characterIds ) {
-            characteristicService.remove( id );
+            characteristicService.delete( id );
         }
     }
 
