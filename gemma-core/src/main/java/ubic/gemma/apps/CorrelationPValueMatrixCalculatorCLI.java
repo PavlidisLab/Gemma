@@ -23,7 +23,7 @@ import ubic.gemma.model.genome.TaxonService;
  *
  */
 public class CorrelationPValueMatrixCalculatorCLI extends
-		AbstractGeneExpressionExperimentManipulatingCLI {
+		ExpressionExperimentManipulatingCLI {
 
 	private String inFile;
 	private String outFile;

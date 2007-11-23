@@ -161,6 +161,15 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
     public Double[] getColumn( BioAssay bioAssay ) {
         int index = this.columnAssayMap.get( bioAssay );
 
+        return this.getColumn( index );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumn(java.lang.Integer)
+     */
+    public Double[] getColumn( Integer index ) {
         double[] rawResult = this.matrix.getColumn( index );
         assert rawResult != null;
         Double[] result = new Double[rawResult.length];
@@ -168,14 +177,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
             result[i] = rawResult[i];
         }
         return result;
-    }
-
-    /**
-     * @param index
-     * @return
-     */
-    public double[] getColumn( int index ) {
-        return this.matrix.getColumn( index );
     }
 
     /*
@@ -331,7 +332,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
                     .getBiologicalCharacteristic();
             if ( biologicalCharacteristic != null ) {
                 try {
-               //     buf.append( " [" + biologicalCharacteristic.getName() + "]" );
+                    // buf.append( " [" + biologicalCharacteristic.getName() + "]" );
                 } catch ( org.hibernate.LazyInitializationException e ) {
                     if ( !warned ) {
                         warned = true;

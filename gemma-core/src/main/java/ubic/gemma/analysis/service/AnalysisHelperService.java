@@ -24,6 +24,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
+import ubic.gemma.analysis.preprocess.filter.ExpressionExperimentFilter;
+import ubic.gemma.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -48,6 +51,40 @@ public class AnalysisHelperService {
     ExpressionExperimentService expressionExperimentService;
 
     DesignElementDataVectorService vectorService;
+
+    /**
+     * Provide a filtered expression data matrix.
+     * 
+     * @param ee
+     * @param filterConfig
+     * @param dataVectors
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig,
+            Collection<DesignElementDataVector> dataVectors ) {
+        ExpressionExperimentFilter filter = new ExpressionExperimentFilter( ee, expressionExperimentService
+                .getArrayDesignsUsed( ee ), filterConfig );
+        ExpressionDataDoubleMatrix eeDoubleMatrix = filter.getFilteredMatrix( dataVectors );
+        return eeDoubleMatrix;
+    }
+
+    /**
+     * Provide a filtered expression data matrix.
+     * 
+     * @param ee
+     * @param filterConfig
+     * @param dataVectors
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig ) {
+        Collection<DesignElementDataVector> dataVectors = this.getVectors( ee );
+        ExpressionExperimentFilter filter = new ExpressionExperimentFilter( ee, expressionExperimentService
+                .getArrayDesignsUsed( ee ), filterConfig );
+        ExpressionDataDoubleMatrix eeDoubleMatrix = filter.getFilteredMatrix( dataVectors );
+        return eeDoubleMatrix;
+    }
 
     /**
      * @param ee

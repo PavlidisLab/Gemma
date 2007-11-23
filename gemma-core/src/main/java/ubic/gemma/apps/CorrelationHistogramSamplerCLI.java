@@ -16,7 +16,7 @@ import ubic.gemma.model.genome.TaxonService;
 import cern.colt.list.DoubleArrayList;
 
 public class CorrelationHistogramSamplerCLI extends
-		AbstractGeneExpressionExperimentManipulatingCLI {
+		ExpressionExperimentManipulatingCLI {
 	private CoexpressionAnalysisService coexprAnalysisService;
 	private Taxon taxon;
 	private int numSamples;

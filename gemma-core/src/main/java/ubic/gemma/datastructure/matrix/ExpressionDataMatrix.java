@@ -79,6 +79,14 @@ public interface ExpressionDataMatrix<T> {
     public T[] getColumn( BioAssay bioAssay );
 
     /**
+     * Access a single column of the matrix.
+     * 
+     * @param column index
+     * @return T[]
+     */
+    public T[] getColumn( Integer column );
+
+    /**
      * Access a single value of the matrix. Note that because there can be multiple bioassays per column and multiple
      * designelements per row, it is possible for this method to retrieve a data that does not come from the bioassay
      * and/or designelement arguments.

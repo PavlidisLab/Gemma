@@ -20,7 +20,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 
 public class RankAnalysisCLI extends
-		AbstractGeneExpressionExperimentManipulatingCLI {
+		ExpressionExperimentManipulatingCLI {
 
 	private DedvRankService dedvRankService;
 

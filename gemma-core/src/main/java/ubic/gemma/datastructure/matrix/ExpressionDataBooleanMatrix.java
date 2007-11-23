@@ -204,6 +204,15 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
      */
     public Boolean[] getColumn( BioAssay bioAssay ) {
         int index = this.columnAssayMap.get( bioAssay );
+        return getColumn( index );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumn(java.lang.Integer)
+     */
+    public Boolean[] getColumn( Integer index ) {
         ObjectMatrix1D rawResult = this.matrix.viewColumn( index );
         Boolean[] res = new Boolean[rawResult.size()];
         int i = 0;

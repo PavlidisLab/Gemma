@@ -41,7 +41,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author pavlidis
  * @version $Id$
  */
-public class StringVectorCleanup extends AbstractGeneExpressionExperimentManipulatingCLI {
+public class StringVectorCleanup extends ExpressionExperimentManipulatingCLI {
 
     @SuppressWarnings("static-access")
     @Override

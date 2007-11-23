@@ -29,7 +29,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author pavlidis
  * @version $Id$
  */
-public class VectorMergingCli extends AbstractGeneExpressionExperimentManipulatingCLI {
+public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
 
     DesignElementDataVectorService vectorService;
 

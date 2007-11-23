@@ -39,7 +39,6 @@ import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Stats;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -67,7 +66,7 @@ public class LinkAnalysis {
     private DoubleArrayList cdf;
     private ObjectArrayList keep; // links that are retained.
     private ExpressionDataDoubleMatrix dataMatrix = null;
-    private Collection<DesignElementDataVector> dataVectors = null;
+    // private Collection<DesignElementDataVector> dataVectors = null;
 
     private Map<CompositeSequence, Collection<Gene>> probeToGeneMap = null;
     private Map<Gene, Collection<CompositeSequence>> geneToProbeMap = null;
@@ -95,7 +94,7 @@ public class LinkAnalysis {
      */
     public void analyze() throws Exception {
         assert this.dataMatrix != null;
-        assert this.dataVectors != null;
+
         assert this.taxon != null;
         assert this.probeToGeneMap != null;
 
@@ -118,7 +117,7 @@ public class LinkAnalysis {
      */
     public void clear() {
         this.dataMatrix = null;
-        this.dataVectors = null;
+
         this.probeToGeneMap = null;
         this.geneToProbeMap = null;
         this.uniqueGenesInDataset = 0;
@@ -127,10 +126,6 @@ public class LinkAnalysis {
 
     public void setDataMatrix( ExpressionDataDoubleMatrix paraDataMatrix ) {
         this.dataMatrix = paraDataMatrix;
-    }
-
-    public void setDataVectors( Collection<DesignElementDataVector> vectors ) {
-        this.dataVectors = vectors;
     }
 
     public void setTaxon( Taxon taxon ) {

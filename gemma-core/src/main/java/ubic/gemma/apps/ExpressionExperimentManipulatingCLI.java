@@ -43,7 +43,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @author Paul
  * @version $Id$
  */
-public abstract class AbstractGeneExpressionExperimentManipulatingCLI extends AbstractSpringAwareCLI {
+public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpringAwareCLI {
 
     protected ExpressionExperimentService eeService;
 
@@ -134,6 +134,7 @@ public abstract class AbstractGeneExpressionExperimentManipulatingCLI extends Ab
         return experimentShortName;
     }
 
+    @SuppressWarnings("unchecked")
     public Collection<ExpressionExperiment> getExpressionExperiments( Taxon taxon ) throws IOException {
         Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
         if ( experimentShortName != null ) {

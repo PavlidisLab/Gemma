@@ -49,7 +49,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * @author Paul
  * @version $Id$
  */
-public class TwoChannelMissingValueCLI extends AbstractGeneExpressionExperimentManipulatingCLI {
+public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingCLI {
 
     private static final String MISSING_VALUE_OPTION = "mvind";
     /**

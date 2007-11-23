@@ -75,7 +75,7 @@ import ubic.gemma.model.genome.ProbeAlignedRegion;
  * @author xwan
  * @version $Id$
  */
-public class LinkStatisticsCLI extends AbstractGeneExpressionExperimentManipulatingCLI {
+public class LinkStatisticsCLI extends ExpressionExperimentManipulatingCLI {
 
     public static void main( String[] args ) {
         LinkStatisticsCLI shuffle = new LinkStatisticsCLI();

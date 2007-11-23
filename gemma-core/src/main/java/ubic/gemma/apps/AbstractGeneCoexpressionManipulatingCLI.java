@@ -36,7 +36,7 @@ import ubic.gemma.model.genome.gene.GeneService;
  * @author Raymond
  * @version $Id$
  */
-public abstract class AbstractGeneCoexpressionManipulatingCLI extends AbstractGeneExpressionExperimentManipulatingCLI {
+public abstract class AbstractGeneCoexpressionManipulatingCLI extends ExpressionExperimentManipulatingCLI {
     protected GeneService geneService;
 
     private String[] queryGeneSymbols;

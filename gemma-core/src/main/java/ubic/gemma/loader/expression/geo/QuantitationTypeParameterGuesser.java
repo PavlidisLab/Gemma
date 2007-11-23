@@ -256,6 +256,7 @@ public class QuantitationTypeParameterGuesser {
         isNormalizedPatterns.add( "ch[12](b)?n.*" );
         isNormalizedPatterns.add( "(unf_)?value" );
         isNormalizedPatterns.add( "rma" );
+        isNormalizedPatterns.add( "dchip" );
 
         isBackgroundSubtractedDescPatterns.add( ".*(?<!ratio).*background[\\s-](subtracted|corrected).*(?!ratio).*" );
         isBackgroundSubtractedDescPatterns.add( ".*(?<!ratio).*difference between.*(?!ratio).*" );
@@ -266,12 +267,14 @@ public class QuantitationTypeParameterGuesser {
         isBackgroundSubtractedNamePatterns.add( ".*((- )|_)b(532|635)" );
         isBackgroundSubtractedNamePatterns.add( ".*- background" );
         isBackgroundSubtractedNamePatterns.add( "rma" );
+        isBackgroundSubtractedNamePatterns.add( "dchip" );
         isBackgroundSubtractedDescPatterns
                 .add( ".*channel [12] (mean|median) signal background (subtracted|corrected).*(?!ratio).*" );
 
         // note: unf_value is without the flagged values removed.
         isPreferredNamePatterns.add( "value" );
         isPreferredNamePatterns.add( "rma" );
+        isPreferredNamePatterns.add( "dchip" );
 
     }
 

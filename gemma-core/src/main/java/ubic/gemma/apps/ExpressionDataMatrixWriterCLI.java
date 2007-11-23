@@ -36,7 +36,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author Paul
  * @version $Id$
  */
-public class ExpressionDataMatrixWriterCLI extends AbstractGeneExpressionExperimentManipulatingCLI {
+public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulatingCLI {
 
     private String outFileName;
 

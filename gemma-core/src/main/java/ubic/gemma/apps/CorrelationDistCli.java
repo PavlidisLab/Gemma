@@ -60,7 +60,7 @@ import ubic.gemma.model.genome.Gene;
  * @author raymond,xwan
  * @version $Id$
  */
-public class CorrelationDistCli extends AbstractGeneExpressionExperimentManipulatingCLI {
+public class CorrelationDistCli extends ExpressionExperimentManipulatingCLI {
 
     private CommandLineToolUtilService linkAnalysisUtilService = null;
     private ArrayDesignService adService = null;

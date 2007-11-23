@@ -43,7 +43,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author keshav
  * @version $Id$
  */
-public class DifferentialExpressionAnalysisCli extends AbstractGeneExpressionExperimentManipulatingCLI {
+public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManipulatingCLI {
     private static Log log = LogFactory.getLog( DifferentialExpressionAnalysisCli.class );
 
     // private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;

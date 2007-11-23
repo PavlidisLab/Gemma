@@ -50,7 +50,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * @author paul (refactoring)
  * @version $Id$
  */
-public class LinkAnalysisCli extends AbstractGeneExpressionExperimentManipulatingCLI {
+public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
     /**
      * @param args
@@ -117,20 +117,7 @@ public class LinkAnalysisCli extends AbstractGeneExpressionExperimentManipulatin
                 "The setting for family wise error control" ).withLongOpt( "fwe" ).create( 'w' );
         addOption( fwe );
 
-        Option minPresentFraction = OptionBuilder.hasArg().withArgName( "Missing Value Threshold" ).withDescription(
-                "Fraction of data points that must be present in a profile to be retained , default="
-                        + FilterConfig.DEFAULT_MINPRESENT_FRACTION ).withLongOpt( "missingcut" ).create( 'm' );
-        addOption( minPresentFraction );
-
-        Option lowExpressionCut = OptionBuilder.hasArg().withArgName( "Expression Threshold" ).withDescription(
-                "Fraction of expression vectors to reject based on low values, default="
-                        + FilterConfig.DEFAULT_LOWEXPRESSIONCUT ).withLongOpt( "lowcut" ).create( 'l' );
-        addOption( lowExpressionCut );
-
-        Option lowVarianceCut = OptionBuilder.hasArg().withArgName( "Variance Threshold" ).withDescription(
-                "Fraction of expression vectors to reject based on low variance (or coefficient of variation), default="
-                        + FilterConfig.DEFAULT_LOWVARIANCECUT ).withLongOpt( "lowvarcut" ).create( "lv" );
-        addOption( lowVarianceCut );
+        buildFilterConfigOptions();
 
         Option absoluteValue = OptionBuilder.withDescription( "If using absolute value in expression file" )
                 .withLongOpt( "abs" ).create( 'a' );
@@ -145,6 +132,24 @@ public class LinkAnalysisCli extends AbstractGeneExpressionExperimentManipulatin
 
     }
 
+    @SuppressWarnings("static-access")
+    private void buildFilterConfigOptions() {
+        Option minPresentFraction = OptionBuilder.hasArg().withArgName( "Missing Value Threshold" ).withDescription(
+                "Fraction of data points that must be present in a profile to be retained , default="
+                        + FilterConfig.DEFAULT_MINPRESENT_FRACTION ).withLongOpt( "missingcut" ).create( 'm' );
+        addOption( minPresentFraction );
+
+        Option lowExpressionCut = OptionBuilder.hasArg().withArgName( "Expression Threshold" ).withDescription(
+                "Fraction of expression vectors to reject based on low values, default="
+                        + FilterConfig.DEFAULT_LOWEXPRESSIONCUT ).withLongOpt( "lowcut" ).create( 'l' );
+        addOption( lowExpressionCut );
+
+        Option lowVarianceCut = OptionBuilder.hasArg().withArgName( "Variance Threshold" ).withDescription(
+                "Fraction of expression vectors to reject based on low variance (or coefficient of variation), default="
+                        + FilterConfig.DEFAULT_LOWVARIANCECUT ).withLongOpt( "lowvarcut" ).create( "lv" );
+        addOption( lowVarianceCut );
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     protected Exception doWork( String[] args ) {
@@ -152,8 +157,6 @@ public class LinkAnalysisCli extends AbstractGeneExpressionExperimentManipulatin
         if ( err != null ) {
             return err;
         }
-
-        this.eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
 
         this.linkAnalysisService = ( LinkAnalysisService ) this.getBean( "linkAnalysisService" );
 
@@ -277,15 +280,8 @@ public class LinkAnalysisCli extends AbstractGeneExpressionExperimentManipulatin
             this.linkAnalysisConfig.setFwe( Double.parseDouble( getOptionValue( 'w' ) ) );
         }
 
-        if ( hasOption( 'm' ) ) {
-            filterConfig.setMinPresentFraction( Double.parseDouble( getOptionValue( 'm' ) ) );
-        }
-        if ( hasOption( 'l' ) ) {
-            filterConfig.setLowExpressionCut( Double.parseDouble( getOptionValue( 'l' ) ) );
-        }
-        if ( hasOption( "lv" ) ) {
-            filterConfig.setLowVarianceCut( Double.parseDouble( getOptionValue( "lv" ) ) );
-        }
+        getFilterConfigOptions();
+
         if ( hasOption( 'a' ) ) {
             this.linkAnalysisConfig.setAbsoluteValue( true );
         }
@@ -298,5 +294,17 @@ public class LinkAnalysisCli extends AbstractGeneExpressionExperimentManipulatin
         this.expressionExperimentReportService = ( ExpressionExperimentReportService ) this
                 .getBean( "expressionExperimentReportService" );
         this.auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
+    }
+
+    private void getFilterConfigOptions() {
+        if ( hasOption( 'm' ) ) {
+            filterConfig.setMinPresentFraction( Double.parseDouble( getOptionValue( 'm' ) ) );
+        }
+        if ( hasOption( 'l' ) ) {
+            filterConfig.setLowExpressionCut( Double.parseDouble( getOptionValue( 'l' ) ) );
+        }
+        if ( hasOption( "lv" ) ) {
+            filterConfig.setLowVarianceCut( Double.parseDouble( getOptionValue( "lv" ) ) );
+        }
     }
 }

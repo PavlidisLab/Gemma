@@ -68,7 +68,7 @@ import ubic.gemma.ontology.GoMetric.Metric;
  * @author xwan
  * @version $Id$
  */
-public class LinkGOStatsCli extends AbstractGeneExpressionExperimentManipulatingCLI {
+public class LinkGOStatsCli extends ExpressionExperimentManipulatingCLI {
 
     private final static int GO_MAXIMUM_COUNT = 50;
     private final static int MAXIMUM_LINK_NUM = 20;

@@ -35,7 +35,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author pavlidis
  * @version $Id$
  */
-public class ExpressionExperimentPlatformSwitchCli extends AbstractGeneExpressionExperimentManipulatingCLI {
+public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentManipulatingCLI {
 
     ArrayDesignService arrayDesignService;
     String arrayDesignName = null;

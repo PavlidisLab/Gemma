@@ -36,7 +36,6 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.math.CorrelationStats;
-import ubic.gemma.analysis.preprocess.filter.ExpressionExperimentFilter;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -105,24 +104,19 @@ public class LinkAnalysisService {
         log.info( "Begin link processing: " + ee );
         Collection<DesignElementDataVector> dataVectors = analysisHelperService.getVectors( ee );
 
-        if ( dataVectors == null ) throw new IllegalArgumentException( "No data vectors in " + ee );
+        checkVectors( ee, dataVectors );
 
-        ExpressionExperimentFilter filter = new ExpressionExperimentFilter( ee, eeService.getArrayDesignsUsed( ee ),
-                filterConfig );
-        ExpressionDataDoubleMatrix eeDoubleMatrix = filter.getFilteredMatrix( dataVectors );
+        ExpressionDataDoubleMatrix eeDoubleMatrix = analysisHelperService.getFilteredMatrix( ee, filterConfig,
+                dataVectors );
 
-        la.setDataMatrix( eeDoubleMatrix );
-        la.setDataVectors( dataVectors ); // shouldn't have to do this.
-        la.setTaxon( eeService.getTaxon( ee.getId() ) );
-        eeService.thawLite( ee );
-        la.setExpressionExperiment( ee );
-        Map<CompositeSequence, DesignElementDataVector> p2v = getProbe2GeneMap( la, dataVectors );
+        setUpAnalysisObject( ee, la, dataVectors, eeDoubleMatrix );
 
-        /*
-         * Start the analysis.
-         */
+        Map<CompositeSequence, DesignElementDataVector> p2v = getProbe2VectorMap( dataVectors );
+
         log.info( "Starting generating Raw Links for " + ee );
         la.analyze();
+
+        // output
         if ( linkAnalysisConfig.isUseDb() && !linkAnalysisConfig.isTextOut() ) {
             saveLinks( p2v, la );
         } else if ( linkAnalysisConfig.isTextOut() ) {
@@ -132,24 +126,59 @@ public class LinkAnalysisService {
 
     }
 
+    private void checkVectors( ExpressionExperiment ee, Collection<DesignElementDataVector> dataVectors ) {
+        if ( dataVectors == null || dataVectors.size() == 0 )
+            throw new IllegalArgumentException( "No data vectors in " + ee );
+    }
+
     /**
+     * @param ee
+     * @param la
+     * @param dataVectors
+     * @param eeDoubleMatrix
+     */
+    private void setUpAnalysisObject( ExpressionExperiment ee, LinkAnalysis la,
+            Collection<DesignElementDataVector> dataVectors, ExpressionDataDoubleMatrix eeDoubleMatrix ) {
+        la.setDataMatrix( eeDoubleMatrix );
+        la.setTaxon( eeService.getTaxon( ee.getId() ) );
+        eeService.thawLite( ee );
+        la.setExpressionExperiment( ee );
+
+        getProbe2GeneMap( la, dataVectors );
+    }
+
+    /**
+     * Somewhat misnamed. It fills in the probe2gene map for the linkAnalysis, but also returns a map of composite
+     * sequence to vector.
+     * 
      * @param la
      * @param dataVectors
      * @return map of probes to vectors.
      */
     @SuppressWarnings("unchecked")
-    private Map<CompositeSequence, DesignElementDataVector> getProbe2GeneMap( LinkAnalysis la,
-            Collection<DesignElementDataVector> dataVectors ) {
+    private void getProbe2GeneMap( LinkAnalysis la, Collection<DesignElementDataVector> dataVectors ) {
         log.info( "Getting probe-to-gene map" );
-        Map<CompositeSequence, DesignElementDataVector> p2v = new HashMap<CompositeSequence, DesignElementDataVector>();
+
         Collection<CompositeSequence> probesForVectors = new HashSet<CompositeSequence>();
         for ( DesignElementDataVector v : dataVectors ) {
             CompositeSequence cs = ( CompositeSequence ) v.getDesignElement();
             probesForVectors.add( cs );
-            p2v.put( cs, v );
         }
         Map<CompositeSequence, Collection<Gene>> probeToGeneMap = csService.getGenes( probesForVectors );
         la.setProbeToGeneMap( probeToGeneMap );
+    }
+
+    /**
+     * @param dataVectors
+     * @return map of probes to vectors.
+     */
+    private Map<CompositeSequence, DesignElementDataVector> getProbe2VectorMap(
+            Collection<DesignElementDataVector> dataVectors ) {
+        Map<CompositeSequence, DesignElementDataVector> p2v = new HashMap<CompositeSequence, DesignElementDataVector>();
+        for ( DesignElementDataVector v : dataVectors ) {
+            CompositeSequence cs = ( CompositeSequence ) v.getDesignElement();
+            p2v.put( cs, v );
+        }
         return p2v;
     }
 

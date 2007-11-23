@@ -80,6 +80,15 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix {
      */
     public String[] getColumn( BioAssay bioAssay ) {
         int index = this.columnAssayMap.get( bioAssay );
+        return this.getColumn( index );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumn(java.lang.Integer)
+     */
+    public String[] getColumn( Integer index ) {
         return this.matrix.getColumn( index );
     }
 
