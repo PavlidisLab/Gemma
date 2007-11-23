@@ -537,7 +537,9 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         }
 
         request.setAttribute( "id", id );
-        return new ModelAndView( "bioAssays" ).addObject( "bioAssays", expressionExperiment.getBioAssays() );
+        ModelAndView mv = new ModelAndView( "bioAssays" ).addObject( "bioAssays", expressionExperiment.getBioAssays() );
+        mv.addObject( "expressionExperiment", expressionExperiment );
+        return mv;
     }
 
     /**

@@ -273,7 +273,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
         if ( accession == null ) {
             // do nothing
-        } else {
+        } else if ( expressionExperiment.getAccession() != null ) {
             /* database entry */
             expressionExperiment.getAccession().setAccession( accession );
 
@@ -348,16 +348,16 @@ public class ExpressionExperimentFormController extends BaseFormController {
                         if ( bMats.size() > 1 ) {
                             // log.warn("");
                         }
-                       
+
                         BioMaterial oldBioMaterial = bMats.iterator().next();
-                        //newMaterial = BioMaterial.Factory.newInstance();
-                        newMaterial =  bioMaterialService.copy( oldBioMaterial );
-//                        newMaterial.setDescription( oldBioMaterial.getDescription() + " [Created by Gemma]" );
-//                        newMaterial.setMaterialType( oldBioMaterial.getMaterialType() );
-//                        newMaterial.setCharacteristics( oldBioMaterial.getCharacteristics() );
-//                        newMaterial.setTreatments( oldBioMaterial.getTreatments() );
-//                        newMaterial.setSourceTaxon( oldBioMaterial.getSourceTaxon() );
-//                        newMaterial.setFactorValues( oldBioMaterial.getFactorValues() );
+                        // newMaterial = BioMaterial.Factory.newInstance();
+                        newMaterial = bioMaterialService.copy( oldBioMaterial );
+                        // newMaterial.setDescription( oldBioMaterial.getDescription() + " [Created by Gemma]" );
+                        // newMaterial.setMaterialType( oldBioMaterial.getMaterialType() );
+                        // newMaterial.setCharacteristics( oldBioMaterial.getCharacteristics() );
+                        // newMaterial.setTreatments( oldBioMaterial.getTreatments() );
+                        // newMaterial.setSourceTaxon( oldBioMaterial.getSourceTaxon() );
+                        // newMaterial.setFactorValues( oldBioMaterial.getFactorValues() );
                         newMaterial.setName( "Modeled after " + oldBioMaterial.getName() );
                         newMaterial = ( BioMaterial ) persisterHelper.persist( newMaterial );
                     } else {

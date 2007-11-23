@@ -93,7 +93,7 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
                 JMatrixDisplay display = expressionDataMatrixVisualizationService.createHeatMap( expressionDataMatrix );
                 if ( display != null ) {
                     response.setContentType( DEFAULT_CONTENT_TYPE );
-                    display.writeOutAsPNG( out, true, true );
+                    display.saveImageToPng( display.getColorMatrix(), out, true, true );
                 }
 
             } catch ( Exception e ) {
