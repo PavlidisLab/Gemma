@@ -300,14 +300,16 @@ if ( expressionExperiment.getExperimentalDesign() != null ) {
 	<a
 		href="/Gemma/experimentalDesign/showExperimentalDesign.html?id=<%out.print(expressionExperiment.getExperimentalDesign().getId());%> ">
 		<%
-		out.print( expressionExperiment.getExperimentalDesign().getName() );
+		                    if ( expressionExperiment.getExperimentalDesign().getName() != null ) {
+		                    out.print( expressionExperiment.getExperimentalDesign().getName() );
+		                }
 		%> <img src="/Gemma/images/magnifier.png" /> </a>
 </h3>
 <div style="padding: 2px;" onclick="Effect.toggle('design', 'blind', {duration:0.1})">
 	<img src="/Gemma/images/plus.gif" />
 	<br />
 </div>
-<div id="design" >
+<div id="design">
 	<Gemma:eeDesign experimentalDesign="${expressionExperiment.experimentalDesign}"></Gemma:eeDesign>
 
 	<div id="eeDesignMatrix" class="x-grid-mso" style="overflow: hidden;"></div>
@@ -352,6 +354,23 @@ if ( expressionExperiment.getExperimentalDesign() != null ) {
 		</display:table>
 	</div>
 </div>
+
+<authz:authorize ifAnyGranted="admin">
+	<h3>
+		Quality Control information
+	</h3>
+	<div style="padding: 2px;" onclick="Effect.toggle('qc', 'blind', {duration:0.1})">
+		<img src="/Gemma/images/plus.gif" />
+		<br />
+	</div>
+	<div id="qc" style="display: none">
+		<div>
+			<%-- inner div needed for effect  --%>
+			<Gemma:expressionQC ee="${expressionExperiment.id}" />
+		</div>
+	</div>
+	<br />
+</authz:authorize>
 
 <authz:authorize ifAnyGranted="admin">
 	<h3>

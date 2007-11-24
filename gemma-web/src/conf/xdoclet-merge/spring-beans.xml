@@ -67,6 +67,8 @@ Mapping URLS to controllers
 			<prop key="/expressionExperiment/visualizeDataMatrix.html">
 				expressionExperimentVisualizationController
 			</prop>
+			<prop key="/expressionExperiment/visualizeCorrMat.html">expressionExperimentQCController</prop>
+		    <prop key="/expressionExperiment/visualizeProbeCorrDist.html">expressionExperimentQCController</prop>
 			<prop key="/getData.html">
 				expressionExperimentDataFetchController</prop>
 			<prop key="/candidateGeneList*">candidateGeneListController</prop>
@@ -256,22 +258,6 @@ Mapping URLS to controllers
 							<value>deleteFactor</value>
 							<value>createNewFactorValue</value>
 							<value>deleteFactorValue</value>
-						</list>
-					</property>
-				</bean>
-			</entry>
-			<entry key="CharacteristicBrowserController">
-				<bean class="org.directwebremoting.spring.CreatorConfig">
-					<property name="creator">
-						<bean class="org.directwebremoting.spring.BeanCreator">
-							<property name="bean" ref="characteristicBrowserController" />
-						</bean>
-					</property>
-					<property name="includes">
-						<list>
-							<value>findCharacteristics</value>
-							<value>updateCharacteristics</value>
-							<value>removeCharacteristics</value>
 						</list>
 					</property>
 				</bean>
@@ -1196,6 +1182,17 @@ Mapping urls to views. List views here that are just jsps and that don't need a 
 		<props>
 			<prop key="/expressionExperiment/visualizeDataMatrix.html">
 				show</prop>
+		</props>
+	</property>
+</bean>
+<bean id="expressionExperimentQCActions"
+	class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
+	<property name="mappings">
+		<props>
+			<prop key="/expressionExperiment/visualizeCorrMat.html">
+				showCorrMat</prop>
+			<prop key="/expressionExperiment/visualizeProbeCorrDist.html">
+				showProbeCorrDist</prop>
 		</props>
 	</property>
 </bean>
