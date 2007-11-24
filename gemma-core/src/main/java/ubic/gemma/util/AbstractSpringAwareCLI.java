@@ -132,7 +132,8 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         if ( skipIfLastRunLaterThan != null ) {
             for ( int j = events.size() - 1; j >= 0; j-- ) {
                 AuditEvent event = events.get( j );
-                if ( event.getEventType() != null && eventClass.isAssignableFrom( event.getEventType().getClass() ) ) {
+                if ( event.getEventType() != null && eventClass != null
+                        && eventClass.isAssignableFrom( event.getEventType().getClass() ) ) {
                     if ( event.getDate().after( skipIfLastRunLaterThan ) ) {
                         errorObjects.add( auditable + ": " + " run more recently than " + skipIfLastRunLaterThan );
                         needToRun = false;
