@@ -125,7 +125,7 @@ public class ExpressionDataSampleCorrelation {
     public static void createMatrixImages( DoubleMatrixNamed matrix, File location, String fileBaseName )
             throws IOException {
 
-        writeMatrix( matrix, fileBaseName + ".txt" );
+        writeMatrix( matrix, location, fileBaseName + ".txt" );
 
         int numRows = matrix.rows();
 
@@ -152,16 +152,19 @@ public class ExpressionDataSampleCorrelation {
      * Save the matrix itself to a text file.
      * 
      * @param matrix
+     * @param location directory
      * @param file
      * @throws IOException
      */
-    private static void writeMatrix( DoubleMatrixNamed matrix, String file ) throws IOException {
-        File f = new File( file );
+    private static void writeMatrix( DoubleMatrixNamed matrix, File location, String file ) throws IOException {
+        File f = new File( location, file );
         OutputStream o;
 
         o = new FileOutputStream( f );
         MatrixWriter writer = new ubic.basecode.io.writer.MatrixWriter( o );
         writer.writeMatrix( matrix, true );
+        o.close();
+        log.info( "Wrote " + f.getAbsolutePath() );
     }
 
     /**
@@ -178,7 +181,6 @@ public class ExpressionDataSampleCorrelation {
         writer.setCellSize( new Dimension( size, size ) );
         File f = new File( location, fileName );
         writer.saveImage( matrix, f.getAbsolutePath(), addlabels, false );
-        log.info( "Wrote " + f.getAbsolutePath() );
     }
 
     /**
