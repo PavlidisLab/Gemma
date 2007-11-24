@@ -41,65 +41,58 @@ public class FactorValueImpl extends ubic.gemma.model.expression.experiment.Fact
 
     @Override
     public boolean equals( Object object ) {
-        if ( object == null )
-            return false;
-        if ( this == object )
-            return true;
-        if ( !(object instanceof FactorValue) )
-            return false;
-        FactorValue that = (FactorValue)object;
-        if ( this.getId() != null && that.getId() != null )
-            return this.getId().equals( that.getId() );
-        
-        /* at this point, we know we have two FactorValues, at least one of which is
-         * transient, so we have to look at the fields; to do this, just compare the
-         * hashcodes, which already incorporate all of the important fields...
+        if ( object == null ) return false;
+        if ( this == object ) return true;
+        if ( !( object instanceof FactorValue ) ) return false;
+        FactorValue that = ( FactorValue ) object;
+        if ( this.getId() != null && that.getId() != null ) return this.getId().equals( that.getId() );
+
+        /*
+         * at this point, we know we have two FactorValues, at least one of which is transient, so we have to look at
+         * the fields; to do this, just compare the hashcodes, which already incorporate all of the important fields...
          */
         return ObjectUtils.equals( this.getExperimentalFactor(), that.getExperimentalFactor() )
-            && ObjectUtils.equals( this.getMeasurement(), that.getMeasurement() )
-            && ObjectUtils.equals( this.getCharacteristics(), that.getCharacteristics() );
+                && ObjectUtils.equals( this.getMeasurement(), that.getMeasurement() )
+                && ObjectUtils.equals( this.getCharacteristics(), that.getCharacteristics() );
     }
 
     @Override
     public int hashCode() {
-        HashCodeBuilder builder = new HashCodeBuilder(17, 7)
-            .append( this.getId() )
-            .append( this.getExperimentalFactor() )
-            .append( this.getMeasurement() );
+        HashCodeBuilder builder = new HashCodeBuilder( 17, 7 ).append( this.getId() ).append(
+                this.getExperimentalFactor() ).append( this.getMeasurement() );
         if ( this.getCharacteristics() != null ) {
             for ( Characteristic c : this.getCharacteristics() ) {
                 if ( c instanceof VocabCharacteristic )
-                    builder.append( ( (VocabCharacteristic)c ).hashCode() );
+                    builder.append( ( ( VocabCharacteristic ) c ).hashCode() );
                 else
                     builder.append( c.hashCode() );
             }
         }
         return builder.toHashCode();
     }
-    
+
     /**
      * @see ubic.gemma.model.expression.experiment.FactorValue#toString()
      */
     @Override
     public java.lang.String toString() {
         StringBuilder buf = new StringBuilder();
-        buf.append( this.getClass().getSimpleName() );
-        if ( this.getId() != null ) {
-            buf.append( "Id:" + this.getId() + " ");
-        } else {
-            buf.append( " " );
-        }
-        buf.append( " Factor: " + this.getExperimentalFactor()  );
+        // buf.append( this.getClass().getSimpleName() );
+        // if ( this.getId() != null ) {
+        // buf.append( "Id:" + this.getId() + " " );
+        // } else {
+        // buf.append( " " );
+        // }
+        buf.append( this.getExperimentalFactor().getName() + ":" );
         if ( this.getCharacteristics().size() > 0 ) {
-            buf.append( " Characteristics : " );
             for ( Characteristic c : this.getCharacteristics() ) {
-                buf.append( c );
-                buf.append( " | " );
+                buf.append( c.getValue() );
+                if ( this.getCharacteristics().size() > 1 ) buf.append( " | " );
             }
         } else if ( this.getMeasurement() != null ) {
-            buf.append(" Measurement: " +  this.getMeasurement() );
+            buf.append( this.getMeasurement().getValue() );
         } else if ( StringUtils.isNotBlank( this.getValue() ) ) {
-            buf.append( " Value: '" + this.getValue() );
+            buf.append( this.getValue() );
         }
         return buf.toString();
     }
