@@ -243,8 +243,6 @@ public class MageMLConverterHelper {
 
         initLocalExternalDataPaths();
 
-        this.initMGEDOntology();
-
     }
 
     /**
@@ -1757,6 +1755,11 @@ public class MageMLConverterHelper {
 
     Map<String, FactorValue> fvMap = new HashMap<String, FactorValue>();
 
+    /*
+     * This is a global variable.
+     */
+    private boolean haveInitializedMgedOntologyHelper = false;
+
     /**
      * @param mageObj
      * @param gemmaObj
@@ -1880,6 +1883,11 @@ public class MageMLConverterHelper {
         String category = mageObj.getCategory();
         String value = mageObj.getValue();
         org.biomage.Description.DatabaseEntry ontologyReference = mageObj.getOntologyReference();
+
+        if ( !haveInitializedMgedOntologyHelper ) {
+            this.initMGEDOntology();
+            haveInitializedMgedOntologyHelper = true;
+        }
 
         boolean categoryIsMo = mgedOntologyHelper.classExists( StringUtils.capitalize( category ) );
 
@@ -3109,8 +3117,8 @@ public class MageMLConverterHelper {
         try {
             mgedOntologyHelper = new OntologyHelper( MGED_ONTOLOGY_URL );
         } catch ( Exception e ) {
-          //  throw new RuntimeException( e );
-            log.error("Unable to initialize MGED Ontology for MAGE-ML conversion.");
+            // throw new RuntimeException( e );
+            log.error( "Unable to initialize MGED Ontology for MAGE-ML conversion." );
         }
     }
 
