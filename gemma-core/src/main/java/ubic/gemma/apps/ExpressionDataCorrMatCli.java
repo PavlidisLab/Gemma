@@ -36,7 +36,6 @@ import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.ConfigUtils;
 
@@ -70,7 +69,8 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
     @Override
     protected Exception doWork( String[] args ) {
         this.processCommandLine( "corrMat", args );
-        this.directory = new File( ConfigUtils.getAnalysisStoragePath() + File.separatorChar + "corrmat" );
+        this.directory = new File( ConfigUtils.getAnalysisStoragePath() + File.separatorChar
+                + ExpressionDataSampleCorrelation.CORRMAT_DIR_NAME );
         if ( !directory.exists() ) {
             boolean success = directory.mkdir();
             if ( !success ) {
@@ -85,17 +85,17 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
                 log.info( "Total ExpressionExperiment: " + all.size() );
                 for ( ExpressionExperiment ee : all ) {
                     eeService.thawLite( ee );
-                    if ( !needToRun( ee, LinkAnalysisEvent.class ) ) {
+                    if ( !needToRun( ee, null ) ) {
                         continue;
                     }
 
                     try {
                         process( ee );
                         successObjects.add( ee.toString() );
-                        audit( ee, "Part of run on all EEs", LinkAnalysisEvent.Factory.newInstance() );
+                        audit( ee, "Part of run on all EEs", null );
                     } catch ( Exception e ) {
                         errorObjects.add( ee + ": " + e.getMessage() );
-                        // logFailure( ee, e );
+                        log.error( ee, e );
                         log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********" );
                     }
                 }
@@ -116,7 +116,7 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
 
                         eeService.thawLite( expressionExperiment );
 
-                        if ( !needToRun( expressionExperiment, LinkAnalysisEvent.class ) ) {
+                        if ( !needToRun( expressionExperiment, null ) ) {
                             continue;
                         }
 
@@ -124,14 +124,13 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
                             process( expressionExperiment );
                             successObjects.add( expressionExperiment.toString() );
 
-                            audit( expressionExperiment, "From list in file: " + experimentListFile,
-                                    LinkAnalysisEvent.Factory.newInstance() );
+                            audit( expressionExperiment, "From list in file: " + experimentListFile, null );
                         } catch ( Exception e ) {
                             errorObjects.add( expressionExperiment + ": " + e.getMessage() );
 
                             // logFailure( expressionExperiment, e );
 
-                            e.printStackTrace();
+                            log.error( e, e );
                             log.error( "**** Exception while processing " + expressionExperiment + ": "
                                     + e.getMessage() + " ********" );
                         }
@@ -151,17 +150,15 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
                     continue;
                 }
                 eeService.thawLite( expressionExperiment );
-                if ( !needToRun( expressionExperiment, LinkAnalysisEvent.class ) ) {
+                if ( !needToRun( expressionExperiment, null ) ) {
                     return null;
                 }
 
                 try {
                     process( expressionExperiment );
-                    audit( expressionExperiment, "From item(s) given from command line", LinkAnalysisEvent.Factory
-                            .newInstance() );
+                    audit( expressionExperiment, "From item(s) given from command line", null );
                 } catch ( Exception e ) {
-                    e.printStackTrace();
-                    // logFailure( expressionExperiment, e );
+                    log.error( e, e );
                     log.error( "**** Exception while processing " + expressionExperiment + ": " + e.getMessage()
                             + " ********" );
                 }
@@ -176,9 +173,9 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
         try {
             ExpressionDataCorrMatCli e = new ExpressionDataCorrMatCli();
             Exception ex = e.doWork( args );
-            log.info( ex );
+            log.info( ex, ex );
         } catch ( Exception e ) {
-            log.info( e );
+            log.info( e, e );
         }
     }
 

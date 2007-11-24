@@ -20,8 +20,10 @@ package ubic.gemma.analysis.stats;
 
 import java.awt.Dimension;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -34,17 +36,47 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.gui.ColorMatrix;
 import ubic.basecode.gui.JMatrixDisplay;
 import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.basecode.io.writer.MatrixWriter;
 import ubic.basecode.math.MatrixStats;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
 /**
- * Given an ExpressionDataMatrix, compute the correlation of the columns (samples).
+ * Given an ExpressionDataMatrix, compute the correlation of the columns (samples) and also create images.sf
  * 
  * @author Paul
  * @version $Id$
  */
 public class ExpressionDataSampleCorrelation {
+
+    private static final int LARGE_CELL_SIZE = 10;
+
+    /**
+     * Suffix on lower contrast, large cell image (sample names will be shown)
+     */
+    public static final String LARGE_LOWCONTRAST = ".loctlg.png";
+
+    /**
+     * Suffix on lower contrast, small cell image
+     */
+    public static final String SMALL_LOWCONTRAST = ".loctsm.png";
+
+    /**
+     * Name of the directory where the correlation matrices will be stored (within the configured analysis results area)
+     */
+    public static final String CORRMAT_DIR_NAME = "corrmat";
+
+    /**
+     * Suffix on high contrast, small cell image.
+     */
+    public static final String SMALL_HIGHCONTRAST = ".hictsm.png";
+
+    /**
+     * Suffix on high contrast, large cell image (sample names will be shown)
+     */
+    public static final String LARGE_HIGHCONTRAST = ".hictlg.png";
 
     private static Log log = LogFactory.getLog( ExpressionDataSampleCorrelation.class.getName() );
 
@@ -56,19 +88,25 @@ public class ExpressionDataSampleCorrelation {
         int cols = matrix.columns();
         double[][] rawcols = new double[cols][];
 
-        for ( int i = 0; i < cols; i++ ) {
+        List<BioMaterial> ordered = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( matrix );
+
+        int m = 0;
+        for ( BioMaterial bioMaterial : ordered ) {
+            int i = matrix.getColumnIndex( bioMaterial );
             Double[] colo = matrix.getColumn( i );
-            rawcols[i] = new double[colo.length];
+            rawcols[m] = new double[colo.length];
             for ( int j = 0; j < colo.length; j++ ) {
-                rawcols[i][j] = colo[j];
+                rawcols[m][j] = colo[j];
             }
+            m++;
         }
 
         DoubleMatrixNamed columns = DoubleMatrix2DNamedFactory.dense( rawcols );
         DoubleMatrixNamed mat = MatrixStats.correlationMatrix( columns );
 
         List<Object> colElements = new ArrayList<Object>();
-        for ( int i = 0; i < cols; i++ ) {
+        for ( BioMaterial bioMaterial : ordered ) {
+            int i = matrix.getColumnIndex( bioMaterial );
             Collection<BioAssay> bas = matrix.getBioAssaysForColumn( i );
             colElements.add( bas.iterator().next() );
         }
@@ -78,7 +116,7 @@ public class ExpressionDataSampleCorrelation {
     }
 
     /**
-     * Generate images of sample correlation
+     * Generate images of sample correlation (also saes text file)
      * 
      * @param matrix
      * @param location directory where files will be saved
@@ -86,6 +124,8 @@ public class ExpressionDataSampleCorrelation {
      */
     public static void createMatrixImages( DoubleMatrixNamed matrix, File location, String fileBaseName )
             throws IOException {
+
+        writeMatrix( matrix, fileBaseName + ".txt" );
 
         int numRows = matrix.rows();
 
@@ -100,14 +140,38 @@ public class ExpressionDataSampleCorrelation {
         if ( numRows > 50 ) smallSize = 1;
         if ( numRows < 10 ) smallSize = 4;
 
-        writeImage( hard, location, fileBaseName + ".hictsm.png", smallSize, false );
-        writeImage( soft, location, fileBaseName + ".loctsm.png", smallSize, false );
+        writeImage( hard, location, fileBaseName + SMALL_HIGHCONTRAST, smallSize, false );
+        writeImage( soft, location, fileBaseName + SMALL_LOWCONTRAST, smallSize, false );
 
-        writeImage( hard, location, fileBaseName + ".hictlg.png", 8, true );
-        writeImage( soft, location, fileBaseName + ".loctlg.png", 8, true );
+        writeImage( hard, location, fileBaseName + LARGE_HIGHCONTRAST, LARGE_CELL_SIZE, true );
+        writeImage( soft, location, fileBaseName + LARGE_LOWCONTRAST, LARGE_CELL_SIZE, true );
 
     }
 
+    /**
+     * Save the matrix itself to a text file.
+     * 
+     * @param matrix
+     * @param file
+     * @throws IOException
+     */
+    private static void writeMatrix( DoubleMatrixNamed matrix, String file ) throws IOException {
+        File f = new File( file );
+        OutputStream o;
+
+        o = new FileOutputStream( f );
+        MatrixWriter writer = new ubic.basecode.io.writer.MatrixWriter( o );
+        writer.writeMatrix( matrix, true );
+    }
+
+    /**
+     * @param matrix
+     * @param location
+     * @param fileName
+     * @param size
+     * @param addlabels
+     * @throws IOException
+     */
     private static void writeImage( ColorMatrix matrix, File location, String fileName, int size, boolean addlabels )
             throws IOException {
         JMatrixDisplay writer = new JMatrixDisplay( matrix );

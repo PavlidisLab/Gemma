@@ -20,7 +20,6 @@ package ubic.gemma.datastructure.matrix;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -37,9 +36,9 @@ public class MatrixWriter<T> {
     static {
         nf.setMaximumFractionDigits( 4 );
     }
-    
-    public void write( Writer writer, ExpressionDataMatrix<T> matrix, boolean writeHeader) throws IOException {
-    	this.write(writer, matrix, writeHeader, true);
+
+    public void write( Writer writer, ExpressionDataMatrix<T> matrix, boolean writeHeader ) throws IOException {
+        this.write( writer, matrix, writeHeader, true );
     }
 
     /**
@@ -47,16 +46,16 @@ public class MatrixWriter<T> {
      * @param matrix
      * @return
      */
-    public void write( Writer writer, ExpressionDataMatrix<T> matrix, boolean writeHeader, boolean writeSequence) throws IOException {
+    public void write( Writer writer, ExpressionDataMatrix<T> matrix, boolean writeHeader, boolean writeSequence )
+            throws IOException {
         int columns = matrix.columns();
         int rows = matrix.rows();
 
         StringBuffer buf = new StringBuffer();
         if ( writeHeader ) {
             // TO do get gene.
-            buf.append( "Probe");
-            if (writeSequence)
-            	buf.append("\tSequence");
+            buf.append( "Probe" );
+            if ( writeSequence ) buf.append( "\tSequence" );
             for ( int i = 0; i < columns; i++ ) {
                 buf.append( "\t" + matrix.getBioMaterialForColumn( i ).getName() + ":" );
                 for ( Object ba : matrix.getBioAssaysForColumn( i ) ) {
@@ -69,7 +68,7 @@ public class MatrixWriter<T> {
         for ( int j = 0; j < rows; j++ ) {
 
             buf.append( matrix.getDesignElementForRow( j ).getName() );
-            if (writeSequence) {
+            if ( writeSequence ) {
                 BioSequence biologicalCharacteristic = ( ( CompositeSequence ) matrix.getDesignElementForRow( j ) )
                         .getBiologicalCharacteristic();
                 if ( biologicalCharacteristic != null ) buf.append( "\t" + biologicalCharacteristic.getName() );
