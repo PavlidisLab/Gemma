@@ -28,9 +28,9 @@ public class QuantitationTypeWrapper extends TableDecorator {
         QuantitationType qt = ( QuantitationType ) getCurrentRowObject();
         if ( qt.getIsPreferred() ) {
             return "<input type=checkbox checked disabled></input>";
-        } else {
-            return "<input type=checkbox disabled></input>";
         }
+        return "<input type=checkbox disabled></input>";
+
     }
 
     /**
@@ -40,9 +40,8 @@ public class QuantitationTypeWrapper extends TableDecorator {
         QuantitationType qt = ( QuantitationType ) getCurrentRowObject();
         if ( qt.getIsRatio() ) {
             return "<input type=checkbox checked disabled></input>";
-        } else {
-            return "<input type=checkbox disabled></input>";
         }
+        return "<input type=checkbox disabled></input>";
     }
 
     /**
@@ -52,9 +51,8 @@ public class QuantitationTypeWrapper extends TableDecorator {
         QuantitationType qt = ( QuantitationType ) getCurrentRowObject();
         if ( qt.getIsBackground() ) {
             return "<input type=checkbox checked disabled></input>";
-        } else {
-            return "<input type=checkbox disabled></input>";
         }
+        return "<input type=checkbox disabled></input>";
     }
 
     /**
@@ -64,9 +62,8 @@ public class QuantitationTypeWrapper extends TableDecorator {
         QuantitationType qt = ( QuantitationType ) getCurrentRowObject();
         if ( qt.getIsBackgroundSubtracted() ) {
             return "<input type=checkbox checked disabled></input>";
-        } else {
-            return "<input type=checkbox disabled></input>";
         }
+        return "<input type=checkbox disabled></input>";
     }
 
     /**
@@ -76,9 +73,8 @@ public class QuantitationTypeWrapper extends TableDecorator {
         QuantitationType qt = ( QuantitationType ) getCurrentRowObject();
         if ( qt.getIsNormalized() ) {
             return "<input type=checkbox checked disabled></input>";
-        } else {
-            return "<input type=checkbox disabled></input>";
         }
+        return "<input type=checkbox disabled></input>";
     }
 
     public String getData() {
@@ -86,8 +82,7 @@ public class QuantitationTypeWrapper extends TableDecorator {
         if ( object == null ) {
             return "-";
         }
-
-        return "<a href=\"javascript:window.open('/Gemma/getData.html?qt=" +  object.getId() + "')\">Data</a>";
+        return "<a href=\"javascript:window.open('/Gemma/getData.html?qt=" + object.getId() + "')\">Data</a>";
     }
 
 }
