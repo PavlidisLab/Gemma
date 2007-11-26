@@ -44,8 +44,10 @@ import ubic.basecode.gui.JMatrixDisplay;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import cern.colt.list.DoubleArrayList;
 
 /**
@@ -56,6 +58,8 @@ import cern.colt.list.DoubleArrayList;
  * @spring.bean name="expressionDataMatrixVisualizationService"
  */
 public class ExpressionDataMatrixVisualizationService {
+
+    private static final int IMAGE_CELL_SIZE = 10;
 
     private Log log = LogFactory.getLog( this.getClass() );
 
@@ -77,7 +81,7 @@ public class ExpressionDataMatrixVisualizationService {
         JMatrixDisplay display = new JMatrixDisplay( colorMatrix );
         display.setMaxColumnLength( 20 );
 
-        display.setCellSize( new Dimension( 10, 10 ) );
+        display.setCellSize( new Dimension( IMAGE_CELL_SIZE, 10 ) );
 
         return display;
     }
@@ -130,13 +134,25 @@ public class ExpressionDataMatrixVisualizationService {
             throw new IllegalArgumentException( "ExpressionDataMatrix apparently has no data" );
         }
 
+        List<BioMaterial> ordering = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( expressionDataMatrix );
+
         double[][] data = new double[expressionDataMatrix.rows()][];
         for ( int i = 0; i < expressionDataMatrix.rows(); i++ ) {
             Double[] row = ( Double[] ) expressionDataMatrix.getRow( i );
-            data[i] = ArrayUtils.toPrimitive( row );
+
+            // Put the columns in the designated ordering.
+            double[] rtmp = ArrayUtils.toPrimitive( row );
+            data[i] = new double[rtmp.length];
+            int m = 0;
+            for ( BioMaterial bm : ordering ) {
+                int j = expressionDataMatrix.getColumnIndex( bm );
+                data[i][m] = rtmp[j];
+                m++;
+            }
         }
 
-        for ( int j = 0; j < data[0].length; j++ ) {
+        for ( BioMaterial bm : ordering ) {
+            int j = expressionDataMatrix.getColumnIndex( bm );
             Collection<BioAssay> bas = expressionDataMatrix.getBioAssaysForColumn( j );
             colElements.add( bas.iterator().next() );// this is temporary.
         }

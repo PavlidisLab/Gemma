@@ -32,6 +32,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class ImageCumulativePlatesLoaderTest extends BaseSpringContextTest {
 
     InputStream is;
+    ImageCumulativePlatesLoader loader;
 
     @Override
     protected void onSetUpInTransaction() throws Exception {
@@ -40,7 +41,7 @@ public class ImageCumulativePlatesLoaderTest extends BaseSpringContextTest {
     }
 
     public void testLoadInputStream() throws Exception {
-        ImageCumulativePlatesLoader loader = new ImageCumulativePlatesLoader();
+        loader = new ImageCumulativePlatesLoader();
         loader.setPersisterHelper( persisterHelper );
         loader.setBioSequenceService( ( BioSequenceService ) this.getBean( "bioSequenceService" ) );
         loader.setExternalDatabaseService( ( ExternalDatabaseService ) this.getBean( "externalDatabaseService" ) );
