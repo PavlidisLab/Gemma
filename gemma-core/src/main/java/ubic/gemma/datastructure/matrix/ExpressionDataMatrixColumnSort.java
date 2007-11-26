@@ -237,7 +237,7 @@ public class ExpressionDataMatrixColumnSort {
         if ( factorValues.iterator().next().getMeasurement() == null ) {
             return;
         }
-        log.info( "Sorting" );
+        log.debug( "Sorting" );
         Collections.sort( factorValues, new Comparator<FactorValue>() {
             public int compare( FactorValue o1, FactorValue o2 ) {
                 try {
