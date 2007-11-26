@@ -78,6 +78,10 @@ public interface ExpressionDataMatrix<T> {
      */
     public T[] getColumn( BioAssay bioAssay );
 
+    public int getColumnIndex( BioMaterial bioMaterial );
+
+    public int getRowIndex( DesignElement designElement );
+
     /**
      * Access a single column of the matrix.
      * 
