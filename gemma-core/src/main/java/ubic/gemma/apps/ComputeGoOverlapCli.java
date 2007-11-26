@@ -19,9 +19,11 @@
 
 package ubic.gemma.apps;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -39,6 +41,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 
+import ubic.gemma.analysis.linkAnalysis.GeneLink;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.coexpression.CoexpressionValueObject;
@@ -53,6 +56,7 @@ import ubic.gemma.ontology.OntologyTerm;
 import ubic.gemma.ontology.GoMetric.Metric;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.AbstractCLI.ErrorCode;
 
 /**
  * @author meeta
@@ -71,13 +75,15 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
     protected void buildOptions() {
         Option goMetricOption = OptionBuilder.hasArg().withArgName( "Choice of GO Metric" ).withDescription(
                 "resnik, lin, jiang; default = simple" ).withLongOpt( "metric" ).create( 'm' );
-
         addOption( goMetricOption );
 
         Option maxOption = OptionBuilder.hasArg().withArgName( "Choice of using MAX calculation" ).withDescription(
                 "MAX" ).withLongOpt( "max" ).create( 'x' );
-
         addOption( maxOption );
+
+        Option fileOption = OptionBuilder.withArgName( "fpath" ).isRequired().withLongOpt( "filepath" ).hasArg()
+                .withDescription( "Path where file is located" ).create( 'f' );
+        addOption( fileOption );
 
     }
 
@@ -92,7 +98,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
             else
                 this.max = false;
         }
-        
+
         if ( hasOption( 'm' ) ) {
             String metricName = getOptionValue( 'm' );
             if ( metricName.equalsIgnoreCase( "resnik" ) )
@@ -101,11 +107,21 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
                 this.metric = GoMetric.Metric.lin;
             else if ( metricName.equalsIgnoreCase( "jiang" ) )
                 this.metric = GoMetric.Metric.jiang;
-            else{
+            else {
                 this.metric = GoMetric.Metric.simple;
                 this.max = false;
             }
         }
+
+        if ( hasOption( 'f' ) ) {
+            String file = getOptionValue( 'f' );
+            File f = new File( file );
+            if ( f.canRead() ) {
+                this.file_path = file;
+            } else
+                System.out.println( "Cannot read from " + file + "!" );
+        }
+
     }
 
     // A list of service beans
@@ -116,17 +132,19 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
     private GoMetric goMetric;
 
     private Map<Long, Collection<String>> mouseGeneGOMap = new HashMap<Long, Collection<String>>();
+    private Map<String, Gene> geneCache = new HashMap<String, Gene>();
 
     private Map<String, Integer> rootMap = new HashMap<String, Integer>();
     Map<String, Integer> GOcountMap = new HashMap<String, Integer>();
 
-    private String HASH_MAP_RETURN = "HashMapReturn";
-    private String GO_PROB_MAP = "GoProbMap";
-    private String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
+    private static final String HASH_MAP_RETURN = "HashMapReturn";
+    private static final String GO_PROB_MAP = "GoProbMap";
+    private static final String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
+    private String file_path = "";
 
     private Metric metric = GoMetric.Metric.simple;
     private boolean max = false;
-    private String OUT_FILE = "JiangMaxFile";
+    private String OUT_FILE = "outPutFile";
 
     // INCLUDE PARTOF OR CHANGE STRINGENCY
     private boolean partOf = true;
@@ -171,26 +189,17 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         StopWatch overallWatch = new StopWatch();
         overallWatch.start();
 
-        String goID = "GO:0007268";
+        Map<String, Integer> geneMap = new HashMap<String, Integer>();
         String commonName = "mouse";
+        Taxon taxon = taxonService.findByCommonName( commonName );
 
-        Collection<Gene> masterGenes = getGeneObject( goID, commonName );
-
-        Map<Gene, Collection<Gene>> geneExpMap = new HashMap<Gene, Collection<Gene>>();
-
-        log.debug( "Total master genes:" + masterGenes.size() );
-
-        for ( Gene gene : masterGenes ) {
-
-            Collection<Gene> foundGenes = getCoexpressedGenes( gene, stringincy );
-            if ( ( foundGenes == null ) || ( foundGenes.isEmpty() ) )
-                continue;
-            else {
-                geneExpMap.put( gene, foundGenes );
-            }
+        try {
+            geneMap = loadLinks( file_path, taxon );
+        } catch ( IOException e ) {
+            return e;
         }
 
-        log.info( "Checking for file..." );
+        log.info( "Checking for Gene2GO Map file..." );
 
         File f = new File( HOME_DIR + File.separatorChar + HASH_MAP_RETURN );
         if ( f.exists() ) {
@@ -200,8 +209,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
 
         else {
 
-            Taxon mouse = taxonService.findByCommonName( commonName );
-            Collection<Gene> mouseGenes = geneService.loadGenes( mouse );
+            Collection<Gene> mouseGenes = geneService.loadGenes( taxon );
 
             for ( Gene gene : mouseGenes ) {
                 Set<OntologyTerm> GOTerms = getGOTerms( gene );
@@ -249,49 +257,48 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
             log.info( "Creating GO probability map took: " + Elapsed / 1000 + "s " );
         }
 
-        Map<Gene, Map<Gene, Double>> masterTermCountMap = new HashMap<Gene, Map<Gene, Double>>();
+        Map<String, Double> scoreMap = new HashMap<String, Double>();
 
-        for ( Gene masterGene : geneExpMap.keySet() ) {
-            Map<Gene, Double> scoreMap = new HashMap<Gene, Double>();
-            Collection<Gene> coExpGene = geneExpMap.get( masterGene );
+        for ( String key : geneMap.keySet() ) {
+            String[] genes = StringUtils.split( key, "_" );
+            Gene masterGene = geneCache.get( genes[0] );
+            Gene coExpGene = geneCache.get( genes[1] );
 
-            for ( Gene cGene : coExpGene ) {
-                double score = 0;
-                if ( max ){
-                    log.info( "getting MAX scores for " + metric  );
-                    score = goMetric.computeMaxSimilarity( masterGene, cGene, GOProbMap, metric );
-                }
-                    
-                else
-                    score = goMetric.computeSimilarity( masterGene, cGene, GOProbMap, metric );
+            double score = 0.0;
 
-                scoreMap.put( cGene, score );
-            }
-            masterTermCountMap.put( masterGene, scoreMap );
+            if ( max ) {
+                log.info( "getting MAX scores for " + metric );
+                score = goMetric.computeMaxSimilarity( masterGene, coExpGene, GOProbMap, metric );
+            } else
+                score = goMetric.computeSimilarity( masterGene, coExpGene, GOProbMap, metric );
+
+            scoreMap.put( key, score );
         }
 
         try {
             Writer write = initOutputFile( OUT_FILE );
-            String masterGene;
-            String geneCoexpressed;
-            double overlap;
-            for ( Gene g : masterTermCountMap.keySet() ) {
-                masterGene = g.getOfficialSymbol();
-                Map<Gene, Double> coexpressed = masterTermCountMap.get( g );
-                int masterGOTerms = ( mouseGeneGOMap.get( g.getId() ) ).size();
 
-                for ( Gene coexpG : coexpressed.keySet() ) {
-                    geneCoexpressed = coexpG.getOfficialSymbol();
-                    overlap = coexpressed.get( coexpG );
-                    int coExpGOTerms;
-                    if ( mouseGeneGOMap.get( coexpG.getId() ) == null )
-                        coExpGOTerms = 0;
-                    else
-                        coExpGOTerms = ( mouseGeneGOMap.get( coexpG.getId() ) ).size();
+            for ( String key : scoreMap.keySet() ) {
+                String[] genes = StringUtils.split( key, "_" );
+                Gene mGene = geneCache.get( genes[0] );
+                Gene cGene = geneCache.get( genes[1] );
+                double overlap = scoreMap.get( key );
 
-                    Collection<OntologyTerm> goTerms = getTermOverlap( g, coexpG );
-                    writeOverlapLine( write, masterGene, geneCoexpressed, overlap, goTerms, masterGOTerms, coExpGOTerms );
-                }
+                int masterGOTerms;
+                int coExpGOTerms;
+
+                if ( !mouseGeneGOMap.containsKey( mGene.getId() ) )
+                    masterGOTerms = 0;
+                else
+                    masterGOTerms = ( mouseGeneGOMap.get( mGene.getId() ) ).size();
+
+                if ( !mouseGeneGOMap.containsKey( cGene.getId() ) )
+                    coExpGOTerms = 0;
+                else
+                    coExpGOTerms = ( mouseGeneGOMap.get( cGene.getId() ) ).size();
+
+                Collection<OntologyTerm> goTerms = getTermOverlap( mGene, cGene );
+                writeOverlapLine( write, genes[0], genes[1], overlap, goTerms, masterGOTerms, coExpGOTerms );
             }
             overallWatch.stop();
             log.info( "Compute GoOverlap takes " + overallWatch.getTime() + "ms" );
@@ -428,19 +435,67 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         }
     }
 
-    /**
-     * @param GOcountMap of terms and their occurrence
-     * @return a new countMap of each term and how many times it occurs and its children occur
-     */
+    private Map<String, Integer> loadLinks( String filepath, Taxon taxon ) throws IOException {
 
-    /**
-     * @param ids
-     * @return a set of gene objects associated with the query GOID
-     */
-    @SuppressWarnings("unchecked")
-    private Collection<Gene> getGeneObject( String goID, String commonName ) {
-        Taxon taxon = taxonService.findByCommonName( commonName );
-        return gene2GOAssociationService.findByGOTerm( goID, taxon );
+        File f = new File( filepath );
+
+        log.info( "Loading links from " + filepath );
+        BufferedReader in = new BufferedReader( new FileReader( f ) );
+
+        Map<String, Integer> geneMap = new HashMap<String, Integer>();
+
+        String line;
+        while ( ( line = in.readLine() ) != null ) {
+            line = line.trim();
+            if ( line.startsWith( "#" ) ) {
+                continue;
+            }
+
+            String[] strings = StringUtils.split( line );
+            String g1 = strings[0];
+            String g2 = strings[1];
+
+            // skip any self links.
+            if ( g1.equals( g2 ) ) continue;
+
+            Integer support = Integer.parseInt( strings[2] );// positive only!
+
+            if ( support.equals( "0" ) ) continue;
+
+            Gene gene1 = null;
+            Gene gene2 = null;
+
+            if ( geneCache.containsKey( g1 ) ) {
+                gene1 = geneCache.get( g1 );
+            } else {
+                Collection<Gene> genes = geneService.findByOfficialSymbol( g1 );
+                for ( Gene gene : genes ) {
+                    if ( gene.getTaxon().equals( taxon ) ) {
+                        geneCache.put( g1, gene );
+                        gene1 = gene;
+                        break;
+                    }
+                }
+            }
+
+            if ( geneCache.containsKey( g2 ) ) {
+                gene2 = geneCache.get( g2 );
+            } else {
+                Collection<Gene> genes = geneService.findByOfficialSymbol( g2 );
+                for ( Gene gene : genes ) {
+                    if ( gene.getTaxon().equals( taxon ) ) {
+                        geneCache.put( g2, gene );
+                        gene2 = gene;
+                        break;
+                    }
+                }
+            }
+
+            String key = g1 + "_" + g2;
+            geneMap.put( key, support );
+        }
+
+        return geneMap;
     }
 
     public static void main( String[] args ) {
