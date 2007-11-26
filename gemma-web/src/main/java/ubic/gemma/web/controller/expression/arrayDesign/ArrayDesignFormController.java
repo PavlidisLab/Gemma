@@ -32,6 +32,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -39,6 +40,8 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.web.controller.BaseFormController;
 
 /**
+ * Controller for editing basic information about array designs.
+ * 
  * @author keshav
  * @version $Id$
  * @spring.bean id="arrayDesignFormController"
@@ -51,6 +54,12 @@ public class ArrayDesignFormController extends BaseFormController {
     private static Log log = LogFactory.getLog( ArrayDesignFormController.class.getName() );
 
     ArrayDesignService arrayDesignService = null;
+
+    @Override
+    protected ModelAndView getCancelView( HttpServletRequest request ) {
+        // go back to the aray we just edited.
+        return new ModelAndView( new RedirectView( "/Gemma/arrays/showArrayDesign.html?id=" + request.getParameter("id") ) );
+    }
 
     public ArrayDesignFormController() {
         /* if true, reuses the same command object across the edit-submit-process (get-post-process). */
@@ -138,9 +147,10 @@ public class ArrayDesignFormController extends BaseFormController {
 
         arrayDesignService.update( ad );
 
-        saveMessage( request, "object.saved", new Object[] { ad.getClass().getSimpleName(), ad.getName() }, "Saved" );
+        saveMessage( request, "object.updated", new Object[] { ad.getClass().getSimpleName(), ad.getName() }, "Saved" );
 
-        return new ModelAndView( getSuccessView() );
+        // go back to the aray we just edited.
+        return new ModelAndView( new RedirectView( "/Gemma/arrays/showArrayDesign.html?id=" + ad.getId() ) );
     }
 
     /**
@@ -151,6 +161,7 @@ public class ArrayDesignFormController extends BaseFormController {
     }
 
     @Override
+    @SuppressWarnings("unused")
     protected Map referenceData( HttpServletRequest request ) throws Exception {
         Map<String, List<? extends Object>> mapping = new HashMap<String, List<? extends Object>>();
         mapping.put( "technologyTypes", new ArrayList<String>( TechnologyType.literals() ) );

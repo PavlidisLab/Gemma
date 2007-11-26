@@ -89,9 +89,7 @@
 			</td>
 			<td>
 				<spring:bind path="arrayDesign.description">
-					<textarea name="description" id="description" rows=8 cols=80>
-						<c:out value="${status.value}" />
-					</textarea>
+					<textarea name="description" id="description" rows=8 cols=80><c:out value="${status.value}" /></textarea>
 					<span class="fieldError"><c:out
 							value="${status.errorMessage}" /> </span>
 				</spring:bind>
@@ -106,6 +104,7 @@
 					onclick="bCancel=false" value="<fmt:message key="button.save"/>" />
 				<input type="submit" class="button" name="cancel"
 					onclick="bCancel=true" value="<fmt:message key="button.cancel"/>" />
+				<input type="hidden" name="id" value="${arrayDesign.id}" />
 			</td>
 		</tr>
 

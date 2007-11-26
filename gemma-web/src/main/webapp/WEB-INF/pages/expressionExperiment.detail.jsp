@@ -325,19 +325,20 @@ if ( expressionExperiment.getExperimentalDesign() != null ) {
 	<a class="helpLink" href="?"
 		onclick="showHelpTip(event, 
 				'Quantitation types are the different measurements available for this experiment.'); return false">
-		<img src="/Gemma/images/help.png" /> </a>
+		<img src="/Gemma/images/help.png" /> </a>  (${qtCount} items)
 </h3>
+
 <div style="padding: 2px;" onclick="Effect.toggle('qts', 'blind', {duration:0.1})">
 	<img src="/Gemma/images/plus.gif" />
 	<br />
 </div>
 <div id="qts" style="display: none">
 	<div>
-		<%-- inner div needed for effect  --%>
+		 
 		<display:table name="quantitationTypes" class="scrollTable"
 			requestURI="/Gemma/expressionExperiment/showExpressionExperiment.html" id="dataVectorList" pagesize="100"
 			decorator="ubic.gemma.web.taglib.displaytag.quantitationType.QuantitationTypeWrapper">
-			<%-- <display:column property="data" sortable="false" title="Get data" /> --%>
+			<display:column property="data" sortable="false" title="Get data" />
 			<display:column property="qtName" sortable="true" maxWords="20" titleKey="name" />
 			<display:column property="description" sortable="true" maxLength="20" titleKey="description" />
 			<display:column property="qtPreferredStatus" sortable="true" maxWords="20" titleKey="quantitationType.preferred" />
@@ -353,7 +354,8 @@ if ( expressionExperiment.getExperimentalDesign() != null ) {
 			<display:setProperty name="basic.empty.showtable" value="false" />
 		</display:table>
 	</div>
-</div>
+</div> 
+
 
 <authz:authorize ifAnyGranted="admin">
 	<h3>

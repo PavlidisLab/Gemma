@@ -183,6 +183,7 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
     private void writeImage( HttpServletResponse response, File f ) {
         if ( !f.canRead() ) {
             log.warn( "Could not locate the correlation matrix image" );
+            return;
         }
 
         InputStream in = null;

@@ -210,8 +210,8 @@ public abstract class BaseFormController extends SimpleFormController {
      * @return the name of the cancel view to use.
      */
     @SuppressWarnings("unused")
-    protected String getCancelView( HttpServletRequest request ) {
-        // Default to successView if cancelView is invalid
+    protected String getCancelViewName( HttpServletRequest request ) {
+        // Default to successView if cancelView is not defined
         if ( StringUtils.isBlank( cancelView ) ) {
             return getSuccessView();
         }
@@ -249,10 +249,21 @@ public abstract class BaseFormController extends SimpleFormController {
             Object command, BindException errors ) throws Exception {
         if ( request.getParameter( "cancel" ) != null ) {
             messageUtil.saveMessage( request, "errors.cancel", "Cancelled" );
-            return new ModelAndView( getCancelView( request ) );
+            return getCancelView( request );
         }
 
         return super.processFormSubmission( request, response, command, errors );
+    }
+
+    /**
+     * Override this to control which cancelView is used. The default behavior is to go to the success view if there is
+     * no cancel view defined; otherwise, get the cancel view.
+     * 
+     * @param request can be used to control which cancel view to use. (This is not used in the default implementation)
+     * @return the view to use.
+     */
+    protected ModelAndView getCancelView( HttpServletRequest request ) {
+        return new ModelAndView( getCancelViewName( request ) );
     }
 
     /**

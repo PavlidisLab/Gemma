@@ -60,7 +60,7 @@ public class UserFormController extends UserAuthenticatingController {
     }
 
     @Override
-    public String getCancelView( HttpServletRequest request ) {
+    public String getCancelViewName( HttpServletRequest request ) {
         if ( StringUtils.equals( request.getParameter( "from" ), "list" ) ) {
             log.info( "Admin cancelled" );
             return getSuccessView();

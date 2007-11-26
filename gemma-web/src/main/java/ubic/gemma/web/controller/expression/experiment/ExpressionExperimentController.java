@@ -190,20 +190,19 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
         if ( sId == null ) {
             return startJob( new GenerateSummary( expressionExperimentReportService ) );
-        } else {
-            Collection ids = new ArrayList<Long>();
-
-            String[] idList = StringUtils.split( sId, ',' );
-            for ( int i = 0; i < idList.length; i++ ) {
-                if ( StringUtils.isNotBlank( idList[i] ) ) {
-                    ids.add( new Long( idList[i] ) );
-                }
-            }
-            expressionExperimentReportService.generateSummaryObjects( ids );
-            String idStr = StringUtils.join( ids.toArray(), "," );
-            return new ModelAndView( new RedirectView(
-                    "/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html" ) );
         }
+        Collection ids = new ArrayList<Long>();
+
+        String[] idList = StringUtils.split( sId, ',' );
+        for ( int i = 0; i < idList.length; i++ ) {
+            if ( StringUtils.isNotBlank( idList[i] ) ) {
+                ids.add( new Long( idList[i] ) );
+            }
+        }
+        expressionExperimentReportService.generateSummaryObjects( ids );
+        String idStr = StringUtils.join( ids.toArray(), "," );
+        return new ModelAndView( new RedirectView(
+                "/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html" ) );
 
     }
 
@@ -255,6 +254,10 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         this.auditTrailService = auditTrailService;
     }
 
+    /**
+     * @param e
+     * @return
+     */
     public Collection<AnnotationValueObject> getAnnotation( EntityDelegator e ) {
         if ( e == null || e.getId() == null ) return null;
         ExpressionExperiment expressionExperiment = expressionExperimentService.load( e.getId() );
@@ -279,18 +282,26 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         return annotation;
     }
 
+    /**
+     * @param uri
+     * @return
+     */
     private String getLabelFromUri( String uri ) {
         OntologyResource resource = ontologyService.getResource( uri );
-        if ( resource != null )
-            return resource.getLabel();
-        else
-            return null;
+        if ( resource != null ) return resource.getLabel();
+
+        return null;
     }
 
+    /**
+     * @param ee
+     * @return
+     */
     private AuditEvent getLastTroubleEvent( ExpressionExperiment ee ) {
         AuditEvent event = auditTrailService.getLastTroubleEvent( ee );
         if ( event != null ) return event;
 
+        // See if array design have trouble.
         for ( Object o : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
             event = auditTrailService.getLastTroubleEvent( ( ArrayDesign ) o );
             if ( event != null ) return event;
@@ -301,14 +312,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
     private AuditEvent getLastValidationEvent( ExpressionExperiment ee ) {
         return auditTrailService.getLastValidationEvent( ee );
-        // if ( event != null ) return event;
-        //
-        // for ( Object o : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
-        // event = auditTrailService.getLastValidationEvent( ( ArrayDesign ) o );
-        // if ( event != null ) return event;
-        // }
-        //
-        // return null;
     }
 
     /**
@@ -357,10 +360,11 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         Collection characteristics = expressionExperiment.getCharacteristics();
         mav.addObject( "characteristics", characteristics );
 
-        // Set s = expressionExperimentService.getQuantitationTypeCountById( id ).entrySet();
+        // Collection s = expressionExperimentService.getQuantitationTypeCountById( id ).entrySet();
         // mav.addObject( "qtCountSet", s );
         Collection quantitationTypes = expressionExperimentService.getQuantitationTypes( expressionExperiment );
         mav.addObject( "quantitationTypes", quantitationTypes );
+        mav.addObject( "qtCount", quantitationTypes.size() );
 
         // add arrayDesigns used, by name
         Collection<ArrayDesign> arrayDesigns = new ArrayList<ArrayDesign>();
@@ -381,12 +385,12 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         // load coexpression link count from cache
         Collection<Long> eeId = new ArrayList<Long>();
         eeId.add( id );
+        Collection<ExpressionExperimentValueObject> eeVos = expressionExperimentReportService
+                .retrieveSummaryObjects( eeId );
 
         AuditEvent lastArrayDesignUpdate = expressionExperimentService.getLastArrayDesignUpdate( expressionExperiment );
         mav.addObject( "lastArrayDesignUpdate", lastArrayDesignUpdate );
 
-        Collection<ExpressionExperimentValueObject> eeVos = expressionExperimentReportService
-                .retrieveSummaryObjects( eeId );
         if ( eeVos != null && eeVos.size() > 0 ) {
             ExpressionExperimentValueObject vo = eeVos.iterator().next();
             String eeLinks = vo.getCoexpressionLinkCount().toString() + " (as of " + vo.getDateCached() + ")";
@@ -732,10 +736,9 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
                 String idStr = StringUtils.join( ids.toArray(), "," );
                 return new ModelAndView( new RedirectView(
                         "/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html?id=" + idStr ) );
-            } else {
-                return new ModelAndView( new RedirectView(
-                        "/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html" ) );
             }
+            return new ModelAndView( new RedirectView(
+                    "/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html" ) );
 
         }
     }
