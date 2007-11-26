@@ -23,7 +23,7 @@ import java.util.Vector;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.util.gemmaspaces.GemmaSpacesUtil;
+import ubic.gemma.util.grid.javaspaces.SpacesUtil;
 
 /**
  * This class exposes methods for AJAX calls.
@@ -45,7 +45,7 @@ public class ProgressStatusService {
 
     private TaskRunningService taskRunningService;
     private ProgressManager progressManager;
-    private GemmaSpacesUtil gemmaSpacesUtil;
+    private SpacesUtil gemmaSpacesUtil;
 
     public void setProgressManager( ProgressManager progressManager ) {
         this.progressManager = progressManager;
@@ -109,7 +109,7 @@ public class ProgressStatusService {
         this.taskRunningService = taskRunningService;
     }
 
-    public void setGemmaSpacesUtil( GemmaSpacesUtil gemmaSpacesUtil ) {
+    public void setGemmaSpacesUtil( SpacesUtil gemmaSpacesUtil ) {
         this.gemmaSpacesUtil = gemmaSpacesUtil;
     }
 

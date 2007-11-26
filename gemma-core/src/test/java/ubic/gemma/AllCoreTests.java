@@ -46,7 +46,7 @@ import ubic.gemma.scheduler.SchedulerFactoryBeanTest;
 import ubic.gemma.security.AllSecurityTests;
 import ubic.gemma.util.BusinessKeyTest;
 import ubic.gemma.util.TaxonUtilityTest;
-import ubic.gemma.util.gemmaspaces.GemmaSpacesUtilTest;
+import ubic.gemma.util.gemmaspaces.SpacesUtilTest;
 import ubic.gemma.util.progress.ProgressAppenderTest;
 import ubic.gemma.util.progress.ProgressIntegrationTest;
 import ubic.gemma.visualization.ExpressionDataMatrixVisualizationServiceTest;
@@ -105,7 +105,7 @@ public class AllCoreTests {
         suite.addTestSuite( ProgressIntegrationTest.class );
         suite.addTestSuite( TaxonUtilityTest.class );
         suite.addTestSuite( BusinessKeyTest.class );
-        suite.addTestSuite( GemmaSpacesUtilTest.class );
+        suite.addTestSuite( SpacesUtilTest.class );
 
         System.out.print( "----------------------\nGemma Core Tests\n" + suite.countTestCases()
                 + " Tests to run\n----------------------\n" );

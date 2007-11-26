@@ -52,13 +52,13 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
-import ubic.gemma.util.gemmaspaces.GemmaSpacesUtil;
+import ubic.gemma.util.grid.javaspaces.SpacesUtil;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.util.progress.TaskRunningService;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.common.auditAndSecurity.FileUpload;
-import ubic.gemma.web.controller.gemmaspaces.AbstractGemmaSpacesFormController;
+import ubic.gemma.web.controller.gemmaspaces.AbstractSpacesFormController;
 import ubic.gemma.web.propertyeditor.ArrayDesignPropertyEditor;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
 import ubic.gemma.web.util.ConfigurationCookie;
@@ -81,7 +81,7 @@ import ubic.gemma.web.util.upload.FileUploadUtil;
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
  * @spring.property name="taxonService" ref="taxonService"
  */
-public class SimpleExpressionExperimentLoadController extends AbstractGemmaSpacesFormController {
+public class SimpleExpressionExperimentLoadController extends AbstractSpacesFormController {
 
     private static final String COOKIE_NAME = "simpleExpressionExperimentLoadCookie";
 
@@ -429,7 +429,7 @@ public class SimpleExpressionExperimentLoadController extends AbstractGemmaSpace
     }
 
     @Override
-    protected void setGemmaSpacesUtil( GemmaSpacesUtil gemmaSpacesUtil ) {
+    protected void setGemmaSpacesUtil( SpacesUtil gemmaSpacesUtil ) {
         this.injectGemmaSpacesUtil( gemmaSpacesUtil );
     }
 }

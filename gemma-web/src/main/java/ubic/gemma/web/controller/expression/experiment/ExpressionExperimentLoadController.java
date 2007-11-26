@@ -38,21 +38,21 @@ import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.gemmaspaces.GemmaSpacesResult;
-import ubic.gemma.gemmaspaces.expression.experiment.ExpressionExperimentLoadTask;
-import ubic.gemma.gemmaspaces.expression.experiment.GemmaSpacesExpressionExperimentLoadCommand;
+import ubic.gemma.grid.javaspaces.SpacesResult;
+import ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTask;
+import ubic.gemma.grid.javaspaces.expression.experiment.SpacesExpressionExperimentLoadCommand;
 import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.util.gemmaspaces.GemmaSpacesEnum;
-import ubic.gemma.util.gemmaspaces.GemmaSpacesUtil;
+import ubic.gemma.util.grid.javaspaces.SpacesEnum;
+import ubic.gemma.util.grid.javaspaces.SpacesUtil;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
-import ubic.gemma.web.controller.gemmaspaces.AbstractGemmaSpacesFormController;
+import ubic.gemma.web.controller.gemmaspaces.AbstractSpacesFormController;
 import ubic.gemma.web.propertyeditor.ArrayDesignPropertyEditor;
 import ubic.gemma.web.util.MessageUtil;
 
@@ -71,7 +71,7 @@ import ubic.gemma.web.util.MessageUtil;
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
  * @spring.property name="arrayExpressLoadService" ref="arrayExpressLoadService"
  */
-public class ExpressionExperimentLoadController extends AbstractGemmaSpacesFormController {
+public class ExpressionExperimentLoadController extends AbstractSpacesFormController {
 
     GeoDatasetService geoDatasetService;
     ArrayDesignService arrayDesignService;
@@ -119,7 +119,7 @@ public class ExpressionExperimentLoadController extends AbstractGemmaSpacesFormC
     @SuppressWarnings("unused")
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
-        return startJob( command, GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ExpressionExperimentLoadTask.class
+        return startJob( command, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ExpressionExperimentLoadTask.class
                 .getName(), true );
     }
 
@@ -130,7 +130,7 @@ public class ExpressionExperimentLoadController extends AbstractGemmaSpacesFormC
      * @return
      */
     public String run( ExpressionExperimentLoadCommand command ) {
-        return run( command, GemmaSpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ExpressionExperimentLoadTask.class.getName(),
+        return run( command, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ExpressionExperimentLoadTask.class.getName(),
                 true );
     }
 
@@ -193,7 +193,7 @@ public class ExpressionExperimentLoadController extends AbstractGemmaSpacesFormC
      * @see ubic.gemma.web.controller.javaspaces.gigaspaces.AbstractGigaSpacesFormController#setGigaSpacesUtil(ubic.gemma.util.javaspaces.gigaspaces.GigaSpacesUtil)
      */
     @Override
-    public void setGemmaSpacesUtil( GemmaSpacesUtil gemmaSpacesUtil ) {
+    public void setGemmaSpacesUtil( SpacesUtil gemmaSpacesUtil ) {
         this.injectGemmaSpacesUtil( gemmaSpacesUtil );
     }
 
@@ -381,11 +381,11 @@ public class ExpressionExperimentLoadController extends AbstractGemmaSpacesFormC
                     // GEO
                 } else {
                     ExpressionExperimentLoadCommand eeLoadCommand = ( ExpressionExperimentLoadCommand ) command;
-                    GemmaSpacesExpressionExperimentLoadCommand jsCommand = new GemmaSpacesExpressionExperimentLoadCommand(
+                    SpacesExpressionExperimentLoadCommand jsCommand = new SpacesExpressionExperimentLoadCommand(
                             taskId, eeLoadCommand.isLoadPlatformOnly(), eeLoadCommand.isSuppressMatching(),
                             eeLoadCommand.getAccession(), eeLoadCommand.isAggressiveQtRemoval() );
 
-                    GemmaSpacesResult res = eeTaskProxy.execute( jsCommand );
+                    SpacesResult res = eeTaskProxy.execute( jsCommand );
                     Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) res.getAnswer();
                     log.info( "result " + result );
 

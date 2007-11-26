@@ -32,7 +32,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.context.support.GenericWebApplicationContext;
 
-import ubic.gemma.util.gemmaspaces.GemmaSpacesUtil;
+import ubic.gemma.util.grid.javaspaces.SpacesUtil;
 
 /**
  * Methods to create Spring contexts. For tests see ubic.gemma.testing.
@@ -131,7 +131,7 @@ public class SpringContextUtil {
         }
 
         if ( gigaspacesOn ) {
-            GemmaSpacesUtil.addGigaspacesContextToPaths( paths );
+            SpacesUtil.addGigaspacesContextToPaths( paths );
         }
 
         addCommonConfig( isWebapp, paths );

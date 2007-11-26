@@ -36,9 +36,9 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 
 import ubic.basecode.util.FileTools;
-import ubic.gemma.gemmaspaces.GemmaSpacesCommand;
-import ubic.gemma.gemmaspaces.GemmaSpacesResult;
-import ubic.gemma.gemmaspaces.expression.experiment.ExpressionExperimentReportTask;
+import ubic.gemma.grid.javaspaces.SpacesCommand;
+import ubic.gemma.grid.javaspaces.SpacesResult;
+import ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
@@ -430,9 +430,9 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.gemmaspaces.expression.experiment.ExpressionExperimentReportTask#execute()
+     * @see ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask#execute()
      */
-    public GemmaSpacesResult execute( GemmaSpacesCommand gemmaSpacesCommand ) {
+    public SpacesResult execute( SpacesCommand spacesCommand ) {
         this.generateSummaryObjects();
         return null;
     }
@@ -449,7 +449,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.gemmaspaces.GemmaSpacesTask#getTaskId()
+     * @see ubic.gemma.grid.javaspaces.SpacesTask#getTaskId()
      */
     public String getTaskId() {
         return taskId;
