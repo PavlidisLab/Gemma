@@ -174,7 +174,7 @@
 		</property>
 	</bean>
 	
-	<!-- Quartz Indexing Configuration -->
+	<!-- Quartz Configuration -->
 	<bean id="schedulerFactoryBean"
 		class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
 		<property name="triggers">
