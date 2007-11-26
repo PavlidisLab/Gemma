@@ -53,10 +53,9 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
     private static final int MAX_GENE_SYMBOL_CELL_LENGTH = 15;
 
-    private static final double IMAGE_HEADER_EM_HEIGHT = 12.5;
+    private static final double IMAGE_HEADER_EM_HEIGHT = 10.5;
 
-    // Was 0.825, which doesn't work any more.
-    private static final double MAGIC_EM_SIZE = 0.75; 
+    private static final double MAGIC_EM_SIZE = 0.917;
 
     private static final long serialVersionUID = 6403196597063627020L;
 
@@ -105,7 +104,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
             StringBuilder buf = new StringBuilder();
 
-            // TODO read this in
+            // TODO read this in as an option.
             String type = "heatmap";
 
             /* random identifier for ExpressionDataMatrix, stored in session. */
@@ -118,29 +117,31 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
             } else {
                 buf.append( "<div class=\"datamatrix\"><table border=\"0\">" );
 
-                buf.append( "<tr>" );
+                buf.append( "<tr >" );
 
-                int HEADER_ROW_HEIGHT = 3;
-
-                buf.append( "<td border=\"0\" rowspan=\"" + HEADER_ROW_HEIGHT + "\" align='right' valign=\"bottom\">" );
-
-                Double emHeight = MAGIC_EM_SIZE * expressionDataMatrix.rows() + IMAGE_HEADER_EM_HEIGHT;
-
+                /* image itself */
+                buf.append( "<td cellpadding=\"0\" rowspan=\"2\" align='right' valign=\"bottom\" >" );
+                // this is the tricky part: how to keep the image scaled appropriately.
+                Double emHeight = expressionDataMatrix.rows() + IMAGE_HEADER_EM_HEIGHT;
                 buf.append( "<img style='height : " + emHeight.toString() + "em;' src=\"visualizeDataMatrix.html?type="
-                        + type + "&id=" + matrixId + "\"border='0' />" );
+                        + type + "&id=" + matrixId + "\" border='0' />" );
 
                 buf.append( "</td>" );
 
+                /* annotation table headings */
                 buf.append( "<td colspan='3' valign='bottom'>" );
-
                 buf
-                        .append( "<table border='0' cellpadding='0' cellspacing='0'>"
-                                + "<tbody><tr><th valign='bottom' nowrap='nowrap' width='125' ><span class='annotation'>Probe</span></th>"
+                        .append( "<table border='0' cellpadding='0' cellspacing='0' >"
+                                + "<tbody style=\"height:"
+                                + IMAGE_HEADER_EM_HEIGHT
+                                + "em;\" ><tr><th valign='bottom' nowrap='nowrap' width='125' ><span class='annotation'>Probe</span></th>"
                                 + "<th valign='bottom' nowrap='nowrap' width='125'><span class='annotation'>Gene</span></th>"
                                 + "<th valign='bottom' nowrap='nowrap' width='200'><span class='annotation'>Name</span></th>"
                                 + "</tr></tbody></table>" );
                 buf.append( "</td>" );
                 buf.append( "</tr>" );
+
+                /* annotations */
                 buf.append( "<tr>" );
 
                 // plug in design elements into a guaranteed order list (we will need to guarantee order to
@@ -165,8 +166,6 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
             log.error( ex, ex );
             throw new JspException( "ExpressionDataMatrixVisualizerTag: " + ex.getMessage() );
         }
-
-        log.debug( "return SKIP_BODY" );
         return SKIP_BODY;
     }
 
@@ -238,7 +237,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
      * @param buf
      */
     private void openColumnTableData( StringBuilder buf ) {
-        buf.append( "<td nowrap='nowrap' style='font-size : " + MAGIC_EM_SIZE
+        buf.append( "<td nowrap='nowrap' style='font-size :" + MAGIC_EM_SIZE
                 + "em; line-height:1.0em;' valign='bottom' align=\"left\">" );
     }
 
@@ -296,9 +295,8 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
             // FIXME this doesn't work as desired.
             // return "style=\"width:" + width + "px;background-color:#eee;\"";
             return "";
-        } else {
-            return "";
         }
+        return "";
     }
 
     /*
