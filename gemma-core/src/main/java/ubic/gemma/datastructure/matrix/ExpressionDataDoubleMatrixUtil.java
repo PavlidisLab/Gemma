@@ -99,7 +99,8 @@ public class ExpressionDataDoubleMatrixUtil {
     }
 
     private static void checkConformant( ExpressionDataMatrix a, ExpressionDataMatrix b ) {
-        if ( a.rows() != b.rows() ) throw new IllegalArgumentException( "Unequal row counts" );
+        if ( a.rows() != b.rows() )
+            throw new IllegalArgumentException( "Unequal row counts: " + a.rows() + " != " + b.rows() );
         if ( a.columns() != b.columns() )
             throw new IllegalArgumentException( "Unequal column counts: " + a.columns() + " != " + b.columns() );
     }
