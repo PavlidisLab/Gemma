@@ -3,32 +3,22 @@
 	class="ubic.gemma.model.expression.designElement.CompositeSequenceImpl" />
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <head>
-	<title><fmt:message key="compositeSequence.title" />
-	</title>
-	<script
-		src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>"
-		type="text/javascript"></script>
-	<script src="<c:url value='/scripts/ext/ext-all.js'/>"
-		type="text/javascript"></script>
+	<title><fmt:message key="compositeSequence.title" /></title>
+	<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
+	<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
 
-	<script type="text/javascript"
-		src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
+	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
 
-	<script type="text/javascript"
-		src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
+	<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
 
-	<script type='text/javascript'
-		src='/Gemma/dwr/interface/CompositeSequenceController.js'></script>
-	
-		<script type='text/javascript'
-		src='/Gemma/dwr/interface/ArrayDesignController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/CompositeSequenceController.js'></script>
+
+	<script type='text/javascript' src='/Gemma/dwr/interface/ArrayDesignController.js'></script>
 
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 
-	<script type="text/javascript"
-		src="<c:url value='/scripts/ajax/probe.grid.js'/>"
-		type="text/javascript"></script>
+	<script type="text/javascript" src="<c:url value='/scripts/ajax/probe.grid.js'/>" type="text/javascript"></script>
 
 	<script type="text/javascript" type="text/javascript">
 	  	Ext.onReady(function() {
@@ -38,7 +28,7 @@
 	</script>
 </head>
 <body>
-	
+
 	<table id="csTableList">
 		<tr>
 			<td>
@@ -67,8 +57,7 @@
 					</tr>
 					<tr>
 						<td valign="top">
-							<b> <fmt:message key="compositeSequence.description" /> <a
-								class="helpLink" href="?"
+							<b> <fmt:message key="compositeSequence.description" /> <a class="helpLink" href="?"
 								onclick="showHelpTip(event, 'Description for the probe, usually provided by the manufacturer. It might not match the sequence annotation!'); return false"><img
 										src="/Gemma/images/help.png" /> </a> </b>
 						</td>
@@ -86,10 +75,9 @@
 					</tr>
 					<tr>
 						<td valign="top">
-							<a class="helpLink" href="?"
+							<b> Array Design </b><a class="helpLink" href="?"
 								onclick="showHelpTip(event, 'The array design this probe belongs to.'); return false"><img
 									src="/Gemma/images/help.png" /> </a>
-							<b> Array Design </b>
 						</td>
 						<td>
 							<%
@@ -109,7 +97,8 @@
 						</td>
 						<td>
 							<%
-							if ( (compositeSequence.getBiologicalCharacteristic() != null) && (compositeSequence.getBiologicalCharacteristic().getTaxon() != null) ) {
+							                    if ( ( compositeSequence.getBiologicalCharacteristic() != null )
+							                    && ( compositeSequence.getBiologicalCharacteristic().getTaxon() != null ) ) {
 							%>
 							${compositeSequence.biologicalCharacteristic.taxon.scientificName}
 							<%
@@ -129,12 +118,9 @@
 						<td>
 
 							<c:choose>
-								<c:when
-									test="${compositeSequence.biologicalCharacteristic != null }">
-									<spring:bind
-										path="compositeSequence.biologicalCharacteristic.type">
-										<spring:transform
-											value="${compositeSequence.biologicalCharacteristic.type}">
+								<c:when test="${compositeSequence.biologicalCharacteristic != null }">
+									<spring:bind path="compositeSequence.biologicalCharacteristic.type">
+										<spring:transform value="${compositeSequence.biologicalCharacteristic.type}">
 										</spring:transform>
 									</spring:bind>
 								</c:when>
@@ -154,7 +140,8 @@
 						</td>
 						<td>
 							<%
-							if ( (compositeSequence.getBiologicalCharacteristic() != null) && (compositeSequence.getBiologicalCharacteristic().getName() != null) ) {
+							                    if ( ( compositeSequence.getBiologicalCharacteristic() != null )
+							                    && ( compositeSequence.getBiologicalCharacteristic().getName() != null ) ) {
 							%>
 							<a title="View details in Gemma"
 								href="<c:url value='/genome/bioSequence/showBioSequence.html?id=${compositeSequence.biologicalCharacteristic.id }'/>">${compositeSequence.biologicalCharacteristic.name
@@ -168,10 +155,9 @@
 					</tr>
 					<tr>
 						<td valign="top">
-							<a class="helpLink" href="?"
+							<b> Sequence description </b><a class="helpLink" href="?"
 								onclick="showHelpTip(event, 'Description of the sequence in our system.'); return false"><img
 									src="/Gemma/images/help.png" /> </a>
-							<b> Sequence description </b>
 						</td>
 						<td>
 							<%
@@ -187,6 +173,7 @@
 						</td>
 					</tr>
 					<tr>
+					<tr>
 						<td valign="top">
 							<b> Sequence accession <a class="helpLink" href="?"
 								onclick="showHelpTip(event, 'External accession for this sequence, if known'); return false"><img
@@ -194,23 +181,21 @@
 						</td>
 						<td>
 							<%
-							                if ( (compositeSequence.getBiologicalCharacteristic() != null) && ( compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() != null )) {
+							                    if ( ( compositeSequence.getBiologicalCharacteristic() != null )
+							                    && ( compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() != null )
+							                    && compositeSequence.getBiologicalCharacteristic().getTaxon().getExternalDatabase() != null
+							                    && compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() != null ) {
+
 							                String organism = compositeSequence.getBiologicalCharacteristic().getTaxon().getCommonName();
-							                String database = "hg18";
-							                if ( organism.equalsIgnoreCase( "Human" ) ) {
-							                    database = "hg18";
-							                } else if ( organism.equalsIgnoreCase( "Rat" ) ) {
-							                    database = "rn4";
-							                } else if ( organism.equalsIgnoreCase( "Mouse" ) ) {
-							                    database = "mm8";
-							                }
-							                // build position if the biosequence has an accession
-							                // otherwise point to location
+							                String database = compositeSequence.getBiologicalCharacteristic().getTaxon().getExternalDatabase()
+							                        .getName();
 							                String position = compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry()
 							                        .getAccession();
-							                String link = position + " <a href='http://genome.ucsc.edu/cgi-bin/hgTracks?clade=vertebrate&org="
+
+							                String link = position
+							                        + " <a target=\"_blank\" title=\"View in UCSC Genome Browser\" href='http://genome.ucsc.edu/cgi-bin/hgTracks?org="
 							                        + organism + "&db=" + database + "&position=+" + position
-							                        + "&pix=620'>(Search UCSC Genome Browser)</a>";
+							                        + "&pix=620'><img src=\"/Gemma/images/logo/ucsc.gif\" /></a>";
 
 							                out.print( link );
 
@@ -220,13 +205,15 @@
 							%>
 						</td>
 					</tr>
+					</tr>
 					<tr>
 						<td valign="top">
 							<b> Sequence length </b>
 						</td>
 						<td>
 							<%
-							                if ( (compositeSequence.getBiologicalCharacteristic() != null) && ( compositeSequence.getBiologicalCharacteristic().getSequence() != null ) ) {
+							                    if ( ( compositeSequence.getBiologicalCharacteristic() != null )
+							                    && ( compositeSequence.getBiologicalCharacteristic().getSequence() != null ) ) {
 							                out.print( compositeSequence.getBiologicalCharacteristic().getSequence().length() );
 							            } else {
 							                out.print( "No sequence available" );
@@ -240,7 +227,8 @@
 						</td>
 						<td>
 							<%
-							                if ((compositeSequence.getBiologicalCharacteristic() != null) && ( compositeSequence.getBiologicalCharacteristic().getSequence() != null ) ) {
+							                    if ( ( compositeSequence.getBiologicalCharacteristic() != null )
+							                    && ( compositeSequence.getBiologicalCharacteristic().getSequence() != null ) ) {
 							                String sequence = compositeSequence.getBiologicalCharacteristic().getSequence();
 							                String formattedSequence = org.apache.commons.lang.WordUtils.wrap( sequence, 80, "<br />", true );
 							%>
@@ -262,7 +250,7 @@
 	</table>
 
 	<div id="probe-details"
-		style="margin:0 0 10px 0; padding: 10px; border: 1px solid #EEEEEE; overflow: hidden; width:610px; height:150px;"></div>
+		style="margin: 0 0 10px 0; padding: 10px; border: 1px solid #EEEEEE; overflow: hidden; width: 610px; height: 150px;"></div>
 
 	<input type="hidden" name="cs" id="cs" value="${compositeSequence.id}" />
 

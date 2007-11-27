@@ -29,6 +29,8 @@ package ubic.gemma;
 public class Constants {
     // ~ Static fields/initializers =============================================
 
+    public static final String APP_NAME = "Gemma";
+    
     /** The name of the ResourceBundle used in this application */
     public static final String BUNDLE_KEY = "messages";
 

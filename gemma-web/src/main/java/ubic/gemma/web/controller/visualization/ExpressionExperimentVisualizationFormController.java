@@ -312,45 +312,6 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
         designElementDataVectorService.thaw( dataVectors );
 
-        /*
-         * Determine ordering we want to use.
-         */
-        if ( false ) {
-            // need to thaw
-            Collection<BioMaterial> bioMaterials = new HashSet<BioMaterial>();
-            Map<FactorValue, Collection<BioMaterial>> fvMap = new HashMap<FactorValue, Collection<BioMaterial>>();
-            Map<FactorValue, Integer> fvSizes = new HashMap<FactorValue, Integer>();
-            Map<ExperimentalFactor, Integer> facNumVals = new HashMap<ExperimentalFactor, Integer>();
-            for ( BioAssay assay : expressionExperiment.getBioAssays() ) {
-                bioMaterials.addAll( assay.getSamplesUsed() );
-            }
-            for ( BioMaterial bm : bioMaterials ) {
-                for ( FactorValue fv : bm.getFactorValues() ) {
-                    ExperimentalFactor factor = fv.getExperimentalFactor();
-
-                    if ( !facNumVals.containsKey( factor ) ) {
-                        facNumVals.put( factor, factor.getFactorValues().size() );
-                    }
-
-                    if ( !fvMap.containsKey( fv ) ) {
-                        fvMap.put( fv, new HashSet<BioMaterial>() );
-                        fvSizes.put( fv, 0 );
-                    }
-                    fvMap.get( fv ).add( bm );
-                    fvSizes.put( fv, fvSizes.get( fv ) + 1 );
-                }
-            }
-
-            if ( fvMap.size() > 0 ) {
-                // find the factor with the fewest values.
-
-                // sort biomaterials by that; anybody who doesn't have a value for it gets put at the end
-
-                // impose the ordering on the samples.
-
-            }
-        }
-
         ExpressionDataMatrixBuilder matrixBuilder = new ExpressionDataMatrixBuilder( dataVectors );
         ExpressionDataDoubleMatrix expressionDataMatrix = null;
         if ( eevc.isMaskMissing() ) {

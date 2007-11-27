@@ -32,6 +32,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.Constants;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -45,11 +46,7 @@ import ubic.gemma.model.genome.Gene;
  */
 public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
-    // private static final int MAX_GENE_NAME_LENGTH = 25;
-
     private static final int MAX_GENE_NAME_CELL_LENGTH = 100;
-
-    // private static final int MAX_GENE_SYMBOL_LENGTH = 12;
 
     private static final int MAX_GENE_SYMBOL_CELL_LENGTH = 15;
 
@@ -57,14 +54,11 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
 
     private static final double MAGIC_EM_SIZE = 0.917;
 
+    private static final String PROBE_VIEW_URL = "/compositeSequence/show.html?id=";
+
     private static final long serialVersionUID = 6403196597063627020L;
 
     private Log log = LogFactory.getLog( this.getClass() );
-
-    // TODO To add EL support, set this and not the
-    // expressionDataMatrixVisualization in the setter. A good refresher is
-    // here:http://www.phptr.com/articles/article.asp?p=30946&seqNum=9&rl=1.
-    // private String expressionDataMatrixVisualizationName = null;
 
     private ExpressionDataMatrix expressionDataMatrix = null;
 
@@ -123,8 +117,8 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
                 buf.append( "<td cellpadding=\"0\" rowspan=\"2\" align='right' valign=\"bottom\" >" );
                 // this is the tricky part: how to keep the image scaled appropriately.
                 Double emHeight = expressionDataMatrix.rows() + IMAGE_HEADER_EM_HEIGHT;
-                buf.append( "<img style='height : " + emHeight.toString() + "em;' src=\"visualizeDataMatrix.html?type="
-                        + type + "&id=" + matrixId + "\" border='0' />" );
+                buf.append( "<img style='margin-right:0px;height : " + emHeight.toString()
+                        + "em;' src=\"visualizeDataMatrix.html?type=" + type + "&id=" + matrixId + "\" border='0' />" );
 
                 buf.append( "</td>" );
 
@@ -174,8 +168,8 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
         for ( int i = 0; i < rowElements.size(); i++ ) {
             buf.append( "<span " + alternateRowStyle( i, 125 ) + ">" );
             DesignElement designElement = rowElements.get( i ).getDesignElement();
-            buf.append( "<a href=\"/Gemma/compositeSequence/showCompositeSequence.html?id=" + designElement.getId()
-                    + "\">" + designElement.getName() + "</a></span><br />\n" );
+            buf.append( "<a href=\"/" + Constants.APP_NAME + PROBE_VIEW_URL + designElement.getId() + "\">"
+                    + designElement.getName() + "</a></span><br />\n" );
         }
         buf.append( "</td>" );
     }
