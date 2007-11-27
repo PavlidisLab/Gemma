@@ -56,6 +56,7 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
  * @spring.property name="bioMaterialService" ref ="bioMaterialService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="characteristicService" ref="characteristicService"
+ * @spring.property name="chebiOntologyService" ref="chebiOntologyService"
  */
 
 public class OntologyService {
@@ -68,6 +69,7 @@ public class OntologyService {
     private OBODiseaseOntologyService oboDiseaseOntologyService;
     private FMAOntologyService fmaOntologyService;
     private MgedOntologyService mgedOntologyService;
+    private ChebiOntologyService chebiOntologyService;
     private BioMaterialService bioMaterialService;
     private ExpressionExperimentService eeService;
     private Collection<AbstractOntologyService> ontologyServices = new HashSet<AbstractOntologyService>();
@@ -298,6 +300,10 @@ public class OntologyService {
 
         results = fmaOntologyService.findResources( search );
         log.debug( "found " + ( results == null ? "null" : results.size() ) + " terms from fma in " + watch.getTime() + " ms" );
+        if ( results != null ) searchResults.addAll( filter( results, search ) );
+
+        results = chebiOntologyService.findResources( search );
+        log.debug( "found " + ( results == null ? "null" : results.size() ) + " terms from chebi in " + watch.getTime() + " ms" );
         if ( results != null ) searchResults.addAll( filter( results, search ) );
 
         // Sort the individual results.
@@ -562,6 +568,14 @@ public class OntologyService {
     public void setMgedOntologyService( MgedOntologyService mgedOntologyService ) {
         this.mgedOntologyService = mgedOntologyService;
         ontologyServices.add( mgedOntologyService );
+    }
+    
+    /**
+     * @param chebiOntologyService the chebiOntologyService to set
+     */
+    public void setChebiOntologyService( ChebiOntologyService chebiOntologyService ) {
+        this.chebiOntologyService = chebiOntologyService;
+        ontologyServices.add( chebiOntologyService );
     }
 
     /**
