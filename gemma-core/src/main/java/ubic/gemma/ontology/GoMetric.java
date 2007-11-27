@@ -189,10 +189,10 @@ public class GoMetric {
         }
 
         HashSet<OntologyTerm> masterGO = getOntologyTerms( queryGene );
-        if ( ( masterGO == null ) || masterGO.isEmpty() ) return null;
+        if ( ( masterGO == null ) || masterGO.isEmpty() ) return 0.0;
 
         HashSet<OntologyTerm> coExpGO = getOntologyTerms( targetGene );
-        if ( ( coExpGO == null ) || coExpGO.isEmpty() ) return null;
+        if ( ( coExpGO == null ) || coExpGO.isEmpty() ) return 0.0;
         
         double total = 0;
         int count = 0;
