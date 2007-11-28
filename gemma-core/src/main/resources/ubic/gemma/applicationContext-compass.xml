@@ -74,7 +74,7 @@
 	<!-- Generic compass configuration bean - for the rest see compass.xml and compasstest.xml -->
 
 	<bean id="hibernateGpsDevice" class="org.compass.gps.device.hibernate.HibernateGpsDevice" singleton="false">
-      <property name="name" value="hibernateDevice" />
+      <property name="name" value="hibernateGpsDevice" />
       <property name="sessionFactory" ref="sessionFactory" />
       <property name="nativeExtractor"><bean class="org.compass.spring.device.hibernate.SpringNativeHibernateExtractor" /></property>
       <property name="entitiesIndexer"><bean class="org.compass.gps.device.hibernate.indexer.ScrollableHibernateIndexEntitiesIndexer" /> </property>
