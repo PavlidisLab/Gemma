@@ -371,18 +371,14 @@ public class ExpressionExperimentServiceImpl extends
 
         Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
 
-        // This could be optimized by builing the map in the dao and having getLastAuditEvent take a collection of ids.
+        // This could be optimized by building the map in the dao and having getLastAuditEvent take a collection of ids.
         Collection<ExpressionExperiment> ees = this.loadMultiple( ids );
         AuditEvent last;
         for ( ExpressionExperiment experiment : ees ) {
-
             last = getLastAuditEvent( experiment, type );
             lastEventMap.put( experiment.getId(), last );
-
         }
-
         return lastEventMap;
-
     }
 
     /*

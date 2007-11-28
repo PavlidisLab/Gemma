@@ -1097,46 +1097,7 @@ public class ExpressionExperimentDaoImpl extends
 		return this.handleGetLastAuditEvent((ExpressionExperiment) auditable,
 				type);
 	}
-
-	protected ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastAuditEvent(
-			ubic.gemma.model.expression.experiment.ExpressionExperiment ee,
-			ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType type)
-			throws java.lang.Exception {
-
-		// for the = operator to work in hibernate the class name cann't be
-		// passed in as a parameter :type
-		// setParameter("type", type.getClass.getCanoicalName
-		// wouldn't work. Although technically this is now vunerable to an sql
-		// injection attack, it seems mute as an
-		// attacker would have to have access to the JVM to inject
-		// a mallformed AuditEventType class name and if they had access to the
-		// JVM then sql injection is the least of
-		// our worries.
-
-		final String queryString = "select distinct event from ExpressionExperimentImpl as ee inner join ee.auditTrail trail inner join trail.events event"
-				+ " where ee = :ee and event.eventType.class = "
-				+ type.getClass().getCanonicalName()
-				+ " order by event.date desc ";
-
-		try {
-			org.hibernate.Query queryObject = super.getSession(false)
-					.createQuery(queryString);
-			queryObject.setMaxResults(1);
-			queryObject.setParameter("ee", ee);
-
-			Collection results = queryObject.list();
-
-			if (results == null || results.isEmpty())
-				return null;
-
-			return (AuditEvent) results.iterator().next();
-
-		} catch (org.hibernate.HibernateException ex) {
-			throw super.convertHibernateAccessException(ex);
-		}
-
-	}
-
+	
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -1291,7 +1252,8 @@ public class ExpressionExperimentDaoImpl extends
 		}
 	}
 
-	@Override
+	@SuppressWarnings("unchecked")
+    @Override
 	protected ExpressionExperiment handleFindByBioMaterial(BioMaterial bm)
 			throws Exception {
 
