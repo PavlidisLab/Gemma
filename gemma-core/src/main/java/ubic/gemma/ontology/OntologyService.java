@@ -215,17 +215,15 @@ public class OntologyService {
         String caseInsensitiveFilter = filter.toLowerCase();
         
         for ( OntologyResource res : terms ) {
-            if ( ( res.getUri() != null ) && ( StringUtils.isNotEmpty( res.getUri() ) )
-                    && ( res.getLabel().toLowerCase().startsWith( caseInsensitiveFilter ) ) ) {
+            if ( StringUtils.isNotEmpty( res.getUri() )
+                    && res.getLabel().toLowerCase().startsWith( caseInsensitiveFilter ) ) {
                 VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
                 if ( res instanceof OntologyTerm ) {
                     OntologyTerm term = ( OntologyTerm ) res;
                     vc.setValue( term.getTerm() );
                     vc.setValueUri( term.getUri() );
                     vc.setDescription( term.getComment() );
-
-                }
-                if ( res instanceof OntologyIndividual ) {
+                } else if ( res instanceof OntologyIndividual ) {
                     OntologyIndividual indi = ( OntologyIndividual ) res;
                     vc.setValue( indi.getLabel() );
                     vc.setValueUri( indi.getUri() );
@@ -260,12 +258,12 @@ public class OntologyService {
         // TODO: this is poorly named. changed to findExactResource, add findExactIndividual Factor out common code
 
         Collection<OntologyResource> results;
-        List<Characteristic> individualResults = new ArrayList<Characteristic>();
 
-        // Add the matching individuals 1st
+        // Add the matching individuals
+        List<Characteristic> individualResults = new ArrayList<Characteristic>();
         if ( categoryUri != null && !categoryUri.equals( "" ) && !categoryUri.equals( "{}" ) ) {
             results = new HashSet<OntologyResource>( mgedOntologyService.getTermIndividuals( categoryUri ) );
-            if ( results != null ) individualResults.addAll( convert( results ) );
+            if ( results != null ) individualResults.addAll( filter( results, search ) );
         }
         log.debug( "found " + individualResults.size() + " individuals from ontology term " + categoryUri + " in " + watch.getTime() + " ms");
 
