@@ -230,9 +230,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
 
                 }
             }
-
             summarizeProcessing();
-
         } catch ( Exception e ) {
             log.error( e );
             return e;

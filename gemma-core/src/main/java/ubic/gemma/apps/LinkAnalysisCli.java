@@ -71,8 +71,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         }
     }
 
-    private ExpressionExperimentService eeService = null;
-
     private ExpressionExperimentReportService expressionExperimentReportService;
 
     private LinkAnalysisService linkAnalysisService;
@@ -80,8 +78,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     private FilterConfig filterConfig = new FilterConfig();
 
     private LinkAnalysisConfig linkAnalysisConfig = new LinkAnalysisConfig();
-
-    private AuditTrailService auditTrailService;
 
     /**
      * @param arrayDesign
