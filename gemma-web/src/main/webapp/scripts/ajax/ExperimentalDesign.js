@@ -7,7 +7,7 @@
 var assignFactorValueToBioMaterialButton, expFactorsCB, factorValueCB, bmGrid, saveNewFactorButton, removeFactorButton, factorDescriptionField, expFactorLabel, factorValueLabel;	//gui components
 var eeID,edID, clazz;
 var factorValueComboDS, bmDS, factorDS, factorComboDS;							//Datastores behind gui components
-var selectedFactorId = 0, selectedFactorValueId	//what is selected by user
+var selectedFactorId = 0, selectedFactorValueId;	//what is selected by user
 var bmGridRefresh;									//methods
 
 var factorMgedComboBox;
@@ -24,13 +24,13 @@ var createMgedComboBox = function(comboHandler){
 	
 	return mgedCombo;					    
 					    	
-}
+};
 
 var createFactorDescriptionField = function(){
 	
 	factorDescriptionField = new Ext.form.TextField({allowBlank : false, invalidText : "Enter a description", blankText : "Add a simple description", emptyText : "Description", width: 150});
 	return factorDescriptionField;
-}
+};
 
 
 
@@ -66,7 +66,7 @@ var saveExperimentalFactor = function(){
 	factorMgedComboBox.reset();
 	factorDescriptionField.reset();
 	
-}
+};
 
 var deleteExperimentalFactor = function(){
 	
@@ -76,7 +76,7 @@ var deleteExperimentalFactor = function(){
 	
 	removeFactorButton.disable();
 		
-}
+};
 
 var saveExperimentalFactorValue = function(characteristic, callback){
 	var selectedGridFactors = factorGridGetSelectedIds();
@@ -88,14 +88,14 @@ var saveExperimentalFactorValue = function(characteristic, callback){
 		
 	ExperimentalDesignController.createNewFactorValue({id:selectedGridFactors[0], classDelegatingFor:"long"},[characteristic], callback);
 	
-}
+};
 
 var deleteExperimentalFactorValue = function(characteristic, callback){
 	
 		var selectedGridFactors = factorGridGetSelectedIds();
 		ExperimentalDesignController.deleteFactorValue(factorValueGridGetSelectedIds(), {id:selectedGridFactors[0], classDelegatingFor:"long"},{id:eeID, classDelegatingFor:"long"}, callback);
 		
-}
+};
 
 
 var createFactorComboBox = function(terms){				
@@ -147,7 +147,7 @@ var createFactorComboBox = function(terms){
 					    
 					    return combo;	
 	
-}
+};
 
 var createFactorValueComboBox = function(){
 	
@@ -194,7 +194,7 @@ var createFactorValueComboBox = function(){
 				  	 	combo.on('select', comboHandler);		   
 	    	                						    
 					    return combo;
-}
+};
 
 
 var refreshBMFactorComboBoxes = function(){
@@ -204,10 +204,10 @@ var refreshBMFactorComboBoxes = function(){
 	expFactorsCB.reset();
 	
 //refresh factor value combo box
-	factorValueComboDS.reload({params:[{id:selectedFactorId, classDelegatingFor:"Long"}]}, function() {factorValueCB.getView().refresh(true)} );
+	factorValueComboDS.reload({params:[{id:selectedFactorId, classDelegatingFor:"Long"}]}, function() {factorValueCB.getView().refresh(true);} );
 	factorValueCB.reset();
 	
-}
+};
 
 
 var saveFactorValueToBMHandler = function(){
@@ -232,7 +232,7 @@ var saveFactorValueToBMHandler = function(){
 	BioMaterialController.addFactorValueTo(bioMaterialIds, {id:factorValueIds[0], classDelegatingFor:"FactorValueObject"}, bmGridRefresh );
 	
 	
-}
+};
 
 
 //=================================================
@@ -242,9 +242,10 @@ var saveFactorValueToBMHandler = function(){
 
 bmGridRefresh = function(){	
 	
-	if (!bmGrid)	//is the user logged in?
+	if (!bmGrid){	//is the user logged in?
 		return;
-			
+	}
+	
 	bmDS.reload( {
 		params : [ {id:eeID, classDelegatingFor:"expressionExperimentID"}, {id:selectedFactorId, classDelegatingFor: "FactorID"} ],
 		callback : function() {
@@ -252,7 +253,7 @@ bmGridRefresh = function(){
 		}
 	} );		
 	
-}
+};
 
 var initBioMaterialGrid = function(div) {
        var     recordType = Ext.data.Record.create([
@@ -307,7 +308,7 @@ var initBioMaterialGrid = function(div) {
 				assignFactorValueToBioMaterialButton.disable();
 			}
 		
-       }
+       };
        
        bmGrid.on("rowclick", bmClickHandler);
 
@@ -334,7 +335,7 @@ factorGridRefresh = function(){
 		}
 	} );
 	
-}
+};
 
 var initFactorGrid = function(div) {
 	
@@ -388,16 +389,17 @@ var initFactorGrid = function(div) {
 			
        		
        		if (selectedGridFactors.length === 0){
-       			if (removeFactorButton)
-       			removeFactorButton.disable();
+       			if (removeFactorButton){
+       				removeFactorButton.disable();
+       			}
        			return;
        		}
        		
 			
 			factorValueGridRefresh(); //just show the 1st one in the factor value table
-			if (removeFactorButton)
+			if (removeFactorButton){
 			 		removeFactorButton.enable();
-       		
+			}
        	
        		//update the BMGrid with the selected Factor
        		
@@ -411,7 +413,7 @@ var initFactorGrid = function(div) {
 				//expFactorsCB.setValue(selections[0].data.factorValue);
 			}
 
-       }
+       };
        
        factorGrid.on("rowclick", gridClickHandler);
        
@@ -436,7 +438,7 @@ factorValueGridRefresh = function(){
 			refreshBMFactorComboBoxes();
 		}
 	} );
-}
+};
 
 factorValueGridGetSelectedIds = function() {
 		    
@@ -446,7 +448,7 @@ factorValueGridGetSelectedIds = function() {
 			ids.push( selected[i].id );
 		}
 		return ids;	
-}
+};
 
 factorGridGetSelectedIds = function(){
 	
@@ -459,7 +461,7 @@ factorGridGetSelectedIds = function(){
 	    	
 	    	return factorsInGrid;
 	
-}
+};
 
 bioMaterialListGetSelectedIds = function(){
        		//Get the ids of the selected biomaterials and put them in BiomatierialList
@@ -470,7 +472,7 @@ bioMaterialListGetSelectedIds = function(){
 	    		bioMaterialIds.push(selected[index].id);
 	    	}  	
 	return   bioMaterialIds;    	
-}
+};
 
 var initFactorValueGrid = function(div) {
 	
@@ -523,9 +525,9 @@ var initFactorValueGrid = function(div) {
        
         var factorValueGridClickHandler = function(factorGrid, rowIndex, event){
 
-			if (!factorValueLabel)	//If we are not logged in don't bother updating
+			if (!factorValueLabel){	//If we are not logged in don't bother updating
 				return;
-				
+			}
 			var fvSelections =  factorValueGrid.getSelectionModel().getSelections();  
 			var bmSelections =  bmGrid.getSelectionModel().getSelections();    
 			 		       	
@@ -543,7 +545,7 @@ var initFactorValueGrid = function(div) {
 			}
 			
 		
-       }
+       };
        
        factorValueGrid.on("rowclick", factorValueGridClickHandler);
        
