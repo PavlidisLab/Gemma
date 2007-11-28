@@ -92,7 +92,7 @@ public class ExpressionExperimentReportGenerationSpacesWorkerCLI extends Abstrac
      * @param args
      */
     public static void main( String[] args ) {
-        log.info( "Running spaces worker to generate expression experiment reports ... \n" );
+        log.info( "Starting spaces worker to generate expression experiment reports ... \n" );
 
         SecurityUtil.passAuthenticationToChildThreads();
 

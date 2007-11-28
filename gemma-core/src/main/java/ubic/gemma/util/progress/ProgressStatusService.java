@@ -31,7 +31,7 @@ import ubic.gemma.util.grid.javaspaces.SpacesUtil;
  * @spring.bean id="progressStatusService"
  * @spring.property name="taskRunningService" ref="taskRunningService"
  * @spring.property name="progressManager" ref="progressManager"
- * @spring.property name="gemmaSpacesUtil" ref="gemmaSpacesUtil"
+ * @spring.property name="spacesUtil" ref="spacesUtil"
  * @author klc
  * @version $Id$
  */
@@ -45,7 +45,7 @@ public class ProgressStatusService {
 
     private TaskRunningService taskRunningService;
     private ProgressManager progressManager;
-    private SpacesUtil gemmaSpacesUtil;
+    private SpacesUtil spacesUtil;
 
     public void setProgressManager( ProgressManager progressManager ) {
         this.progressManager = progressManager;
@@ -96,7 +96,7 @@ public class ProgressStatusService {
     public boolean cancelJob( String taskId ) {
         try {
             log.debug( "Got cancellation for " + taskId );
-            gemmaSpacesUtil.cancel( taskId );
+            spacesUtil.cancel( taskId );
             taskRunningService.cancelTask( taskId, false );
             progressManager.cleanupJob( taskId );
         } catch ( Exception e ) {
@@ -109,8 +109,8 @@ public class ProgressStatusService {
         this.taskRunningService = taskRunningService;
     }
 
-    public void setGemmaSpacesUtil( SpacesUtil gemmaSpacesUtil ) {
-        this.gemmaSpacesUtil = gemmaSpacesUtil;
+    public void setSpacesUtil( SpacesUtil spacesUtil ) {
+        this.spacesUtil = spacesUtil;
     }
 
 }

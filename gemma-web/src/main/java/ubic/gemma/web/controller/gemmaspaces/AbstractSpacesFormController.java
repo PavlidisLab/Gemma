@@ -50,7 +50,7 @@ import com.j_spaces.core.client.NotifyModifiers;
  */
 public abstract class AbstractSpacesFormController extends BackgroundProcessingFormController {
 
-    private SpacesUtil gemmaSpacesUtil = null;
+    private SpacesUtil spacesUtil = null;
 
     protected ApplicationContext updatedContext = null;
 
@@ -69,20 +69,20 @@ public abstract class AbstractSpacesFormController extends BackgroundProcessingF
 
     /**
      * Controllers extending this class must implement this method. The implementation should call
-     * injectGigaspacesUtil(SpacesUtil gemmaSpacesUtil) to "inject" a spring loaded SpacesUtil into this
+     * injectGigaspacesUtil(SpacesUtil spacesUtil) to "inject" a spring loaded SpacesUtil into this
      * abstract class.
      * 
-     * @param gemmaSpacesUtil
+     * @param spacesUtil
      */
-    abstract protected void setGemmaSpacesUtil( SpacesUtil gemmaSpacesUtil );
+    abstract protected void setSpacesUtil( SpacesUtil spacesUtil );
 
     /**
      * @return ApplicationContext
      */
     public ApplicationContext addGemmaSpacesToApplicationContext() {
-        if ( gemmaSpacesUtil == null ) gemmaSpacesUtil = new SpacesUtil();
+        if ( spacesUtil == null ) spacesUtil = new SpacesUtil();
 
-        return gemmaSpacesUtil.addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+        return spacesUtil.addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
     }
 
     /**
@@ -127,7 +127,7 @@ public abstract class AbstractSpacesFormController extends BackgroundProcessingF
 
             taskId = SpacesHelper.getTaskIdFromTask( updatedContext, taskName );
 
-            if ( !gemmaSpacesUtil.canServiceTask( taskName, spaceUrl ) ) {
+            if ( !spacesUtil.canServiceTask( taskName, spaceUrl ) ) {
                 // TODO Add sending of email to user.
                 // User user = SecurityUtil.getUserFromUserDetails( ( UserDetails ) SecurityContextHolder.getContext()
                 // .getAuthentication().getPrincipal() );
@@ -161,9 +161,9 @@ public abstract class AbstractSpacesFormController extends BackgroundProcessingF
     }
 
     /**
-     * @param gemmaSpacesUtil
+     * @param spacesUtil
      */
-    protected void injectGemmaSpacesUtil( SpacesUtil gemmaSpacesUtil ) {
-        this.gemmaSpacesUtil = gemmaSpacesUtil;
+    protected void injectSpacesUtil( SpacesUtil spacesUtil ) {
+        this.spacesUtil = spacesUtil;
     }
 }

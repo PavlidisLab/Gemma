@@ -429,7 +429,7 @@ public class SimpleExpressionExperimentLoadController extends AbstractSpacesForm
     }
 
     @Override
-    protected void setGemmaSpacesUtil( SpacesUtil gemmaSpacesUtil ) {
-        this.injectGemmaSpacesUtil( gemmaSpacesUtil );
+    protected void setSpacesUtil( SpacesUtil spacesUtil ) {
+        this.injectSpacesUtil( spacesUtil );
     }
 }

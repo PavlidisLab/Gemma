@@ -29,7 +29,7 @@ import ubic.gemma.util.grid.javaspaces.SpacesUtil;
  * @version $Id$ *
  * @spring.bean name="expressionExperimentReportGenerationService"
  * @spring.property name="expressionExperimentReportService" ref="expressionExperimentReportService"
- * @spring.property name="gemmaSpacesUtil" ref="gemmaSpacesUtil"
+ * @spring.property name="spacesUtil" ref="spacesUtil"
  */
 public class ExpressionExperimentReportGenerationService extends AbstractSpacesService {
 
@@ -73,11 +73,11 @@ public class ExpressionExperimentReportGenerationService extends AbstractSpacesS
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.grid.javaspaces.AbstractSpacesService#setGemmaSpacesUtil(ubic.gemma.util.grid.javaspaces.SpacesUtil)
+     * @see ubic.gemma.grid.javaspaces.AbstractSpacesService#setSpacesUtil(ubic.gemma.util.grid.javaspaces.SpacesUtil)
      */
     @Override
-    public void setGemmaSpacesUtil( SpacesUtil gemmaSpacesUtil ) {
-        super.injectGemmaSpacesUtil( gemmaSpacesUtil );
+    public void setSpacesUtil( SpacesUtil spacesUtil ) {
+        super.injectSpacesUtil( spacesUtil );
     }
 
     /**

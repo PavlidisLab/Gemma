@@ -60,7 +60,7 @@ public class SpacesUtilTest extends BaseSpringContextTest {
         String gigaspacesTemplate = "gigaspacesTemplate";
         assertFalse( withoutGigaspacesCtx.containsBean( gigaspacesTemplate ) );
 
-        SpacesUtil gigaspacesUtil = ( SpacesUtil ) this.getBean( "gemmaSpacesUtil" );
+        SpacesUtil gigaspacesUtil = ( SpacesUtil ) this.getBean( "spacesUtil" );
 
         BeanFactory updatedCtx = gigaspacesUtil.addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE
                 .getSpaceUrl() );
@@ -94,7 +94,7 @@ public class SpacesUtilTest extends BaseSpringContextTest {
      */
     public void testAreWorkersRegistered() {
 
-        SpacesUtil gigaspacesUtil = ( SpacesUtil ) this.getBean( "gemmaSpacesUtil" );
+        SpacesUtil gigaspacesUtil = ( SpacesUtil ) this.getBean( "spacesUtil" );
         ApplicationContext updatedCtx = gigaspacesUtil
                 .addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
 
@@ -116,7 +116,7 @@ public class SpacesUtilTest extends BaseSpringContextTest {
      * Tests the number of workers registered.
      */
     public void testNumWorkersRegistered() {
-        SpacesUtil gigaspacesUtil = ( SpacesUtil ) this.getBean( "gemmaSpacesUtil" );
+        SpacesUtil gigaspacesUtil = ( SpacesUtil ) this.getBean( "spacesUtil" );
         ApplicationContext updatedCtx = gigaspacesUtil
                 .addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
 

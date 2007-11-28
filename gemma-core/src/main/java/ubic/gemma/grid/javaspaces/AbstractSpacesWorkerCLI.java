@@ -60,7 +60,7 @@ public abstract class AbstractSpacesWorkerCLI extends AbstractSpringAwareCLI imp
 
     protected ApplicationContext updatedContext = null;
 
-    protected SpacesUtil gemmaSpacesUtil = null;
+    protected SpacesUtil spacesUtil = null;
 
     /**
      * Sets the worker to be used. The worker is a {@link CustomDelegatingWorker} which is wired with a task in the bean
@@ -87,9 +87,9 @@ public abstract class AbstractSpacesWorkerCLI extends AbstractSpringAwareCLI imp
      * @throws Exception
      */
     private void preInit() throws Exception {
-        gemmaSpacesUtil = ( SpacesUtil ) this.getBean( "gemmaSpacesUtil" );
+        spacesUtil = ( SpacesUtil ) this.getBean( "spacesUtil" );
 
-        updatedContext = gemmaSpacesUtil.addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE
+        updatedContext = spacesUtil.addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE
                 .getSpaceUrl() );
         setWorker();
     }

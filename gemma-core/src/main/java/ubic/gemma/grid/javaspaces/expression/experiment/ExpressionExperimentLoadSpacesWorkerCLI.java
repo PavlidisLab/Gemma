@@ -92,7 +92,7 @@ public class ExpressionExperimentLoadSpacesWorkerCLI extends AbstractSpacesWorke
      * @param args
      */
     public static void main( String[] args ) {
-        log.info( "Running GemmaSpaces worker to load expression experiments ... \n" );
+        log.info( "Starting GemmaSpaces worker to load expression experiments ... \n" );
 
         SecurityUtil.passAuthenticationToChildThreads();
 

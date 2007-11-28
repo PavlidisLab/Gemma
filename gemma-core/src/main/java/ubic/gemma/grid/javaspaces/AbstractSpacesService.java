@@ -33,7 +33,7 @@ import ubic.gemma.util.progress.TaskRunningService;
 public abstract class AbstractSpacesService {
     private Log log = LogFactory.getLog( AbstractSpacesService.class );
 
-    protected SpacesUtil gemmaSpacesUtil = null;
+    protected SpacesUtil spacesUtil = null;
 
     protected ApplicationContext updatedContext = null;
 
@@ -41,9 +41,9 @@ public abstract class AbstractSpacesService {
      * @return ApplicationContext
      */
     public ApplicationContext addGemmaSpacesToApplicationContext() {
-        if ( gemmaSpacesUtil == null ) gemmaSpacesUtil = new SpacesUtil();
+        if ( spacesUtil == null ) spacesUtil = new SpacesUtil();
 
-        return gemmaSpacesUtil.addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+        return spacesUtil.addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
     }
 
     protected void startJob( String spaceUrl, String taskName, boolean runInLocalContext ) {
@@ -56,7 +56,7 @@ public abstract class AbstractSpacesService {
 
         updatedContext = addGemmaSpacesToApplicationContext();
 
-        if ( updatedContext.containsBean( "gigaspacesTemplate" ) && gemmaSpacesUtil.canServiceTask( taskName, spaceUrl ) ) {
+        if ( updatedContext.containsBean( "gigaspacesTemplate" ) && spacesUtil.canServiceTask( taskName, spaceUrl ) ) {
             log.info( "Running task " + taskName + " remotely." );
 
             taskId = SpacesHelper.getTaskIdFromTask( updatedContext, taskName );
@@ -84,15 +84,15 @@ public abstract class AbstractSpacesService {
      * injectGigaspacesUtil(GigaSpacesUtil gigaSpacesUtil) to "inject" a spring loaded GigaSpacesUtil into this abstract
      * class.
      * 
-     * @param gemmaSpacesUtil
+     * @param spacesUtil
      */
-    abstract public void setGemmaSpacesUtil( SpacesUtil gemmaSpacesUtil );
+    abstract public void setSpacesUtil( SpacesUtil spacesUtil );
 
     /**
-     * @param gemmaSpacesUtil
+     * @param spacesUtil
      */
-    protected void injectGemmaSpacesUtil( SpacesUtil gemmaSpacesUtil ) {
-        this.gemmaSpacesUtil = gemmaSpacesUtil;
+    protected void injectSpacesUtil( SpacesUtil spacesUtil ) {
+        this.spacesUtil = spacesUtil;
     }
 
 }

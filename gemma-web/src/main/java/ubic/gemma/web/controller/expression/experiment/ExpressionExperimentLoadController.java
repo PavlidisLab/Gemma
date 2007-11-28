@@ -67,7 +67,7 @@ import ubic.gemma.web.util.MessageUtil;
  * @spring.property name="formView" value="loadExpressionExperimentForm"
  * @spring.property name="successView" value="loadExpressionExperimentProgress.html"
  * @spring.property name="geoDatasetService" ref="geoDatasetService"
- * @spring.property name="gemmaSpacesUtil" ref="gemmaSpacesUtil"
+ * @spring.property name="spacesUtil" ref="spacesUtil"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
  * @spring.property name="arrayExpressLoadService" ref="arrayExpressLoadService"
  */
@@ -193,8 +193,8 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
      * @see ubic.gemma.web.controller.javaspaces.gigaspaces.AbstractGigaSpacesFormController#setGigaSpacesUtil(ubic.gemma.util.javaspaces.gigaspaces.GigaSpacesUtil)
      */
     @Override
-    public void setGemmaSpacesUtil( SpacesUtil gemmaSpacesUtil ) {
-        this.injectGemmaSpacesUtil( gemmaSpacesUtil );
+    public void setSpacesUtil( SpacesUtil spacesUtil ) {
+        this.injectSpacesUtil( spacesUtil );
     }
 
     /**

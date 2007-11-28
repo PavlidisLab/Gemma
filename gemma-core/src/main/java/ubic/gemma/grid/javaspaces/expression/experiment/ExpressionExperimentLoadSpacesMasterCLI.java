@@ -55,7 +55,7 @@ public class ExpressionExperimentLoadSpacesMasterCLI extends LoadExpressionDataC
 
     private static Log log = LogFactory.getLog( ExpressionExperimentLoadSpacesMasterCLI.class );
 
-    private SpacesUtil gemmaSpacesUtil = null;
+    private SpacesUtil spacesUtil = null;
 
     private GigaSpacesTemplate template = null;
 
@@ -121,8 +121,8 @@ public class ExpressionExperimentLoadSpacesMasterCLI extends LoadExpressionDataC
      */
     protected void init() throws Exception {
 
-        gemmaSpacesUtil = ( SpacesUtil ) this.getBean( "gemmaSpacesUtil" );
-        ApplicationContext updatedContext = gemmaSpacesUtil
+        spacesUtil = ( SpacesUtil ) this.getBean( "spacesUtil" );
+        ApplicationContext updatedContext = spacesUtil
                 .addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
 
         if ( !updatedContext.containsBean( "gigaspacesTemplate" ) )
@@ -179,7 +179,7 @@ public class ExpressionExperimentLoadSpacesMasterCLI extends LoadExpressionDataC
                         throw new RuntimeException( e );
                     }
 
-                    if ( !gemmaSpacesUtil.canServiceTask( ExpressionExperimentLoadTask.class.getName(),
+                    if ( !spacesUtil.canServiceTask( ExpressionExperimentLoadTask.class.getName(),
                             SpacesEnum.DEFAULT_SPACE.getSpaceUrl() ) ) continue;
 
                     ExpressionExperimentLoadTaskImpl eeTaskImpl = ( ExpressionExperimentLoadTaskImpl ) this
