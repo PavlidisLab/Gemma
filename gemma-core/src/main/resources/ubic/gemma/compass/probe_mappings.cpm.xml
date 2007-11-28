@@ -23,40 +23,39 @@
 		<id name="id" />
 
 		<property name="name">
-			<meta-data store="no">name</meta-data>
+			<meta-data>name</meta-data>
 		</property>
 
 
 		<property name="description">
-			<meta-data store="no">description</meta-data>
+			<meta-data>description</meta-data>
 		</property>
 
-		<component name="biologicalCharacteristic"	ref-alias="biologicalCharacteristic" />		
 			
 		<component name="arrayDesign"	ref-alias="arrayDesign" />		
 
-
-
 	</class>
+	
+	
 	<class name="genome.biosequence.BioSequenceImpl"
-		alias="biologicalCharacteristic" root="false">
+		alias="biologicalCharacteristic" root="true">
 
-		<id name="id" />
+	 <id name="id" />
 
-		<property name="name">
-			<meta-data store="no">name</meta-data>
+	<property name="name">
+			<meta-data>name</meta-data>
+		</property>
+		
+	  <property name="description">
+			<meta-data>description</meta-data>
 		</property>
 
-		<property name="description">
-			<meta-data store="no">description</meta-data>
-		</property>
-
-		<component name="bioSequence2GeneProduct" ref-alias="bioSequence2GeneProduct" />
+		  <component name="bioSequence2GeneProduct" ref-alias="bioSequence2GeneProduct" /> 
 		
 	</class>
 	
 	<class name="expression.arrayDesign.ArrayDesign"
-		alias="arrayDesign" root="false">
+		alias="arrayDesign" support-unmarshall="false" root="false">
 
 		<id name="id" />
 
@@ -79,11 +78,11 @@
 		<id name="id" />
 
 		<property name="name">
-			<meta-data store="no">name</meta-data>
+			<meta-data>name</meta-data>
 		</property>
 
 		<property name="description">
-			<meta-data store="no">description</meta-data>
+			<meta-data>description</meta-data>
 		</property>
 
 
