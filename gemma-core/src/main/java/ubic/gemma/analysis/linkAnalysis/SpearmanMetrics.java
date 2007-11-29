@@ -110,7 +110,7 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
     }
 
     /**
-     * 
+     * Main method.
      */
     public void calculateMetrics() {
 
@@ -134,6 +134,10 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
         }
 
         /* for each vector, compare it to all other vectors */
+
+        // value to use if there are no missing values.
+        double denom = Math.pow( numcols, 3 ) - numcols;
+
         ExpressionDataMatrixRowElement itemA = null;
         double[] vectorA = null;
         int count = 0;
@@ -163,7 +167,7 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
 
                 /* if there are no missing values, use the faster method of calculation */
                 if ( !thisRowHasMissing && !hasMissing[j] ) {
-                    setCorrel( i, j, this.correlFast( vectorA, vectorB ), numcols );
+                    setCorrel( i, j, this.correlFast( vectorA, vectorB, denom ), numcols );
                     continue;
                 }
 
@@ -183,7 +187,7 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
                 if ( numused < minNumUsed ) {
                     setCorrel( i, j, Double.NaN, 0 );
                 } else {
-                    double rho = 1.0 - sse / ( Math.pow( numused, 3 ) - 1 );
+                    double rho = 1.0 - sse / ( Math.pow( numused, 3 ) - numused );
                     setCorrel( i, j, rho, numused );
                 }
             }
@@ -199,6 +203,10 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
 
     }
 
+    /**
+     * @param usedB will be filled in, if not null.
+     * @return rank-transformed data.
+     */
     private double[][] getRankTransformedData( boolean[][] usedB ) {
         int numrows = this.dataMatrix.rows();
         int numcols = this.dataMatrix.columns();
@@ -235,17 +243,16 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
      * 
      * @param ival double[]
      * @param jval double[]
-     * @param i int
-     * @param j int
+     * @param denom n^3 - n, to avoid having to compute this every time.
      * @return double
      */
-    private double correlFast( double[] ival, double[] jval ) {
+    private double correlFast( double[] ival, double[] jval, double denom ) {
         double sse = 0.0;
         int n = ival.length;
         for ( int i = 0; i < n; i++ ) {
             sse += Math.pow( ival[i] - jval[i], 2 );
         }
-        return 1.0 - sse / ( Math.pow( n, 3 ) - 1 );
+        return 1.0 - sse / denom;
     }
 
     /**
@@ -260,6 +267,8 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
         if ( docalcs ) {
             rankTransformedData = getRankTransformedData( null );
         }
+
+        double denom = Math.pow( numcols, 3 ) - 1;
 
         /*
          * For each vector, compare it to all other vectors, avoid repeating things; skip items that don't have genes
@@ -288,7 +297,7 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
                 }
 
                 double[] vectorB = rankTransformedData[j];
-                setCorrel( i, j, correlFast( vectorA, vectorB ), numcols );
+                setCorrel( i, j, correlFast( vectorA, vectorB, denom ), numcols );
                 ++numComputed;
             }
             if ( ++count % 2000 == 0 ) {
