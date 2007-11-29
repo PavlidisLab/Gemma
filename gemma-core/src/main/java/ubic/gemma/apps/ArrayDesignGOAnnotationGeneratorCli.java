@@ -108,6 +108,8 @@ public class ArrayDesignGOAnnotationGeneratorCli extends
 	boolean biologicalProcessAnnotations;
 
 	boolean includeGemmaGenes;
+	
+	boolean overWrite = false;
 
 	/*
 	 * (non-Javadoc)
@@ -158,11 +160,18 @@ public class ArrayDesignGOAnnotationGeneratorCli extends
 								+ "Creates 3 zip files for each AD, no parents, parents, biological process. Overrides all other settings.")
 				.withLongOpt("batch").create('b');
 
+		Option overWrite = OptionBuilder
+		.withArgName("Overwrites existing files")
+		.withDescription("If set will overwrite existing annotation files in the output directory")
+		.withLongOpt("overwrite").create('o');
+		
+		
 		addOption(annotationFileOption);
 		addOption(annotationType);
 		addOption(fileLoading);
 		addOption(genesIncludedOption);
 		addOption(batchLoading);
+		addOption(overWrite);
 
 	}
 
@@ -281,6 +290,15 @@ public class ArrayDesignGOAnnotationGeneratorCli extends
 	 */
 	protected void processAD(ArrayDesign arrayDesign, String fileName)
 			throws IOException {
+
+		Writer writer = initOutputFile(fileName);
+		
+		//if no writer then we should abort (this could happen in case where we don't want to overwrite files)
+		if (writer == null) {
+			log.info(arrayDesign.getName() + " annotation file already exits.  Skipping. ");
+			return;
+		}
+
 		unlazifyArrayDesign(arrayDesign);
 
 		Collection<CompositeSequence> compositeSequences = arrayDesign
@@ -288,9 +306,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends
 
 		log.info(arrayDesign.getName() + " has " + compositeSequences.size()
 				+ " composite sequences");
-
-		Writer writer = initOutputFile(fileName);
-
+		
 		int numProcessed = generateAnnotationFile(writer, compositeSequences);
 
 		writer.flush();
@@ -299,12 +315,10 @@ public class ArrayDesignGOAnnotationGeneratorCli extends
 									// be corrupt.
 		writer.close();
 
-		log.info("Finished processing platform: " + arrayDesignName);
+		log.info("Finished processing platform: " + arrayDesign.getName());
 
-		successObjects.add(((Describable) arrayDesign).getName()
-				+ " ("
-				+ (arrayDesign).getExternalReferences().iterator().next()
-						.getAccession() + ")");
+		successObjects.add( String.format( "%s (%s)", arrayDesign.getName(), arrayDesign.getShortName() )); 
+		
 
 		if (StringUtils.isBlank(fileName)) {
 			log.info("Processed " + numProcessed + " composite sequences");
@@ -411,15 +425,18 @@ public class ArrayDesignGOAnnotationGeneratorCli extends
 			log.info("Output to stdout");
 			writer = new PrintWriter(System.out);
 		} else {
-
-			// write into file
-			log.info("Creating new annotation file " + fileName + " \n");
+		
+			log.info("Attempting to create new annotation file " + fileName + " \n");
 
 			File f = new File(ANNOT_DATA_DIR + fileName + ".an.txt");
 
 			if (f.exists()) {
-				log.warn("Will overwrite existing file " + f);
-				f.delete();
+				if (this.overWrite) {
+					log.warn("Will overwrite existing file " + f);
+					f.delete();
+				}
+				else
+					return null;
 			}
 
 			File parentDir = f.getParentFile();
@@ -689,6 +706,9 @@ public class ArrayDesignGOAnnotationGeneratorCli extends
 
 		if (this.hasOption('g'))
 			processGenesIncluded(this.getOptionValue('g'));
+		
+		if (this.hasOption('o'))
+			this.overWrite = true;
 
 		gene2GoAssociationService = (Gene2GOAssociationService) this
 				.getBean("gene2GOAssociationService");
