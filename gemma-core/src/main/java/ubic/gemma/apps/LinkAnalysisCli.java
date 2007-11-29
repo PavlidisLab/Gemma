@@ -126,7 +126,8 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         addOption( textOutOpt );
 
         Option metricOption = OptionBuilder.hasArg().withArgName( "metric" ).withDescription(
-                "Similarity metric {pearson|spearman}, default is pearson" ).withLongOpt( "metric" ).create( 'm' );
+                "Similarity metric {pearson|spearman}, default is pearson" ).create( "metric" );
+
         addOption( metricOption );
 
     }
@@ -287,8 +288,8 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         if ( hasOption( 'd' ) ) {
             this.linkAnalysisConfig.setUseDb( false );
         }
-        if ( hasOption( 'm' ) ) {
-            this.linkAnalysisConfig.setMetric( getOptionValue( 'm' ) );
+        if ( hasOption( "metric" ) ) {
+            this.linkAnalysisConfig.setMetric( getOptionValue( "metric" ) );
         }
         if ( hasOption( "text" ) ) {
             this.linkAnalysisConfig.setTextOut( true );

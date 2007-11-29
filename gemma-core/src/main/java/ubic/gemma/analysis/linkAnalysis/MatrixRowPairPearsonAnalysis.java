@@ -157,7 +157,7 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
                 for ( int k = 0; k < numcols; k++ ) {
                     xj = vectorA[k];
                     yj = vectorB[k];
-                    if ( usedB[i][k] && usedB[j][k] ) { /* this is a bit faster */
+                    if ( usedB[i][k] && usedB[j][k] ) { /* this is a bit faster than calling Double.isNan */
                         sx += xj;
                         sy += yj;
                         sxy += xj * yj;

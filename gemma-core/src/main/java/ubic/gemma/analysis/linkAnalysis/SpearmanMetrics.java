@@ -130,28 +130,7 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
         if ( doCalcs ) {
             // Temporarily copy the data in this matrix, for performance, and rank transform.
             usedB = new boolean[numrows][numcols];
-            rankTransformedData = new double[numrows][];
-            for ( int i = 0; i < numrows; i++ ) { // first vector
-
-                Double[] row = this.dataMatrix.getRow( i );
-                double r[] = new double[row.length];
-                for ( int m = 0, v = row.length; m < v; m++ ) {
-                    r[m] = row[m];
-                }
-
-                DoubleArrayList ranksIA = Rank.rankTransform( new DoubleArrayList( r ) );
-                double ri[] = new double[ranksIA.size()];
-                for ( int n = 0, w = ranksIA.size(); n < w; n++ ) {
-                    ri[n] = ranksIA.getQuick( n );
-                }
-
-                rankTransformedData[i] = ri;
-
-                for ( int j = 0; j < numcols; j++ ) { // second vector
-                    usedB[i][j] = used.get( i, j ); // this is only needed if we use it below, speeds things up
-                    // slightly.
-                }
-            }
+            rankTransformedData = getRankTransformedData( usedB );
         }
 
         /* for each vector, compare it to all other vectors */
@@ -194,7 +173,7 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
                 int numused = 0;
                 double sse = 0.0;
                 for ( int k = 0; k < vectorA.length; k++ ) {
-                    if ( Double.isNaN( vectorA[k] ) || Double.isNaN( vectorB[k] ) ) {
+                    if ( !usedB[i][k] || !usedB[j][k] ) { /* avoid double.isnan() calls */
                         continue;
                     }
                     sse += Math.pow( vectorA[k] - vectorB[k], 2 );
@@ -220,6 +199,37 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
 
     }
 
+    private double[][] getRankTransformedData( boolean[][] usedB ) {
+        int numrows = this.dataMatrix.rows();
+        int numcols = this.dataMatrix.columns();
+        double[][] rankTransformedData;
+        rankTransformedData = new double[numrows][];
+        for ( int i = 0; i < numrows; i++ ) { // first vector
+
+            Double[] row = this.dataMatrix.getRow( i );
+            double r[] = new double[row.length];
+            for ( int m = 0, v = row.length; m < v; m++ ) {
+                r[m] = row[m];
+            }
+
+            DoubleArrayList ranksIA = Rank.rankTransform( new DoubleArrayList( r ) );
+            double ri[] = new double[ranksIA.size()];
+            for ( int n = 0, w = ranksIA.size(); n < w; n++ ) {
+                ri[n] = ranksIA.getQuick( n );
+            }
+
+            rankTransformedData[i] = ri;
+
+            if ( usedB != null ) {
+                for ( int j = 0; j < numcols; j++ ) { // second vector
+                    usedB[i][j] = used.get( i, j ); // this is only needed if we use it below, speeds things up
+                    // slightly.
+                }
+            }
+        }
+        return rankTransformedData;
+    }
+
     /**
      * Compute the rank correlation, when there are no missing values.
      * 
@@ -238,11 +248,56 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
         return 1.0 - sse / ( Math.pow( n, 3 ) - 1 );
     }
 
+    /**
+     * If there are no missing values.
+     */
     private void calculateMetricsFast() {
+        int numrows = this.dataMatrix.rows();
+        int numcols = this.dataMatrix.columns();
+        boolean docalcs = this.needToCalculateMetrics();
+
+        double[][] rankTransformedData = null;
+        if ( docalcs ) {
+            rankTransformedData = getRankTransformedData( null );
+        }
+
         /*
-         * FIXME do work here.
+         * For each vector, compare it to all other vectors, avoid repeating things; skip items that don't have genes
+         * mapped to them.
          */
-        throw new UnsupportedOperationException();
+        ExpressionDataMatrixRowElement itemA = null;
+        ExpressionDataMatrixRowElement itemB = null;
+        double[] vectorA = null;
+        int count = 0;
+        int numComputed = 0;
+        for ( int i = 0; i < numrows; i++ ) {
+            itemA = this.dataMatrix.getRowElement( i );
+            if ( !this.hasGene( itemA ) ) continue;
+            if ( docalcs ) {
+                vectorA = rankTransformedData[i];
+            }
+
+            for ( int j = i + 1; j < numrows; j++ ) {
+                itemB = this.dataMatrix.getRowElement( j );
+                if ( !this.hasGene( itemB ) ) continue;
+                if ( !docalcs || results.getQuick( i, j ) != 0.0 ) { // second pass over matrix. Don't calculate it
+                    // if we
+                    // already have it. Just do the requisite checks.
+                    keepCorrel( i, j, results.getQuick( i, j ), numcols );
+                    continue;
+                }
+
+                double[] vectorB = rankTransformedData[j];
+                setCorrel( i, j, correlFast( vectorA, vectorB ), numcols );
+                ++numComputed;
+            }
+            if ( ++count % 2000 == 0 ) {
+                log.info( count + " rows done, " + numComputed + " correlations computed, last row was " + itemA + " "
+                        + ( keepers.size() > 0 ? keepers.size() + " scores retained" : "" ) );
+            }
+        }
+
+        finishMetrics();
     }
 
 }
