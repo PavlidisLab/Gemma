@@ -35,6 +35,8 @@ import cern.colt.list.ObjectArrayList;
  */
 public interface MatrixRowPairAnalysis {
 
+    double correctedPvalue( int i, int j, double correl, int numused );
+
     public void calculateMetrics();
 
     public QuantitationType getMetricType();
@@ -43,11 +45,6 @@ public interface MatrixRowPairAnalysis {
 
     public void setPValueThreshold( double k );
 
-    // public IHistogram1D getHistogram();
-
-    /**
-     * @param k GroupMap
-     */
     public void setDuplicateMap( Map<CompositeSequence, Collection<Gene>> m1,
             Map<Gene, Collection<CompositeSequence>> m2 );
 

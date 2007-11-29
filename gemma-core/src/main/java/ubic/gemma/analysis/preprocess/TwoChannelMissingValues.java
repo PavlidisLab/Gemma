@@ -25,6 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.Constants;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
@@ -105,7 +106,8 @@ public class TwoChannelMissingValues {
             double signalToNoiseThreshold, Collection<Double> extraMissingValueIndicators ) {
 
         expressionExperimentService.thawLite( expExp );
-        Collection<QuantitationType> usefulQuantitationTypes = ExpressionDataMatrixBuilder.getUsefulQuantitationTypes( expExp );
+        Collection<QuantitationType> usefulQuantitationTypes = ExpressionDataMatrixBuilder
+                .getUsefulQuantitationTypes( expExp );
         Collection<DesignElementDataVector> vectors = expressionExperimentService.getDesignElementDataVectors( expExp,
                 usefulQuantitationTypes );
 
@@ -260,7 +262,7 @@ public class TwoChannelMissingValues {
         QuantitationType present = QuantitationType.Factory.newInstance();
         present.setName( "Detection call" );
         present.setDescription( "Detection call based on signal to noise threshold of " + signalToNoiseThreshold
-                + " (Computed by Gemma)" );
+                + " (Computed by " + Constants.APP_NAME + ")" );
         present.setGeneralType( GeneralType.CATEGORICAL );
         present.setIsBackground( false );
         present.setRepresentation( PrimitiveType.BOOLEAN );

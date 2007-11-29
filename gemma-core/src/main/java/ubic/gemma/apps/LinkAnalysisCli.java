@@ -41,7 +41,6 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEven
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEvent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 /**
  * Commandline tool to conduct link analysis
@@ -125,6 +124,10 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
         Option textOutOpt = OptionBuilder.withDescription( "Output links as text to STOUT" ).create( "text" );
         addOption( textOutOpt );
+
+        Option metricOption = OptionBuilder.hasArg().withArgName( "metric" ).withDescription(
+                "Similarity metric {pearson|spearman}, default is pearson" ).withLongOpt( "metric" ).create( 'm' );
+        addOption( metricOption );
 
     }
 
@@ -283,6 +286,9 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         }
         if ( hasOption( 'd' ) ) {
             this.linkAnalysisConfig.setUseDb( false );
+        }
+        if ( hasOption( 'm' ) ) {
+            this.linkAnalysisConfig.setMetric( getOptionValue( 'm' ) );
         }
         if ( hasOption( "text" ) ) {
             this.linkAnalysisConfig.setTextOut( true );

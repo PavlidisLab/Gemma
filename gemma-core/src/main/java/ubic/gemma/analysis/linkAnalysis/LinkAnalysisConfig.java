@@ -29,7 +29,7 @@ public class LinkAnalysisConfig {
     private double upperTailCut = 0.01;
     private double lowerTailCut = 0.01;
 
-    private String metric = "pearson";
+    private String metric = "pearson"; // spearman
     private boolean absoluteValue = false;
     private double fwe = 0.01;
     private double cdfCut = 0.01; // 1.0 means, keep everything.
@@ -100,7 +100,15 @@ public class LinkAnalysisConfig {
     }
 
     public void setMetric( String metric ) {
+        checkValidMetric( metric );
         this.metric = metric;
+    }
+
+    private void checkValidMetric( String m ) {
+        if ( m.equalsIgnoreCase( "pearson" ) ) return;
+        if ( m.equalsIgnoreCase( "spearman" ) ) return;
+        throw new IllegalArgumentException( "Unrecognized metric: " + m
+                + ", valid options are 'pearson' and 'spearman'" );
     }
 
     public void setTextOut( boolean b ) {
@@ -114,15 +122,14 @@ public class LinkAnalysisConfig {
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
-        buf.append( "# AbsoluteValue:" + this.isAbsoluteValue() + "\n" );
+        buf.append( "# absoluteValue:" + this.isAbsoluteValue() + "\n" );
+        buf.append( "# metric:" + this.getMetric() + "\n" );
         buf.append( "# cdfCut:" + this.getCdfCut() + "\n" );
         buf.append( "# cacheCut:" + this.getCorrelationCacheThreshold() + "\n" );
         buf.append( "# fwe:" + this.getFwe() + "\n" );
-        buf.append( "# metric:" + this.getMetric() + "\n" );
         buf.append( "# uppercut:" + this.getUpperTailCut() + "\n" );
         buf.append( "# lowercut:" + this.getLowerTailCut() + "\n" );
         buf.append( "# useDB:" + this.isUseDb() + "\n" );
         return buf.toString();
     }
-
 }

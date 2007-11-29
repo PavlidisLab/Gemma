@@ -46,7 +46,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import cern.colt.list.DoubleArrayList;
-import cern.colt.list.IntArrayList;
 
 /**
  * For each 'preferred' DesignElementDataVector in the experiment, compute the 'rank' of the expression level. For
@@ -304,9 +303,9 @@ public class DedvRankService {
                 else
                     columnIntensities.add( Double.MIN_VALUE );
             }
-            IntArrayList columnRanks = Rank.rankTransform( columnIntensities );
+            DoubleArrayList columnRanks = Rank.rankTransform( columnIntensities );
             for ( int row = 0; row < intensities.rows(); row++ ) {
-                Double value = ( double ) columnRanks.get( row ) / columnRanks.size();
+                Double value = columnRanks.get( row ) / columnRanks.size();
                 rankMatrix.set( row, column, value );
             }
         }
@@ -337,7 +336,7 @@ public class DedvRankService {
             builder.maskMissingValues( intensities, ad );
         }
 
-        IntArrayList ranks = getRanks( intensities, method );
+        DoubleArrayList ranks = getRanks( intensities, method );
 
         Collection<DesignElementDataVector> preferredVectors = builder.getPreferredDataVectors( ad );
         log.debug( preferredVectors.size() + " vectors" );
@@ -355,7 +354,7 @@ public class DedvRankService {
      * @param intensities
      * @return
      */
-    private IntArrayList getRanks( ExpressionDataDoubleMatrix intensities, Method method ) {
+    private DoubleArrayList getRanks( ExpressionDataDoubleMatrix intensities, Method method ) {
         log.debug( "Getting ranks" );
         DoubleArrayList result = new DoubleArrayList( intensities.rows() );
 

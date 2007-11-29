@@ -26,12 +26,24 @@ import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
  */
 public class MatrixRowPairAnalysisFactory {
 
+    /**
+     * 
+     * @param dataMatrix
+     * @param tmts threshold for caching
+     * @return
+     */
     public static MatrixRowPairPearsonAnalysis pearson( ExpressionDataDoubleMatrix dataMatrix, double tmts ) {
         return new MatrixRowPairPearsonAnalysis( dataMatrix, tmts );
     }
 
-    public static SpearmannMetrics spearmann( ExpressionDataDoubleMatrix dataMatrix, double tmts ) {
-        throw new UnsupportedOperationException( "Sorry, can't do spearmann yet" );
+    /**
+     * 
+     * @param dataMatrix
+     * @param tmts threshold for caching
+     * @return
+     */
+    public static SpearmanMetrics spearmann( ExpressionDataDoubleMatrix dataMatrix, double tmts ) {
+        return new SpearmanMetrics( dataMatrix, tmts );
     }
 
 }

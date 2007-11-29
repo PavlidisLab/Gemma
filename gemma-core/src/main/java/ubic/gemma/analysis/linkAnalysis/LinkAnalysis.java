@@ -179,9 +179,11 @@ public class LinkAnalysis {
      */
     private void calculateDistribution() {
         if ( config.getMetric().equals( "pearson" ) ) {
+            log.info( "Using Pearson linear correlation" );
             metricMatrix = MatrixRowPairAnalysisFactory
                     .pearson( this.dataMatrix, config.getCorrelationCacheThreshold() );
-        } else if ( config.getMetric().equals( "spearmann" ) ) {
+        } else if ( config.getMetric().equals( "spearman" ) ) {
+            log.info( "Using Spearman rank correlation" );
             metricMatrix = MatrixRowPairAnalysisFactory.spearmann( dataMatrix, config.getCorrelationCacheThreshold() );
         }
 
