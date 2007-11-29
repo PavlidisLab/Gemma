@@ -381,18 +381,18 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
 
             if ( this.useAbsoluteValue ) {
                 if ( upperTailThreshold > storageThresholdValue ) { // then we would have stored it already.
-                    log.info( "Second pass, have to recompute some values" );
+                    log.info( "Second pass, good news, all values are cached" );
                     return false;
                 }
             } else {
                 if ( Math.abs( lowerTailThreshold ) > storageThresholdValue
                         && upperTailThreshold > storageThresholdValue ) { // then we would have stored it already.
-                    log.info( "Second pass, have to recompute some values" );
+                    log.info( "Second pass, good news, all values are cached" );
                     return false;
                 }
             }
         }
-        log.info( "Second pass, good news, all values are cached" );
+        log.info( "Second pass, have to recompute some values" );
         return true;
     }
 
