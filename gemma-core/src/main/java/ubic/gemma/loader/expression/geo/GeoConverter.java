@@ -108,6 +108,16 @@ import ubic.gemma.ontology.MgedOntologyService;
 public class GeoConverter implements Converter {
 
     /**
+     * This string is inserted into the descriptions of constructed biomaterials.
+     */
+    private static final String BIOMATERIAL_DESCRIPTION_PREFIX = "BioMat:";
+
+    /**
+     * This string is inserted into the names of constructed biomaterials, so you get names like GSE5929_BioMat_58.
+     */
+    private static final String BIOMATERIAL_NAME_TAG = "_Biomat_";
+
+    /**
      * How often we tell the user about data processing (items per update)
      */
     private static final int LOGGING_VECTOR_COUNT_UPDATE = 2000;
@@ -1509,7 +1519,7 @@ public class GeoConverter implements Converter {
 
             BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
             String bioMaterialName = getBiomaterialPrefix( series, ++numBioMaterials );
-            String bioMaterialDescription = "Biomaterial corresponding to samples: ";
+            String bioMaterialDescription = BIOMATERIAL_DESCRIPTION_PREFIX;
 
             // From the series samples, find the sample that corresponds and convert it.
             Set<String> correspondingSamples = ( Set<String> ) iter.next();
@@ -1543,7 +1553,7 @@ public class GeoConverter implements Converter {
                                 + "\nLast updated (according to GEO): " + sample.getLastUpdateDate() );
                         ba.getSamplesUsed().add( bioMaterial );
                         bioMaterial.getBioAssaysUsedIn().add( ba );
-                        bioMaterialDescription = bioMaterialDescription + " " + sample;
+                        bioMaterialDescription = bioMaterialDescription + "," + sample;
                         expExp.getBioAssays().add( ba );
                         found = true;
                         break;
@@ -1709,7 +1719,7 @@ public class GeoConverter implements Converter {
      * @return
      */
     private String getBiomaterialPrefix( GeoSeries series, int i ) {
-        String bioMaterialName = series.getGeoAccession() + "_bioMaterial_" + i;
+        String bioMaterialName = series.getGeoAccession() + BIOMATERIAL_NAME_TAG + i;
         return bioMaterialName;
     }
 
