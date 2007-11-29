@@ -50,6 +50,17 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  */
 public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
 
+    /**
+     * This is used when we hit a duplicate probe name, and we need to mangle them.
+     */
+    private static final String PROBE_NAME_DISAMBIGUATION_SUFFIX_SEPARATOR = "___";
+    
+    /**
+     * 
+     */
+    private static final String PROBE_NAME_DISAMBIGUATION_REGEX = PROBE_NAME_DISAMBIGUATION_SUFFIX_SEPARATOR
+            + "(\\d )+$";
+
     public static void main( String[] args ) {
         ArrayDesignMergeCli b = new ArrayDesignMergeCli();
         b.doWork( args );
@@ -59,125 +70,12 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
     private String newShortName;
     private String newName;
 
-    @SuppressWarnings("static-access")
-    @Override
-    protected void buildOptions() {
-        super.buildOptions();
-        Option otherArrayDesignOption = OptionBuilder
-                .isRequired()
-                .hasArg()
-                .withArgName( "Other array designs" )
-                .withDescription(
-                        "Short name(s) of arrays to merge with the one given to the -a option, preferably subsumed by it, comma-delimited" )
-                .withLongOpt( "other" ).create( 'o' );
-
-        addOption( otherArrayDesignOption );
-
-        Option newAdName = OptionBuilder.isRequired().hasArg().withArgName( "name" ).withDescription(
-                "Name for new array design" ).withLongOpt( "name" ).create( 'n' );
-        addOption( newAdName );
-        Option newAdShortName = OptionBuilder.isRequired().hasArg().withArgName( "name" ).withDescription(
-                "Short name for new array design" ).withLongOpt( "shortname" ).create( 's' );
-        addOption( newAdShortName );
-    }
-
-    @Override
-    protected Exception doWork( String[] args ) {
-
-        Exception err = processCommandLine( "subsumption tester", args );
-        if ( err != null ) {
-            bail( ErrorCode.INVALID_OPTION );
-            return err;
-        }
-
-        ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
-
-        if ( arrayDesign == null ) {
-            log.error( "No arrayDesign " + arrayDesignName + " found" );
-            bail( ErrorCode.INVALID_OPTION );
-        }
-
-        unlazifyArrayDesign( arrayDesign );
-
-        merge( arrayDesign );
-
-        return null;
-    }
-
     /**
      * @param arrayDesign
      */
-    private void merge( ArrayDesign arrayDesign ) {
-
-        // Collection<ArrayDesign> existingMergees = arrayDesign.getMergees();
-        // boolean mergeWithExisting = existingMergees.size() > 0;
-
-        // FIXME refactor this into a separate service.
-
-        // make map of biosequence -> design elements for all the array designs. But watch out for biosequences that
-        // appear more than once per array design.
-        Map<BioSequence, Collection<CompositeSequence>> globalBsMap = new HashMap<BioSequence, Collection<CompositeSequence>>();
-
-        makeBioSeqMap( globalBsMap, arrayDesign );
-
-        log.info( globalBsMap.keySet().size() + " sequences encountered in first array design to be merged." );
-
-        for ( String otherArrayDesignName : otherArrayDesignNames ) {
-            log.info( "Processing " + otherArrayDesignName );
-            // collect mergees
-            ArrayDesign otherArrayDesign = locateArrayDesign( otherArrayDesignName );
-
-            if ( arrayDesign.equals( otherArrayDesign ) ) {
-                continue;
-            }
-
-            if ( otherArrayDesign == null ) {
-                log.error( "No arrayDesign " + otherArrayDesignName + " found" );
-                bail( ErrorCode.INVALID_OPTION );
-            }
-
-            unlazifyArrayDesign( otherArrayDesign );
-
-            makeBioSeqMap( globalBsMap, otherArrayDesign );
-
-            log.info( globalBsMap.keySet().size() + " sequences encountered in total" );
-
-        }
-
-        createMerged( arrayDesign, globalBsMap );
-    }
-
-    /**
-     * @param globalBsMap
-     * @param otherArrayDesign
-     */
-    private void makeBioSeqMap( Map<BioSequence, Collection<CompositeSequence>> globalBsMap,
-            ArrayDesign otherArrayDesign ) {
-        Map<BioSequence, Collection<CompositeSequence>> bsMap = new HashMap<BioSequence, Collection<CompositeSequence>>();
-        int count = 0;
-        for ( CompositeSequence cs : otherArrayDesign.getCompositeSequences() ) {
-            BioSequence bs = cs.getBiologicalCharacteristic();
-
-            if ( !globalBsMap.containsKey( bs ) ) {
-                globalBsMap.put( bs, new HashSet<CompositeSequence>() );
-            }
-
-            if ( !bsMap.containsKey( bs ) ) {
-                bsMap.put( bs, new HashSet<CompositeSequence>() );
-            }
-
-            bsMap.get( bs ).add( cs );
-
-            if ( globalBsMap.get( bs ).size() < bsMap.get( bs ).size() ) {
-                globalBsMap.get( bs ).add( cs );
-            }
-        }
-
-        if ( ++count % 10000 == 0 ) {
-            log.info( "Processed " + count + " probes" );
-        }
-
-        // }
+    private void audit( ArrayDesign arrayDesign, String note ) {
+        AuditEventType eventType = ArrayDesignMergeEvent.Factory.newInstance();
+        auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }
 
     /**
@@ -251,11 +149,11 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
             arrayDesignService.update( otherArrayDesign );
             audit( otherArrayDesign, "Merged into " + mergedAd );
         }
-
+        arrayDesignReportService.generateArrayDesignReport( mergedAd.getId() );
     }
 
     /**
-     * Names won't be re-used, they will get names like "fooo.1".
+     * Names won't be re-used, they will get names like "fooo___1".
      * 
      * @param probeNames
      * @param cs
@@ -264,19 +162,142 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
     private String getProbeName( Collection<String> probeNames, CompositeSequence cs ) {
         String name = cs.getName();
         int i = 1;
+
+        if ( name.matches( PROBE_NAME_DISAMBIGUATION_REGEX ) ) {
+            // FIXME then we can't do the stuff below without some fix.
+        }
+
         while ( probeNames.contains( name ) ) {
-            name = name + "." + i;
+            if ( name.matches( PROBE_NAME_DISAMBIGUATION_REGEX ) ) {
+                name = name
+                        .replaceAll( PROBE_NAME_DISAMBIGUATION_REGEX, PROBE_NAME_DISAMBIGUATION_SUFFIX_SEPARATOR + i );
+            } else {
+                name = name + PROBE_NAME_DISAMBIGUATION_SUFFIX_SEPARATOR + i;
+            }
             i++;
         }
         return name;
     }
 
     /**
+     * @param globalBsMap
+     * @param otherArrayDesign
+     */
+    private void makeBioSeqMap( Map<BioSequence, Collection<CompositeSequence>> globalBsMap,
+            ArrayDesign otherArrayDesign ) {
+        Map<BioSequence, Collection<CompositeSequence>> bsMap = new HashMap<BioSequence, Collection<CompositeSequence>>();
+        int count = 0;
+        for ( CompositeSequence cs : otherArrayDesign.getCompositeSequences() ) {
+            BioSequence bs = cs.getBiologicalCharacteristic();
+
+            if ( !globalBsMap.containsKey( bs ) ) {
+                globalBsMap.put( bs, new HashSet<CompositeSequence>() );
+            }
+
+            if ( !bsMap.containsKey( bs ) ) {
+                bsMap.put( bs, new HashSet<CompositeSequence>() );
+            }
+
+            bsMap.get( bs ).add( cs );
+
+            if ( globalBsMap.get( bs ).size() < bsMap.get( bs ).size() ) {
+                globalBsMap.get( bs ).add( cs );
+            }
+        }
+
+        if ( ++count % 10000 == 0 ) {
+            log.info( "Processed " + count + " probes" );
+        }
+
+        // }
+    }
+
+    /**
      * @param arrayDesign
      */
-    private void audit( ArrayDesign arrayDesign, String note ) {
-        AuditEventType eventType = ArrayDesignMergeEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
+    private void merge( ArrayDesign arrayDesign ) {
+
+        // Collection<ArrayDesign> existingMergees = arrayDesign.getMergees();
+        // boolean mergeWithExisting = existingMergees.size() > 0;
+
+        // FIXME refactor this into a separate service.
+
+        // make map of biosequence -> design elements for all the array designs. But watch out for biosequences that
+        // appear more than once per array design.
+        Map<BioSequence, Collection<CompositeSequence>> globalBsMap = new HashMap<BioSequence, Collection<CompositeSequence>>();
+
+        makeBioSeqMap( globalBsMap, arrayDesign );
+
+        log.info( globalBsMap.keySet().size() + " sequences encountered in first array design to be merged." );
+
+        for ( String otherArrayDesignName : otherArrayDesignNames ) {
+            log.info( "Processing " + otherArrayDesignName );
+            // collect mergees
+            ArrayDesign otherArrayDesign = locateArrayDesign( otherArrayDesignName );
+
+            if ( arrayDesign.equals( otherArrayDesign ) ) {
+                continue;
+            }
+
+            if ( otherArrayDesign == null ) {
+                log.error( "No arrayDesign " + otherArrayDesignName + " found" );
+                bail( ErrorCode.INVALID_OPTION );
+            }
+
+            unlazifyArrayDesign( otherArrayDesign );
+
+            makeBioSeqMap( globalBsMap, otherArrayDesign );
+
+            log.info( globalBsMap.keySet().size() + " sequences encountered in total" );
+
+        }
+
+        createMerged( arrayDesign, globalBsMap );
+    }
+
+    @SuppressWarnings("static-access")
+    @Override
+    protected void buildOptions() {
+        super.buildOptions();
+        Option otherArrayDesignOption = OptionBuilder
+                .isRequired()
+                .hasArg()
+                .withArgName( "Other array designs" )
+                .withDescription(
+                        "Short name(s) of arrays to merge with the one given to the -a option, preferably subsumed by it, comma-delimited" )
+                .withLongOpt( "other" ).create( 'o' );
+
+        addOption( otherArrayDesignOption );
+
+        Option newAdName = OptionBuilder.isRequired().hasArg().withArgName( "name" ).withDescription(
+                "Name for new array design" ).withLongOpt( "name" ).create( 'n' );
+        addOption( newAdName );
+        Option newAdShortName = OptionBuilder.isRequired().hasArg().withArgName( "name" ).withDescription(
+                "Short name for new array design" ).withLongOpt( "shortname" ).create( 's' );
+        addOption( newAdShortName );
+    }
+
+    @Override
+    protected Exception doWork( String[] args ) {
+
+        Exception err = processCommandLine( "subsumption tester", args );
+        if ( err != null ) {
+            bail( ErrorCode.INVALID_OPTION );
+            return err;
+        }
+
+        ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
+
+        if ( arrayDesign == null ) {
+            log.error( "No arrayDesign " + arrayDesignName + " found" );
+            bail( ErrorCode.INVALID_OPTION );
+        }
+
+        unlazifyArrayDesign( arrayDesign );
+
+        merge( arrayDesign );
+
+        return null;
     }
 
     @Override
