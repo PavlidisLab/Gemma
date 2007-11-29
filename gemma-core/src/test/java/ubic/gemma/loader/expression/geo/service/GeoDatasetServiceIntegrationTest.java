@@ -255,7 +255,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     // public void testFetchASeries() throws Exception {
     // endTransaction();
     // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-    // geoService.fetchAndLoad( "GSE4763", false, false, false );
+    // geoService.fetchAndLoad( "GSE5949", false, false, false );
     // }
 
     /**
@@ -704,6 +704,25 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         assertNotNull( ee );
 
         // FIXME: check that we haven't loaded samples twice.
+    }
+
+    /**
+     * Left out quantitation types due to bug in how quantitation types were cached during persisting, if the QTs didn't
+     * have descriptions.
+     * 
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    public void testFetchAndLoadGSE5949() throws Exception {
+        String path = ConfigUtils.getString( "gemma.home" );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
+                + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE5949short" ) );
+        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
+                "GSE5949", false, true, false );
+        ee = results.iterator().next();
+        eeService.thawLite( ee );
+        Collection qts = eeService.getQuantitationTypes( ee );
+        assertEquals( 3, qts.size() );
     }
 
     /**

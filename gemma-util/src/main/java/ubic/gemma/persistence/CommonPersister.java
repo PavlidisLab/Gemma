@@ -507,6 +507,7 @@ abstract public class CommonPersister extends AbstractPersister {
 
         int key = 0;
         if ( qType.getName() == null ) throw new IllegalArgumentException( "QuantitationType must have a name" );
+        key = qType.getName().hashCode();
         if ( qType.getDescription() != null ) key += qType.getDescription().hashCode();
 
         if ( quantitationTypeCache.containsKey( key ) ) {
