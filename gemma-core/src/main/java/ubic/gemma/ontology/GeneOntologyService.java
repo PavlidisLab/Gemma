@@ -91,7 +91,7 @@ public class GeneOntologyService implements InitializingBean {
 
     private static final AtomicBoolean running = new AtomicBoolean( false );
 
-    private static final String BASE_GO_URI = "http://purl.org/obo/owl/GO#";
+    public static final String BASE_GO_URI = "http://purl.org/obo/owl/GO#";
     private static final String ALL_ROOT = BASE_GO_URI + "ALL";
 
     private static final String PART_OF_URI = "http://purl.org/obo/owl/OBO_REL#OBO_REL_part_of";
