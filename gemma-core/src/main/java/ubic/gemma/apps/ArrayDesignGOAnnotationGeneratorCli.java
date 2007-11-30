@@ -78,7 +78,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends
 
 	final String BIOLOGICAL_PROCESS = "biological_process";
 
-	private static final String ANNOT_DATA_DIR = ConfigUtils
+	public static final String ANNOT_DATA_DIR = ConfigUtils
 			.getString("gemma.appdata.home")
 			+ "/microAnnots/";
 
