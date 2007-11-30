@@ -465,12 +465,12 @@ public class DatasetCombiner {
                         String trimmedTarget = targetTitle;
 
                         if ( commonPrefix != null ) {
-                            trimmedTest = trimmedTest.replaceFirst( "^" + commonPrefix, "" );
-                            trimmedTarget = trimmedTarget.replaceFirst( "^" + commonPrefix, "" );
+                            trimmedTest = trimmedTest.replaceFirst( "^" + Pattern.quote( commonPrefix ), "" );
+                            trimmedTarget = trimmedTarget.replaceFirst( "^" + Pattern.quote( commonPrefix ), "" );
                         }
                         if ( commonSuffix != null ) {
-                            trimmedTest = trimmedTest.replaceFirst( commonSuffix + "$", "" );
-                            trimmedTarget = trimmedTarget.replaceFirst( commonSuffix + "$", "" );
+                            trimmedTest = trimmedTest.replaceFirst( Pattern.quote( commonSuffix ) + "$", "" );
+                            trimmedTarget = trimmedTarget.replaceFirst( Pattern.quote( commonSuffix ) + "$", "" );
                         }
 
                         // remove some punctuation
