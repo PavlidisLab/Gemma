@@ -63,29 +63,12 @@
 	
 	
 	<class name="association.BioSequence2GeneProductImpl"
-		alias="bioSequence2GeneProduct" root="false">
+		alias="bioSequence2GeneProduct" support-unmarshall="false" root="false">
 
 		<id name="id" />
 
-		<component name="geneProduct" ref-alias="geneProduct" />
 
 	</class>
 	
-
-	<class name="genome.gene.GeneProductImpl"
-		alias="geneProduct" root="false">
-
-		<id name="id" />
-
-		<property name="name">
-			<meta-data>name</meta-data>
-		</property>
-
-		<property name="description">
-			<meta-data>description</meta-data>
-		</property>
-
-
-	</class>
 	
 	</compass-core-mapping>
