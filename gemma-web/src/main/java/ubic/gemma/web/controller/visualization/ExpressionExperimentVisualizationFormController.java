@@ -52,12 +52,11 @@ import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -87,6 +86,7 @@ import ubic.gemma.web.util.ConfigurationCookie;
  * @spring.property name = "compositeSequenceService" ref="compositeSequenceService"
  * @spring.property name = "designElementDataVectorService" ref="designElementDataVectorService"
  * @spring.property name = "compositeSequenceGeneMapperService" ref="compositeSequenceGeneMapperService"
+ * @spring.property name="bioAssayService" ref="bioAssayService"
  * @spring.property name = "validator" ref="genericBeanValidator"
  */
 public class ExpressionExperimentVisualizationFormController extends BaseFormController {
@@ -104,6 +104,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     protected CompositeSequenceService compositeSequenceService = null;
     protected DesignElementDataVectorService designElementDataVectorService;
     protected CompositeSequenceGeneMapperService compositeSequenceGeneMapperService = null;
+    protected BioAssayService bioAssayService = null;
 
     public ExpressionExperimentVisualizationFormController() {
         /*
@@ -293,6 +294,10 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         Long id = eevc.getExpressionExperimentId();
 
         ExpressionExperiment expressionExperiment = this.expressionExperimentService.load( id );
+        for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
+            bioAssayService.thaw( ba );
+        }
+
         if ( expressionExperiment == null ) {
             return processErrors( request, response, command, errors, "No expression experiment with id " + id
                     + " found" );
@@ -314,14 +319,18 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
         ExpressionDataMatrixBuilder matrixBuilder = new ExpressionDataMatrixBuilder( dataVectors );
         ExpressionDataDoubleMatrix expressionDataMatrix = null;
+
         if ( eevc.isMaskMissing() ) {
-            expressionDataMatrix = matrixBuilder.getMaskedIntensity( null );
+            expressionDataMatrix = matrixBuilder.getMaskedPreferredData( null );
         } else {
-            expressionDataMatrix = matrixBuilder.getIntensity( null );
+            expressionDataMatrix = matrixBuilder.getPreferredData( null );
         }
 
-        /* deals with the case where probes don't match for the given quantitation type. */
-        if ( expressionDataMatrix.rows() == 0 ) {
+        /*
+         * deals with the case where probes don't match for the given quantitation type, or we lack a preferred data
+         * type, or other calamaties.
+         */
+        if ( expressionDataMatrix == null || expressionDataMatrix.rows() == 0 ) {
             String message = "None of the probe sets match the given quantitation type "
                     + quantitationType.getType().getValue();
 
@@ -344,6 +353,10 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         return mav;
     }
 
+    /**
+     * @param expressionDataMatrix
+     * @return
+     */
     @SuppressWarnings("unchecked")
     private Map<CompositeSequence, Collection<Gene>> getGenes( ExpressionDataDoubleMatrix expressionDataMatrix ) {
         Collection<CompositeSequence> css = new HashSet<CompositeSequence>();
@@ -413,16 +426,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
                     return null;
                 }
 
-                Map<Gene, Collection<CompositeSequence>> compositeSequencesForGene = compositeSequenceGeneMapperService
-                        .getCompositeSequencesForGenesByOfficialSymbols( searchIdsAsList, arrayDesigns );
-
-                Collection<Gene> geneKeySet = compositeSequencesForGene.keySet();
-
-                for ( Gene g : geneKeySet ) {
-                    compositeSequences = compositeSequencesForGene.get( g );
-                    log.debug( "gene official symbol: " + g.getOfficialSymbol() + " has " + compositeSequences.size()
-                            + " composite sequences associated with it." );
-                }
+                compositeSequences = getProbesByGeneSymbols( arrayDesigns, searchIdsAsList );
             }
 
             if ( compositeSequences == null || compositeSequences.size() == 0 ) {
@@ -438,6 +442,26 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             errors.addError( new ObjectError( command.toString(), null, null, "No data could be found." ) );
         }
         return vectors;
+    }
+
+    /**
+     * @param arrayDesigns
+     * @param searchIdsAsList
+     * @return
+     */
+    private Collection<CompositeSequence> getProbesByGeneSymbols( Collection<ArrayDesign> arrayDesigns,
+            List<String> searchIdsAsList ) {
+        Collection<CompositeSequence> compositeSequences;
+        Map<Gene, Collection<CompositeSequence>> genes2Probes = compositeSequenceGeneMapperService
+                .getGene2ProbeMapByOfficialSymbols( searchIdsAsList, arrayDesigns );
+
+        compositeSequences = new HashSet<CompositeSequence>();
+        for ( Gene g : genes2Probes.keySet() ) {
+            compositeSequences.addAll( genes2Probes.get( g ) );
+            log.debug( "gene official symbol: " + g.getOfficialSymbol() + " has " + compositeSequences.size()
+                    + " composite sequences associated with it." );
+        }
+        return compositeSequences;
     }
 
     /**
@@ -515,6 +539,10 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             this.setComment( "User selections for visualization form" );
         }
 
+    }
+
+    public void setBioAssayService( BioAssayService bioAssayService ) {
+        this.bioAssayService = bioAssayService;
     }
 }
 
