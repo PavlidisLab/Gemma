@@ -348,29 +348,6 @@ public class LinkAnalysis {
         if ( scoreP > config.getCorrelationCacheThreshold() ) config.setCorrelationCacheThreshold( scoreP );
     }
 
-    /**
-     * @param paraFileName
-     */
-    protected void writeDataIntoFile( String paraFileName ) throws IOException {
-        BufferedWriter writer = null;
-
-        writer = new BufferedWriter( new FileWriter( paraFileName ) );
-        int cols = this.dataMatrix.columns();
-        for ( int i = 0; i < cols; i++ ) {
-            writer.write( "\t" + this.dataMatrix.getBioMaterialForColumn( i ) );
-        }
-        writer.write( "\n" );
-        int rows = this.dataMatrix.rows();
-        for ( int i = 0; i < rows; i++ ) {
-            writer.write( this.dataMatrix.getRowElements().get( i ).toString() );
-            Double rowData[] = this.dataMatrix.getRow( i );
-            for ( int j = 0; j < rowData.length; j++ )
-                writer.write( "\t" + rowData[j] );
-            writer.write( "\n" );
-        }
-        writer.close();
-    }
-
     public ExpressionDataDoubleMatrix getDataMatrix() {
         return dataMatrix;
     }
