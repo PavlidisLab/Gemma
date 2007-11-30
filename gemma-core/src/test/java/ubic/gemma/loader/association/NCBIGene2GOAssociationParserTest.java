@@ -55,7 +55,7 @@ public class NCBIGene2GOAssociationParserTest extends BaseSpringContextTest {
         is.close();
         int count = gene2GOAssLoader.getCount();
 
-        assertEquals( 21, count );
+        assertEquals( 61, count );
 
     }
 

@@ -33,10 +33,11 @@ import ubic.gemma.loader.util.parser.BasicLineParser;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.description.DatabaseType;
-import ubic.gemma.model.common.description.ExternalDatabase; 
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -80,9 +81,9 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class NCBIGene2GOAssociationParser extends BasicLineParser implements QueuingParser {
 
-    protected static final Log log = LogFactory.getLog( NCBIGene2GOAssociationParser.class );
+    private static final String COMMENT_INDICATOR = "#";
 
-    private static final String GO_BASE_URI = "http://purl.org/obo/owl/GO#";
+    protected static final Log log = LogFactory.getLog( NCBIGene2GOAssociationParser.class );
 
     private final int TAX_ID = ConfigUtils.getInt( "gene2go.tax_id" );
 
@@ -121,13 +122,17 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser implements Que
     }
 
     /**
+     * Note that "-" means a missing value, which in practice only occurs in the "qualifier" and "pubmed" columns.
+     * 
      * @param line
      * @return Object
      */
     public Gene2GOAssociation mapFromGene2GO( String line ) {
         String[] values = StringUtils.splitPreserveAllTokens( line, "\t" );
 
-        if ( line.startsWith( "#" ) ) return null;
+        if ( line.startsWith( COMMENT_INDICATOR ) ) return null;
+
+        if ( values.length < 8 ) return null;
 
         Taxon t = Taxon.Factory.newInstance();
         try {
@@ -147,14 +152,19 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser implements Que
         gene.setTaxon( t );
         VocabCharacteristic oe = VocabCharacteristic.Factory.newInstance();
         String value = values[GO_ID].replace( ":", "_" );
-        oe.setValueUri( GO_BASE_URI + value );
+        oe.setValueUri( GeneOntologyService.BASE_GO_URI + value );
         oe.setValue( value );
-        
+
         g2GOAss.setSource( ncbiGeneDb );
 
         g2GOAss.setGene( gene );
         g2GOAss.setOntologyEntry( oe );
-        g2GOAss.setEvidenceCode( GOEvidenceCode.fromString( values[EVIDENCE_CODE] ) );
+
+        String evidenceCode = values[EVIDENCE_CODE];
+
+        if ( !( StringUtils.isBlank( evidenceCode ) || evidenceCode.equals( "-" ) ) ) {
+            g2GOAss.setEvidenceCode( GOEvidenceCode.fromString( evidenceCode ) );
+        }
 
         try {
             queue.put( g2GOAss );
