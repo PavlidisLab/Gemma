@@ -27,7 +27,7 @@ import ubic.gemma.model.expression.designElement.DesignElement;
  * @author pavlidis
  * @version $Id$
  */
-public class ExpressionDataMatrixRowElement {
+public class ExpressionDataMatrixRowElement implements Comparable<ExpressionDataMatrixRowElement> {
 
     private DesignElement designElement;
 
@@ -37,6 +37,11 @@ public class ExpressionDataMatrixRowElement {
     public ExpressionDataMatrixRowElement( ExpressionDataMatrix matrix, int i ) {
         this.index = i;
         this.designElement = matrix.getDesignElementForRow( i );
+    }
+    
+    public ExpressionDataMatrixRowElement(ExpressionDataMatrixRowElement toCopy) {
+        this.index = toCopy.getIndex();
+        this.designElement = toCopy.getDesignElement();
     }
 
     @Override
@@ -52,7 +57,7 @@ public class ExpressionDataMatrixRowElement {
 
     @Override
     public String toString() {
-        return designElement.getName();
+        return designElement.getName() + " " + designElement.getId();
     }
 
     public DesignElement getDesignElement() {
@@ -69,6 +74,10 @@ public class ExpressionDataMatrixRowElement {
 
     public void setIndex( Integer index ) {
         this.index = index;
+    }
+
+    public int compareTo( ExpressionDataMatrixRowElement o ) {
+        return o.getDesignElement().getName().compareTo( this.getDesignElement().getName() );
     }
 
 }

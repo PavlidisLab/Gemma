@@ -52,18 +52,16 @@ public class ExpressionDataMatrixColumnSort {
         List<BioMaterial> start = getBms( mat );
         Collections.sort( start, new Comparator<BioMaterial>() {
             public int compare( BioMaterial o1, BioMaterial o2 ) {
-                if ( o1.getName() != null && o2.getName() != null ) {
-                    return o1.getName().compareTo( o2.getName() );
+                BioAssay ba1 = o1.getBioAssaysUsedIn().iterator().next();
+                BioAssay ba2 = o2.getBioAssaysUsedIn().iterator().next();
+                if ( ba1.getName() != null && ba2.getName() != null ) {
+                    return ba1.getName().compareTo( ba2.getName() );
                 } else {
-                    BioAssay ba1 = o1.getBioAssaysUsedIn().iterator().next();
-                    BioAssay ba2 = o2.getBioAssaysUsedIn().iterator().next();
-
-                    if ( ba1.getName() != null && ba2.getName() != null ) {
-                        return ba1.getName().compareTo( ba2.getName() );
+                    if ( o1.getName() != null && o2.getName() != null ) {
+                        return o1.getName().compareTo( o2.getName() );
                     } else {
                         return 0;
                     }
-
                 }
             }
         } );
@@ -101,8 +99,8 @@ public class ExpressionDataMatrixColumnSort {
         // buf2.append( fv + " " );
         // }
         // buf2.append( "\n" );
-        //        }
-        //        log.info( buf2.toString() );
+        // }
+        // log.info( buf2.toString() );
 
         return ordered;
 

@@ -111,7 +111,7 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
         Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
 
-        ExpressionDataDoubleMatrix dmatrix = builder.getMaskedIntensity( null );
+        ExpressionDataDoubleMatrix dmatrix = builder.getMaskedPreferredData( null );
 
         DoubleMatrixNamed filteredNamedMatrix = this.filterMatrix( dmatrix, factorValues );
 

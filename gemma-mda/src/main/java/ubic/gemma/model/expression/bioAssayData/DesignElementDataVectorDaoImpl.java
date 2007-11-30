@@ -41,6 +41,7 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -373,6 +374,10 @@ public class DesignElementDataVectorDaoImpl extends
             ba.setArrayDesignUsed( ( ArrayDesign ) session.merge( ba.getArrayDesignUsed() ) );
             ba.getArrayDesignUsed().hashCode();
             ba.getSamplesUsed().size();
+            // for ( BioMaterial bm : ba.getSamplesUsed() ) {
+            // bm.getName();
+            // bm.getBioAssaysUsedIn().size();
+            // }
             ba.getDerivedDataFiles().size();
         }
     }

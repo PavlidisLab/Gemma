@@ -20,6 +20,8 @@ package ubic.gemma.datastructure.matrix;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -200,8 +202,9 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
             Collection<DesignElementDataVector> vectors ) {
         Collection<DesignElementDataVector> vectorsOfInterest = new LinkedHashSet<DesignElementDataVector>();
         this.quantitationTypes.add( quantitationType );
+        List<DesignElementDataVector> sorted = sortVectorsByDesignElement( vectors );
         int i = 0;
-        for ( DesignElementDataVector vector : vectors ) {
+        for ( DesignElementDataVector vector : sorted ) {
             QuantitationType vectorQuantitationType = vector.getQuantitationType();
             if ( vectorQuantitationType.equals( quantitationType ) ) {
                 vectorsOfInterest.add( vector );
@@ -215,6 +218,20 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
     }
 
     /**
+     * @param vectors
+     * @return
+     */
+    private List<DesignElementDataVector> sortVectorsByDesignElement( Collection<DesignElementDataVector> vectors ) {
+        List<DesignElementDataVector> vectorSort = new ArrayList<DesignElementDataVector>( vectors );
+        Collections.sort( vectorSort, new Comparator<DesignElementDataVector>() {
+            public int compare( DesignElementDataVector o1, DesignElementDataVector o2 ) {
+                return o1.getDesignElement().getName().compareTo( o2.getDesignElement().getName() );
+            }
+        } );
+        return vectorSort;
+    }
+
+    /**
      * @param quantitationType
      * @param bioAssayDimension
      * @param vectors
@@ -223,10 +240,11 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
     protected Collection<DesignElementDataVector> selectVectors( ExpressionExperiment expressionExperiment,
             QuantitationType quantitationType, BioAssayDimension bioAssayDimension ) {
         Collection<DesignElementDataVector> vectors = expressionExperiment.getDesignElementDataVectors();
+        List<DesignElementDataVector> sorted = sortVectorsByDesignElement( vectors );
         Collection<DesignElementDataVector> vectorsOfInterest = new LinkedHashSet<DesignElementDataVector>();
         this.quantitationTypes.add( quantitationType );
         int i = 0;
-        for ( DesignElementDataVector vector : vectors ) {
+        for ( DesignElementDataVector vector : sorted ) {
             QuantitationType vectorQuantitationType = vector.getQuantitationType();
             BioAssayDimension cand = vector.getBioAssayDimension();
             if ( vectorQuantitationType.equals( quantitationType ) && cand.equals( bioAssayDimension ) ) {
@@ -270,6 +288,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
     protected Collection<DesignElementDataVector> selectVectors( Collection<DesignElementDataVector> vectors,
             List<BioAssayDimension> bioAssayDimensions, List<QuantitationType> quantitationTypes ) {
         this.quantitationTypes.addAll( quantitationTypes );
+        List<DesignElementDataVector> sorted = sortVectorsByDesignElement( vectors );
         Collection<DesignElementDataVector> vectorsOfInterest = new LinkedHashSet<DesignElementDataVector>();
         int rowIndex = 0;
         for ( int qTypeIndex = 0; qTypeIndex < quantitationTypes.size(); qTypeIndex++ ) {
@@ -279,7 +298,7 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
             if ( log.isDebugEnabled() )
                 log.debug( "Seeking vectors for " + soughtType + " / " + soughtDim + "("
                         + soughtDim.getBioAssays().size() + " bioassays)" );
-            for ( DesignElementDataVector vector : vectors ) {
+            for ( DesignElementDataVector vector : sorted ) {
                 QuantitationType vectorQuantitationType = vector.getQuantitationType();
                 BioAssayDimension cand = vector.getBioAssayDimension();
                 if ( vectorQuantitationType.equals( soughtType ) && cand.equals( soughtDim ) ) {
@@ -344,7 +363,8 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
     protected void selectVectors( Collection<DesignElementDataVector> vectors ) {
         QuantitationType quantitationType = null;
         int i = 0;
-        for ( DesignElementDataVector vector : vectors ) {
+        List<DesignElementDataVector> sorted = sortVectorsByDesignElement( vectors );
+        for ( DesignElementDataVector vector : sorted ) {
             QuantitationType vectorQuantitationType = vector.getQuantitationType();
             this.bioAssayDimensions.add( vector.getBioAssayDimension() );
             if ( quantitationType == null ) {

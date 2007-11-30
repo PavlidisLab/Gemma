@@ -200,7 +200,8 @@ public class ExpressionDataMatrixBuilder {
         List<QuantitationType> qtypes = this.getPreferredQTypes( arrayDesign );
 
         if ( qtypes.size() == 0 ) {
-            throw new IllegalStateException( "Could not find a 'preferred' quantitation type" );
+            log.warn( "Could not find a 'preferred' quantitation type" );
+            return null;
         }
 
         log.info( qtypes.size() + " preferred quantitation types" );
@@ -350,7 +351,8 @@ public class ExpressionDataMatrixBuilder {
             ExpressionDataDoubleMatrix backgroundB = this.getBackgroundChannelB( arrayDesign );
 
             if ( signalA == null && signalB == null ) {
-                throw new IllegalStateException( "Cannot get signal for either channel" );
+                log.warn( "Cannot get signal for either channel" );
+                return null;
             }
 
             if ( backgroundA != null && signalA != null )
@@ -389,15 +391,14 @@ public class ExpressionDataMatrixBuilder {
      * @param arrayDesign
      * @return ExpressionDataDoubleMatrix - For two color arrays, the missing values are masked.
      */
-    public ExpressionDataDoubleMatrix getMaskedIntensity( ArrayDesign arrayDesign ) {
+    public ExpressionDataDoubleMatrix getMaskedPreferredData( ArrayDesign arrayDesign ) {
 
-        ExpressionDataDoubleMatrix intensityMatrix = this.getIntensity( arrayDesign );
-
+        ExpressionDataDoubleMatrix preferredData = this.getPreferredData( arrayDesign );
+        if ( preferredData == null ) return null;
         if ( arrayDesign != null && arrayDesign.getTechnologyType().equals( TechnologyType.TWOCOLOR ) ) {
-            maskMissingValues( intensityMatrix, arrayDesign );
+            maskMissingValues( preferredData, arrayDesign );
         }
-
-        return intensityMatrix;
+        return preferredData;
     }
 
     /**
@@ -620,8 +621,6 @@ public class ExpressionDataMatrixBuilder {
         log.debug( "Experiment has " + eeQtTypes.size() + " quantitation types" );
 
         for ( QuantitationType qType : eeQtTypes ) {
-
-            String name = qType.getName();
             if ( qType.getType().equals( StandardQuantitationType.PRESENTABSENT ) ) {
                 log.debug( "Present/absent=" + qType );
                 neededQtTypes.add( qType );

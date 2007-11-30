@@ -450,7 +450,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         }
 
         int maxSize = setUpColumnElements();
-
         this.matrix = createMatrix( vectors, maxSize );
 
     }

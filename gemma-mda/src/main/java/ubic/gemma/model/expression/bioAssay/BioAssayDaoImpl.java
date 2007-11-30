@@ -26,6 +26,8 @@ import org.hibernate.LockMode;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+
 /**
  * @author pavlidis
  * @version $Id$
@@ -80,7 +82,7 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
         if ( log.isDebugEnabled() ) log.debug( "Creating new bioAssay: " + bioAssay );
         return ( BioAssay ) create( bioAssay );
     }
-
+    
     @Override
     public void handleThaw( final BioAssay bioAssay ) throws Exception {
         HibernateTemplate templ = this.getHibernateTemplate();
@@ -91,7 +93,10 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
                 } catch ( HibernateException e ) {
                     return null;
                 }
-                bioAssay.getSamplesUsed().size();
+                for ( BioMaterial bm : bioAssay.getSamplesUsed() ) {
+                    bm.getName();
+                    bm.getBioAssaysUsedIn().size();
+                }
                 bioAssay.getDerivedDataFiles().size();
                 session.evict( bioAssay );
                 return null;

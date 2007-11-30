@@ -91,7 +91,7 @@ public class AnalyzerHelper {
 
         Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
-        ExpressionDataDoubleMatrix matrix = builder.getMaskedIntensity( null );
+        ExpressionDataDoubleMatrix matrix = builder.getMaskedPreferredData( null );
 
         /* first, get all the biomaterials */
         Collection<BioMaterial> biomaterials = getBioMaterialsForAssays( matrix );
@@ -145,7 +145,7 @@ public class AnalyzerHelper {
 
         Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
-        ExpressionDataDoubleMatrix matrix = builder.getMaskedIntensity( null );
+        ExpressionDataDoubleMatrix matrix = builder.getMaskedPreferredData( null );
 
         /* first, get all the biomaterials */
         Collection<BioMaterial> biomaterials = getBioMaterialsForAssays( matrix );

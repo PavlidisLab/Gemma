@@ -88,6 +88,7 @@ public class ExpressionDataMatrixService {
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( dataVectors );
 
         ExpressionDataDoubleMatrix preferredData = builder.getPreferredData();
+        if ( preferredData == null ) return null;
         if ( maskMissing && isTwoColor ) {
             for ( ArrayDesign ad : adsUsed ) {
                 builder.maskMissingValues( preferredData, ad );

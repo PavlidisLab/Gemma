@@ -154,7 +154,8 @@ public class ExpressionExperimentFilter {
      */
     private ExpressionDataDoubleMatrix filter( ExpressionDataMatrixBuilder builder,
             ExpressionDataDoubleMatrix eeDoubleMatrix ) {
-        if ( eeDoubleMatrix.rows() == 0 ) throw new IllegalStateException( "No data found!" );
+        if ( eeDoubleMatrix == null || eeDoubleMatrix.rows() == 0 )
+            throw new IllegalArgumentException( "No data found!" );
 
         if ( eeDoubleMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER )
             throw new IllegalArgumentException( "To few rows in " + ee.getShortName() + " (" + eeDoubleMatrix.rows()

@@ -134,6 +134,7 @@ public class ExpressionDataMatrixVisualizationService {
             throw new IllegalArgumentException( "ExpressionDataMatrix apparently has no data" );
         }
 
+        // because the matrix is already created, we cannot reorder the rows at this point.
         List<BioMaterial> ordering = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( expressionDataMatrix );
 
         double[][] data = new double[expressionDataMatrix.rows()][];

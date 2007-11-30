@@ -154,7 +154,7 @@ public interface ExpressionDataMatrix<T> {
     /**
      * @return list of elements representing the row 'labels'.
      */
-    public List<DesignElement> getRowElements();
+    public List<ExpressionDataMatrixRowElement> getRowElements();
 
     /**
      * @param index

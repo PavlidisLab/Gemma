@@ -100,7 +100,7 @@ public class DedvRankService {
         for ( ArrayDesign ad : ( Collection<ArrayDesign> ) this.eeService.getArrayDesignsUsed( ee ) ) {
             Collection<DesignElementDataVector> preferredVectors = computeRanks( ad, builder, method );
             if ( preferredVectors == null ) {
-                log.info( "Not updating ranks data" );
+                log.info( "Could not get preferred data vectors, not updating ranks data" );
                 continue;
             }
 
@@ -140,6 +140,9 @@ public class DedvRankService {
 
             for ( ArrayDesign ad : ( Collection<ArrayDesign> ) this.eeService.getArrayDesignsUsed( ee ) ) {
                 ExpressionDataDoubleMatrix intensityMatrix = builder.getIntensity( ad );
+                if ( intensityMatrix == null ) {
+                    // can't do it for this experiment!.
+                }
                 AbstractNamedMatrix rankMatrix = computeSampleRanks( intensityMatrix );
                 rankMatrices.add( rankMatrix );
             }
@@ -323,12 +326,9 @@ public class DedvRankService {
             Method method ) {
         log.info( "Processing vectors on " + ad );
         ExpressionDataDoubleMatrix intensities;
-        try {
-            intensities = builder.getIntensity( ad );
-        } catch ( IllegalStateException e ) {
-            log.error( e.getMessage() );
-            return null;
-        }
+
+        intensities = builder.getIntensity( ad );
+        if ( intensities == null ) return null;
 
         // We don't remove missing values for Affymetrix based on absent/present
         // calls.

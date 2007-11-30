@@ -52,7 +52,7 @@ public class CompositeSequenceGeneMapperService {
      * @return LinkedHashMap<Gene, Collection<CompositeSequence>>
      */
     @SuppressWarnings("unchecked")
-    public LinkedHashMap<Gene, Collection<CompositeSequence>> getCompositeSequencesForGenesByOfficialSymbols(
+    public LinkedHashMap<Gene, Collection<CompositeSequence>> getGene2ProbeMapByOfficialSymbols(
             Collection<String> officialSymbols, Collection<ArrayDesign> arrayDesigns ) {
 
         LinkedHashMap<String, Collection<Gene>> genesMap = findGenesByOfficialSymbols( officialSymbols );
@@ -74,7 +74,6 @@ public class CompositeSequenceGeneMapperService {
                         compositeSequencesForGeneMap.get( g ).add( sequence );
                     }
                 }
-
             }
         }
         return compositeSequencesForGeneMap;
