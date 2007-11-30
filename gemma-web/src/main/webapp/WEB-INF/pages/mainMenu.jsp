@@ -158,14 +158,13 @@
 	</h2>
 	<ul class="glassList">
 		<li>
-			<a href="<c:url value="/geneFinder.html"/>"> <fmt:message
-					key="menu.GeneFinder" /> </a>
-		</li>
-		<li>
 			<a href="<c:url value="/searchCoexpression.html"/>"> <fmt:message
 					key="menu.Coexpression" /> </a>
 		</li>
-
+		<li>
+			<a href="<c:url value="/characteristicBrowser.html"/>"> <fmt:message
+					key="menu.characteristicBrowser" /> </a>
+		</li>
 		<li>
 			<a href="<c:url value="/indexer.html"/>"> <fmt:message
 					key="menu.compassIndexer" /> </a>
@@ -223,12 +222,20 @@
 	</h2>
 	<ul class="glassList">
 		<li>
+			<a href="<c:url value="/geneFinder.html"/>"> <fmt:message
+					key="menu.GeneFinder" /> </a>
+		</li>
+		<li>
 			<a href="<c:url value="/candidateGeneList.html"/>"> <fmt:message
 					key="menu.CandidateGeneList" /> </a>
 		</li>
 		<li>
 			<a href="<c:url value="/bibRefSearch.html"/>"> <fmt:message
 					key="menu.flow.PubMedSearch" /> </a>
+		</li>
+		<li>
+			<a href="<c:url value="/searchCoexpressionMultiple.html"/>"> <fmt:message
+					key="menu.searchCoexpressionMultiple" /> </a>
 		</li>
 	</ul>
 

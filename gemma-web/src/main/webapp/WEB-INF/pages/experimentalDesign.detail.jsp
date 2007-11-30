@@ -4,9 +4,8 @@
 <jsp:useBean id="expressionExperiment" scope="request"
 	class="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" />
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-
-<title>  <fmt:message key="experimentalDesign.details" />  </title>
-
+<head>
+	<title><fmt:message key="experimentalDesign.details" /></title>
 
 	<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
 	<script src="<c:url value='/scripts/ext/ext-all-debug.js'/>" type="text/javascript"></script>
@@ -16,14 +15,22 @@
 	<script type='text/javascript' src='/Gemma/dwr/interface/BioMaterialController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/MgedOntologyService.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/ExperimentalDesignController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/CharacteristicBrowserController.js'></script>
 	 <script type="text/javascript" src='/Gemma/dwr/interface/OntologyService.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/CharacteristicCombo.js'/>"></script>
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/MGEDCombo.js'/>"></script>
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/AnnotationToolBar.js'/>"></script>
-	
-	
+
+</head>
+
+<authz:authorize ifAnyGranted="admin">
+<input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
+</authz:authorize>
+<authz:authorize ifNotGranted="admin">
+<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
+</authz:authorize>	
 	
 <div style="padding: 2px;" onclick="Effect.toggle('edDetail', 'blind', {duration:0.1})">
 	<h2>

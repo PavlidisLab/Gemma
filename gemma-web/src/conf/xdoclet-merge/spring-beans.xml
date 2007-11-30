@@ -410,6 +410,23 @@ Mapping URLS to controllers
 					</property>
 				</bean>
 			</entry>
+			<entry key="CharacteristicBrowserController">
+				<bean class="org.directwebremoting.spring.CreatorConfig">
+					<property name="creator">
+						<bean class="org.directwebremoting.spring.BeanCreator">
+							<property name="bean"
+								ref="characteristicBrowserController"/>
+						</bean>
+					</property>
+					<property name="includes">
+						<list>
+							<value>findCharacteristics</value>
+							<value>removeCharacteristics</value>
+							<value>updateCharacteristics</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
 			<entry key="AuditController">
 				<bean class="org.directwebremoting.spring.CreatorConfig">
 					<property name="creator">
@@ -479,15 +496,6 @@ Mapping URLS to controllers
 			<entry key="ubic.gemma.model.common.description.Characteristic">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="characteristicConverter" />
-					<property name="includes">
-						<list>
-							<value>value</value>
-							<value>category</value>
-							<value>properties</value>
-							<value>description</value>
-							<value>evidenceCode</value>
-						</list>
-					</property>
 				</bean>
 			</entry>
 			<entry

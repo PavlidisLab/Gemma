@@ -24,6 +24,7 @@ Ext.Gemma.MGEDCombo = function ( config ) {
 	this.displayField = config.displayField || "term";
 	this.editable = config.editable || "false";
 	this.mode = config.mode || "local";
+	this.selectOnFocus = config.selectOnFocus || "true";
 	this.triggerAction = config.triggerAction || "all";
 	this.typeAhead = config.typeAhead || true;
 	

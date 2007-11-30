@@ -3,30 +3,43 @@
 	class="ubic.gemma.model.expression.biomaterial.BioMaterialImpl" />
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 
-<title><fmt:message key="bioMaterial.details" /></title>
+<head>
+	<title><fmt:message key="bioMaterial.details" /></title>
 
+	<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
+	<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
+	<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
+	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
+	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/BioMaterialController.js'></script>
+	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/AnnotationGrid.js'/>"></script>
+	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/BioMaterialGrid.js'/>"></script>
+	
+	<script type='text/javascript' src="<c:url value='/scripts/ajax/bmFactorValues.js'/>"></script>
+	
+	<authz:authorize ifAnyGranted="admin">
+		<script type="text/javascript" src='/Gemma/dwr/interface/OntologyService.js'></script>
+		<script type='text/javascript' src='/Gemma/dwr/interface/MgedOntologyService.js'></script>
+		<script type='text/javascript' src='/Gemma/dwr/interface/CharacteristicBrowserController.js'></script>
+		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/CharacteristicCombo.js'/>"></script>
+		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/MGEDCombo.js'/>"></script>
+		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/AnnotationToolBar.js'/>"></script>
+		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/BioMaterialToolBar.js'/>"></script>
+		
+		<script type='text/javascript' src='/Gemma/dwr/interface/AuditController.js'></script>
+		<script type="text/javascript" src="<c:url value='/scripts/ajax/auditTrail.js'/>" type="text/javascript"></script>
+	</authz:authorize>
 
-<script
-	src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>"
-	type="text/javascript"></script>
-<script src="<c:url value='/scripts/ext/ext-all.js'/>"
-	type="text/javascript"></script>
-<script type="text/javascript"
-	src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
-<script type="text/javascript"
-	src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
-<script type='text/javascript'
-	src='/Gemma/dwr/interface/BioMaterialController.js'></script>
-<!-- <script type='text/javascript'
-	src="<c:url value='/scripts/ajax/bmAnnotations.js'/>"></script> -->
-<script type='text/javascript'
-	src="<c:url value='/scripts/ajax/bmFactorValues.js'/>"></script>
-<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
-<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
-<script type='text/javascript'
-	src="<c:url value='/scripts/ajax/annotation/AnnotationGrid.js'/>"></script>
-<script type='text/javascript'
-	src="<c:url value='/scripts/ajax/annotation/BioMaterialGrid.js'/>"></script>
+</head>
+
+<authz:authorize ifAnyGranted="admin">
+<input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
+</authz:authorize>
+<authz:authorize ifNotGranted="admin">
+<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
+</authz:authorize>
+
 <h2>
 	<fmt:message key="bioMaterial.details" />
 </h2>
@@ -117,37 +130,17 @@
 <div id="bmFactorValues" class="x-grid-mso"
 	style="border: 1px solid #c3daf9; overflow: hidden; width:650px; height:150px;"></div>
 
-
-
-
 <h3>
 	Annotations
 </h3>
 <authz:authorize ifAnyGranted="admin">
-	<!-- This is for the bm annotator  -->
-	<div id="bmAnnotator" class="x-grid-mso"
-		style="padding-left: 2px; padding-right: 2px; overflow: hidden; width:650px; height:30px;"></div>
-	<script type="text/javascript"
-		src='/Gemma/dwr/interface/OntologyService.js'></script>
-	<script type='text/javascript'
-		src='/Gemma/dwr/interface/MgedOntologyService.js'></script>
-	<!-- <script type="text/javascript"
-		src="<c:url value='/scripts/ajax/bmAnnotator.js'/>"></script> -->
-	<script type='text/javascript'
-	 src="<c:url value='/scripts/ajax/annotation/CharacteristicCombo.js'/>"></script>
-	<script type='text/javascript'
-	 src="<c:url value='/scripts/ajax/annotation/MGEDCombo.js'/>"></script>
-	<script type='text/javascript'
-	 src="<c:url value='/scripts/ajax/annotation/AnnotationToolBar.js'/>"></script>
-	<script type='text/javascript'
-	 src="<c:url value='/scripts/ajax/annotation/BioMaterialToolBar.js'/>"></script>
+	<div id="bmAnnotator" class="x-grid-mso" style="padding-left: 2px; padding-right: 2px; overflow: hidden; width:650px; height:30px;"></div>
 </authz:authorize>
 
 <div id="bmAnnotations" class="x-grid-mso"
 	style="border: 1px solid #c3daf9; overflow: hidden; width:650px; height:150px;"></div>
 <input type="hidden" name="bmId" id="bmId" value="${bioMaterial.id}" />
-<input type="hidden" name="bmClass" id="bmClass"
-	value="${bioMaterial.class.name}" />
+<input type="hidden" name="bmClass" id="bmClass" value="${bioMaterial.class.name}" />
 
 
 

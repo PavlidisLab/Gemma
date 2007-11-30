@@ -10,7 +10,7 @@ Ext.Gemma.CharacteristicCombo = function ( config ) {
 		/* if the characteristic has a URI, use that as the description;
 		 * if not, strip the " -USED- " string (added in OntologyService) if present.
 		 */
-		var getDescription = function (record) {
+		var getHover = function (record) {
 			if ( record.valueUri )
 				return record.valueUri;
 			else
@@ -32,7 +32,7 @@ Ext.Gemma.CharacteristicCombo = function ( config ) {
 			{ name:"valueUri", type:"string" },
 			{ name:"categoryUri",type:"string" },
 			{ name:"category", type:"string" },
-			{ name:"description", mapping:"this", convert:getDescription },
+			{ name:"hover", mapping:"this", convert:getHover },
 			{ name:"style", mapping:"this", convert:getStyle }
 		] );
 	}
@@ -45,7 +45,7 @@ Ext.Gemma.CharacteristicCombo = function ( config ) {
 	if ( Ext.Gemma.CharacteristicCombo.template == undefined ) {
 		Ext.Gemma.CharacteristicCombo.template = new Ext.Template(
 			'<div class="search-item">',
-				'<div class="{style}" title="{description}">{value}</div>',
+				'<div class="{style}" title="{hover}">{value}</div>',
 			'</div>'
 		);
 	}

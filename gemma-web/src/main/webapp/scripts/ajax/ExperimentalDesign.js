@@ -627,8 +627,13 @@ Ext.onReady(function() {
 
 	if (Ext.get("factorValueTB")){
 		
-		var factorValueTB = new Ext.Gemma.AnnotationToolBar( "factorValueTB",
-			factorValueGrid, saveExperimentalFactorValue, deleteExperimentalFactorValue, true, { mgedComboWidth: 125, charComboWidth: 100 } );
+		var factorValueTB = new Ext.Gemma.AnnotationToolBar( "factorValueTB", factorValueGrid, {
+			createHandler : saveExperimentalFactorValue,
+			deleteHandler : deleteExperimentalFactorValue,
+			addDescription : true,
+			mgedComboWidth: 125,
+			charComboWidth: 100
+		} );
 					
 	}
  		

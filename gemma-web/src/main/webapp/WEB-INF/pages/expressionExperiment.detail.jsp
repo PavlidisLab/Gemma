@@ -17,13 +17,32 @@
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentController.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/AuditController.js'></script>
-	<!-- <script type='text/javascript' src="<c:url value='/scripts/ajax/eeAnnotations.js'/>"></script> -->
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/AnnotationGrid.js'/>"></script>
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/ExpressionExperimentGrid.js'/>"></script>
+	
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/eeDesignMatrix.js'/>"></script>
-
+	
+	<authz:authorize ifAnyGranted="admin">
+		<script type="text/javascript" src='/Gemma/dwr/interface/OntologyService.js'></script>
+		<script type='text/javascript' src='/Gemma/dwr/interface/MgedOntologyService.js'></script>
+		<script type='text/javascript' src='/Gemma/dwr/interface/CharacteristicBrowserController.js'></script>
+		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/CharacteristicCombo.js'/>"></script>
+		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/MGEDCombo.js'/>"></script>
+		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/AnnotationToolBar.js'/>"></script>
+		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/ExpressionExperimentToolBar.js'/>"></script>
+		
+		<script type='text/javascript' src='/Gemma/dwr/interface/AuditController.js'></script>
+		<script type="text/javascript" src="<c:url value='/scripts/ajax/auditTrail.js'/>" type="text/javascript"></script>
+	</authz:authorize>
+	
 </head>
+
+<authz:authorize ifAnyGranted="admin">
+<input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
+</authz:authorize>
+<authz:authorize ifNotGranted="admin">
+<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
+</authz:authorize>
 
 <form style="float: right;" name="ExpresssionExperimentFilter" action="filterExpressionExperiments.html" method="POST">
 	<a class="helpLink" href="?" onclick="showHelpTip(event, 'Search for another experiment'); return false"><img
@@ -271,20 +290,11 @@ if ( expressionExperiment.getName() != null ) {
 	<img src="/Gemma/images/plus.gif" />
 	<br />
 </div>
-<div id="annots"">
+<div id="annots">
 	<authz:authorize ifAnyGranted="admin">
-		<!-- This is for the EE annotator  -->
 		<div id="eeAnnotator" class="x-grid-mso"
 			style="padding-left: 2px; padding-right: 2px; overflow: hidden; width: 650px; height: 30px;"></div>
-		<script type="text/javascript" src='/Gemma/dwr/interface/OntologyService.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/MgedOntologyService.js'></script>
-		<!-- <script type="text/javascript" src="<c:url value='/scripts/ajax/eeAnnotator.js'/>"></script> -->
-		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/CharacteristicCombo.js'/>"></script>
-		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/MGEDCombo.js'/>"></script>
-		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/AnnotationToolBar.js'/>"></script>
-		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/ExpressionExperimentToolBar.js'/>"></script>
 	</authz:authorize>
-
 	<div id="eeAnnotations" class="x-grid-mso"
 		style="border: 1px solid #c3daf9; overflow: hidden; width: 650px; height: 150px;"></div>
 	<input type="hidden" name="eeId" id="eeId" value="${expressionExperiment.id}" />
@@ -318,8 +328,6 @@ if ( expressionExperiment.getExperimentalDesign() != null ) {
 }
 %>
 
-
-
 <h3>
 	Quantitation Types
 	<a class="helpLink" href="?"
@@ -327,14 +335,13 @@ if ( expressionExperiment.getExperimentalDesign() != null ) {
 				'Quantitation types are the different measurements available for this experiment.'); return false">
 		<img src="/Gemma/images/help.png" /> </a>  (${qtCount} items)
 </h3>
-
 <div style="padding: 2px;" onclick="Effect.toggle('qts', 'blind', {duration:0.1})">
 	<img src="/Gemma/images/plus.gif" />
 	<br />
 </div>
 <div id="qts" style="display: none">
 	<div>
-		 
+		<%-- inner div needed for effect  --%>
 		<display:table name="quantitationTypes" class="scrollTable"
 			requestURI="/Gemma/expressionExperiment/showExpressionExperiment.html" id="dataVectorList" pagesize="100"
 			decorator="ubic.gemma.web.taglib.displaytag.quantitationType.QuantitationTypeWrapper">
@@ -354,8 +361,7 @@ if ( expressionExperiment.getExperimentalDesign() != null ) {
 			<display:setProperty name="basic.empty.showtable" value="false" />
 		</display:table>
 	</div>
-</div> 
-
+</div>
 
 <authz:authorize ifAnyGranted="admin">
 	<h3>
@@ -396,24 +402,19 @@ if ( expressionExperiment.getExperimentalDesign() != null ) {
 
 
 <authz:authorize ifAnyGranted="admin">
-	<!-- the import of auditTrail.js has to happen here or non-admin users
-	     will see an error because auditableId isn't defined; -->
-	<script type="text/javascript" src="<c:url value='/scripts/ajax/auditTrail.js'/>" type="text/javascript"></script>
-
 	<h3>
 		History
 	</h3>
 	<div id="auditTrail" class="x-grid-mso"
 		style="border: 1px solid #c3daf9; overflow: hidden; width: 630px; height: 250px;"></div>
+	<input type="hidden" name="auditableId" id="auditableId" value="${expressionExperiment.id}" />
+	<input type="hidden" name="auditableClass" id="auditableClass" value="${expressionExperiment.class.name}" />
 	<c:if test="${ lastArrayDesignUpdate != null}">
 		<p>
 			The last time an array design associated with this experiment was updated: ${lastArrayDesignUpdate.date}
 		</p>
 	</c:if>
-	<input type="hidden" name="auditableId" id="auditableId" value="${expressionExperiment.id}" />
-	<input type="hidden" name="auditableClass" id="auditableClass" value="${expressionExperiment.class.name}" />
 </authz:authorize>
-
 
 <table>
 	<tr>
