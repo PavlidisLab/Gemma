@@ -1121,6 +1121,8 @@ Mapping urls to views. List views here that are just jsps and that don't need a 
 			<prop key="/arrays/filterArrayDesigns.html">filter</prop>
 			<prop key="/arrays/generateArrayDesignSummary.html">
 				generateSummary</prop>
+			<prop key="/arrays/downloadAnnotationFile.html">downloadAnnotationFile</prop>
+				
 		</props>
 	</property>
 </bean>

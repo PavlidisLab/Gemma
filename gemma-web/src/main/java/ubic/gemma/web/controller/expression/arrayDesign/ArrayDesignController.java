@@ -18,6 +18,12 @@
  */
 package ubic.gemma.web.controller.expression.arrayDesign;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -48,6 +54,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject;
+import ubic.gemma.apps.ArrayDesignGOAnnotationGeneratorCli;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -148,6 +155,61 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         this.auditTrailService = auditTrailService;
     }
 
+    
+    
+    public ModelAndView downloadAnnotationFile(HttpServletRequest request, HttpServletResponse response){
+    	
+    	String arrayDesignIdStr = request.getParameter( "id" );
+    	  if ( arrayDesignIdStr == null ) {
+              // should be a validation error, on 'submit'.
+              throw new EntityNotFoundException( "Must provide an Array Design name or Id" );
+          }
+    	  
+    	 String fileType = request.getParameter("fileType");
+    	 if (fileType == null)
+    		 fileType="allParents.an.txt";
+    	 else if(fileType.equalsIgnoreCase("noParents"))
+    		 fileType="NoParents";
+    	 else if(fileType.equalsIgnoreCase("bioProcess"))
+    		 fileType = "bioProcess";
+    	 else
+    		 fileType="allParents";
+    	  
+    	ArrayDesign arrayDesign = arrayDesignService.load( Long.parseLong( arrayDesignIdStr ) );
+    	String fileName = arrayDesign.getShortName() + "_"+ fileType;
+
+    	
+    	File f = new File(ArrayDesignGOAnnotationGeneratorCli.ANNOT_DATA_DIR + fileName + ".an.txt");
+    	BufferedReader reader;
+		try {
+			reader = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
+		}catch(FileNotFoundException fnfe){
+			log.warn("Annotation file"  + fileName  + " is missing");
+			return null;
+		}
+					
+    	response.setHeader( "Content-disposition", "inline; filename=" + fileName );
+    	//response.setContentType("text/plain");
+    	
+    	try{
+	    	String lineOfFile = reader.readLine();
+	    	while(lineOfFile != null){
+	    		response.getWriter().write(lineOfFile);    		
+	    		lineOfFile = reader.readLine();
+	    	}
+	    	
+	    	response.getWriter().flush();
+	    	response.getWriter().close();
+	    	reader.close();
+	    	
+    	}catch(IOException ioe){   		
+    		log.warn("Failure during streaming of annotation file " + fileName + " Error: " + ioe);
+    	}
+    	
+    	return null;
+    }
+    
+    
     /**
      * Show (some of) the probes from an array.
      * 
@@ -341,7 +403,9 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
         if ( ( name == null ) && ( idStr == null ) ) {
             // should be a validation error, on 'submit'.
-            throw new EntityNotFoundException( "Must provide an Array Design name or Id" );
+        	this.saveMessage( request, "Must provide an array design name or id. Displaying all Arrays" );
+        	return this.showAll(request, response);
+        	
         }
         ArrayDesign arrayDesign = null;
         if ( idStr != null ) {
@@ -353,7 +417,9 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         }
 
         if ( arrayDesign == null ) {
-            throw new EntityNotFoundException( idStr + " not found" );
+        	this.saveMessage( request, "Unalbe to load Array Design with id: " + idStr + ". Displaying all Arrays" );
+        	return this.showAll(request, response);        	
+          
         }
         long id = arrayDesign.getId();
 
@@ -394,6 +460,15 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         Collection<ArrayDesign> mergees = arrayDesign.getMergees();
         ArrayDesign merger = arrayDesign.getMergedInto();
 
+       if ((subsumer == null) && (merger == null)){
+    	   //Display annotation file links. 
+    	   mav.addObject("annotationLink","/Gemma/arrays/downloadAnnotationFile.html?id=" + arrayDesign.getId() +"&fileType=" );
+       }
+       else
+    	   mav.addObject("annotationLink","");
+
+    	   
+        
         mav.addObject( "subsumer", subsumer );
         mav.addObject( "subsumees", subsumees );
         mav.addObject( "merger", merger );

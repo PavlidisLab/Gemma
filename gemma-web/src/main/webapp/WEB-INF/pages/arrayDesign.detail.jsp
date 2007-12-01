@@ -337,6 +337,25 @@
 		<td>
 			<Gemma:arrayDesignGrouping subsumer="${merger }" />
 	</tr>
+	
+	<%
+			if ( "${annotationLink}" != null  ) {
+			%>
+<c:if test="${ annotationLink != ''}">		
+	<tr>
+		<td class="label">
+			Annotation files
+			<a class="helpLink" href="?"
+				onclick="showHelpTip(event, 'Annotation files for this array'); return false"><img
+					src="/Gemma/images/help.png" /> </a>
+		</td>
+			<a class="annotationLink" href=${annotationLink}noParents
+					src="no parents"/> </a>
+		<td>
+			
+	</tr>
+</c:if>	
+	
 	<authz:authorize ifAnyGranted="admin">
 		<tr>
 			<td colspan="2">
