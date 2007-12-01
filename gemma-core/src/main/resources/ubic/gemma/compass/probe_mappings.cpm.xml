@@ -54,7 +54,7 @@
 		
 	</class>
 	
-	<class name="expression.arrayDesign.ArrayDesign"
+	<class name="expression.arrayDesign.ArrayDesignImpl"
 		alias="arrayDesign" support-unmarshall="false" root="false">
 
 		<id name="id" />
