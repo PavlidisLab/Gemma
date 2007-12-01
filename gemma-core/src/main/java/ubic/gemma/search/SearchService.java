@@ -58,11 +58,13 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceImpl;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.biosequence.BioSequenceImpl;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneService;
@@ -1007,13 +1009,25 @@ public class SearchService {
      * @param anOntology
      * @return
      */
-    protected Collection<CompositeSequence> convert2ProbeList( CompassHit[] anOntology ) {
+    protected Collection<CompositeSequence> convert2ProbeList( CompassHit[] probeHits ) {
 
-        Collection<CompositeSequence> converted = new HashSet<CompositeSequence>( anOntology.length );
+        Collection<CompositeSequence> converted = new HashSet<CompositeSequence>( probeHits.length );
 
-        for ( int i = 0; i < anOntology.length; i++ )
-            converted.add( ( CompositeSequence ) anOntology[i].getData() );
+        for ( int i = 0; i < probeHits.length; i++ ){        	
+        	Object obj =  probeHits[i].getData();
+        	
+        	if (obj instanceof CompositeSequenceImpl)
+        		converted.add( ( CompositeSequence ) probeHits[i].getData() );
+        	else if (obj instanceof BioSequenceImpl){
+        		BioSequenceImpl bs = (BioSequenceImpl) obj;
+        		log.info("Finding CompositeSequence for Biosequence:  " + bs);
+        		converted.add( (CompositeSequence) compositeSequenceService.findByBioSequenceName(bs.getName()));
+        	}
+        	else
+        		log.info("Unexpected object. skipping: " + obj);
 
+        }
+        
         return converted;
 
     }
@@ -1043,6 +1057,7 @@ public class SearchService {
         // Put a limit on the number of hits to detach.
         // Detaching hits can be time consuming (somewhat like thawing).
 
+        	
         detachedHits = hits.detach( 0, Math.min( hits.getLength(), MAX_SEARCH_RESULTS ) );
 
         log.info( "===== Detaching" + detachedHits.getLength() + " hits for " + query + " took " + watch.getTime()
