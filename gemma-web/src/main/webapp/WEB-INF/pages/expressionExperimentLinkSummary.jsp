@@ -43,6 +43,9 @@
 			sortable="true" defaultorder="descending"
 			comparator="ubic.gemma.web.taglib.displaytag.NumberComparator"
 			titleKey="expressionExperiment.preferredDesignElementDataVectorCount" />
+			<display:column property="technologyType"
+			sortable="true" defaultorder="descending"
+			title="Tech"  />
 		<display:column property="bioMaterialCount" sortable="true"
 			defaultorder="descending"
 			titleKey="expressionExperiment.bioMaterialCount"

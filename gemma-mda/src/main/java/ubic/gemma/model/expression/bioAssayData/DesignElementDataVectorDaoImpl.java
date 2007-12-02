@@ -332,13 +332,13 @@ public class DesignElementDataVectorDaoImpl extends
                     } catch ( org.hibernate.NonUniqueObjectException e ) {
                         // no problem. Ignore it. This happens in tests.
                     }
-                    session.clear();
+                //    session.clear();
                     if ( ++count % 10000 == 0 ) {
                         log.info( "Thawed " + count + " vectors" );
                     }
                 }
                 session.clear();
-                log.info( "Done, thawed " + count + " vectors" );
+                if ( count  > 10000 )    log.info( "Done, thawed " + count + " vectors" );
                 return null;
             }
 

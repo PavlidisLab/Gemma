@@ -27,6 +27,7 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang.time.DateFormatUtils;
@@ -42,7 +43,6 @@ import ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentRepo
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -265,11 +265,21 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         Map<Long, AuditEvent> troubleEvents = expressionExperimentService.getLastTroubleEvent( ids );
         Map<Long, AuditEvent> validationEvents = expressionExperimentService.getLastValidationEvent( ids );
 
+        // do this ahead to avoid round trips.
+        Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( ids );
+        Map<Long, ExpressionExperiment> eeMap = new HashMap<Long, ExpressionExperiment>();
+        for ( ExpressionExperiment ee : ees ) {
+            eeMap.put( ee.getId(), ee );
+        }
+
+        watch.split();
+        long splitTime = watch.getSplitTime();
+        log.info( "Retrieved event information in " + splitTime + "ms (wall time)" );
+        watch.unsplit();
+
         // add in the last events of interest for all eeVos
         for ( Object object : vos ) {
             ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) object;
-            // preemptively fill in event dates with None
-
             Long id = eeVo.getId();
             if ( linkAnalysisEvents.containsKey( id ) ) {
                 AuditEvent event = linkAnalysisEvents.get( id );
@@ -295,33 +305,14 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
             eeVo.setTroubleFlag( troubleEvents.get( id ) );
             eeVo.setValidatedFlag( validationEvents.get( id ) );
 
-            ExpressionExperiment ee = expressionExperimentService.load( id );
-
+            ExpressionExperiment ee = eeMap.get( id );
             AuditEvent arrayDesignUpdateEvent = expressionExperimentService.getLastArrayDesignUpdate( ee );
             eeVo.setDateArrayDesignLastUpdated( arrayDesignUpdateEvent.getDate() );
-
-            // AuditEvent troubleEvent = getLastTroubleEvent( ee );
-            // eeVo.setTroubleFlag( troubleEvent );
-            //            
-            // AuditEvent validatedEvent = auditTrailService.getLastValidationEvent( ee );
-            // eeVo.setValidatedFlag( validatedEvent );
         }
 
         watch.stop();
         log.info( "Added event information in " + watch.getTime() + "ms (wall time)" );
 
-    }
-
-    private AuditEvent getLastTroubleEvent( ExpressionExperiment ee ) {
-        AuditEvent event = auditTrailService.getLastTroubleEvent( ee );
-        if ( event != null ) return event;
-
-        for ( Object o : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
-            event = auditTrailService.getLastTroubleEvent( ( ArrayDesign ) o );
-            if ( event != null ) return event;
-        }
-
-        return null;
     }
 
     /**

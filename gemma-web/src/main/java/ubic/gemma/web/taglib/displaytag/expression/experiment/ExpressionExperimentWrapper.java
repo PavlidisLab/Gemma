@@ -32,6 +32,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEven
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedMissingValueAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.util.GemmaLinkUtils;
@@ -116,6 +117,11 @@ public class ExpressionExperimentWrapper extends TableDecorator {
      */
     public String getDateMissingValueAnalysisNoTime() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
+
+        if ( object.getTechnologyType().equalsIgnoreCase( TechnologyType.ONECOLOR.toString() ) ) {
+            return "<span title=\"not needed\">-</span>";
+        }
+        String style = "";
         Date dateObject = object.getDateMissingValueAnalysis();
         if ( dateObject != null ) {
             boolean mostRecent = determineIfMostRecent( dateObject, object );
@@ -123,7 +129,6 @@ public class ExpressionExperimentWrapper extends TableDecorator {
             String fullDate = dateObject.toString();
             String shortDate = StringUtils.left( fullDate, 10 );
             shortDate = formatIfRecent( mostRecent, shortDate );
-            String style = "";
 
             if ( type instanceof FailedMissingValueAnalysisEvent ) {
                 style = "style=\"color=#F33;\"";
@@ -132,9 +137,11 @@ public class ExpressionExperimentWrapper extends TableDecorator {
             }
 
             return "<span " + style + " title='" + fullDate + "'>" + shortDate + "</span>";
+        } else if ( !object.isHasBothIntensities() ) {
+            return "<span title=\"Lacks qts\" style=\"color=#F33;\">NA</span>";
         }
-        // FIXME : show '-' if this experiment doesn't use two-color arrays
-        return "[None]";
+        style = "style=\"color:#3A3;\" title='Needs to be done'";
+        return "<span " + style + "'>Needed</span>";
     }
 
     private String formatIfRecent( boolean mostRecent, String shortDate ) {
@@ -148,6 +155,14 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     public String getDateRankComputationNoTime() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         Date dateObject = object.getDateRankComputation();
+
+        String style = "";
+        if ( !object.getTechnologyType().equalsIgnoreCase( TechnologyType.ONECOLOR.toString() )
+                && !object.isHasBothIntensities() ) {
+            style = "style=\"color=#F33;\"";
+            return "<span title=\"Lacks qts\" " + style + " >NA</span>";
+        }
+
         if ( dateObject != null ) {
             boolean mostRecent = determineIfMostRecent( dateObject, object );
             // AuditEventType type = object.getRankComputationEventType();
@@ -159,8 +174,24 @@ public class ExpressionExperimentWrapper extends TableDecorator {
             shortDate = formatIfRecent( mostRecent, shortDate );
             return "<span title='" + fullDate + "'>" + shortDate + "</span>";
         }
-        // FIXME: show '-' if the ranks cannot be computed.
-        return "[None]";
+        style = "style=\"color:#3A3;\" title='Needs to be done'";
+        return "<span " + style + "'>Needed</span>";
+    }
+
+    public String getTechnologyType() {
+        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
+        String tt = object.getTechnologyType();
+        if ( tt == null ) {
+            return "?";
+        } else if ( tt.equals( "TWOCOLOR" ) ) {
+            return "TwoC";
+        } else if ( tt.equals( "ONECOLOR" ) ) {
+            return "OneC";
+        } else if ( tt.equals( "DUALMODE" ) ) {
+            return "Dual";
+        } else {
+            return "<span color=\"red\">Mixed</span>";
+        }
     }
 
     /**
@@ -168,19 +199,17 @@ public class ExpressionExperimentWrapper extends TableDecorator {
      */
     public String getDateLinkAnalysisNoTime() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
-        // if the data set is too small, show "-"
-
         Date dateObject = object.getDateLinkAnalysis();
+        String style = "";
         if ( dateObject != null ) {
             boolean mostRecent = determineIfMostRecent( dateObject, object );
             AuditEventType type = object.getLinkAnalysisEventType();
 
-            String style = "";
             if ( type instanceof FailedLinkAnalysisEvent ) {
-                // FIXME get access to the error message; you need to have the AuditTrail in the object.
                 style = "style=\"color:#F33;\" title='There was an error during analysis'";
             } else if ( type instanceof TooSmallDatasetLinkAnalysisEvent ) {
-
+                style = "style=\"font-style:italic;\" title='This dataset may be too small to analyze'";
+                return "<span " + style + "'>small</span>";
             }
 
             String fullDate = dateObject.toString();
@@ -188,10 +217,11 @@ public class ExpressionExperimentWrapper extends TableDecorator {
             shortDate = formatIfRecent( mostRecent, shortDate );
             return "<span " + style + " title='" + fullDate + "'>" + shortDate + "</span>";
         } else if ( object.getBioAssayCount() <= 4 ) {
-            String style = "style=\"font-style:italic;\" title='This dataset may be too small to analyze'";
-            return "<span " + style + "'>[Small]</span>";
+            style = "style=\"font-style:italic;\" title='This dataset may be too small to analyze'";
+            return "<span " + style + "'>small</span>";
         }
-        return "[None]";
+        style = "style=\"color:#3A3;\" title='Needs to be done'";
+        return "<span " + style + "'>Needed</span>";
     }
 
     /**

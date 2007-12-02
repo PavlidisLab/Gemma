@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
@@ -50,6 +51,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -617,8 +619,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      */
     @Override
     protected Collection handleLoadAllValueObjects() throws Exception {
-        Collection<ExpressionExperimentValueObject> vo = new ArrayList<ExpressionExperimentValueObject>();
-        final String queryString = "select ee.id as id, "
+        Map<Long, ExpressionExperimentValueObject> vo = new HashMap<Long, ExpressionExperimentValueObject>();
+        final String queryString = "select distinct ee.id as id, "
                 + "ee.name as name, "
                 + "ED.name as externalDatabaseName, "
                 + "ED.webUri as externalDatabaseUri, "
@@ -628,11 +630,12 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 + "count(distinct BA) as bioAssayCount, "
                 + "count(distinct AD) as arrayDesignCount, "
                 + "ee.shortName as shortName, "
-                + "eventCreated.date as createdDate "
+                + "eventCreated.date as createdDate, "
+                + "AD.technologyType "
                 +
                 // removed to speed up query
                 // "count(distinct dedv) as dedvCount, " +
-                // "count(distinct SU) as bioMaterialCount " +
+                // "count(distict SU) as bioMaterialCount " +
                 " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join ee.auditTrail atr inner join atr.events as eventCreated "
                 + "inner join BA.samplesUsed as SU inner join BA.arrayDesignUsed as AD "
                 + "inner join SU.sourceTaxon as taxon left join ee.accession acc inner join acc.externalDatabase as ED "
@@ -640,10 +643,18 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+
+            queryObject.setCacheable( true );
+            queryObject.setCacheRegion( "eeValueObjects" );
+            Map<Long, Collection<QuantitationType>> qtMap = getQuantiationTypeMap();
             ScrollableResults list = queryObject.scroll( ScrollMode.FORWARD_ONLY );
             while ( list.next() ) {
                 ExpressionExperimentValueObject v = new ExpressionExperimentValueObject();
-                v.setId( list.getLong( 0 ) );
+                Long eeId = list.getLong( 0 );
+                if ( vo.containsKey( eeId ) ) {
+                    v = vo.get( eeId );
+                }
+                v.setId( eeId );
                 v.setName( list.getString( 1 ) );
                 v.setExternalDatabase( list.getString( 2 ) );
                 v.setExternalUri( list.getString( 3 ) );
@@ -654,15 +665,48 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 v.setArrayDesignCount( list.getLong( 8 ) );
                 v.setShortName( list.getString( 9 ) );
                 v.setDateCreated( list.getDate( 10 ).toString() );
-                // removed to speed up query
-                // v.setDesignElementDataVectorCount( list.getInteger( 10 ) );
-                // v.setBioMaterialCount( list.getInteger( 11 ) );
-                vo.add( v );
+                String type = list.getString( 11 );
+
+                fillQuantitationTypeInfo( qtMap, v, eeId, type );
+                vo.put( eeId, v );
             }
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
-        return vo;
+        return vo.values();
+    }
+
+    /**
+     * @return map of EEids to Qts.
+     */
+    @SuppressWarnings("unchecked")
+    private Map<Long, Collection<QuantitationType>> getQuantiationTypeMap() {
+        final String queryString = "select ee, qts  from ExpressionExperimentImpl as ee inner join ee.quantitationTypes as qts";
+        org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+        queryObject.setCacheable( true );
+        queryObject.setCacheRegion( "quantitationTypesForEes" );
+        // queryObject.setMaxResults( 10 ); testing.
+        Map<Long, Collection<QuantitationType>> results = new HashMap<Long, Collection<QuantitationType>>();
+        StopWatch watch = new StopWatch();
+        watch.start();
+        List resultsList = queryObject.list();
+        watch.split();
+        log.debug( "QT query took " + watch.getTime() + "ms" );
+        watch.unsplit();
+        for ( Object object : resultsList ) {
+            Object[] ar = ( Object[] ) object;
+            ExpressionExperiment ee = ( ExpressionExperiment ) ar[0];
+            QuantitationType qt = ( QuantitationType ) ar[1];
+            Long id = ee.getId();
+            if ( !results.containsKey( id ) ) {
+                results.put( id, new HashSet<QuantitationType>() );
+            }
+            results.get( id ).add( qt );
+
+        }
+        watch.stop();
+        log.info( "QT query+processing took " + watch.getTime() + "ms" );
+        return results;
     }
 
     /*
@@ -672,10 +716,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      */
     @Override
     protected Collection handleLoadValueObjects( Collection ids ) throws Exception {
-        Collection<ExpressionExperimentValueObject> vo = new ArrayList<ExpressionExperimentValueObject>();
+        Map<Long, ExpressionExperimentValueObject> vo = new HashMap<Long, ExpressionExperimentValueObject>();
         // sanity check
         if ( ids == null || ids.size() == 0 ) {
-            return vo;
+            return new HashSet<ExpressionExperimentValueObject>();
         }
         final String queryString = "select ee.id as id, "
                 + "ee.name as name, "
@@ -687,7 +731,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 + "count(distinct BA) as bioAssayCount, "
                 + "count(distinct AD) as arrayDesignCount, "
                 + "ee.shortName as shortName, "
-                + "eventCreated.date as createdDate "
+                + "eventCreated.date as createdDate, "
+                + "AD.technologyType "
                 + " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA left join ee.auditTrail atr left join atr.events as eventCreated "
                 + "inner join BA.samplesUsed as SU inner join BA.arrayDesignUsed as AD "
                 + "inner join SU.sourceTaxon as taxon left join ee.accession acc left join acc.externalDatabase as ED "
@@ -696,14 +741,22 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameterList( "ids", ids );
-
+            Map<Long, Collection<QuantitationType>> qtMap = getQuantiationTypeMap();
             queryObject.setCacheable( true );
+            queryObject.setCacheRegion( "eeValueObjects" );
+
             List list = queryObject.list();
             for ( Object object : list ) {
 
                 Object[] res = ( Object[] ) object;
                 ExpressionExperimentValueObject v = new ExpressionExperimentValueObject();
-                v.setId( ( Long ) res[0] );
+                Long eeId = ( Long ) res[0];
+
+                if ( vo.containsKey( eeId ) ) {
+                    v = vo.get( eeId );
+                }
+
+                v.setId( eeId );
                 v.setName( ( String ) res[1] );
                 v.setExternalDatabase( ( String ) res[2] );
                 v.setExternalUri( ( String ) res[3] );
@@ -714,12 +767,83 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 v.setArrayDesignCount( ( Long ) res[8] );
                 v.setShortName( ( String ) res[9] );
                 v.setDateCreated( ( ( Date ) res[10] ).toString() );
-                vo.add( v );
+                String type = res[11].toString();
+                fillQuantitationTypeInfo( qtMap, v, eeId, type );
+                vo.put( eeId, v );
             }
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
-        return vo;
+
+        return vo.values();
+    }
+
+    private void fillQuantitationTypeInfo( Map<Long, Collection<QuantitationType>> qtMap,
+            ExpressionExperimentValueObject v, Long eeId, String type ) {
+        if ( v.getTechnologyType() != null && !v.getTechnologyType().equals( type ) ) {
+            v.setTechnologyType( "MIXED" );
+        } else {
+            v.setTechnologyType( type );
+        }
+
+        if ( !type.equals( TechnologyType.ONECOLOR.toString() ) ) {
+            Collection<QuantitationType> qts = qtMap.get( eeId );
+            boolean hasIntensityA = false;
+            boolean hasIntensityB = false;
+            for ( QuantitationType qt : qts ) {
+                if ( isSignalChannela( qt.getName() ) ) {
+                    hasIntensityA = true;
+                    if ( hasIntensityB ) {
+                        v.setHasBothIntensities( true );
+                        break;
+                    }
+                } else if ( isSignalChannelB( qt.getName() ) ) {
+                    hasIntensityB = true;
+                    if ( hasIntensityA ) {
+                        v.setHasBothIntensities( true );
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * For two-color arrays: Given the quantitation type name, determine if it represents the channel A signal. (by
+     * convention, green)
+     * <p>
+     * FIXME this duplicates code found in the ExpressionDataMatrixBuilder
+     * 
+     * @param name
+     * @return
+     */
+    private static boolean isSignalChannela( String name ) {
+        return name.matches( "CH1(I)?_MEDIAN" ) || name.matches( "CH1(I)?_MEAN" ) || name.equals( "RAW_DATA" )
+                || name.toLowerCase().matches( "f532[\\s_\\.](mean|median)" ) || name.equals( "SIGNAL_CHANNEL 1MEDIAN" )
+                || name.toLowerCase().matches( "ch1_smtm" ) || name.equals( "G_MEAN" ) || name.equals( "Ch1SigMedian" )
+                || name.equals( "ch1.Intensity" ) || name.equals( "CH1_SIG_MEAN" ) || name.equals( "CH1_ Median" )
+                || name.toUpperCase().matches( "\\w{2}\\d{3}_CY3" ) || name.toUpperCase().matches( "NORM(.*)CH1" )
+                || name.equals( "CH1Mean" ) || name.equals( "CH1_SIGNAL" ) || name.equals( "\"log2(532), gN\"" )
+                || name.equals( "gProcessedSignal" );
+    }
+
+    /**
+     * For two-color arrays: Given the quantitation type name, determine if it represents the channel B signal. (by
+     * convention, red)
+     * <p>
+     * FIXME this duplicates code found in the ExpressionDataMatrixBuilder
+     * 
+     * @param name
+     * @return
+     */
+    private static boolean isSignalChannelB( String name ) {
+        return name.matches( "CH2(I)?_MEDIAN" ) || name.matches( "CH2(I)?_MEAN" ) || name.equals( "RAW_CONTROL" )
+                || name.toLowerCase().matches( "f635[\\s_\\.](mean|median)" ) || name.equals( "SIGNAL_CHANNEL 2MEDIAN" )
+                || name.toLowerCase().matches( "ch2_smtm" ) || name.equals( "R_MEAN" ) || name.equals( "Ch2SigMedian" )
+                || name.equals( "ch2.Intensity" ) || name.equals( "CH2_SIG_MEAN" ) || name.equals( "CH2_ Median" )
+                || name.toUpperCase().matches( "\\w{2}\\d{3}_CY5" ) || name.toUpperCase().matches( "NORM(.*)CH2" )
+                || name.equals( "CH2Mean" ) || name.equals( "CH2_SIGNAL" ) || name.equals( "\"log2(635), gN\"" )
+                || name.equals( "rProcessedSignal" );
     }
 
     /*
@@ -987,6 +1111,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setCacheable( true );
+            queryObject.setCacheRegion( "auditEvents" );
             queryObject.setMaxResults( 1 );
             queryObject.setParameter( "ee", ee );
 
