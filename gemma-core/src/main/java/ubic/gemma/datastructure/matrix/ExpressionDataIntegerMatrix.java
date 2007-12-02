@@ -43,6 +43,12 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix {
 
     }
 
+    public ExpressionDataIntegerMatrix( Collection<DesignElementDataVector> vectors ) {
+        init();
+        selectVectors( vectors );
+        vectorsToMatrix( vectors );
+    }
+
     /*
      * (non-Javadoc)
      * 

@@ -58,6 +58,12 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix {
 
     }
 
+    public ExpressionDataStringMatrix( Collection<DesignElementDataVector> vectors ) {
+        init();
+        selectVectors( vectors );
+        vectorsToMatrix( vectors );
+    }
+
     public String get( DesignElement designElement, BioAssay bioAssay ) {
         int i = this.rowElementMap.get( designElement );
         int j = this.columnAssayMap.get( bioAssay );

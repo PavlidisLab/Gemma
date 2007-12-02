@@ -72,6 +72,12 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
         vectorsToMatrix( selectedVectors );
     }
 
+    public ExpressionDataBooleanMatrix( Collection<DesignElementDataVector> vectors ) {
+        init();
+        selectVectors( vectors );
+        vectorsToMatrix( vectors );
+    }
+
     public int columns() {
         return matrix.columns();
     }

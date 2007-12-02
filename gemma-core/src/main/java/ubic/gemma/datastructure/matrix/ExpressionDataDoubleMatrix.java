@@ -401,7 +401,8 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
 
             BioAssayDimension dimension = vector.getBioAssayDimension();
             Collection<BioAssay> bioAssays = dimension.getBioAssays();
-            assert bioAssays.size() == vals.length : "Expected " + vals.length + " got " + bioAssays.size();
+            if ( bioAssays.size() != vals.length )
+                throw new IllegalStateException( "Expected " + vals.length + " got " + bioAssays.size() );
 
             Iterator it = bioAssays.iterator();
 
