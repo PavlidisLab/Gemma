@@ -158,10 +158,6 @@
 	</h2>
 	<ul class="glassList">
 		<li>
-			<a href="<c:url value="/searchCoexpression.html"/>"> <fmt:message
-					key="menu.Coexpression" /> </a>
-		</li>
-		<li>
 			<a href="<c:url value="/characteristicBrowser.html"/>"> <fmt:message
 					key="menu.characteristicBrowser" /> </a>
 		</li>
@@ -173,37 +169,7 @@
 			<a href="<c:url value="/bibRef/showAllEeBibRefs.html"/>">Articles
 				referenced by Experiments in Gemma</a>
 		</li>
-		<li>
-			<a
-				href="<c:url value="/expressionExperiment/showAllExpressionExperimentLinkSummaries.html"/>">
-				Show Expression Experiment Link Summaries </a>
-		</li>
-
-		<li>
-			<a href="<c:url value="/loadExpressionExperiment.html"/>"> <fmt:message
-					key="menu.loadExpressionExperiment" /> </a>
-		</li>
-		<li>
-			<a href="<c:url value="/geoBrowser/showBatch.html" />">Browse GEO
-				records</a>
-		</li>
-		<li>
-			<a href="<c:url value="loadSimpleExpressionExperiment.html"/>">
-				Load expression data from a tabbed file</a>
-		</li>
-		<li>
-			<a href="<c:url value="/uploadFile.html"/>"> <fmt:message
-					key="menu.selectFile" /> </a>
-		</li>
-		<li>
-			<a href="<c:url value="/arrayDesign/associateSequences.html"/>">
-				<fmt:message key="menu.arrayDesignSequenceAdd" /> </a>
-		</li>
-		<li>
-			<a href="<c:url value="/genome/goldenPathSequenceLoad.html"/>"> <fmt:message
-					key="menu.goldenPathSequenceLoad" /> </a>
-		</li>
-		<li>
+			<li>
 			<a href="<c:url value="/securityManager.html"/>"> <fmt:message
 					key="menu.securityManager" /> </a>
 		</li>
@@ -215,12 +181,27 @@
 			<a href="<c:url value="/whatsnew/generateCache.html" />">Regenerate
 				What's New Cache</a>
 		</li>
-	</ul>
-
+		<li>
+			<a href="<c:url value="loadSimpleExpressionExperiment.html"/>">
+				Load expression data from a tabbed file</a>
+		</li>
+		<li>
+			<a href="<c:url value="/arrayDesign/associateSequences.html"/>">
+				<fmt:message key="menu.arrayDesignSequenceAdd" /> </a>
+		</li>
+		<li>
+			<a href="<c:url value="/genome/goldenPathSequenceLoad.html"/>"> <fmt:message
+					key="menu.goldenPathSequenceLoad" /> </a>
+		</li>	
+		</ul>
 	<h2>
 		Inactive, deprecated, or not ready for prime time
 	</h2>
 	<ul class="glassList">
+		<li>
+			<a href="<c:url value="/uploadFile.html"/>"> <fmt:message
+					key="menu.selectFile" /> </a>
+		</li>
 		<li>
 			<a href="<c:url value="/geneFinder.html"/>"> <fmt:message
 					key="menu.GeneFinder" /> </a>
