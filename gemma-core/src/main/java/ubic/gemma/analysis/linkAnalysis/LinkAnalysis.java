@@ -18,7 +18,6 @@
  */
 package ubic.gemma.analysis.linkAnalysis;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -102,7 +101,7 @@ public class LinkAnalysis {
 
         this.init();
         if ( this.uniqueGenesInDataset == 0 ) {
-            throw new RuntimeException( "No genes found for this dataset; make sure the probe -> gene map is complete." );
+            throw new IllegalStateException( "No genes found for this dataset. Is the 'GENE2CS' table up to date?" );
         }
 
         log.info( "Current Options: \n" + this.config );

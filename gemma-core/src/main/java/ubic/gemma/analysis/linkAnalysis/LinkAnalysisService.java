@@ -226,6 +226,7 @@ public class LinkAnalysisService {
             }
 
         }
+        wr.flush();
         log.info( "Done, " + i + " links printed" );
     }
 
