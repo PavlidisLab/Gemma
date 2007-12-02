@@ -35,6 +35,7 @@ import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
+import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -193,7 +194,12 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
             analysisResults.add( probeAnalysisResult );
         }
 
-        expressionAnalysis.setAnalysisResults( analysisResults );
+        Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
+        ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance( expressionAnalysis,
+                analysisResults, experimentalFactor );
+        resultSets.add( resultSet );
+
+        expressionAnalysis.setResultSets( resultSets );
 
         return expressionAnalysis;
     }

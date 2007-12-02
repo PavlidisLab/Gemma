@@ -33,6 +33,7 @@ import ubic.gemma.analysis.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
+import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -201,7 +202,11 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
         // super.summarizeProcessing();
 
-        Collection<ExpressionAnalysisResult> results = expressionAnalysis.getAnalysisResults();
+        Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
+
+        ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
+
+        Collection<ExpressionAnalysisResult> results = resultSet.getResults();
         for ( ExpressionAnalysisResult result : results ) {
             ProbeAnalysisResult probeResult = ( ProbeAnalysisResult ) result;
             log.debug( "probe: " + probeResult.getProbe().getName() + ", p-value: " + probeResult.getPvalue()

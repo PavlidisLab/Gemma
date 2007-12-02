@@ -18,11 +18,14 @@
  */
 package ubic.gemma.analysis.diff;
 
+import java.util.Collection;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
+import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
 
 /**
@@ -80,11 +83,15 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         ExpressionAnalysis expressionAnalysis = analyzer.oneWayAnova( expressionExperiment );
 
-        int size = expressionAnalysis.getAnalysisResults().size();
+        Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
 
-        assertEquals( size, NUM_DESIGN_ELEMENTS );
+        ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
 
-        for ( ExpressionAnalysisResult r : expressionAnalysis.getAnalysisResults() ) {
+        int numResults = resultSet.getResults().size();
+
+        assertEquals( numResults, NUM_DESIGN_ELEMENTS );
+
+        for ( ExpressionAnalysisResult r : resultSet.getResults() ) {
             ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
             log.debug( "probe: " + probeAnalysisResult.getProbe() + "; p-value: " + probeAnalysisResult.getPvalue() );
         }

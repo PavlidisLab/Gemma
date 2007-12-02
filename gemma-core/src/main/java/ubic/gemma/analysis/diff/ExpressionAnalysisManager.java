@@ -30,6 +30,8 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.AnalysisResult;
 import ubic.gemma.model.analysis.AnalysisService;
+import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
+import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.analysis.GeneAnalysisResult;
 
 /**
@@ -53,9 +55,16 @@ public class ExpressionAnalysisManager {
      * @param analysisName
      * @return {@link Collection} Results of an analysis
      */
-    private Collection<AnalysisResult> getAnalysisResults( String analysisName ) {
+    private Collection<ExpressionAnalysisResult> getAnalysisResults( String analysisName ) {
+
         Analysis analysis = analysisService.findByName( analysisName );
-        return analysis.getResults();
+
+        Collection<ExpressionAnalysisResultSet> resultSets = analysis.getResultSets();
+
+        // FIXME manager should work with result sets now
+        ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
+
+        return resultSet.getResults();
     }
 
     /**
@@ -64,7 +73,7 @@ public class ExpressionAnalysisManager {
      */
     public Collection<GeneAnalysisResult> getGeneAnalysisResults( String analysisName ) {
 
-        Collection<AnalysisResult> results = getAnalysisResults( analysisName );
+        Collection<ExpressionAnalysisResult> results = getAnalysisResults( analysisName );
 
         Collection<GeneAnalysisResult> geneAnalysisResults = new HashSet<GeneAnalysisResult>();
 

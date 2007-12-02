@@ -27,6 +27,7 @@ import java.util.List;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
+import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -91,7 +92,13 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractAnalyzer {
 
         }
 
-        expressionAnalysis.setAnalysisResults( analysisResults );
+        Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
+        // FIXME need the experimentalFactor
+        ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance( expressionAnalysis,
+                analysisResults, null );// experimentalFactor );
+        resultSets.add( resultSet );
+
+        expressionAnalysis.setResultSets( resultSets );
 
         return expressionAnalysis;
     }

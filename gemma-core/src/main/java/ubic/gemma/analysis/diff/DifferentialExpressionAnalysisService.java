@@ -31,6 +31,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
+import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.util.ExpressionAnalysisResultComparator;
@@ -70,7 +71,11 @@ public class DifferentialExpressionAnalysisService {
 
         ExpressionAnalysis analysis = analyses.iterator().next();
 
-        Collection<ExpressionAnalysisResult> analysisResults = analysis.getAnalysisResults();
+        Collection<ExpressionAnalysisResultSet> resultSets = analysis.getResultSets();
+
+        ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
+
+        Collection<ExpressionAnalysisResult> analysisResults = resultSet.getResults();
 
         if ( top > analysisResults.size() ) {
             log.warn( "Number of desired results, " + top

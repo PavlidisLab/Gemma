@@ -18,10 +18,13 @@
  */
 package ubic.gemma.analysis.diff;
 
+import java.util.Collection;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
+import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
 
 /**
  * Tests the two way anova analyzer.
@@ -65,7 +68,11 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
 
         ExpressionAnalysis expressionAnalysis = analyzer.getExpressionAnalysis( expressionExperiment );
 
-        assertEquals( expressionAnalysis.getAnalysisResults().size(), NUM_DESIGN_ELEMENTS * 2 );
+        Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
+
+        ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
+
+        assertEquals( resultSet.getResults().size(), NUM_DESIGN_ELEMENTS * 2 );
     }
 
     /*
