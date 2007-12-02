@@ -338,9 +338,7 @@
 			<Gemma:arrayDesignGrouping subsumer="${merger }" />
 	</tr>
 	
-	<%
-			if ( "${annotationLink}" != null  ) {
-			%>
+ 
 <c:if test="${ annotationLink != ''}">		
 	<tr>
 		<td class="label">
