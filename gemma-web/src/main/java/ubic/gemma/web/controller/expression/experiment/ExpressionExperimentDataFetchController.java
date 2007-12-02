@@ -26,13 +26,16 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.AbstractController;
 
-import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.datastructure.matrix.MatrixWriter;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -51,9 +54,15 @@ public class ExpressionExperimentDataFetchController extends AbstractController 
 
     private static Log log = LogFactory.getLog( ExpressionExperimentDataFetchController.class.getName() );
 
-    QuantitationTypeService quantitationTypeService;
+    private static final int BATCH_SIZE = 100;
     protected DesignElementDataVectorService designElementDataVectorService;
     protected ExpressionExperimentService expressionExperimentService = null;
+
+    QuantitationTypeService quantitationTypeService;
+
+    public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
+        this.designElementDataVectorService = designElementDataVectorService;
+    }
 
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
@@ -63,7 +72,30 @@ public class ExpressionExperimentDataFetchController extends AbstractController 
         this.quantitationTypeService = quantitationTypeService;
     }
 
-    private static final int BATCH_SIZE = 2000;
+    /**
+     * @param response
+     * @param writer
+     * @param batch
+     * @param firstBatch
+     * @throws IOException
+     */
+    @SuppressWarnings("unchecked")
+    private void writeBatch( HttpServletResponse response, PrimitiveType representation, MatrixWriter writer,
+            Collection<DesignElementDataVector> batch, boolean firstBatch ) throws IOException {
+        designElementDataVectorService.thaw( batch );
+        ExpressionDataMatrix expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( representation, batch );
+        writer.write( response.getWriter(), expressionDataMatrix, firstBatch );
+        batch.clear();
+    }
+
+    @SuppressWarnings("unchecked")
+    private void writeJsonBatch( HttpServletResponse response, PrimitiveType representation, MatrixWriter writer,
+            Collection<DesignElementDataVector> batch, boolean firstBatch ) throws IOException {
+        designElementDataVectorService.thaw( batch );
+        ExpressionDataMatrix expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( representation, batch );
+        writer.writeJSON( response.getWriter(), expressionDataMatrix, firstBatch );
+        batch.clear();
+    }
 
     @SuppressWarnings("unchecked")
     @Override
@@ -101,12 +133,19 @@ public class ExpressionExperimentDataFetchController extends AbstractController 
 
         log.debug( "Fetching vectors" );
         // FIXME only get maxRows if defined; validate maxRows is positive.
+
+        StopWatch timer = new StopWatch();
+        timer.start();
         Collection<DesignElementDataVector> vectors = designElementDataVectorService.find( qType );
-        log.debug( "Thawing " + vectors.size() + " vectors" );
+        timer.stop();
+        log.info( timer.getTime() + " ms to retrieve proxy vectors; thawing " + vectors.size() + "" );
 
         if ( usedFormat.equals( "text" ) ) {
 
-            response.setContentType( "text/plain" );
+            response.setContentType( "application/octet-stream" );
+            String filename = qType.getName().replaceAll( "\\s+", "_" ) + ".txt";
+            response.setHeader( "Content-disposition", "attachment; filename=\"" + filename + "\"" );
+            response.getWriter().flush();
             MatrixWriter writer = new MatrixWriter();
 
             Collection<DesignElementDataVector> batch = new HashSet<DesignElementDataVector>();
@@ -115,7 +154,7 @@ public class ExpressionExperimentDataFetchController extends AbstractController 
             for ( DesignElementDataVector v : vectors ) {
                 batch.add( v );
                 if ( batch.size() == BATCH_SIZE ) {
-                    writeBatch( response, writer, batch, firstBatch );
+                    writeBatch( response, qType.getRepresentation(), writer, batch, firstBatch );
                     response.getWriter().flush();
                     firstBatch = false;
                 }
@@ -125,11 +164,11 @@ public class ExpressionExperimentDataFetchController extends AbstractController 
             }
 
             if ( batch.size() > 0 ) {
-                writeBatch( response, writer, batch, firstBatch );
+                writeBatch( response, qType.getRepresentation(), writer, batch, firstBatch );
             }
             response.getWriter().flush();
         } else if ( usedFormat.equals( "json" ) ) {
-            response.setContentType( "text/plain" );
+            response.setContentType( "application/json" );
             MatrixWriter writer = new MatrixWriter();
 
             Collection<DesignElementDataVector> batch = new HashSet<DesignElementDataVector>();
@@ -138,7 +177,7 @@ public class ExpressionExperimentDataFetchController extends AbstractController 
             for ( DesignElementDataVector v : vectors ) {
                 batch.add( v );
                 if ( batch.size() == BATCH_SIZE ) {
-                    writeJsonBatch( response, writer, batch, firstBatch );
+                    writeJsonBatch( response, qType.getRepresentation(), writer, batch, firstBatch );
                     response.getWriter().flush();
                     firstBatch = false;
                 }
@@ -148,40 +187,11 @@ public class ExpressionExperimentDataFetchController extends AbstractController 
             }
 
             if ( batch.size() > 0 ) {
-                writeJsonBatch( response, writer, batch, firstBatch );
+                writeJsonBatch( response, qType.getRepresentation(), writer, batch, firstBatch );
             }
             response.getWriter().flush();
         }
         return null;
-    }
-
-    /**
-     * @param response
-     * @param writer
-     * @param batch
-     * @param firstBatch
-     * @throws IOException
-     */
-    @SuppressWarnings("unchecked")
-    private void writeBatch( HttpServletResponse response, MatrixWriter writer,
-            Collection<DesignElementDataVector> batch, boolean firstBatch ) throws IOException {
-        designElementDataVectorService.thaw( batch );
-        ExpressionDataDoubleMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( batch );
-        writer.write( response.getWriter(), expressionDataMatrix, firstBatch );
-        batch.clear();
-    }
-
-    @SuppressWarnings("unchecked")
-    private void writeJsonBatch( HttpServletResponse response, MatrixWriter writer,
-            Collection<DesignElementDataVector> batch, boolean firstBatch ) throws IOException {
-        designElementDataVectorService.thaw( batch );
-        ExpressionDataDoubleMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( batch );
-        writer.writeJSON( response.getWriter(), expressionDataMatrix, firstBatch );
-        batch.clear();
-    }
-
-    public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
-        this.designElementDataVectorService = designElementDataVectorService;
     }
 
 }

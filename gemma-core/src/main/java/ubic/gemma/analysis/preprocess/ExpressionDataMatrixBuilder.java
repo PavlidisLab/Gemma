@@ -31,6 +31,10 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.datastructure.matrix.ExpressionDataBooleanMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
+import ubic.gemma.datastructure.matrix.ExpressionDataIntegerMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataStringMatrix;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -708,7 +712,8 @@ public class ExpressionDataMatrixBuilder {
     }
 
     /**
-     * For two-color arrays: Given the quantitation type name, determine if it represents the channel A signal.
+     * For two-color arrays: Given the quantitation type name, determine if it represents the channel A signal. (by
+     * convention, green)
      * 
      * @param name
      * @return
@@ -719,11 +724,13 @@ public class ExpressionDataMatrixBuilder {
                 || name.toLowerCase().matches( "ch1_smtm" ) || name.equals( "G_MEAN" ) || name.equals( "Ch1SigMedian" )
                 || name.equals( "ch1.Intensity" ) || name.equals( "CH1_SIG_MEAN" ) || name.equals( "CH1_ Median" )
                 || name.toUpperCase().matches( "\\w{2}\\d{3}_CY3" ) || name.toUpperCase().matches( "NORM(.*)CH1" )
-                || name.equals( "CH1Mean" ) || name.equals( "CH1_SIGNAL" ) || name.equals( "\"log2(532), gN\"" );
+                || name.equals( "CH1Mean" ) || name.equals( "CH1_SIGNAL" ) || name.equals( "\"log2(532), gN\"" )
+                || name.equals( "gProcessedSignal" );
     }
 
     /**
-     * For two-color arrays: Given the quantitation type name, determine if it represents the channel B signal.
+     * For two-color arrays: Given the quantitation type name, determine if it represents the channel B signal.(by
+     * convention, red)
      * 
      * @param name
      * @return
@@ -734,8 +741,34 @@ public class ExpressionDataMatrixBuilder {
                 || name.toLowerCase().matches( "ch2_smtm" ) || name.equals( "R_MEAN" ) || name.equals( "Ch2SigMedian" )
                 || name.equals( "ch2.Intensity" ) || name.equals( "CH2_SIG_MEAN" ) || name.equals( "CH2_ Median" )
                 || name.toUpperCase().matches( "\\w{2}\\d{3}_CY5" ) || name.toUpperCase().matches( "NORM(.*)CH2" )
-                || name.equals( "CH2Mean" ) || name.equals( "CH2_SIGNAL" ) || name.equals( "\"log2(635), gN\"" );
+                || name.equals( "CH2Mean" ) || name.equals( "CH2_SIGNAL" ) || name.equals( "\"log2(635), gN\"" )
+                || name.equals( "rProcessedSignal" );
     }
+    
+    
+    /**
+     *  
+     * 
+     * @param representation PrimitiveType
+     * @param vectors raw vectors
+     * @return matrix of appropriate type.
+     */
+    public static ExpressionDataMatrix getMatrix( PrimitiveType representation, Collection<DesignElementDataVector> vectors ) {
+        ExpressionDataMatrix expressionDataMatrix = null;
+        if ( representation.equals( PrimitiveType.DOUBLE ) ) {
+            expressionDataMatrix = new ExpressionDataDoubleMatrix( vectors );
+        } else if ( representation.equals( PrimitiveType.STRING ) ) {
+            expressionDataMatrix = new ExpressionDataStringMatrix( vectors );
+        } else if ( representation.equals( PrimitiveType.INT ) ) {
+            expressionDataMatrix = new ExpressionDataIntegerMatrix( vectors );
+        } else if ( representation.equals( PrimitiveType.BOOLEAN ) ) {
+            expressionDataMatrix = new ExpressionDataBooleanMatrix( vectors );
+        } else {
+            throw new UnsupportedOperationException( "Don't know how to deal with matrices of type " + representation );
+        }
+        return expressionDataMatrix;
+    }
+    
 
     /**
      * @param dimensions
