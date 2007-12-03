@@ -121,6 +121,7 @@ public class TwoChannelMissingValues {
          * Note we have to do this one array design at a time, because we are producing DesignElementDataVectors which
          * must be associated with the correct BioAssayDimension.
          */
+        log.info( "Study has " + dims.size() + " bioassaydimensions" );
         for ( BioAssayDimension bioAssayDimension : dims ) {
             Collection<BioAssay> bioAssays = bioAssayDimension.getBioAssays();
             Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
@@ -132,10 +133,10 @@ public class TwoChannelMissingValues {
             }
 
             if ( extraMissingValueIndicators.size() > 0 ) {
-                log.info( "There are " + extraMissingValueIndicators.size() + " manually set missing value indicators" );
+                log.info( "There are " + extraMissingValueIndicators.size() + " manually-set missing value indicators" );
             }
 
-            ArrayDesign ades = bioAssayDimension.getBioAssays().iterator().next().getArrayDesignUsed();
+            ArrayDesign ades = ads.iterator().next();
             ExpressionDataDoubleMatrix preferredData = builder.getPreferredData( ades );
             ExpressionDataDoubleMatrix bkgDataA = builder.getBackgroundChannelA( ades );
             ExpressionDataDoubleMatrix bkgDataB = builder.getBackgroundChannelB( ades );

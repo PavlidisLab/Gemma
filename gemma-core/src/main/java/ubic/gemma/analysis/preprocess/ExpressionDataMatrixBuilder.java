@@ -439,7 +439,7 @@ public class ExpressionDataMatrixBuilder {
      */
     public ArrayDesign arrayDesignForVector( DesignElementDataVector vector ) {
         Collection<BioAssay> bioAssays = vector.getBioAssayDimension().getBioAssays();
-        if ( bioAssays.size() == 0 ) throw new IllegalArgumentException( "No bioassays for " + vector );
+        if ( bioAssays.size() == 0 ) throw new IllegalArgumentException( "No bioassays for vector." );
         Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
         for ( BioAssay ba : bioAssays ) {
             ads.add( ba.getArrayDesignUsed() );
@@ -546,7 +546,8 @@ public class ExpressionDataMatrixBuilder {
     }
 
     /**
-     * Get just the quantitation types that are likely to be 'useful' (preferred, present/absent, etc).
+     * Get just the quantitation types that are likely to be 'useful': Preferred, present/absent, signals and background
+     * from both channels (if present).
      * 
      * @return
      */
@@ -578,7 +579,11 @@ public class ExpressionDataMatrixBuilder {
             } else if ( isSignalChannelB( name ) ) {
                 neededQtTypes.add( qType );
                 log.info( "Signal B=" + qType );
-            } else if ( name.matches( "CH1D_MEAN" ) ) { // FIXME This is a bit strange...
+            } else if ( name.matches( "CH1D_MEAN" ) ) {
+                /*
+                 * Special case. This is the background subtracted channel 1 for Genepix data. It is only needed to
+                 * reconstruct CH1 if it isn't present, which is surprisingly common in Stanford data sets
+                 */
                 neededQtTypes.add( qType );
             } else if ( qType.getType().equals( StandardQuantitationType.PRESENTABSENT ) ) {
                 log.info( "Present/absent=" + qType );
@@ -744,16 +749,14 @@ public class ExpressionDataMatrixBuilder {
                 || name.equals( "CH2Mean" ) || name.equals( "CH2_SIGNAL" ) || name.equals( "\"log2(635), gN\"" )
                 || name.equals( "rProcessedSignal" );
     }
-    
-    
+
     /**
-     *  
-     * 
      * @param representation PrimitiveType
      * @param vectors raw vectors
      * @return matrix of appropriate type.
      */
-    public static ExpressionDataMatrix getMatrix( PrimitiveType representation, Collection<DesignElementDataVector> vectors ) {
+    public static ExpressionDataMatrix getMatrix( PrimitiveType representation,
+            Collection<DesignElementDataVector> vectors ) {
         ExpressionDataMatrix expressionDataMatrix = null;
         if ( representation.equals( PrimitiveType.DOUBLE ) ) {
             expressionDataMatrix = new ExpressionDataDoubleMatrix( vectors );
@@ -768,7 +771,6 @@ public class ExpressionDataMatrixBuilder {
         }
         return expressionDataMatrix;
     }
-    
 
     /**
      * @param dimensions
