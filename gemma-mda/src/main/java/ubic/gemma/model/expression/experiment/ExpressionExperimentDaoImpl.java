@@ -778,6 +778,12 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         return vo.values();
     }
 
+    /**
+     * @param qtMap
+     * @param v
+     * @param eeId
+     * @param type
+     */
     private void fillQuantitationTypeInfo( Map<Long, Collection<QuantitationType>> qtMap,
             ExpressionExperimentValueObject v, Long eeId, String type ) {
         if ( v.getTechnologyType() != null && !v.getTechnologyType().equals( type ) ) {
@@ -790,21 +796,30 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             Collection<QuantitationType> qts = qtMap.get( eeId );
             boolean hasIntensityA = false;
             boolean hasIntensityB = false;
+            boolean hasBothIntensities = false;
+            boolean mayBeOneChannel = false;
             for ( QuantitationType qt : qts ) {
-                if ( isSignalChannela( qt.getName() ) ) {
+                if ( qt.getIsPreferred() && !qt.getIsRatio() ) {
+                    /*
+                     * This could be a dual-mode array, or it could be mis-labeled as two-color; or this might actually
+                     * be ratios. In either case, we should flag it; as it stands we shouldn't use two-channel missing
+                     * value analysis on it.
+                     */
+                    mayBeOneChannel = true;
+                    break;
+                } else if ( isSignalChannela( qt.getName() ) ) {
                     hasIntensityA = true;
                     if ( hasIntensityB ) {
-                        v.setHasBothIntensities( true );
-                        break;
+                        hasBothIntensities = true;
                     }
                 } else if ( isSignalChannelB( qt.getName() ) ) {
                     hasIntensityB = true;
                     if ( hasIntensityA ) {
-                        v.setHasBothIntensities( true );
-                        break;
+                        hasBothIntensities = true;
                     }
                 }
             }
+            v.setHasBothIntensities( hasBothIntensities && !mayBeOneChannel );
         }
     }
 
