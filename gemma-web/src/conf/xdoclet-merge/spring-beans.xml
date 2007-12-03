@@ -1318,6 +1318,18 @@ controller bean declarations.
 		<value>.jsp</value>
 	</property>
 </bean>
+
+<!-- ==================================================== -->
+<!-- Make spring aware of our i18n support files -->
+<!-- ==================================================== -->
+<bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+	<property name="basenames">
+		<list>
+			<value>messages</value>
+		</list>
+	</property>
+</bean>
+
 <!-- ==================================================== -->
 
 <!--  Validation settings. The validator factory is defined in applicationContext-validation.xml -->
