@@ -97,6 +97,8 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
 
         assertEquals( resultSet.getResults().size(), NUM_DESIGN_ELEMENTS * 3 );
 
+        logResults( resultSet );
+
     }
 
     /*

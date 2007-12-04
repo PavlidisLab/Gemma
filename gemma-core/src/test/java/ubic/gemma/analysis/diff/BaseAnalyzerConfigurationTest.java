@@ -31,6 +31,9 @@ import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
+import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
+import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
+import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -427,12 +430,15 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         Collection<BioMaterial> updatedBiomaterials = new HashSet<BioMaterial>();
         for ( BioMaterial m : biomaterials ) {
             Collection<FactorValue> fvs = m.getFactorValues();
+            Collection<FactorValue> updatedFactorValues = new HashSet<FactorValue>();
             for ( FactorValue fv : fvs ) {
                 if ( fv.getExperimentalFactor().getName() != experimentalFactorB.getName() ) {
-                    fvs.remove( fv );
-                    m.setFactorValues( fvs );
-                    updatedBiomaterials.add( m );
+                    continue;
+                } else {
+                    updatedFactorValues.add( fv );
                 }
+                m.setFactorValues( updatedFactorValues );
+                updatedBiomaterials.add( m );
             }
         }
 
@@ -466,6 +472,17 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
         control.replay();
 
+    }
+
+    /**
+     * @param resultSet
+     */
+    protected void logResults( ExpressionAnalysisResultSet resultSet ) {
+
+        for ( ExpressionAnalysisResult r : resultSet.getResults() ) {
+            ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
+            log.debug( "probe: " + probeAnalysisResult.getProbe() + "; p-value: " + probeAnalysisResult.getPvalue() );
+        }
     }
 
     /**

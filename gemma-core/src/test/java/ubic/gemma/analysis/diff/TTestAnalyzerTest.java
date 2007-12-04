@@ -26,7 +26,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
+import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
+import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -116,6 +118,8 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
         int numResults = resultSet.getResults().size();
 
         assertEquals( numResults, NUM_DESIGN_ELEMENTS );
+
+        logResults(resultSet);
 
     }
 

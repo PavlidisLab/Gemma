@@ -73,6 +73,8 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
         ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
 
         assertEquals( resultSet.getResults().size(), NUM_DESIGN_ELEMENTS * 2 );
+
+        logResults( resultSet );
     }
 
     /*

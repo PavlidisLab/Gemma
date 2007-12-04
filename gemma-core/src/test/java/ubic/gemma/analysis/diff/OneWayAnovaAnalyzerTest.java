@@ -24,9 +24,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
-import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
-import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
 
 /**
  * Tests the one way anova analyzer.
@@ -91,10 +89,7 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         assertEquals( numResults, NUM_DESIGN_ELEMENTS );
 
-        for ( ExpressionAnalysisResult r : resultSet.getResults() ) {
-            ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
-            log.debug( "probe: " + probeAnalysisResult.getProbe() + "; p-value: " + probeAnalysisResult.getPvalue() );
-        }
+        logResults( resultSet );
 
     }
 
