@@ -56,10 +56,13 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractAnalyzer {
      * @param filteredPvalues
      * @param filteredFStatistics
      * @param numResultsFromR
+     * @param experimentalFactorA
+     * @param experimentalFactorB
      * @return
      */
     protected ExpressionAnalysis createExpressionAnalysis( ExpressionDataDoubleMatrix dmatrix,
-            double[] filteredPvalues, double[] filteredFStatistics, int numResultsFromR ) {
+            double[] filteredPvalues, double[] filteredFStatistics, int numResultsFromR,
+            ExperimentalFactor experimentalFactorA, ExperimentalFactor experimentalFactorB ) {
 
         /* Create the expression analysis and pack the results. */
         ExpressionAnalysis expressionAnalysis = ExpressionAnalysis.Factory.newInstance();
@@ -67,6 +70,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractAnalyzer {
         Collection<ExpressionExperiment> experimentsAnalyzed = new HashSet<ExpressionExperiment>();
         expressionAnalysis.setExperimentsAnalyzed( experimentsAnalyzed );
 
+        /* Each probe has all results (ie. 2 - without interactions; 3 - with interactions) */
         List<ExpressionAnalysisResult> analysisResults = new ArrayList<ExpressionAnalysisResult>();
 
         int k = 0;
@@ -91,15 +95,20 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractAnalyzer {
 
                 k++;
             }
-
         }
 
-        /* This results set contains each probe, where each probe has all 3 values. */
         ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance( expressionAnalysis,
                 analysisResults, null );
         resultSets.add( resultSet );
 
-        // TODO now you need a set for each of main and interaction effects.
+        /* main effects */
+        ExpressionAnalysisResultSet mainEffectResultSetA = ExpressionAnalysisResultSet.Factory.newInstance(
+                expressionAnalysis, analysisResults, experimentalFactorA );
+        resultSets.add( mainEffectResultSetA );
+
+        ExpressionAnalysisResultSet mainEffectResultSetB = ExpressionAnalysisResultSet.Factory.newInstance(
+                expressionAnalysis, analysisResults, experimentalFactorA );
+        resultSets.add( mainEffectResultSetB );
 
         expressionAnalysis.setResultSets( resultSets );
 
