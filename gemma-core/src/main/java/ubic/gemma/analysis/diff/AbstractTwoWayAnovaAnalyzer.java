@@ -47,6 +47,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractAnalyzer {
 
+    protected Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
+
     /**
      * Creates and returns an {@link ExpressionAnalysis} and fills in the expression analysis results.
      * 
@@ -92,11 +94,12 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractAnalyzer {
 
         }
 
-        Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
-        // FIXME need the experimentalFactor
+        /* This results set contains each probe, where each probe has all 3 values. */
         ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance( expressionAnalysis,
-                analysisResults, null );// experimentalFactor );
+                analysisResults, null );
         resultSets.add( resultSet );
+
+        // TODO now you need a set for each of main and interaction effects.
 
         expressionAnalysis.setResultSets( resultSets );
 
