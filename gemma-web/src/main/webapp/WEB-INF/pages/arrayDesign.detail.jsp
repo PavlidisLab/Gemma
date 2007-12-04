@@ -347,8 +347,15 @@
 				onclick="showHelpTip(event, 'Annotation files for this array'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
 		</td>
+		<td>
 			<a class="annotationLink" href=${annotationLink}noParents
-					src="no parents"/> </a>
+					src="no parents"/>[no parents] </a>
+			
+			<a class="annotationLink" href=${annotationLink}allParents
+					src="no parents"/>[All parents] </a>
+					
+			<a class="annotationLink" href=${annotationLink}bioProcess
+					src="no parents"/>[Biological Process] </a>		
 		<td>
 			
 	</tr>

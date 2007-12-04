@@ -176,25 +176,26 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     		 fileType="allParents";
     	  
     	ArrayDesign arrayDesign = arrayDesignService.load( Long.parseLong( arrayDesignIdStr ) );
-    	String fileName = arrayDesign.getShortName() + "_"+ fileType;
+    	String fileName = arrayDesign.getShortName() + "_"+ fileType + ".an.txt";
 
     	
-    	File f = new File(ArrayDesignGOAnnotationGeneratorCli.ANNOT_DATA_DIR + fileName + ".an.txt");
+    	File f = new File(ArrayDesignGOAnnotationGeneratorCli.ANNOT_DATA_DIR + fileName);
     	BufferedReader reader;
 		try {
 			reader = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
 		}catch(FileNotFoundException fnfe){
-			log.warn("Annotation file"  + fileName  + " is missing");
+			log.warn("Annotation file"  + fileName  + " can't be found");
 			return null;
 		}
-					
-    	response.setHeader( "Content-disposition", "inline; filename=" + fileName );
-    	//response.setContentType("text/plain");
+		
+    	response.setHeader( "Content-disposition", "attachment; filename=" + fileName );
+    	response.setContentType("application/octet-stream");
     	
     	try{
 	    	String lineOfFile = reader.readLine();
 	    	while(lineOfFile != null){
-	    		response.getWriter().write(lineOfFile);    		
+	    		response.getWriter().write(lineOfFile);
+	    		response.getWriter().write('\n');	//Readln strips out new line characters, put back in. 
 	    		lineOfFile = reader.readLine();
 	    	}
 	    	
@@ -460,8 +461,12 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         Collection<ArrayDesign> mergees = arrayDesign.getMergees();
         ArrayDesign merger = arrayDesign.getMergedInto();
 
-       if ((subsumer == null) && (merger == null)){
-    	   //Display annotation file links. 
+    	File f = new File(ArrayDesignGOAnnotationGeneratorCli.ANNOT_DATA_DIR + arrayDesign.getShortName() + "_NoParents.an.txt");
+
+       if ((subsumer == null) && (merger == null) && (f.exists())){
+    	   //Possible to have an annotation file?
+    	   //Has the annotation file been generated?
+    	       	   
     	   mav.addObject("annotationLink","/Gemma/arrays/downloadAnnotationFile.html?id=" + arrayDesign.getId() +"&fileType=" );
        }
        else
