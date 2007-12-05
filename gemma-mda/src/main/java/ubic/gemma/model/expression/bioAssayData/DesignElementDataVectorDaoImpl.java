@@ -32,6 +32,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
 import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
+import org.hibernate.LockMode;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -360,22 +361,24 @@ public class DesignElementDataVectorDaoImpl extends
                     try {
                         BioSequence seq = ( ( CompositeSequence ) de ).getBiologicalCharacteristic();
                         if ( seq != null ) {
-                            session.update( seq );
+                            session.lock( seq, LockMode.NONE );
+                            Hibernate.initialize( seq );
+                       //     session.evict( seq );
                         }
 
                         ArrayDesign arrayDesign = ( ( CompositeSequence ) de ).getArrayDesign();
                         Hibernate.initialize( arrayDesign );
                     } catch ( org.hibernate.NonUniqueObjectException e ) {
-                        log.warn( e, e );
+                        log.warn( e.getMessage() );
                         // no problem. Ignore it. This happens in tests.
                     }
 
                     if ( ++count % 10000 == 0 && count >= 10000 ) {
                         timer.split();
                         log.info( "Thawed " + count + " vector-associated probes " + timer.getSplitTime() + " ms" );
-                        session.clear();
                         timer.unsplit();
                     }
+             //       session.evict( de );
                 }
 
                 timer.stop();

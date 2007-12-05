@@ -966,14 +966,20 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      */
     @Override
     protected Collection handleGetDesignElementDataVectors( Collection quantitationTypes ) throws Exception {
-        // NOTE this essentially does the thaw.
+        // NOTE this essentially does a partial thaw.
         final String queryString = "select dev from DesignElementDataVectorImpl dev"
                 + " inner join fetch dev.bioAssayDimension bd "
                 + " inner join fetch dev.designElement de inner join fetch dev.quantitationType where dev.quantitationType in (:qts) ";
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameterList( "qts", quantitationTypes );
+            StopWatch timer = new StopWatch();
+            timer.start();
             List results = queryObject.list();
+            timer.stop();
+            if ( timer.getTime() > 5000 ) {
+                log.info( "Load " + results.size() + " vectors in " + timer.getTime() + "ms" );
+            }
             return results;
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
