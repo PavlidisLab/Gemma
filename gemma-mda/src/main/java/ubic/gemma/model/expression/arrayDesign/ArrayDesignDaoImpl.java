@@ -1095,6 +1095,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 arrayDesign.getLocalFiles().size();
                 for ( DatabaseEntry d : arrayDesign.getExternalReferences() ) {
                     session.update( d );
+                    session.evict( d );
                 }
 
                 arrayDesign.getAuditTrail().getEvents().size();
@@ -1128,8 +1129,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
 
                     if ( ++i % LOGGING_UPDATE_EVENT_COUNT == 0 ) {
-                        log.info( "CS assoc thaw progress: " + i + "/" + numToDo + " ... (" + timer.getTime() / 1000
-                                + "s elapsed)" );
+                        log.info( arrayDesign.getShortName() + " CS assoc thaw progress: " + i + "/" + numToDo
+                                + " ... (" + timer.getTime() / 1000 + "s elapsed)" );
                         try {
                             Thread.sleep( 10 );
                         } catch ( InterruptedException e ) {
@@ -1176,19 +1177,23 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                         if ( g != null ) {
                             g.getAliases().size();
                         }
+                        session.evict( g );
                     }
 
                     if ( bs.getSequenceDatabaseEntry() != null ) {
                         Hibernate.initialize( bs.getSequenceDatabaseEntry() );
                     }
+
+                    session.evict( bs );
+                    session.evict( cs );
                 }
 
                 if ( timer.getTime() > 2000 )
-                    log.info( "CS assoc thaw done (" + timer.getTime() / 1000 + "s elapsed)" );
+                    log.info( arrayDesign.getShortName() + ": CS assoc thaw done (" + timer.getTime() / 1000
+                            + "s elapsed)" );
 
                 // session.update( arrayDesign );
-
-                session.clear();
+                // session.clear();
                 session.setFlushMode( oldFlushMode );
                 session.setCacheMode( oldCacheMode );
                 return null;
