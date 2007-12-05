@@ -117,48 +117,49 @@ public class DedvRankService {
      */
     @SuppressWarnings("unchecked")
     public AbstractNamedMatrix getSampleRankMatrix( Collection<Gene> genes, Collection<ExpressionExperiment> ees ) {
+        throw new UnsupportedOperationException( "Sorry, this isn't implemented yet" );
         // TODO: finish implementation
-        Collection<AbstractNamedMatrix> rankMatrices = new HashSet<AbstractNamedMatrix>();
-        int count = 1;
-        for ( ExpressionExperiment ee : ees ) {
-            log.info( "Processing " + ee.getShortName() + " (" + count++ + " of " + ees.size() + ")" );
-
-            eeService.thawLite( ee );
-            Collection<DesignElementDataVector> vectors;
-            try {
-                vectors = eeService.getDesignElementDataVectors( ExpressionDataMatrixBuilder
-                        .getUsefulQuantitationTypes( ee ) );
-            } catch ( Exception e ) {
-                log.error( e.getMessage() );
-                log.error( ee.getShortName() + ": Unable to retrieve design element data vectors, skipping..." );
-                continue;
-            }
-
-            Map<Gene, Collection<DesignElementDataVector>> gene2dedvMap = getGene2DedvMap( ee, vectors );
-
-            ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectors );
-
-            for ( ArrayDesign ad : ( Collection<ArrayDesign> ) this.eeService.getArrayDesignsUsed( ee ) ) {
-                ExpressionDataDoubleMatrix intensityMatrix = builder.getIntensity( ad );
-                if ( intensityMatrix == null ) {
-                    // can't do it for this experiment!.
-                }
-                AbstractNamedMatrix rankMatrix = computeSampleRanks( intensityMatrix );
-                rankMatrices.add( rankMatrix );
-            }
-        }
-        int columns = 0;
-        int rows = genes.size();
-        for ( AbstractNamedMatrix rankMatrix : rankMatrices ) {
-            columns += rankMatrix.columns();
-        }
-        AbstractNamedMatrix rankMatrix = new DenseDoubleMatrix2DNamed( rows, columns );
-
-        for ( Gene gene : genes ) {
-
-        }
-
-        return null;
+        // Collection<AbstractNamedMatrix> rankMatrices = new HashSet<AbstractNamedMatrix>();
+        // int count = 1;
+        // for ( ExpressionExperiment ee : ees ) {
+        // log.info( "Processing " + ee.getShortName() + " (" + count++ + " of " + ees.size() + ")" );
+        //
+        // eeService.thawLite( ee );
+        // Collection<DesignElementDataVector> vectors;
+        // try {
+        // vectors = eeService.getDesignElementDataVectors( ExpressionDataMatrixBuilder
+        // .getUsefulQuantitationTypes( ee ) );
+        // } catch ( Exception e ) {
+        // log.error( e.getMessage() );
+        // log.error( ee.getShortName() + ": Unable to retrieve design element data vectors, skipping..." );
+        // continue;
+        // }
+        //
+        // Map<Gene, Collection<DesignElementDataVector>> gene2dedvMap = getGene2DedvMap( ee, vectors );
+        //
+        // ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectors );
+        //
+        // for ( ArrayDesign ad : ( Collection<ArrayDesign> ) this.eeService.getArrayDesignsUsed( ee ) ) {
+        // ExpressionDataDoubleMatrix intensityMatrix = builder.getIntensity( ad );
+        // if ( intensityMatrix == null ) {
+        // // can't do it for this experiment!.
+        // }
+        // AbstractNamedMatrix rankMatrix = computeSampleRanks( intensityMatrix );
+        // rankMatrices.add( rankMatrix );
+        // }
+        // }
+        // int columns = 0;
+        // int rows = genes.size();
+        // for ( AbstractNamedMatrix rankMatrix : rankMatrices ) {
+        //            columns += rankMatrix.columns();
+        //        }
+        //        AbstractNamedMatrix rankMatrix = new DenseDoubleMatrix2DNamed( rows, columns );
+        //
+        //        for ( Gene gene : genes ) {
+        //
+        //        }
+        //
+        //        return null;
     }
 
     /**

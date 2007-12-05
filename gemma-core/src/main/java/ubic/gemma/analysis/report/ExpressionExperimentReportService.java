@@ -43,6 +43,7 @@ import ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentRepo
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -306,8 +307,15 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
             eeVo.setValidatedFlag( validationEvents.get( id ) );
 
             ExpressionExperiment ee = eeMap.get( id );
-            AuditEvent arrayDesignUpdateEvent = expressionExperimentService.getLastArrayDesignUpdate( ee );
-            eeVo.setDateArrayDesignLastUpdated( arrayDesignUpdateEvent.getDate() );
+
+            /*
+             * The array design is not considered 'updated' unless the probe mapping has been run.
+             */
+            AuditEvent arrayDesignUpdateEvent = expressionExperimentService.getLastArrayDesignUpdate( ee,
+                    ArrayDesignGeneMappingEvent.class );
+            if ( arrayDesignUpdateEvent != null ) {
+                eeVo.setDateArrayDesignLastUpdated( arrayDesignUpdateEvent.getDate() );
+            }
         }
 
         watch.stop();

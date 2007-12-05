@@ -646,7 +646,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
             queryObject.setCacheable( true );
             queryObject.setCacheRegion( "eeValueObjects" );
-            Map<Long, Collection<QuantitationType>> qtMap = getQuantiationTypeMap();
+            Map<Long, Collection<QuantitationType>> qtMap = getQuantitationTypeMap( null );
             ScrollableResults list = queryObject.scroll( ScrollMode.FORWARD_ONLY );
             while ( list.next() ) {
                 ExpressionExperimentValueObject v = new ExpressionExperimentValueObject();
@@ -680,9 +680,15 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      * @return map of EEids to Qts.
      */
     @SuppressWarnings("unchecked")
-    private Map<Long, Collection<QuantitationType>> getQuantiationTypeMap() {
-        final String queryString = "select ee, qts  from ExpressionExperimentImpl as ee inner join ee.quantitationTypes as qts";
+    private Map<Long, Collection<QuantitationType>> getQuantitationTypeMap( Collection eeids ) {
+        String queryString = "select ee, qts  from ExpressionExperimentImpl as ee inner join ee.quantitationTypes as qts ";
+        if ( eeids != null ) {
+            queryString = queryString + " where ee.id in (:eeids)";
+        }
         org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+        if ( eeids != null ) {
+            queryObject.setParameterList( "eeids", eeids );
+        }
         queryObject.setCacheable( true );
         queryObject.setCacheRegion( "quantitationTypesForEes" );
         // queryObject.setMaxResults( 10 ); testing.
@@ -741,7 +747,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameterList( "ids", ids );
-            Map<Long, Collection<QuantitationType>> qtMap = getQuantiationTypeMap();
+            Map<Long, Collection<QuantitationType>> qtMap = getQuantitationTypeMap( ids );
             queryObject.setCacheable( true );
             queryObject.setCacheRegion( "eeValueObjects" );
 
@@ -1125,10 +1131,16 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
     @Override
     protected ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastArrayDesignUpdate(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment ee ) throws java.lang.Exception {
+            ubic.gemma.model.expression.experiment.ExpressionExperiment ee, Class eventType )
+            throws java.lang.Exception {
 
-        final String queryString = "select distinct event from ExpressionExperimentImpl as ee inner join ee.bioAssays b inner join b.arrayDesignUsed a inner join a.auditTrail trail inner join trail.events event"
-                + " where ee = :ee order by event.date desc";
+        String classRestriction = "";
+        if ( eventType != null ) {
+            classRestriction = " and et.class = '" + eventType.getSimpleName() + "Impl'";
+        }
+        final String queryString = "select distinct event from ExpressionExperimentImpl as ee inner join "
+                + "ee.bioAssays b inner join b.arrayDesignUsed a inner join a.auditTrail trail inner join trail.events event left outer join event.eventType et "
+                + " where ee = :ee " + classRestriction + " order by event.date desc ";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
@@ -1139,6 +1151,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
             Collection results = queryObject.list();
 
+            if ( results.size() == 0 ) return null;
             return ( AuditEvent ) results.iterator().next();
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );

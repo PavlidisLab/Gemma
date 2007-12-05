@@ -50,8 +50,6 @@
 			defaultorder="descending"
 			titleKey="expressionExperiment.bioMaterialCount"
 			comparator="ubic.gemma.web.taglib.displaytag.NumberComparator" />
-		<display:column property="dateCachedNoTime" sortable="true"
-			defaultorder="descending" title="Cached" />
 		<display:column property="dateCreatedNoTime" sortable="true"
 			defaultorder="descending" title="Created"
 			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />
@@ -62,7 +60,7 @@
 			defaultorder="descending" title="Rank Computed"
 			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />
 		<display:column property="dateLastArrayDesignUpdatedNoTime"
-			sortable="true" defaultorder="descending" title="Array Des. Mod."
+			sortable="true" defaultorder="descending" title="Probe Map"
 			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />
 		<display:column property="dateLinkAnalysisNoTime" sortable="true"
 			defaultorder="descending" title="Link Analyzed" 

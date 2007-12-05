@@ -388,7 +388,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         Collection<ExpressionExperimentValueObject> eeVos = expressionExperimentReportService
                 .retrieveSummaryObjects( eeId );
 
-        AuditEvent lastArrayDesignUpdate = expressionExperimentService.getLastArrayDesignUpdate( expressionExperiment );
+        AuditEvent lastArrayDesignUpdate = expressionExperimentService.getLastArrayDesignUpdate( expressionExperiment,
+                null );
         mav.addObject( "lastArrayDesignUpdate", lastArrayDesignUpdate );
 
         if ( eeVos != null && eeVos.size() > 0 ) {

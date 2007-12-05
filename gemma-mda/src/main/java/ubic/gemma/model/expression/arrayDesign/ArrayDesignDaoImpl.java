@@ -878,7 +878,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * (non-Javadoc)
      * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumCompositeSequences(java.lang.Long)
-     */// FIXME this method should return a long.
+     */
     @Override
     protected Integer handleNumCompositeSequences( Long id ) throws Exception {
         final String queryString = "select count (*) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar where ar.id = :id";
@@ -1128,7 +1128,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 Collection<BioSequence> seen = new HashSet<BioSequence>();
                 for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
 
-                    if ( ++i % LOGGING_UPDATE_EVENT_COUNT == 0 ) {
+                    if ( ++i % LOGGING_UPDATE_EVENT_COUNT == 0 && timer.getTime() > 5000 ) {
                         log.info( arrayDesign.getShortName() + " CS assoc thaw progress: " + i + "/" + numToDo
                                 + " ... (" + timer.getTime() / 1000 + "s elapsed)" );
                         try {
@@ -1188,7 +1188,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                     session.evict( cs );
                 }
 
-                if ( timer.getTime() > 2000 )
+                if ( timer.getTime() > 5000 )
                     log.info( arrayDesign.getShortName() + ": CS assoc thaw done (" + timer.getTime() / 1000
                             + "s elapsed)" );
 

@@ -109,7 +109,9 @@ public class ExpressionExperimentWrapper extends TableDecorator {
             shortDate = formatIfRecent( mostRecent, shortDate );
             return "<span title='" + fullDate + "'>" + shortDate + "</span>";
         }
-        return "[None]";
+        // This indicates that the probe analysis was never done.
+        String style = "style=\"color:#3A3;\" title='Needs to be done'";
+        return "<span " + style + "'>Needed</span>";
     }
 
     /**

@@ -209,22 +209,25 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
             log.info( "Removing " + oldVectors.size() + " old vectors for " + type );
             designElementDataVectorService.remove( oldVectors );
 
-            // FIXME can remove the old BioAssayDimensions, too.
+            // can remove the old BioAssayDimensions, too.
             for ( BioAssayDimension oldDim : oldBioAssayDims ) {
-
+                bioAssayDimensionService.remove( oldDim );
             }
         }
 
     }
 
+    /**
+     * Define a new bioAd, or get an existing one.
+     * 
+     * @param oldBioAssayDims
+     * @param newDims
+     * @return
+     */
     private BioAssayDimension locateBioAssayDimension( Collection<BioAssayDimension> oldBioAssayDims,
             Collection<BioAssayDimension> newDims ) {
         List<BioAssayDimension> sortedOldDims = sortedBioAssayDimensions( oldBioAssayDims );
-
-        // define a new bioAd, or get an existing one.
-
         return combineBioAssayDimensions( newDims, sortedOldDims );
-
     }
 
     private List<BioAssayDimension> sortedBioAssayDimensions( Collection<BioAssayDimension> oldBioAssayDims ) {

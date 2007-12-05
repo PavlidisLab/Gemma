@@ -102,7 +102,9 @@ public class DesignElementDataVectorDaoImpl extends
 
     @Override
     public Collection find( ArrayDesign arrayDesign, QuantitationType quantitationType ) {
-        final String queryString = "select dedv from DesignElementDataVectorImpl dedv where dedv.designElement in (:desEls) and dedv.quantitationType = :quantitationType ";
+        final String queryString = "select dedv from DesignElementDataVectorImpl dev   inner join fetch dev.bioAssayDimension bd "
+                + " inner join fetch dev.designElement de inner join fetch dev.quantitationTypewhere dev.designElement in (:desEls) "
+                + "and dev.quantitationType = :quantitationType ";
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameter( "quantitationType", quantitationType );
@@ -363,7 +365,7 @@ public class DesignElementDataVectorDaoImpl extends
                         if ( seq != null ) {
                             session.lock( seq, LockMode.NONE );
                             Hibernate.initialize( seq );
-                       //     session.evict( seq );
+                            // session.evict( seq );
                         }
 
                         ArrayDesign arrayDesign = ( ( CompositeSequence ) de ).getArrayDesign();
@@ -378,7 +380,7 @@ public class DesignElementDataVectorDaoImpl extends
                         log.info( "Thawed " + count + " vector-associated probes " + timer.getSplitTime() + " ms" );
                         timer.unsplit();
                     }
-             //       session.evict( de );
+                    // session.evict( de );
                 }
 
                 timer.stop();
@@ -667,7 +669,7 @@ public class DesignElementDataVectorDaoImpl extends
             // get the data returned from the query
             Long dedvId = scroll.getLong( 0 );
             Long geneId = scroll.getLong( 1 );
-            Long featureId = scroll.getLong( 2 );
+         //   Long featureId = scroll.getLong( 2 );
             String officialName = scroll.getString( 3 );
             String officialSymbol = scroll.getString( 4 );
 

@@ -404,8 +404,8 @@ public class ExpressionExperimentServiceImpl extends
 
     @Override
     @SuppressWarnings("unchecked")
-    protected AuditEvent handleGetLastArrayDesignUpdate( ExpressionExperiment ee ) throws Exception {
-        return this.getExpressionExperimentDao().getLastArrayDesignUpdate( ee );
+    protected AuditEvent handleGetLastArrayDesignUpdate( ExpressionExperiment ee, Class eventType ) throws Exception {
+        return this.getExpressionExperimentDao().getLastArrayDesignUpdate( ee, eventType );
     }
 
     /*

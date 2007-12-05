@@ -94,7 +94,7 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
 
         final String queryString = "select event " + "from ubic.gemma.model.common.auditAndSecurity.AuditTrail trail "
                 + "inner join trail.events event inner join event.eventType et " + "where trail = :trail "
-                + "and et.class in (" + StringUtils.join( classes, "," ) + ")order by event.date desc ";
+                + "and et.class in (" + StringUtils.join( classes, "," ) + ") order by event.date desc ";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );

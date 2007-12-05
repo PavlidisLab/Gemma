@@ -85,11 +85,10 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
      */
     @SuppressWarnings("unchecked")
     public void switchExperimentToMergedPlatform( ExpressionExperiment expExp ) {
-
         ArrayDesign arrayDesign = locateMergedDesign( expExp );
-
+        if ( arrayDesign == null )
+            throw new IllegalArgumentException( "Experiment has no merged design to switch to" );
         switchExperimentToArrayDesign( expExp, arrayDesign );
-
     }
 
     /**
