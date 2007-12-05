@@ -138,8 +138,8 @@ public class EffectSizeCalculationCli extends AbstractGeneCoexpressionManipulati
             return new Exception( "No genes in query/target" );
         }
 
-        FilterConfig filterConfig = new FilterConfig(); // FIXME
-        CoexpressionMatrices matrices = coexpressionAnalysisService.calculateCoexpressionMatrices( ees, queryGenes, targetGenes, filterConfig);
+        FilterConfig filterConfig = new FilterConfig();
+        CoexpressionMatrices matrices = coexpressionAnalysisService.calculateCoexpressionMatrices( ees, queryGenes, targetGenes, filterConfig, null);
         DenseDoubleMatrix3DNamed correlationMatrix = matrices.getCorrelationMatrix();
         DenseDoubleMatrix3DNamed sampleSizeMatrix = matrices.getSampleSizeMatrix();
         DoubleMatrixNamed effectSizeMatrix = coexpressionAnalysisService.calculateEffectSizeMatrix( correlationMatrix, sampleSizeMatrix );

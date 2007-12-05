@@ -20,6 +20,7 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.io.writer.MatrixWriter;
 import ubic.gemma.analysis.linkAnalysis.CoexpressionAnalysisService;
 import ubic.gemma.analysis.linkAnalysis.CoexpressionAnalysisService.CoexpressionMatrices;
+import ubic.gemma.analysis.linkAnalysis.CoexpressionAnalysisService.CorrelationMethod;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -95,7 +96,7 @@ public class CorrelationAnalysisCLI extends
 		// calculate matrices
 		CoexpressionMatrices matrices = coexpressionAnalysisService
 				.calculateCoexpressionMatrices(ees, queryGenes, targetGenes,
-						filterConfig);
+						filterConfig, CorrelationMethod.SPEARMAN);
 		DenseDoubleMatrix3DNamed correlationMatrix = matrices
 				.getCorrelationMatrix();
 //		DenseDoubleMatrix3DNamed sampleSizeMatrix = matrices
