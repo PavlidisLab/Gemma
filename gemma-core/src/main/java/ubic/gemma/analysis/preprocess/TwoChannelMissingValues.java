@@ -18,9 +18,12 @@
  */
 package ubic.gemma.analysis.preprocess;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -108,8 +111,14 @@ public class TwoChannelMissingValues {
         expressionExperimentService.thawLite( expExp );
         Collection<QuantitationType> usefulQuantitationTypes = ExpressionDataMatrixBuilder
                 .getUsefulQuantitationTypes( expExp );
-        Collection<DesignElementDataVector> vectors = expressionExperimentService.getDesignElementDataVectors( expExp,
-                usefulQuantitationTypes );
+        StopWatch timer = new StopWatch();
+        timer.start();
+        log.info( "Loading vectors ..." );
+        Collection<DesignElementDataVector> vectors = expressionExperimentService
+                .getDesignElementDataVectors( usefulQuantitationTypes );
+
+        timer.stop();
+        logTimeInfo( timer, vectors );
 
         designElementDataVectorService.thaw( vectors );
 
@@ -150,6 +159,12 @@ public class TwoChannelMissingValues {
             finalResults.addAll( dimRes );
         }
         return finalResults;
+    }
+
+    private void logTimeInfo( StopWatch timer, Collection<DesignElementDataVector> items ) {
+        NumberFormat nf = DecimalFormat.getInstance();
+        nf.setMaximumFractionDigits( 2 );
+        log.info( "Loaded in " + nf.format( timer.getTime() / 1000 ) + "s. Thawing " + items.size() + " vectors" );
     }
 
     /**

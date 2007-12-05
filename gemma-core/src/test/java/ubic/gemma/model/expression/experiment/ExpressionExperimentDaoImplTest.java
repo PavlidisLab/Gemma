@@ -144,8 +144,9 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
         quantitationTypes.add( quantitationType );
 
         log.info( "***********************" );
-        Collection<DesignElementDataVector> vectors = expressionExperimentDao.getDesignElementDataVectors( ee,
-                quantitationTypes );
+        Collection<DesignElementDataVector> vectors = expressionExperimentDao.getDesignElementDataVectors(
+
+        quantitationTypes );
         log.info( "***********************" );
         assertEquals( 12, vectors.size() );
 

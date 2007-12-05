@@ -54,7 +54,11 @@ public class ExpressionExperimentDataFetchController extends AbstractController 
 
     private static Log log = LogFactory.getLog( ExpressionExperimentDataFetchController.class.getName() );
 
-    private static final int BATCH_SIZE = 100;
+    /**
+     * Chunks of this many vectors of data are sent to the client, so download starts pretty quickly.
+     */
+    private static final int BATCH_SIZE = 2000;
+    
     protected DesignElementDataVectorService designElementDataVectorService;
     protected ExpressionExperimentService expressionExperimentService = null;
 
@@ -82,10 +86,14 @@ public class ExpressionExperimentDataFetchController extends AbstractController 
     @SuppressWarnings("unchecked")
     private void writeBatch( HttpServletResponse response, PrimitiveType representation, MatrixWriter writer,
             Collection<DesignElementDataVector> batch, boolean firstBatch ) throws IOException {
-        designElementDataVectorService.thaw( batch );
-        ExpressionDataMatrix expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( representation, batch );
-        writer.write( response.getWriter(), expressionDataMatrix, firstBatch );
-        batch.clear();
+        try {
+            designElementDataVectorService.thaw( batch );
+            ExpressionDataMatrix expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( representation, batch );
+            writer.write( response.getWriter(), expressionDataMatrix, firstBatch );
+            batch.clear();
+        } catch ( Exception e ) {
+            throw new RuntimeException(e);
+        }
     }
 
     @SuppressWarnings("unchecked")

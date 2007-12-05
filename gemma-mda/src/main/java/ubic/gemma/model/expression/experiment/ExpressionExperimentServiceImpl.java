@@ -331,9 +331,8 @@ public class ExpressionExperimentServiceImpl extends
      *      java.util.Collection)
      */
     @Override
-    protected Collection handleGetDesignElementDataVectors( ExpressionExperiment expressionExperiment,
-            Collection quantitationTypes ) throws Exception {
-        return this.getExpressionExperimentDao().getDesignElementDataVectors( expressionExperiment, quantitationTypes );
+    protected Collection handleGetDesignElementDataVectors( Collection quantitationTypes ) throws Exception {
+        return this.getExpressionExperimentDao().getDesignElementDataVectors( quantitationTypes );
     }
 
     /*
@@ -510,9 +509,9 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().getAssayedProbes( expressionExperiment, rankThreshold );
     }
 
-	@Override
-	protected ExpressionExperiment handleFindByBioMaterial(BioMaterial bm) throws Exception {
-		return this.getExpressionExperimentDao().findByBioMaterial(bm);
-	}
+    @Override
+    protected ExpressionExperiment handleFindByBioMaterial( BioMaterial bm ) throws Exception {
+        return this.getExpressionExperimentDao().findByBioMaterial( bm );
+    }
 
 }

@@ -82,7 +82,7 @@ public class ExpressionDataMatrixService {
 
         log.info( "Loading vectors..." );
 
-        Collection<DesignElementDataVector> dataVectors = eeService.getDesignElementDataVectors( ee, qtc );
+        Collection<DesignElementDataVector> dataVectors = eeService.getDesignElementDataVectors( qtc );
         vectorService.thaw( dataVectors );
 
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( dataVectors );

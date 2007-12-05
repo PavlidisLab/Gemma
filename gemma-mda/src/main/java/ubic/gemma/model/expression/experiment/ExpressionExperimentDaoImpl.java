@@ -965,11 +965,11 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      *      java.util.Collection)
      */
     @Override
-    protected Collection handleGetDesignElementDataVectors( ExpressionExperiment expressionExperiment,
-            Collection quantitationTypes ) throws Exception {
-        // FIXME: the experiment is no longer necessary,as each QT is soley
-        // owned by one EE.
-        final String queryString = "select distinct dev from DesignElementDataVectorImpl dev inner join fetch dev.bioAssayDimension inner join fetch dev.designElement  where dev.quantitationType in (:qts) ";
+    protected Collection handleGetDesignElementDataVectors( Collection quantitationTypes ) throws Exception {
+        // NOTE this essentially does the thaw.
+        final String queryString = "select dev from DesignElementDataVectorImpl dev"
+                + " inner join fetch dev.bioAssayDimension bd "
+                + " inner join fetch dev.designElement de inner join fetch dev.quantitationType where dev.quantitationType in (:qts) ";
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameterList( "qts", quantitationTypes );

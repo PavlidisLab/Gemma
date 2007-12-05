@@ -23,13 +23,17 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
+import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
+import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -41,8 +45,8 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -313,35 +317,75 @@ public class DesignElementDataVectorDaoImpl extends
 
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected void handleThaw( final Collection designElementDataVectors ) throws Exception {
 
-        // String query = "from DesignElementDataVectorImpl d "
-        // + "inner join fetch d.designElement inner join fetch d.bioAssayDimension dim "
-        // + "inner join fetch dim.bioAssays ba " + "inner join fetch ba.arrayDesignUsed "
-        // + "inner join fetch ba.samplesUsed " + "inner join fetch ba.derivedDataFiles where d in (:dedvs) ";
-
         HibernateTemplate templ = this.getHibernateTemplate();
+        templ.setFetchSize( 400 );
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            @SuppressWarnings("unchecked")
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+
+                FlushMode oldFlushMode = session.getFlushMode();
+                CacheMode oldCacheMode = session.getCacheMode();
+                session.setCacheMode( CacheMode.IGNORE ); // Don't hit the secondary cache
+                session.setFlushMode( FlushMode.MANUAL ); // We're READ-ONLY so this is okay.
                 int count = 0;
+                StopWatch timer = new StopWatch();
+                timer.start();
+
+                Collection<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
+                Collection<DesignElement> cs = new HashSet<DesignElement>();
                 for ( Object object : designElementDataVectors ) {
-                    DesignElementDataVector designElementDataVector = ( DesignElementDataVector ) object;
+                    DesignElementDataVector v = ( DesignElementDataVector ) object;
+                    dims.add( v.getBioAssayDimension() );
+                    cs.add( v.getDesignElement() );
+                }
+
+                for ( BioAssayDimension bad : dims ) {
                     try {
-                        thaw( session, designElementDataVector );
+                        for ( BioAssay ba : bad.getBioAssays() ) {
+                            session.update( ba );
+                            ba.setArrayDesignUsed( ( ArrayDesign ) session.merge( ba.getArrayDesignUsed() ) );
+                            ba.getArrayDesignUsed().hashCode();
+                            ba.getSamplesUsed().size();
+                            ba.getDerivedDataFiles().size();
+                        }
                     } catch ( org.hibernate.NonUniqueObjectException e ) {
                         log.warn( e, e );
                         // no problem. Ignore it. This happens in tests.
                     }
-                    if ( count % 1000 == 0 ) {
-                        session.clear();
+                }
+
+                for ( DesignElement de : cs ) {
+                    try {
+                        BioSequence seq = ( ( CompositeSequence ) de ).getBiologicalCharacteristic();
+                        if ( seq != null ) {
+                            session.update( seq );
+                        }
+
+                        ArrayDesign arrayDesign = ( ( CompositeSequence ) de ).getArrayDesign();
+                        Hibernate.initialize( arrayDesign );
+                    } catch ( org.hibernate.NonUniqueObjectException e ) {
+                        log.warn( e, e );
+                        // no problem. Ignore it. This happens in tests.
                     }
-                    if ( ++count % 10000 == 0 ) {
-                        log.info( "Thawed " + count + " vectors" );
+
+                    if ( ++count % 10000 == 0 && count >= 10000 ) {
+                        timer.split();
+                        log.info( "Thawed " + count + " vector-associated probes " + timer.getSplitTime() + " ms" );
+                        session.clear();
+                        timer.unsplit();
                     }
                 }
-                session.clear();
-                if ( count > 10000 ) log.info( "Done, thawed " + count + " vectors" );
+
+                timer.stop();
+                if ( designElementDataVectors.size() >= 2000 || timer.getTime() > 2000 )
+                    log.info( "Done, thawed " + designElementDataVectors.size() + " vectors in " + timer.getTime()
+                            + "ms" );
+                session.setFlushMode( oldFlushMode );
+                session.setCacheMode( oldCacheMode );
                 return null;
             }
 
@@ -356,18 +400,19 @@ public class DesignElementDataVectorDaoImpl extends
      * @param designElementDataVector
      */
     private void thaw( org.hibernate.Session session, DesignElementDataVector designElementDataVector ) {
-        session.update( designElementDataVector );
+        // session.update( designElementDataVector );
 
         // thaw the design element.
         BioSequence seq = ( ( CompositeSequence ) designElementDataVector.getDesignElement() )
                 .getBiologicalCharacteristic();
         if ( seq != null ) {
             session.update( seq );
-            seq.hashCode();
+            // seq.hashCode();
+            // Hibernate.initialize( seq );
         }
 
         ArrayDesign arrayDesign = ( ( CompositeSequence ) designElementDataVector.getDesignElement() ).getArrayDesign();
-        session.update( arrayDesign ); // lock with LockMode.NONE or READ yields 'dirty collection reference' error.
+        // session.update( arrayDesign ); // lock with LockMode.NONE or READ yields 'dirty collection reference' error
         Hibernate.initialize( arrayDesign );
         arrayDesign.hashCode();
 
@@ -377,10 +422,6 @@ public class DesignElementDataVectorDaoImpl extends
             ba.setArrayDesignUsed( ( ArrayDesign ) session.merge( ba.getArrayDesignUsed() ) );
             ba.getArrayDesignUsed().hashCode();
             ba.getSamplesUsed().size();
-            // for ( BioMaterial bm : ba.getSamplesUsed() ) {
-            // bm.getName();
-            // bm.getBioAssaysUsedIn().size();
-            // }
             ba.getDerivedDataFiles().size();
         }
     }

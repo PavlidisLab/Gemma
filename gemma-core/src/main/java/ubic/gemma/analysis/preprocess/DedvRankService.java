@@ -91,8 +91,8 @@ public class DedvRankService {
     public void computeDevRankForExpressionExperiment( ExpressionExperiment ee, Method method ) {
 
         eeService.thawLite( ee );
-        Collection<DesignElementDataVector> vectors = eeService.getDesignElementDataVectors( ee,
-                ExpressionDataMatrixBuilder.getUsefulQuantitationTypes( ee ) );
+        Collection<DesignElementDataVector> vectors = eeService
+                .getDesignElementDataVectors( ExpressionDataMatrixBuilder.getUsefulQuantitationTypes( ee ) );
 
         devService.thaw( vectors );
 
@@ -126,7 +126,7 @@ public class DedvRankService {
             eeService.thawLite( ee );
             Collection<DesignElementDataVector> vectors;
             try {
-                vectors = eeService.getDesignElementDataVectors( ee, ExpressionDataMatrixBuilder
+                vectors = eeService.getDesignElementDataVectors( ExpressionDataMatrixBuilder
                         .getUsefulQuantitationTypes( ee ) );
             } catch ( Exception e ) {
                 log.error( e.getMessage() );
@@ -200,7 +200,7 @@ public class DedvRankService {
             Collection<DesignElementDataVector> vectors;
 
             try {
-                vectors = eeService.getDesignElementDataVectors( ee, ExpressionDataMatrixBuilder
+                vectors = eeService.getDesignElementDataVectors( ExpressionDataMatrixBuilder
                         .getUsefulQuantitationTypes( ee ) );
             } catch ( Exception e ) {
                 log.error( e.getMessage() );
