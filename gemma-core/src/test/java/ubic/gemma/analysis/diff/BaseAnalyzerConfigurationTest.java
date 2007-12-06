@@ -60,7 +60,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
     protected static final int NUM_BIOASSAYS = 8;
 
-    protected final int NUM_TWA_RESULT_SETS = 4;
+    protected final int NUM_TWA_RESULT_SETS = 7;
 
     protected ArrayDesign arrayDesign = null;
 
@@ -123,8 +123,8 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
         /* Decide whether to skip test based on R connection. */
         try {
-            rc = RCommand.newInstance( 20000 );
-            connected = rc == null;
+            rc = null;// RCommand.newInstance( 20000 );
+            connected = true;// rc == null;
         } catch ( RuntimeException e ) {
             connected = false;
         }

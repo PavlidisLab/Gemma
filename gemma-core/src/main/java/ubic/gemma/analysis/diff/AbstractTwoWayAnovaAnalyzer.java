@@ -75,9 +75,6 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractAnalyzer {
         Collection<ExpressionExperiment> experimentsAnalyzed = new HashSet<ExpressionExperiment>();
         expressionAnalysis.setExperimentsAnalyzed( experimentsAnalyzed );
 
-        /* Each probe has all results (ie. 2 - without interactions; 3 - with interactions) */
-        List<ExpressionAnalysisResult> analysisResultsPerProbe = new ArrayList<ExpressionAnalysisResult>();
-
         /* All results for the first main effect */
         List<ExpressionAnalysisResult> analysisResultsMainEffectA = new ArrayList<ExpressionAnalysisResult>();
 
@@ -89,6 +86,9 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractAnalyzer {
 
         int k = 0;
         for ( int i = 0; i < dmatrix.rows(); i++ ) {
+
+            /* Each probe has all results (ie. 2 - without interactions; 3 - with interactions) */
+            List<ExpressionAnalysisResult> analysisResultsPerProbe = new ArrayList<ExpressionAnalysisResult>();
 
             DesignElement de = dmatrix.getDesignElementForRow( i );
 
@@ -116,11 +116,12 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractAnalyzer {
 
                 k++;
             }
-        }
 
-        ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance( expressionAnalysis,
-                analysisResultsPerProbe, null );
-        resultSets.add( resultSet );
+            ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance(
+                    expressionAnalysis, analysisResultsPerProbe, null );
+
+            resultSets.add( resultSet );
+        }
 
         /* main effects */
         ExpressionAnalysisResultSet mainEffectResultSetA = ExpressionAnalysisResultSet.Factory.newInstance(
