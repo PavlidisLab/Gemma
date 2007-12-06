@@ -49,13 +49,12 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
 
         analyzer = ( TwoWayAnovaWithoutInteractionsAnalyzer ) this.getBean( "twoWayAnovaWithoutInteractionsAnalyzer" );
 
-        configureMocks();
     }
 
     /**
      * Tests the TwoWayAnova method.
      */
-    public void testTwoWayAnova() {
+    public void testTwoWayAnova() throws Exception {
 
         log.debug( "Testing getPValues method in " + TwoWayAnovaWithoutInteractionsAnalyzer.class.getName() );
 
@@ -66,15 +65,19 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
 
         super.configureTestDataForTwoWayAnovaWithoutInteractions();
 
+        configureMocks();
+
         ExpressionAnalysis expressionAnalysis = analyzer.getExpressionAnalysis( expressionExperiment );
 
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
 
-        ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
+        assertEquals( NUM_TWA_RESULT_SETS - 1, resultSets.size() );
 
-        assertEquals( resultSet.getResults().size(), NUM_DESIGN_ELEMENTS * 2 );
-
-        logResults( resultSet );
+        for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
+            log.info( "*** Result set for factor: " + resultSet.getExperimentalFactor()
+                    + ".  If factor is null, the result set contains all results per probe. ***" );
+            logResults( resultSet );
+        }
     }
 
     /*

@@ -60,6 +60,8 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
     protected static final int NUM_BIOASSAYS = 8;
 
+    protected final int NUM_TWA_RESULT_SETS = 4;
+
     protected ArrayDesign arrayDesign = null;
 
     protected ExpressionExperiment expressionExperiment = null;
@@ -304,7 +306,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         bioAssay3a.setSamplesUsed( samplesUsed3a );
         bioAssay3a.setArrayDesignUsed( arrayDesign );
 
-        BioAssay bioAssay3b = BioAssay.Factory.newInstance();
+        bioAssay3b = BioAssay.Factory.newInstance();
         bioAssay3b.setName( "a test bioassay 3b" );
         Collection<BioMaterial> samplesUsed3b = new HashSet<BioMaterial>();
         samplesUsed3b.add( biomaterial3b );
@@ -347,15 +349,13 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         bioAssayDimension.setBioAssays( bioAssays );
 
         configureVectors( NUM_BIOASSAYS );
-
-        expressionExperiment.setDesignElementDataVectors( vectors );
     }
 
     /**
      * @param numAssays
      */
     private void configureVectors( int numAssays ) {
-        vectors = new HashSet<DesignElementDataVector>();
+        this.vectors = new HashSet<DesignElementDataVector>();
 
         Collection<CompositeSequence> compositeSequences = new HashSet<CompositeSequence>();
         for ( int i = 0; i < NUM_DESIGN_ELEMENTS; i++ ) {
@@ -367,7 +367,6 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
             cs.setName( String.valueOf( i ) );
             cs.setArrayDesign( arrayDesign );
             vector.setDesignElement( cs );
-            vectors.add( vector );
 
             double[] dvals = new double[numAssays];
             for ( int j = 0; j < dvals.length; j++ ) {
@@ -377,8 +376,12 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
             byte[] bvals = bac.doubleArrayToBytes( dvals );
             vector.setData( bvals );
 
+            vectors.add( vector );
+
             compositeSequences.add( cs );
         }
+
+        expressionExperiment.setDesignElementDataVectors( vectors );
 
         arrayDesign.setCompositeSequences( compositeSequences );
     }

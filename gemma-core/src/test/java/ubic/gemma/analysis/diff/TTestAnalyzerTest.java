@@ -26,9 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
-import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
-import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -69,8 +67,6 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         analyzer = ( TTestAnalyzer ) this.getBean( "tTestAnalyzer" );
 
-        configureMocks();
-
         /*
          * Doing this here because the test experiment has 2 experimental factors, each with 2 factor values. To test
          * the t-test, we only want to use one experimental factor and one factor value for each biomaterial.
@@ -100,12 +96,14 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
     /**
      * Tests the t-test with an {@link ExpressionExperiment}.
      */
-    public void testTTestWithExpressionExperiment() {
+    public void testTTestWithExpressionExperiment() throws Exception {
 
         if ( !connected ) {
             log.warn( "Could not establish R connection.  Skipping test ..." );
             return;
         }
+
+        configureMocks();
 
         ExpressionAnalysis expressionAnalysis = analyzer.tTest( expressionExperiment, factorValueA, factorValueB );
 
@@ -119,7 +117,7 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         assertEquals( numResults, NUM_DESIGN_ELEMENTS );
 
-        logResults(resultSet);
+        logResults( resultSet );
 
     }
 

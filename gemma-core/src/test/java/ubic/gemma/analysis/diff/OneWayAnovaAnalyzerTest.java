@@ -61,14 +61,12 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
         super.onSetUpInTransaction();
 
         analyzer = ( OneWayAnovaAnalyzer ) this.getBean( "oneWayAnovaAnalyzer" );
-
-        configureMocks();
     }
 
     /**
      * Tests the OneWayAnova method.
      */
-    public void testOneWayAnova() {
+    public void testOneWayAnova() throws Exception {
 
         log.debug( "Testing OneWayAnova method in " + OneWayAnovaAnalyzer.class.getName() );
 
@@ -78,6 +76,8 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
         }
 
         super.configureTestDataForOneWayAnova();
+
+        configureMocks();
 
         ExpressionAnalysis expressionAnalysis = analyzer.oneWayAnova( expressionExperiment );
 

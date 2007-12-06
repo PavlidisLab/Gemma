@@ -65,14 +65,13 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
 
         analyzer = ( TwoWayAnovaWithInteractionsAnalyzer ) this.getBean( "twoWayAnovaWithInteractionsAnalyzer" );
 
-        configureMocks();
     }
 
     /**
      * 
      *
      */
-    public void testTwoWayAnova() {
+    public void testTwoWayAnova() throws Exception {
 
         log.debug( "Testing TwoWayAnova method in " + TwoWayAnovaWithInteractionsAnalyzer.class.getName() );
 
@@ -80,6 +79,8 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
             log.warn( "Could not establish R connection.  Skipping test ..." );
             return;
         }
+
+        configureMocks();
 
         Iterator<ExperimentalFactor> iter = expressionExperiment.getExperimentalDesign().getExperimentalFactors()
                 .iterator();
@@ -93,11 +94,15 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
 
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
 
-        ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
+        assertEquals( NUM_TWA_RESULT_SETS, resultSets.size() );
 
-        assertEquals( resultSet.getResults().size(), NUM_DESIGN_ELEMENTS * 3 );
-
-        logResults( resultSet );
+        for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
+            log
+                    .info( "*** Result set for factor: "
+                            + resultSet.getExperimentalFactor()
+                            + ".  If factor is null, the result set contains all results per probe or represents the results for the 'interaction' effect. ***" );
+            logResults( resultSet );
+        }
 
     }
 

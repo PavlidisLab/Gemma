@@ -49,6 +49,11 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractAnalyzer {
 
     protected Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
 
+    private final int mainEffectAIndex = 0;
+    private final int mainEffectBIndex = 1;
+    private final int mainEffectInteractionIndex = 2;
+    private final int maxResults = 3;
+
     /**
      * Creates and returns an {@link ExpressionAnalysis} and fills in the expression analysis results.
      * 
@@ -71,7 +76,16 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractAnalyzer {
         expressionAnalysis.setExperimentsAnalyzed( experimentsAnalyzed );
 
         /* Each probe has all results (ie. 2 - without interactions; 3 - with interactions) */
-        List<ExpressionAnalysisResult> analysisResults = new ArrayList<ExpressionAnalysisResult>();
+        List<ExpressionAnalysisResult> analysisResultsPerProbe = new ArrayList<ExpressionAnalysisResult>();
+
+        /* All results for the first main effect */
+        List<ExpressionAnalysisResult> analysisResultsMainEffectA = new ArrayList<ExpressionAnalysisResult>();
+
+        /* All results for the second main effect */
+        List<ExpressionAnalysisResult> analysisResultsMainEffectB = new ArrayList<ExpressionAnalysisResult>();
+
+        /* Interaction effect */
+        List<ExpressionAnalysisResult> analysisResultsInteractionEffect = new ArrayList<ExpressionAnalysisResult>();
 
         int k = 0;
         for ( int i = 0; i < dmatrix.rows(); i++ ) {
@@ -91,24 +105,37 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractAnalyzer {
                 // probeAnalysisResult.setCorrectedPvalue( correctedPvalue );
                 // probeAnalysisResult.setParameters( parameters );
 
-                analysisResults.add( probeAnalysisResult );
+                analysisResultsPerProbe.add( probeAnalysisResult );
+
+                if ( j % numResultsFromR == mainEffectAIndex ) analysisResultsMainEffectA.add( probeAnalysisResult );
+
+                if ( j % numResultsFromR == mainEffectBIndex ) analysisResultsMainEffectB.add( probeAnalysisResult );
+
+                if ( j % numResultsFromR == mainEffectInteractionIndex )
+                    analysisResultsInteractionEffect.add( probeAnalysisResult );
 
                 k++;
             }
         }
 
         ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance( expressionAnalysis,
-                analysisResults, null );
+                analysisResultsPerProbe, null );
         resultSets.add( resultSet );
 
         /* main effects */
         ExpressionAnalysisResultSet mainEffectResultSetA = ExpressionAnalysisResultSet.Factory.newInstance(
-                expressionAnalysis, analysisResults, experimentalFactorA );
+                expressionAnalysis, analysisResultsMainEffectA, experimentalFactorA );
         resultSets.add( mainEffectResultSetA );
 
         ExpressionAnalysisResultSet mainEffectResultSetB = ExpressionAnalysisResultSet.Factory.newInstance(
-                expressionAnalysis, analysisResults, experimentalFactorA );
+                expressionAnalysis, analysisResultsMainEffectB, experimentalFactorB );
         resultSets.add( mainEffectResultSetB );
+
+        if ( numResultsFromR == maxResults ) {
+            ExpressionAnalysisResultSet interactionEffectResultSet = ExpressionAnalysisResultSet.Factory.newInstance(
+                    expressionAnalysis, analysisResultsInteractionEffect, null );
+            resultSets.add( interactionEffectResultSet );
+        }
 
         expressionAnalysis.setResultSets( resultSets );
 
@@ -126,7 +153,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractAnalyzer {
         Collection<ExperimentalFactor> experimentalFactors = expressionExperiment.getExperimentalDesign()
                 .getExperimentalFactors();
 
-        if ( experimentalFactors.size() != 2 )
+        if ( experimentalFactors.size() != mainEffectInteractionIndex )
             throw new RuntimeException( "Two way anova supports 2 experimental factors.  Received "
                     + experimentalFactors.size() + "." );
 
