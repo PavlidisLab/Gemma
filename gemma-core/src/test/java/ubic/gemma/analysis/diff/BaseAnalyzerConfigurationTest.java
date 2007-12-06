@@ -123,8 +123,8 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
         /* Decide whether to skip test based on R connection. */
         try {
-            rc = null;// RCommand.newInstance( 20000 );
-            connected = true;// rc == null;
+            rc = RCommand.newInstance( 20000 );
+            connected = rc == null;
         } catch ( RuntimeException e ) {
             connected = false;
         }
