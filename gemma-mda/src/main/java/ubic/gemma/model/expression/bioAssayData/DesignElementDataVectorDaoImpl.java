@@ -102,8 +102,8 @@ public class DesignElementDataVectorDaoImpl extends
 
     @Override
     public Collection find( ArrayDesign arrayDesign, QuantitationType quantitationType ) {
-        final String queryString = "select dedv from DesignElementDataVectorImpl dev   inner join fetch dev.bioAssayDimension bd "
-                + " inner join fetch dev.designElement de inner join fetch dev.quantitationTypewhere dev.designElement in (:desEls) "
+        final String queryString = "select dedv from DesignElementDataVectorImpl dev  inner join fetch dev.bioAssayDimension bd "
+                + " inner join fetch dev.designElement de inner join fetch dev.quantitationType where dev.designElement in (:desEls) "
                 + "and dev.quantitationType = :quantitationType ";
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
@@ -669,7 +669,7 @@ public class DesignElementDataVectorDaoImpl extends
             // get the data returned from the query
             Long dedvId = scroll.getLong( 0 );
             Long geneId = scroll.getLong( 1 );
-         //   Long featureId = scroll.getLong( 2 );
+            // Long featureId = scroll.getLong( 2 );
             String officialName = scroll.getString( 3 );
             String officialSymbol = scroll.getString( 4 );
 
