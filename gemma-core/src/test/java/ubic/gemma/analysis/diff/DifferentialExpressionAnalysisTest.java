@@ -44,7 +44,6 @@ public class DifferentialExpressionAnalysisTest extends BaseAnalyzerConfiguratio
 
         analysis = ( DifferentialExpressionAnalysis ) this.getBean( "differentialExpressionAnalysis" );
 
-        configureMocks();
     }
 
     /**
@@ -85,7 +84,7 @@ public class DifferentialExpressionAnalysisTest extends BaseAnalyzerConfiguratio
     // }
     // }
     /**
-     * Tests determineAnalysis.
+     * * Tests determineAnalysis.
      * <p>
      * 2 experimental factors
      * <p>
@@ -94,8 +93,11 @@ public class DifferentialExpressionAnalysisTest extends BaseAnalyzerConfiguratio
      * complete block design and biological replicates
      * <p>
      * Expected analyzer: {@link TwoWayAnovaWithInteractionsAnalyzer}
+     * 
+     * @throws Exception
      */
-    public void testDetermineAnalysisA() {
+    public void testDetermineAnalysisA() throws Exception {
+        configureMocks();
         AbstractAnalyzer analyzer = analysis.determineAnalysis( expressionExperiment );
         assertTrue( analyzer instanceof TwoWayAnovaWithInteractionsAnalyzer );
     }
@@ -110,9 +112,12 @@ public class DifferentialExpressionAnalysisTest extends BaseAnalyzerConfiguratio
      * no replicates
      * <p>
      * Expected analyzer: {@link TwoWayAnovaWithoutInteractionsAnalyzer}
+     * 
+     * @throws Exception
      */
-    public void testDetermineAnalysisB() {
+    public void testDetermineAnalysisB() throws Exception {
         super.configureTestDataForTwoWayAnovaWithoutInteractions();
+        configureMocks();
         AbstractAnalyzer analyzer = analysis.determineAnalysis( expressionExperiment );
         assertTrue( analyzer instanceof TwoWayAnovaWithoutInteractionsAnalyzer );
     }
