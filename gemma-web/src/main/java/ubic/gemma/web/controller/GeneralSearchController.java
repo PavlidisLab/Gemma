@@ -216,7 +216,7 @@ public class GeneralSearchController extends BaseFormController {
         }
 
         if ( compositeSequence ) {
-            Collection<CompositeSequence> compositeSequences = searchService.compositeSequenceDbSearch( searchString );
+            Collection<CompositeSequence> compositeSequences = searchService.compositeSequenceSearch( searchString );
             mav.addObject( "compositeSequenceList", compositeSequences );
             mav.addObject( "numCompositeSequenceList", compositeSequences.size() );
         }
