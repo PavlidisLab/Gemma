@@ -190,4 +190,10 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
         this.getBioSequenceDao().thawLite( bioSequences );
     }
 
+	@Override
+	protected Collection handleFindByGenes(Collection genes) throws Exception {
+		
+		return this.getBioSequenceDao().findByGenes(genes);
+	}
+
 }
