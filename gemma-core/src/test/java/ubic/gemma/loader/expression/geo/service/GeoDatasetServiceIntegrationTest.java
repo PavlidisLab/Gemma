@@ -255,7 +255,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     // public void testFetchASeries() throws Exception {
     // endTransaction();
     // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-    // geoService.fetchAndLoad( "GSE5949", false, false, false );
+    // geoService.fetchAndLoad( "GSE3500", false, false, false );
     // }
 
     /**
@@ -365,6 +365,20 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
                 "GSE60", false, true, false );
+        ee = results.iterator().next();
+    }
+
+    /**
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    public void testFetchAndLoadGSE3500() throws Exception {
+        String path = getTestFileBasePath();
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
+                + "gse3500Short" ) );
+
+        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
+                "GSE3500", false, false, true );
         ee = results.iterator().next();
     }
 

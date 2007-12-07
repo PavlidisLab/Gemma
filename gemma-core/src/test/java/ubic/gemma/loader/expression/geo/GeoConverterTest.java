@@ -199,6 +199,19 @@ public class GeoConverterTest extends TestCase {
         assertNotNull( result );
     }
 
+    public void testConvertWithLotsOfPlatforms() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse3500Short/GSE3500_family.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE3500" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner( false );
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Object result = this.gc.convert( series );
+        assertNotNull( result );
+    }
+
     /**
      * Note: this series has some samples that don't have all the quantitation types.
      * 

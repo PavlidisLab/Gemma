@@ -352,7 +352,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
     private void initAttributes() {
 
         toUseAnalysis = ExpressionAnalysis.Factory.newInstance();
-        toUseAnalysis.setAnalyzedInvestigation( new HashSet<Investigation>( toUseEE ) );
+
         toUseAnalysis.setDescription( "Coexpression analysis for " + toUseTaxon.getCommonName() + "using "
                 + toUseEE.size() + " expression experiments" );
 
@@ -372,6 +372,8 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
 
         toUseAnalysis.setProtocol( protocol );
         toUseAnalysis = analysisS.create( toUseAnalysis );
+
+        // toUseAnalysis.setAnalyzedInvestigation( new HashSet<Investigation>( toUseEE ) );
 
     }
 

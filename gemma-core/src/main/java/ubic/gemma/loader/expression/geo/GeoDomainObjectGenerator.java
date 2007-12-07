@@ -200,8 +200,6 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
      * Download and parse a GEO series.
      * 
      * @param seriesAccession
-     * @param doSampleMatching Whether we should attempt to match the samples. In some cases we might know that this is
-     *        not a good idea.
      */
     private GeoSeries processSeries( String seriesAccession ) {
 
@@ -244,7 +242,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
             log.info( "Processing " + dataSetAccession );
             processDataSet( series, dataSetAccession );
         }
-        DatasetCombiner datasetCombiner = new DatasetCombiner( doSampleMatching );
+        DatasetCombiner datasetCombiner = new DatasetCombiner( this.doSampleMatching );
 
         GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
         assert correspondence != null;

@@ -19,6 +19,7 @@
 package ubic.gemma.loader.expression.geo;
 
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.zip.GZIPInputStream;
 
 import junit.framework.TestCase;
@@ -26,6 +27,9 @@ import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.loader.expression.geo.model.GeoSample;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.loader.expression.geo.model.GeoValues;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.testing.AbstractGeoServiceTest;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author pavlidis
@@ -102,6 +106,22 @@ public class GeoFamilyParserTest extends TestCase {
         System.err.print( values );
 
     }
+
+    // /**
+    // * This data set has a lot of changes in the column ordering, etc. for samples 
+    // *
+    // * @throws Exception
+    // */
+    // @SuppressWarnings("unchecked")
+    // public void testParseGSE3500() throws Exception {
+    // is = new GZIPInputStream( this.getClass().getResourceAsStream(
+    // "/data/loader/expression/geo/gse3500Short/GSE3500_family.soft.gz" ) );
+    // parser.setAgressiveQtRemoval( true );
+    // parser.parse( is );
+    // GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE3500" );
+    // GeoValues values = series.getValues();
+    //        // System.err.print( values );
+    //    }
 
     // /**
     // * Failed assertio durin gstoring CH1_BKG_MEAN

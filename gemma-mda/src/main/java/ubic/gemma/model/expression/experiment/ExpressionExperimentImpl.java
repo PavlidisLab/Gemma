@@ -20,6 +20,8 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import java.util.Collection;
+
 /**
  * @see ubic.gemma.model.expression.experiment.ExpressionExperiment
  * @author paul
@@ -28,7 +30,7 @@ package ubic.gemma.model.expression.experiment;
 public class ExpressionExperimentImpl extends ubic.gemma.model.expression.experiment.ExpressionExperiment {
 
     /**
-     * 
+     *  
      */
     private static final long serialVersionUID = -1342753625018841735L;
 
@@ -40,6 +42,11 @@ public class ExpressionExperimentImpl extends ubic.gemma.model.expression.experi
     @Override
     public String toString() {
         return super.toString() + " (" + this.getShortName() + ")";
+    }
+
+    @Override
+    public Collection getAnalyses() {
+       return this.getExpressionAnalyses();
     }
 
 }

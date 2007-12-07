@@ -36,6 +36,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -276,18 +277,18 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 session.update( toDelete );
                 toDelete.getBioAssayDataVectors().size();
                 Set<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
+                Set<QuantitationType> qts = new HashSet<QuantitationType>();
                 Collection<DesignElementDataVector> designElementDataVectors = toDelete.getDesignElementDataVectors();
 
                 int count = 0;
-                log.info( "Removing  Design Element Data Vectors." );
+                log.info( "Removing Design Element Data Vectors." );
                 for ( DesignElementDataVector dv : designElementDataVectors ) {
-                    BioAssayDimension dim = dv.getBioAssayDimension();
-                    dims.add( dim );
+                    dims.add( dv.getBioAssayDimension() );
+                    qts.add( dv.getQuantitationType() );
                     session.delete( dv );
                     if ( ++count % 20000 == 0 ) {
                         log.info( count + " design Element data vectors deleted" );
                     }
-
                 }
                 toDelete.getDesignElementDataVectors().clear();
 
@@ -335,6 +336,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
                 for ( BioMaterial bm : bioMaterialsToDelete ) {
                     session.delete( bm );
+                }
+
+                for ( QuantitationType qt : qts ) {
+                    session.delete( qt );
                 }
 
                 session.delete( toDelete );
@@ -424,8 +429,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.update( expressionExperiment );
-                Hibernate.initialize( expressionExperiment );
+                if ( !session.contains( expressionExperiment ) ) {
+                    session.lock( expressionExperiment, LockMode.READ );
+                }
                 expressionExperiment.getBioAssays().size();
                 for ( QuantitationType type : expressionExperiment.getQuantitationTypes() ) {
                     session.update( type );
@@ -452,7 +458,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 }
                 return null;
             }
-        }, true );
+        }, false );
     }
 
     @Override
@@ -949,19 +955,20 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     @SuppressWarnings("unchecked")
     @Override
     protected Collection<ExpressionExperiment> handleLoad( Collection ids ) throws Exception {
-        Collection<ExpressionExperiment> ee = null;
+        Collection<ExpressionExperiment> ees = null;
         final String queryString = "select ee from ExpressionExperimentImpl as ee " + " where ee.id in (:ids) ";
 
         try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            Session session = this.getSession( false );
+            org.hibernate.Query queryObject = session.createQuery( queryString );
+            queryObject.setReadOnly( true );
             queryObject.setParameterList( "ids", ids );
-
-            ee = queryObject.list();
-
+            ees = queryObject.list();
+            session.clear();
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
-        return ee;
+        return ees;
     }
 
     /*

@@ -667,11 +667,14 @@ public class GeoConverter implements Converter {
 
             if ( count > 0 ) {
                 expExp.getQuantitationTypes().add( qt );
+                if ( log.isInfoEnabled() ) {
+                    log.info( count + " Data vectors added for '" + quantitationType + "'" );
+                }
+            } else {
+                log.info( "No vectors were retained for " + quantitationType
+                        + " -- usually this is due to all values being missing." );
             }
 
-            if ( log.isInfoEnabled() ) {
-                log.info( count + " Data vectors added for '" + quantitationType + "'" );
-            }
         }
         log.info( "Total of " + expExp.getDesignElementDataVectors().size() + " vectors so far..."
                 + expExp.getQuantitationTypes().size() + " quantitation types." );

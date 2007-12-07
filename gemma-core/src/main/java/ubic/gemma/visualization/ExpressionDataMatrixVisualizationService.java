@@ -51,7 +51,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import cern.colt.list.DoubleArrayList;
 
 /**
- * A service to generate visualizations. Can be used to generate a color mosaic and x y line charts.
+ * A service to generate visualizations from ExpressionDataMatrices.
  * 
  * @author keshav
  * @version $Id$
@@ -63,6 +63,9 @@ public class ExpressionDataMatrixVisualizationService {
 
     private Log log = LogFactory.getLog( this.getClass() );
 
+    /**
+     * @deprecated
+     */
     private static final int NUM_PROFILES_TO_DISPLAY = 3;
 
     /**
@@ -93,6 +96,7 @@ public class ExpressionDataMatrixVisualizationService {
      * @param dataCol
      * @param numProfiles
      * @return JFreeChart
+     * @deprecated
      */
     public JFreeChart createXYLineChart( String title, Collection<double[]> dataCol, int numProfiles ) {
         if ( dataCol == null ) throw new RuntimeException( "dataCol cannot be " + null );
@@ -206,6 +210,7 @@ public class ExpressionDataMatrixVisualizationService {
      * <p>
      * More information on z-scores can be found at http://en.wikipedia.org/wiki/Z_score.
      * </p>
+     * FIXME move this somewhere non-visualization related.
      * 
      * @param expressionDataDoubleMatrix
      * @param threshold The threhold at which the data will be clipped (ie. 2 clips the data at -2 and +2).

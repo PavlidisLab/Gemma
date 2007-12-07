@@ -22,12 +22,13 @@ import java.util.List;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class ExpressionExperimentEditCommand extends ExpressionExperiment {
+public class ExpressionExperimentEditCommand extends ExpressionExperimentImpl {
 
     private List<QuantitationType> quantitationTypes;
     private ExpressionExperiment expressionExperiment;
@@ -49,7 +50,7 @@ public class ExpressionExperimentEditCommand extends ExpressionExperiment {
         this.setSource( ee.getSource() );
         this.setInvestigators( ee.getInvestigators() );
         this.setId( ee.getId() );
-        this.setAnalyses( ee.getAnalyses() );
+        this.setExpressionAnalyses( ee.getExpressionAnalyses() );
         this.setAccession( ee.getAccession() );
         this.setSubsets( ee.getSubsets() );
         this.setOwner( ee.getOwner() );
@@ -81,7 +82,7 @@ public class ExpressionExperimentEditCommand extends ExpressionExperiment {
         expressionExperiment.setSource( this.getSource() );
         expressionExperiment.setInvestigators( this.getInvestigators() );
         expressionExperiment.setId( this.getId() ); // maybe not...
-        expressionExperiment.setAnalyses( this.getAnalyses() );
+        expressionExperiment.setExpressionAnalyses( this.getExpressionAnalyses() );
         expressionExperiment.setAccession( this.getAccession() );
         expressionExperiment.setSubsets( this.getSubsets() );
         expressionExperiment.setOwner( this.getOwner() );

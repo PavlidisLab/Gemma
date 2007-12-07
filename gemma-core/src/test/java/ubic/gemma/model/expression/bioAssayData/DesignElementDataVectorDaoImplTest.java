@@ -66,8 +66,7 @@ public class DesignElementDataVectorDaoImplTest extends BaseSpringContextTest {
     }
 
     /**
-     * 
-     *
+     * @deprecated the method under test is deprecated.
      */
     public void testQueryByGeneSymbolAndSpecies() {
         designElementDataVectorDao = ( DesignElementDataVectorDao ) this.getBean( "designElementDataVectorDao" );

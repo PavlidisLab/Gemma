@@ -774,7 +774,6 @@ public class GeoFamilyParser implements Parser {
                 inPlatform = false;
                 inSeries = false;
             } else if ( startsWithIgnoreCase( line, "^SAMPLE" ) ) {
-
                 processedDesignElements.clear();
                 inSample = true;
                 inSubset = false;
@@ -785,9 +784,9 @@ public class GeoFamilyParser implements Parser {
                 if ( this.processPlatformsOnly ) return;
                 String value = extractValue( line );
                 currentSampleAccession = value;
+                log.info( "Starting new sample " + value );
                 if ( results.getSampleMap().containsKey( value ) ) return;
                 addNewSample( value );
-                log.debug( "Starting new sample " + value );
             } else if ( startsWithIgnoreCase( line, "^PLATFORM" ) ) {
                 inPlatform = true;
                 inSubset = false;
@@ -1119,9 +1118,26 @@ public class GeoFamilyParser implements Parser {
         return wantedQuantitationTypes.contains( index );
     }
 
+    /**
+     * 
+     */
     private Collection<Integer> wantedQuantitationTypes = new HashSet<Integer>();
+
+    /**
+     * For each platform, the map of column names to column numbers in the data.
+     */
     Map<GeoPlatform, Map<String, Integer>> quantitationTypeKey = new HashMap<GeoPlatform, Map<String, Integer>>();
+
+    /**
+     * This is used to put the data in the right place later. We know the actual column is where it is NOW, for this
+     * sample, but in our data structure we put it where we EXPECT it to be (where it was the first time we saw it).
+     * This is our attempt to fix problems with columns moving around from sample to sample.
+     */
     Map<GeoPlatform, Map<Integer, Integer>> quantitationTypeTargetColumn = new HashMap<GeoPlatform, Map<Integer, Integer>>();
+
+    /**
+     * 
+     */
     private boolean aggressiveQuantitationTypeRemoval;
 
     /**
@@ -1142,13 +1158,17 @@ public class GeoFamilyParser implements Parser {
         Map<GeoPlatform, Integer> currentIndex = new HashMap<GeoPlatform, Integer>();
         Collection<String> seenColumnNames = new HashSet<String>();
 
+        /*
+         * In some data sets, the quantitation types are not in the same columns in different samples. ARRRGH!
+         */
+        GeoPlatform platformForSample = this.currentSample().getPlatforms().iterator().next();
+        log.info( "Initializing quantitation types for " + currentSample() + ", Platform=" + platformForSample );
+
         for ( String columnName : currentSample().getColumnNames() ) {
             boolean isWanted = values.isWantedQuantitationType( columnName, this.aggressiveQuantitationTypeRemoval );
 
-            /*
-             * In some data sets, the quantitation types are not in the same columns in different samples. ARRRGH!
-             */
-            GeoPlatform platformForSample = this.currentSample().getPlatforms().iterator().next();
+            if ( !isWanted ) log.debug( columnName + " will not be included in final data" );
+
             if ( !currentIndex.containsKey( platformForSample ) ) {
                 currentIndex.put( platformForSample, 0 );
             }
@@ -1196,9 +1216,10 @@ public class GeoFamilyParser implements Parser {
                 values.addQuantitationType( platformForSample, columnName, desiredColumnNumber );
             } else {
                 /*
-                 * First time we see this column name. Normally we assume it just goes at the column index we're at.
-                 * However, make sure that there isn't another column name in this sample that should be at the same
-                 * index. We have to 'look ahead'. This isn't the usual case, but it isn't rare either.
+                 * First time we see this column name (for the platform for the current sample). Normally we assume it
+                 * just goes at the column index we're at. However, make sure that there isn't another column name in
+                 * this sample that should be at the same index. We have to 'look ahead'. This isn't the usual case, but
+                 * it isn't rare either. (Example: GSE3500)
                  */
                 boolean clobbers = willClobberOtherQuantitationType( columnName, actualColumnNumber, qtMapForPlatform );
 
@@ -1245,7 +1266,7 @@ public class GeoFamilyParser implements Parser {
     /**
      * @param columnName
      * @param actualColumnNumber
-     * @param qtMapForPlatform
+     * @param qtMapForPlatform The map of
      * @return
      */
     private boolean willClobberOtherQuantitationType( String columnName, int actualColumnNumber,
@@ -1256,8 +1277,9 @@ public class GeoFamilyParser implements Parser {
             if ( !qtMapForPlatform.containsKey( name ) ) continue;
             Integer checkColInd = qtMapForPlatform.get( name );
             if ( checkColInd == actualColumnNumber ) {
-                log.warn( "Current column name is new, " + columnName
-                        + " would be going in the index previously occupied by " + name );
+                log.warn( "Current column name " + columnName
+                        + " is new for the current platform, would be going in the index previously occupied by "
+                        + name );
                 clobbers = true;
                 break;
             }

@@ -130,13 +130,13 @@ public class DesignElementDataVectorDaoImpl extends
         return ( DesignElementDataVector ) create( designElementDataVector );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
+    /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleQueryByGeneSymbolAndSpecies(java.lang.String,
      *      java.lang.String)
+     * @deprecated This is not used anywhere.
      */
     @Override
+    @Deprecated
     protected Collection handleQueryByGeneSymbolAndSpecies( String geneOfficialSymbol, String species,
             Collection expressionExperiments ) throws Exception {
 

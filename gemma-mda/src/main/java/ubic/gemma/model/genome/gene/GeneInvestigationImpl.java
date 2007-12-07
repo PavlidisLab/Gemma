@@ -22,15 +22,20 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import java.util.Collection;
+
 /**
  * @see ubic.gemma.model.genome.gene.GeneInvestigation
  */
-public class GeneInvestigationImpl
-    extends ubic.gemma.model.genome.gene.GeneInvestigation
-{
+public class GeneInvestigationImpl extends ubic.gemma.model.genome.gene.GeneInvestigation {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -637420597830373276L;
+
+    @Override
+    public Collection getAnalyses() {
+        return null;
+    }
 
 }

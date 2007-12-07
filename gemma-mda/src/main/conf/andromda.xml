@@ -84,6 +84,7 @@
 				<property name="hibernateCacheProvider">org.hibernate.cache.EhCacheProvider</property>
 				<property name="hibernateInheritanceStrategy">subclass</property>
 				<property name="enableTemplating">false</property>
+				<property name="enableDaoPropertiesCreateMethod">false</property>
 				<property name="springTypesPackage">ubic.gemma.spring</property>
 				<property name="springPresentationTypesPackage">ubic.gemma.spring.presentation</property>
 				<property name="mergeLocation">${maven.andromda.spring.merge.custom}</property>
@@ -164,7 +165,11 @@
 				<property name="hibernateTransactionFactoryClass">
 					org.hibernate.transaction.JTATransactionFactory
 				</property>
+				<property name="hibernateXMLPersistence">true</property>
 			</properties>
 		</namespace>
+<namespace name="cs">
+<properties><property name="interfaces">${maven.andromda.core.generated.dir}</property></properties>
+</namespace>
 	</namespaces>
 </andromda>

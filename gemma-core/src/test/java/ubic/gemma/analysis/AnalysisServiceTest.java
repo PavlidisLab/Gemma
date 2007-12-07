@@ -70,7 +70,7 @@ public class AnalysisServiceTest extends BaseSpringContextTest {
 
         eAnalysis1 = ExpressionAnalysis.Factory.newInstance();
         investigations.add( e1 );
-        eAnalysis1.setAnalyzedInvestigation( investigations );
+      //  eAnalysis1.setAnalyzedInvestigation( investigations );
         eAnalysis1.setName( "TestAnalysis1" );
         eAnalysis1.setDescription( "An analysis Test 1" );
         eAnalysis1 = analysisS.create( eAnalysis1 );
@@ -79,7 +79,7 @@ public class AnalysisServiceTest extends BaseSpringContextTest {
         investigations = new HashSet<Investigation>();
         investigations.add( e1 );
         investigations.add( e2 );
-        eAnalysis2.setAnalyzedInvestigation( investigations );
+     //   eAnalysis2.setAnalyzedInvestigation( investigations );
         eAnalysis2.setName( "TestAnalysis2" );
         eAnalysis2.setDescription( "An analysis Test 2" );
         eAnalysis2 = analysisS.create( eAnalysis2 );
@@ -90,7 +90,7 @@ public class AnalysisServiceTest extends BaseSpringContextTest {
         investigations.add( e2 );
         investigations.add( e3 );
 
-        eAnalysis4.setAnalyzedInvestigation( investigations );
+    //.setAnalyzedInvestigation( investigations );
         eAnalysis4.setName( "Test" );
         eAnalysis4.setDescription( "An analysis Test 4" );
         eAnalysis4 = analysisS.create( eAnalysis4 );
@@ -100,7 +100,7 @@ public class AnalysisServiceTest extends BaseSpringContextTest {
         investigations.add( e1 );
         investigations.add( e2 );
         investigations.add( e3 );
-        eAnalysis3.setAnalyzedInvestigation( investigations );
+      //.setAnalyzedInvestigation( investigations );
         eAnalysis3.setName( "TestAnalysis3" );
         eAnalysis3.setDescription( "An analysis Test 3" );
         eAnalysis3 = analysisS.create( eAnalysis3 );

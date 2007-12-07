@@ -65,6 +65,12 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
         return handleGetLastAuditEvent( auditable.getAuditTrail(), type );
     }
 
+    /**
+     * @param auditTrail
+     * @param type
+     * @return
+     * @throws java.lang.Exception
+     */
     protected ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastAuditEvent( final AuditTrail auditTrail,
             AuditEventType type ) throws java.lang.Exception {
 
@@ -76,6 +82,33 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
          * least of our worries. The real annoyance here is dealing with subclasses of event types.
          */
 
+        List<String> classes = getSubclassesClause( type );
+
+        final String queryString = "select event " + "from ubic.gemma.model.common.auditAndSecurity.AuditTrail trail "
+                + "inner join trail.events event inner join event.eventType et " + "where trail = :trail "
+                + "and et.class in (" + StringUtils.join( classes, "," ) + ") order by event.date desc ";
+
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setCacheable( true );
+            queryObject.setCacheRegion( "auditEvents" );
+
+            queryObject.setParameter( "trail", auditTrail );
+            queryObject.setMaxResults( 1 );
+
+            Collection results = queryObject.list();
+
+            if ( results == null || results.isEmpty() ) return null;
+
+            return ( AuditEvent ) results.iterator().next();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+
+    }
+
+    private List<String> getSubclassesClause( AuditEventType type ) {
         List<String> classes = new ArrayList<String>();
         classes.add( type.getClass().getCanonicalName() );
 
@@ -91,28 +124,6 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
                 classes.add( string );
             }
         }
-
-        final String queryString = "select event " + "from ubic.gemma.model.common.auditAndSecurity.AuditTrail trail "
-                + "inner join trail.events event inner join event.eventType et " + "where trail = :trail "
-                + "and et.class in (" + StringUtils.join( classes, "," ) + ") order by event.date desc ";
-
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setCacheable( true );
-            queryObject.setCacheRegion( "auditEvents" );
-            
-            queryObject.setParameter( "trail", auditTrail );
-            queryObject.setMaxResults( 1 );
-
-            Collection results = queryObject.list();
-
-            if ( results == null || results.isEmpty() ) return null;
-
-            return ( AuditEvent ) results.iterator().next();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-
+        return classes;
     }
 }

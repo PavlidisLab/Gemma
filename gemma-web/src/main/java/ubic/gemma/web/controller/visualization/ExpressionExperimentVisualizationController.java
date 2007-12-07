@@ -86,10 +86,6 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
             OutputStream out = null;
             try {
                 out = response.getOutputStream();
-
-                /* normalize and clip the expression data matrix */
-                // ExpressionDataMatrix normedExpressionDataMatrix = expressionDataMatrixVisualizationService
-                // .standardizeExpressionDataDoubleMatrix( expressionDataMatrix, DEFAULT_VISUALIZATION_THRESHOLD );
                 JMatrixDisplay display = expressionDataMatrixVisualizationService.createHeatMap( expressionDataMatrix );
                 if ( display != null ) {
                     response.setContentType( DEFAULT_CONTENT_TYPE );

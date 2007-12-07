@@ -98,7 +98,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     public static final String SEARCH_BY_PROBE = "probe set id";
     public static final String SEARCH_BY_GENE = "gene symbol";
     private static final String COOKIE_NAME = "expressionExperimentVisualizationCookie";
-    private static final int MAX_ELEMENTS_TO_VISUALIZE = 70;
+    private static final int MAX_ELEMENTS_TO_VISUALIZE = 200;
 
     protected ExpressionExperimentService expressionExperimentService = null;
     protected CompositeSequenceService compositeSequenceService = null;

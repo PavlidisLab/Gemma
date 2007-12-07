@@ -123,12 +123,16 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         Collection<ArrayDesign> oldArrayDesigns = expressionExperimentService.getArrayDesignsUsed( expExp );
         Collection<DesignElement> usedDesignElements = new HashSet<DesignElement>();
         for ( ArrayDesign oldAd : oldArrayDesigns ) {
-
             if ( oldAd.equals( arrayDesign ) ) continue; // no need to switch
 
             arrayDesignService.thawLite( oldAd );
+
+            if ( oldAd.getCompositeSequences().size() == 0 ) {
+                throw new IllegalStateException( oldAd + " has no composite sequences" );
+            }
+
             Collection<QuantitationType> qts = expressionExperimentService.getQuantitationTypes( expExp, oldAd );
-            log.info( qts.size() + " quantitation types for vectors on " + oldAd );
+            log.info( "Processing " + qts.size() + " quantitation types for vectors on " + oldAd );
             for ( QuantitationType type : qts ) {
 
                 log.info( "Processing " + type + " for vectors run on " + oldAd );
@@ -137,6 +141,12 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                 usedDesignElements.clear();
 
                 Collection<DesignElementDataVector> vectorsForQt = getVectorsForOneQuantitationType( oldAd, type );
+
+                if ( vectorsForQt.size() == 0 ) {
+                    throw new IllegalStateException( "No vectors for " + type + " on " + oldAd );
+                    // continue;
+                }
+
                 // Collection<DesignElementDataVector> doomedToBeRemoved = new HashSet<DesignElementDataVector>();
                 int count = 0;
                 for ( DesignElementDataVector vector : vectorsForQt ) {
@@ -167,6 +177,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         expExp.setDescription( expExp.getDescription() + " [Switched to use " + arrayDesign.getShortName()
                 + " by Gemma]" );
         expressionExperimentService.update( expExp );
+        log.info( "Done switching " + expExp );
     }
 
     @SuppressWarnings("unchecked")
