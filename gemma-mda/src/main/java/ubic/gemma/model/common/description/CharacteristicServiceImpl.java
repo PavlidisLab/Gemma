@@ -45,7 +45,15 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
      */
     @Override
     protected java.util.Collection handleFindByValue( java.lang.String search ) throws java.lang.Exception {
-        return this.getCharacteristicDao().findByValue( search + '%');
+        return handleFindByValue( search, 0, 0 );
+    }
+    
+    /**
+     * @see ubic.gemma.model.common.description.CharacteristicService#findByValue(java.lang.String)
+     */
+    @Override
+    protected java.util.Collection handleFindByValue( java.lang.String search, int firstResult, int maxResults ) throws java.lang.Exception {
+        return this.getCharacteristicDao().findByValue( search + '%', 0, 0 );
     }
 
     /**

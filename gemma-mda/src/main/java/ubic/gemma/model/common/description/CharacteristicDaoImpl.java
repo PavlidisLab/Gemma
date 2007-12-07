@@ -38,11 +38,23 @@ public class CharacteristicDaoImpl
      */
     @Override
     protected Collection handleFindByValue( String search ) throws Exception {
+        return handleFindByValue( search, 0, 0 );
+    }
+    
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByvalue(java.lang.String)
+     */
+    @Override
+    protected Collection handleFindByValue( String search, int firstResult, int maxResults ) throws Exception {
         final String queryString = "select distinct char from CharacteristicImpl as char where lower(char.value) like :search";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setString( "search", search.toLowerCase() );
+            if ( firstResult > 0 )
+                queryObject.setFirstResult( firstResult );
+            if ( maxResults > 0 )
+                queryObject.setMaxResults( maxResults );
             return queryObject.list();
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
