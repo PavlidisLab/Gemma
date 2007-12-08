@@ -198,21 +198,22 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
      * @param expressionAnalysis
      */
     private void summarizeProcessing( ExpressionAnalysis expressionAnalysis ) {
-        // FIXME - fix this summarization
 
         // super.summarizeProcessing();
 
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
 
-        ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
+        for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
 
-        Collection<ExpressionAnalysisResult> results = resultSet.getResults();
-        for ( ExpressionAnalysisResult result : results ) {
-            ProbeAnalysisResult probeResult = ( ProbeAnalysisResult ) result;
-            log.debug( "probe: " + probeResult.getProbe().getName() + ", p-value: " + probeResult.getPvalue()
-                    + ", score: " + probeResult.getScore() );
+            Collection<ExpressionAnalysisResult> results = resultSet.getResults();
+
+            for ( ExpressionAnalysisResult result : results ) {
+                ProbeAnalysisResult probeResult = ( ProbeAnalysisResult ) result;
+                log.debug( "probe: " + probeResult.getProbe().getName() + ", p-value: " + probeResult.getPvalue()
+                        + ", score: " + probeResult.getScore() );
+            }
+            log.info( "Result set processed with " + results.size() + " results." );
         }
-        log.info( "# results: " + results.size() );
     }
 
     /**
