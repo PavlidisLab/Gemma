@@ -428,37 +428,40 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     protected void handleThawBioAssays( final ExpressionExperiment expressionExperiment ) {
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                if ( !session.contains( expressionExperiment ) ) {
-                    session.lock( expressionExperiment, LockMode.READ );
-                }
-                expressionExperiment.getBioAssays().size();
-                for ( QuantitationType type : expressionExperiment.getQuantitationTypes() ) {
+                ExpressionExperiment ee = ( ExpressionExperiment ) session.get( ExpressionExperimentImpl.class,
+                        expressionExperiment.getId() );
+                ee.getBioAssays().size();
+                for ( QuantitationType type : ee.getQuantitationTypes() ) {
                     session.update( type );
                     session.evict( type );
                 }
-                expressionExperiment.getAuditTrail().getEvents().size();
+                ee.getAuditTrail().getEvents().size();
 
-                thawReferences( expressionExperiment, session );
+                thawReferences( ee, session );
 
-                ExperimentalDesign experimentalDesign = expressionExperiment.getExperimentalDesign();
+                ExperimentalDesign experimentalDesign = ee.getExperimentalDesign();
                 if ( experimentalDesign != null ) {
                     session.update( experimentalDesign );
                     experimentalDesign.getExperimentalFactors().size();
                 }
 
-                if ( expressionExperiment.getAccession() != null )
-                    expressionExperiment.getAccession().getExternalDatabase();
-                for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
+                if ( ee.getAccession() != null ) ee.getAccession().getExternalDatabase();
+                for ( BioAssay ba : ee.getBioAssays() ) {
                     for ( BioMaterial bm : ba.getSamplesUsed() ) {
                         bm.getName();
                     }
                     ba.getDerivedDataFiles().size();
                     Hibernate.initialize( ba.getArrayDesignUsed() );
                 }
+
+                ee.getInvestigators().size();
+
+                session.evict( ee );
                 return null;
             }
-        }, false );
+        }, true );
     }
 
     @Override
@@ -518,7 +521,6 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         }
     }
 
-    // FIXME, EE is not needed as a parameter.
     @SuppressWarnings("unchecked")
     @Override
     protected Collection handleGetDesignElementDataVectors( Collection designElements, QuantitationType quantitationType )
@@ -961,10 +963,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         try {
             Session session = this.getSession( false );
             org.hibernate.Query queryObject = session.createQuery( queryString );
-            queryObject.setReadOnly( true );
             queryObject.setParameterList( "ids", ids );
             ees = queryObject.list();
-            session.clear();
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
