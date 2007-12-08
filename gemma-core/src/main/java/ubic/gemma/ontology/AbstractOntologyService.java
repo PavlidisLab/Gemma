@@ -211,7 +211,7 @@ public abstract class AbstractOntologyService implements InitializingBean {
         assert index != null : "attempt to search " + this.getOntologyName() + " when index is null";
         // if ( index == null ) index = OntologyIndexer.indexOntology( ontology_name, model );
 
-        Collection<OntologyResource> res = OntologySearch.matchResources( model, index, search );
+        Collection<OntologyResource> res = OntologySearch.matchResources( model, index, search + "*" );
 
         return res;
     }
