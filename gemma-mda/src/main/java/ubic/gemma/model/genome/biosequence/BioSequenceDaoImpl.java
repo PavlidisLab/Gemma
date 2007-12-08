@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.genome.biosequence;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -197,14 +198,18 @@ public class BioSequenceDaoImpl extends
 	@Override
 	protected Collection handleFindByGenes(Collection genes) throws Exception {
 		Collection<BioSequence> bs = null;
+		
+		if (genes == null || genes.isEmpty())
+			return new ArrayList();
+		
 		final String queryString = "select distinct bs" +
 				" from GeneImpl gene inner join gene.products ggp," +
-					" BioSequenceImpl bs inner join bs.bioSequence2GeneProduct bs2gp inner join bs2gp.bioSequenceGeneProducts bsgp" +
+					" BioSequenceImpl bs inner join bs.bioSequence2GeneProduct bs2gp inner join bs2gp.geneProduct bsgp" +
 				" where ggp=bsgp and gene in (:genes)";
 		try {
 			org.hibernate.Query queryObject = super.getSession(false)
 					.createQuery(queryString);
-			queryObject.setParameterList("geneList", genes);
+			queryObject.setParameterList("genes", genes);
 			bs = queryObject.list();
 
 		} catch (org.hibernate.HibernateException ex) {
