@@ -102,7 +102,7 @@ public class DesignElementDataVectorDaoImpl extends
 
     @Override
     public Collection find( ArrayDesign arrayDesign, QuantitationType quantitationType ) {
-        final String queryString = "select dedv from DesignElementDataVectorImpl dev  inner join fetch dev.bioAssayDimension bd "
+        final String queryString = "select dev from DesignElementDataVectorImpl dev  inner join fetch dev.bioAssayDimension bd "
                 + " inner join fetch dev.designElement de inner join fetch dev.quantitationType where dev.designElement in (:desEls) "
                 + "and dev.quantitationType = :quantitationType ";
         try {
