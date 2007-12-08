@@ -166,7 +166,8 @@ public class SearchService {
 
 		watch.stop();
 		log.info("Array Design Compositesequence DB search for " + searchString
-				+ " took " + watch.getTime() + " ms" + " found " + adSet.size() + " Ads");
+				+ " took " + watch.getTime() + " ms" + " found " + adSet.size()
+				+ " Ads");
 
 		return adSet;
 
@@ -200,8 +201,8 @@ public class SearchService {
 		for (CompositeSequence cs : compassProbeSearch(searchString)) {
 
 			if (cs.getArrayDesign() == null) // This might happen as compass
-												// might not have indexed the AD
-												// for the CS
+				// might not have indexed the AD
+				// for the CS
 				continue;
 
 			probeAdIdList.add(cs.getArrayDesign().getId());
@@ -258,10 +259,52 @@ public class SearchService {
 
 		watch.stop();
 		log.info("BioSequence DB search for " + searchString + " took "
-				+ watch.getTime() + " ms and found" + bioSequenceList.size() +" BioSequences");
+				+ watch.getTime() + " ms and found" + bioSequenceList.size()
+				+ " BioSequences");
 
 		return bioSequenceList.subList(0, Math.min(bioSequenceList.size(),
 				MAX_SEARCH_RESULTS));
+
+	}
+
+	/**
+	 * A compass backed search that finds biosequences that match the search
+	 * string. Searches the gene and probe indexes for matches then converts
+	 * those results to biosequences
+	 * 
+	 * @param searchString
+	 * @return
+	 * @throws Exception
+	 */
+	public Collection<BioSequence> compassBioSequenceSearch(String searchString)
+			throws Exception {
+
+		log.info("Compass biosequence search for: " + searchString);
+		final String query = searchString.trim();
+		CompassSearchResults searchResults;
+
+		CompassTemplate template = new CompassTemplate(probeBean);
+
+		// first find probes that match and get their biosequences
+		searchResults = (CompassSearchResults) template
+				.execute(
+						CompassTransaction.TransactionIsolation.READ_ONLY_READ_COMMITTED,
+						new CompassCallback() {
+							public Object doInCompass(CompassSession session)
+									throws CompassException {
+								return performSearch(query, session);
+							}
+						});
+
+		Collection<BioSequence> bsResults = convert2BsList(searchResults
+				.getHits());
+
+		// Now find genes that match and get their bioSequences
+
+		Collection<Gene> geneResults = compassGeneSearch(query);
+		bsResults.addAll(bioSequenceService.findByGenes(geneResults));
+
+		return bsResults;
 
 	}
 
@@ -496,7 +539,8 @@ public class SearchService {
 
 		watch.stop();
 		log.info("Composite sequence DB search for " + searchString + " took "
-				+ watch.getTime() + " ms and found" + nameMatch.size() +" composite sequences");
+				+ watch.getTime() + " ms and found" + nameMatch.size()
+				+ " composite sequences");
 
 		return nameMatch;
 	}
@@ -579,11 +623,12 @@ public class SearchService {
 	 * @throws Exception
 	 */
 	@SuppressWarnings("unchecked")
-	public Collection<CompositeSequence> compositeSequenceSearch(String searchString) {
+	public Collection<CompositeSequence> compositeSequenceSearch(
+			String searchString) {
 
 		StopWatch watch = startTiming();
 
-		Collection<CompositeSequence> allResults = new HashSet<CompositeSequence>();
+		List<CompositeSequence> allResults = new ArrayList<CompositeSequence>();
 		if (StringUtils.isBlank(searchString))
 			return allResults;
 
@@ -610,21 +655,21 @@ public class SearchService {
 				allResults.addAll(geneCs);
 			}
 		}
-		
+
 		try {
 			allResults.addAll(compassProbeSearch(cleanedSearchString));
 		} catch (Exception e) {
 			log.error(e, e);
 
 		}
-	
 
 		watch.stop();
-		log.info("Composite sequence general search for " + searchString + " took "
-				+ watch.getTime() + " ms and found" + allResults.size() + " CSs");
+		log.info("Composite sequence general search for " + searchString
+				+ " took " + watch.getTime() + " ms and found"
+				+ allResults.size() + " CSs");
 
-		
-		return allResults;
+		return allResults.subList(0, Math.min(allResults.size(),
+				MAX_SEARCH_RESULTS));
 
 	}
 
@@ -786,7 +831,8 @@ public class SearchService {
 
 		watch.stop();
 		log.info("Gene DB search for " + searchString + " took "
-				+ watch.getTime() + " ms and found " + geneList.size() + " genes");
+				+ watch.getTime() + " ms and found " + geneList.size()
+				+ " genes");
 
 		return geneList.subList(0, Math
 				.min(geneList.size(), MAX_SEARCH_RESULTS));
@@ -1220,8 +1266,35 @@ public class SearchService {
 			else if (obj instanceof BioSequenceImpl) {
 				BioSequenceImpl bs = (BioSequenceImpl) obj;
 				log.info("Finding CompositeSequence for Biosequence:  " + bs);
-				converted.addAll( compositeSequenceService
+				converted.addAll(compositeSequenceService
 						.findByBioSequenceName(bs.getName()));
+			} else
+				log.warn("Unexpected object. skipping: " + obj);
+
+		}
+
+		return converted;
+
+	}
+
+	/**
+	 * @param anOntology
+	 * @return
+	 */
+	protected Collection<BioSequence> convert2BsList(CompassHit[] probeHits) {
+
+		Collection<BioSequence> converted = new HashSet<BioSequence>(
+				probeHits.length);
+
+		for (int i = 0; i < probeHits.length; i++) {
+			Object obj = probeHits[i].getData();
+
+			if (obj instanceof CompositeSequenceImpl) {
+				CompositeSequence cs = (CompositeSequenceImpl) obj;
+				converted.add(cs.getBiologicalCharacteristic());
+			} else if (obj instanceof BioSequenceImpl) {
+				converted.add((BioSequenceImpl) obj);
+
 			} else
 				log.warn("Unexpected object. skipping: " + obj);
 
@@ -1261,8 +1334,8 @@ public class SearchService {
 		// Put a limit on the number of hits to detach.
 		// Detaching hits can be time consuming (somewhat like thawing).
 
-		detachedHits = hits.detach(0, Math.min(hits.getLength(),
-				MAX_DETACHHITS));
+		detachedHits = hits.detach(0, Math
+				.min(hits.getLength(), MAX_DETACHHITS));
 
 		log.info("===== Detaching" + detachedHits.getLength() + " hits for "
 				+ query + " took " + watch.getTime() + " ms");
