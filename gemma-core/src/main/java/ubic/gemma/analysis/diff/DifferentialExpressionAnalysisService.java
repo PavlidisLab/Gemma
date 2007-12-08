@@ -32,6 +32,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.util.ExpressionAnalysisResultComparator;
@@ -48,34 +49,61 @@ import ubic.gemma.util.ExpressionAnalysisResultComparator;
  */
 public class DifferentialExpressionAnalysisService {
 
+    private static final int NUM_RESULT_SETS_OWA = 1;// num one way anova sets
+    private static final int NUM_FACTORS_OWA = 1;// num one way anova factors
     private Log log = LogFactory.getLog( this.getClass() );
     ExpressionExperimentService expressionExperimentService = null;
 
     DifferentialExpressionAnalysis differentialExpressionAnalysis = null;
 
     /**
-     * Returns the top persistent analysis results for the experiment with shortName. If the expression experiment given
-     * by shortName is not found, returns null.
+     * Returns the top persistent analysis results for the experiment with shortName.
+     * <p>
+     * If the expression experiment given by shortName is not found, returns null.
+     * <p>
+     * If there are no analyses for the given experiment, returns null.
      * 
      * @param shortName
      * @param top
      * @return
      */
     public Collection<ExpressionAnalysisResult> getTopExpressionAnalysisResults( String shortName, int top ) {
-        // FIXME you need to differentiate between different analyses for a given experiment ... by name?
 
-        Collection<ExpressionAnalysis> analyses = this.getPersistentExpressionAnalyses( shortName );
-        if ( analyses == null ) return null;
+        ExpressionExperiment ee = expressionExperimentService.findByShortName( shortName );
+        if ( ee == null ) {
+            log.error( "Could not find expeiment with name: " + shortName + ".  Returning ..." );
+            return null;
+        }
+        expressionExperimentService.thaw( ee );
+
+        Collection<ExpressionAnalysis> analyses = this.getPersistentExpressionAnalyses( ee );
+        if ( analyses == null ) {
+            log.error( "No analyses associated with experiment: " + shortName );
+            return null;
+        }
 
         // FIXME for now, as a test, just do something stupid and use the first analysis.
-
         ExpressionAnalysis analysis = analyses.iterator().next();
 
-        Collection<ExpressionAnalysisResultSet> resultSets = analysis.getResultSets();
+        Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
 
-        ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
+        Collection<ExpressionAnalysisResult> analysisResults = null;
 
-        Collection<ExpressionAnalysisResult> analysisResults = resultSet.getResults();
+        int numFactors = factors.size();
+        if ( numFactors == NUM_FACTORS_OWA ) {
+            log.info( "Get one way anova results." );
+
+            Collection<ExpressionAnalysisResultSet> resultSets = analysis.getResultSets();
+            if ( resultSets.size() != NUM_RESULT_SETS_OWA )
+                throw new RuntimeException( "Invalid number of result sets for analysis for experiment: " + shortName );
+
+            ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
+
+            analysisResults = resultSet.getResults();
+        } else {
+            log.error( "Cannot return top results for two way anova at this time.  Returning ..." );
+            return null;
+        }
 
         if ( top > analysisResults.size() ) {
             log.warn( "Number of desired results, " + top
@@ -139,25 +167,6 @@ public class DifferentialExpressionAnalysisService {
         }
 
         return expressionAnalyses;
-    }
-
-    /**
-     * Finds the persistent expression experiment by the shortName and returns the analyses. If the expression
-     * experiment does not exist, returns null.
-     * 
-     * @param shortName
-     * @return
-     */
-    public Collection<ExpressionAnalysis> getPersistentExpressionAnalyses( String shortName ) {
-
-        ExpressionExperiment ee = expressionExperimentService.findByShortName( shortName );
-
-        expressionExperimentService.thaw( ee );
-
-        if ( ee == null ) return null;
-
-        return this.getPersistentExpressionAnalyses( ee );
-
     }
 
     /**
