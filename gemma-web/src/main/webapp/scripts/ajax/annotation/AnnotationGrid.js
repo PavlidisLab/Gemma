@@ -1,7 +1,7 @@
 Ext.namespace('Ext.Gemma');
 
 /* Ext.Gemma.AnnotationGrid constructor...
- * 	div is the name of the div in which to render the tool bar.
+ * 	div is the name of the div in which to render the grid.
  * 	config is a hash with the following options:
  * 		readMethod : the DWR method that returns the list of AnnotationValueObjects
  * 			( e.g.: ExpressionExperimentController.getAnnotation )
@@ -9,13 +9,16 @@ Ext.namespace('Ext.Gemma');
  * 			( e.e.: [ { id:x, classDelegatingFor:"ExpressionExperimentImpl" } ] )
  * 		             or a pointer to a function that will return the array of parameters
  * 		editable : if true, the annotations in the grid will be editable
+ * 		showParent : if true, a link to the parent object will appear in the grid
+ * 		noInitialLoad : if true, the grid will not be loaded immediately upon creation
  */
 Ext.Gemma.AnnotationGrid = function ( div, config ) {
 	
 	this.readMethod = config.readMethod; delete config.readMethod;
 	this.readParams = config.readParams; delete config.readParams;
-	this.showParent = config.showParent; delete config.showParent;
 	this.editable = config.editable; delete config.editable;
+	this.showParent = config.showParent; delete config.showParent;
+	this.noInitialLoad = config.noInitialLoad; delete config.noInitialLoad;
 	
 	var superConfig = { };
 	superConfig.ds = new Ext.data.Store( {
@@ -23,6 +26,9 @@ Ext.Gemma.AnnotationGrid = function ( div, config ) {
 		reader : new Ext.data.ListRangeReader( {id:"id"}, Ext.Gemma.AnnotationGrid.getRecord() )
 	} );
 	superConfig.ds.setDefaultSort('className');
+	superConfig.ds.on( "load", function() {
+		Ext.Gemma.CharacteristicBrowser.grid.getView().autoSizeColumns();
+	} );
 	
 	superConfig.cm = new Ext.grid.ColumnModel( [
 		{ header: "Class", dataIndex: "className" },
@@ -92,10 +98,8 @@ Ext.Gemma.AnnotationGrid = function ( div, config ) {
 		} );
 	}
 	
-	this.getDataSource().load( { params : this.getReadParams() } );
-	this.getDataSource().on( "load", function() {
-		Ext.Gemma.CharacteristicBrowser.grid.getView().autoSizeColumns();
-	} );
+	if ( ! this.noInitialLoad )
+		this.getDataSource().load( { params : this.getReadParams() } );
 };
 
 /* static methods
