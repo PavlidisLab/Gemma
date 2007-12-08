@@ -87,22 +87,33 @@ public class DifferentialExpressionAnalysisService {
 
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
 
+        Collection<ExpressionAnalysisResultSet> resultSets = analysis.getResultSets();
+
         Collection<ExpressionAnalysisResult> analysisResults = null;
 
         int numFactors = factors.size();
         if ( numFactors == NUM_FACTORS_OWA ) {
-            log.info( "Get one way anova results." );
+            log.info( "Getting one way anova results for experiment: " + shortName );
 
-            Collection<ExpressionAnalysisResultSet> resultSets = analysis.getResultSets();
             if ( resultSets.size() != NUM_RESULT_SETS_OWA )
                 throw new RuntimeException( "Invalid number of result sets for analysis for experiment: " + shortName );
 
             ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
 
             analysisResults = resultSet.getResults();
-        } else {
-            log.error( "Cannot return top results for two way anova at this time.  Returning ..." );
-            return null;
+        } else {// FIXME picking one factor randomly for now
+            log.info( "Getting two way anova results for experiment: " + shortName );
+
+            for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
+                ExperimentalFactor factor = resultSet.getExperimentalFactor();
+                if ( factor == null ) {
+                    log.info( "Null experimental factor for result set.  Skipping ..." );
+                    continue;
+                }
+                log.info( "Returning top results for the randomly selected factor " + factor );
+
+                analysisResults = resultSet.getResults();
+            }
         }
 
         if ( top > analysisResults.size() ) {
