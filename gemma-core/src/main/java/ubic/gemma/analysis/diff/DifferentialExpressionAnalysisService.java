@@ -107,7 +107,7 @@ public class DifferentialExpressionAnalysisService {
             for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
                 ExperimentalFactor factor = resultSet.getExperimentalFactor();
                 if ( factor == null ) {
-                    log.info( "Null experimental factor for result set.  Skipping ..." );
+                    log.debug( "Null experimental factor for result set.  Skipping ..." );
                     continue;
                 }
                 log.info( "Returning top results for the randomly selected factor " + factor );
