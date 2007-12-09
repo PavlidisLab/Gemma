@@ -425,14 +425,13 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
     // thaw lite.
     @Override
-    protected void handleThawBioAssays( final ExpressionExperiment expressionExperiment ) {
+    protected void handleThawBioAssays( final ExpressionExperiment ee ) {
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
 
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                ExpressionExperiment ee = ( ExpressionExperiment ) session.get( ExpressionExperimentImpl.class,
-                        expressionExperiment.getId() );
-                ee.getBioAssays().size();
+                session.update( ee );
+
                 for ( QuantitationType type : ee.getQuantitationTypes() ) {
                     session.update( type );
                     session.evict( type );
@@ -449,6 +448,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
                 if ( ee.getAccession() != null ) ee.getAccession().getExternalDatabase();
                 for ( BioAssay ba : ee.getBioAssays() ) {
+                    Hibernate.initialize( ba );
                     for ( BioMaterial bm : ba.getSamplesUsed() ) {
                         bm.getName();
                     }
