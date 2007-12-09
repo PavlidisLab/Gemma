@@ -143,8 +143,11 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                 Collection<DesignElementDataVector> vectorsForQt = getVectorsForOneQuantitationType( oldAd, type );
 
                 if ( vectorsForQt.size() == 0 ) {
-                    throw new IllegalStateException( "No vectors for " + type + " on " + oldAd );
-                    // continue;
+                    /*
+                     * This can happen when the quantitation types vary for the array designs.
+                     */
+                    log.info( "No vectors for " + type + " on " + oldAd );
+                    continue;
                 }
 
                 // Collection<DesignElementDataVector> doomedToBeRemoved = new HashSet<DesignElementDataVector>();
