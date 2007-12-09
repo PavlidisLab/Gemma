@@ -103,7 +103,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
             if ( result instanceof ProbeAnalysisResult ) {
 
                 ProbeAnalysisResult presult = ( ProbeAnalysisResult ) result;
-                log.debug( presult.getProbe().getName() + "; " + presult.getPvalue() );
+                log.info( presult.getProbe().getName() + "; " + presult.getPvalue() );
             } else {
                 assertFalse( "Invalid result type.  Expected a " + ProbeAnalysisResult.class.getName() + ", received "
                         + result.getClass().getClass().getName(), false );
