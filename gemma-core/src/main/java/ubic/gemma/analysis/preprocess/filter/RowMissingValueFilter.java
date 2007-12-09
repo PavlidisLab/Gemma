@@ -30,6 +30,8 @@ import ubic.gemma.model.expression.designElement.DesignElement;
 import cern.colt.list.IntArrayList;
 
 /**
+ * Filter out rows that have "too many" missing values
+ * 
  * @author pavlidis
  * @version $Id$
  */
@@ -82,6 +84,11 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
         maxFractionRemoved = f;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.preprocess.filter.Filter#filter(ubic.gemma.datastructure.matrix.ExpressionDataMatrix)
+     */
     public ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix data ) {
         int numRows = data.rows();
         int numCols = data.columns();
@@ -106,10 +113,20 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
         /* first pass - determine how many missing values there are per row */
         for ( int i = 0; i < numRows; i++ ) {
             DesignElement designElementForRow = data.getDesignElementForRow( i );
+
+            /* allow for the possibility that the absent/present matrix is not in the same order, etc. */
+            int absentPresentRow = absentPresentCalls.getRowIndex( designElementForRow );
+            if ( absentPresentRow < 0 ) {
+                log.debug( "No separate missing value data for " + designElementForRow );
+            }
+
             int presentCount = 0;
             for ( int j = 0; j < numCols; j++ ) {
-                if ( !Double.isNaN( data.get( i, j ) )
-                        && ( absentPresentCalls == null || ( Boolean ) absentPresentCalls.get( i, j ) ) ) {
+                boolean callIsPresent = true;
+                if ( absentPresentRow >= 0 ) {
+                    callIsPresent = ( Boolean ) absentPresentCalls.get( absentPresentRow, j );
+                }
+                if ( !Double.isNaN( data.get( i, j ) ) && callIsPresent ) {
                     presentCount++;
                 }
             }
@@ -137,7 +154,7 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
                 if ( present.get( i ) >= minPresentCount && present.get( i ) >= ABSOLUTEMINPRESENT ) {
                     DesignElement designElementForRow = data.getDesignElementForRow( i );
                     if ( kept.contains( designElementForRow ) ) continue; // FIXME SLOW because it is a
-                                                                                        // list.
+                    // list.
                     kept.add( designElementForRow );
                 }
             }

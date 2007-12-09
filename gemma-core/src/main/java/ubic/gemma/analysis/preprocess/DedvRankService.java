@@ -151,15 +151,15 @@ public class DedvRankService {
         // int columns = 0;
         // int rows = genes.size();
         // for ( AbstractNamedMatrix rankMatrix : rankMatrices ) {
-        //            columns += rankMatrix.columns();
-        //        }
-        //        AbstractNamedMatrix rankMatrix = new DenseDoubleMatrix2DNamed( rows, columns );
+        // columns += rankMatrix.columns();
+        // }
+        // AbstractNamedMatrix rankMatrix = new DenseDoubleMatrix2DNamed( rows, columns );
         //
-        //        for ( Gene gene : genes ) {
+        // for ( Gene gene : genes ) {
         //
-        //        }
+        // }
         //
-        //        return null;
+        // return null;
     }
 
     /**
@@ -343,6 +343,11 @@ public class DedvRankService {
         log.debug( preferredVectors.size() + " vectors" );
         for ( DesignElementDataVector vector : preferredVectors ) {
             DesignElement de = vector.getDesignElement();
+            if ( intensities.getRow( de ) == null ) {
+                log.warn( "No intensity value for " + de + ", rank for vector will be null" );
+                vector.setRank( null );
+                continue;
+            }
             Integer i = intensities.getRowIndex( de );
             assert i != null;
             double rank = ( double ) ranks.get( i ) / ranks.size();

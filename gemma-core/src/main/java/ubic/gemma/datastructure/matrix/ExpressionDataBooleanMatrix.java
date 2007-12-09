@@ -256,8 +256,14 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
      */
     public Boolean[] getRow( DesignElement designElement ) {
         Integer row = this.rowElementMap.get( designElement );
+        if ( row == null ) return null;
         Object[] rawRow = matrix.getRow( row );
-        return ( Boolean[] ) rawRow;
+        Boolean[] result = new Boolean[rawRow.length];
+        for ( int i = 0, k = rawRow.length; i < k; i++ ) {
+            assert rawRow[i] instanceof Boolean : "Got a " + rawRow[i].getClass().getName();
+            result[i] = ( Boolean ) rawRow[i];
+        }
+        return result;
     }
 
     /*

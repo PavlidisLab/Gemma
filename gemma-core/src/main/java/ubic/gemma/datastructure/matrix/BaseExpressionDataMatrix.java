@@ -163,7 +163,9 @@ abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
     }
 
     public int getRowIndex( DesignElement designElement ) {
-        return rowElementMap.get( designElement );
+        Integer index = rowElementMap.get( designElement );
+        if ( index == null ) return -1;
+        return index;
     }
 
     /**

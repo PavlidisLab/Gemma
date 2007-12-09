@@ -18,6 +18,9 @@
  */
 package ubic.gemma.datastructure.matrix;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.DesignElement;
 
@@ -31,19 +34,35 @@ public class ExpressionDataDoubleMatrixUtil {
 
     private static final double LOGARITHM_BASE = 2.0;
 
+    private static Log log = LogFactory.getLog( ExpressionDataDoubleMatrixUtil.class.getName() );
+
     /**
-     * Subtract two conformant matrices. The rows and columns do not have to be in the same order, but they do have to
-     * have the same row and column keys. The result is stored in a.
+     * Subtract two matrices. Ideally, they matrices are conformant, but if they are not (as some rows are sometimes
+     * missing for some quantitation types), this method attempts to handle it anyway (see below). The rows and columns
+     * do not have to be in the same order, but they do have to have the same column keys and row keys (with the
+     * exception of missing rows). The result is stored in a. (a - b).
+     * <p>
+     * If the number of rows are not the same, and/or the rows have different keys in the two matrices, some rows will
+     * simply not get subtracted and a warning will be issued.
      * 
      * @param a
-     * @param b
+     * @param b throws IllegalArgumentException if the matrices are not column-conformant.
      */
     public static void subtractMatrices( ExpressionDataDoubleMatrix a, ExpressionDataDoubleMatrix b ) {
-        checkConformant( a, b );
+        // checkConformant( a, b );
+        if ( a.columns() != b.columns() )
+            throw new IllegalArgumentException( "Unequal column counts: " + a.columns() + " != " + b.columns() );
+
         int columns = a.columns();
         for ( ExpressionDataMatrixRowElement el : a.getRowElements() ) {
             int rowNum = el.getIndex();
             DesignElement del = el.getDesignElement();
+
+            if ( b.getRow( del ) == null ) {
+                log.warn( "Matrix 'b' is missing a row for " + del + ", it will not be subtracted" );
+                continue;
+            }
+
             for ( int i = 0; i < columns; i++ ) {
                 BioAssay assay = a.getBioAssaysForColumn( i ).iterator().next();
                 double valA = a.get( del, assay );
@@ -78,17 +97,29 @@ public class ExpressionDataDoubleMatrixUtil {
     }
 
     /**
-     * Add two conformant matrices. The rows and columns do not have to be in the same order, but they do have to have
-     * the same row and column keys. The result is stored in a.
+     * Add two matrices. Ideally, they matrices are conformant, but if they are not (as some rows are sometimes missing
+     * for some quantitation types), this method attempts to handle it anyway (see below). The rows and columns do not
+     * have to be in the same order, but they do have to have the same column keys and row keys (with the exception of
+     * missing rows). The result is stored in a.
+     * <p>
+     * If the number of rows are not the same, and/or the rows have different keys in the two matrices, some rows will
+     * simply not get added and a warning will be issued.
      * 
      * @param a
-     * @param b
+     * @param b throws IllegalArgumentException if the matrices are not column-conformant.
      */
     public static void addMatrices( ExpressionDataDoubleMatrix a, ExpressionDataDoubleMatrix b ) {
-        checkConformant( a, b );
+        // checkConformant( a, b );
+        if ( a.columns() != b.columns() )
+            throw new IllegalArgumentException( "Unequal column counts: " + a.columns() + " != " + b.columns() );
         int columns = a.columns();
         for ( ExpressionDataMatrixRowElement el : a.getRowElements() ) {
             DesignElement del = el.getDesignElement();
+
+            if ( b.getRow( del ) == null ) {
+                log.warn( "Matrix 'b' is missing a row for " + del + ", this row will not be added" );
+                continue;
+            }
             for ( int i = 0; i < columns; i++ ) {
                 BioAssay bm = a.getBioAssaysForColumn( i ).iterator().next();
                 double valA = a.get( del, bm );
@@ -127,18 +158,26 @@ public class ExpressionDataDoubleMatrixUtil {
     }
 
     /**
-     * Use the mask matrix to turn some values in a conformant matrix to NaN. The rows and columns do not have to be in
-     * the same order, but they do have to have the same row and column keys. The result is stored in a.
+     * Use the mask matrix to turn some values in a matrix to NaN. Ideally, they matrices are conformant, but if they
+     * are not (as some rows are sometimes missing for some quantitation types), this method attempts to handle it
+     * anyway (see below). The rows and columns do not have to be in the same order, but they do have to have the same
+     * column keys and row keys (with the exception of missing rows). The result is stored in matrix.
      * 
      * @param matrix
      * @param mask if null, masking is not attempted.
      */
     public static void maskMatrix( ExpressionDataDoubleMatrix matrix, ExpressionDataBooleanMatrix mask ) {
         if ( mask == null ) return;
-        checkConformant( matrix, mask );
+        // checkConformant( a, b );
+        if ( matrix.columns() != mask.columns() )
+            throw new IllegalArgumentException( "Unequal column counts: " + matrix.columns() + " != " + mask.columns() );
         int columns = matrix.columns();
         for ( ExpressionDataMatrixRowElement el : matrix.getRowElements() ) {
             DesignElement del = el.getDesignElement();
+            if ( mask.getRow( del ) == null ) {
+                log.warn( "Mask Matrix is missing a row for " + del );
+                continue;
+            }
             for ( int i = 0; i < columns; i++ ) {
                 BioAssay bm = matrix.getBioAssaysForColumn( i ).iterator().next();
                 boolean present = mask.get( del, bm );
