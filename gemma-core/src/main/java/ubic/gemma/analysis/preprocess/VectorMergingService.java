@@ -131,7 +131,8 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
 
         BioAssayDimension newBioAd = getNewBioAssayDimension( dimId, sortedOldDims );
         int totalBioAssays = newBioAd.getBioAssays().size();
-        assert totalBioAssays == expExp.getBioAssays().size();
+        assert totalBioAssays == expExp.getBioAssays().size() : "experiment has " + expExp.getBioAssays().size()
+                + " but new bioassaydimension has " + totalBioAssays;
 
         for ( QuantitationType type : qts ) {
 

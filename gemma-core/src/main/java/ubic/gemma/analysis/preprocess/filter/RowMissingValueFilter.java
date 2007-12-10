@@ -115,10 +115,8 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
             DesignElement designElementForRow = data.getDesignElementForRow( i );
 
             /* allow for the possibility that the absent/present matrix is not in the same order, etc. */
-            int absentPresentRow = absentPresentCalls.getRowIndex( designElementForRow );
-            if ( absentPresentRow < 0 ) {
-                log.debug( "No separate missing value data for " + designElementForRow );
-            }
+            int absentPresentRow = absentPresentCalls == null ? -1 : absentPresentCalls
+                    .getRowIndex( designElementForRow );
 
             int presentCount = 0;
             for ( int j = 0; j < numCols; j++ ) {
