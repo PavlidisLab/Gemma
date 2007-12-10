@@ -673,7 +673,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 v.setArrayDesignCount( list.getLong( 8 ) );
                 v.setShortName( list.getString( 9 ) );
                 v.setDateCreated( list.getDate( 10 ).toString() );
-                String type = list.getString( 11 );
+                String type = list.get( 11 ).toString();
 
                 fillQuantitationTypeInfo( qtMap, v, eeId, type );
                 vo.put( eeId, v );
