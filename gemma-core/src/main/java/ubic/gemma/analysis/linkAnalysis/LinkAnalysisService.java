@@ -48,7 +48,6 @@ import ubic.gemma.model.association.coexpression.RatProbeCoExpression;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -63,7 +62,6 @@ import cern.colt.list.ObjectArrayList;
  * Running link analyses through the spring context; will persist the results if the configuration says so.
  * 
  * @spring.bean id="linkAnalysisService"
- * @spring.property name="vectorService" ref="designElementDataVectorService"
  * @spring.property name="eeService" ref="expressionExperimentService"
  * @spring.property name="ppService" ref="probe2ProbeCoexpressionService"
  * @spring.property name="csService" ref="compositeSequenceService"
@@ -82,7 +80,6 @@ public class LinkAnalysisService {
     QuantitationTypeService quantitationTypeService;
     ExpressionExperimentService eeService;
     CompositeSequenceService csService;
-    DesignElementDataVectorService vectorService;
     private Probe2ProbeCoexpressionService ppService = null;
     private AnalysisHelperService analysisHelperService = null;
 
@@ -450,10 +447,6 @@ public class LinkAnalysisService {
 
     public void setPpService( Probe2ProbeCoexpressionService ppService ) {
         this.ppService = ppService;
-    }
-
-    public void setVectorService( DesignElementDataVectorService vectorService ) {
-        this.vectorService = vectorService;
     }
 
     public void setCsService( CompositeSequenceService csService ) {
