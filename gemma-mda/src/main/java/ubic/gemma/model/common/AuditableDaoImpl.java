@@ -84,7 +84,7 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
          * least of our worries. The real annoyance here is dealing with subclasses of event types.
          */
 
-        List<String> classes = getClassHierarchy( type );
+        List<String> classes = getClassHierarchy( type.getClass() );
 
         final String queryString = "select event " + "from ubic.gemma.model.common.auditAndSecurity.AuditTrail trail "
                 + "inner join trail.events event inner join event.eventType et " + "where trail = :trail "
@@ -113,16 +113,16 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
     /**
      * Determine the full set of AuditEventTypes that are needed (that is, subclasses of the given class)
      * 
-     * @param type
+     * @param type Class
      * @return A List of class names, including the given type.
      */
-    private List<String> getClassHierarchy( AuditEventType type ) {
+    protected List<String> getClassHierarchy( Class type ) {
         List<String> classes = new ArrayList<String>();
-        classes.add( type.getClass().getCanonicalName() );
+        classes.add( type.getCanonicalName() );
 
         // how to determine subclasses? There is no way to do this but the hibernate way.
         SingleTableEntityPersister classMetadata = ( SingleTableEntityPersister ) this.getSessionFactory()
-                .getClassMetadata( type.getClass() );
+                .getClassMetadata( type );
         if ( classMetadata.hasSubclasses() ) {
             String[] subclasses = classMetadata.getSubclassClosure(); // this includes the superclass, fully qualified
             // names.
@@ -151,9 +151,9 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
             atmap.put( a.getAuditTrail(), a );
         }
 
-        List<String> classes = getClassHierarchy( type );
+        List<String> classes = getClassHierarchy( type.getClass() );
 
-        final String queryString = "select trail,event from ubic.gemma.model.common.auditAndSecurity.AuditTrail trail "
+        final String queryString = "select trail, event from ubic.gemma.model.common.auditAndSecurity.AuditTrail trail "
                 + "inner join trail.events event inner join event.eventType et where trail in (:trails) "
                 + "and et.class in (" + StringUtils.join( classes, "," ) + ") order by event.date desc ";
 
@@ -162,15 +162,19 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setCacheable( true );
             queryObject.setCacheRegion( "auditEvents" );
-            queryObject.setParameter( "trails", atmap.keySet() );
+            queryObject.setParameterList( "trails", atmap.keySet() );
 
-            List results = queryObject.list();
-            if ( results == null || results.isEmpty() ) return null;
+            List qr = queryObject.list();
+            if ( qr == null || qr.isEmpty() ) return result;
 
-            for ( Object o : results ) {
-                List l = ( List ) o;
-                AuditTrail t = ( AuditTrail ) l.get( 0 );
-                AuditEvent e = ( AuditEvent ) l.get( 1 );
+            for ( Object o : qr ) {
+                Object[] ar = ( Object[] ) o;
+                AuditTrail t = ( AuditTrail ) ar[0];
+                AuditEvent e = ( AuditEvent ) ar[1];
+
+                // only one event per object, please - the most recent.
+                if ( result.containsKey( atmap.get( t ) ) ) continue;
+
                 result.put( atmap.get( t ), e );
             }
 
@@ -192,7 +196,7 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
         }
 
         final String queryString = "select trail,event,et from ubic.gemma.model.common.auditAndSecurity.AuditTrail trail "
-                + "inner join trail.events event inner join event.eventType et where trail in (:trails) group by trail, order by event.date desc ";
+                + "inner join trail.events event inner join event.eventType et where trail in (:trails) order by event.date desc ";
 
         Map<Class, Map<Auditable, AuditEvent>> result = new HashMap<Class, Map<Auditable, AuditEvent>>();
         try {
@@ -201,18 +205,27 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
             queryObject.setCacheRegion( "auditEvents" );
             queryObject.setParameter( "trails", atmap.keySet() );
 
-            List results = queryObject.list();
-            if ( results == null || results.isEmpty() ) return null;
+            List qr = queryObject.list();
+            if ( qr == null || qr.isEmpty() ) return result;
 
-            for ( Object o : results ) {
-                List l = ( List ) o;
-                AuditTrail t = ( AuditTrail ) l.get( 0 );
-                AuditEvent e = ( AuditEvent ) l.get( 1 );
-                AuditEventType ty = ( AuditEventType ) l.get( 2 );
+            for ( Object o : qr ) {
+                Object[] ar = ( Object[] ) o;
+                AuditTrail t = ( AuditTrail ) ar[0];
+                AuditEvent e = ( AuditEvent ) ar[1];
+                AuditEventType ty = ( AuditEventType ) ar[2];
+
+                /*
+                 * Careful with subclasses. The key in the hashtable should really only be the superclass.
+                 */
                 if ( !result.containsKey( ty.getClass() ) ) {
                     result.put( ty.getClass(), new HashMap<Auditable, AuditEvent>() );
                 }
-                result.get( ty.getClass() ).put( atmap.get( t ), e );
+                Map<Auditable, AuditEvent> amap = result.get( ty.getClass() );
+
+                // only one event per object, please - the most recent.
+                if ( amap.containsKey( atmap.get( t ) ) ) continue;
+
+                amap.put( atmap.get( t ), e );
             }
 
         } catch ( org.hibernate.HibernateException ex ) {

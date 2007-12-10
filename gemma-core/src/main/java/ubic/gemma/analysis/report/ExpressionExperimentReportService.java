@@ -41,9 +41,17 @@ import ubic.gemma.grid.javaspaces.SpacesCommand;
 import ubic.gemma.grid.javaspaces.SpacesResult;
 import ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
+import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEvent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -258,24 +266,25 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
             ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) object;
             ids.add( eeVo.getId() );
         }
-        // get the last event information
-        Map<Long, AuditEvent> linkAnalysisEvents = expressionExperimentService.getLastLinkAnalysis( ids );
-        Map<Long, AuditEvent> missingValueAnalysisEvents = expressionExperimentService
-                .getLastMissingValueAnalysis( ids );
-        Map<Long, AuditEvent> rankComputationEvents = expressionExperimentService.getLastRankComputation( ids );
-        Map<Long, AuditEvent> troubleEvents = expressionExperimentService.getLastTroubleEvent( ids );
-        Map<Long, AuditEvent> validationEvents = expressionExperimentService.getLastValidationEvent( ids );
 
         // do this ahead to avoid round trips.
         Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( ids );
-        Map<Long, ExpressionExperiment> eeMap = new HashMap<Long, ExpressionExperiment>();
-        for ( ExpressionExperiment ee : ees ) {
-            eeMap.put( ee.getId(), ee );
-        }
 
         watch.split();
-        long splitTime = watch.getSplitTime();
-        log.info( "Retrieved event information in " + splitTime + "ms (wall time)" );
+        log.info( "Load ees in " + watch.getSplitTime() + "ms (wall time)" );
+        watch.unsplit();
+
+        // This is substantially faster than expressionExperimentService.getLastLinkAnalysis( ids ).
+        Map<Long, AuditEvent> linkAnalysisEvents = getEvents( ees, LinkAnalysisEvent.Factory.newInstance() );
+        Map<Long, AuditEvent> missingValueAnalysisEvents = getEvents( ees, MissingValueAnalysisEvent.Factory
+                .newInstance() );
+        Map<Long, AuditEvent> rankComputationEvents = getEvents( ees, RankComputationEvent.Factory.newInstance() );
+        Map<Long, AuditEvent> troubleEvents = getEvents( ees, TroubleStatusFlagEvent.Factory.newInstance() );
+        Map<Long, AuditEvent> validationEvents = getEvents( ees, ValidatedFlagEvent.Factory.newInstance() );
+        Map<Long, AuditEvent> arrayDesignEvents = getEvents( ees, ArrayDesignGeneMappingEvent.Factory.newInstance() );
+
+        watch.split();
+        log.info( "Retrieval of event information done after " + watch.getSplitTime() + "ms (wall time)" );
         watch.unsplit();
 
         // add in the last events of interest for all eeVos
@@ -289,6 +298,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                     eeVo.setLinkAnalysisEventType( event.getEventType() );
                 }
             }
+
             if ( missingValueAnalysisEvents.containsKey( id ) ) {
                 AuditEvent event = missingValueAnalysisEvents.get( id );
                 if ( event != null ) {
@@ -296,6 +306,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                     eeVo.setMissingValueAnalysisEventType( event.getEventType() );
                 }
             }
+
             if ( rankComputationEvents.containsKey( id ) ) {
                 AuditEvent event = rankComputationEvents.get( id );
                 if ( event != null ) {
@@ -303,24 +314,38 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                     eeVo.setRankComputationEventType( event.getEventType() );
                 }
             }
+
+            if ( arrayDesignEvents.containsKey( id ) ) {
+                AuditEvent event = arrayDesignEvents.get( id );
+                if ( event != null ) {
+                    eeVo.setDateArrayDesignLastUpdated( event.getDate() );
+                }
+            }
+
             eeVo.setTroubleFlag( troubleEvents.get( id ) );
             eeVo.setValidatedFlag( validationEvents.get( id ) );
+        }
+    }
 
-            ExpressionExperiment ee = eeMap.get( id );
-
-            /*
-             * The array design is not considered 'updated' unless the probe mapping has been run.
-             */
-            AuditEvent arrayDesignUpdateEvent = expressionExperimentService.getLastArrayDesignUpdate( ee,
-                    ArrayDesignGeneMappingEvent.class );
-            if ( arrayDesignUpdateEvent != null ) {
-                eeVo.setDateArrayDesignLastUpdated( arrayDesignUpdateEvent.getDate() );
-            }
+    @SuppressWarnings("unchecked")
+    private Map<Long, AuditEvent> getEvents( Collection<ExpressionExperiment> ees, AuditEventType type ) {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        Map<Long, AuditEvent> result = new HashMap<Long, AuditEvent>();
+        Map<Auditable, AuditEvent> events = null;
+        if ( type instanceof ArrayDesignAnalysisEvent ) {
+            events = expressionExperimentService.getLastArrayDesignUpdate( ees, type.getClass() );
+        } else {
+            events = expressionExperimentService.getLastAuditEvent( ees, type );
         }
 
-        watch.stop();
-        log.info( "Added event information in " + watch.getTime() + "ms (wall time)" );
-
+        for ( Auditable a : events.keySet() ) {
+            result.put( ( ( ExpressionExperiment ) a ).getId(), events.get( a ) );
+        }
+        watch.split();
+        log.info( "Retrieval of events of type " + type.getClass().getSimpleName() + " done after "
+                + watch.getSplitTime() + "ms (wall time)" );
+        return result;
     }
 
     /**

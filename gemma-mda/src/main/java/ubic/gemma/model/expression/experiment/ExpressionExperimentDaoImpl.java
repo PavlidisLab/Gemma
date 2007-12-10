@@ -36,7 +36,6 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -963,6 +962,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         try {
             Session session = this.getSession( false );
             org.hibernate.Query queryObject = session.createQuery( queryString );
+            queryObject.setCacheable( true );
+            queryObject.setCacheRegion( "ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" );
             queryObject.setParameterList( "ids", ids );
             ees = queryObject.list();
         } catch ( org.hibernate.HibernateException ex ) {
@@ -1167,6 +1168,42 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     }
 
     @Override
+    protected Map<ExpressionExperiment, AuditEvent> handleGetLastArrayDesignUpdate( Collection expressionExperiments,
+            Class type ) throws Exception {
+
+        List<String> classes = getClassHierarchy( type );
+        final String queryString = "select ee,event from ExpressionExperimentImpl as ee inner join "
+                + "ee.bioAssays b inner join b.arrayDesignUsed a inner join a.auditTrail trail inner join trail.events event inner join event.eventType et "
+                + " where ee in (:ee) and et.class in (" + StringUtils.join( classes, "," )
+                + ") order by event.date desc ";
+
+        Map<ExpressionExperiment, AuditEvent> result = new HashMap<ExpressionExperiment, AuditEvent>();
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setCacheable( true );
+            queryObject.setCacheRegion( "auditEvents" );
+            queryObject.setParameterList( "ee", expressionExperiments );
+            List qr = queryObject.list();
+            if ( qr == null || qr.isEmpty() ) return result;
+
+            for ( Object o : qr ) {
+                Object[] ar = ( Object[] ) o;
+                ExpressionExperiment ee = ( ExpressionExperiment ) ar[0];
+                AuditEvent e = ( AuditEvent ) ar[1];
+
+                // only one event per object, please - the most recent.
+                if ( result.containsKey( ee ) ) continue;
+
+                result.put( ee, e );
+            }
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return result;
+    }
+
+    @Override
     protected ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastAuditEvent(
             final ubic.gemma.model.common.Auditable auditable,
             final ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType type ) throws java.lang.Exception {
@@ -1340,4 +1377,5 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         return ee.iterator().next();
 
     }
+
 }

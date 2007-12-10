@@ -364,13 +364,12 @@ public class ExpressionExperimentServiceImpl extends
      * @param type
      * @returns a map of the expression experiment ids to the last audit event for the given audit event type the map
      *          can contain nulls if the specified auditEventType isn't found for a given expression experiment id
+     * @see AuditableDao.getLastAuditEvent and getLastTypedAuditEvents for faster methods.
      */
     @SuppressWarnings("unchecked")
     private Map<Long, AuditEvent> getLastEvent( Collection<Long> ids, AuditEventType type ) {
 
         Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
-
-        // This could be optimized by building the map in the dao and having getLastAuditEvent take a collection of ids.
         Collection<ExpressionExperiment> ees = this.loadMultiple( ids );
         AuditEvent last;
         for ( ExpressionExperiment experiment : ees ) {
@@ -512,6 +511,11 @@ public class ExpressionExperimentServiceImpl extends
     @Override
     protected ExpressionExperiment handleFindByBioMaterial( BioMaterial bm ) throws Exception {
         return this.getExpressionExperimentDao().findByBioMaterial( bm );
+    }
+
+    @Override
+    protected Map handleGetLastArrayDesignUpdate( Collection expressionExperiments, Class type ) throws Exception {
+        return this.getExpressionExperimentDao().getLastArrayDesignUpdate( expressionExperiments, type );
     }
 
 }
