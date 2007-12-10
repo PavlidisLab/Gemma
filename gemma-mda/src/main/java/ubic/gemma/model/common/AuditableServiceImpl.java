@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -48,12 +49,14 @@ public class AuditableServiceImpl extends ubic.gemma.model.common.AuditableServi
             throws java.lang.Exception {
         return this.getAuditableDao().getAuditEvents( auditable );
     }
-    
+
     /**
-     * @see ubic.gemma.model.common.AuditableService#getLastAuditEvent(ubic.gemma.model.common.Auditable, ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)
+     * @see ubic.gemma.model.common.AuditableService#getLastAuditEvent(ubic.gemma.model.common.Auditable,
+     *      ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)
      */
     @Override
-    protected ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastAuditEvent( final Auditable auditable, AuditEventType type ) throws java.lang.Exception {
+    protected ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastAuditEvent( final Auditable auditable,
+            AuditEventType type ) throws java.lang.Exception {
         return this.getAuditableDao().getLastAuditEvent( auditable, type );
     }
 
@@ -77,21 +80,27 @@ public class AuditableServiceImpl extends ubic.gemma.model.common.AuditableServi
         }
         return lastEvent;
     }
-    
+
+    /**
+     * @param events
+     * @return
+     */
     protected AuditEvent getLastOutstandingTroubleEvent( Collection<AuditEvent> events ) {
         return getLastOutstandingTroubleEventNoSort( events );
-        //return getLastOutstandingTroubleEventWithSort( events );
     }
-    
+
+    /**
+     * @param events
+     * @return
+     */
     private AuditEvent getLastOutstandingTroubleEventNoSort( Collection<AuditEvent> events ) {
         AuditEvent lastTroubleEvent = null;
         AuditEvent lastOKEvent = null;
         for ( AuditEvent event : events ) {
-            if ( event.getEventType() == null) {
+            if ( event.getEventType() == null ) {
                 continue;
             } else if ( OKStatusFlagEvent.class.isAssignableFrom( event.getEventType().getClass() ) ) {
-                if ( lastOKEvent == null || lastOKEvent.getDate().before( event.getDate() ) )
-                    lastOKEvent = event;
+                if ( lastOKEvent == null || lastOKEvent.getDate().before( event.getDate() ) ) lastOKEvent = event;
             } else if ( TroubleStatusFlagEvent.class.isAssignableFrom( event.getEventType().getClass() ) ) {
                 if ( lastTroubleEvent == null || lastTroubleEvent.getDate().before( event.getDate() ) )
                     lastTroubleEvent = event;
@@ -102,11 +111,13 @@ public class AuditableServiceImpl extends ubic.gemma.model.common.AuditableServi
                 return lastTroubleEvent;
         return null;
     }
-        
+
+    @Deprecated
     private AuditEvent getLastOutstandingTroubleEventWithSort( Collection<AuditEvent> events ) {
-        /* sort by date descending and step through the list; if we come to an OK event
-         * first, there's no problem; if we come to a Trouble before we see an OK event,
-         * there's a problem (in this case, we might go through the whole list...)
+        /*
+         * sort by date descending and step through the list; if we come to an OK event first, there's no problem; if we
+         * come to a Trouble before we see an OK event, there's a problem (in this case, we might go through the whole
+         * list...)
          */
         List<AuditEvent> eventList = new ArrayList<AuditEvent>( events );
         Collections.sort( eventList, new Comparator<AuditEvent>() {
@@ -117,9 +128,31 @@ public class AuditableServiceImpl extends ubic.gemma.model.common.AuditableServi
         for ( AuditEvent event : eventList ) {
             if ( OKStatusFlagEvent.class.isAssignableFrom( event.getEventType().getClass() ) )
                 return null;
-            else if ( TroubleStatusFlagEvent.class.isAssignableFrom( event.getEventType().getClass() ) )
-                return event;
+            else if ( TroubleStatusFlagEvent.class.isAssignableFrom( event.getEventType().getClass() ) ) return event;
         }
         return null;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.AuditableServiceBase#handleGetLastAuditEvent(java.util.Collection,
+     *      ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)
+     */
+    @Override
+    protected Map handleGetLastAuditEvent( Collection auditables, AuditEventType type ) throws Exception {
+        return this.getAuditableDao().getLastAuditEvent( auditables, type );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.AuditableServiceBase#handleGetLastTypedAuditEvents(java.util.Collection)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Map<Class, Map<Auditable, AuditEvent>> handleGetLastTypedAuditEvents( Collection auditables )
+            throws Exception {
+        return this.getAuditableDao().getLastTypedAuditEvents( auditables );
     }
 }

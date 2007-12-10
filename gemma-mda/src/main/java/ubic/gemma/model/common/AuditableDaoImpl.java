@@ -24,7 +24,9 @@ package ubic.gemma.model.common;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -82,7 +84,7 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
          * least of our worries. The real annoyance here is dealing with subclasses of event types.
          */
 
-        List<String> classes = getSubclassesClause( type );
+        List<String> classes = getClassHierarchy( type );
 
         final String queryString = "select event " + "from ubic.gemma.model.common.auditAndSecurity.AuditTrail trail "
                 + "inner join trail.events event inner join event.eventType et " + "where trail = :trail "
@@ -108,7 +110,13 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
 
     }
 
-    private List<String> getSubclassesClause( AuditEventType type ) {
+    /**
+     * Determine the full set of AuditEventTypes that are needed (that is, subclasses of the given class)
+     * 
+     * @param type
+     * @return A List of class names, including the given type.
+     */
+    private List<String> getClassHierarchy( AuditEventType type ) {
         List<String> classes = new ArrayList<String>();
         classes.add( type.getClass().getCanonicalName() );
 
@@ -125,5 +133,92 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
             }
         }
         return classes;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.AuditableDaoBase#handleGetLastAuditEvent(java.util.Collection,
+     *      ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Map<Auditable, AuditEvent> handleGetLastAuditEvent( Collection auditables, AuditEventType type )
+            throws Exception {
+
+        Map<AuditTrail, Auditable> atmap = new HashMap<AuditTrail, Auditable>();
+        for ( Auditable a : ( Collection<Auditable> ) auditables ) {
+            atmap.put( a.getAuditTrail(), a );
+        }
+
+        List<String> classes = getClassHierarchy( type );
+
+        final String queryString = "select trail,event from ubic.gemma.model.common.auditAndSecurity.AuditTrail trail "
+                + "inner join trail.events event inner join event.eventType et where trail in (:trails) "
+                + "and et.class in (" + StringUtils.join( classes, "," ) + ") order by event.date desc ";
+
+        Map<Auditable, AuditEvent> result = new HashMap<Auditable, AuditEvent>();
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setCacheable( true );
+            queryObject.setCacheRegion( "auditEvents" );
+            queryObject.setParameter( "trails", atmap.keySet() );
+
+            List results = queryObject.list();
+            if ( results == null || results.isEmpty() ) return null;
+
+            for ( Object o : results ) {
+                List l = ( List ) o;
+                AuditTrail t = ( AuditTrail ) l.get( 0 );
+                AuditEvent e = ( AuditEvent ) l.get( 1 );
+                result.put( atmap.get( t ), e );
+            }
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+
+        return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Map<Class, Map<Auditable, AuditEvent>> handleGetLastTypedAuditEvents( Collection auditables )
+            throws Exception {
+
+        Map<AuditTrail, Auditable> atmap = new HashMap<AuditTrail, Auditable>();
+        for ( Auditable a : ( Collection<Auditable> ) auditables ) {
+            atmap.put( a.getAuditTrail(), a );
+        }
+
+        final String queryString = "select trail,event,et from ubic.gemma.model.common.auditAndSecurity.AuditTrail trail "
+                + "inner join trail.events event inner join event.eventType et where trail in (:trails) group by trail, order by event.date desc ";
+
+        Map<Class, Map<Auditable, AuditEvent>> result = new HashMap<Class, Map<Auditable, AuditEvent>>();
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setCacheable( true );
+            queryObject.setCacheRegion( "auditEvents" );
+            queryObject.setParameter( "trails", atmap.keySet() );
+
+            List results = queryObject.list();
+            if ( results == null || results.isEmpty() ) return null;
+
+            for ( Object o : results ) {
+                List l = ( List ) o;
+                AuditTrail t = ( AuditTrail ) l.get( 0 );
+                AuditEvent e = ( AuditEvent ) l.get( 1 );
+                AuditEventType ty = ( AuditEventType ) l.get( 2 );
+                if ( !result.containsKey( ty.getClass() ) ) {
+                    result.put( ty.getClass(), new HashMap<Auditable, AuditEvent>() );
+                }
+                result.get( ty.getClass() ).put( atmap.get( t ), e );
+            }
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+
+        return result;
     }
 }
