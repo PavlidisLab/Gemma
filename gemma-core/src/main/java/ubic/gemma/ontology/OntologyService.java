@@ -258,7 +258,7 @@ public class OntologyService {
         // TODO: this is poorly named. changed to findExactResource, add findExactIndividual Factor out common code
 
         Collection<OntologyResource> results;
-
+        
         // Add the matching individuals
         List<Characteristic> individualResults = new ArrayList<Characteristic>();
         if ( categoryUri != null && !categoryUri.equals( "" ) && !categoryUri.equals( "{}" ) ) {
@@ -267,20 +267,20 @@ public class OntologyService {
         }
         log.debug( "found " + individualResults.size() + " individuals from ontology term " + categoryUri + " in " + watch.getTime() + " ms");
 
-        Collection<String> foundValues = new HashSet<String>();
         List<Characteristic> alreadyUsedResults = new ArrayList<Characteristic>();
         Collection<Characteristic> foundChars = characteristicService.findByValue( search );
 
         // remove duplicates, don't want to redefine == operator for Characteristics
         // for this use consider if the value = then its a duplicate.
+        Collection<String> foundValues = new HashSet<String>();
         if ( foundChars != null ) {
             for ( Characteristic characteristic : foundChars ) {
-                if ( !foundValues.contains( characteristic.getValue().toLowerCase() ) ) {
+                if ( !foundValues.contains( foundValueKey(characteristic) ) ) {
                     // Want to flag in the web interface that these are alrady used by Gemma
                     // Didn't want to make a characteristic value object just to hold a boolean flag for used....
                     characteristic.setDescription( USED + characteristic.getDescription() );
                     alreadyUsedResults.add( characteristic );
-                    foundValues.add( characteristic.getValue().toLowerCase() );
+                    foundValues.add( foundValueKey(characteristic) );
                 }
             }
         }
@@ -310,6 +310,12 @@ public class OntologyService {
         
         return sortedResults; 
 
+    }
+    private String foundValueKey(Characteristic c) {
+        StringBuffer buf = new StringBuffer( c.getValue().toLowerCase() );
+        if ( c instanceof VocabCharacteristic )
+            buf.append( ((VocabCharacteristic)c).getValueUri() );
+        return buf.toString();
     }
     
 

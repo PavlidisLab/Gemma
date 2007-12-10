@@ -46,11 +46,11 @@ public class CharacteristicDaoImpl
      */
     @Override
     protected Collection handleFindByValue( String search, int firstResult, int maxResults ) throws Exception {
-        final String queryString = "select distinct char from CharacteristicImpl as char where lower(char.value) like :search";
+        final String queryString = "select distinct char from CharacteristicImpl as char where char.value like :search";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setString( "search", search.toLowerCase() );
+            queryObject.setString( "search", search );
             if ( firstResult > 0 )
                 queryObject.setFirstResult( firstResult );
             if ( maxResults > 0 )
