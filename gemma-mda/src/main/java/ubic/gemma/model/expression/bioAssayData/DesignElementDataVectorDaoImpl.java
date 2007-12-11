@@ -342,6 +342,9 @@ public class DesignElementDataVectorDaoImpl extends
                     DesignElementDataVector v = ( DesignElementDataVector ) object;
                     dims.add( v.getBioAssayDimension() );
                     cs.add( v.getDesignElement() );
+
+                    session.evict( v.getQuantitationType() );
+                    session.evict( v );
                 }
 
                 for ( BioAssayDimension bad : dims ) {
@@ -352,6 +355,7 @@ public class DesignElementDataVectorDaoImpl extends
                             ba.getArrayDesignUsed().hashCode();
                             ba.getSamplesUsed().size();
                             ba.getDerivedDataFiles().size();
+                            session.evict( ba );
                         }
                     } catch ( org.hibernate.NonUniqueObjectException e ) {
                         log.warn( e, e );
@@ -389,6 +393,7 @@ public class DesignElementDataVectorDaoImpl extends
                             + "ms" );
                 session.setFlushMode( oldFlushMode );
                 session.setCacheMode( oldCacheMode );
+                // session.clear();
                 return null;
             }
 
