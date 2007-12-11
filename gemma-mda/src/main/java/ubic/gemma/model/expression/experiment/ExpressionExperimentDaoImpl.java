@@ -397,6 +397,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                     ba.getDerivedDataFiles().size();
                 }
 
+                expressionExperiment.getExpressionAnalyses().size();
+
                 return null;
             }
 
@@ -459,7 +461,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
                 ee.getInvestigators().size();
 
+                ee.getExpressionAnalyses().size();
+
                 session.evict( ee );
+
                 return null;
             }
         }, true );
