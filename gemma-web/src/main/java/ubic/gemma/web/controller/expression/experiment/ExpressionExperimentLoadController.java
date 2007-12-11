@@ -57,6 +57,10 @@ import ubic.gemma.web.propertyeditor.ArrayDesignPropertyEditor;
 import ubic.gemma.web.util.MessageUtil;
 
 /**
+ * Handles loading of Expression data into the system when the source is GEO or ArrayExpress, via Spring MVC or AJAX,
+ * either in the webapp or in a javaspaces grid. The choice depends on how the system and client is configured. In
+ * either case the job runs in its own thread, firing a ProgressJob that the client can monitor.
+ * 
  * @author pavlidis
  * @version $Id$
  * @spring.bean id="expressionExperimentLoadController"
@@ -70,6 +74,8 @@ import ubic.gemma.web.util.MessageUtil;
  * @spring.property name="spacesUtil" ref="spacesUtil"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
  * @spring.property name="arrayExpressLoadService" ref="arrayExpressLoadService"
+ * @see ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentLoadController for how flat-file data
+ *      is loaded.
  */
 public class ExpressionExperimentLoadController extends AbstractSpacesFormController {
 
@@ -93,8 +99,8 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
                 true );
     }
 
-    /*
-     * (non-Javadoc)
+    /**
+     * Main entry point for Spring MVC
      * 
      * @see ubic.gemma.web.controller.BaseFormController#processFormSubmission(javax.servlet.http.HttpServletRequest,
      *      javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)
@@ -112,7 +118,7 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
     }
 
     /**
-     * Exposed for AJAX calls.
+     * Main entry point for AJAX calls.
      * 
      * @param command
      * @return
@@ -150,41 +156,6 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
     @Override
     public void setSpacesUtil( SpacesUtil spacesUtil ) {
         this.injectSpacesUtil( spacesUtil );
-    }
-
-    /**
-     * This method has been deprecated in favor of an ajax call.
-     * 
-     * @param request
-     * @deprecated
-     */
-    private void cancel( HttpServletRequest request ) {
-        Future job = ( Future ) request.getSession().getAttribute( JOB_ATTRIBUTE );
-        job.cancel( true );
-    }
-
-    /**
-     * @param mapping
-     */
-    @SuppressWarnings("unchecked")
-    private void populateArrayDesignReferenceData( Map<String, List<? extends Object>> mapping ) {
-        List<ArrayDesign> arrayDesigns = new ArrayList<ArrayDesign>();
-        for ( ArrayDesign arrayDesign : ( Collection<ArrayDesign> ) arrayDesignService.loadAll() ) {
-            // remove AD's that are mergees or subsumers
-
-            if ( arrayDesign.getSubsumingArrayDesign() != null ) continue;
-
-            if ( arrayDesign.getMergedInto() != null ) continue;
-
-            arrayDesigns.add( arrayDesign );
-        }
-        Collections.sort( arrayDesigns, new Comparator<ArrayDesign>() {
-            public int compare( ArrayDesign o1, ArrayDesign o2 ) {
-                return ( o1 ).getName().compareTo( ( o2 ).getName() );
-            }
-        } );
-
-        mapping.put( "arrayDesigns", arrayDesigns );
     }
 
     /*
@@ -225,6 +196,12 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
         return new LoadInSpaceJob( taskId, securityContext, command, messenger );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.BaseFormController#initBinder(javax.servlet.http.HttpServletRequest,
+     *      org.springframework.web.bind.ServletRequestDataBinder)
+     */
     @Override
     protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
         super.initBinder( request, binder );
@@ -247,8 +224,102 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
     }
 
     /**
+     * This method has been deprecated in favor of an ajax call.
+     * 
+     * @param request
+     * @deprecated
+     */
+    private void cancel( HttpServletRequest request ) {
+        Future job = ( Future ) request.getSession().getAttribute( JOB_ATTRIBUTE );
+        job.cancel( true );
+    }
+
+    /**
+     * @param mapping
+     */
+    @SuppressWarnings("unchecked")
+    private void populateArrayDesignReferenceData( Map<String, List<? extends Object>> mapping ) {
+        List<ArrayDesign> arrayDesigns = new ArrayList<ArrayDesign>();
+        for ( ArrayDesign arrayDesign : ( Collection<ArrayDesign> ) arrayDesignService.loadAll() ) {
+            // remove AD's that are mergees or subsumers
+
+            if ( arrayDesign.getSubsumingArrayDesign() != null ) continue;
+
+            if ( arrayDesign.getMergedInto() != null ) continue;
+
+            arrayDesigns.add( arrayDesign );
+        }
+        Collections.sort( arrayDesigns, new Comparator<ArrayDesign>() {
+            public int compare( ArrayDesign o1, ArrayDesign o2 ) {
+                return ( o1 ).getName().compareTo( ( o2 ).getName() );
+            }
+        } );
+
+        mapping.put( "arrayDesigns", arrayDesigns );
+    }
+
+    /**
+     * Job that loads in a javaspace.
+     * 
      * @author Paul
      * @version $Id$
+     */
+    private class LoadInSpaceJob extends LoadJob {
+
+        final ExpressionExperimentLoadTask eeTaskProxy = ( ExpressionExperimentLoadTask ) updatedContext
+                .getBean( "proxy" );
+
+        /**
+         * @param taskId
+         * @param parentSecurityContext
+         * @param commandObj
+         * @param messenger
+         */
+        public LoadInSpaceJob( String taskId, SecurityContext parentSecurityContext, Object commandObj,
+                MessageUtil messenger ) {
+            super( taskId, parentSecurityContext, commandObj, messenger );
+
+        }
+
+        @Override
+        protected ModelAndView processArrayExpressJob( ExpressionExperimentLoadCommand eeLoadCommand ) {
+            SpacesExpressionExperimentLoadCommand jsCommand = new SpacesExpressionExperimentLoadCommand( taskId,
+                    eeLoadCommand );
+
+            SpacesResult result = eeTaskProxy.execute( jsCommand );
+            return super.processArrayExpressResult( ( ExpressionExperiment ) result.getAnswer() );
+        }
+
+        /**
+         * @param model
+         * @param list
+         * @return
+         */
+        @Override
+        @SuppressWarnings("unchecked")
+        protected ModelAndView processGEODataJob( ExpressionExperimentLoadCommand eeLoadCommand ) {
+
+            SpacesExpressionExperimentLoadCommand jsCommand = new SpacesExpressionExperimentLoadCommand( taskId,
+                    eeLoadCommand );
+
+            SpacesResult res = eeTaskProxy.execute( jsCommand );
+            Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) res.getAnswer();
+            return super.processGeoLoadResult( result );
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        protected ModelAndView processPlatformOnlyJob( ExpressionExperimentLoadCommand eeLoadCommand ) {
+            SpacesExpressionExperimentLoadCommand jsCommand = new SpacesExpressionExperimentLoadCommand( taskId,
+                    eeLoadCommand );
+            SpacesResult result = eeTaskProxy.execute( jsCommand );
+            return super.processArrayDesignResult( ( Collection<ArrayDesign> ) result );
+        }
+
+    }
+
+    /**
+     * Regular job.
      */
     private class LoadJob extends BackgroundControllerJob<ModelAndView> {
 
@@ -291,19 +362,6 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
         }
 
         /**
-         * Clean up the access provided by the user.
-         * 
-         * @param expressionExperimentLoadCommand
-         * @return
-         */
-        private String getAccession( ExpressionExperimentLoadCommand expressionExperimentLoadCommand ) {
-            String accesionNum = expressionExperimentLoadCommand.getAccession();
-            accesionNum = StringUtils.strip( accesionNum );
-            accesionNum = StringUtils.upperCase( accesionNum );
-            return accesionNum;
-        }
-
-        /**
          * @param arrayDesigns
          * @return
          */
@@ -323,6 +381,22 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
         }
 
         /**
+         * @param expressionExperimentLoadCommand
+         * @param accesionNum
+         * @param model
+         * @return
+         * @throws IOException
+         */
+        protected ModelAndView processArrayExpressJob( ExpressionExperimentLoadCommand expressionExperimentLoadCommand ) {
+
+            String accession = getAccession( expressionExperimentLoadCommand );
+            ExpressionExperiment result = arrayExpressLoadService.load( accession, expressionExperimentLoadCommand
+                    .getArrayDesignName() );
+
+            return processArrayExpressResult( result );
+        }
+
+        /**
          * @param result
          * @return
          */
@@ -332,6 +406,25 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
             model.put( "expressionExperiment", result );
             return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
                     + result.getId() ) );
+        }
+
+        /**
+         * @param accesionNum
+         * @param doSampleMatching
+         * @param aggressiveQtRemoval
+         * @return
+         */
+        @SuppressWarnings("unchecked")
+        protected ModelAndView processGEODataJob( ExpressionExperimentLoadCommand expressionExperimentLoadCommand ) {
+
+            String accession = getAccession( expressionExperimentLoadCommand );
+            boolean doSampleMatching = !expressionExperimentLoadCommand.isSuppressMatching();
+            boolean aggressiveQtRemoval = expressionExperimentLoadCommand.isAggressiveQtRemoval();
+
+            Collection<ExpressionExperiment> result = geoDatasetService.fetchAndLoad( accession, false,
+                    doSampleMatching, aggressiveQtRemoval );
+
+            return processGeoLoadResult( result );
         }
 
         /**
@@ -358,41 +451,6 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
         }
 
         /**
-         * @param expressionExperimentLoadCommand
-         * @param accesionNum
-         * @param model
-         * @return
-         * @throws IOException
-         */
-        protected ModelAndView processArrayExpressJob( ExpressionExperimentLoadCommand expressionExperimentLoadCommand ) {
-
-            String accession = getAccession( expressionExperimentLoadCommand );
-            ExpressionExperiment result = arrayExpressLoadService.load( accession, expressionExperimentLoadCommand
-                    .getArrayDesignName() );
-
-            return processArrayExpressResult( result );
-        }
-
-        /**
-         * @param accesionNum
-         * @param doSampleMatching
-         * @param aggressiveQtRemoval
-         * @return
-         */
-        @SuppressWarnings("unchecked")
-        protected ModelAndView processGEODataJob( ExpressionExperimentLoadCommand expressionExperimentLoadCommand ) {
-
-            String accession = getAccession( expressionExperimentLoadCommand );
-            boolean doSampleMatching = !expressionExperimentLoadCommand.isSuppressMatching();
-            boolean aggressiveQtRemoval = expressionExperimentLoadCommand.isAggressiveQtRemoval();
-
-            Collection<ExpressionExperiment> result = geoDatasetService.fetchAndLoad( accession, false,
-                    doSampleMatching, aggressiveQtRemoval );
-
-            return processGeoLoadResult( result );
-        }
-
-        /**
          * @param job
          * @param accesionNum
          * @param doSampleMatching
@@ -413,66 +471,19 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
 
             return processArrayDesignResult( arrayDesigns );
         }
-    }
-
-    /**
-     * Job that loads in a javaspace.
-     * 
-     * @author Paul
-     * @version $Id$
-     */
-    private class LoadInSpaceJob extends LoadJob {
-
-        final ExpressionExperimentLoadTask eeTaskProxy = ( ExpressionExperimentLoadTask ) updatedContext
-                .getBean( "proxy" );
 
         /**
-         * @param taskId
-         * @param parentSecurityContext
-         * @param commandObj
-         * @param messenger
-         */
-        public LoadInSpaceJob( String taskId, SecurityContext parentSecurityContext, Object commandObj,
-                MessageUtil messenger ) {
-            super( taskId, parentSecurityContext, commandObj, messenger );
-
-        }
-
-        /**
-         * @param model
-         * @param list
+         * Clean up the access provided by the user.
+         * 
+         * @param expressionExperimentLoadCommand
          * @return
          */
-        @Override
-        @SuppressWarnings("unchecked")
-        protected ModelAndView processGEODataJob( ExpressionExperimentLoadCommand eeLoadCommand ) {
-
-            SpacesExpressionExperimentLoadCommand jsCommand = new SpacesExpressionExperimentLoadCommand( taskId,
-                    eeLoadCommand );
-
-            SpacesResult res = eeTaskProxy.execute( jsCommand );
-            Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) res.getAnswer();
-            return super.processGeoLoadResult( result );
+        private String getAccession( ExpressionExperimentLoadCommand expressionExperimentLoadCommand ) {
+            String accesionNum = expressionExperimentLoadCommand.getAccession();
+            accesionNum = StringUtils.strip( accesionNum );
+            accesionNum = StringUtils.upperCase( accesionNum );
+            return accesionNum;
         }
-
-        @Override
-        protected ModelAndView processArrayExpressJob( ExpressionExperimentLoadCommand eeLoadCommand ) {
-            SpacesExpressionExperimentLoadCommand jsCommand = new SpacesExpressionExperimentLoadCommand( taskId,
-                    eeLoadCommand );
-
-            SpacesResult result = eeTaskProxy.execute( jsCommand );
-            return super.processArrayExpressResult( ( ExpressionExperiment ) result.getAnswer() );
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        protected ModelAndView processPlatformOnlyJob( ExpressionExperimentLoadCommand eeLoadCommand ) {
-            SpacesExpressionExperimentLoadCommand jsCommand = new SpacesExpressionExperimentLoadCommand( taskId,
-                    eeLoadCommand );
-            SpacesResult result = eeTaskProxy.execute( jsCommand );
-            return super.processArrayDesignResult( ( Collection<ArrayDesign> ) result );
-        }
-
     }
 
 }
