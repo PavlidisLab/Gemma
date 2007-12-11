@@ -1,6 +1,6 @@
 <%@ include file="/common/taglibs.jsp"%>
 <jsp:useBean id="command" scope="request"
-	class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand" />
+	class="ubic.gemma.loader.expression.ExpressionExperimentLoadCommand" />
 <head>
 	<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
 	<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>

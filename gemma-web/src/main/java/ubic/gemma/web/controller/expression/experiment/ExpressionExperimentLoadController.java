@@ -66,8 +66,7 @@ import ubic.gemma.web.util.MessageUtil;
  * @version $Id$
  * @spring.bean id="expressionExperimentLoadController"
  * @spring.property name="commandName" value="expressionExperimentLoadCommand"
- * @spring.property name="commandClass"
- *                  value="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand"
+ * @spring.property name="commandClass" value="ubic.gemma.loader.expression.ExpressionExperimentLoadCommand"
  * @spring.property name="validator" ref="genericBeanValidator"
  * @spring.property name="formView" value="loadExpressionExperimentForm"
  * @spring.property name="successView" value="loadExpressionExperimentProgress.html"
