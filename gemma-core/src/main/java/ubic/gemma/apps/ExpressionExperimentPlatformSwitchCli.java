@@ -76,7 +76,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
             serv.switchExperimentToMergedPlatform( ee );
             auditEventService.addUpdateEvent( ee, type, "Switched to use merged array Design " );
         }
-
+        log.info( "Processing done!" );
         return null;
     }
 
