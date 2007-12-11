@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2006-2007 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ public class NcbiGeneLoaderCLI extends AbstractSpringAwareCLI {
     private String GENEINFO_FILE = "gene_info.gz";
     private String GENE2ACCESSION_FILE = "gene2accession.gz";
 
-    private String filePath = "";
+    private String filePath = null;
 
     public NcbiGeneLoaderCLI() {
         super();
@@ -55,15 +55,12 @@ public class NcbiGeneLoaderCLI extends AbstractSpringAwareCLI {
 
     @Override
     protected Exception doWork( String[] args ) {
-
-        /* COMMAND LINE PARSER STAGE */
         Exception err = processCommandLine( "NcbiGeneLoaderCLI", args );
         if ( err != null ) return err;
         loader = new NcbiGeneLoader();
         loader.setPersisterHelper( this.getPersisterHelper() );
-        /* check parse option. */
-        if ( hasOption( 'f' ) ) {
-            // load through files
+
+        if ( filePath != null ) {
             String geneInfoFile = filePath + File.separatorChar + GENEINFO_FILE;
             String gene2AccFile = filePath + File.separatorChar + GENE2ACCESSION_FILE;
             loader.load( geneInfoFile, gene2AccFile, true ); // do filtering of taxa
@@ -89,8 +86,6 @@ public class NcbiGeneLoaderCLI extends AbstractSpringAwareCLI {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        /* parse */
-
         Option pathOption = OptionBuilder.hasArg().withArgName( "Input File Path" ).withDescription(
                 "Optional path to the gene_info and gene2accession files" ).withLongOpt( "file" ).create( 'f' );
 

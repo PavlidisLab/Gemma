@@ -30,6 +30,7 @@ import java.util.concurrent.BlockingQueue;
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -175,7 +176,7 @@ public class GoldenPathBioSequenceLoader {
 
         Thread loadThread = new Thread( new Runnable() {
             public void run() {
-                SecurityContextHolder.setContext( context ); // don't know why this is needed, but it works.
+                SecurityContextHolder.setContext( context );
                 log.info( "Starting loading" );
                 load( queue );
             }
@@ -199,7 +200,8 @@ public class GoldenPathBioSequenceLoader {
     void load( BlockingQueue<BioSequence> queue ) {
         log.debug( "Entering 'load' " );
 
-        long millis = System.currentTimeMillis();
+        StopWatch timer = new StopWatch();
+        timer.start();
 
         int count = 0;
         int cpt = 0;
@@ -214,8 +216,6 @@ public class GoldenPathBioSequenceLoader {
                     continue;
                 }
 
-                // if ( log.isTraceEnabled() ) log.trace( "Got " + sequence );
-
                 sequence.getSequenceDatabaseEntry().setExternalDatabase( genbank );
                 sequence.setTaxon( taxon );
                 bioSequencesToPersist.add( sequence );
@@ -227,16 +227,17 @@ public class GoldenPathBioSequenceLoader {
                 // just some timing information.
                 if ( count % 1000 == 0 ) {
                     cpt++;
-                    double secsperthousand = ( System.currentTimeMillis() - millis ) / 1000.0;
+                    timer.split();
+                    double secsperthousand = timer.getSplitTime() / 1000.0;
                     secspt += secsperthousand;
                     double meanspt = secspt / cpt;
 
                     String progString = "Processed and loaded " + count + " sequences, last one was "
-                            + sequence.getName() + " (" + secsperthousand + " seconds elapsed, average per thousand="
-                            + meanspt + ")";
+                            + sequence.getName() + " (" + secsperthousand + "s elapsed, mean per kseq=" + meanspt
+                            + "s)";
                     ProgressManager.updateCurrentThreadsProgressJob( new ProgressData( count, progString ) );
                     log.info( progString );
-                    millis = System.currentTimeMillis();
+                    timer.unsplit();
                 }
 
             }

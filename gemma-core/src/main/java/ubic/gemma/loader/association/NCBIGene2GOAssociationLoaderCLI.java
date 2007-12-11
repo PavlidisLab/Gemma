@@ -18,9 +18,17 @@
  */
 package ubic.gemma.loader.association;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.Collection;
+import java.util.HashSet;
+
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.loader.util.fetcher.HttpFetcher;
+import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.AbstractSpringAwareCLI;
@@ -33,15 +41,21 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  */
 public class NCBIGene2GOAssociationLoaderCLI extends AbstractSpringAwareCLI {
 
+    private static final String GENE2GO_FILE = "gene2go.gz";
+    private String filePath = null;
+
     /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
+    @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        // none needed yet.
+        Option pathOption = OptionBuilder.hasArg().withArgName( "Input File Path" ).withDescription(
+                "Optional location of the gene2go.gz file" ).withLongOpt( "file" ).create( 'f' );
 
+        addOption( pathOption );
     }
 
     public static void main( String[] args ) {
@@ -50,6 +64,14 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractSpringAwareCLI {
             p.doWork( args );
         } catch ( Exception e ) {
             throw new RuntimeException( e );
+        }
+    }
+
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+        if ( hasOption( 'f' ) ) {
+            filePath = getOptionValue( 'f' );
         }
     }
 
@@ -71,12 +93,30 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractSpringAwareCLI {
 
         HttpFetcher fetcher = new HttpFetcher();
 
-        Collection<LocalFile> files = fetcher.fetch( "ftp://ftp.ncbi.nih.gov/gene/DATA/gene2go.gz" );
-
+        Collection<LocalFile> files = null;
+        if ( filePath != null ) {
+            File f = new File( filePath );
+            if ( !f.canRead() ) {
+                return new IOException( "Cannot read from " + filePath );
+            }
+            files = new HashSet<LocalFile>();
+            LocalFile lf = LocalFile.Factory.newInstance();
+            try {
+                lf.setLocalURL( f.toURL() );
+            } catch ( MalformedURLException e1 ) {
+                return e1;
+            }
+            files.add( lf );
+        } else {
+            files = fetcher.fetch( "ftp://ftp.ncbi.nih.gov/gene/DATA/" + GENE2GO_FILE );
+        }
         assert files.size() == 1;
-
         LocalFile gene2Gofile = files.iterator().next();
+        Gene2GOAssociationService ggoserv = ( Gene2GOAssociationService ) this.getBean( "gene2GOAssociationService" );
+        log.info( "Removing all old GO associations" );
+        ggoserv.removeAll();
 
+        log.info( "Done, loading new ones" );
         gene2GOAssLoader.load( gene2Gofile );
 
         return null;

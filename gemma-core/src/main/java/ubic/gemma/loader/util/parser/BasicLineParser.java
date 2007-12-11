@@ -91,7 +91,7 @@ public abstract class BasicLineParser implements LineParser {
 
         }
 
-        if ( linesParsed > MIN_PARSED_LINES_FOR_UPDATE ) {
+        if ( linesParsed > MIN_PARSED_LINES_FOR_UPDATE && this.getResults() != null ) {
             log.info( "Parsed " + linesParsed + " lines, " + this.getResults().size() + " items" );
         }
         if ( nullLines > 0 ) log.info( nullLines + " yielded no parse result (they may have been filtered)." );

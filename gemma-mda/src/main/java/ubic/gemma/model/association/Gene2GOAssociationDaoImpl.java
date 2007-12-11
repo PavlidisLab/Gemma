@@ -85,7 +85,7 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
             queryObject.setParameterList( "goIDs", goIDs );
             queryObject.setParameter( "taxon", taxon );
 
-            results = queryObject.list(); 
+            results = queryObject.list();
 
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
@@ -163,21 +163,27 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
         return results;
     }
 
-	/* (non-Javadoc)
-	 * @see ubic.gemma.model.association.Gene2GOAssociationDaoBase#handleFindAssociationByGene(ubic.gemma.model.genome.Gene)
-	 */
-	@Override
-	protected Collection handleFindAssociationByGene(Gene gene) throws Exception {
+    protected void handleRemoveAll() throws Exception {
+        final String queryString = "delete from Gene2GOAssociationImpl";
+        this.getHibernateTemplate().bulkUpdate( queryString );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.association.Gene2GOAssociationDaoBase#handleFindAssociationByGene(ubic.gemma.model.genome.Gene)
+     */
+    @Override
+    protected Collection handleFindAssociationByGene( Gene gene ) throws Exception {
         final String queryString = "from Gene2GOAssociationImpl where gene = :gene";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameter( "gene", gene );
             return queryObject.list();
-
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
-	}
+    }
 
 }

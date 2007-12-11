@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2006-2007 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,6 +43,7 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
  */
 public class GoldenPathDumper extends GoldenPath {
 
+    private static final String REF_GENE_TABLE_NAME = "refGene";
     // these are provided for testing (switch off ones not using)
     private boolean DO_EST = true;
     private boolean DO_MRNA = true;
@@ -180,16 +181,19 @@ public class GoldenPathDumper extends GoldenPath {
         return numInput;
     }
 
+    /**
+     * 
+     */
     private void initGenbank() {
-        // if ( externalDatabaseService != null ) {
-        // genbank = externalDatabaseService.find( "Genbank" );
-        // } else {
         genbank = ExternalDatabase.Factory.newInstance();
         genbank.setName( "Genbank" );
         genbank.setType( DatabaseType.SEQUENCE );
-        // }
     }
 
+    /**
+     * @author paul
+     * @version $Id$
+     */
     private class BioSequenceMappingQuery extends MappingSqlQuery {
 
         SequenceType type;
@@ -226,6 +230,10 @@ public class GoldenPathDumper extends GoldenPath {
 
     }
 
+    /**
+     * @author paul
+     * @version $Id$
+     */
     private class BioSequenceRefseqMappingQuery extends MappingSqlQuery {
 
         public BioSequenceRefseqMappingQuery( DriverManagerDataSource ds, String query ) {
@@ -276,7 +284,7 @@ public class GoldenPathDumper extends GoldenPath {
     @SuppressWarnings("unchecked")
     private Collection<BioSequence> loadRefseqByQuery( String limitSuffix ) {
 
-        String query = "SELECT name FROM refgene " + limitSuffix;
+        String query = "SELECT name FROM " + REF_GENE_TABLE_NAME + " " + limitSuffix;
 
         BioSequenceRefseqMappingQuery bsQuery = new BioSequenceRefseqMappingQuery( dataSource, query );
 
