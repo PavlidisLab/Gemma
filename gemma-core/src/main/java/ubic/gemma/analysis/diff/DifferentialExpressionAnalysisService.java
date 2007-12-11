@@ -74,7 +74,7 @@ public class DifferentialExpressionAnalysisService {
             log.error( "Could not find expeiment with name: " + shortName + ".  Returning ..." );
             return null;
         }
-        expressionExperimentService.thaw( ee );
+        expressionExperimentService.thawLite( ee );
 
         Collection<ExpressionAnalysis> analyses = this.getPersistentExpressionAnalyses( ee );
         if ( analyses == null ) {
