@@ -18,7 +18,13 @@
  */
 package ubic.gemma.web.listener;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -104,6 +110,8 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
         servletContext.setAttribute( Constants.CONFIG, config );
 
         populateDropDowns( servletContext );
+        
+        copyWorkerJars( servletContext );
 
         sw.stop();
 
@@ -202,5 +210,63 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
 
         assert ( context.getAttribute( Constants.AVAILABLE_ROLES ) != null );
 
+    }
+    
+    /**
+     * Copy the JAR files required by the JavaSpaces workers to the defined shared location.
+     */
+    private void copyWorkerJars( ServletContext servletContext ) {
+        String libpath = ConfigUtils.getString( "gemma.lib.path" );
+        File targetLibdir = new File( libpath );
+        if ( !targetLibdir.exists() ) {
+            if ( !targetLibdir.mkdirs() ) {
+                log.error( "destination directory " + targetLibdir + " does not exist and could not be created" );
+                return;
+            }
+        }
+
+        File sourceLibdir = null;
+        Collection<File> jars = new ArrayList<File>();
+        for ( Enumeration e = servletContext.getAttributeNames(); e.hasMoreElements(); ) {
+            String key = (String)e.nextElement();
+            if ( key.endsWith( "classpath" ) ) {
+                String classpath = (String)servletContext.getAttribute( key );
+                for ( String entry : classpath.split( ":" ) ) {
+                    if ( entry.endsWith( ".jar" ) ) {
+                        File jar = new File( entry );
+                        jars.add( jar );
+                        if ( sourceLibdir == null && entry.matches( ".*Gemma/WEB-INF/lib.*") )
+                            sourceLibdir = jar.getParentFile();
+                    }
+                }
+            }
+        }
+        Map<String, String> appConfig = (Map<String, String>)servletContext.getAttribute("appConfig");
+        String version = appConfig.get( "version" );
+        jars.add( new File( sourceLibdir, String.format( "%s-%s", "gemma-core", version ) ) );
+        jars.add( new File( sourceLibdir, String.format( "%s-%s", "gemma-mda", version ) ) );
+        jars.add( new File( sourceLibdir, String.format( "%s-%s", "gemma-testing", version ) ) );
+        jars.add( new File( sourceLibdir, String.format( "%s-%s", "gemma-util", version ) ) );
+        
+        for ( File jar : jars ) {
+            try {
+                copyFile( jar, new File( targetLibdir, jar.getName() ) );
+            } catch ( IOException e ) {
+                log.error( "error copying " + jar + " to " + targetLibdir + ": " + e );
+            }
+        }
+    }
+    
+    private static void copyFile( File fromFile, File toFile ) throws IOException {
+        FileReader from = new FileReader( fromFile );
+        FileWriter to = new FileWriter( toFile );
+        final int BUFFER_SIZE = 4096;
+        char[] buf = new char[BUFFER_SIZE];
+        int charsRead;
+        while ( ( charsRead = from.read( buf ) ) != -1 ) {
+            to.write(buf, 0, charsRead);
+        }
+        to.close();
+        from.close();
     }
 }
