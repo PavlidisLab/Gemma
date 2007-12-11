@@ -21,6 +21,7 @@ package ubic.gemma.grid.javaspaces.expression.experiment;
 import java.io.Serializable;
 
 import ubic.gemma.grid.javaspaces.SpacesCommand;
+import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand;
 
 /**
  * @author keshav
@@ -38,9 +39,13 @@ public class SpacesExpressionExperimentLoadCommand extends SpacesCommand impleme
     /**
      * Used to turn off 'bioassay to biomaterial' matching.
      */
-    private boolean suppressMatching;
+    private boolean suppressMatching = false;
 
     private String accession;
+
+    private String arrayDesignName = null;
+
+    private boolean isArrayExpress = false;
 
     /**
      * Set to true to attempt to remove all unneeded quantitation types during parsing.
@@ -81,18 +86,32 @@ public class SpacesExpressionExperimentLoadCommand extends SpacesCommand impleme
 
     /**
      * @param taskId
-     * @param loadPlatformOnly
-     * @param suppressMatching
-     * @param accession
-     * @param aggressiveQtRemoval
+     * @param command
      */
-    public SpacesExpressionExperimentLoadCommand( String taskId, boolean loadPlatformOnly,
-            boolean suppressMatching, String accession, boolean aggressiveQtRemoval ) {
+    public SpacesExpressionExperimentLoadCommand( String taskId, ExpressionExperimentLoadCommand command ) {
         super( taskId );
-        this.loadPlatformOnly = loadPlatformOnly;
-        this.suppressMatching = suppressMatching;
-        this.accession = accession;
-        this.aggressiveQtRemoval = aggressiveQtRemoval;
+        this.loadPlatformOnly = command.isLoadPlatformOnly();
+        this.suppressMatching = command.isSuppressMatching();
+        this.accession = command.getAccession();
+        this.aggressiveQtRemoval = command.isAggressiveQtRemoval();
+        this.isArrayExpress = command.isArrayExpress();
+        this.arrayDesignName = command.getArrayDesignName();
+    }
+
+    public boolean isArrayExpress() {
+        return isArrayExpress;
+    }
+
+    public void setArrayExpress( boolean isArrayExpress ) {
+        this.isArrayExpress = isArrayExpress;
+    }
+
+    public String getArrayDesignName() {
+        return arrayDesignName;
+    }
+
+    public void setArrayDesignName( String arrayDesignName ) {
+        this.arrayDesignName = arrayDesignName;
     }
 
 }

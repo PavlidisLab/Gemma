@@ -58,7 +58,7 @@ public class ArrayExpressLoadService {
 
     ArrayDesignService arrayDesignService;
 
-    public ExpressionExperiment load( String accession ) throws IOException {
+    public ExpressionExperiment load( String accession ) {
         return this.load( accession, null );
     }
 
@@ -69,7 +69,7 @@ public class ArrayExpressLoadService {
      * @param adAccession accession for the array design, either short name or name.
      * @return
      */
-    public ExpressionExperiment load( String accession, String adAccession ) throws IOException {
+    public ExpressionExperiment load( String accession, String adAccession ) {
         DataFileFetcher dfFetcher = new DataFileFetcher();
         ProcessedDataFetcher pdFetcher = new ProcessedDataFetcher();
         ProcessedDataFileParser pdParser = new ProcessedDataFileParser();
@@ -110,44 +110,49 @@ public class ArrayExpressLoadService {
         String mageMLpath = mageMlFile.getLocalURL().getPath();
 
         log.info( "Parsing MAGE-ML" );
-        mlp.parse( mageMLpath );
-        Collection<Object> parseResult = mlp.getResults();
+        try {
+            mlp.parse( mageMLpath );
 
-        log.info( "Converting MAGE objects" );
-        Collection<Object> result = mageMLConverter.convert( parseResult );
+            Collection<Object> parseResult = mlp.getResults();
 
-        ExpressionExperiment ee = locateExpressionExperimentInMageResults( result );
-        ee.setShortName( accession );
-        assert ee != null;
-        Collection<BioAssay> bioAssays = ee.getBioAssays();
-        assert bioAssays != null && bioAssays.size() > 0;
+            log.info( "Converting MAGE objects" );
+            Collection<Object> result = mageMLConverter.convert( parseResult );
 
-        log.info( "MAGE conversion: located raw expression experiment: " + ee );
+            ExpressionExperiment ee = locateExpressionExperimentInMageResults( result );
+            ee.setShortName( accession );
+            assert ee != null;
+            Collection<BioAssay> bioAssays = ee.getBioAssays();
+            assert bioAssays != null && bioAssays.size() > 0;
 
-        // If we made it this far, and selectedAd is null we know an AD was never specified so go ahead and
-        // use the AD given by mage
-        if ( selectedAd == null ) {
-            log.info( "Filling in array design information" );
-            processArrayDesignInfo( bioAssays );
-        } else { // the user selected an AD in the system, make sure all the bioAssays point to it.
-            log.info( "Using specified Array Design: " + selectedAd.getShortName() );
-            processArrayDesignInfo( bioAssays, selectedAd );
+            log.info( "MAGE conversion: located raw expression experiment: " + ee );
+
+            // If we made it this far, and selectedAd is null we know an AD was never specified so go ahead and
+            // use the AD given by mage
+            if ( selectedAd == null ) {
+                log.info( "Filling in array design information" );
+                processArrayDesignInfo( bioAssays );
+            } else { // the user selected an AD in the system, make sure all the bioAssays point to it.
+                log.info( "Using specified Array Design: " + selectedAd.getShortName() );
+                processArrayDesignInfo( bioAssays, selectedAd );
+            }
+
+            log.info( "Parsing processed data" );
+            InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( pdFile.getLocalURL().getPath() );
+            pdParser.parse( is );
+
+            log.info( "Merging processed data with expression experiment from MAGE-ML" );
+            Collection<QuantitationType> qts = locateQuantitationTypesInMageResults( result );
+
+            if ( qts.size() == 0 ) {
+                throw new IllegalStateException( "No quantitation types found" );
+            }
+
+            pdMerger.merge( ee, qts, pdParser.getMap(), pdParser.getSamples() );
+
+            return ( ExpressionExperiment ) persisterHelper.persist( ee );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
         }
-
-        log.info( "Parsing processed data" );
-        InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( pdFile.getLocalURL().getPath() );
-        pdParser.parse( is );
-
-        log.info( "Merging processed data with expression experiment from MAGE-ML" );
-        Collection<QuantitationType> qts = locateQuantitationTypesInMageResults( result );
-
-        if ( qts.size() == 0 ) {
-            throw new IllegalStateException( "No quantitation types found" );
-        }
-
-        pdMerger.merge( ee, qts, pdParser.getMap(), pdParser.getSamples() );
-
-        return ( ExpressionExperiment ) persisterHelper.persist( ee );
 
     }
 

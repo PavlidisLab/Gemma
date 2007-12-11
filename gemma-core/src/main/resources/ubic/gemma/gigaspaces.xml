@@ -11,8 +11,7 @@
 
 <beans>
 	<!-- Declaration of GigaSpaces factory bean -->
-	<bean id="gigaspace"
-		class="org.springmodules.javaspaces.gigaspaces.GigaSpacesFactoryBean">
+	<bean id="gigaspace" class="org.springmodules.javaspaces.gigaspaces.GigaSpacesFactoryBean">
 		<property name="urls">
 			<list>
 				<!--  <value>jini://*/*/remotingSpace</value> -->
@@ -28,41 +27,33 @@
 	</bean>
 
 	<!-- Declaration of GigaSpace template-->
-	<bean id="gigaspacesTemplate"
-		class="org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate">
+	<bean id="gigaspacesTemplate" class="org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate">
 		<property name="space" ref="gigaspace" />
 	</bean>
 
-	<bean id="expressionExperimentLoadWorker"
-		class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
+	<bean id="expressionExperimentLoadWorker" class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
 		singleton="false">
 		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
 		<property name="delegate">
 			<ref local="taskBean" />
 		</property>
 		<property name="businessInterface">
-			<value>
-				ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTask
-			</value>
+			<value>ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTask</value>
 		</property>
 	</bean>
 
-	<bean id="expressionExperimentReportGenerationWorker"
-		class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
+	<bean id="expressionExperimentReportGenerationWorker" class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
 		singleton="false">
 		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
 		<property name="delegate">
 			<ref bean="expressionExperimentReportService" />
 		</property>
 		<property name="businessInterface">
-			<value>
-				ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask
-			</value>
+			<value>ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask</value>
 		</property>
 	</bean>
 
-	<bean id="javaSpaceInterceptor"
-		class="org.springmodules.javaspaces.gigaspaces.GigaSpacesInterceptor">
+	<bean id="javaSpaceInterceptor" class="org.springmodules.javaspaces.gigaspaces.GigaSpacesInterceptor">
 		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
 		<property name="uidFactory" ref="gigaSpacesUidFactory" />
 		<property name="synchronous">
@@ -92,8 +83,7 @@
 	<!--
 		This is the client-side proxy.
 	-->
-	<bean id="proxy"
-		class="org.springframework.aop.framework.ProxyFactoryBean">
+	<bean id="proxy" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="interceptorNames">
 			<list>
 				<value>javaSpaceInterceptor</value>
@@ -104,20 +94,18 @@
 		</property>
 		<property name="proxyInterfaces">
 			<list>
-				<value>
-					ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTask
-				</value>
-				<value>
-					ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask
-				</value>
+				<value>ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTask</value>
+				<value>ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask</value>
 			</list>
 		</property>
 	</bean>
 
-	<bean id="taskBean"
-		class="ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTaskImpl">
+	<bean id="taskBean" class="ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTaskImpl">
 		<property name="geoDatasetService">
 			<ref bean="geoDatasetService" />
+		</property>
+		<property name="arrayExpressLoadService">
+			<ref bean="arrayExpressLoadService" />
 		</property>
 		<property name="gigaSpacesTemplate">
 			<ref bean="gigaspacesTemplate" />

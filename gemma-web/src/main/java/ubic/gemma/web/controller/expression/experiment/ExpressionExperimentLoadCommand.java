@@ -160,4 +160,27 @@ public class ExpressionExperimentLoadCommand implements Serializable {
         this.arrayExpress = arrayExpress;
     }
 
+    /**
+     * @param accession
+     * @param loadPlatformOnly
+     * @param suppressMatching
+     * @param aggressiveQtRemoval
+     * @param arrayExpress
+     */
+    public ExpressionExperimentLoadCommand( String accession, boolean loadPlatformOnly, boolean suppressMatching,
+            boolean aggressiveQtRemoval, boolean arrayExpress ) {
+        super();
+        this.accession = accession;
+        this.loadPlatformOnly = loadPlatformOnly;
+        this.suppressMatching = suppressMatching;
+        this.aggressiveQtRemoval = aggressiveQtRemoval;
+        this.arrayExpress = arrayExpress;
+    }
+
+    /**
+     * 
+     */
+    public ExpressionExperimentLoadCommand() {
+    }
+
 }

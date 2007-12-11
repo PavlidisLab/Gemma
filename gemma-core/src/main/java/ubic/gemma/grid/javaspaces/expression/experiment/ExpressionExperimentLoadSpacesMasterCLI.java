@@ -38,6 +38,7 @@ import ubic.gemma.grid.javaspaces.SpacesResult;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
 import ubic.gemma.util.grid.javaspaces.SpacesUtil;
 import ubic.gemma.util.grid.javaspaces.entry.SpacesProgressEntry;
+import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand;
 
 import com.j_spaces.core.client.EntryArrivedRemoteEvent;
 import com.j_spaces.core.client.ExternalEntry;
@@ -122,8 +123,8 @@ public class ExpressionExperimentLoadSpacesMasterCLI extends LoadExpressionDataC
     protected void init() throws Exception {
 
         spacesUtil = ( SpacesUtil ) this.getBean( "spacesUtil" );
-        ApplicationContext updatedContext = spacesUtil
-                .addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+        ApplicationContext updatedContext = spacesUtil.addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE
+                .getSpaceUrl() );
 
         if ( !updatedContext.containsBean( "gigaspacesTemplate" ) )
             throw new RuntimeException( "GemmaSpaces beans could not be loaded. Cannot start master." );
@@ -156,45 +157,35 @@ public class ExpressionExperimentLoadSpacesMasterCLI extends LoadExpressionDataC
                     continue;
                 }
 
-                if ( platformOnly ) {
-                    // TODO add back in
-                    throw new IllegalArgumentException( "\'Platform Only\' (y) unsupported at this time." );
-                    // Collection designs = geoService.fetchAndLoad( accession, true, true );
-                    // for ( Object object : designs ) {
-                    // assert object instanceof ArrayDesign;
-                    // successObjects.add( ( ( Describable ) object ).getName()
-                    // + " ("
-                    // + ( ( ArrayDesign ) object ).getExternalReferences().iterator().next()
-                    // .getAccession() + ")" );
-                    // }
-                } else {
+                /* configure this client to be receive notifications */
+                try {
 
-                    /* configure this client to be receive notifications */
-                    try {
+                    template.addNotifyDelegatorListener( this, new SpacesProgressEntry(), null, true, Lease.FOREVER,
+                            NotifyModifiers.NOTIFY_ALL );
 
-                        template.addNotifyDelegatorListener( this, new SpacesProgressEntry(), null, true,
-                                Lease.FOREVER, NotifyModifiers.NOTIFY_ALL );
-
-                    } catch ( Exception e ) {
-                        throw new RuntimeException( e );
-                    }
-
-                    if ( !spacesUtil.canServiceTask( ExpressionExperimentLoadTask.class.getName(),
-                            SpacesEnum.DEFAULT_SPACE.getSpaceUrl() ) ) continue;
-
-                    ExpressionExperimentLoadTaskImpl eeTaskImpl = ( ExpressionExperimentLoadTaskImpl ) this
-                            .getBean( "taskBean" );
-
-                    SpacesExpressionExperimentLoadCommand jsCommand = new SpacesExpressionExperimentLoadCommand(
-                            eeTaskImpl.getTaskId(), platformOnly, doMatching, accession, aggressive );
-
-                    res = proxy.execute( jsCommand );
-
-                    stopwatch.stop();
-                    long wt = stopwatch.getTime();
-                    log.info( "Job with id " + res.getTaskID() + " completed in " + wt
-                            + " ms.  Number of expression experiments persisted: " + res.getAnswer() + "." );
+                } catch ( Exception e ) {
+                    throw new RuntimeException( e );
                 }
+
+                if ( !spacesUtil.canServiceTask( ExpressionExperimentLoadTask.class.getName(), SpacesEnum.DEFAULT_SPACE
+                        .getSpaceUrl() ) ) continue;
+
+                ExpressionExperimentLoadTaskImpl eeTaskImpl = ( ExpressionExperimentLoadTaskImpl ) this
+                        .getBean( "taskBean" );
+
+                ExpressionExperimentLoadCommand command = new ExpressionExperimentLoadCommand( accession, platformOnly,
+                        doMatching, aggressive, false );
+
+                SpacesExpressionExperimentLoadCommand jsCommand = new SpacesExpressionExperimentLoadCommand( eeTaskImpl
+                        .getTaskId(), command );
+
+                res = proxy.execute( jsCommand );
+
+                stopwatch.stop();
+                long wt = stopwatch.getTime();
+                log.info( "Job with id " + res.getTaskID() + " completed in " + wt
+                        + " ms.  Number of expression experiments persisted: " + res.getAnswer() + "." );
+
             }
 
             /*

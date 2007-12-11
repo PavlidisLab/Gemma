@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -49,7 +50,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
 import ubic.gemma.util.grid.javaspaces.SpacesUtil;
-import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.gemmaspaces.AbstractSpacesFormController;
@@ -74,40 +74,10 @@ import ubic.gemma.web.util.MessageUtil;
 public class ExpressionExperimentLoadController extends AbstractSpacesFormController {
 
     GeoDatasetService geoDatasetService;
+
     ArrayDesignService arrayDesignService;
+
     ArrayExpressLoadService arrayExpressLoadService;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.mvc.AbstractFormController#formBackingObject(javax.servlet.http.HttpServletRequest)
-     */
-    @Override
-    protected Object formBackingObject( HttpServletRequest request ) throws Exception {
-        ExpressionExperimentLoadCommand command = new ExpressionExperimentLoadCommand();
-        return command;
-    }
-
-    @Override
-    protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
-        super.initBinder( request, binder );
-        binder.registerCustomEditor( ArrayDesign.class, new ArrayDesignPropertyEditor( this.arrayDesignService ) );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.mvc.SimpleFormController#referenceData(javax.servlet.http.HttpServletRequest)
-     */
-    @SuppressWarnings("unused")
-    @Override
-    protected Map referenceData( HttpServletRequest request ) throws Exception {
-        Map<String, List<? extends Object>> mapping = new HashMap<String, List<? extends Object>>();
-
-        populateArrayDesignReferenceData( mapping );
-        return mapping;
-
-    }
 
     /*
      * (non-Javadoc)
@@ -119,18 +89,7 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
     @SuppressWarnings("unused")
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
-        return startJob( command, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ExpressionExperimentLoadTask.class
-                .getName(), true );
-    }
-
-    /**
-     * Exposed for AJAX calls.
-     * 
-     * @param command
-     * @return
-     */
-    public String run( ExpressionExperimentLoadCommand command ) {
-        return run( command, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ExpressionExperimentLoadTask.class.getName(),
+        return startJob( command, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ExpressionExperimentLoadTask.class.getName(),
                 true );
     }
 
@@ -150,6 +109,58 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
         }
 
         return super.processFormSubmission( request, response, command, errors );
+    }
+
+    /**
+     * Exposed for AJAX calls.
+     * 
+     * @param command
+     * @return
+     */
+    public String run( ExpressionExperimentLoadCommand command ) {
+        return run( command, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ExpressionExperimentLoadTask.class.getName(), true );
+    }
+
+    /**
+     * @param arrayDesignService the arrayDesignService to set
+     */
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
+
+    /**
+     * @param arrayExpressLoadService the arrayExpressLoadService to set
+     */
+    public void setArrayExpressLoadService( ArrayExpressLoadService arrayExpressLoadService ) {
+        this.arrayExpressLoadService = arrayExpressLoadService;
+    }
+
+    /**
+     * @param geoDatasetService the geoDatasetService to set
+     */
+    public void setGeoDatasetService( GeoDatasetService geoDatasetService ) {
+        this.geoDatasetService = geoDatasetService;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.javaspaces.gigaspaces.AbstractGigaSpacesFormController#setGigaSpacesUtil(ubic.gemma.util.javaspaces.gigaspaces.GigaSpacesUtil)
+     */
+    @Override
+    public void setSpacesUtil( SpacesUtil spacesUtil ) {
+        this.injectSpacesUtil( spacesUtil );
+    }
+
+    /**
+     * This method has been deprecated in favor of an ajax call.
+     * 
+     * @param request
+     * @deprecated
+     */
+    private void cancel( HttpServletRequest request ) {
+        Future job = ( Future ) request.getSession().getAttribute( JOB_ATTRIBUTE );
+        job.cancel( true );
     }
 
     /**
@@ -176,49 +187,18 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
         mapping.put( "arrayDesigns", arrayDesigns );
     }
 
-    /**
-     * This method has been deprecated in favor of an ajax call.
-     * 
-     * @param request
-     * @deprecated
-     */
-    private void cancel( HttpServletRequest request ) {
-        Future job = ( Future ) request.getSession().getAttribute( JOB_ATTRIBUTE );
-        job.cancel( true );
-    }
-
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.web.controller.javaspaces.gigaspaces.AbstractGigaSpacesFormController#setGigaSpacesUtil(ubic.gemma.util.javaspaces.gigaspaces.GigaSpacesUtil)
+     * @see org.springframework.web.servlet.mvc.AbstractFormController#formBackingObject(javax.servlet.http.HttpServletRequest)
      */
     @Override
-    public void setSpacesUtil( SpacesUtil spacesUtil ) {
-        this.injectSpacesUtil( spacesUtil );
+    @SuppressWarnings("unused")
+    protected Object formBackingObject( HttpServletRequest request ) throws Exception {
+        ExpressionExperimentLoadCommand command = new ExpressionExperimentLoadCommand();
+        return command;
     }
 
-    /**
-     * @param geoDatasetService the geoDatasetService to set
-     */
-    public void setGeoDatasetService( GeoDatasetService geoDatasetService ) {
-        this.geoDatasetService = geoDatasetService;
-    }
-
-    /**
-     * @param arrayDesignService the arrayDesignService to set
-     */
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
-    }
-
-    /**
-     * @param arrayExpressLoadService the arrayExpressLoadService to set
-     */
-    public void setArrayExpressLoadService( ArrayExpressLoadService arrayExpressLoadService ) {
-        this.arrayExpressLoadService = arrayExpressLoadService;
-    }
-
-    // TODO: getRunner and getSpaceRunner have a lot of similar code, can we consolidate this?
     /*
      * (non-Javadoc)
      * 
@@ -229,84 +209,7 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
     protected BackgroundControllerJob<ModelAndView> getRunner( String taskId, SecurityContext securityContext,
             Object command, MessageUtil messenger ) {
 
-        return new BackgroundControllerJob<ModelAndView>( taskId, securityContext, command, messenger ) {
-
-            @SuppressWarnings("unchecked")
-            public ModelAndView call() throws Exception {
-
-                SecurityContextHolder.setContext( securityContext );
-                Map<Object, Object> model = new HashMap<Object, Object>();
-                ExpressionExperimentLoadCommand expressionExperimentLoadCommand = ( ( ExpressionExperimentLoadCommand ) command );
-
-                String accesionNum = expressionExperimentLoadCommand.getAccession();
-
-                ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
-                        .getAuthentication().getName(), "Loading " + expressionExperimentLoadCommand.getAccession() );
-
-                // put the accession number in a safer form
-                accesionNum = StringUtils.strip( accesionNum );
-                accesionNum = StringUtils.upperCase( accesionNum );
-
-                log.info( "Loading " + accesionNum );
-
-                if ( geoDatasetService.getGeoDomainObjectGenerator() == null ) {
-                    geoDatasetService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-                }
-
-                boolean doSampleMatching = !expressionExperimentLoadCommand.isSuppressMatching();
-                boolean aggressiveQtRemoval = expressionExperimentLoadCommand.isAggressiveQtRemoval();
-                String list = "";
-                if ( expressionExperimentLoadCommand.isLoadPlatformOnly() ) {
-                    job.updateProgress( "Loading platforms only." );
-                    Collection<ArrayDesign> arrayDesigns = geoDatasetService.fetchAndLoad( accesionNum, true,
-                            doSampleMatching, aggressiveQtRemoval );
-                    this.saveMessage( "Successfully loaded " + arrayDesigns.size() + " array designs" );
-                    model.put( "arrayDesigns", arrayDesigns );
-
-                    if ( arrayDesigns.size() == 1 ) {
-                        return new ModelAndView( new RedirectView( "/Gemma/arrays/showArrayDesign.html?id="
-                                + arrayDesigns.iterator().next().getId() ) );
-                    } else {
-                        for ( ArrayDesign ad : arrayDesigns )
-                            list += ad.getId() + ",";
-                        return new ModelAndView(
-                                new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?ids=" + list ) );
-                    }
-                } else if ( expressionExperimentLoadCommand.isArrayExpress() ) {
-
-                    if ( expressionExperimentLoadCommand.getArrayDesignName() == null ) {
-                        this.saveMessage( "Unable to load: Must select an array design to use" );
-                        return new ModelAndView( new RedirectView( "/Gemma/loadExpressionExperiment.html" ) );
-                    }
-
-                    ExpressionExperiment result = arrayExpressLoadService.load( accesionNum,
-                            expressionExperimentLoadCommand.getArrayDesignName() );
-
-                    this.saveMessage( "Successfully loaded " + result.getName() );
-                    model.put( "expressionExperiment", result );
-                    return new ModelAndView( new RedirectView(
-                            "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + result.getId() ) );
-                } else /* GEO */{
-                    Collection<ExpressionExperiment> result = geoDatasetService.fetchAndLoad( accesionNum, false,
-                            doSampleMatching, aggressiveQtRemoval );
-                    if ( result.size() == 1 ) {
-                        ExpressionExperiment loaded = result.iterator().next();
-                        this.saveMessage( "Successfully loaded " + loaded );
-                        model.put( "expressionExperiment", loaded );
-                        return new ModelAndView( new RedirectView(
-                                "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
-                                        + result.iterator().next().getId() ) );
-                    } else {
-                        this.saveMessage( "Successfully loaded " + result.size() + " expression experiments" );
-                        for ( ExpressionExperiment ee : result )
-                            list += ee.getId() + ",";
-                        return new ModelAndView( new RedirectView(
-                                "/Gemma/expressionExperiment/showAllExpressionExperiments.html?ids=" + list ) );
-                    }
-                }
-
-            }
-        };
+        return new LoadJob( taskId, securityContext, command, messenger );
     }
 
     /*
@@ -319,97 +222,257 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
     @Override
     protected BackgroundControllerJob<ModelAndView> getSpaceRunner( String taskId, SecurityContext securityContext,
             Object command, MessageUtil messenger ) {
+        return new LoadInSpaceJob( taskId, securityContext, command, messenger );
+    }
+
+    @Override
+    protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
+        super.initBinder( request, binder );
+        binder.registerCustomEditor( ArrayDesign.class, new ArrayDesignPropertyEditor( this.arrayDesignService ) );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.web.servlet.mvc.SimpleFormController#referenceData(javax.servlet.http.HttpServletRequest)
+     */
+    @SuppressWarnings("unused")
+    @Override
+    protected Map referenceData( HttpServletRequest request ) throws Exception {
+        Map<String, List<? extends Object>> mapping = new HashMap<String, List<? extends Object>>();
+
+        populateArrayDesignReferenceData( mapping );
+        return mapping;
+
+    }
+
+    /**
+     * @author Paul
+     * @version $Id$
+     */
+    private class LoadJob extends BackgroundControllerJob<ModelAndView> {
+
+        /**
+         * @param taskId
+         * @param parentSecurityContext
+         * @param commandObj
+         * @param messenger
+         */
+        public LoadJob( String taskId, SecurityContext parentSecurityContext, Object commandObj, MessageUtil messenger ) {
+            super( taskId, parentSecurityContext, commandObj, messenger );
+            if ( geoDatasetService.getGeoDomainObjectGenerator() == null ) {
+                geoDatasetService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+            }
+
+        }
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.util.concurrent.Callable#call()
+         */
+        @SuppressWarnings("unchecked")
+        public ModelAndView call() throws Exception {
+
+            SecurityContextHolder.setContext( securityContext );
+
+            ExpressionExperimentLoadCommand expressionExperimentLoadCommand = ( ( ExpressionExperimentLoadCommand ) command );
+
+            ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication().getName(),
+                    "Loading " + expressionExperimentLoadCommand.getAccession() );
+
+            if ( expressionExperimentLoadCommand.isLoadPlatformOnly() ) {
+                return processPlatformOnlyJob( expressionExperimentLoadCommand );
+            } else if ( expressionExperimentLoadCommand.isArrayExpress() ) {
+                return processArrayExpressJob( expressionExperimentLoadCommand );
+            } else /* GEO */{
+                return processGEODataJob( expressionExperimentLoadCommand );
+            }
+        }
+
+        /**
+         * Clean up the access provided by the user.
+         * 
+         * @param expressionExperimentLoadCommand
+         * @return
+         */
+        private String getAccession( ExpressionExperimentLoadCommand expressionExperimentLoadCommand ) {
+            String accesionNum = expressionExperimentLoadCommand.getAccession();
+            accesionNum = StringUtils.strip( accesionNum );
+            accesionNum = StringUtils.upperCase( accesionNum );
+            return accesionNum;
+        }
+
+        /**
+         * @param arrayDesigns
+         * @return
+         */
+        protected ModelAndView processArrayDesignResult( Collection<ArrayDesign> arrayDesigns ) {
+            Map<Object, Object> model = new HashMap<Object, Object>();
+            this.saveMessage( "Successfully loaded " + arrayDesigns.size() + " array designs" );
+            model.put( "arrayDesigns", arrayDesigns );
+
+            if ( arrayDesigns.size() == 1 ) {
+                return new ModelAndView( new RedirectView( "/Gemma/arrays/showArrayDesign.html?id="
+                        + arrayDesigns.iterator().next().getId() ) );
+            }
+            String list = "";
+            for ( ArrayDesign ad : arrayDesigns )
+                list += ad.getId() + ",";
+            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?ids=" + list ) );
+        }
+
+        /**
+         * @param result
+         * @return
+         */
+        protected ModelAndView processArrayExpressResult( ExpressionExperiment result ) {
+            this.saveMessage( "Successfully loaded " + result.getName() );
+            Map<Object, Object> model = new HashMap<Object, Object>();
+            model.put( "expressionExperiment", result );
+            return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
+                    + result.getId() ) );
+        }
+
+        /**
+         * @param result
+         * @return
+         */
+        protected ModelAndView processGeoLoadResult( Collection<ExpressionExperiment> result ) {
+            Map<Object, Object> model = new HashMap<Object, Object>();
+            if ( result.size() == 1 ) {
+                ExpressionExperiment loaded = result.iterator().next();
+                this.saveMessage( "Successfully loaded " + loaded );
+                model.put( "expressionExperiment", loaded );
+                return new ModelAndView( new RedirectView(
+                        "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
+                                + result.iterator().next().getId() ) );
+            }
+
+            this.saveMessage( "Successfully loaded " + result.size() + " expression experiments" );
+            String list = "";
+            for ( ExpressionExperiment ee : result )
+                list += ee.getId() + ",";
+            return new ModelAndView( new RedirectView(
+                    "/Gemma/expressionExperiment/showAllExpressionExperiments.html?ids=" + list ) );
+        }
+
+        /**
+         * @param expressionExperimentLoadCommand
+         * @param accesionNum
+         * @param model
+         * @return
+         * @throws IOException
+         */
+        protected ModelAndView processArrayExpressJob( ExpressionExperimentLoadCommand expressionExperimentLoadCommand ) {
+
+            String accession = getAccession( expressionExperimentLoadCommand );
+            ExpressionExperiment result = arrayExpressLoadService.load( accession, expressionExperimentLoadCommand
+                    .getArrayDesignName() );
+
+            return processArrayExpressResult( result );
+        }
+
+        /**
+         * @param accesionNum
+         * @param doSampleMatching
+         * @param aggressiveQtRemoval
+         * @return
+         */
+        @SuppressWarnings("unchecked")
+        protected ModelAndView processGEODataJob( ExpressionExperimentLoadCommand expressionExperimentLoadCommand ) {
+
+            String accession = getAccession( expressionExperimentLoadCommand );
+            boolean doSampleMatching = !expressionExperimentLoadCommand.isSuppressMatching();
+            boolean aggressiveQtRemoval = expressionExperimentLoadCommand.isAggressiveQtRemoval();
+
+            Collection<ExpressionExperiment> result = geoDatasetService.fetchAndLoad( accession, false,
+                    doSampleMatching, aggressiveQtRemoval );
+
+            return processGeoLoadResult( result );
+        }
+
+        /**
+         * @param job
+         * @param accesionNum
+         * @param doSampleMatching
+         * @param aggressiveQtRemoval
+         * @param model
+         * @param list
+         * @return
+         */
+        @SuppressWarnings("unchecked")
+        protected ModelAndView processPlatformOnlyJob( ExpressionExperimentLoadCommand expressionExperimentLoadCommand ) {
+            String accession = getAccession( expressionExperimentLoadCommand );
+
+            boolean doSampleMatching = !expressionExperimentLoadCommand.isSuppressMatching();
+            boolean aggressiveQtRemoval = expressionExperimentLoadCommand.isAggressiveQtRemoval();
+
+            Collection<ArrayDesign> arrayDesigns = geoDatasetService.fetchAndLoad( accession, true, doSampleMatching,
+                    aggressiveQtRemoval );
+
+            return processArrayDesignResult( arrayDesigns );
+        }
+    }
+
+    /**
+     * Job that loads in a javaspace.
+     * 
+     * @author Paul
+     * @version $Id$
+     */
+    private class LoadInSpaceJob extends LoadJob {
 
         final ExpressionExperimentLoadTask eeTaskProxy = ( ExpressionExperimentLoadTask ) updatedContext
                 .getBean( "proxy" );
 
-        return new BackgroundControllerJob<ModelAndView>( taskId, securityContext, command, messenger ) {
+        /**
+         * @param taskId
+         * @param parentSecurityContext
+         * @param commandObj
+         * @param messenger
+         */
+        public LoadInSpaceJob( String taskId, SecurityContext parentSecurityContext, Object commandObj,
+                MessageUtil messenger ) {
+            super( taskId, parentSecurityContext, commandObj, messenger );
 
-            @SuppressWarnings("unchecked")
-            public ModelAndView call() throws Exception {
+        }
 
-                SecurityContextHolder.setContext( securityContext );
-                Map<Object, Object> model = new HashMap<Object, Object>();
-                ExpressionExperimentLoadCommand expressionExperimentLoadCommand = ( ( ExpressionExperimentLoadCommand ) command );
+        /**
+         * @param model
+         * @param list
+         * @return
+         */
+        @Override
+        @SuppressWarnings("unchecked")
+        protected ModelAndView processGEODataJob( ExpressionExperimentLoadCommand eeLoadCommand ) {
 
-                String accesionNum = expressionExperimentLoadCommand.getAccession();
+            SpacesExpressionExperimentLoadCommand jsCommand = new SpacesExpressionExperimentLoadCommand( taskId,
+                    eeLoadCommand );
 
-                ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
-                        .getAuthentication().getName(), "Loading " + expressionExperimentLoadCommand.getAccession() );
+            SpacesResult res = eeTaskProxy.execute( jsCommand );
+            Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) res.getAnswer();
+            return super.processGeoLoadResult( result );
+        }
 
-                // put the accession number in a safer form
-                accesionNum = StringUtils.strip( accesionNum );
-                accesionNum = StringUtils.upperCase( accesionNum );
+        @Override
+        protected ModelAndView processArrayExpressJob( ExpressionExperimentLoadCommand eeLoadCommand ) {
+            SpacesExpressionExperimentLoadCommand jsCommand = new SpacesExpressionExperimentLoadCommand( taskId,
+                    eeLoadCommand );
 
-                log.info( "Loading " + accesionNum );
+            SpacesResult result = eeTaskProxy.execute( jsCommand );
+            return super.processArrayExpressResult( ( ExpressionExperiment ) result.getAnswer() );
+        }
 
-                if ( geoDatasetService.getGeoDomainObjectGenerator() == null ) {
-                    geoDatasetService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-                }
+        @Override
+        @SuppressWarnings("unchecked")
+        protected ModelAndView processPlatformOnlyJob( ExpressionExperimentLoadCommand eeLoadCommand ) {
+            SpacesExpressionExperimentLoadCommand jsCommand = new SpacesExpressionExperimentLoadCommand( taskId,
+                    eeLoadCommand );
+            SpacesResult result = eeTaskProxy.execute( jsCommand );
+            return super.processArrayDesignResult( ( Collection<ArrayDesign> ) result );
+        }
 
-                boolean doSampleMatching = !expressionExperimentLoadCommand.isSuppressMatching();
-                boolean aggressiveQtRemoval = expressionExperimentLoadCommand.isAggressiveQtRemoval();
-                String list = "";
-                if ( expressionExperimentLoadCommand.isLoadPlatformOnly() ) {
-                    job.updateProgress( "Loading platforms only." );
-                    Collection<ArrayDesign> arrayDesigns = geoDatasetService.fetchAndLoad( accesionNum, true,
-                            doSampleMatching, aggressiveQtRemoval );
-                    this.saveMessage( "Successfully loaded " + arrayDesigns.size() + " array designs" );
-                    model.put( "arrayDesigns", arrayDesigns );
-                    // ProgressManager.destroyProgressJob( job, !AJAX );
-
-                    if ( arrayDesigns.size() == 1 ) {
-                        return new ModelAndView( new RedirectView( "/Gemma/arrays/showArrayDesign.html?id="
-                                + arrayDesigns.iterator().next().getId() ) );
-                    } else {
-                        for ( ArrayDesign ad : arrayDesigns )
-                            list += ad.getId() + ",";
-                        return new ModelAndView(
-                                new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?ids=" + list ) );
-                    }
-                }
-
-                // Array Express
-                else if ( expressionExperimentLoadCommand.isArrayExpress() ) {
-                    ExpressionExperiment result = arrayExpressLoadService.load( accesionNum,
-                            expressionExperimentLoadCommand.getArrayDesignName() );
-
-                    this.saveMessage( "Successfully loaded " + result.getName() );
-                    model.put( "expressionExperiment", result );
-                    return new ModelAndView( new RedirectView(
-                            "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + result.getId() ) );
-                    // GEO
-                } else {
-                    ExpressionExperimentLoadCommand eeLoadCommand = ( ExpressionExperimentLoadCommand ) command;
-                    SpacesExpressionExperimentLoadCommand jsCommand = new SpacesExpressionExperimentLoadCommand(
-                            taskId, eeLoadCommand.isLoadPlatformOnly(), eeLoadCommand.isSuppressMatching(),
-                            eeLoadCommand.getAccession(), eeLoadCommand.isAggressiveQtRemoval() );
-
-                    SpacesResult res = eeTaskProxy.execute( jsCommand );
-                    Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) res.getAnswer();
-                    log.info( "result " + result );
-
-                    if ( result.size() == 1 ) {
-                        ExpressionExperiment loaded = result.iterator().next();
-                        this.saveMessage( "Successfully loaded " + loaded );
-                        model.put( "expressionExperiment", loaded );
-                        // ProgressManager.destroyProgressJob( job, !AJAX );
-                        return new ModelAndView( new RedirectView(
-                                "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
-                                        + result.iterator().next().getId() ) );
-                    } else {
-                        // model.put( "expressionExeriments", result );
-                        this.saveMessage( "Successfully loaded " + result.size() + " expression experiments" );
-                        // ProgressManager.destroyProgressJob( job, !AJAX );
-                        for ( ExpressionExperiment ee : result )
-                            list += ee.getId() + ",";
-                        return new ModelAndView( new RedirectView(
-                                "/Gemma/expressionExperiment/showAllExpressionExperiments.html?ids=" + list ) );
-                    }
-
-                }
-
-            }
-        };
     }
+
 }

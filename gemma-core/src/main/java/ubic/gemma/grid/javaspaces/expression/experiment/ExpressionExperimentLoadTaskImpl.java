@@ -27,8 +27,10 @@ import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.grid.javaspaces.BaseSpacesTask;
 import ubic.gemma.grid.javaspaces.SpacesResult;
+import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.progress.TaskRunningService;
 
@@ -42,6 +44,7 @@ public class ExpressionExperimentLoadTaskImpl extends BaseSpacesTask implements 
 
     private long counter = 0;
     private GeoDatasetService geoDatasetService = null;
+    ArrayExpressLoadService arrayExpressLoadService;
     private String taskId = null;
 
     /*
@@ -50,30 +53,31 @@ public class ExpressionExperimentLoadTaskImpl extends BaseSpacesTask implements 
      * @see ubic.gemma.javaspaces.gigaspaces.ExpressionExperimentTask#execute(java.lang.String, boolean, boolean)
      */
     @SuppressWarnings("unchecked")
-    public SpacesResult execute(
-            SpacesExpressionExperimentLoadCommand javaSpacesExpressionExperimentLoadCommand ) {
-
-        if ( !( javaSpacesExpressionExperimentLoadCommand instanceof SpacesExpressionExperimentLoadCommand ) ) {
-            throw new RuntimeException( "Cannot handle objects of type "
-                    + javaSpacesExpressionExperimentLoadCommand.getClass() );
-        }
+    public SpacesResult execute( SpacesExpressionExperimentLoadCommand jsEeLoadCommand ) {
 
         super.initProgressAppender( this.getClass() );
 
-        SpacesExpressionExperimentLoadCommand jsEeLoadCommand = javaSpacesExpressionExperimentLoadCommand;
-        String geoAccession = jsEeLoadCommand.getAccession();
+        String accession = jsEeLoadCommand.getAccession();
         boolean loadPlatformOnly = jsEeLoadCommand.isLoadPlatformOnly();
         boolean doSampleMatching = jsEeLoadCommand.isSuppressMatching();
         boolean aggressiveQtRemoval = jsEeLoadCommand.isAggressiveQtRemoval();
 
-        Collection<ExpressionExperiment> datasets = geoDatasetService.fetchAndLoad( geoAccession, loadPlatformOnly,
-                doSampleMatching, aggressiveQtRemoval );
-
-        counter++;
         SpacesResult result = new SpacesResult();
-        result.setAnswer( datasets );
+        if ( jsEeLoadCommand.isArrayExpress() ) {
+            ExpressionExperiment dataset = arrayExpressLoadService.load( accession, jsEeLoadCommand
+                    .getArrayDesignName() );
+            result.setAnswer( dataset );
+        } else if ( loadPlatformOnly ) {
+            Collection<ArrayDesign> arrayDesigns = geoDatasetService.fetchAndLoad( accession, true, doSampleMatching,
+                    aggressiveQtRemoval );
+            result.setAnswer( arrayDesigns );
+        } else {
+            Collection<ExpressionExperiment> datasets = geoDatasetService.fetchAndLoad( accession, loadPlatformOnly,
+                    doSampleMatching, aggressiveQtRemoval );
+            result.setAnswer( datasets );
+        }
+        counter++;
         result.setTaskID( counter );
-
         log.info( "Task execution complete ... returning result " + result.getAnswer() + " with id "
                 + result.getTaskID() );
         return result;
@@ -85,6 +89,13 @@ public class ExpressionExperimentLoadTaskImpl extends BaseSpacesTask implements 
     public void setGeoDatasetService( GeoDatasetService geoDatasetService ) {
         this.geoDatasetService = geoDatasetService;
         this.geoDatasetService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+    }
+
+    /**
+     * @param arrayExpressLoadService the arrayExpressLoadService to set
+     */
+    public void setArrayExpressLoadService( ArrayExpressLoadService arrayExpressLoadService ) {
+        this.arrayExpressLoadService = arrayExpressLoadService;
     }
 
     /**
