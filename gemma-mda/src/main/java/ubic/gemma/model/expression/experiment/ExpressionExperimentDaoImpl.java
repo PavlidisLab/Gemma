@@ -22,6 +22,8 @@ import java.math.BigInteger;
 import java.sql.Blob;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -693,8 +695,11 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             queryString = queryString + " where ee.id in (:eeids)";
         }
         org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+        // make sure we use the cache.
         if ( eeids != null ) {
-            queryObject.setParameterList( "eeids", eeids );
+            List idList = new ArrayList( eeids );
+            Collections.sort( idList );
+            queryObject.setParameterList( "eeids", idList );
         }
         queryObject.setCacheable( true );
         queryObject.setCacheRegion( "quantitationTypesForEes" );
@@ -959,12 +964,15 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         Collection<ExpressionExperiment> ees = null;
         final String queryString = "select ee from ExpressionExperimentImpl as ee " + " where ee.id in (:ids) ";
 
+        List idList = new ArrayList( ids );
+        Collections.sort( idList );
+
         try {
             Session session = this.getSession( false );
             org.hibernate.Query queryObject = session.createQuery( queryString );
             queryObject.setCacheable( true );
             queryObject.setCacheRegion( "ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" );
-            queryObject.setParameterList( "ids", ids );
+            queryObject.setParameterList( "ids", idList );
             ees = queryObject.list();
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
@@ -1167,6 +1175,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected Map<ExpressionExperiment, AuditEvent> handleGetLastArrayDesignUpdate( Collection expressionExperiments,
             Class type ) throws Exception {
@@ -1178,11 +1187,20 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 + ") order by event.date desc ";
 
         Map<ExpressionExperiment, AuditEvent> result = new HashMap<ExpressionExperiment, AuditEvent>();
+
+        // helps make sure we use the query cache.
+        List<ExpressionExperiment> eeList = new ArrayList<ExpressionExperiment>( expressionExperiments );
+        Collections.sort( eeList, new Comparator<ExpressionExperiment>() {
+            public int compare( ExpressionExperiment o1, ExpressionExperiment o2 ) {
+                return o1.getId().compareTo( o2.getId() );
+            }
+        } );
+
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setCacheable( true );
             queryObject.setCacheRegion( "auditEvents" );
-            queryObject.setParameterList( "ee", expressionExperiments );
+            queryObject.setParameterList( "ee", eeList );
             List qr = queryObject.list();
             if ( qr == null || qr.isEmpty() ) return result;
 
