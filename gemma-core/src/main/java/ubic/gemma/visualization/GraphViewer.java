@@ -88,7 +88,7 @@ import prefuse.util.ui.JForcePanel;
 import prefuse.visual.DecoratorItem;
 import prefuse.visual.NodeItem;
 import prefuse.visual.VisualItem;
-import ubic.gemma.analysis.linkAnalysis.LinkBitMatrixUtil;
+import ubic.gemma.analysis.linkAnalysis.LinkMatrix;
 import ubic.gemma.analysis.linkAnalysis.LinkGraphClustering;
 import ubic.gemma.analysis.linkAnalysis.TreeNode;
 import ubic.gemma.model.genome.Gene;
@@ -140,9 +140,14 @@ public class GraphViewer implements PropertyChangeListener, ActionListener, Wind
         DECORATOR_SCHEMA.setDefault( VisualItem.FONT, FontLib.getFont( "Tahoma", 10 ) );
     }
 
-    private LinkBitMatrixUtil linkMatrix = null;
+    private LinkMatrix linkMatrix = null;
 
-    public GraphViewer( ObjectArrayList nodes, boolean MULTIPLE_TREES, LinkBitMatrixUtil linkMatrix ) {
+    /**
+     * @param nodes
+     * @param MULTIPLE_TREES
+     * @param linkMatrix
+     */
+    public GraphViewer( ObjectArrayList nodes, boolean MULTIPLE_TREES, LinkMatrix linkMatrix ) {
         WINDOW_CLOSED = false;
         if ( MULTIPLE_TREES )
             this.clusterRootNodes = nodes;
@@ -152,6 +157,9 @@ public class GraphViewer implements PropertyChangeListener, ActionListener, Wind
         init_view();
     }
 
+    /**
+     * @param buttonPanel
+     */
     private void init_buttons( JPanel buttonPanel ) {
         GridBagConstraints c = new GridBagConstraints();
         c.fill = GridBagConstraints.HORIZONTAL;
@@ -205,6 +213,9 @@ public class GraphViewer implements PropertyChangeListener, ActionListener, Wind
         }
     }
 
+    /**
+     * 
+     */
     private void init_view() {
         frame = new JFrame( "Graph Viewer" );
         JFrame.setDefaultLookAndFeelDecorated( true );
@@ -243,11 +254,14 @@ public class GraphViewer implements PropertyChangeListener, ActionListener, Wind
         frame.addWindowListener( this );
     }
 
+    /**
+     * 
+     */
     public void run() {
         if ( this.clusterRootNodes == null && this.treeNodes == null ) {
             System.err.println( "Display Demo Graph" );
         }
-        Graph g = get_graph( this.currentGraphIndex );
+        Graph g = getGraph( this.currentGraphIndex );
         initVisualization( g );
         vis.run( "init" );
         vis.run( "color" ); // assign the colors
@@ -268,7 +282,11 @@ public class GraphViewer implements PropertyChangeListener, ActionListener, Wind
         System.err.println( "Finished" );
     }
 
-    private Graph get_graph( int currentIndex ) {
+    /**
+     * @param currentIndex
+     * @return
+     */
+    private Graph getGraph( int currentIndex ) {
         Graph g = null;
         if ( this.clusterRootNodes == null && this.treeNodes == null ) {
             if ( currentIndex % 2 == 0 )
@@ -288,7 +306,7 @@ public class GraphViewer implements PropertyChangeListener, ActionListener, Wind
         Collection<Long> treeIds = new HashSet<Long>();
         for ( int i = 0; i < leafNodes.size(); i++ ) {
             TreeNode treeNode = ( TreeNode ) leafNodes.get( i );
-            treeIds.add( treeNode.id );
+            treeIds.add( treeNode.getId() );
         }
         goTermsCounter = linkMatrix.computeGOOverlap( treeIds, 20 );
         for ( OntologyTerm ontologyTerm : goTermsCounter.keySet() ) {
@@ -302,7 +320,8 @@ public class GraphViewer implements PropertyChangeListener, ActionListener, Wind
         g.getEdgeTable().addColumns( EDGE_SCHEMA );
         for ( int i = 0; i < leafNodes.size(); i++ ) {
             Object obj = leafNodes.get( i );
-            Gene[] pairedGene = linkMatrix.getPairedGenes( ( ( TreeNode ) obj ).id );
+            Gene[] pairedGene = linkMatrix.getPairedGenes( ( ( TreeNode ) obj ).getId() );
+            assert pairedGene.length == 2;
             for ( Gene gene : pairedGene ) {
                 if ( !gene2Node.containsKey( gene.getId() ) ) {
                     Node node = g.addNode();
@@ -315,7 +334,7 @@ public class GraphViewer implements PropertyChangeListener, ActionListener, Wind
                         node.setString( NODETYPE, "N" );
 
                     String goTerms = "";
-                    Collection<OntologyTerm> goEntries = linkMatrix.getUtilService().getGOTerms( gene );
+                    Collection<OntologyTerm> goEntries = linkMatrix.getGOTerms( gene );
                     for ( OntologyTerm ontologyTerm : goEntries ) {
                         goTerms = goTerms + ontologyTerm.getTerm() + ";";
                     }
@@ -325,14 +344,17 @@ public class GraphViewer implements PropertyChangeListener, ActionListener, Wind
             }
             Node node1 = gene2Node.get( pairedGene[0].getId() );
             Node node2 = gene2Node.get( pairedGene[1].getId() );
-            Integer goOverlaped = linkMatrix.computeGOOverlap( ( ( TreeNode ) obj ).id );
+            Integer goOverlap = linkMatrix.computeGOOverlap( ( ( TreeNode ) obj ).getId() );
             Edge edge = g.addEdge( node1, node2 );
             // edge.setDouble(WEIGHT,goOverlaped);
-            edge.setString( EDGENAME, goOverlaped.toString() );
+            edge.setString( EDGENAME, goOverlap.toString() );
         }
         return g;
     }
 
+    /**
+     * @param g
+     */
     private void initVisualization( Graph g ) {
         vis = new Visualization();
         // draw the "name" for NodeItems
@@ -448,7 +470,7 @@ public class GraphViewer implements PropertyChangeListener, ActionListener, Wind
         vis.reset();
         display.clearDamage();
 
-        Graph g = get_graph( index );
+        Graph g = getGraph( index );
         // vis.add("graph", g);
         initVisualization( g );
         this.frame.validate();
@@ -646,46 +668,41 @@ public class GraphViewer implements PropertyChangeListener, ActionListener, Wind
                 if ( nitem.getString( NODEATTR ).contains( SelectedGoTerm ) ) {
                     return ColorLib.rgb( 191, 99, 130 );
 
-                } else
-                    return cmap.getColor( 1 );
-            } else {
-                return cmap.getColor( 0 );
+                }
+                return cmap.getColor( 1 );
             }
+            return cmap.getColor( 0 );
         }
 
     } // end of inner class TreeMapColorAction
 
+    @SuppressWarnings("unused")
     public void windowActivated( WindowEvent e ) {
-        // TODO Auto-generated method stub
-
     }
 
+    @SuppressWarnings("unused")
     public void windowClosed( WindowEvent e ) {
-        // TODO Auto-generated method stub
     }
 
+    @SuppressWarnings("unused")
     public void windowClosing( WindowEvent e ) {
-        // TODO Auto-generated method stub
         WINDOW_CLOSED = true;
         System.err.println( "CLOSING" );
     }
 
+    @SuppressWarnings("unused")
     public void windowDeactivated( WindowEvent e ) {
-        // TODO Auto-generated method stub
     }
 
+    @SuppressWarnings("unused")
     public void windowDeiconified( WindowEvent e ) {
-        // TODO Auto-generated method stub
-
     }
 
+    @SuppressWarnings("unused")
     public void windowIconified( WindowEvent e ) {
-        // TODO Auto-generated method stub
-
     }
 
+    @SuppressWarnings("unused")
     public void windowOpened( WindowEvent e ) {
-        // TODO Auto-generated method stub
-
     }
 }

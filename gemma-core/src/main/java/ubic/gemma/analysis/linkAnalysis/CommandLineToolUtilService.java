@@ -58,17 +58,6 @@ public class CommandLineToolUtilService {
     }
 
     /**
-     * @param id1 gene primary key
-     * @param id2 gene primary key
-     * @return
-     */
-    public int computeGOOverlap( long id1, long id2 ) {
-        Gene gene1 = geneService.load( id1 );
-        Gene gene2 = geneService.load( id2 );
-        return computeGOOverlap( gene1, gene2 );
-    }
-
-    /**
      * @param gene
      * @return
      * @deprecated duplicates functionality found elsewhere.

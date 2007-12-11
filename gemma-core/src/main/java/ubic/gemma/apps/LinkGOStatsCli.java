@@ -23,11 +23,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -37,11 +35,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 
 import ubic.basecode.dataStructure.matrix.CompressedNamedBitMatrix;
-import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
-import ubic.basecode.gui.ColorMap;
-import ubic.basecode.gui.ColorMatrix;
-import ubic.basecode.gui.JMatrixDisplay;
 import ubic.gemma.analysis.linkAnalysis.GeneLink;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImpl.ProbeLink;
@@ -121,11 +114,11 @@ public class LinkGOStatsCli extends ExpressionExperimentManipulatingCLI {
                 int support = bits[j];
                 if ( support > 0 ) {
                     if ( support >= MAXIMUM_LINK_NUM ) support = MAXIMUM_LINK_NUM - 1;
-                    Gene gene1 = geneMap.get( ( Long ) linkCount.getRowName( i ) );
-                    Gene gene2 = geneMap.get( ( Long ) linkCount.getRowName( j ) );
+                    Gene gene1 = geneMap.get( linkCount.getRowName( i ) );
+                    Gene gene2 = geneMap.get(  linkCount.getRowName( j ) );
                     if ( gene1 == null || gene2 == null ) {
-                        log.info( "Wrong setting for gene" + ( Long ) linkCount.getRowName( i ) + "\t"
-                                + ( Long ) linkCount.getRowName( j ) );
+                        log.info( "Wrong setting for gene" + linkCount.getRowName( i ) + "\t"
+                                +   linkCount.getRowName( j ) );
                         continue;
                     }
                     // int goOverlap = linkAnalysisUtilService.computeGOOverlap( gene1, gene2 );
