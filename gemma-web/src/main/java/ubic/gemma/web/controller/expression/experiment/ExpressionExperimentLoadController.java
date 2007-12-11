@@ -42,6 +42,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.grid.javaspaces.SpacesResult;
 import ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTask;
 import ubic.gemma.grid.javaspaces.expression.experiment.SpacesExpressionExperimentLoadCommand;
+import ubic.gemma.loader.expression.ExpressionExperimentLoadCommand;
 import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;

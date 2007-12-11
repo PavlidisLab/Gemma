@@ -35,10 +35,10 @@ import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.apps.LoadExpressionDataCli;
 import ubic.gemma.grid.javaspaces.SpacesResult;
+import ubic.gemma.loader.expression.ExpressionExperimentLoadCommand;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
 import ubic.gemma.util.grid.javaspaces.SpacesUtil;
 import ubic.gemma.util.grid.javaspaces.entry.SpacesProgressEntry;
-import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand;
 
 import com.j_spaces.core.client.EntryArrivedRemoteEvent;
 import com.j_spaces.core.client.ExternalEntry;

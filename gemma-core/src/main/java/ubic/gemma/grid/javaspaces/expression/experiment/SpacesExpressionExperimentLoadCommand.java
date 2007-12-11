@@ -21,7 +21,7 @@ package ubic.gemma.grid.javaspaces.expression.experiment;
 import java.io.Serializable;
 
 import ubic.gemma.grid.javaspaces.SpacesCommand;
-import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand;
+import ubic.gemma.loader.expression.ExpressionExperimentLoadCommand;
 
 /**
  * @author keshav
