@@ -164,7 +164,8 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
     }
 
     protected void handleRemoveAll() throws Exception {
-        final String queryString = "delete from Gene2GOAssociationImpl";
+        // FIXME this does not delete the associated vocabCharacteristics.
+        final String queryString = "delete from Gene2GOAssociationImpl go ";
         this.getHibernateTemplate().bulkUpdate( queryString );
     }
 
