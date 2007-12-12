@@ -20,6 +20,8 @@ package ubic.gemma.analysis.diff;
 
 import java.util.Collection;
 
+import org.apache.commons.lang.time.StopWatch;
+
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
 import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -90,6 +92,8 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         // differentialExpressionAnalysisService.getTopExpressionAnalysisResults( shortName, "differential", "anova",
         // null, 100 );
 
+        StopWatch watch = new StopWatch();
+        watch.start();
         Collection<ExpressionAnalysisResult> analysisResults = differentialExpressionAnalysisService
                 .getTopExpressionAnalysisResults( shortName, 100 );
 
@@ -111,6 +115,10 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         }
 
         assertFalse( analysisResults.isEmpty() );
+
+        watch.stop();
+
+        log.info( "time: " + watch.getTime() );
 
     }
 }
