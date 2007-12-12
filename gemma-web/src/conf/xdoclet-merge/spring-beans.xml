@@ -934,7 +934,7 @@ Mapping URLS to controllers
 				</bean>
 			</entry>
 			<entry
-				key="ubic.gemma.loader.expression.ExpressionExperimentLoadCommand">
+				key="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean"/>
 				</bean>

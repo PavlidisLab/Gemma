@@ -42,7 +42,6 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.grid.javaspaces.SpacesResult;
 import ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTask;
 import ubic.gemma.grid.javaspaces.expression.experiment.SpacesExpressionExperimentLoadCommand;
-import ubic.gemma.loader.expression.ExpressionExperimentLoadCommand;
 import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
@@ -66,7 +65,7 @@ import ubic.gemma.web.util.MessageUtil;
  * @version $Id$
  * @spring.bean id="expressionExperimentLoadController"
  * @spring.property name="commandName" value="expressionExperimentLoadCommand"
- * @spring.property name="commandClass" value="ubic.gemma.loader.expression.ExpressionExperimentLoadCommand"
+ * @spring.property name="commandClass" value="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand"
  * @spring.property name="validator" ref="genericBeanValidator"
  * @spring.property name="formView" value="loadExpressionExperimentForm"
  * @spring.property name="successView" value="loadExpressionExperimentProgress.html"
@@ -283,11 +282,18 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
 
         @Override
         protected ModelAndView processArrayExpressJob( ExpressionExperimentLoadCommand eeLoadCommand ) {
-            SpacesExpressionExperimentLoadCommand jsCommand = new SpacesExpressionExperimentLoadCommand( taskId,
-                    eeLoadCommand );
-
-            SpacesResult result = eeTaskProxy.execute( jsCommand );
+            SpacesResult result = process( eeLoadCommand );
             return super.processArrayExpressResult( ( ExpressionExperiment ) result.getAnswer() );
+        }
+
+        /**
+         * @param eeLoadCommand
+         * @return
+         */
+        private SpacesResult process( ExpressionExperimentLoadCommand eeLoadCommand ) {
+            SpacesExpressionExperimentLoadCommand jsCommand = createCommandObject( eeLoadCommand );
+            SpacesResult result = eeTaskProxy.execute( jsCommand );
+            return result;
         }
 
         /**
@@ -298,22 +304,21 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
         @Override
         @SuppressWarnings("unchecked")
         protected ModelAndView processGEODataJob( ExpressionExperimentLoadCommand eeLoadCommand ) {
-
-            SpacesExpressionExperimentLoadCommand jsCommand = new SpacesExpressionExperimentLoadCommand( taskId,
-                    eeLoadCommand );
-
-            SpacesResult res = eeTaskProxy.execute( jsCommand );
-            Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) res.getAnswer();
-            return super.processGeoLoadResult( result );
+            SpacesResult result = process( eeLoadCommand );
+            return super.processGeoLoadResult( ( Collection<ExpressionExperiment> ) result.getAnswer() );
         }
 
         @Override
         @SuppressWarnings("unchecked")
         protected ModelAndView processPlatformOnlyJob( ExpressionExperimentLoadCommand eeLoadCommand ) {
-            SpacesExpressionExperimentLoadCommand jsCommand = new SpacesExpressionExperimentLoadCommand( taskId,
-                    eeLoadCommand );
-            SpacesResult result = eeTaskProxy.execute( jsCommand );
-            return super.processArrayDesignResult( ( Collection<ArrayDesign> ) result );
+            SpacesResult result = process( eeLoadCommand );
+            return super.processArrayDesignResult( ( Collection<ArrayDesign> ) result.getAnswer() );
+        }
+
+        private SpacesExpressionExperimentLoadCommand createCommandObject( ExpressionExperimentLoadCommand eelc ) {
+            return new SpacesExpressionExperimentLoadCommand( taskId, eelc.isLoadPlatformOnly(), eelc
+                    .isSuppressMatching(), eelc.getAccession(), eelc.isAggressiveQtRemoval(), eelc.isArrayExpress(),
+                    eelc.getArrayDesignName() );
         }
 
     }

@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.loader.expression;
+package ubic.gemma.web.controller.expression.experiment;
 
 import java.io.Serializable;
 import java.util.Collection;

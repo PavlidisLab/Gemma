@@ -35,7 +35,6 @@ import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.apps.LoadExpressionDataCli;
 import ubic.gemma.grid.javaspaces.SpacesResult;
-import ubic.gemma.loader.expression.ExpressionExperimentLoadCommand;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
 import ubic.gemma.util.grid.javaspaces.SpacesUtil;
 import ubic.gemma.util.grid.javaspaces.entry.SpacesProgressEntry;
@@ -173,13 +172,10 @@ public class ExpressionExperimentLoadSpacesMasterCLI extends LoadExpressionDataC
                 ExpressionExperimentLoadTaskImpl eeTaskImpl = ( ExpressionExperimentLoadTaskImpl ) this
                         .getBean( "taskBean" );
 
-                ExpressionExperimentLoadCommand command = new ExpressionExperimentLoadCommand( accession, platformOnly,
-                        doMatching, aggressive, false );
+                SpacesExpressionExperimentLoadCommand command = new SpacesExpressionExperimentLoadCommand( eeTaskImpl
+                        .getTaskId(), platformOnly, !doMatching, accession, aggressive, false, null );
 
-                SpacesExpressionExperimentLoadCommand jsCommand = new SpacesExpressionExperimentLoadCommand( eeTaskImpl
-                        .getTaskId(), command );
-
-                res = proxy.execute( jsCommand );
+                res = proxy.execute( command );
 
                 stopwatch.stop();
                 long wt = stopwatch.getTime();

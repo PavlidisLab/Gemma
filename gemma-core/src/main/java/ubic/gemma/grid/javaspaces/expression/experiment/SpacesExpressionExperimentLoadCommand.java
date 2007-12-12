@@ -21,7 +21,6 @@ package ubic.gemma.grid.javaspaces.expression.experiment;
 import java.io.Serializable;
 
 import ubic.gemma.grid.javaspaces.SpacesCommand;
-import ubic.gemma.loader.expression.ExpressionExperimentLoadCommand;
 
 /**
  * @author keshav
@@ -85,17 +84,21 @@ public class SpacesExpressionExperimentLoadCommand extends SpacesCommand impleme
     }
 
     /**
+     * NOTE: we can't pass in a ExpressionExperimentLoadCommand, it's defined in the web module, which messes up the
+     * configuration.
+     * 
      * @param taskId
      * @param command
      */
-    public SpacesExpressionExperimentLoadCommand( String taskId, ExpressionExperimentLoadCommand command ) {
+    public SpacesExpressionExperimentLoadCommand( String taskId, boolean loadPlatformOnly, boolean suppressMatching,
+            String accession, boolean aggressiveQtRemoval, boolean isArrayExpress, String arrayDesignName ) {
         super( taskId );
-        this.loadPlatformOnly = command.isLoadPlatformOnly();
-        this.suppressMatching = command.isSuppressMatching();
-        this.accession = command.getAccession();
-        this.aggressiveQtRemoval = command.isAggressiveQtRemoval();
-        this.isArrayExpress = command.isArrayExpress();
-        this.arrayDesignName = command.getArrayDesignName();
+        this.loadPlatformOnly = loadPlatformOnly;
+        this.suppressMatching = suppressMatching;
+        this.accession = accession;
+        this.aggressiveQtRemoval = aggressiveQtRemoval;
+        this.isArrayExpress = isArrayExpress;
+        this.arrayDesignName = arrayDesignName;
     }
 
     public boolean isArrayExpress() {

@@ -1,6 +1,6 @@
 <%@ include file="/common/taglibs.jsp"%>
 <jsp:useBean id="command" scope="request"
-	class="ubic.gemma.loader.expression.ExpressionExperimentLoadCommand" />
+	class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand" />
 <head>
 	<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
 	<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
@@ -13,7 +13,7 @@
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 
-<%--
+	<%--
 Note: to get the command object updated with values from the form one has to update the loadExpressionExperiment.js file as it builds the command obj on the fly
 by getting the info it needs from the dom.  The initbinder method in the controller never gets called. 
  --%>
@@ -43,7 +43,7 @@ by getting the info it needs from the dom.  The initbinder method in the control
 
 <fmt:message key="expressionExperimentLoad.message" />
 
-<div id="messages" style="margin:10px;width:400px"></div>
+<div id="messages" style="margin: 10px; width: 400px"></div>
 <div id="taskId" style="display: none;"></div>
 
 <table class="detail">
@@ -57,26 +57,26 @@ by getting the info it needs from the dom.  The initbinder method in the control
 				<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
 			</spring:bind>
 		</td>
-	</tr>	
+	</tr>
 	<tr>
 		<th>
-			<Gemma:label  key="expressionExperimentLoad.arrayExpress" />
+			<Gemma:label key="expressionExperimentLoad.arrayExpress" />
 			<a class="helpLink" href="?"
 				onclick="showHelpTip(event, 'Check if data is to come from ArrayExpress.'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
 		</th>
 		<td align="left">
-			<spring:bind path="command.arrayExpress">	
-				<input type="hidden" name="_<c:out value="${status.expression}"/>">			
+			<spring:bind path="command.arrayExpress">
+				<input type="hidden" name="_<c:out value="${status.expression}"/>">
 				<input id="arrayExpress" align="left" type="checkbox" name="<c:out value="${status.expression}"/>" value="true"
-				      <c:if test="${status.value}">checked</c:if> />
+					<c:if test="${status.value}">checked</c:if> />
 				<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
 			</spring:bind>
 		</td>
-	</tr>		
+	</tr>
 	<tr>
 		<th>
-			<Gemma:label  key="expressionExperimentLoad.platformOnly" />
+			<Gemma:label key="expressionExperimentLoad.platformOnly" />
 			<a class="helpLink" href="?"
 				onclick="showHelpTip(event, 'Load an array design only, not  expression data.'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
@@ -92,7 +92,7 @@ by getting the info it needs from the dom.  The initbinder method in the control
 	</tr>
 	<tr>
 		<th>
-			<Gemma:label  key="expressionExperimentLoad.suppressMatching" />
+			<Gemma:label key="expressionExperimentLoad.suppressMatching" />
 			<a class="helpLink" href="?"
 				onclick="showHelpTip(event, 'Check this box if you know that samples were run on only one platform each. Otherwise an attempt will be made to identify biological replicates on different platforms.'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
@@ -106,34 +106,33 @@ by getting the info it needs from the dom.  The initbinder method in the control
 			</spring:bind>
 		</td>
 	</tr>
-	
-	
-	<tr>
-				<th>
-					<Gemma:label  key="expressionExperimentLoad.arrayDesign" />
-				</th>
-				<td>
-				<spring:bind
-					path="expressionExperimentLoadCommand.arrayDesigns">
-					<select id="arrayDesign" name="${status.expression}" multiple size='5' >
-						<c:forEach items="${arrayDesigns}" var="arrayDesign">
-							<option value="${arrayDesign.name}">
-								${arrayDesign.name}
-							</option>
-						</c:forEach>
-					</select>
-					<span class="fieldError">${status.errorMessage}</span>
-				</spring:bind>
 
-			</td>
+
+	<tr>
+		<th>
+			<Gemma:label key="expressionExperimentLoad.arrayDesign" />
+		</th>
+		<td>
+			<spring:bind path="expressionExperimentLoadCommand.arrayDesigns">
+				<select id="arrayDesign" name="${status.expression}" multiple size='5'>
+					<c:forEach items="${arrayDesigns}" var="arrayDesign">
+						<option value="${arrayDesign.name}">
+							${arrayDesign.name}
+						</option>
+					</c:forEach>
+				</select>
+				<span class="fieldError">${status.errorMessage}</span>
+			</spring:bind>
+
+		</td>
 	</tr>
 	<tr>
-		<td colspan="2" style="padding:10px" align="center" class="buttonBar"  >
+		<td colspan="2" style="padding: 10px" align="center" class="buttonBar">
 			<div id="upload-button"></div>
-		 </td>
+		</td>
 	</tr>
 </table>
 
-<div id="progress-area" style="padding:5px;"></div>
+<div id="progress-area" style="padding: 5px;"></div>
 
 <validate:javascript formName="expressionExperimentLoad" staticJavascript="false" />
