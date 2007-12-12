@@ -1,3 +1,6 @@
 .deps
 .libs
 .Rhistory
+Blat.lo
+libBlat.la
+
