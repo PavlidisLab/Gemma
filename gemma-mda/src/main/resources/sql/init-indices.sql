@@ -16,5 +16,3 @@ alter table CHARACTERISTIC ADD INDEX value (VALUE);
 alter table CHARACTERISTIC ADD INDEX category (CATEGORY);
 alter table CHARACTERISTIC ADD INDEX valueUri (VALUE_URI);
 alter table CHARACTERISTIC ADD INDEX categoryUri (CATEGORY_URI);
--- Next is not an index, but needed to allow sequences to be long.
-alter table BIO_SEQUENCE modify SEQUENCE LONGTEXT;

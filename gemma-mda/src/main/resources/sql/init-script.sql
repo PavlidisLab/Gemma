@@ -10,6 +10,11 @@ ALTER TABLE CHROMOSOME_FEATURE MODIFY NCBI_ID varchar(255) character set latin1 
 -- alter GENE_ALIAS for case insensitive search
 ALTER TABLE GENE_ALIAS MODIFY ALIAS varchar(255) character set latin1 default NULL;
 
+-- wider columns.
+alter table BIO_SEQUENCE modify SEQUENCE LONGTEXT;
+alter table JOB_INFO modify MESSAGES LONGTEXT;
+
+
 -- all of these are used.
 insert into AUDIT_TRAIL VALUES (); 
 insert into AUDIT_TRAIL VALUES (); 
