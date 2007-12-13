@@ -457,6 +457,20 @@ Mapping URLS to controllers
 					</property>
 				</bean>
 			</entry>
+			<entry key="GeoBrowserService">
+				<bean class="org.directwebremoting.spring.CreatorConfig">
+					<property name="creator">
+						<bean class="org.directwebremoting.spring.BeanCreator">
+							<property name="bean" ref="geoBrowserService" />
+						</bean>
+					</property>
+					<property name="includes">
+						<list>
+							<value>getDetails</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
 		</map>
 	</property>
 	<property name="converters">

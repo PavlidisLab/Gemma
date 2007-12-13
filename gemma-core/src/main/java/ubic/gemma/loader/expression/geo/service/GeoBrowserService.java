@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+import ubic.gemma.loader.entrez.EutilFetch;
 import ubic.gemma.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -93,6 +94,20 @@ public class GeoBrowserService {
         }
 
         return records;
+    }
+
+    /**
+     * Get details from GEO about an accession.
+     * 
+     * @param accession
+     * @return
+     */
+    public String getDetails( String accession ) {
+        /*
+         * The maxrecords is > 1 because it return platforms as well (and there are series with as many as 13 platforms
+         * ... leaving some headroom)
+         */
+        return EutilFetch.fetch( "gds", accession, 25 );
     }
 
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {

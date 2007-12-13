@@ -42,8 +42,10 @@ public class GeoRecordWrapper extends TableDecorator {
 
         if ( record.getCorrespondingExperiments().size() == 0 ) {
             String accession = record.getGeoAccession();
-            return "<strong><form method=\"POST\" action=\"/Gemma/loadExpressionExperiment.html\"><input type=\"hidden\" name=\"accession\" value=\""
-                    + accession + "\" /><input type=\"submit\" value=\"Load\" /></form></strong>";
+            return "<div id=\"upload-button.notyet\">Sorry</div>";
+            // return "<strong><form method=\"POST\" action=\"/Gemma/loadExpressionExperiment.html\"><input
+            // type=\"hidden\" name=\"accession\" value=\""
+            // + accession + "\" /><input type=\"submit\" value=\"Load\" /></form></strong>";
         } else {
             StringBuilder buf = new StringBuilder();
             for ( ExpressionExperiment ee : record.getCorrespondingExperiments() ) {
@@ -53,6 +55,12 @@ public class GeoRecordWrapper extends TableDecorator {
             }
             return buf.toString();
         }
+    }
+
+    public String getDetails() {
+        GeoRecord record = ( GeoRecord ) getCurrentRowObject();
+        String accession = record.getGeoAccession();
+        return "<a href=\"#\" onClick=\"showDetails(\'" + accession + "\')\">Details</a>";
     }
 
     /**
