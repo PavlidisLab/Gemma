@@ -42,10 +42,7 @@ public class GeoRecordWrapper extends TableDecorator {
 
         if ( record.getCorrespondingExperiments().size() == 0 ) {
             String accession = record.getGeoAccession();
-            return "<div id=\"upload-button.notyet\">Sorry</div>";
-            // return "<strong><form method=\"POST\" action=\"/Gemma/loadExpressionExperiment.html\"><input
-            // type=\"hidden\" name=\"accession\" value=\""
-            // + accession + "\" /><input type=\"submit\" value=\"Load\" /></form></strong>";
+            return "<input type=\"button\" value=\"Load\" " + "\" onClick=\"load('" + accession + "')\" >";
         } else {
             StringBuilder buf = new StringBuilder();
             for ( ExpressionExperiment ee : record.getCorrespondingExperiments() ) {

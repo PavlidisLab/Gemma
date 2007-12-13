@@ -47,7 +47,7 @@ public class EutilFetch {
 
     /**
      * 
-     * @param db e.g., geo.
+     * @param db e.g., gds.
      * @param searchString
      * @param limit - Maximum number of records to return.
      * @return
@@ -55,7 +55,6 @@ public class EutilFetch {
     public static String fetch( String db, String searchString, int limit ) {
         try {
             URL searchUrl = new URL( ESEARCH + db + "&usehistory=y&term=" + searchString );
-            System.err.println( searchUrl );
             URLConnection conn = searchUrl.openConnection();
             conn.connect();
             InputStream is = conn.getInputStream();
@@ -85,8 +84,6 @@ public class EutilFetch {
 
             URL fetchUrl = new URL( EFETCH + db + "&report=docsum&mode=text&query_key=" + queryId + "&WebEnv=" + cookie
                     + "&retmax=" + limit );
-
-            System.err.println( fetchUrl );
 
             conn = fetchUrl.openConnection();
             conn.connect();
