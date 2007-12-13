@@ -45,7 +45,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author keshav
  * @version $Id$
  */
-public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractAnalyzer {
+public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
     protected Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
 
@@ -139,6 +139,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractAnalyzer {
         }
 
         expressionAnalysis.setResultSets( resultSets );
+        this.setAnalysisMetadata( expressionAnalysis, this.getClass().getSimpleName(), DIFFERENTIAL_EXPRESSION );
 
         return expressionAnalysis;
     }

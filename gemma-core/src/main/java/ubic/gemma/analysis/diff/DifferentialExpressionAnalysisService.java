@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -49,15 +50,17 @@ import ubic.gemma.util.ExpressionAnalysisResultComparator;
  */
 public class DifferentialExpressionAnalysisService {
 
+    private static final String DIFFERENTIAL_EXPRESSION = "differential";
+    private static final String ONE_WAY_ANOVA = "one";
+    private static final String TWO_WAY_ANOVA = "two";
     private static final int NUM_RESULT_SETS_OWA = 1;// num one way anova sets
-    private static final int NUM_FACTORS_OWA = 1;// num one way anova factors
-    private Log log = LogFactory.getLog( this.getClass() );
-    ExpressionExperimentService expressionExperimentService = null;
 
-    DifferentialExpressionAnalysis differentialExpressionAnalysis = null;
+    private Log log = LogFactory.getLog( this.getClass() );
+    private ExpressionExperimentService expressionExperimentService = null;
+    private DifferentialExpressionAnalysis differentialExpressionAnalysis = null;
 
     /**
-     * Returns the top persistent analysis results for the experiment with shortName.
+     * Returns the top results of a one way anova for the experiment with shortName.
      * <p>
      * If the expression experiment given by shortName is not found, returns null.
      * <p>
@@ -67,7 +70,7 @@ public class DifferentialExpressionAnalysisService {
      * @param top
      * @return
      */
-    public Collection<ExpressionAnalysisResult> getTopExpressionAnalysisResults( String shortName, int top ) {
+    public Collection<ExpressionAnalysisResult> getTopResults( String shortName, int top ) {
 
         ExpressionExperiment ee = expressionExperimentService.findByShortName( shortName );
         if ( ee == null ) {
@@ -82,65 +85,85 @@ public class DifferentialExpressionAnalysisService {
             return null;
         }
 
-        // FIXME for now, as a test, just do something stupid and use the first analysis.
-        ExpressionAnalysis analysis = analyses.iterator().next();
+        ExpressionAnalysis analysis = confirmAnalysisExists( analyses, ONE_WAY_ANOVA );
 
-        Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
+        if ( analysis == null ) {
+            log.error( "One way anova differential expression analysis not found for experiment " + shortName
+                    + ".  Returning ..." );
+            return null;
+        }
 
         Collection<ExpressionAnalysisResultSet> resultSets = analysis.getResultSets();
 
-        Collection<ExpressionAnalysisResult> analysisResults = null;
+        log.info( "Getting one way anova results for experiment: " + shortName );
 
-        int numFactors = factors.size();
-        if ( numFactors == NUM_FACTORS_OWA ) {
-            log.info( "Getting one way anova results for experiment: " + shortName );
+        if ( resultSets.size() != NUM_RESULT_SETS_OWA )
+            throw new RuntimeException( "Invalid number of result sets for analysis for experiment: " + shortName );
 
-            if ( resultSets.size() != NUM_RESULT_SETS_OWA )
-                throw new RuntimeException( "Invalid number of result sets for analysis for experiment: " + shortName );
+        ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
 
-            ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
+        Collection<ExpressionAnalysisResult> analysisResults = resultSet.getResults();
 
-            analysisResults = resultSet.getResults();
-        } else {// FIXME picking one factor randomly for now
-            log.info( "Getting two way anova results for experiment: " + shortName );
+        top = setTopLimit( shortName, top, analysisResults );
 
-            for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
-                ExperimentalFactor factor = resultSet.getExperimentalFactor();
-                if ( factor == null ) {
-                    log.debug( "Null experimental factor for result set.  Skipping ..." );
-                    continue;
-                }
-                log.info( "Returning top results for the randomly selected factor " + factor );
-
-                analysisResults = resultSet.getResults();
-            }
-        }
-
-        if ( top > analysisResults.size() ) {
-            log.warn( "Number of desired results, " + top
-                    + ", is greater than the number of analysis results for experiment with short name " + shortName
-                    + ".  Will return all results." );
-            top = analysisResults.size();
-        }
-
-        // FIXME This is a silly hack. Return a list with analysis.getAnalysisResults since you know this has to be
-        // sorted (don't want to edit the model just yet).
-        ExpressionAnalysisResult[] analysisResultsAsArray = analysisResults
-                .toArray( new ExpressionAnalysisResult[analysisResults.size()] );
-        List<ExpressionAnalysisResult> analysisResultsAsList = Arrays.asList( analysisResultsAsArray );
-        // end fixme
-
-        Collections.sort( analysisResultsAsList, ExpressionAnalysisResultComparator.Factory.newInstance() );
-
-        Iterator<ExpressionAnalysisResult> iter = analysisResultsAsList.iterator();
-
-        List<ExpressionAnalysisResult> topResults = new ArrayList<ExpressionAnalysisResult>();
-
-        for ( int i = 0; i < top; i++ ) {
-            topResults.add( iter.next() );
-        }
+        List<ExpressionAnalysisResult> topResults = sortResults( top, analysisResults );
 
         return topResults;
+    }
+
+    /**
+     * Returns the top results of a two way anova for an experiment with shortName and the given factor.
+     * 
+     * @param shortName
+     * @param top
+     * @param factor
+     * @return
+     */
+    public Collection<ExpressionAnalysisResult> getTopResultsForFactor( String shortName, int top, String factorName ) {
+
+        ExpressionExperiment ee = expressionExperimentService.findByShortName( shortName );
+        if ( ee == null ) {
+            log.error( "Could not find expeiment with name: " + shortName + ".  Returning ..." );
+            return null;
+        }
+        expressionExperimentService.thawLite( ee );
+
+        Collection<ExpressionAnalysis> analyses = this.getPersistentExpressionAnalyses( ee );
+        if ( analyses == null ) {
+            log.error( "No analyses associated with experiment: " + shortName );
+            return null;
+        }
+
+        ExpressionAnalysis analysis = confirmAnalysisExists( analyses, TWO_WAY_ANOVA );
+
+        if ( analysis == null ) {
+            log.error( "Two way anova differential expression analysis not found for experiment " + shortName
+                    + ".  Returning ..." );
+            return null;
+        }
+
+        Collection<ExpressionAnalysisResultSet> resultSets = analysis.getResultSets();
+
+        log.info( "Getting two way anova results for experiment: " + shortName );
+
+        for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
+            ExperimentalFactor factor = resultSet.getExperimentalFactor();
+            if ( factor == null ) {
+                log.debug( "Null experimental factor for result set.  Skipping ..." );
+                continue;
+            }
+            if ( StringUtils.contains( factor.getName(), factorName ) ) {
+                log.info( "Returning top results for factor with" + "\'" + factorName + "\'"
+                        + " in the name (or description)." );
+                Collection<ExpressionAnalysisResult> analysisResults = resultSet.getResults();
+                top = setTopLimit( shortName, top, analysisResults );
+                List<ExpressionAnalysisResult> topResults = sortResults( top, analysisResults );
+                return topResults;
+            }
+
+        }
+
+        return null;
     }
 
     /**
@@ -178,6 +201,74 @@ public class DifferentialExpressionAnalysisService {
         }
 
         return expressionAnalyses;
+    }
+
+    /**
+     * @param analyses
+     * @param analysis
+     * @param analysisType
+     * @return
+     */
+    private ExpressionAnalysis confirmAnalysisExists( Collection<ExpressionAnalysis> analyses, String analysisType ) {
+        ExpressionAnalysis analysis = null;
+        for ( ExpressionAnalysis a : analyses ) {
+
+            if ( StringUtils.equalsIgnoreCase( a.getName().toLowerCase(), DIFFERENTIAL_EXPRESSION.toLowerCase() )
+                    || StringUtils.contains( a.getDescription().toLowerCase(), DIFFERENTIAL_EXPRESSION.toLowerCase() ) ) {
+
+                if ( StringUtils.contains( a.getName().toLowerCase(), analysisType.toLowerCase() )
+                        || StringUtils.contains( a.getDescription().toLowerCase(), analysisType.toLowerCase() ) ) {
+                    analysis = a;
+                    break;
+                }
+            }
+        }
+        return analysis;
+    }
+
+    /**
+     * The analysisResults are sorted.
+     * 
+     * @param top
+     * @param analysisResults
+     * @return
+     */
+    private List<ExpressionAnalysisResult> sortResults( int top, Collection<ExpressionAnalysisResult> analysisResults ) {
+        // FIXME This is a silly hack. Return a list with analysis.getAnalysisResults since you know this has to be
+        // sorted (don't want to edit the model just yet).
+        ExpressionAnalysisResult[] analysisResultsAsArray = analysisResults
+                .toArray( new ExpressionAnalysisResult[analysisResults.size()] );
+        List<ExpressionAnalysisResult> analysisResultsAsList = Arrays.asList( analysisResultsAsArray );
+        // end fixme
+
+        Collections.sort( analysisResultsAsList, ExpressionAnalysisResultComparator.Factory.newInstance() );
+
+        Iterator<ExpressionAnalysisResult> iter = analysisResultsAsList.iterator();
+
+        List<ExpressionAnalysisResult> topResults = new ArrayList<ExpressionAnalysisResult>();
+
+        for ( int i = 0; i < top; i++ ) {
+            topResults.add( iter.next() );
+        }
+        return topResults;
+    }
+
+    /**
+     * If the number of desired results (top) is greater than the number of analysis results, all results are returned.
+     * 
+     * @param shortName
+     * @param top
+     * @param analysisResults
+     * @return
+     */
+    private int setTopLimit( String shortName, int top, Collection<ExpressionAnalysisResult> analysisResults ) {
+        if ( top > analysisResults.size() ) {
+            log.warn( "Number of desired results, " + top
+                    + ", is greater than the number of analysis results for experiment with short name " + shortName
+                    + ".  Will return all results." );
+            top = analysisResults.size();
+        }
+        return top;
     }
 
     /**

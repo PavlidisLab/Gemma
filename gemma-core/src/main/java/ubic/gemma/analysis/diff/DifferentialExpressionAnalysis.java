@@ -69,7 +69,7 @@ public class DifferentialExpressionAnalysis {
      */
     public void analyze( ExpressionExperiment expressionExperiment ) {
 
-        AbstractAnalyzer analyzer = determineAnalysis( expressionExperiment );
+        AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment );
 
         expressionAnalysis = analyzer.getExpressionAnalysis( expressionExperiment );
 
@@ -92,7 +92,7 @@ public class DifferentialExpressionAnalysis {
      * @param expressionExperiment
      * @return
      */
-    protected AbstractAnalyzer determineAnalysis( ExpressionExperiment expressionExperiment ) {
+    protected AbstractDifferentialExpressionAnalyzer determineAnalysis( ExpressionExperiment expressionExperiment ) {
 
         Collection<ExperimentalFactor> experimentalFactors = expressionExperiment.getExperimentalDesign()
                 .getExperimentalFactors();

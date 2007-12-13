@@ -60,7 +60,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @author keshav
  * @version $Id$
  */
-public class TTestAnalyzer extends AbstractAnalyzer {
+public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
     private Log log = LogFactory.getLog( this.getClass() );
 
@@ -189,6 +189,8 @@ public class TTestAnalyzer extends AbstractAnalyzer {
         resultSets.add( resultSet );
 
         expressionAnalysis.setResultSets( resultSets );
+
+        this.setAnalysisMetadata( expressionAnalysis, this.getClass().getSimpleName(), DIFFERENTIAL_EXPRESSION );
 
         return expressionAnalysis;
     }

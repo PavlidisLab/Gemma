@@ -21,8 +21,6 @@ package ubic.gemma.analysis.diff;
 import ubic.basecode.util.RCommand;
 import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.analysis.util.RCommanderWrapper;
-import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * An abstract analyzer to be extended by analyzers which will make use of R.
@@ -38,12 +36,6 @@ public abstract class AbstractAnalyzer {
     protected RCommand rc = null;
 
     protected AnalysisHelperService analysisHelperService = null;
-
-    /**
-     * @param expressionExperiment
-     * @return
-     */
-    public abstract ExpressionAnalysis getExpressionAnalysis( ExpressionExperiment expressionExperiment );
 
     /**
      * 

@@ -62,7 +62,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @author keshav
  * @version $Id$
  */
-public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
+public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
     private Log log = LogFactory.getLog( this.getClass() );
 
@@ -200,6 +200,8 @@ public class OneWayAnovaAnalyzer extends AbstractAnalyzer {
         resultSets.add( resultSet );
 
         expressionAnalysis.setResultSets( resultSets );
+
+        this.setAnalysisMetadata( expressionAnalysis, this.getClass().getSimpleName(), DIFFERENTIAL_EXPRESSION );
 
         return expressionAnalysis;
     }

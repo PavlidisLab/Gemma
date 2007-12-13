@@ -34,7 +34,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
 
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
 
-    private String shortName = "GSE1077";
+    private String shortName = "GSE1997";
 
     /*
      * (non-Javadoc)
@@ -89,13 +89,16 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
      */
     public void testGetTopPersistentAnalysisResults() throws Exception {
 
-        // differentialExpressionAnalysisService.getTopExpressionAnalysisResults( shortName, "differential", "anova",
-        // null, 100 );
-
         StopWatch watch = new StopWatch();
         watch.start();
+
+        /* eg. use GSE1077 */
+        // Collection<ExpressionAnalysisResult> analysisResults = differentialExpressionAnalysisService.getTopResults(
+        // shortName, 100 );
+
+        /* eg. use GSE1997 */
         Collection<ExpressionAnalysisResult> analysisResults = differentialExpressionAnalysisService
-                .getTopExpressionAnalysisResults( shortName, 100 );
+                .getTopResultsForFactor( shortName, 100, "protocol" );
 
         if ( analysisResults == null ) {
             log.warn( "Could not find analyses for expression experiment with short name " + shortName
