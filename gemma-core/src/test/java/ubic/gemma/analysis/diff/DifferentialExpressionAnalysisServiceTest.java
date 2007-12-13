@@ -59,31 +59,6 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         super.onTearDownInTransaction();
     }
 
-    // /**
-    // * @throws Exception
-    // */
-    // public void testGetPersistentAnalyses() throws Exception {
-    //
-    // Collection<Analysis> analyses = differentialExpressionAnalysisService.getPersistentAnalyses( shortName );
-    //
-    // if ( analyses == null ) {
-    // log.warn( "Could not find analyses for expression experiment with short name " + shortName
-    // + ". Expression experiment probably does not exist. Skipping test ..." );
-    // return;
-    // }
-    //
-    // log.debug( analyses.size() );
-    //
-    // Analysis analysis = analyses.iterator().next();
-    //
-    // ExpressionAnalysis expressionAnalysis = ( ExpressionAnalysis ) analysis;
-    // Collection<ExpressionAnalysisResult> results = expressionAnalysis.getAnalysisResults();
-    // log.debug( results.size() );
-    //
-    // assertFalse( analyses.isEmpty() );
-    //
-    // }
-
     /**
      * @throws Exception
      */
