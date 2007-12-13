@@ -271,3 +271,7 @@ a.info:hover span{ /*the span will display just on :hover state*/
     background-color:#cff; color:#000;
     text-align: center;
 }
+
+.x-grid-row-selected a {
+	color: white !important;
+}
