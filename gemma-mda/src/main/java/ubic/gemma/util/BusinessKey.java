@@ -25,6 +25,7 @@ import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Conjunction;
 import org.hibernate.criterion.CriteriaSpecification;
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Restrictions;
 
@@ -106,8 +107,8 @@ public class BusinessKey {
      * @param databaseEntry
      * @param attributeName
      */
-    public static void attachCriteria( Criteria queryObject, DatabaseEntry databaseEntry, String attributeName ) {
-        Criteria externalRef = queryObject.createCriteria( attributeName );
+    public static void attachCriteria( DetachedCriteria queryObject, DatabaseEntry databaseEntry, String attributeName ) {
+        DetachedCriteria externalRef = queryObject.createCriteria( attributeName );
         addRestrictions( externalRef, databaseEntry );
     }
 
@@ -748,7 +749,7 @@ public class BusinessKey {
      * @param queryObject
      * @param databaseEntry
      */
-    public static void addRestrictions( Criteria queryObject, DatabaseEntry databaseEntry ) {
+    public static void addRestrictions( DetachedCriteria queryObject, DatabaseEntry databaseEntry ) {
         queryObject.add( Restrictions.eq( "accession", databaseEntry.getAccession() ) ).createCriteria(
                 "externalDatabase" ).add( Restrictions.eq( "name", databaseEntry.getExternalDatabase().getName() ) );
     }

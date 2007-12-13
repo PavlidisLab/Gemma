@@ -28,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
 import org.hibernate.FlushMode;
+import org.hibernate.criterion.DetachedCriteria;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.association.BioSequence2GeneProduct;
@@ -41,393 +42,353 @@ import ubic.gemma.util.BusinessKey;
  * @version $Id$
  * @see ubic.gemma.model.genome.biosequence.BioSequence
  */
-public class BioSequenceDaoImpl extends
-		ubic.gemma.model.genome.biosequence.BioSequenceDaoBase {
+public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioSequenceDaoBase {
 
-	private static Log log = LogFactory.getLog(BioSequenceDaoImpl.class
-			.getName());
+    private static Log log = LogFactory.getLog( BioSequenceDaoImpl.class.getName() );
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#find(ubic.gemma.model.genome.biosequence.BioSequence)
-	 */
-	@SuppressWarnings("unchecked")
-	@Override
-	public BioSequence find(BioSequence bioSequence) {
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#find(ubic.gemma.model.genome.biosequence.BioSequence)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public BioSequence find( BioSequence bioSequence ) {
 
-		BusinessKey.checkValidKey(bioSequence);
+        BusinessKey.checkValidKey( bioSequence );
 
-		try {
+        try {
 
-			Criteria queryObject = BusinessKey.createQueryObject(this
-					.getSession(false), bioSequence);
+            Criteria queryObject = BusinessKey.createQueryObject( this.getSession( false ), bioSequence );
 
-			java.util.List results = queryObject.list();
-			Object result = null;
-			if (results != null) {
-				if (results.size() > 1) {
-					debug(results);
+            java.util.List results = queryObject.list();
+            Object result = null;
+            if ( results != null ) {
+                if ( results.size() > 1 ) {
+                    debug( results );
 
-					// Try to find the best match. See BusinessKey for more
-					// explanation of why this is needed.
-					BioSequence match = null;
-					for (BioSequence res : (Collection<BioSequence>) results) {
-						if (res.equals(bioSequence)) {
-							if (match != null) {
-								log
-										.warn("More than one sequence in the database matches "
-												+ bioSequence);
-								throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-										"More than one instance of '"
-												+ BioSequence.class.getName()
-												+ "' was found when executing query for "
-												+ bioSequence);
-							}
-							match = res;
-						}
-					}
+                    // Try to find the best match. See BusinessKey for more
+                    // explanation of why this is needed.
+                    BioSequence match = null;
+                    for ( BioSequence res : ( Collection<BioSequence> ) results ) {
+                        if ( res.equals( bioSequence ) ) {
+                            if ( match != null ) {
+                                log.warn( "More than one sequence in the database matches " + bioSequence );
+                                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                                        "More than one instance of '" + BioSequence.class.getName()
+                                                + "' was found when executing query for " + bioSequence );
+                            }
+                            match = res;
+                        }
+                    }
 
-					return match;
+                    return match;
 
-				} else if (results.size() == 1) {
-					result = results.iterator().next();
-				}
-			}
-			return (BioSequence) result;
-		} catch (org.hibernate.HibernateException ex) {
-			throw super.convertHibernateAccessException(ex);
-		}
-	}
+                } else if ( results.size() == 1 ) {
+                    result = results.iterator().next();
+                }
+            }
+            return ( BioSequence ) result;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#findOrCreate(ubic.gemma.model.genome.biosequence.BioSequence)
-	 */
-	@Override
-	public BioSequence findOrCreate(BioSequence bioSequence) {
-		BioSequence existingBioSequence = this.find(bioSequence);
-		if (existingBioSequence != null) {
-			return existingBioSequence;
-		}
-		if (log.isDebugEnabled())
-			log.debug("Creating new: " + bioSequence);
-		return (BioSequence) create(bioSequence);
-	}
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#findOrCreate(ubic.gemma.model.genome.biosequence.BioSequence)
+     */
+    @Override
+    public BioSequence findOrCreate( BioSequence bioSequence ) {
+        BioSequence existingBioSequence = this.find( bioSequence );
+        if ( existingBioSequence != null ) {
+            return existingBioSequence;
+        }
+        if ( log.isDebugEnabled() ) log.debug( "Creating new: " + bioSequence );
+        return ( BioSequence ) create( bioSequence );
+    }
 
-	/**
-	 * @param results
-	 */
-	private void debug(List results) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("\nMultiple BioSequences found matching query:\n");
-		for (Object object : results) {
-			BioSequence entity = (BioSequence) object;
-			sb.append("\tID=" + entity.getId() + " Name=" + entity.getName());
-			if (StringUtils.isNotBlank(entity.getSequence()))
-				sb.append(" Sequence="
-						+ entity.getSequence()
-								.substring(
-										0,
-										Math.min(10, entity.getSequence()
-												.length() - 1)) + " ...");
-			if (entity.getSequenceDatabaseEntry() != null)
-				sb.append(" acc="
-						+ entity.getSequenceDatabaseEntry().getAccession());
-			sb.append("\n");
-		}
-		log.info(sb.toString());
-	}
+    /**
+     * @param results
+     */
+    private void debug( List results ) {
+        StringBuilder sb = new StringBuilder();
+        sb.append( "\nMultiple BioSequences found matching query:\n" );
+        for ( Object object : results ) {
+            BioSequence entity = ( BioSequence ) object;
+            sb.append( "\tID=" + entity.getId() + " Name=" + entity.getName() );
+            if ( StringUtils.isNotBlank( entity.getSequence() ) )
+                sb.append( " Sequence="
+                        + entity.getSequence().substring( 0, Math.min( 10, entity.getSequence().length() - 1 ) )
+                        + " ..." );
+            if ( entity.getSequenceDatabaseEntry() != null )
+                sb.append( " acc=" + entity.getSequenceDatabaseEntry().getAccession() );
+            sb.append( "\n" );
+        }
+        log.info( sb.toString() );
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleGetGenesByAccession(java.lang.String)
-	 */
-	@SuppressWarnings("unchecked")
-	@Override
-	protected Collection handleGetGenesByAccession(String search)
-			throws Exception {
-		Collection<Gene> genes = null;
-		final String queryString = "select distinct gene from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProductImpl as bs2gp"
-				+ " inner join bs2gp.bioSequence bs "
-				+ "inner join bs.sequenceDatabaseEntry de where gp=bs2gp.geneProduct "
-				+ " and de.accession = :search ";
-		try {
-			org.hibernate.Query queryObject = super.getSession(false)
-					.createQuery(queryString);
-			queryObject.setString("search", search);
-			genes = queryObject.list();
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleGetGenesByAccession(java.lang.String)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleGetGenesByAccession( String search ) throws Exception {
+        Collection<Gene> genes = null;
+        final String queryString = "select distinct gene from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProductImpl as bs2gp"
+                + " inner join bs2gp.bioSequence bs "
+                + "inner join bs.sequenceDatabaseEntry de where gp=bs2gp.geneProduct " + " and de.accession = :search ";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setString( "search", search );
+            genes = queryObject.list();
 
-		} catch (org.hibernate.HibernateException ex) {
-			throw super.convertHibernateAccessException(ex);
-		}
-		return genes;
-	}
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return genes;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleGetGenesByName(java.lang.String)
-	 */
-	@SuppressWarnings("unchecked")
-	@Override
-	protected Collection handleGetGenesByName(String search) throws Exception {
-		Collection<Gene> genes = null;
-		final String queryString = "select distinct gene from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProductImpl as bs2gp where gp=bs2gp.geneProduct "
-				+ " and bs2gp.bioSequence.name like :search ";
-		try {
-			org.hibernate.Query queryObject = super.getSession(false)
-					.createQuery(queryString);
-			queryObject.setString("search", search);
-			genes = queryObject.list();
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleGetGenesByName(java.lang.String)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleGetGenesByName( String search ) throws Exception {
+        Collection<Gene> genes = null;
+        final String queryString = "select distinct gene from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProductImpl as bs2gp where gp=bs2gp.geneProduct "
+                + " and bs2gp.bioSequence.name like :search ";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setString( "search", search );
+            genes = queryObject.list();
 
-		} catch (org.hibernate.HibernateException ex) {
-			throw super.convertHibernateAccessException(ex);
-		}
-		return genes;
-	}
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return genes;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleGetGenesByName(java.lang.String)
-	 */
-	@SuppressWarnings("unchecked")
-	@Override
-	protected Collection handleFindByGenes(Collection genes) throws Exception {
-		Collection<BioSequence> bs = null;
-		
-		if (genes == null || genes.isEmpty())
-			return new ArrayList();
-		
-		final String queryString = "select distinct bs" +
-				" from GeneImpl gene inner join gene.products ggp," +
-					" BioSequenceImpl bs inner join bs.bioSequence2GeneProduct bs2gp inner join bs2gp.geneProduct bsgp" +
-				" where ggp=bsgp and gene in (:genes)";
-		try {
-			org.hibernate.Query queryObject = super.getSession(false)
-					.createQuery(queryString);
-			queryObject.setParameterList("genes", genes);
-			bs = queryObject.list();
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleGetGenesByName(java.lang.String)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleFindByGenes( Collection genes ) throws Exception {
+        Collection<BioSequence> bs = null;
 
-		} catch (org.hibernate.HibernateException ex) {
-			throw super.convertHibernateAccessException(ex);
-		}
-		return bs;
-	}
+        if ( genes == null || genes.isEmpty() ) return new ArrayList();
 
-	@Override
-	protected Integer handleCountAll() throws Exception {
-		final String query = "select count(*) from BioSequenceImpl";
-		try {
-			org.hibernate.Query queryObject = super.getSession(false)
-					.createQuery(query);
+        final String queryString = "select distinct bs" + " from GeneImpl gene inner join gene.products ggp,"
+                + " BioSequenceImpl bs inner join bs.bioSequence2GeneProduct bs2gp inner join bs2gp.geneProduct bsgp"
+                + " where ggp=bsgp and gene in (:genes)";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameterList( "genes", genes );
+            bs = queryObject.list();
 
-			return (Integer) queryObject.iterate().next();
-		} catch (org.hibernate.HibernateException ex) {
-			throw super.convertHibernateAccessException(ex);
-		}
-	}
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return bs;
+    }
 
-	@Override
-	protected Collection handleFindByName(String name) throws Exception {
-		if (name == null)
-			return null;
-		final String query = "from BioSequenceImpl b where b.name = :name";
-		try {
-			org.hibernate.Query queryObject = super.getSession(false)
-					.createQuery(query);
-			queryObject.setParameter("name", name);
-			return queryObject.list();
-		} catch (org.hibernate.HibernateException ex) {
-			throw super.convertHibernateAccessException(ex);
-		}
-	}
+    @Override
+    protected Integer handleCountAll() throws Exception {
+        final String query = "select count(*) from BioSequenceImpl";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
 
-	@Override
-	public BioSequence findByAccession(DatabaseEntry databaseEntry) {
-		BusinessKey.checkValidKey(databaseEntry);
-		try {
+            return ( Integer ) queryObject.iterate().next();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
 
-			Criteria queryObject = super.getSession(false).createCriteria(
-					BioSequence.class);
+    @Override
+    protected Collection handleFindByName( String name ) throws Exception {
+        if ( name == null ) return null;
+        final String query = "from BioSequenceImpl b where b.name = :name";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
+            queryObject.setParameter( "name", name );
+            return queryObject.list();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
 
-			BusinessKey.attachCriteria(queryObject, databaseEntry,
-					"sequenceDatabaseEntry");
+    @Override
+    public BioSequence findByAccession( DatabaseEntry databaseEntry ) {
+        BusinessKey.checkValidKey( databaseEntry );
+        try {
 
-			java.util.List results = queryObject.list();
-			Object result = null;
-			if (results != null) {
-				if (results.size() > 1) {
-					debug(results);
-					log.warn("More than one instance of '"
-							+ BioSequence.class.getName()
-							+ "' was found when executing query for accession="
-							+ databaseEntry.getAccession());
+            DetachedCriteria queryObject = DetachedCriteria.forClass( DatabaseEntry.class );
+            BusinessKey.checkKey( databaseEntry );
 
-					// favor the one with name matching the accession.
-					for (Object object : results) {
-						BioSequence bs = (BioSequence) object;
-						if (bs.getName().equals(databaseEntry.getAccession())) {
-							return bs;
-						}
-					}
+            BusinessKey.addRestrictions( queryObject, databaseEntry );
 
-					throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-							"No real match frond for  '"
-									+ DatabaseEntry.class.getName()
-									+ "' was found when executing query for accession="
-									+ databaseEntry.getAccession());
+            List results = this.getHibernateTemplate().findByCriteria( queryObject );
+            Object result = null;
+            if ( results != null ) {
+                if ( results.size() > 1 ) {
+                    debug( results );
+                    log.warn( "More than one instance of '" + BioSequence.class.getName()
+                            + "' was found when executing query for accession=" + databaseEntry.getAccession() );
 
-				} else if (results.size() == 1) {
-					result = results.iterator().next();
-				} else {
-					return null;
-				}
-			}
-			return (BioSequence) result;
-		} catch (org.hibernate.HibernateException ex) {
-			throw super.convertHibernateAccessException(ex);
-		}
-	}
+                    // favor the one with name matching the accession.
+                    for ( Object object : results ) {
+                        BioSequence bs = ( BioSequence ) object;
+                        if ( bs.getName().equals( databaseEntry.getAccession() ) ) {
+                            return bs;
+                        }
+                    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleLoad(java.util.Collection)
-	 */
-	@SuppressWarnings("unchecked")
-	@Override
-	protected Collection handleLoad(Collection ids) throws Exception {
-		Collection<BioSequence> bioSequences = null;
-		final String queryString = "select distinct bs from BioSequenceImpl bs where bs.id in (:ids)";
-		try {
-			org.hibernate.Query queryObject = super.getSession(false)
-					.createQuery(queryString);
-			queryObject.setParameterList("ids", ids);
-			bioSequences = queryObject.list();
+                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                            "No real match frond for  '" + DatabaseEntry.class.getName()
+                                    + "' was found when executing query for accession=" + databaseEntry.getAccession() );
 
-		} catch (org.hibernate.HibernateException ex) {
-			throw super.convertHibernateAccessException(ex);
-		}
-		return bioSequences;
-	}
+                } else if ( results.size() == 1 ) {
+                    result = results.iterator().next();
+                } else {
+                    return null;
+                }
+            }
+            return ( BioSequence ) result;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleThaw(ubic.gemma.model.genome.biosequence.BioSequence)
-	 */
-	@Override
-	protected void handleThaw(final BioSequence bioSequence) throws Exception {
-		if (bioSequence == null)
-			return;
-		if (bioSequence.getId() == null)
-			return;
-		HibernateTemplate templ = this.getHibernateTemplate();
-		templ.execute(
-				new org.springframework.orm.hibernate3.HibernateCallback() {
-					public Object doInHibernate(org.hibernate.Session session)
-							throws org.hibernate.HibernateException {
-						session.update(bioSequence);
-						bioSequence.getBioSequence2GeneProduct().size();
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleLoad(java.util.Collection)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleLoad( Collection ids ) throws Exception {
+        Collection<BioSequence> bioSequences = null;
+        final String queryString = "select distinct bs from BioSequenceImpl bs where bs.id in (:ids)";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameterList( "ids", ids );
+            bioSequences = queryObject.list();
 
-						if (bioSequence.getTaxon() != null
-								&& bioSequence.getTaxon().getId() != null) {
-							session.update(bioSequence.getTaxon());
-						}
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return bioSequences;
+    }
 
-						DatabaseEntry dbEntry = bioSequence
-								.getSequenceDatabaseEntry();
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleThaw(ubic.gemma.model.genome.biosequence.BioSequence)
+     */
+    @Override
+    protected void handleThaw( final BioSequence bioSequence ) throws Exception {
+        if ( bioSequence == null ) return;
+        if ( bioSequence.getId() == null ) return;
+        HibernateTemplate templ = this.getHibernateTemplate();
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                session.update( bioSequence );
+                bioSequence.getBioSequence2GeneProduct().size();
 
-						if (dbEntry != null) {
-							session.update(dbEntry);
-							session.update(dbEntry.getExternalDatabase());
-						}
+                if ( bioSequence.getTaxon() != null && bioSequence.getTaxon().getId() != null ) {
+                    session.update( bioSequence.getTaxon() );
+                }
 
-						for (BioSequence2GeneProduct bs2gp : bioSequence
-								.getBioSequence2GeneProduct()) {
-							GeneProduct geneProduct = bs2gp.getGeneProduct();
-							Gene g = geneProduct.getGene();
-							if (g != null) {
-								g.getAliases().size();
-							}
-						}
+                DatabaseEntry dbEntry = bioSequence.getSequenceDatabaseEntry();
 
-						session.evict(bioSequence);
-						return null;
-					}
-				}, true);
-	}
+                if ( dbEntry != null ) {
+                    session.update( dbEntry );
+                    session.update( dbEntry.getExternalDatabase() );
+                }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleThaw(java.util.Collection)
-	 */
-	@Override
-	protected void handleThaw(final Collection bioSequences) throws Exception {
-		doThaw(bioSequences, true);
-	}
+                for ( BioSequence2GeneProduct bs2gp : bioSequence.getBioSequence2GeneProduct() ) {
+                    GeneProduct geneProduct = bs2gp.getGeneProduct();
+                    Gene g = geneProduct.getGene();
+                    if ( g != null ) {
+                        g.getAliases().size();
+                    }
+                }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleThaw(java.util.Collection)
-	 */
-	@Override
-	protected void handleThawLite(final Collection bioSequences)
-			throws Exception {
-		doThaw(bioSequences, false);
-	}
+                session.clear();
+                return null;
+            }
+        }, true );
+    }
 
-	/**
-	 * @param bioSequences
-	 * @param deep
-	 */
-	private void doThaw(final Collection bioSequences, final boolean deep) {
-		if (bioSequences == null)
-			return;
-		if (bioSequences.size() == 0)
-			return;
-		HibernateTemplate templ = this.getHibernateTemplate();
-		templ.setFetchSize(300);
-		templ.execute(
-				new org.springframework.orm.hibernate3.HibernateCallback() {
-					public Object doInHibernate(org.hibernate.Session session)
-							throws org.hibernate.HibernateException {
-						session.setCacheMode(CacheMode.IGNORE); // Don't hit the
-																// secondary
-																// cache
-						session.setFlushMode(FlushMode.MANUAL); // We're
-																// READ-ONLY so
-																// this is okay.
-						int count = 0;
-						for (Object object : bioSequences) {
-							BioSequence bioSequence = (BioSequence) object;
-							session.update(bioSequence);
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleThaw(java.util.Collection)
+     */
+    @Override
+    protected void handleThaw( final Collection bioSequences ) throws Exception {
+        doThaw( bioSequences, true );
+    }
 
-							if (deep) {
-								bioSequence.getTaxon();
-								bioSequence.getBioSequence2GeneProduct().size();
-							}
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleThaw(java.util.Collection)
+     */
+    @Override
+    protected void handleThawLite( final Collection bioSequences ) throws Exception {
+        doThaw( bioSequences, false );
+    }
 
-							DatabaseEntry dbEntry = bioSequence
-									.getSequenceDatabaseEntry();
-							if (dbEntry != null) {
-								session.update(dbEntry);
-								session.update(dbEntry.getExternalDatabase());
-							}
+    /**
+     * @param bioSequences
+     * @param deep
+     */
+    private void doThaw( final Collection bioSequences, final boolean deep ) {
+        if ( bioSequences == null ) return;
+        if ( bioSequences.size() == 0 ) return;
+        HibernateTemplate templ = this.getHibernateTemplate();
+        templ.setFetchSize( 300 );
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                session.setCacheMode( CacheMode.IGNORE ); // Don't hit the
+                // secondary
+                // cache
+                session.setFlushMode( FlushMode.MANUAL ); // We're
+                // READ-ONLY so
+                // this is okay.
+                int count = 0;
+                for ( Object object : bioSequences ) {
+                    BioSequence bioSequence = ( BioSequence ) object;
+                    session.update( bioSequence );
 
-							if (++count % 2000 == 0) {
-								log.info("Thawed " + count + " sequences ...");
-							}
+                    if ( deep ) {
+                        bioSequence.getTaxon();
+                        bioSequence.getBioSequence2GeneProduct().size();
+                    }
 
-						}
-						return null;
-					}
-				}, true);
-	}
+                    DatabaseEntry dbEntry = bioSequence.getSequenceDatabaseEntry();
+                    if ( dbEntry != null ) {
+                        session.update( dbEntry );
+                        session.update( dbEntry.getExternalDatabase() );
+                    }
+
+                    if ( ++count % 2000 == 0 ) {
+                        log.info( "Thawed " + count + " sequences ..." );
+                        session.clear();
+                    }
+
+                }
+                return null;
+            }
+        }, true );
+    }
 }

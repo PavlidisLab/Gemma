@@ -24,7 +24,7 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.Criteria;
+import org.hibernate.criterion.DetachedCriteria;
 
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.util.BusinessKey;
@@ -40,36 +40,29 @@ public class DatabaseEntryDaoImpl extends ubic.gemma.model.common.description.Da
 
     @Override
     public DatabaseEntry find( DatabaseEntry databaseEntry ) {
-        try {
-            Criteria queryObject = super.getSession( false ).createCriteria( DatabaseEntry.class );
 
-            BusinessKey.checkKey( databaseEntry );
+        DetachedCriteria queryObject = DetachedCriteria.forClass( DatabaseEntry.class );
+        BusinessKey.checkKey( databaseEntry );
 
-            BusinessKey.addRestrictions( queryObject, databaseEntry );
+        BusinessKey.addRestrictions( queryObject, databaseEntry );
 
-            java.util.List results = queryObject.list();
-            Object result = null;
-            if ( results != null ) {
-                if ( results.size() > 1 ) {
-                    log.error( debug( results ) );
+        List results = this.getHibernateTemplate().findByCriteria( queryObject );
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                log.error( debug( results ) );
 
-                    result = cleanup( databaseEntry );
-                    if ( result == null ) { // means there were no composite sequences involved.
-                        result = results.iterator().next();
-                    }
-
-                    // throw new org.springframework.dao.InvalidDataAccessResourceUsageException( results.size()
-                    // + " instances of '" + ubic.gemma.model.common.description.DatabaseEntry.class.getName()
-                    // + "' was found when executing query for " + databaseEntry + ", expected only 1" );
-
-                } else if ( results.size() == 1 ) {
+                result = cleanup( databaseEntry );
+                if ( result == null ) { // means there were no composite sequences involved.
                     result = results.iterator().next();
                 }
+
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
             }
-            return ( DatabaseEntry ) result;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
         }
+        return ( DatabaseEntry ) result;
+
     }
 
     /**
