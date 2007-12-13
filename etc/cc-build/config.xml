@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
+<!-- 
+Cruise control configuration.
+This script is out of date; we're using continuum.
+$Id$
+-->
 <cruisecontrol>
   <project name="Gemma">
     <bootstrappers>
@@ -7,7 +11,7 @@
       </currentbuildstatusbootstrapper>
     </bootstrappers>
     <modificationset>
-      <cvs localWorkingCopy="/proj/cruise-work/checkout/Gemma" cvsroot=":ext:pavlidis@adgate.cu-genome.org:/fsnode/projects/cvs/pavlab">
+      <cvs localWorkingCopy="/proj/cruise-work/checkout/Gemma" cvsroot=":ext:pavlidis@broca.ubic.ca:/cvs">
       </cvs>
     </modificationset>
     <schedule interval="300">
