@@ -78,7 +78,8 @@ public class SequenceManipulation {
             try {
                 result[i] = Integer.parseInt( strings[i] );
             } catch ( NumberFormatException e ) {
-                throw new RuntimeException( "Could not parse integer blat location from " + strings[i], e );
+                throw new RuntimeException( "Could not parse integer blat location " + blatLocations + ", from "
+                        + strings[i], e );
             }
         }
         return result;

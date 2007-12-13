@@ -21,6 +21,8 @@ package ubic.gemma.apps;
 import java.util.Collection;
 import java.util.Date;
 
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.analysis.sequence.RepeatScan;
@@ -39,6 +41,24 @@ import ubic.gemma.model.genome.biosequence.BioSequenceService;
  */
 public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli {
     BioSequenceService bsService;
+    private String inputFileName;
+
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+        if ( this.hasOption( 'f' ) ) {
+            this.inputFileName = this.getOptionValue( 'f' );
+        }
+    }
+
+    @SuppressWarnings("static-access")
+    @Override
+    protected void buildOptions() {
+        super.buildOptions();
+        Option fileOption = OptionBuilder.hasArg().withArgName( ".out file" ).withDescription(
+                "Repeatscan file to use as input" ).withLongOpt( "file" ).create( 'f' );
+        addOption( fileOption );
+    }
 
     /**
      * @param args
@@ -105,7 +125,8 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
                 if ( isSubsumedOrMerged( design ) ) {
                     log.warn( design + " is subsumed or merged into another design, it will not be run." );
                     // not really an error, but nice to get notification.
-                    errorObjects.add( design + ": " + "Skipped because it is subsumed by or merged into another design." );
+                    errorObjects.add( design + ": "
+                            + "Skipped because it is subsumed by or merged into another design." );
                     continue;
                 }
 
@@ -136,8 +157,12 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
         Collection<BioSequence> sequences = ArrayDesignSequenceAlignmentService.getSequences( design );
 
         RepeatScan scanner = new RepeatScan();
-
-        Collection<BioSequence> altered = scanner.repeatScan( sequences );
+        Collection<BioSequence> altered;
+        if ( this.inputFileName != null ) {
+            altered = scanner.processRepeatMaskerOutput( sequences, inputFileName );
+        } else {
+            altered = scanner.repeatScan( sequences );
+        }
 
         log.info( "Saving..." );
         bsService.update( altered );

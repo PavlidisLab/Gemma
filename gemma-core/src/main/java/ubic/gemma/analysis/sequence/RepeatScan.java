@@ -171,13 +171,17 @@ public class RepeatScan {
 
     /**
      * @param sequences
-     * @param outputSequencePath
+     * @param outputSequencePath in FASTA format
      * @return Sequences which were updated.
      */
-    private Collection<BioSequence> processRepeatMaskerOutput( Collection<BioSequence> sequences,
-            String outputSequencePath ) throws IOException {
+    public Collection<BioSequence> processRepeatMaskerOutput( Collection<BioSequence> sequences,
+            String outputSequencePath ) {
         FastaParser parser = new FastaParser();
-        parser.parse( outputSequencePath );
+        try {
+            parser.parse( outputSequencePath );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
         Collection<BioSequence> finalRes = new HashSet<BioSequence>();
         // build map of identifiers to sequences.
         Collection<BioSequence> results = parser.getResults();
