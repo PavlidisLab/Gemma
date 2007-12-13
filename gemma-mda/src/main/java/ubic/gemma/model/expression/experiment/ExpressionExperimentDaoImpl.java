@@ -33,8 +33,7 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.hibernate.Criteria;
+import org.apache.commons.logging.LogFactory; 
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.ScrollMode;
@@ -79,31 +78,30 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      */
     @Override
     public ExpressionExperiment find( ExpressionExperiment expressionExperiment ) {
-        try {
-            Criteria queryObject = super.getSession( false ).createCriteria( ExpressionExperiment.class );
 
-            if ( expressionExperiment.getAccession() != null ) {
-                queryObject.add( Restrictions.eq( "accession", expressionExperiment.getAccession() ) );
-            } else {
-                queryObject.add( Restrictions.eq( "name", expressionExperiment.getName() ) );
-            }
+        DetachedCriteria crit = DetachedCriteria.forClass( ExpressionExperiment.class );
 
-            java.util.List results = queryObject.list();
-            Object result = null;
-            if ( results != null ) {
-                if ( results.size() > 1 ) {
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                            "More than one instance of '" + ExpressionExperiment.class.getName()
-                                    + "' was found when executing query" );
-
-                } else if ( results.size() == 1 ) {
-                    result = results.iterator().next();
-                }
-            }
-            return ( ExpressionExperiment ) result;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
+        if ( expressionExperiment.getAccession() != null ) {
+            crit.add( Restrictions.eq( "accession", expressionExperiment.getAccession() ) );
+        } else if ( expressionExperiment.getShortName() != null ) {
+            crit.add( Restrictions.eq( "shortName", expressionExperiment.getShortName() ) );
+        } else {
+            crit.add( Restrictions.eq( "name", expressionExperiment.getName() ) );
         }
+
+        List results = this.getHibernateTemplate().findByCriteria( crit );
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of '" + ExpressionExperiment.class.getName()
+                                + "' was found when executing query" );
+
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
+            }
+        }
+        return ( ExpressionExperiment ) result;
     }
 
     /*
@@ -113,12 +111,12 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      */
     @Override
     public ExpressionExperiment findOrCreate( ExpressionExperiment expressionExperiment ) {
-        if ( expressionExperiment.getName() == null && expressionExperiment.getAccession() == null ) {
+        if ( expressionExperiment.getShortName() == null && expressionExperiment.getName() == null
+                && expressionExperiment.getAccession() == null ) {
             throw new IllegalArgumentException( "ExpressionExperiment must have name or external accession." );
         }
         ExpressionExperiment newExpressionExperiment = this.find( expressionExperiment );
         if ( newExpressionExperiment != null ) {
-
             return newExpressionExperiment;
         }
         log.debug( "Creating new expressionExperiment: " + expressionExperiment.getName() );
@@ -850,19 +848,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             throws Exception {
         final String queryString = "select count(distinct dedv) from ExpressionExperimentImpl as ee "
                 + "inner join ee.designElementDataVectors as dedv "
-                + "inner join dedv.quantitationType as qType where qType.isPreferred = true and ee.id = :eeId ";
+                + "inner join dedv.quantitationType as qType where qType.isPreferred = true and ee = :ee ";
 
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setLong( "eeId", expressionExperiment.getId() );
-
-            queryObject.setMaxResults( 1 );
-
-            return ( Long ) queryObject.uniqueResult();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
+        List result = getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
+        return ( Long ) result.iterator().next();
     }
 
     /*
@@ -886,6 +875,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             queryObject.setCacheRegion( "ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" );
             queryObject.setParameterList( "ids", idList );
             ees = queryObject.list();
+            session.clear();
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
@@ -904,20 +894,14 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         final String queryString = "select dev from DesignElementDataVectorImpl dev"
                 + " inner join fetch dev.bioAssayDimension bd "
                 + " inner join fetch dev.designElement de inner join fetch dev.quantitationType where dev.quantitationType in (:qts) ";
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameterList( "qts", quantitationTypes );
-            StopWatch timer = new StopWatch();
-            timer.start();
-            List results = queryObject.list();
-            timer.stop();
-            if ( timer.getTime() > 5000 ) {
-                log.info( "Load " + results.size() + " vectors in " + timer.getTime() + "ms" );
-            }
-            return results;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+        List results = getHibernateTemplate().findByNamedParam( queryString, "qts", quantitationTypes );
+        if ( timer.getTime() > 5000 ) {
+            log.info( "Load " + results.size() + " vectors in " + timer.getTime() + "ms" );
         }
+        return results;
     }
 
     /*
@@ -929,42 +913,35 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     protected Map handleGetAuditEvents( Collection ids ) throws Exception {
         final String queryString = "select ee.id, auditEvent from ExpressionExperimentImpl ee inner join ee.auditTrail as auditTrail inner join auditTrail.events as auditEvent "
                 + " where ee.id in (:ids) ";
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameterList( "ids", ids );
-            // ScrollableResults list = queryObject.scroll();
-            List result = queryObject.list();
-            Map<Long, Collection<AuditEvent>> eventMap = new HashMap<Long, Collection<AuditEvent>>();
-            // process list of expression experiment ids that have events
-            // while ( list.next() ) {
-            // Long id = list.getLong( 0 );
-            // AuditEvent event = ( AuditEvent ) list.get( 1 );
-            for ( Object o : result ) {
-                Object[] row = ( Object[] ) o;
-                Long id = ( Long ) row[0];
-                AuditEvent event = ( AuditEvent ) row[1];
 
-                if ( eventMap.containsKey( id ) ) {
-                    Collection<AuditEvent> events = eventMap.get( id );
-                    events.add( event );
-                } else {
-                    Collection<AuditEvent> events = new ArrayList<AuditEvent>();
-                    events.add( event );
-                    eventMap.put( id, events );
-                }
+        List result = getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
+
+        Map<Long, Collection<AuditEvent>> eventMap = new HashMap<Long, Collection<AuditEvent>>();
+
+        for ( Object o : result ) {
+            Object[] row = ( Object[] ) o;
+            Long id = ( Long ) row[0];
+            AuditEvent event = ( AuditEvent ) row[1];
+
+            if ( eventMap.containsKey( id ) ) {
+                Collection<AuditEvent> events = eventMap.get( id );
+                events.add( event );
+            } else {
+                Collection<AuditEvent> events = new ArrayList<AuditEvent>();
+                events.add( event );
+                eventMap.put( id, events );
             }
-            // add in expression experiment ids that do not have events. Set
-            // their values to null.
-            for ( Object object : ids ) {
-                Long id = ( Long ) object;
-                if ( !eventMap.containsKey( id ) ) {
-                    eventMap.put( id, null );
-                }
-            }
-            return eventMap;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
         }
+        // add in expression experiment ids that do not have events. Set
+        // their values to null.
+        for ( Object object : ids ) {
+            Long id = ( Long ) object;
+            if ( !eventMap.containsKey( id ) ) {
+                eventMap.put( id, null );
+            }
+        }
+        return eventMap;
+
     }
 
     /*
@@ -1050,16 +1027,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         final String queryString = "select distinct ee FROM ExpressionExperimentImpl as ee left join ee.otherRelevantPublications as eeO"
                 + " WHERE ee.primaryPublication.id = :bibID OR (eeO.id = :bibID) ";
 
-        try {
-            Session session = super.getSession( false );
-            org.hibernate.Query queryObject = session.createQuery( queryString );
-            queryObject.setParameter( "bibID", bibRefID );
-            Collection results = queryObject.list();
-            session.clear();
-            return results;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
+        return getHibernateTemplate().findByNamedParam( queryString, "bibID", bibRefID );
     }
 
     @Override
@@ -1076,14 +1044,15 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 + " where ee = :ee " + classRestriction + " order by event.date desc ";
 
         try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            Session session = super.getSession( false );
+            org.hibernate.Query queryObject = session.createQuery( queryString );
             queryObject.setCacheable( true );
             queryObject.setCacheRegion( "auditEvents" );
             queryObject.setMaxResults( 1 );
             queryObject.setParameter( "ee", ee );
 
             Collection results = queryObject.list();
-
+            session.clear();
             if ( results.size() == 0 ) return null;
             return ( AuditEvent ) results.iterator().next();
         } catch ( org.hibernate.HibernateException ex ) {
@@ -1114,7 +1083,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         } );
 
         try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            Session session = super.getSession( false );
+            org.hibernate.Query queryObject = session.createQuery( queryString );
             queryObject.setCacheable( true );
             queryObject.setCacheRegion( "auditEvents" );
             queryObject.setParameterList( "ee", eeList );
@@ -1131,7 +1101,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
                 result.put( ee, e );
             }
-
+            session.clear();
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
@@ -1155,41 +1125,33 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         final String queryString = "select ee.id, ad.id, event " + "from ExpressionExperimentImpl ee "
                 + "inner join ee.bioAssays b " + "inner join b.arrayDesignUsed ad " + "inner join ad.auditTrail trail "
                 + "inner join trail.events event " + "where ee.id in (:ids) ";
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameterList( "ids", ids );
-            // ScrollableResults list = queryObject.scroll();
-            List result = queryObject.list();
-            Map<Long, Map<Long, Collection<AuditEvent>>> eventMap = new HashMap<Long, Map<Long, Collection<AuditEvent>>>();
-            // process list of expression experiment ids that have events
-            // while ( list.next() ) {
-            // Long eeId = list.getLong( 0 );
-            // Long adId = list.getLong( 1 );
-            // AuditEvent event = ( AuditEvent ) list.get( 2 );
-            for ( Object o : result ) {
-                Object[] row = ( Object[] ) o;
-                Long eeId = ( Long ) row[0];
-                Long adId = ( Long ) row[1];
-                AuditEvent event = ( AuditEvent ) row[2];
 
-                Map<Long, Collection<AuditEvent>> adEventMap = eventMap.get( eeId );
-                if ( adEventMap == null ) {
-                    adEventMap = new HashMap<Long, Collection<AuditEvent>>();
-                    eventMap.put( eeId, adEventMap );
-                }
+        List result = getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
 
-                Collection<AuditEvent> events = adEventMap.get( adId );
-                if ( events == null ) {
-                    events = new ArrayList<AuditEvent>();
-                    adEventMap.put( adId, events );
-                }
+        Map<Long, Map<Long, Collection<AuditEvent>>> eventMap = new HashMap<Long, Map<Long, Collection<AuditEvent>>>();
+        // process list of expression experiment ids that have events
+        for ( Object o : result ) {
+            Object[] row = ( Object[] ) o;
+            Long eeId = ( Long ) row[0];
+            Long adId = ( Long ) row[1];
+            AuditEvent event = ( AuditEvent ) row[2];
 
-                events.add( event );
+            Map<Long, Collection<AuditEvent>> adEventMap = eventMap.get( eeId );
+            if ( adEventMap == null ) {
+                adEventMap = new HashMap<Long, Collection<AuditEvent>>();
+                eventMap.put( eeId, adEventMap );
             }
-            return eventMap;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
+
+            Collection<AuditEvent> events = adEventMap.get( adId );
+            if ( events == null ) {
+                events = new ArrayList<AuditEvent>();
+                adEventMap.put( adId, events );
+            }
+
+            events.add( event );
         }
+        return eventMap;
+
     }
 
     /*
@@ -1269,24 +1231,20 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         Collection<CompositeSequence> result = new HashSet<CompositeSequence>();
         Collection<Long> batch = new ArrayList<Long>();
         final int BATCH_SIZE = 1000;
-        try {
-            org.hibernate.Query qo = super.getSession( false ).createQuery( gqs );
-            for ( Long probeId : probeIds ) {
-                batch.add( probeId );
-                if ( batch.size() == BATCH_SIZE ) {
-                    qo.setParameterList( "ids", batch );
-                    result.addAll( ( Collection<CompositeSequence> ) qo.list() );
-                    batch.clear();
-                }
+
+        for ( Long probeId : probeIds ) {
+            batch.add( probeId );
+            if ( batch.size() == BATCH_SIZE ) {
+                List list = getHibernateTemplate().findByNamedParam( gqs, "ids", batch );
+                result.addAll( ( Collection<CompositeSequence> ) list );
+                batch.clear();
             }
-            if ( batch.size() > 0 ) {
-                qo.setParameterList( "ids", batch );
-                result.addAll( ( Collection<CompositeSequence> ) qo.list() );
-            }
-            return result;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
         }
+        if ( batch.size() > 0 ) {
+            List list = getHibernateTemplate().findByNamedParam( gqs, "ids", batch );
+            result.addAll( ( Collection<CompositeSequence> ) list );
+        }
+        return result;
     }
 
     @SuppressWarnings("unchecked")

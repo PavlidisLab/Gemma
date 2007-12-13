@@ -1226,24 +1226,13 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         } );
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection<ArrayDesign> handleLoadMultiple( Collection ids ) throws Exception {
-
         if ( ids == null || ids.isEmpty() ) return new HashSet<ArrayDesign>();
-
-        Collection<ArrayDesign> ads = null;
-        final String queryString = "select ad from ArrayDesignImpl as ad " + " where ad.id in (:ids) ";
-
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameterList( "ids", ids );
-
-            ads = queryObject.list();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-        return ads;
+        final String queryString = "select ad from ArrayDesignImpl as ad where ad.id in (:ids) ";
+        return getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
+       
     }
 
 }
