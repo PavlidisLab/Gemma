@@ -155,62 +155,58 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         this.auditTrailService = auditTrailService;
     }
 
-    
-    
-    public ModelAndView downloadAnnotationFile(HttpServletRequest request, HttpServletResponse response){
-    	
-    	String arrayDesignIdStr = request.getParameter( "id" );
-    	  if ( arrayDesignIdStr == null ) {
-              // should be a validation error, on 'submit'.
-              throw new EntityNotFoundException( "Must provide an Array Design name or Id" );
-          }
-    	  
-    	 String fileType = request.getParameter("fileType");
-    	 if (fileType == null)
-    		 fileType="allParents.an.txt";
-    	 else if(fileType.equalsIgnoreCase("noParents"))
-    		 fileType="NoParents";
-    	 else if(fileType.equalsIgnoreCase("bioProcess"))
-    		 fileType = "bioProcess";
-    	 else
-    		 fileType="allParents";
-    	  
-    	ArrayDesign arrayDesign = arrayDesignService.load( Long.parseLong( arrayDesignIdStr ) );
-    	String fileName = arrayDesign.getShortName() + "_"+ fileType + ".an.txt";
+    public ModelAndView downloadAnnotationFile( HttpServletRequest request, HttpServletResponse response ) {
 
-    	
-    	File f = new File(ArrayDesignGOAnnotationGeneratorCli.ANNOT_DATA_DIR + fileName);
-    	BufferedReader reader;
-		try {
-			reader = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
-		}catch(FileNotFoundException fnfe){
-			log.warn("Annotation file"  + fileName  + " can't be found");
-			return null;
-		}
-		
-    	response.setHeader( "Content-disposition", "attachment; filename=" + fileName );
-    	response.setContentType("application/octet-stream");
-    	
-    	try{
-	    	String lineOfFile = reader.readLine();
-	    	while(lineOfFile != null){
-	    		response.getWriter().write(lineOfFile);
-	    		response.getWriter().write('\n');	//Readln strips out new line characters, put back in. 
-	    		lineOfFile = reader.readLine();
-	    	}
-	    	
-	    	response.getWriter().flush();
-	    	response.getWriter().close();
-	    	reader.close();
-	    	
-    	}catch(IOException ioe){   		
-    		log.warn("Failure during streaming of annotation file " + fileName + " Error: " + ioe);
-    	}
-    	
-    	return null;
+        String arrayDesignIdStr = request.getParameter( "id" );
+        if ( arrayDesignIdStr == null ) {
+            // should be a validation error, on 'submit'.
+            throw new EntityNotFoundException( "Must provide an Array Design name or Id" );
+        }
+
+        String fileType = request.getParameter( "fileType" );
+        if ( fileType == null )
+            fileType = "allParents.an.txt";
+        else if ( fileType.equalsIgnoreCase( "noParents" ) )
+            fileType = "NoParents";
+        else if ( fileType.equalsIgnoreCase( "bioProcess" ) )
+            fileType = "bioProcess";
+        else
+            fileType = "allParents";
+
+        ArrayDesign arrayDesign = arrayDesignService.load( Long.parseLong( arrayDesignIdStr ) );
+        String fileName = arrayDesign.getShortName() + "_" + fileType + ".an.txt";
+
+        File f = new File( ArrayDesignGOAnnotationGeneratorCli.ANNOT_DATA_DIR + fileName );
+        BufferedReader reader;
+        try {
+            reader = new BufferedReader( new InputStreamReader( new FileInputStream( f ) ) );
+        } catch ( FileNotFoundException fnfe ) {
+            log.warn( "Annotation file" + fileName + " can't be found" );
+            return null;
+        }
+
+        response.setHeader( "Content-disposition", "attachment; filename=" + fileName );
+        response.setContentType( "application/octet-stream" );
+
+        try {
+            String lineOfFile = reader.readLine();
+            while ( lineOfFile != null ) {
+                response.getWriter().write( lineOfFile );
+                response.getWriter().write( '\n' ); // Readln strips out new line characters, put back in.
+                lineOfFile = reader.readLine();
+            }
+
+            response.getWriter().flush();
+            response.getWriter().close();
+            reader.close();
+
+        } catch ( IOException ioe ) {
+            log.warn( "Failure during streaming of annotation file " + fileName + " Error: " + ioe );
+        }
+
+        return null;
     }
-    
-    
+
     /**
      * Show (some of) the probes from an array.
      * 
@@ -404,9 +400,9 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
         if ( ( name == null ) && ( idStr == null ) ) {
             // should be a validation error, on 'submit'.
-        	this.saveMessage( request, "Must provide an array design name or id. Displaying all Arrays" );
-        	return this.showAll(request, response);
-        	
+            this.saveMessage( request, "Must provide an array design name or id. Displaying all Arrays" );
+            return this.showAll( request, response );
+
         }
         ArrayDesign arrayDesign = null;
         if ( idStr != null ) {
@@ -418,9 +414,9 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         }
 
         if ( arrayDesign == null ) {
-        	this.saveMessage( request, "Unalbe to load Array Design with id: " + idStr + ". Displaying all Arrays" );
-        	return this.showAll(request, response);        	
-          
+            this.saveMessage( request, "Unalbe to load Array Design with id: " + idStr + ". Displaying all Arrays" );
+            return this.showAll( request, response );
+
         }
         long id = arrayDesign.getId();
 
@@ -461,19 +457,18 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         Collection<ArrayDesign> mergees = arrayDesign.getMergees();
         ArrayDesign merger = arrayDesign.getMergedInto();
 
-    	File f = new File(ArrayDesignGOAnnotationGeneratorCli.ANNOT_DATA_DIR + arrayDesign.getShortName() + "_NoParents.an.txt");
+        File f = new File( ArrayDesignGOAnnotationGeneratorCli.ANNOT_DATA_DIR + arrayDesign.getShortName()
+                + "_NoParents.an.txt" );
 
-       if ((subsumer == null) && (merger == null) && (f.exists())){
-    	   //Possible to have an annotation file?
-    	   //Has the annotation file been generated?
-    	       	   
-    	   mav.addObject("annotationLink","/Gemma/arrays/downloadAnnotationFile.html?id=" + arrayDesign.getId() +"&fileType=" );
-       }
-       else
-    	   mav.addObject("annotationLink","");
+        if ( ( subsumer == null ) && ( merger == null ) && ( f.exists() ) ) {
+            // Possible to have an annotation file?
+            // Has the annotation file been generated?
 
-    	   
-        
+            mav.addObject( "annotationLink", "/Gemma/arrays/downloadAnnotationFile.html?id=" + arrayDesign.getId()
+                    + "&fileType=" );
+        } else
+            mav.addObject( "annotationLink", "" );
+
         mav.addObject( "subsumer", subsumer );
         mav.addObject( "subsumees", subsumees );
         mav.addObject( "merger", merger );
@@ -842,6 +837,10 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         try {
             CacheManager manager = CacheManager.getInstance();
 
+            if ( manager.cacheExists( "ArrayDesignCompositeSequenceCache" ) ) {
+                return;
+            }
+
             cache = new Cache( "ArrayDesignCompositeSequenceCache", ARRAY_INFO_CACHE_SIZE,
                     MemoryStoreEvictionPolicy.LFU, false, null, false, ARRAY_INFO_CACHE_TIME_TO_DIE,
                     ARRAY_INFO_CACHE_TIME_TO_IDLE, false, 500, null );
@@ -850,7 +849,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             cache = manager.getCache( "ArrayDesignCompositeSequenceCache" );
 
         } catch ( CacheException e ) {
-            throw new RuntimeException();
+            throw new RuntimeException( e );
         }
 
     }
