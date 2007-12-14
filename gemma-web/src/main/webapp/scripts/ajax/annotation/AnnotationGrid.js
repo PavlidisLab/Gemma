@@ -93,18 +93,17 @@ Ext.Gemma.AnnotationGrid = function ( div, config ) {
 		} );
 		
 		this.on( "afteredit", function( e ) {
-			var row = e.record.data;
 			var col = this.getColumnModel().getColumnId( e.column );
 			if ( col == CATEGORY_COLUMN ) {
 				var f = this.categoryCombo.getTerm.bind( this.categoryCombo );
 				var term = f();
-				row.className = term.term;
-				row.classUri = term.uri;
+				e.record.set( "className", term.term );
+				e.record.set( "classUri", term.uri );
 			} else if ( col == VALUE_COLUMN ) {
 				var f = this.valueCombo.getCharacteristic.bind( this.valueCombo );
 				var c = f();
-				row.termName = c.value;
-				row.termUri = c.valueUri;
+				e.record.set( "termName", c.value );
+				e.record.set( "termUri", c.valueUri );
 			}
 			this.getView().refresh();
 		} );

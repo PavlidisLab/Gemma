@@ -30,10 +30,6 @@ Ext.onReady( function() {
 			Ext.Gemma.CharacteristicBrowser.grid.refresh( [ query, searchNos, searchEEs, searchBMs, searchFVs ] );
 		}
 	} );
-	Ext.Gemma.CharacteristicBrowser.grid.on( "afteredit", function( e ) {
-		saveButton.enable();
-		Ext.Gemma.CharacteristicBrowser.grid.getView().refresh();
-	} );
 
 	var saveButton = new Ext.Toolbar.Button( {
 		text : "save",
@@ -45,6 +41,9 @@ Ext.onReady( function() {
 			var callback = Ext.Gemma.CharacteristicBrowser.grid.refresh.bind( Ext.Gemma.CharacteristicBrowser.grid );
 			CharacteristicBrowserController.updateCharacteristics( chars, callback );
 		}
+	} );
+	Ext.Gemma.CharacteristicBrowser.grid.on( "afteredit", function( e ) {
+		saveButton.enable();
 	} );
 	
 	var deleteButton = new Ext.Toolbar.Button( {
@@ -74,6 +73,33 @@ Ext.onReady( function() {
 			deleteButton.enable();
 		else
 			deleteButton.disable();
+	} );
+	
+	var revertButton = new Ext.Toolbar.Button( {
+		text : "revert",
+		tooltip : "Undo changes to selected characteristics",
+		disabled : true,
+		handler : function() {
+			var selected = Ext.Gemma.CharacteristicBrowser.grid.getSelectionModel().getSelections();
+			for ( var i=0; i<selected.length; ++i ) {
+				var record = selected[i]
+				record.reject();
+			}
+			Ext.Gemma.CharacteristicBrowser.grid.getView().refresh();
+		}
+	} );
+	Ext.Gemma.CharacteristicBrowser.grid.getSelectionModel().on( "selectionchange", function( model ) {
+		var selected = model.getSelections();
+		revertButton.disable();
+		for ( var i=0; i<selected.length; ++i ) {
+			if ( selected[i].dirty ) {
+				revertButton.enable();
+				break;
+			}
+		}
+	} );
+	Ext.Gemma.CharacteristicBrowser.grid.on( "afteredit", function( e ) {
+		revertButton.enable();
 	} );
 	
 	var eeCheckBox = new Ext.form.Checkbox( {
@@ -111,14 +137,17 @@ Ext.onReady( function() {
 	toolbar.addSeparator();
 	toolbar.addField( deleteButton );
 	toolbar.addSeparator();
-	toolbar.addText( "Find characteristics from" );
-	toolbar.addSpacer();
-	toolbar.addField( eeCheckBox );
-	toolbar.addSpacer();
-	toolbar.addField( bmCheckBox );
-	toolbar.addSpacer();
-	toolbar.addField( fvCheckBox );
-	toolbar.addSpacer();
-	toolbar.addField( noCheckBox );
+	toolbar.addField( revertButton );
+	var secondToolbar = new Ext.Toolbar( gridHeader.createChild() );
+	secondToolbar.addSpacer();
+	secondToolbar.addText( "Find characteristics from" );
+	secondToolbar.addSpacer();
+	secondToolbar.addField( eeCheckBox );
+	secondToolbar.addSpacer();
+	secondToolbar.addField( bmCheckBox );
+	secondToolbar.addSpacer();
+	secondToolbar.addField( fvCheckBox );
+	secondToolbar.addSpacer();
+	secondToolbar.addField( noCheckBox );
 	
 } );
