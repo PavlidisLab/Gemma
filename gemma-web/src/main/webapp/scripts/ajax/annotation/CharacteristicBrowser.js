@@ -22,8 +22,12 @@ Ext.onReady( function() {
 		text : "search",
 		tooltip : "Find matching characteristics in the database",
 		handler : function() {
-			var value = charCombo.getCharacteristic().value;
-			Ext.Gemma.CharacteristicBrowser.grid.refresh( [ value ] );
+			var query = charCombo.getCharacteristic().value;
+			var searchEEs = eeCheckBox.getValue();
+			var searchBMs = bmCheckBox.getValue();
+			var searchFVs = fvCheckBox.getValue();
+			var searchNos = noCheckBox.getValue();
+			Ext.Gemma.CharacteristicBrowser.grid.refresh( [ query, searchNos, searchEEs, searchBMs, searchFVs ] );
 		}
 	} );
 	Ext.Gemma.CharacteristicBrowser.grid.on( "afteredit", function( e ) {
@@ -72,6 +76,31 @@ Ext.onReady( function() {
 			deleteButton.disable();
 	} );
 	
+	var eeCheckBox = new Ext.form.Checkbox( {
+		boxLabel : 'Expression Experiments',
+		checked : true,
+		name : 'searchEEs',
+		width : 'auto'
+	} );
+	var bmCheckBox = new Ext.form.Checkbox( {
+		boxLabel : 'BioMaterials',
+		checked : true,
+		name : 'searchBMs',
+		width : 'auto'
+	} );
+	var fvCheckBox = new Ext.form.Checkbox( {
+		boxLabel : 'Factor Values',
+		checked : true,
+		name : 'searchFVs',
+		width : 'auto'
+	} );
+	var noCheckBox = new Ext.form.Checkbox( {
+		boxLabel : 'No parent',
+		checked : true,
+		name : 'searchNos',
+		width : 'auto'
+	} );
+	
 	var gridHeader = Ext.Gemma.CharacteristicBrowser.grid.getView().getHeaderPanel( true );
 	var toolbar = new Ext.Toolbar( gridHeader );
 	toolbar.addField( charCombo );
@@ -81,5 +110,15 @@ Ext.onReady( function() {
 	toolbar.addField( saveButton );
 	toolbar.addSeparator();
 	toolbar.addField( deleteButton );
+	toolbar.addSeparator();
+	toolbar.addText( "Find characteristics from" );
+	toolbar.addSpacer();
+	toolbar.addField( eeCheckBox );
+	toolbar.addSpacer();
+	toolbar.addField( bmCheckBox );
+	toolbar.addSpacer();
+	toolbar.addField( fvCheckBox );
+	toolbar.addSpacer();
+	toolbar.addField( noCheckBox );
 	
 } );

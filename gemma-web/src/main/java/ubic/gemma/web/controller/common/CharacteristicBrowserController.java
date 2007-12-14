@@ -52,23 +52,32 @@ public class CharacteristicBrowserController extends BaseFormController {
     }
     
     public Collection<AnnotationValueObject> findCharacteristics( String valuePrefix ) {
+        return findCharacteristics( valuePrefix, true, true, true, true );
+    }
+    
+    public Collection<AnnotationValueObject> findCharacteristics( String valuePrefix, boolean searchNos, boolean searchEEs, boolean searchBMs, boolean searchFVs ) {
         Collection<AnnotationValueObject> results = new HashSet<AnnotationValueObject>();
         Collection chars = characteristicService.findByValue( valuePrefix );
         Map charToParent = characteristicService.getParents( chars );
         for ( Object o : chars ) {
             Characteristic c = (Characteristic)o;
-            AnnotationValueObject avo = new AnnotationValueObject();
-            avo.setId( c.getId() );
-            avo.setClassName( c.getCategory() );
-            avo.setTermName( c.getValue() );
-            if ( c instanceof VocabCharacteristic ) {
-                VocabCharacteristic vc = (VocabCharacteristic)c;
-                avo.setClassUri( vc.getCategoryUri() );
-                avo.setTermUri( vc.getValueUri() );
-            }
             Object parent = charToParent.get( c );
-            populateParentInformation( avo, charToParent.get( c ) );
-            results.add( avo );
+            if ( ( searchEEs && parent instanceof ExpressionExperiment ) ||
+                 ( searchBMs && parent instanceof BioMaterial ) ||
+                 ( searchFVs && parent instanceof FactorValue ) ||
+                 ( searchNos && parent == null ) ) {
+                AnnotationValueObject avo = new AnnotationValueObject();
+                avo.setId( c.getId() );
+                avo.setClassName( c.getCategory() );
+                avo.setTermName( c.getValue() );
+                if ( c instanceof VocabCharacteristic ) {
+                    VocabCharacteristic vc = (VocabCharacteristic)c;
+                    avo.setClassUri( vc.getCategoryUri() );
+                    avo.setTermUri( vc.getValueUri() );
+                }
+                populateParentInformation( avo, parent );
+                results.add( avo );
+            }
         }
         return results;
     }
