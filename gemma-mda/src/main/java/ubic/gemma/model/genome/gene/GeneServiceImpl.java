@@ -39,11 +39,6 @@ import ubic.gemma.model.genome.Taxon;
  */
 public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBase {
 
-    @Override
-    protected Map handleGetCoexpressedGeneMap( int stringincy, Gene gene ) throws Exception {
-        return this.getGeneDao().getCoexpressedGeneMap( stringincy, gene );
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -305,11 +300,15 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
         return this.getGeneDao().loadPredictedGenes( taxon );
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetCoexpressedKnownGenes(ubic.gemma.model.genome.Gene, java.util.Collection, java.lang.Integer)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetCoexpressedKnownGenes(ubic.gemma.model.genome.Gene,
+     *      java.util.Collection, java.lang.Integer)
      */
     @Override
-    protected Collection handleGetCoexpressedKnownGenes( Gene gene, Collection ees, Integer stringency ) throws Exception {
+    protected Collection handleGetCoexpressedKnownGenes( Gene gene, Collection ees, Integer stringency )
+            throws Exception {
         // TODO Auto-generated method stub
         return null;
     }

@@ -212,7 +212,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
         if ( force && previousMissingValueQt != null ) {
             log.info( "Removing old present/absent data" );
-            dedvs.removeDataForQuantitationType( ee, previousMissingValueQt );
+            dedvs.removeDataForQuantitationType( previousMissingValueQt );
             quantitationTypeService.remove( previousMissingValueQt );
         }
 

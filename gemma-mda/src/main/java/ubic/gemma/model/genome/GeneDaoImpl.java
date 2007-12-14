@@ -35,6 +35,7 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -43,8 +44,8 @@ import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
 
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
-import ubic.gemma.model.coexpression.CoexpressionTypeValueObject;
 import ubic.gemma.model.coexpression.CoexpressionValueObject;
+import ubic.gemma.model.coexpression.GeneCoexpressionResults;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -61,109 +62,6 @@ import ubic.gemma.util.TaxonUtility;
 public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     private static Log log = LogFactory.getLog( GeneDaoImpl.class.getName() );
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadGenes(ubic.gemma.model.genome.Taxon)
-     */
-    @Override
-    protected Collection handleLoadGenes( Taxon taxon ) throws Exception {
-        final String queryString = "select gene from GeneImpl as gene where gene.taxon = :taxon"
-                + " and (gene.class = " + CoexpressionCollectionValueObject.GENE_IMPL + " )";
-
-        Collection genes;
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameter( "taxon", taxon );
-
-            genes = queryObject.list();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-        return genes;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadPredictedGenes(ubic.gemma.model.genome.Taxon)
-     */
-    @Override
-    protected Collection handleLoadPredictedGenes( Taxon taxon ) throws Exception {
-        final String queryString = "select gene from GeneImpl as gene where gene.taxon = :taxon"
-                + " and (gene.class = " + CoexpressionCollectionValueObject.PREDICTED_GENE_IMPL + ")";
-
-        Collection predictedGenes;
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameter( "taxon", taxon );
-
-            predictedGenes = queryObject.list();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-        return predictedGenes;
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadProbeAlignedRegions(ubic.gemma.model.genome.Taxon)
-     */
-    @Override
-    protected Collection handleLoadProbeAlignedRegions( Taxon taxon ) throws Exception {
-        final String queryString = "select gene from GeneImpl as gene where gene.taxon = :taxon"
-                + " and (gene.class = " + CoexpressionCollectionValueObject.PROBE_ALIGNED_REGION_IMPL + ")";
-
-        Collection pars;
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameter( "taxon", taxon );
-
-            pars = queryObject.list();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-        return pars;
-    }
-
-    /**
-     * Gets all the CompositeSequences related to the gene identified by the given gene and arrayDesign.
-     * 
-     * @param gene, arrayDesign
-     * @return Collection
-     */
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.GeneDaoBase#handleGetCompositeSequences(ubic.gemma.model.genome.Gene,
-     *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Collection handleGetCompositeSequences( Gene gene, ArrayDesign arrayDesign ) throws Exception {
-        Collection<CompositeSequence> compSeq = null;
-        final String queryString = "select distinct cs from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProductImpl"
-                + " as bs2gp, CompositeSequenceImpl as cs where gp=bs2gp.geneProduct "
-                + " and cs.biologicalCharacteristic=bs2gp.bioSequence "
-                + " and gene = :gene and cs.arrayDesign = :arrayDesign ";
-
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameter( "arrayDesign", arrayDesign );
-            queryObject.setParameter( "gene", gene );
-            compSeq = queryObject.list();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-        return compSeq;
-    }
 
     /*
      * (non-Javadoc)
@@ -235,232 +133,12 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @see ubic.gemma.model.genome.GeneDao#geneValueObjectToEntity(ubic.gemma.model.genome.gene.GeneValueObject)
      */
     public Gene geneValueObjectToEntity( GeneValueObject geneValueObject ) {
-        final String queryString = "select distinct gene from GeneImpl gene where gene.id = :id";
-
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setLong( "id", geneValueObject.getId() );
-            java.util.List results = queryObject.list();
-
-            if ( ( results == null ) || ( results.size() == 0 ) ) return null;
-
-            return ( Gene ) results.iterator().next();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
+        return ( Gene ) this.load( geneValueObject.getId() );
     }
 
     /**
-     * @param stringency
-     * @param geneMap
-     * @param coexpressions
+     * @param results
      */
-    @SuppressWarnings("unchecked")
-    private void postProcessing( GeneMap geneMap, CoexpressionCollectionValueObject coexpressions ) throws Exception {
-
-        postProcessGeneImpls( geneMap.getGeneImplMap(), coexpressions );
-
-        postProcessProbeAlignedRegions( geneMap.getProbeAlignedRegionMap(), coexpressions );
-
-        postProcessPredictedGenes( geneMap.getPredictedGeneMap(), coexpressions );
-
-    }
-
-    /**
-     * @param genes
-     * @param coexpressions
-     */
-    private void postProcessPredictedGenes( Map<Long, CoexpressionValueObject> genes,
-            CoexpressionCollectionValueObject coexpressions ) {
-
-        List<Long> allEEIds = new ArrayList<Long>( coexpressions.getGeneCoexpressionType().getExpressionExperimentIds() );
-
-        CoexpressionTypeValueObject predictedCoexpressionType = coexpressions.getPredictedCoexpressionType();
-        for ( Long geneId : genes.keySet() ) {
-            CoexpressionValueObject coExValObj = genes.get( geneId );
-            incrementRawEEContributions( coExValObj.getExpressionExperiments(), predictedCoexpressionType );
-
-            coExValObj.computeExperimentBits( allEEIds );
-            if ( ( coExValObj.getPositiveLinkCount() != null ) || ( coExValObj.getNegativeLinkCount() != null ) ) {
-                coexpressions.getPredictedCoexpressionData().add( coExValObj );
-
-                if ( coExValObj.getPositiveLinkCount() != null )
-                    incrementEEContributions( coExValObj.getEEContributing2PositiveLinks(), predictedCoexpressionType );
-                else
-                    incrementEEContributions( coExValObj.getEEContributing2NegativeLinks(), predictedCoexpressionType );
-            }
-        }
-        predictedCoexpressionType.setNumberOfGenes( genes.size() );
-    }
-
-    /**
-     * @param genes
-     * @param coexpressions
-     */
-    private void postProcessProbeAlignedRegions( Map<Long, CoexpressionValueObject> genes,
-            CoexpressionCollectionValueObject coexpressions ) {
-
-        int numStringencyProbeAlignedRegions = 0;
-        List<Long> allEEIds = new ArrayList<Long>( coexpressions.getGeneCoexpressionType().getExpressionExperimentIds() );
-
-        CoexpressionTypeValueObject probeAlignedCoexpressionType = coexpressions.getProbeAlignedCoexpressionType();
-        for ( Long geneId : genes.keySet() ) {
-            CoexpressionValueObject coExValObj = genes.get( geneId );
-
-            coExValObj.computeExperimentBits( allEEIds );
-            incrementRawEEContributions( coExValObj.getExpressionExperiments(), probeAlignedCoexpressionType );
-
-            if ( ( coExValObj.getPositiveLinkCount() != null ) || ( coExValObj.getNegativeLinkCount() != null ) ) {
-                numStringencyProbeAlignedRegions++;
-                coexpressions.getProbeAlignedCoexpressionData().add( coExValObj );
-
-                if ( coExValObj.getPositiveLinkCount() != null )
-                    incrementEEContributions( coExValObj.getEEContributing2PositiveLinks(),
-                            probeAlignedCoexpressionType );
-                else
-                    incrementEEContributions( coExValObj.getEEContributing2NegativeLinks(),
-                            probeAlignedCoexpressionType );
-            }
-
-        }
-
-        probeAlignedCoexpressionType.setNumberOfGenes( genes.size() );
-    }
-
-    /**
-     * @param genes
-     * @param coexpressions
-     * @throws Exception
-     */
-    private void postProcessGeneImpls( Map<Long, CoexpressionValueObject> genes,
-            CoexpressionCollectionValueObject coexpressions ) throws Exception {
-
-        int positiveLinkCount = 0;
-        int negativeLinkCount = 0;
-        int numStringencyGenes = 0;
-
-        Map<Long, Collection<Gene>> querySpecificity = getGenes( coexpressions.getQueryGeneProbes() );
-        coexpressions.addQueryGeneSpecifityInfo( querySpecificity );
-        Collection<Long> allQuerySpecificEE = coexpressions.getQueryGeneSpecificExpressionExperiments();
-
-        Map<Long, Collection<Long>> allSpecificEE = coexpressions.getGeneCoexpressionType()
-                .getSpecificExpressionExperiments();
-        List<Long> allEEIds = new ArrayList<Long>( coexpressions.getGeneCoexpressionType().getExpressionExperimentIds() );
-
-        for ( Long geneId : genes.keySet() ) {
-            CoexpressionValueObject coExValObj = genes.get( geneId );
-
-            // determine which EE's that contributed to this gene's coexpression were non-specific
-            // an ee is specific iff the ee is specific for the query gene and the target gene.
-            Collection<Long> nonspecificEE = new HashSet<Long>( coExValObj.getExpressionExperiments() );
-            Collection<Long> specificEE = new HashSet<Long>( allSpecificEE.get( geneId ) ); // get the EE's that are
-            // specific for the target
-            // gene
-            specificEE.retainAll( allQuerySpecificEE ); // get the EE's that are specific for both the target and
-            // the query gene
-            nonspecificEE.removeAll( specificEE );
-            coExValObj.setNonspecificEE( nonspecificEE );
-            coExValObj.computeExperimentBits( allEEIds );
-
-            if ( coExValObj.getGeneName().equalsIgnoreCase( "RPL27" ) ) log.debug( "at gene rpl27" );
-
-            // figure out which genes where culprits for making this gene non-specific
-            Collection<Long> probes = coExValObj.getProbes();
-            for ( Long eeID : nonspecificEE ) {
-                for ( Long probeID : probes ) {
-                    if ( coexpressions.getGeneCoexpressionType().getNonSpecificGenes( eeID, probeID ) != null ) {
-                        for ( Long geneID : coexpressions.getGeneCoexpressionType().getNonSpecificGenes( eeID, probeID ) ) {
-                            coExValObj.addNonSpecificGene( genes.get( geneID ).getGeneName() );
-                            if ( geneID == coexpressions.getQueryGene().getId() )
-                                coExValObj.setHybridizesWithQueryGene( true );
-                        }
-                    }
-                }
-
-            }
-            coExValObj.getNonSpecificGenes().remove( coExValObj.getGeneOfficialName() );
-
-            boolean added = false;
-
-            incrementRawEEContributions( coExValObj.getExpressionExperiments(), coexpressions.getGeneCoexpressionType() );
-
-            if ( coExValObj.getPositiveLinkCount() != null ) {
-                numStringencyGenes++;
-                positiveLinkCount++;
-                added = true;
-                // add in coexpressions that match stringency
-                coexpressions.getCoexpressionData().add( coExValObj );
-                // add in expression experiments that match stringency
-                // update the link count for that EE
-                incrementEEContributions( coExValObj.getEEContributing2PositiveLinks(), coexpressions
-                        .getGeneCoexpressionType() );
-            }
-
-            if ( coExValObj.getNegativeLinkCount() != null ) {
-                negativeLinkCount++;
-                // add in expression experiments that match stringency
-                // update the link count for that EE
-                incrementEEContributions( coExValObj.getEEContributing2NegativeLinks(), coexpressions
-                        .getGeneCoexpressionType() );
-
-                if ( added ) continue; // no point in adding or counting the same element twice
-                coexpressions.getCoexpressionData().add( coExValObj );
-                numStringencyGenes++;
-
-            }
-        }
-
-        // add count of pruned matches to coexpression data
-        coexpressions.getGeneCoexpressionType().setPositiveStringencyLinkCount( positiveLinkCount );
-        coexpressions.getGeneCoexpressionType().setNegativeStringencyLinkCount( negativeLinkCount );
-        coexpressions.getGeneCoexpressionType().setNumberOfGenes( genes.size() );
-    }
-
-    /**
-     * @param contributingEEs
-     * @param coexpressions
-     */
-    private void incrementEEContributions( Collection<Long> contributingEEs, CoexpressionTypeValueObject coexpressions ) {
-
-        for ( Long eeID : contributingEEs ) {
-            ExpressionExperimentValueObject eeVo = coexpressions.getExpressionExperiment( eeID );
-
-            if ( eeVo == null ) {
-                log.warn( "Looked for " + eeID + " but not in coexpressions object" );
-                continue;
-            }
-            if ( eeVo.getCoexpressionLinkCount() == null )
-                eeVo.setCoexpressionLinkCount( new Long( 1 ) );
-            else
-                eeVo.setCoexpressionLinkCount( eeVo.getCoexpressionLinkCount() + 1 );
-
-        }
-
-    }
-
-    /**
-     * @param contributingEEs
-     * @param coexpressions
-     */
-    private void incrementRawEEContributions( Collection<Long> contributingEEs,
-            CoexpressionTypeValueObject coexpressions ) {
-
-        for ( Long eeID : contributingEEs ) {
-            ExpressionExperimentValueObject eeVo = coexpressions.getExpressionExperiment( eeID );
-
-            if ( eeVo == null ) {
-                log.warn( "Looked for " + eeID + " but not in coexpressions object" );
-                continue;
-            }
-            if ( eeVo.getRawCoexpressionLinkCount() == null )
-                eeVo.setRawCoexpressionLinkCount( new Long( 1 ) );
-            else
-                eeVo.setRawCoexpressionLinkCount( eeVo.getRawCoexpressionLinkCount() + 1 );
-        }
-
-    }
-
     private void debug( List results ) {
 
         StringBuilder buf = new StringBuilder();
@@ -489,37 +167,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     }
 
     /**
-     * @param givenG
-     * @return
-     */
-    private String getP2PClassName( Gene givenG ) {
-        if ( TaxonUtility.isHuman( givenG.getTaxon() ) )
-            return "HumanProbeCoExpressionImpl";
-        else if ( TaxonUtility.isMouse( givenG.getTaxon() ) )
-            return "MouseProbeCoExpressionImpl";
-        else if ( TaxonUtility.isRat( givenG.getTaxon() ) )
-            return "RatProbeCoExpressionImpl";
-        else
-            return "OtherProbeCoExpressionImpl";
-
-    }
-
-    /**
-     * @param className
-     * @return
-     */
-    private String getP2PTableNameForClassName( String className ) {
-        if ( className.equals( "HumanProbeCoExpressionImpl" ) )
-            return "HUMAN_PROBE_CO_EXPRESSION";
-        else if ( className.equals( "MouseProbeCoExpressionImpl" ) )
-            return "MOUSE_PROBE_CO_EXPRESSION";
-        else if ( className.equals( "RatProbeCoExpressionImpl" ) )
-            return "RAT_PROBE_CO_EXPRESSION";
-        else
-            return "OTHER_PROBE_CO_EXPRESSION";
-    }
-
-    /**
      * @param p2pClassName
      * @param in
      * @param out
@@ -543,30 +190,163 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
          * same gene are correlated. STRAIGHT_JOIN is to ensure that mysql doesn't do something goofy with the index
          * use.
          */
-        String query =
-            "SELECT STRAIGHT_JOIN geneout.ID as id, geneout.NAME as genesymb, "
+        String query = "SELECT STRAIGHT_JOIN geneout.ID as id, geneout.NAME as genesymb, "
                 + "geneout.OFFICIAL_NAME as genename, coexp.EXPRESSION_EXPERIMENT_FK as exper, coexp.PVALUE as pvalue, coexp.SCORE as score, "
-                + "gcIn.CS as csIdIn, gcOut.CS as csIdOut, geneout.class as geneType, "
-                + "ee.NAME as eeName "
-            + "FROM GENE2CS gcIn "
-                + " INNER JOIN " + p2pClass + " coexp ON gcIn.CS=coexp." + inKey + " "
+                + "gcIn.CS as csIdIn, gcOut.CS as csIdOut, geneout.class as geneType, " + "ee.NAME as eeName "
+                + "FROM GENE2CS gcIn " + " INNER JOIN " + p2pClass + " coexp ON gcIn.CS=coexp." + inKey + " "
                 + " INNER JOIN GENE2CS gcOut ON gcOut.CS=coexp." + outKey + " "
                 + " INNER JOIN CHROMOSOME_FEATURE geneout ON geneout.ID=gcOut.GENE "
-                + " INNER JOIN INVESTIGATION ee ON ee.ID=coexp.EXPRESSION_EXPERIMENT_FK "
-            + "WHERE " + eeClause
+                + " INNER JOIN INVESTIGATION ee ON ee.ID=coexp.EXPRESSION_EXPERIMENT_FK " + "WHERE " + eeClause
                 + " gcIn.GENE=:id AND geneout.ID <> :id  ";
 
         return query;
     }
 
     /**
-     * Process a single query result from the coexpression search.
+     * @param givenG
+     * @return
+     */
+    private String getP2PClassName( Gene givenG ) {
+        if ( TaxonUtility.isHuman( givenG.getTaxon() ) )
+            return "HumanProbeCoExpressionImpl";
+        else if ( TaxonUtility.isMouse( givenG.getTaxon() ) )
+            return "MouseProbeCoExpressionImpl";
+        else if ( TaxonUtility.isRat( givenG.getTaxon() ) )
+            return "RatProbeCoExpressionImpl";
+        else
+            return "OtherProbeCoExpressionImpl";
+    }
+
+    /**
+     * @param className
+     * @return
+     */
+    private String getP2PTableNameForClassName( String className ) {
+        if ( className.equals( "HumanProbeCoExpressionImpl" ) )
+            return "HUMAN_PROBE_CO_EXPRESSION";
+        else if ( className.equals( "MouseProbeCoExpressionImpl" ) )
+            return "MOUSE_PROBE_CO_EXPRESSION";
+        else if ( className.equals( "RatProbeCoExpressionImpl" ) )
+            return "RAT_PROBE_CO_EXPRESSION";
+        else
+            return "OTHER_PROBE_CO_EXPRESSION";
+    }
+
+    /**
+     * @param gene
+     * @param ees
+     * @param id
+     * @param eeIds
+     * @param queryString
+     * @return
+     */
+    private org.hibernate.Query setCoexpQueryParameters( Session session, Gene gene, long id, String queryString ) {
+        org.hibernate.SQLQuery queryObject;
+        queryObject = session.createSQLQuery( queryString ); // for native query.
+
+        queryObject.addScalar( "id", new LongType() );
+        queryObject.addScalar( "genesymb", new StringType() );
+        queryObject.addScalar( "genename", new StringType() );
+        queryObject.addScalar( "exper", new LongType() );
+        queryObject.addScalar( "pvalue", new DoubleType() );
+        queryObject.addScalar( "score", new DoubleType() );
+        queryObject.addScalar( "csIdIn", new LongType() );
+        queryObject.addScalar( "csIdOut", new LongType() );
+        queryObject.addScalar( "geneType", new StringType() );
+        queryObject.addScalar( "eeName", new StringType() );
+
+        queryObject.setLong( "id", id );
+        // this is to make the query faster by narrowing down the gene join
+        // queryObject.setLong( "taxonId", gene.getTaxon().getId() );
+
+        return queryObject;
+    }
+
+    @Override
+    protected Integer handleCountAll() throws Exception {
+        final String query = "select count(*) from GeneImpl";
+        List r = getHibernateTemplate().find( query );
+        return ( Integer ) r.iterator().next();
+    }
+
+    /**
+     * Gets all the genes referred to by the alias defined by the search string.
+     * 
+     * @param search
+     * @return Collection
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleGetByGeneAlias( String search ) throws Exception {
+        final String queryString = "select distinct g from GeneImpl as g inner join g.aliases als where als.Alias = :search";
+        return getHibernateTemplate().findByNamedParam( queryString, "search", search );
+    }
+
+    /**
+     * Gets all the genes that are coexpressed with another gene.
+     * 
+     * @param gene to use as the query
+     * @param ees Data sets to restrict the search to.
+     * @param stringency minimum number of data sets the coexpression has to occur in before it 'counts'.
+     * @return Collection of CoexpressionCollectionValueObjects. This needs to be 'postprocessed' before it has all the
+     *         data needed for web display.
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Object handleGetCoexpressedGenes( final Gene gene, Collection ees, Integer stringency ) throws Exception {
+        Gene givenG = gene;
+        final long id = givenG.getId();
+        log.info( "Gene: " + gene.getName() );
+
+        final String p2pClassName = getP2PClassName( givenG );
+
+        final CoexpressionCollectionValueObject coexpressions = new CoexpressionCollectionValueObject();
+
+        coexpressions.setStringency( stringency );
+        coexpressions.setQueryGene( gene );
+
+        StopWatch overallWatch = new StopWatch();
+        overallWatch.start();
+
+        final Collection<Long> eeIds = getEEIds( ees );
+
+        String queryString = "";
+        queryString = getFastNativeQueryString( p2pClassName, "firstVector", "secondVector", eeIds );
+
+        Session session = this.getSession( false );
+        org.hibernate.Query queryObject = setCoexpQueryParameters( session, gene, id, queryString );
+        processCoexpQuery( gene, queryObject, coexpressions );
+
+        overallWatch.stop();
+        Long overallElapsed = overallWatch.getTime();
+        log.info( "Query took a total of " + overallElapsed + "ms (wall clock time)" );
+        coexpressions.setElapsedWallTimeElapsed( overallElapsed );
+        return coexpressions;
+    }
+
+    /**
+     * @param queryGene
+     * @param geneMap
+     * @param queryObject
+     */
+    private void processCoexpQuery( Gene queryGene, Query queryObject, CoexpressionCollectionValueObject coexpressions ) {
+        ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        GeneCoexpressionResults geneMap = new GeneCoexpressionResults();
+        while ( scroll.next() ) {
+            processCoexpQueryResult( queryGene, geneMap, scroll, coexpressions );
+        }
+        coexpressions.setGeneCoexpressionResults( geneMap );
+    }
+
+    /**
+     * Process a single query result from the coexpression search, converting it into a
+     * CoexpressionCollectionValueObject
      * 
      * @param queryGene
      * @param geneMap
      * @param scroll
      */
-    private void processCoexpQueryResult( Gene queryGene, GeneMap geneMap, ScrollableResults scroll,
+    private void processCoexpQueryResult( Gene queryGene, GeneCoexpressionResults geneMap, ScrollableResults scroll,
             CoexpressionCollectionValueObject coexpressions ) {
         CoexpressionValueObject vo;
         Long geneId = scroll.getLong( 0 );
@@ -615,138 +395,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     }
 
     /**
-     * @param queryGene
-     * @param geneMap
-     * @param queryObject
-     */
-    private void processCoexpQuery( Gene queryGene, GeneMap geneMap, org.hibernate.Query queryObject,
-            CoexpressionCollectionValueObject coexpressions ) {
-        ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-
-        while ( scroll.next() ) {
-            processCoexpQueryResult( queryGene, geneMap, scroll, coexpressions );
-        }
-    }
-
-    /**
-     * @param gene
-     * @param ees
-     * @param id
-     * @param eeIds
-     * @param queryString
-     * @return
-     */
-    private org.hibernate.Query setCoexpQueryParameters( Session session, Gene gene, long id, String queryString ) {
-        org.hibernate.SQLQuery queryObject;
-        queryObject = session.createSQLQuery( queryString ); // for native query.
-
-        queryObject.addScalar( "id", new LongType() );
-        queryObject.addScalar( "genesymb", new StringType() );
-        queryObject.addScalar( "genename", new StringType() );
-        queryObject.addScalar( "exper", new LongType() );
-        queryObject.addScalar( "pvalue", new DoubleType() );
-        queryObject.addScalar( "score", new DoubleType() );
-        queryObject.addScalar( "csIdIn", new LongType() );
-        queryObject.addScalar( "csIdOut", new LongType() );
-        queryObject.addScalar( "geneType", new StringType() );
-        queryObject.addScalar( "eeName", new StringType() );
-
-        queryObject.setLong( "id", id );
-        // this is to make the query faster by narrowing down the gene join
-        // queryObject.setLong( "taxonId", gene.getTaxon().getId() );
-
-        return queryObject;
-    }
-
-    @Override
-    protected Integer handleCountAll() throws Exception {
-        final String query = "select count(*) from GeneImpl";
-        try {
-            org.hibernate.Query queryObject = super.getSession().createQuery( query );
-
-            return ( Integer ) queryObject.iterate().next();
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-    }
-
-    /**
-     * Gets all the genes referred to by the alias defined by the search string.
-     * 
-     * @param search
-     * @return Collection
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Collection handleGetByGeneAlias( String search ) throws Exception {
-        Collection<Gene> genes = null;
-        final String queryString = "select distinct g from GeneImpl as g inner join g.aliases als where als.Alias = :search";
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setString( "search", search );
-            genes = queryObject.list();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-
-        return genes;
-    }
-
-    /**
-     * Gets all the genes that are coexpressed with another gene
-     * 
-     * @param gene to use as the query
-     * @param ees Data sets to restrict the search to.
-     * @param stringency minimum number of data sets the coexpression has to occur in before it 'counts'.
-     * @return Collection of CoexpressionCollectionValueObjects
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Object handleGetCoexpressedGenes( final Gene gene, Collection ees, Integer stringency ) throws Exception {
-        Gene givenG = gene;
-        final long id = givenG.getId();
-        log.info( "Gene: " + gene.getName() );
-
-        final String p2pClassName = getP2PClassName( givenG );
-        final GeneMap geneMap = new GeneMap();
-        final CoexpressionCollectionValueObject coexpressions = new CoexpressionCollectionValueObject();
-
-        coexpressions.setStringency( stringency );
-        coexpressions.setQueryGene( gene );
-
-        StopWatch overallWatch = new StopWatch();
-        overallWatch.start();
-
-        final Collection<Long> eeIds = getEEIds( ees );
-
-        String queryString = "";
-        queryString = getFastNativeQueryString( p2pClassName, "firstVector", "secondVector", eeIds );
-
-        Session session = getSessionFactory().openSession();
-        org.hibernate.Query queryObject = setCoexpQueryParameters( session, gene, id, queryString );
-        processCoexpQuery( gene, geneMap, queryObject, coexpressions );
-        session.close();
-
-        overallWatch.stop();
-        Long overallElapsed = overallWatch.getTime();
-        log.info( "Query took a total of " + overallElapsed + "ms (wall clock time)" );
-        coexpressions.setElapsedWallTimeElapsed( overallElapsed );
-
-        StopWatch watch = new StopWatch();
-        watch.start();
-        log.info( "Starting postprocessing" );
-        postProcessing( geneMap, coexpressions );
-
-        watch.stop();
-        Long elapsed = watch.getTime();
-        coexpressions.setPostProcessTime( elapsed );
-        log.info( "Done postprocessing; time for postprocessing: " + elapsed );
-
-        return coexpressions;
-    }
-
-    /**
      * Gets a count of the CompositeSequences related to the gene identified by the given id.
      * 
      * @param id
@@ -754,305 +402,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      */
     @Override
     protected long handleGetCompositeSequenceCountById( long id ) throws Exception {
-        long count = 0;
         final String queryString = "select count(distinct cs) from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProductImpl"
                 + " as bs2gp, CompositeSequenceImpl as cs where gp=bs2gp.geneProduct "
                 + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setLong( "id", id );
-            queryObject.setMaxResults( 1 );
-
-            count = ( Long ) queryObject.uniqueResult();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-
-        return count;
-    }
-
-    /**
-     * Gets all the CompositeSequences related to the gene identified by the given id.
-     * 
-     * @param id
-     * @return Collection
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Collection handleGetCompositeSequencesById( long id ) throws Exception {
-        Collection<CompositeSequence> compSeq = null;
-        final String queryString = "select distinct cs from GeneImpl as gene  inner join gene.products as gp, BioSequence2GeneProductImpl "
-                + " as bs2gp , CompositeSequenceImpl as cs where gp=bs2gp.geneProduct "
-                + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
-
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setLong( "id", id );
-            compSeq = queryObject.list();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-        return compSeq;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Collection handleGetGenesByTaxon( Taxon taxon ) throws Exception {
-        Collection<Gene> genes = null;
-        final String queryString = "select gene from GeneImpl as gene where gene.taxon = :taxon ";
-
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameter( "taxon", taxon );
-            genes = queryObject.list();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-        return genes;
-
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Collection handleGetMicroRnaByTaxon( Taxon taxon ) throws Exception {
-        Collection<Gene> miRNA = null;
-        final String queryString = "select gene from GeneImpl as gene where gene.taxon = :taxon"
-                + " and (gene.description like '%micro RNA or sno RNA' OR gene.description = 'miRNA')";
-
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameter( "taxon", taxon );
-            miRNA = queryObject.list();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-        return miRNA;
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.GeneDaoBase#handleLoad(java.util.Collection)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Collection handleLoad( Collection ids ) throws Exception {
-        Collection<Gene> genes = null;
-        final String queryString = "select distinct gene from GeneImpl gene where gene.id in (:ids)";
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameterList( "ids", ids );
-            genes = queryObject.list();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-        return genes;
-    }
-
-    // This method has been duplicated from CompositeSequenceService
-    // It actually belongs here, as it returns a Map CS to genes.
-    // TODO unify this duplication
-    @SuppressWarnings("unchecked")
-    private Map<Long, Collection<Gene>> getGenes( Collection<Long> csIds ) throws Exception {
-
-        if ( ( csIds == null ) || ( csIds.size() == 0 ) ) {
-            log.debug( "getGenes given null or empty set" );
-            return null;
-        }
-        Map<Long, Collection<Gene>> returnVal = new HashMap<Long, Collection<Gene>>();
-        for ( Long csID : csIds ) {
-            returnVal.put( csID, new HashSet<Gene>() );
-        }
-
-        // build the query for fetching the cs -> gene relation
-        final String nativeQuery = "select CS, GENE from GENE2CS WHERE CS IN ";
-
-        StringBuilder buf = new StringBuilder();
-        buf.append( nativeQuery );
-        buf.append( "(" );
-        for ( Long csID : csIds ) {
-            buf.append( csID );
-            buf.append( "," );
-        }
-        buf.setCharAt( buf.length() - 1, ')' );
-        Session session = getSessionFactory().openSession();
-        org.hibernate.SQLQuery queryObject = session.createSQLQuery( buf.toString() );
-        queryObject.addScalar( "cs", new LongType() );
-        queryObject.addScalar( "gene", new LongType() );
-
-        StopWatch watch = new StopWatch();
-        log.debug( "Beginning query" );
-        watch.start();
-
-        List result = queryObject.list();
-
-        log.debug( "Done with initial query in " + watch.getTime() + " ms, got " + result.size()
-                + " cs-to-gene mappings." );
-        watch.reset();
-        watch.start();
-
-        int count = 0;
-        Collection<Long> genesToFetch = new HashSet<Long>();
-        Map<Long, Collection<Long>> cs2geneIds = new HashMap<Long, Collection<Long>>();
-
-        for ( Object object : result ) {
-            Object[] ar = ( Object[] ) object;
-            Long cs = ( Long ) ar[0];
-            Long gene = ( Long ) ar[1];
-            if ( !cs2geneIds.containsKey( cs ) ) {
-                cs2geneIds.put( cs, new HashSet<Long>() );
-            }
-            cs2geneIds.get( cs ).add( gene );
-            genesToFetch.add( gene );
-        }
-
-        session.close();
-
-        // nothing found?
-        if ( genesToFetch.size() == 0 ) {
-            returnVal.clear();
-            return returnVal;
-        }
-
-        log.debug( "Built cs -> gene map in " + watch.getTime() + " ms; fetching " + genesToFetch.size() + " genes." );
-        watch.reset();
-        watch.start();
-
-        // fetch the genes
-        Collection<Long> batch = new HashSet<Long>();
-        Collection<Gene> genes = new HashSet<Gene>();
-        String geneQuery = "select g from GeneImpl g where g.id in ( :gs )";
-
-        org.hibernate.Query geneQueryObject = super.getSession( false ).createQuery( geneQuery ).setFetchSize( 1000 );
-        int BATCH_SIZE = 10000;
-        for ( Long gene : genesToFetch ) {
-            batch.add( gene );
-            if ( batch.size() == BATCH_SIZE ) {
-                geneQueryObject.setParameterList( "gs", batch );
-                genes.addAll( geneQueryObject.list() );
-                batch.clear();
-            }
-        }
-
-        if ( batch.size() > 0 ) {
-            geneQueryObject.setParameterList( "gs", batch );
-            genes.addAll( geneQueryObject.list() );
-        }
-
-        log.debug( "Got information on " + genes.size() + " genes in " + watch.getTime() + " ms" );
-
-        Map<Long, Gene> geneIdMap = new HashMap<Long, Gene>();
-        for ( Gene g : ( Collection<Gene> ) genes ) {
-            Long id = g.getId();
-            geneIdMap.put( id, g );
-        }
-
-        // fill in the return value.
-        for ( Long csId : csIds ) {
-            assert csId != null;
-            Collection<Long> genesToAttach = cs2geneIds.get( csId );
-            if ( genesToAttach == null ) {
-                // this means there was no gene for that cs; we should delete it from the result
-                returnVal.remove( csId );
-                continue;
-            }
-            for ( Long geneId : genesToAttach ) {
-                returnVal.get( csId ).add( geneIdMap.get( geneId ) );
-            }
-            ++count;
-        }
-
-        log.debug( "Done, " + count + " result rows processed, " + returnVal.size() + "/" + csIds.size()
-                + " probes are associated with genes" );
-        return returnVal;
-    }
-
-    private class GeneMap {
-
-        private Map<Long, CoexpressionValueObject> geneImplMap;
-        private Map<Long, CoexpressionValueObject> predictedMap;
-        private Map<Long, CoexpressionValueObject> probeAlignedMap;
-
-        public GeneMap() {
-
-            super();
-            geneImplMap = new HashMap<Long, CoexpressionValueObject>();
-            predictedMap = new HashMap<Long, CoexpressionValueObject>();
-            probeAlignedMap = new HashMap<Long, CoexpressionValueObject>();
-
-        }
-
-        public boolean contains( Long id ) {
-
-            return geneImplMap.containsKey( id ) || predictedMap.containsKey( id ) || probeAlignedMap.containsKey( id );
-
-        }
-
-        private void addGeneImpl( CoexpressionValueObject cvo ) {
-
-            if ( geneImplMap.containsKey( cvo.getGeneId() ) ) return;
-
-            geneImplMap.put( cvo.getGeneId(), cvo );
-        }
-
-        private void addPredictedGene( CoexpressionValueObject cvo ) {
-
-            if ( geneImplMap.containsKey( cvo.getGeneId() ) ) return;
-
-            predictedMap.put( cvo.getGeneId(), cvo );
-        }
-
-        private void addProbeAlignedGene( CoexpressionValueObject cvo ) {
-
-            if ( geneImplMap.containsKey( cvo.getGeneId() ) ) return;
-
-            probeAlignedMap.put( cvo.getGeneId(), cvo );
-        }
-
-        public CoexpressionValueObject get( Long id ) {
-
-            if ( geneImplMap.containsKey( id ) ) return geneImplMap.get( id );
-
-            if ( predictedMap.containsKey( id ) ) return predictedMap.get( id );
-
-            if ( probeAlignedMap.containsKey( id ) ) return probeAlignedMap.get( id );
-
-            return null;
-        }
-
-        public void put( CoexpressionValueObject cvo ) {
-
-            if ( cvo.getGeneType().equalsIgnoreCase( "GeneImpl" ) ) {
-                addGeneImpl( cvo );
-            } else if ( cvo.getGeneType().equalsIgnoreCase( "PredictedGeneImpl" ) ) {
-                addPredictedGene( cvo );
-            } else if ( cvo.getGeneType().equalsIgnoreCase( "ProbeAlignedRegionImpl" ) ) {
-                addProbeAlignedGene( cvo );
-            } else
-                log.warn( "There was a coexpressed gene of invalid type. Skipping...  " + cvo.getGeneType() );
-
-            return;
-
-        }
-
-        public Map<Long, CoexpressionValueObject> getGeneImplMap() {
-            return geneImplMap;
-        }
-
-        public Map<Long, CoexpressionValueObject> getProbeAlignedRegionMap() {
-            return probeAlignedMap;
-        }
-
-        public Map<Long, CoexpressionValueObject> getPredictedGeneMap() {
-            return predictedMap;
-        }
-
+        List r = getHibernateTemplate().findByNamedParam( queryString, "id", id );
+        return ( Long ) r.iterator().next();
     }
 
     /*
@@ -1092,8 +446,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
 
-        //
-
         while ( scroll.next() ) {
             Long geneId = scroll.getLong( 0 );
             Long csId = scroll.getLong( 1 );
@@ -1110,15 +462,52 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         return geneMap;
     }
 
+    /**
+     * Gets all the CompositeSequences related to the gene identified by the given gene and arrayDesign.
+     * 
+     * @param gene, arrayDesign
+     * @return Collection
+     */
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.genome.GeneDaoBase#handleGetCoexpressedGeneMap(int, ubic.gemma.model.genome.Gene)
+     * @see ubic.gemma.model.genome.GeneDaoBase#handleGetCompositeSequences(ubic.gemma.model.genome.Gene,
+     *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
+    @SuppressWarnings("unchecked")
     @Override
-    @Deprecated
-    protected Map handleGetCoexpressedGeneMap( int stringincy, Gene gene ) throws Exception {
-        throw new UnsupportedOperationException( "Sorry, you shouldn't use this" );
+    protected Collection handleGetCompositeSequences( Gene gene, ArrayDesign arrayDesign ) throws Exception {
+        Collection<CompositeSequence> compSeq = null;
+        final String queryString = "select distinct cs from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProductImpl"
+                + " as bs2gp, CompositeSequenceImpl as cs where gp=bs2gp.geneProduct "
+                + " and cs.biologicalCharacteristic=bs2gp.bioSequence "
+                + " and gene = :gene and cs.arrayDesign = :arrayDesign ";
+
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameter( "arrayDesign", arrayDesign );
+            queryObject.setParameter( "gene", gene );
+            compSeq = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return compSeq;
+    }
+
+    /**
+     * Gets all the CompositeSequences related to the gene identified by the given id.
+     * 
+     * @param id
+     * @return Collection
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleGetCompositeSequencesById( long id ) throws Exception {
+        final String queryString = "select distinct cs from GeneImpl as gene  inner join gene.products as gp, BioSequence2GeneProductImpl "
+                + " as bs2gp , CompositeSequenceImpl as cs where gp=bs2gp.geneProduct "
+                + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
+        return getHibernateTemplate().findByNamedParam( queryString, "id", id );
     }
 
     @SuppressWarnings("unchecked")
@@ -1198,6 +587,113 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             cs2genes.put( csId2cs.get( ent.getKey() ), genes );
         }
         return cs2genes;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.GeneDaoBase#handleGetGenesByTaxon(ubic.gemma.model.genome.Taxon)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleGetGenesByTaxon( Taxon taxon ) throws Exception {
+        final String queryString = "select gene from GeneImpl as gene where gene.taxon = :taxon ";
+        return getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.GeneDaoBase#handleGetMicroRnaByTaxon(ubic.gemma.model.genome.Taxon)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleGetMicroRnaByTaxon( Taxon taxon ) throws Exception {
+        final String queryString = "select gene from GeneImpl as gene where gene.taxon = :taxon"
+                + " and (gene.description like '%micro RNA or sno RNA' OR gene.description = 'miRNA')";
+        return getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.GeneDaoBase#handleLoad(java.util.Collection)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleLoad( Collection ids ) throws Exception {
+        final String queryString = "select distinct gene from GeneImpl gene where gene.id in (:ids)";
+        return getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadGenes(ubic.gemma.model.genome.Taxon)
+     */
+    @Override
+    protected Collection handleLoadGenes( Taxon taxon ) throws Exception {
+        final String queryString = "select gene from GeneImpl as gene where gene.taxon = :taxon"
+                + " and (gene.class = " + CoexpressionCollectionValueObject.GENE_IMPL + " )";
+
+        Collection genes;
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameter( "taxon", taxon );
+
+            genes = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return genes;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadPredictedGenes(ubic.gemma.model.genome.Taxon)
+     */
+    @Override
+    protected Collection handleLoadPredictedGenes( Taxon taxon ) throws Exception {
+        final String queryString = "select gene from GeneImpl as gene where gene.taxon = :taxon"
+                + " and (gene.class = " + CoexpressionCollectionValueObject.PREDICTED_GENE_IMPL + ")";
+
+        Collection predictedGenes;
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameter( "taxon", taxon );
+
+            predictedGenes = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return predictedGenes;
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadProbeAlignedRegions(ubic.gemma.model.genome.Taxon)
+     */
+    @Override
+    protected Collection handleLoadProbeAlignedRegions( Taxon taxon ) throws Exception {
+        final String queryString = "select gene from GeneImpl as gene where gene.taxon = :taxon"
+                + " and (gene.class = " + CoexpressionCollectionValueObject.PROBE_ALIGNED_REGION_IMPL + ")";
+
+        Collection pars;
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameter( "taxon", taxon );
+
+            pars = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return pars;
     }
 
 }

@@ -246,7 +246,6 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         commandObject.setSearchString( sourceGene.getOfficialSymbol() );
         commandObject.setGeneIdSearch( "false" );
         commandObject.setId( null );
-        
 
         Integer numExpressionExperiments = 0;
         Collection<Long> possibleEEs = expressionExperimentService.findByGene( sourceGene );
@@ -295,10 +294,6 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         }
         commandObject.setStringency( stringency );
 
-        // ===================================================================================
-        // Taking out progress for the mean time while we figure out the back button problem
-        // return startJob( command, request, response, errors );
-        // ===================================================================================
         CoexpressionCollectionValueObject coexpressions = ( CoexpressionCollectionValueObject ) geneService
                 .getCoexpressedGenes( commandObject.getSourceGene(), commandObject.getToUseEE(), commandObject
                         .getStringency() );

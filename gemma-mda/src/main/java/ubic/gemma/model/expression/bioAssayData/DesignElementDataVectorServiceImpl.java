@@ -26,7 +26,6 @@ import java.util.Map;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author pavlidis
@@ -144,9 +143,8 @@ public class DesignElementDataVectorServiceImpl extends
      *      ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
     @Override
-    protected void handleRemoveDataForQuantitationType( ExpressionExperiment expressionExperiment,
-            QuantitationType quantitationType ) throws Exception {
-        this.getDesignElementDataVectorDao().removeDataFromQuantitationType( expressionExperiment, quantitationType );
+    protected void handleRemoveDataForQuantitationType( QuantitationType quantitationType ) throws Exception {
+        this.getDesignElementDataVectorDao().removeDataForQuantitationType( quantitationType );
     }
 
     @Override
@@ -176,6 +174,7 @@ public class DesignElementDataVectorServiceImpl extends
 
     @Override
     protected Map handleGetDedv2GenesMap( Collection dedvs, QuantitationType qt ) throws Exception {
-           return this.getDesignElementDataVectorDao().getDedv2GenesMap( dedvs, qt );
+        return this.getDesignElementDataVectorDao().getDedv2GenesMap( dedvs, qt );
     }
+
 }

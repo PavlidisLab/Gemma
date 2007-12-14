@@ -38,12 +38,10 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
     @SuppressWarnings("unchecked")
     @Override
     public Collection<ProbeAlignedRegion> find( BlatResult blatResult ) {
-
         Chromosome chrom = blatResult.getTargetChromosome();
         final Long targetStart = blatResult.getTargetStart();
         final Long targetEnd = blatResult.getTargetEnd();
         final String strand = blatResult.getStrand();
-
         return findByPosition( chrom, targetStart, targetEnd, strand );
 
     }
@@ -61,7 +59,7 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
     @SuppressWarnings("unchecked")
     private Collection<ProbeAlignedRegion> findByPosition( Chromosome chrom, final Long targetStart,
             final Long targetEnd, final String strand ) {
-        Collection<ProbeAlignedRegion> result = null;
+
         // the 'fetch'es are so we don't get lazy loads (typical applications of this method)
         String query = "select par from ProbeAlignedRegionImpl as par inner join fetch par.physicalLocation pl "
                 + "inner join fetch par.products prod inner join fetch prod.exons inner join fetch pl.chromosome "
@@ -73,23 +71,17 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
 
         query = query + " and " + SequenceBinUtils.addBinToQuery( "pl", targetStart, targetEnd );
 
+        String[] params;
+        Object[] vals;
         if ( strand != null ) {
             query = query + " and pl.strand = :strand ";
+            params = new String[] { "chromosome", "start", "end", "strand" };
+            vals = new Object[] { chrom, targetStart, targetEnd, strand };
+        } else {
+            params = new String[] { "chromosome", "start", "end" };
+            vals = new Object[] { chrom, targetStart, targetEnd };
         }
-
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
-            queryObject.setParameter( "chromosome", chrom );
-            queryObject.setParameter( "start", targetStart );
-            queryObject.setParameter( "end", targetEnd );
-            if ( strand != null ) queryObject.setParameter( "strand", strand );
-
-            result = queryObject.list();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-        return result;
+        return getHibernateTemplate().findByNamedParam( query, params, vals );
     }
 
     /*
@@ -99,20 +91,7 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
      */
     @Override
     public ProbeAlignedRegion geneValueObjectToEntity( GeneValueObject geneValueObject ) {
-        final String queryString = "select distinct gene from ProbeAlignedRegionImpl gene where gene.id = :id";
-
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setLong( "id", geneValueObject.getId() );
-            java.util.List results = queryObject.list();
-
-            if ( ( results == null ) || ( results.size() == 0 ) ) return null;
-
-            return ( ProbeAlignedRegion ) results.iterator().next();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
+        return ( ProbeAlignedRegion ) this.load( geneValueObject.getId() );
     }
 
 }

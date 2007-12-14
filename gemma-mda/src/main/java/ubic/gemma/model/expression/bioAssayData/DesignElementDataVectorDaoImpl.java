@@ -29,7 +29,7 @@ import java.util.Map;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.CacheMode; 
+import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
@@ -47,7 +47,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.util.BusinessKey;
@@ -463,14 +462,17 @@ public class DesignElementDataVectorDaoImpl extends
      *      ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
     @Override
-    protected void handleRemoveDataFromQuantitationType( final ExpressionExperiment expressionExperiment,
-            final QuantitationType quantitationType ) throws Exception {
-        final String dedvRemovalQuery = "delete from DesignElementDataVectorImpl as dedv where dedv.expressionExperiment = :ee and dedv.quantitationType = :qt";
-        int deleted = getHibernateTemplate().bulkUpdate( dedvRemovalQuery,
-                new Object[] { expressionExperiment, quantitationType } );
+    protected void handleRemoveDataForQuantitationType( final QuantitationType quantitationType ) throws Exception {
+        final String dedvRemovalQuery = "delete from DesignElementDataVectorImpl as dedv where dedv.quantitationType = :qt";
+        int deleted = getHibernateTemplate().bulkUpdate( dedvRemovalQuery, quantitationType );
         log.info( "Deleted " + deleted + " data vector elements" );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleThaw(java.util.Collection)
+     */
     @SuppressWarnings("unchecked")
     @Override
     protected void handleThaw( final Collection designElementDataVectors ) throws Exception {

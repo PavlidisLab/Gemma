@@ -365,7 +365,6 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             css.add( cs );
         }
         return compositeSequenceService.getGenes( css );
-
     }
 
     /**
