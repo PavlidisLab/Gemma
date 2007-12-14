@@ -16,6 +16,7 @@ import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -34,6 +35,7 @@ import ubic.gemma.web.controller.expression.experiment.AnnotationValueObject;
  * @spring.property name="bioMaterialService" ref="bioMaterialService"
  * @spring.property name="factorValueService" ref="factorValueService"
  * @spring.property name="ontologyService" ref="ontologyService"
+ * @spring.property name="experimentalDesignService" ref="experimentalDesignService"
  */
 public class CharacteristicBrowserController extends BaseFormController {
 
@@ -44,6 +46,7 @@ public class CharacteristicBrowserController extends BaseFormController {
     BioMaterialService bioMaterialService;
     FactorValueService factorValueService;
     OntologyService ontologyService;
+    ExperimentalDesignService experimentalDesignService;
     
     @Override
     protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
@@ -193,16 +196,26 @@ public class CharacteristicBrowserController extends BaseFormController {
             return;
         if ( parent instanceof ExpressionExperiment ) {
             ExpressionExperiment ee = (ExpressionExperiment)parent;
-            avo.setParentDescription( String.format( "ExpressionExperiment: %s", ee.getName() ) );
-            avo.setParentLink( GemmaLinkUtils.getExpressionExperimentLink( ee.getId(), avo.getParentDescription(), avo.getParentDescription() ) );
+            avo.setParentName( String.format( "ExpressionExperiment: %s", ee.getName() ) );
+            avo.setParentDescription( ee.getDescription() );
+            avo.setParentLink( GemmaLinkUtils.getExpressionExperimentLink( ee.getId(), avo.getParentName(), null ) );
         } else if ( parent instanceof BioMaterial ) {
             BioMaterial bm = (BioMaterial)parent;
-            avo.setParentDescription( String.format( "BioMaterial: %s", bm.getDescription() ) );
-            avo.setParentLink( GemmaLinkUtils.getBioMaterialLink( bm.getId(), avo.getParentDescription(), avo.getParentDescription() ) );
+            avo.setParentName( String.format( "BioMaterial: %s", bm.getName() ) );
+            avo.setParentDescription( bm.getDescription() );
+            avo.setParentLink( GemmaLinkUtils.getBioMaterialLink( bm.getId(), avo.getParentName(), null ) );
+            ExpressionExperiment ee = expressionExperimentService.findByBioMaterial( bm );
+            avo.setParentOfParentName( String.format( "ExpressionExperiment: %s", ee.getName() ) );
+            avo.setParentOfParentDescription( ee.getDescription() );
+            avo.setParentOfParentLink( GemmaLinkUtils.getExpressionExperimentLink( ee.getId(), avo.getParentOfParentName(), null ) );
         } else if ( parent instanceof FactorValue ) {
             FactorValue fv = (FactorValue)parent;
             avo.setParentDescription( String.format( "FactorValue: %s : %s", fv.getExperimentalFactor().getName(), fv.getValue() ) );
-            avo.setParentLink( GemmaLinkUtils.getExperimentalDesignLink( fv.getExperimentalFactor().getExperimentalDesign().getId(), avo.getParentDescription(), avo.getParentDescription() ) );
+            avo.setParentLink( GemmaLinkUtils.getExperimentalDesignLink( fv.getExperimentalFactor().getExperimentalDesign().getId(), avo.getParentDescription(), null ) );
+            ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( fv.getExperimentalFactor().getExperimentalDesign() );
+            avo.setParentOfParentName( String.format( "ExpressionExperiment: %s", ee.getName() ) );
+            avo.setParentOfParentDescription( ee.getDescription() );
+            avo.setParentOfParentLink( GemmaLinkUtils.getExpressionExperimentLink( ee.getId(), avo.getParentOfParentName(), null ) );
         }
     }
 
@@ -239,6 +252,13 @@ public class CharacteristicBrowserController extends BaseFormController {
      */
     public void setFactorValueService( FactorValueService factorValueService ) {
         this.factorValueService = factorValueService;
+    }
+
+    /**
+     * @param experimentalDesignService the experimentalDesignService to set
+     */
+    public void setExperimentalDesignService( ExperimentalDesignService experimentalDesignService ) {
+        this.experimentalDesignService = experimentalDesignService;
     }
     
 }

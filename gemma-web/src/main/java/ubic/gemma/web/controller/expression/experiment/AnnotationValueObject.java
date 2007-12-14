@@ -29,8 +29,12 @@ public class AnnotationValueObject  {
     private String className;
     private String termUri;
     private String termName;
+    private String parentName;
     private String parentDescription;
     private String parentLink;
+    private String parentOfParentName;
+    private String parentOfParentDescription;
+    private String parentOfParentLink;
     private String description;
     private String evidenceCode;
     
@@ -108,6 +112,20 @@ public class AnnotationValueObject  {
     }
 
     /**
+     * @return the parentName
+     */
+    public String getParentName() {
+        return parentName;
+    }
+
+    /**
+     * @param parentDescription the parentDescription to set
+     */
+    public void setParentName( String parentName ) {
+        this.parentName = parentName;
+    }
+
+    /**
      * @return the parentDescription
      */
     public String getParentDescription() {
@@ -133,5 +151,47 @@ public class AnnotationValueObject  {
      */
     public void setParentLink( String parentLink ) {
         this.parentLink = parentLink;
+    }
+
+    /**
+     * @return the parentOfParentName
+     */
+    public String getParentOfParentName() {
+        return parentOfParentName;
+    }
+
+    /**
+     * @param parentOfParentName the parentOfParentName to set
+     */
+    public void setParentOfParentName( String parentOfParentName ) {
+        this.parentOfParentName = parentOfParentName;
+    }
+
+    /**
+     * @return the parentOfParentDescription
+     */
+    public String getParentOfParentDescription() {
+        return parentOfParentDescription;
+    }
+
+    /**
+     * @param parentOfParentDescription the parentOfParentDescription to set
+     */
+    public void setParentOfParentDescription( String parentOfParentDescription ) {
+        this.parentOfParentDescription = parentOfParentDescription;
+    }
+
+    /**
+     * @return the parentOfParentLink
+     */
+    public String getParentOfParentLink() {
+        return parentOfParentLink;
+    }
+
+    /**
+     * @param parentOfParentLink the parentOfParentLink to set
+     */
+    public void setParentOfParentLink( String parentOfParentLink ) {
+        this.parentOfParentLink = parentOfParentLink;
     }
 }

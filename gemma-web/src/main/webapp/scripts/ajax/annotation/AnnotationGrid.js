@@ -44,8 +44,8 @@ Ext.Gemma.AnnotationGrid = function ( div, config ) {
 	
 	superConfig.cm = new Ext.grid.ColumnModel( [
 		{ header: "Class", dataIndex: "className" },
-		{ header: "Term", dataIndex: "termName", renderer: Ext.Gemma.AnnotationGrid.getStyler() },
-		{ header: "Parent", dataIndex: "parentLink", hidden: this.showParent ? false: true }
+		{ header: "Term", dataIndex: "termName", renderer: Ext.Gemma.AnnotationGrid.getTermStyler() },
+		{ header: "Parent", dataIndex: "parentLink", renderer: Ext.Gemma.AnnotationGrid.getParentStyler(), hidden: this.showParent ? false: true }
 	] );
 	superConfig.cm.defaultSortable = true;
 	var CATEGORY_COLUMN = 0;
@@ -123,28 +123,47 @@ Ext.Gemma.AnnotationGrid.getRecord = function() {
 			{ name:"className", type:"string" },
 			{ name:"termUri", type:"string" },
 			{ name:"termName", type:"string" },
+			{ name:"parentLink", type:"string" },
 			{ name:"parentDescription", type:"string" },
-			{ name:"parentLink", type:"string" }
+			{ name:"parentOfParentLink", type:"string" },
+			{ name:"parentOfParentDescription", type:"string" }
 		] );
 	}
 	return Ext.Gemma.AnnotationGrid.record;
 };
 
-Ext.Gemma.AnnotationGrid.formatWithStyle = function( value, uri ) {
+Ext.Gemma.AnnotationGrid.formatTermWithStyle = function( value, uri ) {
 	var class = uri ? "unusedWithUri" : "unusedNoUri";
 	var description = uri || "free text";
 	return String.format( "<span class='{0}' title='{2}'>{1}</span>", class, value, description );
 };
 
-Ext.Gemma.AnnotationGrid.getStyler = function() {
-	if ( Ext.Gemma.AnnotationGrid.styler == undefined ) {
+Ext.Gemma.AnnotationGrid.getTermStyler = function() {
+	if ( Ext.Gemma.AnnotationGrid.termStyler == undefined ) {
 		/* apply a CSS class depending on whether or not the characteristic has a URI.
 		 */
-		Ext.Gemma.AnnotationGrid.styler = function ( value, metadata, record, row, col, ds ) {
-			return Ext.Gemma.AnnotationGrid.formatWithStyle( value, record.data.termUri );
+		Ext.Gemma.AnnotationGrid.termStyler = function ( value, metadata, record, row, col, ds ) {
+			return Ext.Gemma.AnnotationGrid.formatTermWithStyle( value, record.data.termUri );
 		}
 	}
-	return Ext.Gemma.AnnotationGrid.styler;
+	return Ext.Gemma.AnnotationGrid.termStyler;
+};
+
+Ext.Gemma.AnnotationGrid.formatParentWithStyle = function( parentLink, parentDescription, parentOfParentLink, parentOfParentDescription ) {
+	return parentOfParentLink ?
+		String.format( "{0}<br> from {1}", parentLink, parentOfParentLink ) :
+		parentLink;
+};
+
+Ext.Gemma.AnnotationGrid.getParentStyler = function() {
+	if ( Ext.Gemma.AnnotationGrid.parentStyler == undefined ) {
+		/* apply a CSS class depending on whether or not the characteristic has a URI.
+		 */
+		Ext.Gemma.AnnotationGrid.parentStyler = function ( value, metadata, record, row, col, ds ) {
+			return Ext.Gemma.AnnotationGrid.formatParentWithStyle( record.data.parentLink, record.data.parentDescription, record.data.parentOfParentLink, record.data.parentOfParentDescription );
+		}
+	}
+	return Ext.Gemma.AnnotationGrid.parentStyler;
 };
 
 Ext.Gemma.AnnotationGrid.convertToCharacteristic = function( record ) {
