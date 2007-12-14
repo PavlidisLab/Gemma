@@ -312,7 +312,7 @@ public class OntologyService {
 
     }
     private String foundValueKey(Characteristic c) {
-        StringBuffer buf = new StringBuffer( c.getValue().toLowerCase() );
+        StringBuffer buf = new StringBuffer( c.getValue() );
         if ( c instanceof VocabCharacteristic )
             buf.append( ((VocabCharacteristic)c).getValueUri() );
         return buf.toString();

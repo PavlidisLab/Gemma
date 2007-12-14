@@ -75,9 +75,10 @@ public class CharacteristicBrowserController extends BaseFormController {
     
     public void removeCharacteristics( Collection<Characteristic> chars ) {
         Map charToParent = characteristicService.getParents( chars );
-        for ( Characteristic c : chars ) {
-            removeFromParent( c, charToParent.get( c ) );
-            characteristicService.delete( c );
+        for ( Characteristic cFromClient : chars ) {
+            Characteristic cFromDatabase = characteristicService.load( cFromClient.getId() );
+            removeFromParent( cFromDatabase, charToParent.get( cFromDatabase ) );
+            characteristicService.delete( cFromDatabase );
         }
     }
     

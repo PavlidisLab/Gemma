@@ -38,27 +38,24 @@ public class CharacteristicDaoImpl
      */
     @Override
     protected Collection handleFindByValue( String search ) throws Exception {
-        return handleFindByValue( search, 0, 0 );
-    }
-    
-    /* (non-Javadoc)
-     * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByvalue(java.lang.String)
-     */
-    @Override
-    protected Collection handleFindByValue( String search, int firstResult, int maxResults ) throws Exception {
         final String queryString = "select distinct char from CharacteristicImpl as char where char.value like :search";
 
         try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setString( "search", search );
-            if ( firstResult > 0 )
-                queryObject.setFirstResult( firstResult );
-            if ( maxResults > 0 )
-                queryObject.setMaxResults( maxResults );
-            return queryObject.list();
+//            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+//            queryObject.setString( "search", search );
+//            return queryObject.list();
+            return getHibernateTemplate().findByNamedParam( queryString, "search", search );
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByValue(java.lang.String, int, int)
+     */
+    @Override
+    protected Collection handleFindByValue( String query, int firstResult, int maxResults ) throws Exception {
+        throw new UnsupportedOperationException();
     }
 
     /* (non-Javadoc)
@@ -69,12 +66,12 @@ public class CharacteristicDaoImpl
         final String queryString =
             "select parent, char from " + parentClass.getSimpleName() + " as parent " +
                 "inner join parent.characteristics as char";
-//            "from " + parentClass.getSimpleName();
         
         try {
             Map charToParent = new HashMap<Characteristic, Object>();
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            for ( Object o : queryObject.list() ) {
+//            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+//            for ( Object o : queryObject.list() ) {
+            for ( Object o : getHibernateTemplate().find( queryString ) ) {
                 Object[] row = (Object[])o;
                 charToParent.put( (Characteristic)row[1], row[0] );
             }
@@ -92,6 +89,12 @@ public class CharacteristicDaoImpl
         if ( characteristics.isEmpty() )
             return new HashMap();
         
+//        Map<Long, Characteristic> idToCharacteristic = new HashMap<Long, Characteristic>();
+//        for ( Object o : characteristics ) {
+//            Characteristic c = (Characteristic)o;
+//            idToCharacteristic.put( c.getId(), c ); 
+//        }
+        
         final String queryString =
             "select parent, char from " + parentClass.getSimpleName() + " as parent " +
                 "inner join parent.characteristics as char " +
@@ -99,10 +102,12 @@ public class CharacteristicDaoImpl
         
         try {
             Map charToParent = new HashMap<Characteristic, Object>();
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameterList( "chars", characteristics );
-            for ( Object o : queryObject.list() ) {
+//            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+//            queryObject.setParameterList( "chars", characteristics );
+//            for ( Object o : queryObject.list() ) {
+            for ( Object o : getHibernateTemplate().findByNamedParam( queryString, "chars", characteristics ) ) {
                 Object[] row = (Object[])o;
+//                charToParent.put( idToCharacteristic.get( ((Characteristic)row[1]).getId() ), row[0] );
                 charToParent.put( (Characteristic)row[1], row[0] );
             }
             return charToParent;
@@ -116,9 +121,10 @@ public class CharacteristicDaoImpl
         final String queryString = "select char from VocabCharacteristicImpl as char where lower(char.valueUri) = :search";
 
         try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setString( "search", searchString.toLowerCase() );
-            return queryObject.list();
+//            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+//            queryObject.setString( "search", searchString.toLowerCase() );
+//            return queryObject.list();
+            return getHibernateTemplate().findByNamedParam( queryString, "search", searchString.toLowerCase() );
 
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
@@ -130,10 +136,10 @@ public class CharacteristicDaoImpl
         final String queryString = "from VocabCharacteristicImpl where valueUri in (:uris)";
 
         try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameterList( "uris", uris);
-            return queryObject.list();
-
+//            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+//            queryObject.setParameterList( "uris", uris);
+//            return queryObject.list();
+            return getHibernateTemplate().findByNamedParam( queryString, "uris", uris );
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }

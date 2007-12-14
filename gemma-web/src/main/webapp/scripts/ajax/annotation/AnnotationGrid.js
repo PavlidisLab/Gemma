@@ -11,6 +11,7 @@ Ext.namespace('Ext.Gemma');
  * 		editable : if true, the annotations in the grid will be editable
  * 		showParent : if true, a link to the parent object will appear in the grid
  * 		noInitialLoad : if true, the grid will not be loaded immediately upon creation
+ * 		pageSize : if defined, the grid will be paged on the client side, with the defined page size
  */
 Ext.Gemma.AnnotationGrid = function ( div, config ) {
 	
@@ -19,15 +20,26 @@ Ext.Gemma.AnnotationGrid = function ( div, config ) {
 	this.editable = config.editable; delete config.editable;
 	this.showParent = config.showParent; delete config.showParent;
 	this.noInitialLoad = config.noInitialLoad; delete config.noInitialLoad;
+	this.pageSize = config.pageSize; delete config.pageSize;
 	
 	var superConfig = { };
-	superConfig.ds = new Ext.data.Store( {
-		proxy : new Ext.data.DWRProxy( this.readMethod ),
-		reader : new Ext.data.ListRangeReader( {id:"id"}, Ext.Gemma.AnnotationGrid.getRecord() )
-	} );
+	var thisGrid = this;
+	
+	if ( this.pageSize ) {
+		superConfig.ds = new Ext.Gemma.PagingDataStore( {
+			proxy : new Ext.data.DWRProxy( this.readMethod ),
+			reader : new Ext.data.ListRangeReader( {id:"id"}, Ext.Gemma.AnnotationGrid.getRecord() ),
+			pageSize : this.pageSize
+		} );
+	} else {
+		superConfig.ds = new Ext.data.Store( {
+			proxy : new Ext.data.DWRProxy( this.readMethod ),
+			reader : new Ext.data.ListRangeReader( {id:"id"}, Ext.Gemma.AnnotationGrid.getRecord() )
+		} );
+	}
 	superConfig.ds.setDefaultSort('className');
 	superConfig.ds.on( "load", function() {
-		Ext.Gemma.CharacteristicBrowser.grid.getView().autoSizeColumns();
+		thisGrid.getView().autoSizeColumns();
 	} );
 	
 	superConfig.cm = new Ext.grid.ColumnModel( [
