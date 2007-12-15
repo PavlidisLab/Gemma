@@ -53,7 +53,9 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.ontology.OntologyResource;
 import ubic.gemma.ontology.OntologyService;
+import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
+import ubic.gemma.search.SearchSettings;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.ToStringUtil;
 import ubic.gemma.util.progress.ProgressJob;
@@ -153,7 +155,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             return showAll( request, response );
         }
 
-        Collection<ExpressionExperiment> searchResults = searchService.expressionExperimentSearch( searchString );
+        Collection<SearchResult> searchResults = searchService.search(
+                SearchSettings.ExpressionExperimentSearch( searchString ) ).get( ExpressionExperiment.class );
 
         if ( ( searchResults == null ) || ( searchResults.size() == 0 ) ) {
             this.saveMessage( request, "Your search yielded no results." );
@@ -168,7 +171,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         }
 
         String list = "";
-        for ( ExpressionExperiment ee : searchResults )
+        for ( SearchResult ee : searchResults )
             list += ee.getId() + ",";
 
         this.saveMessage( request, "Search Criteria: " + searchString + "; " + searchResults.size()

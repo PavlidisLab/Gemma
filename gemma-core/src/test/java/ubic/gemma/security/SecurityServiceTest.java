@@ -95,7 +95,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
      * @throws Exception
      */
     public void testMakePrivate() throws Exception {
-        ArrayDesign ad = arrayDesignService.findArrayDesignByName( arrayDesignName );
+        ArrayDesign ad = arrayDesignService.findByName( arrayDesignName );
         SecurityService securityService = new SecurityService();
 
         securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
@@ -117,7 +117,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
         this.onSetUpInTransactionGrantingUserAuthority( "unauthorizedTestUser" );
 
-        ArrayDesign ad = arrayDesignService.findArrayDesignByName( arrayDesignName );
+        ArrayDesign ad = arrayDesignService.findByName( arrayDesignName );
         SecurityService securityService = new SecurityService();
 
         securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );

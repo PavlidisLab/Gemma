@@ -24,125 +24,105 @@ package ubic.gemma.model.common.description;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 /**
+ * @author Luke
+ * @author Paul
  * @see ubic.gemma.model.common.description.Characteristic
+ * @version $Id$
  */
-public class CharacteristicDaoImpl
-    extends ubic.gemma.model.common.description.CharacteristicDaoBase
-{
+public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.CharacteristicDaoBase {
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByParentClass(java.lang.Class)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Map handleFindByParentClass( Class parentClass ) throws Exception {
+        final String queryString = "select parent, char from " + parentClass.getSimpleName() + " as parent "
+                + "inner join parent.characteristics as char";
+
+        Map charToParent = new HashMap<Characteristic, Object>();
+        for ( Object o : getHibernateTemplate().find( queryString ) ) {
+            Object[] row = ( Object[] ) o;
+            charToParent.put( ( Characteristic ) row[1], row[0] );
+        }
+        return charToParent;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByUri(java.util.Collection)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection<Characteristic> handleFindByUri( Collection uris ) throws Exception {
+        int batchSize = 1000; // to avoid HQL parser barfing
+        Collection<String> batch = new HashSet<String>();
+        Collection<Characteristic> results = new HashSet<Characteristic>();
+        final String queryString = "from VocabCharacteristicImpl where valueUri in (:uris)";
+
+        for ( String uri : ( Collection<String> ) uris ) {
+            batch.add( uri );
+            if ( batch.size() >= batchSize ) {
+                results.addAll( getHibernateTemplate().findByNamedParam( queryString, "uris", batch ) );
+                batch.clear();
+            }
+        }
+        if ( batch.size() > 0 ) {
+            results.addAll( getHibernateTemplate().findByNamedParam( queryString, "uris", batch ) );
+        }
+        return results;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByUri(java.lang.String)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection<Characteristic> handleFindByUri( String searchString ) throws Exception {
+        final String queryString = "select char from VocabCharacteristicImpl as char where  char.valueUri = :search";
+        return getHibernateTemplate().findByNamedParam( queryString, "search", searchString );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByvalue(java.lang.String)
      */
     @Override
     protected Collection handleFindByValue( String search ) throws Exception {
         final String queryString = "select distinct char from CharacteristicImpl as char where char.value like :search";
-
-        try {
-//            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-//            queryObject.setString( "search", search );
-//            return queryObject.list();
-            return getHibernateTemplate().findByNamedParam( queryString, "search", search );
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
+        return getHibernateTemplate().findByNamedParam( queryString, "search", search );
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByValue(java.lang.String, int, int)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindParents(java.lang.Class,
+     *      java.util.Collection)
      */
-    @Override
-    protected Collection handleFindByValue( String query, int firstResult, int maxResults ) throws Exception {
-        throw new UnsupportedOperationException();
-    }
-
-    /* (non-Javadoc)
-     * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByParentClass(java.lang.Class)
-     */
-    @Override
-    protected Map handleFindByParentClass( Class parentClass ) throws Exception {
-        final String queryString =
-            "select parent, char from " + parentClass.getSimpleName() + " as parent " +
-                "inner join parent.characteristics as char";
-        
-        try {
-            Map charToParent = new HashMap<Characteristic, Object>();
-//            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-//            for ( Object o : queryObject.list() ) {
-            for ( Object o : getHibernateTemplate().find( queryString ) ) {
-                Object[] row = (Object[])o;
-                charToParent.put( (Characteristic)row[1], row[0] );
-            }
-            return charToParent;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-    }
-
-    /* (non-Javadoc)
-     * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindParents(java.lang.Class, java.util.Collection)
-     */
+    @SuppressWarnings("unchecked")
     @Override
     protected Map handleGetParents( Class parentClass, Collection characteristics ) throws Exception {
-        if ( characteristics.isEmpty() )
-            return new HashMap();
-        
-//        Map<Long, Characteristic> idToCharacteristic = new HashMap<Long, Characteristic>();
-//        for ( Object o : characteristics ) {
-//            Characteristic c = (Characteristic)o;
-//            idToCharacteristic.put( c.getId(), c ); 
-//        }
-        
-        final String queryString =
-            "select parent, char from " + parentClass.getSimpleName() + " as parent " +
-                "inner join parent.characteristics as char " +
-                "where char in (:chars)";
-        
-        try {
-            Map charToParent = new HashMap<Characteristic, Object>();
-//            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-//            queryObject.setParameterList( "chars", characteristics );
-//            for ( Object o : queryObject.list() ) {
-            for ( Object o : getHibernateTemplate().findByNamedParam( queryString, "chars", characteristics ) ) {
-                Object[] row = (Object[])o;
-//                charToParent.put( idToCharacteristic.get( ((Characteristic)row[1]).getId() ), row[0] );
-                charToParent.put( (Characteristic)row[1], row[0] );
-            }
-            return charToParent;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
+        if ( characteristics.isEmpty() ) return new HashMap();
+
+        final String queryString = "select parent, char from " + parentClass.getSimpleName() + " as parent "
+                + "inner join parent.characteristics as char " + "where char in (:chars)";
+
+        Map charToParent = new HashMap<Characteristic, Object>();
+        for ( Object o : getHibernateTemplate().findByNamedParam( queryString, "chars", characteristics ) ) {
+            Object[] row = ( Object[] ) o;
+            charToParent.put( ( Characteristic ) row[1], row[0] );
         }
+        return charToParent;
     }
-    
-    @Override
-    protected Collection<Characteristic> handleFindByUri( String searchString ) throws Exception {
-        final String queryString = "select char from VocabCharacteristicImpl as char where lower(char.valueUri) = :search";
 
-        try {
-//            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-//            queryObject.setString( "search", searchString.toLowerCase() );
-//            return queryObject.list();
-            return getHibernateTemplate().findByNamedParam( queryString, "search", searchString.toLowerCase() );
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-	}
-    
-    @Override
-    protected Collection<Characteristic> handleFindByUri( Collection uris ) throws Exception {
-        final String queryString = "from VocabCharacteristicImpl where valueUri in (:uris)";
-
-        try {
-//            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-//            queryObject.setParameterList( "uris", uris);
-//            return queryObject.list();
-            return getHibernateTemplate().findByNamedParam( queryString, "uris", uris );
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-	}
-	
 }

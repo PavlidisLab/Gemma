@@ -23,13 +23,13 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
+import java.util.List;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.AnalysisService;
-import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService;
 import ubic.gemma.model.association.coexpression.HumanGeneCoExpression;
@@ -47,7 +47,9 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
+import ubic.gemma.search.SearchSettings;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
@@ -256,14 +258,19 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
 
     }
 
+    /**
+     * @param query
+     */
     private void processQuery( String query ) {
 
-        Collection<ExpressionExperiment> ees = searchS.compassExpressionSearch( query );
+        List<SearchResult> ees = searchS.search( SearchSettings.ExpressionExperimentSearch( query ) ).get(
+                ExpressionExperiment.class );
 
         log.info( ees.size() + "Expresion expreiments matched the search criteria" );
 
         // Filter out all the ee that are not of correct taxon
-        for ( ExpressionExperiment ee : ees ) {
+        for ( SearchResult sr : ees ) {
+            ExpressionExperiment ee = ( ExpressionExperiment ) sr.getResultObject();
             Taxon t = eeS.getTaxon( ee.getId() );
             if ( t.getCommonName().equalsIgnoreCase( toUseTaxon.getCommonName() ) )
                 toUseEE.add( ee );

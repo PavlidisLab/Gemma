@@ -100,7 +100,7 @@ public class SecurityIntegrationTest extends BaseSpringContextTest {
      * @throws Exception
      */
     public void testMakePrivate() throws Exception {
-        ArrayDesign ad = arrayDesignService.findArrayDesignByName( arrayDesignName );
+        ArrayDesign ad = arrayDesignService.findByName( arrayDesignName );
         SecurityService securityService = new SecurityService();
         securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
         securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );

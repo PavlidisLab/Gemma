@@ -73,7 +73,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
      */
     protected ArrayDesign locateArrayDesign( String name ) {
 
-        ArrayDesign arrayDesign = arrayDesignService.findArrayDesignByName( name.trim().toUpperCase() );
+        ArrayDesign arrayDesign = arrayDesignService.findByName( name.trim().toUpperCase() );
 
         if ( arrayDesign == null ) {
             arrayDesign = arrayDesignService.findByShortName( name );

@@ -25,9 +25,6 @@ Ext.extend(Ext.data.ListRangeReader, Ext.data.DataReader, {
 					return new Function("obj", "return obj." + expr);
 				else
 					return function (obj) { return obj[expr]; };
-	//			return (re.test(expr)) ? new Function("obj", "return obj." + expr) : function (obj) {
-	//				return obj[expr];
-	//			};
 			}
 			catch (e) {
 			}
@@ -68,6 +65,7 @@ Ext.extend(Ext.data.ListRangeReader, Ext.data.DataReader, {
 		 
 		var records = [];
 		var root;
+		
 		if ((o !== null) && (o.data !== undefined)) {
 			root = o.data;
 		} else {
@@ -76,29 +74,37 @@ Ext.extend(Ext.data.ListRangeReader, Ext.data.DataReader, {
 			}
 			root = o;
 		}
+		
 		var c = root.length;
 		var totalRecords = c;
 		var success = true;
+		
 		if (this.meta.totalProperty) {
 			var v = parseInt(this.getTotal(o), 10);
 			if (!isNaN(v)) {
 				totalRecords = v;
 			}
 		}
+		
 		if (this.meta.successProperty) {
 			var v = this.getSuccess(o);
 			if (v === false || v === "false") {
 				success = false;
 			}
 		}
+		
 		for (var i = 0; i < c; i++) {
 			var n = root[i];
 			var values = {};
 			var id = this.getId(n);
 			for (var j = 0; j < fields.length; j++) {
-		 		f = fields.items[j];
+		 		var f = fields.items[j];
 				var v = this.ef[j](n);
-				values[f.name] = f.convert((v !== undefined) ? v : f.defaultValue);
+				if (f.convert) {
+					values[f.name] = f.convert((v !== undefined) ? v : f.defaultValue);
+				} else {
+					values[f.name] = "Could not convert";
+				}
 			}
 			var record = new recordType(values, id);
 			records[i] = record;

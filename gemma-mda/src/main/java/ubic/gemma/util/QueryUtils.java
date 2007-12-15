@@ -30,6 +30,7 @@ import org.springframework.orm.hibernate3.SessionFactoryUtils;
  * 
  * @author Paul
  * @version $Id$
+ * @deprecated Use hibernateTemplate methods instead.
  */
 public class QueryUtils {
 
@@ -42,6 +43,7 @@ public class QueryUtils {
      * @return a single object
      * @throws InvalidDataAccessResourceUsageException if more than one object is returned
      * @throws DataAccessException on other errors
+     * @deprecated
      */
     public static Object query( Session session, final String queryString ) {
         try {
@@ -63,6 +65,12 @@ public class QueryUtils {
         }
     }
 
+    /**
+     * @deprecated
+     * @param session
+     * @param queryString
+     * @return
+     */
     public static Collection queryForCollection( Session session, final String queryString ) {
         try {
             org.hibernate.Query queryObject = session.createQuery( queryString ).setReadOnly( true );
@@ -78,6 +86,7 @@ public class QueryUtils {
      * @param id
      * @param queryString with parameter "id"
      * @return a single Object, even if the query actually returns more.
+     * @deprecated
      */
     public static Object queryById( Session session, Long id, final String queryString ) {
         try {
@@ -102,6 +111,7 @@ public class QueryUtils {
      * @param id with parameter "id"
      * @param queryString
      * @return
+     * @deprecated
      */
     public static Collection queryByIdReturnCollection( Session session, Long id, final String queryString ) {
         try {
@@ -120,6 +130,7 @@ public class QueryUtils {
      * @param queryString
      * @param limit how many records to return; set to 0 or a negative to not use a limit.
      * @return
+     * @deprecated
      */
     public static Collection queryByIdReturnCollection( Session session, Long id, final String queryString, int limit ) {
         try {
@@ -140,6 +151,7 @@ public class QueryUtils {
      * @param ids
      * @param queryString with parameter "ids"
      * @return a single Object
+     * @deprecated
      */
     public static Object queryByIds( Session session, Collection<Long> ids, final String queryString ) {
         try {
@@ -167,6 +179,7 @@ public class QueryUtils {
      * 
      * @param queryString
      * @return Collection of records (Object[])
+     * @deprecated
      */
     @SuppressWarnings("unchecked")
     public static Collection<Object[]> nativeQuery( Session session, final String queryString ) {
@@ -185,6 +198,7 @@ public class QueryUtils {
      * @param id
      * @param queryString
      * @return Collection of records (Object[])
+     * @deprecated
      */
     @SuppressWarnings("unchecked")
     public static Collection<Object[]> nativeQueryById( Session session, Long id, final String queryString ) {

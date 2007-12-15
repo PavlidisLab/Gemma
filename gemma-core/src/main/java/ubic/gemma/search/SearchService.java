@@ -19,10 +19,12 @@
 
 package ubic.gemma.search;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -38,57 +40,46 @@ import org.compass.core.Compass;
 import org.compass.core.CompassCallback;
 import org.compass.core.CompassDetachedHits;
 import org.compass.core.CompassException;
+import org.compass.core.CompassHighlightedText;
 import org.compass.core.CompassHit;
 import org.compass.core.CompassHits;
 import org.compass.core.CompassQuery;
 import org.compass.core.CompassSession;
 import org.compass.core.CompassTemplate;
 import org.compass.core.CompassTransaction;
-import org.compass.core.support.search.CompassSearchResults;
 
-import ubic.gemma.model.common.Auditable;
-import ubic.gemma.model.common.Describable;
-import ubic.gemma.model.common.Securable;
+import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceImpl;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.model.genome.biosequence.BioSequenceImpl;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.ontology.OntologyTerm;
+import ubic.gemma.util.EntityUtils;
+import ubic.gemma.util.ReflectionUtil;
 
 /**
- * This service is used for performing searches. There are generally two kinds
- * of searches available, percise database searches looking for exact matches in
- * the database and compass/lucene searches which look for matches in the stored
- * index.
+ * This service is used for performing searches using free text or exact matches to items in the database.
+ * <h2>Implementation notes</h2>
  * <p>
- * To enforce access restrictions to the results ("hits") of compass searches,
- * most of the compass searches are backed by a database search. Refer to the
- * javadocs of the individual methods to determine if the result set has
- * factored in access control list permissions.
+ * Internally, there are generally two kinds of searches performed, percise database searches looking for exact matches
+ * in the database and compass/lucene searches which look for matches in the stored index.
  * <p>
- * This class is void of any security related code and can be used without a
- * security framework. The security-related javadocs on methods are only
- * pertinent when the programmer wishes to use this class in a declarative
- * security environment, such as ACEGI {@link http://acegisecurity.org/}.
- * <p>
- * NOTE: to add more dependencies to this Service edit the
- * applicationContext-compass.xml
+ * To add more dependencies to this Service edit the applicationContext-compass.xml
  * 
  * @author klc
  * @author paul
@@ -97,1264 +88,1038 @@ import ubic.gemma.ontology.OntologyTerm;
  */
 public class SearchService {
 
-	/**
-	 * Global maximum number of search results that will be returned.
-	 */
-	public static final int MAX_SEARCH_RESULTS = 100;
+    /**
+     * Global maximum number of search results that will be returned for index searches.
+     */
+    private static final int MAX_COMPASS_HITS_TO_DETACH = 1000;
 
-	public static final int MAX_DETACHHITS = 1000;
+    private static Log log = LogFactory.getLog( SearchService.class.getName() );
+
+    private Gene2GOAssociationService gene2GOAssociationService;
 
-	private static Log log = LogFactory.getLog(SearchService.class.getName());
+    private GeneService geneService;
+
+    private GeneProductService geneProductService;
 
-	private GeneService geneService;
+    private CompositeSequenceService compositeSequenceService;
 
-	private GeneProductService geneProductService;
+    private ArrayDesignService arrayDesignService;
 
-	private CompositeSequenceService compositeSequenceService;
+    private ExpressionExperimentService expressionExperimentService;
 
-	private ArrayDesignService arrayDesignService;
+    private BibliographicReferenceService bibliographicReferenceService;
 
-	private BibliographicReferenceService bibliographicReferenceService;
+    private BioSequenceService bioSequenceService;
+
+    private CharacteristicService characteristicService;
 
-	private ExpressionExperimentService expressionExperimentService;
+    private OntologyService ontologyService;
+
+    private Compass geneBean;
 
-	private BioSequenceService bioSequenceService;
-
-	private CharacteristicService characteristicService;
-
-	private OntologyService ontologyService;
-
-	private Compass geneBean;
-
-	private Compass eeBean;
-
-	private Compass arrayBean;
-
-	private Compass ontologyBean;
-
-	private Compass bibliographicReferenceBean;
-
-	private Compass probeBean;
-
-	/* EXPRESSION EXPERIMENT SEARCHES */
-
-	/**
-	 * Searches the DB for array designs which have composite sequences whose
-	 * names match the given search string. Because of the underlying database
-	 * search, this is acl aware. That is, returned array designs are filtered
-	 * based on access control list (ACL) permissions.
-	 * 
-	 * @param searchString
-	 * @return a collection of array designs (no duplicates)
-	 * @throws Exception
-	 */
-	@SuppressWarnings("unchecked")
-	public Collection<ArrayDesign> arrayDesignCompositeSequenceDbSearch(
-			String searchString) throws Exception {
-
-		StopWatch watch = startTiming();
-
-		searchString = searchString.trim();
-		Set<ArrayDesign> adSet = new HashSet<ArrayDesign>();
-
-		// search by exact composite sequence name
-		Collection<CompositeSequence> matchedCs = compositeSequenceService
-				.findByName(searchString);
-		for (CompositeSequence sequence : matchedCs) {
-			adSet.add(sequence.getArrayDesign());
-		}
-
-		watch.stop();
-		log.info("Array Design Compositesequence DB search for " + searchString
-				+ " took " + watch.getTime() + " ms" + " found " + adSet.size()
-				+ " Ads");
-
-		return adSet;
-
-	}
-
-	/**
-	 * A general search for array designs.
-	 * <p>
-	 * This search does both an database search and a compass search. This is
-	 * also contains an underlying {@link CompositeSequence} search, returning
-	 * the {@link ArrayDesign} collection for the given composite sequence
-	 * search string (the returned collection of array designs does not contain
-	 * duplicates).
-	 * 
-	 * @param searchString
-	 * @return a hashset of arraydesigns
-	 * @throws Exception
-	 */
-	public Collection<ArrayDesign> arrayDesignSearch(String searchString)
-			throws Exception {
-
-		StopWatch watch = startTiming();
-
-		searchString = searchString.trim();
-		ArrayDesign adQueryResult = arrayDesignService
-				.findArrayDesignByName(searchString);
-		Collection<ArrayDesign> adCompassList = compassArrayDesignSearch(searchString);
-		Collection<ArrayDesign> adCsList = arrayDesignCompositeSequenceDbSearch(searchString);
-
-		Collection<Long> probeAdIdList = new HashSet<Long>();
-		for (CompositeSequence cs : compassProbeSearch(searchString)) {
-
-			if (cs.getArrayDesign() == null) // This might happen as compass
-				// might not have indexed the AD
-				// for the CS
-				continue;
-
-			probeAdIdList.add(cs.getArrayDesign().getId());
-		}
-		Collection<ArrayDesign> adProbeList = arrayDesignDbLoad(probeAdIdList);
-
-		Collection<ArrayDesign> combinedList = new HashSet<ArrayDesign>();
-		combinedList.addAll(adCompassList);
-		combinedList.addAll(adCsList);
-		combinedList.addAll(adProbeList);
-
-		if (adQueryResult != null)
-			combinedList.add(adQueryResult);
-
-		watch.stop();
-		log.info("General Array Design search for " + searchString + " took "
-				+ watch.getTime() + " ms");
-
-		return combinedList;
-	}
-
-	/**
-	 * A database serach for biosequences with the given searchString.
-	 * 
-	 * @param searchString
-	 * @return
-	 * @throws Exception
-	 */
-	@SuppressWarnings("unchecked")
-	public Collection<BioSequence> bioSequenceDbSearch(String searchString)
-			throws Exception {
-		// Use the wildcard plumbing.
-		StopWatch watch = startTiming();
-
-		searchString = searchString.trim();
-
-		// search by inexact symbol
-		Set<BioSequence> bioSequenceMatch = new HashSet<BioSequence>();
-
-		// replace * with % for inexact symbol search
-		String inexactString = searchString;
-		Pattern pattern = Pattern.compile("\\*");
-		Matcher match = pattern.matcher(inexactString);
-		inexactString = match.replaceAll("%");
-
-		bioSequenceMatch.addAll(bioSequenceService.findByName(inexactString));
-
-		List<BioSequence> bioSequenceList = new ArrayList<BioSequence>(
-				bioSequenceMatch);
-		Comparator<Describable> comparator = new DescribableComparator();
-		Collections.sort(bioSequenceList, comparator);
-		if (bioSequenceList.size() == 0)
-			return bioSequenceList;
-
-		watch.stop();
-		log.info("BioSequence DB search for " + searchString + " took "
-				+ watch.getTime() + " ms and found" + bioSequenceList.size()
-				+ " BioSequences");
-
-		return bioSequenceList.subList(0, Math.min(bioSequenceList.size(),
-				MAX_SEARCH_RESULTS));
-
-	}
-
-	/**
-	 * A compass backed search that finds biosequences that match the search
-	 * string. Searches the gene and probe indexes for matches then converts
-	 * those results to biosequences
-	 * 
-	 * @param searchString
-	 * @return
-	 * @throws Exception
-	 */
-	public Collection<BioSequence> compassBioSequenceSearch(String searchString)
-			throws Exception {
-
-		log.info("Compass biosequence search for: " + searchString);
-		final String query = searchString.trim();
-		CompassSearchResults searchResults;
-
-		CompassTemplate template = new CompassTemplate(probeBean);
-
-		// first find probes that match and get their biosequences
-		searchResults = (CompassSearchResults) template
-				.execute(
-						CompassTransaction.TransactionIsolation.READ_ONLY_READ_COMMITTED,
-						new CompassCallback() {
-							public Object doInCompass(CompassSession session)
-									throws CompassException {
-								return performSearch(query, session);
-							}
-						});
-
-		Collection<BioSequence> bsResults = convert2BsList(searchResults
-				.getHits());
-
-		// Now find genes that match and get their bioSequences
-
-		Collection<Gene> geneResults = compassGeneSearch(query);
-		bsResults.addAll(bioSequenceService.findByGenes(geneResults));
-
-		return bsResults;
-
-	}
-
-	/**
-	 * A Compass search on array designs.
-	 * <p>
-	 * The compass search is backed by a database search so the returned
-	 * collection is filtered based on access permissions to the objects in the
-	 * collection.
-	 * 
-	 * @param query
-	 * @return {@link Collection}
-	 */
-	public Collection<ArrayDesign> compassArrayDesignSearch(String searchString) {
-
-		log.info("Compass Array Design search for: " + searchString);
-		final String query = searchString.trim();
-		CompassSearchResults searchResults;
-
-		CompassTemplate template = new CompassTemplate(arrayBean);
-
-		searchResults = (CompassSearchResults) template
-				.execute(
-						CompassTransaction.TransactionIsolation.READ_ONLY_READ_COMMITTED,
-						new CompassCallback() {
-							public Object doInCompass(CompassSession session)
-									throws CompassException {
-								return performSearch(query, session);
-							}
-						});
-
-		if (searchResults == null)
-			return new HashSet<ArrayDesign>();
-
-		Collection<Long> adIds = convert2IdList(searchResults.getHits());
-
-		return this.arrayDesignDbLoad(adIds);
-	}
-
-	/* ARRAY DESIGN SEARCHES */
-
-	/* BIBLIOGRAPHIC REFERENCE SEARCHES */
-	/**
-	 * Does a compass style search on
-	 * 
-	 * @param query
-	 * @return
-	 */
-	public Collection<BibliographicReference> compassBibliographicReferenceSearch(
-			String searchString) {
-
-		log.info("Compass Bibliographic Reference search for: " + searchString);
-		final String query = searchString.trim();
-		CompassSearchResults searchResults;
-
-		CompassTemplate template = new CompassTemplate(
-				bibliographicReferenceBean);
-
-		searchResults = (CompassSearchResults) template
-				.execute(
-						CompassTransaction.TransactionIsolation.READ_ONLY_READ_COMMITTED,
-						new CompassCallback() {
-							public Object doInCompass(CompassSession session)
-									throws CompassException {
-								return performSearch(query, session);
-							}
-						});
-
-		if (searchResults == null)
-			return new HashSet<BibliographicReference>();
-
-		Collection<BibliographicReference> bibRefsFromCompass = convert2BibliographicReferenceList(searchResults
-				.getHits());
-
-		/*
-		 * if compass is not indexed properly, this db search gives us a second
-		 * chance.
-		 */
-		Collection<BibliographicReference> bibliographicReferences = new HashSet<BibliographicReference>();
-
-		for (BibliographicReference bibRef : bibRefsFromCompass) {
-			if (bibRef.getPubAccession() == null) {
-				BibliographicReference bibRefFromDb = bibliographicReferenceService
-						.findByTitle(bibRef.getTitle());
-				bibliographicReferences.add(bibRefFromDb);
-			} else {
-				bibliographicReferences.add(bibRef);
-			}
-		}
-
-		return bibliographicReferences;
-
-	}
-
-	/**
-	 * A compass search on expressionExperiments.
-	 * <p>
-	 * The compass search is backed by a database search so the returned
-	 * collection is filtered based on access permissions to the objects in the
-	 * collection.
-	 * 
-	 * @param query
-	 * @return {@link Collection}
-	 */
-	public Collection<ExpressionExperiment> compassExpressionSearch(String query) {
-
-		log.info("Compass expression experiment search for: " + query);
-		CompassSearchResults searchResults;
-
-		CompassTemplate template = new CompassTemplate(eeBean);
-		final String tq = StringUtils.strip(query);
-		searchResults = (CompassSearchResults) template
-				.execute(
-						CompassTransaction.TransactionIsolation.READ_ONLY_READ_COMMITTED,
-						new CompassCallback() {
-							public Object doInCompass(CompassSession session)
-									throws CompassException {
-								return performSearch(tq, session);
-							}
-						});
-		if (searchResults == null)
-			return new HashSet<ExpressionExperiment>();
-
-		Collection<Long> eeIds = convert2IdList(searchResults.getHits());
-
-		return this.expressionExperimentDbLoad(eeIds);
-	}
-
-	/**
-	 * @param query
-	 * @return
-	 */
-	public Collection<Gene> compassGeneSearch(String searchString) {
-		log.info("Compass gene search for: " + searchString);
-		final String query = searchString.trim();
-		CompassSearchResults searchResults;
-
-		CompassTemplate template = new CompassTemplate(geneBean);
-
-		searchResults = (CompassSearchResults) template
-				.execute(
-						CompassTransaction.TransactionIsolation.READ_ONLY_READ_COMMITTED,
-						new CompassCallback() {
-							public Object doInCompass(CompassSession session)
-									throws CompassException {
-								return performSearch(query, session);
-							}
-						});
-		if (searchResults == null)
-			return new HashSet<Gene>();
-		return convert2GeneList(searchResults.getHits());
-	}
-
-	/* ONTOLOGY SEARCHES */
-	/**
-	 * Does a compass style search on
-	 * 
-	 * @param query
-	 * @return
-	 */
-	public Collection<Characteristic> compassOntologySearch(String searchString) {
-
-		log.info("Compass ontology search for: " + searchString);
-		final String query = searchString.trim();
-		CompassSearchResults searchResults;
-
-		CompassTemplate template = new CompassTemplate(ontologyBean);
-
-		searchResults = (CompassSearchResults) template
-				.execute(
-						CompassTransaction.TransactionIsolation.READ_ONLY_READ_COMMITTED,
-						new CompassCallback() {
-							public Object doInCompass(CompassSession session)
-									throws CompassException {
-								return performSearch(query, session);
-							}
-						});
-
-		if (searchResults == null)
-			return new HashSet<Characteristic>();
-		return convert2OntologyList(searchResults.getHits());
-	}
-
-	/* GENE SEARCHES */
-
-	public Collection<CompositeSequence> compassProbeSearch(String searchString)
-			throws Exception {
-
-		log.info("Compass probe search for: " + searchString);
-		final String query = searchString.trim();
-		CompassSearchResults searchResults;
-
-		CompassTemplate template = new CompassTemplate(probeBean);
-
-		searchResults = (CompassSearchResults) template
-				.execute(
-						CompassTransaction.TransactionIsolation.READ_ONLY_READ_COMMITTED,
-						new CompassCallback() {
-							public Object doInCompass(CompassSession session)
-									throws CompassException {
-								return performSearch(query, session);
-							}
-						});
-
-		if (searchResults == null)
-			return new HashSet<CompositeSequence>();
-
-		return convert2ProbeList(searchResults.getHits());
-
-	}
-
-	/**
-	 * A simple database search for composite sequences by name.
-	 * 
-	 * @param searchString
-	 * @return
-	 */
-	@SuppressWarnings("unchecked")
-	public Collection<CompositeSequence> compositeSequenceDbSearch(
-			String searchString) {
-
-		StopWatch watch = startTiming();
-
-		Collection<CompositeSequence> nameMatch = null;
-
-		if (StringUtils.isBlank(searchString))
-			return nameMatch;
-
-		String cleanedSearchString = StringUtils.strip(searchString);
-
-		nameMatch = compositeSequenceService.findByName(cleanedSearchString);
-
-		watch.stop();
-		log.info("Composite sequence DB search for " + searchString + " took "
-				+ watch.getTime() + " ms and found" + nameMatch.size()
-				+ " composite sequences");
-
-		return nameMatch;
-	}
-
-	/**
-	 * Search by name of the composite sequence as well as gene.
-	 * 
-	 * @param searchString
-	 * @param arrayDesign
-	 * @return
-	 * @throws Exception
-	 */
-	@SuppressWarnings("unchecked")
-	public List<CompositeSequence> compositeSequenceSearch(String searchString,
-			ArrayDesign arrayDesign) {
-
-		StopWatch watch = startTiming();
-
-		List<CompositeSequence> allResults = new ArrayList<CompositeSequence>();
-		if (StringUtils.isBlank(searchString))
-			return allResults;
-
-		Collection<CompositeSequence> nameMatch;
-
-		String cleanedSearchString = StringUtils.strip(searchString);
-
-		if (arrayDesign == null) {
-			nameMatch = compositeSequenceService
-					.findByName(cleanedSearchString);
-			allResults.addAll(nameMatch);
-		} else {
-			assert arrayDesign.getId() != null;
-			CompositeSequence res = compositeSequenceService.findByName(
-					arrayDesign, cleanedSearchString);
-			if (res != null)
-				allResults.add(res);
-		}
-
-		Collection<Gene> geneResults = null;
-		try {
-			geneResults = geneSearch(searchString);
-		} catch (Exception e) {
-			log.error(e, e);
-		}
-		// if there have been any genes returned, find the compositeSequences
-		// associated with the genes
-		if (geneResults != null && geneResults.size() > 0) {
-			for (Gene gene : geneResults) {
-
-				if (arrayDesign == null) {
-					Collection<CompositeSequence> geneCs = geneService
-							.getCompositeSequencesById(gene.getId());
-					allResults.addAll(geneCs);
-				} else {
-					Collection<CompositeSequence> geneCs = geneService
-							.getCompositeSequences(gene, arrayDesign);
-					allResults.addAll(geneCs);
-				}
-
-			}
-		}
-
-		Collections.sort(allResults, new DescribableComparator());
-		if (allResults.size() == 0)
-			return allResults;
-
-		watch.stop();
-		log.info("Composite sequence DB search for " + searchString + " took "
-				+ watch.getTime() + " ms");
-
-		return allResults.subList(0, Math.min(allResults.size(),
-				MAX_SEARCH_RESULTS));
-	}
-
-	/**
-	 * Search by name of the composite sequence as well as gene.
-	 * 
-	 * @param searchString
-	 * @return
-	 * @throws Exception
-	 */
-	@SuppressWarnings("unchecked")
-	public Collection<CompositeSequence> compositeSequenceSearch(
-			String searchString) {
-
-		StopWatch watch = startTiming();
-
-		List<CompositeSequence> allResults = new ArrayList<CompositeSequence>();
-		if (StringUtils.isBlank(searchString))
-			return allResults;
-
-		Collection<CompositeSequence> nameMatch;
-
-		String cleanedSearchString = StringUtils.strip(searchString);
-
-		nameMatch = compositeSequenceService.findByName(cleanedSearchString);
-		allResults.addAll(nameMatch);
-
-		Collection<Gene> geneResults = null;
-		try {
-			geneResults = geneSearch(searchString);
-		} catch (Exception e) {
-			log.error(e, e);
-		}
-		// if there have been any genes returned, find the compositeSequences
-		// associated with the genes
-		if (geneResults != null && geneResults.size() > 0) {
-			for (Gene gene : geneResults) {
-
-				Collection<CompositeSequence> geneCs = geneService
-						.getCompositeSequencesById(gene.getId());
-				allResults.addAll(geneCs);
-			}
-		}
-
-		try {
-			allResults.addAll(compassProbeSearch(cleanedSearchString));
-		} catch (Exception e) {
-			log.error(e, e);
-
-		}
-
-		watch.stop();
-		log.info("Composite sequence general search for " + searchString
-				+ " took " + watch.getTime() + " ms and found"
-				+ allResults.size() + " CSs");
-
-		return allResults.subList(0, Math.min(allResults.size(),
-				MAX_SEARCH_RESULTS));
-
-	}
-
-	/**
-	 * Does search on exact string by: id, name and short name.
-	 * <p>
-	 * The compass search is backed by a database search so the returned
-	 * collection is filtered based on access permissions to the objects in the
-	 * collection.
-	 * 
-	 * @param query
-	 * @return {@link Collection}
-	 */
-	public Collection<ExpressionExperiment> expressionExperimentDbSearch(
-			final String query) {
-
-		StopWatch watch = startTiming();
-
-		String tq = StringUtils.strip(query);
-		Collection<ExpressionExperiment> results = new HashSet<ExpressionExperiment>();
-		ExpressionExperiment ee = expressionExperimentService.findByName(tq);
-		if (ee != null)
-			results.add(ee);
-		ee = expressionExperimentService.findByShortName(tq);
-		if (ee != null) {
-			results.add(ee);
-		} else {
-			try {
-				// maybe user put in a primary key value.
-				ee = expressionExperimentService.load(new Long(tq));
-				if (ee != null)
-					results.add(ee);
-			} catch (NumberFormatException e) {
-				// no-op - it's not and ID.
-			}
-		}
-
-		watch.stop();
-		log.info("DB Expression Experiment search for " + query + " took "
-				+ watch.getTime() + " ms and found " + results.size() + " EEs");
-
-		return results;
-	}
-
-	/**
-	 * A general search for expression experiments. This search does both an
-	 * database search and a compass search.
-	 * 
-	 * @param query
-	 * @return {@link Collection}
-	 */
-	public Collection<ExpressionExperiment> expressionExperimentSearch(
-			final String query) {
-
-		StopWatch watch = startTiming();
-
-		String tq = StringUtils.strip(query);
-		Collection<ExpressionExperiment> results = expressionExperimentDbSearch(tq);
-		results.addAll(compassExpressionSearch(tq));
-
-		watch.stop();
-		log.info("General Expression Experiment search for " + query + " took "
-				+ watch.getTime() + " ms");
-
-		return results;
-	}
-
-	/**
-	 * Search the DB for genes that are matched by a given compositeSequence
-	 * tables
-	 * 
-	 * @param searchString
-	 * @return
-	 * @throws Exception
-	 */
-	@SuppressWarnings("unchecked")
-	public Collection<Gene> geneCompositeSequenceSearch(String searchString)
-			throws Exception {
-
-		StopWatch watch = startTiming();
-
-		searchString = searchString.trim();
-		Set<Gene> geneSet = new HashSet<Gene>();
-
-		// search by exact composite sequence name
-		Collection<CompositeSequence> matchedCs = compositeSequenceService
-				.findByName(searchString);
-		for (CompositeSequence sequence : matchedCs) {
-			geneSet.addAll(compositeSequenceService.getGenes(sequence));
-		}
-
-		List<Gene> geneList = new ArrayList<Gene>(geneSet);
-		Comparator<Describable> comparator = new DescribableComparator();
-		Collections.sort(geneList, comparator);
-		if (geneList.size() == 0)
-			return geneList;
-
-		watch.stop();
-		log.info("Gene composite sequence DB search " + searchString + " took "
-				+ watch.getTime() + " ms");
-
-		return geneList.subList(0, Math
-				.min(geneList.size(), MAX_SEARCH_RESULTS));
-
-	}
-
-	/**
-	 * Search the DB for genes that exactly match the given search string
-	 * searches geneProducts, gene and bioSequence tables
-	 * 
-	 * @param searchString
-	 * @return
-	 * @throws Exception
-	 */
-	@SuppressWarnings("unchecked")
-	public Collection<Gene> geneDbSearch(String searchString) throws Exception {
-
-		searchString = searchString.trim();
-
-		StopWatch watch = startTiming();
-
-		// search by inexact symbol
-		Set<Gene> geneSet = new HashSet<Gene>();
-		Set<Gene> geneMatch = new HashSet<Gene>();
-		Set<Gene> aliasMatch = new HashSet<Gene>();
-		Set<Gene> geneProductMatch = new HashSet<Gene>();
-		Set<Gene> bioSequenceMatch = new HashSet<Gene>();
-
-		// replace * with % for inexact symbol search
-		String inexactString = searchString;
-		Pattern pattern = Pattern.compile("\\*");
-		Matcher match = pattern.matcher(inexactString);
-		inexactString = match.replaceAll("%");
-
-		geneMatch
-				.addAll(geneService.findByOfficialSymbolInexact(inexactString));
-		aliasMatch.addAll(geneService.getByGeneAlias(inexactString));
-
-		geneProductMatch.addAll(geneProductService
-				.getGenesByName(inexactString));
-		geneProductMatch.addAll(geneProductService
-				.getGenesByNcbiId(inexactString));
-
-		bioSequenceMatch.addAll(bioSequenceService
-				.getGenesByAccession(inexactString));
-		bioSequenceMatch.addAll(bioSequenceService
-				.getGenesByName(inexactString));
-
-		geneSet.addAll(geneMatch);
-		geneSet.addAll(aliasMatch);
-		geneSet.addAll(geneProductMatch);
-		geneSet.addAll(bioSequenceMatch);
-
-		List<Gene> geneList = new ArrayList<Gene>(geneSet);
-		Comparator<Describable> comparator = new DescribableComparator();
-		Collections.sort(geneList, comparator);
-		if (geneList.size() == 0)
-			return geneList;
-
-		watch.stop();
-		log.info("Gene DB search for " + searchString + " took "
-				+ watch.getTime() + " ms and found " + geneList.size()
-				+ " genes");
-
-		return geneList.subList(0, Math
-				.min(geneList.size(), MAX_SEARCH_RESULTS));
-
-	}
-
-	/**
-	 * Combines compass style search, the db style search, and the
-	 * compositeSequence search and returns 1 combined list with no duplicates.
-	 * 
-	 * @param searchString
-	 * @return
-	 * @throws Exception
-	 */
-	public Collection<Gene> geneSearch(String searchString) throws Exception {
-
-		StopWatch watch = startTiming();
-
-		searchString = searchString.trim();
-		Collection<Gene> geneDbList = geneDbSearch(searchString);
-		Collection<Gene> geneCompassList = compassGeneSearch(searchString);
-		Collection<Gene> geneCsList = geneCompositeSequenceSearch(searchString);
-
-		List<Gene> combinedGeneList = new ArrayList<Gene>();
-		combinedGeneList.addAll(geneDbList);
-
-		for (Gene gene : geneCompassList) {
-			if (!geneDbList.contains(gene))
-				combinedGeneList.add(gene);
-		}
-
-		for (Gene gene : geneCsList) {
-			if (!combinedGeneList.contains(gene))
-				combinedGeneList.add(gene);
-		}
-
-		if (combinedGeneList.size() == 0)
-			return combinedGeneList;
-
-		log.info("General Gene search for " + searchString + " took "
-				+ watch.getTime() + " ms");
-
-		return combinedGeneList.subList(0, Math.min(combinedGeneList.size(),
-				MAX_SEARCH_RESULTS));
-	}
-
-	/**
-	 * @return the bioSequenceService
-	 */
-	public BioSequenceService getBioSequenceService() {
-		return bioSequenceService;
-	}
-
-	/**
-	 * Attempts to find an exact match for the search term in the characteristic
-	 * table. If the search term is found then uses that URI to find the parents
-	 * and returns a collection of that characteritic and its parents
-	 * 
-	 * @param searchString
-	 * @return
-	 */
-	@SuppressWarnings("unchecked")
-	public Collection<ExpressionExperiment> ontologySearchForExpressionExperiments(
-			String searchString) {
-
-		StopWatch watch = startTiming();
-		Collection<ExpressionExperiment> results = new HashSet<ExpressionExperiment>();
-
-		Collection<VocabCharacteristic> characterResults = ontologySearchIncludeChildren(searchString);
-
-		log.info("OntologySearchIncludeParents returned "
-				+ characterResults.size() + " results in " + watch.getTime()
-				+ "ms");
-		watch.reset();
-		watch.start();
-
-		if (characterResults.isEmpty())
-			return results;
-
-		Map<Characteristic, Object> mapResults = characteristicService
-				.getParents(characterResults);
-
-		log.info("Found " + mapResults.size()
-				+ " parents/owners for characteristics returned in "
-				+ watch.getTime() + "ms");
-		for (Object obj : mapResults.values()) {
-			if (obj instanceof Auditable)
-				log.info("==== Parent Id: " + ((Auditable) obj).getId()
-						+ " Parent Class: " + obj.getClass());
-			else
-				log.info("==== Parent : " + obj.toString() + " Parent Class: "
-						+ obj.getClass());
-
-		}
-
-		watch.reset();
-		watch.start();
-
-		Collection<BioMaterial> bmResults = new HashSet<BioMaterial>();
-		for (Object obj : mapResults.values()) {
-			// Need to filter out just the EE's
-			if (obj instanceof ExpressionExperiment)
-				results.add((ExpressionExperiment) obj);
-			else if (obj instanceof BioMaterial)
-				bmResults.add((BioMaterial) obj);
-
-		}
-
-		// If any BioMaterials were returned then get their ExpressionExperiment
-		// and add it as well.
-
-		for (BioMaterial bm : bmResults) {
-			ExpressionExperiment ee = expressionExperimentService
-					.findByBioMaterial(bm);
-			if (ee != null)
-				results.add(ee);
-
-		}
-
-		log.info("Added " + bmResults.size()
-				+ " bioMaterial related results in " + watch.getTime() + " ms");
-
-		Collection<Long> eeIds = new HashSet<Long>();
-		for (ExpressionExperiment ee : results)
-			eeIds.add(ee.getId());
-
-		return this.expressionExperimentDbLoad(eeIds);
-
-	}
-
-	/**
-	 * Attempts to find an exact match for the search term in the characteristic
-	 * table. If the search term is found then uses that URI to find the
-	 * children and returns a collection of that characteritic and its children
-	 * 
-	 * @param searchString
-	 * @return
-	 */
-	@SuppressWarnings("unchecked")
-	public Collection<VocabCharacteristic> ontologySearchIncludeChildren(
-			String searchString) {
-
-		StopWatch watch = startTiming();
-
-		Collection<OntologyTerm> possibleTerms = ontologyService
-				.findTerms(searchString);
-
-		log.info("Found " + possibleTerms.size() + " matching terms in "
-				+ watch.getTime() + "ms");
-		watch.reset();
-		watch.start();
-
-		if ((possibleTerms == null) || possibleTerms.isEmpty())
-			return new HashSet<VocabCharacteristic>();
-
-		Collection<String> characteristicUris = new HashSet<String>();
-		StopWatch loopWatch = new StopWatch();
-
-		for (OntologyTerm term : possibleTerms) {
-			loopWatch.start();
-
-			characteristicUris.add(term.getUri());
-			for (OntologyTerm child : term.getChildren(false))
-				characteristicUris.add(child.getUri());
-
-			log.info("==== Added Term and Children for  " + term.getUri()
-					+ "  in " + loopWatch.getTime() + "ms");
-			loopWatch.reset();
-
-		}
-
-		log.info("Found " + characteristicUris.size()
-				+ " possible matches with children in " + watch.getTime()
-				+ "ms");
-		watch.reset();
-		watch.start();
-
-		Collection<VocabCharacteristic> inSystem = characteristicService
-				.findByUri(characteristicUris);
-		log.info("Found " + inSystem.size() + " matches in our system in "
-				+ watch.getTime() + "ms");
-
-		watch.stop();
-		return inSystem;
-	}
-
-	/**
-	 * @param arrayBean
-	 *            the arrayBean to set
-	 */
-	public void setArrayBean(Compass arrayBean) {
-		this.arrayBean = arrayBean;
-	}
-
-	/* COMPOSITE SEQUENCE SEARCHES */
-
-	public void setArrayDesignService(ArrayDesignService arrayDesignService) {
-		this.arrayDesignService = arrayDesignService;
-	}
-
-	/**
-	 * @param bibliographicReferenceBean
-	 *            the bibliographicReferenceBean to set
-	 */
-	public void setBibliographicReferenceBean(Compass bibliographicReferenceBean) {
-		this.bibliographicReferenceBean = bibliographicReferenceBean;
-	}
-
-	/* BIOSEQUENCE SEARCHES */
-
-	/**
-	 * @param bibliographicReferenceService
-	 *            the bibliographicReferenceService to set
-	 */
-	public void setBibliographicReferenceService(
-			BibliographicReferenceService bibliographicReferenceService) {
-		this.bibliographicReferenceService = bibliographicReferenceService;
-	}
-
-	/**
-	 * @param bioSequenceService
-	 *            the bioSequenceService to set
-	 */
-	public void setBioSequenceService(BioSequenceService bioSequenceService) {
-		this.bioSequenceService = bioSequenceService;
-	}
-
-	public void setCharacteristicService(
-			CharacteristicService characteristicService) {
-		this.characteristicService = characteristicService;
-	}
-
-	/**
-	 * @param compositeSequenceService
-	 *            the compositeSequenceService to set
-	 */
-	public void setCompositeSequenceService(
-			CompositeSequenceService compositeSequenceService) {
-		this.compositeSequenceService = compositeSequenceService;
-	}
-
-	/**
-	 * @param eeBean
-	 *            the eeBean to set
-	 */
-	public void setEeBean(Compass eeBean) {
-		this.eeBean = eeBean;
-	}
-
-	public void setExpressionExperimentService(
-			ExpressionExperimentService expressionExperimentService) {
-		this.expressionExperimentService = expressionExperimentService;
-	}
-
-	/**
-	 * @param geneBean
-	 *            the geneBean to set
-	 */
-	public void setGeneBean(Compass geneBean) {
-		this.geneBean = geneBean;
-	}
-
-	/**
-	 * @param geneProductService
-	 *            the geneProductService to set
-	 */
-	public void setGeneProductService(GeneProductService geneProductService) {
-		this.geneProductService = geneProductService;
-	}
-
-	/**
-	 * @param geneService
-	 *            The geneService to set.
-	 */
-	public void setGeneService(GeneService geneService) {
-		this.geneService = geneService;
-	}
-
-	/**
-	 * @param ontologyBean
-	 *            the ontologyBean to set
-	 */
-	public void setOntologyBean(Compass ontologyBean) {
-		this.ontologyBean = ontologyBean;
-	}
-
-	public void setOntologyService(OntologyService ontologyService) {
-		this.ontologyService = ontologyService;
-	}
-
-	/**
-	 * @param probeBean
-	 *            the probeBean to set
-	 */
-	public void setProbeBean(Compass probeBean) {
-		this.probeBean = probeBean;
-	}
-
-	/**
-	 * Database search by ids.
-	 * <p>
-	 * The compass search is backed by a database search so the returned
-	 * collection is filtered based on access permissions to the objects in the
-	 * collection.
-	 * 
-	 * @param ids
-	 * @return {@link Collection}
-	 */
-	@SuppressWarnings("unchecked")
-	private Collection<ArrayDesign> arrayDesignDbLoad(Collection<Long> ids) {
-
-		Collection<ArrayDesign> results = arrayDesignService.loadMultiple(ids);
-
-		return results;
-	}
-
-	/**
-	 * Database search by ids.
-	 * <p>
-	 * The compass search is backed by a database search so the returned
-	 * collection is filtered based on access permissions to the objects in the
-	 * collection.
-	 * 
-	 * @param ids
-	 * @return {@link Collection}
-	 */
-	@SuppressWarnings("unchecked")
-	private Collection<ExpressionExperiment> expressionExperimentDbLoad(
-			Collection<Long> ids) {
-
-		Collection<ExpressionExperiment> results = null;
-
-		if (ids != null && !ids.isEmpty()) {
-			results = expressionExperimentService.loadMultiple(ids);
-		} else {
-			results = new HashSet<ExpressionExperiment>();
-		}
-
-		return results;
-	}
-
-	private StopWatch startTiming() {
-		StopWatch watch = new StopWatch();
-		watch.start();
-		return watch;
-	}
-
-	/**
-	 * @param bibliographicReferenceHits
-	 * @return
-	 */
-	protected Collection<BibliographicReference> convert2BibliographicReferenceList(
-			CompassHit[] bibliographicReferenceHits) {
-
-		Collection<BibliographicReference> converted = new HashSet<BibliographicReference>(
-				bibliographicReferenceHits.length);
-
-		for (int i = 0; i < bibliographicReferenceHits.length; i++)
-			converted
-					.add((BibliographicReference) bibliographicReferenceHits[i]
-							.getData());
-
-		return converted;
-
-	}
-
-	/**
-	 * @param anArray
-	 * @return
-	 */
-	protected Collection<Gene> convert2GeneList(CompassHit[] anArray) {
-
-		Collection<Gene> converted = new HashSet<Gene>(anArray.length);
-
-		for (int i = 0; i < anArray.length; i++)
-			converted.add((Gene) anArray[i].getData());
-
-		return converted;
-
-	}
-
-	/**
-	 * Accepts compass hits and returns a collection of ids.
-	 * 
-	 * @param anArray
-	 * @return {@link Collection}
-	 */
-	protected Collection<Long> convert2IdList(CompassHit[] anArray) {
-
-		Collection<Long> converted = new HashSet<Long>(anArray.length);
-
-		for (int i = 0; i < anArray.length; i++)
-			converted.add(((Securable) anArray[i].getData()).getId());
-
-		return converted;
-
-	}
-
-	/**
-	 * @param anOntology
-	 * @return
-	 */
-	protected Collection<Characteristic> convert2OntologyList(
-			CompassHit[] anOntology) {
-
-		Collection<Characteristic> converted = new HashSet<Characteristic>(
-				anOntology.length);
-
-		for (int i = 0; i < anOntology.length; i++)
-			converted.add((Characteristic) anOntology[i].getData());
-
-		return converted;
-
-	}
-
-	/**
-	 * @param anOntology
-	 * @return
-	 */
-	protected Collection<CompositeSequence> convert2ProbeList(
-			CompassHit[] probeHits) {
-
-		Collection<CompositeSequence> converted = new HashSet<CompositeSequence>(
-				probeHits.length);
-
-		for (int i = 0; i < probeHits.length; i++) {
-			Object obj = probeHits[i].getData();
-
-			if (obj instanceof CompositeSequenceImpl)
-				converted.add((CompositeSequence) probeHits[i].getData());
-			else if (obj instanceof BioSequenceImpl) {
-				BioSequenceImpl bs = (BioSequenceImpl) obj;
-				log.info("Finding CompositeSequence for Biosequence:  " + bs);
-				converted.addAll(compositeSequenceService
-						.findByBioSequenceName(bs.getName()));
-			} else
-				log.warn("Unexpected object. skipping: " + obj);
-
-		}
-
-		return converted;
-
-	}
-
-	/**
-	 * @param anOntology
-	 * @return
-	 */
-	protected Collection<BioSequence> convert2BsList(CompassHit[] probeHits) {
-
-		Collection<BioSequence> converted = new HashSet<BioSequence>(
-				probeHits.length);
-
-		for (int i = 0; i < probeHits.length; i++) {
-			Object obj = probeHits[i].getData();
-
-			if (obj instanceof CompositeSequenceImpl) {
-				CompositeSequence cs = (CompositeSequenceImpl) obj;
-				converted.add(cs.getBiologicalCharacteristic());
-			} else if (obj instanceof BioSequenceImpl) {
-				converted.add((BioSequenceImpl) obj);
-
-			} else
-				log.warn("Unexpected object. skipping: " + obj);
-
-		}
-
-		return converted;
-
-	}
-
-	/**
-	 * @param query
-	 * @param session
-	 * @return
-	 */
-	protected CompassSearchResults performSearch(String query,
-			CompassSession session) {
-
-		StopWatch watch = startTiming();
-		log.info("Preforming compass search for " + query);
-
-		query = query.trim();
-		if (StringUtils.isBlank(query))
-			return null;
-
-		if (query.equals("*"))
-			return null;
-
-		CompassQuery compassQuery = session.queryBuilder().queryString(
-				query.trim()).toQuery();
-		CompassHits hits = compassQuery.hits();
-		CompassDetachedHits detachedHits;
-		log.info("===== Getting " + hits.getLength() + " hits for " + query
-				+ " took " + watch.getTime() + " ms");
-		watch.reset();
-		watch.start();
-
-		// Put a limit on the number of hits to detach.
-		// Detaching hits can be time consuming (somewhat like thawing).
-
-		detachedHits = hits.detach(0, Math
-				.min(hits.getLength(), MAX_DETACHHITS));
-
-		log.info("===== Detaching" + detachedHits.getLength() + " hits for "
-				+ query + " took " + watch.getTime() + " ms");
-
-		CompassSearchResults searchResults = new CompassSearchResults(
-				detachedHits.getHits(), watch.getTime(),
-				detachedHits.getHits().length);
-
-		watch.stop();
-		return searchResults;
-	}
-
-	/**
-	 * An inner class used for the ordering of genes
-	 */
-	private class DescribableComparator implements Comparator<Describable> {
-		public int compare(Describable arg0, Describable arg1) {
-			return arg0.getName().compareTo(arg1.getName());
-		}
-	}
+    private Compass eeBean;
+
+    private Compass arrayBean;
+
+    private Compass ontologyBean;
+
+    private Compass bibliographicReferenceBean;
+
+    private Compass probeBean;
+
+    /**
+     * The results are sorted in order of decreasing score, organized by class. The following objects can be searched
+     * for, depending on the configuration of the input object.
+     * <ul>
+     * <li>Genes
+     * <li>ExpressionExperiments
+     * <li>CompositeSequences (probes)
+     * <li>ArrayDesigns (platforms)
+     * <li>Characteristics (e.g., Ontology annotations)
+     * <li>BioSequences
+     * <li>BibliographicReferences (articles)
+     * </ul>
+     * 
+     * @param settings
+     * @return Map of Class to SearchResults. The results are already filtered for security considerations.
+     */
+    @SuppressWarnings("unchecked")
+    public Map<Class, List<SearchResult>> search( SearchSettings settings ) {
+        return this.search( settings, true );
+    }
+
+    /**
+     * @param settings
+     * @param fillObjects If false, the entities will not be filled in inside the searchsettings; instead, they will be
+     *        nulled (for security purposes). Use the id stored in the SearchSettings to load the entities at your
+     *        leisure.
+     * @return
+     * @see SearchService.search(SearchSettings settings)
+     */
+    @SuppressWarnings("unchecked")
+    public Map<Class, List<SearchResult>> search( SearchSettings settings, boolean fillObjects ) {
+        String searchString = settings.getQuery();
+
+        List<SearchResult> rawResults = new ArrayList<SearchResult>();
+
+        if ( settings.isSearchExperiments() ) {
+            Collection<SearchResult> foundEEs = expressionExperimentSearch( settings );
+            rawResults.addAll( foundEEs );
+        }
+
+        Collection<SearchResult> genes = null;
+        if ( settings.isSearchGenes() ) {
+            genes = geneSearch( settings );
+            rawResults.addAll( genes );
+        }
+
+        Collection<SearchResult> compositeSequences = null;
+        if ( settings.isSearchProbes() ) {
+            compositeSequences = compositeSequenceSearch( settings, genes );
+            rawResults.addAll( compositeSequences );
+        }
+
+        if ( settings.isSearchArrays() ) {
+            Collection<SearchResult> foundADs = arrayDesignSearch( settings, compositeSequences );
+            rawResults.addAll( foundADs );
+        }
+
+        if ( settings.isSearchBioSequences() ) {
+            Collection<SearchResult> bioSequences = compassBioSequenceSearch( settings, genes );
+            rawResults.addAll( bioSequences );
+        }
+
+        if ( settings.isSearchGenesByGO() ) {
+            Collection<SearchResult> ontologyGenes = gene2GOAssociationService.findByGOTerm( searchString, settings
+                    .getTaxon() );
+            rawResults.addAll( ontologyGenes );
+        }
+
+        if ( settings.isSearchBibrefs() ) {
+            Collection<SearchResult> bibliographicReferences = compassBibliographicReferenceSearch( settings );
+            rawResults.addAll( bibliographicReferences );
+        }
+
+        return getSortedLimitedResults( settings, rawResults, fillObjects );
+
+    }
+
+    /**
+     * @param arrayBean the arrayBean to set
+     */
+    public void setArrayBean( Compass arrayBean ) {
+        this.arrayBean = arrayBean;
+    }
+
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
+
+    /**
+     * @param bibliographicReferenceBean the bibliographicReferenceBean to set
+     */
+    public void setBibliographicReferenceBean( Compass bibliographicReferenceBean ) {
+        this.bibliographicReferenceBean = bibliographicReferenceBean;
+    }
+
+    public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
+        this.bibliographicReferenceService = bibliographicReferenceService;
+    }
+
+    /**
+     * @param bioSequenceService the bioSequenceService to set
+     */
+    public void setBioSequenceService( BioSequenceService bioSequenceService ) {
+        this.bioSequenceService = bioSequenceService;
+    }
+
+    public void setCharacteristicService( CharacteristicService characteristicService ) {
+        this.characteristicService = characteristicService;
+    }
+
+    /**
+     * @param compositeSequenceService the compositeSequenceService to set
+     */
+    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
+        this.compositeSequenceService = compositeSequenceService;
+    }
+
+    /**
+     * @param eeBean the eeBean to set
+     */
+    public void setEeBean( Compass eeBean ) {
+        this.eeBean = eeBean;
+    }
+
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
+        this.gene2GOAssociationService = gene2GOAssociationService;
+    }
+
+    /**
+     * @param geneBean the geneBean to set
+     */
+    public void setGeneBean( Compass geneBean ) {
+        this.geneBean = geneBean;
+    }
+
+    /**
+     * @param geneProductService the geneProductService to set
+     */
+    public void setGeneProductService( GeneProductService geneProductService ) {
+        this.geneProductService = geneProductService;
+    }
+
+    /**
+     * @param geneService The geneService to set.
+     */
+    public void setGeneService( GeneService geneService ) {
+        this.geneService = geneService;
+    }
+
+    /**
+     * @param ontologyBean the ontologyBean to set
+     */
+    public void setOntologyBean( Compass ontologyBean ) {
+        this.ontologyBean = ontologyBean;
+    }
+
+    public void setOntologyService( OntologyService ontologyService ) {
+        this.ontologyService = ontologyService;
+    }
+
+    /**
+     * @param probeBean the probeBean to set
+     */
+    public void setProbeBean( Compass probeBean ) {
+        this.probeBean = probeBean;
+    }
+
+    /**
+     * A general search for array designs.
+     * <p>
+     * This search does both an database search and a compass search. This is also contains an underlying
+     * {@link CompositeSequence} search, returning the {@link ArrayDesign} collection for the given composite sequence
+     * search string (the returned collection of array designs does not contain duplicates).
+     * 
+     * @param searchString
+     * @param probeResults Collection of results from a previous CompositeSequence search. Can be null; otherwise used
+     *        to avoid a second search for probes. The array designs for the probes are added to the final results.
+     * @return
+     */
+    private Collection<SearchResult> arrayDesignSearch( SearchSettings settings, Collection<SearchResult> probeResults ) {
+
+        StopWatch watch = startTiming();
+        String searchString = settings.getQuery();
+        Collection<SearchResult> results = new HashSet<SearchResult>();
+        ArrayDesign shortNameResult = arrayDesignService.findByShortName( searchString );
+        if ( shortNameResult != null ) {
+            results.add( new SearchResult( shortNameResult, 1.0 ) );
+        } else {
+            ArrayDesign nameResult = arrayDesignService.findByName( searchString );
+            if ( nameResult != null ) results.add( new SearchResult( nameResult, 1.0 ) );
+        }
+
+        results.addAll( compassArrayDesignSearch( settings ) );
+        results.addAll( databaseArrayDesignSearch( settings ) );
+
+        Collection<SearchResult> probes = null;
+        if ( probeResults == null ) {
+            probes = compassCompositeSequenceSearch( settings );
+        } else {
+            probes = probeResults;
+        }
+
+        for ( SearchResult r : probes ) {
+            CompositeSequence cs = ( CompositeSequence ) r.getResultObject();
+            if ( cs.getArrayDesign() == null ) // This might happen as compass
+                // might not have indexed the AD
+                // for the CS
+                continue;
+            results.add( r );
+        }
+
+        watch.stop();
+        if ( watch.getTime() > 1000 )
+            log.info( "Array Design search for " + settings + " took " + watch.getTime() + " ms" );
+
+        return results;
+    }
+
+    /**
+     * @param settings
+     */
+    private Collection<SearchResult> characteristicExpressionExperimentSearch( final SearchSettings settings ) {
+        Collection<SearchResult> results = new HashSet<SearchResult>();
+
+        Collection<Class> classesToSearch = new HashSet<Class>();
+        classesToSearch.add( ExpressionExperiment.class );
+        classesToSearch.add( BioMaterial.class );
+        classesToSearch.add( FactorValue.class );
+
+        Collection<SearchResult> characterSearchResults = ontologySearchAnnotatedObject( classesToSearch, settings );
+
+        // filter and get parents...
+        for ( SearchResult sr : characterSearchResults ) {
+            Class resultClass = sr.getResultClass();
+            if ( ExpressionExperiment.class.isAssignableFrom( resultClass ) ) {
+                results.add( sr );
+            } else if ( BioMaterial.class.isAssignableFrom( resultClass ) ) {
+                ExpressionExperiment ee = expressionExperimentService.findByBioMaterial( ( BioMaterial ) sr
+                        .getResultObject() );
+                if ( ee != null ) results.add( new SearchResult( ee, 1.0 ) );
+            } else if ( FactorValue.class.isAssignableFrom( resultClass ) ) {
+                ExpressionExperiment ee = expressionExperimentService.findByFactorValue( ( FactorValue ) sr
+                        .getResultObject() );
+                if ( ee != null ) results.add( new SearchResult( ee, 1.0 ) );
+            }
+        }
+
+        return results;
+    }
+
+    /**
+     * Search for the query in ontologies.
+     * 
+     * @param searchString
+     * @return SearchResults of CharcteristicObjects. Typically to be useful one needs to retrieve the 'parents'
+     *         (owners) of those Characteristics.
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<SearchResult> characteristicSearchWithChildren( Collection<Class> classes,
+            SearchSettings settings ) {
+
+        StopWatch watch = startTiming();
+
+        Collection<OntologyTerm> possibleTerms = ontologyService.findTerms( settings.getQuery() );
+        if ( ( possibleTerms == null ) || possibleTerms.isEmpty() ) return new HashSet<SearchResult>();
+
+        log.info( "Found " + possibleTerms.size() + " matching terms in " + watch.getTime() + "ms" );
+        watch.reset();
+        watch.start();
+
+        Collection<String> characteristicUris = new HashSet<String>();
+        StopWatch loopWatch = new StopWatch();
+
+        for ( OntologyTerm term : possibleTerms ) {
+            loopWatch.start();
+
+            characteristicUris.add( term.getUri() );
+            /*
+             * FIXME getChildren can be very slow for 'high-level' classes like "neoplasm".
+             */
+            Collection<OntologyTerm> children = term.getChildren( false );
+            for ( OntologyTerm child : children ) {
+                characteristicUris.add( child.getUri() );
+            }
+
+            if ( loopWatch.getTime() > 1000 ) {
+                log.info( "==== Added Term and " + children.size() + " children for  " + term.getUri() + "  in "
+                        + loopWatch.getTime() + "ms" );
+            }
+            loopWatch.reset();
+        }
+
+        if ( watch.getTime() > 1000 ) {
+            log.info( "Found " + characteristicUris.size() + " possible matches with children in " + watch.getTime()
+                    + "ms" );
+        }
+        watch.reset();
+        watch.start();
+
+        Collection<SearchResult> inSystem = dbHitsToSearchResult( characteristicService.findByUri( characteristicUris ) );
+
+        Collection<Characteristic> cs = new HashSet<Characteristic>();
+        for ( SearchResult crs : inSystem ) {
+            cs.add( ( Characteristic ) crs.getResultObject() );
+        }
+        Map<Characteristic, Object> parentMap = characteristicService.getParents( cs );
+        inSystem = filterCharacteristicOwnersByClass( classes, parentMap );
+        // log.info( "Found " + mapResults.size() + " parents/owners for characteristics returned in " + watch.getTime()
+        // + "ms" );
+        // for ( Object obj : mapResults.values() ) {
+        // if ( obj instanceof Auditable )
+        // log.info( "==== Owner Id: " + ( ( Auditable ) obj ).getId() + " Owner Class: " + obj.getClass() );
+        // else
+        // log.info( "==== Owner : " + obj.toString() + " Owner Class: " + obj.getClass() );
+        // }
+
+        if ( watch.getTime() > 1000 )
+            log.info( "Found " + inSystem.size() + " matches in our system in " + watch.getTime() + "ms" );
+
+        watch.stop();
+        return inSystem;
+    }
+
+    /**
+     * A Compass search on array designs.
+     * <p>
+     * The compass search is backed by a database search so the returned collection is filtered based on access
+     * permissions to the objects in the collection.
+     * 
+     * @param query
+     * @return {@link Collection}
+     */
+    private Collection<SearchResult> compassArrayDesignSearch( SearchSettings settings ) {
+        return compassSearch( arrayBean, settings );
+    }
+
+    /**
+     * @param query
+     * @return
+     */
+    private Collection<SearchResult> compassBibliographicReferenceSearch( SearchSettings settings ) {
+        return compassSearch( bibliographicReferenceBean, settings );
+    }
+
+    /**
+     * A compass backed search that finds biosequences that match the search string. Searches the gene and probe indexes
+     * for matches then converts those results to biosequences
+     * 
+     * @param searchString
+     * @param previousGeneSearchResults Can be null, otherwise used to avoid a second search for genes. The biosequences
+     *        for the genes are added to the final results.
+     * @return
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<SearchResult> compassBioSequenceSearch( SearchSettings settings,
+            Collection<SearchResult> previousGeneSearchResults ) {
+        Collection<SearchResult> results = compassSearch( probeBean, settings );
+        Collection<SearchResult> geneResults = null;
+        if ( previousGeneSearchResults == null ) {
+            geneResults = compassGeneSearch( settings );
+        } else {
+            geneResults = previousGeneSearchResults;
+        }
+        Collection<Gene> genes = new HashSet<Gene>();
+        for ( SearchResult sr : geneResults ) {
+            genes.add( ( Gene ) sr.getResultObject() );
+        }
+        results.addAll( dbHitsToSearchResult( bioSequenceService.findByGenes( genes ) ) );
+        return results;
+    }
+
+    /**
+     * @param settings
+     * @return
+     */
+    private Collection<SearchResult> compassCompositeSequenceSearch( final SearchSettings settings ) {
+        return compassSearch( probeBean, settings );
+    }
+
+    /**
+     * A compass search on expressionExperiments.
+     * 
+     * @param query
+     * @return {@link Collection}
+     */
+    private Collection<SearchResult> compassExpressionSearch( SearchSettings settings ) {
+        return compassSearch( eeBean, settings );
+    }
+
+    /**
+     * @param query
+     * @return
+     */
+    private Collection<SearchResult> compassGeneSearch( final SearchSettings settings ) {
+        return compassSearch( geneBean, settings );
+    }
+
+    /**
+     * @param settings
+     * @return
+     */
+    private Collection<SearchResult> compassOntologySearch( final SearchSettings settings ) {
+        return compassSearch( ontologyBean, settings );
+    }
+
+    /**
+     * @param bean
+     * @param settings
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<SearchResult> compassSearch( Compass bean, final SearchSettings settings ) {
+        CompassTemplate template = new CompassTemplate( bean );
+        return ( Collection<SearchResult> ) template.execute(
+                CompassTransaction.TransactionIsolation.READ_ONLY_READ_COMMITTED, new CompassCallback() {
+                    public Object doInCompass( CompassSession session ) throws CompassException {
+                        return performSearch( settings, session );
+                    }
+                } );
+    }
+
+    /**
+     * Search for composite sequences associated with genes.
+     * 
+     * @param settings
+     * @param geneSearchResults Optional. If non-null, the results here will be used instead of conducting a brand new
+     *        search for genes.
+     * @param arrayDesign
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<SearchResult> compositeSequenceByGeneSearch( SearchSettings settings,
+            Collection<SearchResult> geneSearchResults ) {
+
+        // Note that the gene results are NOT returned.
+        final Collection<SearchResult> geneResults;
+        Set<SearchResult> allResults = new HashSet<SearchResult>();
+        if ( geneSearchResults == null ) {
+            geneResults = geneSearch( settings );
+        } else {
+            geneResults = geneSearchResults;
+        }
+
+        // if there have been any genes returned, find the compositeSequences
+        // associated with the genes
+        if ( geneResults != null && geneResults.size() > 0 ) {
+            ArrayDesign arrayDesign = settings.getArrayDesign();
+            for ( SearchResult sr : geneResults ) {
+                if ( arrayDesign == null ) {
+                    Collection<CompositeSequence> geneCs = geneService.getCompositeSequencesById( sr.getId() );
+                    allResults.addAll( dbHitsToSearchResult( geneCs ) );
+                } else {
+                    Collection<CompositeSequence> geneCs = geneService.getCompositeSequences( ( Gene ) sr
+                            .getResultObject(), arrayDesign );
+                    allResults.addAll( dbHitsToSearchResult( geneCs ) );
+                }
+
+            }
+        }
+        return allResults;
+    }
+
+    /**
+     * Search by name of the composite sequence as well as gene.
+     * 
+     * @param searchString
+     * @param arrayDesign to restrict to
+     * @param geneSearchResults Can be null, otherwise used to avoid a second search.
+     * @return
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<SearchResult> compositeSequenceSearch( SearchSettings settings,
+            Collection<SearchResult> geneSearchResults ) {
+
+        StopWatch watch = startTiming();
+
+        Collection<SearchResult> allResults = new HashSet<SearchResult>();
+        allResults.addAll( compassCompositeSequenceSearch( settings ) );
+        allResults.addAll( databaseCompositeSequenceSearch( settings ) );
+        allResults.addAll( compositeSequenceByGeneSearch( settings, geneSearchResults ) );
+
+        watch.stop();
+        if ( watch.getTime() > 1000 )
+            log.info( "Composite sequence DB search for " + settings + " took " + watch.getTime() + " ms" );
+        return allResults;
+    }
+
+    /**
+     * Searches the DB for array designs which have composite sequences whose names match the given search string.
+     * Because of the underlying database search, this is acl aware. That is, returned array designs are filtered based
+     * on access control list (ACL) permissions.
+     * 
+     * @param searchString
+     * @return
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<SearchResult> databaseArrayDesignSearch( SearchSettings settings ) {
+
+        StopWatch watch = startTiming();
+
+        Collection<ArrayDesign> adSet = new HashSet<ArrayDesign>();
+
+        // search by exact composite sequence name
+        Collection<CompositeSequence> matchedCs = compositeSequenceService.findByName( settings.getQuery() );
+        for ( CompositeSequence sequence : matchedCs ) {
+            adSet.add( sequence.getArrayDesign() );
+        }
+
+        watch.stop();
+        if ( watch.getTime() > 1000 )
+            log.info( "Array Design Compositesequence DB search for " + settings + " took " + watch.getTime() + " ms"
+                    + " found " + adSet.size() + " Ads" );
+
+        return dbHitsToSearchResult( adSet );
+
+    }
+
+    /**
+     * A database serach for biosequences. Biosequence names are already indexed by compass...
+     * 
+     * @param searchString
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<SearchResult> databaseBiosequenceSearch( SearchSettings settings ) {
+        // Use the wildcard plumbing.
+        StopWatch watch = startTiming();
+
+        String searchString = settings.getQuery();
+
+        // search by inexact symbol
+        Set<SearchResult> bioSequenceMatch = new HashSet<SearchResult>();
+
+        // replace * with % for inexact symbol search
+        String inexactString = searchString;
+        Pattern pattern = Pattern.compile( "\\*" );
+        Matcher match = pattern.matcher( inexactString );
+        inexactString = match.replaceAll( "%" );
+
+        bioSequenceMatch.addAll( bioSequenceService.findByName( inexactString ) );
+
+        Collection<SearchResult> bioSequenceList = new HashSet<SearchResult>( dbHitsToSearchResult( bioSequenceMatch ) );
+
+        if ( bioSequenceList.size() == 0 ) return bioSequenceList;
+
+        watch.stop();
+        if ( watch.getTime() > 1000 )
+            log.info( "BioSequence DB search for " + searchString + " took " + watch.getTime() + " ms and found"
+                    + bioSequenceList.size() + " BioSequences" );
+
+        return bioSequenceList;
+    }
+
+    /**
+     * @param clazz Class of objects to restrict the search to (typically ExpressionExperiment.class, for example).
+     * @param settings
+     * @return Collection of search results for the objects owning the found characteristics, where the owner is of
+     *         class clazz
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<SearchResult> databaseCharacteristicSearchForOwners( Collection<Class> classes,
+            SearchSettings settings ) {
+        Collection<Characteristic> characteristicValueMatches = characteristicService.findByValue( settings.getQuery()
+                + "%" );
+        Collection<Characteristic> characteristicURIMatches = characteristicService.findByUri( settings.getQuery() );
+
+        Map parentMap = characteristicService.getParents( characteristicValueMatches );
+        parentMap.putAll( characteristicService.getParents( characteristicURIMatches ) );
+
+        return filterCharacteristicOwnersByClass( classes, parentMap );
+    }
+
+    /**
+     * Search the DB for genes that are matched
+     * 
+     * @param searchString
+     * @return
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<SearchResult> databaseCompositeSequenceSearch( final SearchSettings settings ) {
+
+        StopWatch watch = startTiming();
+
+        Set<Gene> geneSet = new HashSet<Gene>();
+
+        String searchString = settings.getQuery();
+
+        // search by exact composite sequence name
+        Collection<CompositeSequence> matchedCs = compositeSequenceService.findByName( searchString );
+
+        // search by associated genes.
+        for ( CompositeSequence sequence : matchedCs ) {
+            geneSet.addAll( compositeSequenceService.getGenes( sequence ) );
+        }
+
+        watch.stop();
+        if ( watch.getTime() > 1000 )
+            log.info( "Gene composite sequence DB search " + searchString + " took " + watch.getTime() + " ms, "
+                    + geneSet.size() + " items." );
+
+        return dbHitsToSearchResult( geneSet );
+    }
+
+    /**
+     * Does search on exact string by: id, name and short name.
+     * <p>
+     * The compass search is backed by a database search so the returned collection is filtered based on access
+     * permissions to the objects in the collection.
+     * 
+     * @param query
+     * @return {@link Collection}
+     */
+    private Collection<SearchResult> databaseExpressionExperimentSearch( final SearchSettings settings ) {
+
+        StopWatch watch = startTiming();
+
+        Collection<ExpressionExperiment> results = new HashSet<ExpressionExperiment>();
+        ExpressionExperiment ee = expressionExperimentService.findByName( settings.getQuery() );
+        if ( ee != null ) {
+            results.add( ee );
+        } else {
+            ee = expressionExperimentService.findByShortName( settings.getQuery() );
+            if ( ee != null ) {
+                results.add( ee );
+            } else {
+                try {
+                    // maybe user put in a primary key value.
+                    ee = expressionExperimentService.load( new Long( settings.getQuery() ) );
+                    if ( ee != null ) results.add( ee );
+                } catch ( NumberFormatException e ) {
+                    // no-op - it's not an ID.
+                }
+            }
+        }
+
+        watch.stop();
+        if ( watch.getTime() > 1000 )
+            log.info( "DB Expression Experiment search for " + settings + " took " + watch.getTime() + " ms and found "
+                    + results.size() + " EEs" );
+
+        Collection<SearchResult> r = dbHitsToSearchResult( results );
+        return r;
+    }
+
+    /**
+     * Search the DB for genes that exactly match the given search string searches geneProducts, gene and bioSequence
+     * tables
+     * 
+     * @param searchString
+     * @return
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<SearchResult> databaseGeneSearch( SearchSettings settings ) {
+
+        StopWatch watch = startTiming();
+        String searchString = settings.getQuery();
+        if ( StringUtils.isBlank( searchString ) ) return new HashSet<SearchResult>();
+
+        // replace * with % for inexact symbol search
+        String inexactString = searchString;
+        Pattern pattern = Pattern.compile( "\\*" );
+        Matcher match = pattern.matcher( inexactString );
+        inexactString = match.replaceAll( "%" );
+
+        Collection<Gene> geneSet = new HashSet<Gene>();
+        geneSet.addAll( geneService.findByOfficialSymbolInexact( inexactString ) );
+        geneSet.addAll( geneService.getByGeneAlias( inexactString ) );
+
+        geneSet.addAll( geneProductService.getGenesByName( inexactString ) );
+        geneSet.addAll( geneProductService.getGenesByNcbiId( inexactString ) );
+
+        geneSet.addAll( bioSequenceService.getGenesByAccession( inexactString ) );
+        geneSet.addAll( bioSequenceService.getGenesByName( inexactString ) );
+
+        watch.stop();
+        if ( watch.getTime() > 1000 )
+            log.info( "Gene DB search for " + searchString + " took " + watch.getTime() + " ms and found "
+                    + geneSet.size() + " genes" );
+
+        Collection<SearchResult> results = dbHitsToSearchResult( geneSet );
+        filterByTaxon( settings, results );
+        return results;
+    }
+
+    /**
+     * Convert hits from database searches into SearchResults.
+     * 
+     * @param entities
+     * @return
+     */
+    private Collection<SearchResult> dbHitsToSearchResult( Collection<? extends Object> entities ) {
+        Collection<SearchResult> results = new HashSet<SearchResult>();
+        for ( Object object : entities ) {
+            // DB hits always get a score of 1.
+            results.add( new SearchResult( object, 1.0 ) );
+        }
+        return results;
+    }
+
+    /**
+     * A general search for expression experiments. This search does both an database search and a compass search.
+     * 
+     * @param settings
+     * @return {@link Collection}
+     */
+    private Collection<SearchResult> expressionExperimentSearch( final SearchSettings settings ) {
+        StopWatch watch = startTiming();
+        Collection<SearchResult> results = databaseExpressionExperimentSearch( settings );
+        Collection<SearchResult> compassExpressionSearchResults = compassExpressionSearch( settings );
+        results.addAll( compassExpressionSearchResults );
+        results.addAll( characteristicExpressionExperimentSearch( settings ) );
+
+        watch.stop();
+        if ( watch.getTime() > 1000 )
+            log.info( "General Expression Experiment search for " + settings + " took " + watch.getTime() + " ms" );
+
+        return results;
+    }
+
+    /**
+     * This can only be used on SearchResults where the result object has a "getTaxon" method.
+     * 
+     * @param settings
+     * @param geneSet
+     */
+    private void filterByTaxon( SearchSettings settings, Collection<SearchResult> results ) {
+        if ( settings.getTaxon() != null ) {
+            Collection<SearchResult> toRemove = new HashSet<SearchResult>();
+            Taxon t = settings.getTaxon();
+            for ( SearchResult sr : results ) {
+                Object o = sr.getResultObject();
+                try {
+                    Method m = o.getClass().getMethod( "getTaxon", new Class[] {} );
+                    Taxon currentTaxon = ( Taxon ) m.invoke( o, new Object[] {} );
+                    if ( !currentTaxon.equals( t ) ) {
+                        toRemove.add( sr );
+                    }
+                } catch ( SecurityException e ) {
+                    throw new RuntimeException( e );
+                } catch ( NoSuchMethodException e ) {
+                    throw new RuntimeException( e );
+                } catch ( IllegalArgumentException e ) {
+                    throw new RuntimeException( e );
+                } catch ( IllegalAccessException e ) {
+                    throw new RuntimeException( e );
+                } catch ( InvocationTargetException e ) {
+                    throw new RuntimeException( e );
+                }
+            }
+            results.removeAll( toRemove );
+        }
+    }
+
+    /**
+     * @param clazz
+     * @param parentMap
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<SearchResult> filterCharacteristicOwnersByClass( Collection<Class> classes, Map parentMap ) {
+        Collection<SearchResult> results = new HashSet<SearchResult>();
+        for ( Object c : parentMap.keySet() ) {
+            Object o = parentMap.get( ( Characteristic ) c );
+            for ( Class clazz : classes ) {
+                if ( clazz.isAssignableFrom( o.getClass() ) ) {
+                    results.add( new SearchResult( o, 1.0 ) );
+                }
+            }
+        }
+        return results;
+    }
+
+    /**
+     * Combines compass style search, the db style search, and the compositeSequence search and returns 1 combined list
+     * with no duplicates.
+     * 
+     * @param searchString
+     * @return
+     * @throws Exception
+     */
+    private Collection<SearchResult> geneSearch( final SearchSettings settings ) {
+
+        StopWatch watch = startTiming();
+
+        String searchString = settings.getQuery();
+
+        Collection<SearchResult> geneDbList = databaseGeneSearch( settings );
+        Collection<SearchResult> geneCompassList = compassGeneSearch( settings );
+        Collection<SearchResult> geneCsList = databaseCompositeSequenceSearch( settings );
+
+        Set<SearchResult> combinedGeneList = new HashSet<SearchResult>();
+        combinedGeneList.addAll( geneDbList );
+        combinedGeneList.addAll( geneCompassList );
+        combinedGeneList.addAll( geneCsList );
+
+        if ( watch.getTime() > 1000 )
+            log.info( "General Gene search for " + searchString + " took " + watch.getTime() + " ms" );
+
+        filterByTaxon( settings, combinedGeneList );
+        return combinedGeneList;
+    }
+
+    /**
+     * @param searchResults
+     * @return List of ids for the entities held by the search results.
+     */
+    private List<Long> getIds( List<SearchResult> searchResults ) {
+        List<Long> list = new ArrayList<Long>();
+        for ( SearchResult ee : searchResults ) {
+            list.add( ee.getId() );
+        }
+        return list;
+    }
+
+    /**
+     * @param hits
+     * @return
+     */
+    private Collection<SearchResult> getSearchResults( CompassHit[] hits ) {
+        Collection<SearchResult> results = new HashSet<SearchResult>();
+        for ( CompassHit compassHit : hits ) {
+            SearchResult r = new SearchResult( compassHit.getData() );
+            r.setScore( new Double( compassHit.getScore() ) );
+            CompassHighlightedText highlightedText = compassHit.getHighlightedText();
+            if ( highlightedText != null ) r.setHighlightedText( highlightedText.getHighlightedText() );
+            results.add( r );
+        }
+        return results;
+    }
+
+    /**
+     * @param settings
+     * @param results
+     * @param rawResults
+     * @param fillObjects
+     */
+    private Map<Class, List<SearchResult>> getSortedLimitedResults( SearchSettings settings,
+            List<SearchResult> rawResults, boolean fillObjects ) {
+        Map<Class, List<SearchResult>> results = new HashMap<Class, List<SearchResult>>();
+        Collections.sort( rawResults );
+
+        results.put( Gene.class, new ArrayList<SearchResult>() );
+        results.put( ExpressionExperiment.class, new ArrayList<SearchResult>() );
+        results.put( BibliographicReference.class, new ArrayList<SearchResult>() );
+        results.put( BioSequence.class, new ArrayList<SearchResult>() );
+        results.put( CompositeSequence.class, new ArrayList<SearchResult>() );
+        results.put( ArrayDesign.class, new ArrayList<SearchResult>() );
+
+        /*
+         * Get the top N results, overall (NOT within each class - experimental.)
+         */
+        for ( int i = 0, limit = Math.min( rawResults.size(), settings.getMaxResults() ); i < limit; i++ ) {
+            SearchResult sr = rawResults.get( i );
+            Class resultClass = ReflectionUtil.getBaseForImpl( sr.getResultClass() );
+            if ( !results.containsKey( resultClass ) ) {
+                log.warn( "!!!" + resultClass );
+            }
+            results.get( resultClass ).add( sr );
+        }
+
+        if ( fillObjects ) {
+            /**
+             * Now retrieve the entities and put them in the SearchResult. Entities that are filtered out by the
+             * SecurityInterceptor will be removed at this stage.
+             */
+            for ( Class clazz : results.keySet() ) {
+                List<SearchResult> r = results.get( clazz );
+                if ( r.size() == 0 ) continue;
+                Map<Long, SearchResult> rMap = new HashMap<Long, SearchResult>();
+                for ( SearchResult searchResult : r ) {
+                    rMap.put( searchResult.getId(), searchResult );
+                }
+
+                Collection entities = retrieveResultEntities( clazz, r );
+                List<SearchResult> filteredResults = new ArrayList<SearchResult>();
+                for ( Object entity : entities ) {
+                    Long id = EntityUtils.getId( entity );
+                    SearchResult keeper = rMap.get( id );
+                    keeper.setResultObject( entity );
+                    filteredResults.add( keeper );
+                }
+                results.put( clazz, filteredResults );
+
+            }
+        } else {
+            for ( SearchResult sr : rawResults ) {
+                sr.setResultObject( null );
+            }
+        }
+
+        return results;
+    }
+
+    /**
+     * Attempts to find an exact match for the search term in the characteristic table (by value and value URI). If the
+     * search term is found then uses that URI to find the parents and returns them as SearchResults.
+     * 
+     * @param classes
+     * @param searchString
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<SearchResult> ontologySearchAnnotatedObject( Collection<Class> classes, SearchSettings settings ) {
+
+        /*
+         * Direct search.
+         */
+        Collection<SearchResult> results = databaseCharacteristicSearchForOwners( classes, settings );
+
+        /*
+         * Include children in ontologies, if any. This can be very slow.
+         */
+        Collection<SearchResult> childResults = characteristicSearchWithChildren( classes, settings );
+
+        results.addAll( childResults );
+
+        return results;
+
+    }
+
+    /**
+     * @param query
+     * @param session
+     * @return
+     */
+    private Collection<SearchResult> performSearch( SearchSettings settings, CompassSession session ) {
+        StopWatch watch = startTiming();
+
+        String query = settings.getQuery();
+        if ( StringUtils.isBlank( query ) || query.equals( "*" ) ) return new ArrayList<SearchResult>();
+
+        CompassQuery compassQuery = session.queryBuilder().queryString( query.trim() ).toQuery();
+        CompassHits hits = compassQuery.hits();
+
+        watch.split();
+        if ( watch.getSplitTime() > 1000 )
+            log.info( "===== Getting " + hits.getLength() + " hits for " + query + " took " + watch.getSplitTime()
+                    + " ms" );
+        watch.unsplit();
+
+        // Put a limit on the number of hits to detach.
+        // Detaching hits can be time consuming (somewhat like thawing).
+
+        CompassDetachedHits detachedHits = hits.detach( 0, Math.min( hits.getLength(), MAX_COMPASS_HITS_TO_DETACH ) );
+
+        watch.split();
+
+        if ( watch.getSplitTime() > 1000 )
+            log.info( "===== Detaching " + detachedHits.getLength() + " hits for " + query + " took "
+                    + watch.getSplitTime() + " ms" );
+
+        return getSearchResults( detachedHits.getHits() );
+    }
+
+    /**
+     * Retrieve entities from the persistent store.
+     * 
+     * @param entityClass
+     * @param results
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Collection retrieveResultEntities( Class entityClass, List<SearchResult> results ) {
+        List<Long> ids = getIds( results );
+        if ( ExpressionExperiment.class.isAssignableFrom( entityClass ) ) {
+            return expressionExperimentService.loadMultiple( ids );
+        } else if ( ArrayDesign.class.isAssignableFrom( entityClass ) ) {
+            return arrayDesignService.loadMultiple( ids );
+        } else if ( CompositeSequence.class.isAssignableFrom( entityClass ) ) {
+            return compositeSequenceService.loadMultiple( ids );
+        } else if ( BibliographicReference.class.isAssignableFrom( entityClass ) ) {
+            return bibliographicReferenceService.loadMultiple( ids );
+        } else if ( Gene.class.isAssignableFrom( entityClass ) ) {
+            return geneService.loadMultiple( ids );
+        } else if ( BioSequence.class.isAssignableFrom( entityClass ) ) {
+            return bioSequenceService.loadMultiple( ids );
+        } else {
+            throw new UnsupportedOperationException( "Don't know how to retrieve objects for class=" + entityClass );
+        }
+    }
+
+    private StopWatch startTiming() {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        return watch;
+    }
 
 }

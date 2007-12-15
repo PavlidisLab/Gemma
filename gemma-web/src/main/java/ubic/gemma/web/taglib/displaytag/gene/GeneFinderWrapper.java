@@ -28,19 +28,18 @@ import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.search.SearchResult;
 
 /**
  * Used to generate hyperlinks in displaytag tables.
  * <p>
  * See http://displaytag.sourceforge.net/10/tut_decorators.html and http://displaytag.sourceforge.net/10/tut_links.html
  * for explanation of how this works.
- *
+ * 
  * @author jsantos
  * @version $Id $
- *  
  */
 public class GeneFinderWrapper extends TableDecorator {
-
 
     Log log = LogFactory.getLog( this.getClass() );
 
@@ -48,59 +47,78 @@ public class GeneFinderWrapper extends TableDecorator {
      * @return String
      */
     public String getTaxon() {
-        Gene object = ( Gene ) getCurrentRowObject();
-        return object.getTaxon().getScientificName();
+        SearchResult object = ( SearchResult ) getCurrentRowObject();
+        Gene g = ( Gene ) object.getResultObject();
+        return g.getTaxon().getScientificName();
     }
-    
+
     public String getAccession() {
-        DatabaseEntry object = (DatabaseEntry) getCurrentRowObject();
+        DatabaseEntry object = ( DatabaseEntry ) getCurrentRowObject();
         return object.getAccession() + "." + object.getAccessionVersion();
     }
-    
-    public String getNcbiLink() {
-        Gene object = ( Gene ) getCurrentRowObject();
-        if (object.getNcbiId() == null) return "";
 
-        String ncbiLink = "<a target='_blank' href='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids=" +
-                object.getNcbiId() + "'>  <img hight='10' width='10%' src=\"/Gemma/images/logo/ncbi.gif\" /></a>";
+    public String getNcbiLink() {
+        SearchResult object = ( SearchResult ) getCurrentRowObject();
+        Gene g = ( Gene ) object.getResultObject();
+        if ( g.getNcbiId() == null ) return "";
+
+        String ncbiLink = "<a target='_blank' href='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids="
+                + g.getNcbiId() + "'>  <img hight='10' width='10%' src=\"/Gemma/images/logo/ncbi.gif\" /></a>";
         return ncbiLink;
     }
-    
+
     public String getGemmaLink() {
-        Gene object = ( Gene ) getCurrentRowObject();
-        String gemmaLink = "<a href='/Gemma/gene/showGene.html?id=" +
-                object.getId() + "'><img src=\"/Gemma/images/logo/gemmaTiny.gif\" /> </a>";
+        SearchResult object = ( SearchResult ) getCurrentRowObject();
+        String gemmaLink = "<a href='/Gemma/gene/showGene.html?id=" + object.getId()
+                + "'><img src=\"/Gemma/images/logo/gemmaTiny.gif\" /> </a>";
         return gemmaLink;
     }
-    
+
     public String getNameLink() {
-        Gene object = ( Gene ) getCurrentRowObject();
-        String nameLink = "<a href='/Gemma/gene/showGene.html?id=" +
-        object.getId() + "'>" + object.getName() + "</a> &nbsp; &nbsp;" + getNcbiLink();
+        SearchResult object = ( SearchResult ) getCurrentRowObject();
+        Gene g = ( Gene ) object.getResultObject();
+        String nameLink = "<a href='/Gemma/gene/showGene.html?id=" + object.getId() + "'>" + g.getName()
+                + "</a> &nbsp; &nbsp;" + getNcbiLink();
         return nameLink;
     }
-    
+
+    public String getOfficialName() {
+        SearchResult object = ( SearchResult ) getCurrentRowObject();
+        Gene g = ( Gene ) object.getResultObject();
+        return g.getOfficialName();
+    }
+
+    public String getOfficialSymbol() {
+        SearchResult object = ( SearchResult ) getCurrentRowObject();
+        Gene g = ( Gene ) object.getResultObject();
+        return g.getOfficialSymbol();
+    }
+
     @SuppressWarnings("unchecked")
     public String getMatchesView() {
         Gene object = ( Gene ) getCurrentRowObject();
-        Set<Gene> geneMatch = (Set) this.getPageContext().findAttribute( "geneMatch" );
-        Set<Gene> aliasMatch = (Set) this.getPageContext().findAttribute( "aliasMatch" );
-        Set<Gene> geneProductMatch = (Set) this.getPageContext().findAttribute( "geneProductMatch" );
-        Set<Gene> bioSequenceMatch = (Set) this.getPageContext().findAttribute( "bioSequenceMatch" );
+        Set<Gene> geneMatch = ( Set ) this.getPageContext().findAttribute( "geneMatch" );
+        Set<Gene> aliasMatch = ( Set ) this.getPageContext().findAttribute( "aliasMatch" );
+        Set<Gene> geneProductMatch = ( Set ) this.getPageContext().findAttribute( "geneProductMatch" );
+        Set<Gene> bioSequenceMatch = ( Set ) this.getPageContext().findAttribute( "bioSequenceMatch" );
         ArrayList<String> matches = new ArrayList<String>();
-        if (geneMatch.contains( object )) {
-            matches.add("Symbol");;
+        if ( geneMatch.contains( object ) ) {
+            matches.add( "Symbol" );
+            ;
         }
-        if (aliasMatch.contains( object )) {
-            matches.add("Alias");;
+        if ( aliasMatch.contains( object ) ) {
+            matches.add( "Alias" );
+            ;
         }
-        if (geneProductMatch.contains( object )) {
-            matches.add("GeneProduct");;
+        if ( geneProductMatch.contains( object ) ) {
+            matches.add( "GeneProduct" );
+            ;
         }
-        if (bioSequenceMatch.contains( object )) {
-            matches.add("BioSequence");;
+        if ( bioSequenceMatch.contains( object ) ) {
+            matches.add( "BioSequence" );
+            ;
         }
         return StringUtils.join( matches.toArray(), "," );
     }
-    
+
 }

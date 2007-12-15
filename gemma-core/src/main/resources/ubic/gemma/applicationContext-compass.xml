@@ -27,6 +27,8 @@
 		</property>
 		<property name="geneProductService">
 			<ref bean="geneProductService" />
+		</property><property name="gene2GOAssociationService">
+			<ref bean="gene2GOAssociationService" />
 		</property>
 		<property name="bioSequenceService">
 			<ref bean="bioSequenceService" />

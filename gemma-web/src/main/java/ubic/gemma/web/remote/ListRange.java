@@ -19,6 +19,7 @@
 package ubic.gemma.web.remote;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * Wraps a chunk of data for display (e.g., in a paging grid)
@@ -31,6 +32,11 @@ public class ListRange implements Serializable {
     private static final long serialVersionUID = -1765086079209452654L;
     private Object[] data;
     private int totalSize;
+
+    public ListRange( List<? extends Object> objects ) {
+        this.data = objects.toArray();
+        this.setTotalSize( data.length );
+    }
 
     public Object[] getData() {
         return data;

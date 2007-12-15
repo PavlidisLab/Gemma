@@ -32,6 +32,8 @@ import java.util.Collection;
 public class BibliographicReferenceServiceImpl extends
         ubic.gemma.model.common.description.BibliographicReferenceServiceBase {
 
+    private static final String PUB_MED_DATABASE_NAME = "PubMed";
+
     /**
      * Check to see if the reference already exists
      * 
@@ -52,7 +54,7 @@ public class BibliographicReferenceServiceImpl extends
     protected ubic.gemma.model.common.description.BibliographicReference handleFindByExternalId( java.lang.String id )
             throws java.lang.Exception {
 
-        return this.getBibliographicReferenceDao().findByExternalId( id, "PubMed" );
+        return this.getBibliographicReferenceDao().findByExternalId( id, PUB_MED_DATABASE_NAME );
 
     }
 
@@ -143,6 +145,11 @@ public class BibliographicReferenceServiceImpl extends
     @Override
     protected Collection handleGetRelatedExperiments( BibliographicReference bibliographicReference ) throws Exception {
         return this.getBibliographicReferenceDao().getRelatedExperiments( bibliographicReference );
+    }
+
+    @Override
+    protected Collection handleLoadMultiple( Collection ids ) throws Exception {
+        return this.getBibliographicReferenceDao().loadMultiple( ids );
     }
 
 }

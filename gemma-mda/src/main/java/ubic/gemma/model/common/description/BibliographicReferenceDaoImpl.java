@@ -121,4 +121,9 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
         }
     }
 
+    @Override
+    protected Collection handleLoadMultiple( Collection ids ) throws Exception {
+        return this.getHibernateTemplate().find( "from BibliographicReferenceImpl b where b.id in :bib", ids );
+    }
+
 }

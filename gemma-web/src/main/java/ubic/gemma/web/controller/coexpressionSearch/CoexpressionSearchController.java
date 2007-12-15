@@ -55,7 +55,9 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.ontology.OntologyTerm;
+import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
+import ubic.gemma.search.SearchSettings;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
@@ -158,8 +160,11 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
             Gene g = geneService.load( Long.parseLong( commandObject.getId() ) );
             genesFound.add( g );
         } else if ( commandObject.getExactSearch() == null ) {
-            genesFound.addAll( searchService.geneDbSearch( commandObject.getSearchString() ) );
-            genesFound.addAll( searchService.compassGeneSearch( commandObject.getSearchString() ) );
+            List<SearchResult> geneSearchResults = searchService.search(
+                    SearchSettings.GeneSearch( commandObject.getSearchString(), null ) ).get( Gene.class );
+            for ( SearchResult sr : geneSearchResults ) {
+                genesFound.add( ( Gene ) sr.getResultObject() );
+            }
         } else if ( commandObject.getGeneIdSearch().equalsIgnoreCase( "true" ) ) {
             String geneId = commandObject.getSearchString();
             Long id = Long.parseLong( geneId );
@@ -171,8 +176,11 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         } else {
             genesFound.addAll( geneService.findByOfficialSymbol( commandObject.getSearchString() ) );
             if ( genesFound.size() == 0 ) {
-                genesFound.addAll( searchService.geneDbSearch( commandObject.getSearchString() ) );
-                genesFound.addAll( searchService.compassGeneSearch( commandObject.getSearchString() ) );
+                List<SearchResult> geneSearchResults = searchService.search(
+                        SearchSettings.GeneSearch( commandObject.getSearchString(), null ) ).get( Gene.class );
+                for ( SearchResult sr : geneSearchResults ) {
+                    genesFound.add( ( Gene ) sr.getResultObject() );
+                }
             }
         }
 
@@ -229,14 +237,19 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         // find coexpressed genes
 
         // find expressionExperiments via lucene if the query is eestring-constrained
-        Collection<ExpressionExperiment> ees;
+        /*
+         * FIXME this is probably a little broken now.
+         */
+        Collection<SearchResult> eeSearchResults;
         if ( StringUtils.isNotBlank( commandObject.getEeSearchString() ) ) {
-            ees = searchService.compassExpressionSearch( commandObject.getEeSearchString() );
-            if ( ees.size() == 0 ) {
+            eeSearchResults = searchService.search(
+                    SearchSettings.ExpressionExperimentSearch( commandObject.getEeSearchString() ) ).get(
+                    ExpressionExperiment.class );
+            if ( eeSearchResults.size() == 0 ) {
                 saveMessage( request, "No datasets matched - defaulting to all datasets" );
             }
         } else {
-            ees = new ArrayList<ExpressionExperiment>();
+            eeSearchResults = new ArrayList<SearchResult>();
         }
 
         Gene sourceGene = ( Gene ) ( genesFound.toArray() )[0];
@@ -258,19 +271,20 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
             return mav;
         }
 
-        if ( ees.size() > 0 ) {
-            // if there are matches, fihter the expression experiments first by taxon
+        Collection<ExpressionExperiment> ees = null;
+        if ( eeSearchResults.size() > 0 ) {
+            // if there are matches, filter the expression experiments first by taxon
 
-            Collection<ExpressionExperiment> eeToRemove = new HashSet<ExpressionExperiment>();
-            for ( ExpressionExperiment ee : ees ) {
+            Collection<SearchResult> eeToRemove = new HashSet<SearchResult>();
+            for ( SearchResult ee : eeSearchResults ) {
                 Taxon t = expressionExperimentService.getTaxon( ee.getId() );
                 if ( t.getId().longValue() != taxon.getId().longValue() ) eeToRemove.add( ee );
 
                 if ( !possibleEEs.contains( ee.getId() ) ) eeToRemove.add( ee );
             }
-            ees.removeAll( eeToRemove );
+            eeSearchResults.removeAll( eeToRemove );
 
-            if ( ees.isEmpty() ) {
+            if ( eeSearchResults.isEmpty() ) {
                 ModelAndView mav = super.showForm( request, errors, getFormView() );
                 saveMessage( request, "There are no " + taxon.getScientificName()
                         + " arrays in the system that assay for the gene "

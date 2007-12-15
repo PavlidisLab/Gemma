@@ -285,6 +285,7 @@
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByAccession=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByName=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByShortName=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByFactorValue=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByTaxon=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.getArrayDesignsUsed=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.experiment.ExpressionExperimentService.getQuantitationTypeCountById=user,admin,ROLE_ANONYMOUS
@@ -323,7 +324,7 @@
                 ubic.gemma.model.expression.arrayDesign.ArrayDesignService.loadAll=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.arrayDesign.ArrayDesignService.findOrCreate=ACL_SECURABLE_EDIT,admin,user
                 ubic.gemma.model.expression.arrayDesign.ArrayDesignService.remove=admin,ACL_SECURABLE_EDIT
-                ubic.gemma.model.expression.arrayDesign.ArrayDesignService.findArrayDesignByName=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.expression.arrayDesign.ArrayDesignService.findByName=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.arrayDesign.ArrayDesignService.update=user,admin,ACL_SECURABLE_EDIT 
                 ubic.gemma.model.expression.arrayDesign.ArrayDesignService.find=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.arrayDesign.ArrayDesignService.create=user,admin

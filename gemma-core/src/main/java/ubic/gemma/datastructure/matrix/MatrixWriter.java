@@ -101,7 +101,7 @@ public class MatrixWriter<T> {
 
         buf.append( "[" );
         // if ( writeHeader ) {
-        // // TO do get gene.
+        // // TO do get gene. Bug 872.
         // buf.append( "{ 'id' : \"Probe\",\"Sequence\"" );
         // for ( int i = 0; i < columns; i++ ) {
         // buf.append( ",\"" + matrix.getBioMaterialForColumn( i ).getName() + "." );

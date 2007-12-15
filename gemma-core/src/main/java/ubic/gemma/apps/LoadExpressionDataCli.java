@@ -172,7 +172,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
                             "Batch loading via text file not supported for Array Express file formats. " );
 
                 ad = adService.findByShortName( this.adName );
-                if ( ad == null ) ad = adService.findArrayDesignByName( this.adName );
+                if ( ad == null ) ad = adService.findByName( this.adName );
 
                 if ( ad == null ) {
                     return new IllegalArgumentException( "Array Design Specified was not valid: " + adName

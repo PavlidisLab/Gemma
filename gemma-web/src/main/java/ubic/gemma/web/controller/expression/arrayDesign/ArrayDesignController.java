@@ -63,7 +63,9 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
+import ubic.gemma.search.SearchSettings;
 import ubic.gemma.util.ToStringUtil;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
@@ -127,32 +129,74 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
     private Cache cache;
 
-    /**
-     * @param arrayDesignReportService the arrayDesignReportService to set
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
-    public void setArrayDesignReportService( ArrayDesignReportService arrayDesignReportService ) {
-        this.arrayDesignReportService = arrayDesignReportService;
+    public void afterPropertiesSet() throws Exception {
+        try {
+            CacheManager manager = CacheManager.getInstance();
+
+            if ( manager.cacheExists( "ArrayDesignCompositeSequenceCache" ) ) {
+                return;
+            }
+
+            cache = new Cache( "ArrayDesignCompositeSequenceCache", ARRAY_INFO_CACHE_SIZE,
+                    MemoryStoreEvictionPolicy.LFU, false, null, false, ARRAY_INFO_CACHE_TIME_TO_DIE,
+                    ARRAY_INFO_CACHE_TIME_TO_IDLE, false, 500, null );
+
+            manager.addCache( cache );
+            cache = manager.getCache( "ArrayDesignCompositeSequenceCache" );
+
+        } catch ( CacheException e ) {
+            throw new RuntimeException( e );
+        }
+
     }
 
     /**
-     * @param arrayDesignService The arrayDesignService to set.
+     * Delete an arrayDesign.
+     * 
+     * @param request
+     * @param response
+     * @return
      */
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
-    }
+    @SuppressWarnings("unused")
+    public ModelAndView delete( HttpServletRequest request, HttpServletResponse response ) {
+        String stringId = request.getParameter( "id" );
 
-    /**
-     * @return the ontologyService
-     */
-    public AuditTrailService getAuditTrailService() {
-        return auditTrailService;
-    }
+        if ( stringId == null ) {
+            // should be a validation error.
+            throw new EntityNotFoundException( "Must provide an id" );
+        }
 
-    /**
-     * @param ausitTrailService the auditTrailService to set
-     */
-    public void setAuditTrailService( AuditTrailService auditTrailService ) {
-        this.auditTrailService = auditTrailService;
+        Long id = null;
+        try {
+            id = Long.parseLong( stringId );
+        } catch ( NumberFormatException e ) {
+            throw new EntityNotFoundException( "Identifier was invalid" );
+        }
+
+        ArrayDesign arrayDesign = arrayDesignService.load( id );
+        if ( arrayDesign == null ) {
+            throw new EntityNotFoundException( "Array design with id=" + id + " not found" );
+        }
+
+        // check that no EE depend on the arraydesign we want to delete
+        // Do this by checking if there are any bioassays that depend this AD
+        Collection assays = arrayDesignService.getAllAssociatedBioAssays( id );
+        if ( assays.size() != 0 ) {
+            // String eeName = ( ( BioAssay ) assays.iterator().next() )
+            // todo tell user what EE depends on this array design
+            addMessage( request, "Array  " + arrayDesign.getName()
+                    + " can't be deleted. Dataset has a dependency on this Array.", new Object[] { messageName,
+                    arrayDesign.getName() } );
+            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) );
+        }
+
+        return startJob( new RemoveArrayJob( arrayDesign, arrayDesignService ) );
+
     }
 
     public ModelAndView downloadAnnotationFile( HttpServletRequest request, HttpServletResponse response ) {
@@ -208,48 +252,97 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     }
 
     /**
-     * Show (some of) the probes from an array.
+     * Show array designs that match search criteria.
      * 
      * @param request
      * @param response
      * @return
      */
-    public ModelAndView showCompositeSequences( HttpServletRequest request, HttpServletResponse response ) {
+    public ModelAndView filter( HttpServletRequest request, HttpServletResponse response ) {
 
-        String arrayDesignIdStr = request.getParameter( "id" );
+        StopWatch overallWatch = new StopWatch();
+        overallWatch.start();
 
-        if ( arrayDesignIdStr == null ) {
-            // should be a validation error, on 'submit'.
-            throw new EntityNotFoundException( "Must provide an Array Design name or Id" );
+        String filter = request.getParameter( "filter" );
+
+        // Validate the filtering search criteria.
+        if ( StringUtils.isBlank( filter ) ) {
+            this.saveMessage( request, "No search critera provided" );
+            return showAll( request, response );
         }
 
-        ArrayDesign arrayDesign = arrayDesignService.load( Long.parseLong( arrayDesignIdStr ) );
-        ModelAndView mav = new ModelAndView( "compositeSequences.geneMap" );
+        Collection<SearchResult> searchResults = searchService.search( SearchSettings.ArrayDesignSearch( filter ) )
+                .get( ArrayDesign.class );
 
-        if ( !AJAX ) {
-            Collection<CompositeSequenceMapValueObject> compositeSequenceSummary = getDesignSummaries( arrayDesign );
-            if ( compositeSequenceSummary == null || compositeSequenceSummary.size() == 0 ) {
-                throw new RuntimeException( "No probes found for " + arrayDesign );
-            }
-            mav.addObject( "sequenceData", compositeSequenceSummary );
-            mav.addObject( "numCompositeSequences", compositeSequenceSummary.size() );
+        if ( ( searchResults == null ) || ( searchResults.size() == 0 ) ) {
+            this.saveMessage( request, "Your search yielded no results" );
+            Long overallElapsed = overallWatch.getTime();
+            log.info( "No results found. Search took: " + overallElapsed / 1000 + "s " );
+            return showAll( request, response );
         }
 
-        mav.addObject( "arrayDesign", arrayDesign );
+        String list = "";
 
-        return mav;
+        if ( searchResults.size() == 1 ) {
+            ArrayDesign arrayDesign = arrayDesignService.load( searchResults.iterator().next().getId() );
+            this.saveMessage( request, "Matched one : " + arrayDesign.getName() + "(" + arrayDesign.getShortName()
+                    + ")" );
+            overallWatch.stop();
+            Long overallElapsed = overallWatch.getTime();
+            log.info( "Filter found 1 AD:  " + arrayDesign.getName() + " took: " + overallElapsed / 1000 + "s " );
+            return new ModelAndView( new RedirectView( "/Gemma/arrays/showArrayDesign.html?id=" + arrayDesign.getId() ) );
+        }
+
+        for ( SearchResult ad : searchResults ) {
+            list += ad.getId() + ",";
+        }
+
+        this.saveMessage( request, "Search Criteria: " + filter );
+        this.saveMessage( request, searchResults.size() + " Array Designs matched your search." );
+
+        overallWatch.stop();
+        Long overallElapsed = overallWatch.getTime();
+        log.info( "Generating the AD list:  (" + list + ") took: " + overallElapsed / 1000 + "s " );
+
+        return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?id=" + list ) );
+
     }
 
     /**
-     * @param arrayDesign
+     * Build summary report for an array design
+     * 
+     * @param request
+     * @param response
      * @return
      */
-    @SuppressWarnings("unchecked")
-    public Collection<CompositeSequenceMapValueObject> getDesignSummaries( ArrayDesign arrayDesign ) {
-        Collection rawSummaries = compositeSequenceService.getRawSummary( arrayDesign, NUM_PROBES_TO_SHOW );
-        Collection<CompositeSequenceMapValueObject> summaries = arrayDesignMapResultService
-                .getSummaryMapValueObjects( rawSummaries );
-        return summaries;
+    public ModelAndView generateSummary( HttpServletRequest request, HttpServletResponse response ) {
+
+        String sId = request.getParameter( "id" );
+
+        // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
+        if ( sId == null ) {
+            return startJob( new GenerateSummary( request, arrayDesignReportService ) );
+        }
+        Long id = Long.parseLong( sId );
+        return startJob( new GenerateSummary( request, arrayDesignReportService, id ) );
+    }
+
+    /**
+     * @return the ontologyService
+     */
+    public AuditTrailService getAuditTrailService() {
+        return auditTrailService;
+    }
+
+    /**
+     * Exposed for AJAX calls.
+     * 
+     * @param ed
+     * @return
+     */
+    public Collection<CompositeSequenceMapValueObject> getCsSummaries( EntityDelegator ed ) {
+        ArrayDesign arrayDesign = arrayDesignService.load( ed.getId() );
+        return this.getDesignSummaries( arrayDesign );
     }
 
     /**
@@ -319,34 +412,21 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             offset = Math.max( 0, offset );
             offset = Math.min( res.size() - 1, offset );
             int endpoint = Math.min( res.size() - 1, offset + size );
-            ListRange result = new ListRange();
-            result.setData( res.subList( offset, endpoint ).toArray() );
-            result.setTotalSize( res.size() );
+            ListRange result = new ListRange( res.subList( offset, endpoint ) );
             return result;
         }
     }
 
     /**
-     * Exposed for AJAX calls.
-     * 
-     * @param ed
+     * @param arrayDesign
      * @return
      */
-    public Collection<CompositeSequenceMapValueObject> getCsSummaries( EntityDelegator ed ) {
-        ArrayDesign arrayDesign = arrayDesignService.load( ed.getId() );
-        return this.getDesignSummaries( arrayDesign );
-    }
-
-    /**
-     * AJAX
-     * 
-     * @param ed
-     * @return the taskid
-     */
-    public String updateReport( EntityDelegator ed ) {
-        GenerateSummary runner = new GenerateSummary( null, arrayDesignReportService, ed.getId() );
-        runner.setDoForward( false );
-        return ( String ) super.startJob( runner ).getModel().get( "taskId" );
+    @SuppressWarnings("unchecked")
+    public Collection<CompositeSequenceMapValueObject> getDesignSummaries( ArrayDesign arrayDesign ) {
+        Collection rawSummaries = compositeSequenceService.getRawSummary( arrayDesign, NUM_PROBES_TO_SHOW );
+        Collection<CompositeSequenceMapValueObject> summaries = arrayDesignMapResultService
+                .getSummaryMapValueObjects( rawSummaries );
+        return summaries;
     }
 
     /**
@@ -369,6 +449,13 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     }
 
     /**
+     * @return the searchService
+     */
+    public SearchService getSearchService() {
+        return searchService;
+    }
+
+    /**
      * AJAX
      * 
      * @return the taskid
@@ -384,6 +471,48 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
                     + ", it is used by an expression experiment" );
         }
         return ( String ) startJob( new RemoveArrayJob( arrayDesign, arrayDesignService ) ).getModel().get( "taskId" );
+    }
+
+    /**
+     * @param arrayDesignMapResultService the arrayDesignMapResultService to set
+     */
+    public void setArrayDesignMapResultService( ArrayDesignMapResultService arrayDesignMapResultService ) {
+        this.arrayDesignMapResultService = arrayDesignMapResultService;
+    }
+
+    /**
+     * @param arrayDesignReportService the arrayDesignReportService to set
+     */
+    public void setArrayDesignReportService( ArrayDesignReportService arrayDesignReportService ) {
+        this.arrayDesignReportService = arrayDesignReportService;
+    }
+
+    /**
+     * @param arrayDesignService The arrayDesignService to set.
+     */
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
+
+    /**
+     * @param ausitTrailService the auditTrailService to set
+     */
+    public void setAuditTrailService( AuditTrailService auditTrailService ) {
+        this.auditTrailService = auditTrailService;
+    }
+
+    /**
+     * @param compositeSequenceService the compositeSequenceService to set
+     */
+    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
+        this.compositeSequenceService = compositeSequenceService;
+    }
+
+    /**
+     * @param searchService the searchService to set
+     */
+    public void setSearchService( SearchService searchService ) {
+        this.searchService = searchService;
     }
 
     /**
@@ -409,7 +538,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             arrayDesign = arrayDesignService.load( Long.parseLong( idStr ) );
             request.setAttribute( "id", idStr );
         } else if ( name != null ) {
-            arrayDesign = arrayDesignService.findArrayDesignByName( name );
+            arrayDesign = arrayDesignService.findByName( name );
             request.setAttribute( "name", name );
         }
 
@@ -484,36 +613,6 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         return mav;
     }
 
-    private String formatExpressionExperimentIds( Collection<ExpressionExperiment> ee ) {
-        String[] eeIdList = new String[ee.size()];
-        int i = 0;
-        for ( ExpressionExperiment e : ee ) {
-            eeIdList[i] = e.getId().toString();
-            i++;
-        }
-        String eeIds = StringUtils.join( eeIdList, "," );
-        return eeIds;
-    }
-
-    /**
-     * @param arrayDesign
-     * @return
-     */
-    private String formatTechnologyType( ArrayDesign arrayDesign ) {
-        String techType = arrayDesign.getTechnologyType().getValue();
-        String colorString = "";
-        if ( techType.equalsIgnoreCase( "ONECOLOR" ) ) {
-            colorString = "one-color";
-        } else if ( techType.equalsIgnoreCase( "TWOCOLOR" ) ) {
-            colorString = "two-color";
-        } else if ( techType.equalsIgnoreCase( "DUALMODE" ) ) {
-            colorString = "dual mode";
-        } else {
-            colorString = "No color";
-        }
-        return colorString;
-    }
-
     /**
      * Show all array designs, or according to a list of IDs passed in.
      * 
@@ -572,66 +671,36 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     }
 
     /**
-     * Build summary report for an array design
+     * Show (some of) the probes from an array.
      * 
      * @param request
      * @param response
      * @return
      */
-    public ModelAndView generateSummary( HttpServletRequest request, HttpServletResponse response ) {
+    public ModelAndView showCompositeSequences( HttpServletRequest request, HttpServletResponse response ) {
 
-        String sId = request.getParameter( "id" );
+        String arrayDesignIdStr = request.getParameter( "id" );
 
-        // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
-        if ( sId == null ) {
-            return startJob( new GenerateSummary( request, arrayDesignReportService ) );
-        }
-        Long id = Long.parseLong( sId );
-        return startJob( new GenerateSummary( request, arrayDesignReportService, id ) );
-    }
-
-    /**
-     * Delete an arrayDesign.
-     * 
-     * @param request
-     * @param response
-     * @return
-     */
-    @SuppressWarnings("unused")
-    public ModelAndView delete( HttpServletRequest request, HttpServletResponse response ) {
-        String stringId = request.getParameter( "id" );
-
-        if ( stringId == null ) {
-            // should be a validation error.
-            throw new EntityNotFoundException( "Must provide an id" );
+        if ( arrayDesignIdStr == null ) {
+            // should be a validation error, on 'submit'.
+            throw new EntityNotFoundException( "Must provide an Array Design name or Id" );
         }
 
-        Long id = null;
-        try {
-            id = Long.parseLong( stringId );
-        } catch ( NumberFormatException e ) {
-            throw new EntityNotFoundException( "Identifier was invalid" );
+        ArrayDesign arrayDesign = arrayDesignService.load( Long.parseLong( arrayDesignIdStr ) );
+        ModelAndView mav = new ModelAndView( "compositeSequences.geneMap" );
+
+        if ( !AJAX ) {
+            Collection<CompositeSequenceMapValueObject> compositeSequenceSummary = getDesignSummaries( arrayDesign );
+            if ( compositeSequenceSummary == null || compositeSequenceSummary.size() == 0 ) {
+                throw new RuntimeException( "No probes found for " + arrayDesign );
+            }
+            mav.addObject( "sequenceData", compositeSequenceSummary );
+            mav.addObject( "numCompositeSequences", compositeSequenceSummary.size() );
         }
 
-        ArrayDesign arrayDesign = arrayDesignService.load( id );
-        if ( arrayDesign == null ) {
-            throw new EntityNotFoundException( "Array design with id=" + id + " not found" );
-        }
+        mav.addObject( "arrayDesign", arrayDesign );
 
-        // check that no EE depend on the arraydesign we want to delete
-        // Do this by checking if there are any bioassays that depend this AD
-        Collection assays = arrayDesignService.getAllAssociatedBioAssays( id );
-        if ( assays.size() != 0 ) {
-            // String eeName = ( ( BioAssay ) assays.iterator().next() )
-            // todo tell user what EE depends on this array design
-            addMessage( request, "Array  " + arrayDesign.getName()
-                    + " can't be deleted. Dataset has a dependency on this Array.", new Object[] { messageName,
-                    arrayDesign.getName() } );
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) );
-        }
-
-        return startJob( new RemoveArrayJob( arrayDesign, arrayDesignService ) );
-
+        return mav;
     }
 
     /**
@@ -667,104 +736,45 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     }
 
     /**
-     * Show array designs that match search criteria.
+     * AJAX
      * 
-     * @param request
-     * @param response
+     * @param ed
+     * @return the taskid
+     */
+    public String updateReport( EntityDelegator ed ) {
+        GenerateSummary runner = new GenerateSummary( null, arrayDesignReportService, ed.getId() );
+        runner.setDoForward( false );
+        return ( String ) super.startJob( runner ).getModel().get( "taskId" );
+    }
+
+    private String formatExpressionExperimentIds( Collection<ExpressionExperiment> ee ) {
+        String[] eeIdList = new String[ee.size()];
+        int i = 0;
+        for ( ExpressionExperiment e : ee ) {
+            eeIdList[i] = e.getId().toString();
+            i++;
+        }
+        String eeIds = StringUtils.join( eeIdList, "," );
+        return eeIds;
+    }
+
+    /**
+     * @param arrayDesign
      * @return
      */
-    public ModelAndView filter( HttpServletRequest request, HttpServletResponse response ) {
-
-        StopWatch overallWatch = new StopWatch();
-        overallWatch.start();
-
-        String filter = request.getParameter( "filter" );
-
-        // Validate the filtering search criteria.
-        if ( StringUtils.isBlank( filter ) ) {
-            this.saveMessage( request, "No search critera provided" );
-            return showAll( request, response );
+    private String formatTechnologyType( ArrayDesign arrayDesign ) {
+        String techType = arrayDesign.getTechnologyType().getValue();
+        String colorString = "";
+        if ( techType.equalsIgnoreCase( "ONECOLOR" ) ) {
+            colorString = "one-color";
+        } else if ( techType.equalsIgnoreCase( "TWOCOLOR" ) ) {
+            colorString = "two-color";
+        } else if ( techType.equalsIgnoreCase( "DUALMODE" ) ) {
+            colorString = "dual mode";
+        } else {
+            colorString = "No color";
         }
-
-        Collection<ArrayDesign> searchResults = searchService.compassArrayDesignSearch( filter );
-
-        if ( ( searchResults == null ) || ( searchResults.size() == 0 ) ) {
-            this.saveMessage( request, "Your search yielded no results" );
-            Long overallElapsed = overallWatch.getTime();
-            log.info( "No results found. Search took: " + overallElapsed / 1000 + "s " );
-            return showAll( request, response );
-        }
-
-        String list = "";
-
-        if ( searchResults.size() == 1 ) {
-            ArrayDesign arrayDesign = searchResults.iterator().next();
-            this.saveMessage( request, "Matched one : " + arrayDesign.getName() + "(" + arrayDesign.getShortName()
-                    + ")" );
-            overallWatch.stop();
-            Long overallElapsed = overallWatch.getTime();
-            log.info( "Filter found 1 AD:  " + arrayDesign.getName() + " took: " + overallElapsed / 1000 + "s " );
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showArrayDesign.html?id=" + arrayDesign.getId() ) );
-        }
-
-        for ( ArrayDesign ad : searchResults )
-            list += ad.getId() + ",";
-
-        this.saveMessage( request, "Search Criteria: " + filter );
-        this.saveMessage( request, searchResults.size() + " Array Designs matched your search." );
-
-        overallWatch.stop();
-        Long overallElapsed = overallWatch.getTime();
-        log.info( "Generating the AD list:  (" + list + ") took: " + overallElapsed / 1000 + "s " );
-
-        return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?id=" + list ) );
-
-    }
-
-    /**
-     * @return the searchService
-     */
-    public SearchService getSearchService() {
-        return searchService;
-    }
-
-    /**
-     * @param searchService the searchService to set
-     */
-    public void setSearchService( SearchService searchService ) {
-        this.searchService = searchService;
-    }
-
-    /**
-     * Inner class used for deleting array designs
-     */
-    class RemoveArrayJob extends BackgroundControllerJob<ModelAndView> {
-
-        private ArrayDesignService arrayDesignService;
-        private ArrayDesign ad;
-
-        public RemoveArrayJob( ArrayDesign ad, ArrayDesignService arrayDesignService ) {
-            super( getMessageUtil() );
-            this.arrayDesignService = arrayDesignService;
-            this.ad = ad;
-        }
-
-        @SuppressWarnings("unchecked")
-        public ModelAndView call() throws Exception {
-
-            init();
-
-            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
-                    .getName(), "Deleting Array: " + ad.getShortName() );
-
-            arrayDesignService.remove( ad );
-            saveMessage( "Array " + ad.getShortName() + " removed from Database." );
-            ad = null;
-
-            ProgressManager.destroyProgressJob( job, true );
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) );
-
-        }
+        return colorString;
     }
 
     /**
@@ -815,42 +825,34 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     }
 
     /**
-     * @param arrayDesignMapResultService the arrayDesignMapResultService to set
+     * Inner class used for deleting array designs
      */
-    public void setArrayDesignMapResultService( ArrayDesignMapResultService arrayDesignMapResultService ) {
-        this.arrayDesignMapResultService = arrayDesignMapResultService;
-    }
+    class RemoveArrayJob extends BackgroundControllerJob<ModelAndView> {
 
-    /**
-     * @param compositeSequenceService the compositeSequenceService to set
-     */
-    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
-        this.compositeSequenceService = compositeSequenceService;
-    }
+        private ArrayDesignService arrayDesignService;
+        private ArrayDesign ad;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-     */
-    public void afterPropertiesSet() throws Exception {
-        try {
-            CacheManager manager = CacheManager.getInstance();
-
-            if ( manager.cacheExists( "ArrayDesignCompositeSequenceCache" ) ) {
-                return;
-            }
-
-            cache = new Cache( "ArrayDesignCompositeSequenceCache", ARRAY_INFO_CACHE_SIZE,
-                    MemoryStoreEvictionPolicy.LFU, false, null, false, ARRAY_INFO_CACHE_TIME_TO_DIE,
-                    ARRAY_INFO_CACHE_TIME_TO_IDLE, false, 500, null );
-
-            manager.addCache( cache );
-            cache = manager.getCache( "ArrayDesignCompositeSequenceCache" );
-
-        } catch ( CacheException e ) {
-            throw new RuntimeException( e );
+        public RemoveArrayJob( ArrayDesign ad, ArrayDesignService arrayDesignService ) {
+            super( getMessageUtil() );
+            this.arrayDesignService = arrayDesignService;
+            this.ad = ad;
         }
 
+        @SuppressWarnings("unchecked")
+        public ModelAndView call() throws Exception {
+
+            init();
+
+            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
+                    .getName(), "Deleting Array: " + ad.getShortName() );
+
+            arrayDesignService.remove( ad );
+            saveMessage( "Array " + ad.getShortName() + " removed from Database." );
+            ad = null;
+
+            ProgressManager.destroyProgressJob( job, true );
+            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) );
+
+        }
     }
 }

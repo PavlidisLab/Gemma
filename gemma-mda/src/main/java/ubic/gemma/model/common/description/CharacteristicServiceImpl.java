@@ -33,27 +33,20 @@ import ubic.gemma.model.expression.experiment.FactorValueImpl;
 
 /**
  * @see ubic.gemma.model.common.description.CharacteristicService
+ * @author Luke
+ * @version $Id$
  */
 public class CharacteristicServiceImpl extends ubic.gemma.model.common.description.CharacteristicServiceBase {
 
-    private static final Class[] CLASSES_WITH_CHARACTERISTICS = new Class[] {
-        ExpressionExperimentImpl.class, BioMaterialImpl.class, FactorValueImpl.class
-    };
-    
+    private static final Class[] CLASSES_WITH_CHARACTERISTICS = new Class[] { ExpressionExperimentImpl.class,
+            BioMaterialImpl.class, FactorValueImpl.class };
+
     /**
      * @see ubic.gemma.model.common.description.CharacteristicService#findByValue(java.lang.String)
      */
     @Override
     protected java.util.Collection handleFindByValue( java.lang.String search ) throws java.lang.Exception {
         return this.getCharacteristicDao().findByValue( search + '%' );
-    }
-
-    /* (non-Javadoc)
-     * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByValue(java.lang.String, int, int)
-     */
-    @Override
-    protected Collection handleFindByValue( String query, int firstResult, int maxResults ) throws Exception {
-        throw new UnsupportedOperationException();
     }
 
     /**
@@ -64,23 +57,28 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
         return this.getCharacteristicDao().findByParentClass( parentClass );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.description.CharacteristicServiceBase#handleGetParent(ubic.gemma.model.common.description.Characteristic)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Object handleGetParent( Characteristic characteristic ) throws Exception {
         Collection chars = Arrays.asList( new Characteristic[] { characteristic } );
         for ( Class parentClass : CLASSES_WITH_CHARACTERISTICS ) {
-           Map<Characteristic, Object> charToParent = this.getCharacteristicDao().getParents( parentClass, chars );
-           if ( charToParent.containsKey( characteristic ) )
-               return charToParent.get( characteristic );
+            Map<Characteristic, Object> charToParent = this.getCharacteristicDao().getParents( parentClass, chars );
+            if ( charToParent.containsKey( characteristic ) ) return charToParent.get( characteristic );
         }
         return null;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.description.CharacteristicServiceBase#handleGetParents(java.util.Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Map handleGetParents( Collection characteristics ) throws Exception {
         Map charToParent = new HashMap<Characteristic, Object>();
@@ -90,19 +88,19 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
         return charToParent;
     }
 
-	@Override
-	protected Collection handleFindByUri(String searchString) throws Exception {
-		return this.getCharacteristicDao().findByUri(searchString);
-	}
-	
-	@Override
-	protected Collection handleFindByUri(Collection uris) throws Exception {
-		return this.getCharacteristicDao().findByUri(uris);
-	}
+    @Override
+    protected Collection handleFindByUri( String searchString ) throws Exception {
+        return this.getCharacteristicDao().findByUri( searchString );
+    }
+
+    @Override
+    protected Collection handleFindByUri( Collection uris ) throws Exception {
+        return this.getCharacteristicDao().findByUri( uris );
+    }
 
     @Override
     protected Characteristic handleLoad( Long id ) throws Exception {
-        return (Characteristic)this.getCharacteristicDao().load( id );
+        return ( Characteristic ) this.getCharacteristicDao().load( id );
     }
 
     @Override
@@ -122,7 +120,7 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
 
     @Override
     protected Characteristic handleCreate( Characteristic c ) throws Exception {
-        return (Characteristic)this.getCharacteristicDao().create( c );
+        return ( Characteristic ) this.getCharacteristicDao().create( c );
     }
 
 }

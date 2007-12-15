@@ -34,7 +34,9 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
+import ubic.gemma.search.SearchSettings;
 import ubic.gemma.web.controller.BaseMultiActionController;
 
 /**
@@ -46,11 +48,12 @@ import ubic.gemma.web.controller.BaseMultiActionController;
  */
 public class GenePickerController extends BaseMultiActionController {
     private static Log log = LogFactory.getLog( GenePickerController.class.getName() );
-    
+
     private GeneService geneService = null;
     private TaxonService taxonService = null;
     private SearchService searchService = null;
-    
+
+    @SuppressWarnings("unchecked")
     public Collection<Taxon> getTaxa() {
         List<Taxon> taxa = new ArrayList<Taxon>();
         for ( Taxon taxon : ( Collection<Taxon> ) taxonService.loadAll() ) {
@@ -67,38 +70,47 @@ public class GenePickerController extends BaseMultiActionController {
         return taxa;
     }
 
+    @SuppressWarnings("unchecked")
     public Collection<Gene> getGenes( Collection<Long> geneIds ) {
         return geneService.loadMultiple( geneIds );
     }
-    
+
     public Collection<Gene> searchGenes( String query, Long taxonId ) {
-        TaxonFilteredOrderedGeneSet genes = new TaxonFilteredOrderedGeneSet( taxonService.load( taxonId ) );
-        try {
-            genes.addAll( searchService.geneDbSearch( query ) );
-        } catch ( Exception e ) {
-            log.error( "error in geneDbSearch", e );
+        Taxon taxon = taxonService.load( taxonId );
+        /*
+         * Fixme this doesn't do anything?
+         */
+        TaxonFilteredOrderedGeneSet genes = new TaxonFilteredOrderedGeneSet( taxon );
+
+        Collection<Gene> genesFound = new HashSet<Gene>();
+        SearchSettings settings = SearchSettings.GeneSearch( query, taxon );
+        settings.setTaxon( taxon );
+        List<SearchResult> geneSearchResults = searchService.search( settings ).get( Gene.class );
+        for ( SearchResult sr : geneSearchResults ) {
+            genesFound.add( ( Gene ) sr.getResultObject() );
         }
-        genes.addAll( searchService.compassGeneSearch( query ) );
-        return genes;
+        return genesFound;
     }
-    
+
     private class TaxonFilteredOrderedGeneSet extends ArrayList<Gene> {
         private Taxon taxon;
         private Set<Gene> genesSeen;
-        public TaxonFilteredOrderedGeneSet(Taxon taxon) {
+
+        public TaxonFilteredOrderedGeneSet( Taxon taxon ) {
             super();
             this.taxon = taxon;
             this.genesSeen = new HashSet<Gene>();
         }
+
         @Override
         public boolean add( Gene gene ) {
             if ( !genesSeen.contains( gene ) ) {
                 genesSeen.add( gene );
-                if ( gene.getTaxon().equals( taxon ) )
-                    return super.add(gene);
+                if ( gene.getTaxon().equals( taxon ) ) return super.add( gene );
             }
             return false;
         }
+
         @Override
         public boolean addAll( Collection<? extends Gene> genes ) {
             boolean changed = false;
@@ -107,10 +119,12 @@ public class GenePickerController extends BaseMultiActionController {
             }
             return changed;
         }
+
         @Override
         public void add( int index, Gene gene ) {
             throw new UnsupportedOperationException();
         }
+
         @Override
         public boolean addAll( int index, Collection<? extends Gene> genes ) {
             throw new UnsupportedOperationException();
@@ -130,7 +144,7 @@ public class GenePickerController extends BaseMultiActionController {
     public void setTaxonService( TaxonService taxonService ) {
         this.taxonService = taxonService;
     }
-    
+
     public void setSearchService( SearchService searchService ) {
         this.searchService = searchService;
     }

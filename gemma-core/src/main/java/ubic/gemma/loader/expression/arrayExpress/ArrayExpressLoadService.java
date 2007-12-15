@@ -77,7 +77,7 @@ public class ArrayExpressLoadService {
 
         ArrayDesign selectedAd = null;
         if ( adAccession != null ) {
-            selectedAd = this.arrayDesignService.findArrayDesignByName( adAccession );
+            selectedAd = this.arrayDesignService.findByName( adAccession );
 
             // what if short name was specified....
             if ( selectedAd == null ) selectedAd = this.arrayDesignService.findByShortName( adAccession );

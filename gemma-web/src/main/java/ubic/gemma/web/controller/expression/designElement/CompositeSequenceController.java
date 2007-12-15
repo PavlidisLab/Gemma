@@ -40,6 +40,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.SequenceType;
@@ -47,7 +48,9 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
+import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
+import ubic.gemma.search.SearchSettings;
 import ubic.gemma.web.controller.BaseMultiActionController;
 import ubic.gemma.web.propertyeditor.SequenceTypePropertyEditor;
 import ubic.gemma.web.remote.EntityDelegator;
@@ -149,9 +152,15 @@ public class CompositeSequenceController extends BaseMultiActionController {
          */
         ArrayDesign arrayDesign = loadArrayDesign( arrayDesignId );
 
-        Collection<CompositeSequence> searchResults = searchService.compositeSequenceSearch( searchString, arrayDesign );
+        Collection<SearchResult> searchResults = searchService.search(
+                SearchSettings.CompositeSequenceSearch( searchString, arrayDesign ) ).get( CompositeSequence.class );
 
-        return getSummaries( searchResults );
+        Collection<CompositeSequence> css = new HashSet<CompositeSequence>();
+        for ( SearchResult sr : searchResults ) {
+            css.add( ( CompositeSequence ) sr.getResultObject() );
+        }
+
+        return getSummaries( css );
     }
 
     public void setArrayDesignMapResultService( ArrayDesignMapResultService arrayDesignMapResultService ) {

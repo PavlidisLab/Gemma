@@ -57,7 +57,9 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.GeneOntologyService;
+import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
+import ubic.gemma.search.SearchSettings;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BackgroundProcessingFormBindController;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
@@ -230,14 +232,18 @@ public class MultipleCoexpressionSearchController extends BackgroundProcessingFo
         // find coexpressed genes
 
         // find expressionExperiments via lucene if the query is eestring-constrained
-        Collection<ExpressionExperiment> ees;
+        Collection<ExpressionExperiment> ees = new ArrayList<ExpressionExperiment>();
+
         if ( StringUtils.isNotBlank( commandObject.getEeSearchString() ) ) {
-            ees = searchService.compassExpressionSearch( commandObject.getEeSearchString() );
+            List<SearchResult> searchRes = searchService.search(
+                    SearchSettings.ExpressionExperimentSearch( commandObject.getEeSearchString() ) ).get(
+                    ExpressionExperiment.class );
+            for ( SearchResult sr : searchRes ) {
+                ees.add( ( ExpressionExperiment ) sr.getResultObject() );
+            }
             if ( ees.size() == 0 ) {
                 saveMessage( request, "No datasets matched - defaulting to all datasets" );
             }
-        } else {
-            ees = new ArrayList<ExpressionExperiment>();
         }
 
         Integer numExpressionExperiments = 0;

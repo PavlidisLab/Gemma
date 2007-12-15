@@ -37,7 +37,6 @@ import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -330,30 +329,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             }
         }, true );
         log.info( "Done deleting." );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleFindByGoId(String)
-     */
-    @Override
-    protected Collection handleFindByGoId( String goId ) throws Exception {
-
-        if ( goId == null || goId.length() == 0 ) {
-            throw new IllegalArgumentException();
-        }
-
-        final String queryString = "select ad from ArrayDesignImpl ad inner join ad.compositeSequences as cs inner"
-                + " join cs.biologicalCharacteristic as bs inner join bs.bioSequence2GeneProduct as bs2gp, Gene2GOAssociationImpl"
-                + " g2o inner join g2o.ontologyEntry oe inner join g2o.gene g inner join g.products prod "
-                + " where bs2gp.geneProduct=prod and oe.accession = :accession group by ad";
-
-        Query queryObject = super.getSession( false ).createQuery( queryString );
-        queryObject.setParameter( "accession", goId );
-
-        return queryObject.list();
-
     }
 
     /*
@@ -1232,7 +1207,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         if ( ids == null || ids.isEmpty() ) return new HashSet<ArrayDesign>();
         final String queryString = "select ad from ArrayDesignImpl as ad where ad.id in (:ids) ";
         return getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
-       
+
     }
 
 }

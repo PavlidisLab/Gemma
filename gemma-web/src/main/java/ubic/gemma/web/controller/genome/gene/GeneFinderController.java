@@ -31,7 +31,9 @@ import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
+import ubic.gemma.search.SearchSettings;
 import ubic.gemma.web.controller.BaseFormController;
 
 /**
@@ -48,6 +50,13 @@ public class GeneFinderController extends BaseFormController {
 
     private SearchService searchService;
 
+    /**
+     * @return the searchService
+     */
+    public SearchService getSearchService() {
+        return searchService;
+    }
+
     @Override
     @SuppressWarnings( { "unused", "unchecked" })
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
@@ -63,30 +72,33 @@ public class GeneFinderController extends BaseFormController {
             return new ModelAndView( "geneFinder" );
         }
 
-        // Map params = request.getParameterMap();
-        //
-        // String previousSearch = (String)request.getSession().getAttribute( "previousSearch");
-        // // check to see if the modelAndView is saved in the session
-        // // make sure that this is a pagination or sort (not a re-search)
-        // // the current search string and the previous search string should not be null
-        // // and the previous search should be the same as the current one.
-        // if ( (request.getSession().getAttribute( "modelAndView") != null) &&
-        // (params.size() > 1) &&
-        // (previousSearch != null) &&
-        // (previousSearch.equals( searchString ))
-        // ) {
-        // return (ModelAndView) request.getSession().getAttribute( "modelAndView");
-        // }
-
-        Collection<Gene> geneResults = searchService.geneSearch( searchString );
+        log.info( "Attempting gene search" );
+        Collection<SearchResult> geneResults = searchService.search( SearchSettings.GeneSearch( searchString, null ) )
+                .get( Gene.class );
 
         ModelAndView mav = new ModelAndView( "geneFinderList" );
         mav.addObject( "searchParameter", searchString );
-        mav.addObject( "numGeans", geneResults.size() );
-        log.info( "Attempting gene search" );
+        mav.addObject( "numGenes", geneResults.size() );
+
         mav.addObject( "genes", geneResults );
 
         return mav;
+    }
+
+    /**
+     * 
+     */
+    @Override
+    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
+            Object command, BindException errors ) throws Exception {
+        return this.onSubmit( request, response, command, errors );
+    }
+
+    /**
+     * @param searchService the searchService to set
+     */
+    public void setSearchService( SearchService searchService ) {
+        this.searchService = searchService;
     }
 
     /**
@@ -102,12 +114,18 @@ public class GeneFinderController extends BaseFormController {
     }
 
     /**
+     * Validates the query string
      * 
+     * @param query
+     * @return
      */
-    @Override
-    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
-            Object command, BindException errors ) throws Exception {
-        return this.onSubmit( request, response, command, errors );
+    protected boolean searchStringValidator( String query ) {
+
+        if ( StringUtils.isBlank( query ) ) return false;
+
+        if ( ( query.charAt( 0 ) == '%' ) || ( query.charAt( 0 ) == '*' ) ) return false;
+
+        return true;
     }
 
     /*
@@ -134,35 +152,6 @@ public class GeneFinderController extends BaseFormController {
 
             return obj0.getName().compareTo( obj1.getName() );
         }
-    }
-
-    /**
-     * Validates the query string
-     * 
-     * @param query
-     * @return
-     */
-    protected boolean searchStringValidator( String query ) {
-
-        if ( StringUtils.isBlank( query ) ) return false;
-
-        if ( ( query.charAt( 0 ) == '%' ) || ( query.charAt( 0 ) == '*' ) ) return false;
-
-        return true;
-    }
-
-    /**
-     * @return the searchService
-     */
-    public SearchService getSearchService() {
-        return searchService;
-    }
-
-    /**
-     * @param searchService the searchService to set
-     */
-    public void setSearchService( SearchService searchService ) {
-        this.searchService = searchService;
     }
 
 }

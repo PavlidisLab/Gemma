@@ -39,7 +39,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.loader.genome.taxon.SupportedTaxa;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -51,16 +51,19 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
-import ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchCommand;
+import ubic.gemma.search.SearchSettings;
+import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
+import ubic.gemma.web.remote.ListRange;
 
 /**
  * @author klc
  * @version $Id$
  * @spring.bean id="generalSearchController"
- * @spring.property name = "commandName" value="coexpressionSearchCommand"
- * @spring.property name = "commandClass" value="ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchCommand"
+ * @spring.property name = "commandName" value="searchSettings"
+ * @spring.property name = "commandClass" value="ubic.gemma.search.SearchSettings"
  * @spring.property name="formView" value="generalSearch"
  * @spring.property name="successView" value="generalSearch"
  * @spring.property name="searchService" ref="searchService"
@@ -69,242 +72,96 @@ import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
  * @spring.property name = "gene2GOAssociationService" ref="gene2GOAssociationService"
  * @spring.property name = "taxonService" ref="taxonService"
  */
-
 public class GeneralSearchController extends BaseFormController {
+    private SearchService searchService;
 
-    // TODO: Preformance: There is a lot of overlap in the gene, cs, bs searches yet
-    // each search is redone everytime.
-    // For preformance reasons would make sense to combine them into one search that
-    // returned a the 3 groups or results together.
+    private ExpressionExperimentService expressionExperimentService;
 
-    protected SearchService searchService;
+    private ArrayDesignService arrayDesignService;
 
-    protected ExpressionExperimentService expressionExperimentService;
+    private Gene2GOAssociationService gene2GOAssociationService;
 
-    protected ArrayDesignService arrayDesignService;
+    private TaxonService taxonService;
 
-    protected Gene2GOAssociationService gene2GOAssociationService;
+    /**
+     * @return the arrayDesignService
+     */
+    public ArrayDesignService getArrayDesignService() {
+        return arrayDesignService;
+    }
 
-    protected TaxonService taxonService;
+    /**
+     * @return the expressionExperimentService
+     */
+    public ExpressionExperimentService getExpressionExperimentService() {
+        return expressionExperimentService;
+    }
+
+    /**
+     * @return the gene2GOAssociationService
+     */
+    public Gene2GOAssociationService getGene2GOAssociationService() {
+        return gene2GOAssociationService;
+    }
 
     @Override
     @SuppressWarnings( { "unused", "unchecked" })
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 
-        CoexpressionSearchCommand csc = ( CoexpressionSearchCommand ) command;
-        String searchString = request.getParameter( "searchString" );
+        SearchSettings settings = ( SearchSettings ) command;
+
         String[] advanced = request.getParameterValues( "advancedSelect" );
         Map test = request.getParameterMap();
         ModelAndView mav = super.showForm( request, errors, getSuccessView() );
 
-        // TODO create a search command object replacing all this parsing junk
-        boolean dataset = false;
-        boolean gene = false;
-        boolean array = false;
-        boolean compositeSequence = false;
-        boolean goID = false;
-        boolean ontology = false;
-        boolean goArray = false;
-        boolean bibliographicReference = false;
-        boolean bioSequence = false;
+        mav.addObject( "searchDataset", "DataSet" );
+        mav.addObject( "searchGene", "Gene" );
+        mav.addObject( "searchArray", "Array" );
+        mav.addObject( "searchCompositeSequence", "CompositeSequence" );
+        mav.addObject( "searchBioSequence", "bioSequence" );
+        mav.addObject( "searchGoID", "GoID" );
+        mav.addObject( "searchOntology", "ontology" );
+        mav.addObject( "searchBibliographicReference", "bibliographicReference" );
+        mav.addObject( "searchBioSequence", "bioSequence" );
 
-        if ( ( advanced == null ) || ( advanced.length == 0 ) ) {
-            dataset = true;
-            gene = true;
-            array = true;
-            compositeSequence = true;
-            bioSequence = true;
-            goID = false;
-            ontology = false;
-            goArray = false;
-            bibliographicReference = false;
-
-            mav.addObject( "searchDataset", "DataSet" );
-            mav.addObject( "searchGene", "Gene" );
-            mav.addObject( "searchArray", "Array" );
-            mav.addObject( "searchCompositeSequence", "CompositeSequence" );
-            mav.addObject( "searchBioSequence", "bioSequence" );
-
-        } else {
-            for ( String types : advanced ) {
-                if ( types.equalsIgnoreCase( "DataSet" ) ) {
-                    dataset = true;
-                    mav.addObject( "searchDataset", "DataSet" );
-                }
-
-                if ( types.equalsIgnoreCase( "Gene" ) ) {
-                    gene = true;
-                    mav.addObject( "searchGene", "Gene" );
-                }
-
-                if ( types.equalsIgnoreCase( "Array" ) ) {
-                    array = true;
-                    mav.addObject( "searchArray", "Array" );
-                }
-
-                if ( types.equalsIgnoreCase( "CompositeSequence" ) ) {
-                    array = true;
-                    mav.addObject( "searchCompositeSequence", "CompositeSequence" );
-                }
-
-                if ( types.equalsIgnoreCase( "GoID" ) ) {
-                    goID = true;
-                    mav.addObject( "searchGoID", "GoID" );
-                }
-
-                if ( types.equalsIgnoreCase( "ontology" ) ) {
-                    ontology = true;
-                    mav.addObject( "searchOntology", "ontology" );
-                }
-
-                if ( types.equalsIgnoreCase( "ADbyGoID" ) ) {
-                    goArray = true;
-                    mav.addObject( "searchADbyGoID", "ADbyGoID" );
-                }
-                if ( types.equalsIgnoreCase( "bibliographicReference" ) ) {
-                    bibliographicReference = true;
-                    mav.addObject( "searchBibliographicReference", "bibliographicReference" );
-                }
-                if ( types.equalsIgnoreCase( "bioSequence" ) ) {
-                    bioSequence = true;
-                    mav.addObject( "searchBioSequence", "bioSequence" );
-                }
-            }
-        }
         // first check - searchString should allow searches of 3 characters or
         // more ONLY
         // this is to prevent a huge wildcard search
 
-        if ( !searchStringValidator( searchString ) ) {
+        if ( !searchStringValidator( settings.getQuery() ) ) {
             this.saveMessage( request, "Must use at least three characters for search" );
-            log.info( "User entered an invalid search" );
+            log.info( "User entered an invalid search: " + settings.getQuery() );
             return super.showForm( request, errors, getSuccessView() );
         }
 
-        log.info( "Attempting general search" );
+        log.info( "General search for " + settings );
 
         // Need this infor for the bookmarkable links
-        mav.addObject( "SearchString", searchString );
-        if ( ( csc.getTaxon() != null ) && ( csc.getTaxon().getId() != null ) )
-            mav.addObject( "searchTaxon", csc.getTaxon().getScientificName() );
+        mav.addObject( "SearchString", settings.getQuery() );
+        if ( ( settings.getTaxon() != null ) && ( settings.getTaxon().getId() != null ) )
+            mav.addObject( "searchTaxon", settings.getTaxon().getScientificName() );
 
-        if ( gene ) {
-            Collection<Gene> foundGenes = searchService.geneSearch( searchString );
-            if ( ( csc.getTaxon() != null ) && ( csc.getTaxon().getId() != null ) )
-                foundGenes = filterGenesByTaxon( foundGenes, csc.getTaxon() );
-            mav.addObject( "geneList", foundGenes );
-            mav.addObject( "numGenes", foundGenes.size() );
-        }
+        /*
+         * Here is where the magic happens.
+         */
+        Map<Class, List<SearchResult>> searchResults = searchService.search( settings );
 
-        if ( dataset ) {
-            Collection<ExpressionExperiment> foundEEs = searchService.expressionExperimentSearch( searchString );
+        for ( Class clazz : searchResults.keySet() ) {
+            List<SearchResult> results = searchResults.get( clazz );
+            log.info( clazz + " " + results.size() );
+            if ( results.size() == 0 ) continue;
 
-            Collection<ExpressionExperimentValueObject> valueEEs = expressionExperimentService
-                    .loadValueObjects( generateEEIdList( foundEEs ) );
+            /*
+             * Now put the valueObjects inside the SearchResults
+             */
+            fillValueObjects( clazz, results, settings );
 
-            if ( ( csc.getTaxon() != null ) && ( csc.getTaxon().getId() != null ) )
-                valueEEs = filterEEByTaxon( valueEEs, csc.getTaxon() );
-
-            mav.addObject( "expressionList", valueEEs );
-            mav.addObject( "numEEs", valueEEs.size() );
-
-            Collection<ExpressionExperiment> eesFromOntology = searchService
-                    .ontologySearchForExpressionExperiments( searchString );
-            Collection<ExpressionExperimentValueObject> valueOntEEs = expressionExperimentService
-                    .loadValueObjects( generateEEIdList( eesFromOntology ) );
-            mav.addObject( "eeOntologyList", valueOntEEs );
-            mav.addObject( "numEEOntologyList", eesFromOntology.size() );
-        }
-
-        if ( array ) {
-            Collection<ArrayDesign> foundADs = searchService.arrayDesignSearch( searchString );
-            Collection<ArrayDesignValueObject> valueADs = arrayDesignService
-                    .loadValueObjects( generateADIdList( foundADs ) );
-
-            if ( ( csc.getTaxon() != null ) && ( csc.getTaxon().getId() != null ) )
-                valueADs = filterADByTaxon( valueADs, csc.getTaxon() );
-
-            mav.addObject( "arrayList", valueADs );
-            mav.addObject( "numADs", valueADs.size() );
-        }
-
-        if ( compositeSequence ) {
-            Collection<CompositeSequence> compositeSequences = searchService.compositeSequenceSearch( searchString );
-            mav.addObject( "compositeSequenceList", compositeSequences );
-            mav.addObject( "numCompositeSequenceList", compositeSequences.size() );
-        }
-
-        if ( goID ) {
-            Collection<Gene> ontolgyGenes = gene2GOAssociationService.findByGOTerm( searchString, csc.getTaxon() );
-            mav.addObject( "goGeneList", ontolgyGenes );
-            mav.addObject( "numGoGenes", ontolgyGenes.size() );
-
-        }
-
-        if ( ontology ) {
-            Collection<VocabCharacteristic> ontolgyEntries = searchService.ontologySearchIncludeChildren( searchString );
-            mav.addObject( "ontologyList", ontolgyEntries );
-            mav.addObject( "numOntologyList", ontolgyEntries.size() );
-        }
-
-        if ( goArray ) {
-            Collection<ArrayDesign> foundADs = arrayDesignService.findByGoId( searchString );
-            Collection<ArrayDesignValueObject> valueADs = arrayDesignService
-                    .loadValueObjects( generateADIdList( foundADs ) );
-
-            if ( ( csc.getTaxon() != null ) && ( csc.getTaxon().getId() != null ) )
-                valueADs = filterADByTaxon( valueADs, csc.getTaxon() );
-
-            mav.addObject( "goArrayList", valueADs );
-            mav.addObject( "numGoADs", valueADs.size() );
-        }
-
-        if ( bibliographicReference ) {
-            Collection<BibliographicReference> bibliographicReferences = searchService
-                    .compassBibliographicReferenceSearch( searchString );
-            mav.addObject( "bibliographicReferenceList", bibliographicReferences );
-            mav.addObject( "numBibliographicReferenceList", bibliographicReferences.size() );
-
-        }
-
-        if ( bioSequence ) {
-            Collection<BioSequence> bioSequences = searchService.compassBioSequenceSearch( searchString );
-            mav.addObject( "bioSequenceList", bioSequences );
-            mav.addObject( "numBioSequenceList", bioSequences.size() );
+            mav.addObject( clazz.getSimpleName() + "_results", results );
+            mav.addObject( clazz.getSimpleName() + "_count", results.size() );
         }
 
         return mav;
-    }
-
-    private Collection<Gene> filterGenesByTaxon( final Collection<Gene> toFilter, Taxon tax ) {
-        Collection<Gene> filtered = new HashSet<Gene>();
-        for ( Gene g : toFilter ) {
-            if ( g.getTaxon() == tax ) filtered.add( g );
-        }
-
-        return filtered;
-    }
-
-    private Collection<ExpressionExperimentValueObject> filterEEByTaxon(
-            final Collection<ExpressionExperimentValueObject> toFilter, Taxon tax ) {
-        Collection<ExpressionExperimentValueObject> filtered = new HashSet<ExpressionExperimentValueObject>();
-        for ( ExpressionExperimentValueObject eevo : toFilter ) {
-            if ( eevo.getTaxon().equalsIgnoreCase( tax.getCommonName() ) ) filtered.add( eevo );
-        }
-
-        return filtered;
-    }
-
-    private Collection<ArrayDesignValueObject> filterADByTaxon( final Collection<ArrayDesignValueObject> toFilter,
-            Taxon tax ) {
-        Collection<ArrayDesignValueObject> filtered = new HashSet<ArrayDesignValueObject>();
-        for ( ArrayDesignValueObject eevo : toFilter ) {
-            if ( ( eevo.getTaxon() == null ) || ( eevo.getTaxon().equalsIgnoreCase( tax.getCommonName() ) ) )
-                filtered.add( eevo );
-        }
-
-        return filtered;
     }
 
     /**
@@ -322,23 +179,64 @@ public class GeneralSearchController extends BaseFormController {
         return super.processFormSubmission( request, response, command, errors );
     }
 
-    /*
-     * (non-Javadoc)
+    /**
+     * AJAX - all objects in one collection.
      * 
-     * @see org.springframework.web.servlet.mvc.SimpleFormController#showForm(javax.servlet.http.HttpServletRequest,
-     *      javax.servlet.http.HttpServletResponse, org.springframework.validation.BindException)
+     * @param settings
+     * @return
      */
-    @Override
-    protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors )
-            throws Exception {
-        if ( request.getParameter( "searchString" ) != null ) {
-            CoexpressionSearchCommand csc = ( CoexpressionSearchCommand ) this.formBackingObject( request );
-            String taxon = request.getParameter( "taxon" );
-            if ( taxon != null ) csc.setTaxon( taxonService.findByScientificName( taxon ) );
-            return this.onSubmit( request, response, csc, errors );
-        }
+    public ListRange search( SearchSettings settings ) {
+        Map<Class, List<SearchResult>> searchResults = searchService.search( settings );
 
-        return super.showForm( request, response, errors );
+        List<SearchResult> finalResults = new ArrayList<SearchResult>();
+        for ( Class clazz : searchResults.keySet() ) {
+            List<SearchResult> results = searchResults.get( clazz );
+            log.info( clazz + " " + results.size() );
+            if ( results.size() == 0 ) continue;
+
+            /*
+             * Now put the valueObjects inside the SearchResults
+             */
+            fillValueObjects( clazz, results, settings );
+            finalResults.addAll( results );
+        }
+        Collections.sort( finalResults );
+        return new ListRange( finalResults );
+    }
+
+    /**
+     * @param arrayDesignService the arrayDesignService to set
+     */
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
+
+    /**
+     * @param expressionExperimentService the expressionExperimentService to set
+     */
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    /**
+     * @param gene2GOAssociationService the gene2GOAssociationService to set
+     */
+    public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
+        this.gene2GOAssociationService = gene2GOAssociationService;
+    }
+
+    /**
+     * @param searchService the searchService to set
+     */
+    public void setSearchService( SearchService searchService ) {
+        this.searchService = searchService;
+    }
+
+    /**
+     * @param taxonService the taxonService to set
+     */
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
     }
 
     /**
@@ -350,45 +248,13 @@ public class GeneralSearchController extends BaseFormController {
      */
     @Override
     protected Object formBackingObject( HttpServletRequest request ) throws Exception {
-        return new CoexpressionSearchCommand();
+        return new SearchSettings();
     }
 
-    /**
-     * @param searchService the searchService to set
-     */
-    public void setSearchService( SearchService searchService ) {
-        this.searchService = searchService;
-    }
-
-    protected boolean searchStringValidator( String query ) {
-
-        if ( StringUtils.isBlank( query ) ) return false;
-
-        if ( ( query.charAt( 0 ) == '%' ) || ( query.charAt( 0 ) == '*' ) ) return false;
-
-        return true;
-    }
-
-    protected Collection<Long> generateEEIdList( Collection<ExpressionExperiment> searchResults ) {
-        Collection<Long> list = new ArrayList<Long>();
-
-        for ( ExpressionExperiment ee : searchResults ) {
-            if ( ee == null ) continue;
-            list.add( ee.getId() );
-        }
-
-        return list;
-    }
-
-    protected Collection<Long> generateADIdList( Collection<ArrayDesign> searchResults ) {
-        Collection<Long> list = new ArrayList<Long>();
-
-        for ( ArrayDesign ad : searchResults ) {
-            if ( ad == null ) continue;
-            list.add( ad.getId() );
-        }
-
-        return list;
+    @Override
+    protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
+        super.initBinder( request, binder );
+        binder.registerCustomEditor( Taxon.class, new TaxonPropertyEditor( this.taxonService ) );
     }
 
     @SuppressWarnings("unused")
@@ -400,6 +266,100 @@ public class GeneralSearchController extends BaseFormController {
         populateTaxonReferenceData( mapping );
 
         return mapping;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.web.servlet.mvc.SimpleFormController#showForm(javax.servlet.http.HttpServletRequest,
+     *      javax.servlet.http.HttpServletResponse, org.springframework.validation.BindException)
+     */
+    @Override
+    protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors )
+            throws Exception {
+        if ( request.getParameter( "searchString" ) != null ) {
+            SearchSettings csc = ( SearchSettings ) this.formBackingObject( request );
+            String taxon = request.getParameter( "taxon" );
+            if ( taxon != null ) csc.setTaxon( taxonService.findByScientificName( taxon ) );
+            return this.onSubmit( request, response, csc, errors );
+        }
+
+        return super.showForm( request, response, errors );
+    }
+
+    /**
+     * @param entityClass
+     * @param results
+     * @return ValueObjects for the entities (in some cases, this is just the entities again). They are returned in the
+     *         same order as the entities.
+     */
+    @SuppressWarnings("unchecked")
+    private void fillValueObjects( Class entityClass, List<SearchResult> results, SearchSettings settings ) {
+        Collection vos = null;
+
+        Map<Long, SearchResult> rMap = new HashMap<Long, SearchResult>();
+        for ( SearchResult searchResult : results ) {
+            rMap.put( searchResult.getId(), searchResult );
+        }
+
+        if ( ExpressionExperiment.class.isAssignableFrom( entityClass ) ) {
+            vos = filterEEByTaxon( expressionExperimentService.loadValueObjects( EntityUtils.getIds( results ) ),
+                    settings );
+        } else if ( ArrayDesign.class.isAssignableFrom( entityClass ) ) {
+            vos = filterADByTaxon( arrayDesignService.loadValueObjects( EntityUtils.getIds( results ) ), settings );
+        } else if ( CompositeSequence.class.isAssignableFrom( entityClass ) ) {
+            return;
+        } else if ( BibliographicReference.class.isAssignableFrom( entityClass ) ) {
+            return;
+        } else if ( Gene.class.isAssignableFrom( entityClass ) ) {
+            return;
+        } else if ( Characteristic.class.isAssignableFrom( entityClass ) ) {
+            return;
+        } else if ( BioSequence.class.isAssignableFrom( entityClass ) ) {
+            return;
+        } else {
+            throw new UnsupportedOperationException( "Don't know how to make value objects for class=" + entityClass );
+        }
+
+        for ( Object o : vos ) {
+            Long id = EntityUtils.getId( o );
+            rMap.get( id ).setResultObject( o );
+        }
+    }
+
+    /**
+     * @param toFilter
+     * @param tax
+     * @return
+     */
+    private Collection<ArrayDesignValueObject> filterADByTaxon( final Collection<ArrayDesignValueObject> toFilter,
+            SearchSettings settings ) {
+        Taxon tax = settings.getTaxon();
+        if ( tax == null ) return toFilter;
+        Collection<ArrayDesignValueObject> filtered = new HashSet<ArrayDesignValueObject>();
+        for ( ArrayDesignValueObject eevo : toFilter ) {
+            if ( ( eevo.getTaxon() == null ) || ( eevo.getTaxon().equalsIgnoreCase( tax.getCommonName() ) ) )
+                filtered.add( eevo );
+        }
+
+        return filtered;
+    }
+
+    /**
+     * @param toFilter
+     * @param settings
+     * @return
+     */
+    private Collection<ExpressionExperimentValueObject> filterEEByTaxon(
+            final Collection<ExpressionExperimentValueObject> toFilter, SearchSettings settings ) {
+        Taxon tax = settings.getTaxon();
+        if ( tax == null ) return toFilter;
+        Collection<ExpressionExperimentValueObject> filtered = new HashSet<ExpressionExperimentValueObject>();
+        for ( ExpressionExperimentValueObject eevo : toFilter ) {
+            if ( eevo.getTaxon().equalsIgnoreCase( tax.getCommonName() ) ) filtered.add( eevo );
+        }
+
+        return filtered;
     }
 
     /**
@@ -422,59 +382,10 @@ public class GeneralSearchController extends BaseFormController {
         mapping.put( "taxa", taxa );
     }
 
-    @Override
-    protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
-        super.initBinder( request, binder );
-        binder.registerCustomEditor( Taxon.class, new TaxonPropertyEditor( this.taxonService ) );
-    }
-
-    /**
-     * @return the arrayDesignService
-     */
-    public ArrayDesignService getArrayDesignService() {
-        return arrayDesignService;
-    }
-
-    /**
-     * @param arrayDesignService the arrayDesignService to set
-     */
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
-    }
-
-    /**
-     * @return the expressionExperimentService
-     */
-    public ExpressionExperimentService getExpressionExperimentService() {
-        return expressionExperimentService;
-    }
-
-    /**
-     * @param expressionExperimentService the expressionExperimentService to set
-     */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    /**
-     * @param taxonService the taxonService to set
-     */
-    public void setTaxonService( TaxonService taxonService ) {
-        this.taxonService = taxonService;
-    }
-
-    /**
-     * @return the gene2GOAssociationService
-     */
-    public Gene2GOAssociationService getGene2GOAssociationService() {
-        return gene2GOAssociationService;
-    }
-
-    /**
-     * @param gene2GOAssociationService the gene2GOAssociationService to set
-     */
-    public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
-        this.gene2GOAssociationService = gene2GOAssociationService;
+    private boolean searchStringValidator( String query ) {
+        if ( StringUtils.isBlank( query ) ) return false;
+        if ( ( query.charAt( 0 ) == '%' ) || ( query.charAt( 0 ) == '*' ) ) return false;
+        return true;
     }
 
 }

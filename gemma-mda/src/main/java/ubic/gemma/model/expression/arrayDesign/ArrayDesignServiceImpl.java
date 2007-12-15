@@ -155,33 +155,11 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     }
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#findArrayDesignByName(java.lang.String)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#findByName(java.lang.String)
      */
     @Override
-    protected ubic.gemma.model.expression.arrayDesign.ArrayDesign handleFindArrayDesignByName( String name )
-            throws Exception {
+    protected ubic.gemma.model.expression.arrayDesign.ArrayDesign handleFindByName( String name ) throws Exception {
         return this.getArrayDesignDao().findByName( name );
-    }
-
-    // /*
-    // * (non-Javadoc)
-    // *
-    // * @see
-    // ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleLoadReporters(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-    // */
-    // @Override
-    // protected Collection handleLoadReporters( ArrayDesign arrayDesign ) throws Exception {
-    // return this.getArrayDesignDao().loadReporters( arrayDesign.getId() );
-    // }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleFindByGoId(String)
-     */
-    @Override
-    protected Collection handleFindByGoId( String goId ) throws Exception {
-        return this.getArrayDesignDao().findByGoId( goId );
     }
 
     @Override
@@ -585,7 +563,8 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     protected void handleThawLite( ArrayDesign arrayDesign ) throws Exception {
         this.getArrayDesignDao().thawLite( arrayDesign );
     }
-    
+
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection<ArrayDesign> handleLoadMultiple( Collection ids ) throws Exception {
         return this.getArrayDesignDao().loadMultiple( ids );
@@ -617,61 +596,69 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastTroubleEvent(java.util.Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected java.util.Map handleGetLastTroubleEvent( Collection ids ) throws Exception {
         Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
         Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
-        
+
         Set<Long> aaIds = eventMap.keySet();
         for ( Long arrayDesignId : aaIds ) {
 
             Collection<AuditEvent> events = eventMap.get( arrayDesignId );
             AuditEvent lastEvent = null;
-            
+
             if ( events == null ) {
                 lastEventMap.put( arrayDesignId, null );
             } else {
                 lastEvent = getLastOutstandingTroubleEvent( events );
                 lastEventMap.put( arrayDesignId, lastEvent );
-                
-                /* TODO how to deal with merged/subsumed arrays in this case?
+
+                /*
+                 * TODO how to deal with merged/subsumed arrays in this case?
                  */
             }
-            
+
         }
-        
+
         return lastEventMap;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastValidationEvent(java.util.Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Map handleGetLastValidationEvent( Collection ids ) throws Exception {
         Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
         Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
-        
+
         Set<Long> aaIds = eventMap.keySet();
         for ( Long arrayDesignId : aaIds ) {
 
             Collection<AuditEvent> events = eventMap.get( arrayDesignId );
             AuditEvent lastEvent = null;
-            
+
             if ( events == null ) {
                 lastEventMap.put( arrayDesignId, null );
             } else {
                 lastEvent = getLastEvent( events, ValidatedFlagEvent.class );
                 lastEventMap.put( arrayDesignId, lastEvent );
-                
-                /* TODO how to deal with merged/subsumed arrays in this case?
+
+                /*
+                 * TODO how to deal with merged/subsumed arrays in this case?
                  */
             }
-            
+
         }
-        
+
         return lastEventMap;
     }
 

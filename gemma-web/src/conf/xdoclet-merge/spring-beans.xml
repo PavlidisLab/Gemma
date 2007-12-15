@@ -143,6 +143,8 @@ Mapping URLS to controllers
 				value="ubic.gemma.web.remote.ScaleTypeConverter"></entry>
 			<entry key="ontologyTermConverter"
 				value="ubic.gemma.web.remote.OntologyTermConverter"></entry>
+			<entry key="classConverter"
+				value="ubic.gemma.web.remote.ClassConverter"></entry>
 		</map>
 	</property>
 	<property name="creators">
@@ -295,13 +297,12 @@ Mapping URLS to controllers
 				<bean class="org.directwebremoting.spring.CreatorConfig">
 					<property name="creator">
 						<bean class="org.directwebremoting.spring.BeanCreator">
-							<property name="bean" ref="searchService"/>
+							<property name="bean" ref="generalSearchController"/>
 						</bean>
 					</property>
 					<property name="includes">
 						<list>
-							<value>expressionExperimentSearch</value>
-							<value>geneSearch</value>
+							<value>search</value>
 						</list>
 					</property>
 				</bean>
@@ -1066,6 +1067,24 @@ Mapping URLS to controllers
 				key="ubic.gemma.model.common.quantitationtype.ScaleType">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="scaleTypeConverter"/>
+				</bean>
+			</entry>
+			<entry
+				key="ubic.gemma.search.SearchResult">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean"/>
+				</bean>
+			</entry>
+			<entry
+				key="ubic.gemma.search.SearchSettings">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean"/>
+				</bean>
+			</entry>
+			<entry
+				key="java.lang.Class">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="classConverter"/>
 				</bean>
 			</entry>
 		</map>
