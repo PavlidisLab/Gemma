@@ -59,7 +59,7 @@ var initGrid = function(id) {
 	]);
 	cm.defaultSortable = true;
  
-	ds = new Ext.data.Store(
+	ds = new Ext.Gemma.PagingDataStore(
 	{
 		proxy:new Ext.data.DWRProxy(SearchService.search),
 		reader:new Ext.data.ListRangeReader({id:"id", root:"data",totalProperty:"totalSize"}, recordType), 
@@ -77,8 +77,8 @@ var initGrid = function(id) {
     rz.on('resize', grid.autoSize, grid);
 	grid.render();
 	  gridFoot = grid.getView().getFooterPanel(true);
-	     paging  = new Ext.PagingToolbar(gridFoot, ds, {
-	     pageSize: 50
+	     paging  = new Ext.Gemma.PagingToolbar(gridFoot, ds, {
+	     pageSize: 10
     });
 };
 
