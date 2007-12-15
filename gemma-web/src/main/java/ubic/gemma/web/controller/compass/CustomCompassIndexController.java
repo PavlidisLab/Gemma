@@ -24,6 +24,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.acegisecurity.context.SecurityContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
@@ -33,11 +34,18 @@ import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.grid.javaspaces.SpacesResult;
+import ubic.gemma.grid.javaspaces.index.IndexGemmaTask;
+import ubic.gemma.grid.javaspaces.index.SpacesIndexGemmaCommand;
 import ubic.gemma.util.CompassUtils;
+import ubic.gemma.util.grid.javaspaces.SpacesEnum;
+import ubic.gemma.util.grid.javaspaces.SpacesUtil;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
-import ubic.gemma.web.controller.MultiBackgroundProcessingController;
+import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand;
+import ubic.gemma.web.controller.gemmaspaces.AbstractSpacesFormController;
+import ubic.gemma.web.util.MessageUtil;
 
 /**
  * A general Spring's MVC Controller that perform the index operation of <code>CompassGps</code>. The indexing here
@@ -54,19 +62,22 @@ import ubic.gemma.web.controller.MultiBackgroundProcessingController;
  * The results of the index operation will be saved under the <code>indexResultsName</code>, which defaults to
  * "indexResults".
  * 
- * @author keshav
+ * @author keshav, klc	
  * @version $Id$
  * @spring.bean id="indexController"
+ * @spring.property name="formView" value="indexer"
+ * @spring.property name="successView" value="indexer"
+ * @spring.property name="commandName" value="IndexGemmaCommand"
+ * @spring.property name="commandClass" value="ubic.gemma.web.controller.compass.IndexGemmaCommand"
  * @spring.property name="arrayGps" ref="arrayGps"
  * @spring.property name="expressionGps" ref="expressionGps"
  * @spring.property name="geneGps" ref="geneGps"
  * @spring.property name="ontologyGps" ref="ontologyGps"
  * @spring.property name="bibliographicGps" ref="bibliographicGps"
- * @spring.property name="formView" value="indexer"
- * @spring.property name="successView" value="indexer"
+ * @spring.property name="probeGps" ref="probeGps"
  */
 
-public class CustomCompassIndexController extends MultiBackgroundProcessingController {
+public class CustomCompassIndexController extends AbstractSpacesFormController {
 
     private Log log = LogFactory.getLog( CustomCompassIndexController.class );
 
@@ -75,6 +86,7 @@ public class CustomCompassIndexController extends MultiBackgroundProcessingContr
     private CompassGpsInterfaceDevice geneGps;
     private CompassGpsInterfaceDevice ontologyGps;
     private CompassGpsInterfaceDevice bibliographicGps;
+    private CompassGpsInterfaceDevice probeGps;
 
     /*
      * (non-Javadoc)
@@ -85,25 +97,51 @@ public class CustomCompassIndexController extends MultiBackgroundProcessingContr
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 
-        IndexJob index;
+    	//TODO: Make use of command object (so that indexing can be batched)
+    	
+    	 IndexGemmaCommand indexCommand = new IndexGemmaCommand();
 
         if ( StringUtils.hasText( request.getParameter( "geneIndex" ) ) ) {
-            index = new IndexJob( request, geneGps, "Gene Index" );
+            indexCommand.setIndexGene(true);
         } else if ( StringUtils.hasText( request.getParameter( "eeIndex" ) ) ) {
-            index = new IndexJob( request, expressionGps, "Dataset Index" );
+           indexCommand.setIndexEE(true);
         } else if ( StringUtils.hasText( request.getParameter( "arrayIndex" ) ) ) {
-            index = new IndexJob( request, arrayGps, "Array Index" );
+            indexCommand.setIndexArray(true);
         } else if ( StringUtils.hasText( request.getParameter( "ontologyIndex" ) ) ) {
-            index = new IndexJob( request, ontologyGps, "Ontology Index" );
+            indexCommand.setIndexOntology(true);
         } else if ( StringUtils.hasText( request.getParameter( "bibliographicIndex" ) ) ) {
-            index = new IndexJob( request, bibliographicGps, "Bibliographic Index" );
+           indexCommand.setIndexBibliographic(true);
         } else
             return new ModelAndView( this.getFormView() );
-
-        return startJob( request, index );
+    	
+    	
+    	return startJob( indexCommand, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), IndexGemmaTask.class.getName(),
+                true );
 
     }
 
+    
+    /**
+     * Main entry point for AJAX calls.
+     * 
+     * @param command
+     * @return
+     */
+    public String run( ExpressionExperimentLoadCommand command ) {
+        return run( command, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), IndexGemmaTask.class.getName(), true );
+    }
+    
+    
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.javaspaces.gigaspaces.AbstractGigaSpacesFormController#setGigaSpacesUtil(ubic.gemma.util.javaspaces.gigaspaces.GigaSpacesUtil)
+     */
+    @Override
+    public void setSpacesUtil( SpacesUtil spacesUtil ) {
+        this.injectSpacesUtil( spacesUtil );
+    }
+    
     /*
      * (non-Javadoc)
      * 
@@ -145,6 +183,9 @@ public class CustomCompassIndexController extends MultiBackgroundProcessingContr
         if ( request.getParameter( "bibliographicIndex" ) != null ) {
             return this.onSubmit( request, response, this.formBackingObject( request ), errors );
         }
+        if ( request.getParameter( "probeIndex" ) != null ) {
+            return this.onSubmit( request, response, this.formBackingObject( request ), errors );
+        }
 
         return super.showForm( request, response, errors );
     }
@@ -160,6 +201,69 @@ public class CustomCompassIndexController extends MultiBackgroundProcessingContr
     protected Object formBackingObject( HttpServletRequest request ) throws Exception {
         return request;
     }
+    
+    protected BackgroundControllerJob<ModelAndView> getRunner( String taskId, SecurityContext securityContext,
+            Object command, MessageUtil messenger ) {
+
+        return new IndexJob( taskId, securityContext, command, messenger );
+    }
+    
+    
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.javaspaces.gigaspaces.AbstractGigaSpacesFormController#getSpaceRunner(java.lang.String,
+     *      org.acegisecurity.context.SecurityContext, javax.servlet.http.HttpServletRequest, java.lang.Object,
+     *      ubic.gemma.web.util.MessageUtil)
+     */
+    @Override
+    protected BackgroundControllerJob<ModelAndView> getSpaceRunner( String taskId, SecurityContext securityContext,
+            Object command, MessageUtil messenger ) {
+        return new LoadInSpaceJob( taskId, securityContext, command, messenger );
+    }
+    
+    
+    /**
+     * Job that loads in a javaspace.
+     * 
+     * @author Paul
+     * @version $Id$
+     */
+    private class LoadInSpaceJob extends IndexJob {
+
+        final IndexGemmaTask indexGemmaTaskProxy = ( IndexGemmaTask ) updatedContext
+                .getBean( "proxy" );
+
+        /**
+         * @param taskId
+         * @param parentSecurityContext
+         * @param commandObj
+         * @param messenger
+         */
+        public LoadInSpaceJob( String taskId, SecurityContext parentSecurityContext, Object commandObj,
+                MessageUtil messenger ) {
+            super( taskId, parentSecurityContext, commandObj, messenger );
+
+        }
+
+        /**
+         * @param eeLoadCommand
+         * @return
+         */
+        private SpacesResult process( IndexGemmaCommand indexCommand ) {
+            SpacesIndexGemmaCommand jsCommand = createCommandObject( indexCommand );
+            SpacesResult result = indexGemmaTaskProxy.execute( jsCommand );
+            return result;
+        }
+
+
+        private SpacesIndexGemmaCommand createCommandObject( IndexGemmaCommand ic ) {
+            return new SpacesIndexGemmaCommand( taskId, true, ic.isIndexArray(), ic.isIndexEE(), ic.isIndexGene()
+            		, ic.isIndexProbe(),  ic.isIndexBibliographic(), ic.isIndexOntology());
+        }
+
+    }
+    
 
     /**
      * @author klc
@@ -171,10 +275,21 @@ public class CustomCompassIndexController extends MultiBackgroundProcessingContr
         private CompassGpsInterfaceDevice gpsDevice;
         private String description;
 
-        public IndexJob( HttpServletRequest request, CompassGpsInterfaceDevice gpsDevice, String description ) {
-            super( getMessageUtil() );
+        public IndexJob( String taskId, SecurityContext parentSecurityContext, Object commandObj, MessageUtil messenger, CompassGpsInterfaceDevice gpsDevice, String description ) {
+            this( taskId, parentSecurityContext, commandObj, messenger);
             this.gpsDevice = gpsDevice;
             this.description = description;
+        }
+        
+        /**
+         * @param taskId
+         * @param parentSecurityContext
+         * @param commandObj
+         * @param messenger
+         */
+        public IndexJob( String taskId, SecurityContext parentSecurityContext, Object commandObj, MessageUtil messenger ) {
+            super( taskId, parentSecurityContext, commandObj, messenger );
+
         }
 
         @SuppressWarnings("unchecked")
@@ -207,74 +322,34 @@ public class CustomCompassIndexController extends MultiBackgroundProcessingContr
         }
     }
 
-    /**
-     * @return the arrayGps
-     */
-    public CompassGpsInterfaceDevice getArrayGps() {
-        return arrayGps;
-    }
 
-    /**
-     * @param arrayGps the arrayGps to set
-     */
-    public void setArrayGps( CompassGpsInterfaceDevice arrayGps ) {
-        this.arrayGps = arrayGps;
-    }
+	public void setArrayGps(CompassGpsInterfaceDevice arrayGps) {
+		this.arrayGps = arrayGps;
+	}
 
-    /**
-     * @return the expressionGps
-     */
-    public CompassGpsInterfaceDevice getExpressionGps() {
-        return expressionGps;
-    }
 
-    /**
-     * @param expressionGps the expressionGps to set
-     */
-    public void setExpressionGps( CompassGpsInterfaceDevice expressionGps ) {
-        this.expressionGps = expressionGps;
-    }
+	public void setBibliographicGps(CompassGpsInterfaceDevice bibliographicGps) {
+		this.bibliographicGps = bibliographicGps;
+	}
 
-    /**
-     * @return the geneGps
-     */
-    public CompassGpsInterfaceDevice getGeneGps() {
-        return geneGps;
-    }
 
-    /**
-     * @param geneGps the geneGps to set
-     */
-    public void setGeneGps( CompassGpsInterfaceDevice geneGps ) {
-        this.geneGps = geneGps;
-    }
+	public void setExpressionGps(CompassGpsInterfaceDevice expressionGps) {
+		this.expressionGps = expressionGps;
+	}
 
-    /**
-     * @return the ontologyGps
-     */
-    public CompassGpsInterfaceDevice getOntologyGps() {
-        return ontologyGps;
-    }
 
-    /**
-     * @param ontologyGps the ontologyGps to set
-     */
-    public void setOntologyGps( CompassGpsInterfaceDevice ontologyGps ) {
-        this.ontologyGps = ontologyGps;
-    }
+	public void setGeneGps(CompassGpsInterfaceDevice geneGps) {
+		this.geneGps = geneGps;
+	}
 
-    /**
-     * @return the bibliographicGps
-     */
-    public CompassGpsInterfaceDevice getBibliographicGps() {
-        return bibliographicGps;
-    }
 
-    /**
-     * @param bibliographicGps the bibliographicGps to set
-     */
-    public void setBibliographicGps( CompassGpsInterfaceDevice bibliographicGps ) {
-        this.bibliographicGps = bibliographicGps;
-    }
+	public void setOntologyGps(CompassGpsInterfaceDevice ontologyGps) {
+		this.ontologyGps = ontologyGps;
+	}
+
+	public void setProbeGps(CompassGpsInterfaceDevice probeGps){
+		this.probeGps = probeGps;
+		
+	}
 
 }
