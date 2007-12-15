@@ -3,7 +3,7 @@ Ext.namespace('Ext.Gemma');
 /* Ext.Gemma.PagingDataStore constructor...
  * 	ds is the backing data store
  * 	config is a hash with the following options:
- * 		...
+ * 		pageSize is the number of rows to show on each page.
  */
 Ext.Gemma.PagingDataStore = function ( config ) {
 
