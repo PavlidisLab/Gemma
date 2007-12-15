@@ -33,12 +33,15 @@ public class GemmaLinkUtils {
         buf.append( url );
         buf.append( "\"");
         if ( hover != null ) {
-            buf.append( " title=\"" );
-            buf.append( hover );
-            buf.append( "\"" );
+            buf.append( " class=\"tooltip\"" );
         }
         buf.append( ">" );
         buf.append( link );
+        if ( hover != null ) {
+            buf.append( "<span class=\"tooltiptext\">" );
+            buf.append( hover );
+            buf.append( "</span>" );
+        }
         buf.append( "</a>" );
         return buf.toString();
     }

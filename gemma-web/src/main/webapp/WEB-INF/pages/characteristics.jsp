@@ -29,7 +29,7 @@
 			<fmt:message key="characteristicBrowser.heading" />
 		</h1>
 
-<authz:authorize ifAnyGranted="admin">		
+<authz:authorize ifAnyGranted="admin">
 		<div id="characteristicBrowser" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden;"></div>
 </authz:authorize>
 <authz:authorize ifNotGranted="admin">

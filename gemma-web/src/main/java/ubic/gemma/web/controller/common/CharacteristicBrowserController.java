@@ -198,24 +198,24 @@ public class CharacteristicBrowserController extends BaseFormController {
             ExpressionExperiment ee = (ExpressionExperiment)parent;
             avo.setParentName( String.format( "ExpressionExperiment: %s", ee.getName() ) );
             avo.setParentDescription( ee.getDescription() );
-            avo.setParentLink( GemmaLinkUtils.getExpressionExperimentLink( ee.getId(), avo.getParentName(), null ) );
+            avo.setParentLink( GemmaLinkUtils.getExpressionExperimentLink( ee.getId(), avo.getParentName() ) );
         } else if ( parent instanceof BioMaterial ) {
             BioMaterial bm = (BioMaterial)parent;
             avo.setParentName( String.format( "BioMaterial: %s", bm.getName() ) );
             avo.setParentDescription( bm.getDescription() );
-            avo.setParentLink( GemmaLinkUtils.getBioMaterialLink( bm.getId(), avo.getParentName(), null ) );
+            avo.setParentLink( GemmaLinkUtils.getBioMaterialLink( bm.getId(), avo.getParentName() ) );
             ExpressionExperiment ee = expressionExperimentService.findByBioMaterial( bm );
             avo.setParentOfParentName( String.format( "ExpressionExperiment: %s", ee.getName() ) );
             avo.setParentOfParentDescription( ee.getDescription() );
-            avo.setParentOfParentLink( GemmaLinkUtils.getExpressionExperimentLink( ee.getId(), avo.getParentOfParentName(), null ) );
+            avo.setParentOfParentLink( GemmaLinkUtils.getExpressionExperimentLink( ee.getId(), avo.getParentOfParentName() ) );
         } else if ( parent instanceof FactorValue ) {
             FactorValue fv = (FactorValue)parent;
             avo.setParentDescription( String.format( "FactorValue: %s : %s", fv.getExperimentalFactor().getName(), fv.getValue() ) );
-            avo.setParentLink( GemmaLinkUtils.getExperimentalDesignLink( fv.getExperimentalFactor().getExperimentalDesign().getId(), avo.getParentDescription(), null ) );
+            avo.setParentLink( GemmaLinkUtils.getExperimentalDesignLink( fv.getExperimentalFactor().getExperimentalDesign().getId(), avo.getParentName() ) );
             ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( fv.getExperimentalFactor().getExperimentalDesign() );
             avo.setParentOfParentName( String.format( "ExpressionExperiment: %s", ee.getName() ) );
             avo.setParentOfParentDescription( ee.getDescription() );
-            avo.setParentOfParentLink( GemmaLinkUtils.getExpressionExperimentLink( ee.getId(), avo.getParentOfParentName(), null ) );
+            avo.setParentOfParentLink( GemmaLinkUtils.getExpressionExperimentLink( ee.getId(), avo.getParentOfParentName() ) );
         }
     }
 

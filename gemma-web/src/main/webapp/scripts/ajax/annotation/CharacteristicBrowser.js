@@ -83,7 +83,7 @@ Ext.onReady( function() {
 			var selected = Ext.Gemma.CharacteristicBrowser.grid.getSelectionModel().getSelections();
 			for ( var i=0; i<selected.length; ++i ) {
 				var record = selected[i]
-				record.reject();
+				//record.reject();
 			}
 			Ext.Gemma.CharacteristicBrowser.grid.getView().refresh();
 		}
@@ -100,6 +100,18 @@ Ext.onReady( function() {
 	} );
 	Ext.Gemma.CharacteristicBrowser.grid.on( "afteredit", function( e ) {
 		revertButton.enable();
+	} );
+	
+	var testButton = new Ext.Toolbar.Button( {
+		text : "test",
+		handler : function() {
+			var selected = Ext.Gemma.CharacteristicBrowser.grid.getSelectionModel().getSelections();
+			for ( var i=0; i<selected.length; ++i ) {
+				var record = selected[i]
+				record.data.parentLink = record.data.parentLink.concat( String.format( "<div style='white-space: normal; margin-left: 1em;'>{0}</div>", record.data.parentDescription ) );
+			}
+			Ext.Gemma.CharacteristicBrowser.grid.getView().refresh();
+		}
 	} );
 	
 	var eeCheckBox = new Ext.form.Checkbox( {
@@ -138,6 +150,8 @@ Ext.onReady( function() {
 	toolbar.addField( deleteButton );
 	toolbar.addSeparator();
 	toolbar.addField( revertButton );
+	toolbar.addSeparator();
+	toolbar.addField( testButton );
 	var secondToolbar = new Ext.Toolbar( gridHeader.createChild() );
 	secondToolbar.addSpacer();
 	secondToolbar.addText( "Find characteristics from" );
