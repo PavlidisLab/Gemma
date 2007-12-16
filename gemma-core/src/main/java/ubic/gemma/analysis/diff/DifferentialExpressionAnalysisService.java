@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -214,26 +213,23 @@ public class DifferentialExpressionAnalysisService {
     private Collection<ExpressionAnalysis> getPersistentExpressionAnalyses( ExpressionExperiment expressionExperiment ) {
 
         Collection<ExpressionAnalysis> expressionAnalyses = expressionExperiment.getExpressionAnalyses();
-        if ( expressionAnalyses == null || expressionAnalyses.isEmpty() ) {
+        if ( expressionAnalyses.isEmpty() ) {
             log
                     .warn( "Experiment "
                             + expressionExperiment.getShortName()
                             + " does not have any associated analyses.  Running differenial expression analysis and persisting results.  This may take some time." );
 
-            expressionAnalyses = new HashSet<ExpressionAnalysis>();
-
             differentialExpressionAnalysis.analyze( expressionExperiment );
 
             ExpressionAnalysis expressionAnalysis = differentialExpressionAnalysis.getExpressionAnalysis();
 
-            Collection<ExpressionExperiment> experimentsAnalyzed = new HashSet<ExpressionExperiment>();
+            Collection<ExpressionExperiment> experimentsAnalyzed = expressionAnalysis.getExperimentsAnalyzed();
             experimentsAnalyzed.add( expressionExperiment );
-
             expressionAnalysis.setExperimentsAnalyzed( experimentsAnalyzed );
 
             expressionAnalyses.add( expressionAnalysis );
-
             expressionExperiment.setExpressionAnalyses( expressionAnalyses );
+
             expressionExperimentService.update( expressionExperiment );
 
         }
