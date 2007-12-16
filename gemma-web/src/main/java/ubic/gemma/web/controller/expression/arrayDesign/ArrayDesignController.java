@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -543,7 +544,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         }
 
         if ( arrayDesign == null ) {
-            this.saveMessage( request, "Unalbe to load Array Design with id: " + idStr + ". Displaying all Arrays" );
+            this.saveMessage( request, "Unable to load Array Design with id: " + idStr + ". Displaying all Arrays" );
             return this.showAll( request, response );
 
         }
@@ -627,6 +628,9 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         overallWatch.start();
 
         String sId = request.getParameter( "id" );
+        boolean showMergees = Boolean.parseBoolean( request.getParameter( "showMerg" ) );
+        boolean showOrphans = Boolean.parseBoolean( request.getParameter( "showOrph" ) );
+
         Collection<ArrayDesignValueObject> valueObjects = new ArrayList<ArrayDesignValueObject>();
         ArrayDesignValueObject summary = arrayDesignReportService.getSummaryObject();
         // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
@@ -642,30 +646,37 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
                 ids.add( new Long( idList[i] ) );
             }
             valueObjects.addAll( arrayDesignService.loadValueObjects( ids ) );
-            log.info( "List of AD ids to load value objets for: " + idList );
-            log.info( "Loading AD value objects took: " + overallWatch.getTime() / 1000 );
+            arrayDesignReportService.fillInValueObjects( valueObjects );
+            log.debug( "List of AD ids to load value objets for: " + idList );
+            log.debug( "Loading AD value objects took: " + overallWatch.getTime() / 1000 );
         }
 
         arrayDesignReportService.fillEventInformation( valueObjects );
         arrayDesignReportService.fillInSubsumptionInfo( valueObjects );
 
-        /*
-         * for ( ArrayDesignValueObject ad : arrayDesigns ) { ad.setLastSequenceAnalysis(
-         * arrayDesignReportService.getLastSequenceAnalysisEvent( ad.getId() ) ); ad.setLastGeneMapping(
-         * arrayDesignReportService.getLastGeneMappingEvent( ad.getId() ) ); ad.setLastSequenceUpdate(
-         * arrayDesignReportService.getLastSequenceUpdateEvent( ad.getId() ) ); }
-         */
+        Collection<ArrayDesignValueObject> toHide = new HashSet<ArrayDesignValueObject>();
+        for ( ArrayDesignValueObject a : valueObjects ) {
+            if ( !showMergees && a.getIsMergee() ) {
+                toHide.add( a );
+            }
+            if ( !showOrphans && ( a.getExpressionExperimentCount() == null || a.getExpressionExperimentCount() == 0 ) ) {
+                toHide.add( a );
+            }
+        }
+        valueObjects.removeAll( toHide );
 
         // Sort the ArrayDesigns
         Collections.sort( ( List<ArrayDesignValueObject> ) valueObjects, new ArrayDesignValueObjectComparator() );
 
         Long numArrayDesigns = new Long( valueObjects.size() );
         ModelAndView mav = new ModelAndView( "arrayDesigns" );
+        mav.addObject( "showMergees", showMergees );
+        mav.addObject( "showOrphans", showOrphans );
         mav.addObject( "arrayDesigns", valueObjects );
         mav.addObject( "numArrayDesigns", numArrayDesigns );
         mav.addObject( "summary", summary );
 
-        log.info( "ArrayDesign.showall took: " + overallWatch.getTime() / 1000 );
+        log.info( "ArrayDesign.showall took: " + overallWatch.getTime() + "ms" );
 
         return mav;
     }

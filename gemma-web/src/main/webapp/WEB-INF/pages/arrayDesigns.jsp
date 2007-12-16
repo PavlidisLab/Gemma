@@ -95,8 +95,7 @@
 <title>Platforms</title>
 
 
-<form name="ArrayDesignFilter" action="filterArrayDesigns.html"
-	method="POST">
+<form name="ArrayDesignFilter" action="filterArrayDesigns.html" method="POST">
 	<h4>
 		Enter search criteria for finding a specific array design here
 	</h4>
@@ -104,19 +103,31 @@
 	<input type="submit" value="Find" />
 </form>
 
-<div id="messages" style="margin:10px;width:400px"></div>
+<div id="messages" style="margin: 10px; width: 400px"></div>
 <div id="taskId" style="display: none;"></div>
-<div id="progress-area" style="padding:15px;"></div>
+<div id="progress-area" style="padding: 15px;"></div>
 
 <h3>
 	Displaying
 	<c:out value="${numArrayDesigns}" />
-	Platforms
+	Platforms.
 </h3>
+<p>
+	<c:choose>
+		<c:when test="${!showMergees || !showOrphans}">
+			<c:if test="${!showMergees}">Platforms that have been merged are hidden. </c:if>
+			<c:if test="${!showOrphans}">Platforms with no datasets are hidden. </c:if>
+			<a href="<c:url value='/arrays/showAllArrayDesigns.html?showOrph=true&showMerg=true'/>">Show all</a>
+		</c:when>
+		<c:otherwise>
+			<a href="<c:url value='/arrays/showAllArrayDesigns.html?showOrph=false&showMerg=false'/>">Hide</a> orphans and mergees.
+	</c:otherwise>
+	</c:choose>
+</p>
+
 <authz:authorize ifAnyGranted="admin">
 	<a href="<c:url value="/arrays/generateArrayDesignSummary.html"/>"
-		onclick="return confirm('Regenerate report for all platforms?');">
-		Regenerate this report</a>
+		onclick="return confirm('Regenerate report for all platforms?');"> Regenerate this report</a>
 </authz:authorize>
 
 <script type='text/javascript' src='/Gemma/scripts/prototype.js'></script>
@@ -124,41 +135,31 @@
 
 <display:table name="arrayDesigns" sort="list" requestURI="" id="arrayDesignList" pagesize="50"
 	decorator="ubic.gemma.web.taglib.displaytag.expression.arrayDesign.ArrayDesignWrapper">
-	<display:column property="name" sortable="true"
-		comparator="ubic.gemma.web.taglib.displaytag.StringComparator"
-		href="showArrayDesign.html" paramId="id" paramProperty="id"
-		titleKey="arrayDesign.name" />
+	<display:column property="name" sortable="true" comparator="ubic.gemma.web.taglib.displaytag.StringComparator"
+		href="showArrayDesign.html" paramId="id" paramProperty="id" titleKey="arrayDesign.name" />
 	<authz:authorize ifAnyGranted="admin">
 		<display:column property="status" sortable="true" titleKey="arrayDesign.status"
-			style="text-align:center; vertical-align:middle;" comparator="ubic.gemma.web.taglib.displaytag.StringComparator" defaultorder="descending" />
+			style="text-align:center; vertical-align:middle;" comparator="ubic.gemma.web.taglib.displaytag.StringComparator"
+			defaultorder="descending" />
 	</authz:authorize>
-	<display:column property="shortName" sortable="true"
-		titleKey="arrayDesign.shortName"
+	<display:column property="shortName" sortable="true" titleKey="arrayDesign.shortName"
 		comparator="ubic.gemma.web.taglib.displaytag.StringComparator" />
-	<display:column property="taxon" sortable="true"
-		titleKey="arrayDesign.taxon" />
-	<display:column property="expressionExperimentCountLink"
-		sortable="true" title="Expts"
+	<display:column property="taxon" sortable="true" titleKey="arrayDesign.taxon" />
+	<display:column property="expressionExperimentCountLink" sortable="true" title="Expts"
 		comparator="ubic.gemma.web.taglib.displaytag.NumberComparator" />
 	<display:column property="summaryTable" title="Probe Summary" />
 	<authz:authorize ifAnyGranted="admin">
 		<display:column property="lastSequenceUpdateDate" sortable="true"
-			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator"
-			title="Seq. Update" defaultorder="descending" />
+			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" title="Seq. Update" defaultorder="descending" />
 		<display:column property="lastRepeatMaskDate" sortable="true"
-			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator"
-			title="Rep. mask" defaultorder="descending" />
+			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" title="Rep. mask" defaultorder="descending" />
 		<display:column property="lastSequenceAnalysisDate" sortable="true"
-			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator"
-			title="Seq. Analysis" defaultorder="descending" />
+			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" title="Seq. Analysis" defaultorder="descending" />
 		<display:column property="lastGeneMappingDate" sortable="true"
-			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator"
-			title="Gene mapping" defaultorder="descending" />
-		<display:column property="color" sortable="true"
-			titleKey="arrayDesign.technologyType" />
+			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" title="Gene mapping" defaultorder="descending" />
+		<display:column property="color" sortable="true" titleKey="arrayDesign.technologyType" />
 		<display:column property="refreshReport" title="Refresh" />
-		<display:column property="delete" sortable="false"
-			titleKey="arrayDesign.delete" />
+		<display:column property="delete" sortable="false" titleKey="arrayDesign.delete" />
 	</authz:authorize>
 
 	<display:setProperty name="basic.empty.showtable" value="true" />

@@ -13,45 +13,38 @@
 -->
 
 <compass-core-mapping package="ubic.gemma.model">
-
-	<class name="expression.arrayDesign.ArrayDesignImpl"
-		alias="arrayDesign" root="true">
-
-
-		<id name="id" />
-
+	
+	<class name="expression.arrayDesign.ArrayDesignImpl" alias="arrayDesign" root="true">
+		
+		<id name="id"/>
+		
 		<property name="name">
 			<meta-data>name</meta-data>
 			<meta-data>array design name</meta-data>
 		</property>
-
-
+		
 		<property name="description">
 			<meta-data>description</meta-data>
 			<meta-data>array design description</meta-data>
 		</property>
-
+		
 		<property name="shortName">
 			<meta-data>shortName</meta-data>
 			<meta-data>array design short name</meta-data>
 		</property>
-
-		<component name="designProvider" ref-alias="contact" />
+		
+		<component name="designProvider" ref-alias="contact"/>
+		
+	</class>
 	
-
-	</class>
-
-
-	<class name="common.auditAndSecurity.ContactImpl" alias="contact"
-		root="false">
-
-		<id name="id" />
-
+	<class name="common.auditAndSecurity.ContactImpl" alias="contact" root="false">
+		
+		<id name="id"/>
+		
 		<property name="name">
-			<meta-data store="no">name</meta-data>			
+			<meta-data store="no">name</meta-data>
 		</property>
-
-
+		
 	</class>
-
+	
 </compass-core-mapping>

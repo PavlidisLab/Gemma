@@ -442,12 +442,12 @@ public class DesignElementDataVectorDaoImpl extends
 
         for ( String type : probeCoexpTypes ) {
 
-            final String dedvRemovalQuery = "delete dedv from DesignElementDataVectorImpl dedv where dedv.designElement = :cs";
+            final String dedvRemovalQuery = "delete dedv from DesignElementDataVectorImpl dedv where dedv.designElement = ?";
 
             final String ppcRemoveFirstQuery = "delete d from " + type
-                    + "ProbeCoExpressionImpl as p inner join p.firstVector d where d.designElement = :cs";
+                    + "ProbeCoExpressionImpl as p inner join p.firstVector d where d.designElement = ?";
             final String ppcRemoveSecondQuery = "delete d from " + type
-                    + "ProbeCoExpressionImpl as p inner join p.secondVector d where d.designElement = :cs";
+                    + "ProbeCoExpressionImpl as p inner join p.secondVector d where d.designElement = ?";
 
             int deleted = getHibernateTemplate().bulkUpdate( ppcRemoveFirstQuery, compositeSequence );
             deleted += getHibernateTemplate().bulkUpdate( ppcRemoveSecondQuery, compositeSequence );
@@ -463,7 +463,7 @@ public class DesignElementDataVectorDaoImpl extends
      */
     @Override
     protected void handleRemoveDataForQuantitationType( final QuantitationType quantitationType ) throws Exception {
-        final String dedvRemovalQuery = "delete from DesignElementDataVectorImpl as dedv where dedv.quantitationType = :qt";
+        final String dedvRemovalQuery = "delete from DesignElementDataVectorImpl as dedv where dedv.quantitationType = ?";
         int deleted = getHibernateTemplate().bulkUpdate( dedvRemovalQuery, quantitationType );
         log.info( "Deleted " + deleted + " data vector elements" );
     }

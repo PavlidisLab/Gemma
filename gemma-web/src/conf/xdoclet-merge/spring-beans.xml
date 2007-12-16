@@ -591,6 +591,7 @@ Mapping URLS to controllers
 							<value>name</value>
 							<value>description</value>
 							<value>type</value>
+                            <value>taxon</value>
 						</list>
 					</property>
 				</bean>
@@ -604,6 +605,7 @@ Mapping URLS to controllers
 							<value>name</value>
 							<value>officialSymbol</value>
 							<value>officialName</value>
+						    <value>taxon</value>
 						</list>
 					</property>
 				</bean>
@@ -899,6 +901,7 @@ Mapping URLS to controllers
 							<value>id</value>
 							<value>name</value>
 							<value>description</value>
+							<value>arrayDesign</value>
 						</list>
 					</property>
 				</bean>

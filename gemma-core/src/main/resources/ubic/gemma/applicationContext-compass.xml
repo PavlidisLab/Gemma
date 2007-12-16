@@ -17,8 +17,8 @@
 		<property name="arrayGps">
 			<ref bean="arrayGps" />
 		</property>
-		<property name="ontologyGps">
-			<ref bean="ontologyGps" />
+		<property name="characteristicGps">
+			<ref bean="characteristicGps" />
 		</property>
 	</bean>
 	<bean id="searchService" class="ubic.gemma.search.SearchService">
@@ -54,8 +54,8 @@
 		<property name="arrayBean">
 			<ref bean="compassArray" />
 		</property>
-		<property name="ontologyBean">
-			<ref bean="compassOntology" />
+		<property name="characteristicBean">
+			<ref bean="compassCharacteristic" />
 		</property>
 		<property name="bibliographicReferenceBean">
 			<ref bean="compassBibliographic" />
@@ -131,10 +131,10 @@
 			</list>
 		</property>
 	</bean>
-	<bean id="ontologyGps" class="org.compass.gps.impl.SingleCompassGps"
+	<bean id="characteristicGps" class="org.compass.gps.impl.SingleCompassGps"
 		init-method="start" destroy-method="stop">
 		<property name="compass">
-			<ref bean="compassOntology" />
+			<ref bean="compassCharacteristic" />
 		</property>
 		<property name="gpsDevices">
 			<list>

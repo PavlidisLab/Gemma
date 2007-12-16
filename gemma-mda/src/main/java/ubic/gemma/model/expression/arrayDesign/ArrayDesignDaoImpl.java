@@ -42,7 +42,6 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.springframework.orm.hibernate3.HibernateCallback;
 import org.springframework.orm.hibernate3.HibernateTemplate;
-import org.springframework.orm.hibernate3.SessionFactoryUtils;
 
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -52,8 +51,6 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.util.BusinessKey;
 import ubic.gemma.util.QueryUtils;
 
@@ -64,59 +61,12 @@ import ubic.gemma.util.QueryUtils;
  */
 public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase {
 
-    private static final int LOGGING_UPDATE_EVENT_COUNT = 5000;
     static Log log = LogFactory.getLog( ArrayDesignDaoImpl.class.getName() );
+    private static final int LOGGING_UPDATE_EVENT_COUNT = 5000;
 
     public ArrayDesign arrayDesignValueObjectToEntity( ArrayDesignValueObject arrayDesignValueObject ) {
         Long id = arrayDesignValueObject.getId();
         return ( ArrayDesign ) this.load( id );
-    }
-
-    /**
-     * 
-     */
-    private void debug( List results ) {
-        for ( Object ad : results ) {
-            log.error( ad );
-        }
-
-    }
-
-    @Override
-    public void remove( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        if ( arrayDesign == null ) {
-            throw new IllegalArgumentException( "ArrayDesign.remove - 'arrayDesign' can not be null" );
-        }
-
-        this.getHibernateTemplate().execute( new HibernateCallback() {
-
-            public Object doInHibernate( Session session ) throws HibernateException, SQLException {
-                session.update( arrayDesign );
-                arrayDesign.getMergees().clear();
-                arrayDesign.getSubsumedArrayDesigns().clear();
-                return null;
-            }
-        } );
-
-        this.getHibernateTemplate().delete( arrayDesign );
-    }
-
-    /**
-     * Efficiently delete objects.
-     * 
-     * @param toBeRemoved
-     */
-    private void deleteInBatches( Collection toBeRemoved ) {
-        Collection<Object> batch = new ArrayList<Object>();
-        int BATCH_SIZE = 10000;
-        for ( Object result : toBeRemoved ) {
-            batch.add( result );
-            if ( batch.size() == BATCH_SIZE ) {
-                this.getHibernateTemplate().deleteAll( batch );
-                batch.clear();
-            }
-        }
-        if ( batch.size() > 0 ) this.getHibernateTemplate().deleteAll( batch );
     }
 
     /*
@@ -166,29 +116,23 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return ( ArrayDesign ) create( arrayDesign );
     }
 
-    /**
-     * queries the database and gets the number of expression experiments per ArrayDesign
-     * 
-     * @return Map
-     */
-    private Map getExpressionExperimentCountMap() {
-        final String queryString = "select ad.id, count(distinct ee) from ArrayDesignImpl ad, "
-                + "BioAssayImpl ba, ExpressionExperimentImpl ee inner join ee.bioAssays bas where "
-                + "ba.arrayDesignUsed=ad and bas=ba group by ad";
-
-        Map<Long, Long> eeCount = new HashMap<Long, Long>();
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            ScrollableResults list = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-            while ( list.next() ) {
-                Long id = list.getLong( 0 );
-                Long count = list.getLong( 1 );
-                eeCount.put( id, count );
-            }
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
+    @Override
+    public void remove( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        if ( arrayDesign == null ) {
+            throw new IllegalArgumentException( "ArrayDesign.remove - 'arrayDesign' can not be null" );
         }
-        return eeCount;
+
+        this.getHibernateTemplate().execute( new HibernateCallback() {
+
+            public Object doInHibernate( Session session ) throws HibernateException, SQLException {
+                session.update( arrayDesign );
+                arrayDesign.getMergees().clear();
+                arrayDesign.getSubsumedArrayDesigns().clear();
+                return null;
+            }
+        } );
+
+        this.getHibernateTemplate().delete( arrayDesign );
     }
 
     /*
@@ -198,12 +142,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      */
     @Override
     protected Collection handleCompositeSequenceWithoutBioSequences( ArrayDesign arrayDesign ) throws Exception {
-        if ( arrayDesign == null || arrayDesign.getId() == null ) {
-            throw new IllegalArgumentException();
-        }
         final String queryString = "select distinct cs from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-                + " left join cs.biologicalCharacteristic bs where ar.id = :id and " + " bs IS NULL";
-        return QueryUtils.queryByIdReturnCollection( getSession(), arrayDesign.getId(), queryString );
+                + " left join cs.biologicalCharacteristic bs where ar = :ar " + " bs IS NULL";
+        return getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign );
     }
 
     /*
@@ -247,88 +188,32 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     @Override
     protected Integer handleCountAll() throws Exception {
-        final String query = "select count(*) from ArrayDesignImpl";
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
-
-            return ( ( Long ) queryObject.iterate().next() ).intValue();
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
+        final String queryString = "select count(*) from ArrayDesignImpl";
+        return ( ( Long ) getHibernateTemplate().find( queryString ).iterator().next() ).intValue();
     }
 
     @SuppressWarnings("unchecked")
     @Override
     protected void handleDeleteAlignmentData( ArrayDesign arrayDesign ) throws Exception {
-
-        // probably can do this as one query...
-
         // First have to delete all blatAssociations, because they are referred to by the alignments
-        final String blatAssociationQueryString = "select ba from ArrayDesignImpl ad inner join ad.compositeSequences as cs "
-                + "inner join cs.biologicalCharacteristic bs, BlatResultImpl br,BlatAssociationImpl ba "
-                + "where br.querySequence = bs and ad=:arrayDesign and ba.bioSequence = bs";
-        org.hibernate.Query queryObject = super.getSession( false ).createQuery( blatAssociationQueryString );
-        queryObject.setParameter( "arrayDesign", arrayDesign );
-        Collection<BlatResult> toBeRemoved = queryObject.list();
-
-        if ( toBeRemoved.size() == 0 ) {
-            log.info( "No old blatAssociations for " + arrayDesign );
-        } else {
-            log.info( "Have " + toBeRemoved.size() + " BlatAssociations to remove for " + arrayDesign
-                    + "(they have to be removed to make way for new alignment data)" );
-            deleteInBatches( toBeRemoved );
-        }
-
-        final String sequenceQueryString = "select br from ArrayDesignImpl ad inner join ad.compositeSequences as cs "
+        deleteGeneProductAssociations( arrayDesign );
+        final String deleteQuery = "delete br from ArrayDesignImpl ad inner join ad.compositeSequences as cs "
                 + "inner join cs.biologicalCharacteristic bs, BlatResultImpl br "
-                + "where br.querySequence = bs and ad=:arrayDesign";
-        queryObject = super.getSession( false ).createQuery( sequenceQueryString );
-        queryObject.setParameter( "arrayDesign", arrayDesign );
-        toBeRemoved = queryObject.list();
-
-        if ( toBeRemoved.size() == 0 ) {
-            log.info( "No old alignments to be removed for " + arrayDesign );
-        } else {
-            log.info( "Have " + toBeRemoved.size() + " BlatResults to remove for " + arrayDesign );
-            deleteInBatches( toBeRemoved );
-            log.info( "Done deleting." );
-        }
+                + "where br.querySequence = bs and ad=?";
+        log.info( "BlatResult removal for " + arrayDesign );
+        int deleted = getHibernateTemplate().bulkUpdate( deleteQuery, arrayDesign );
+        log.info( "Done deleting " + deleted + " BlatResult for " + arrayDesign );
     }
 
     @SuppressWarnings("unchecked")
     @Override
     protected void handleDeleteGeneProductAssociations( ArrayDesign arrayDesign ) {
-        final String sequenceQueryString = "select ba from ArrayDesignImpl ad inner join ad.compositeSequences as cs "
+        final String deleteQuery = "delete ba from ArrayDesignImpl ad inner join ad.compositeSequences as cs "
                 + "inner join cs.biologicalCharacteristic bs, BlatAssociationImpl ba "
-                + "where ba.bioSequence = bs and ad=:arrayDesign";
-        org.hibernate.Query queryObject = super.getSession( false ).createQuery( sequenceQueryString );
-        queryObject.setFetchSize( 1000 );
-        queryObject.setParameter( "arrayDesign", arrayDesign );
-        final Collection<BlatAssociation> toBeRemoved = queryObject.list();
-
-        if ( toBeRemoved.size() == 0 ) {
-            log.info( "No old associations to be removed for " + arrayDesign );
-            return;
-        }
-        log.info( "Have " + toBeRemoved.size() + " BlatAssociations to remove for " + arrayDesign );
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                int i = 0;
-                for ( java.util.Iterator entityIterator = toBeRemoved.iterator(); entityIterator.hasNext(); ) {
-                    session.delete( entityIterator.next() );
-                    if ( ++i % 5000 == 0 ) {
-                        log.info( "Delete Progress: " + i + "/" + toBeRemoved.size() + "..." );
-                        try {
-                            Thread.sleep( 100 );
-                        } catch ( InterruptedException e ) {
-                            //
-                        }
-                    }
-                }
-                return null;
-            }
-        }, true );
-        log.info( "Done deleting." );
+                + "where ba.bioSequence = bs and ad=?";
+        log.info( "BlatAssociation removal for " + arrayDesign );
+        int deleted = getHibernateTemplate().bulkUpdate( deleteQuery, arrayDesign );
+        log.info( "Done deleting " + deleted + " BlatAssociations for " + arrayDesign );
     }
 
     /*
@@ -338,9 +223,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      */
     @Override
     protected Collection handleGetAllAssociatedBioAssays( Long id ) throws Exception {
-        final String queryString = "select bioAssay from BioAssayImpl as bioAssay where bioAssay.arrayDesignUsed.id = :id";
-        return QueryUtils.queryByIdReturnCollection( getSession(), id, queryString );
-
+        final String queryString = "select bioAssay from BioAssayImpl as bioAssay b inner join b.arrayDesignUsed a where a.id = :id";
+        return getHibernateTemplate().findByNamedParam( queryString, "id", id );
     }
 
     /*
@@ -348,41 +232,37 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetAuditEvents(java.util.Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Map handleGetAuditEvents( Collection ids ) throws Exception {
         final String queryString = "select ad.id, auditEvent from ArrayDesignImpl ad"
                 + " inner join ad.auditTrail as auditTrail inner join auditTrail.events as auditEvent "
                 + " where ad.id in (:ids) ";
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameterList( "ids", ids );
-            ScrollableResults list = queryObject.scroll();
-            Map<Long, Collection<AuditEvent>> eventMap = new HashMap<Long, Collection<AuditEvent>>();
-            // process list of expression experiment ids that have events
-            while ( list.next() ) {
-                Long id = list.getLong( 0 );
-                AuditEvent event = ( AuditEvent ) list.get( 1 );
 
-                if ( eventMap.containsKey( id ) ) {
-                    Collection<AuditEvent> events = eventMap.get( id );
-                    events.add( event );
-                } else {
-                    Collection<AuditEvent> events = new ArrayList<AuditEvent>();
-                    events.add( event );
-                    eventMap.put( id, events );
-                }
+        List<Object[]> list = getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
+        Map<Long, Collection<AuditEvent>> eventMap = new HashMap<Long, Collection<AuditEvent>>();
+        for ( Object[] o : list ) {
+            Long id = ( Long ) o[0];
+            AuditEvent event = ( AuditEvent ) o[1];
+
+            if ( eventMap.containsKey( id ) ) {
+                Collection<AuditEvent> events = eventMap.get( id );
+                events.add( event );
+            } else {
+                Collection<AuditEvent> events = new ArrayList<AuditEvent>();
+                events.add( event );
+                eventMap.put( id, events );
             }
-            // add in the array design ids that do not have events. Set their values to null.
-            for ( Object object : ids ) {
-                Long id = ( Long ) object;
-                if ( !eventMap.containsKey( id ) ) {
-                    eventMap.put( id, null );
-                }
-            }
-            return eventMap;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
         }
+        // add in the array design ids that do not have events. Set their values to null.
+        for ( Object object : ids ) {
+            Long id = ( Long ) object;
+            if ( !eventMap.containsKey( id ) ) {
+                eventMap.put( id, null );
+            }
+        }
+        return eventMap;
+
     }
 
     /*
@@ -392,14 +272,10 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      */
     @Override
     protected Collection handleGetExpressionExperiments( ArrayDesign arrayDesign ) throws Exception {
-        if ( arrayDesign == null || arrayDesign.getId() == null ) {
-            throw new IllegalArgumentException();
-        }
-        long id = arrayDesign.getId();
         final String queryString = "select distinct ee from ArrayDesignImpl ad, "
                 + "BioAssayImpl ba, ExpressionExperimentImpl ee inner join ee.bioAssays eeba where"
-                + " ba.arrayDesignUsed=ad and eeba=ba and ad.id = :id";
-        return QueryUtils.queryByIdReturnCollection( getSession(), id, queryString );
+                + " ba.arrayDesignUsed=ad and eeba=ba and ad = :ad";
+        return getHibernateTemplate().findByNamedParam( queryString, "ad", arrayDesign );
     }
 
     /*
@@ -409,144 +285,106 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      */
     @Override
     protected Taxon handleGetTaxon( Long id ) throws Exception {
-
         final String queryString = "select t from ArrayDesignImpl as arrayD "
                 + "inner join arrayD.compositeSequences as cs inner join " + "cs.biologicalCharacteristic as bioC"
                 + " inner join bioC.taxon t where arrayD.id = :id";
-
-        try {
-            org.hibernate.Query queryObject = this.getSession().createQuery( queryString );
-            queryObject.setParameter( "id", id );
-            queryObject.setMaxResults( 1 );
-            List list = queryObject.list();
-            if ( list.size() == 0 ) {
-                log.warn( "Could not determine taxon for array design" + id + " (no sequences?)" );
-                return null;
-            }
-            return ( Taxon ) list.iterator().next();
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw SessionFactoryUtils.convertHibernateAccessException( ex );
+        List list = getHibernateTemplate().findByNamedParam( queryString, "id", id );
+        if ( list.size() == 0 ) {
+            log.warn( "Could not determine taxon for array design" + id + " (no sequences?)" );
+            return null;
         }
+        return ( Taxon ) list.iterator().next();
     }
 
     @SuppressWarnings("unchecked")
     @Override
     protected Map handleIsMerged( Collection ids ) throws Exception {
         final String queryString = "select ad.id, count(subs) from ArrayDesignImpl as ad inner join ad.mergees subs where ad.id in (:ids) group by ad";
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameterList( "ids", ids );
-            ScrollableResults list = queryObject.scroll();
-            Map<Long, Boolean> eventMap = new HashMap<Long, Boolean>();
-            // process list of ids that have events
-            while ( list.next() ) {
-                Long id = list.getLong( 0 );
-                Long mergeeCount = list.getLong( 1 );
-                if ( mergeeCount != null && mergeeCount > 0 ) {
-                    eventMap.put( id, Boolean.TRUE );
-                }
+        List<Object[]> list = getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
+        Map<Long, Boolean> eventMap = new HashMap<Long, Boolean>();
+        for ( Object[] o : list ) {
+            Long id = ( Long ) o[0];
+            Long mergeeCount = ( Long ) o[1];
+            if ( mergeeCount != null && mergeeCount > 0 ) {
+                eventMap.put( id, Boolean.TRUE );
             }
-            for ( Long id : ( Collection<Long> ) ids ) {
-                if ( !eventMap.containsKey( id ) ) {
-                    eventMap.put( id, Boolean.FALSE );
-                }
-            }
-
-            return eventMap;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
         }
+        for ( Long id : ( Collection<Long> ) ids ) {
+            if ( !eventMap.containsKey( id ) ) {
+                eventMap.put( id, Boolean.FALSE );
+            }
+        }
+
+        return eventMap;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     protected Map handleIsMergee( final Collection ids ) throws Exception {
         final String queryString = "select ad.id, ad.mergedInto from ArrayDesignImpl as ad where ad.id in (:ids) ";
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameterList( "ids", ids );
-            ScrollableResults list = queryObject.scroll();
-            Map<Long, Boolean> eventMap = new HashMap<Long, Boolean>();
-            // process list of ids that have events
-            while ( list.next() ) {
-                Long id = list.getLong( 0 );
-                ArrayDesign merger = ( ArrayDesign ) list.get( 1 );
-                if ( merger != null ) {
-                    eventMap.put( id, Boolean.TRUE );
-                }
+        List<Object[]> list = getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
+        Map<Long, Boolean> eventMap = new HashMap<Long, Boolean>();
+        for ( Object[] o : list ) {
+            Long id = ( Long ) o[0];
+            ArrayDesign merger = ( ArrayDesign ) o[1];
+            if ( merger != null ) {
+                eventMap.put( id, Boolean.TRUE );
             }
-            for ( Long id : ( Collection<Long> ) ids ) {
-                if ( !eventMap.containsKey( id ) ) {
-                    eventMap.put( id, Boolean.FALSE );
-                }
-            }
-
-            return eventMap;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
         }
+        for ( Long id : ( Collection<Long> ) ids ) {
+            if ( !eventMap.containsKey( id ) ) {
+                eventMap.put( id, Boolean.FALSE );
+            }
+        }
+
+        return eventMap;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     protected Map handleIsSubsumed( final Collection ids ) throws Exception {
         final String queryString = "select ad.id, ad.subsumingArrayDesign from ArrayDesignImpl as ad where ad.id in (:ids) ";
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameterList( "ids", ids );
-            ScrollableResults list = queryObject.scroll();
-            Map<Long, Boolean> eventMap = new HashMap<Long, Boolean>();
-            // process list of ids that have events
-            while ( list.next() ) {
-                Long id = list.getLong( 0 );
-                ArrayDesign subsumer = ( ArrayDesign ) list.get( 1 );
-                if ( subsumer != null ) {
-                    eventMap.put( id, Boolean.TRUE );
-                }
+        List<Object[]> list = getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
+        Map<Long, Boolean> eventMap = new HashMap<Long, Boolean>();
+        for ( Object[] o : list ) {
+            Long id = ( Long ) o[0];
+            ArrayDesign subsumer = ( ArrayDesign ) o[1];
+            if ( subsumer != null ) {
+                eventMap.put( id, Boolean.TRUE );
             }
-            for ( Long id : ( Collection<Long> ) ids ) {
-                if ( !eventMap.containsKey( id ) ) {
-                    eventMap.put( id, Boolean.FALSE );
-                }
-            }
-
-            return eventMap;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
         }
+        for ( Long id : ( Collection<Long> ) ids ) {
+            if ( !eventMap.containsKey( id ) ) {
+                eventMap.put( id, Boolean.FALSE );
+            }
+        }
+        return eventMap;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     protected Map handleIsSubsumer( Collection ids ) throws Exception {
         final String queryString = "select ad.id, count(subs) from ArrayDesignImpl as ad inner join ad.subsumedArrayDesigns subs where ad.id in (:ids) group by ad";
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameterList( "ids", ids );
-            ScrollableResults list = queryObject.scroll();
-            Map<Long, Boolean> eventMap = new HashMap<Long, Boolean>();
-            // process list of ids that have events
-            while ( list.next() ) {
-                Long id = list.getLong( 0 );
-                Long subsumeeCount = list.getLong( 1 );
-                if ( subsumeeCount != null && subsumeeCount > 0 ) {
-                    eventMap.put( id, Boolean.TRUE );
-                }
+        List<Object[]> list = getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
+        Map<Long, Boolean> eventMap = new HashMap<Long, Boolean>();
+        for ( Object[] o : list ) {
+            Long id = ( Long ) o[0];
+            Long subsumeeCount = ( Long ) o[1];
+            if ( subsumeeCount != null && subsumeeCount > 0 ) {
+                eventMap.put( id, Boolean.TRUE );
             }
-            for ( Long id : ( Collection<Long> ) ids ) {
-                if ( !eventMap.containsKey( id ) ) {
-                    eventMap.put( id, Boolean.FALSE );
-                }
-            }
-
-            return eventMap;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
         }
+        for ( Long id : ( Collection<Long> ) ids ) {
+            if ( !eventMap.containsKey( id ) ) {
+                eventMap.put( id, Boolean.FALSE );
+            }
+        }
+        return eventMap;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    // fixme: why is this so much different than handleLoadAllValueObjects(collection)?
+    // FIXME why is this so much different than handleLoadAllValueObjects(collection)?
     // refarctoring is necessary
     protected Collection handleLoadAllValueObjects() throws Exception {
 
@@ -584,12 +422,11 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 csToArray.put( csId, arrayId );
             }
 
-            org.hibernate.Query taxonQueryObject = super.getSession( false ).createQuery( taxonString );
-            taxonQueryObject.setParameterList( "id", csToArray.keySet() );
-            ScrollableResults taxonList = taxonQueryObject.scroll();
-            while ( taxonList.next() ) {
-                Long csId = taxonList.getLong( 0 );
-                String taxon = taxonList.getString( 1 );
+            List<Object[]> taxonList = getHibernateTemplate().findByNamedParam( taxonString, "id", csToArray.keySet() );
+
+            for ( Object[] o : taxonList ) {
+                Long csId = ( Long ) o[0];
+                String taxon = ( String ) o[1];
                 Long arrayId = csToArray.get( csId );
                 arrayToTaxon.put( arrayId, taxon );
             }
@@ -626,7 +463,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     @Override
     protected Collection handleLoadCompositeSequences( Long id ) throws Exception {
         final String queryString = "select cs from CompositeSequenceImpl as cs inner join cs.arrayDesign as ar where ar.id = :id";
-        return QueryUtils.queryByIdReturnCollection( getSession(), id, queryString );
+        return getHibernateTemplate().findByNamedParam( queryString, "id", id );
     }
 
     /*
@@ -654,9 +491,20 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
         Session session = getSession();
         session.setCacheMode( CacheMode.IGNORE );
-        ArrayDesign arrayDesign = ( ArrayDesign ) QueryUtils.queryById( session, id, queryString );
+        List list = getHibernateTemplate().findByNamedParam( queryString, "id", id );
+        if ( list.size() == 0 ) return null;
+        ArrayDesign arrayDesign = ( ArrayDesign ) list.iterator().next();
         log.info( "Thaw done (" + timer.getTime() / 1000 + " s elapsed)" );
         return arrayDesign;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection<ArrayDesign> handleLoadMultiple( Collection ids ) throws Exception {
+        if ( ids == null || ids.isEmpty() ) return new HashSet<ArrayDesign>();
+        final String queryString = "select ad from ArrayDesignImpl as ad where ad.id in (:ids) ";
+        return getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
+
     }
 
     @Override
@@ -706,8 +554,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     @Override
     protected long handleNumAllCompositeSequenceWithBioSequences() throws Exception {
         final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-                + " where " + "cs.biologicalCharacteristic.sequence IS NOT NULL";
-        return ( Long ) QueryUtils.query( getSession(), queryString );
+                + " where " + "cs.biologicalCharacteristic.sequence is not null";
+        return ( Long ) getHibernateTemplate().find( queryString ).iterator().next();
     }
 
     /*
@@ -718,12 +566,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     @SuppressWarnings("unchecked")
     @Override
     protected long handleNumAllCompositeSequenceWithBioSequences( Collection ids ) throws Exception {
-        if ( ids == null || ids.size() == 0 ) {
-            throw new IllegalArgumentException();
-        }
         final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                 + " where ar.id in (:ids) and cs.biologicalCharacteristic.sequence is not null";
-        return ( Long ) QueryUtils.queryByIds( getSession(), ids, queryString );
+        return ( Long ) getHibernateTemplate().find( queryString ).iterator().next();
     }
 
     /*
@@ -735,7 +580,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     protected long handleNumAllCompositeSequenceWithBlatResults() throws Exception {
         final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                 + " , BlatResultImpl as blat where blat.querySequence=cs.biologicalCharacteristic";
-        return ( Long ) QueryUtils.query( getSession(), queryString );
+        return ( Long ) getHibernateTemplate().find( queryString ).iterator().next();
     }
 
     /*
@@ -751,7 +596,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         }
         final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                 + ", BlatResultImpl as blat where blat.querySequence= and ar.id in (:ids)";
-        return ( Long ) QueryUtils.queryByIds( getSession(), ids, queryString );
+        return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ids", ids ).iterator().next();
     }
 
     /*
@@ -763,8 +608,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     protected long handleNumAllCompositeSequenceWithGenes() throws Exception {
         final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                 + ", BioSequence2GeneProductImpl bs2gp, GeneImpl gene inner join gene.products gp "
-                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and " + "bs2gp.geneProduct=gp";
-        return ( Long ) QueryUtils.query( getSession(), queryString );
+                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and bs2gp.geneProduct=gp";
+        return ( Long ) getHibernateTemplate().find( queryString ).iterator().next();
     }
 
     /*
@@ -781,8 +626,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                 + " , BioSequence2GeneProductImpl bs2gp, GeneImpl gene inner join gene.products gp"
                 + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
-                + "bs2gp.geneProduct=gp and ar.id in (:id)";
-        return ( Long ) QueryUtils.queryByIds( getSession(), ids, queryString );
+                + "bs2gp.geneProduct=gp and ar.id in (:ids)";
+        return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ids", ids ).iterator().next();
     }
 
     /*
@@ -794,8 +639,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     protected long handleNumAllGenes() throws Exception {
         final String queryString = "select count (distinct gene) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                 + ", BioSequence2GeneProductImpl bs2gp, GeneImpl gene inner join gene.products gp "
-                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and " + "bs2gp.geneProduct=gp";
-        return ( Long ) QueryUtils.query( getSession(), queryString );
+                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and  bs2gp.geneProduct=gp";
+        return ( Long ) getHibernateTemplate().find( queryString ).iterator().next();
     }
 
     /*
@@ -813,7 +658,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 + " , BioSequence2GeneProductImpl bs2gp, GeneImpl gene inner join gene.products gp "
                 + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
                 + "bs2gp.geneProduct=gp  and ar.id in (:ids)";
-        return ( Long ) QueryUtils.queryByIds( getSession(), ids, queryString );
+        return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ids", ids ).iterator().next();
     }
 
     /*
@@ -823,13 +668,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      */
     @Override
     protected long handleNumBioSequences( ArrayDesign arrayDesign ) throws Exception {
-        if ( arrayDesign == null || arrayDesign.getId() == null ) {
-            throw new IllegalArgumentException();
-        }
-        long id = arrayDesign.getId();
         final String queryString = "select count (distinct cs.biologicalCharacteristic) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-                + " where ar.id = :id and cs.biologicalCharacteristic.sequence IS NOT NULL";
-        return ( Long ) QueryUtils.queryById( getSession(), id, queryString );
+                + " where ar = :ar and cs.biologicalCharacteristic.sequence IS NOT NULL";
+        return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
 
     /*
@@ -839,14 +680,10 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      */
     @Override
     protected long handleNumBlatResults( ArrayDesign arrayDesign ) throws Exception {
-        if ( arrayDesign == null || arrayDesign.getId() == null ) {
-            throw new IllegalArgumentException();
-        }
-        long id = arrayDesign.getId();
         final String queryString = "select count (distinct bs2gp) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                 + " , BioSequence2GeneProductImpl as bs2gp "
-                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and ar.id = :id";
-        return ( Long ) QueryUtils.queryById( getSession(), id, queryString );
+                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and ar = :ar";
+        return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
 
     /*
@@ -857,7 +694,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     @Override
     protected Integer handleNumCompositeSequences( Long id ) throws Exception {
         final String queryString = "select count (*) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar where ar.id = :id";
-        return ( ( Long ) QueryUtils.queryById( getSession(), id, queryString ) ).intValue();
+        return ( ( Long ) getHibernateTemplate().findByNamedParam( queryString, "id", id ).iterator().next() )
+                .intValue();
     }
 
     /*
@@ -867,13 +705,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      */
     @Override
     protected long handleNumCompositeSequenceWithBioSequences( ArrayDesign arrayDesign ) throws Exception {
-        if ( arrayDesign == null || arrayDesign.getId() == null ) {
-            throw new IllegalArgumentException();
-        }
-        long id = arrayDesign.getId();
-        final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-                + " where ar.id = :id and cs.biologicalCharacteristic.sequence IS NOT NULL";
-        return ( Long ) QueryUtils.queryById( getSession(), id, queryString );
+        final String queryString = "select count (distinct cs) from CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
+                + " where ar = :ar and cs.biologicalCharacteristic.sequence IS NOT NULL";
+        return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
 
     /*
@@ -883,13 +717,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      */
     @Override
     protected long handleNumCompositeSequenceWithBlatResults( ArrayDesign arrayDesign ) throws Exception {
-        if ( arrayDesign == null || arrayDesign.getId() == null ) {
-            throw new IllegalArgumentException();
-        }
-        long id = arrayDesign.getId();
         final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-                + " , BlatResultImpl as blat where blat.querySequence=cs.biologicalCharacteristic and ar.id = :id";
-        return ( Long ) QueryUtils.queryById( getSession(), id, queryString );
+                + " , BlatResultImpl as blat where blat.querySequence=cs.biologicalCharacteristic and ar = :ar";
+        return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
 
     /*
@@ -899,38 +729,26 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      */
     @Override
     protected long handleNumCompositeSequenceWithGenes( ArrayDesign arrayDesign ) throws Exception {
-        if ( arrayDesign == null || arrayDesign.getId() == null ) {
-            throw new IllegalArgumentException();
-        }
-        long id = arrayDesign.getId();
         final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                 + " , BioSequence2GeneProductImpl bs2gp, GeneImpl gene inner join gene.products gp "
-                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and " + "bs2gp.geneProduct=gp and ar.id = :id";
-        return ( Long ) QueryUtils.queryById( getSession(), id, queryString );
+                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and " + "bs2gp.geneProduct=gp and ar = :ar";
+        return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
 
     @Override
     protected long handleNumCompositeSequenceWithPredictedGene( ArrayDesign arrayDesign ) throws Exception {
-        if ( arrayDesign == null || arrayDesign.getId() == null ) {
-            throw new IllegalArgumentException();
-        }
-        long id = arrayDesign.getId();
         final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                 + " , BioSequence2GeneProductImpl bs2gp, PredictedGeneImpl gene inner join gene.products gp "
-                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and " + "bs2gp.geneProduct=gp and ar.id = :id";
-        return ( Long ) QueryUtils.queryById( getSession(), id, queryString );
+                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and " + "bs2gp.geneProduct=gp and ar = :ar";
+        return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
 
     @Override
     protected long handleNumCompositeSequenceWithProbeAlignedRegion( ArrayDesign arrayDesign ) throws Exception {
-        if ( arrayDesign == null || arrayDesign.getId() == null ) {
-            throw new IllegalArgumentException();
-        }
-        long id = arrayDesign.getId();
         final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                 + " , BioSequence2GeneProductImpl bs2gp, ProbeAlignedRegionImpl gene inner join gene.products gp "
-                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and " + "bs2gp.geneProduct=gp and ar.id = :id";
-        return ( Long ) QueryUtils.queryById( getSession(), id, queryString );
+                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and " + "bs2gp.geneProduct=gp and ar = :ar";
+        return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
 
     /*
@@ -940,14 +758,10 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      */
     @Override
     protected long handleNumGenes( ArrayDesign arrayDesign ) throws Exception {
-        if ( arrayDesign == null || arrayDesign.getId() == null ) {
-            throw new IllegalArgumentException();
-        }
-        long id = arrayDesign.getId();
         final String queryString = "select count (distinct gene) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                 + ", BioSequence2GeneProductImpl bs2gp, GeneImpl gene inner join gene.products gp "
-                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and " + "bs2gp.geneProduct=gp and ar.id = :id";
-        return ( Long ) QueryUtils.queryById( getSession(), id, queryString );
+                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and " + "bs2gp.geneProduct=gp and ar = :ar";
+        return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
 
     /*
@@ -959,7 +773,32 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     protected Integer handleNumReporters( Long id ) throws Exception {
         final String queryString = "select count (*) from ArrayDesignImpl as ar inner join"
                 + " ar.compositeSequences as cs inner join cs.componentReporters as rep where ar.id = :id";
-        return ( ( Long ) QueryUtils.queryById( getSession(), id, queryString ) ).intValue();
+        return ( ( Long ) getHibernateTemplate().findByNamedParam( queryString, "id", id ).iterator().next() )
+                .intValue();
+    }
+
+    @Override
+    protected void handleRemoveBiologicalCharacteristics( final ArrayDesign arrayDesign ) throws Exception {
+        if ( arrayDesign == null ) {
+            throw new IllegalArgumentException( "Array design cannot be null" );
+        }
+        HibernateTemplate templ = this.getHibernateTemplate();
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                session.lock( arrayDesign, LockMode.READ );
+                int count = 0;
+                for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+                    cs.setBiologicalCharacteristic( null );
+                    session.update( cs );
+                    session.evict( cs );
+                    if ( ++count % LOGGING_UPDATE_EVENT_COUNT == 0 ) {
+                        log.info( "Cleared sequence association for " + count + " composite sequences" );
+                    }
+                }
+
+                return null;
+            }
+        } );
     }
 
     @Override
@@ -1039,6 +878,38 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         this.getHibernateTemplate().clear();
 
         return true;
+    }
+
+    /**
+     * 
+     */
+    private void debug( List results ) {
+        for ( Object ad : results ) {
+            log.error( ad );
+        }
+
+    }
+
+    /**
+     * Gets the number of expression experiments per ArrayDesign
+     * 
+     * @return Map
+     */
+    @SuppressWarnings("unchecked")
+    private Map getExpressionExperimentCountMap() {
+        final String queryString = "select ad.id, count(distinct ee) from ArrayDesignImpl ad, "
+                + "BioAssayImpl ba, ExpressionExperimentImpl ee inner join ee.bioAssays bas where "
+                + "ba.arrayDesignUsed=ad and bas=ba group by ad";
+
+        Map<Long, Long> eeCount = new HashMap<Long, Long>();
+        List<Object[]> list = getHibernateTemplate().find( queryString );
+        for ( Object[] o : list ) {
+            Long id = ( Long ) o[0];
+            Long count = ( Long ) o[1];
+            ;
+            eeCount.put( id, count );
+        }
+        return eeCount;
     }
 
     /**
@@ -1174,39 +1045,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 return null;
             }
         }, true );
-
-    }
-
-    @Override
-    protected void handleRemoveBiologicalCharacteristics( final ArrayDesign arrayDesign ) throws Exception {
-        if ( arrayDesign == null ) {
-            throw new IllegalArgumentException( "Array design cannot be null" );
-        }
-        HibernateTemplate templ = this.getHibernateTemplate();
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( arrayDesign, LockMode.READ );
-                int count = 0;
-                for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
-                    cs.setBiologicalCharacteristic( null );
-                    session.update( cs );
-                    session.evict( cs );
-                    if ( ++count % LOGGING_UPDATE_EVENT_COUNT == 0 ) {
-                        log.info( "Cleared sequence association for " + count + " composite sequences" );
-                    }
-                }
-
-                return null;
-            }
-        } );
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Collection<ArrayDesign> handleLoadMultiple( Collection ids ) throws Exception {
-        if ( ids == null || ids.isEmpty() ) return new HashSet<ArrayDesign>();
-        final String queryString = "select ad from ArrayDesignImpl as ad where ad.id in (:ids) ";
-        return getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
 
     }
 

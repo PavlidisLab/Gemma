@@ -121,11 +121,11 @@ public class SearchService {
 
     private Compass arrayBean;
 
-    private Compass ontologyBean;
+    private Compass characteristicBean;
 
     private Compass bibliographicReferenceBean;
 
-    private Compass probeBean;
+    private Compass probeAndBioSequenceBean;
 
     /**
      * The results are sorted in order of decreasing score, organized by class. The following objects can be searched
@@ -281,10 +281,10 @@ public class SearchService {
     }
 
     /**
-     * @param ontologyBean the ontologyBean to set
+     * @param characteristicBean the characteristicBean to set
      */
-    public void setOntologyBean( Compass ontologyBean ) {
-        this.ontologyBean = ontologyBean;
+    public void setCharacteristicBean( Compass characteristicBean ) {
+        this.characteristicBean = characteristicBean;
     }
 
     public void setOntologyService( OntologyService ontologyService ) {
@@ -295,7 +295,7 @@ public class SearchService {
      * @param probeBean the probeBean to set
      */
     public void setProbeBean( Compass probeBean ) {
-        this.probeBean = probeBean;
+        this.probeAndBioSequenceBean = probeBean;
     }
 
     /**
@@ -488,7 +488,7 @@ public class SearchService {
     @SuppressWarnings("unchecked")
     private Collection<SearchResult> compassBioSequenceSearch( SearchSettings settings,
             Collection<SearchResult> previousGeneSearchResults ) {
-        Collection<SearchResult> results = compassSearch( probeBean, settings );
+        Collection<SearchResult> results = compassSearch( probeAndBioSequenceBean, settings );
         Collection<SearchResult> geneResults = null;
         if ( previousGeneSearchResults == null ) {
             geneResults = compassGeneSearch( settings );
@@ -508,7 +508,7 @@ public class SearchService {
      * @return
      */
     private Collection<SearchResult> compassCompositeSequenceSearch( final SearchSettings settings ) {
-        return compassSearch( probeBean, settings );
+        return compassSearch( probeAndBioSequenceBean, settings );
     }
 
     /**
@@ -534,7 +534,7 @@ public class SearchService {
      * @return
      */
     private Collection<SearchResult> compassOntologySearch( final SearchSettings settings ) {
-        return compassSearch( ontologyBean, settings );
+        return compassSearch( characteristicBean, settings );
     }
 
     /**

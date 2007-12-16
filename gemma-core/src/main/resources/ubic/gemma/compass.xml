@@ -149,22 +149,22 @@
 		</property>
 	</bean>
 
-	<bean id="compassOntology"
+	<bean id="compassCharacteristic"
 		class="org.compass.spring.LocalCompassBean">
 		<property name="resourceLocations">
 			<list>
 				<value>
-					classpath:ubic/gemma/compass/ontologyEntry_Mappings.cpm.xml
+					classpath:ubic/gemma/compass/characteristicEntry_Mappings.cpm.xml
 				</value>
 			</list>
 		</property>
 		<property name="compassSettings">
 			<props>
 				<prop key="compass.engine.connection">
-					file://${gemma.appdata.home}/compass/gemma/ontology
+					file://${gemma.appdata.home}/compass/gemma/characteristic
 				</prop>
 				<prop key="compass.engine.lockFile">
-					file://${gemma.appdata.home}/compass/gemma/ontology/ontology.lock
+					file://${gemma.appdata.home}/compass/gemma/characteristic/characteristic.lock
 				</prop>
 				<prop key="compass.transaction.factory">
 					org.compass.spring.transaction.SpringSyncTransactionFactory

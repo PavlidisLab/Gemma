@@ -35,8 +35,19 @@ var searchForm = function() {
     simple.render('search-form');
 };
 
-var objectConvert = function(o) {
-	return o;
+var renderEntity = function( data, metadata, record, row, column, store  ) {
+	var clazz = record.get("resultClass");
+	if (clazz == "ExpressionExperiment") {
+		return data.shortName;		
+	} else if (clazz=="CompositeSequence") {
+		return data.name  + " [" + data.arrayDesign.shortName + "]";
+	} else if (clazz== "ArrayDesign") {
+			return data.shortName ;
+	}else if (clazz == "BioSequence") {
+		return data.name + " [" + data.taxon.commonName + "]";
+	} else if (clazz == "Gene") {
+		return data.officialSymbol + " [" + data.taxon.commonName + "]";
+	}
 };
 
 var initGrid = function(id) {
@@ -45,16 +56,15 @@ var initGrid = function(id) {
 			{name:"score", type:"float"},
 			{name:"resultClass", type:"string"},
 			{name:"id",type:"int"},
-			{name:"resultObject", convert:objectConvert},
+			{name:"resultObject" },
 			{name:"highlightedText", type:"string"},
 			{name:"indexSearchResult", type:"boolean"},
 	]);
 	
 	 var cm = new Ext.grid.ColumnModel([
-				{header: "Item id",  width: 80, dataIndex:"id" }, 
 				{header: "Item class", width: 150, dataIndex:"resultClass" },
+				{header: "Item", width: 180, dataIndex:"resultObject", renderer:renderEntity },
 				{header: "Score", width: 60, dataIndex:"score" },
-				{header: "Item", width: 180, dataIndex:"resultObject" },
 				{header: "Text", width: 180, dataIndex:"highlightedText" }
 	]);
 	cm.defaultSortable = true;

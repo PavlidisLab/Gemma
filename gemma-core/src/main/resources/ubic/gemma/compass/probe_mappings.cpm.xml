@@ -11,64 +11,31 @@
 	author: klc
 	version: $Id$
 -->
-
-
 <compass-core-mapping package="ubic.gemma.model">
-
-
-
-	<class name="expression.designElement.CompositeSequenceImpl"
-		alias="compositeSequence" root="true">
-
-		<id name="id" />
-
+	<class name="expression.designElement.CompositeSequenceImpl" alias="compositeSequence" root="true">
+		<id name="id"/>
 		<property name="name">
 			<meta-data>name</meta-data>
 		</property>
-
-
 		<property name="description">
 			<meta-data>description</meta-data>
 		</property>
-
-			
-		<component name="arrayDesign"	ref-alias="arrayDesign" />		
-
+		<component name="arrayDesign" ref-alias="arrayDesign"/>
 	</class>
-	
-	
-	<class name="genome.biosequence.BioSequenceImpl"
-		alias="biologicalCharacteristic" root="true">
-
-	 <id name="id" />
-
-	<property name="name">
+	<class name="genome.biosequence.BioSequenceImpl" alias="biologicalCharacteristic" root="true">
+		<id name="id"/>
+		<property name="name">
 			<meta-data>name</meta-data>
 		</property>
-		
-	  <property name="description">
+		<property name="description">
 			<meta-data>description</meta-data>
 		</property>
-
-		  <component name="bioSequence2GeneProduct" ref-alias="bioSequence2GeneProduct" /> 
-		
+		<component name="bioSequence2GeneProduct" ref-alias="bioSequence2GeneProduct"/>
 	</class>
-	
-	<class name="expression.arrayDesign.ArrayDesignImpl"
-		alias="arrayDesign" root="false">
-
-		<id name="id" />
-
+	<class name="expression.arrayDesign.ArrayDesignImpl" alias="arrayDesign" root="false">
+		<id name="id"/>
 	</class>
-	
-	
-	<class name="association.BioSequence2GeneProductImpl"
-		alias="bioSequence2GeneProduct" root="false">
-
-		<id name="id" />
-
-
+	<class name="association.BioSequence2GeneProductImpl" alias="bioSequence2GeneProduct" root="false">
+		<id name="id"/>
 	</class>
-	
-	
-	</compass-core-mapping>
+</compass-core-mapping>
