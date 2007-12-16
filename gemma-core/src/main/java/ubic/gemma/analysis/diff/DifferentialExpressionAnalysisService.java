@@ -60,6 +60,19 @@ public class DifferentialExpressionAnalysisService {
     private DifferentialExpressionAnalysis differentialExpressionAnalysis = null;
 
     /**
+     * Returns the analyses for the give experiment.
+     * 
+     * @param ee
+     * @return
+     */
+    public Collection<ExpressionAnalysis> getExpressionAnalyses( ExpressionExperiment ee ) {
+
+        Collection<ExpressionAnalysis> analyses = this.getPersistentExpressionAnalyses( ee );
+
+        return analyses;
+    }
+
+    /**
      * Returns the top results of a one way anova for the experiment with shortName.
      * <p>
      * If the expression experiment given by shortName is not found, returns null.
@@ -79,32 +92,43 @@ public class DifferentialExpressionAnalysisService {
         }
         expressionExperimentService.thawLite( ee );
 
+        return getTopResults( top, ee );
+    }
+
+    /**
+     * Returns the top results of a one way anova for the experiment
+     * 
+     * @param top
+     * @param ee
+     * @return
+     */
+    public Collection<ExpressionAnalysisResult> getTopResults( int top, ExpressionExperiment ee ) {
         Collection<ExpressionAnalysis> analyses = this.getPersistentExpressionAnalyses( ee );
         if ( analyses == null ) {
-            log.error( "No analyses associated with experiment: " + shortName );
+            log.error( "No analyses associated with experiment: " + ee.getShortName() );
             return null;
         }
 
         ExpressionAnalysis analysis = confirmAnalysisExists( analyses, ONE_WAY_ANOVA );
 
         if ( analysis == null ) {
-            log.error( "One way anova differential expression analysis not found for experiment " + shortName
+            log.error( "One way anova differential expression analysis not found for experiment " + ee.getShortName()
                     + ".  Returning ..." );
             return null;
         }
 
         Collection<ExpressionAnalysisResultSet> resultSets = analysis.getResultSets();
 
-        log.info( "Getting one way anova results for experiment: " + shortName );
+        log.info( "Getting one way anova results for experiment: " + ee.getShortName() );
 
         if ( resultSets.size() != NUM_RESULT_SETS_OWA )
-            throw new RuntimeException( "Invalid number of result sets for analysis for experiment: " + shortName );
-
+            throw new RuntimeException( "Invalid number of result sets for analysis for experiment: "
+                    + ee.getShortName() );
         ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
 
         Collection<ExpressionAnalysisResult> analysisResults = resultSet.getResults();
 
-        top = setTopLimit( shortName, top, analysisResults );
+        top = setTopLimit( ee.getShortName(), top, analysisResults );
 
         List<ExpressionAnalysisResult> topResults = sortResults( top, analysisResults );
 
@@ -128,23 +152,37 @@ public class DifferentialExpressionAnalysisService {
         }
         expressionExperimentService.thawLite( ee );
 
+        return getTopResultsForFactor( top, factorName, ee );
+    }
+
+    /**
+     * Returns the top results of a two way anova for the experiment with the given factor.
+     * 
+     * @param shortName
+     * @param top
+     * @param factorName
+     * @param ee
+     * @return
+     */
+    public Collection<ExpressionAnalysisResult> getTopResultsForFactor( int top, String factorName,
+            ExpressionExperiment ee ) {
         Collection<ExpressionAnalysis> analyses = this.getPersistentExpressionAnalyses( ee );
         if ( analyses == null ) {
-            log.error( "No analyses associated with experiment: " + shortName );
+            log.error( "No analyses associated with experiment: " + ee.getShortName() );
             return null;
         }
 
         ExpressionAnalysis analysis = confirmAnalysisExists( analyses, TWO_WAY_ANOVA );
 
         if ( analysis == null ) {
-            log.error( "Two way anova differential expression analysis not found for experiment " + shortName
+            log.error( "Two way anova differential expression analysis not found for experiment " + ee.getShortName()
                     + ".  Returning ..." );
             return null;
         }
 
         Collection<ExpressionAnalysisResultSet> resultSets = analysis.getResultSets();
 
-        log.info( "Getting two way anova results for experiment: " + shortName );
+        log.info( "Getting two way anova results for experiment: " + ee.getShortName() );
 
         for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
             ExperimentalFactor factor = resultSet.getExperimentalFactor();
@@ -156,7 +194,7 @@ public class DifferentialExpressionAnalysisService {
                 log.info( "Returning top results for factor with" + "\'" + factorName + "\'"
                         + " in the name (or description)." );
                 Collection<ExpressionAnalysisResult> analysisResults = resultSet.getResults();
-                top = setTopLimit( shortName, top, analysisResults );
+                top = setTopLimit( ee.getShortName(), top, analysisResults );
                 List<ExpressionAnalysisResult> topResults = sortResults( top, analysisResults );
                 return topResults;
             }
@@ -173,7 +211,7 @@ public class DifferentialExpressionAnalysisService {
      * @param expressionExperiment
      * @return
      */
-    public Collection<ExpressionAnalysis> getPersistentExpressionAnalyses( ExpressionExperiment expressionExperiment ) {
+    private Collection<ExpressionAnalysis> getPersistentExpressionAnalyses( ExpressionExperiment expressionExperiment ) {
 
         Collection<ExpressionAnalysis> expressionAnalyses = expressionExperiment.getExpressionAnalyses();
         if ( expressionAnalyses == null || expressionAnalyses.isEmpty() ) {

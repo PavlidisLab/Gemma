@@ -30,12 +30,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.analysis.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -47,9 +47,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManipulatingCLI {
     private static Log log = LogFactory.getLog( DifferentialExpressionAnalysisCli.class );
 
-    // private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
 
-    private DesignElementDataVectorService designElementDataVectorService = null;
+    private int top = 100;
 
     /*
      * (non-Javadoc)
@@ -78,6 +78,10 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     @Override
     protected void processOptions() {
         super.processOptions();
+
+        if ( hasOption( 't' ) ) {
+            this.top = Integer.parseInt( ( getOptionValue( 't' ) ) );
+        }
     }
 
     /*
@@ -93,19 +97,13 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             return err;
         }
 
-        this.designElementDataVectorService = ( DesignElementDataVectorService ) this
-                .getBean( "designElementDataVectorService" );
-
-        DifferentialExpressionAnalysis analysis = ( DifferentialExpressionAnalysis ) this
-                .getBean( "differentialExpressionAnalysis" );
-
-        // TODO use DifferentialExpressionAnalysisService instead of DifferentialExpressionAnalysis
-        // differentialExpressionAnalysisService = ( DifferentialExpressionAnalysisService ) this
-        // .getBean( "differentialExpressionAnalysisService" );
+        this.differentialExpressionAnalysisService = ( DifferentialExpressionAnalysisService ) this
+                .getBean( "differentialExpressionAnalysisService" );
 
         if ( this.getExperimentShortName() == null ) {
+            /* nothing on the command line */
             if ( this.experimentListFile == null ) {
-                /* run on all experiments */
+                /* no file, so run on all experiments */
                 Collection<ExpressionExperiment> all = eeService.loadAll();
                 log.info( "Total ExpressionExperiment: " + all.size() );
                 for ( ExpressionExperiment ee : all ) {
@@ -115,7 +113,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                     }
 
                     try {
-                        analysis.analyze( ee );
+                        this.differentialExpressionAnalysisService.getTopResults( top, ee );
                         successObjects.add( ee.toString() );
                         // TODO add auditing
                         // audit( ee, "Part of run on all EEs",
@@ -128,7 +126,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                     }
                 }
             } else {
-                // read short names from specified experiment list file
+                /* read short names from specified experiment list file */
                 try {
                     InputStream is = new FileInputStream( this.experimentListFile );
                     BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
@@ -149,7 +147,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                         }
 
                         try {
-                            analysis.analyze( expressionExperiment );
+                            this.differentialExpressionAnalysisService.getTopResults( shortName, top );
                             successObjects.add( expressionExperiment.toString() );
                             // TODO add audit
                             // audit( expressionExperiment, "From list in file: " + experimentListFile,
@@ -169,12 +167,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 }
             }
         } else {
+            /* read short names from the command line */
             String[] shortNames = this.getExperimentShortName().split( "," );
-
-            // TODO remove this check
-            if ( shortNames.length > 1 )
-                throw new RuntimeException( this.getClass().getName()
-                        + " supports 1 expression experiment at this time." );
 
             for ( String shortName : shortNames ) {
                 ExpressionExperiment expressionExperiment = locateExpressionExperiment( shortName );
@@ -183,15 +177,25 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
                 eeService.thaw( expressionExperiment );
 
-                analysis.analyze( expressionExperiment );
+                Collection<ExpressionAnalysis> expressionAnalyses = this.differentialExpressionAnalysisService
+                        .getExpressionAnalyses( expressionExperiment );
+
+                summarizeProcessing( expressionAnalyses );
 
             }
 
         }
 
-        summarizeProcessing( analysis.getExpressionAnalysis() );
-
         return null;
+    }
+
+    /**
+     * @param expressionAnalyses
+     */
+    private void summarizeProcessing( Collection<ExpressionAnalysis> expressionAnalyses ) {
+        for ( ExpressionAnalysis analysis : expressionAnalyses ) {
+            summarizeProcessing( analysis );
+        }
     }
 
     /**
@@ -201,6 +205,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
         // super.summarizeProcessing();
 
+        log.info( "Results for expression analysis of type: " + expressionAnalysis.getName() );
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
 
         for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
