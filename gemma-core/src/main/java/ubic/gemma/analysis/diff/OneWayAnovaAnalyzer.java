@@ -33,6 +33,7 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.dataStructure.matrix.FastRowAccessDoubleMatrix2DNamed;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
@@ -75,9 +76,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.analysis.diff.AbstractAnalyzer#getPValues(ubic.gemma.model.expression.experiment.ExpressionExperiment,
-     *      ubic.gemma.model.common.quantitationtype.QuantitationType,
-     *      ubic.gemma.model.expression.bioAssayData.BioAssayDimension, java.util.Collection)
+     * @see ubic.gemma.analysis.diff.AbstractDifferentialExpressionAnalyzer#getExpressionAnalysis(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
     public ExpressionAnalysis getExpressionAnalysis( ExpressionExperiment expressionExperiment ) {
@@ -110,6 +109,9 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                             + factorValues.size() + "." );
 
         Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
+
+        QuantitationType quantitationType = vectorsToUse.iterator().next().getQuantitationType();
+
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
 
         ExpressionDataDoubleMatrix dmatrix = builder.getMaskedPreferredData( null );
@@ -189,7 +191,8 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             probeAnalysisResult.setProbe( cs );
             probeAnalysisResult.setPvalue( filteredPvalues[i] );
             probeAnalysisResult.setScore( filteredFStatistics[i] );
-            // probeAnalysisResult.setQuantitationType( quantitationType );
+
+            probeAnalysisResult.setQuantitationType( quantitationType );
 
             analysisResults.add( probeAnalysisResult );
         }
