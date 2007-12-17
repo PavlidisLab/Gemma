@@ -31,6 +31,7 @@ import org.rosuda.JRclient.REXP;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
@@ -113,6 +114,9 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
         connectToR();
 
         Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
+
+        QuantitationType quantitationType = vectorsToUse.iterator().next().getQuantitationType();
+
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
 
         ExpressionDataDoubleMatrix dmatrix = builder.getMaskedPreferredData( null );
@@ -178,7 +182,7 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
             probeAnalysisResult.setProbe( cs );
             probeAnalysisResult.setPvalue( pvalues[i] );
             probeAnalysisResult.setScore( tstatistics[i] );
-            // probeAnalysisResult.setQuantitationType( quantitationType );
+            probeAnalysisResult.setQuantitationType( quantitationType );
 
             analysisResults.add( probeAnalysisResult );
         }
