@@ -558,10 +558,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     @SuppressWarnings("unchecked")
     @Override
     protected ExpressionExperiment handleFindByFactorValue( FactorValue fv ) {
-        final String queryString = "select distinct ee FROM ExpressionExperimentImpl as ee inner join ee.experimentalDesign ed "
+        final String queryString = "select distinct ee from ExpressionExperimentImpl as ee inner join ee.experimentalDesign ed "
                 + "inner join ed.experimentalFactors ef inner join ef.factorValues fv where fv = :fv ";
 
-        List results = getHibernateTemplate().find( queryString, fv );
+        List results = getHibernateTemplate().findByNamedParam( queryString, "fv", fv );
 
         if ( results.size() == 0 ) {
             log.info( "There is no expression experiment that has factorValue = " + fv );

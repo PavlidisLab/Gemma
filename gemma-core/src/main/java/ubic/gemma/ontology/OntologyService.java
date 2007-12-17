@@ -157,8 +157,8 @@ public class OntologyService {
     }
 
     /**
-     * Given a search string will look through the Mged, birnlex, obo Disease Ontology and FMA Ontology for terms that match
-     * the search term. this a lucene backed search, is inexact and for general terms can return alot of results.
+     * Given a search string will look through the Mged, birnlex, obo Disease Ontology and FMA Ontology for terms that
+     * match the search term. this a lucene backed search, is inexact and for general terms can return alot of results.
      * 
      * @param search
      * @return a collection of VocabCharacteristics that are backed by the corresponding found OntologyTerm
@@ -175,24 +175,21 @@ public class OntologyService {
 
         return terms;
     }
-    
-    
-    
+
     /**
-     * Given a search string will look through the Mged, birnlex, obo Disease Ontology and FMA Ontology for terms that match
-     * the search term. this a lucene backed search, is inexact and for general terms can return alot of results.
+     * Given a search string will look through the loaded ontologies for terms that match the search term. this a lucene
+     * backed search, is inexact and for general terms can return a lot of results.
      * 
      * @param search
      * @return returns a collection of ontologyTerm's
      */
     public Collection<OntologyTerm> findTerms( String search ) {
-      
+
         Collection<OntologyTerm> results = new HashSet<OntologyTerm>();
 
         for ( AbstractOntologyService ontology : ontologyServices ) {
-        	Collection<OntologyTerm> found = ontology.findTerm( search );
-        	if (found != null)
-        		results.addAll(found);            
+            Collection<OntologyTerm> found = ontology.findTerm( search );
+            if ( found != null ) results.addAll( found );
         }
 
         return results;
@@ -213,7 +210,7 @@ public class OntologyService {
         if ( ( terms == null ) || ( terms.isEmpty() ) ) return filtered;
 
         String caseInsensitiveFilter = filter.toLowerCase();
-        
+
         for ( OntologyResource res : terms ) {
             if ( StringUtils.isNotEmpty( res.getUri() )
                     && res.getLabel().toLowerCase().startsWith( caseInsensitiveFilter ) ) {
@@ -248,24 +245,25 @@ public class OntologyService {
      * @return
      */
     public Collection<Characteristic> findExactTerm( String search, String categoryUri ) {
-    	
+
         StopWatch watch = new StopWatch();
         watch.start();
-        log.debug( "starting findExactTerm for " + search + ". Timining information begins from here");
-        
+        log.debug( "starting findExactTerm for " + search + ". Timining information begins from here" );
+
         if ( search == null ) return null;
 
         // TODO: this is poorly named. changed to findExactResource, add findExactIndividual Factor out common code
 
         Collection<OntologyResource> results;
-        
+
         // Add the matching individuals
         List<Characteristic> individualResults = new ArrayList<Characteristic>();
         if ( categoryUri != null && !categoryUri.equals( "" ) && !categoryUri.equals( "{}" ) ) {
             results = new HashSet<OntologyResource>( mgedOntologyService.getTermIndividuals( categoryUri ) );
             if ( results != null ) individualResults.addAll( filter( results, search ) );
         }
-        log.debug( "found " + individualResults.size() + " individuals from ontology term " + categoryUri + " in " + watch.getTime() + " ms");
+        log.debug( "found " + individualResults.size() + " individuals from ontology term " + categoryUri + " in "
+                + watch.getTime() + " ms" );
 
         List<Characteristic> alreadyUsedResults = new ArrayList<Characteristic>();
         Collection<Characteristic> foundChars = characteristicService.findByValue( search );
@@ -275,49 +273,53 @@ public class OntologyService {
         Collection<String> foundValues = new HashSet<String>();
         if ( foundChars != null ) {
             for ( Characteristic characteristic : foundChars ) {
-                if ( !foundValues.contains( foundValueKey(characteristic) ) ) {
+                if ( !foundValues.contains( foundValueKey( characteristic ) ) ) {
                     // Want to flag in the web interface that these are alrady used by Gemma
                     // Didn't want to make a characteristic value object just to hold a boolean flag for used....
                     characteristic.setDescription( USED + characteristic.getDescription() );
                     alreadyUsedResults.add( characteristic );
-                    foundValues.add( foundValueKey(characteristic) );
+                    foundValues.add( foundValueKey( characteristic ) );
                 }
             }
         }
-        log.debug( "found " + alreadyUsedResults.size() + " matching characteristics used in the database" + " in " + watch.getTime()+ " ms" );
+        log.debug( "found " + alreadyUsedResults.size() + " matching characteristics used in the database" + " in "
+                + watch.getTime() + " ms" );
 
         List<Characteristic> searchResults = new ArrayList<Characteristic>();
 
         results = birnLexOntologyService.findResources( search );
-        log.debug( "found " + ( results == null ? "null" : results.size() ) + " terms from birnLex in " + watch.getTime() + " ms" );
+        log.debug( "found " + ( results == null ? "null" : results.size() ) + " terms from birnLex in "
+                + watch.getTime() + " ms" );
         if ( results != null ) searchResults.addAll( filter( results, search ) );
 
         results = oboDiseaseOntologyService.findResources( search );
-        log.debug( "found " + ( results == null ? "null" : results.size() ) + " terms from obo in " + watch.getTime() + " ms" );
+        log.debug( "found " + ( results == null ? "null" : results.size() ) + " terms from obo in " + watch.getTime()
+                + " ms" );
         if ( results != null ) searchResults.addAll( filter( results, search ) );
 
         results = fmaOntologyService.findResources( search );
-        log.debug( "found " + ( results == null ? "null" : results.size() ) + " terms from fma in " + watch.getTime() + " ms" );
+        log.debug( "found " + ( results == null ? "null" : results.size() ) + " terms from fma in " + watch.getTime()
+                + " ms" );
         if ( results != null ) searchResults.addAll( filter( results, search ) );
 
         results = chebiOntologyService.findResources( search );
-        log.debug( "found " + ( results == null ? "null" : results.size() ) + " terms from chebi in " + watch.getTime() + " ms" );
+        log.debug( "found " + ( results == null ? "null" : results.size() ) + " terms from chebi in " + watch.getTime()
+                + " ms" );
         if ( results != null ) searchResults.addAll( filter( results, search ) );
 
         // Sort the individual results.
-        Collection<Characteristic>  sortedResults = sort( individualResults, alreadyUsedResults, searchResults, search );
+        Collection<Characteristic> sortedResults = sort( individualResults, alreadyUsedResults, searchResults, search );
         log.debug( "sorted " + sortedResults.size() + " in " + watch.getTime() + " ms" );
-        
-        return sortedResults; 
+
+        return sortedResults;
 
     }
-    private String foundValueKey(Characteristic c) {
+
+    private String foundValueKey( Characteristic c ) {
         StringBuffer buf = new StringBuffer( c.getValue() );
-        if ( c instanceof VocabCharacteristic )
-            buf.append( ((VocabCharacteristic)c).getValueUri() );
+        if ( c instanceof VocabCharacteristic ) buf.append( ( ( VocabCharacteristic ) c ).getValueUri() );
         return buf.toString();
     }
-    
 
     private Collection<Characteristic> sort( List<Characteristic> individualResults,
             List<Characteristic> alreadyUsedResults, List<Characteristic> searchResults, String searchTerm ) {
@@ -499,7 +501,7 @@ public class OntologyService {
             eeService.update( ee );
 
         }
-        
+
         for ( Long id : characterIds ) {
             characteristicService.delete( id );
         }
@@ -536,7 +538,7 @@ public class OntologyService {
             bioMaterialService.update( bm );
 
         }
-        
+
         for ( Long id : characterIds ) {
             characteristicService.delete( id );
         }
@@ -573,7 +575,7 @@ public class OntologyService {
         this.mgedOntologyService = mgedOntologyService;
         ontologyServices.add( mgedOntologyService );
     }
-    
+
     /**
      * @param chebiOntologyService the chebiOntologyService to set
      */

@@ -88,6 +88,10 @@ import ubic.gemma.util.ReflectionUtil;
  */
 public class SearchService {
 
+    private static final double INDIRECT_DB_HIT_PENALTY = 0.8;
+
+    private static final double COMPASS_HIT_SCORE_PENALTY_FACTOR = 0.9;
+
     /**
      * Global maximum number of search results that will be returned for index searches.
      */
@@ -121,8 +125,6 @@ public class SearchService {
 
     private Compass arrayBean;
 
-    private Compass characteristicBean;
-
     private Compass bibliographicReferenceBean;
 
     private Compass probeAndBioSequenceBean;
@@ -151,8 +153,9 @@ public class SearchService {
     /**
      * @param settings
      * @param fillObjects If false, the entities will not be filled in inside the searchsettings; instead, they will be
-     *        nulled (for security purposes). Use the id stored in the SearchSettings to load the entities at your
-     *        leisure.
+     *        nulled (for security purposes). You can then use the id and Class stored in the SearchSettings to load the
+     *        entities at your leisure. If true, the entities are loaded in the usual secure fashion. Setting this to
+     *        false can be an optimization if all you need is the id.
      * @return
      * @see SearchService.search(SearchSettings settings)
      */
@@ -185,7 +188,7 @@ public class SearchService {
         }
 
         if ( settings.isSearchBioSequences() ) {
-            Collection<SearchResult> bioSequences = compassBioSequenceSearch( settings, genes );
+            Collection<SearchResult> bioSequences = bioSequenceSearch( settings, genes );
             rawResults.addAll( bioSequences );
         }
 
@@ -202,6 +205,28 @@ public class SearchService {
 
         return getSortedLimitedResults( settings, rawResults, fillObjects );
 
+    }
+
+    /**
+     * *
+     * 
+     * @param searchString
+     * @param previousGeneSearchResults Can be null, otherwise used to avoid a second search for genes. The biosequences
+     *        for the genes are added to the final results.
+     * @return
+     */
+    private Collection<SearchResult> bioSequenceSearch( SearchSettings settings,
+            Collection<SearchResult> previousGeneSearchResults ) {
+        StopWatch watch = startTiming();
+
+        Collection<SearchResult> allResults = new HashSet<SearchResult>();
+        allResults.addAll( compassBioSequenceSearch( settings, previousGeneSearchResults ) );
+        allResults.addAll( databaseBioSequenceSearch( settings ) );
+
+        watch.stop();
+        if ( watch.getTime() > 1000 )
+            log.info( "Composite sequence search for " + settings + " took " + watch.getTime() + " ms" );
+        return allResults;
     }
 
     /**
@@ -278,13 +303,6 @@ public class SearchService {
      */
     public void setGeneService( GeneService geneService ) {
         this.geneService = geneService;
-    }
-
-    /**
-     * @param characteristicBean the characteristicBean to set
-     */
-    public void setCharacteristicBean( Compass characteristicBean ) {
-        this.characteristicBean = characteristicBean;
     }
 
     public void setOntologyService( OntologyService ontologyService ) {
@@ -370,11 +388,11 @@ public class SearchService {
             } else if ( BioMaterial.class.isAssignableFrom( resultClass ) ) {
                 ExpressionExperiment ee = expressionExperimentService.findByBioMaterial( ( BioMaterial ) sr
                         .getResultObject() );
-                if ( ee != null ) results.add( new SearchResult( ee, 1.0 ) );
+                if ( ee != null ) results.add( new SearchResult( ee, INDIRECT_DB_HIT_PENALTY ) );
             } else if ( FactorValue.class.isAssignableFrom( resultClass ) ) {
                 ExpressionExperiment ee = expressionExperimentService.findByFactorValue( ( FactorValue ) sr
                         .getResultObject() );
-                if ( ee != null ) results.add( new SearchResult( ee, 1.0 ) );
+                if ( ee != null ) results.add( new SearchResult( ee, INDIRECT_DB_HIT_PENALTY ) );
             }
         }
 
@@ -488,19 +506,39 @@ public class SearchService {
     @SuppressWarnings("unchecked")
     private Collection<SearchResult> compassBioSequenceSearch( SearchSettings settings,
             Collection<SearchResult> previousGeneSearchResults ) {
+
         Collection<SearchResult> results = compassSearch( probeAndBioSequenceBean, settings );
+
         Collection<SearchResult> geneResults = null;
         if ( previousGeneSearchResults == null ) {
             geneResults = compassGeneSearch( settings );
         } else {
             geneResults = previousGeneSearchResults;
         }
-        Collection<Gene> genes = new HashSet<Gene>();
+
+        Map<Gene, Double> genes = new HashMap<Gene, Double>();
         for ( SearchResult sr : geneResults ) {
-            genes.add( ( Gene ) sr.getResultObject() );
+            genes.put( ( Gene ) sr.getResultObject(), sr.getScore() );
         }
-        results.addAll( dbHitsToSearchResult( bioSequenceService.findByGenes( genes ) ) );
-        return results;
+
+        Map<Gene, Collection<BioSequence>> seqsFromDb = bioSequenceService.findByGenes( genes.keySet() );
+        for ( Gene gene : seqsFromDb.keySet() ) {
+            Collection<BioSequence> bs = seqsFromDb.get( gene );
+            bioSequenceService.thaw( bs );
+            results.addAll( dbHitsToSearchResult( bs, genes.get( gene ) ) );
+        }
+
+        /*
+         * This last step is needed because the compassSearch for biosequences returns compsitesequences too.
+         */
+        Collection<SearchResult> finalResults = new HashSet<SearchResult>();
+        for ( SearchResult sr : results ) {
+            if ( BioSequence.class.isAssignableFrom( sr.getResultClass() ) ) {
+                finalResults.add( sr );
+            }
+        }
+
+        return finalResults;
     }
 
     /**
@@ -527,14 +565,6 @@ public class SearchService {
      */
     private Collection<SearchResult> compassGeneSearch( final SearchSettings settings ) {
         return compassSearch( geneBean, settings );
-    }
-
-    /**
-     * @param settings
-     * @return
-     */
-    private Collection<SearchResult> compassOntologySearch( final SearchSettings settings ) {
-        return compassSearch( characteristicBean, settings );
     }
 
     /**
@@ -613,10 +643,20 @@ public class SearchService {
         allResults.addAll( databaseCompositeSequenceSearch( settings ) );
         allResults.addAll( compositeSequenceByGeneSearch( settings, geneSearchResults ) );
 
+        /*
+         * This last step is needed because the compassSearch for compositeSequences returns bioSequences too.
+         */
+        Collection<SearchResult> finalResults = new HashSet<SearchResult>();
+        for ( SearchResult sr : allResults ) {
+            if ( CompositeSequence.class.isAssignableFrom( sr.getResultClass() ) ) {
+                finalResults.add( sr );
+            }
+        }
+
         watch.stop();
         if ( watch.getTime() > 1000 )
-            log.info( "Composite sequence DB search for " + settings + " took " + watch.getTime() + " ms" );
-        return allResults;
+            log.info( "Composite sequence search for " + settings + " took " + watch.getTime() + " ms" );
+        return finalResults;
     }
 
     /**
@@ -657,14 +697,10 @@ public class SearchService {
      * @return
      */
     @SuppressWarnings("unchecked")
-    private Collection<SearchResult> databaseBiosequenceSearch( SearchSettings settings ) {
-        // Use the wildcard plumbing.
+    private Collection<SearchResult> databaseBioSequenceSearch( SearchSettings settings ) {
         StopWatch watch = startTiming();
 
         String searchString = settings.getQuery();
-
-        // search by inexact symbol
-        Set<SearchResult> bioSequenceMatch = new HashSet<SearchResult>();
 
         // replace * with % for inexact symbol search
         String inexactString = searchString;
@@ -672,11 +708,9 @@ public class SearchService {
         Matcher match = pattern.matcher( inexactString );
         inexactString = match.replaceAll( "%" );
 
-        bioSequenceMatch.addAll( bioSequenceService.findByName( inexactString ) );
-
-        Collection<SearchResult> bioSequenceList = new HashSet<SearchResult>( dbHitsToSearchResult( bioSequenceMatch ) );
-
-        if ( bioSequenceList.size() == 0 ) return bioSequenceList;
+        Collection<BioSequence> bs = bioSequenceService.findByName( inexactString );
+        bioSequenceService.thaw( bs );
+        Collection<SearchResult> bioSequenceList = new HashSet<SearchResult>( dbHitsToSearchResult( bs ) );
 
         watch.stop();
         if ( watch.getTime() > 1000 )
@@ -826,10 +860,26 @@ public class SearchService {
      * @return
      */
     private Collection<SearchResult> dbHitsToSearchResult( Collection<? extends Object> entities ) {
+        return this.dbHitsToSearchResult( entities, null );
+    }
+
+    /**
+     * Convert hits from database searches into SearchResults.
+     * 
+     * @param entities
+     * @param score if null, use 1.0. Any other value is assumed to be a score for a related object retrieved by an
+     *        index search, and is therefore further penalized by INDIRECT_DB_HIT_PENALTY
+     * @return
+     */
+    private Collection<SearchResult> dbHitsToSearchResult( Collection<? extends Object> entities, Double score ) {
         Collection<SearchResult> results = new HashSet<SearchResult>();
         for ( Object object : entities ) {
-            // DB hits always get a score of 1.
-            results.add( new SearchResult( object, 1.0 ) );
+            // DB hits always get a score of 1 unless it was indirect, in which case we penalize.
+            if ( score == null ) {
+                results.add( new SearchResult( object, 1.0 ) );
+            } else {
+                results.add( new SearchResult( object, score * INDIRECT_DB_HIT_PENALTY ) );
+            }
         }
         return results;
     }
@@ -957,7 +1007,10 @@ public class SearchService {
         Collection<SearchResult> results = new HashSet<SearchResult>();
         for ( CompassHit compassHit : hits ) {
             SearchResult r = new SearchResult( compassHit.getData() );
-            r.setScore( new Double( compassHit.getScore() ) );
+            /*
+             * Always give compass hits a lower score so they can be differentiated from exact database hits.
+             */
+            r.setScore( new Double( compassHit.getScore() * COMPASS_HIT_SCORE_PENALTY_FACTOR ) );
             CompassHighlightedText highlightedText = compassHit.getHighlightedText();
             if ( highlightedText != null ) r.setHighlightedText( highlightedText.getHighlightedText() );
             results.add( r );
@@ -978,8 +1031,8 @@ public class SearchService {
 
         results.put( Gene.class, new ArrayList<SearchResult>() );
         results.put( ExpressionExperiment.class, new ArrayList<SearchResult>() );
-        results.put( BibliographicReference.class, new ArrayList<SearchResult>() );
         results.put( BioSequence.class, new ArrayList<SearchResult>() );
+        results.put( BibliographicReference.class, new ArrayList<SearchResult>() );
         results.put( CompositeSequence.class, new ArrayList<SearchResult>() );
         results.put( ArrayDesign.class, new ArrayList<SearchResult>() );
 
@@ -990,7 +1043,7 @@ public class SearchService {
             SearchResult sr = rawResults.get( i );
             Class resultClass = ReflectionUtil.getBaseForImpl( sr.getResultClass() );
             if ( !results.containsKey( resultClass ) ) {
-                log.warn( "!!!" + resultClass );
+                throw new IllegalStateException( "Can't handle class:" + resultClass );
             }
             results.get( resultClass ).add( sr );
         }

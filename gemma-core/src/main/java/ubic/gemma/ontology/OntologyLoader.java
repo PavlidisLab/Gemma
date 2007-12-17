@@ -68,64 +68,6 @@ public class OntologyLoader {
     private static Log log = LogFactory.getLog( OntologyLoader.class.getName() );
 
     /**
-     * Ontology must be in the persistent store for this to work.
-     * 
-     * @param url
-     * @return
-     */
-    protected static ExternalDatabase ontologyAsExternalDatabase( String url ) {
-        ExternalDatabase ontology = ExternalDatabase.Factory.newInstance();
-        ontology.setType( DatabaseType.ONTOLOGY );
-        ontology.setWebUri( url );
-        // Ontology ont = getOntology( url );
-
-        // if ( ont != null ) {
-        // log.info( "Getting information about " + ont );
-        // // jenaOntToExternalDatabase( ontology, ont );
-        // }
-
-        return ontology;
-    }
-
-    protected static void jenaOntToExternalDatabase( ExternalDatabase ontology, Ontology ont ) {
-        StmtIterator iterator = ont.listProperties();
-        ontology.setType( DatabaseType.ONTOLOGY );
-
-        while ( iterator.hasNext() ) {
-            Statement statement = iterator.nextStatement();
-            Property predicate = statement.getPredicate();
-            RDFNode object = statement.getObject();
-            if ( predicate.getLocalName().equals( "title" ) ) {
-                ontology.setName( asString( object ) );
-            } else if ( predicate.getLocalName().equals( "description" ) ) {
-                ontology.setDescription( asString( object ) );
-            } else if ( predicate.getLocalName().equals( "definition" ) ) {
-                ontology.setDescription( asString( object ) );
-            }
-        }
-    }
-
-    /**
-     * @param url
-     * @return
-     */
-    protected static Ontology getOntology( String url ) {
-        OntModel model = getRDBModel( url );
-        Ontology ont = null;
-        Map m = model.getNsPrefixMap();
-        for ( Object o : m.keySet() ) {
-            if ( StringUtils.isBlank( ( String ) o ) ) {
-                String prefix = model.getNsPrefixURI( ( String ) o );
-                if ( prefix == null ) {
-                    continue;
-                }
-                ont = model.getOntology( prefix.replace( "#", "" ) );
-            }
-        }
-        return ont;
-    }
-
-    /**
      * Use to pretty-print a RDFNode
      * 
      * @param object
@@ -148,95 +90,6 @@ public class OntologyLoader {
                 return r.getLocalName();
             }
         } );
-    }
-
-    /**
-     * @param po
-     * @return
-     */
-    protected static ModelMaker getRDBMaker() {
-        PersistentOntology po = new PersistentOntology();
-        String dbUrl = ConfigUtils.getString( "gemma.jena.db.url" );
-        String user = ConfigUtils.getString( "gemma.jena.db.user" );
-        String pwd = ConfigUtils.getString( "gemma.jena.db.password" );
-        String type = ConfigUtils.getString( "gemma.jena.db.type" );
-        String driver = ConfigUtils.getString( "gemma.jena.db.driver" );
-
-        try {
-            Class.forName( driver );
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
-
-        ModelMaker maker = po.getRDBMaker( dbUrl, user, pwd, type, false );
-        return maker;
-    }
-
-    /**
-     * Deletes all cached ontologies from the system. Use with care!
-     */
-    protected static void wipePersistentStore() {
-        // PersistentOntology po = new PersistentOntology();
-        String dbUrl = ConfigUtils.getString( "gemma.jena.db.url" );
-        String user = ConfigUtils.getString( "gemma.jena.db.user" );
-        String pwd = ConfigUtils.getString( "gemma.jena.db.password" );
-        String type = ConfigUtils.getString( "gemma.jena.db.type" );
-        String driver = ConfigUtils.getString( "gemma.jena.db.driver" );
-
-        try {
-            Class.forName( driver );
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
-        IDBConnection conn = new DBConnection( dbUrl, user, pwd, type );
-
-        try {
-            conn.cleanDB();
-            conn.close();
-        } catch ( SQLException e ) {
-            throw new RuntimeException();
-        }
-
-    }
-
-    /**
-     * Load an ontology into memory. Use this type of model when fast access is critical and memory is available.
-     * 
-     * @param url
-     * @return
-     * @throws IOException
-     */
-    public static OntModel loadMemoryModel( String url, OntModelSpec spec ) {
-        OntModel model = getMemoryModel( url, spec );
-        model.read( url );
-        return model;
-    }
-
-    /**
-     * This is primarily here for testing purposes.
-     * 
-     * @param is
-     * @param name
-     * @return
-     * @throws IOException
-     */
-    public static OntModel loadMemoryModel( InputStream is, String name, OntModelSpec spec ) {
-        OntModel model = getMemoryModel( name, spec );
-        model.read( is, null );
-        return model;
-    }
-
-    /**
-     * Load a model backed by a persistent store. This type of model is much slower than memory models but uses much
-     * less memory.
-     * 
-     * @param url
-     * @param force model to be loaded into the database, even if it already exists there.
-     * @return
-     * @throws IOException
-     */
-    public static OntModel loadPersistentModel( String url, boolean force ) {
-        return persistModelIfNecessary( url, force );
     }
 
     /**
@@ -310,28 +163,158 @@ public class OntologyLoader {
         return result;
     }
 
+    public static OntModel load( String url ) {
+        return loadPersistentModel( url, false );
+    }
+
     /**
-     * @param url
-     * @param force
-     * @return
+     * Added to allow loading of files
      */
-    private static OntModel persistModelIfNecessary( String url, boolean force ) {
-        log.info( "Getting model ..." );
-        OntModel model = getRDBModel( url );
-        if ( model.isEmpty() ) {
-            log.info( url + ": New ontology, loading..." );
-            model.read( url );
-        } else if ( force ) {
-            log.info( url + ": Reloading..." );
-            model.read( url );
-        } else {
-            log.info( url + ": Ontology already exists in persistent store" );
-        }
+    public static OntModel loadFromFile( File file, String base ) throws IOException {
+        OntModel model = getRDBModel( base );
+        model.read( new FileInputStream( file ), base );
         return model;
     }
 
-    public static OntModel load( String url ) {
-        return loadPersistentModel( url, false );
+    /**
+     * Load an ontology into memory. Use this type of model when fast access is critical and memory is available.
+     * 
+     * @param is
+     * @param url, used as a key
+     * @return
+     * @throws IOException
+     */
+    public static OntModel loadMemoryModel( InputStream is, String url, OntModelSpec spec ) {
+        OntModel model = getMemoryModel( url, spec );
+        model.read( is, null );
+        return model;
+    }
+
+    /**
+     * Load an ontology into memory. Use this type of model when fast access is critical and memory is available.
+     * 
+     * @param url
+     * @return
+     * @throws IOException
+     */
+    public static OntModel loadMemoryModel( String url, OntModelSpec spec ) {
+        OntModel model = getMemoryModel( url, spec );
+        model.read( url );
+        return model;
+    }
+
+    /**
+     * Load a model backed by a persistent store. This type of model is much slower than memory models but uses much
+     * less memory.
+     * 
+     * @param url
+     * @param force model to be loaded into the database, even if it already exists there.
+     * @return
+     */
+    public static OntModel loadPersistentModel( String url, boolean force ) {
+        return persistModelIfNecessary( url, force );
+    }
+
+    /**
+     * @param url
+     * @return
+     */
+    protected static Ontology getOntology( String url ) {
+        OntModel model = getRDBModel( url );
+        Ontology ont = null;
+        Map m = model.getNsPrefixMap();
+        for ( Object o : m.keySet() ) {
+            if ( StringUtils.isBlank( ( String ) o ) ) {
+                String prefix = model.getNsPrefixURI( ( String ) o );
+                if ( prefix == null ) {
+                    continue;
+                }
+                ont = model.getOntology( prefix.replace( "#", "" ) );
+            }
+        }
+        return ont;
+    }
+
+    /**
+     * @return
+     */
+    protected static ModelMaker getRDBMaker() {
+        PersistentOntology po = new PersistentOntology();
+        String dbUrl = ConfigUtils.getString( "gemma.jena.db.url" );
+        String user = ConfigUtils.getString( "gemma.jena.db.user" );
+        String pwd = ConfigUtils.getString( "gemma.jena.db.password" );
+        String type = ConfigUtils.getString( "gemma.jena.db.type" );
+        String driver = ConfigUtils.getString( "gemma.jena.db.driver" );
+
+        try {
+            Class.forName( driver );
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+
+        ModelMaker maker = po.getRDBMaker( dbUrl, user, pwd, type, false );
+        return maker;
+    }
+
+    /**
+     * @param ontology
+     * @param ont
+     */
+    protected static void jenaOntToExternalDatabase( ExternalDatabase ontology, Ontology ont ) {
+        StmtIterator iterator = ont.listProperties();
+        ontology.setType( DatabaseType.ONTOLOGY );
+
+        while ( iterator.hasNext() ) {
+            Statement statement = iterator.nextStatement();
+            Property predicate = statement.getPredicate();
+            RDFNode object = statement.getObject();
+            if ( predicate.getLocalName().equals( "title" ) ) {
+                ontology.setName( asString( object ) );
+            } else if ( predicate.getLocalName().equals( "description" ) ) {
+                ontology.setDescription( asString( object ) );
+            } else if ( predicate.getLocalName().equals( "definition" ) ) {
+                ontology.setDescription( asString( object ) );
+            }
+        }
+    }
+
+    /**
+     * Ontology must be in the persistent store for this to work.
+     * 
+     * @param url
+     * @return
+     */
+    protected static ExternalDatabase ontologyAsExternalDatabase( String url ) {
+        ExternalDatabase ontology = ExternalDatabase.Factory.newInstance();
+        ontology.setType( DatabaseType.ONTOLOGY );
+        ontology.setWebUri( url );
+        return ontology;
+    }
+
+    /**
+     * Deletes all cached ontologies from the system. Use with care!
+     */
+    protected static void wipePersistentStore() {
+        String dbUrl = ConfigUtils.getString( "gemma.jena.db.url" );
+        String user = ConfigUtils.getString( "gemma.jena.db.user" );
+        String pwd = ConfigUtils.getString( "gemma.jena.db.password" );
+        String type = ConfigUtils.getString( "gemma.jena.db.type" );
+        String driver = ConfigUtils.getString( "gemma.jena.db.driver" );
+
+        try {
+            Class.forName( driver );
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+        IDBConnection conn = new DBConnection( dbUrl, user, pwd, type );
+
+        try {
+            conn.cleanDB();
+            conn.close();
+        } catch ( SQLException e ) {
+            throw new RuntimeException();
+        }
+
     }
 
     /**
@@ -383,11 +366,22 @@ public class OntologyLoader {
     }
 
     /**
-     * Added to allow loading of files
+     * @param url
+     * @param force
+     * @return
      */
-    public static OntModel loadFromFile( File file, String base ) throws IOException {
-        OntModel model = getRDBModel( base );
-        model.read( new FileInputStream( file ), base );
+    private static OntModel persistModelIfNecessary( String url, boolean force ) {
+        log.info( "Getting model ..." );
+        OntModel model = getRDBModel( url );
+        if ( model.isEmpty() ) {
+            log.info( url + ": New ontology, loading..." );
+            model.read( url );
+        } else if ( force ) {
+            log.info( url + ": Reloading..." );
+            model.read( url );
+        } else {
+            log.info( url + ": Ontology already exists in persistent store" );
+        }
         return model;
     }
 

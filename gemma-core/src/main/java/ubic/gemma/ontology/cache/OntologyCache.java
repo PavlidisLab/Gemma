@@ -40,7 +40,7 @@ public class OntologyCache {
 
             // fixme: get this from the spring context?
             CacheManager manager = CacheManager.getInstance();
- 
+
             cache = new Cache( "ontologyCache", MAX_ELEMENTS, false, true, TIME_TO_LIVE, 30, false, 0 );
 
             manager.addCache( cache );
@@ -51,6 +51,12 @@ public class OntologyCache {
         }
     }
 
+    /**
+     * @param uri
+     * @return
+     * @throws IllegalStateException
+     * @throws CacheException
+     */
     public OntologyResource get( String uri ) throws IllegalStateException, CacheException {
         Element element = cache.get( uri );
         if ( element == null ) {
@@ -59,6 +65,11 @@ public class OntologyCache {
         return ( OntologyResource ) element.getValue();
     }
 
+    /**
+     * @param term
+     * @throws IllegalArgumentException
+     * @throws IllegalStateException
+     */
     public void put( OntologyResource term ) throws IllegalArgumentException, IllegalStateException {
         if ( term == null ) return;
         assert cache != null;

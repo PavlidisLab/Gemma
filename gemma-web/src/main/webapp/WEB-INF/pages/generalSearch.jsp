@@ -24,28 +24,10 @@
 		General search tool for Gemma
 	</h1>
 
-	<div id="messages"></div>
-	<div style="width: 500px">
-		<div class="x-box-tl">
-			<div class="x-box-tr">
-				<div class="x-box-tc"></div>
-			</div>
-		</div>
-		<div class="x-box-ml">
-			<div class="x-box-mr">
-				<div class="x-box-mc">
-					<div id="search-form"></div>
-				</div>
-			</div>
-		</div>
-		<div class="x-box-bl">
-			<div class="x-box-br">
-				<div class="x-box-bc"></div>
-			</div>
-		</div>
-	</div>
-	<div id="grid-panel" style="width: 600px; height: 300px;">
-		<div id="results-grid"
-			style="border: 1px solid #99bbe8; overflow: hidden; width: 665px; height: 300px; position: relative; left: 0; top: 0;"></div>
+		<div id="messages" ><div id="validation-messages"></div></div><br />
+	 
+		<div id="search-form" ></div>
+				  
+		<div id="results-grid"></div>
 	</div>
 </body>

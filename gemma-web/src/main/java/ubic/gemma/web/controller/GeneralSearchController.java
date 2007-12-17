@@ -149,8 +149,10 @@ public class GeneralSearchController extends BaseFormController {
 
         for ( Class clazz : searchResults.keySet() ) {
             List<SearchResult> results = searchResults.get( clazz );
-            log.info( clazz + " " + results.size() );
+
             if ( results.size() == 0 ) continue;
+
+            log.info( "Search result: " + results.size() + " " + clazz.getSimpleName() + "'s" );
 
             /*
              * Now put the valueObjects inside the SearchResults
@@ -186,21 +188,36 @@ public class GeneralSearchController extends BaseFormController {
      * @return
      */
     public ListRange search( SearchSettings settings ) {
+        List<SearchResult> finalResults = new ArrayList<SearchResult>();
+        if ( settings == null || StringUtils.isBlank( settings.getQuery() )
+                || StringUtils.isBlank( settings.getQuery().replaceAll( "\\*", "" ) ) ) {
+            // FIXME validate input better, and return error.
+            log.info( "No query or invalid." );
+            // return new ListRange( finalResults );
+            throw new IllegalArgumentException( "Query " + settings.getQuery() + " was invalid" );
+        }
+        log.info( "Search initiated: " + settings );
         Map<Class, List<SearchResult>> searchResults = searchService.search( settings );
 
-        List<SearchResult> finalResults = new ArrayList<SearchResult>();
+        /*
+         * FIXME sort by the number of hits per class, so smallest number of hits is at the top.
+         */
+        
         for ( Class clazz : searchResults.keySet() ) {
             List<SearchResult> results = searchResults.get( clazz );
-            log.info( clazz + " " + results.size() );
+            
             if ( results.size() == 0 ) continue;
 
+            log.info( "Search result: " + results.size() + " " + clazz.getSimpleName() + "'s" );
+
             /*
-             * Now put the valueObjects inside the SearchResults
+             * Now put the valueObjects inside the SearchResults in score order.
              */
+            Collections.sort( results );
             fillValueObjects( clazz, results, settings );
             finalResults.addAll( results );
         }
-        Collections.sort( finalResults );
+      
         return new ListRange( finalResults );
     }
 

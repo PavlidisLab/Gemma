@@ -46,20 +46,41 @@ public class CompassUtils {
      */
     @SuppressWarnings("unchecked")
     public static void deleteCompassLocks() {
-        log.debug( "compass lock dir: " + FSDirectory.LOCK_DIR );
+        /*
+         * FIXME lock directory is now the same as the indexes, by default.
+         */
+        log.debug( "Lucene index lock dir: " + FSDirectory.LOCK_DIR );
 
         Collection<File> lockFiles = FileUtils.listFiles( new File( FSDirectory.LOCK_DIR ), FileFilterUtils
                 .suffixFileFilter( "lock" ), null );
 
         if ( lockFiles.size() == 0 ) {
-            log.debug( "Compass lock files do not exist." );
+            log.debug( "Lucene lock files do not exist." );
             return;
         }
 
         for ( File file : lockFiles ) {
-            log.debug( "Removing compass lock file " + file );
+            log.debug( "Removing Lucene lock file " + file );
             file.delete();
         }
+    }
+
+    /**
+     * disables the index mirroring operation.
+     * 
+     * @param device
+     */
+    public static void disableIndexMirroring( CompassGpsInterfaceDevice device ) {
+        device.stop();
+    }
+
+    /**
+     * enables the index mirroring operation.
+     * 
+     * @param device
+     */
+    public static void enableIndexMirroring( CompassGpsInterfaceDevice device ) {
+        device.start();
     }
 
     /**
@@ -67,6 +88,7 @@ public class CompassUtils {
      * 
      * @param gps
      * @throws IOException
+     * @see IndexService
      */
     public static synchronized void rebuildCompassIndex( CompassGpsInterfaceDevice gps ) {
         boolean wasRunningBefore = gps.isRunning();
@@ -93,44 +115,6 @@ public class CompassUtils {
     }
 
     /**
-     * Add the compass contexts to the other spring contexts
-     * 
-     * @param paths
-     */
-    private static void addCompassContext( List<String> paths ) {
-        paths.add( "classpath*:ubic/gemma/compass.xml" );
-        paths.add( "classpath*:ubic/gemma/applicationContext-compass.xml" );
-    }
-
-    /**
-     * Add the compass test contexts to the other spring contexts.
-     * 
-     * @param paths
-     */
-    private static void addCompassTestContext( List<String> paths ) {
-        paths.add( "classpath*:ubic/gemma/compasstest.xml" );
-        paths.add( "classpath*:ubic/gemma/applicationContext-compass.xml" );
-    }
-
-    /**
-     * disables the index mirroring operation.
-     * 
-     * @param device
-     */
-    public static void disableIndexMirroring( CompassGpsInterfaceDevice device ) {
-        device.stop();
-    }
-
-    /**
-     * enables the index mirroring operation.
-     * 
-     * @param device
-     */
-    public static void enableIndexMirroring( CompassGpsInterfaceDevice device ) {
-        device.start();
-    }
-
-    /**
      * "Turning on" means adding the compass context to our spring context, as well as creating the compass index
      * directory. This does not turn on index mirroring to automatically update the index while persisting data (to a
      * database). To do this, call enableIndexMirroring after running this.
@@ -146,5 +130,23 @@ public class CompassUtils {
             addCompassContext( paths );
         }
 
+    }
+
+    /**
+     * Add the compass contexts to the other spring contexts
+     * 
+     * @param paths
+     */
+    private static void addCompassContext( List<String> paths ) {
+        paths.add( "classpath*:ubic/gemma/applicationContext-search.xml" );
+    }
+
+    /**
+     * Add the compass test contexts to the other spring contexts.
+     * 
+     * @param paths
+     */
+    private static void addCompassTestContext( List<String> paths ) {
+        paths.add( "classpath*:ubic/gemma/applicationContext-search.xml" );
     }
 }

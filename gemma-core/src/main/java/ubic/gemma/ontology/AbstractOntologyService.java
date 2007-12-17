@@ -144,7 +144,6 @@ public abstract class AbstractOntologyService implements InitializingBean {
     }
 
     /**
-     * 
      * @param uri
      * @return
      */
@@ -163,7 +162,6 @@ public abstract class AbstractOntologyService implements InitializingBean {
     }
 
     /**
-     * 
      * @param uri
      * @return
      */
@@ -190,9 +188,9 @@ public abstract class AbstractOntologyService implements InitializingBean {
 
         if ( !isOntologyLoaded() ) return null;
 
-        assert index != null : "attempt to search " + this.getOntologyName() + " when index is null";
-        // if ( index == null ) index = OntologyIndexer.indexOntology( ontology_name, model );
+        log.info( "Searching " + this.getOntologyName() );
 
+        assert index != null : "attempt to search " + this.getOntologyName() + " when index is null";
         Collection<OntologyTerm> name = OntologySearch.matchClasses( model, index, search );
 
         return name;
@@ -209,7 +207,6 @@ public abstract class AbstractOntologyService implements InitializingBean {
         if ( !isOntologyLoaded() ) return null;
 
         assert index != null : "attempt to search " + this.getOntologyName() + " when index is null";
-        // if ( index == null ) index = OntologyIndexer.indexOntology( ontology_name, model );
 
         Collection<OntologyResource> res = OntologySearch.matchResources( model, index, search + "*" );
 
@@ -316,40 +313,41 @@ public abstract class AbstractOntologyService implements InitializingBean {
 
     /**
      * Used for determining if the Gene Ontology has finished loading into memory yet Although calls like getParents,
-     * getChildren will still work (its much faster once the gene ontologies have been preloaded into memory.
+     * getChildren will still work (its much faster once the ontologies have been preloaded into memory.)
      * 
      * @returns boolean
      */
     public synchronized boolean isOntologyLoaded() {
-
         return ready.get();
     }
 
-    /* a collection of the keep-alive threads for each concrete subclass; a single variable
-     * here wouldn't work because all of the subclasses would be using the same variable.
+    /*
+     * a collection of the keep-alive threads for each concrete subclass; a single variable here wouldn't work because
+     * all of the subclasses would be using the same variable.
      */
-    private static Map keepAliveThreads = Collections.synchronizedMap( new HashMap<Class, Thread>() );
-    
-    /* the number of milliseconds between keep-alive queries; this should be less than or
-     * equal to MySQL wait_timeout server variable.
+    private static Map<Class, Thread> keepAliveThreads = Collections.synchronizedMap( new HashMap<Class, Thread>() );
+
+    /*
+     * the number of milliseconds between keep-alive queries; this should be less than or equal to MySQL wait_timeout
+     * server variable.
      */
     private static final int KEEPALIVE_PING_DELAY = 28800 * 1000;
-    
-    /* a term to search for; matters not at all...
+
+    /*
+     * a term to search for; matters not at all...
      */
     private static final String KEEPALIVE_SEARCH_TERM = "dummy";
-    
+
     private synchronized void startKeepAliveThread() {
-        if ( keepAliveThreads.containsKey( this.getClass() ) )
-            return;
+        if ( keepAliveThreads.containsKey( this.getClass() ) ) return;
         Thread keepAliveThread = new KeepAliveThread();
         keepAliveThread.start();
         keepAliveThreads.put( this.getClass(), keepAliveThread );
     }
-    
+
     private class KeepAliveThread extends Thread {
         public void run() {
-            for (;;) {
+            for ( ;; ) {
                 try {
                     Thread.sleep( KEEPALIVE_PING_DELAY );
                 } catch ( InterruptedException e ) {

@@ -45,24 +45,6 @@ public class OntologyTools {
         cache = new OntologyCache();
     }
 
-    public static void initOntology( InputStream is, String name, OntModelSpec spec ) {
-        Collection<OntologyResource> terms;
-        terms = OntologyLoader.initialize( name, OntologyLoader.loadMemoryModel( is, name, spec ) );
-
-        for ( OntologyResource term : terms ) {
-            if ( term == null ) continue; // why does this happen?
-            cache.put( term );
-        }
-    }
-
-    public static void initOntology( String url, OntModelSpec spec ) {
-        Collection<OntologyResource> terms;
-        terms = OntologyLoader.initialize( url, OntologyLoader.loadMemoryModel( url, spec ) );
-        for ( OntologyResource term : terms ) {
-            cache.put( term );
-        }
-    }
-
     /**
      * @param characteristic
      * @return A text version of the term underlying the characteristic.
@@ -71,17 +53,13 @@ public class OntologyTools {
         return getOntologyTerm( characteristic ).getTerm();
     }
 
-    /**
-     * @param uri
-     * @return
-     */
-    public static OntologyTerm getOntologyTerm( String uri ) {
+    public static OntologyIndividual getOntologyIndividual( String uri ) {
         try {
             if ( cache.get( uri ) != null ) {
-                return ( OntologyTerm ) cache.get( uri );
+                return ( OntologyIndividual ) cache.get( uri );
             }
 
-            return ( OntologyTerm ) cache.get( uri );
+            return ( OntologyIndividual ) cache.get( uri );
         } catch ( IllegalStateException e ) {
             throw new RuntimeException( e );
         } catch ( CacheException e ) {
@@ -107,13 +85,17 @@ public class OntologyTools {
         }
     }
 
-    public static OntologyIndividual getOntologyIndividual( String uri ) {
+    /**
+     * @param uri
+     * @return
+     */
+    public static OntologyTerm getOntologyTerm( String uri ) {
         try {
             if ( cache.get( uri ) != null ) {
-                return ( OntologyIndividual ) cache.get( uri );
+                return ( OntologyTerm ) cache.get( uri );
             }
 
-            return ( OntologyIndividual ) cache.get( uri );
+            return ( OntologyTerm ) cache.get( uri );
         } catch ( IllegalStateException e ) {
             throw new RuntimeException( e );
         } catch ( CacheException e ) {
@@ -162,6 +144,24 @@ public class OntologyTools {
         } catch ( ClassCastException c ) {
             Literal l = soln.getLiteral( var );
             return l.getString();
+        }
+    }
+
+    protected static void initOntology( InputStream is, String name, OntModelSpec spec ) {
+        Collection<OntologyResource> terms;
+        terms = OntologyLoader.initialize( name, OntologyLoader.loadMemoryModel( is, name, spec ) );
+
+        for ( OntologyResource term : terms ) {
+            if ( term == null ) continue; // why does this happen?
+            cache.put( term );
+        }
+    }
+
+    protected static void initOntology( String url, OntModelSpec spec ) {
+        Collection<OntologyResource> terms;
+        terms = OntologyLoader.initialize( url, OntologyLoader.loadMemoryModel( url, spec ) );
+        for ( OntologyResource term : terms ) {
+            cache.put( term );
         }
     }
 

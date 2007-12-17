@@ -922,9 +922,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         if ( arrayDesign.getId() == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
 
-        templ.setFetchSize( 400 );
-        log.debug( "Fetch size for thaw is " + templ.getFetchSize() );
-
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
 

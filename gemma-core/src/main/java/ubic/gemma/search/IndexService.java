@@ -25,33 +25,59 @@ import org.compass.gps.spi.CompassGpsInterfaceDevice;
 import ubic.gemma.util.CompassUtils;
 
 /**
+ * Services for updating the search indexes.
+ * 
  * @author keshav
  * @version $Id$
  */
 public class IndexService {
+
     /*
-     * IndexService has not been configured with xdoclet tags because we it needs to reside in
-     * applicationContext-compass.xml so we can choose whether or not to load this part of the application context at
+     * Note: IndexService has not been configured with xdoclet tags because we it needs to reside in
+     * applicationContext-search.xml so we can choose whether or not to load this part of the application context at
      * spring startup.
      */
+
     private Log log = LogFactory.getLog( this.getClass() );
 
     private CompassGpsInterfaceDevice expressionGps;
     private CompassGpsInterfaceDevice geneGps;
     private CompassGpsInterfaceDevice arrayGps;
-    private CompassGpsInterfaceDevice ontologyGps;
+    private CompassGpsInterfaceDevice probeGps;
+    private CompassGpsInterfaceDevice bibliographicGps;
 
     /**
-     * Indexes expression experiments, genes, and array designs. This is a convenience method for Quartz to schedule
-     * indexing of the entire database.
+     * Indexes expression experiments, genes, array designs, probes and bibliographic references. This is a convenience
+     * method for Quartz to schedule indexing of the entire database.
      */
     public void indexAll() {
         log.debug( "rebuilding compass index" );
         CompassUtils.rebuildCompassIndex( expressionGps );
         CompassUtils.rebuildCompassIndex( geneGps );
         CompassUtils.rebuildCompassIndex( arrayGps );
-        CompassUtils.rebuildCompassIndex( ontologyGps );
+        CompassUtils.rebuildCompassIndex( probeGps );
+        CompassUtils.rebuildCompassIndex( bibliographicGps );
+    }
 
+    /**
+     * Indexes array designs.
+     */
+    public void indexArrayDesigns() {
+        CompassUtils.rebuildCompassIndex( arrayGps );
+    }
+
+    /**
+     * Indexes bibliographic references.
+     */
+    public void indexBibligraphicReferences() {
+        CompassUtils.rebuildCompassIndex( bibliographicGps );
+    }
+
+    /**
+     * Indexes probes
+     */
+    public void indexCompositeSequences() {
+        CompassUtils.rebuildCompassIndex( probeGps );
     }
 
     /**
@@ -69,17 +95,14 @@ public class IndexService {
     }
 
     /**
-     * Indexes array designs.
+     * @param arrayGps The arrayGps to set.
      */
-    public void indexArrayDesigns() {
-        CompassUtils.rebuildCompassIndex( arrayGps );
+    public void setArrayGps( CompassGpsInterfaceDevice arrayGps ) {
+        this.arrayGps = arrayGps;
     }
 
-    /**
-     * Indexes Ontology Entries.
-     */
-    public void indexOntologyEntries() {
-        CompassUtils.rebuildCompassIndex( ontologyGps );
+    public void setBibliographicGps( CompassGpsInterfaceDevice bibliographicGps ) {
+        this.bibliographicGps = bibliographicGps;
     }
 
     /**
@@ -90,13 +113,6 @@ public class IndexService {
     }
 
     /**
-     * @param arrayGps The arrayGps to set.
-     */
-    public void setArrayGps( CompassGpsInterfaceDevice arrayGps ) {
-        this.arrayGps = arrayGps;
-    }
-
-    /**
      * @param geneGps The geneGps to set.
      */
     public void setGeneGps( CompassGpsInterfaceDevice geneGps ) {
@@ -104,10 +120,10 @@ public class IndexService {
     }
 
     /**
-     * @param ontologyGps The ontologyGps to set.
+     * @param probeGps
      */
-    public void setOntologyGps( CompassGpsInterfaceDevice ontologyGps ) {
-        this.ontologyGps = ontologyGps;
+    public void setProbeGps( CompassGpsInterfaceDevice probeGps ) {
+        this.probeGps = probeGps;
     }
 
 }

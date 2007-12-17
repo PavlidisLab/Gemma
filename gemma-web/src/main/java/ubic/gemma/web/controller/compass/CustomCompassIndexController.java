@@ -71,12 +71,10 @@ import ubic.gemma.web.util.MessageUtil;
  * @spring.property name="commandClass" value="ubic.gemma.web.controller.compass.IndexGemmaCommand"
  * @spring.property name="arrayGps" ref="arrayGps"
  * @spring.property name="expressionGps" ref="expressionGps"
- * @spring.property name="geneGps" ref="geneGps"
- * @spring.property name="ontologyGps" ref="ontologyGps"
+ * @spring.property name="geneGps" ref="geneGps" 
  * @spring.property name="bibliographicGps" ref="bibliographicGps"
  * @spring.property name="probeGps" ref="probeGps"
  */
-
 public class CustomCompassIndexController extends AbstractSpacesFormController {
 
     private Log log = LogFactory.getLog( CustomCompassIndexController.class );
