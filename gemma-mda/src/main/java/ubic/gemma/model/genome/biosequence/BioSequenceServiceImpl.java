@@ -20,6 +20,7 @@ package ubic.gemma.model.genome.biosequence;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 
 import ubic.gemma.model.common.description.DatabaseEntry;
 
@@ -191,8 +192,7 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
     }
 
 	@Override
-	protected Collection handleFindByGenes(Collection genes) throws Exception {
-		
+	protected Map handleFindByGenes(Collection genes) throws Exception {
 		return this.getBioSequenceDao().findByGenes(genes);
 	}
 
