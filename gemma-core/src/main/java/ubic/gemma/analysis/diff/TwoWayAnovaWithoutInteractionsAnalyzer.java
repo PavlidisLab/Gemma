@@ -28,6 +28,7 @@ import org.rosuda.JRclient.REXP;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -84,6 +85,9 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
         }
 
         Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
+
+        QuantitationType quantitationType = vectorsToUse.iterator().next().getQuantitationType();
+
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
 
         ExpressionDataDoubleMatrix dmatrix = builder.getMaskedPreferredData( null );
@@ -154,6 +158,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
             }
         }
 
-        return createExpressionAnalysis( dmatrix, filteredPvalues, filteredFStatistics, ACTUAL_NUM_RESULTS, experimentalFactorA, experimentalFactorB );
+        return createExpressionAnalysis( dmatrix, filteredPvalues, filteredFStatistics, ACTUAL_NUM_RESULTS,
+                experimentalFactorA, experimentalFactorB, quantitationType );
     }
 }

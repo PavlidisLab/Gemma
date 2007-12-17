@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
@@ -63,11 +64,13 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
      * @param numResultsFromR
      * @param experimentalFactorA
      * @param experimentalFactorB
+     * @param quantitationType
      * @return
      */
     protected ExpressionAnalysis createExpressionAnalysis( ExpressionDataDoubleMatrix dmatrix,
             double[] filteredPvalues, double[] filteredFStatistics, int numResultsFromR,
-            ExperimentalFactor experimentalFactorA, ExperimentalFactor experimentalFactorB ) {
+            ExperimentalFactor experimentalFactorA, ExperimentalFactor experimentalFactorB,
+            QuantitationType quantitationType ) {
 
         /* Create the expression analysis and pack the results. */
         ExpressionAnalysis expressionAnalysis = ExpressionAnalysis.Factory.newInstance();
@@ -98,7 +101,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
 
                 ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();
                 probeAnalysisResult.setProbe( cs );
-                // probeAnalysisResult.setQuantitationType( quantitationType );
+                probeAnalysisResult.setQuantitationType( quantitationType );
 
                 probeAnalysisResult.setPvalue( filteredPvalues[k] );
                 probeAnalysisResult.setScore( filteredFStatistics[k] );
