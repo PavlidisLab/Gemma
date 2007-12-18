@@ -87,7 +87,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 .getBean( "differentialExpressionAnalysisService" );
 
         if ( this.getExperimentShortName() == null ) {
-            /* nothing on the command line */
+            /* no experiments from the command line */
             if ( this.experimentListFile == null ) {
                 /* no file, so run on all experiments */
                 Collection<ExpressionExperiment> all = eeService.loadAll();
