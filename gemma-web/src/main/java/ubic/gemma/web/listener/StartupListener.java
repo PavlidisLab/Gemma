@@ -18,9 +18,11 @@
  */
 package ubic.gemma.web.listener;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,6 +40,7 @@ import javax.servlet.ServletContextListener;
 import org.acegisecurity.providers.AuthenticationProvider;
 import org.acegisecurity.providers.ProviderManager;
 import org.acegisecurity.providers.rememberme.RememberMeAuthenticationProvider;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -248,12 +251,24 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
         jars.add( new File( sourceLibdir, String.format( "%s-%s", "gemma-testing", version ) ) );
         jars.add( new File( sourceLibdir, String.format( "%s-%s", "gemma-util", version ) ) );
         
-        for ( File jar : jars ) {
+        Collection<File> copiedJars = new ArrayList<File>();
+        for ( File sourceJar : jars ) {
             try {
-                copyFile( jar, new File( targetLibdir, jar.getName() ) );
+                File targetJar = new File( targetLibdir, sourceJar.getName() );
+                copyFile( sourceJar, targetJar );
+                copiedJars.add( targetJar );
             } catch ( IOException e ) {
-                log.error( "error copying " + jar + " to " + targetLibdir + ": " + e );
+                log.error( "error copying " + sourceJar + " to " + targetLibdir + ": " + e );
             }
+        }
+        
+        try {
+            File classpathFile = new File( targetLibdir, "CLASSPATH" );
+            BufferedWriter out = new BufferedWriter( new FileWriter( classpathFile ) );
+            out.write( StringUtils.join( copiedJars, ":" ) );
+            out.close();
+        } catch ( IOException e ) {
+            log.error( "error creating classpath file in " + targetLibdir );
         }
     }
     
