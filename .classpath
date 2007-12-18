@@ -166,7 +166,11 @@
 	<classpathentry kind="var" path="M2_REPO/jfree/jfreechart/1.0.2/jfreechart-1.0.2.jar" sourcepath="/JAR_SOURCE/jfreechart-1.0.2/source"/>
 	<classpathentry kind="var" path="M2_REPO/jfree/jcommon/1.0.5/jcommon-1.0.5.jar"/>
 	<classpathentry kind="var" path="M2_REPO/ajaxanywhere/ajaxanywhere/1.2-RC2/ajaxanywhere-1.2-RC2.jar" sourcepath="/JAR_SOURCE/ajaxanywhere-1.2-RC2-src.jar"/>
-	<classpathentry kind="var" path="M2_REPO/quartz/quartz/1.5.2/quartz-1.5.2.jar"/>
+	<classpathentry kind="var" path="M2_REPO/quartz/quartz/1.6.0/quartz-1.6.0.jar" sourcepath="/JAR_SOURCE/quartz-1.6.0/src/java">
+		<attributes>
+			<attribute name="javadoc_location" value="http://www.opensymphony.com/quartz/api/"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/com/sdicons/jsontools/jsontools-core/1.4/jsontools-core-1.4.jar"/>
 	<classpathentry kind="var" path="M2_REPO/prefuse/prefuse/beta/prefuse-beta.jar"/>
 	<classpathentry kind="var" path="M2_REPO/mtj/mtj/0.9.8/mtj-0.9.8.jar">
