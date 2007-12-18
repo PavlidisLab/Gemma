@@ -34,7 +34,7 @@ public class SearchSettings {
 
     private boolean searchProbes = true;
     private Taxon taxon;
-    private int maxResults = 200;
+    private int maxResults = 500;
     private String query;
 
     private boolean searchGenes = true;

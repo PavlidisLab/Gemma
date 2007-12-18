@@ -41,12 +41,14 @@ import org.compass.core.CompassCallback;
 import org.compass.core.CompassDetachedHits;
 import org.compass.core.CompassException;
 import org.compass.core.CompassHighlightedText;
+import org.compass.core.CompassHighlighter;
 import org.compass.core.CompassHit;
 import org.compass.core.CompassHits;
 import org.compass.core.CompassQuery;
 import org.compass.core.CompassSession;
 import org.compass.core.CompassTemplate;
 import org.compass.core.CompassTransaction;
+import org.compass.core.engine.SearchEngineException;
 
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.Auditable;
@@ -182,38 +184,56 @@ public class SearchService {
         Collection<SearchResult> genes = null;
         if ( settings.isSearchGenes() ) {
             genes = geneSearch( settings );
-            rawResults.addAll( genes );
+            accreteResults( rawResults, genes );
         }
 
         Collection<SearchResult> compositeSequences = null;
         if ( settings.isSearchProbes() ) {
             compositeSequences = compositeSequenceSearch( settings, genes );
-            rawResults.addAll( compositeSequences );
+            accreteResults( rawResults, compositeSequences );
         }
 
         if ( settings.isSearchArrays() ) {
             Collection<SearchResult> foundADs = arrayDesignSearch( settings, compositeSequences );
-            rawResults.addAll( foundADs );
+            accreteResults( rawResults, foundADs );
         }
 
         if ( settings.isSearchBioSequences() ) {
             Collection<SearchResult> bioSequences = bioSequenceSearch( settings, genes );
-            rawResults.addAll( bioSequences );
+            accreteResults( rawResults, bioSequences );
         }
 
         if ( settings.isSearchGenesByGO() ) {
             Collection<SearchResult> ontologyGenes = gene2GOAssociationService.findByGOTerm( searchString, settings
                     .getTaxon() );
-            rawResults.addAll( ontologyGenes );
+            accreteResults( rawResults, ontologyGenes );
         }
 
         if ( settings.isSearchBibrefs() ) {
             Collection<SearchResult> bibliographicReferences = compassBibliographicReferenceSearch( settings );
-            rawResults.addAll( bibliographicReferences );
+            accreteResults( rawResults, bibliographicReferences );
         }
 
         return getSortedLimitedResults( settings, rawResults, fillObjects );
 
+    }
+
+    /**
+     * Add results.
+     * 
+     * @param rawResults To add to
+     * @param newResults To be added
+     */
+    private void accreteResults( List<SearchResult> rawResults, Collection<SearchResult> newResults ) {
+        for ( SearchResult sr : newResults ) {
+            if ( !rawResults.contains( sr ) ) {
+                /*
+                 * We do this because we don't want to clobber results. FIXME - perhaps check if the score of the
+                 * existing one is lower?
+                 */
+                rawResults.add( sr );
+            }
+        }
     }
 
     /**
@@ -234,7 +254,8 @@ public class SearchService {
 
         watch.stop();
         if ( watch.getTime() > 1000 )
-            log.info( "Composite sequence search for " + settings + " took " + watch.getTime() + " ms" );
+            log.info( "Biosequence search for '" + settings + "' took " + watch.getTime() + " ms " + allResults.size()
+                    + " results." );
         return allResults;
     }
 
@@ -371,7 +392,7 @@ public class SearchService {
 
         watch.stop();
         if ( watch.getTime() > 1000 )
-            log.info( "Array Design search for " + settings + " took " + watch.getTime() + " ms" );
+            log.info( "Array Design search for '" + settings + "' took " + watch.getTime() + " ms" );
 
         return results;
     }
@@ -578,12 +599,13 @@ public class SearchService {
     @SuppressWarnings("unchecked")
     private Collection<SearchResult> compassSearch( Compass bean, final SearchSettings settings ) {
         CompassTemplate template = new CompassTemplate( bean );
-        return ( Collection<SearchResult> ) template.execute(
+        Collection<SearchResult> searchResults = ( Collection<SearchResult> ) template.execute(
                 CompassTransaction.TransactionIsolation.READ_ONLY_READ_COMMITTED, new CompassCallback() {
                     public Object doInCompass( CompassSession session ) throws CompassException {
                         return performSearch( settings, session );
                     }
                 } );
+        return searchResults;
     }
 
     /**
@@ -658,7 +680,8 @@ public class SearchService {
 
         watch.stop();
         if ( watch.getTime() > 1000 )
-            log.info( "Composite sequence search for " + settings + " took " + watch.getTime() + " ms" );
+            log.info( "Composite sequence search for '" + settings + "' took " + watch.getTime() + " ms, "
+                    + finalResults.size() + " results." );
         return finalResults;
     }
 
@@ -909,7 +932,7 @@ public class SearchService {
 
         watch.stop();
         if ( watch.getTime() > 1000 )
-            log.info( "General Expression Experiment search for " + settings + " took " + watch.getTime() + " ms" );
+            log.info( "Expression Experiment search for '" + settings + "' took " + watch.getTime() + " ms" );
 
         return results;
     }
@@ -925,6 +948,7 @@ public class SearchService {
             Collection<SearchResult> toRemove = new HashSet<SearchResult>();
             Taxon t = settings.getTaxon();
             for ( SearchResult sr : results ) {
+
                 Object o = sr.getResultObject();
                 try {
                     Method m = o.getClass().getMethod( "getTaxon", new Class[] {} );
@@ -983,6 +1007,7 @@ public class SearchService {
 
         Collection<SearchResult> geneDbList = databaseGeneSearch( settings );
         Collection<SearchResult> geneCompassList = compassGeneSearch( settings );
+
         Collection<SearchResult> geneCsList = databaseCompositeSequenceSearch( settings );
 
         Set<SearchResult> combinedGeneList = new HashSet<SearchResult>();
@@ -990,10 +1015,11 @@ public class SearchService {
         combinedGeneList.addAll( geneCompassList );
         combinedGeneList.addAll( geneCsList );
 
-        if ( watch.getTime() > 1000 )
-            log.info( "General Gene search for " + searchString + " took " + watch.getTime() + " ms" );
-
         filterByTaxon( settings, combinedGeneList );
+
+        if ( watch.getTime() > 1000 )
+            log.info( "Gene search for " + searchString + " took " + watch.getTime() + " ms; "
+                    + combinedGeneList.size() + " results." );
         return combinedGeneList;
     }
 
@@ -1022,7 +1048,9 @@ public class SearchService {
              */
             r.setScore( new Double( compassHit.getScore() * COMPASS_HIT_SCORE_PENALTY_FACTOR ) );
             CompassHighlightedText highlightedText = compassHit.getHighlightedText();
-            if ( highlightedText != null ) r.setHighlightedText( highlightedText.getHighlightedText() );
+            if ( highlightedText != null ) {
+                r.setHighlightedText( highlightedText.getHighlightedText() );
+            }
             results.add( r );
         }
         return results;
@@ -1036,15 +1064,16 @@ public class SearchService {
      */
     private Map<Class, List<SearchResult>> getSortedLimitedResults( SearchSettings settings,
             List<SearchResult> rawResults, boolean fillObjects ) {
+
         Map<Class, List<SearchResult>> results = new HashMap<Class, List<SearchResult>>();
         Collections.sort( rawResults );
 
-        results.put( Gene.class, new ArrayList<SearchResult>() );
-        results.put( ExpressionExperiment.class, new ArrayList<SearchResult>() );
+        results.put( ArrayDesign.class, new ArrayList<SearchResult>() );
         results.put( BioSequence.class, new ArrayList<SearchResult>() );
         results.put( BibliographicReference.class, new ArrayList<SearchResult>() );
         results.put( CompositeSequence.class, new ArrayList<SearchResult>() );
-        results.put( ArrayDesign.class, new ArrayList<SearchResult>() );
+        results.put( ExpressionExperiment.class, new ArrayList<SearchResult>() );
+        results.put( Gene.class, new ArrayList<SearchResult>() );
 
         /*
          * Get the top N results, overall (NOT within each class - experimental.)
@@ -1136,6 +1165,8 @@ public class SearchService {
                     + " ms" );
         watch.unsplit();
 
+        cacheHighlightedText( hits );
+
         // Put a limit on the number of hits to detach.
         // Detaching hits can be time consuming (somewhat like thawing).
 
@@ -1147,7 +1178,47 @@ public class SearchService {
             log.info( "===== Detaching " + detachedHits.getLength() + " hits for " + query + " took "
                     + watch.getSplitTime() + " ms" );
 
-        return getSearchResults( detachedHits.getHits() );
+        Collection<SearchResult> searchResults = getSearchResults( detachedHits.getHits() );
+
+        return searchResults;
+    }
+
+    /**
+     * @param hits
+     */
+    private void cacheHighlightedText( CompassHits hits ) {
+        for ( int i = 0; i < hits.getLength(); i++ ) {
+            CompassHighlighter highlighter = hits.highlighter( i );
+            try {
+                highlighter.fragment( "description" );
+            } catch ( SearchEngineException e ) {
+                // no big deal - we asked for a property it doesn't have. Must be a
+                // better way...
+            }
+
+            try {
+                highlighter.fragment( "name" );
+            } catch ( SearchEngineException e ) {
+                // no big deal - we asked for a property it doesn't have. Must be a
+                // better way...
+            }
+
+            try {
+                highlighter.fragment( "shortName" );
+            } catch ( SearchEngineException e ) {
+                // no big deal - we asked for a property it doesn't have. Must be a better way...
+            }
+            try {
+                highlighter.fragment( "title" );
+            } catch ( SearchEngineException e ) {
+                // no big deal - we asked for a property it doesn't have. Must be a better way...
+            }
+            try {
+                highlighter.fragment( "abstract" );
+            } catch ( SearchEngineException e ) {
+                // no big deal - we asked for a property it doesn't have. Must be a better way...
+            }
+        }
     }
 
     /**
