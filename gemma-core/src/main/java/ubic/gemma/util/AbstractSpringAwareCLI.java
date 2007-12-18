@@ -214,10 +214,9 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
         CompassUtils.deleteCompassLocks();
 
-        /* if compass is on, turn off the quartz scheduler for CLIs */
-        if ( hasOption( COMPASS_ON ) ) {
-            QuartzUtils.disableQuartzScheduler( ( StdScheduler ) this.getBean( "schedulerFactoryBean" ) );
-        }
+        /* disable the scheduler */
+        QuartzUtils.disableQuartzScheduler( ( StdScheduler ) this.getBean( "schedulerFactoryBean" ) );
+
     }
 
     /**

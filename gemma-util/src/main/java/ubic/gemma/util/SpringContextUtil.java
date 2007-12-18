@@ -128,9 +128,9 @@ public class SpringContextUtil {
         List<String> paths = new ArrayList<String>();
         paths.add( "classpath*:ubic/gemma/dataSource.xml" );
 
-        if ( compassOn ) {
-            CompassUtils.turnOnCompass( false, paths );
-        }
+//        if ( compassOn ) {
+//            CompassUtils.turnOnCompass( false, paths );
+//        }
 
         if ( gigaspacesOn ) {
             SpacesUtil.addGigaspacesContextToPaths( paths );
