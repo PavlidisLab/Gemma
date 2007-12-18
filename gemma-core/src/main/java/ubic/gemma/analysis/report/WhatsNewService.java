@@ -285,10 +285,6 @@ public class WhatsNewService {
                 ao.id = ee.getId();
                 updatedObjects.add( ao );
             }
-            // save information into a map
-            // Map<String,Collection> auditableSave = new HashMap<String,Collection>();
-            // auditableSave.put( "newAuditables", newObjects );
-            // auditableSave.put( "updatedAuditables", updatedObjects );
             FileOutputStream fos = new FileOutputStream( newOutput );
             ObjectOutputStream oos = new ObjectOutputStream( fos );
             oos.writeObject( newObjects );

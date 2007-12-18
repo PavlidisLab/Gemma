@@ -173,6 +173,12 @@ public class GeneralSearchController extends BaseFormController {
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
             Object command, BindException errors ) throws Exception {
 
+        if (request.getParameter( "query" ) != null) {
+            ModelAndView mav = new ModelAndView();
+            mav.addObject("query", request.getParameter("query"));
+            return mav;
+        }
+        
         if ( request.getParameter( "cancel" ) != null ) {
             this.saveMessage( request, "Cancelled Search" );
             return new ModelAndView( new RedirectView( "mainMenu.html" ) );

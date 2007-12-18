@@ -44,6 +44,7 @@ public class IndexService {
     private CompassGpsInterfaceDevice geneGps;
     private CompassGpsInterfaceDevice arrayGps;
     private CompassGpsInterfaceDevice probeGps;
+    private CompassGpsInterfaceDevice biosequenceGps;
     private CompassGpsInterfaceDevice bibliographicGps;
 
     /**
@@ -56,6 +57,7 @@ public class IndexService {
         CompassUtils.rebuildCompassIndex( geneGps );
         CompassUtils.rebuildCompassIndex( arrayGps );
         CompassUtils.rebuildCompassIndex( probeGps );
+        CompassUtils.rebuildCompassIndex( biosequenceGps );
         CompassUtils.rebuildCompassIndex( bibliographicGps );
     }
 
@@ -124,6 +126,13 @@ public class IndexService {
      */
     public void setProbeGps( CompassGpsInterfaceDevice probeGps ) {
         this.probeGps = probeGps;
+    }
+
+    /**
+     * @param biosequenceGps
+     */
+    public void setBiosequenceGps( CompassGpsInterfaceDevice biosequenceGps ) {
+        this.biosequenceGps = biosequenceGps;
     }
 
 }

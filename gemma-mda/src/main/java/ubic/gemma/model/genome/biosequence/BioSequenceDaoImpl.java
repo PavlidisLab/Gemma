@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.genome.biosequence;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -40,6 +39,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.util.BusinessKey;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * @author pavlidis
@@ -179,21 +179,20 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
     protected Map<Gene, Collection<BioSequence>> handleFindByGenes( Collection genes ) throws Exception {
         if ( genes == null || genes.isEmpty() ) return new HashMap<Gene, Collection<BioSequence>>();
 
-        
         Map<Gene, Collection<BioSequence>> results = new HashMap<Gene, Collection<BioSequence>>();
-        
-        final String queryString = "select distinct gene,bs" + " from GeneImpl gene inner join gene.products ggp,"
+
+        final String queryString = "select distinct gene,bs from GeneImpl gene inner join fetch gene.products ggp,"
                 + " BioSequenceImpl bs inner join bs.bioSequence2GeneProduct bs2gp inner join bs2gp.geneProduct bsgp"
                 + " where ggp=bsgp and gene in (:genes)";
 
-        List<Object[]> qr =  getHibernateTemplate().findByNamedParam( queryString, "genes", genes );
+        List<Object[]> qr = getHibernateTemplate().findByNamedParam( queryString, "genes", genes );
         for ( Object[] oa : qr ) {
-            Gene g = (Gene)oa[0];
-            BioSequence b = (BioSequence)oa[1];
-            if (!results.containsKey( g )) {
-                results.put(g, new HashSet<BioSequence>());
+            Gene g = ( Gene ) oa[0];
+            BioSequence b = ( BioSequence ) oa[1];
+            if ( !results.containsKey( g ) ) {
+                results.put( g, new HashSet<BioSequence>() );
             }
-            results.get(g).add(b);
+            results.get( g ).add( b );
         }
         return results;
     }
@@ -302,6 +301,10 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                 }
 
                 session.evict( bioSequence );
+                /*
+                 * For reasons unclear, biosequence is still a proxy at this point.
+                 */
+                EntityUtils.unProxy( bioSequence );
                 return null;
             }
         }, true );
@@ -344,7 +347,8 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                 for ( Object object : bioSequences ) {
                     BioSequence bioSequence = ( BioSequence ) object;
                     Hibernate.initialize( bioSequence );
-                   
+                    session.update( bioSequence );
+
                     if ( deep ) {
                         bioSequence.getTaxon();
                         bioSequence.getBioSequence2GeneProduct().size();
@@ -360,12 +364,11 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                         log.info( "Thawed " + count + " sequences ..." );
                         session.clear();
                     }
-
+                    EntityUtils.unProxy( bioSequence );
                 }
                 session.clear();
                 session.setFlushMode( oldFlushMode );
                 session.setCacheMode( oldCacheMode );
-                log.info( bioSequences.iterator().next().getClass().getName() );
                 return null;
             }
         }, true );

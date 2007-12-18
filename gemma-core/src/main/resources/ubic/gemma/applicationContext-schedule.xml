@@ -8,6 +8,9 @@
 -->
 <beans>
 	
+	<!--<ref local="indexTrigger"/>-->
+	
+	
 	<!-- Quartz Configuration. The schedulerFactorBean is the main entry point. See also QuartzUtils for how this can be turned off. -->
 	<bean id="schedulerFactoryBean" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
 		<property name="triggers">
@@ -16,15 +19,31 @@
 				<ref local="expressionExperimentReportTrigger"/>
 				<ref local="whatsNewTrigger"/>
 				<ref local="hibernateStatsTrigger"/>
+				<ref local="gene2CsUpdateTrigger"/>
 			</list>
 		</property>
 	</bean>
+	
+	<!-- Triggers -->
+	<!-- Cron trigger fields are:
+	Seconds 	    	0-59 	  	, - * /
+	Minutes 	  	   0-59 	  	, - * /
+	Hours 	  	        0-23 	  	, - * /
+	Day-of-month 	  	1-31 	  	, - * ? / L W
+	Month 	  	1-12 or JAN-DEC 	  	, - * /
+	Day-of-Week 	  	1-7 or SUN-SAT 	  	, - * ? / L #
+	Year (Optional) 	  	empty, 1970-2099 	  	, - * /
+	
+	See http://www.opensymphony.com/quartz/api/org/quartz/CronExpression.html for details, http://www.opensymphony.com/quartz/api/org/quartz/CronTrigger.html for examples.
+	
+	If you want a schedule that fire frequently for testing, try <value>0 0/2 * ? * *</value>.
+	-->
 	<bean id="indexTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
 		<property name="jobDetail">
 			<ref bean="indexJobDetail"/>
 		</property>
 		<property name="cronExpression">
-			<value>0 15 1 ? * *</value>
+			<value>0 15 1 ? * *</value><!-- daily after 1:15 -->
 		</property>
 	</bean>
 	<bean id="arrayDesignReportTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
@@ -32,7 +51,7 @@
 			<ref bean="arrayDesignReportJobDetail"/>
 		</property>
 		<property name="cronExpression">
-			<value>0 30 1 1 * ?</value>
+			<value>0 30 1 1 * ?</value><!-- monthly at 1:30  -->
 		</property>
 	</bean>
 	<bean id="expressionExperimentReportTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
@@ -40,7 +59,7 @@
 			<ref bean="expressionExperimentReportJobDetail"/>
 		</property>
 		<property name="cronExpression">
-			<value>0 15 0 1 * ?</value>
+			<value>0 15 0 1 * ?</value><!-- monthly at 00:15 -->
 		</property>
 	</bean>
 	<bean id="whatsNewTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
@@ -48,7 +67,15 @@
 			<ref bean="whatsNewJobDetail"/>
 		</property>
 		<property name="cronExpression">
-			<value>0 15 0 ? * *</value>
+			<value>0 15 0 ? * *</value><!-- daily at 00:15 -->
+		</property>
+	</bean>
+	<bean id="gene2CsUpdateTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail">
+			<ref bean="gene2CsUpdateJobDetail"/>
+		</property>
+		<property name="cronExpression">
+			<value>0 40 0 ? * *</value><!-- daily at 00:40 (should only update if it needs to) -->
 		</property>
 	</bean>
 	<bean id="hibernateStatsTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
@@ -56,9 +83,11 @@
 			<ref bean="hibernateStatsJobDetail"/>
 		</property>
 		<property name="repeatInterval">
-			<value>1800000</value>
+			<value>1800000</value> <!-- every 30 minutes -->
 		</property>
 	</bean>
+	
+	<!-- Job details -->
 	<bean id="indexJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
 		<property name="targetObject">
 			<ref bean="indexService"/>
@@ -67,7 +96,8 @@
 			<value>indexAll</value>
 		</property>
 	</bean>
-	<bean id="arrayDesignReportJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	<bean id="arrayDesignReportJobDetail"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
 		<property name="targetObject">
 			<ref bean="arrayDesignReportService"/>
 		</property>
@@ -98,6 +128,14 @@
 		</property>
 		<property name="targetMethod">
 			<value>getStats</value>
+		</property>
+	</bean>
+	<bean id="gene2CsUpdateJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">
+			<ref bean="tableMaintenanceUtil"/>
+		</property>
+		<property name="targetMethod">
+			<value>updateGene2CsEntries</value>
 		</property>
 	</bean>
 </beans>

@@ -24,6 +24,9 @@
 		<property name="bibliographicGps">
 			<ref bean="bibliographicGps"/>
 		</property>
+		<property name="biosequenceGps">
+			<ref bean="biosequenceGps"/>
+		</property>
 	</bean>
 	<bean id="searchService" class="ubic.gemma.search.SearchService">
 		<property name="geneService">
@@ -63,6 +66,9 @@
 		</property>
 		<property name="probeBean">
 			<ref bean="compassProbe"/>
+		</property>
+		<property name="biosequenceBean">
+			<ref bean="compassBiosequence"/>
 		</property>
 		<property name="ontologyService">
 			<ref bean="ontologyService"/>
@@ -141,6 +147,18 @@
 	<bean id="probeGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
 		<property name="compass">
 			<ref bean="compassProbe"/>
+		</property>
+		<property name="gpsDevices">
+			<list>
+				<bean class="org.compass.spring.device.SpringSyncTransactionGpsDeviceWrapper">
+					<property name="gpsDevice" ref="hibernateGpsDevice"/>
+				</bean>
+			</list>
+		</property>
+	</bean>
+	<bean id="biosequenceGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
+		<property name="compass">
+			<ref bean="compassBiosequence"/>
 		</property>
 		<property name="gpsDevices">
 			<list>
@@ -270,6 +288,42 @@
 				<prop key="compass.engine.connection">file://${gemma.appdata.home}/compass/gemma/probe
 				</prop>
 				<prop key="compass.engine.lockFile">file://${gemma.appdata.home}/compass/gemma/probe/probe.lock
+				</prop>
+				<prop key="compass.transaction.factory">org.compass.spring.transaction.SpringSyncTransactionFactory
+				</prop>
+				<prop key="compass.transaction.lockTimeout">20</prop>
+				<prop key="compass.engine.analyzer.default.type">Snowball
+				</prop>
+				<prop key="compass.engine.analyzer.default.name">English
+				</prop>
+				<prop key="compass.engine.optimizer.schedule">false
+				</prop>
+				<prop key="compass.engine.optimizer.type">org.compass.core.lucene.engine.optimizer.NullOptimizer
+				</prop>
+				<prop key="compass.engine.indexManagerScheduleInterval">-1
+				</prop>
+				<prop key="compass.engine.mergeFactor">500</prop>
+				<prop key="compass.engine.maxBufferedDocs">500</prop>
+				
+			</props>
+		</property>
+		<property name="transactionManager">
+			<ref bean="transactionManager"/>
+		</property>
+	</bean>
+	
+		<bean id="compassBiosequence" class="org.compass.spring.LocalCompassBean">
+		<property name="resourceLocations">
+			<list>
+				<value>classpath:ubic/gemma/compass/biosequence_mappings.cpm.xml
+				</value>
+			</list>
+		</property>
+		<property name="compassSettings">
+			<props>
+				<prop key="compass.engine.connection">file://${gemma.appdata.home}/compass/gemma/biosequence
+				</prop>
+				<prop key="compass.engine.lockFile">file://${gemma.appdata.home}/compass/gemma/biosequence/biosequence.lock
 				</prop>
 				<prop key="compass.transaction.factory">org.compass.spring.transaction.SpringSyncTransactionFactory
 				</prop>

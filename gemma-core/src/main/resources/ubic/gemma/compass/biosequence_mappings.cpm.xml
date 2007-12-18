@@ -8,11 +8,11 @@
 	indexed and searched.  All "searchable" expression experiment attributes 
 	(as well as associations) should be included here.
 	
-	author: klc
+	author: klc / paul
 	version: $Id$
 -->
 <compass-core-mapping package="ubic.gemma.model">
-	<class name="expression.designElement.CompositeSequenceImpl" alias="compositeSequence" root="true">
+	<class name="genome.biosequence.BioSequenceImpl" alias="biologicalCharacteristic" root="true">
 		<id name="id"/>
 		<property name="name">
 			<meta-data>name</meta-data>
@@ -20,9 +20,9 @@
 		<property name="description">
 			<meta-data>description</meta-data>
 		</property>
-		<component name="arrayDesign" ref-alias="arrayDesign"/>
+		<component name="bioSequence2GeneProduct" ref-alias="bioSequence2GeneProduct"/>
 	</class>
-	<class name="expression.arrayDesign.ArrayDesignImpl" alias="arrayDesign" root="false">
+	<class name="association.BioSequence2GeneProductImpl" alias="bioSequence2GeneProduct" root="false">
 		<id name="id"/>
 	</class>
 </compass-core-mapping>

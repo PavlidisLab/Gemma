@@ -26,7 +26,6 @@ import org.acegisecurity.userdetails.UserDetails;
 import org.acegisecurity.userdetails.UserDetailsService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.proxy.HibernateProxy;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserImpl;
@@ -37,22 +36,6 @@ import ubic.gemma.model.common.auditAndSecurity.UserImpl;
  */
 public class SecurityUtil {
     private static Log log = LogFactory.getLog( SecurityUtil.class );
-
-    /**
-     * Returns the Implementation object from the HibernateProxy. If target is not an instanceof HibernateProxy, target
-     * is returned.
-     * 
-     * @param target The proxy
-     * @return Object The implementation
-     */
-    public static Object getImplementationFromProxy( Object target ) {
-        if ( target instanceof HibernateProxy ) {
-            HibernateProxy proxy = ( HibernateProxy ) target;
-            return proxy.getHibernateLazyInitializer().getImplementation();
-        }
-
-        return target;
-    }
 
     /**
      * @param userDetails

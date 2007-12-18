@@ -28,7 +28,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * Basically a value object to hold onto the 'new' objects. TODO: supply information on other types of objects.
+ * Basically a value object to hold onto the 'new' objects.
  * 
  * @author pavlidis
  * @version $Id$
@@ -44,8 +44,8 @@ public class WhatsNew {
         newObjects = new ArrayList<Auditable>();
         updatedObjects = new ArrayList<Auditable>();
     }
-    
-    public WhatsNew( ) {
+
+    public WhatsNew() {
         newObjects = new ArrayList<Auditable>();
         updatedObjects = new ArrayList<Auditable>();
     }
@@ -115,36 +115,40 @@ public class WhatsNew {
     public void setNewObjects( Collection<Auditable> newObjects ) {
         this.newObjects = newObjects;
     }
-    
+
     /**
      * adds a single auditable to the new object list
+     * 
      * @param newObject
      */
-    public void addNewObjects (Auditable newObject) {
+    public void addNewObjects( Auditable newObject ) {
         this.newObjects.add( newObject );
     }
-    
+
     /**
      * adds a collection of auditables to the new object list
+     * 
      * @param newObjects
      */
-    public void addNewObjects (Collection<Auditable> newObjects) {
+    public void addNewObjects( Collection<Auditable> newObjects ) {
         this.newObjects.addAll( newObjects );
     }
-    
+
     /**
      * adds a single auditable to the updated object list
+     * 
      * @param updatedObject
      */
-    public void addUpdatedObjects (Auditable updatedObject) {
+    public void addUpdatedObjects( Auditable updatedObject ) {
         this.updatedObjects.add( updatedObject );
     }
-    
+
     /**
      * adds a collection of auditables to the updated object list
+     * 
      * @param updatedObjects
      */
-    public void addUpdatedObjects (Collection<Auditable> updatedObjects) {
+    public void addUpdatedObjects( Collection<Auditable> updatedObjects ) {
         this.updatedObjects.addAll( updatedObjects );
     }
 

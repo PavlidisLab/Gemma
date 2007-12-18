@@ -23,6 +23,8 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.hibernate.proxy.HibernateProxy;
+
 /**
  * @author paul
  * @version $Id$
@@ -60,6 +62,29 @@ public class EntityUtils {
             r.add( getId( object ) );
         }
         return r;
+    }
+
+    /**
+     * Obtain the implementation for a proxy. If target is not an instanceof HibernateProxy, target is returned.
+     * 
+     * @param target The object to be unproxied.
+     * @return the underlying implementation.
+     */
+    public static Object getImplementationForProxy( Object target ) {
+        if ( target instanceof HibernateProxy ) {
+            HibernateProxy proxy = ( HibernateProxy ) target;
+            return proxy.getHibernateLazyInitializer().getImplementation();
+        }
+        return target;
+    }
+
+    /**
+     * Replaces a proxy with an implementation. If target is not an instanceof HibernateProxy, target is unchanged.
+     * 
+     * @param target The object to be unproxied.
+     */
+    public static void unProxy( Object target ) {
+        target = getImplementationForProxy( target );
     }
 
 }

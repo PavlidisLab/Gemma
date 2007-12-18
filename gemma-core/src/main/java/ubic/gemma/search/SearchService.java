@@ -49,6 +49,7 @@ import org.compass.core.CompassTemplate;
 import org.compass.core.CompassTransaction;
 
 import ubic.gemma.model.association.Gene2GOAssociationService;
+import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.Characteristic;
@@ -127,7 +128,15 @@ public class SearchService {
 
     private Compass bibliographicReferenceBean;
 
-    private Compass probeAndBioSequenceBean;
+    // private Compass probeAndBioSequenceBean;
+
+    private Compass biosequenceBean;
+
+    private Compass probeBean;
+
+    public void setBiosequenceBean( Compass biosequenceBean ) {
+        this.biosequenceBean = biosequenceBean;
+    }
 
     /**
      * The results are sorted in order of decreasing score, organized by class. The following objects can be searched
@@ -313,7 +322,7 @@ public class SearchService {
      * @param probeBean the probeBean to set
      */
     public void setProbeBean( Compass probeBean ) {
-        this.probeAndBioSequenceBean = probeBean;
+        this.probeBean = probeBean;
     }
 
     /**
@@ -402,7 +411,9 @@ public class SearchService {
     /**
      * Search for the query in ontologies.
      * 
-     * @param searchString
+     * @param classes Classes of characteristic-bound entities. For example, to get matching characteristics of
+     *        ExpressionExperiments, pass ExpressionExperiments.class in this collection parameter.
+     * @param settings
      * @return SearchResults of CharcteristicObjects. Typically to be useful one needs to retrieve the 'parents'
      *         (owners) of those Characteristics.
      */
@@ -448,7 +459,8 @@ public class SearchService {
         watch.reset();
         watch.start();
 
-        Collection<SearchResult> inSystem = dbHitsToSearchResult( characteristicService.findByUri( characteristicUris ) );
+        Collection<SearchResult> inSystem = dbHitsToSearchResult( new ArrayList<CharacteristicService>(
+                characteristicService.findByUri( characteristicUris ) ) );
 
         Collection<Characteristic> cs = new HashSet<Characteristic>();
         for ( SearchResult crs : inSystem ) {
@@ -456,15 +468,16 @@ public class SearchService {
         }
         Map<Characteristic, Object> parentMap = characteristicService.getParents( cs );
         inSystem = filterCharacteristicOwnersByClass( classes, parentMap );
-        // log.info( "Found " + mapResults.size() + " parents/owners for characteristics returned in " + watch.getTime()
-        // + "ms" );
-        // for ( Object obj : mapResults.values() ) {
-        // if ( obj instanceof Auditable )
-        // log.info( "==== Owner Id: " + ( ( Auditable ) obj ).getId() + " Owner Class: " + obj.getClass() );
-        // else
-        // log.info( "==== Owner : " + obj.toString() + " Owner Class: " + obj.getClass() );
-        // }
 
+        if ( parentMap.size() > 0 ) {
+            log.info( "Found " + parentMap.size() + "  owners for characteristics:" );
+            for ( Object obj : parentMap.values() ) {
+                if ( obj instanceof Auditable )
+                    log.info( "==== Owner Id: " + ( ( Auditable ) obj ).getId() + " Owner Class: " + obj.getClass() );
+                else
+                    log.info( "==== Owner : " + obj.toString() + " Owner Class: " + obj.getClass() );
+            }
+        }
         if ( watch.getTime() > 1000 )
             log.info( "Found " + inSystem.size() + " matches in our system in " + watch.getTime() + "ms" );
 
@@ -507,7 +520,7 @@ public class SearchService {
     private Collection<SearchResult> compassBioSequenceSearch( SearchSettings settings,
             Collection<SearchResult> previousGeneSearchResults ) {
 
-        Collection<SearchResult> results = compassSearch( probeAndBioSequenceBean, settings );
+        Collection<SearchResult> results = compassSearch( biosequenceBean, settings );
 
         Collection<SearchResult> geneResults = null;
         if ( previousGeneSearchResults == null ) {
@@ -516,29 +529,19 @@ public class SearchService {
             geneResults = previousGeneSearchResults;
         }
 
-        Map<Gene, Double> genes = new HashMap<Gene, Double>();
+        Map<Gene, SearchResult> genes = new HashMap<Gene, SearchResult>();
         for ( SearchResult sr : geneResults ) {
-            genes.put( ( Gene ) sr.getResultObject(), sr.getScore() );
+            genes.put( ( Gene ) sr.getResultObject(), sr );
         }
 
         Map<Gene, Collection<BioSequence>> seqsFromDb = bioSequenceService.findByGenes( genes.keySet() );
         for ( Gene gene : seqsFromDb.keySet() ) {
-            Collection<BioSequence> bs = seqsFromDb.get( gene );
+            List<BioSequence> bs = new ArrayList<BioSequence>( seqsFromDb.get( gene ) );
             bioSequenceService.thaw( bs );
             results.addAll( dbHitsToSearchResult( bs, genes.get( gene ) ) );
         }
 
-        /*
-         * This last step is needed because the compassSearch for biosequences returns compsitesequences too.
-         */
-        Collection<SearchResult> finalResults = new HashSet<SearchResult>();
-        for ( SearchResult sr : results ) {
-            if ( BioSequence.class.isAssignableFrom( sr.getResultClass() ) ) {
-                finalResults.add( sr );
-            }
-        }
-
-        return finalResults;
+        return results;
     }
 
     /**
@@ -546,7 +549,7 @@ public class SearchService {
      * @return
      */
     private Collection<SearchResult> compassCompositeSequenceSearch( final SearchSettings settings ) {
-        return compassSearch( probeAndBioSequenceBean, settings );
+        return compassSearch( probeBean, settings );
     }
 
     /**
@@ -768,7 +771,7 @@ public class SearchService {
             log.info( "Gene composite sequence DB search " + searchString + " took " + watch.getTime() + " ms, "
                     + geneSet.size() + " items." );
 
-        return dbHitsToSearchResult( geneSet );
+        return dbHitsToSearchResult( new ArrayList<Gene>( geneSet ) );
     }
 
     /**
@@ -867,18 +870,25 @@ public class SearchService {
      * Convert hits from database searches into SearchResults.
      * 
      * @param entities
-     * @param score if null, use 1.0. Any other value is assumed to be a score for a related object retrieved by an
-     *        index search, and is therefore further penalized by INDIRECT_DB_HIT_PENALTY
+     * @param compassHitDerivedFrom SearchResult that these entities were derived from. For example, if you
+     *        compass-searched for genes, and then used the genes to get sequences from the database, the gene is
+     *        compassHitsDerivedFrom. If null, we treat this as a direct hit.
      * @return
      */
-    private Collection<SearchResult> dbHitsToSearchResult( Collection<? extends Object> entities, Double score ) {
-        Collection<SearchResult> results = new HashSet<SearchResult>();
-        for ( Object object : entities ) {
-            // DB hits always get a score of 1 unless it was indirect, in which case we penalize.
-            if ( score == null ) {
-                results.add( new SearchResult( object, 1.0 ) );
+    private List<SearchResult> dbHitsToSearchResult( Collection<? extends Object> entities,
+            SearchResult compassHitDerivedFrom ) {
+        List<SearchResult> results = new ArrayList<SearchResult>();
+        for ( Object e : entities ) {
+
+            e = EntityUtils.getImplementationForProxy( e );
+
+            if ( compassHitDerivedFrom != null ) {
+                SearchResult esr = new SearchResult( e, compassHitDerivedFrom.getScore() * INDIRECT_DB_HIT_PENALTY );
+                esr.setHighlightedText( compassHitDerivedFrom.getHighlightedText() );
+                results.add( esr );
             } else {
-                results.add( new SearchResult( object, score * INDIRECT_DB_HIT_PENALTY ) );
+
+                results.add( new SearchResult( e, 1.0 ) );
             }
         }
         return results;
@@ -1042,9 +1052,7 @@ public class SearchService {
         for ( int i = 0, limit = Math.min( rawResults.size(), settings.getMaxResults() ); i < limit; i++ ) {
             SearchResult sr = rawResults.get( i );
             Class resultClass = ReflectionUtil.getBaseForImpl( sr.getResultClass() );
-            if ( !results.containsKey( resultClass ) ) {
-                throw new IllegalStateException( "Can't handle class:" + resultClass );
-            }
+            assert results.containsKey( resultClass ) : "Unknown class " + resultClass;
             results.get( resultClass ).add( sr );
         }
 

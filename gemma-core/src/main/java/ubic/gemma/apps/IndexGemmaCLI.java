@@ -50,33 +50,34 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        Option geneOption = OptionBuilder.withArgName( "Index Genes" ).withDescription(
-                "Use this option for indexing Genes" ).withLongOpt( "genes" ).create( 'g' );
+        Option geneOption = OptionBuilder.withDescription( "Use this option for indexing Genes" ).withLongOpt( "genes" )
+                .create( 'g' );
 
         addOption( geneOption );
 
-        Option eeOption = OptionBuilder.withArgName( "Expression Experiments" ).withDescription(
-                "Use this option for indexing Expression Experiments" ).withLongOpt( "ExpressionExperiments" ).create(
-                'e' );
+        Option eeOption = OptionBuilder.withDescription( "Use this option for indexing Expression Experiments" )
+                .withLongOpt( "ExpressionExperiments" ).create( 'e' );
         addOption( eeOption );
 
-        Option adOption = OptionBuilder.withArgName( "Array Design" ).withDescription(
-                "Use this option for indexing Array Designs" ).withLongOpt( "ArrayDesigns" ).create( 'a' );
+        Option adOption = OptionBuilder.withDescription( "Use this option for indexing Array Designs" ).withLongOpt(
+                "ArrayDesigns" ).create( 'a' );
         addOption( adOption );
 
-        Option ontologyOption = OptionBuilder.withArgName( "Ontology Entry" ).withDescription(
-                "Use this option for indexing Ontology Entries" ).withLongOpt( "Ontology" ).create( 'o' );
+        Option ontologyOption = OptionBuilder.withDescription( "Use this option for indexing Ontology Entries" )
+                .withLongOpt( "Ontology" ).create( 'o' );
         addOption( ontologyOption );
 
-        Option bibliographicOption = OptionBuilder.withArgName( "Bibliographic Reference" ).withDescription(
+        Option bibliographicOption = OptionBuilder.withDescription(
                 "Use this option for indexing Bibliographic References" ).withLongOpt( "Bibliographic" ).create( 'b' );
         addOption( bibliographicOption );
 
-        Option probeOption = OptionBuilder.withArgName( "probes" ).withDescription(
-                "Use this option for indexing probes" ).withLongOpt( "probes" ).create( 's' );
+        Option probeOption = OptionBuilder.withDescription( "Use this option for indexing probes" ).withLongOpt(
+                "probes" ).create( 's' );
         addOption( probeOption );
 
-
+        Option sequenceOption = OptionBuilder.withDescription( "Use this option for indexing probes" ).withLongOpt(
+                "sequences" ).create( 's' );
+        addOption( sequenceOption );
     }
 
     /*
@@ -96,9 +97,8 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
         if ( hasOption( 'o' ) ) indexO = true;
 
         if ( hasOption( 'b' ) ) indexB = true;
-        
+
         if ( hasOption( 's' ) ) indexP = true;
-        
 
     }
 
@@ -138,7 +138,8 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
                 rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "geneGps" ), "Gene index" );
             }
             if ( this.indexEE ) {
-                rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "expressionGps" ), "Expression Experiment index" );
+                rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "expressionGps" ),
+                        "Expression Experiment index" );
             }
             if ( this.indexAD ) {
                 rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "arrayGps" ), "Array Design index" );
@@ -147,7 +148,8 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
                 rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "ontologyGps" ), "Ontology Index" );
             }
             if ( this.indexB ) {
-                rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "bibliographicGps" ), "Bibliographic Reference Index" );
+                rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "bibliographicGps" ),
+                        "Bibliographic Reference Index" );
             }
             if ( this.indexP ) {
                 rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "probeGps" ), "Probe Reference Index" );
@@ -169,7 +171,6 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
     protected void rebuildIndex( CompassGpsInterfaceDevice device, String whatIndexingMsg ) throws Exception {
 
         long time = System.currentTimeMillis();
-
 
         log.info( "Rebuilding " + whatIndexingMsg );
         // /device.index();

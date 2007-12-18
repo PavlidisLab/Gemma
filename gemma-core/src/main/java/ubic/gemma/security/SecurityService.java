@@ -36,7 +36,7 @@ import org.springframework.util.StringUtils;
 
 import ubic.gemma.model.common.Securable;
 import ubic.gemma.model.common.SecurableDao;
-import ubic.gemma.util.SecurityUtil;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * @author keshav
@@ -121,8 +121,8 @@ public class SecurityService {
                 try {
                     if ( returnType == java.util.Collection.class ) {
 
-                        Collection returnedCollection = ( Collection ) clazz.getMethod( name, null ).invoke(
-                                targetObject, null );
+                        Collection returnedCollection = ( Collection ) clazz.getMethod( name, ( Class[] ) null )
+                                .invoke( targetObject, ( Object[] ) null );
                         if ( returnedCollection.isEmpty() ) continue;
 
                         /* check if an object in collection is in unsecuredCol */
@@ -140,9 +140,9 @@ public class SecurityService {
                             }
                         }
                     } else {
-                        Object ob = clazz.getMethod( name, null ).invoke( targetObject, null );
+                        Object ob = clazz.getMethod( name, ( Class[] ) null ).invoke( targetObject, ( Object[] ) null );
 
-                        ob = SecurityUtil.getImplementationFromProxy( ob );
+                        ob = EntityUtils.getImplementationForProxy( ob );
 
                         if ( ob == null || unsecuredClasses.contains( ob.getClass() )
                                 || !Securable.class.isAssignableFrom( ob.getClass() )

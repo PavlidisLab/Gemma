@@ -103,7 +103,7 @@ public class OntologyLoader {
 
         ExtendedIterator iterator = model.listClasses();
         int count = 0;
-        log.info( "Reading classes..." );
+        log.info( "Reading classes for ontology: " + url );
         while ( iterator.hasNext() ) {
             OntClass element = ( OntClass ) iterator.next();
             if ( element.isAnon() ) continue;

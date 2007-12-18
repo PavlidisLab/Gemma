@@ -36,7 +36,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.ui.velocity.VelocityEngineUtils;
 
 /**
- * From Appfuse.
+ * This bean is configured in applicationContext-serviceBeans.xml
  * 
  * @author pavlidis
  * @author Matt Raible
