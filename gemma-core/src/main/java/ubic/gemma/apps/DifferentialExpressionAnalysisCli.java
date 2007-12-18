@@ -51,36 +51,22 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     int top = 100;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.apps.AbstractGeneExpressionExperimentManipulatingCLI#buildOptions()
+    /**
+     * @param args
      */
-    @SuppressWarnings("static-access")
-    @Override
-    protected void buildOptions() {
-
-        /*
-         * These options from the super class support: running on one or more data sets from the command line, running
-         * on list of data sets from a file, running on all data sets.
-         */
-        super.buildOptions();
-
-        /* Supports: runing on all data sets that have not been run since a given date. */
-        super.addDateOption();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.apps.AbstractGeneExpressionExperimentManipulatingCLI#processOptions()
-     */
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-
-        if ( hasOption( 't' ) ) {
-            this.top = Integer.parseInt( ( getOptionValue( 't' ) ) );
+    public static void main( String[] args ) {
+        DifferentialExpressionAnalysisCli analysisCli = new DifferentialExpressionAnalysisCli();
+        StopWatch watch = new StopWatch();
+        watch.start();
+        try {
+            Exception ex = analysisCli.doWork( args );
+            if ( ex != null ) {
+                ex.printStackTrace();
+            }
+            watch.stop();
+            log.info( "Elapsed time: " + watch.getTime() / 1000 + " seconds" );
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
         }
     }
 
@@ -197,6 +183,39 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         return null;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.apps.AbstractGeneExpressionExperimentManipulatingCLI#buildOptions()
+     */
+    @SuppressWarnings("static-access")
+    @Override
+    protected void buildOptions() {
+
+        /*
+         * These options from the super class support: running on one or more data sets from the command line, running
+         * on list of data sets from a file, running on all data sets.
+         */
+        super.buildOptions();
+
+        /* Supports: runing on all data sets that have not been run since a given date. */
+        super.addDateOption();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.apps.AbstractGeneExpressionExperimentManipulatingCLI#processOptions()
+     */
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+
+        if ( hasOption( 't' ) ) {
+            this.top = Integer.parseInt( ( getOptionValue( 't' ) ) );
+        }
+    }
+
     /**
      * @param expressionExperiment
      * @param e
@@ -234,25 +253,6 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                         + ", score: " + probeResult.getScore() );
             }
             log.debug( "Result set processed with " + results.size() + " results." );
-        }
-    }
-
-    /**
-     * @param args
-     */
-    public static void main( String[] args ) {
-        DifferentialExpressionAnalysisCli analysisCli = new DifferentialExpressionAnalysisCli();
-        StopWatch watch = new StopWatch();
-        watch.start();
-        try {
-            Exception ex = analysisCli.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-            watch.stop();
-            log.info( "Elapsed time: " + watch.getTime() / 1000 + " seconds" );
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
         }
     }
 
