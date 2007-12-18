@@ -45,7 +45,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @version $Id$
  */
 public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManipulatingCLI {
-    private static Log log = LogFactory.getLog( DifferentialExpressionAnalysisCli.class );
+
+    private Log logger = LogFactory.getLog( DifferentialExpressionAnalysisCli.class );
 
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
 
@@ -110,7 +111,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                         // DifferentialExpressionAnalysisEvent.Factory.newInstance() );
                     } catch ( Exception e ) {
                         errorObjects.add( ee + ": " + e.getMessage() );
-                        logFailure( ee, e );
+                        // logFailure( ee, e );
                     }
                 }
             } else {
@@ -175,7 +176,6 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 }
 
             }
-
         }
 
         super.summarizeProcessing();
@@ -222,7 +222,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
      */
     private void logFailure( ExpressionExperiment expressionExperiment, Exception e ) {
         e.printStackTrace();
-        log.error( "**** Exception while processing " + expressionExperiment + ": " + e.getMessage() + " ********" );
+        logger.error( "**** Exception while processing " + expressionExperiment + ": " + e.getMessage() + " ********" );
     }
 
     /**
@@ -239,20 +239,20 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
      */
     private void logProcessing( ExpressionAnalysis expressionAnalysis ) {
 
-        log.debug( "Summarizing results for expression analysis of type: " + expressionAnalysis.getName() );
+        logger.debug( "Summarizing results for expression analysis of type: " + expressionAnalysis.getName() );
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
 
-        log.debug( resultSets.size() + " result set(s) to process." );
+        logger.debug( resultSets.size() + " result set(s) to process." );
         for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
-            log.debug( "*** Result set ***" );
+            logger.debug( "*** Result set ***" );
             Collection<ExpressionAnalysisResult> results = resultSet.getResults();
 
             for ( ExpressionAnalysisResult result : results ) {
                 ProbeAnalysisResult probeResult = ( ProbeAnalysisResult ) result;
-                log.debug( "probe: " + probeResult.getProbe().getName() + ", p-value: " + probeResult.getPvalue()
+                logger.debug( "probe: " + probeResult.getProbe().getName() + ", p-value: " + probeResult.getPvalue()
                         + ", score: " + probeResult.getScore() );
             }
-            log.debug( "Result set processed with " + results.size() + " results." );
+            logger.debug( "Result set processed with " + results.size() + " results." );
         }
     }
 
