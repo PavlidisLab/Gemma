@@ -51,6 +51,8 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
+import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -459,6 +461,27 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 || name.toUpperCase().matches( "\\w{2}\\d{3}_CY5" ) || name.toUpperCase().matches( "NORM(.*)CH2" )
                 || name.equals( "CH2Mean" ) || name.equals( "CH2_SIGNAL" ) || name.equals( "\"log2(635), gN\"" )
                 || name.equals( "rProcessedSignal" );
+    }
+
+    /**
+     * Thaws the analyses.
+     * 
+     * @param expressionExperiment
+     * @param session
+     */
+    private void thawAnalyses( final ExpressionExperiment expressionExperiment, org.hibernate.Session session ) {
+        // Not doing anything with the session but passing it in just in case.
+
+        Collection<ExpressionAnalysis> eas = expressionExperiment.getExpressionAnalyses();
+
+        for ( ExpressionAnalysis ea : eas ) {
+            Collection<ExpressionAnalysisResultSet> resultSets = ea.getResultSets();
+            resultSets.size();
+            for ( ExpressionAnalysisResultSet rs : resultSets ) {
+                rs.getResults().size();
+            }
+        }
+
     }
 
     /**
@@ -1258,7 +1281,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                     ba.getDerivedDataFiles().size();
                 }
 
-                expressionExperiment.getExpressionAnalyses().size();
+                thawAnalyses( expressionExperiment, session );
 
                 return null;
             }
@@ -1301,7 +1324,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
                 ee.getInvestigators().size();
 
-                ee.getExpressionAnalyses().size();
+                thawAnalyses( ee, session );
 
                 session.evict( ee );
 
