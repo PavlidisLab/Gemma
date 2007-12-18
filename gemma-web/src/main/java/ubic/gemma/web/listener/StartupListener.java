@@ -19,8 +19,8 @@
 package ubic.gemma.web.listener;
 
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -258,15 +258,21 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
     }
     
     private static void copyFile( File fromFile, File toFile ) throws IOException {
-        FileReader from = new FileReader( fromFile );
-        FileWriter to = new FileWriter( toFile );
-        final int BUFFER_SIZE = 4096;
-        char[] buf = new char[BUFFER_SIZE];
-        int charsRead;
-        while ( ( charsRead = from.read( buf ) ) != -1 ) {
-            to.write(buf, 0, charsRead);
+        FileInputStream fis  = new FileInputStream(fromFile);
+        FileOutputStream fos = new FileOutputStream(toFile);
+        try {
+            byte[] buf = new byte[1024];
+            int i = 0;
+            while ((i = fis.read(buf)) != -1) {
+                fos.write(buf, 0, i);
+            }
+        } 
+        catch (IOException e) {
+            throw e;
         }
-        to.close();
-        from.close();
+        finally {
+            if (fis != null) fis.close();
+            if (fos != null) fos.close();
+        }
     }
 }
