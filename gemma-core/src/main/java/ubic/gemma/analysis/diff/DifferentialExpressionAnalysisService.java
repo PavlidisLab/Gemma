@@ -269,7 +269,7 @@ public class DifferentialExpressionAnalysisService {
      */
     private List<ExpressionAnalysisResult> sortResults( int top, Collection<ExpressionAnalysisResult> analysisResults ) {
         // FIXME This is a silly hack. Return a list with analysis.getAnalysisResults since you know this has to be
-        // sorted (don't want to edit the model just yet).
+        // sorted.
         ExpressionAnalysisResult[] analysisResultsAsArray = analysisResults
                 .toArray( new ExpressionAnalysisResult[analysisResults.size()] );
         List<ExpressionAnalysisResult> analysisResultsAsList = Arrays.asList( analysisResultsAsArray );
