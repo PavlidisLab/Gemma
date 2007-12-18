@@ -41,6 +41,7 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
     private boolean indexO = false;
     private boolean indexB = false;
     private boolean indexP = false;
+    private boolean indexQ = false;
 
     /*
      * (non-Javadoc)
@@ -52,7 +53,6 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
     protected void buildOptions() {
         Option geneOption = OptionBuilder.withDescription( "Use this option for indexing Genes" ).withLongOpt( "genes" )
                 .create( 'g' );
-
         addOption( geneOption );
 
         Option eeOption = OptionBuilder.withDescription( "Use this option for indexing Expression Experiments" )
@@ -75,8 +75,8 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
                 "probes" ).create( 's' );
         addOption( probeOption );
 
-        Option sequenceOption = OptionBuilder.withDescription( "Use this option for indexing probes" ).withLongOpt(
-                "sequences" ).create( 's' );
+        Option sequenceOption = OptionBuilder.withDescription( "Use this option for indexing sequences" ).withLongOpt(
+                "sequences" ).create( 'q' );
         addOption( sequenceOption );
     }
 
@@ -100,6 +100,7 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
 
         if ( hasOption( 's' ) ) indexP = true;
 
+        if ( hasOption( 'q' ) ) indexQ = true;
     }
 
     /**
@@ -153,9 +154,10 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
             }
             if ( this.indexP ) {
                 rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "probeGps" ), "Probe Reference Index" );
-
             }
-
+            if ( this.indexQ ) {
+                rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "sequenceGps" ), "BioSequence Index" );
+            }
         } catch ( Exception e ) {
             log.error( e );
             return e;
