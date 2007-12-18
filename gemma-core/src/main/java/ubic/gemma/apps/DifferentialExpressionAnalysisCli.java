@@ -205,12 +205,12 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
         // super.summarizeProcessing();
 
-        log.info( "Results for expression analysis of type: " + expressionAnalysis.getName() );
+        log.info( "Summarizing results for expression analysis of type: " + expressionAnalysis.getName() );
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
 
-        log.info( resultSets.size() + " to process." );
+        log.info( resultSets.size() + " result set(s) to process." );
         for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
-
+            log.info( "*** Result set ***" );
             Collection<ExpressionAnalysisResult> results = resultSet.getResults();
 
             for ( ExpressionAnalysisResult result : results ) {
