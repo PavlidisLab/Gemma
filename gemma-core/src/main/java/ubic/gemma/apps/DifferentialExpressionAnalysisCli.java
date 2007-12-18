@@ -120,9 +120,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                         // DifferentialExpressionAnalysisEvent.Factory.newInstance() );
                     } catch ( Exception e ) {
                         errorObjects.add( ee + ": " + e.getMessage() );
-                        // TODO add logFailure
-                        // logFailure( ee, e );
-                        log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********" );
+                        logFailure( ee, e );
                     }
                 }
             } else {
@@ -147,19 +145,18 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                         }
 
                         try {
-                            this.differentialExpressionAnalysisService.getTopResults( shortName, top );
+                            Collection<ExpressionAnalysis> expressionAnalyses = this.differentialExpressionAnalysisService
+                                    .getExpressionAnalyses( expressionExperiment );
+
+                            logProcessing( expressionAnalyses );
+
                             successObjects.add( expressionExperiment.toString() );
                             // TODO add audit
                             // audit( expressionExperiment, "From list in file: " + experimentListFile,
-                            // LinkAnalysisEvent.Factory.newInstance() );
+                            // DifferentialExpressionAnalysisEvent.Factory.newInstance() );
                         } catch ( Exception e ) {
                             errorObjects.add( expressionExperiment + ": " + e.getMessage() );
-                            // TODO add logFailure
-                            // logFailure( expressionExperiment, e );
-
-                            e.printStackTrace();
-                            log.error( "**** Exception while processing " + expressionExperiment + ": "
-                                    + e.getMessage() + " ********" );
+                            logFailure( expressionExperiment, e );
                         }
                     }
                 } catch ( Exception e ) {
@@ -180,28 +177,39 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 Collection<ExpressionAnalysis> expressionAnalyses = this.differentialExpressionAnalysisService
                         .getExpressionAnalyses( expressionExperiment );
 
-                summarizeProcessing( expressionAnalyses );
+                logProcessing( expressionAnalyses );
 
             }
 
         }
 
+        // super.summarizeProcessing();
+
         return null;
+    }
+
+    /**
+     * @param expressionExperiment
+     * @param e
+     */
+    private void logFailure( ExpressionExperiment expressionExperiment, Exception e ) {
+        e.printStackTrace();
+        log.error( "**** Exception while processing " + expressionExperiment + ": " + e.getMessage() + " ********" );
     }
 
     /**
      * @param expressionAnalyses
      */
-    private void summarizeProcessing( Collection<ExpressionAnalysis> expressionAnalyses ) {
+    private void logProcessing( Collection<ExpressionAnalysis> expressionAnalyses ) {
         for ( ExpressionAnalysis analysis : expressionAnalyses ) {
-            summarizeProcessing( analysis );
+            logProcessing( analysis );
         }
     }
 
     /**
      * @param expressionAnalysis
      */
-    private void summarizeProcessing( ExpressionAnalysis expressionAnalysis ) {
+    private void logProcessing( ExpressionAnalysis expressionAnalysis ) {
 
         // super.summarizeProcessing();
 
