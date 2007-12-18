@@ -28,6 +28,8 @@ import org.apache.commons.net.ftp.FTPClient;
 import ubic.basecode.util.NetUtils;
 
 /**
+ * Helper methods to get FTP connection.
+ * 
  * @author pavlidis
  * @version $Id$
  */

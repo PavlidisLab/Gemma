@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.util;
+package ubic.gemma.persistence;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

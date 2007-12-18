@@ -33,7 +33,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
-//import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 import ubic.basecode.util.FileTools;
@@ -42,7 +42,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.util.ConfigUtils;
-//import ubic.gemma.util.MailEngine;
+import ubic.gemma.util.MailEngine;
 
 /**
  * Functions for maintaining the database. This is intended for denormalized tables and statistics tables that need to
@@ -52,6 +52,7 @@ import ubic.gemma.util.ConfigUtils;
  * @spring.property name="auditEventService" ref="auditEventService"
  * @spring.property name="sessionFactory" ref="sessionFactory"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
+ * @spring.property name="mailEngine" ref="mailEngine"
  * 
  * @author jsantos
  * @author paul
@@ -71,12 +72,12 @@ public class TableMaintenanceUtil extends HibernateDaoSupport {
      */
     private ArrayDesignService arrayDesignService;
     
-    //@spring.property name="mailEngine" ref="mailEngine"
-//    private MailEngine mailEngine;
-//
-//    public void setMailEngine( MailEngine mailEngine ) {
-//        this.mailEngine = mailEngine;
-//    }
+    //
+    private MailEngine mailEngine;
+
+    public void setMailEngine( MailEngine mailEngine ) {
+        this.mailEngine = mailEngine;
+    }
 
     public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
         this.arrayDesignService = arrayDesignService;
@@ -243,11 +244,11 @@ public class TableMaintenanceUtil extends HibernateDaoSupport {
      * @param results
      */
     private void sendEmail( Gene2CsStatus results ) {
-//        SimpleMailMessage msg = new SimpleMailMessage();
-//        msg.setTo( "paul@ubic.ca" ); // FIXME use configured nag person.
-//        msg.setSubject( "Gene2Cs update status." );
-//        msg.setText( "Gene2Cs updating was run." );
-//        mailEngine.send( msg );
+        SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setTo( "paul@ubic.ca" ); // FIXME use configured nag person.
+        msg.setSubject( "Gene2Cs update status." );
+        msg.setText( "Gene2Cs updating was run." );
+        mailEngine.send( msg );
     }
 
 }
