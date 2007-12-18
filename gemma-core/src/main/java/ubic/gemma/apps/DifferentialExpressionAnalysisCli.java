@@ -208,6 +208,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         log.info( "Results for expression analysis of type: " + expressionAnalysis.getName() );
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
 
+        log.info( resultSets.size() + " to process." );
         for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
 
             Collection<ExpressionAnalysisResult> results = resultSet.getResults();
