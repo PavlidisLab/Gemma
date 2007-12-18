@@ -61,8 +61,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     protected void buildOptions() {
 
         /*
-         * These options from the super class support: running on one data set, running on list of data sets from a
-         * file, running on all data sets.
+         * These options from the super class support: running on one or more data sets from the command line, running
+         * on list of data sets from a file, running on all data sets.
          */
         super.buildOptions();
 
@@ -113,7 +113,11 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                     }
 
                     try {
-                        this.differentialExpressionAnalysisService.getTopResults( top, ee );
+                        Collection<ExpressionAnalysis> expressionAnalyses = this.differentialExpressionAnalysisService
+                                .getExpressionAnalyses( ee );
+
+                        logProcessing( expressionAnalyses );
+
                         successObjects.add( ee.toString() );
                         // TODO add auditing
                         // audit( ee, "Part of run on all EEs",
