@@ -49,7 +49,7 @@ import ubic.gemma.util.ConfigUtils;
  * <p>
  * FIXME there is a possibility of having stale data.
  * 
- * @spring.bena id="expressionDataFileService"
+ * @spring.bean id="expressionDataFileService"
  * @spring.property name = "designElementDataVectorService" ref="designElementDataVectorService"
  * @author paul
  * @version $Id$
@@ -73,7 +73,7 @@ public class ExpressionDataFileService {
      * @throws IOException
      */
     public File getOutputFile( QuantitationType type ) throws IOException {
-        String filename = type.getName().replaceAll( "\\s+", "_" ) + DATA_FILE_SUFFIX;
+        String filename = type.getId() + "_" + type.getName().replaceAll( "\\s+", "_" ) + DATA_FILE_SUFFIX;
         String fullFilePath = DATA_DIR + filename;
 
         File f = new File( fullFilePath );
@@ -85,7 +85,6 @@ public class ExpressionDataFileService {
 
         File parentDir = f.getParentFile();
         if ( !parentDir.exists() ) parentDir.mkdirs();
-        f.createNewFile();
         return f;
     }
 
@@ -244,6 +243,8 @@ public class ExpressionDataFileService {
         Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
         MatrixWriter matrixWriter = new MatrixWriter();
         matrixWriter.write( writer, expressionDataMatrix, geneAnnotations, true );
+        writer.flush();
+        writer.close();
     }
 
 }
