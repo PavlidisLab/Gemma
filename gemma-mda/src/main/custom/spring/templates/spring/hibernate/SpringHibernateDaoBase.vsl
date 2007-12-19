@@ -115,9 +115,7 @@ $xmlIndent        return transformEntity(transform, ($entity.fullyQualifiedName)
     /**
      * @see ${entity.fullyQualifiedDaoName}#loadAll()
      */
-#if ($enableTemplating)
     @SuppressWarnings({"unchecked"})
-#end
     public $entityCollectionType loadAll()
     {
         return ($entityCollectionType)this.loadAll(TRANSFORM_NONE);
@@ -212,9 +210,7 @@ $xmlIndent        return transformEntity(transform, ($entity.fullyQualifiedName)
     /**
      * @see ${entity.fullyQualifiedDaoName}#create($entityCollectionType)
      */
-#if ($enableTemplating)
     @SuppressWarnings({"unchecked"})
-#end
     public $entityCollectionType create(final $entityCollectionType entities)
     {
         return create($entity.daoNoTransformationConstantName, entities);
@@ -233,9 +229,6 @@ $xmlIndent        return transformEntity(transform, ($entity.fullyQualifiedName)
         this.getHibernateTemplate().execute(
             new ${hibernateUtils.springHibernatePackage}.HibernateCallback()
             {
-#if ($enableTemplating)
-                @SuppressWarnings({"ForLoopReplaceableByForEach"})
-#end
                 public Object doInHibernate(${hibernateUtils.basePackage}.Session session)
                     throws ${hibernateUtils.basePackage}.HibernateException
                 {
@@ -481,6 +474,7 @@ $xmlIndent        return transformEntity(transform, ($entity.fullyQualifiedName)
     /**
      * @see ${entity.fullyQualifiedDaoName}#${finder.name}(java.lang.String#if(!$finder.arguments.empty), ${finder.argumentTypeNames}#end)
      */
+    @SuppressWarnings({"unchecked"})
     $finder.visibility $returnType ${finder.name}(final java.lang.String queryString#if(!$finder.arguments.empty), ${finder.getTypedArgumentList('final')}#end)
 #if ($finder.exceptionsPresent)
         throws $finder.exceptionList
@@ -499,6 +493,7 @@ $xmlIndent        return transformEntity(transform, ($entity.fullyQualifiedName)
     /**
      * @see ${entity.fullyQualifiedDaoName}#${finder.name}(int#if(!$finder.arguments.empty), ${finder.argumentTypeNames}#end)
      */
+    @SuppressWarnings({"unchecked"})
     $finder.visibility $returnType ${finder.name}(final int transform#if(!$finder.arguments.empty), ${finder.getTypedArgumentList('final')}#end)
 #if ($finder.exceptionsPresent)
         throws $finder.exceptionList
@@ -510,14 +505,15 @@ $xmlIndent        return transformEntity(transform, ($entity.fullyQualifiedName)
     /**
      * @see ${entity.fullyQualifiedDaoName}#${finder.name}(int, java.lang.String#if(!$finder.arguments.empty), ${finder.argumentTypeNames}#end)
      */
+    @SuppressWarnings({"unchecked"})
     $finder.visibility $returnType ${finder.name}(final int transform, final java.lang.String queryString#if(!$finder.arguments.empty), ${finder.getTypedArgumentList('final')}#end)
 #if ($finder.exceptionsPresent)
         throws $finder.exceptionList
 #end
     {
-        try
-        {
-            ${hibernateUtils.basePackage}.Query queryObject = super.getSession(false).createQuery(queryString);
+## Heavily modified by PP for Gemma. We use the getHibernateTemplate method instead of messing with the session directly.
+          java.util.List<String> argNames = new java.util.ArrayList<String>();
+          java.util. List<Object> args = new java.util.ArrayList<Object>();
 #foreach($argument in $finder.arguments)
 #set ($count = $velocityCount - 1)
 #set ($argumentValue = $argument.name)
@@ -530,29 +526,32 @@ $xmlIndent        return transformEntity(transform, ($entity.fullyQualifiedName)
 #if ($argument.type.collectionType || $argument.type.arrayType)
 #set ($setParameterOperation = "${setParameterOperation}List")
 #end
+          args.add($argumentValue);
 #if ($finder.useNamedParameters)
-            queryObject.${setParameterOperation}("$argument.name", $argumentValue);
-#else
-            queryObject.${setParameterOperation}($count, $argumentValue);
+          argNames.add("$argument.name");
 #end
 #end
 #if ($finder.returnType.setType || !$finder.returnType.collectionType)
-            java.util.Set results = new java.util.LinkedHashSet(queryObject.list());
+#if ($finder.useNamedParameters)
+         java.util.Set results = new java.util.LinkedHashSet(this.getHibernateTemplate().findByNamedParam(queryString, argNames.toArray(new String[argNames.size()]), args.toArray()));
 #else
-            java.util.List results = queryObject.list();
+	     java.util.Set results = new java.util.LinkedHashSet(this.getHibernateTemplate.find(queryString, args.toArray()));
+#end
+#else
+#if ($finder.useNamedParameters)
+         java.util.List results = this.getHibernateTemplate().findByNamedParam(queryString, argNames.toArray(new String[argNames.size()]), args.toArray());
+#else
+         java.util.List results = this.getHibernateTemplate().find(queryString, args.toArray());
+#end
 #end
 #if (!$finder.returnType.collectionType)
             Object result = null;
-            if (results != null)
-            {
-                if (results.size() > 1)
-                {
+            if (results != null)  {
+                if (results.size() > 1)  {
                     throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
                         "More than one instance of '${finder.returnType.fullyQualifiedName}"
                             + "' was found when executing query --> '" + queryString + "'");
-                }
-                else if (results.size() == 1)
-                {
+                }   else if (results.size() == 1) {
                     result = ($entity.fullyQualifiedName)results.iterator().next();
                 }
             }
@@ -562,11 +561,6 @@ $xmlIndent        return transformEntity(transform, ($entity.fullyQualifiedName)
             transformEntities(transform, results);
             return results;
 #end
-        }
-        catch (${hibernateUtils.basePackage}.HibernateException ex)
-        {
-            throw super.convertHibernateAccessException(ex);
-        }
     }
 #else
     /**
