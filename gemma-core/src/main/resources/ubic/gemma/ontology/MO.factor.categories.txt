@@ -1,0 +1,30 @@
+# Lists MGED Ontology terms to be displayed for detailed annotation of experimental design factors and factorvalues.
+# $Id$
+# Author: Paul
+Treatment
+StrainOrLine
+TargetCellType
+OrganismPart
+CellLine
+DevelopmentalStage
+Genotype
+DiseaseState
+DiseaseLocation
+DiseaseStaging
+ChromosomalAberrationClass
+ClinicalHistory
+ClinicalTreatment
+Compound
+Cultivar
+Ecotype 
+EnvironmentalHistory 
+GeneticModification
+Phenotype
+Sex
+TumorStaging
+Atmosphere
+Allele
+Nutrients
+Light
+Ploidy
+PopulationDensity
