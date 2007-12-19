@@ -19,7 +19,9 @@
 package ubic.gemma.web.controller.expression.arrayDesign;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -36,6 +38,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.web.controller.BaseFormController;
 
@@ -46,6 +49,7 @@ import ubic.gemma.web.controller.BaseFormController;
  * @version $Id$
  * @spring.bean id="arrayDesignFormController"
  * @spring.property name = "commandName" value="arrayDesign"
+ * @spring.property name = "commandClass" value="ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject"
  * @spring.property name = "formView" value="arrayDesign.edit"
  * @spring.property name = "successView" value="redirect:/arrays/showAllArrayDesigns.html"
  * @spring.property name = "arrayDesignService" ref="arrayDesignService"
@@ -58,13 +62,8 @@ public class ArrayDesignFormController extends BaseFormController {
     @Override
     protected ModelAndView getCancelView( HttpServletRequest request ) {
         // go back to the aray we just edited.
-        return new ModelAndView( new RedirectView( "/Gemma/arrays/showArrayDesign.html?id=" + request.getParameter("id") ) );
-    }
-
-    public ArrayDesignFormController() {
-        /* if true, reuses the same command object across the edit-submit-process (get-post-process). */
-        setSessionForm( true );
-        setCommandClass( ArrayDesign.class );
+        return new ModelAndView( new RedirectView( "/Gemma/arrays/showArrayDesign.html?id="
+                + request.getParameter( "id" ) ) );
     }
 
     /**
@@ -76,13 +75,14 @@ public class ArrayDesignFormController extends BaseFormController {
      * @return Object
      * @throws ServletException
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Object formBackingObject( HttpServletRequest request ) {
 
         String idString = request.getParameter( "id" );
 
         Long id;
-        ArrayDesign arrayDesign = null;
+        ArrayDesignValueObject arrayDesign = null;
 
         // should be caught by validation.
         if ( idString != null ) {
@@ -91,12 +91,15 @@ public class ArrayDesignFormController extends BaseFormController {
             } catch ( NumberFormatException e ) {
                 throw new IllegalArgumentException();
             }
-            arrayDesign = arrayDesignService.load( id );
+            Collection<Long> ids = new HashSet<Long>();
+            ids.add( id );
+            Collection<ArrayDesignValueObject> arrayDesigns = arrayDesignService.loadValueObjects( ids );
+            if ( arrayDesigns.size() > 0 ) arrayDesign = arrayDesigns.iterator().next();
 
         }
 
         if ( arrayDesign == null ) {
-            return ArrayDesign.Factory.newInstance();
+            return new ArrayDesignValueObject();
         }
         return arrayDesign;
     }
@@ -135,19 +138,24 @@ public class ArrayDesignFormController extends BaseFormController {
     @SuppressWarnings("unused")
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
+        ArrayDesignValueObject ad = ( ArrayDesignValueObject ) command;
 
-        log.debug( "entering onSubmit" );
+        ArrayDesign existing = arrayDesignService.load( ad.getId() );
 
-        ArrayDesign ad = ( ArrayDesign ) command;
-
-        if ( ad == null || ad.getId() == null ) {
-            errors.addError( new ObjectError( command.toString(), null, null, "Array design was null or had null id" ) );
+        if ( existing == null ) {
+            errors.addError( new ObjectError( command.toString(), null, null, "No such array design" ) );
             return processFormSubmission( request, response, command, errors );
         }
 
-        arrayDesignService.update( ad );
+        existing.setDescription( ad.getDescription() );
+        existing.setName( ad.getName() );
+        existing.setShortName( ad.getShortName() );
+        existing.setTechnologyType( ad.getTechnologyType() );
 
-        saveMessage( request, "object.updated", new Object[] { ad.getClass().getSimpleName(), ad.getName() }, "Saved" );
+        arrayDesignService.update( existing );
+
+        saveMessage( request, "object.updated", new Object[] {
+                ad.getClass().getSimpleName().replaceFirst( "Impl", "" ), ad.getName() }, "Saved" );
 
         // go back to the aray we just edited.
         return new ModelAndView( new RedirectView( "/Gemma/arrays/showArrayDesign.html?id=" + ad.getId() ) );

@@ -80,17 +80,18 @@ public class DatabaseEntryTag extends TagSupport {
         if ( this.databaseEntry == null ) {
             buf.append( "No accession" );
         } else {
-            if (databaseEntry.getExternalDatabase() != null) {
-                if (databaseEntry.getExternalDatabase().getName().equalsIgnoreCase( "GEO" )) {
+            if ( databaseEntry.getExternalDatabase() != null ) {
+                if ( databaseEntry.getExternalDatabase().getName().equalsIgnoreCase( "GEO" ) ) {
                     String name = databaseEntry.getAccession();
-                    buf.append(name + "&nbsp;<a target='_blank' href='http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" + databaseEntry.getAccession() + "'<img src='/Gemma/images/logo/ncbi.gif' /></a>");
+                    buf.append( name + "&nbsp;<a title='NCBI page for this entry'"
+                            + " target='_blank' href='http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc="
+                            + databaseEntry.getAccession() + "'<img src='/Gemma/images/logo/ncbi.gif' /></a>" );
+                } else {
+                    buf.append( databaseEntry.getAccession() + "(" + databaseEntry.getExternalDatabase().getName()
+                            + ":" + ")" );
                 }
-                else {
-                    buf.append( databaseEntry.getAccession() + "(" + databaseEntry.getExternalDatabase().getName() + ":" +  ")" );   
-                }
-            }
-            else {
-                buf.append( databaseEntry.getAccession() ); 
+            } else {
+                buf.append( databaseEntry.getAccession() );
             }
         }
 

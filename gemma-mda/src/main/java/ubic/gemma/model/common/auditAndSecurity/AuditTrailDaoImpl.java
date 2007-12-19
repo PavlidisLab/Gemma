@@ -22,6 +22,7 @@ import java.util.Calendar;
 
 import org.acegisecurity.context.SecurityContextHolder;
 import org.acegisecurity.userdetails.UserDetails;
+import org.hibernate.Hibernate;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.common.Auditable;
@@ -41,9 +42,10 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.update( auditTrail );
+                Hibernate.initialize( auditTrail );
                 if ( auditTrail.getEvents() == null ) return null;
                 auditTrail.getEvents().size();
+                session.evict( auditTrail );
                 return null;
             }
         }, true );
@@ -69,6 +71,7 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
                     session.update( event );
                     if ( event.getEventType() != null ) session.update( event.getEventType() );
                 }
+                session.evict( auditable );
                 return null;
             }
         }, true );
@@ -101,6 +104,7 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
                 session.update( auditable );
                 auditable.getAuditTrail().addEvent( auditEvent );
                 session.update( auditable );
+                session.evict( auditable );
                 return null;
             }
         }, true );
@@ -140,17 +144,12 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
             return null;
         }
 
-        try {
-            String queryString = "from ContactImpl where userName=:userName";
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameter( "userName", name );
-            java.util.List results = queryObject.list();
-            assert results.size() == 1;
-            Object result = results.iterator().next();
-            return ( User ) result;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
+        String queryString = "from ContactImpl where userName=:userName";
+        java.util.List results = this.getHibernateTemplate().findByNamedParam( queryString, "userName", name );
+
+        assert results.size() == 1;
+        Object result = results.iterator().next();
+        return ( User ) result;
     }
 
 }

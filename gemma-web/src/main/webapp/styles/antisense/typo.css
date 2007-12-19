@@ -47,6 +47,11 @@
             color: #CC6633; 
             text-decoration: none;
         }
+        
+        a.annotationLink {
+        	text-decoration: underline;
+        }
+        
     /* END LINKS */
 
     /* HEADINGS */
@@ -217,6 +222,8 @@
         	  font-weight: bold;
         	  text-align: right;
         	  vertical-align: top;
+        	  padding-right:8px;
+        	  padding-top:4px;
         } 
 		
 		th {

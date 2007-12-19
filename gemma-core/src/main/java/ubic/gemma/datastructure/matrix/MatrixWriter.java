@@ -21,9 +21,20 @@ package ubic.gemma.datastructure.matrix;
 import java.io.IOException;
 import java.io.Writer;
 import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+
+import ubic.gemma.analysis.service.ArrayDesignAnnotationService;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
@@ -51,11 +62,15 @@ public class MatrixWriter<T> {
         int columns = matrix.columns();
         int rows = matrix.rows();
 
+        Map<CompositeSequence, Collection<Gene>> geneAnnotations = getGeneAnnotations( matrix );
+
         StringBuffer buf = new StringBuffer();
         if ( writeHeader ) {
-            // TO do get gene.
             buf.append( "Probe" );
             if ( writeSequence ) buf.append( "\tSequence" );
+            if ( !geneAnnotations.isEmpty() ) {
+                buf.append( "\tGeneSymbol\tGeneName" );
+            }
             for ( int i = 0; i < columns; i++ ) {
                 buf.append( "\t" + matrix.getBioMaterialForColumn( i ).getName() + ":" );
                 for ( Object ba : matrix.getBioAssaysForColumn( i ) ) {
@@ -66,13 +81,16 @@ public class MatrixWriter<T> {
         }
 
         for ( int j = 0; j < rows; j++ ) {
-
-            buf.append( matrix.getDesignElementForRow( j ).getName() );
+            CompositeSequence probeForRow = ( CompositeSequence ) matrix.getDesignElementForRow( j );
+            buf.append( probeForRow.getName() );
             if ( writeSequence ) {
-                BioSequence biologicalCharacteristic = ( ( CompositeSequence ) matrix.getDesignElementForRow( j ) )
+                BioSequence biologicalCharacteristic = ( ( CompositeSequence ) probeForRow )
                         .getBiologicalCharacteristic();
                 if ( biologicalCharacteristic != null ) buf.append( "\t" + biologicalCharacteristic.getName() );
             }
+
+            buf.append( "\t" );
+            addGeneInfo( geneAnnotations, buf, probeForRow );
 
             for ( int i = 0; i < columns; i++ ) {
                 T val = matrix.get( j, i );
@@ -83,6 +101,51 @@ public class MatrixWriter<T> {
 
         }
         writer.write( buf.toString() );
+    }
+
+    /**
+     * @param geneAnnotations
+     * @param buf
+     * @param probeForRow
+     */
+    private void addGeneInfo( Map<CompositeSequence, Collection<Gene>> geneAnnotations, StringBuffer buf,
+            CompositeSequence probeForRow ) {
+        Collection<Gene> genes = geneAnnotations.get( probeForRow );
+        if ( genes != null ) {
+            List<String> gs = new ArrayList<String>();
+            List<String> gn = new ArrayList<String>();
+            for ( Gene gene : genes ) {
+                gs.add( gene.getOfficialSymbol() );
+                gn.add( gene.getOfficialName() );
+            }
+
+            buf.append( StringUtils.join( gs.toArray(), '|' ) );
+            buf.append( "\t" );
+            buf.append( StringUtils.join( gs.toArray(), '|' ) );
+        } else {
+            buf.append( "\t\t" );
+        }
+    }
+
+    /**
+     * @param matrix
+     * @param columns
+     */
+    private Map<CompositeSequence, Collection<Gene>> getGeneAnnotations( ExpressionDataMatrix<T> matrix ) {
+        int columns = matrix.columns();
+        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+        for ( int i = 0; i < columns; i++ ) {
+            Collection<BioAssay> bas = matrix.getBioAssaysForColumn( i );
+            for ( BioAssay ba : bas ) {
+                ads.add( ba.getArrayDesignUsed() );
+            }
+        }
+
+        Map<CompositeSequence, Collection<Gene>> annots = new HashMap<CompositeSequence, Collection<Gene>>();
+        for ( ArrayDesign arrayDesign : ads ) {
+            annots.putAll( ArrayDesignAnnotationService.readAnnotationFile( arrayDesign ) );
+        }
+        return annots;
     }
 
     /**
@@ -100,18 +163,6 @@ public class MatrixWriter<T> {
         buf.append( "{ 'numRows' : " + matrix.rows() + ", 'rows': " );
 
         buf.append( "[" );
-        // if ( writeHeader ) {
-        // // TO do get gene. Bug 872.
-        // buf.append( "{ 'id' : \"Probe\",\"Sequence\"" );
-        // for ( int i = 0; i < columns; i++ ) {
-        // buf.append( ",\"" + matrix.getBioMaterialForColumn( i ).getName() + "." );
-        // for ( Object ba : matrix.getBioAssaysForColumn( i ) ) {
-        // buf.append( ( ( BioAssay ) ba ).getName() + "." );
-        // }
-        // buf.append("\"");
-        // }
-        // buf.append( "}\n" );
-        // }
 
         for ( int j = 0; j < rows; j++ ) {
 

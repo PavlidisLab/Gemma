@@ -394,7 +394,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         Collection<ArrayDesignValueObject> result = new ArrayList<ArrayDesignValueObject>();
 
         final String queryString = "select ad.id as id, " + "ad.name as name, " + "ad.shortName as shortName, "
-                + "ad.technologyType, " + "event.date as createdDate " + "from ArrayDesignImpl ad "
+                + "ad.technologyType, ad.description, " + "event.date as createdDate " + "from ArrayDesignImpl ad "
                 + "left join ad.auditTrail as trail " + "inner join trail.events as event "
                 + "where event.action='C' group by ad order by ad.name";
 
@@ -441,11 +441,12 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                     v.setShortName( list.getString( 2 ) );
 
                     TechnologyType color = ( TechnologyType ) list.get( 3 );
+                    v.setTechnologyType( color );
                     if ( color != null ) v.setColor( color.getValue() );
-
+                    v.setDescription( list.getString( 4 ) );
                     v.setTaxon( arrayToTaxon.get( v.getId() ) );
                     v.setExpressionExperimentCount( ( Long ) eeCounts.get( v.getId() ) );
-                    v.setDateCreated( ( Date ) list.getDate( 4 ) );
+                    v.setDateCreated( ( Date ) list.getDate( 5 ) );
                     result.add( v );
                 }
             }
@@ -520,7 +521,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
         // FIXME is it necessary to order this query?
         final String queryString = "select ad.id as id, " + "ad.name as name, " + "ad.shortName as shortName, "
-                + "ad.technologyType, " + "event.date as createdDate " + "from ArrayDesignImpl ad "
+                + "ad.technologyType, ad.description, " + "event.date as createdDate " + "from ArrayDesignImpl ad "
                 + "left join ad.auditTrail as trail " + "inner join trail.events as event "
                 + " where ad.id in (:ids) and event.action='C' group by ad order by ad.name";
 
@@ -534,9 +535,11 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 v.setName( list.getString( 1 ) );
                 v.setShortName( list.getString( 2 ) );
                 TechnologyType color = ( TechnologyType ) list.get( 3 );
+                v.setTechnologyType( color );
                 v.setColor( color.getValue() );
+                v.setDescription( list.getString( 4 ) );
                 v.setExpressionExperimentCount( ( Long ) eeCounts.get( v.getId() ) );
-                v.setDateCreated( ( Date ) list.getDate( 4 ) );
+                v.setDateCreated( ( Date ) list.getDate( 5 ) );
 
                 vo.add( v );
             }

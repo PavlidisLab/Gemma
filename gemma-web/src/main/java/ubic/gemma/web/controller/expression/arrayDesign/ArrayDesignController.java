@@ -18,12 +18,13 @@
  */
 package ubic.gemma.web.controller.expression.arrayDesign;
 
-import java.io.BufferedReader;
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -55,7 +56,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject;
-import ubic.gemma.apps.ArrayDesignGOAnnotationGeneratorCli;
+import ubic.gemma.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -200,6 +201,11 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
     }
 
+    /**
+     * @param request
+     * @param response
+     * @return
+     */
     public ModelAndView downloadAnnotationFile( HttpServletRequest request, HttpServletResponse response ) {
 
         String arrayDesignIdStr = request.getParameter( "id" );
@@ -210,7 +216,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
         String fileType = request.getParameter( "fileType" );
         if ( fileType == null )
-            fileType = "allParents.an.txt";
+            fileType = "allParents";
         else if ( fileType.equalsIgnoreCase( "noParents" ) )
             fileType = "NoParents";
         else if ( fileType.equalsIgnoreCase( "bioProcess" ) )
@@ -219,14 +225,15 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             fileType = "allParents";
 
         ArrayDesign arrayDesign = arrayDesignService.load( Long.parseLong( arrayDesignIdStr ) );
-        String fileName = arrayDesign.getShortName() + "_" + fileType + ".an.txt";
+        String fileName = arrayDesign.getShortName() + "_" + fileType
+                + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
 
-        File f = new File( ArrayDesignGOAnnotationGeneratorCli.ANNOT_DATA_DIR + fileName );
-        BufferedReader reader;
+        File f = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
+        InputStream reader;
         try {
-            reader = new BufferedReader( new InputStreamReader( new FileInputStream( f ) ) );
+            reader = new BufferedInputStream( new FileInputStream( f ) );
         } catch ( FileNotFoundException fnfe ) {
-            log.warn( "Annotation file" + fileName + " can't be found" );
+            log.warn( "Annotation file " + fileName + " can't be found" );
             return null;
         }
 
@@ -234,15 +241,12 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         response.setContentType( "application/octet-stream" );
 
         try {
-            String lineOfFile = reader.readLine();
-            while ( lineOfFile != null ) {
-                response.getWriter().write( lineOfFile );
-                response.getWriter().write( '\n' ); // Readln strips out new line characters, put back in.
-                lineOfFile = reader.readLine();
+            OutputStream outputStream = response.getOutputStream();
+            byte[] buf = new byte[1024];
+            int len;
+            while ( ( len = reader.read( buf ) ) > 0 ) {
+                outputStream.write( buf, 0, len );
             }
-
-            response.getWriter().flush();
-            response.getWriter().close();
             reader.close();
 
         } catch ( IOException ioe ) {
@@ -587,17 +591,27 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         Collection<ArrayDesign> mergees = arrayDesign.getMergees();
         ArrayDesign merger = arrayDesign.getMergedInto();
 
-        File f = new File( ArrayDesignGOAnnotationGeneratorCli.ANNOT_DATA_DIR + arrayDesign.getShortName()
-                + "_NoParents.an.txt" );
+        File fnp = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + arrayDesign.getShortName() + "_NoParents"
+                + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
 
-        if ( ( subsumer == null ) && ( merger == null ) && ( f.exists() ) ) {
-            // Possible to have an annotation file?
-            // Has the annotation file been generated?
+        File fap = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + arrayDesign.getShortName() + "_AllParents"
+                + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
 
-            mav.addObject( "annotationLink", "/Gemma/arrays/downloadAnnotationFile.html?id=" + arrayDesign.getId()
-                    + "&fileType=" );
-        } else
-            mav.addObject( "annotationLink", "" );
+        File fbp = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + arrayDesign.getShortName() + "_BioProcess"
+                + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
+
+        if ( ( subsumer == null ) && ( merger == null ) && ( fnp.exists() ) ) {
+            mav.addObject( "noParentsAnnotationLink", "/Gemma/arrays/downloadAnnotationFile.html?id="
+                    + arrayDesign.getId() + "&fileType=noParents" );
+        }
+        if ( ( subsumer == null ) && ( merger == null ) && ( fap.exists() ) ) {
+            mav.addObject( "allParentsAnnotationLink", "/Gemma/arrays/downloadAnnotationFile.html?id="
+                    + arrayDesign.getId() + "&fileType=allParents" );
+        }
+        if ( ( subsumer == null ) && ( merger == null ) && ( fbp.exists() ) ) {
+            mav.addObject( "bioProcessAnnotationLink", "/Gemma/arrays/downloadAnnotationFile.html?id="
+                    + arrayDesign.getId() + "&fileType=bioProcess" );
+        }
 
         mav.addObject( "subsumer", subsumer );
         mav.addObject( "subsumees", subsumees );

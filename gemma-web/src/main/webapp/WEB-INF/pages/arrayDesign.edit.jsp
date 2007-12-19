@@ -1,13 +1,12 @@
 <%@ include file="/common/taglibs.jsp"%>
 
-<title>Edit Array Design</title>
+<title>Edit Array Design ${arrayDesign.name}</title>
 
 <spring:bind path="arrayDesign.*">
 	<c:if test="${not empty status.errorMessages}">
 		<div class="error">
 			<c:forEach var="error" items="${status.errorMessages}">
-				<img src="<c:url value="/images/iconWarning.gif"/>"
-					alt="<fmt:message key="icon.warning"/>" class="icon" />
+				<img src="<c:url value="/images/iconWarning.gif"/>" alt="<fmt:message key="icon.warning"/>" class="icon" />
 				<c:out value="${error}" escapeXml="false" />
 				<br />
 			</c:forEach>
@@ -15,56 +14,33 @@
 	</c:if>
 </spring:bind>
 
-<form method="post"
-	action="<c:url value="/arrayDesign/editArrayDesign.html"/>"
-	id="arrayDesignForm" onsubmit="return validateArrayDesign(this)">
+<form method="post" action="<c:url value="/arrayDesign/editArrayDesign.html"/>" id="arrayDesignForm"
+	onsubmit="return validateArrayDesign(this)">
 
 	<table>
-
 		<tr>
 			<td class="label">
 				<Gemma:label key="arrayDesign.name" />
 			</td>
 			<td>
 				<spring:bind path="arrayDesign.name">
-					<c:choose>
-						<c:when test="${empty arrayDesign.name}">
-							<input type="text" name="name"
-								value="<c:out value="${status.value}"/>" id="name" />
-							<span class="fieldError"><c:out
-									value="${status.errorMessage}" /> </span>
-						</c:when>
-						<c:otherwise>
-							<c:out value="${arrayDesign.name}" />
-							<input type="hidden" name="name"
-								value="<c:out value="${status.value}"/>" id="name" />
-						</c:otherwise>
-					</c:choose>
+					<input size="120" type="text" name="name" value="<c:out value="${status.value}"/>" id="name" />
+					<span class="fieldError"><c:out value="${status.errorMessage}" /> </span>
 				</spring:bind>
 			</td>
 		</tr>
-
 		<tr>
 			<td class="label">
-				<Gemma:label key="arrayDesign.manufacturer" />
+				<Gemma:label key="arrayDesign.shortName" />
 			</td>
 			<td>
-				<c:choose>
-					<c:when test="${empty arrayDesign.designProvider.name}">
-						<input type="text" name="${status.expression}"
-							value="<c:out value="${status.value}"/>" id="contact.name" />
-						<span class="fieldError"><c:out
-								value="${status.errorMessage}" /> </span>
-					</c:when>
-					<c:otherwise>
-						<c:out value="${arrayDesign.designProvider.name}" />
-						<input type="hidden" name="${status.expression}"
-							value="<c:out value="${status.value}"/>" id="contact.name" />
-					</c:otherwise>
-				</c:choose>
+				<spring:bind path="arrayDesign.shortName">
+					<input type="text" name="shortName" value="<c:out value="${status.value}"/>" id="shortName" />
+					<span class="fieldError"><c:out value="${status.errorMessage}" /> </span>
+
+				</spring:bind>
 			</td>
 		</tr>
-
 		<tr>
 			<td class="label">
 				<Gemma:label key="arrayDesign.technologyType" />
@@ -73,8 +49,7 @@
 				<spring:bind path="arrayDesign.technologyType">
 					<select name="${status.expression}">
 						<c:forEach items="${technologyTypes}" var="type">
-							<option value="${type}"
-								<c:if test="${status.value == type}">selected</c:if>>
+							<option value="${type}" <c:if test="${status.value == type}">selected</c:if>>
 								${type}
 							</option>
 						</c:forEach>
@@ -90,20 +65,15 @@
 			<td>
 				<spring:bind path="arrayDesign.description">
 					<textarea name="description" id="description" rows=8 cols=80><c:out value="${status.value}" /></textarea>
-					<span class="fieldError"><c:out
-							value="${status.errorMessage}" /> </span>
+					<span class="fieldError"><c:out value="${status.errorMessage}" /> </span>
 				</spring:bind>
 			</td>
 		</tr>
-
-
 		<tr>
 			<td></td>
 			<td>
-				<input type="submit" class="button" name="save"
-					onclick="bCancel=false" value="<fmt:message key="button.save"/>" />
-				<input type="submit" class="button" name="cancel"
-					onclick="bCancel=true" value="<fmt:message key="button.cancel"/>" />
+				<input type="submit" class="button" name="save" onclick="bCancel=false" value="<fmt:message key="button.save"/>" />
+				<input type="submit" class="button" name="cancel" onclick="bCancel=true" value="<fmt:message key="button.cancel"/>" />
 				<input type="hidden" name="id" value="${arrayDesign.id}" />
 			</td>
 		</tr>
@@ -112,5 +82,4 @@
 </form>
 
 <validate:javascript formName="arrayDesign" staticJavascript="false" />
-<script type="text/javascript"
-	src="<c:url value="/scripts/validator.jsp"/>"></script>
+<script type="text/javascript" src="<c:url value="/scripts/validator.jsp"/>"></script>

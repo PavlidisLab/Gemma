@@ -93,6 +93,9 @@
             <field property="name" depends="required">
                 <arg position="0"  key="arrayDesign.name"/>
             </field>
+			 <field property="shortName" depends="required">
+                <arg position="0"  key="arrayDesign.shortName"/>
+            </field>
             <field property="description" depends="required">
                 <arg position="0"  key="arrayDesign.description"/>
             </field>
