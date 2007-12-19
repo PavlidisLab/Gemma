@@ -21,6 +21,7 @@ package ubic.gemma.apps;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collection;
+import java.util.HashMap;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -75,7 +76,10 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
             try {
                 MatrixWriter out = new MatrixWriter();
                 PrintWriter writer = new PrintWriter( outFileName );
-                out.write( writer, dataMatrix, true, false );
+                /*
+                 * FIXME output the gene information too.
+                 */
+                out.write( writer, dataMatrix, new HashMap(), true, false );
             } catch ( IOException e ) {
                 return e;
             }

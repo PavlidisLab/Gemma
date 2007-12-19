@@ -31,6 +31,7 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -54,6 +55,7 @@ import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.ontology.OntologyTerm;
 import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.DateUtil;
 
 /**
  * Methods to generate annotations for array designs, based on information alreay in the database. This can be used to
@@ -71,9 +73,77 @@ public class ArrayDesignAnnotationService {
 
     public static final String ANNOTATION_FILE_SUFFIX = ".an.txt.gz";
 
-    public static final String ANNOT_DATA_DIR = ConfigUtils.getString( "gemma.appdata.home" ) + "/microAnnots/";
+    public static final String ANNOT_DATA_DIR = ConfigUtils.getString( "gemma.appdata.home" ) + File.separatorChar
+            + "microAnnots" + File.separatorChar;
 
     private static Log log = LogFactory.getLog( ArrayDesignAnnotationService.class.getName() );;
+
+    /**
+     * @param arrayDesign
+     * @return Map of composite sequence ids and transient (incomplete) genes. The genes only have the symbol filled in.
+     */
+    public static Map<Long, Collection<Gene>> readAnnotationFile( ArrayDesign arrayDesign ) {
+        Map<Long, Collection<Gene>> results = new HashMap<Long, Collection<Gene>>();
+        File f = new File( ANNOT_DATA_DIR + arrayDesign.getShortName() + ANNOTATION_FILE_SUFFIX );
+        if ( !f.canRead() ) {
+            log.info( "Gene annotations are not available from " + f );
+            return results;
+        }
+
+        Map<String, Long> probeNameToId = new HashMap<String, Long>();
+        for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+            results.put( cs.getId(), new HashSet<Gene>() );
+            if ( probeNameToId.containsKey( cs.getName() ) ) {
+                log.warn( "Duplicate probe name: " + cs.getName() );
+            }
+            probeNameToId.put( cs.getName(), cs.getId() );
+        }
+
+        try {
+            log.info( "Reading annotations from: " + f );
+            InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() );
+            BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+            String line = null;
+            br.readLine(); // discard header line.
+            while ( ( line = br.readLine() ) != null ) {
+                if ( StringUtils.isBlank( line ) ) {
+                    continue;
+                }
+                String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
+
+                if ( fields.length < 3 ) continue; // means there are no gene annotations.
+
+                String probeName = fields[0];
+
+                if ( !probeNameToId.containsKey( probeName ) ) continue;
+                Long probeId = probeNameToId.get( probeName );
+
+                List<String> geneSymbols = Arrays.asList( StringUtils.split( fields[1], '|' ) );
+                List<String> geneNames = Arrays.asList( StringUtils.split( fields[2], '|' ) );
+
+                for ( int i = 0; i < geneSymbols.size(); i++ ) {
+                    Gene g = Gene.Factory.newInstance();
+                    String symbol = geneSymbols.get( i );
+                    if ( StringUtils.isBlank( symbol ) ) {
+                        continue;
+                    }
+                    g.setOfficialSymbol( symbol );
+
+                    if ( i < geneNames.size() ) {
+                        g.setOfficialName( geneNames.get( i ) );
+                    }
+
+                    results.get( probeId ).add( g );
+                }
+            }
+
+            return results;
+        } catch ( FileNotFoundException e ) {
+            throw new RuntimeException( e );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+    }
 
     private Gene2GOAssociationService gene2GOAssociationService;
 
@@ -158,59 +228,6 @@ public class ArrayDesignAnnotationService {
     }
 
     /**
-     * @param arrayDesign
-     * @return Map of (persistent) composite sequences and transient (incomplete) genes. The genes only have the symbol
-     *         filled in.
-     */
-    public static Map<CompositeSequence, Collection<Gene>> readAnnotationFile( ArrayDesign arrayDesign ) {
-        Map<CompositeSequence, Collection<Gene>> results = new HashMap<CompositeSequence, Collection<Gene>>();
-        File f = new File( ANNOT_DATA_DIR + arrayDesign.getShortName() + ANNOTATION_FILE_SUFFIX );
-        if ( !f.canRead() ) return results;
-
-        for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
-            results.put( cs, new HashSet<Gene>() );
-        }
-
-        try {
-            log.info( "Reading annotations from: " + f );
-            InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() );
-            BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-            String line = null;
-            br.readLine(); // discard header line.
-            while ( ( line = br.readLine() ) != null ) {
-                if ( StringUtils.isBlank( line ) ) {
-                    continue;
-                }
-                String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
-                String probeName = fields[0];
-
-                if ( !results.containsKey( probeName ) ) continue;
-
-                List<String> geneSymbols = Arrays.asList( StringUtils.split( fields[1], '|' ) );
-                List<String> geneNames = Arrays.asList( StringUtils.split( fields[2], '|' ) );
-
-                for ( int i = 0; i < geneSymbols.size(); i++ ) {
-                    Gene g = Gene.Factory.newInstance();
-                    String symbol = geneSymbols.get( i );
-                    if ( StringUtils.isBlank( symbol ) ) {
-                        continue;
-                    }
-                    g.setOfficialSymbol( symbol );
-                    g.setOfficialName( geneNames.get( i ) );
-
-                    results.get( probeName ).add( g );
-                }
-            }
-
-            return results;
-        } catch ( FileNotFoundException e ) {
-            throw new RuntimeException( e );
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    /**
      * Opens a file for writing and adds the header.
      * 
      * @param fileBaseName if Null, output will be written to standard output.
@@ -245,7 +262,11 @@ public class ArrayDesignAnnotationService {
 
             writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( f ) ) );
         }
-
+        StringBuilder buf = new StringBuilder();
+        buf.append( "# Array design annotation file generated by Gemma" );
+        buf.append( "# Generated " + DateUtil.convertDateToString( new Date() ) );
+        buf.append( "# If you use this file for your research, please cite the Gemma web site." );
+        writer.write( buf.toString() );
         writer.write( "ProbeName\tGeneSymbols\tGeneNames\tGOTerms\n" );
 
         return writer;
@@ -265,87 +286,6 @@ public class ArrayDesignAnnotationService {
 
     public void setGoService( GeneOntologyService goService ) {
         this.goService = goService;
-    }
-
-    /**
-     * @param gene
-     * @return the goTerms for a given gene, as configured
-     */
-    @SuppressWarnings("unchecked")
-    protected Collection<OntologyTerm> getGoTerms( Gene gene, OutputType ty ) {
-
-        Collection<VocabCharacteristic> ontos = new HashSet<VocabCharacteristic>( gene2GOAssociationService
-                .findByGene( gene ) );
-
-        Collection<OntologyTerm> results = new HashSet<OntologyTerm>();
-        for ( VocabCharacteristic vc : ontos ) {
-            results.add( GeneOntologyService.getTermForId( vc.getValue() ) );
-        }
-
-        if ( ( ontos == null ) || ( ontos.size() == 0 ) ) return results;
-
-        if ( ty.equals( OutputType.SHORT ) ) return results;
-
-        if ( ty.equals( OutputType.LONG ) ) {
-            Collection<OntologyTerm> oes = goService.getAllParents( results );
-            results.addAll( oes );
-        } else if ( ty.equals( OutputType.BIOPROCESS ) ) {
-            Collection<OntologyTerm> toRemove = new HashSet<OntologyTerm>();
-
-            for ( OntologyTerm ont : results ) {
-                if ( ( ont == null ) ) {
-                    continue; // / shouldn't happen!
-                }
-                if ( !goService.isBiologicalProcess( ont ) ) {
-                    toRemove.add( ont );
-                }
-            }
-
-            for ( OntologyTerm toRemoveOnto : toRemove ) {
-                results.remove( toRemoveOnto );
-            }
-        }
-
-        return results;
-    }
-
-    /**
-     * @param probeId
-     * @param gene
-     * @param description
-     * @param goTerms
-     * @throws IOException Adds one line at a time to the annotation file
-     */
-    protected void writeAnnotationLine( Writer writer, String probeId, String gene, String description,
-            Collection<OntologyTerm> goTerms ) throws IOException {
-
-        if ( log.isDebugEnabled() ) log.debug( "Generating line for annotation file  \n" );
-
-        if ( gene == null ) gene = "";
-
-        if ( description == null ) description = "";
-
-        writer.write( probeId + "\t" + gene + "\t" + description + "\t" );
-
-        if ( ( goTerms == null ) || goTerms.isEmpty() ) {
-            writer.write( "\n" );
-            return;
-        }
-
-        boolean wrote = false;
-        for ( OntologyTerm oe : goTerms ) {
-            if ( oe == null ) continue;
-            if ( wrote ) {
-                writer.write( "|" + GeneOntologyService.asRegularGoId( oe ) );
-            } else {
-                writer.write( GeneOntologyService.asRegularGoId( oe ) );
-            }
-            wrote = true;
-        }
-
-        writer.write( "\n" );
-        writer.flush();
-
     }
 
     /**
@@ -390,6 +330,89 @@ public class ArrayDesignAnnotationService {
         Collection<OntologyTerm> terms = getGoTerms( gene, ty );
         goTerms.addAll( terms );
         return terms;
+    }
+
+    /**
+     * @param gene
+     * @param ty Configures which GO terms to return: With all parents, biological process only, or direct annotations
+     *        only.
+     * @return the goTerms for a given gene, as configured
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<OntologyTerm> getGoTerms( Gene gene, OutputType ty ) {
+
+        Collection<VocabCharacteristic> ontos = new HashSet<VocabCharacteristic>( gene2GOAssociationService
+                .findByGene( gene ) );
+
+        Collection<OntologyTerm> results = new HashSet<OntologyTerm>();
+        for ( VocabCharacteristic vc : ontos ) {
+            results.add( GeneOntologyService.getTermForId( vc.getValue() ) );
+        }
+
+        if ( ( ontos == null ) || ( ontos.size() == 0 ) ) return results;
+
+        if ( ty.equals( OutputType.SHORT ) ) return results;
+
+        if ( ty.equals( OutputType.LONG ) ) {
+            Collection<OntologyTerm> oes = goService.getAllParents( results );
+            results.addAll( oes );
+        } else if ( ty.equals( OutputType.BIOPROCESS ) ) {
+            Collection<OntologyTerm> toRemove = new HashSet<OntologyTerm>();
+
+            for ( OntologyTerm ont : results ) {
+                if ( ( ont == null ) ) {
+                    continue; // / shouldn't happen!
+                }
+                if ( !goService.isBiologicalProcess( ont ) ) {
+                    toRemove.add( ont );
+                }
+            }
+
+            for ( OntologyTerm toRemoveOnto : toRemove ) {
+                results.remove( toRemoveOnto );
+            }
+        }
+
+        return results;
+    }
+
+    /**
+     * @param probeId
+     * @param gene
+     * @param description
+     * @param goTerms
+     * @throws IOException Adds one line at a time to the annotation file
+     */
+    private void writeAnnotationLine( Writer writer, String probeId, String gene, String description,
+            Collection<OntologyTerm> goTerms ) throws IOException {
+
+        if ( log.isDebugEnabled() ) log.debug( "Generating line for annotation file  \n" );
+
+        if ( gene == null ) gene = "";
+
+        if ( description == null ) description = "";
+
+        writer.write( probeId + "\t" + gene + "\t" + description + "\t" );
+
+        if ( ( goTerms == null ) || goTerms.isEmpty() ) {
+            writer.write( "\n" );
+            return;
+        }
+
+        boolean wrote = false;
+        for ( OntologyTerm oe : goTerms ) {
+            if ( oe == null ) continue;
+            if ( wrote ) {
+                writer.write( "|" + GeneOntologyService.asRegularGoId( oe ) );
+            } else {
+                writer.write( GeneOntologyService.asRegularGoId( oe ) );
+            }
+            wrote = true;
+        }
+
+        writer.write( "\n" );
+        writer.flush();
+
     }
 
     public enum OutputType {
