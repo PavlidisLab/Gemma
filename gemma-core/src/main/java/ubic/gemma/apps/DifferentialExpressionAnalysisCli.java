@@ -112,6 +112,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                     } catch ( Exception e ) {
                         errorObjects.add( ee + ": " + e.getMessage() );
                         // logFailure( ee, e );
+                        continue;
                     }
                 }
             } else {
@@ -148,6 +149,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                         } catch ( Exception e ) {
                             errorObjects.add( expressionExperiment + ": " + e.getMessage() );
                             // logFailure( expressionExperiment, e );
+                            continue;
                         }
                     }
                 } catch ( Exception e ) {
@@ -173,8 +175,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 } catch ( Exception e ) {
                     errorObjects.add( expressionExperiment + ": " + e.getMessage() );
                     // logFailure( expressionExperiment, e );
+                    continue;
                 }
-
             }
         }
 
