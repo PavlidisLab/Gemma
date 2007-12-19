@@ -26,66 +26,61 @@ import ubic.gemma.util.grid.javaspaces.SpacesUtil;
 
 /**
  * @author keshav
- * @version $Id$ *
+ * @version $Id: ExpressionExperimentReportGenerationService.java,v 1.2
+ *          2007/11/28 18:22:02 keshav Exp $ *
  * @spring.bean name="expressionExperimentReportGenerationService"
- * @spring.property name="expressionExperimentReportService" ref="expressionExperimentReportService"
- * @spring.property name="spacesUtil" ref="spacesUtil"
+ * @spring.property name="expressionExperimentReportService"
+ *                  ref="expressionExperimentReportService"
+ * 
  */
-public class ExpressionExperimentReportGenerationService extends AbstractSpacesService {
+public class ExpressionExperimentReportGenerationService extends
+		AbstractSpacesService {
 
-    private ExpressionExperimentReportService expressionExperimentReportService = null;
+	private ExpressionExperimentReportService expressionExperimentReportService = null;
 
-    /**
-     * 
-     *
-     */
-    public void generateSummaryObjects() {
-        startJob( SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ExpressionExperimentReportTask.class.getName(), true );
-    }
+	/**
+	 * 
+	 * 
+	 */
+	public void generateSummaryObjects() {
+		startJob(SpacesEnum.DEFAULT_SPACE.getSpaceUrl(),
+				ExpressionExperimentReportTask.class.getName(), true);
+	}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.grid.javaspaces.AbstractSpacesService#runLocally(java.lang.String)
-     */
-    @Override
-    public void runLocally( String taskId ) {
-        expressionExperimentReportService.generateSummaryObjects();
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see ubic.gemma.grid.javaspaces.AbstractSpacesService#runLocally(java.lang.String)
+	 */
+	@Override
+	public void runLocally(String taskId) {
+		expressionExperimentReportService.generateSummaryObjects();
+	}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.grid.javaspaces.AbstractSpacesService#runRemotely(java.lang.String)
-     */
-    @Override
-    public void runRemotely( String taskId ) {
-        // ExpressionExperimentReportTask reportProxy = ( ExpressionExperimentReportTask ) updatedContext
-        // .getBean( "expressionExperimentReportTask" );
-        // reportProxy.execute();
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see ubic.gemma.grid.javaspaces.AbstractSpacesService#runRemotely(java.lang.String)
+	 */
+	@Override
+	public void runRemotely(String taskId) {
+		// ExpressionExperimentReportTask reportProxy = (
+		// ExpressionExperimentReportTask ) updatedContext
+		// .getBean( "expressionExperimentReportTask" );
+		// reportProxy.execute();
 
-        ExpressionExperimentReportTask reportProxy = ( ExpressionExperimentReportTask ) updatedContext
-                .getBean( "proxy" );
-        SpacesCommand spacesCommand = new SpacesCommand( taskId );
-        reportProxy.execute( spacesCommand );
-    }
+		ExpressionExperimentReportTask reportProxy = (ExpressionExperimentReportTask) updatedContext
+				.getBean("proxy");
+		SpacesCommand spacesCommand = new SpacesCommand(taskId);
+		reportProxy.execute(spacesCommand);
+	}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.grid.javaspaces.AbstractSpacesService#setSpacesUtil(ubic.gemma.util.grid.javaspaces.SpacesUtil)
-     */
-    @Override
-    public void setSpacesUtil( SpacesUtil spacesUtil ) {
-        super.injectSpacesUtil( spacesUtil );
-    }
-
-    /**
-     * @param expressionExperimentReportService
-     */
-    public void setExpressionExperimentReportService(
-            ExpressionExperimentReportService expressionExperimentReportService ) {
-        this.expressionExperimentReportService = expressionExperimentReportService;
-    }
+	/**
+	 * @param expressionExperimentReportService
+	 */
+	public void setExpressionExperimentReportService(
+			ExpressionExperimentReportService expressionExperimentReportService) {
+		this.expressionExperimentReportService = expressionExperimentReportService;
+	}
 
 }

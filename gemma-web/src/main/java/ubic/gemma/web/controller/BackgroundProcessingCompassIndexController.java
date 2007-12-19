@@ -29,6 +29,7 @@ import ubic.gemma.util.progress.TaskRunningService;
 import ubic.gemma.web.util.MessageUtil;
 
 /**
+ * TODO:  This class isn't being used anywhere. Deprecate or Remove
  * Extends this when the controller needs to run a long task (show a progress bar). To use it, implement getRunner and
  * call startJob in your onSubmit method.
  * 

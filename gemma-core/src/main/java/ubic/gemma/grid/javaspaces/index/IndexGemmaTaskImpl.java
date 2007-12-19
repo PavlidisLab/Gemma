@@ -46,7 +46,6 @@ public class IndexGemmaTaskImpl extends BaseSpacesTask implements
 	private CompassGpsInterfaceDevice geneGps;
 	private CompassGpsInterfaceDevice expressionGps;
 	private CompassGpsInterfaceDevice arrayGps;
-	private CompassGpsInterfaceDevice ontologyGps;
 	private CompassGpsInterfaceDevice bibliographicGps;
 	private CompassGpsInterfaceDevice probeGps;
 
@@ -55,31 +54,21 @@ public class IndexGemmaTaskImpl extends BaseSpacesTask implements
 		this.arrayGps = arrayGps;
 	}
 
-
-
 	public void setBibliographicGps(CompassGpsInterfaceDevice bibliographicGps) {
 		this.bibliographicGps = bibliographicGps;
 	}
-
-
 
 	public void setExpressionGps(CompassGpsInterfaceDevice expressionGps) {
 		this.expressionGps = expressionGps;
 	}
 
-
-
-	public void setOntologyGps(CompassGpsInterfaceDevice ontologyGps) {
-		this.ontologyGps = ontologyGps;
-	}
-
-
-
 	public void setProbeGps(CompassGpsInterfaceDevice probeGps) {
 		this.probeGps = probeGps;
 	}
 
-
+	public void setGeneGps(CompassGpsInterfaceDevice geneGps) {
+		this.geneGps = geneGps;
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -101,9 +90,6 @@ public class IndexGemmaTaskImpl extends BaseSpacesTask implements
             }
             if ( indexCommand.isIndexAD() ) {
                 rebuildIndex( arrayGps, "Array Design index" );
-            }
-            if ( indexCommand.isIndexOntology() ) {
-                rebuildIndex( ontologyGps, "Ontology Index" );
             }
             if ( indexCommand.isIndexBibRef() ) {
                 rebuildIndex( bibliographicGps, "Bibliographic Reference Index" );

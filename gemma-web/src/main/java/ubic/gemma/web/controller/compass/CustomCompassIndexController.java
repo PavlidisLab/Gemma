@@ -67,8 +67,6 @@ import ubic.gemma.web.util.MessageUtil;
  * @spring.bean id="indexController"
  * @spring.property name="formView" value="indexer"
  * @spring.property name="successView" value="indexer"
- * @spring.property name="commandName" value="IndexGemmaCommand"
- * @spring.property name="commandClass" value="ubic.gemma.web.controller.compass.IndexGemmaCommand"
  * @spring.property name="arrayGps" ref="arrayGps"
  * @spring.property name="expressionGps" ref="expressionGps"
  * @spring.property name="geneGps" ref="geneGps" 
@@ -82,7 +80,6 @@ public class CustomCompassIndexController extends AbstractSpacesFormController {
     private CompassGpsInterfaceDevice expressionGps;
     private CompassGpsInterfaceDevice arrayGps;
     private CompassGpsInterfaceDevice geneGps;
-    private CompassGpsInterfaceDevice ontologyGps;
     private CompassGpsInterfaceDevice bibliographicGps;
     private CompassGpsInterfaceDevice probeGps;
 
@@ -105,8 +102,6 @@ public class CustomCompassIndexController extends AbstractSpacesFormController {
            indexCommand.setIndexEE(true);
         } else if ( StringUtils.hasText( request.getParameter( "arrayIndex" ) ) ) {
             indexCommand.setIndexArray(true);
-        } else if ( StringUtils.hasText( request.getParameter( "ontologyIndex" ) ) ) {
-            indexCommand.setIndexOntology(true);
         } else if ( StringUtils.hasText( request.getParameter( "bibliographicIndex" ) ) ) {
            indexCommand.setIndexBibliographic(true);
         } else
@@ -130,15 +125,6 @@ public class CustomCompassIndexController extends AbstractSpacesFormController {
     }
     
     
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.javaspaces.gigaspaces.AbstractGigaSpacesFormController#setGigaSpacesUtil(ubic.gemma.util.javaspaces.gigaspaces.GigaSpacesUtil)
-     */
-    @Override
-    public void setSpacesUtil( SpacesUtil spacesUtil ) {
-        this.injectSpacesUtil( spacesUtil );
-    }
     
     /*
      * (non-Javadoc)
@@ -173,9 +159,6 @@ public class CustomCompassIndexController extends AbstractSpacesFormController {
             return this.onSubmit( request, response, this.formBackingObject( request ), errors );
         }
         if ( request.getParameter( "arrayIndex" ) != null ) {
-            return this.onSubmit( request, response, this.formBackingObject( request ), errors );
-        }
-        if ( request.getParameter( "ontologyIndex" ) != null ) {
             return this.onSubmit( request, response, this.formBackingObject( request ), errors );
         }
         if ( request.getParameter( "bibliographicIndex" ) != null ) {
@@ -244,15 +227,14 @@ public class CustomCompassIndexController extends AbstractSpacesFormController {
 
         }
 
-        /**
-         * @param eeLoadCommand
-         * @return
-         */
-        private SpacesResult process( IndexGemmaCommand indexCommand ) {
-            SpacesIndexGemmaCommand jsCommand = createCommandObject( indexCommand );
-            SpacesResult result = indexGemmaTaskProxy.execute( jsCommand );
-            return result;
+        @Override
+        protected void index(IndexGemmaCommand indexGemmaCommand){
+        	
+        	 SpacesIndexGemmaCommand jsCommand = createCommandObject( indexGemmaCommand );
+             SpacesResult result = indexGemmaTaskProxy.execute( jsCommand );
+             //return result;
         }
+      
 
 
         private SpacesIndexGemmaCommand createCommandObject( IndexGemmaCommand ic ) {
@@ -302,8 +284,12 @@ public class CustomCompassIndexController extends AbstractSpacesFormController {
 
             job.updateProgress( "Preparing to rebuild " + this.description );
             log.info( "Preparing to rebuild " + this.description );
+            
+            IndexGemmaCommand indexGemmaCommand = ( ( IndexGemmaCommand ) command );
+   
+            
+            index(indexGemmaCommand);
 
-            CompassUtils.rebuildCompassIndex( gpsDevice );
             time = System.currentTimeMillis() - time;
             CompassIndexResults indexResults = new CompassIndexResults( time );
             Map<Object, Object> data = new HashMap<Object, Object>();
@@ -317,6 +303,12 @@ public class CustomCompassIndexController extends AbstractSpacesFormController {
 
             return mv;
 
+        }
+        
+        protected void index(IndexGemmaCommand indexGemmaCommand){
+
+            CompassUtils.rebuildCompassIndex( gpsDevice );
+        	
         }
     }
 
@@ -338,11 +330,6 @@ public class CustomCompassIndexController extends AbstractSpacesFormController {
 
 	public void setGeneGps(CompassGpsInterfaceDevice geneGps) {
 		this.geneGps = geneGps;
-	}
-
-
-	public void setOntologyGps(CompassGpsInterfaceDevice ontologyGps) {
-		this.ontologyGps = ontologyGps;
 	}
 
 	public void setProbeGps(CompassGpsInterfaceDevice probeGps){

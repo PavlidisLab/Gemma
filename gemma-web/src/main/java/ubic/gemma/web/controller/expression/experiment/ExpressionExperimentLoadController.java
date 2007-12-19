@@ -49,7 +49,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
-import ubic.gemma.util.grid.javaspaces.SpacesUtil;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.gemmaspaces.AbstractSpacesFormController;
@@ -70,7 +69,6 @@ import ubic.gemma.web.util.MessageUtil;
  * @spring.property name="formView" value="loadExpressionExperimentForm"
  * @spring.property name="successView" value="loadExpressionExperimentProgress.html"
  * @spring.property name="geoDatasetService" ref="geoDatasetService"
- * @spring.property name="spacesUtil" ref="spacesUtil"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
  * @spring.property name="arrayExpressLoadService" ref="arrayExpressLoadService"
  * @see ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentLoadController for how flat-file data
@@ -147,15 +145,6 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
         this.geoDatasetService = geoDatasetService;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.javaspaces.gigaspaces.AbstractGigaSpacesFormController#setGigaSpacesUtil(ubic.gemma.util.javaspaces.gigaspaces.GigaSpacesUtil)
-     */
-    @Override
-    public void setSpacesUtil( SpacesUtil spacesUtil ) {
-        this.injectSpacesUtil( spacesUtil );
-    }
 
     /*
      * (non-Javadoc)

@@ -46,7 +46,7 @@
 		singleton="false">
 		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
 		<property name="delegate">
-			<ref local="taskBean" />
+			<ref local="indexTask" />
 		</property>
 		<property name="businessInterface">
 			<value>ubic.gemma.grid.javaspaces.index.IndexGemmaTask</value>
@@ -127,7 +127,7 @@
 		
 	</bean>
 	
-	<bean id="taskBean" class="ubic.gemma.grid.javaspaces.index.IndexGemmaTaskImpl">
+	<bean id="indexTask" class="ubic.gemma.grid.javaspaces.index.IndexGemmaTaskImpl">
 
 		<property name="geneGps">
 			<ref bean="geneGps" />
@@ -137,9 +137,6 @@
 		</property>
 		<property name="expressionGps">
 			<ref bean="expressionGps" />
-		</property>
-		<property name="ontologyGps">
-			<ref bean="ontologyGps" />
 		</property>
 		<property name="probeGps">
 			<ref bean="probeGps" />

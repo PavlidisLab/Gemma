@@ -27,72 +27,78 @@ import ubic.gemma.util.grid.javaspaces.SpacesUtil;
 import ubic.gemma.util.progress.TaskRunningService;
 
 /**
+ * @spring.property name="spacesUtil" ref="spacesUtil"
  * @author keshav
  * @version $Id$
  */
 public abstract class AbstractSpacesService {
-    private Log log = LogFactory.getLog( AbstractSpacesService.class );
+	private Log log = LogFactory.getLog(AbstractSpacesService.class);
 
-    protected SpacesUtil spacesUtil = null;
+	protected SpacesUtil spacesUtil = null;
 
-    protected ApplicationContext updatedContext = null;
+	protected ApplicationContext updatedContext = null;
 
-    /**
-     * @return ApplicationContext
-     */
-    public ApplicationContext addGemmaSpacesToApplicationContext() {
-        if ( spacesUtil == null ) spacesUtil = new SpacesUtil();
+	/**
+	 * @return ApplicationContext
+	 */
+	public ApplicationContext addGemmaSpacesToApplicationContext() {
+		assert spacesUtil != null;
+		return spacesUtil
+				.addGemmaSpacesToApplicationContext(SpacesEnum.DEFAULT_SPACE
+						.getSpaceUrl());
+	}
 
-        return spacesUtil.addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
-    }
+	protected void startJob(String spaceUrl, String taskName,
+			boolean runInLocalContext) {
+		run(spaceUrl, taskName, runInLocalContext);
+	}
 
-    protected void startJob( String spaceUrl, String taskName, boolean runInLocalContext ) {
-        run( spaceUrl, taskName, runInLocalContext );
-    }
+	protected String run(String spaceUrl, String taskName,
+			boolean runInLocalContext) {
 
-    protected String run( String spaceUrl, String taskName, boolean runInLocalContext ) {
+		String taskId = null;
 
-        String taskId = null;
+		updatedContext = addGemmaSpacesToApplicationContext();
 
-        updatedContext = addGemmaSpacesToApplicationContext();
+		if (updatedContext.containsBean("gigaspacesTemplate")
+				&& spacesUtil.canServiceTask(taskName, spaceUrl)) {
+			log.info("Running task " + taskName + " remotely.");
 
-        if ( updatedContext.containsBean( "gigaspacesTemplate" ) && spacesUtil.canServiceTask( taskName, spaceUrl ) ) {
-            log.info( "Running task " + taskName + " remotely." );
+			taskId = SpacesHelper.getTaskIdFromTask(updatedContext, taskName);
+			runRemotely(taskId);
+		} else if (!updatedContext.containsBean("gigaspacesTemplate")
+				&& !runInLocalContext) {
+			throw new RuntimeException(
+					"This task must be run on the compute server, but the space is not running. Please try again later");
+		}
 
-            taskId = SpacesHelper.getTaskIdFromTask( updatedContext, taskName );
-            runRemotely( taskId );
-        } else if ( !updatedContext.containsBean( "gigaspacesTemplate" ) && !runInLocalContext ) {
-            throw new RuntimeException(
-                    "This task must be run on the compute server, but the space is not running. Please try again later" );
-        }
+		else {
+			log.info("Running task " + taskName + " locally.");
+			taskId = TaskRunningService.generateTaskId();
+			runLocally(taskId);
+		}
 
-        else {
-            log.info( "Running task " + taskName + " locally." );
-            taskId = TaskRunningService.generateTaskId();
-            runLocally( taskId );
-        }
+		return taskId;
+	}
 
-        return taskId;
-    }
+	public abstract void runLocally(String taskId);
 
-    public abstract void runLocally( String taskId );
+	public abstract void runRemotely(String taskId);
 
-    public abstract void runRemotely( String taskId );
+	/**
+	 * 
+	 * 
+	 * @param spacesUtil
+	 */
+	public void setSpacesUtil(SpacesUtil spacesUtil) {
+		this.spacesUtil = spacesUtil;
+	}
 
-    /**
-     * Controllers extending this class must implement this method. The implementation should call
-     * injectGigaspacesUtil(GigaSpacesUtil gigaSpacesUtil) to "inject" a spring loaded GigaSpacesUtil into this abstract
-     * class.
-     * 
-     * @param spacesUtil
-     */
-    abstract public void setSpacesUtil( SpacesUtil spacesUtil );
-
-    /**
-     * @param spacesUtil
-     */
-    protected void injectSpacesUtil( SpacesUtil spacesUtil ) {
-        this.spacesUtil = spacesUtil;
-    }
+	/**
+	 * @param spacesUtil
+	 */
+	protected void injectSpacesUtil(SpacesUtil spacesUtil) {
+		this.spacesUtil = spacesUtil;
+	}
 
 }

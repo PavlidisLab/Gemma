@@ -44,6 +44,7 @@ import com.j_spaces.core.client.NotifyModifiers;
 
 /**
  * Controllers requiring the capability to submit jobs to a compute server should extend this controller.
+ * @spring.property name="spacesUtil" ref="spacesUtil"
  * 
  * @author keshav
  * @version $Id$
@@ -67,14 +68,10 @@ public abstract class AbstractSpacesFormController extends BackgroundProcessingF
     abstract protected BackgroundControllerJob<ModelAndView> getSpaceRunner( String jobId,
             SecurityContext securityContex, Object command, MessageUtil messenger );
 
-    /**
-     * Controllers extending this class must implement this method. The implementation should call
-     * injectGigaspacesUtil(SpacesUtil spacesUtil) to "inject" a spring loaded SpacesUtil into this
-     * abstract class.
-     * 
-     * @param spacesUtil
-     */
-    abstract protected void setSpacesUtil( SpacesUtil spacesUtil );
+
+     public void setSpacesUtil( SpacesUtil spacesUtil ){
+    	 this.spacesUtil = spacesUtil;
+     }
 
     /**
      * @return ApplicationContext

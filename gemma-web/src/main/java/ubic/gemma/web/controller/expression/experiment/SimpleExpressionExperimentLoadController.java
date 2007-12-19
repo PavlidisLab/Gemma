@@ -52,7 +52,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
-import ubic.gemma.util.grid.javaspaces.SpacesUtil;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.util.progress.TaskRunningService;
@@ -72,8 +71,7 @@ import ubic.gemma.web.util.upload.FileUploadUtil;
  * @version $Id$
  * @spring.bean id="simpleExpressionExperimentLoadController"
  * @spring.property name="commandName" value="simpleExpressionExperimentLoadCommand"
- * @spring.property name="commandClass"
- *                  value="ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentLoadCommand"
+ * @spring.property name="commandClass" value="ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentLoadCommand"
  * @spring.property name="validator" ref="simpleExpressionExperimentLoadValidator"
  * @spring.property name="formView" value="simpleExpressionExperimentForm"
  * @spring.property name="successView" value="loadExpressionExperimentProgress.html"
@@ -428,8 +426,4 @@ public class SimpleExpressionExperimentLoadController extends AbstractSpacesForm
         return super.showForm( request, response, errors, controlModel );
     }
 
-    @Override
-    protected void setSpacesUtil( SpacesUtil spacesUtil ) {
-        this.injectSpacesUtil( spacesUtil );
-    }
 }
