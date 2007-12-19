@@ -26,9 +26,12 @@ Ext.onReady(function() {
 			{header: "Factor Value", width: 650, dataIndex:"factorValue"}]);
 	cm.defaultSortable = false;
  
-	factorValueGrid = new Ext.grid.Grid("bmFactorValues", {
+	factorValueGrid = new Ext.grid.GridPanel({
+		renderTo:"bmFactorValues",
 		ds:factorValueDS,
 		cm:cm,
+		autoHeight:true,
+		viewConfig: { emptyText : "No factor values have been assigned to this biomaterial." }
 	});
 
 	factorValueGrid.render();

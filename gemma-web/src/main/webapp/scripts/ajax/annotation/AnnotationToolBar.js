@@ -1,7 +1,6 @@
 Ext.namespace('Ext.Gemma');
 
 /* Ext.Gemma.AnnotationToolBar constructor...
- * 	div is the name of the div in which to render the tool bar.
  * 	annotationGrid is the grid that contains the annotations.
  * 	config is a hash with the following options:
  * 		createHandler : a function with arguments ( characteristic, callback )
@@ -18,7 +17,7 @@ Ext.namespace('Ext.Gemma');
  * 			if this argument is not present, there will be no save button in the toolbar
  */
  
-Ext.Gemma.AnnotationToolBar = function ( div, annotationGrid, config ) {
+Ext.Gemma.AnnotationToolBar = function ( annotationGrid, config ) {
 	
 	var createHandler = config.createHandler; delete config.createHandler;
 	var deleteHandler = config.deleteHandler; delete config.deleteHandler;
@@ -38,8 +37,14 @@ Ext.Gemma.AnnotationToolBar = function ( div, annotationGrid, config ) {
 		mgedComboOpts.width = config.mgedComboWidth; delete config.mgedComboWidth;
 	}
 	
-	Ext.Gemma.AnnotationToolBar.superclass.constructor.call( this, div );
-	
+	/* according to the docs, we shouldn't have to call this method, but
+	 * if we don't, we're left with the empty placeholder toolbar above
+	 * our new toolbar...
+	 */
+	Ext.Gemma.AnnotationToolBar.superclass.constructor.call( this, {
+		autoHeight : true,
+		renderTo : annotationGrid.tbar
+	} );
 	
 	var charCombo = new Ext.Gemma.CharacteristicCombo( charComboOpts );
 	

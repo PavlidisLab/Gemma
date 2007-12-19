@@ -3,6 +3,7 @@ Ext.namespace('Ext.Gemma.CharacteristicBrowser');
 Ext.onReady( function() {
 		
 	Ext.Gemma.CharacteristicBrowser.grid = new Ext.Gemma.AnnotationGrid( "characteristicBrowser", {
+		tbar : new Ext.Toolbar( { } ),
 		readMethod : CharacteristicBrowserController.findCharacteristics,
 		readParams : [ ],
 		editable : true,
@@ -11,10 +12,6 @@ Ext.onReady( function() {
 		pageSize : 10
 	} );
 	Ext.Gemma.CharacteristicBrowser.grid.render();
-	var footer = Ext.Gemma.CharacteristicBrowser.grid.getView().getFooterPanel( true );
-	var paging = new Ext.Gemma.PagingToolbar( footer, Ext.Gemma.CharacteristicBrowser.grid.getDataSource(), {
-		pageSize : 10
-	} );
 	
 	var charCombo = new Ext.Gemma.CharacteristicCombo( { } );
 	
@@ -101,7 +98,8 @@ Ext.onReady( function() {
 	Ext.Gemma.CharacteristicBrowser.grid.on( "afteredit", function( e ) {
 		revertButton.enable();
 	} );
-	
+
+/*
 	var testButton = new Ext.Toolbar.Button( {
 		text : "test",
 		handler : function() {
@@ -113,7 +111,8 @@ Ext.onReady( function() {
 			Ext.Gemma.CharacteristicBrowser.grid.getView().refresh();
 		}
 	} );
-	
+*/
+
 	var eeCheckBox = new Ext.form.Checkbox( {
 		boxLabel : 'Expression Experiments',
 		checked : true,
@@ -139,8 +138,7 @@ Ext.onReady( function() {
 		width : 'auto'
 	} );
 	
-	var gridHeader = Ext.Gemma.CharacteristicBrowser.grid.getView().getHeaderPanel( true );
-	var toolbar = new Ext.Toolbar( gridHeader );
+	var toolbar = Ext.Gemma.CharacteristicBrowser.grid.getTopToolbar();
 	toolbar.addField( charCombo );
 	toolbar.addSpacer();
 	toolbar.addField( searchButton );
@@ -150,9 +148,12 @@ Ext.onReady( function() {
 	toolbar.addField( deleteButton );
 	toolbar.addSeparator();
 	toolbar.addField( revertButton );
+/*
 	toolbar.addSeparator();
 	toolbar.addField( testButton );
-	var secondToolbar = new Ext.Toolbar( gridHeader.createChild() );
+*/
+
+	var secondToolbar = new Ext.Toolbar( toolbar.getEl().createChild() );
 	secondToolbar.addSpacer();
 	secondToolbar.addText( "Find characteristics from" );
 	secondToolbar.addSpacer();

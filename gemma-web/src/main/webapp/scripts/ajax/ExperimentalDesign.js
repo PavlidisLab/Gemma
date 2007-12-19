@@ -286,7 +286,8 @@ var initBioMaterialGrid = function(div) {
                        ]);
        cm.defaultSortable = true;
 
-       bmGrid = new Ext.grid.Grid(div, {autoSizeColumns: true,
+       bmGrid = new Ext.grid.GridPanel({renderTo: div, autoHeight: true, viewConfig: { autoFill: true },
+       							 autoSizeColumns: true,
        							 ds:bmDS,
        							 cm:cm,
        							 loadMask: true });
@@ -355,9 +356,6 @@ var initFactorGrid = function(div) {
                        remoteSort:false,
                        sortInfo:{field:'factorValue'}
       });
-     factorDS.on( "load", function() {
-       	factorGrid.getView().autoSizeColumns();
-     } );
                
 	   factorDS.load({params:[{id:eeID, classDelegatingFor:"FactorValueObject"}]});
 	
@@ -370,7 +368,8 @@ var initFactorGrid = function(div) {
                        ]);
        cm.defaultSortable = true;
 
-       factorGrid = new Ext.grid.Grid(div, {autoSizeColumns: true,
+       factorGrid = new Ext.grid.GridPanel({renderTo: div, autoHeight: true, viewConfig: { autoFill: true },
+       							 autoSizeColumns: true,
        							 ds:factorDS,
        							 cm:cm,
        							 loadMask: true });
@@ -493,9 +492,6 @@ var initFactorValueGrid = function(div) {
                        remoteSort:false,
                        sortInfo:{field:'factorValue'}
                });
-     factorValueGridDS.on( "load", function() {
-       	factorValueGrid.getView().autoSizeColumns();
-     } );
                           
 	  
 	
@@ -508,12 +504,14 @@ var initFactorValueGrid = function(div) {
        cm.defaultSortable = true;
 
 		
-       factorValueGrid = new Ext.grid.Grid(div, {autoSizeColumns: true,
+       factorValueGrid = new Ext.grid.GridPanel({renderTo: div, autoHeight: true, viewConfig: { autoFill: true },
+       							 autoSizeColumns: true,
        							 ds:factorValueGridDS,
        							 cm:cm,
        							 loadMask: true, 
        							 editable: true, 
-       							 singleSelect : true}
+       							 singleSelect : true,
+       							 tbar: []}
        							 );
 
 		//Need two extra methods because annotationGrid defines refresh and getSelected      							 
@@ -559,7 +557,7 @@ Ext.onReady(function() {
 
 	eeID = dwr.util.getValue("expressionExperimentID");
 	edID = dwr.util.getValue("experimentalDesignID");
-	
+	var admin = dwr.util.getValue("experimentalDesignAdmin");
 
 	//================================================
 	//The tool bm to factor value assoction toolbar. 
@@ -575,7 +573,7 @@ Ext.onReady(function() {
 		factorValueLabel = new Ext.form.TextField({readOnly: true, allowBlank : false, invalidText : "Select a factor value", blankText : "Selected Factor Value", emptyText : "Factor Value", width: 200});
 		
 
-		var simpleTB = new Ext.Toolbar("eDesign");				//Tool bar to rule them all	
+		var simpleTB = new Ext.Toolbar({renderTo: "eDesign"});				//Tool bar to rule them all	
 		simpleTB.addText("Displaying BioMaterials for: ");
 		simpleTB.addField(expFactorLabel);
 		simpleTB.addSpacer();
@@ -600,7 +598,7 @@ Ext.onReady(function() {
 	
     	
     	factorMgedComboBox = createMgedComboBox(function(field,record,index){saveNewFactorButton.enable();});
-	 	var factorTB = new Ext.Toolbar("factorGridTB");	
+	 	var factorTB = new Ext.Toolbar({renderTo: "factorGridTB"});	
 		factorTB.addField(factorMgedComboBox);
 		factorTB.addSpacer();
 		factorTB.addField(createFactorDescriptionField());
@@ -625,17 +623,14 @@ Ext.onReady(function() {
 						
 	initFactorValueGrid("factorValueGrid");	
 
-	if (Ext.get("factorValueTB")){
-		
-		var factorValueTB = new Ext.Gemma.AnnotationToolBar( "factorValueTB", factorValueGrid, {
+	if ( admin ) {
+		var factorValueTB = new Ext.Gemma.AnnotationToolBar( factorValueGrid, {
 			createHandler : saveExperimentalFactorValue,
 			deleteHandler : deleteExperimentalFactorValue,
 			addDescription : true,
 			mgedComboWidth: 125,
 			charComboWidth: 100
 		} );
-					
-	}
- 		
+ 	}
 	
 });

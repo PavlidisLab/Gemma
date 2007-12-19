@@ -371,7 +371,7 @@
 					History
 				</h3>
 				<div id="auditTrail" class="x-grid-mso"
-					style="border: 1px solid #c3daf9; overflow: hidden; width: 630px; height: 250px;"></div>
+					style="border: 1px solid #c3daf9; overflow: hidden; width: 630px;"></div>
 				<input type="hidden" name="auditableId" id="auditableId" value="${arrayDesign.id}" />
 				<input type="hidden" name="auditableClass" id="auditableClass" value="${arrayDesign.class.name}" />
 

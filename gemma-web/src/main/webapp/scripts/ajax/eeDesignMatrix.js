@@ -29,9 +29,31 @@ var DesignMatrix = {
 		} );
 		this.ds.load();
 		
-		this.grid = new Ext.grid.Grid( "eeDesignMatrix", { ds : this.ds, cm : cm } );
+		this.grid = new Ext.grid.GridPanel( {
+			ds : this.ds,
+			cm : cm,
+			renderTo : "eeDesignMatrix",
+			autoHeight : true,
+			autoWidth : true,
+			viewConfig : { autoFill : true }
+		} );
 		this.grid.render();
-		this.grid.getView().autoSizeColumns();
+		
+		this.grid.autoSizeColumns = function() {
+		    for (var i = 0; i < this.colModel.getColumnCount(); i++) {
+    			this.autoSizeColumn(i);
+		    }
+		};
+		this.grid.autoSizeColumn = function(c) {
+			var w = this.view.getHeaderCell(c).firstChild.scrollWidth;
+			for (var i = 0, l = this.store.getCount(); i < l; i++) {
+				w = Math.max(w, this.view.getCell(i, c).firstChild.scrollWidth);
+			}
+			this.colModel.setColumnWidth(c, w);
+			return w;
+		};
+		this.grid.autoSizeColumns();
+		this.grid.doLayout();
 	},
 	init : function() {
 		var entityDelegator = {

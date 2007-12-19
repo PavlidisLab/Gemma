@@ -3,8 +3,16 @@ Ext.namespace('Ext.Gemma');
 /* Ext.Gemma.CharacteristicCombo constructor...
  */
 Ext.Gemma.CharacteristicCombo = function ( config ) {
+	Ext.QuickTips.init();
+	
+	this.characteristic = {
+		category : null,
+		categoryUri : null,
+		value : null,
+		valueUri : null
+	}
 
-	Ext.Gemma.CharacteristicCombo.superclass.constructor.call( this, config );
+	var superConfig = { };
 	
 	if ( Ext.Gemma.CharacteristicCombo.record == undefined ) {
 		/* if the characteristic has a URI, use that as the description;
@@ -36,38 +44,27 @@ Ext.Gemma.CharacteristicCombo = function ( config ) {
 			{ name:"style", mapping:"this", convert:getStyle }
 		] );
 	}
-	this.store = config.store || new Ext.data.Store( {
+	superConfig.store = new Ext.data.Store( {
 		proxy : new Ext.data.DWRProxy( OntologyService.findExactTerm ),
 		reader : new Ext.data.ListRangeReader( {id:"id"}, Ext.Gemma.CharacteristicCombo.record ),
 		remoteSort : true
 	} );
 	
 	if ( Ext.Gemma.CharacteristicCombo.template == undefined ) {
-		Ext.Gemma.CharacteristicCombo.template = new Ext.Template(
-			'<div class="search-item">',
-				'<div class="{style}" title="{hover}">{value}</div>',
-			'</div>'
+		Ext.Gemma.CharacteristicCombo.template = new Ext.XTemplate(
+			'<tpl for="."><div ext:qtip="{hover}" class="x-combo-list-item {style}">{value}</div></tpl>'
 		);
 	}
-	this.tpl = config.tpl || Ext.Gemma.CharacteristicCombo.template;
+	superConfig.tpl = Ext.Gemma.CharacteristicCombo.template;
 	
-	this.getParams = function (query) {
-		return [ query, this.characteristic.categoryUri ];
-	};
-	
-	this.hideTrigger = config.hideTrigger || false;
-	this.loadingText = config.loadingText || "Searching...";
-	this.minChars = config.minChars || 2;
-	this.pageSize = config.pageSize || 0;
-	this.selectOnFocus = config.selectOnFocus || true;
-	this.typeAhead = config.typeAhead || false;
-	
-	this.characteristic = {
-		category : null,
-		categoryUri : null,
-		value : null,
-		valueUri : null
+	superConfig.loadingText = "Searching...";
+	superConfig.minChars = 2;
+	superConfig.selectOnFocus = true;
+
+	for ( property in config ) {
+		superConfig[property] = config[property];
 	}
+	Ext.Gemma.CharacteristicCombo.superclass.constructor.call( this, superConfig );
 	
 	this.on( "select", function ( combo, record, index ) {
 		this.characteristic.value = record.data.value;
@@ -79,6 +76,10 @@ Ext.Gemma.CharacteristicCombo = function ( config ) {
 /* other public methods...
  */
 Ext.extend( Ext.Gemma.CharacteristicCombo, Ext.form.ComboBox, {
+
+		getParams : function ( query ) {
+			return [ query, this.characteristic.categoryUri ];
+		},
 
 		getCharacteristic : function () {
 			/* check to see if the user has typed anything in the combo box;

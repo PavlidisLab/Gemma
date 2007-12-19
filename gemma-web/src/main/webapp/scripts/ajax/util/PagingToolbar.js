@@ -15,9 +15,9 @@ Ext.namespace('Ext.Gemma');
  *         var d = this.getPageData(), ap = d.activePage, ps = d.pages;
  *
  */
-Ext.Gemma.PagingToolbar = function ( el, ds, config ) {
+Ext.Gemma.PagingToolbar = function ( config ) {
 
-	Ext.Gemma.PagingToolbar.superclass.constructor.call( this, el, ds, config );
+	Ext.Gemma.PagingToolbar.superclass.constructor.call( this, config );
 
 }
 
@@ -28,8 +28,8 @@ Ext.extend( Ext.Gemma.PagingToolbar, Ext.PagingToolbar, {
 		 * won't be caught by the test in Ext.PagingToolbar.onLoad...
 		 */
 		var definedStartParameter = false;
-		if ( o.params && o.params.start === undefined ) {
-			o.params.start = 0;
+		if ( o.params && o.params[this.paramNames.start] === undefined ) {
+			o.params[this.paramNames.start] = 0;
 			definedStartParameter = true;
 		}
 		
@@ -39,7 +39,7 @@ Ext.extend( Ext.Gemma.PagingToolbar, Ext.PagingToolbar, {
 		 * change behaviour elsewhere...
 		 */
 		if ( definedStartParameter )
-			delete o.params.start;
+			delete o.params[this.paramNames.start];
 	}
 
 } );

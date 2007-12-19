@@ -21,29 +21,26 @@ Ext.Gemma.AnnotationGrid = function ( div, config ) {
 	this.showParent = config.showParent; delete config.showParent;
 	this.noInitialLoad = config.noInitialLoad; delete config.noInitialLoad;
 	this.pageSize = config.pageSize; delete config.pageSize;
-	this.uniqueId = Ext.Gemma.AnnotationGrid.getUniqueId();
 	
-	var parentStyler = function( value, metadata, record, row, col, ds ) {
-		var parentLink = record.data.parentLink;
-		var parentDecription = record.data.parentDescription;
-		var parentOfParentLink = record.data.parentOfParentLink;
-		var parentOfParentDescription = record.data.parentOfParentDescription;
-		
-		if ( parentOfParentLink ) {
-			return String.format( "{0}<br> from {1}", parentLink, parentOfParentLink )
-		} else {
-			return String.format ( "{0} <img id='{1}' src='/Gemma/images/magnifier.png' />", parentLink, Ext.Gemma.AnnotationGrid.getHandleId( this.uniqueId, record.id ) );
-		}
-	};
-	
-	var superConfig = { };
+	/* keep a reference to ourselves to avoid convoluted scope issues below...
+	 */
 	var thisGrid = this;
+	
+	/* establish default config options...
+	 */
+	var superConfig = {
+		renderTo : div
+	};
 	
 	if ( this.pageSize ) {
 		superConfig.ds = new Ext.Gemma.PagingDataStore( {
 			proxy : new Ext.data.DWRProxy( this.readMethod ),
 			reader : new Ext.data.ListRangeReader( {id:"id"}, Ext.Gemma.AnnotationGrid.getRecord() ),
 			pageSize : this.pageSize
+		} );
+		superConfig.bbar = new Ext.Gemma.PagingToolbar( {
+			pageSize : this.pageSize,
+			store : superConfig.ds
 		} );
 	} else {
 		superConfig.ds = new Ext.data.Store( {
@@ -52,9 +49,6 @@ Ext.Gemma.AnnotationGrid = function ( div, config ) {
 		} );
 	}
 	superConfig.ds.setDefaultSort('className');
-	superConfig.ds.on( "load", function() {
-		thisGrid.getView().autoSizeColumns();
-	} );
 	
 	superConfig.cm = new Ext.grid.ColumnModel( [
 		{ header: "Class", dataIndex: "className" },
@@ -79,25 +73,21 @@ Ext.Gemma.AnnotationGrid = function ( div, config ) {
 	
 	superConfig.selModel = new Ext.grid.RowSelectionModel();
 	
-	superConfig.loadMask = true;
 	superConfig.autoExpandColumn = this.showParent ? 2 : 1;
+	superConfig.autoHeight = true;
+	superConfig.loadMask = true;
+	superConfig.bbar = [];
+	superConfig.tbar = [];
 
 	for ( property in config ) {
 		superConfig[property] = config[property];
 	}
-	Ext.Gemma.AnnotationGrid.superclass.constructor.call( this, div, superConfig );
+	Ext.Gemma.AnnotationGrid.superclass.constructor.call( this, superConfig );
 	
 	/* these functions have to happen after we've called the super-constructor so that we know
 	 * we're a Grid...
 	 */
 	if ( this.editable ) {
-//		this.on( "afteredit", function( e ) {
-//			var row = e.record.data;
-//			var c = Ext.Gemma.AnnotationGrid.convertToCharacteristic( row );
-//			var callback = this.refresh.bind( this );
-//			CharacteristicBrowserController.updateCharacteristics( [ c ], callback );
-//		} );
-		
 		this.on( "beforeedit", function( e ) {
 			var row = e.record.data;
 			var col = this.getColumnModel().getColumnId( e.column );
@@ -106,7 +96,6 @@ Ext.Gemma.AnnotationGrid = function ( div, config ) {
 				f( row.className, row.classUri );
 			}
 		} );
-		
 		this.on( "afteredit", function( e ) {
 			var col = this.getColumnModel().getColumnId( e.column );
 			if ( col == CATEGORY_COLUMN ) {
@@ -125,7 +114,7 @@ Ext.Gemma.AnnotationGrid = function ( div, config ) {
 	}
 	
 	this.on( "celldblclick", function ( grid, rowIndex, cellIndex ) {
-		var record = grid.getDataSource().getAt( rowIndex );
+		var record = grid.getStore().getAt( rowIndex );
 		var column = grid.getColumnModel().getColumnId( cellIndex )
 		if ( column == PARENT_COLUMN ) {
 			record.expanded = record.expanded ? 0 : 1;
@@ -133,8 +122,19 @@ Ext.Gemma.AnnotationGrid = function ( div, config ) {
 		}
 	}, this );
 	
+	this.getStore().on( "load", function () {
+		this.autoSizeColumns();
+		this.doLayout();
+	}, this );
+	
 	if ( ! this.noInitialLoad )
-		this.getDataSource().load( { params : this.getReadParams() } );
+		this.getStore().load( { params : this.getReadParams() } );
+	
+	/* if the toolbars weren't passed in, destroy the default elements that were created...
+	 * we're doing this so that we can have the option of adding toolbars later...
+	 */
+	if ( ! config.tbar ) { this.getTopToolbar().destroy(); }
+	if ( ! config.bbar ) { this.getBottomToolbar().destroy(); }
 };
 
 /* static methods
@@ -154,14 +154,6 @@ Ext.Gemma.AnnotationGrid.getRecord = function() {
 		] );
 	}
 	return Ext.Gemma.AnnotationGrid.record;
-};
-
-Ext.Gemma.AnnotationGrid.getUniqueId = function() {
-	return ++Ext.Gemma.AnnotationGrid.nextId;
-};
-
-Ext.Gemma.AnnotationGrid.getHandleId = function( gridId, recordId ) {
-	return String.format( "handle{0}{1}", gridId, recordId );
 };
 
 Ext.Gemma.AnnotationGrid.formatTermWithStyle = function( value, uri ) {
@@ -220,14 +212,14 @@ Ext.Gemma.AnnotationGrid.convertToCharacteristic = function( record ) {
 
 /* instance methods...
  */
-Ext.extend( Ext.Gemma.AnnotationGrid, Ext.grid.EditorGrid, {
+Ext.extend( Ext.Gemma.AnnotationGrid, Ext.grid.EditorGridPanel, {
 	
 	refresh : function( params ) {
 		var reloadOpts = { callback: this.getView().refresh };
 		if ( params ) {
 			reloadOpts.params = params
 		}
-		this.getDataSource().reload( reloadOpts );
+		this.getStore().reload( reloadOpts );
 	},
 
 	getReadParams : function() {
@@ -255,13 +247,28 @@ Ext.extend( Ext.Gemma.AnnotationGrid, Ext.grid.EditorGrid, {
 	
 	getEditedCharacteristics : function() {
 		var chars = [];
-		this.getDataSource().each( function( record ) {
+		this.getStore().each( function( record ) {
 			if ( record.dirty ) {
 				var row = record.data;
 				chars.push( Ext.Gemma.AnnotationGrid.convertToCharacteristic( row ) );
 			}
 		} );
 		return chars;
+	},
+	
+	autoSizeColumns: function() {
+	    for (var i = 0; i < this.colModel.getColumnCount(); i++) {
+    		this.autoSizeColumn(i);
+	    }
+	},
+
+	autoSizeColumn: function(c) {
+		var w = this.view.getHeaderCell(c).firstChild.scrollWidth;
+		for (var i = 0, l = this.store.getCount(); i < l; i++) {
+			w = Math.max(w, this.view.getCell(i, c).firstChild.scrollWidth);
+		}
+		this.colModel.setColumnWidth(c, w);
+		return w;
 	}
 	
 } );

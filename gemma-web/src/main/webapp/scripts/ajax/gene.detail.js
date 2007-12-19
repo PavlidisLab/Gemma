@@ -29,7 +29,7 @@ var goTermGrid = function () {
 		return columnModel;
 	}
 	function buildGrid() {
-		grid = new Ext.grid.Grid("go-grid", {ds:ds, cm:getColumnModel(), loadMask: true});
+		grid = new Ext.grid.GridPanel({renderTo:"go-grid", height: Ext.get("go-grid").getHeight(), ds:ds, cm:getColumnModel(), loadMask: true});
 		grid.render();
 	}
 	return {init:function () {
@@ -71,7 +71,7 @@ Ext.onReady(function() {
 			{header: "Description", width: 270, dataIndex:"description"}]);
 	cm.defaultSortable = true;
 
-	var grid = new Ext.grid.Grid("geneproduct-grid", {ds:ds, cm:cm, loadMask: true });
+	var grid = new Ext.grid.GridPanel({renderTo:"geneproduct-grid", height: Ext.get("geneproduct-grid").getHeight(), ds:ds, cm:cm, loadMask: true });
 	grid.render();
 	ds.load({params:[g]});
 	  

@@ -128,17 +128,14 @@
 </h3>
 
 <div id="bmFactorValues" class="x-grid-mso"
-	style="border: 1px solid #c3daf9; overflow: hidden; width:650px; height:150px;"></div>
+	style="border: 1px solid #c3daf9; overflow: hidden; width:650px;"></div>
 
 <h3>
 	Annotations
 </h3>
-<authz:authorize ifAnyGranted="admin">
-	<div id="bmAnnotator" class="x-grid-mso" style="padding-left: 2px; padding-right: 2px; overflow: hidden; width:650px; height:30px;"></div>
-</authz:authorize>
 
 <div id="bmAnnotations" class="x-grid-mso"
-	style="border: 1px solid #c3daf9; overflow: hidden; width:650px; height:150px;"></div>
+	style="border: 1px solid #c3daf9; overflow: hidden; width:650px;"></div>
 <input type="hidden" name="bmId" id="bmId" value="${bioMaterial.id}" />
 <input type="hidden" name="bmClass" id="bmClass" value="${bioMaterial.class.name}" />
 

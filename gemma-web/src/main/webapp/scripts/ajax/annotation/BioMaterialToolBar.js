@@ -4,7 +4,7 @@ Ext.onReady( function() {
 	
 	/* here we reference the grid defined in BioMaterialGrid.js.
 	 */
-	var toolbar = new Ext.Gemma.AnnotationToolBar( "bmAnnotator", Ext.Gemma.BioMaterialGrid.grid, {
+	var toolbar = new Ext.Gemma.AnnotationToolBar( Ext.Gemma.BioMaterialGrid.grid, {
 		createHandler : function( characteristic, callback ) {
 			OntologyService.saveBioMaterialStatement( characteristic, [bmId], callback );
 		},

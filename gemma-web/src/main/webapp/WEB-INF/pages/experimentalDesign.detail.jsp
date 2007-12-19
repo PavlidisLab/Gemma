@@ -214,22 +214,22 @@
 <authz:authorize ifAllGranted="admin">
 	<input type="hidden" name="experimentalDesignAdmin" value="true" />
 </authz:authorize>
+<authz:authorize ifNotGranted="admin">
+<input type="hidden" name="experimentalDesignAdmin" id="hasAdmin" value="" />
+</authz:authorize>
 
 <table>
 	<tr>
-		<td>
+		<td style="vertical-align: top">
         	<h3><fmt:message key="experimentalFactors.title" /></h3>
         	<authz:authorize ifAllGranted="admin">
         		<div id="factorGridTB" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:400px; height:30px;"></div>
 	        </authz:authorize>
     	    <div id="factorGrid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:400px; height:150px;"></div>
 	     </td>
-    	 <td>
+    	 <td style="vertical-align: top">
         	<h3><fmt:message key="experimentalDesign.factorValues" />  for selected factor</h3>
-	        <authz:authorize ifAllGranted="admin">
-		        <div id="factorValueTB" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:400px; height:30px;"></div>    	
-	        </authz:authorize>
-    	    <div id="factorValueGrid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:400px; height:150px;"></div>
+	        <div id="factorValueGrid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:400px; height:180px;"></div>
 	  	</td>
 	</tr>
  	<authz:authorize ifAllGranted="admin">  

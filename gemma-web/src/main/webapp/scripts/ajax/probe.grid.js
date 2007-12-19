@@ -32,7 +32,7 @@ var showprobes = function(id) {
 var showArrayDesignProbes = function(id) {
 	ds.load({params:{start:start, limit:size, sort:"arrayDesignName", dir:"ASC"},
 	callback: function(r, options, success, scope ) {  
-		if (!success) { 
+		if (!success) {
 			Ext.DomHelper.overwrite("messages", "There was an error." );  
 		} 
 	}});
@@ -143,7 +143,7 @@ var initDetails = function() {
 	cm.setColumnTooltip(1, "BLAT score");
 	cm.setColumnTooltip(2, "Sequence alignment identity");
 
-	var blgrid = new Ext.grid.Grid("probe-details", {ds:detailsDataSource, cm:cm, loadMask: true });
+	var blgrid = new Ext.grid.GridPanel({renderTo: "probe-details", height: Ext.get("probe-details").getHeight(), store:detailsDataSource, cm:cm, loadMask: true });
 	
     var rz = new Ext.Resizable("probe-details", {
 	    wrap:true,
@@ -151,7 +151,7 @@ var initDetails = function() {
 	    pinned:true,
 	    handles: 's'
     });
-    rz.on('resize', blgrid.autoSize, blgrid);
+    rz.on('resize', blgrid.doLayout, blgrid);
 	blgrid.render();
 };
  
@@ -341,7 +341,22 @@ Ext.onReady(function() {
 		cm.setColumnTooltip(4, "Symbols of genes this probe potentially targets; if there are more than 3, the total count is provided in parentheses");
 	}
 
-	grid = new Ext.grid.Grid("probe-grid", {ds:ds, cm:cm, loadMask: true });
+	var gridConfig = {
+		renderTo: "probe-grid",
+		store:ds,
+		cm:cm,
+		loadMask: true,
+		height: Ext.get("probe-grid").getHeight()
+	};
+	// add a paging toolbar to the grid's footer
+	if ( isArrayDesign ) {
+		paging = new Ext.PagingToolbar({
+			store: ds,
+	        pageSize: size
+	    });
+		gridConfig.bbar = paging;
+	}
+	grid = new Ext.grid.GridPanel( gridConfig );
 	
 	    // make the grid resizable, do before render for better performance
     var rz = new Ext.Resizable("probe-grid", {
@@ -350,17 +365,9 @@ Ext.onReady(function() {
         pinned:true,
         handles: 's'
     });
-    rz.on('resize', grid.autoSize, grid);
+    rz.on('resize', grid.doLayout, grid);
 	
 	grid.render();
-	
-	// add a paging toolbar to the grid's footer
-	if (isArrayDesign) {
-		var gridFoot = grid.getView().getFooterPanel(true);
-	     paging  = new Ext.PagingToolbar(gridFoot, ds, {
-	        pageSize: size
-	    });
-	}
 	
 	reset();
 

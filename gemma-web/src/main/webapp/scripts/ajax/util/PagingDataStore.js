@@ -23,6 +23,10 @@ Ext.extend( Ext.Gemma.PagingDataStore, Ext.data.Store, {
        return Ext.Gemma.PagingDataStore.superclass.getAt.call( this, this.currentStartIndex + index );
     },
     
+    getCount : function () {
+    	return this.getVisibleRecords().length;
+    },
+    
     getRange : function ( start, end ) {
 	   	var windowStart = this.currentStartIndex + start;
     	var windowEnd = this.currentStartIndex + end;

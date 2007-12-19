@@ -22,6 +22,8 @@
 	
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/eeDesignMatrix.js'/>"></script>
 	
+	<script type="text/javascript" src="<c:url value='/scripts/scriptaculous/effects.js'/>"></script>
+	
 	<authz:authorize ifAnyGranted="admin">
 		<script type="text/javascript" src='/Gemma/dwr/interface/OntologyService.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/MgedOntologyService.js'></script>
@@ -291,12 +293,8 @@ if ( expressionExperiment.getName() != null ) {
 	<br />
 </div>
 <div id="annots">
-	<authz:authorize ifAnyGranted="admin">
-		<div id="eeAnnotator" class="x-grid-mso"
-			style="padding-left: 2px; padding-right: 2px; overflow: hidden; width: 650px; height: 30px;"></div>
-	</authz:authorize>
 	<div id="eeAnnotations" class="x-grid-mso"
-		style="border: 1px solid #c3daf9; overflow: hidden; width: 650px; height: 150px;"></div>
+		style="border: 1px solid #c3daf9; overflow: hidden;"></div>
 	<input type="hidden" name="eeId" id="eeId" value="${expressionExperiment.id}" />
 	<input type="hidden" name="eeClass" id="eeClass" value="${expressionExperiment.class.name}" />
 </div>
@@ -322,7 +320,8 @@ if ( expressionExperiment.getExperimentalDesign() != null ) {
 <div id="design">
 	<Gemma:eeDesign experimentalDesign="${expressionExperiment.experimentalDesign}"></Gemma:eeDesign>
 
-	<div id="eeDesignMatrix" class="x-grid-mso" style="overflow: hidden;"></div>
+	<div id="eeDesignMatrix" class="x-grid-mso"
+		style="border: 1px solid #c3daf9; overflow: hidden;"></div>
 </div>
 <%
 }
@@ -406,7 +405,7 @@ if ( expressionExperiment.getExperimentalDesign() != null ) {
 		History
 	</h3>
 	<div id="auditTrail" class="x-grid-mso"
-		style="border: 1px solid #c3daf9; overflow: hidden; width: 630px; height: 250px;"></div>
+		style="border: 1px solid #c3daf9; overflow: hidden; width: 650px;"></div>
 	<input type="hidden" name="auditableId" id="auditableId" value="${expressionExperiment.id}" />
 	<input type="hidden" name="auditableClass" id="auditableClass" value="${expressionExperiment.class.name}" />
 	<c:if test="${ lastArrayDesignUpdate != null}">
