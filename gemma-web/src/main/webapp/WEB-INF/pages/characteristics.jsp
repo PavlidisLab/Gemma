@@ -16,11 +16,12 @@
 		<script type="text/javascript" src='/Gemma/dwr/interface/OntologyService.js'></script>
 		<script type="text/javascript" src='/Gemma/dwr/interface/MgedOntologyService.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/CharacteristicBrowserController.js'></script>
+		<script type='text/javascript' src="<c:url value='/scripts/ajax/util/GemmaGridPanel.js'/>"></script>
 		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/AnnotationGrid.js'/>"></script>
-		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/CharacteristicCombo.js'/>"></script>
-		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/MGEDCombo.js'/>"></script>
 		<script type='text/javascript' src="<c:url value='/scripts/ajax/util/PagingDataStore.js'/>"></script>
 		<script type='text/javascript' src="<c:url value='/scripts/ajax/util/PagingToolbar.js'/>"></script>
+		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/CharacteristicCombo.js'/>"></script>
+		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/MGEDCombo.js'/>"></script>
 		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/CharacteristicBrowser.js'/>"></script>
 	</authz:authorize>
 </head>

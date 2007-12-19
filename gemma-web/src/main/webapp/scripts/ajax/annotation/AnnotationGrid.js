@@ -71,13 +71,7 @@ Ext.Gemma.AnnotationGrid = function ( div, config ) {
 		superConfig.cm.setEditor( VALUE_COLUMN, valueEditor );
 	}
 	
-	superConfig.selModel = new Ext.grid.RowSelectionModel();
-	
 	superConfig.autoExpandColumn = this.showParent ? 2 : 1;
-	superConfig.autoHeight = true;
-	superConfig.loadMask = true;
-	superConfig.bbar = [];
-	superConfig.tbar = [];
 
 	for ( property in config ) {
 		superConfig[property] = config[property];
@@ -129,12 +123,6 @@ Ext.Gemma.AnnotationGrid = function ( div, config ) {
 	
 	if ( ! this.noInitialLoad )
 		this.getStore().load( { params : this.getReadParams() } );
-	
-	/* if the toolbars weren't passed in, destroy the default elements that were created...
-	 * we're doing this so that we can have the option of adding toolbars later...
-	 */
-	if ( ! config.tbar ) { this.getTopToolbar().destroy(); }
-	if ( ! config.bbar ) { this.getBottomToolbar().destroy(); }
 };
 
 /* static methods
@@ -156,18 +144,12 @@ Ext.Gemma.AnnotationGrid.getRecord = function() {
 	return Ext.Gemma.AnnotationGrid.record;
 };
 
-Ext.Gemma.AnnotationGrid.formatTermWithStyle = function( value, uri ) {
-	var class = uri ? "unusedWithUri" : "unusedNoUri";
-	var description = uri || "free text";
-	return String.format( "<span class='{0}' title='{2}'>{1}</span>", class, value, description );
-};
-
 Ext.Gemma.AnnotationGrid.getTermStyler = function() {
 	if ( Ext.Gemma.AnnotationGrid.termStyler == undefined ) {
 		/* apply a CSS class depending on whether or not the characteristic has a URI.
 		 */
 		Ext.Gemma.AnnotationGrid.termStyler = function ( value, metadata, record, row, col, ds ) {
-			return Ext.Gemma.AnnotationGrid.formatTermWithStyle( value, record.data.termUri );
+			return Ext.Gemma.GemmaGridPanel.formatTermWithStyle( value, record.data.termUri );
 		}
 	}
 	return Ext.Gemma.AnnotationGrid.termStyler;
@@ -212,15 +194,7 @@ Ext.Gemma.AnnotationGrid.convertToCharacteristic = function( record ) {
 
 /* instance methods...
  */
-Ext.extend( Ext.Gemma.AnnotationGrid, Ext.grid.EditorGridPanel, {
-	
-	refresh : function( params ) {
-		var reloadOpts = { callback: this.getView().refresh };
-		if ( params ) {
-			reloadOpts.params = params
-		}
-		this.getStore().reload( reloadOpts );
-	},
+Ext.extend( Ext.Gemma.AnnotationGrid, Ext.Gemma.GemmaGridPanel, {
 
 	getReadParams : function() {
 		return ( typeof this.readParams == "function" ) ? this.readParams() : this.readParams;
@@ -254,21 +228,6 @@ Ext.extend( Ext.Gemma.AnnotationGrid, Ext.grid.EditorGridPanel, {
 			}
 		} );
 		return chars;
-	},
-	
-	autoSizeColumns: function() {
-	    for (var i = 0; i < this.colModel.getColumnCount(); i++) {
-    		this.autoSizeColumn(i);
-	    }
-	},
-
-	autoSizeColumn: function(c) {
-		var w = this.view.getHeaderCell(c).firstChild.scrollWidth;
-		for (var i = 0, l = this.store.getCount(); i < l; i++) {
-			w = Math.max(w, this.view.getCell(i, c).firstChild.scrollWidth);
-		}
-		this.colModel.setColumnWidth(c, w);
-		return w;
 	}
 	
 } );

@@ -17,6 +17,7 @@
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentController.js'></script>
+		<script type='text/javascript' src="<c:url value='/scripts/ajax/util/GemmaGridPanel.js'/>"></script>
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/AnnotationGrid.js'/>"></script>
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/ExpressionExperimentGrid.js'/>"></script>
 	
