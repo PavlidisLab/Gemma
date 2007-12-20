@@ -11,14 +11,14 @@
 	<script src="<c:url value='/scripts/ext/ext-all-debug.js'/>" type="text/javascript"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentController.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/BioMaterialController.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/MgedOntologyService.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/ExperimentalDesignController.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/CharacteristicBrowserController.js'></script>
-	 <script type="text/javascript" src='/Gemma/dwr/interface/OntologyService.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/BioMaterialController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/ExperimentalDesignController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/CharacteristicBrowserController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/MgedOntologyService.js'></script>
+	<script type="text/javascript" src='/Gemma/dwr/interface/OntologyService.js'></script>
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/CharacteristicCombo.js'/>"></script>
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/MGEDCombo.js'/>"></script>
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/AnnotationToolBar.js'/>"></script>
@@ -31,11 +31,12 @@
 <authz:authorize ifNotGranted="admin">
 <input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
 </authz:authorize>	
-	
+
+
 <div style="padding: 2px;" onclick="Effect.toggle('edDetail', 'blind', {duration:0.1})">
 	<h2>
 		<img src="/Gemma/images/plus.gif" />
-		<fmt:message key="experimentalDesign.details" />
+		<fmt:message key="experimentalDesign.details" /> for <a href='<c:out value="${expressionExperimentUrl}" />'><jsp:getProperty name="expressionExperiment" property="shortName" /></a>
 	</h2>
 </div>
 <div id="edDetail" style="display: none">
@@ -53,7 +54,7 @@
         	out.print("Experimental Design Name unavailable");
         }%>
     	</td>
-    </tr>        
+    </tr>    
     <tr>
        <td class="label">
                     <b>
@@ -205,8 +206,6 @@
 </table>
 	</div>
 </div>
-		
-
 
 <script type="text/javascript" src="<c:url value='/scripts/ajax/ExperimentalDesign.js'/>" type="text/javascript"></script>
 <input type="hidden" name="expressionExperimentID" id="expressionExperimentID" value="${expressionExperiment.id}" />

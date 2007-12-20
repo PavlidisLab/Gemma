@@ -38,6 +38,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
+import ubic.gemma.util.GemmaLinkUtils;
 import ubic.gemma.web.controller.BaseMultiActionController;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.EntityNotFoundException;
@@ -91,6 +92,7 @@ public class ExperimentalDesignController extends BaseMultiActionController {
         ModelAndView mnv = new ModelAndView( "experimentalDesign.detail" );
         mnv.addObject( "experimentalDesign", experimentalDesign );
         mnv.addObject( "expressionExperiment", ee );
+        mnv.addObject( "expressionExperimentUrl", GemmaLinkUtils.getExpressionExperimentUrl( ee.getId() ) );
 
         return mnv;
     }

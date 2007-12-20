@@ -93,7 +93,7 @@ public class ExperimentalDesignDaoImpl extends ubic.gemma.model.expression.exper
         if ( ed == null ) return null;
 
         final String queryString = "select distinct ee FROM ExpressionExperimentImpl as ee where ee.experimentalDesign = :ed ";
-        List results = getHibernateTemplate().find( queryString, ed );
+        List results = getHibernateTemplate().findByNamedParam( queryString, "ed", ed );
 
         if ( results.size() == 0 ) {
             log.info( "There is no expression experiment that has experimental design id = " + ed.getId() );
