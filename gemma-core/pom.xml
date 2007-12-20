@@ -197,9 +197,10 @@
 			<type>jar</type>
 		</dependency>
 		<dependency>
+			<!-- jena 2.5.6-pre is a made-up version number. It's a snapshot from CVS that uses the lucene 2.2.0 that compass needs. Hopefully soon we will be able to use an official jena release. -->
 			<groupId>jena</groupId>
 			<artifactId>jena</artifactId>
-			<version>2.5.2</version>
+			<version>2.5.6-pre</version>
 			<type>jar</type>
 		</dependency>
 		<dependency>
