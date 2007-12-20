@@ -143,6 +143,9 @@
 		</property>
 		<property name="bibliographicGps">
 			<ref bean="bibliographicGps" />
+		</property>	
+		<property name="bioSequenceGps">
+			<ref bean="biosequenceGps" />
 		</property>		
 		<property name="gigaSpacesTemplate">
 			<ref bean="gigaspacesTemplate" />

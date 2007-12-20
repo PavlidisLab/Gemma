@@ -996,6 +996,12 @@ Mapping URLS to controllers
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean"/>
 				</bean>
+			</entry>			
+			<entry
+				key="ubic.gemma.web.controller.compass.IndexGemmaCommand">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean"/>
+				</bean>
 			</entry>
 			<entry
 				key="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand">

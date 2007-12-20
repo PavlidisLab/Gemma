@@ -49,6 +49,9 @@ function load(accession) {
 	
 };
 
+function reset(data) {
+
+};
 
 function handleLoadSuccess(data) {
 	try {

@@ -48,6 +48,7 @@ public class IndexGemmaTaskImpl extends BaseSpacesTask implements
 	private CompassGpsInterfaceDevice arrayGps;
 	private CompassGpsInterfaceDevice bibliographicGps;
 	private CompassGpsInterfaceDevice probeGps;
+	private CompassGpsInterfaceDevice bioSequenceGps;
 
 	
 	public void setArrayGps(CompassGpsInterfaceDevice arrayGps) {
@@ -69,6 +70,12 @@ public class IndexGemmaTaskImpl extends BaseSpacesTask implements
 	public void setGeneGps(CompassGpsInterfaceDevice geneGps) {
 		this.geneGps = geneGps;
 	}
+	
+	public void setBioSequenceGps(CompassGpsInterfaceDevice bsGps) {
+		this.bioSequenceGps = bsGps;
+	}
+	
+	
 
 	/*
 	 * (non-Javadoc)
@@ -81,6 +88,7 @@ public class IndexGemmaTaskImpl extends BaseSpacesTask implements
 
 		super.initProgressAppender(this.getClass());
 
+		 SpacesResult result = new SpacesResult();
         try {
             if ( indexCommand.isIndexGene() ) {
                 rebuildIndex( geneGps, "Gene index" );
@@ -96,14 +104,16 @@ public class IndexGemmaTaskImpl extends BaseSpacesTask implements
             }
             if ( indexCommand.isIndexProbe() ) {
                 rebuildIndex( probeGps, "Probe Reference Index" );
-
+            }
+            if (indexCommand.isIndexBioSequence()){
+            	rebuildIndex(bioSequenceGps, "Biosequence Reference Index");
             }
 
         } catch ( Exception e ) {
             log.error( e );          
         }
 		
-		return null;
+		return result;
 	}
 	
 	
@@ -114,7 +124,7 @@ public class IndexGemmaTaskImpl extends BaseSpacesTask implements
 
 
         log.info( "Rebuilding " + whatIndexingMsg );
-        // /device.index();
+        
         CompassUtils.rebuildCompassIndex( device );
 
         time = System.currentTimeMillis() - time;

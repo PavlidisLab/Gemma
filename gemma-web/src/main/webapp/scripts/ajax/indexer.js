@@ -2,45 +2,54 @@ Ext.onReady(function() {
 	indexForm();
 });
 
+function reset(data) {
+	
+};
 
 var indexForm = function() {
 	
     Ext.form.Field.prototype.msgTarget = 'side';
-    var simple = new Ext.BasicForm('index-form',{ 
+    var simple = new Ext.FormPanel({border: false 
     });
 
 	geneCheckBox =     new Ext.form.Checkbox({
-            fieldLabel: 'Index genes',
+            boxLabel: ' Index genes',
+            labelSeparator: '',
             name: 'gene'
         });
     simple.add(geneCheckBox);     
     
 	probeCheckBox =     new Ext.form.Checkbox({
-            fieldLabel: 'Index probes',
+			labelSeparator: '',
+            boxLabel: 'Index probes',            
             name: 'probe'
         });
     simple.add( probeCheckBox   );
 	
 	adCheckBox =     new Ext.form.Checkbox({
-            fieldLabel: 'Index ADs',
+            labelSeparator: '',
+            boxLabel:  'Index Array Designs',
             name: 'ad'
         });
     simple.add( adCheckBox   );
     
 	bsCheckBox =     new Ext.form.Checkbox({
-            fieldLabel: 'Index Biosequences',
+            labelSeparator: '',
+            boxLabel:  'Index Biosequences',
             name: 'bs'
         });
 	simple.add( bsCheckBox    );
 	    
 	eeCheckBox =     new Ext.form.Checkbox({
-            fieldLabel: 'Index EEs',
+           labelSeparator: '',
+            boxLabel:  'Index Expression Experiments',
             name: 'ee'
         });
     simple.add(  eeCheckBox  );
         
 	bibRefCheckBox =     new Ext.form.Checkbox({
-            fieldLabel: 'Index Bibliographic Refs',
+            labelSeparator: '',
+            boxLabel: 'Index Bibliographic References',
             name: 'bibRef'
         });		
     simple.add( bibRefCheckBox );
@@ -67,7 +76,7 @@ function index(event) {
 	var callParams = [];
 	
 
-	var commandObj = {indexArray: adCheckBox.valueOf() , indexEE: eeCheckBox.valueOf(), indexProbe : probeCheckBox.valueOf(), indexBibliographic: bibRefCheckBox.valueOf(), indexGene: geneCheckBox.valueOf(), indexBioSequence: bsCheckBox.valueOf()};
+	var commandObj = {indexArray: adCheckBox.getValue() , indexEE: eeCheckBox.getValue(), indexProbe : probeCheckBox.getValue(), indexBibliographic: bibRefCheckBox.getValue(), indexGene: geneCheckBox.getValue(), indexBioSequence: bsCheckBox.getValue()};
 
 	callParams.push(commandObj);
 	

@@ -282,8 +282,8 @@ public class CustomCompassIndexController extends AbstractSpacesFormController {
 
             long time = System.currentTimeMillis();
 
-            job.updateProgress( "Preparing to rebuild " + this.description );
-            log.info( "Preparing to rebuild " + this.description );
+            job.updateProgress( "Preparing to rebuild selected indexes ");
+            log.info( "Preparing to rebuild selected indexes" );
             
             IndexGemmaCommand indexGemmaCommand = ( ( IndexGemmaCommand ) command );
    
