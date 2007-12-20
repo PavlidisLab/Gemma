@@ -62,7 +62,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
     /**
      * @throws Exception
      */
-    public void testGetTopPersistentAnalysisResults() throws Exception {
+    public void testGetTopResultsForFactor() throws Exception {
 
         StopWatch watch = new StopWatch();
         watch.start();
@@ -70,10 +70,9 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         /* eg. use GSE1077 */
         // Collection<ExpressionAnalysisResult> analysisResults = differentialExpressionAnalysisService.getTopResults(
         // shortName, 100 );
-
         /* eg. use GSE1997 */
         Collection<ExpressionAnalysisResult> analysisResults = differentialExpressionAnalysisService
-                .getTopResultsForFactor( shortName, 100, "protocol" );
+                .getTopResultsForFactor( shortName, 100, "protocol", true );
 
         if ( analysisResults == null ) {
             log.warn( "Could not find analyses for expression experiment with short name " + shortName

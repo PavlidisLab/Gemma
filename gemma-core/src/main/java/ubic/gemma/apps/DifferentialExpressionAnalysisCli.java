@@ -24,6 +24,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
 
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 
@@ -53,6 +55,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     private int top = 100;
 
     private boolean useDb = true;
+
+    private boolean forceAnalysis = false;
 
     /**
      * @param args
@@ -107,7 +111,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
                     try {
                         Collection<ExpressionAnalysis> expressionAnalyses = this.differentialExpressionAnalysisService
-                                .getExpressionAnalyses( ee );
+                                .getPersistentExpressionAnalyses( ee, forceAnalysis );
 
                         logProcessing( expressionAnalyses );
 
@@ -142,7 +146,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
                         try {
                             Collection<ExpressionAnalysis> expressionAnalyses = this.differentialExpressionAnalysisService
-                                    .getExpressionAnalyses( expressionExperiment );
+                                    .getPersistentExpressionAnalyses( expressionExperiment, forceAnalysis );
 
                             logProcessing( expressionAnalyses );
                             successObjects.add( expressionExperiment.toString() );
@@ -171,7 +175,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
                 try {
                     Collection<ExpressionAnalysis> expressionAnalyses = this.differentialExpressionAnalysisService
-                            .getExpressionAnalyses( expressionExperiment );
+                            .getPersistentExpressionAnalyses( expressionExperiment, forceAnalysis );
 
                     logProcessing( expressionAnalyses );
 
@@ -206,8 +210,14 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
          */
         super.buildOptions();
 
-        /* Supports: runing on all data sets that have not been run since a given date. */
+        /* Supports: running on all data sets that have not been run since a given date. */
         super.addDateOption();
+
+        Option topOpt = OptionBuilder.withLongOpt( "top" ).hasArg( true ).create();
+        super.addOption( topOpt );
+
+        Option forceAnalysisOpt = OptionBuilder.hasArg( false ).create( 'r' );
+        super.addOption( forceAnalysisOpt );
     }
 
     /*
@@ -219,9 +229,12 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     protected void processOptions() {
         super.processOptions();
 
-        if ( hasOption( 't' ) ) {
-            this.top = Integer.parseInt( ( getOptionValue( 't' ) ) );
+        if ( hasOption( "top" ) ) {
+            this.top = Integer.parseInt( ( getOptionValue( "top" ) ) );
         }
+
+        this.forceAnalysis = hasOption( 'r' );
+
     }
 
     /**
