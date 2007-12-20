@@ -46,6 +46,12 @@ public class OntologySearch {
 
     private static Log log = LogFactory.getLog( OntologySearch.class.getName() );
 
+    /**
+     * @param model
+     * @param index
+     * @param queryString
+     * @deprecated never used.
+     */
     public static void performQuery( OntModel model, IndexLARQ index, String queryString ) {
         // Make globally available
         LARQ.setDefaultIndex( index );
@@ -76,19 +82,21 @@ public class OntologySearch {
         while ( iterator.hasNext() ) {
             RDFNode r = ( RDFNode ) iterator.next();
             r = r.inModel( model );
-            log.debug( "Search results: " + r );
+            if ( log.isDebugEnabled() ) log.debug( "Search results: " + r );
             if ( r.isURIResource() ) {
                 try {
-                	
-                	if (!r.canAs(OntClass.class)){
-                		log.info("Unable to convert jena resource to OntClass.class, skipping. Resource: " + r.toString());                		
-                		continue;
-                	}
-                	
+
+                    if ( !r.canAs( OntClass.class ) ) {
+                        if ( log.isDebugEnabled() )
+                            log.debug( "Unable to convert jena resource " + r
+                                    + " to OntClass.class, skipping. Resource: " + r.toString() );
+                        continue;
+                    }
+
                     OntClass cl = ( OntClass ) r.as( OntClass.class );
                     OntologyTermImpl impl2 = new OntologyTermImpl( cl, null );
                     results.add( impl2 );
-                    log.debug( impl2 );
+                    if ( log.isDebugEnabled() ) log.debug( impl2 );
                 } catch ( Exception e ) {
                     log.error( e, e );
                 }
@@ -96,8 +104,6 @@ public class OntologySearch {
 
         }
         return results;
-        //
-
     }
 
     /**
@@ -116,19 +122,21 @@ public class OntologySearch {
         while ( iterator.hasNext() ) {
             RDFNode r = ( RDFNode ) iterator.next();
             r = r.inModel( model );
-            log.debug( "Search results: " + r );
+            if ( log.isDebugEnabled() ) log.debug( "Search results: " + r );
             if ( r.isResource() ) {
                 try {
-                	
-                	if (!r.canAs(Individual.class)){
-                		log.info("Unable to convert jena resource to Individual.class, skipping. Resource: " + r.toString());                		
-                		continue;
-                	}
-                	
+
+                    if ( !r.canAs( Individual.class ) ) {
+                        if ( log.isDebugEnabled() )
+                            log.debug( "Unable to convert jena resource " + r
+                                    + " to Individual.class, skipping. Resource: " + r.toString() );
+                        continue;
+                    }
+
                     Individual cl = ( Individual ) r.as( Individual.class );
                     OntologyIndividual impl2 = new OntologyIndividualImpl( cl, null );
                     results.add( impl2 );
-                    log.debug( impl2 );
+                    if ( log.isDebugEnabled() ) log.debug( impl2 );
                 } catch ( Exception e ) {
                     log.error( e, e );
                 }
@@ -155,39 +163,42 @@ public class OntologySearch {
         while ( iterator.hasNext() ) {
             RDFNode r = ( RDFNode ) iterator.next();
             r = r.inModel( model );
-            log.debug( "Search results: " + r );
+            if ( log.isDebugEnabled() ) log.debug( "Search results: " + r );
             if ( r.isURIResource() ) {
                 try {
-                	
-                	if (!r.canAs(OntClass.class)){
-                		log.info("Unable to convert jena resource to OntClass.class, skipping. Resource: " + r.toString());                		
-                		continue;
-                	}
-                	
+
+                    if ( !r.canAs( OntClass.class ) ) {
+                        if ( log.isDebugEnabled() )
+                            log.debug( "Unable to convert jena resource resource " + r
+                                    + " to OntClass.class, skipping. Resource: " + r.toString() );
+                        continue;
+                    }
+
                     OntClass cl = ( OntClass ) r.as( OntClass.class );
                     OntologyTermImpl impl2 = new OntologyTermImpl( cl, null );
                     results.add( impl2 );
-                    log.debug( impl2 );
+                    if ( log.isDebugEnabled() ) log.debug( impl2 );
                 } catch ( Exception e ) {
                     log.error( e, e );
                 }
             } else if ( r.isResource() ) {
                 try {
-                	
-                	if (!r.canAs(Individual.class)){
-                		log.info("Unable to convert jena resource to Individual.class, skipping. Resource: " + r.toString());                		
-                		continue;
-                	}
-                	
+
+                    if ( !r.canAs( Individual.class ) ) {
+                        if ( log.isDebugEnabled() )
+                            log.debug( "Unable to convert jena resource resource " + r
+                                    + "  to Individual.class, skipping. Resource: " + r.toString() );
+                        continue;
+                    }
+
                     Individual cl = ( Individual ) r.as( Individual.class );
                     OntologyIndividual impl2 = new OntologyIndividualImpl( cl, null );
                     results.add( impl2 );
-                    log.debug( impl2 );
+                    if ( log.isDebugEnabled() ) log.debug( impl2 );
                 } catch ( Exception e ) {
                     log.error( e, e );
                 }
-            } else
-                log.debug( "This search term not included in the results: " + r );
+            } else if ( log.isDebugEnabled() ) log.debug( "This search term not included in the results: " + r );
 
         }
         return results;

@@ -214,7 +214,7 @@ public class GeneralSearchController extends BaseFormController {
             
             if ( results.size() == 0 ) continue;
 
-            log.info( "Search result: " + results.size() + " " + clazz.getSimpleName() + "'s" );
+            log.info( "Search result: " + results.size() + " " + clazz.getSimpleName() + "s" );
 
             /*
              * Now put the valueObjects inside the SearchResults in score order.

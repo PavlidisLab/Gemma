@@ -157,9 +157,9 @@ public class OntologyTools {
         }
     }
 
-    protected static void initOntology( String url, OntModelSpec spec ) {
+    protected static void initOntology( String url ) {
         Collection<OntologyResource> terms;
-        terms = OntologyLoader.initialize( url, OntologyLoader.loadMemoryModel( url, spec ) );
+        terms = OntologyLoader.initialize( url, OntologyLoader.loadMemoryModel( url ) );
         for ( OntologyResource term : terms ) {
             cache.put( term );
         }

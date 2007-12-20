@@ -16,7 +16,6 @@
  * limitations under the License.
  *
  */
-
 package ubic.gemma.ontology;
 
 import java.io.IOException;
@@ -24,25 +23,13 @@ import java.io.IOException;
 import com.hp.hpl.jena.ontology.OntModel;
 
 /**
- * Holds a copy of the FMA Ontology on disk. This gets loaded on startup.
+ * Holds a copy of the OBO Disese Ontology on disk. This gets loaded on startup.
  * 
  * @author klc
- * @version $Id: FMAOntologyService.java
- * @spring.bean id="fmaOntologyService"
+ * @version $Id: OBODiseaseOntologyService.java
+ * @spring.bean id="diseaseOntologyService"
  */
-
-public class FMAOntologyService extends AbstractOntologyService {
-
-    @Override
-    protected String getOntologyUrl() {
-        return "http://www.berkeleybop.org/ontologies/obo-all/fma_lite/fma_lite.owl";
-        // http://purl.org/obo/owl/FMA
-    }
-
-    @Override
-    protected OntModel loadModel( String url ) throws IOException {
-        return OntologyLoader.loadMemoryModel( url );
-    }
+public class HumanDiseaseOntologyService extends AbstractOntologyService {
 
     /*
      * (non-Javadoc)
@@ -51,7 +38,19 @@ public class FMAOntologyService extends AbstractOntologyService {
      */
     @Override
     protected String getOntologyName() {
-        return "fmaOntology";
+        return "diseaseOntology";
+    }
+
+    @Override
+    protected String getOntologyUrl() {
+        return "http://www.berkeleybop.org/ontologies/obo-all/disease_ontology/disease_ontology.owl";
+        // http://purl.org/obo/owl/DOID
+    }
+
+    @Override
+    protected OntModel loadModel( String url ) throws IOException {
+
+        return OntologyLoader.loadPersistentModel( url, false );
     }
 
 }

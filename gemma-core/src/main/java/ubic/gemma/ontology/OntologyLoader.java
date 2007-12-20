@@ -197,6 +197,10 @@ public class OntologyLoader {
      * @return
      * @throws IOException
      */
+    public static OntModel loadMemoryModel( String url ) {
+        return loadMemoryModel( url, OntModelSpec.OWL_MEM_TRANS_INF );
+    }
+
     public static OntModel loadMemoryModel( String url, OntModelSpec spec ) {
         OntModel model = getMemoryModel( url, spec );
         model.read( url );
@@ -351,7 +355,7 @@ public class OntologyLoader {
      */
     private static OntModel getRDBModel( String url ) {
 
-        OntModelSpec spec = new OntModelSpec( OntModelSpec.OWL_DL_MEM_RDFS_INF );
+        OntModelSpec spec = new OntModelSpec( OntModelSpec.OWL_DL_MEM_TRANS_INF );
         ModelMaker maker = getRDBMaker();
         spec.setImportModelMaker( maker );
         Model base;

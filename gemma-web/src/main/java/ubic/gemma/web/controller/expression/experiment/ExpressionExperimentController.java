@@ -90,6 +90,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     private ExpressionExperimentReportService expressionExperimentReportService = null;
 
     private SearchService searchService;
+
     private OntologyService ontologyService;
 
     private AuditTrailService auditTrailService;
@@ -258,6 +259,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     }
 
     /**
+     * AJAX
+     * 
      * @param e
      * @return
      */
@@ -655,7 +658,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     @SuppressWarnings("unchecked")
     private Collection<ExpressionExperimentValueObject> getExpressionExperimentValueObjects(
             Collection<ExpressionExperiment> securedEEs ) {
-        // FIXME use the ee, not the id
         Collection ids = new LinkedHashSet();
         for ( ExpressionExperiment ee : securedEEs ) {
             ids.add( ee.getId() );
@@ -790,6 +792,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     }
 
     /**
+     * AJAX
+     * 
      * @param eeId
      * @return a collectino of factor value objects that represent the factors of a given experiment
      */
@@ -811,6 +815,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     }
 
     /**
+     * AJAX
+     * 
      * @param id of an experimental factor
      * @return A collection of factor value objects for the specified experimental factor
      */
@@ -831,6 +837,12 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         return result;
     }
 
+    /**
+     * AJAX
+     * 
+     * @param e
+     * @return
+     */
     public Collection<DesignMatrixRowValueObject> getDesignMatrixRows( EntityDelegator e ) {
 
         if ( e == null || e.getId() == null ) return null;

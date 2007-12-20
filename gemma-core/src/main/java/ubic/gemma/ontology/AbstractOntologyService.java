@@ -34,7 +34,6 @@ import org.springframework.beans.factory.InitializingBean;
 import ubic.gemma.util.ConfigUtils;
 
 import com.hp.hpl.jena.ontology.OntModel;
-import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.query.larq.IndexLARQ;
 
 /**
@@ -48,6 +47,11 @@ public abstract class AbstractOntologyService implements InitializingBean {
     protected Map<String, OntologyTerm> terms;
     protected Map<String, OntologyIndividual> individuals;
     protected AtomicBoolean ready = new AtomicBoolean( false );
+
+    protected AtomicBoolean modelReady = new AtomicBoolean( false );
+    protected AtomicBoolean indexReady = new AtomicBoolean( false );
+    protected AtomicBoolean cacheReady = new AtomicBoolean( false );
+
     protected AtomicBoolean running = new AtomicBoolean( false );
     protected String ontology_URL;
     protected String ontology_name;
@@ -56,14 +60,13 @@ public abstract class AbstractOntologyService implements InitializingBean {
 
     /**
      * Delegates the call as to load the model into memory or leave it on disk. Simply delegates to either
-     * OntologyLoader.loadMemoryModel( url, spec ); OR OntologyLoader.loadPersistentModel( url, spec );
+     * OntologyLoader.loadMemoryModel( url ); OR OntologyLoader.loadPersistentModel( url, spec );
      * 
      * @param url
-     * @param spec
      * @return
      * @throws IOException
      */
-    protected abstract OntModel loadModel( String url, OntModelSpec spec ) throws IOException;
+    protected abstract OntModel loadModel( String url ) throws IOException;
 
     /**
      * Defines the location of the ontology eg: http://mged.sourceforge.net/ontologies/MGEDOntology.owl
@@ -86,6 +89,11 @@ public abstract class AbstractOntologyService implements InitializingBean {
         ontology_name = getOntologyName();
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
+     */
     public void afterPropertiesSet() throws Exception {
         log.debug( "entering AfterpropertiesSet" );
         if ( running.get() ) {
@@ -115,6 +123,7 @@ public abstract class AbstractOntologyService implements InitializingBean {
      * 
      * @param uri
      * @return
+     * @deprecated Never used.
      */
     public OntologyIndividual getIndividual( String uri ) {
 
@@ -146,6 +155,7 @@ public abstract class AbstractOntologyService implements InitializingBean {
     /**
      * @param uri
      * @return
+     * @deprecated
      */
     public Collection<OntologyRestriction> getTermRestrictions( String uri ) {
 
@@ -188,12 +198,11 @@ public abstract class AbstractOntologyService implements InitializingBean {
 
         if ( !isOntologyLoaded() ) return null;
 
-        log.info( "Searching " + this.getOntologyName() );
+        log.info( "Searching " + this.getOntologyName() + " for '" + search + "'" );
 
         assert index != null : "attempt to search " + this.getOntologyName() + " when index is null";
-        Collection<OntologyTerm> name = OntologySearch.matchClasses( model, index, search );
-
-        return name;
+        Collection<OntologyTerm> matches = OntologySearch.matchClasses( model, index, search );
+        return matches;
     }
 
     /**
@@ -251,22 +260,36 @@ public abstract class AbstractOntologyService implements InitializingBean {
                 terms = new HashMap<String, OntologyTerm>();
                 individuals = new HashMap<String, OntologyIndividual>();
 
-                log.debug( "Loading " + ontology_name + " Ontology..." );
+                log.info( "Loading " + ontology_name + " Ontology..." );
                 StopWatch loadTime = new StopWatch();
                 loadTime.start();
 
                 try {
 
-                    model = loadModel( ontology_URL, OntModelSpec.OWL_MEM );
+                    /*
+                     * We use the OWL_MEM_TRANS_INF spec so we can do 'getChildren' and get _all_ the children in one
+                     * query.
+                     */
+                    model = loadModel( ontology_URL );
+                    modelReady.set( true );
 
-                    loadTermsInNameSpace( ontology_URL );
-                    log.debug( ontology_URL + "  loaded, total of " + terms.size() + " items in " + loadTime.getTime()
-                            / 1000 + "s" );
-
+                    /*
+                     * Indexing will be slow the first time (can take hours for large ontologies).
+                     */
                     log.info( "Loading Index for " + ontology_name + " Ontology" );
                     index = OntologyIndexer.indexOntology( ontology_name, model );
                     log.info( "Done Loading Index for " + ontology_name + " Ontology in " + loadTime.getTime() / 1000
                             + "s" );
+                    indexReady.set( true );
+
+                    /*
+                     * This creates a cache of URI (String) --> OntologyTerms. ?? Does Jena provide an easier way to do
+                     * this?
+                     */
+                    loadTermsInNameSpace( ontology_URL );
+                    log.info( ontology_URL + "  loaded, total of " + terms.size() + " items in " + loadTime.getTime()
+                            / 1000 + "s" );
+                    cacheReady.set( true );
 
                     ready.set( true );
                     running.set( false );
@@ -300,6 +323,9 @@ public abstract class AbstractOntologyService implements InitializingBean {
         addTerms( terms );
     }
 
+    /**
+     * @param newTerms
+     */
     private void addTerms( Collection<OntologyResource> newTerms ) {
         if ( terms == null ) terms = new HashMap<String, OntologyTerm>();
         if ( individuals == null ) individuals = new HashMap<String, OntologyIndividual>();

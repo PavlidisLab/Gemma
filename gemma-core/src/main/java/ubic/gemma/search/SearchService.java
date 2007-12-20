@@ -70,6 +70,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.ontology.OntologyIndividual;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.ontology.OntologyTerm;
 import ubic.gemma.util.EntityUtils;
@@ -443,15 +444,21 @@ public class SearchService {
             SearchSettings settings ) {
 
         StopWatch watch = startTiming();
+        Collection<String> characteristicUris = new HashSet<String>();
+
+        Collection<OntologyIndividual> individuals = ontologyService.findIndividuals( settings.getQuery() );
+        log.info( "Found " + individuals.size() + " matching individuals in " + watch.getTime() + "ms" );
+        for ( OntologyIndividual term : individuals ) {
+            characteristicUris.add( term.getUri() );
+        }
 
         Collection<OntologyTerm> possibleTerms = ontologyService.findTerms( settings.getQuery() );
         if ( ( possibleTerms == null ) || possibleTerms.isEmpty() ) return new HashSet<SearchResult>();
 
-        log.info( "Found " + possibleTerms.size() + " matching terms in " + watch.getTime() + "ms" );
+        log.info( "Found " + possibleTerms.size() + " matching classes in " + watch.getTime() + "ms" );
         watch.reset();
         watch.start();
 
-        Collection<String> characteristicUris = new HashSet<String>();
         StopWatch loopWatch = new StopWatch();
 
         for ( OntologyTerm term : possibleTerms ) {
@@ -466,17 +473,18 @@ public class SearchService {
                 characteristicUris.add( child.getUri() );
             }
 
-            if ( loopWatch.getTime() > 1000 ) {
-                log.info( "==== Added Term and " + children.size() + " children for  " + term.getUri() + "  in "
-                        + loopWatch.getTime() + "ms" );
-            }
+            // if ( loopWatch.getTime() > 1000 ) {
+            //if (children.size() > 0) {
+//            log.info( "==== Added Term and " + children.size() + " children for  " + term.getUri() + "  in "
+//                    + loopWatch.getTime() + "ms" );
+            //}
             loopWatch.reset();
         }
 
-        if ( watch.getTime() > 1000 ) {
-            log.info( "Found " + characteristicUris.size() + " possible matches with children in " + watch.getTime()
+        //if ( watch.getTime() > 1000 ) {
+            log.info( "Found " + characteristicUris.size() + " possible matches + child terms in " + watch.getTime()
                     + "ms" );
-        }
+        //}
         watch.reset();
         watch.start();
 
@@ -932,7 +940,7 @@ public class SearchService {
 
         watch.stop();
         if ( watch.getTime() > 1000 )
-            log.info( "Expression Experiment search for '" + settings + "' took " + watch.getTime() + " ms" );
+            log.info( "Expression Experiment search for '" + settings + "' took " + watch.getTime() + " ms, " + results.size() + " hits." );
 
         return results;
     }

@@ -31,7 +31,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.hp.hpl.jena.ontology.OntModel;
-import com.hp.hpl.jena.ontology.OntModelSpec;
 
 /**
  * Holds a complete copy of the MgedOntology in memory. This gets loaded on startup. As the MgedOntology is the
@@ -45,21 +44,12 @@ import com.hp.hpl.jena.ontology.OntModelSpec;
 public class MgedOntologyService extends AbstractOntologyService {
 
     public static final String MGED_ONTO_BASE_URL = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl";
-    
-    private static final Collection<String> TermsToRemove = Collections.synchronizedList(Arrays.asList( new String[] {"BioMaterialPackage",
-    		"BioMaterialCharacteristics",
-    		"BioMaterial",
-    		"BiologicalProperty",
-    		"ExperimentalDesign",
-    		"ExperimentalFactor",
-    		"ExperimentalFactorCategory",
-    		"Experiment",
-    		"NormalizationDescriptionType",
-    		"NormalizationDescription",
-    		"QualityControlDescriptionType"} ));
 
-    
-    
+    private static final Collection<String> TermsToRemove = Collections.synchronizedList( Arrays.asList( new String[] {
+            "BioMaterialPackage", "BioMaterialCharacteristics", "BioMaterial", "BiologicalProperty",
+            "ExperimentalDesign", "ExperimentalFactor", "ExperimentalFactorCategory", "Experiment",
+            "NormalizationDescriptionType", "NormalizationDescription", "QualityControlDescriptionType" } ) );
+
     /*
      * (non-Javadoc)
      * 
@@ -102,36 +92,31 @@ public class MgedOntologyService extends AbstractOntologyService {
         return results;
 
     }
-    
-    
+
     /**
-     * @return
-     * 
-     * Returns the Mged Ontology Terms that are usefull for annotating Gemma. 
-     * Basically the terms in the bioMaterial package plus some special cases. 
+     * @return Returns the Mged Ontology Terms that are usefull for annotating Gemma. Basically the terms in the
+     *         bioMaterial package plus some special cases.
      */
-    public Collection<OntologyTerm> getUsefulMgedTerms(){
+    public Collection<OntologyTerm> getUsefulMgedTerms() {
         if ( !ready.get() ) return null;
-        
+
         Collection<OntologyTerm> results = getBioMaterialTerms();
-        results = Collections.synchronizedCollection(results);
-        
-        //A bunch of terms not in the biomaterial package that we need. (special cases)
+        results = Collections.synchronizedCollection( results );
+
+        // A bunch of terms not in the biomaterial package that we need. (special cases)
         OntologyTerm term = terms.get( MGED_ONTO_BASE_URL + "#ExperimentPackage" );
-        results.addAll( getAllTerms( term ));
-        
-        //trim some terms out:  
-        Collection<OntologyTerm> trimmed  = Collections.synchronizedSet(new HashSet<OntologyTerm>());
-        for(OntologyTerm mgedTerm : results){
-        	if (!TermsToRemove.contains(mgedTerm.getTerm())){
-        		trimmed.add(mgedTerm);        		
-        	}
+        results.addAll( getAllTerms( term ) );
+
+        // trim some terms out:
+        Collection<OntologyTerm> trimmed = Collections.synchronizedSet( new HashSet<OntologyTerm>() );
+        for ( OntologyTerm mgedTerm : results ) {
+            if ( !TermsToRemove.contains( mgedTerm.getTerm() ) ) {
+                trimmed.add( mgedTerm );
+            }
         }
-        
-        
+
         return trimmed;
-        
-        
+
     }
 
     /**
@@ -194,8 +179,8 @@ public class MgedOntologyService extends AbstractOntologyService {
     }
 
     @Override
-    protected OntModel loadModel( String url, OntModelSpec spec ) throws IOException {
-        return OntologyLoader.loadMemoryModel( url, spec );
+    protected OntModel loadModel( String url ) throws IOException {
+        return OntologyLoader.loadMemoryModel( url );
     }
 
     protected String getOntologyStartingPoint() {

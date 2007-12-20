@@ -51,14 +51,13 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
  * @spring.bean id="ontologyService"
  * @spring.property name="birnLexOntologyService" ref ="birnLexOntologyService"
  * @spring.property name="fmaOntologyService" ref ="fmaOntologyService"
- * @spring.property name="oboDiseaseOntologyService" ref ="oboDiseaseOntologyService"
+ * @spring.property name="diseaseOntologyService" ref ="diseaseOntologyService"
  * @spring.property name="mgedOntologyService" ref ="mgedOntologyService"
  * @spring.property name="bioMaterialService" ref ="bioMaterialService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="characteristicService" ref="characteristicService"
  * @spring.property name="chebiOntologyService" ref="chebiOntologyService"
  */
-
 public class OntologyService {
 
     private static final String USED = " -USED- ";
@@ -66,7 +65,7 @@ public class OntologyService {
     private static Log log = LogFactory.getLog( OntologyService.class.getName() );
 
     private BirnLexOntologyService birnLexOntologyService;
-    private OBODiseaseOntologyService oboDiseaseOntologyService;
+    private HumanDiseaseOntologyService diseaseOntologyService;
     private FMAOntologyService fmaOntologyService;
     private MgedOntologyService mgedOntologyService;
     private ChebiOntologyService chebiOntologyService;
@@ -97,7 +96,7 @@ public class OntologyService {
     }
 
     /**
-     * @return the OntologyTerm for the specified URI
+     * @return the OntologyTerm for the specified URI. Exposed for AJAX.
      */
     public OntologyTerm getTerm( String uri ) {
         for ( AbstractOntologyService ontology : ontologyServices ) {
@@ -196,6 +195,22 @@ public class OntologyService {
     }
 
     /**
+     * @param search
+     * @return
+     */
+    public Collection<OntologyIndividual> findIndividuals( String search ) {
+
+        Collection<OntologyIndividual> results = new HashSet<OntologyIndividual>();
+
+        for ( AbstractOntologyService ontology : ontologyServices ) {
+            Collection<OntologyIndividual> found = ontology.findIndividuals( search );
+            if ( found != null ) results.addAll( found );
+        }
+
+        return results;
+    }
+
+    /**
      * Given a collection of ontology terms will filter out all the terms that don't have the filter term in their
      * label.
      * 
@@ -244,6 +259,7 @@ public class OntologyService {
      * @param search
      * @return
      */
+    @SuppressWarnings("unchecked")
     public Collection<Characteristic> findExactTerm( String search, String categoryUri ) {
 
         StopWatch watch = new StopWatch();
@@ -292,7 +308,7 @@ public class OntologyService {
                 + watch.getTime() + " ms" );
         if ( results != null ) searchResults.addAll( filter( results, search ) );
 
-        results = oboDiseaseOntologyService.findResources( search );
+        results = diseaseOntologyService.findResources( search );
         log.debug( "found " + ( results == null ? "null" : results.size() ) + " terms from obo in " + watch.getTime()
                 + " ms" );
         if ( results != null ) searchResults.addAll( filter( results, search ) );
@@ -412,11 +428,12 @@ public class OntologyService {
     }
 
     /**
-     * Will persist the give vocab characteristic to each biomaterial id supplied in the list
+     * Will persist the give vocab characteristic to each biomaterial id supplied in the list. Exposed for AJAX.
      * 
      * @param vc
      * @param bioMaterialIdList
      */
+    @SuppressWarnings("unchecked")
     public void saveBioMaterialStatement( Characteristic vc, Collection<Long> bioMaterialIdList ) {
 
         log.debug( "Vocab Characteristic: " + vc );
@@ -442,11 +459,12 @@ public class OntologyService {
     }
 
     /**
-     * Will persist the give vocab characteristic to each expression experiment id supplied in the list
+     * Will persist the give vocab characteristic to each expression experiment id supplied in the list.
      * 
      * @param vc
      * @param bmIdList
      */
+    @SuppressWarnings("unchecked")
     public void saveExpressionExperimentStatement( Characteristic vc, Collection<Long> bmIdList ) {
 
         log.debug( "Vocab Characteristic: " + vc );
@@ -471,11 +489,12 @@ public class OntologyService {
     }
 
     /**
-     * Will persist the give vocab characteristic to each expression experiment id supplied in the list
+     * Will persist the give vocab characteristic to each expression experiment id supplied in the list.
      * 
      * @param vc
      * @param bmIdList
      */
+    @SuppressWarnings("unchecked")
     public void removeExpressionExperimentStatement( Collection<Long> characterIds, Collection<Long> eeIdList ) {
 
         log.debug( "Vocab Characteristic: " + characterIds );
@@ -508,11 +527,12 @@ public class OntologyService {
     }
 
     /**
-     * Will persist the give vocab characteristic to each biomaterial id supplied in the list
+     * Will persist the give vocab characteristic to each biomaterial id supplied in the list.
      * 
      * @param vc
      * @param bmIdList
      */
+    @SuppressWarnings("unchecked")
     public void removeBioMaterialStatement( Collection<Long> characterIds, Collection<Long> bmIdList ) {
 
         log.debug( "Vocab Characteristic: " + characterIds );
@@ -561,11 +581,11 @@ public class OntologyService {
     }
 
     /**
-     * @param oboDiseaseOntologyService the oboDiseaseOntologyService to set
+     * @param diseaseOntologyService the diseaseOntologyService to set
      */
-    public void setOboDiseaseOntologyService( OBODiseaseOntologyService oboDiseaseOntologyService ) {
-        this.oboDiseaseOntologyService = oboDiseaseOntologyService;
-        ontologyServices.add( oboDiseaseOntologyService );
+    public void setDiseaseOntologyService( HumanDiseaseOntologyService diseaseOntologyService ) {
+        this.diseaseOntologyService = diseaseOntologyService;
+        ontologyServices.add( diseaseOntologyService );
     }
 
     /**

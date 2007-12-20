@@ -107,6 +107,7 @@ public class OntologyTermImpl extends AbstractOntologyResource implements Ontolo
             // some reasoners will infer owl#Nothing as a subclass of everything
             if ( c.getURI().equals( NOTHING ) ) continue;
             result.add( this.fromOntClass( c ) );
+         //   log.info( c );
         }
         return result;
     }

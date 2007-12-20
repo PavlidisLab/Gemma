@@ -24,7 +24,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.hp.hpl.jena.ontology.OntModel;
-import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.query.larq.IndexLARQ;
 
 import junit.framework.TestCase;
@@ -37,10 +36,9 @@ public class OntologyIndexerTest extends TestCase {
 
     private static Log log = LogFactory.getLog( OntologyIndexerTest.class.getName() );
 
-    
     public final void testIndexing() throws Exception {
         String url = "http://www.berkeleybop.org/ontologies/obo-all/mged/mged.owl";
-        OntModel model = OntologyLoader.loadMemoryModel( url, OntModelSpec.OWL_MEM_RDFS_INF );
+        OntModel model = OntologyLoader.loadMemoryModel( url );
 
         IndexLARQ index = OntologyIndexer.indexOntology( "mged", model );
 
@@ -52,16 +50,16 @@ public class OntologyIndexerTest extends TestCase {
 
     public final void testCellListings() throws Exception {
         String url = "http://www.berkeleybop.org/ontologies/obo-all/mged/mged.owl";
-        OntModel model = OntologyLoader.loadMemoryModel( url, OntModelSpec.OWL_MEM_RDFS_INF );
+        OntModel model = OntologyLoader.loadMemoryModel( url );
         IndexLARQ index = OntologyIndexer.indexOntology( "mged", model );
-        
+
         Collection<OntologyTerm> names = OntologySearch.matchClasses( model, index, "cell*" );
         for ( OntologyTerm ot : names ) {
-            if(!ot.toString().startsWith( "Cell" )) throw new Exception(ot+ " does not start with Cell");
+            if ( !ot.toString().startsWith( "Cell" ) ) throw new Exception( ot + " does not start with Cell" );
         }
         index.close();
     }
-    
+
     public final void testPersistanceFail() throws Exception {
         OntologyIndexer.eraseIndex( "mged" );
         Exception result = null;
@@ -77,7 +75,7 @@ public class OntologyIndexerTest extends TestCase {
     public final void testPersistance() throws Exception {
 
         String url = "http://www.berkeleybop.org/ontologies/obo-all/mged/mged.owl";
-        OntModel model = OntologyLoader.loadMemoryModel( url, OntModelSpec.OWL_MEM_RDFS_INF );
+        OntModel model = OntologyLoader.loadMemoryModel( url );
 
         IndexLARQ index = OntologyIndexer.indexOntology( "mged", model );
         index.close();
@@ -91,15 +89,16 @@ public class OntologyIndexerTest extends TestCase {
         index.close();
     }
 
-//    public final void testIndexingDbModel() throws Exception { // MESH must be loaded into the DB for this to work in a
-//        // reasonable amount of time!
-//        String url = "http://www.berkeleybop.org/ontologies/obo-all/mesh/mesh.owl";
-//        OntModel model = OntologyLoader.loadPersistentModel( url, false ); // should be a one-time process
-//        log.info( "Indexing..." );
-//        IndexLARQ index = OntologyIndexer.indexOntology( "mesh", model );
-//        index = OntologyIndexer.getSubjectIndex( "mesh" );
-//        log.info( "Searching ... " );
-//        Collection<OntologyTerm> name = OntologySearch.matchClasses( model, index, "anatomy" );
-//        assertEquals( 7, name.size() );
-//    }
+    // public final void testIndexingDbModel() throws Exception { // MESH must be loaded into the DB for this to work in
+    // a
+    // // reasonable amount of time!
+    // String url = "http://www.berkeleybop.org/ontologies/obo-all/mesh/mesh.owl";
+    // OntModel model = OntologyLoader.loadPersistentModel( url, false ); // should be a one-time process
+    // log.info( "Indexing..." );
+    // IndexLARQ index = OntologyIndexer.indexOntology( "mesh", model );
+    // index = OntologyIndexer.getSubjectIndex( "mesh" );
+    // log.info( "Searching ... " );
+    // Collection<OntologyTerm> name = OntologySearch.matchClasses( model, index, "anatomy" );
+    // assertEquals( 7, name.size() );
+    // }
 }

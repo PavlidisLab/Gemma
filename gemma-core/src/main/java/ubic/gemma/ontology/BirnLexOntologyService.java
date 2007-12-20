@@ -22,11 +22,10 @@ package ubic.gemma.ontology;
 import java.io.IOException;
 
 import com.hp.hpl.jena.ontology.OntModel;
-import com.hp.hpl.jena.ontology.OntModelSpec;
-
 
 /**
- * Holds a complete copy of the BirnLex Ontology on disk. This gets loaded on startup.
+ * Holds a complete copy of the BirnLex Ontology. This gets loaded on startup. BirnLex is small, only about 1500 terms
+ * (as of 12/2007) so we can hold it in memory.
  * 
  * @author klc
  * @version $Id: BirnLexOntologyService.java
@@ -35,7 +34,9 @@ import com.hp.hpl.jena.ontology.OntModelSpec;
 
 public class BirnLexOntologyService extends AbstractOntologyService {
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.ontology.AbstractOntologyService#getOntologyName()
      */
     @Override
@@ -44,15 +45,13 @@ public class BirnLexOntologyService extends AbstractOntologyService {
     }
 
     @Override
-    protected OntModel loadModel( String url, OntModelSpec spec ) throws IOException {
-        return OntologyLoader.loadPersistentModel( url, false );
-    }  
+    protected OntModel loadModel( String url ) throws IOException {
+        return OntologyLoader.loadMemoryModel( url );
+    }
 
     @Override
-    protected String getOntologyUrl() {       
+    protected String getOntologyUrl() {
         return "http://fireball.drexelmed.edu/birnlex/";
     }
-    
-    
 
 }
