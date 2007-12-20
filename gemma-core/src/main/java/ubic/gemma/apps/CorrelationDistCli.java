@@ -46,7 +46,7 @@ import ubic.basecode.gui.ColorMatrix;
 import ubic.basecode.gui.JMatrixDisplay;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.CorrelationStats;
-import ubic.gemma.analysis.coexpression.GeneCoExpressionAnalysis;
+import ubic.gemma.analysis.coexpression.GeneCoExpressionAnalyzer;
 import ubic.gemma.analysis.linkAnalysis.CommandLineToolUtilService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -149,7 +149,7 @@ public class CorrelationDistCli extends ExpressionExperimentManipulatingCLI {
         DoubleArrayList data = new DoubleArrayList();
         for ( ExpressionProfile ep1 : source ) {
             for ( ExpressionProfile ep2 : target ) {
-                if ( ep1.val.length == ep2.val.length && ep1.val.length > GeneCoExpressionAnalysis.MINIMUM_SAMPLE ) {
+                if ( ep1.val.length == ep2.val.length && ep1.val.length > GeneCoExpressionAnalyzer.MINIMUM_SAMPLE ) {
                     data.add( CorrelationStats.correl( ep1.val, ep2.val ) );
                 }
             }

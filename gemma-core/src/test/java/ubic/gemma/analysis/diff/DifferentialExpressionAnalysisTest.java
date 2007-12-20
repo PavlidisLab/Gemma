@@ -31,7 +31,7 @@ public class DifferentialExpressionAnalysisTest extends BaseAnalyzerConfiguratio
 
     private Log log = LogFactory.getLog( this.getClass() );
 
-    DifferentialExpressionAnalysis analysis = null;
+    DifferentialExpressionAnalyzer analysis = null;
 
     /*
      * (non-Javadoc)
@@ -42,7 +42,7 @@ public class DifferentialExpressionAnalysisTest extends BaseAnalyzerConfiguratio
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
 
-        analysis = ( DifferentialExpressionAnalysis ) this.getBean( "differentialExpressionAnalysis" );
+        analysis = ( DifferentialExpressionAnalyzer ) this.getBean( "differentialExpressionAnalysis" );
 
     }
 

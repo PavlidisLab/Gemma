@@ -50,7 +50,7 @@ import ubic.gemma.model.genome.Gene;
  * @author xwan
  * @version $Id$
  */
-public class GeneCoExpressionAnalysis {
+public class GeneCoExpressionAnalyzer {
     private class ExpressedData {
         public DesignElementDataVector query = null;
         public DesignElementDataVector coexpressed = null;
@@ -90,11 +90,11 @@ public class GeneCoExpressionAnalysis {
     private Map<Long, String> eeNames = new HashMap<Long, String>();
     private Map<Long, Integer> eeSampleSizes = new HashMap<Long, Integer>();
 
-    private static Log log = LogFactory.getLog( GeneCoExpressionAnalysis.class.getName() );
+    private static Log log = LogFactory.getLog( GeneCoExpressionAnalyzer.class.getName() );
     private ExpressionExperimentService eeService = null;
     public static int MINIMUM_SAMPLE = 5;
 
-    public GeneCoExpressionAnalysis( Collection<Gene> queryGenes, Collection<Gene> coExpressedGenes,
+    public GeneCoExpressionAnalyzer( Collection<Gene> queryGenes, Collection<Gene> coExpressedGenes,
             Collection<ExpressionExperiment> ees ) {
         queryGenesData = new ObjectMatrix2DNamed( queryGenes.size(), ees.size() );
         for ( Gene queryGene : queryGenes ) {
@@ -276,7 +276,7 @@ public class GeneCoExpressionAnalysis {
             // ");
             return Double.NaN;
         }
-        if ( ival.length < GeneCoExpressionAnalysis.MINIMUM_SAMPLE ) return Double.NaN;
+        if ( ival.length < GeneCoExpressionAnalyzer.MINIMUM_SAMPLE ) return Double.NaN;
         if ( dedvI.getId() == dedvJ.getId() ) {
             // System.err.println("Error in " + devI.getExpressionExperiment().getId());
             return Double.NaN;

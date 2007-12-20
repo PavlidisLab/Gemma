@@ -28,8 +28,8 @@ import java.util.List;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
-import ubic.gemma.model.analysis.Analysis;
-import ubic.gemma.model.analysis.AnalysisService;
+import ubic.gemma.model.analysis.GeneCoexpressionAnalysis;
+import ubic.gemma.model.analysis.GeneCoexpressionAnalysisService;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService;
 import ubic.gemma.model.association.coexpression.HumanGeneCoExpression;
@@ -40,7 +40,6 @@ import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.protocol.ProtocolService;
-import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
@@ -58,13 +57,13 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  */
 public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
 
-    private static final int DEFAULT_STRINGINCY = 2;
+    private static final int DEFAULT_STRINGINCY = 1;
     // Used Services
     ExpressionExperimentService eeS;
     GeneService geneS;
     TaxonService taxonS;
     Gene2GeneCoexpressionService gene2geneS;
-    AnalysisService analysisS;
+    GeneCoexpressionAnalysisService analysisS;
     ProtocolService protocolS;
     ExpressionExperimentService expExpS;
     SearchService searchS;
@@ -72,7 +71,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
     Collection<ExpressionExperiment> toUseEE;
     Collection<Gene> toUseGenes;
     Taxon toUseTaxon;
-    Analysis toUseAnalysis;
+    GeneCoexpressionAnalysis analysis;
     int toUseStringency;
     String toUseAnalysisName;
 
@@ -110,7 +109,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
                 "Use a querry string for defining what expression experiments to use" )
                 .withLongOpt( "expressionQuerry" ).create( 'q' );
 
-        geneFileOption.setRequired( true );
+        // geneFileOption.setRequired( true );
         taxonOption.setRequired( true );
 
         addOption( geneFileOption );
@@ -181,7 +180,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
 
         log.info( "Persisting Gene2Gene coexpression data to the " + toUseTaxon.getCommonName()
                 + "GeneCoexpression table" );
-        g2gCoexpression.setSourceAnalysis( toUseAnalysis );
+        g2gCoexpression.setSourceAnalysis( analysis );
         int persistedCount = 0;
 
         for ( CoexpressionValueObject co : toPersist.getCoexpressionData() ) {
@@ -214,7 +213,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
             // cost of higher memory requirements.
 
         }
-        log.info( "Persited " + persistedCount + " gene2geneCoexpressions for analysis: " + toUseAnalysis.getName() );
+        log.info( "Persited " + persistedCount + " gene2geneCoexpressions for analysis: " + analysis.getName() );
 
     }
 
@@ -229,9 +228,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
 
         initSpringBeans();
 
-        if ( this.hasOption( 't' ) ) {
-            toUseTaxon = taxonS.findByCommonName( this.getOptionValue( 't' ) );
-        }
+        toUseTaxon = taxonS.findByCommonName( this.getOptionValue( 't' ) );
 
         if ( this.hasOption( 'q' ) ) {
             processQuery( this.getOptionValue( 'q' ) );
@@ -239,10 +236,14 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
 
         if ( this.hasOption( 'e' ) ) {
             processEEFile( this.getOptionValue( 'e' ) );
+        } else {
+            this.toUseEE = eeS.findByTaxon( toUseTaxon );
         }
 
         if ( this.hasOption( 'g' ) ) {
             processGeneFile( this.getOptionValue( 'g' ) );
+        } else {
+            toUseGenes = geneS.loadGenes( toUseTaxon );
         }
 
         toUseStringency = DEFAULT_STRINGINCY;
@@ -347,7 +348,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
         eeS = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
         taxonS = ( TaxonService ) this.getBean( "taxonService" );
         gene2geneS = ( Gene2GeneCoexpressionService ) this.getBean( "gene2GeneCoexpressionService" );
-        analysisS = ( AnalysisService ) this.getBean( "analysisService" );
+        analysisS = ( GeneCoexpressionAnalysisService ) this.getBean( "geneCoexpressionAnalysisService" );
         protocolS = ( ProtocolService ) this.getBean( "protocolService" );
         expExpS = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
         searchS = ( SearchService ) this.getBean( "searchService" );
@@ -358,16 +359,16 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
 
     private void initAttributes() {
 
-        toUseAnalysis = ExpressionAnalysis.Factory.newInstance();
+        analysis = GeneCoexpressionAnalysis.Factory.newInstance();
 
-        toUseAnalysis.setDescription( "Coexpression analysis for " + toUseTaxon.getCommonName() + "using "
-                + toUseEE.size() + " expression experiments" );
+        analysis.setDescription( "Coexpression analysis for " + toUseTaxon.getCommonName() + "using " + toUseEE.size()
+                + " expression experiments" );
 
         Calendar cal = new GregorianCalendar();
 
         if ( toUseAnalysisName == null ) toUseAnalysisName = "Generated on:";
 
-        toUseAnalysis.setName( toUseAnalysisName + cal.get( Calendar.YEAR ) + " " + cal.get( Calendar.MONTH ) + " "
+        analysis.setName( toUseAnalysisName + cal.get( Calendar.YEAR ) + " " + cal.get( Calendar.MONTH ) + " "
                 + cal.get( Calendar.DAY_OF_MONTH ) + " " + cal.get( Calendar.HOUR_OF_DAY ) + ":"
                 + cal.get( Calendar.MINUTE ) );
 
@@ -377,10 +378,10 @@ public class Gene2GeneCoexpressionGeneratorCli extends AbstractSpringAwareCLI {
                 + " Genes" );
         protocol = protocolS.findOrCreate( protocol );
 
-        toUseAnalysis.setProtocol( protocol );
-        toUseAnalysis = analysisS.create( toUseAnalysis );
+        analysis.setProtocol( protocol );
+        analysis.setExperimentsAnalyzed( this.toUseEE );
 
-        // toUseAnalysis.setAnalyzedInvestigation( new HashSet<Investigation>( toUseEE ) );
+        analysis = ( GeneCoexpressionAnalysis ) analysisS.create( analysis );
 
     }
 

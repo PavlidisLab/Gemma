@@ -26,8 +26,9 @@ import java.util.Map;
 
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.AnalysisService;
+import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.Investigation;
-import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -36,16 +37,16 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @author klc
  * @version $Id$
  */
-public class AnalysisServiceTest extends BaseSpringContextTest {
+public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContextTest {
 
-    private AnalysisService analysisS;
+    private DifferentialExpressionAnalysisService analysisS;
     private ExpressionExperimentService eeS;
 
     // Test Data
-    Analysis eAnalysis1;
-    Analysis eAnalysis2;
-    Analysis eAnalysis3;
-    Analysis eAnalysis4;
+    DifferentialExpressionAnalysis eAnalysis1;
+    DifferentialExpressionAnalysis eAnalysis2;
+    DifferentialExpressionAnalysis eAnalysis3;
+    DifferentialExpressionAnalysis eAnalysis4;
 
     ExpressionExperiment e1;
     ExpressionExperiment e2;
@@ -68,39 +69,39 @@ public class AnalysisServiceTest extends BaseSpringContextTest {
 
         Collection<Investigation> investigations = new HashSet<Investigation>();
 
-        eAnalysis1 = ExpressionAnalysis.Factory.newInstance();
+        eAnalysis1 = DifferentialExpressionAnalysis.Factory.newInstance();
         investigations.add( e1 );
-      //  eAnalysis1.setAnalyzedInvestigation( investigations );
+        // eAnalysis1.setAnalyzedInvestigation( investigations );
         eAnalysis1.setName( "TestAnalysis1" );
         eAnalysis1.setDescription( "An analysis Test 1" );
         eAnalysis1 = analysisS.create( eAnalysis1 );
 
-        eAnalysis2 = ExpressionAnalysis.Factory.newInstance();
+        eAnalysis2 = DifferentialExpressionAnalysis.Factory.newInstance();
         investigations = new HashSet<Investigation>();
         investigations.add( e1 );
         investigations.add( e2 );
-     //   eAnalysis2.setAnalyzedInvestigation( investigations );
+        // eAnalysis2.setAnalyzedInvestigation( investigations );
         eAnalysis2.setName( "TestAnalysis2" );
         eAnalysis2.setDescription( "An analysis Test 2" );
         eAnalysis2 = analysisS.create( eAnalysis2 );
 
-        eAnalysis4 = ExpressionAnalysis.Factory.newInstance();
+        eAnalysis4 = DifferentialExpressionAnalysis.Factory.newInstance();
         investigations = new HashSet<Investigation>();
         investigations.add( e1 );
         investigations.add( e2 );
         investigations.add( e3 );
 
-    //.setAnalyzedInvestigation( investigations );
+        // .setAnalyzedInvestigation( investigations );
         eAnalysis4.setName( "Test" );
         eAnalysis4.setDescription( "An analysis Test 4" );
         eAnalysis4 = analysisS.create( eAnalysis4 );
 
-        eAnalysis3 = ExpressionAnalysis.Factory.newInstance();
+        eAnalysis3 = DifferentialExpressionAnalysis.Factory.newInstance();
         investigations = new HashSet<Investigation>();
         investigations.add( e1 );
         investigations.add( e2 );
         investigations.add( e3 );
-      //.setAnalyzedInvestigation( investigations );
+        // .setAnalyzedInvestigation( investigations );
         eAnalysis3.setName( "TestAnalysis3" );
         eAnalysis3.setDescription( "An analysis Test 3" );
         eAnalysis3 = analysisS.create( eAnalysis3 );
@@ -164,7 +165,7 @@ public class AnalysisServiceTest extends BaseSpringContextTest {
     /**
      * @param analysisS the analysisS to set
      */
-    public void setAnalysisService( AnalysisService analysisS ) {
+    public void setAnalysisService( DifferentialExpressionAnalysisService analysisS ) {
         this.analysisS = analysisS;
     }
 

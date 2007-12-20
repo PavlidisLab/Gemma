@@ -20,7 +20,7 @@ package ubic.gemma;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
-import ubic.gemma.analysis.AnalysisServiceTest;
+import ubic.gemma.analysis.DifferentialExpressionAnalysisServiceTest;
 import ubic.gemma.analysis.diff.AllDifferentialExpressionTests;
 import ubic.gemma.analysis.preprocess.AllPreProcessTests;
 import ubic.gemma.analysis.sequence.ProbeMapperTest;
@@ -83,7 +83,7 @@ public class AllCoreTests {
 
         suite.addTest( AllOntologyTests.suite() );
 
-        suite.addTestSuite( AnalysisServiceTest.class);
+        suite.addTestSuite( DifferentialExpressionAnalysisServiceTest.class);
         
         suite.addTestSuite( HttpFetcherTest.class );
         suite.addTestSuite( AbstractFetcherTest.class );

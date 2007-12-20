@@ -20,7 +20,7 @@ package ubic.gemma.util;
 
 import java.util.Comparator;
 
-import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
+import ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult;
 
 /**
  * A {@link Comparator} to compare {@link ExpressionAnalysisResult} by p value.
@@ -28,7 +28,7 @@ import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
  * @author keshav
  * @version $Id$
  */
-public class ExpressionAnalysisResultComparator implements Comparator<ExpressionAnalysisResult> {
+public class DifferentialExpressionAnalysisResultComparator implements Comparator<DifferentialExpressionAnalysisResult> {
 
     /**
      * @author keshav
@@ -38,8 +38,8 @@ public class ExpressionAnalysisResultComparator implements Comparator<Expression
         /**
          * Constructs a new instance of {@link ubic.gemma.model.expression.analysis.ExpressionAnalysisResult}.
          */
-        public static ExpressionAnalysisResultComparator newInstance() {
-            return new ExpressionAnalysisResultComparator();
+        public static DifferentialExpressionAnalysisResultComparator newInstance() {
+            return new DifferentialExpressionAnalysisResultComparator();
         }
     }
 
@@ -48,7 +48,7 @@ public class ExpressionAnalysisResultComparator implements Comparator<Expression
      * 
      * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
      */
-    public int compare( ExpressionAnalysisResult ear1, ExpressionAnalysisResult ear2 ) {
+    public int compare( DifferentialExpressionAnalysisResult ear1, DifferentialExpressionAnalysisResult ear2 ) {
 
         if ( ear1 != null ) {
             if ( ear2 != null )

@@ -31,7 +31,7 @@ import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
-import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
+import ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -482,7 +482,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
      */
     protected void logResults( ExpressionAnalysisResultSet resultSet ) {
 
-        for ( ExpressionAnalysisResult r : resultSet.getResults() ) {
+        for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
             ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
             log.debug( "probe: " + probeAnalysisResult.getProbe() + "; p-value: " + probeAnalysisResult.getPvalue() );
         }

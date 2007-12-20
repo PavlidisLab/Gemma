@@ -31,9 +31,10 @@ import org.rosuda.JRclient.REXP;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
-import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -166,12 +167,12 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
         double[] tstatistics = ( double[] ) regExpTStatistics.getContent();
 
         /* Create the expression analysis and pack the results. */
-        ExpressionAnalysis expressionAnalysis = ExpressionAnalysis.Factory.newInstance();
+        DifferentialExpressionAnalysis expressionAnalysis = DifferentialExpressionAnalysis.Factory.newInstance();
 
         Collection<ExpressionExperiment> experimentsAnalyzed = new HashSet<ExpressionExperiment>();
         expressionAnalysis.setExperimentsAnalyzed( experimentsAnalyzed );
 
-        List<ExpressionAnalysisResult> analysisResults = new ArrayList<ExpressionAnalysisResult>();
+        List<DifferentialExpressionAnalysisResult> analysisResults = new ArrayList<DifferentialExpressionAnalysisResult>();
 
         for ( int i = 0; i < dmatrix.rows(); i++ ) {
             DesignElement de = dmatrix.getDesignElementForRow( i );
@@ -188,8 +189,10 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
         }
 
         Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
-        ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance( expressionAnalysis,
-                analysisResults, factorValueA.getExperimentalFactor() );
+        Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
+        factors.add( factorValueA.getExperimentalFactor() );
+        ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance( analysisResults,
+                expressionAnalysis, factors );
         resultSets.add( resultSet );
 
         expressionAnalysis.setResultSets( resultSets );

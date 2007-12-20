@@ -25,8 +25,6 @@ package ubic.gemma.model.analysis;
 import java.util.Collection;
 import java.util.Map;
 
-import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
-
 /**
  * @see ubic.gemma.model.analysis.AnalysisService
  */
@@ -42,7 +40,7 @@ public class AnalysisServiceImpl extends ubic.gemma.model.analysis.AnalysisServi
         Collection results = this.getAnalysisDao().findByName( name + "%" );
 
         Analysis mostRecent = null;
-        
+
         // find the most recent one that matches. Perhaps the best way is to use the audit trail but would have to thaw
         // them.
         // Instead of thawing the audit trail just use the analysis with the largest ID as we don't update analysis
@@ -52,9 +50,8 @@ public class AnalysisServiceImpl extends ubic.gemma.model.analysis.AnalysisServi
         for ( Object obj : results ) {
             Analysis ana = ( Analysis ) obj;
 
-            if (ana.getName().equalsIgnoreCase( name ))
-                return ana;
-            
+            if ( ana.getName().equalsIgnoreCase( name ) ) return ana;
+
             if ( mostRecent == null ) {
                 mostRecent = ana;
                 continue;
@@ -109,18 +106,6 @@ public class AnalysisServiceImpl extends ubic.gemma.model.analysis.AnalysisServi
     @Override
     protected java.util.Collection handleLoadAll() throws java.lang.Exception {
         return this.getAnalysisDao().loadAll();
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.AnalysisService#create(ubic.gemma.model.analysis.Analysis)
-     */
-    @Override
-    protected ubic.gemma.model.analysis.Analysis handleCreate( ubic.gemma.model.analysis.Analysis analysis )
-            throws java.lang.Exception {
-        if ( analysis instanceof ExpressionAnalysis )
-            return ( Analysis ) this.getExpressionAnalysisDao().create( ( ExpressionAnalysis ) analysis );
-
-        throw new java.lang.Exception( "analysis isn't of a known type. don't know how to create." + analysis );
     }
 
     /**

@@ -26,10 +26,9 @@ package ubic.gemma.model.expression.analysis;
 
 /**
  * @see ubic.gemma.model.expression.analysis.ExpressionAnalysis
+ * @version $Id$
  */
-public class ExpressionAnalysisImpl
-    extends ubic.gemma.model.expression.analysis.ExpressionAnalysis
-{
+public abstract class ExpressionAnalysisImpl extends ubic.gemma.model.expression.analysis.ExpressionAnalysis {
 
     /**
      * 

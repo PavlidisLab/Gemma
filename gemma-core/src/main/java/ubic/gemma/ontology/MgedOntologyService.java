@@ -107,6 +107,8 @@ public class MgedOntologyService extends AbstractOntologyService {
         OntologyTerm term = terms.get( MGED_ONTO_BASE_URL + "#ExperimentPackage" );
         results.addAll( getAllTerms( term ) );
 
+        // FIXME configure this externally.
+        
         // trim some terms out:
         Collection<OntologyTerm> trimmed = Collections.synchronizedSet( new HashSet<OntologyTerm>() );
         for ( OntologyTerm mgedTerm : results ) {

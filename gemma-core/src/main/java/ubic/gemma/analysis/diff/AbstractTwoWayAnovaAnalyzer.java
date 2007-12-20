@@ -25,9 +25,10 @@ import java.util.Iterator;
 import java.util.List;
 
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
-import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -73,25 +74,25 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
             QuantitationType quantitationType ) {
 
         /* Create the expression analysis and pack the results. */
-        ExpressionAnalysis expressionAnalysis = ExpressionAnalysis.Factory.newInstance();
+        DifferentialExpressionAnalysis expressionAnalysis = DifferentialExpressionAnalysis.Factory.newInstance();
 
         Collection<ExpressionExperiment> experimentsAnalyzed = new HashSet<ExpressionExperiment>();
         expressionAnalysis.setExperimentsAnalyzed( experimentsAnalyzed );
 
         /* All results for the first main effect */
-        List<ExpressionAnalysisResult> analysisResultsMainEffectA = new ArrayList<ExpressionAnalysisResult>();
+        List<DifferentialExpressionAnalysisResult> analysisResultsMainEffectA = new ArrayList<DifferentialExpressionAnalysisResult>();
 
         /* All results for the second main effect */
-        List<ExpressionAnalysisResult> analysisResultsMainEffectB = new ArrayList<ExpressionAnalysisResult>();
+        List<DifferentialExpressionAnalysisResult> analysisResultsMainEffectB = new ArrayList<DifferentialExpressionAnalysisResult>();
 
         /* Interaction effect */
-        List<ExpressionAnalysisResult> analysisResultsInteractionEffect = new ArrayList<ExpressionAnalysisResult>();
+        List<DifferentialExpressionAnalysisResult> analysisResultsInteractionEffect = new ArrayList<DifferentialExpressionAnalysisResult>();
 
         int k = 0;
         for ( int i = 0; i < dmatrix.rows(); i++ ) {
 
             /* Each probe has all results (ie. 2 - without interactions; 3 - with interactions) */
-            List<ExpressionAnalysisResult> analysisResultsPerProbe = new ArrayList<ExpressionAnalysisResult>();
+            List<DifferentialExpressionAnalysisResult> analysisResultsPerProbe = new ArrayList<DifferentialExpressionAnalysisResult>();
 
             DesignElement de = dmatrix.getDesignElementForRow( i );
 
@@ -121,23 +122,30 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
             }
 
             ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance(
-                    expressionAnalysis, analysisResultsPerProbe, null );
+                    analysisResultsPerProbe, expressionAnalysis, null );
 
             resultSets.add( resultSet );
         }
 
         /* main effects */
+        Collection<ExperimentalFactor> mainA = new HashSet<ExperimentalFactor>();
+        mainA.add( experimentalFactorA );
         ExpressionAnalysisResultSet mainEffectResultSetA = ExpressionAnalysisResultSet.Factory.newInstance(
-                expressionAnalysis, analysisResultsMainEffectA, experimentalFactorA );
+                analysisResultsMainEffectA, expressionAnalysis, mainA );
         resultSets.add( mainEffectResultSetA );
 
+        Collection<ExperimentalFactor> mainB = new HashSet<ExperimentalFactor>();
+        mainB.add( experimentalFactorB );
         ExpressionAnalysisResultSet mainEffectResultSetB = ExpressionAnalysisResultSet.Factory.newInstance(
-                expressionAnalysis, analysisResultsMainEffectB, experimentalFactorB );
+                analysisResultsMainEffectB, expressionAnalysis, mainB );
         resultSets.add( mainEffectResultSetB );
 
         if ( numResultsFromR == maxResults ) {
+            Collection<ExperimentalFactor> interAB = new HashSet<ExperimentalFactor>();
+            interAB.add( experimentalFactorA );
+            interAB.add( experimentalFactorB );
             ExpressionAnalysisResultSet interactionEffectResultSet = ExpressionAnalysisResultSet.Factory.newInstance(
-                    expressionAnalysis, analysisResultsInteractionEffect, null );
+                    analysisResultsInteractionEffect, expressionAnalysis, interAB );
             resultSets.add( interactionEffectResultSet );
         }
 

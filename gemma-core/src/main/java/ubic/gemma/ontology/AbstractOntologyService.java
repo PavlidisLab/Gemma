@@ -44,8 +44,16 @@ public abstract class AbstractOntologyService implements InitializingBean {
 
     protected static final Log log = LogFactory.getLog( AbstractOntologyService.class );
 
+    /**
+     * Used to determine whether the loading should proceed. It is often disabled for CLIs.
+     */
+    public static final String ENABLE_PROPERTY_NAME = "loadOntologies";
+
     protected Map<String, OntologyTerm> terms;
     protected Map<String, OntologyIndividual> individuals;
+
+    private boolean enabled = true;
+
     protected AtomicBoolean ready = new AtomicBoolean( false );
 
     protected AtomicBoolean modelReady = new AtomicBoolean( false );
@@ -242,10 +250,12 @@ public abstract class AbstractOntologyService implements InitializingBean {
 
     protected synchronized void init() {
 
+        boolean globalLoadOntologies = ConfigUtils.getBoolean( ENABLE_PROPERTY_NAME );
+
         boolean loadOntology = ConfigUtils.getBoolean( "load." + ontology_name, true );
 
         // if loading ontologies is disabled in the configuration, return
-        if ( !loadOntology ) {
+        if ( !globalLoadOntologies || !loadOntology ) {
             log.info( "Loading " + ontology_name + " is disabled" );
             return;
         }
@@ -388,5 +398,18 @@ public abstract class AbstractOntologyService implements InitializingBean {
                 }
             }
         }
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    /**
+     * Use this to turn this ontology on or off.
+     * 
+     * @param enabled If false, the ontology will not be loaded.
+     */
+    public void setEnabled( boolean enabled ) {
+        this.enabled = enabled;
     }
 }

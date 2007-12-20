@@ -229,8 +229,8 @@ public class SearchService {
         for ( SearchResult sr : newResults ) {
             if ( !rawResults.contains( sr ) ) {
                 /*
-                 * We do this because we don't want to clobber results. FIXME - perhaps check if the score of the
-                 * existing one is lower?
+                 * We do this because we don't want to clobber results, when the same object comes up more than once in
+                 * different searches. FIXME - perhaps check if the score of the existing one is lower?
                  */
                 rawResults.add( sr );
             }
@@ -474,17 +474,18 @@ public class SearchService {
             }
 
             // if ( loopWatch.getTime() > 1000 ) {
-            //if (children.size() > 0) {
-//            log.info( "==== Added Term and " + children.size() + " children for  " + term.getUri() + "  in "
-//                    + loopWatch.getTime() + "ms" );
-            //}
+            // if (children.size() > 0) {
+            // log.info( "==== Added Term and " + children.size() + " children for " + term.getUri() + " in "
+            // + loopWatch.getTime() + "ms" );
+            // }
             loopWatch.reset();
         }
 
-        //if ( watch.getTime() > 1000 ) {
-            log.info( "Found " + characteristicUris.size() + " possible matches + child terms in " + watch.getTime()
-                    + "ms" );
-        //}
+        // if ( watch.getTime() > 1000 ) {
+        log
+                .info( "Found " + characteristicUris.size() + " possible matches + child terms in " + watch.getTime()
+                        + "ms" );
+        // }
         watch.reset();
         watch.start();
 
@@ -910,9 +911,6 @@ public class SearchService {
             SearchResult compassHitDerivedFrom ) {
         List<SearchResult> results = new ArrayList<SearchResult>();
         for ( Object e : entities ) {
-
-            e = EntityUtils.getImplementationForProxy( e );
-
             if ( compassHitDerivedFrom != null ) {
                 SearchResult esr = new SearchResult( e, compassHitDerivedFrom.getScore() * INDIRECT_DB_HIT_PENALTY );
                 esr.setHighlightedText( compassHitDerivedFrom.getHighlightedText() );
@@ -940,7 +938,8 @@ public class SearchService {
 
         watch.stop();
         if ( watch.getTime() > 1000 )
-            log.info( "Expression Experiment search for '" + settings + "' took " + watch.getTime() + " ms, " + results.size() + " hits." );
+            log.info( "Expression Experiment search for '" + settings + "' took " + watch.getTime() + " ms, "
+                    + results.size() + " hits." );
 
         return results;
     }
@@ -1088,9 +1087,14 @@ public class SearchService {
          */
         for ( int i = 0, limit = Math.min( rawResults.size(), settings.getMaxResults() ); i < limit; i++ ) {
             SearchResult sr = rawResults.get( i );
-            Class resultClass =  EntityUtils.getImplementationForProxy( sr.getResultObject() ).getClass();
-            resultClass = ReflectionUtil.getBaseForImpl(resultClass );
-           
+
+            /*
+             * FIXME This is unpleasant and should be removed when BioSequences are correctly detached.
+             */
+            Class resultClass = EntityUtils.getImplementationForProxy( sr.getResultObject() ).getClass();
+
+            resultClass = ReflectionUtil.getBaseForImpl( resultClass );
+
             assert results.containsKey( resultClass ) : "Unknown class " + resultClass;
             results.get( resultClass ).add( sr );
         }

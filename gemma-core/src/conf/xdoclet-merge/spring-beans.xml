@@ -47,18 +47,18 @@
 	Variables are listed in a resource. If the resource is in your classpath, list in in 'locations'.
 	Other config files can be added by defining PropertiesConfiguration instances  
 	==================================================== -->
-<bean id="buildProperties"
+<bean id="userProperties"
 	class="org.apache.commons.configuration.PropertiesConfiguration"
 	dependency-check="none">
 	<constructor-arg index="0">
-		<value>build.properties</value>
+		<value>Gemma.properties</value>
 	</constructor-arg>
 </bean>
 
 <bean id="configurationPropertyConfigurer"
 	class="ubic.gemma.util.CommonsConfigurationPropertyPlaceholderConfigurer">
 	<property name="configuration">
-		<ref local="buildProperties" />
+		<ref local="userProperties" />
 	</property>
 	<property name="locations">
 		<list>

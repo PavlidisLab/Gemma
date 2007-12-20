@@ -24,39 +24,35 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 
-import ubic.gemma.analysis.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.analysis.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.analysis.diff.DifferentialExpressionAnalyzer;
+import ubic.gemma.analysis.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
-import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
+import ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * A command line interface to the {@link DifferentialExpressionAnalysis}.
+ * A command line interface to the {@link DifferentialExpressionAnalyzer}.
  * 
  * @author keshav
  * @version $Id$
  */
 public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
-    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
+    private DifferentialExpressionAnalyzerService differentialExpressionAnalysisService = null;
 
     private ExpressionExperimentReportService expressionExperimentReportService = null;
 
     private int top = 100;
 
     private boolean useDb = true;
-
-    private boolean forceAnalysis = false;
 
     /**
      * @param args
@@ -91,7 +87,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             return err;
         }
 
-        this.differentialExpressionAnalysisService = ( DifferentialExpressionAnalysisService ) this
+        this.differentialExpressionAnalysisService = ( DifferentialExpressionAnalyzerService ) this
                 .getBean( "differentialExpressionAnalysisService" );
 
         this.expressionExperimentReportService = ( ExpressionExperimentReportService ) this
@@ -111,7 +107,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
                     try {
                         Collection<ExpressionAnalysis> expressionAnalyses = this.differentialExpressionAnalysisService
-                                .getPersistentExpressionAnalyses( ee, forceAnalysis );
+                                .getExpressionAnalyses( ee );
 
                         logProcessing( expressionAnalyses );
 
@@ -146,7 +142,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
                         try {
                             Collection<ExpressionAnalysis> expressionAnalyses = this.differentialExpressionAnalysisService
-                                    .getPersistentExpressionAnalyses( expressionExperiment, forceAnalysis );
+                                    .getExpressionAnalyses( expressionExperiment );
 
                             logProcessing( expressionAnalyses );
                             successObjects.add( expressionExperiment.toString() );
@@ -175,7 +171,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
                 try {
                     Collection<ExpressionAnalysis> expressionAnalyses = this.differentialExpressionAnalysisService
-                            .getPersistentExpressionAnalyses( expressionExperiment, forceAnalysis );
+                            .getExpressionAnalyses( expressionExperiment );
 
                     logProcessing( expressionAnalyses );
 
@@ -210,14 +206,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
          */
         super.buildOptions();
 
-        /* Supports: running on all data sets that have not been run since a given date. */
+        /* Supports: runing on all data sets that have not been run since a given date. */
         super.addDateOption();
-
-        Option topOpt = OptionBuilder.withLongOpt( "top" ).hasArg( true ).create();
-        super.addOption( topOpt );
-
-        Option forceAnalysisOpt = OptionBuilder.hasArg( false ).create( 'r' );
-        super.addOption( forceAnalysisOpt );
     }
 
     /*
@@ -229,12 +219,9 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     protected void processOptions() {
         super.processOptions();
 
-        if ( hasOption( "top" ) ) {
-            this.top = Integer.parseInt( ( getOptionValue( "top" ) ) );
+        if ( hasOption( 't' ) ) {
+            this.top = Integer.parseInt( ( getOptionValue( 't' ) ) );
         }
-
-        this.forceAnalysis = hasOption( 'r' );
-
     }
 
     /**
@@ -257,9 +244,9 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         log.debug( resultSets.size() + " result set(s) to process." );
         for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
             log.debug( "*** Result set ***" );
-            Collection<ExpressionAnalysisResult> results = resultSet.getResults();
+            Collection<DifferentialExpressionAnalysisResult> results = resultSet.getResults();
 
-            for ( ExpressionAnalysisResult result : results ) {
+            for ( DifferentialExpressionAnalysisResult result : results ) {
                 ProbeAnalysisResult probeResult = ( ProbeAnalysisResult ) result;
                 log.debug( "probe: " + probeResult.getProbe().getName() + ", p-value: " + probeResult.getPvalue()
                         + ", score: " + probeResult.getScore() );

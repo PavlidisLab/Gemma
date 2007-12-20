@@ -78,7 +78,7 @@ public abstract class AbstractCLI {
     private static int DEFAULT_VERBOSITY = 2;
     protected static Log log = LogFactory.getLog( AbstractCLI.class );
 
-    private Options options = new Options();
+    protected Options options = new Options();
 
     private CommandLine commandLine;
 
@@ -421,16 +421,12 @@ public abstract class AbstractCLI {
                 .withDescription(
                         "Set the selected logger to the verbosity level after the equals sign. For example, '-logger=org.hibernate.SQL=4'" )
                 .create( "logger" );
-        Option compassOnOpt = new Option( "compassOn", false,
-                "Turn on compass indexing (Does not turn on index mirroring)" );
-        Option gigaspacesOnOpt = new Option( "gigaspacesOn", false, "Use the gigaspaces compute-server for large jobs." );
 
         options.addOption( otherLogOpt );
         options.addOption( logOpt );
         options.addOption( helpOpt );
         options.addOption( testOpt );
-        options.addOption( compassOnOpt );
-        options.addOption( gigaspacesOnOpt );
+
     }
 
     /**

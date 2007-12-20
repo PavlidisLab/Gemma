@@ -30,6 +30,7 @@ public class CommonsConfigurationPropertyPlaceholderConfigurer extends PropertyP
      * @param conf the conf to set
      */
     public void setConfiguration( PropertiesConfiguration configuration ) {
+        log.info( "Got configuration from " + configuration.getFileName() );
         this.configuration = configuration;
     }
 
@@ -37,7 +38,7 @@ public class CommonsConfigurationPropertyPlaceholderConfigurer extends PropertyP
     protected Properties mergeProperties() throws IOException {
         Properties result = super.mergeProperties();
 
-        // now load properties from configuration (build.properties), to override the
+        // now load properties from user's configuration (Gemma.properties), to override the
         // earlier properties from the xml
         if ( this.configuration != null ) {
             for ( Iterator it = configuration.getKeys(); it.hasNext(); ) {

@@ -24,7 +24,10 @@ import java.util.Collection;
 import java.util.GregorianCalendar;
 
 import ubic.gemma.model.analysis.Analysis;
-import ubic.gemma.model.analysis.AnalysisService;
+import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.analysis.GeneCoexpressionAnalysis;
+import ubic.gemma.model.analysis.GeneCoexpressionAnalysisService;
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.protocol.ProtocolService;
@@ -41,12 +44,12 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
 
     private Gene2GeneCoexpressionService g2gCoexpressionS;
-    private AnalysisService analysisS;
+    private GeneCoexpressionAnalysisService analysisS;
     private ProtocolService protocolS;
     private GeneService geneS;
     private TaxonService taxonS;
 
-    private Analysis analysis;
+    private GeneCoexpressionAnalysis analysis;
     private Gene firstGene;
 
     @Override
@@ -55,12 +58,12 @@ public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
         this.endTransaction();
 
         g2gCoexpressionS = ( Gene2GeneCoexpressionService ) this.getBean( "gene2GeneCoexpressionService" );
-        analysisS = ( AnalysisService ) this.getBean( "analysisService" );
+        analysisS = ( GeneCoexpressionAnalysisService ) this.getBean( "geneCoexpressionAnalysisService" );
         protocolS = ( ProtocolService ) this.getBean( "protocolService" );
         geneS = ( GeneService ) this.getBean( "geneService" );
         taxonS = ( TaxonService ) this.getBean( "taxonService" );
 
-        analysis = ExpressionAnalysis.Factory.newInstance();
+        analysis = GeneCoexpressionAnalysis.Factory.newInstance();
         // analysis.setAnalyzedInvestigation( new HashSet<Investigation>( toUseEE ) );
         analysis.setDescription( "test" );
 

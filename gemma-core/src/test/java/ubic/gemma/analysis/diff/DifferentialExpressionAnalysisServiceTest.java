@@ -22,7 +22,7 @@ import java.util.Collection;
 
 import org.apache.commons.lang.time.StopWatch;
 
-import ubic.gemma.model.expression.analysis.ExpressionAnalysisResult;
+import ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -32,7 +32,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContextTest {
 
-    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
+    private DifferentialExpressionAnalyzerService differentialExpressionAnalysisService = null;
 
     private String shortName = "GSE1997";
 
@@ -45,7 +45,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
 
-        differentialExpressionAnalysisService = ( DifferentialExpressionAnalysisService ) this
+        differentialExpressionAnalysisService = ( DifferentialExpressionAnalyzerService ) this
                 .getBean( "differentialExpressionAnalysisService" );
     }
 
@@ -62,7 +62,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
     /**
      * @throws Exception
      */
-    public void testGetTopResultsForFactor() throws Exception {
+    public void testGetTopPersistentAnalysisResults() throws Exception {
 
         StopWatch watch = new StopWatch();
         watch.start();
@@ -71,8 +71,8 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         // Collection<ExpressionAnalysisResult> analysisResults = differentialExpressionAnalysisService.getTopResults(
         // shortName, 100 );
         /* eg. use GSE1997 */
-        Collection<ExpressionAnalysisResult> analysisResults = differentialExpressionAnalysisService
-                .getTopResultsForFactor( shortName, 100, "protocol", true );
+        Collection<DifferentialExpressionAnalysisResult> analysisResults = differentialExpressionAnalysisService
+                .getTopResultsForFactor( shortName, 100, "protocol" );
 
         if ( analysisResults == null ) {
             log.warn( "Could not find analyses for expression experiment with short name " + shortName
@@ -80,7 +80,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
             return;
         }
 
-        for ( ExpressionAnalysisResult result : analysisResults ) {
+        for ( DifferentialExpressionAnalysisResult result : analysisResults ) {
             if ( result instanceof ProbeAnalysisResult ) {
 
                 ProbeAnalysisResult presult = ( ProbeAnalysisResult ) result;

@@ -37,7 +37,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * <p>
  * See http://www.bioinformatics.ubc.ca/pavlidis/lab/docs/reprints/anova-methods.pdf.
  * 
- * @spring.bean id="differentialExpressionAnalysis"
+ * @spring.bean id="differentialExpressionAnalyzer"
  * @spring.property name="studenttTestAnalyzer" ref="tTestAnalyzer"
  * @spring.property name="oneWayAnovaAnalyzer" ref="oneWayAnovaAnalyzer"
  * @spring.property name="twoWayAnovaWithInteractionsAnalyzer" ref="twoWayAnovaWithInteractionsAnalyzer"
@@ -46,7 +46,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @author keshav
  * @version $Id$
  */
-public class DifferentialExpressionAnalysis {
+public class DifferentialExpressionAnalyzer {
     private Log log = LogFactory.getLog( this.getClass() );
 
     private int EXPERIMENTAL_FACTOR_ONE = 1;
@@ -81,8 +81,8 @@ public class DifferentialExpressionAnalysis {
      * @return
      */
     public ExpressionAnalysis getExpressionAnalysis() {
-        if ( expressionAnalysis == null ) return null;
-
+        if ( expressionAnalysis == null )
+            throw new RuntimeException( "Analysis was never executed.  Run the analysis first." );
         return expressionAnalysis;
     }
 

@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.commons.cli.Option;
 import org.apache.commons.lang.StringUtils;
 import org.quartz.impl.StdScheduler;
 import org.springframework.beans.factory.BeanFactory;
@@ -39,6 +40,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.ontology.AbstractOntologyService;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.security.authentication.ManualAuthenticationProcessing;
 
@@ -55,6 +57,8 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     private static final String GIGASPACES_ON = "gigaspacesOn";
 
+    private static final String ONTOLOGIES_ON = "ontologiesOn";
+
     protected BeanFactory ctx = null;
     PersisterHelper ph = null;
     protected AuditTrailService auditTrailService;
@@ -64,6 +68,19 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     protected void buildStandardOptions() {
         super.buildStandardOptions();
         addUserNameAndPasswordOptions();
+
+        addSpecialServiceOptions();
+    }
+
+    private void addSpecialServiceOptions() {
+        Option compassOnOpt = new Option( COMPASS_ON, false,
+                "Turn on compass indexing (Does not turn on index mirroring)" );
+        Option gigaspacesOnOpt = new Option( GIGASPACES_ON, false, "Use the gigaspaces compute-server for large jobs." );
+        Option ontologiesOnOpt = new Option( ONTOLOGIES_ON, false,
+                "Allow loading of ontologies as configured in your properties file. Ontology loading is off by default." );
+        options.addOption( compassOnOpt );
+        options.addOption( gigaspacesOnOpt );
+        options.addOption( ontologiesOnOpt );
     }
 
     public AbstractSpringAwareCLI() {
@@ -209,6 +226,11 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
      * check if using test or production contexts
      */
     void createSpringContext() {
+
+        if ( hasOption( ONTOLOGIES_ON ) ) {
+            ConfigUtils.setProperty( AbstractOntologyService.ENABLE_PROPERTY_NAME, true );
+        }
+
         ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), hasOption( COMPASS_ON ),
                 hasOption( GIGASPACES_ON ), false );
 
@@ -227,8 +249,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     }
 
     /**
-     * Convenience method to obtain instance of any bean by name. Use this only when necessary, you should wire your
-     * tests by injection instead.
+     * Convenience method to obtain instance of any bean by name.
      * 
      * @param name
      * @return
@@ -238,13 +259,14 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     }
 
     /**
-     * You must override this method to process any options you added.(?)
+     * You must override this method to process any options you added.
      */
     @Override
     protected void processOptions() {
         createSpringContext();
         authenticate();
         this.auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
+
     }
 
     /**

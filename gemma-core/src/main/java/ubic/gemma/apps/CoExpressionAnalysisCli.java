@@ -48,7 +48,7 @@ import ubic.basecode.gui.ColorMap;
 import ubic.basecode.gui.ColorMatrix;
 import ubic.basecode.gui.JMatrixDisplay;
 import ubic.basecode.io.reader.StringMatrixReader;
-import ubic.gemma.analysis.coexpression.GeneCoExpressionAnalysis;
+import ubic.gemma.analysis.coexpression.GeneCoExpressionAnalyzer;
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -376,7 +376,7 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
                 allEEs );
         if ( dedv2genes.size() == 0 || queryGenes.size() == 0 || coExpressedGenes.size() == 0 || allEEs.size() == 0 )
             return null;
-        GeneCoExpressionAnalysis coExpression = new GeneCoExpressionAnalysis( queryGenes, coExpressedGenes,
+        GeneCoExpressionAnalyzer coExpression = new GeneCoExpressionAnalyzer( queryGenes, coExpressedGenes,
                 new HashSet( allEEs ) );
 
         coExpression.setDedv2Genes( dedv2genes );
@@ -412,7 +412,7 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
      * @throws IOException
      * @throws InterruptedException
      */
-    private void makeClusterGrams( GeneCoExpressionAnalysis coExpression, Gene inputGene )
+    private void makeClusterGrams( GeneCoExpressionAnalyzer coExpression, Gene inputGene )
             throws FileNotFoundException, IOException, InterruptedException {
         String filebaseName = inputGene.getOfficialSymbol() + "_coexp";
         // Generate the data file for Cluster3

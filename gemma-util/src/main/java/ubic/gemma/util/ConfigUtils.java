@@ -45,20 +45,37 @@ public class ConfigUtils {
 
     private static Log log = LogFactory.getLog( ConfigUtils.class.getName() );
 
-    private static final String GEMMA_PROPERTIES = "Gemma.properties";
+    /**
+     * The name of the file users can use to configure Gemma.
+     */
+    private static final String USER_CONFIGURATION = "Gemma.properties";
+
+    /**
+     * Name of the resource that is used to configure Gemma internally.
+     */
+    private static final String BUILTIN_CONFIGURATION = "project.properties";
 
     private static CompositeConfiguration config;
 
     static {
+
         config = new CompositeConfiguration();
         config.addConfiguration( new SystemConfiguration() );
 
         // the order matters - first come, first serve.
+
         try {
-            config.addConfiguration( new PropertiesConfiguration( "build.properties" ) );
+            config.addConfiguration( new PropertiesConfiguration( USER_CONFIGURATION ) );
+        } catch ( ConfigurationException e ) {
+            // hmm, this is pretty much required.
+            log.warn( USER_CONFIGURATION + " not found" );
+        }
+
+        try {
+            config.addConfiguration( new PropertiesConfiguration( BUILTIN_CONFIGURATION ) );
         } catch ( ConfigurationException e ) {
             // that's okay, but warn
-            log.warn( "build.properties not found" );
+            log.warn( BUILTIN_CONFIGURATION + " not found" );
         }
 
         try {
@@ -68,14 +85,8 @@ public class ConfigUtils {
                         + "local.properties" ) );
             }
         } catch ( ConfigurationException e ) {
-            // that's okay, but warn
-            log.warn( "local.properties not found" );
-        }
-
-        try {
-            config.addConfiguration( new PropertiesConfiguration( "project.properties" ) );
-        } catch ( ConfigurationException e ) {
-            // that's okay too....
+            // that's okay
+            // log.warn( "local.properties not found" );
         }
 
         try {
@@ -85,12 +96,6 @@ public class ConfigUtils {
             log.warn( "version.properties not found" );
         }
 
-        try {
-            config.addConfiguration( new PropertiesConfiguration( GEMMA_PROPERTIES ) );
-        } catch ( ConfigurationException e ) {
-            // that's okay, but warn
-            log.warn( "Gemma.properties not found" ); // this is not here for all modules.
-        }
     }
 
     /**
@@ -478,6 +483,16 @@ public class ConfigUtils {
      */
     public static String[] getStringArray( String key ) {
         return config.getStringArray( key );
+    }
+
+    /**
+     * Set an environment/application variable programatically.
+     * 
+     * @param enablePropertyName
+     * @param b
+     */
+    public static void setProperty( String key, Object value ) {
+        config.setProperty( key, value );
     }
 
 }
