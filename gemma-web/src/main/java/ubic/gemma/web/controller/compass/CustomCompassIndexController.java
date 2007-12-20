@@ -39,11 +39,9 @@ import ubic.gemma.grid.javaspaces.index.IndexGemmaTask;
 import ubic.gemma.grid.javaspaces.index.SpacesIndexGemmaCommand;
 import ubic.gemma.util.CompassUtils;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
-import ubic.gemma.util.grid.javaspaces.SpacesUtil;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
-import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand;
 import ubic.gemma.web.controller.gemmaspaces.AbstractSpacesFormController;
 import ubic.gemma.web.util.MessageUtil;
 
@@ -72,6 +70,8 @@ import ubic.gemma.web.util.MessageUtil;
  * @spring.property name="geneGps" ref="geneGps" 
  * @spring.property name="bibliographicGps" ref="bibliographicGps"
  * @spring.property name="probeGps" ref="probeGps"
+ * @spring.property name="biosequenceGps" ref="biosequenceGps"
+ * 
  */
 public class CustomCompassIndexController extends AbstractSpacesFormController {
 
@@ -82,6 +82,7 @@ public class CustomCompassIndexController extends AbstractSpacesFormController {
     private CompassGpsInterfaceDevice geneGps;
     private CompassGpsInterfaceDevice bibliographicGps;
     private CompassGpsInterfaceDevice probeGps;
+    private CompassGpsInterfaceDevice biosequenceGps;
 
     /*
      * (non-Javadoc)
@@ -93,6 +94,8 @@ public class CustomCompassIndexController extends AbstractSpacesFormController {
             BindException errors ) throws Exception {
 
     	//TODO: Make use of command object (so that indexing can be batched)
+    	//Kind of mute case using ajax now
+    	
     	
     	 IndexGemmaCommand indexCommand = new IndexGemmaCommand();
 
@@ -104,7 +107,10 @@ public class CustomCompassIndexController extends AbstractSpacesFormController {
             indexCommand.setIndexArray(true);
         } else if ( StringUtils.hasText( request.getParameter( "bibliographicIndex" ) ) ) {
            indexCommand.setIndexBibliographic(true);
-        } else
+        } else if ( StringUtils.hasText( request.getParameter( "biosequenceIndex" ) ) ) {
+           indexCommand.setIndexBibliographic(true);
+        }
+        else
             return new ModelAndView( this.getFormView() );
     	
     	
@@ -117,10 +123,10 @@ public class CustomCompassIndexController extends AbstractSpacesFormController {
     /**
      * Main entry point for AJAX calls.
      * 
-     * @param command
+     * @param IndexGemmaCommand
      * @return
      */
-    public String run( ExpressionExperimentLoadCommand command ) {
+    public String run( IndexGemmaCommand command ) {
         return run( command, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), IndexGemmaTask.class.getName(), true );
     }
     
@@ -239,7 +245,7 @@ public class CustomCompassIndexController extends AbstractSpacesFormController {
 
         private SpacesIndexGemmaCommand createCommandObject( IndexGemmaCommand ic ) {
             return new SpacesIndexGemmaCommand( taskId, true, ic.isIndexArray(), ic.isIndexEE(), ic.isIndexGene()
-            		, ic.isIndexProbe(),  ic.isIndexBibliographic(), ic.isIndexOntology());
+            		, ic.isIndexProbe(),  ic.isIndexBibliographic(), ic.isIndexBioSequence());
         }
 
     }
@@ -252,14 +258,8 @@ public class CustomCompassIndexController extends AbstractSpacesFormController {
      */
     class IndexJob extends BackgroundControllerJob<ModelAndView> {
 
-        private CompassGpsInterfaceDevice gpsDevice;
         private String description;
 
-        public IndexJob( String taskId, SecurityContext parentSecurityContext, Object commandObj, MessageUtil messenger, CompassGpsInterfaceDevice gpsDevice, String description ) {
-            this( taskId, parentSecurityContext, commandObj, messenger);
-            this.gpsDevice = gpsDevice;
-            this.description = description;
-        }
         
         /**
          * @param taskId
@@ -305,9 +305,21 @@ public class CustomCompassIndexController extends AbstractSpacesFormController {
 
         }
         
-        protected void index(IndexGemmaCommand indexGemmaCommand){
+        protected void index(IndexGemmaCommand command){
 
-            CompassUtils.rebuildCompassIndex( gpsDevice );
+        	if (command.isIndexArray())
+        		CompassUtils.rebuildCompassIndex( arrayGps );
+        	else if (command.isIndexBibliographic())
+        		CompassUtils.rebuildCompassIndex(bibliographicGps);
+        	else if (command.isIndexEE())
+        		CompassUtils.rebuildCompassIndex(expressionGps);
+        	else if (command.isIndexGene())
+        		CompassUtils.rebuildCompassIndex(geneGps);
+        	else if (command.isIndexProbe())
+        		CompassUtils.rebuildCompassIndex(probeGps);
+        	else if (command.isIndexBioSequence())
+        		CompassUtils.rebuildCompassIndex(biosequenceGps);
+        		
         	
         }
     }
@@ -337,4 +349,8 @@ public class CustomCompassIndexController extends AbstractSpacesFormController {
 		
 	}
 
+	public void setBiosequenceGps(CompassGpsInterfaceDevice biosequenceGps){
+		this.biosequenceGps = biosequenceGps;
+		
+	}
 }

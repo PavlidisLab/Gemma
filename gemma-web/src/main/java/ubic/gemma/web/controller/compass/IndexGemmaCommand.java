@@ -22,6 +22,14 @@ package ubic.gemma.web.controller.compass;
 
 import java.io.Serializable;
 
+/**
+ * This class contains the options for indexing.  
+ * 
+ * @author klc
+ *
+ */
+
+
 public class IndexGemmaCommand implements Serializable {
 
 	/**
@@ -34,8 +42,8 @@ public class IndexGemmaCommand implements Serializable {
 	private boolean indexEE;
 	private boolean indexProbe;
 	private boolean indexBibliographic;
-	private boolean indexOntology;
 	private boolean indexGene;
+	private boolean indexBioSequence;
 	
 	
 	
@@ -63,17 +71,17 @@ public class IndexGemmaCommand implements Serializable {
 	public void setIndexGene(boolean indexGene) {
 		this.indexGene = indexGene;
 	}
-	public boolean isIndexOntology() {
-		return indexOntology;
-	}
-	public void setIndexOntology(boolean indexOntology) {
-		this.indexOntology = indexOntology;
-	}
 	public boolean isIndexProbe() {
 		return indexProbe;
 	}
 	public void setIndexProbe(boolean indexProbe) {
 		this.indexProbe = indexProbe;
+	}
+	public boolean isIndexBioSequence() {
+		return indexBioSequence;
+	}
+	public void setIndexBioSequence(boolean indexBioSequence) {
+		this.indexBioSequence = indexBioSequence;
 	}
 	
 	

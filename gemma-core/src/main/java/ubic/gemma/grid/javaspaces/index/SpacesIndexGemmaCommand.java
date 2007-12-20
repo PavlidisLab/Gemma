@@ -44,16 +44,17 @@ public class SpacesIndexGemmaCommand extends SpacesCommand implements
 
 	private boolean indexProbe;
 
-	private boolean indexOntology;
+	private boolean indexBioSequence;
 
 	private boolean indexGene;
-
+	
+	
 	
 	
 	
 	public SpacesIndexGemmaCommand(String taskId, boolean compassOn,
 			boolean indexAD, boolean indexEE, boolean indexGene,
-			boolean indexProbe, boolean indexBibRef, boolean indexOntology) {
+			boolean indexProbe, boolean indexBibRef, boolean indexBioSequence) {
 
 		super(taskId);
 
@@ -62,7 +63,7 @@ public class SpacesIndexGemmaCommand extends SpacesCommand implements
 		this.indexBibRef = indexBibRef;
 		this.indexProbe = indexProbe;
 		this.indexGene = indexGene;
-		this.indexOntology = indexOntology;
+		this.indexBioSequence = indexBioSequence;
 
 		this.compassOn = compassOn;
 	}
@@ -107,12 +108,12 @@ public class SpacesIndexGemmaCommand extends SpacesCommand implements
 		this.indexGene = indexGene;
 	}
 
-	public boolean isIndexOntology() {
-		return indexOntology;
+	public boolean isIndexBioSequence() {
+		return indexBioSequence;
 	}
 
-	public void setIndexOntology(boolean indexOntology) {
-		this.indexOntology = indexOntology;
+	public void setIndexOntology(boolean indexBioSequence) {
+		this.indexBioSequence = indexBioSequence;
 	}
 
 	public boolean isIndexProbe() {
