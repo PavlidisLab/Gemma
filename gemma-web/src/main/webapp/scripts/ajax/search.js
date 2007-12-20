@@ -124,7 +124,7 @@ var initGrid = function(id) {
 	
 	
 	var cm = new Ext.grid.ColumnModel([
-	 			{header: "Entity", width: 150, dataIndex:"resultClass", renderer:renderEntityClass },
+	 			{header: "Category", width: 150, dataIndex:"resultClass", renderer:renderEntityClass },
 				{header: "Item", width: 480, dataIndex:"resultObject", renderer:renderEntity },
 				{header: "Score", width: 60, dataIndex:"score" },
 				{header: "Text", width: 180, dataIndex:"highlightedText" }
@@ -192,6 +192,8 @@ var renderEntityClass = function(data, metadata, record, row, column, store  ) {
 		return "Sequence";
 	} else if (clazz == "Gene") {
 		return "Gene";
+	} else{
+		return clazz;
 	}
 };
 
@@ -200,14 +202,14 @@ var renderEntity = function( data, metadata, record, row, column, store  ) {
 	var clazz = record.get("resultClass");
 	if (clazz == "ExpressionExperimentValueObject") {
 		return "<a href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + data.id + "\">" + data.shortName + "</a> - " + data.name ;
-	} else if (clazz=="CompositeSequence") {
-		return data.name  + " - " + data.description + " ;" + data.arrayDesign.shortName;
-	} else if (clazz== "ArrayDesign") {
+	} else if (clazz == "CompositeSequence") {
+		return "<a href=\"/Gemma/compositeSequence/show.html?id=" + data.id + "\">" + data.name  + "</a> - " + data.description + "; Array: " + data.arrayDesign.shortName;
+	} else if (clazz == "ArrayDesign") {
 		return "<a href=\"/Gemma/arrays/showArrayDesign.html?id=" + data.id + "\">" + data.shortName + "</a>  " + data.name;
 	}else if (clazz == "BioSequence") {
 		return "<a href=\"/Gemma/genome/bioSequence/showBioSequence.html?id=" + data.id + "\">" + data.name + "</a> - " + data.taxon.commonName + " " + data.description ;
 	} else if (clazz == "Gene") {
-		return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">" + data.officialSymbol + "</a>  - " + data.taxon.commonName + " " + data.officialName;
+		return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">" + data.officialSymbol + "</a>  - Species: " + data.taxon.commonName + " Desc: " + data.officialName;
 	}else if (clazz == "Bibliographicreference") {
 		return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">" + data.title + "</a> [" + data.pubmedId + "]";
 	}

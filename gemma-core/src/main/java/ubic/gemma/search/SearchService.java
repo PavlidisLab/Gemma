@@ -1088,7 +1088,9 @@ public class SearchService {
          */
         for ( int i = 0, limit = Math.min( rawResults.size(), settings.getMaxResults() ); i < limit; i++ ) {
             SearchResult sr = rawResults.get( i );
-            Class resultClass = ReflectionUtil.getBaseForImpl( sr.getResultClass() );
+            Class resultClass =  EntityUtils.getImplementationForProxy( sr.getResultObject() ).getClass();
+            resultClass = ReflectionUtil.getBaseForImpl(resultClass );
+           
             assert results.containsKey( resultClass ) : "Unknown class " + resultClass;
             results.get( resultClass ).add( sr );
         }
