@@ -343,54 +343,54 @@ function highlightTableRows(tableId) {
     }
 }
 
-function highlightFormElements() {
-    // add input box highlighting 
-    addFocusHandlers(document.getElementsByTagName("input"));
-    addFocusHandlers(document.getElementsByTagName("textarea"));
-}
+//function highlightFormElements() {
+//    // add input box highlighting 
+//    addFocusHandlers(document.getElementsByTagName("input"));
+//    addFocusHandlers(document.getElementsByTagName("textarea"));
+//}
 
-function addFocusHandlers(elements) {
-    for (i=0; i < elements.length; i++) {
-        if (elements[i].type != "button" && elements[i].type != "submit" &&
-            elements[i].type != "reset" && elements[i].type != "checkbox" && elements[i].type != "radio") {
-            if (elements[i].getAttribute('readonly') != "readonly" && elements[i].getAttribute('readonly') != "disabled") {
-                elements[i].onfocus=function() {this.className='focus';this.select()};
-                elements[i].onblur=function() {this.className=''};
-            }
-        }
-    }
-}
+//function addFocusHandlers(elements) {
+//    for (i=0; i < elements.length; i++) {
+//        if (elements[i].type != "button" && elements[i].type != "submit" &&
+//            elements[i].type != "reset" && elements[i].type != "checkbox" && elements[i].type != "radio") {
+//            if (elements[i].getAttribute('readonly') != "readonly" && elements[i].getAttribute('readonly') != "disabled") {
+//                elements[i].onfocus=function() {this.className='focus';this.select()};
+//                elements[i].onblur=function() {this.className=''};
+//            }
+//        }
+//    }
+//}
 
-function radio(clicked){
-    var form = clicked.form;
-    var checkboxes = form.elements[clicked.name];
-    if (!clicked.checked || !checkboxes.length) {
-        clicked.parentNode.parentNode.className="";
-        return false;
-    }
-
-    for (i=0; i<checkboxes.length; i++) {
-        if (checkboxes[i] != clicked) {
-            checkboxes[i].checked=false;
-            checkboxes[i].parentNode.parentNode.className="";
-        }
-    }
-
-    // highlight the row    
-    clicked.parentNode.parentNode.className="over";
-}
-
-window.onload = function() {
-    highlightFormElements();
-    if ($('successMessages')) {
-        new Effect.Highlight('successMessages');
-        // causes webtest exception on OS X : http://lists.canoo.com/pipermail/webtest/2006q1/005214.html
-        // window.setTimeout("Effect.DropOut('successMessages')", 3000);
-    }
-    if ($('errorMessages')) {
-        new Effect.Highlight('errorMessages');
-    }
-}
+//function radio(clicked){
+//    var form = clicked.form;
+//    var checkboxes = form.elements[clicked.name];
+//    if (!clicked.checked || !checkboxes.length) {
+//        clicked.parentNode.parentNode.className="";
+//        return false;
+//    }
+//
+//    for (i=0; i<checkboxes.length; i++) {
+//        if (checkboxes[i] != clicked) {
+//            checkboxes[i].checked=false;
+//            checkboxes[i].parentNode.parentNode.className="";
+//        }
+//    }
+//
+//    // highlight the row    
+//    clicked.parentNode.parentNode.className="over";
+//}
+//
+//window.onload = function() {
+//    highlightFormElements();
+//    if ($('successMessages')) {
+//        new Effect.Highlight('successMessages');
+//        // causes webtest exception on OS X : http://lists.canoo.com/pipermail/webtest/2006q1/005214.html
+//        // window.setTimeout("Effect.DropOut('successMessages')", 3000);
+//    }
+//    if ($('errorMessages')) {
+//        new Effect.Highlight('errorMessages');
+//    }
+//}
 
 // Show the document's title on the status bar
 window.defaultStatus=document.title;

@@ -16,7 +16,7 @@ var detailsDataSource;
 
 var showprobes = function(id) {
 	var ids =  id.split(",");
-	// note how we pass the new array in directly, without wraping it in an object first.
+	// note how we pass the new array in directly, without wrapping it in an object first.
 	ds.load({params:[ids], 
 	callback: function(r, options, success, scope ) {  
 		if (success) { 
