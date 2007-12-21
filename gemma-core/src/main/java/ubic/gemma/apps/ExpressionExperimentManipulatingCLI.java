@@ -35,6 +35,9 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.search.SearchResult;
+import ubic.gemma.search.SearchService;
+import ubic.gemma.search.SearchSettings;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
@@ -48,6 +51,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
     protected ExpressionExperimentService eeService;
 
     protected GeneService geneService;
+
+    protected SearchService searchService;
 
     protected TaxonService taxonService;
 
@@ -69,11 +74,11 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
 
         addOption( expOption );
 
-        Option geneFileListOption = OptionBuilder.hasArg().withArgName( "Expression experiment list file" )
+        Option eeFileListOption = OptionBuilder.hasArg().withArgName( "Expression experiment list file" )
                 .withDescription(
                         "File with list of short names of expression experiments (one per line; use instead of '-e')" )
                 .withLongOpt( "eeListfile" ).create( 'f' );
-        addOption( geneFileListOption );
+        addOption( eeFileListOption );
 
         Option taxonOption = OptionBuilder.hasArg().withDescription( "taxon name" ).withDescription(
                 "taxon of the expression experiments and genes" ).withLongOpt( "taxon" ).create( 't' );
@@ -83,6 +88,11 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
                 .withDescription( "File containing list of expression experiments to exclude" ).withLongOpt(
                         "excludeEEFile" ).create( 'x' );
         addOption( excludeEeOption );
+
+        Option eeSearchOption = OptionBuilder.hasArg().withArgName( "expressionQuerry" ).withDescription(
+                "Use a query string for defining which expression experiments to use" ).withLongOpt( "expressionQuery" )
+                .create( 'q' );
+        addOption( eeSearchOption );
     }
 
     /**
@@ -130,12 +140,12 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
 
     }
 
-    public String getExperimentShortName() {
+    protected String getExperimentShortName() {
         return experimentShortName;
     }
 
     @SuppressWarnings("unchecked")
-    public Collection<ExpressionExperiment> getExpressionExperiments( Taxon taxon ) throws IOException {
+    protected Collection<ExpressionExperiment> getExpressionExperiments( Taxon taxon ) throws IOException {
         Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
         if ( experimentShortName != null ) {
             ExpressionExperiment ee = eeService.findByShortName( experimentShortName );
@@ -192,7 +202,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
      * @return
      * @throws IOException
      */
-    public Collection<ExpressionExperiment> readExpressionExperimentListFile( String fileName ) throws IOException {
+    protected Collection<ExpressionExperiment> readExpressionExperimentListFile( String fileName ) throws IOException {
         Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
         for ( String eeName : readExpressionExperimentListFileToStrings( fileName ) ) {
             ExpressionExperiment ee = eeService.findByShortName( eeName );
@@ -206,11 +216,34 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
     }
 
     /**
+     * Use the search engine to locate expression experiments.
+     * 
+     * @param query
+     */
+    protected Collection<ExpressionExperiment> findExpressionExperimentsByQuery( String query, Taxon taxon ) {
+        Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
+        Collection<SearchResult> eeSearchResults = searchService.search(
+                SearchSettings.ExpressionExperimentSearch( query ) ).get( ExpressionExperiment.class );
+
+        log.info( ees.size() + " Expression experiments matched '" + query + "'" );
+
+        // Filter out all the ee that are not of correct taxon
+        for ( SearchResult sr : eeSearchResults ) {
+            ExpressionExperiment ee = ( ExpressionExperiment ) sr.getResultObject();
+            Taxon t = eeService.getTaxon( ee.getId() );
+            if ( t.getCommonName().equalsIgnoreCase( taxon.getCommonName() ) ) {
+                ees.add( ee );
+            }
+        }
+        return ees;
+
+    }
+
+    /**
      * Read in a list of genes
      * 
      * @param inFile - file name to read
      * @param taxon
-     * @param type format that gene is in
      * @return collection of genes
      * @throws IOException
      */
