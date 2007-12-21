@@ -32,7 +32,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContextTest {
 
-    private DifferentialExpressionAnalyzerService differentialExpressionAnalysisService = null;
+    private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService = null;
 
     private String shortName = "GSE1997";
 
@@ -45,8 +45,8 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
 
-        differentialExpressionAnalysisService = ( DifferentialExpressionAnalyzerService ) this
-                .getBean( "differentialExpressionAnalysisService" );
+        differentialExpressionAnalyzerService = ( DifferentialExpressionAnalyzerService ) this
+                .getBean( "differentialExpressionAnalyzerService" );
     }
 
     /*
@@ -62,17 +62,17 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
     /**
      * @throws Exception
      */
-    public void testGetTopPersistentAnalysisResults() throws Exception {
+    public void testGetTopResultsForFactor() throws Exception {
 
         StopWatch watch = new StopWatch();
         watch.start();
 
         /* eg. use GSE1077 */
-        // Collection<ExpressionAnalysisResult> analysisResults = differentialExpressionAnalysisService.getTopResults(
+        // Collection<ExpressionAnalysisResult> analysisResults = differentialExpressionAnalyzerService.getTopResults(
         // shortName, 100 );
         /* eg. use GSE1997 */
-        Collection<DifferentialExpressionAnalysisResult> analysisResults = differentialExpressionAnalysisService
-                .getTopResultsForFactor( shortName, 100, "protocol" );
+        Collection<DifferentialExpressionAnalysisResult> analysisResults = differentialExpressionAnalyzerService
+                .getTopResultsForFactor( shortName, 100, "protocol", true );
 
         if ( analysisResults == null ) {
             log.warn( "Could not find analyses for expression experiment with short name " + shortName
