@@ -22,6 +22,7 @@ package ubic.gemma.apps;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,12 +31,8 @@ import java.util.Map;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.lang.BitField;
-
-import edu.emory.mathcs.backport.java.util.Collections;
 
 import ubic.basecode.dataStructure.BitUtil;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.analysis.GeneCoexpressionAnalysis;
 import ubic.gemma.model.analysis.GeneCoexpressionAnalysisService;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
@@ -57,7 +54,7 @@ import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
-import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.util.AbstractSpringAwareCLI; 
 
 /**
  * @author klc
