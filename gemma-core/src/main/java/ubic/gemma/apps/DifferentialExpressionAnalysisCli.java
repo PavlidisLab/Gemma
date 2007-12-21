@@ -111,7 +111,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
                     try {
                         Collection<ExpressionAnalysis> expressionAnalyses = this.differentialExpressionAnalyzerService
-                                .getPersistentExpressionAnalyses( ee, forceAnalysis );
+                                .getExpressionAnalyses( ee, forceAnalysis );
 
                         logProcessing( expressionAnalyses );
 
@@ -146,7 +146,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
                         try {
                             Collection<ExpressionAnalysis> expressionAnalyses = this.differentialExpressionAnalyzerService
-                                    .getPersistentExpressionAnalyses( expressionExperiment, forceAnalysis );
+                                    .getExpressionAnalyses( expressionExperiment, forceAnalysis );
 
                             logProcessing( expressionAnalyses );
                             successObjects.add( expressionExperiment.toString() );
@@ -175,7 +175,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
                 try {
                     Collection<ExpressionAnalysis> expressionAnalyses = this.differentialExpressionAnalyzerService
-                            .getPersistentExpressionAnalyses( expressionExperiment, forceAnalysis );
+                            .getExpressionAnalyses( expressionExperiment, forceAnalysis );
 
                     logProcessing( expressionAnalyses );
 
