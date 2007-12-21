@@ -23,6 +23,7 @@
 package ubic.gemma.model.association.coexpression;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.genome.Gene;
@@ -30,6 +31,8 @@ import ubic.gemma.util.TaxonUtility;
 
 /**
  * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpression
+ * @version $Id$
+ * @author klc
  */
 public class Gene2GeneCoexpressionDaoImpl extends
         ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDaoBase {
@@ -37,6 +40,7 @@ public class Gene2GeneCoexpressionDaoImpl extends
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao#findCoexpressionRelationships(null,
      *      java.util.Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected java.util.Collection handleFindCoexpressionRelationships( Gene gene, Analysis analysis, int stringency ) {
         String g2gClassName;
@@ -59,25 +63,12 @@ public class Gene2GeneCoexpressionDaoImpl extends
                 + g2gClassName
                 + " as g2g where g2g.sourceAnalysis.id = :analysisID and g2g.secondGene.id = :geneID and g2g.numDataSets >= :stringency";
 
-        Collection results;
+        Collection<Gene2GeneCoexpression> results = new HashSet<Gene2GeneCoexpression>();
 
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryStringFirstVector );
-            queryObject.setLong( "analysisID", analysis.getId() );
-            queryObject.setLong( "geneID", gene.getId() );
-            queryObject.setInteger( "stringency", stringency );
-            results = queryObject.list();
-
-            // do query joining coexpressed genes through the secondVector to the firstVector
-            queryObject = super.getSession( false ).createQuery( queryStringSecondVector );
-            queryObject.setLong( "analysisID", analysis.getId() );
-            queryObject.setLong( "geneID", gene.getId() );
-            queryObject.setInteger( "stringency", stringency );
-            results.addAll( queryObject.list() );
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
+        results.addAll( this.getHibernateTemplate().findByNamedParam( queryStringFirstVector,
+                new String[] { "analysisId", "geneId", "stringency" }, new Object[] { gene, analysis, stringency } ) );
+        results.addAll( this.getHibernateTemplate().findByNamedParam( queryStringSecondVector,
+                new String[] { "analysisId", "geneId", "stringency" }, new Object[] { gene, analysis, stringency } ) );
 
         return results;
     }
