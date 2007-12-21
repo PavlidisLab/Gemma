@@ -62,7 +62,7 @@ public abstract class AbstractOntologyService implements InitializingBean {
 
     protected AtomicBoolean running = new AtomicBoolean( false );
     protected String ontology_URL;
-    protected String ontology_name;
+    protected String ontologyName;
     protected OntModel model;
     protected IndexLARQ index;
 
@@ -94,7 +94,7 @@ public abstract class AbstractOntologyService implements InitializingBean {
     public AbstractOntologyService() {
         super();
         ontology_URL = getOntologyUrl();
-        ontology_name = getOntologyName();
+        ontologyName = getOntologyName();
     }
 
     /*
@@ -252,11 +252,11 @@ public abstract class AbstractOntologyService implements InitializingBean {
 
         boolean globalLoadOntologies = ConfigUtils.getBoolean( ENABLE_PROPERTY_NAME );
 
-        boolean loadOntology = ConfigUtils.getBoolean( "load." + ontology_name, true );
+        boolean loadOntology = ConfigUtils.getBoolean( "load." + ontologyName, true );
 
         // if loading ontologies is disabled in the configuration, return
         if ( !globalLoadOntologies || !loadOntology ) {
-            log.info( "Loading " + ontology_name + " is disabled" );
+            log.info( "Loading " + ontologyName + " is disabled" );
             return;
         }
 
@@ -270,7 +270,7 @@ public abstract class AbstractOntologyService implements InitializingBean {
                 terms = new HashMap<String, OntologyTerm>();
                 individuals = new HashMap<String, OntologyIndividual>();
 
-                log.info( "Loading " + ontology_name + " Ontology..." );
+                log.info( "Loading " + ontologyName + " Ontology..." );
                 StopWatch loadTime = new StopWatch();
                 loadTime.start();
 
@@ -286,9 +286,9 @@ public abstract class AbstractOntologyService implements InitializingBean {
                     /*
                      * Indexing will be slow the first time (can take hours for large ontologies).
                      */
-                    log.info( "Loading Index for " + ontology_name + " Ontology" );
-                    index = OntologyIndexer.indexOntology( ontology_name, model );
-                    log.info( "Done Loading Index for " + ontology_name + " Ontology in " + loadTime.getTime() / 1000
+                    log.info( "Loading Index for " + ontologyName + " Ontology" );
+                    index = OntologyIndexer.indexOntology( ontologyName, model );
+                    log.info( "Done Loading Index for " + ontologyName + " Ontology in " + loadTime.getTime() / 1000
                             + "s" );
                     indexReady.set( true );
 
@@ -305,7 +305,7 @@ public abstract class AbstractOntologyService implements InitializingBean {
                     running.set( false );
                     loadTime.stop();
 
-                    log.info( "Finished loading ontology " + ontology_name + " in " + loadTime.getTime() / 1000 + "s" );
+                    log.info( "Finished loading ontology " + ontologyName + " in " + loadTime.getTime() / 1000 + "s" );
 
                 } catch ( Exception e ) {
                     log.error( e, e );

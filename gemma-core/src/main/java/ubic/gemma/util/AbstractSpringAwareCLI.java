@@ -229,6 +229,8 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
         if ( hasOption( ONTOLOGIES_ON ) ) {
             ConfigUtils.setProperty( AbstractOntologyService.ENABLE_PROPERTY_NAME, true );
+        } else {
+            ConfigUtils.setProperty( AbstractOntologyService.ENABLE_PROPERTY_NAME, false );
         }
 
         ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), hasOption( COMPASS_ON ),
