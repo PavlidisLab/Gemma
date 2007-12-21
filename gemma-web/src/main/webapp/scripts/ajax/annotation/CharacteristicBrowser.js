@@ -80,7 +80,7 @@ Ext.onReady( function() {
 			var selected = Ext.Gemma.CharacteristicBrowser.grid.getSelectionModel().getSelections();
 			for ( var i=0; i<selected.length; ++i ) {
 				var record = selected[i]
-				//record.reject();
+				record.reject();
 			}
 			Ext.Gemma.CharacteristicBrowser.grid.getView().refresh();
 		}
