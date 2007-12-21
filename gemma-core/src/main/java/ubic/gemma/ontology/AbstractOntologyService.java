@@ -250,7 +250,7 @@ public abstract class AbstractOntologyService implements InitializingBean {
 
     protected synchronized void init() {
 
-        boolean globalLoadOntologies = ConfigUtils.getBoolean( ENABLE_PROPERTY_NAME );
+        boolean globalLoadOntologies = ConfigUtils.getBoolean( ENABLE_PROPERTY_NAME, false );
 
         boolean loadOntology = ConfigUtils.getBoolean( "load." + ontologyName, true );
 

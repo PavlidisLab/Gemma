@@ -21,8 +21,10 @@ package ubic.gemma.util;
 import java.io.File;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Properties;
 
 import org.apache.commons.configuration.CompositeConfiguration;
@@ -35,464 +37,544 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * Convenience class to access Gemma properties defined in a resource. Methods will look in Gemma.properties,
- * project.properties, build.properties and in the system properties.
+ * Convenience class to access Gemma properties defined in a resource. Methods
+ * will look in Gemma.properties, project.properties, build.properties and in
+ * the system properties.
  * 
  * @author pavlidis
  * @version $Id$
  */
 public class ConfigUtils {
 
-    private static Log log = LogFactory.getLog( ConfigUtils.class.getName() );
+	private static Log log = LogFactory.getLog(ConfigUtils.class.getName());
 
-    /**
-     * The name of the file users can use to configure Gemma.
-     */
-    private static final String USER_CONFIGURATION = "Gemma.properties";
+	/**
+	 * The name of the file users can use to configure Gemma.
+	 */
+	private static final String USER_CONFIGURATION = "Gemma.properties";
 
-    /**
-     * Name of the resource that is used to configure Gemma internally.
-     */
-    private static final String BUILTIN_CONFIGURATION = "project.properties";
+	/**
+	 * Name of the resource that is used to configure Gemma internally.
+	 */
+	private static final String BUILTIN_CONFIGURATION = "project.properties";
 
-    private static CompositeConfiguration config;
+	private static CompositeConfiguration config;
 
-    static {
+	static {
 
-        config = new CompositeConfiguration();
-        config.addConfiguration( new SystemConfiguration() );
+		config = new CompositeConfiguration();
+		config.addConfiguration(new SystemConfiguration());
 
-        // the order matters - first come, first serve.
+		// the order matters - first come, first serve.
 
-        try {
-            config.addConfiguration( new PropertiesConfiguration( USER_CONFIGURATION ) );
-        } catch ( ConfigurationException e ) {
-            // hmm, this is pretty much required.
-            log.warn( USER_CONFIGURATION + " not found" );
-        }
+		try {
+			config.addConfiguration(new PropertiesConfiguration(
+					USER_CONFIGURATION));
+		} catch (ConfigurationException e) {
+			// hmm, this is pretty much required.
+			log.warn(USER_CONFIGURATION + " not found");
+		}
 
-        try {
-            config.addConfiguration( new PropertiesConfiguration( BUILTIN_CONFIGURATION ) );
-        } catch ( ConfigurationException e ) {
-            // that's okay, but warn
-            log.warn( BUILTIN_CONFIGURATION + " not found" );
-        }
+		try {
+			config.addConfiguration(new PropertiesConfiguration(
+					BUILTIN_CONFIGURATION));
+		} catch (ConfigurationException e) {
+			// that's okay, but warn
+			log.warn(BUILTIN_CONFIGURATION + " not found");
+		}
 
-        try {
-            String gemmaAppDataHome = config.getString( "gemma.appdata.home" );
-            if ( StringUtils.isNotBlank( gemmaAppDataHome ) ) {
-                config.addConfiguration( new PropertiesConfiguration( gemmaAppDataHome + File.separatorChar
-                        + "local.properties" ) );
-            }
-        } catch ( ConfigurationException e ) {
-            // that's okay
-            // log.warn( "local.properties not found" );
-        }
+		try {
+			String gemmaAppDataHome = config.getString("gemma.appdata.home");
+			if (StringUtils.isNotBlank(gemmaAppDataHome)) {
+				config.addConfiguration(new PropertiesConfiguration(
+						gemmaAppDataHome + File.separatorChar
+								+ "local.properties"));
+			}
+		} catch (ConfigurationException e) {
+			// that's okay
+			// log.warn( "local.properties not found" );
+		}
 
-        try {
-            config.addConfiguration( new PropertiesConfiguration( "version.properties" ) );
-        } catch ( ConfigurationException e ) {
-            // that's okay too.
-            log.warn( "version.properties not found" );
-        }
+		try {
+			config.addConfiguration(new PropertiesConfiguration(
+					"version.properties"));
+		} catch (ConfigurationException e) {
+			// that's okay too.
+			log.warn("version.properties not found");
+		}
 
-    }
+	}
 
-    /**
-     * Attempt to get the version information about the application.
-     * 
-     * @return
-     */
-    public static String getAppVersion() {
-        return getString( "gemma.version" );
-    }
+	/**
+	 * Attempt to get the version information about the application.
+	 * 
+	 * @return
+	 */
+	public static String getAppVersion() {
+		return getString("gemma.version");
+	}
 
-    /**
-     * @return The local directory where files downloaded/uploaded are stored. It will end in a file separator ("/" on
-     *         unix).
-     */
-    public static String getDownloadPath() {
-        String val = getString( "gemma.download.path" );
-        if ( val.endsWith( File.separator ) ) return val;
-        return val + File.separatorChar;
-    }
+	/**
+	 * @return The local directory where files downloaded/uploaded are stored.
+	 *         It will end in a file separator ("/" on unix).
+	 */
+	public static String getDownloadPath() {
+		String val = getString("gemma.download.path");
+		if (val.endsWith(File.separator))
+			return val;
+		return val + File.separatorChar;
+	}
 
-    /**
-     * @return The local directory where files generated by analyses are stored. It will end in a file separator ("/" on
-     *         unix).
-     */
-    public static String getAnalysisStoragePath() {
-        String val = getString( "analysis.dir" );
-        if ( val.endsWith( File.separator ) ) return val;
-        return val + File.separatorChar;
-    }
+	/**
+	 * @return The local directory where files generated by analyses are stored.
+	 *         It will end in a file separator ("/" on unix).
+	 */
+	public static String getAnalysisStoragePath() {
+		String val = getString("analysis.dir");
+		if (val.endsWith(File.separator))
+			return val;
+		return val + File.separatorChar;
+	}
 
-    /**
-     * @param key
-     * @param defaultValue
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getBigDecimal(java.lang.String, java.math.BigDecimal)
-     */
-    public static BigDecimal getBigDecimal( String key, BigDecimal defaultValue ) {
-        return config.getBigDecimal( key, defaultValue );
-    }
+	/**
+	 * @param key
+	 * @param defaultValue
+	 * @return
+	 * @see org.apache.commons.configuration.AbstractConfiguration#getBigDecimal(java.lang.String,
+	 *      java.math.BigDecimal)
+	 */
+	public static BigDecimal getBigDecimal(String key, BigDecimal defaultValue) {
+		return config.getBigDecimal(key, defaultValue);
+	}
 
-    /**
-     * @param key
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getBigDecimal(java.lang.String)
-     */
-    public static BigDecimal getBigDecimal( String key ) {
-        return config.getBigDecimal( key );
-    }
+	/**
+	 * @param key
+	 * @return
+	 * @see org.apache.commons.configuration.AbstractConfiguration#getBigDecimal(java.lang.String)
+	 */
+	public static BigDecimal getBigDecimal(String key) {
+		return config.getBigDecimal(key);
+	}
 
-    /**
-     * @param key
-     * @param defaultValue
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getBigInteger(java.lang.String, java.math.BigInteger)
-     */
-    public static BigInteger getBigInteger( String key, BigInteger defaultValue ) {
-        return config.getBigInteger( key, defaultValue );
-    }
+	/**
+	 * @param key
+	 * @param defaultValue
+	 * @return
+	 * @see org.apache.commons.configuration.AbstractConfiguration#getBigInteger(java.lang.String,
+	 *      java.math.BigInteger)
+	 */
+	public static BigInteger getBigInteger(String key, BigInteger defaultValue) {
+		return config.getBigInteger(key, defaultValue);
+	}
 
-    /**
-     * @param key
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getBigInteger(java.lang.String)
-     */
-    public static BigInteger getBigInteger( String key ) {
-        return config.getBigInteger( key );
-    }
+	/**
+	 * @param key
+	 * @return
+	 * @see org.apache.commons.configuration.AbstractConfiguration#getBigInteger(java.lang.String)
+	 */
+	public static BigInteger getBigInteger(String key) {
+		return config.getBigInteger(key);
+	}
 
-    /**
-     * @param key
-     * @param defaultValue
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getBoolean(java.lang.String, boolean)
-     */
-    public static boolean getBoolean( String key, boolean defaultValue ) {
-        return config.getBoolean( key, defaultValue );
-    }
+	/**
+	 * @param key
+	 * @param defaultValue
+	 * @return
+	 * @see org.apache.commons.configuration.AbstractConfiguration#getBoolean(java.lang.String,
+	 *      boolean)
+	 */
+	public static boolean getBoolean(String key, boolean defaultValue) {
+		return config.getBoolean(key, defaultValue);
+	}
 
-    /**
-     * @param key
-     * @param defaultValue
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getBoolean(java.lang.String, java.lang.Boolean)
-     */
-    public static Boolean getBoolean( String key, Boolean defaultValue ) {
-        return config.getBoolean( key, defaultValue );
-    }
+	/**
+	 * @param key
+	 * @param defaultValue
+	 * @return
+	 * @see org.apache.commons.configuration.AbstractConfiguration#getBoolean(java.lang.String,
+	 *      java.lang.Boolean)
+	 */
+	public static Boolean getBoolean(String key, Boolean defaultValue) {
+		return config.getBoolean(key, defaultValue);
+	}
 
-    /**
-     * @param key
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getBoolean(java.lang.String)
-     */
-    public static boolean getBoolean( String key ) {
-        return config.getBoolean( key );
-    }
+	/**
+	 * @param key
+	 * @return
+	 * @see org.apache.commons.configuration.AbstractConfiguration#getBoolean(java.lang.String)
+	 */
+	public static boolean getBoolean(String key) {
+		try {
+			return config.getBoolean(key);
+		} catch (NoSuchElementException nsee) {
+			log.info(nsee + " returning default value of false");
+			return false;
+		}
 
-    /**
-     * @param key
-     * @param defaultValue
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getByte(java.lang.String, byte)
-     */
-    public static byte getByte( String key, byte defaultValue ) {
-        return config.getByte( key, defaultValue );
-    }
+	}
 
-    /**
-     * @param key
-     * @param defaultValue
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getByte(java.lang.String, java.lang.Byte)
-     */
-    public static Byte getByte( String key, Byte defaultValue ) {
-        return config.getByte( key, defaultValue );
-    }
+	/**
+	 * @param key
+	 * @param defaultValue
+	 * @return
+	 * @see org.apache.commons.configuration.AbstractConfiguration#getByte(java.lang.String,
+	 *      byte)
+	 */
+	public static byte getByte(String key, byte defaultValue) {
+		return config.getByte(key, defaultValue);
+	}
 
-    /**
-     * @param key
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getByte(java.lang.String)
-     */
-    public static byte getByte( String key ) {
-        return config.getByte( key );
-    }
+	/**
+	 * @param key
+	 * @param defaultValue
+	 * @return
+	 * @see org.apache.commons.configuration.AbstractConfiguration#getByte(java.lang.String,
+	 *      java.lang.Byte)
+	 */
+	public static Byte getByte(String key, Byte defaultValue) {
+		return config.getByte(key, defaultValue);
+	}
 
-    /**
-     * @param index
-     * @return
-     * @see org.apache.commons.configuration.CompositeConfiguration#getConfiguration(int)
-     */
-    public static Configuration getConfiguration( int index ) {
-        return config.getConfiguration( index );
-    }
+	/**
+	 * @param key
+	 * @return
+	 * @see org.apache.commons.configuration.AbstractConfiguration#getByte(java.lang.String)
+	 */
+	public static byte getByte(String key) {
+		try {
+			return config.getByte(key);
+		} catch (NoSuchElementException nsee) {
+			log.info(nsee + " returning default value of 1");
+			return 1;
+		}
+	}
 
-    /**
-     * @param key
-     * @param defaultValue
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getDouble(java.lang.String, double)
-     */
-    public static double getDouble( String key, double defaultValue ) {
-        return config.getDouble( key, defaultValue );
-    }
+	/**
+	 * @param index
+	 * @return
+	 * @see org.apache.commons.configuration.CompositeConfiguration#getConfiguration(int)
+	 */
+	public static Configuration getConfiguration(int index) {
+		return config.getConfiguration(index);
+	}
 
-    /**
-     * @param key
-     * @param defaultValue
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getDouble(java.lang.String, java.lang.Double)
-     */
-    public static Double getDouble( String key, Double defaultValue ) {
-        return config.getDouble( key, defaultValue );
-    }
+	/**
+	 * @param key
+	 * @param defaultValue
+	 * @return
+	 * @see org.apache.commons.configuration.AbstractConfiguration#getDouble(java.lang.String,
+	 *      double)
+	 */
+	public static double getDouble(String key, double defaultValue) {
+		return config.getDouble(key, defaultValue);
+	}
 
-    /**
-     * @param key
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getDouble(java.lang.String)
-     */
-    public static double getDouble( String key ) {
-        return config.getDouble( key );
-    }
+	/**
+	 * @param key
+	 * @param defaultValue
+	 * @return
+	 * @see org.apache.commons.configuration.AbstractConfiguration#getDouble(java.lang.String,
+	 *      java.lang.Double)
+	 */
+	public static Double getDouble(String key, Double defaultValue) {
+		return config.getDouble(key, defaultValue);
+	}
 
-    /**
-     * @param key
-     * @param defaultValue
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getFloat(java.lang.String, float)
-     */
-    public static float getFloat( String key, float defaultValue ) {
-        return config.getFloat( key, defaultValue );
-    }
+	/**
+	 * @param key
+	 * @return
+	 * @see org.apache.commons.configuration.AbstractConfiguration#getDouble(java.lang.String)
+	 */
+	public static double getDouble(String key) {
+		try {
+			return config.getDouble(key);
+		} catch (NoSuchElementException nsee) {
+			log.info(nsee + " returning default value of 1");
+			return 1;
+		}
+	}
 
-    /**
-     * @param key
-     * @param defaultValue
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getFloat(java.lang.String, java.lang.Float)
-     */
-    public static Float getFloat( String key, Float defaultValue ) {
-        return config.getFloat( key, defaultValue );
-    }
+	/**
+	 * @param key
+	 * @param defaultValue
+	 * @return
+	 * @see org.apache.commons.configuration.AbstractConfiguration#getFloat(java.lang.String,
+	 *      float)
+	 */
+	public static float getFloat(String key, float defaultValue) {
+		return config.getFloat(key, defaultValue);
+	}
 
-    /**
-     * @param key
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getFloat(java.lang.String)
-     */
-    public static float getFloat( String key ) {
-        return config.getFloat( key );
-    }
+	/**
+	 * @param key
+	 * @param defaultValue
+	 * @return
+	 * @see org.apache.commons.configuration.AbstractConfiguration#getFloat(java.lang.String,
+	 *      java.lang.Float)
+	 */
+	public static Float getFloat(String key, Float defaultValue) {
+		return config.getFloat(key, defaultValue);
+	}
 
-    /**
-     * @return
-     * @see org.apache.commons.configuration.CompositeConfiguration#getInMemoryConfiguration()
-     */
-    public static Configuration getInMemoryConfiguration() {
-        return config.getInMemoryConfiguration();
-    }
+	/**
+	 * @param key
+	 * @return
+	 * @see org.apache.commons.configuration.AbstractConfiguration#getFloat(java.lang.String)
+	 */
+	public static float getFloat(String key) {
+		try {
+			return config.getFloat(key);
+		} catch (NoSuchElementException nsee) {
+			log.info(nsee + " returning default value of 1");
+			return 1;
+		}
+	}
 
-    /**
-     * @param key
-     * @param defaultValue
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getInt(java.lang.String, int)
-     */
-    public static int getInt( String key, int defaultValue ) {
-        return config.getInt( key, defaultValue );
-    }
+	/**
+	 * @return
+	 * @see org.apache.commons.configuration.CompositeConfiguration#getInMemoryConfiguration()
+	 */
+	public static Configuration getInMemoryConfiguration() {
+		return config.getInMemoryConfiguration();
+	}
 
-    /**
-     * @param key
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getInt(java.lang.String)
-     */
-    public static int getInt( String key ) {
-        return config.getInt( key );
-    }
+	/**
+	 * @param key
+	 * @param defaultValue
+	 * @return
+	 * @see org.apache.commons.configuration.AbstractConfiguration#getInt(java.lang.String,
+	 *      int)
+	 */
+	public static int getInt(String key, int defaultValue) {
+		return config.getInt(key, defaultValue);
+	}
 
-    /**
-     * @param key
-     * @param defaultValue
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getInteger(java.lang.String, java.lang.Integer)
-     */
-    public static Integer getInteger( String key, Integer defaultValue ) {
-        return config.getInteger( key, defaultValue );
-    }
+	/**
+	 * @param key
+	 * @return
+	 * @see org.apache.commons.configuration.AbstractConfiguration#getInt(java.lang.String)
+	 */
+	public static int getInt(String key) {
+		try {
+			return config.getInt(key);
+		} catch (NoSuchElementException nsee) {
+			log.info(nsee + " returning default value of 1");
+			return 1;
+		}
+	}
 
-    /**
-     * @return
-     * @see org.apache.commons.configuration.CompositeConfiguration#getKeys()
-     */
-    public static Iterator getKeys() {
-        return config.getKeys();
-    }
+	/**
+	 * @param key
+	 * @param defaultValue
+	 * @return
+	 * @see org.apache.commons.configuration.AbstractConfiguration#getInteger(java.lang.String,
+	 *      java.lang.Integer)
+	 */
+	public static Integer getInteger(String key, Integer defaultValue) {
+		return config.getInteger(key, defaultValue);
+	}
 
-    /**
-     * @param key
-     * @return
-     * @see org.apache.commons.configuration.CompositeConfiguration#getKeys(java.lang.String)
-     */
-    public static Iterator getKeys( String key ) {
-        return config.getKeys( key );
-    }
+	/**
+	 * @return
+	 * @see org.apache.commons.configuration.CompositeConfiguration#getKeys()
+	 */
+	public static Iterator getKeys() {
+		return config.getKeys();
+	}
 
-    /**
-     * @param key
-     * @param defaultValue
-     * @return
-     * @see org.apache.commons.configuration.CompositeConfiguration#getList(java.lang.String, java.util.List)
-     */
-    public static List getList( String key, List defaultValue ) {
-        return config.getList( key, defaultValue );
-    }
+	/**
+	 * @param key
+	 * @return
+	 * @see org.apache.commons.configuration.CompositeConfiguration#getKeys(java.lang.String)
+	 */
+	public static Iterator getKeys(String key) {
+		return config.getKeys(key);
+	}
 
-    /**
-     * @param key
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getList(java.lang.String)
-     */
-    public static List getList( String key ) {
-        return config.getList( key );
-    }
+	/**
+	 * @param key
+	 * @param defaultValue
+	 * @return
+	 * @see org.apache.commons.configuration.CompositeConfiguration#getList(java.lang.String,
+	 *      java.util.List)
+	 */
+	public static List getList(String key, List defaultValue) {
+		return config.getList(key, defaultValue);
+	}
 
-    /**
-     * @param key
-     * @param defaultValue
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getLong(java.lang.String, long)
-     */
-    public static long getLong( String key, long defaultValue ) {
-        return config.getLong( key, defaultValue );
-    }
+	/**
+	 * @param key
+	 * @return
+	 * @see org.apache.commons.configuration.AbstractConfiguration#getList(java.lang.String)
+	 */
+	public static List getList(String key) {
 
-    /**
-     * @param key
-     * @param defaultValue
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getLong(java.lang.String, java.lang.Long)
-     */
-    public static Long getLong( String key, Long defaultValue ) {
-        return config.getLong( key, defaultValue );
-    }
+		try {
+			return config.getList(key);
 
-    /**
-     * @param key
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getLong(java.lang.String)
-     */
-    public static long getLong( String key ) {
-        return config.getLong( key );
-    }
+		} catch (NoSuchElementException nsee) {
+			log.info(nsee + " returning empty arrayList");
+			return new ArrayList();
+		}
+	}
 
-    /**
-     * @return
-     * @see org.apache.commons.configuration.CompositeConfiguration#getNumberOfConfigurations()
-     */
-    public static int getNumberOfConfigurations() {
-        return config.getNumberOfConfigurations();
-    }
+	/**
+	 * @param key
+	 * @param defaultValue
+	 * @return
+	 * @see org.apache.commons.configuration.AbstractConfiguration#getLong(java.lang.String,
+	 *      long)
+	 */
+	public static long getLong(String key, long defaultValue) {
+		return config.getLong(key, defaultValue);
+	}
 
-    /**
-     * @param key
-     * @param defaults
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getProperties(java.lang.String, java.util.Properties)
-     */
-    public static Properties getProperties( String key, Properties defaults ) {
-        return config.getProperties( key, defaults );
-    }
+	/**
+	 * @param key
+	 * @param defaultValue
+	 * @return
+	 * @see org.apache.commons.configuration.AbstractConfiguration#getLong(java.lang.String,
+	 *      java.lang.Long)
+	 */
+	public static Long getLong(String key, Long defaultValue) {
+		return config.getLong(key, defaultValue);
+	}
 
-    /**
-     * @param key
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getProperties(java.lang.String)
-     */
-    public static Properties getProperties( String key ) {
-        return config.getProperties( key );
-    }
+	/**
+	 * @param key
+	 * @return
+	 * @see org.apache.commons.configuration.AbstractConfiguration#getLong(java.lang.String)
+	 */
+	public static long getLong(String key) {
+		try {
+			return config.getLong(key);
+		} catch (NoSuchElementException nsee) {
+			log.info(nsee + " returning default value of 1");
+			return 1;
+		}
+	}
 
-    /**
-     * @param key
-     * @return
-     * @see org.apache.commons.configuration.CompositeConfiguration#getProperty(java.lang.String)
-     */
-    public static Object getProperty( String key ) {
-        return config.getProperty( key );
-    }
+	/**
+	 * @return
+	 * @see org.apache.commons.configuration.CompositeConfiguration#getNumberOfConfigurations()
+	 */
+	public static int getNumberOfConfigurations() {
+		return config.getNumberOfConfigurations();
+	}
 
-    /**
-     * @param key
-     * @param defaultValue
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getShort(java.lang.String, short)
-     */
-    public static short getShort( String key, short defaultValue ) {
-        return config.getShort( key, defaultValue );
-    }
+	/**
+	 * @param key
+	 * @param defaults
+	 * @return
+	 * @see org.apache.commons.configuration.AbstractConfiguration#getProperties(java.lang.String,
+	 *      java.util.Properties)
+	 */
+	public static Properties getProperties(String key, Properties defaults) {
+		return config.getProperties(key, defaults);
+	}
 
-    /**
-     * @param key
-     * @param defaultValue
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getShort(java.lang.String, java.lang.Short)
-     */
-    public static Short getShort( String key, Short defaultValue ) {
-        return config.getShort( key, defaultValue );
-    }
+	/**
+	 * @param key
+	 * @return
+	 * @see org.apache.commons.configuration.AbstractConfiguration#getProperties(java.lang.String)
+	 */
+	public static Properties getProperties(String key) {
+		return config.getProperties(key);
+	}
 
-    /**
-     * @param key
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getShort(java.lang.String)
-     */
-    public static short getShort( String key ) {
-        return config.getShort( key );
-    }
+	/**
+	 * @param key
+	 * @return
+	 * @see org.apache.commons.configuration.CompositeConfiguration#getProperty(java.lang.String)
+	 */
+	public static Object getProperty(String key) {
+		return config.getProperty(key);
+	}
 
-    /**
-     * @param key
-     * @param defaultValue
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getString(java.lang.String, java.lang.String)
-     */
-    public static String getString( String key, String defaultValue ) {
-        return config.getString( key, defaultValue );
-    }
+	/**
+	 * @param key
+	 * @param defaultValue
+	 * @return
+	 * @see org.apache.commons.configuration.AbstractConfiguration#getShort(java.lang.String,
+	 *      short)
+	 */
+	public static short getShort(String key, short defaultValue) {
+		return config.getShort(key, defaultValue);
+	}
 
-    /**
-     * @param key
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getString(java.lang.String)
-     */
-    public static String getString( String key ) {
-        return config.getString( key );
-    }
+	/**
+	 * @param key
+	 * @param defaultValue
+	 * @return
+	 * @see org.apache.commons.configuration.AbstractConfiguration#getShort(java.lang.String,
+	 *      java.lang.Short)
+	 */
+	public static Short getShort(String key, Short defaultValue) {
+		return config.getShort(key, defaultValue);
+	}
 
-    /**
-     * @param key
-     * @return
-     * @see org.apache.commons.configuration.CompositeConfiguration#getStringArray(java.lang.String)
-     */
-    public static String[] getStringArray( String key ) {
-        return config.getStringArray( key );
-    }
+	/**
+	 * @param key
+	 * @return
+	 * @see org.apache.commons.configuration.AbstractConfiguration#getShort(java.lang.String)
+	 */
+	public static short getShort(String key) {
+		try {
+			return config.getShort(key);
 
-    /**
-     * Set an environment/application variable programatically.
-     * 
-     * @param enablePropertyName
-     * @param b
-     */
-    public static void setProperty( String key, Object value ) {
-        config.setProperty( key, value );
-    }
+		} catch (NoSuchElementException nsee) {
+			log.info(nsee + " returning default value of 1");
+			return 1;
+		}
+	}
+
+	/**
+	 * @param key
+	 * @param defaultValue
+	 * @return
+	 * @see org.apache.commons.configuration.AbstractConfiguration#getString(java.lang.String,
+	 *      java.lang.String)
+	 */
+	public static String getString(String key, String defaultValue) {
+		return config.getString(key, defaultValue);
+	}
+
+	/**
+	 * @param key
+	 * @return
+	 * @see org.apache.commons.configuration.AbstractConfiguration#getString(java.lang.String)
+	 */
+	public static String getString(String key) {
+		try {
+			return config.getString(key);
+		} catch (NoSuchElementException nsee) {
+			log.info(nsee + " returning empty string");
+			return "";
+		}
+	}
+
+	/**
+	 * @param key
+	 * @return
+	 * @see org.apache.commons.configuration.CompositeConfiguration#getStringArray(java.lang.String)
+	 */
+	public static String[] getStringArray(String key) {
+		try {
+			return config.getStringArray(key);
+		} catch (NoSuchElementException nsee) {
+			log.info(nsee + " returning default value of null");
+			return null;
+		}
+	}
+
+	/**
+	 * Set an environment/application variable programatically.
+	 * 
+	 * @param enablePropertyName
+	 * @param b
+	 */
+	public static void setProperty(String key, Object value) {
+		config.setProperty(key, value);
+	}
 
 }
