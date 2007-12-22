@@ -106,7 +106,6 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
             unlazifyArrayDesign( arrayDesign );
 
             processArrayDesign( arrayDesign );
-            audit( arrayDesign, "" );
 
         } else if ( skipIfLastRunLaterThan != null ) {
             log.warn( "*** Running Repeatmasker for all Array designs *** " );
@@ -166,6 +165,12 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
 
         log.info( "Saving..." );
         bsService.update( altered );
+        if ( this.inputFileName != null ) {
+            audit( design, "Repeat scan data from file: " + inputFileName + ", updated " + altered.size()
+                    + " sequences." );
+        } else {
+            audit( design, "Repeat scan done, updated " + altered.size() + " sequences." );
+        }
         log.info( "Done with " + design );
     }
 
