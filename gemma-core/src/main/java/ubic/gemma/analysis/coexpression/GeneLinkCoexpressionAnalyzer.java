@@ -54,7 +54,7 @@ import ubic.gemma.model.genome.Taxon;
  * cache the results rather than querying the probe-links each time. The additional benefit is that the client can let
  * us decide which experiments are "brain datasets".
  * 
- * @spring.bean geneLinkCoexpressionAnalyzer
+ * @spring.bean id="geneLinkCoexpressionAnalyzer"
  * @spring.property name="protocolService" ref="protocolService"
  * @spring.property name="gene2GeneCoexpressionService" ref="gene2GeneCoexpressionService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
