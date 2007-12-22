@@ -29,11 +29,21 @@ import org.quartz.impl.StdScheduler;
 public class QuartzUtils {
     private static Log log = LogFactory.getLog( QuartzUtils.class );
 
+    /**
+     * Turn off a scheduler.
+     * 
+     * @param stdScheduler
+     */
     public static void disableQuartzScheduler( StdScheduler stdScheduler ) {
 
         log.debug( "shutting down quartz" );
         try {
             stdScheduler.shutdown( true );
+            if ( stdScheduler.isShutdown() ) {
+                log.info( "Scheduler shutdown successful" );
+            } else {
+                log.warn( "Scheduler could not be shutdown for some reason" );
+            }
         } catch ( Exception e ) {
             throw new RuntimeException( "Cannot shutdown quartz. Error is: " + e );
         }
