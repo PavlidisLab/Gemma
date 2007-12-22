@@ -25,6 +25,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.analysis.sequence.SequenceWriter;
 import ubic.gemma.apps.Blat;
 import ubic.gemma.loader.util.parser.BasicLineParser;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -199,7 +200,7 @@ public class BlatResultParser extends BasicLineParser {
     public static String cleanUpQueryName( String queryName ) {
         queryName = queryName.replace( "target:", "" );
         queryName = queryName.replaceFirst( ";$", "" );
-        queryName = queryName.replaceAll( Blat.SPACE_REPLACEMENT, " " );
+        queryName = queryName.replaceAll( SequenceWriter.SPACE_REPLACEMENT, " " );
         return queryName;
     }
 
