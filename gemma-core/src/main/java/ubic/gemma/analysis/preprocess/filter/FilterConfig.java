@@ -26,6 +26,16 @@ package ubic.gemma.analysis.preprocess.filter;
  */
 public class FilterConfig {
 
+    @Override
+    public String toString() {
+        StringBuilder buf = new StringBuilder();
+        buf.append( "# highExpressionCut " + this.getHighExpressionCut() + "\n" );
+        buf.append( "# lowExpressionCut " + this.getLowExpressionCut() + "\n" );
+        buf.append( "# minPresentFraction " + this.getMinPresentFraction() + "\n" );
+        buf.append( "# lowVarianceCut " + this.getLowVarianceCut() + "\n" );
+        return buf.toString();
+    }
+
     /**
      * How many samples a dataset has to have before we consider analyzing it.
      */
