@@ -18,6 +18,9 @@
  */
 package ubic.gemma.analysis.linkAnalysis;
 
+import ubic.gemma.model.analysis.ProbeCoexpressionAnalysis;
+import ubic.gemma.model.common.protocol.Protocol;
+
 /**
  * Holds parameters needed for LinkAnalysis.
  * 
@@ -117,6 +120,17 @@ public class LinkAnalysisConfig {
 
     public boolean isTextOut() {
         return textOut;
+    }
+
+    /**
+     * @return representation of this analysis (not completely filled in - only the basic parameters)
+     */
+    public ProbeCoexpressionAnalysis toAnalysis() {
+        ProbeCoexpressionAnalysis analysis = ProbeCoexpressionAnalysis.Factory.newInstance();
+        Protocol protocol = Protocol.Factory.newInstance();
+        protocol.setDescription( this.toString() );
+        analysis.setProtocol( protocol );
+        return analysis;
     }
 
     @Override
