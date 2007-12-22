@@ -1,9 +1,6 @@
 -- $Id$
---- Triggers to fill in denormalized fields
-
--- redefine command delimiter so we can enter triggers containing ';'
- 
-
+-- Triggers to fill in denormalized fields
+-- This is designed to be run from a configuration that defines the delimiter for commands to be '|'. If you run it by hand execute 'DELIMITER |' first.
 
 CREATE TRIGGER humanCoexpTrigger BEFORE INSERT ON HUMAN_PROBE_CO_EXPRESSION
   FOR EACH ROW BEGIN  
