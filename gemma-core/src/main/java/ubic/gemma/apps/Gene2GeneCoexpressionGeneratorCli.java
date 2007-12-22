@@ -152,7 +152,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
     }
 
     private void initSpringBeans() {
-        geneVoteAnalyzer = ( GeneLinkCoexpressionAnalyzer ) this.getBean( "geneVoteCoexpressionAnalyzer" );
+        geneVoteAnalyzer = ( GeneLinkCoexpressionAnalyzer ) this.getBean( "geneLinkCoexpressionAnalyzer" );
 
     }
 
