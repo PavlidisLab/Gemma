@@ -46,7 +46,7 @@ import ubic.basecode.gui.ColorMatrix;
 import ubic.basecode.gui.JMatrixDisplay;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.CorrelationStats;
-import ubic.gemma.analysis.coexpression.GeneCoExpressionAnalyzer;
+import ubic.gemma.analysis.coexpression.GeneEffectSizeCoExpressionAnalyzer;
 import ubic.gemma.analysis.linkAnalysis.CommandLineToolUtilService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -149,7 +149,8 @@ public class CorrelationDistCli extends ExpressionExperimentManipulatingCLI {
         DoubleArrayList data = new DoubleArrayList();
         for ( ExpressionProfile ep1 : source ) {
             for ( ExpressionProfile ep2 : target ) {
-                if ( ep1.val.length == ep2.val.length && ep1.val.length > GeneCoExpressionAnalyzer.MINIMUM_SAMPLE ) {
+                if ( ep1.val.length == ep2.val.length
+                        && ep1.val.length > GeneEffectSizeCoExpressionAnalyzer.MINIMUM_SAMPLE ) {
                     data.add( CorrelationStats.correl( ep1.val, ep2.val ) );
                 }
             }
@@ -308,16 +309,11 @@ public class CorrelationDistCli extends ExpressionExperimentManipulatingCLI {
         }
 
         try {
-            Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
-            if ( taxon != null ) {
-                ees.addAll( eeService.findByTaxon( taxon ) );
-            } else {
-                ees = this.readExpressionExperimentListFile( this.experimentListFile );
-            }
-            histogram = new int[ees.size()][binNum];
+
+            histogram = new int[expressionExperiments.size()][binNum];
             eeIndexMap = new HashMap<ExpressionExperiment, Integer>();
             int index = 0;
-            for ( ExpressionExperiment ee : ees ) {
+            for ( ExpressionExperiment ee : expressionExperiments ) {
                 eeIndexMap.put( ee, index );
                 index++;
             }
@@ -325,7 +321,7 @@ public class CorrelationDistCli extends ExpressionExperimentManipulatingCLI {
             Collection<Long> geneIds = new HashSet<Long>();
             for ( Gene gene : genes )
                 geneIds.add( gene.getId() );
-            for ( ExpressionExperiment ee : ees ) {
+            for ( ExpressionExperiment ee : expressionExperiments ) {
                 fillHistogram( ee, geneIds );
             }
             saveHistogram();

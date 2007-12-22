@@ -870,7 +870,7 @@ public class SearchService {
 
         Collection<Gene> geneSet = new HashSet<Gene>();
         geneSet.addAll( geneService.findByOfficialSymbolInexact( inexactString ) );
-        geneSet.addAll( geneService.getByGeneAlias( inexactString ) );
+        geneSet.addAll( geneService.findByAlias( inexactString ) );
 
         geneSet.addAll( geneProductService.getGenesByName( inexactString ) );
         geneSet.addAll( geneProductService.getGenesByNcbiId( inexactString ) );

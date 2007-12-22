@@ -21,10 +21,22 @@
  * You can (and have to!) safely modify it by hand.
  */
 package ubic.gemma.model.analysis;
+
+import java.util.Collection;
+
+import ubic.gemma.model.genome.Taxon;
+
 /**
  * @see ubic.gemma.model.analysis.GeneCoexpressionAnalysis
  */
-public class GeneCoexpressionAnalysisDaoImpl
-    extends ubic.gemma.model.analysis.GeneCoexpressionAnalysisDaoBase
-{
+public class GeneCoexpressionAnalysisDaoImpl extends ubic.gemma.model.analysis.GeneCoexpressionAnalysisDaoBase {
+
+    @Override
+    protected Collection handleFindByTaxon( Taxon taxon ) {
+        final String queryString = "select distinct goa from GeneCoexpressionAnalysisImpl as goa inner join goa.experimentsAnalyzed  as ee "
+                + "inner join ee.bioAssays as ba "
+                + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
+        return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
+    }
+
 }

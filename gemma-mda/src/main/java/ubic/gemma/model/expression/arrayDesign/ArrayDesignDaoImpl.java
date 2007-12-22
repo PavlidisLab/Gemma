@@ -197,23 +197,27 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     protected void handleDeleteAlignmentData( ArrayDesign arrayDesign ) throws Exception {
         // First have to delete all blatAssociations, because they are referred to by the alignments
         deleteGeneProductAssociations( arrayDesign );
-        final String deleteQuery = "delete br from ArrayDesignImpl ad inner join ad.compositeSequences as cs "
+
+        // Note attempts to do this with bulk updates were unsuccessful due to the need for joins.
+        final String queryString = "select br from ArrayDesignImpl ad inner join ad.compositeSequences as cs "
                 + "inner join cs.biologicalCharacteristic bs, BlatResultImpl br "
-                + "where br.querySequence = bs and ad=?";
-        log.info( "BlatResult removal for " + arrayDesign );
-        int deleted = getHibernateTemplate().bulkUpdate( deleteQuery, arrayDesign );
-        log.info( "Done deleting " + deleted + " BlatResult for " + arrayDesign );
+                + "where br.querySequence = bs and ad=:arrayDesign";
+        getHibernateTemplate().deleteAll(
+                getHibernateTemplate().findByNamedParam( queryString, "arrayDesign", arrayDesign ) );
+
+        log.info( "Done deleting  BlatResults for " + arrayDesign );
+
     }
 
     @SuppressWarnings("unchecked")
     @Override
     protected void handleDeleteGeneProductAssociations( ArrayDesign arrayDesign ) {
-        final String deleteQuery = "delete ba from ArrayDesignImpl ad inner join ad.compositeSequences as cs "
+        final String queryString = "select ba from ArrayDesignImpl ad inner join ad.compositeSequences as cs "
                 + "inner join cs.biologicalCharacteristic bs, BlatAssociationImpl ba "
-                + "where ba.bioSequence = bs and ad=?";
-        log.info( "BlatAssociation removal for " + arrayDesign );
-        int deleted = getHibernateTemplate().bulkUpdate( deleteQuery, arrayDesign );
-        log.info( "Done deleting " + deleted + " BlatAssociations for " + arrayDesign );
+                + "where ba.bioSequence = bs and ad=:arrayDesign";
+        getHibernateTemplate().deleteAll(
+                getHibernateTemplate().findByNamedParam( queryString, "arrayDesign", arrayDesign ) );
+        log.info( "Done deleting BlatAssociations for " + arrayDesign );
     }
 
     /*

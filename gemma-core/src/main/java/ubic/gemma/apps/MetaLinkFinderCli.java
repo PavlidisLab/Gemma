@@ -27,6 +27,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.time.StopWatch;
 
+import ubic.gemma.analysis.coexpression.ProbeLinkCoexpressionAnalyzer;
 import ubic.gemma.analysis.linkAnalysis.CommandLineToolUtilService;
 import ubic.gemma.analysis.linkAnalysis.FrequentLinkSetFinder;
 import ubic.gemma.analysis.linkAnalysis.LinkMatrix;
@@ -61,6 +62,7 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
     private String matrixFile = null, eeMapFile = null, treeFile = null, taxonName = null;
     private Taxon taxon = null;
     private LinkMatrix linkMatrix = null;
+    private ProbeLinkCoexpressionAnalyzer probeLinkCoexpressionAnalyzer;
 
     @SuppressWarnings("static-access")
     @Override
@@ -170,8 +172,9 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
         try {
             eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
             geneService = ( GeneService ) this.getBean( "geneService" );
-            utilService = ( CommandLineToolUtilService ) this.getBean( " linkAnalysisUtilService" );
-
+            utilService = ( CommandLineToolUtilService ) this.getBean( "linkAnalysisUtilService" );
+            probeLinkCoexpressionAnalyzer = ( ProbeLinkCoexpressionAnalyzer ) this
+                    .getBean( "probeLinkCoexpressionAnalyzer" );
             taxon = utilService.getTaxon( taxonName );
             if ( taxon == null ) {
                 return new Exception( "The input species couldn't be found" );
@@ -185,7 +188,7 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
                 linkMatrix.setGeneService( geneService );
                 linkMatrix.setEEService( eeService );
                 linkMatrix.setUtilService( utilService );
-                linkMatrix.fillCountMatrix();
+                linkMatrix.setProbeLinkCoexpressionAnalyzer( this.probeLinkCoexpressionAnalyzer );
                 try {
                     linkMatrix.toFile( this.matrixFile, this.eeMapFile );
                 } catch ( IOException e ) {

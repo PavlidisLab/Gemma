@@ -1,8 +1,3 @@
-package ubic.gemma.model.coexpression;
-
-import java.util.HashMap;
-import java.util.Map;
-
 /*
  * The Gemma project
  * 
@@ -21,6 +16,19 @@ import java.util.Map;
  * limitations under the License.
  *
  */
+package ubic.gemma.model.coexpression;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Used to hold coexpression results
+ * 
+ * @author paul
+ * @version $Id$
+ * @see CoexpressionValueObject
+ * @see ProbeLinkCoexpressionAnalyzer
+ */
 public class GeneCoexpressionResults {
 
     private Map<Long, CoexpressionValueObject> geneImplMap;
@@ -34,10 +42,18 @@ public class GeneCoexpressionResults {
         probeAlignedMap = new HashMap<Long, CoexpressionValueObject>();
     }
 
+    /**
+     * @param id
+     * @return
+     */
     public boolean contains( Long id ) {
         return geneImplMap.containsKey( id ) || predictedMap.containsKey( id ) || probeAlignedMap.containsKey( id );
     }
 
+    /**
+     * @param id
+     * @return
+     */
     public CoexpressionValueObject get( Long id ) {
         if ( geneImplMap.containsKey( id ) ) return geneImplMap.get( id );
         if ( predictedMap.containsKey( id ) ) return predictedMap.get( id );
@@ -45,18 +61,30 @@ public class GeneCoexpressionResults {
         return null;
     }
 
+    /**
+     * @return
+     */
     public Map<Long, CoexpressionValueObject> getGeneImplMap() {
         return geneImplMap;
     }
 
+    /**
+     * @return
+     */
     public Map<Long, CoexpressionValueObject> getPredictedGeneMap() {
         return predictedMap;
     }
 
+    /**
+     * @return
+     */
     public Map<Long, CoexpressionValueObject> getProbeAlignedRegionMap() {
         return probeAlignedMap;
     }
 
+    /**
+     * @param cvo
+     */
     public void put( CoexpressionValueObject cvo ) {
         if ( cvo.getGeneType().equalsIgnoreCase( "GeneImpl" ) ) {
             addGeneImpl( cvo );

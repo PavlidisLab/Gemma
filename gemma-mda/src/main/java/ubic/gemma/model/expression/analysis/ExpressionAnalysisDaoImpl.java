@@ -1,7 +1,7 @@
 /*
  * The Gemma project.
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2006-2007 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,4 +27,13 @@ package ubic.gemma.model.expression.analysis;
 public class ExpressionAnalysisDaoImpl
     extends ubic.gemma.model.expression.analysis.ExpressionAnalysisDaoBase
 {
+    /**
+     * @see ubic.gemma.model.expression.analysis.ExpressionAnalysisDao#findByTaxon(ubic.gemma.model.genome.Taxon)
+     */
+    protected java.util.Collection handleFindByTaxon(ubic.gemma.model.genome.Taxon taxon)
+    {
+        // @todo implement public java.util.Collection handleFindByTaxon(ubic.gemma.model.genome.Taxon taxon)
+        return null;
+}
+
 }

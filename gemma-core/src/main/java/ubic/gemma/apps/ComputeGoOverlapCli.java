@@ -41,6 +41,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 
+import ubic.gemma.analysis.coexpression.ProbeLinkCoexpressionAnalyzer;
 import ubic.gemma.analysis.linkAnalysis.GeneLink;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
@@ -156,6 +157,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
     private int pCount = 0;
     private int fCount = 0;
     private int cCount = 0;
+    private ProbeLinkCoexpressionAnalyzer probeLinkCoexpressionAnalyzer;
 
     protected void initBeans() {
         taxonService = ( TaxonService ) getBean( "taxonService" );
@@ -163,7 +165,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         gene2GOAssociationService = ( Gene2GOAssociationService ) getBean( "gene2GOAssociationService" );
         ontologyEntryService = ( GeneOntologyService ) getBean( "geneOntologyService" );
         goMetric = ( GoMetric ) getBean( "goMetric" );
-
+        probeLinkCoexpressionAnalyzer = (ProbeLinkCoexpressionAnalyzer) this.getBean("probeLinkCoexpressionAnalyzer");
         while ( !ontologyEntryService.isReady() ) {
             log.info( "waiting for ontology load.." );
             try {
@@ -354,8 +356,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
 
     private Collection<Gene> getCoexpressedGenes( Gene gene, Integer stringincy ) {
 
-        CoexpressionCollectionValueObject coexpressed = ( CoexpressionCollectionValueObject ) geneService
-                .getCoexpressedGenes( gene, null, stringincy );
+        CoexpressionCollectionValueObject coexpressed =probeLinkCoexpressionAnalyzer.linkAnalysis( gene, null, stringincy );
 
         Collection<Long> geneIds = new HashSet<Long>();
         for ( CoexpressionValueObject co : coexpressed.getCoexpressionData() ) {

@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2007 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package ubic.gemma.apps;
 
 import java.io.FileWriter;
@@ -34,24 +52,40 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
+/**
+ * @author raylim
+ * @version $Id$
+ */
 public class ProbeAlignedRegionAnalysisCLI extends AbstractSpringAwareCLI {
 
+    public static final double DEFAULT_THRESHOLD = 0.5;
+
+    public static void main( String[] args ) {
+        ProbeAlignedRegionAnalysisCLI analysis = new ProbeAlignedRegionAnalysisCLI();
+        StopWatch watch = new StopWatch();
+        watch.start();
+        Exception e = analysis.doWork( args );
+        if ( e != null ) log.error( e.getMessage() );
+        watch.stop();
+        log.info( "Probe aligned region analysis completed in " + watch.getTime() / 1000 + " seconds" );
+    }
+
     private Taxon taxon;
+
     private double threshold;
     private String outFileName;
 
     private ExpressionExperimentService eeService;
+
     private GeneService geneService;
 
     private Probe2ProbeCoexpressionService p2pService;
 
     private ArrayDesignService adService;
 
-    public static final double DEFAULT_THRESHOLD = 0.5;
-
     @SuppressWarnings("static-access")
     @Override
-     protected void buildOptions() {
+    protected void buildOptions() {
         Option taxonOption = OptionBuilder.hasArg().isRequired().withArgName( "taxon" ).withDescription(
                 "the taxon of the genes" ).withLongOpt( "taxon" ).create( 't' );
         addOption( taxonOption );
@@ -64,98 +98,6 @@ public class ProbeAlignedRegionAnalysisCLI extends AbstractSpringAwareCLI {
         Option inputFileOption = OptionBuilder.hasArg().isRequired().withArgName( "inFileName" ).withDescription(
                 "Target gene list file name" ).withLongOpt( "inFile" ).create( 'i' );
         addOption( inputFileOption );
-    }
-
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-        String taxonName = getOptionValue( 't' );
-        taxon = Taxon.Factory.newInstance();
-        taxon.setCommonName( taxonName );
-        TaxonService taxonService = ( TaxonService ) this.getBean( "taxonService" );
-        taxon = taxonService.find( taxon );
-        if ( taxon == null ) {
-            log.info( "No Taxon found!" );
-        }
-        if ( hasOption( 'o' ) ) {
-            this.outFileName = getOptionValue( 'o' );
-        }
-        if ( hasOption( 'h' ) ) {
-            this.threshold = Double.parseDouble( getOptionValue( 'h' ) );
-        } else {
-            this.threshold = DEFAULT_THRESHOLD;
-        }
-        initBeans();
-    }
-
-    private void initBeans() {
-        eeService = ( ExpressionExperimentService ) getBean( "expressionExperimentService" );
-        adService = ( ArrayDesignService ) getBean( "arrayDesignService" );
-        geneService = ( GeneService ) getBean( "geneService" );
-        p2pService = ( Probe2ProbeCoexpressionService ) getBean( "probe2ProbeCoexpressionService" );
-    }
-
-    private Map<Long, List<Double>> getParId2eeRankMap( Collection<Long> parIds, Collection<ExpressionExperiment> EEs ) {
-        Map<Long, List<Double>> parId2eeRankMap = new HashMap<Long, List<Double>>();
-        for ( ExpressionExperiment EE : EEs ) {
-            // get quantitation type
-            Collection<QuantitationType> qts = eeService
-                    .getPreferredQuantitationType( EE );
-            if ( qts.size() < 1 ) {
-                return null;
-            }
-            QuantitationType qt = qts.iterator().next();
-
-            // get cs2gene map
-            Collection<ArrayDesign> ADs = eeService.getArrayDesignsUsed( EE );
-            Collection<Long> csIds = new HashSet<Long>();
-            for ( ArrayDesign AD : ADs ) {
-                Collection<CompositeSequence> CSs = adService.loadCompositeSequences( AD );
-                for ( CompositeSequence CS : CSs ) {
-                    csIds.add( CS.getId() );
-                }
-            }
-            // FIXME this use dto return only known genes.
-            Map<Long, Collection<Long>> cs2geneMap = geneService.getCS2GeneMap( csIds );
-
-            Map<DesignElementDataVector, Collection<Long>> dedv2geneMap = eeService.getDesignElementDataVectors(
-                    cs2geneMap, qt );
-            // invert dedv2geneMap to gene2dedvMap
-            Map<Long, Collection<DesignElementDataVector>> gene2dedvMap = new HashMap<Long, Collection<DesignElementDataVector>>();
-            for ( DesignElementDataVector dedv : dedv2geneMap.keySet() ) {
-                Collection<Long> geneIds = dedv2geneMap.get( dedv );
-                for ( Long geneId : geneIds ) {
-                    Collection<DesignElementDataVector> dedvs = gene2dedvMap.get( dedv );
-                    if ( dedvs == null ) {
-                        dedvs = new HashSet<DesignElementDataVector>();
-                        gene2dedvMap.put( geneId, dedvs );
-                    }
-                    dedvs.add( dedv );
-                }
-            }
-            log.info( "Loaded design element data vectors" );
-
-            for ( Long parId : parIds ) {
-                List<Double> parRanks = parId2eeRankMap.get( parId );
-                if ( parRanks == null ) {
-                    parRanks = new ArrayList<Double>( EEs.size() );
-                    parId2eeRankMap.put( parId, parRanks );
-                }
-                parRanks.add( getGeneRank( gene2dedvMap, parId ) );
-            }
-        }
-        return parId2eeRankMap;
-    }
-
-    private Double getGeneRank( Map<Long, Collection<DesignElementDataVector>> gene2dedvMap, Long parId ) {
-        Collection<DesignElementDataVector> dedvs = gene2dedvMap.get( parId );
-        ArrayList<Double> ranks = new ArrayList<Double>();
-        for ( DesignElementDataVector dedv : dedvs ) {
-            ranks.add( dedv.getRank() );
-        }
-        Collections.sort( ranks );
-        Double rank = ranks.get( ranks.size() / 2 );
-        return rank;
     }
 
     @Override
@@ -210,27 +152,41 @@ public class ProbeAlignedRegionAnalysisCLI extends AbstractSpringAwareCLI {
                 }
             }
         }
-        
+
         Map<Long, Integer> geneId2LinkCountMap = new HashMap<Long, Integer>();
-        for (Long parId : parIds) {
+        for ( Long parId : parIds ) {
             int i = linkMatrix.getRowIndexByName( parId );
             int[] positiveBitCount = linkMatrix.getRowBitCount( i );
             int[] negativeBitCount = negativeLinkMatrix.getRowBitCount( i );
-            for (Long geneId : knownGeneIds) {
+            for ( Long geneId : knownGeneIds ) {
                 int j = linkMatrix.getColIndexByName( geneId );
-                
+
             }
         }
-        
+
         return null;
     }
 
-    private Map<Integer, Long> getInvertedMap(Map<Long, Integer> map) {
-        Map<Integer, Long> invertedMap = new HashMap<Integer, Long>();
-        for (Map.Entry<Long, Integer> entry : map.entrySet()) {
-            invertedMap.put( entry.getValue(), entry.getKey() );
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+        String taxonName = getOptionValue( 't' );
+        taxon = Taxon.Factory.newInstance();
+        taxon.setCommonName( taxonName );
+        TaxonService taxonService = ( TaxonService ) this.getBean( "taxonService" );
+        taxon = taxonService.find( taxon );
+        if ( taxon == null ) {
+            log.info( "No Taxon found!" );
         }
-        return invertedMap;
+        if ( hasOption( 'o' ) ) {
+            this.outFileName = getOptionValue( 'o' );
+        }
+        if ( hasOption( 'h' ) ) {
+            this.threshold = Double.parseDouble( getOptionValue( 'h' ) );
+        } else {
+            this.threshold = DEFAULT_THRESHOLD;
+        }
+        initBeans();
     }
 
     private Map<Long, Integer> getEeId2IndexMap( Collection<ExpressionExperiment> EEs ) {
@@ -240,6 +196,25 @@ public class ProbeAlignedRegionAnalysisCLI extends AbstractSpringAwareCLI {
             eeId2IndexMap.put( EE.getId(), new Integer( index++ ) );
         }
         return eeId2IndexMap;
+    }
+
+    private Double getGeneRank( Map<Long, Collection<DesignElementDataVector>> gene2dedvMap, Long parId ) {
+        Collection<DesignElementDataVector> dedvs = gene2dedvMap.get( parId );
+        ArrayList<Double> ranks = new ArrayList<Double>();
+        for ( DesignElementDataVector dedv : dedvs ) {
+            ranks.add( dedv.getRank() );
+        }
+        Collections.sort( ranks );
+        Double rank = ranks.get( ranks.size() / 2 );
+        return rank;
+    }
+
+    private Map<Integer, Long> getInvertedMap( Map<Long, Integer> map ) {
+        Map<Integer, Long> invertedMap = new HashMap<Integer, Long>();
+        for ( Map.Entry<Long, Integer> entry : map.entrySet() ) {
+            invertedMap.put( entry.getValue(), entry.getKey() );
+        }
+        return invertedMap;
     }
 
     /**
@@ -265,6 +240,64 @@ public class ProbeAlignedRegionAnalysisCLI extends AbstractSpringAwareCLI {
         return linkCountMatrix;
     }
 
+    private Map<Long, List<Double>> getParId2eeRankMap( Collection<Long> parIds, Collection<ExpressionExperiment> EEs ) {
+        Map<Long, List<Double>> parId2eeRankMap = new HashMap<Long, List<Double>>();
+        for ( ExpressionExperiment EE : EEs ) {
+            // get quantitation type
+            Collection<QuantitationType> qts = eeService.getPreferredQuantitationType( EE );
+            if ( qts.size() < 1 ) {
+                return null;
+            }
+            QuantitationType qt = qts.iterator().next();
+
+            // get cs2gene map
+            Collection<ArrayDesign> ADs = eeService.getArrayDesignsUsed( EE );
+            Collection<Long> csIds = new HashSet<Long>();
+            for ( ArrayDesign AD : ADs ) {
+                Collection<CompositeSequence> CSs = adService.loadCompositeSequences( AD );
+                for ( CompositeSequence CS : CSs ) {
+                    csIds.add( CS.getId() );
+                }
+            }
+            // FIXME this use dto return only known genes.
+            Map<Long, Collection<Long>> cs2geneMap = geneService.getCS2GeneMap( csIds );
+
+            Map<DesignElementDataVector, Collection<Long>> dedv2geneMap = eeService.getDesignElementDataVectors(
+                    cs2geneMap, qt );
+            // invert dedv2geneMap to gene2dedvMap
+            Map<Long, Collection<DesignElementDataVector>> gene2dedvMap = new HashMap<Long, Collection<DesignElementDataVector>>();
+            for ( DesignElementDataVector dedv : dedv2geneMap.keySet() ) {
+                Collection<Long> geneIds = dedv2geneMap.get( dedv );
+                for ( Long geneId : geneIds ) {
+                    Collection<DesignElementDataVector> dedvs = gene2dedvMap.get( dedv );
+                    if ( dedvs == null ) {
+                        dedvs = new HashSet<DesignElementDataVector>();
+                        gene2dedvMap.put( geneId, dedvs );
+                    }
+                    dedvs.add( dedv );
+                }
+            }
+            log.info( "Loaded design element data vectors" );
+
+            for ( Long parId : parIds ) {
+                List<Double> parRanks = parId2eeRankMap.get( parId );
+                if ( parRanks == null ) {
+                    parRanks = new ArrayList<Double>( EEs.size() );
+                    parId2eeRankMap.put( parId, parRanks );
+                }
+                parRanks.add( getGeneRank( gene2dedvMap, parId ) );
+            }
+        }
+        return parId2eeRankMap;
+    }
+
+    private void initBeans() {
+        eeService = ( ExpressionExperimentService ) getBean( "expressionExperimentService" );
+        adService = ( ArrayDesignService ) getBean( "arrayDesignService" );
+        geneService = ( GeneService ) getBean( "geneService" );
+        p2pService = ( Probe2ProbeCoexpressionService ) getBean( "probe2ProbeCoexpressionService" );
+    }
+
     private void removeAboveThreshold( Map<Long, List<Double>> parId2eeRankMap ) {
         for ( Iterator<List<Double>> it = parId2eeRankMap.values().iterator(); it.hasNext(); ) {
             List<Double> eeRanks = it.next();
@@ -287,15 +320,5 @@ public class ProbeAlignedRegionAnalysisCLI extends AbstractSpringAwareCLI {
             }
             out.println( line );
         }
-    }
-
-    public static void main( String[] args ) {
-        ProbeAlignedRegionAnalysisCLI analysis = new ProbeAlignedRegionAnalysisCLI();
-        StopWatch watch = new StopWatch();
-        watch.start();
-        Exception e = analysis.doWork( args );
-        if ( e != null ) log.error( e.getMessage() );
-        watch.stop();
-        log.info( "Probe aligned region analysis completed in " + watch.getTime() / 1000 + " seconds" );
     }
 }

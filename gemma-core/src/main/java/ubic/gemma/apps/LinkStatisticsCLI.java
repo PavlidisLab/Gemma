@@ -36,7 +36,6 @@ import org.apache.commons.lang.time.StopWatch;
 import ubic.gemma.analysis.linkAnalysis.LinkConfirmationStatistics;
 import ubic.gemma.analysis.linkAnalysis.LinkStatistics;
 import ubic.gemma.analysis.linkAnalysis.LinkStatisticsService;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PredictedGene;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
@@ -146,25 +145,10 @@ public class LinkStatisticsCLI extends ExpressionExperimentManipulatingCLI {
             return err;
         }
 
-        Collection<ExpressionExperiment> ees = null;
-        if ( this.experimentListFile != null ) {
-            log.info( "Loading experiments from list in " + ees );
-            try {
-                ees = readExpressionExperimentListFile( this.experimentListFile );
-            } catch ( IOException e ) {
-                return e;
-            }
-        } else if ( taxon != null ) {
-            log.info( "Loading all expermients for " + taxon );
-            ees = eeService.findByTaxon( taxon );
-        } else {
-            log.error( "You must provide either the taxon or a list of expression experiments in a file" );
-            bail( ErrorCode.MISSING_OPTION );
-        }
         LinkStatisticsService lss = ( LinkStatisticsService ) this.getBean( "linkStatisticsService" );
 
         if ( !prepared ) {
-            lss.prepareDatabase( ees, taxon.getCommonName(), filterNonSpecific );
+            lss.prepareDatabase( expressionExperiments, taxon.getCommonName(), filterNonSpecific );
             return null;
         }
         Collection<Gene> genes = getKnownGenes();
@@ -191,7 +175,8 @@ public class LinkStatisticsCLI extends ExpressionExperimentManipulatingCLI {
 
             if ( doRealAnalysis ) { // Currently this is really just for debugging purposes, though reading in from a
                 // file might be useful.
-                LinkStatistics realStats = lss.analyze( ees, genes, taxon.getCommonName(), false, filterNonSpecific );
+                LinkStatistics realStats = lss.analyze( expressionExperiments, genes, taxon.getCommonName(), false,
+                        filterNonSpecific );
                 log.info( realStats.getTotalLinkCount() + " gene links in total" );
                 confStats = realStats.getLinkConfirmationStats();
 
@@ -209,7 +194,8 @@ public class LinkStatisticsCLI extends ExpressionExperimentManipulatingCLI {
                 for ( currentIteration = 1; currentIteration < numIterationsToDo + 1; currentIteration++ ) {
                     log.info( "*** Iteration " + currentIteration + " ****" );
 
-                    LinkStatistics sr = lss.analyze( ees, genes, taxon.getCommonName(), true, filterNonSpecific );
+                    LinkStatistics sr = lss.analyze( expressionExperiments, genes, taxon.getCommonName(), true,
+                            filterNonSpecific );
                     log.info( sr.getTotalLinkCount() + " gene links in total" );
 
                     shuffleRuns.add( sr.getLinkConfirmationStats() );

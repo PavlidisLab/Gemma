@@ -35,6 +35,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.matrix.CompressedNamedBitMatrix;
+import ubic.gemma.analysis.coexpression.ProbeLinkCoexpressionAnalyzer;
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -59,11 +60,6 @@ import cern.colt.list.ObjectArrayList;
  * @see FrequentLinkSetFinder
  */
 public class LinkMatrix {
-
-    /**
-     * This value is adjusted when necessary.
-     */
-    private int shift = 50000; // to encode two geneid into one long id
 
     protected static final Log log = LogFactory.getLog( LinkMatrix.class );
 
@@ -110,15 +106,6 @@ public class LinkMatrix {
     }
 
     /**
-     * @param row
-     * @param col
-     * @return
-     */
-    public long generateId( int row, int col ) {
-        return ( long ) row * ( long ) shift + col;
-    }
-
-    /**
      * @param mask1
      * @param mask2
      * @return
@@ -142,9 +129,14 @@ public class LinkMatrix {
         return bits;
     }
 
-    private CompressedNamedBitMatrix linkCountMatrix = null;
-    private Map<Long, Integer> eeIndexMap = null;
+    /**
+     * This value is adjusted when necessary.
+     */
+    private int shift = 50000; // to encode two geneid into one long id
 
+    private CompressedNamedBitMatrix linkCountMatrix = null;
+
+    private Map<Long, Integer> eeIndexMap = null;
     private Map<Integer, ExpressionExperiment> eeMap = null;
 
     private Map<Long, Gene> geneMap = null;
@@ -158,6 +150,8 @@ public class LinkMatrix {
     private CommandLineToolUtilService utilService = null;
 
     private int stringency = 2;
+
+    private ProbeLinkCoexpressionAnalyzer probeLinkCoexpressionAnalyzer;
 
     /**
      * @param genes
@@ -277,13 +271,6 @@ public class LinkMatrix {
     }
 
     /**
-     * Ensure the shift is high enough to store genes in pairs in a single 64-bit vector.
-     */
-    private void computeShift() {
-        shift = linkCountMatrix.rows() > linkCountMatrix.columns() ? linkCountMatrix.rows() : linkCountMatrix.columns();
-    }
-
-    /**
      * Initialize with all genes for the given taxon.
      * 
      * @param taxon
@@ -378,13 +365,22 @@ public class LinkMatrix {
         for ( Gene gene : targetGenes ) {
             System.out.println( i + "/" + targetGenes.size() + "\t" + gene.getName() );
             // Get the gene->eeIds map
-            CoexpressionCollectionValueObject coexpressed = ( CoexpressionCollectionValueObject ) geneService
-                    .getCoexpressedGenes( gene, null, stringency );
+            CoexpressionCollectionValueObject coexpressed = probeLinkCoexpressionAnalyzer.linkAnalysis( gene, null,
+                    stringency );
             Map<Long, Collection<Long>> geneEEMap = coexpressed.getGeneCoexpressionType()
                     .getSpecificExpressionExperiments();
             this.count( gene.getId(), geneEEMap );
             i++;
         }
+    }
+
+    /**
+     * @param row
+     * @param col
+     * @return
+     */
+    public long generateId( int row, int col ) {
+        return ( long ) row * ( long ) shift + col;
     }
 
     /**
@@ -634,6 +630,10 @@ public class LinkMatrix {
         this.geneService = geneService;
     }
 
+    public void setProbeLinkCoexpressionAnalyzer( ProbeLinkCoexpressionAnalyzer probeLinkCoexpressionAnalyzer ) {
+        this.probeLinkCoexpressionAnalyzer = probeLinkCoexpressionAnalyzer;
+    }
+
     public void setStringency( int stringency ) {
         this.stringency = stringency;
     }
@@ -675,6 +675,28 @@ public class LinkMatrix {
             out.write( index + "\t" + this.eeIndexMap.get( index ) + "\n" );
         }
         out.close();
+    }
+
+    /**
+     * For test purposes only.
+     * 
+     * @param i
+     * @param j
+     * @return
+     */
+    protected boolean filter( int i, int j ) {
+        // String geneName1 = getRowGene( i ).getName();
+        // String geneName2 = getColGene( j ).getName();
+        // if(geneName1.matches("(RPL|RPS)(.*)") ||geneName2.matches("(RPL|RPS)(.*)"))
+        // return true;
+        return false;
+    }
+
+    /**
+     * Ensure the shift is high enough to store genes in pairs in a single 64-bit vector.
+     */
+    private void computeShift() {
+        shift = linkCountMatrix.rows() > linkCountMatrix.columns() ? linkCountMatrix.rows() : linkCountMatrix.columns();
     }
 
     /**
@@ -734,20 +756,5 @@ public class LinkMatrix {
             }
         }
         init( ees, genes, coExpressedGenes );
-    }
-
-    /**
-     * For test purposes only.
-     * 
-     * @param i
-     * @param j
-     * @return
-     */
-    protected boolean filter( int i, int j ) {
-        // String geneName1 = getRowGene( i ).getName();
-        // String geneName2 = getColGene( j ).getName();
-        // if(geneName1.matches("(RPL|RPS)(.*)") ||geneName2.matches("(RPL|RPS)(.*)"))
-        // return true;
-        return false;
     }
 }

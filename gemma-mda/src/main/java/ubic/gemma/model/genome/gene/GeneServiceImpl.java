@@ -23,10 +23,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.commons.lang.time.StopWatch;
-
-import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
-import ubic.gemma.model.coexpression.MultipleCoexpressionCollectionValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -39,40 +35,51 @@ import ubic.gemma.model.genome.Taxon;
  */
 public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBase {
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetByGeneAlias(java.lang.String)
-     */
-    @Override
-    protected Collection handleGetByGeneAlias( String search ) throws Exception {
-        return this.getGeneDao().getByGeneAlias( search );
-    }
-
     @Override
     protected Integer handleCountAll() throws Exception {
         return this.getGeneDao().countAll();
     }
 
-    /**
-     * This was created because calling saveGene with an existant gene actually causes a caching error in Spring.
+    /*
+     * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.genome.gene.GeneService#updateGene(ubic.gemma.model.genome.Gene)
+     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleCreate(java.util.Collection)
      */
     @Override
-    protected void handleUpdate( ubic.gemma.model.genome.Gene gene ) throws java.lang.Exception {
-        this.getGeneDao().update( gene );
+    protected Collection handleCreate( Collection genes ) throws Exception {
+        return this.getGeneDao().create( genes );
+
+    }
+
+    @Override
+    protected Gene handleCreate( Gene gene ) throws Exception {
+        return ( Gene ) this.getGeneDao().create( gene );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleFind(ubic.gemma.model.genome.Gene)
+     */
+    @Override
+    protected Gene handleFind( Gene gene ) throws Exception {
+        return this.getGeneDao().find( gene );
     }
 
     /**
-     * This was created because calling saveGene from Spring causes caching errors. I left saveGene in place on the
-     * assumption that Kiran's loaders use it with success.
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneService#createGene(ubic.gemma.model.genome.Gene)
+     * @see ubic.gemma.model.genome.gene.GeneService#findAllQtlsByPhysicalMapLocation(ubic.gemma.model.genome.PhysicalLocation)
      */
-    protected ubic.gemma.model.genome.Gene handleSaveGene( ubic.gemma.model.genome.Gene gene )
-            throws java.lang.Exception {
-        return ( Gene ) this.getGeneDao().create( gene );
+    @Override
+    protected java.util.Collection handleFindAllQtlsByPhysicalMapLocation(
+            ubic.gemma.model.genome.PhysicalLocation physicalMapLocation ) throws java.lang.Exception {
+        return this.getGeneDao().findByPhysicalLocation( physicalMapLocation );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.gene.GeneService#handleFindByID(java.lang.long)
+     */
+    protected ubic.gemma.model.genome.Gene handleFindByID( Long id ) throws java.lang.Exception {
+        return ( Gene ) this.getGeneDao().load( id );
     }
 
     /**
@@ -105,40 +112,6 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
         return this.getGeneDao().findByOfficialSymbolInexact( officialSymbol );
     }
 
-    /**
-     * @see ubic.gemma.model.genome.gene.GeneService#findAllQtlsByPhysicalMapLocation(ubic.gemma.model.genome.PhysicalLocation)
-     */
-    @Override
-    protected java.util.Collection handleFindAllQtlsByPhysicalMapLocation(
-            ubic.gemma.model.genome.PhysicalLocation physicalMapLocation ) throws java.lang.Exception {
-        return this.getGeneDao().findByPhysicalLocation( physicalMapLocation );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.GeneService#handleFindByID(java.lang.long)
-     */
-    protected ubic.gemma.model.genome.Gene handleFindByID( Long id ) throws java.lang.Exception {
-        return ( Gene ) this.getGeneDao().load( id );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetAllGenes()
-     */
-    @Override
-    protected Collection handleLoadAll() throws Exception {
-        return this.getGeneDao().loadAll();
-    }
-
-    @Override
-    protected void handleRemove( String officialName ) throws Exception {
-        java.util.Collection col = this.getGeneDao().findByOfficialName( officialName );
-        Iterator iter = col.iterator();
-        while ( iter.hasNext() ) {
-            Gene g = ( Gene ) iter.next();
-            this.getGeneDao().remove( g );
-        }
-    }
-
     @Override
     protected Gene handleFindOrCreate( Gene gene ) throws Exception {
         return this.getGeneDao().findOrCreate( gene );
@@ -147,43 +120,11 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleRemove(java.util.Collection)
+     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetByGeneAlias(java.lang.String)
      */
     @Override
-    protected void handleRemove( Collection genes ) throws Exception {
-        this.getGeneDao().remove( genes );
-
-    }
-
-    @Override
-    protected Gene handleCreate( Gene gene ) throws Exception {
-        return ( Gene ) this.getGeneDao().create( gene );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleCreate(java.util.Collection)
-     */
-    @Override
-    protected Collection handleCreate( Collection genes ) throws Exception {
-        return this.getGeneDao().create( genes );
-
-    }
-
-    @Override
-    protected Gene handleLoad( long id ) throws Exception {
-        return ( Gene ) this.getGeneDao().load( id );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleFind(ubic.gemma.model.genome.Gene)
-     */
-    @Override
-    protected Gene handleFind( Gene gene ) throws Exception {
-        return this.getGeneDao().find( gene );
+    protected Collection handleFindByAlias( String search ) throws Exception {
+        return this.getGeneDao().findByAlias( search );
     }
 
     /*
@@ -199,44 +140,54 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetMultipleCoexpressionResults(java.util.Collection,
+     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetCoexpressedKnownGenes(ubic.gemma.model.genome.Gene,
      *      java.util.Collection, java.lang.Integer)
      */
     @Override
-    protected Object handleGetMultipleCoexpressionResults( Collection genes, Collection ees, Integer stringency )
+    protected Collection handleGetCoexpressedKnownGenes( Gene gene, Collection ees, Integer stringency )
             throws Exception {
-
-        StopWatch overallWatch = new StopWatch();
-        overallWatch.start();
-
-        MultipleCoexpressionCollectionValueObject results = new MultipleCoexpressionCollectionValueObject();
-        for ( Iterator iter = genes.iterator(); iter.hasNext(); ) {
-            Gene gene = ( Gene ) iter.next();
-            CoexpressionCollectionValueObject current = ( CoexpressionCollectionValueObject ) getCoexpressedGenes(
-                    gene, ees, stringency );
-            results.addCoexpressionCollection( current );
-            current = null;
-        }
-
-        overallWatch.stop();
-        results.setElapsedWallTimeElapsed( overallWatch.getTime() );
-
-        return results;
+        throw new UnsupportedOperationException();
     }
 
     @Override
-    protected Collection handleGetGenesByTaxon( Taxon taxon ) throws Exception {
-        return this.getGeneDao().getGenesByTaxon( taxon );
+    protected long handleGetCompositeSequenceCountById( Long id ) throws Exception {
+        return this.getGeneDao().getCompositeSequenceCountById( id );
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleLoadMultiple(java.util.Collection)
+     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetCompositeSequenceMap(java.util.Collection)
      */
     @Override
-    protected Collection handleLoadMultiple( Collection ids ) throws Exception {
-        return this.getGeneDao().load( ids );
+    protected Map handleGetCompositeSequenceMap( Collection genes ) throws Exception {
+        return this.getGeneDao().getCompositeSequenceMap( genes );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetCompositeSequencesById(ubic.gemma.model.genome.Gene,
+     *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     */
+    @Override
+    protected Collection handleGetCompositeSequences( Gene gene, ArrayDesign arrayDesign ) throws Exception {
+        return this.getGeneDao().getCompositeSequences( gene, arrayDesign );
+    }
+
+    @Override
+    protected Collection handleGetCompositeSequencesById( Long id ) throws Exception {
+        return this.getGeneDao().getCompositeSequencesById( id );
+    }
+
+    @Override
+    protected Map handleGetCS2GeneMap( Collection css ) throws Exception {
+        return this.getGeneDao().getCS2GeneMap( css );
+    }
+
+    @Override
+    protected Collection handleGetGenesByTaxon( Taxon taxon ) throws Exception {
+        return this.getGeneDao().getGenesByTaxon( taxon );
     }
 
     /*
@@ -252,42 +203,42 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetCompositeSequencesById(ubic.gemma.model.genome.Gene,
-     *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetMultipleCoexpressionResults(java.util.Collection,
+     *      java.util.Collection, java.lang.Integer)
      */
     @Override
-    protected Collection handleGetCompositeSequences( Gene gene, ArrayDesign arrayDesign ) throws Exception {
-        return this.getGeneDao().getCompositeSequences( gene, arrayDesign );
+    protected Object handleGetMultipleCoexpressionResults( Collection genes, Collection ees, Integer stringency )
+            throws Exception {
+        throw new UnsupportedOperationException( "This method has to be called from a post-processing method" );
+        // StopWatch overallWatch = new StopWatch();
+        // overallWatch.start();
+        //
+        // MultipleCoexpressionCollectionValueObject results = new MultipleCoexpressionCollectionValueObject();
+        // for ( Iterator iter = genes.iterator(); iter.hasNext(); ) {
+        // Gene gene = ( Gene ) iter.next();
+        // CoexpressionCollectionValueObject current = ( CoexpressionCollectionValueObject ) getCoexpressedGenes(
+        // gene, ees, stringency );
+        // results.addCoexpressionCollection( current );
+        // current = null;
+        // }
+        //
+        // overallWatch.stop();
+        // results.setElapsedWallTimeElapsed( overallWatch.getTime() );
+        //
+        // return results;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetCompositeSequenceMap(java.util.Collection)
+    @Override
+    protected Gene handleLoad( long id ) throws Exception {
+        return ( Gene ) this.getGeneDao().load( id );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetAllGenes()
      */
     @Override
-    protected Map handleGetCompositeSequenceMap( Collection genes ) throws Exception {
-        return this.getGeneDao().getCompositeSequenceMap( genes );
-    }
-
-    @Override
-    protected long handleGetCompositeSequenceCountById( Long id ) throws Exception {
-        return this.getGeneDao().getCompositeSequenceCountById( id );
-    }
-
-    @Override
-    protected Collection handleGetCompositeSequencesById( Long id ) throws Exception {
-        return this.getGeneDao().getCompositeSequencesById( id );
-    }
-
-    @Override
-    protected Map handleGetCS2GeneMap( Collection css ) throws Exception {
-        return this.getGeneDao().getCS2GeneMap( css );
-    }
-
-    @Override
-    protected Collection handleLoadProbeAlignedRegions( Taxon taxon ) throws Exception {
-        return this.getGeneDao().loadProbeAlignedRegions( taxon );
+    protected Collection handleLoadAll() throws Exception {
+        return this.getGeneDao().loadAll();
     }
 
     @Override
@@ -295,21 +246,65 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
         return this.getGeneDao().loadGenes( taxon );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleLoadMultiple(java.util.Collection)
+     */
+    @Override
+    protected Collection handleLoadMultiple( Collection ids ) throws Exception {
+        return this.getGeneDao().loadMultiple( ids );
+    }
+
     @Override
     protected Collection handleLoadPredictedGenes( Taxon taxon ) throws Exception {
         return this.getGeneDao().loadPredictedGenes( taxon );
     }
 
+    @Override
+    protected Collection handleLoadProbeAlignedRegions( Taxon taxon ) throws Exception {
+        return this.getGeneDao().loadProbeAlignedRegions( taxon );
+    }
+
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetCoexpressedKnownGenes(ubic.gemma.model.genome.Gene,
-     *      java.util.Collection, java.lang.Integer)
+     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleRemove(java.util.Collection)
      */
     @Override
-    protected Collection handleGetCoexpressedKnownGenes( Gene gene, Collection ees, Integer stringency )
-            throws Exception {
-        // TODO Auto-generated method stub
-        return null;
+    protected void handleRemove( Collection genes ) throws Exception {
+        this.getGeneDao().remove( genes );
+
+    }
+
+    @Override
+    protected void handleRemove( String officialName ) throws Exception {
+        java.util.Collection col = this.getGeneDao().findByOfficialName( officialName );
+        Iterator iter = col.iterator();
+        while ( iter.hasNext() ) {
+            Gene g = ( Gene ) iter.next();
+            this.getGeneDao().remove( g );
+        }
+    }
+
+    /**
+     * This was created because calling saveGene from Spring causes caching errors. I left saveGene in place on the
+     * assumption that Kiran's loaders use it with success.
+     * 
+     * @see ubic.gemma.model.genome.gene.GeneService#createGene(ubic.gemma.model.genome.Gene)
+     */
+    protected ubic.gemma.model.genome.Gene handleSaveGene( ubic.gemma.model.genome.Gene gene )
+            throws java.lang.Exception {
+        return ( Gene ) this.getGeneDao().create( gene );
+    }
+
+    /**
+     * This was created because calling saveGene with an existant gene actually causes a caching error in Spring.
+     * 
+     * @see ubic.gemma.model.genome.gene.GeneService#updateGene(ubic.gemma.model.genome.Gene)
+     */
+    @Override
+    protected void handleUpdate( ubic.gemma.model.genome.Gene gene ) throws java.lang.Exception {
+        this.getGeneDao().update( gene );
     }
 }

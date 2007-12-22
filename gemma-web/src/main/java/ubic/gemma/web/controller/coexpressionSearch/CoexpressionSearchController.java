@@ -42,6 +42,7 @@ import org.springframework.validation.BindException;
 import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.analysis.coexpression.ProbeLinkCoexpressionAnalyzer;
 import ubic.gemma.loader.genome.taxon.SupportedTaxa;
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.coexpression.CoexpressionTypeValueObject;
@@ -86,6 +87,7 @@ import ubic.gemma.web.util.MessageUtil;
  * @spring.property name = "searchService" ref="searchService"
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name = "geneOntologyService" ref="geneOntologyService"
+ * @spring.property name = "probeLinkCoexpressionAnalyzer" ref="probeLinkCoexpressionAnalyzer" 
  * @spring.property name = "validator" ref="genericBeanValidator"
  */
 public class CoexpressionSearchController extends BackgroundProcessingFormBindController {
@@ -102,6 +104,11 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
     private SearchService searchService = null;
     private ExpressionExperimentService expressionExperimentService = null;
     private GeneOntologyService geneOntologyService;
+    ProbeLinkCoexpressionAnalyzer probeLinkCoexpressionAnalyzer;
+
+    public void setProbeLinkCoexpressionAnalyzer( ProbeLinkCoexpressionAnalyzer probeLinkCoexpressionAnalyzer ) {
+        this.probeLinkCoexpressionAnalyzer = probeLinkCoexpressionAnalyzer;
+    }
 
     public CoexpressionSearchController() {
         /*
@@ -308,9 +315,8 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         }
         commandObject.setStringency( stringency );
 
-        CoexpressionCollectionValueObject coexpressions = ( CoexpressionCollectionValueObject ) geneService
-                .getCoexpressedGenes( commandObject.getSourceGene(), commandObject.getToUseEE(), commandObject
-                        .getStringency() );
+        CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis( commandObject
+                .getSourceGene(), commandObject.getToUseEE(), commandObject.getStringency() );
 
         StopWatch watch = new StopWatch();
 
@@ -670,8 +676,8 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
                         + csc.getSourceGene().getOfficialSymbol() );
 
                 job.updateProgress( "Analyzing coexpresson for " + csc.getSourceGene().getOfficialSymbol() );
-                CoexpressionCollectionValueObject coexpressions = ( CoexpressionCollectionValueObject ) geneService
-                        .getCoexpressedGenes( csc.getSourceGene(), csc.getToUseEE(), csc.getStringency() );
+                CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis( csc
+                        .getSourceGene(), csc.getToUseEE(), csc.getStringency() );
 
                 StopWatch watch = new StopWatch();
 

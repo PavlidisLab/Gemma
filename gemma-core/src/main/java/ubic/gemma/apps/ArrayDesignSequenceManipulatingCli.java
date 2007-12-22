@@ -134,6 +134,8 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
     protected boolean needToRun( Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
             Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
 
+        if ( skipIfLastRunLaterThan == null ) return true;
+
         auditTrailService.thaw( arrayDesign );
 
         if ( skipIfLastRunLaterThan == null && autoSeek == false ) return true;

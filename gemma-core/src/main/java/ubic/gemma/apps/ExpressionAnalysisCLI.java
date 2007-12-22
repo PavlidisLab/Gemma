@@ -32,8 +32,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
 
 /**
  * Create a relative expression level (dedv rank) matrix for a list of genes
@@ -42,10 +40,6 @@ import ubic.gemma.model.genome.TaxonService;
  */
 public class ExpressionAnalysisCLI extends AbstractGeneCoexpressionManipulatingCLI {
     private String outFilePrefix;
-
-    private Taxon taxon;
-
-    private ExpressionExperimentService eeService;
 
     private ArrayDesignService adService;
 
@@ -83,23 +77,24 @@ public class ExpressionAnalysisCLI extends AbstractGeneCoexpressionManipulatingC
             filterThreshold = DEFAULT_FILTER_THRESHOLD;
         }
 
-        String taxonName = getOptionValue( 't' );
-        taxon = Taxon.Factory.newInstance();
-        taxon.setCommonName( taxonName );
-        TaxonService taxonService = ( TaxonService ) getBean( "taxonService" );
-        taxon = taxonService.find( taxon );
-        if ( taxon == null ) {
-            log.info( "No Taxon found!" );
-        }
         initBeans();
     }
 
+    /**
+     * 
+     */
     protected void initBeans() {
         eeService = ( ExpressionExperimentService ) getBean( "expressionExperimentService" );
         adService = ( ArrayDesignService ) getBean( "arrayDesignService" );
         dedvService = ( DesignElementDataVectorService ) getBean( "designElementDataVectorService" );
     }
 
+    /**
+     * @param genes
+     * @param ees
+     * @return
+     */
+    @SuppressWarnings("unchecked")
     private DenseDoubleMatrix2DNamed getRankMatrix( Collection<Gene> genes, Collection<ExpressionExperiment> ees ) {
         DenseDoubleMatrix2DNamed matrix = new DenseDoubleMatrix2DNamed( genes.size(), ees.size() );
         for ( int i = 0; i < matrix.rows(); i++ ) {
@@ -177,9 +172,13 @@ public class ExpressionAnalysisCLI extends AbstractGeneCoexpressionManipulatingC
         return matrix;
     }
 
+    /**
+     * @param matrix
+     * @return
+     */
     private DenseDoubleMatrix2DNamed filterRankmatrix( DenseDoubleMatrix2DNamed matrix ) {
         // filter out genes with less than filterThreshold fraction of ranks
-        List fRowNames = new ArrayList();
+        List<Object> fRowNames = new ArrayList<Object>();
         for ( Object rowName : matrix.getRowNames() ) {
             int row = matrix.getRowIndexByName( rowName );
             int count = 0;
@@ -192,7 +191,7 @@ public class ExpressionAnalysisCLI extends AbstractGeneCoexpressionManipulatingC
         }
 
         // filter out data sets with no ranks
-        List fColNames = new ArrayList();
+        List<Object> fColNames = new ArrayList<Object>();
         for ( Object colName : matrix.getColNames() ) {
             int col = matrix.getColIndexByName( colName );
             boolean found = false;
@@ -229,23 +228,19 @@ public class ExpressionAnalysisCLI extends AbstractGeneCoexpressionManipulatingC
      * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Exception doWork( String[] args ) {
         Exception e = processCommandLine( "ExpressionAnalysis", args );
         if ( e != null ) return e;
 
         Collection<Gene> genes;
-        Collection<ExpressionExperiment> ees;
-        try {
-            ees = getExpressionExperiments( taxon );
-        } catch ( IOException exc ) {
-            return exc;
-        }
+
         log.info( "Getting genes" );
         genes = geneService.loadGenes( taxon );
         log.info( "Loaded " + genes.size() + " genes" );
 
-        DenseDoubleMatrix2DNamed rankMatrix = getRankMatrix( genes, ees );
+        DenseDoubleMatrix2DNamed rankMatrix = getRankMatrix( genes, expressionExperiments );
         // rankMatrix = filterRankmatrix(rankMatrix);
 
         // gene names

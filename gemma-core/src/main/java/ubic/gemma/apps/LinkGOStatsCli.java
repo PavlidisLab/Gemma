@@ -115,10 +115,10 @@ public class LinkGOStatsCli extends ExpressionExperimentManipulatingCLI {
                 if ( support > 0 ) {
                     if ( support >= MAXIMUM_LINK_NUM ) support = MAXIMUM_LINK_NUM - 1;
                     Gene gene1 = geneMap.get( linkCount.getRowName( i ) );
-                    Gene gene2 = geneMap.get(  linkCount.getRowName( j ) );
+                    Gene gene2 = geneMap.get( linkCount.getRowName( j ) );
                     if ( gene1 == null || gene2 == null ) {
                         log.info( "Wrong setting for gene" + linkCount.getRowName( i ) + "\t"
-                                +   linkCount.getRowName( j ) );
+                                + linkCount.getRowName( j ) );
                         continue;
                     }
                     // int goOverlap = linkAnalysisUtilService.computeGOOverlap( gene1, gene2 );
@@ -418,7 +418,6 @@ public class LinkGOStatsCli extends ExpressionExperimentManipulatingCLI {
             }
         }
 
-        Collection<ExpressionExperiment> ees = null;
         Collection<GeneLink> linksFromFile = null;
         if ( this.linkFile != null ) {
 
@@ -428,17 +427,6 @@ public class LinkGOStatsCli extends ExpressionExperimentManipulatingCLI {
                 return e;
             }
 
-        } else if ( this.experimentListFile != null ) {
-            try {
-                ees = readExpressionExperimentListFile( this.experimentListFile );
-            } catch ( IOException e ) {
-                return e;
-            }
-        } else if ( taxon != null ) {
-            ees = eeService.findByTaxon( taxon );
-        } else {
-            log.error( "You must provide either the taxon or a list of expression experiments in a file" );
-            bail( ErrorCode.MISSING_OPTION );
         }
 
         if ( linkFile != null ) {
@@ -451,16 +439,16 @@ public class LinkGOStatsCli extends ExpressionExperimentManipulatingCLI {
                 geneMap.put( gene.getId(), gene );
             }
             int index = 0;
-            for ( ExpressionExperiment ee : ees ) {
+            for ( ExpressionExperiment ee : expressionExperiments ) {
                 eeIndexMap.put( ee.getId(), index );
                 index++;
             }
-            linkCount = new CompressedNamedBitMatrix( allGenes.size(), allGenes.size(), ees.size() );
+            linkCount = new CompressedNamedBitMatrix( allGenes.size(), allGenes.size(), expressionExperiments.size() );
             for ( Gene geneIter : allGenes ) {
                 linkCount.addRowName( geneIter.getId() );
                 linkCount.addColumnName( geneIter.getId() );
             }
-            for ( ExpressionExperiment ee : ees ) {
+            for ( ExpressionExperiment ee : expressionExperiments ) {
                 log.info( "Shuffling " + ee.getShortName() );
                 Collection<ProbeLink> links = p2pService.getProbeCoExpression( ee, this.taxon.getCommonName(), true );
                 if ( links == null || links.size() == 0 ) continue;

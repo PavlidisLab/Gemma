@@ -75,7 +75,7 @@ public class GeneDaoTest extends BaseSpringContextTest {
         aliases.add( alias );
 
         gene.setAliases( aliases );
-        Collection<Gene> genes = geneDao.getByGeneAlias( "GRIN1" );
+        Collection<Gene> genes = geneDao.findByAlias( "GRIN1" );
         assertNotNull( genes );
     }
 

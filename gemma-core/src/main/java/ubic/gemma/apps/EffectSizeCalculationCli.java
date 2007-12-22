@@ -59,7 +59,7 @@ public class EffectSizeCalculationCli extends AbstractGeneCoexpressionManipulati
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-    	super.buildOptions();
+        super.buildOptions();
         Option goOption = OptionBuilder.hasArg().withArgName( "GOTerm" ).withDescription( "Target GO term" )
                 .withLongOpt( "GOTerm" ).create( 'g' );
         addOption( goOption );
@@ -115,10 +115,9 @@ public class EffectSizeCalculationCli extends AbstractGeneCoexpressionManipulati
         StopWatch watch = new StopWatch();
         watch.start();
 
-        Collection<ExpressionExperiment> ees;
         Collection<Gene> queryGenes, targetGenes;
         try {
-            ees = getExpressionExperiments( taxon );
+
             queryGenes = getQueryGenes();
             targetGenes = getTargetGenes();
         } catch ( IOException e ) {
@@ -139,41 +138,43 @@ public class EffectSizeCalculationCli extends AbstractGeneCoexpressionManipulati
         }
 
         FilterConfig filterConfig = new FilterConfig();
-        CoexpressionMatrices matrices = coexpressionAnalysisService.calculateCoexpressionMatrices( ees, queryGenes, targetGenes, filterConfig, null);
+        CoexpressionMatrices matrices = coexpressionAnalysisService.calculateCoexpressionMatrices(
+                expressionExperiments, queryGenes, targetGenes, filterConfig, null );
         DenseDoubleMatrix3DNamed correlationMatrix = matrices.getCorrelationMatrix();
         DenseDoubleMatrix3DNamed sampleSizeMatrix = matrices.getSampleSizeMatrix();
-        DoubleMatrixNamed effectSizeMatrix = coexpressionAnalysisService.calculateEffectSizeMatrix( correlationMatrix, sampleSizeMatrix );
-        
+        DoubleMatrixNamed effectSizeMatrix = coexpressionAnalysisService.calculateEffectSizeMatrix( correlationMatrix,
+                sampleSizeMatrix );
+
         // create 2D correlation heat map
-//        ColorMatrix dataColorMatrix = new ColorMatrix( correlationMatrix2D );
-//        dataColorMatrix.setColorMap( ColorMap.GREENRED_COLORMAP );
-//        JMatrixDisplay dataMatrixDisplay = new JMatrixDisplay( dataColorMatrix );
-//        String figureFileName = outFilePrefix + ".corr.png";
-        
+        // ColorMatrix dataColorMatrix = new ColorMatrix( correlationMatrix2D );
+        // dataColorMatrix.setColorMap( ColorMap.GREENRED_COLORMAP );
+        // JMatrixDisplay dataMatrixDisplay = new JMatrixDisplay( dataColorMatrix );
+        // String figureFileName = outFilePrefix + ".corr.png";
+
         // create row/col name maps
         Map<ExpressionExperiment, String> eeNameMap = matrices.getEeNameMap();
 
-        DecimalFormat formatter = (DecimalFormat) NumberFormat.getNumberInstance();
-        formatter.applyPattern("0.0000");
-		DecimalFormatSymbols symbols = formatter.getDecimalFormatSymbols();
-		symbols.setNaN("");
-		formatter.setDecimalFormatSymbols(symbols);
+        DecimalFormat formatter = ( DecimalFormat ) NumberFormat.getNumberInstance();
+        formatter.applyPattern( "0.0000" );
+        DecimalFormatSymbols symbols = formatter.getDecimalFormatSymbols();
+        symbols.setNaN( "" );
+        formatter.setDecimalFormatSymbols( symbols );
         String topLeft = "GenePair";
         try {
-            MatrixWriter out = new MatrixWriter( outFilePrefix + ".corr.txt", formatter);
-            out.setColNameMap(eeNameMap);
-            out.setTopLeft(topLeft);
+            MatrixWriter out = new MatrixWriter( outFilePrefix + ".corr.txt", formatter );
+            out.setColNameMap( eeNameMap );
+            out.setTopLeft( topLeft );
             out.writeMatrix( correlationMatrix, true );
             out.close();
-            
-            out = new MatrixWriter( outFilePrefix + ".effect_size.txt", formatter);
-            out.setColNameMap(eeNameMap);
-            out.setTopLeft(topLeft);
+
+            out = new MatrixWriter( outFilePrefix + ".effect_size.txt", formatter );
+            out.setColNameMap( eeNameMap );
+            out.setTopLeft( topLeft );
             out.writeMatrix( effectSizeMatrix, true );
             out.close();
-            
-//            dataMatrixDisplay.saveImage( figureFileName, true );
-//            log.info( "Saved correlation image to " + figureFileName );
+
+            // dataMatrixDisplay.saveImage( figureFileName, true );
+            // log.info( "Saved correlation image to " + figureFileName );
         } catch ( IOException e ) {
             return e;
         }

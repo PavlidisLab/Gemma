@@ -61,15 +61,8 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
     protected Exception doWork( String[] args ) {
         processCommandLine( "expressionDataMatrixWriterCLI", args );
 
-        Collection<ExpressionExperiment> ees;
-        try {
-            ees = getExpressionExperiments( null );
-        } catch ( IOException e ) {
-            return e;
-        }
-
         ExpressionDataMatrixService eeds = ( ExpressionDataMatrixService ) this.getBean( "expressionDataMatrixService" );
-        for ( ExpressionExperiment ee : ees ) {
+        for ( ExpressionExperiment ee : expressionExperiments ) {
 
             ExpressionDataDoubleMatrix dataMatrix = eeds.getPreferredDataMatrix( ee, true );
 

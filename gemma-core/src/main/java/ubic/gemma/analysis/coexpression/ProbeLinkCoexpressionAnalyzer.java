@@ -39,27 +39,32 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 
 /**
- * Perform probe-to-probe coexpression link analysis ("TMM-style").
+ * Perform probe-to-probe coexpression link analysis ("TMM-style"). probeLinkCoexpressionAnalyzer.linkAnalysis
  * 
- * @spring.bean id="coexpressionService"
+ * @spring.bean id="probeLinkCoexpressionAnalyzer"
  * @spring.property name="geneService" ref="geneService"
  * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
  * @author paul
  * @version $Id$
  */
-public class CoexpressionService {
-    private static Log log = LogFactory.getLog( CoexpressionService.class.getName() );
+public class ProbeLinkCoexpressionAnalyzer {
+    private static Log log = LogFactory.getLog( ProbeLinkCoexpressionAnalyzer.class.getName() );
     CompositeSequenceService compositeSequenceService;
     GeneService geneService;
 
     /**
      * Call this!
+     * <p>
+     * Do not attempt to call the method GeneDao.getCoexpressedGenes() directly, the results that are returned will not
+     * be complete.
      * 
      * @param gene
      * @param ees
      * @param stringency A positive non-zero integer. If a value less than or equal to zero is entered, the value 1 will
      *        be silently used.
-     * @return
+     * @see ubic.gemma.model.genome.GeneDao.getCoexpressedGenes
+     * @see ubic.gemma.model.coexpression.CoexpressionCollectionValueObject
+     * @return Fully initialized CoexpressionCollectionValueObject.
      */
     public CoexpressionCollectionValueObject linkAnalysis( Gene gene, Collection<ExpressionExperiment> ees,
             int stringency ) {

@@ -277,7 +277,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleGetByGeneAlias( String search ) throws Exception {
+    protected Collection handleFindByAlias( String search ) throws Exception {
         final String queryString = "select distinct g from GeneImpl as g inner join g.aliases als where als.Alias = :search";
         return getHibernateTemplate().findByNamedParam( queryString, "search", search );
     }
@@ -583,7 +583,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         // get the gene objects so we can return them.
         for ( Map.Entry<Long, Collection<Long>> ent : csId2geneIds.entrySet() ) {
-            Collection<Gene> genes = load( ent.getValue() );
+            Collection<Gene> genes = loadMultiple( ent.getValue() );
             cs2genes.put( csId2cs.get( ent.getKey() ), genes );
         }
         return cs2genes;
@@ -621,7 +621,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleLoad( Collection ids ) throws Exception {
+    protected Collection handleLoadMultiple( Collection ids ) throws Exception {
         final String queryString = "select distinct gene from GeneImpl gene where gene.id in (:ids)";
         return getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
     }

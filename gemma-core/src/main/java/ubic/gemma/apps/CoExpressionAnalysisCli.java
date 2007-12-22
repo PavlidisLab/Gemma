@@ -48,7 +48,8 @@ import ubic.basecode.gui.ColorMap;
 import ubic.basecode.gui.ColorMatrix;
 import ubic.basecode.gui.JMatrixDisplay;
 import ubic.basecode.io.reader.StringMatrixReader;
-import ubic.gemma.analysis.coexpression.GeneCoExpressionAnalyzer;
+import ubic.gemma.analysis.coexpression.GeneEffectSizeCoExpressionAnalyzer;
+import ubic.gemma.analysis.coexpression.ProbeLinkCoexpressionAnalyzer;
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -135,7 +136,11 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         dedvService = ( DesignElementDataVectorService ) this.getBean( "designElementDataVectorService" );
         eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
         geneService = ( GeneService ) this.getBean( "geneService" );
+        probeLinkCoexpressionAnalyzer = ( ProbeLinkCoexpressionAnalyzer ) this
+                .getBean( "probeLinkCoexpressionAnalyzer" );
     }
+
+    ProbeLinkCoexpressionAnalyzer probeLinkCoexpressionAnalyzer;
 
     /**
      * @param geneService
@@ -190,8 +195,8 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         Collection<Long> geneIds = new HashSet<Long>();
         for ( Gene gene : queryGenes ) {
             log.info( "Get co-expressed genes for " + gene.getName() );
-            CoexpressionCollectionValueObject coexpressed = ( CoexpressionCollectionValueObject ) geneService
-                    .getCoexpressedGenes( gene, null, this.stringency );
+            CoexpressionCollectionValueObject coexpressed = probeLinkCoexpressionAnalyzer.linkAnalysis( gene, null,
+                    this.stringency );
             Map<Long, Collection<Long>> geneEEMap = coexpressed.getGeneCoexpressionType()
                     .getSpecificExpressionExperiments();
             for ( Long geneId : geneEEMap.keySet() ) {
@@ -376,12 +381,12 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
                 allEEs );
         if ( dedv2genes.size() == 0 || queryGenes.size() == 0 || coExpressedGenes.size() == 0 || allEEs.size() == 0 )
             return null;
-        GeneCoExpressionAnalyzer coExpression = new GeneCoExpressionAnalyzer( queryGenes, coExpressedGenes,
-                new HashSet( allEEs ) );
+        GeneEffectSizeCoExpressionAnalyzer coExpression = new GeneEffectSizeCoExpressionAnalyzer( queryGenes,
+                coExpressedGenes, new HashSet( allEEs ) );
 
         coExpression.setDedv2Genes( dedv2genes );
         coExpression.setExpressionExperimentService( eeService );
-        coExpression.analysis( dedv2genes.keySet() );
+        coExpression.analyze( dedv2genes.keySet() );
 
         for ( Gene gene : queryGenes ) {
             try {
@@ -412,7 +417,7 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
      * @throws IOException
      * @throws InterruptedException
      */
-    private void makeClusterGrams( GeneCoExpressionAnalyzer coExpression, Gene inputGene )
+    private void makeClusterGrams( GeneEffectSizeCoExpressionAnalyzer coExpression, Gene inputGene )
             throws FileNotFoundException, IOException, InterruptedException {
         String filebaseName = inputGene.getOfficialSymbol() + "_coexp";
         // Generate the data file for Cluster3

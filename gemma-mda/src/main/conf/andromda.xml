@@ -98,8 +98,7 @@
 				<property name="applicationContextLocalDataSource">dataSource.xml</property>
 				<property name="jdbcDataSourceClass">org.apache.commons.dbcp.BasicDataSource</property>
 				<property name="jdbcDataSourceDestroyMethod">close</property>
-				<property name="localTransactionManager">
-					org.springframework.orm.hibernate3.HibernateTransactionManager
+				<property name="localTransactionManager"> org.springframework.orm.hibernate3.HibernateTransactionManager
 				</property>
 				<property name="sessionFactory">org.springframework.orm.hibernate3.LocalSessionFactoryBean</property>
 				<property name="value-objects">${maven.andromda.core.generated.dir}</property>
@@ -109,25 +108,7 @@
 				<property name="service-impls">${maven.andromda.core.manual.dir}</property>
 				<property name="service-interfaces">${maven.andromda.core.generated.dir}</property>
 				<property name="spring-configuration">${maven.andromda.spring.configuration.dir}</property>
-				<!--	<property name="open-session-in-view">${maven.andromda.core.generated.dir}</property>-->
 				<property name="parameterRequiredCheck">false</property>
-				<!--  	
-					<property name="acegiServiceSecurity">
-					true
-					</property>
-					<property name="acegiServiceSecurityInterceptor">
-					org.acegisecurity.intercept.method.aopalliance.MethodSecurityInterceptor
-					</property>
-					<property name="acegiAuthenticationManager">
-					authenticationManager
-					</property>
-					<property name="acegiServiceAccessDecisionManager">
-					org.acegisecurity.vote.AffirmativeBased
-					</property>
-					<property name="acegiServiceDecisionVoter">
-					org.acegisecurity.vote.RoleVoter
-					</property>
-				-->
 			</properties>
 		</namespace>
 		<namespace name="hibernate">

@@ -31,9 +31,11 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.ontology.OntologyTerm;
 
 /**
- * @author klc The coexpressionValueObject is used for storing the results of each gene that is coexpressed with the
- *         query gene. Keeps track of specificity, pValues, Scores, goTerms, overlap, stringency value. This object is
- *         threadsafe.
+ * Used for storing the results of each gene that is coexpressed with a query gene. Keeps track of specificity, pValues,
+ * Scores, goTerms, GO overlap with the query, stringency value.
+ * 
+ * @author klc
+ * @version $Id$
  */
 public class CoexpressionValueObject {
 
@@ -42,7 +44,7 @@ public class CoexpressionValueObject {
     private String geneOfficialName;
     private String geneType;
     private Long taxonId;
-    
+
     private Map<Long, Map<Long, Double>> positiveScores;
     private Map<Long, Map<Long, Double>> negativeScores;
     private Map<Long, Map<Long, Double>> pValues;
@@ -54,30 +56,54 @@ public class CoexpressionValueObject {
     private Collection<String> nonSpecificGenes = new HashSet<String>();
     private boolean hybridizesWithQueryGene;
 
-    public String getImageMapName() {
-        StringBuffer buf = new StringBuffer();
-        buf.append( "map." );
-        buf.append( geneType );
-        buf.append( ".gene" );
-        buf.append( geneId );
-        buf.append( ".taxon" );
-        buf.append( taxonId );
-        return buf.toString();
+    // the expression experiments that this coexpression was involved in
+    private Map<Long, ExpressionExperimentValueObject> expressionExperimentValueObjects;
+
+    public CoexpressionValueObject() {
+        geneName = "";
+        geneId = null;
+        geneOfficialName = null;
+        expressionExperimentValueObjects = Collections
+                .synchronizedMap( new HashMap<Long, ExpressionExperimentValueObject>() );
+        positiveScores = Collections.synchronizedMap( new HashMap<Long, Map<Long, Double>>() );
+        negativeScores = Collections.synchronizedMap( new HashMap<Long, Map<Long, Double>>() );
+        pValues = new HashMap<Long, Map<Long, Double>>();
+        stringencyFilterValue = null;
+        possibleOverlap = 0;
     }
-    
-    public String getExperimentBitList() {
-        StringBuffer buf = new StringBuffer();
-        for ( Iterator<Long> it = experimentBitList.iterator(); it.hasNext(); ) {
-            long i = it.next();
-            buf.append( i == 0 ? 0 : 20 );
-            if ( it.hasNext() )
-                buf.append( "," );
+
+    /**
+     * @param expressionExperimentValueObjects the expressionExperimentValueObjects to set
+     */
+    public void addExpressionExperimentValueObject( ExpressionExperimentValueObject eeVo ) {
+        if ( !expressionExperimentValueObjects.containsKey( eeVo.getId() ) )
+            this.expressionExperimentValueObjects.put( eeVo.getId(), eeVo );
+    }
+
+    public void addNonSpecificGene( String gene ) {
+        this.nonSpecificGenes.add( gene );
+    }
+
+    public void addPValue( Long eeID, Double pValue, Long probeID ) {
+
+        if ( !pValues.containsKey( eeID ) ) pValues.put( eeID, new HashMap<Long, Double>() );
+
+        pValues.get( eeID ).put( probeID, pValue );
+
+    }
+
+    public void addScore( Long eeID, Double score, long probeID ) {
+        if ( score < 0 ) {
+            if ( !negativeScores.containsKey( eeID ) ) negativeScores.put( eeID, new HashMap<Long, Double>() );
+
+            negativeScores.get( eeID ).put( probeID, score );
+
+        } else {
+            if ( !positiveScores.containsKey( eeID ) ) positiveScores.put( eeID, new HashMap<Long, Double>() );
+
+            positiveScores.get( eeID ).put( probeID, score );
+
         }
-        return buf.toString();
-    }
-    
-    public List<Long> getExperimentBitIds() {
-        return experimentBitList;
     }
 
     /**
@@ -97,27 +123,67 @@ public class CoexpressionValueObject {
         }
     }
 
-    // the expression experiments that this coexpression was involved in
-    private Map<Long, ExpressionExperimentValueObject> expressionExperimentValueObjects;
+    /**
+     * @return
+     */
+    public double getCollapsedPValue() {
 
-    public CoexpressionValueObject() {
-        geneName = "";
-        geneId = null;
-        geneOfficialName = null;
-        expressionExperimentValueObjects = Collections
-                .synchronizedMap( new HashMap<Long, ExpressionExperimentValueObject>() );
-        positiveScores = Collections.synchronizedMap( new HashMap<Long, Map<Long, Double>>() );
-        negativeScores = Collections.synchronizedMap( new HashMap<Long, Map<Long, Double>>() );
-        pValues = new HashMap<Long, Map<Long, Double>>();
-        stringencyFilterValue = null;
-        possibleOverlap = 0;
+        if ( pValues.keySet().size() == 0 ) return 0;
+
+        double mean = 0;
+        int size = 0;
+
+        synchronized ( pValues ) {
+            for ( Map<Long, Double> scores : pValues.values() ) {
+                for ( Double score : scores.values() ) {
+                    mean += score;
+                    size++;
+                }
+            }
+        }
+        return mean / size;
     }
 
     /**
-     * @return the expressionExperiments that actually contained coexpression relationtionships for coexpressed gene
+     * @return a collection of EE ids that contributed to this genes negative expression
      */
-    public Collection<ExpressionExperimentValueObject> getExpressionExperimentValueObjects() {
-        return expressionExperimentValueObjects.values();
+    public Collection<Long> getEEContributing2NegativeLinks() {
+        return negativeScores.keySet();
+
+    }
+
+    /**
+     * @return a collectino of EEids that contributed to this genes positive expression
+     */
+    public Collection<Long> getEEContributing2PositiveLinks() {
+        return positiveScores.keySet();
+    }
+
+    /**
+     * @return
+     */
+    public List<Long> getExperimentBitIds() {
+        return experimentBitList;
+    }
+
+    /**
+     * @return
+     */
+    public String getExperimentBitList() {
+        StringBuffer buf = new StringBuffer();
+        for ( Iterator<Long> it = experimentBitList.iterator(); it.hasNext(); ) {
+            long i = it.next();
+            buf.append( i == 0 ? 0 : 20 );
+            if ( it.hasNext() ) buf.append( "," );
+        }
+        return buf.toString();
+    }
+
+    /**
+     * @return the nonspecificEE
+     */
+    public Collection<Long> getExpressionExperiments() {
+        return expressionExperimentValueObjects.keySet();
     }
 
     /**
@@ -134,11 +200,10 @@ public class CoexpressionValueObject {
     }
 
     /**
-     * @param expressionExperimentValueObjects the expressionExperimentValueObjects to set
+     * @return the expressionExperiments that actually contained coexpression relationtionships for coexpressed gene
      */
-    public void addExpressionExperimentValueObject( ExpressionExperimentValueObject eeVo ) {
-        if ( !expressionExperimentValueObjects.containsKey( eeVo.getId() ) )
-            this.expressionExperimentValueObjects.put( eeVo.getId(), eeVo );
+    public Collection<ExpressionExperimentValueObject> getExpressionExperimentValueObjects() {
+        return expressionExperimentValueObjects.values();
     }
 
     /**
@@ -149,24 +214,10 @@ public class CoexpressionValueObject {
     }
 
     /**
-     * @param geneId the geneId to set
-     */
-    public void setGeneId( Long geneId ) {
-        this.geneId = geneId;
-    }
-
-    /**
      * @return the geneName
      */
     public String getGeneName() {
         return geneName;
-    }
-
-    /**
-     * @param geneName the geneName to set
-     */
-    public void setGeneName( String geneName ) {
-        this.geneName = geneName;
     }
 
     /**
@@ -177,72 +228,76 @@ public class CoexpressionValueObject {
     }
 
     /**
-     * @param geneOfficialName the geneOfficialName to set
+     * @return the geneType
      */
-    public void setGeneOfficialName( String geneOfficialName ) {
-        this.geneOfficialName = geneOfficialName;
+    public String getGeneType() {
+        return geneType;
     }
 
-    public void addPValue( Long eeID, Double pValue, Long probeID ) {
-
-        if ( !pValues.containsKey( eeID ) ) pValues.put( eeID, new HashMap<Long, Double>() );
-
-        pValues.get( eeID ).put( probeID, pValue );
-
-    }
-
-    public Map<Long, Map<Long, Double>> getPValues() {
-        return pValues;
-
+    public Collection<OntologyTerm> getGoOverlap() {
+        return goOverlap;
     }
 
     /**
-     * @return the negativePValues
+     * @return
      */
-    public Map<Long, Map<Long, Double>> getNegativeScores() {
-        return negativeScores;
+    public String getImageMapName() {
+        StringBuffer buf = new StringBuffer();
+        buf.append( "map." );
+        buf.append( geneType );
+        buf.append( ".gene" );
+        buf.append( geneId );
+        buf.append( ".taxon" );
+        buf.append( taxonId );
+        return buf.toString();
     }
 
     /**
-     * @return the positivePValues
+     * Function to return the max of negative or positive link count. This is used for sorting.
+     * 
+     * @return
      */
-    public Map<Long, Map<Long, Double>> getPositiveScores() {
-        return positiveScores;
-    }
+    public Integer getMaxLinkCount() {
+        Integer positiveLinks = this.getPositiveLinkCount();
+        Integer negativeLinks = this.getNegativeLinkCount();
 
-    public void addScore( Long eeID, Double score, long probeID ) {
-        if ( score < 0 ) {
-            if ( !negativeScores.containsKey( eeID ) ) negativeScores.put( eeID, new HashMap<Long, Double>() );
+        if ( positiveLinks == null && negativeLinks == null ) {
+            return 0;
+        }
+        if ( positiveLinks == null ) {
+            return negativeLinks;
+        }
+        if ( negativeLinks == null ) {
+            return positiveLinks;
+        }
 
-            negativeScores.get( eeID ).put( probeID, score );
-
+        if ( positiveLinks >= negativeLinks ) {
+            return positiveLinks;
         } else {
-            if ( !positiveScores.containsKey( eeID ) ) positiveScores.put( eeID, new HashMap<Long, Double>() );
-
-            positiveScores.get( eeID ).put( probeID, score );
-
+            return negativeLinks;
         }
     }
 
-    public double getPositiveScore() {
-
-        if ( positiveScores.keySet().size() == 0 ) return 0;
-
-        double mean = 0;
-        int size = 0;
-
-        synchronized ( positiveScores ) {
-            for ( Map<Long, Double> scores : positiveScores.values() ) {
-                for ( Double score : scores.values() ) {
-                    mean += score;
-                    size++;
-                }
-            }
+    /**
+     * Function to return the negative link counts. If the count equals or exceeds the stringency filter value or the
+     * filter value is not set, return the count. If the count is below the filter value, return null.
+     * 
+     * @return the negative link counts
+     */
+    public Integer getNegativeLinkCount() {
+        Integer count = this.negativeScores.keySet().size();
+        if ( stringencyFilterValue == null ) {
+            return count;
+        } else if ( count >= stringencyFilterValue ) {
+            return count;
+        } else {
+            return null;
         }
-        return mean / size;
-
     }
 
+    /**
+     * @return
+     */
     public double getNegativeScore() {
 
         if ( negativeScores.keySet().size() == 0 ) return 0;
@@ -262,22 +317,25 @@ public class CoexpressionValueObject {
 
     }
 
-    public double getCollapsedPValue() {
+    /**
+     * @return the negativePValues
+     */
+    public Map<Long, Map<Long, Double>> getNegativeScores() {
+        return negativeScores;
+    }
 
-        if ( pValues.keySet().size() == 0 ) return 0;
+    /**
+     * @return the nonspecificEE
+     */
+    public Collection<Long> getNonspecificEE() {
+        return nonspecificEE;
+    }
 
-        double mean = 0;
-        int size = 0;
-
-        synchronized ( pValues ) {
-            for ( Map<Long, Double> scores : pValues.values() ) {
-                for ( Double score : scores.values() ) {
-                    mean += score;
-                    size++;
-                }
-            }
-        }
-        return mean / size;
+    /**
+     * @return the nonSpecificGenes
+     */
+    public Collection<String> getNonSpecificGenes() {
+        return nonSpecificGenes;
     }
 
     /**
@@ -298,129 +356,41 @@ public class CoexpressionValueObject {
     }
 
     /**
-     * @return a collectino of EEids that contributed to this genes positive expression
-     */
-    public Collection<Long> getEEContributing2PositiveLinks() {
-        return positiveScores.keySet();
-    }
-
-    /**
-     * @return a collection of EE ids that contributed to this genes negative expression
-     */
-    public Collection<Long> getEEContributing2NegativeLinks() {
-        return negativeScores.keySet();
-
-    }
-
-    /**
-     * Function to return the negative link counts. If the count equals or exceeds the stringency filter value or the
-     * filter value is not set, return the count. If the count is below the filter value, return null.
-     * 
-     * @return the negative link counts
-     */
-    public Integer getNegativeLinkCount() {
-        Integer count = this.negativeScores.keySet().size();
-        if ( stringencyFilterValue == null ) {
-            return count;
-        } else if ( count >= stringencyFilterValue ) {
-            return count;
-        } else {
-            return null;
-        }
-    }
-    
-    /**
-     * Function to return the max of negative or positive link count.
-     * This is used for sorting.
      * @return
      */
-    public Integer getMaxLinkCount() {
-        Integer positiveLinks = this.getPositiveLinkCount();
-        Integer negativeLinks = this.getNegativeLinkCount();
-        
-        if (positiveLinks == null && negativeLinks == null) {
-            return 0;
+    public double getPositiveScore() {
+
+        if ( positiveScores.keySet().size() == 0 ) return 0;
+
+        double mean = 0;
+        int size = 0;
+
+        synchronized ( positiveScores ) {
+            for ( Map<Long, Double> scores : positiveScores.values() ) {
+                for ( Double score : scores.values() ) {
+                    mean += score;
+                    size++;
+                }
+            }
         }
-        if (positiveLinks == null) {
-            return negativeLinks;
-        }
-        if (negativeLinks == null) {
-            return positiveLinks;
-        }
-        
-        if (positiveLinks >= negativeLinks) {
-            return positiveLinks;
-        }
-        else {
-            return negativeLinks;
-        }
+        return mean / size;
+
     }
 
     /**
-     * @return the geneType
+     * @return the positivePValues
      */
-    public String getGeneType() {
-        return geneType;
-    }
-
-    /**
-     * @param geneType the geneType to set
-     */
-    public void setGeneType( String geneType ) {
-        this.geneType = geneType;
-    }
-
-    /**
-     * @return the stringencyFilterValue
-     */
-    public Integer getStringencyFilterValue() {
-        return stringencyFilterValue;
-    }
-
-    /**
-     * @param stringencyFilterValue the stringencyFilterValue to set
-     */
-    public void setStringencyFilterValue( Integer stringencyFilterValue ) {
-        this.stringencyFilterValue = stringencyFilterValue;
-    }
-
-    /**
-     * @return the nonspecificEE
-     */
-    public Collection<Long> getNonspecificEE() {
-        return nonspecificEE;
-    }
-
-    /**
-     * @param nonspecificEE the nonspecificEE to set
-     */
-    public void setNonspecificEE( Collection<Long> nonspecificEE ) {
-        this.nonspecificEE = nonspecificEE;
-    }
-
-    /**
-     * @return the nonspecificEE
-     */
-    public Collection<Long> getExpressionExperiments() {
-        return expressionExperimentValueObjects.keySet();
-    }
-
-    public Collection<OntologyTerm> getGoOverlap() {
-        return goOverlap;
-    }
-
-    public void setGoOverlap( Collection<OntologyTerm> goOverlap ) {
-        this.goOverlap = goOverlap;
+    public Map<Long, Map<Long, Double>> getPositiveScores() {
+        return positiveScores;
     }
 
     public int getPossibleOverlap() {
         return possibleOverlap;
     }
 
-    public void setPossibleOverlap( int possibleOverlap ) {
-        this.possibleOverlap = possibleOverlap;
-    }
-
+    /**
+     * @return
+     */
     public Collection<Long> getProbes() {
         Collection<Long> results = new HashSet<Long>();
 
@@ -433,21 +403,22 @@ public class CoexpressionValueObject {
     }
 
     /**
-     * @return the nonSpecificGenes
+     * @return
      */
-    public Collection<String> getNonSpecificGenes() {
-        return nonSpecificGenes;
+    public Map<Long, Map<Long, Double>> getPValues() {
+        return pValues;
+
     }
 
     /**
-     * @param nonSpecificGenes the nonSpecificGenes to set
+     * @return the stringencyFilterValue
      */
-    public void setNonSpecificGenes( Collection<String> nonSpecificGenes ) {
-        this.nonSpecificGenes = nonSpecificGenes;
+    public Integer getStringencyFilterValue() {
+        return stringencyFilterValue;
     }
-    
-    public void addNonSpecificGene(String gene){
-        this.nonSpecificGenes.add( gene );
+
+    public Long getTaxonId() {
+        return taxonId;
     }
 
     /**
@@ -458,16 +429,72 @@ public class CoexpressionValueObject {
     }
 
     /**
+     * @param geneId the geneId to set
+     */
+    public void setGeneId( Long geneId ) {
+        this.geneId = geneId;
+    }
+
+    /**
+     * @param geneName the geneName to set
+     */
+    public void setGeneName( String geneName ) {
+        this.geneName = geneName;
+    }
+
+    /**
+     * @param geneOfficialName the geneOfficialName to set
+     */
+    public void setGeneOfficialName( String geneOfficialName ) {
+        this.geneOfficialName = geneOfficialName;
+    }
+
+    /**
+     * @param geneType the geneType to set
+     */
+    public void setGeneType( String geneType ) {
+        this.geneType = geneType;
+    }
+
+    public void setGoOverlap( Collection<OntologyTerm> goOverlap ) {
+        this.goOverlap = goOverlap;
+    }
+
+    /**
      * @param hybridizesWithQueryGene the hybridizesWithQueryGene to set
      */
     public void setHybridizesWithQueryGene( boolean hybridizesWithQueryGene ) {
         this.hybridizesWithQueryGene = hybridizesWithQueryGene;
     }
 
-    public Long getTaxonId() {
-        return taxonId;
+    /**
+     * @param nonspecificEE the nonspecificEE to set
+     */
+    public void setNonspecificEE( Collection<Long> nonspecificEE ) {
+        this.nonspecificEE = nonspecificEE;
     }
 
+    /**
+     * @param nonSpecificGenes the nonSpecificGenes to set
+     */
+    public void setNonSpecificGenes( Collection<String> nonSpecificGenes ) {
+        this.nonSpecificGenes = nonSpecificGenes;
+    }
+
+    public void setPossibleOverlap( int possibleOverlap ) {
+        this.possibleOverlap = possibleOverlap;
+    }
+
+    /**
+     * @param stringencyFilterValue the stringencyFilterValue to set
+     */
+    public void setStringencyFilterValue( Integer stringencyFilterValue ) {
+        this.stringencyFilterValue = stringencyFilterValue;
+    }
+
+    /**
+     * @param taxonId
+     */
     public void setTaxonId( Long taxonId ) {
         this.taxonId = taxonId;
     }

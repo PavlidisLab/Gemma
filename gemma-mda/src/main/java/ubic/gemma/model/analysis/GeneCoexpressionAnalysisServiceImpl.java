@@ -22,6 +22,10 @@
  */
 package ubic.gemma.model.analysis;
 
+import java.util.Collection;
+
+import ubic.gemma.model.genome.Taxon;
+
 /**
  * @see ubic.gemma.model.analysis.GeneCoexpressionAnalysisService
  * @author paul
@@ -29,7 +33,7 @@ package ubic.gemma.model.analysis;
  */
 public class GeneCoexpressionAnalysisServiceImpl extends ubic.gemma.model.analysis.GeneCoexpressionAnalysisServiceBase {
 
-    /**
+    /*
      * @see ubic.gemma.model.analysis.GeneCoexpressionAnalysisService#create(ubic.gemma.model.analysis.GeneCoexpressionAnalysis)
      */
     protected ubic.gemma.model.analysis.GeneCoexpressionAnalysis handleCreate(
@@ -37,4 +41,23 @@ public class GeneCoexpressionAnalysisServiceImpl extends ubic.gemma.model.analys
         return ( GeneCoexpressionAnalysis ) this.getGeneCoexpressionAnalysisDao().create( analysis );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.AnalysisServiceImpl#handleLoadAll()
+     */
+    @Override
+    protected Collection handleLoadAll() throws Exception {
+        return this.getGeneCoexpressionAnalysisDao().loadAll();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.GeneCoexpressionAnalysisServiceBase#handleFindByTaxon(ubic.gemma.model.genome.Taxon)
+     */
+    @Override
+    protected Collection handleFindByTaxon( Taxon taxon ) throws Exception {
+        return this.getGeneCoexpressionAnalysisDao().findByTaxon( taxon );
+    }
 }

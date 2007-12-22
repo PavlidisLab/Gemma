@@ -45,12 +45,12 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 
 /**
- * Compute the pairwise correlations for a bunch of dedvs for a bunch of genes.
+ * Compute the pairwise correlations for a bunch of dedvs for a bunch of genes. This uses the 'effect-size' approach.
  * 
  * @author xwan
  * @version $Id$
  */
-public class GeneCoExpressionAnalyzer {
+public class GeneEffectSizeCoExpressionAnalyzer {
     private class ExpressedData {
         public DesignElementDataVector query = null;
         public DesignElementDataVector coexpressed = null;
@@ -90,11 +90,11 @@ public class GeneCoExpressionAnalyzer {
     private Map<Long, String> eeNames = new HashMap<Long, String>();
     private Map<Long, Integer> eeSampleSizes = new HashMap<Long, Integer>();
 
-    private static Log log = LogFactory.getLog( GeneCoExpressionAnalyzer.class.getName() );
+    private static Log log = LogFactory.getLog( GeneEffectSizeCoExpressionAnalyzer.class.getName() );
     private ExpressionExperimentService eeService = null;
     public static int MINIMUM_SAMPLE = 5;
 
-    public GeneCoExpressionAnalyzer( Collection<Gene> queryGenes, Collection<Gene> coExpressedGenes,
+    public GeneEffectSizeCoExpressionAnalyzer( Collection<Gene> queryGenes, Collection<Gene> coExpressedGenes,
             Collection<ExpressionExperiment> ees ) {
         queryGenesData = new ObjectMatrix2DNamed( queryGenes.size(), ees.size() );
         for ( Gene queryGene : queryGenes ) {
@@ -145,6 +145,7 @@ public class GeneCoExpressionAnalyzer {
     /**
      * @param dedvs
      */
+    @SuppressWarnings("unchecked")
     private void distributeDesignElementDataVector( Set<DesignElementDataVector> dedvs ) {
         // First, get the sample sizes for Expression Experiments
         for ( DesignElementDataVector dedv : dedvs ) {
@@ -276,7 +277,7 @@ public class GeneCoExpressionAnalyzer {
             // ");
             return Double.NaN;
         }
-        if ( ival.length < GeneCoExpressionAnalyzer.MINIMUM_SAMPLE ) return Double.NaN;
+        if ( ival.length < GeneEffectSizeCoExpressionAnalyzer.MINIMUM_SAMPLE ) return Double.NaN;
         if ( dedvI.getId() == dedvJ.getId() ) {
             // System.err.println("Error in " + devI.getExpressionExperiment().getId());
             return Double.NaN;
@@ -560,7 +561,7 @@ public class GeneCoExpressionAnalyzer {
      * @param dedvs
      * @return
      */
-    public boolean analysis( Set<DesignElementDataVector> dedvs ) {
+    public boolean analyze( Set<DesignElementDataVector> dedvs ) {
         assert ( this.dedv2genes != null );
         assert ( this.eeService != null );
         this.distributeDesignElementDataVector( dedvs );
