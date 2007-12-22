@@ -44,6 +44,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.sequence.SequenceManipulation;
+import ubic.gemma.analysis.sequence.SequenceWriter;
 import ubic.gemma.loader.genome.BlatResultParser;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -51,6 +52,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.TimeUtil;
 import ubic.gemma.util.concurrent.GenericStreamConsumer;
 
 /**
@@ -60,11 +62,6 @@ import ubic.gemma.util.concurrent.GenericStreamConsumer;
  * @version $Id$
  */
 public class Blat {
-
-    /**
-     * Spaces in the sequence name will cause problems when converting back from the PSL format, so they are replaced.
-     */
-    public static final String SPACE_REPLACEMENT = "_____";
 
     /**
      * This value is basically a threshold fraction of aligned bases in the query
@@ -86,11 +83,6 @@ public class Blat {
      */
     private static final int POLY_AT_THRESHOLD = 5;
 
-    /**
-     * Required for some applications (read: Repeatmasker) that can't handle long identifiers.
-     */
-    private static final int MAX_SEQ_IDENTIFIER_LENGTH = 50;
-
     private static boolean hasNativeLibrary;
 
     static {
@@ -101,36 +93,13 @@ public class Blat {
                 log.info( "Loaded Blat native library successfully" );
                 hasNativeLibrary = true;
             } catch ( UnsatisfiedLinkError e ) {
-                log.error( e, e );
-                // throw new ExceptionInInitializerError( "Unable to locate or load the Blat native library: "
-                // + e.getMessage() );
+                log.warn( "Unable to locate the native Blat library. "
+                        + "This isn't a problem if you have the Blat binaries installed" );
                 hasNativeLibrary = false;
             }
         } else {
             hasNativeLibrary = false;
         }
-    }
-
-    /**
-     * Modify the identifier for the purposes of using in temporary Fasta files. WARNING There is a faint possibility
-     * that this could cause problems in identifying the sequences later.
-     * 
-     * @param b
-     * @return
-     */
-    public static String getIdentifier( BioSequence b ) {
-        String identifier = b.getName();
-        identifier = identifier.replaceAll( " ", SPACE_REPLACEMENT );
-        identifier = identifier.substring( 0, Math.min( identifier.length(), MAX_SEQ_IDENTIFIER_LENGTH ) );
-        return identifier;
-    }
-
-    public static String getMinutesElapsed( StopWatch overallWatch ) {
-        Long overallElapsed = overallWatch.getTime();
-        NumberFormat nf = new DecimalFormat();
-        nf.setMaximumFractionDigits( 2 );
-        String minutes = nf.format( overallElapsed / ( 60.0 * 1000.0 ) );
-        return minutes;
     }
 
     /**
@@ -143,53 +112,6 @@ public class Blat {
         searchedDatabase.setType( DatabaseType.SEQUENCE );
         searchedDatabase.setName( genome.toString().toLowerCase() );
         return searchedDatabase;
-    }
-
-    /**
-     * Write a collection of sequences in FASTA format. TODO: move this somewhere more generally accessible.
-     * 
-     * @param sequences
-     * @param querySequenceFile
-     * @return
-     * @throws IOException
-     */
-    public static int writeSequencesToFile( Collection<BioSequence> sequences, File querySequenceFile )
-            throws IOException {
-        BufferedWriter out = new BufferedWriter( new FileWriter( querySequenceFile ) );
-
-        /*
-         * Note this silliness. Often the sequences have been read in from a file in the first place. The problem is
-         * there are no easy hooks to gfClient that don't use a file. This could be changed at a later time. It would
-         * require customizing Kent's code (even more than we do).
-         */
-
-        log.debug( "Processing " + sequences.size() + " sequences for blat analysis" );
-        int count = 0;
-        Collection<Object> identifiers = new HashSet<Object>();
-        int repeats = 0;
-        for ( BioSequence b : sequences ) {
-            if ( StringUtils.isBlank( b.getSequence() ) ) {
-                log.warn( "Blank sequence for " + b );
-                continue;
-            }
-            String identifier = getIdentifier( b );
-            if ( identifiers.contains( identifier ) ) {
-                log.debug( b + " is a repeat with identifier " + identifier );
-                repeats++;
-                continue; // don't repeat sequences.
-            }
-
-            // use toUpper to ensure that sequence does not start out 'masked'.
-            out.write( ">" + identifier + "\n" + b.getSequence().toUpperCase() + "\n" );
-            identifiers.add( identifier );
-
-            if ( ++count % 2000 == 0 ) {
-                log.debug( "Wrote " + count + " sequences" );
-            }
-        }
-        out.close();
-        log.info( "Wrote " + count + " sequences( " + repeats + " repeated items were skipped)." );
-        return count;
     }
 
     /**
@@ -231,11 +153,11 @@ public class Blat {
 
     private int ratServerPort;
 
-    private String humanServerHost;
-
-    private String mouseServerHost;
-
-    private String ratServerHost;
+    // private String humanServerHost;
+    //
+    // private String mouseServerHost;
+    //
+    // private String ratServerHost;
 
     /**
      * Create a blat object with settings read from the config file.
@@ -322,7 +244,7 @@ public class Blat {
         Map<BioSequence, Collection<BlatResult>> results = new HashMap<BioSequence, Collection<BlatResult>>();
 
         File querySequenceFile = File.createTempFile( "pattern", ".fa" );
-        int count = writeSequencesToFile( sequences, querySequenceFile );
+        int count = SequenceWriter.writeSequencesToFile( sequences, querySequenceFile );
         if ( count == 0 ) {
             querySequenceFile.delete();
             throw new IllegalArgumentException( "No sequences!" );
@@ -592,14 +514,14 @@ public class Blat {
                     Long size = outputFile.length();
                     NumberFormat nf = new DecimalFormat();
                     nf.setMaximumFractionDigits( 2 );
-                    String minutes = getMinutesElapsed( overallWatch );
+                    String minutes = TimeUtil.getMinutesElapsed( overallWatch );
                     log.info( "BLAT output so far: " + nf.format( size / 1024.0 ) + " kb (" + minutes
                             + " minutes elapsed)" );
                 }
             }
 
             overallWatch.stop();
-            String minutes = getMinutesElapsed( overallWatch );
+            String minutes = TimeUtil.getMinutesElapsed( overallWatch );
             log.info( "Blat took a total of " + minutes + " minutes" );
 
             // int exitVal = run.waitFor();
@@ -658,9 +580,9 @@ public class Blat {
         this.humanServerPort = ConfigUtils.getInt( "gfClient.humanServerPort" );
         this.mouseServerPort = ConfigUtils.getInt( "gfClient.mouseServerPort" );
         this.ratServerPort = ConfigUtils.getInt( "gfClient.ratServerPort" );
-        this.humanServerHost = ConfigUtils.getString( "gfClient.humanServerHost" );
-        this.mouseServerHost = ConfigUtils.getString( "gfClient.mouseServerHost" );
-        this.ratServerHost = ConfigUtils.getString( "gfClient.ratServerHost" );
+        // this.humanServerHost = ConfigUtils.getString( "gfClient.humanServerHost" );
+        // this.mouseServerHost = ConfigUtils.getString( "gfClient.mouseServerHost" );
+        // this.ratServerHost = ConfigUtils.getString( "gfClient.ratServerHost" );
         this.host = ConfigUtils.getString( "gfClient.host" );
         this.seqDir = ConfigUtils.getString( "gfClient.seqDir" );
         this.mouseSeqFiles = ConfigUtils.getString( "gfClient.mouse.seqFiles" );
@@ -716,7 +638,7 @@ public class Blat {
                     Long size = outputFile.length();
                     NumberFormat nf = new DecimalFormat();
                     nf.setMaximumFractionDigits( 2 );
-                    String minutes = getMinutesElapsed( overallWatch );
+                    String minutes = TimeUtil.getMinutesElapsed( overallWatch );
                     log.info( "BLAT output so far: " + nf.format( size / 1024.0 ) + " kb (" + minutes
                             + " minutes elapsed)" );
                 }
@@ -724,7 +646,7 @@ public class Blat {
             }
 
             overallWatch.stop();
-            String minutes = getMinutesElapsed( overallWatch );
+            String minutes = TimeUtil.getMinutesElapsed( overallWatch );
             log.info( "Blat took a total of " + minutes + " minutes" );
 
         } catch ( UnsatisfiedLinkError e ) {
