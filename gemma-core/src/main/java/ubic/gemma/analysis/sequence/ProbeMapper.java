@@ -427,8 +427,8 @@ public class ProbeMapper {
         // no genes, have to look for pre-existing probealignedregions that overlap.
         if ( blatResult.getQuerySequence().getTaxon() == null )
             blatResult.getQuerySequence().setTaxon( goldenPathDb.getTaxon() );
-        return findProbeAlignedRegionAssociations( blatResult, ignoreStrand );
 
+        return findProbeAlignedRegionAssociations( blatResult, ignoreStrand );
     }
 
     /**

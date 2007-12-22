@@ -42,6 +42,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private TaxonService taxonService;
     private String taxonName;
     private Taxon taxon;
+
     /*
      * (non-Javadoc)
      * 
@@ -60,6 +61,10 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 .create( 't' );
 
         addOption( taxonOption );
+
+        Option force = OptionBuilder.withDescription( "Run no matter what" ).create( "force" );
+
+        addOption( force );
 
     }
 
@@ -157,6 +162,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     @Override
     protected boolean needToRun( Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
             Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
+
+        if ( this.hasOption( "force" ) ) {
+            return true;
+        }
+
         if ( !super.needToRun( skipIfLastRunLaterThan, arrayDesign, eventClass ) ) {
             return false;
         }
