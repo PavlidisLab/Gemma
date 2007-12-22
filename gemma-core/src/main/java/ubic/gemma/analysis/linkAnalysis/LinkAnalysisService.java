@@ -24,6 +24,7 @@ import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -39,6 +40,7 @@ import ubic.basecode.math.CorrelationStats;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.model.analysis.ProbeCoexpressionAnalysis;
 import ubic.gemma.model.association.coexpression.HumanProbeCoExpression;
 import ubic.gemma.model.association.coexpression.MouseProbeCoExpression;
 import ubic.gemma.model.association.coexpression.OtherProbeCoExpression;
@@ -115,10 +117,20 @@ public class LinkAnalysisService {
 
         // output
         if ( linkAnalysisConfig.isUseDb() && !linkAnalysisConfig.isTextOut() ) {
+            ProbeCoexpressionAnalysis analysis = linkAnalysisConfig.toAnalysis();
+            analysis.getProtocol().setDescription(
+                    ( analysis.getProtocol().getDescription() + "# FilterConfig:\n" + filterConfig.toString() ) );
+
+            
+            
+            Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
+            ees.add( ee );
+
             saveLinks( p2v, la );
         } else if ( linkAnalysisConfig.isTextOut() ) {
             writeLinks( la, new PrintWriter( System.out ) );
         }
+
         log.info( "Done with processing of " + ee );
 
     }

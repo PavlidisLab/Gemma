@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -79,9 +80,12 @@ public class GeneLinkCoexpressionAnalyzer {
      * @param stringency
      * @param toUseAnalysisName
      */
-    public void analyze( Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> toUseGenes,
-            int stringency, String toUseAnalysisName ) {
+    public void analyze( Set<ExpressionExperiment> expressionExperiments, Collection<Gene> toUseGenes, int stringency,
+            String toUseAnalysisName ) {
         Collection<Gene> processedGenes = new HashSet<Gene>();
+
+        log.info( "Starting gene link analysis '" + toUseAnalysisName + " on " + toUseGenes.size() + " genes in "
+                + expressionExperiments.size() + " experiments with a stringency of " + stringency );
 
         Taxon taxon = null;
         Map<Long, Gene> genesToAnalyzeMap = new HashMap<Long, Gene>();
@@ -108,6 +112,9 @@ public class GeneLinkCoexpressionAnalyzer {
                         analysis, genesToAnalyzeMap, processedGenes );
                 totalLinks += created.size();
                 processedGenes.add( gene );
+                if ( processedGenes.size() % 100 == 0 ) {
+                    log.info( "Processed " + processedGenes.size() + " genes..." );
+                }
             }
             analysis.setDescription( analysis.getDescription() + "; " + totalLinks + " gene pairs stored." );
             // analysisS.update( analysis );
@@ -116,6 +123,7 @@ public class GeneLinkCoexpressionAnalyzer {
             geneCoexpressionAnalysisService.delete( analysis );
             throw new RuntimeException( e );
         }
+        log.info( totalLinks + " gene pairs stored." );
     }
 
     /**
@@ -278,6 +286,7 @@ public class GeneLinkCoexpressionAnalyzer {
 
         Collection<Gene2GeneCoexpression> all = new ArrayList<Gene2GeneCoexpression>();
         Collection<Gene2GeneCoexpression> batch = new ArrayList<Gene2GeneCoexpression>();
+
         for ( CoexpressionValueObject co : toPersist.getCoexpressionData() ) {
 
             if ( !genesToAnalyze.containsKey( co.getGeneId() ) ) {
@@ -329,7 +338,9 @@ public class GeneLinkCoexpressionAnalyzer {
             all.addAll( this.gene2GeneCoexpressionService.create( batch ) );
             batch.clear();
         }
-        log.info( "Persited " + all.size() + " gene2geneCoexpressions for analysis: " + analysis.getName() );
+        if ( all.size() > 0 ) {
+            log.info( "Persisted " + all.size() + " gene2geneCoexpressions for analysis: " + analysis.getName() );
+        }
         return all;
 
     }

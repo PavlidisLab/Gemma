@@ -296,7 +296,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     protected Object handleGetCoexpressedGenes( final Gene gene, Collection ees, Integer stringency ) throws Exception {
         Gene givenG = gene;
         final long id = givenG.getId();
-        log.info( "Gene: " + gene.getName() );
+        log.debug( "Gene: " + gene.getName() );
 
         final String p2pClassName = getP2PClassName( givenG );
 
@@ -319,7 +319,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         overallWatch.stop();
         Long overallElapsed = overallWatch.getTime();
-        log.info( "Query took a total of " + overallElapsed + "ms (wall clock time)" );
+        if ( overallElapsed > 1000 )
+            log.info( "Query for " + gene.getName() + " took a total of " + overallElapsed + "ms (wall clock time)" );
         coexpressions.setElapsedWallTimeElapsed( overallElapsed );
         return coexpressions;
     }

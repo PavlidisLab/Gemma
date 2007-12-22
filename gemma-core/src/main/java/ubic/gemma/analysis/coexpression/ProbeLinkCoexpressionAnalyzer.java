@@ -76,13 +76,13 @@ public class ProbeLinkCoexpressionAnalyzer {
 
         StopWatch watch = new StopWatch();
         watch.start();
-        log.info( "Starting postprocessing" );
+        if ( log.isDebugEnabled() ) log.debug( "Starting postprocessing" );
         postProcessing( new GeneCoexpressionResults(), coexpressions );
 
         watch.stop();
         Long elapsed = watch.getTime();
         coexpressions.setPostProcessTime( elapsed );
-        log.info( "Done postprocessing; time for postprocessing: " + elapsed );
+        if ( elapsed > 1000 ) log.info( "Done postprocessing; time for postprocessing: " + elapsed );
         return coexpressions;
     }
 

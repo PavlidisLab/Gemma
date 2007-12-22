@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -64,7 +65,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
 
     protected Taxon taxon = null;
 
-    protected Collection<ExpressionExperiment> expressionExperiments;
+    protected Set<ExpressionExperiment> expressionExperiments;
 
     protected Collection<ExpressionExperiment> excludeExperiments;
 
@@ -148,9 +149,13 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
         } else if ( hasOption( 'q' ) ) {
             this.expressionExperiments = this.findExpressionExperimentsByQuery( getOptionValue( 'q' ), taxon );
         } else if ( taxon != null ) {
-            this.expressionExperiments = eeService.findByTaxon( taxon );
+            this.expressionExperiments = new HashSet( eeService.findByTaxon( taxon ) );
         } else {
-            this.expressionExperiments = eeService.loadAll();
+            this.expressionExperiments = new HashSet( eeService.loadAll() );
+        }
+
+        if ( expressionExperiments != null ) {
+            log.info( "Loaded " + this.expressionExperiments.size() + " expressionExperiments" );
         }
 
         if ( hasOption( 'x' ) ) {
@@ -210,11 +215,11 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
     // it.remove();
     // count++;
     // }
-    //            }
-    //            log.info( "Excluded " + count + " expression experiments" );
-    //        }
-    //        return ees;
-    //    }
+    // }
+    // log.info( "Excluded " + count + " expression experiments" );
+    // }
+    // return ees;
+    // }
 
     private Collection<String> readExpressionExperimentListFileToStrings( String fileName ) throws IOException {
         Collection<String> eeNames = new HashSet<String>();
@@ -236,8 +241,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
      * @return
      * @throws IOException
      */
-    private Collection<ExpressionExperiment> readExpressionExperimentListFile( String fileName ) throws IOException {
-        Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
+    private Set<ExpressionExperiment> readExpressionExperimentListFile( String fileName ) throws IOException {
+        Set<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
         for ( String eeName : readExpressionExperimentListFileToStrings( fileName ) ) {
             ExpressionExperiment ee = eeService.findByShortName( eeName );
             if ( ee == null ) {
@@ -254,8 +259,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
      * 
      * @param query
      */
-    private Collection<ExpressionExperiment> findExpressionExperimentsByQuery( String query, Taxon taxon ) {
-        Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
+    private Set<ExpressionExperiment> findExpressionExperimentsByQuery( String query, Taxon taxon ) {
+        Set<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
         Collection<SearchResult> eeSearchResults = searchService.search(
                 SearchSettings.ExpressionExperimentSearch( query ) ).get( ExpressionExperiment.class );
 

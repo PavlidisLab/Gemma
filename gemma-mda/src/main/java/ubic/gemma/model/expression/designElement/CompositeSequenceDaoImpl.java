@@ -398,9 +398,9 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
     @Override
     protected Map<CompositeSequence, Collection<Gene>> handleGetGenes( Collection compositeSequences ) throws Exception {
         Map<CompositeSequence, Collection<Gene>> returnVal = new HashMap<CompositeSequence, Collection<Gene>>();
-        
-        if (compositeSequences.size() == 0) return returnVal;
-        
+
+        if ( compositeSequences.size() == 0 ) return returnVal;
+
         for ( CompositeSequence cs : ( Collection<CompositeSequence> ) compositeSequences ) {
             returnVal.put( cs, new HashSet<Gene>() );
         }
@@ -422,13 +422,14 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         queryObject.addScalar( "gene", new LongType() );
 
         StopWatch watch = new StopWatch();
-        log.debug( "Beginning query" );
+        if ( log.isDebugEnabled() ) log.debug( "Beginning query" );
         watch.start();
 
         List result = queryObject.list();
 
-        log.debug( "Done with initial query in " + watch.getTime() + " ms, got " + result.size()
-                + " cs-to-gene mappings." );
+        if ( log.isDebugEnabled() )
+            log.debug( "Done with initial query in " + watch.getTime() + " ms, got " + result.size()
+                    + " cs-to-gene mappings." );
         watch.reset();
         watch.start();
 
@@ -455,7 +456,9 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
             return returnVal;
         }
 
-        log.debug( "Built cs -> gene map in " + watch.getTime() + " ms; fetching " + genesToFetch.size() + " genes." );
+        if ( log.isDebugEnabled() )
+            log.debug( "Built cs -> gene map in " + watch.getTime() + " ms; fetching " + genesToFetch.size()
+                    + " genes." );
         watch.reset();
         watch.start();
 
@@ -481,7 +484,8 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
             genes.addAll( geneQueryObject.list() );
         }
 
-        log.debug( "Got information on " + genes.size() + " genes in " + watch.getTime() + " ms" );
+        if ( log.isDebugEnabled() )
+            log.debug( "Got information on " + genes.size() + " genes in " + watch.getTime() + " ms" );
 
         Map<Long, Gene> geneIdMap = new HashMap<Long, Gene>();
         for ( Gene g : ( Collection<Gene> ) genes ) {
@@ -506,8 +510,9 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
             ++count;
         }
 
-        log.debug( "Done, " + count + " result rows processed, " + returnVal.size() + "/" + compositeSequences.size()
-                + " probes are associated with genes" );
+        if ( log.isDebugEnabled() )
+            log.debug( "Done, " + count + " result rows processed, " + returnVal.size() + "/"
+                    + compositeSequences.size() + " probes are associated with genes" );
         return returnVal;
     }
 

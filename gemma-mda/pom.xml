@@ -392,7 +392,6 @@
 					<plugin>
 						<groupId>org.codehaus.mojo</groupId>
 						<artifactId>sql-maven-plugin</artifactId>
-						<version>1.0-beta-2-SNAPSHOT</version>
 						<dependencies>
 							<dependency>
 								<groupId>mysql</groupId>
@@ -461,6 +460,22 @@
 										</srcFile>
 										<srcFile>
 											src/main/resources/sql/init-script.sql
+										</srcFile>
+									</srcFiles>
+									<onError>continue</onError>
+								</configuration>
+							</execution>
+							<execution>
+								<id>install-triggers</id>
+								<phase>process-test-resources</phase>
+								<goals>
+									<goal>execute</goal>
+								</goals>
+								<configuration>
+									<url>${gemma.testdb.build.url}</url>
+									<delimiter>|</delimiter>
+									<srcFiles>
+										<srcFile>src/main/resources/sql/init-triggers.sql
 										</srcFile>
 									</srcFiles>
 									<onError>continue</onError>

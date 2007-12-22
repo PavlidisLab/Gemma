@@ -26,7 +26,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.analysis.coexpression.GeneLinkCoexpressionAnalyzer;
-import ubic.gemma.model.analysis.GeneCoexpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 
@@ -37,7 +36,7 @@ import ubic.gemma.model.genome.Gene;
  */
 public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManipulatingCLI {
 
-    private static final int DEFAULT_STRINGINCY = 1;
+    private static final int DEFAULT_STRINGINCY = 2;
 
     public static void main( String[] args ) {
         Gene2GeneCoexpressionGeneratorCli p = new Gene2GeneCoexpressionGeneratorCli();
@@ -51,20 +50,11 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
         }
     }
 
-    GeneLinkCoexpressionAnalyzer geneVoteAnalyzer;
-    Collection<ExpressionExperiment> expressionExperiments;
+    private GeneLinkCoexpressionAnalyzer geneVoteAnalyzer;
+    private Collection<Gene> toUseGenes;
+    private int toUseStringency;
 
-    Collection<Gene> toUseGenes;
-    GeneCoexpressionAnalysis analysis;
-    int toUseStringency;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#buildOptions()
-     */
-
-    String toUseAnalysisName;
+    private String toUseAnalysisName;
 
     @SuppressWarnings("static-access")
     @Override
@@ -112,7 +102,6 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
     @SuppressWarnings("unchecked")
     @Override
     protected void processOptions() {
-
         super.processOptions();
         initSpringBeans();
 
