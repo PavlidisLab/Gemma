@@ -62,14 +62,14 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
         super.buildOptions();
 
         Option geneFileOption = OptionBuilder.hasArg().withArgName( "Gene List File Name" ).withDescription(
-                "A text file that contains a list of gene symbols.  a new gene symbol on each line" ).withLongOpt(
+                "A text file that contains a list of gene symbols, with one gene symbol on each line" ).withLongOpt(
                 "geneFile" ).create( 'g' );
 
-        Option stringencyOption = OptionBuilder.hasArg().withArgName( "Stringency" ).withDescription(
-                "The stringency value: Defaults to 2" ).withLongOpt( "stringency" ).create( 's' );
+        Option stringencyOption = OptionBuilder.hasArg().withArgName( "stringency" ).withDescription(
+                "The stringency value: Defaults to " + DEFAULT_STRINGINCY ).withLongOpt( "stringency" ).create( 's' );
 
-        Option analysisNameOption = OptionBuilder.hasArg().withArgName( "Analysis" ).withDescription(
-                "The name of the analysis to create. Defaults to a date stamp" ).withLongOpt( "analysis" ).create( 'a' );
+        Option analysisNameOption = OptionBuilder.hasArg().isRequired().withArgName( "name" ).withDescription(
+                "The name of the analysis to create" ).withLongOpt( "name" ).create( 'a' );
 
         addOption( geneFileOption );
         addOption( stringencyOption );
