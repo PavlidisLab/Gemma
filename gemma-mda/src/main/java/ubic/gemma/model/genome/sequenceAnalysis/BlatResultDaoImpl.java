@@ -63,42 +63,35 @@ public class BlatResultDaoImpl extends ubic.gemma.model.genome.sequenceAnalysis.
 
         return results;
     }
-    
-      /* (non-Javadoc)
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultDaoBase#findOrCreate(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
      */
     @Override
-    public ubic.gemma.model.genome.sequenceAnalysis.BlatResult findOrCreate(ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult){
+    public ubic.gemma.model.genome.sequenceAnalysis.BlatResult findOrCreate(
+            ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) {
         if ( blatResult.getQuerySequence() == null )
             throw new IllegalArgumentException( "BlatResult must have a querrySequence associated with it." );
-        
-        
+
         BlatResult result = this.find( blatResult );
-        if ( result != null )
-            return result;
-       
-        
+        if ( result != null ) return result;
+
         logger.debug( "Creating new BlatResult: " + blatResult.toString() );
         result = ( BlatResult ) create( blatResult );
         return result;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultDaoBase#handleLoad(java.util.Collection)
      */
     @Override
     protected Collection handleLoad( Collection ids ) throws Exception {
-        Collection<BlatResult> blatResults = null;
         final String queryString = "select distinct blatResult from BlatResultImpl blatResult where blatResult.id in (:ids)";
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameterList( "ids", ids );
-            blatResults = queryObject.list();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-        return blatResults;
+        return this.getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
     }
 
 }
