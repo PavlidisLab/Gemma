@@ -39,7 +39,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 
 /**
- * Perform probe-to-probe coexpression link analysis ("TMM-style"). probeLinkCoexpressionAnalyzer.linkAnalysis
+ * Perform probe-to-probe coexpression link analysis ("TMM-style").
  * 
  * @spring.bean id="probeLinkCoexpressionAnalyzer"
  * @spring.property name="geneService" ref="geneService"

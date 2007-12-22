@@ -35,6 +35,11 @@ import ubic.gemma.util.SequenceBinUtils;
  */
 public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlignedRegionDaoBase {
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.ProbeAlignedRegionDaoBase#find(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
+     */
     @SuppressWarnings("unchecked")
     @Override
     public Collection<ProbeAlignedRegion> find( BlatResult blatResult ) {
@@ -46,6 +51,11 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
 
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.ProbeAlignedRegionDaoBase#findByPhysicalLocation(ubic.gemma.model.genome.PhysicalLocation)
+     */
     @Override
     public Collection<ProbeAlignedRegion> findByPhysicalLocation( PhysicalLocation location ) {
         Chromosome chrom = location.getChromosome();
