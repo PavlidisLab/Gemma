@@ -398,6 +398,9 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
     @Override
     protected Map<CompositeSequence, Collection<Gene>> handleGetGenes( Collection compositeSequences ) throws Exception {
         Map<CompositeSequence, Collection<Gene>> returnVal = new HashMap<CompositeSequence, Collection<Gene>>();
+        
+        if (compositeSequences.size() == 0) return returnVal;
+        
         for ( CompositeSequence cs : ( Collection<CompositeSequence> ) compositeSequences ) {
             returnVal.put( cs, new HashSet<Gene>() );
         }
