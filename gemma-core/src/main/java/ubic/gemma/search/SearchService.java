@@ -32,6 +32,12 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheException;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
+import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -49,6 +55,7 @@ import org.compass.core.CompassSession;
 import org.compass.core.CompassTemplate;
 import org.compass.core.CompassTransaction;
 import org.compass.core.engine.SearchEngineException;
+import org.springframework.beans.factory.InitializingBean;
 
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.Auditable;
@@ -90,7 +97,7 @@ import ubic.gemma.util.ReflectionUtil;
  * @author keshav
  * @version $Id$
  */
-public class SearchService {
+public class SearchService implements InitializingBean {
 
     private static final double INDIRECT_DB_HIT_PENALTY = 0.8;
 
@@ -100,6 +107,23 @@ public class SearchService {
      * Global maximum number of search results that will be returned for index searches.
      */
     private static final int MAX_COMPASS_HITS_TO_DETACH = 1000;
+
+    /**
+     * How long an item in the cache lasts when it is not accessed.
+     */
+    private static final int ONTOLOGY_CACHE_TIME_TO_IDLE = 600;
+
+    /**
+     * How long after creation before an object is evicted.
+     */
+    private static final int ONTOLOGY_CACHE_TIME_TO_DIE = 2000;
+
+    Cache childTermCache;
+
+    /**
+     * How many term children can stay in memory
+     */
+    private static final int ONTOLOGY_INFO_CACHE_SIZE = 500;
 
     private static Log log = LogFactory.getLog( SearchService.class.getName() );
 
@@ -139,6 +163,32 @@ public class SearchService {
 
     public void setBiosequenceBean( Compass biosequenceBean ) {
         this.biosequenceBean = biosequenceBean;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
+     */
+    public void afterPropertiesSet() throws Exception {
+        try {
+            CacheManager manager = CacheManager.getInstance();
+
+            if ( manager.cacheExists( "OntologyChildrenCache" ) ) {
+                return;
+            }
+
+            childTermCache = new Cache( "OntologyChildrenCache", ONTOLOGY_INFO_CACHE_SIZE,
+                    MemoryStoreEvictionPolicy.LFU, false, null, false, ONTOLOGY_CACHE_TIME_TO_DIE,
+                    ONTOLOGY_CACHE_TIME_TO_IDLE, false, 500, null );
+
+            manager.addCache( childTermCache );
+            childTermCache = manager.getCache( "OntologyChildrenCache" );
+
+        } catch ( CacheException e ) {
+            throw new RuntimeException( e );
+        }
+
     }
 
     /**
@@ -465,30 +515,37 @@ public class SearchService {
             loopWatch.start();
 
             characteristicUris.add( term.getUri() );
+
             /*
-             * FIXME getChildren can be very slow for 'high-level' classes like "neoplasm".
+             * getChildren can be very slow for 'high-level' classes like "neoplasm", so we use a cache.
              */
-            Collection<OntologyTerm> children = term.getChildren( false );
-            for ( OntologyTerm child : children ) {
-                characteristicUris.add( child.getUri() );
+            Collection<OntologyTerm> children = null;
+            Element element = this.childTermCache.get( term );
+            if ( element == null ) {
+                children = term.getChildren( false );
+                for ( OntologyTerm child : children ) {
+                    characteristicUris.add( child.getUri() );
+                }
+                // possibly only put large ones in the cache. Small ones are fast enough.
+                childTermCache.put( new Element( term, characteristicUris ) );
+            } else {
+                if ( log.isDebugEnabled() ) log.debug( "Cache hit on " + term );
+                characteristicUris = ( Collection<String> ) element.getValue();
             }
 
-            // if ( loopWatch.getTime() > 1000 ) {
-            // if (children.size() > 0) {
-            // log.info( "==== Added Term and " + children.size() + " children for " + term.getUri() + " in "
-            // + loopWatch.getTime() + "ms" );
-            // }
             loopWatch.reset();
         }
 
-        // if ( watch.getTime() > 1000 ) {
-        log
-                .info( "Found " + characteristicUris.size() + " possible matches + child terms in " + watch.getTime()
-                        + "ms" );
-        // }
+        if ( watch.getTime() > 1000 ) {
+            log.info( "Found " + characteristicUris.size() + " possible matches + child terms in " + watch.getTime()
+                    + "ms" );
+        }
         watch.reset();
         watch.start();
 
+        /*
+         * Find occurrences of these terms in our system. This is fast, so long as there aren't too many.
+         */
         Collection<SearchResult> inSystem = dbHitsToSearchResult( new ArrayList<CharacteristicService>(
                 characteristicService.findByUri( characteristicUris ) ) );
 
@@ -496,6 +553,8 @@ public class SearchService {
         for ( SearchResult crs : inSystem ) {
             cs.add( ( Characteristic ) crs.getResultObject() );
         }
+
+        // / Owners of the characteristics is what we want.
         Map<Characteristic, Object> parentMap = characteristicService.getParents( cs );
         inSystem = filterCharacteristicOwnersByClass( classes, parentMap );
 
