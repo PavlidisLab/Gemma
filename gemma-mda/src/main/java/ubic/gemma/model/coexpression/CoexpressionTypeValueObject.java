@@ -53,7 +53,7 @@ public class CoexpressionTypeValueObject {
     private Map<Long, Map<Long, Collection<Long>>> crossHybridizingProbes; // this is raw data before stringincy is
 
     public CoexpressionTypeValueObject() {
-        
+
         positiveStringencyLinkCount = 0;
         negativeStringencyLinkCount = 0;
         numGenes = 0;
@@ -176,7 +176,6 @@ public class CoexpressionTypeValueObject {
         this.coexpressionData = coexpressionData;
     }
 
- 
     /**
      * @return the stringencyLinkCount
      */
@@ -211,7 +210,7 @@ public class CoexpressionTypeValueObject {
     public Collection<ExpressionExperimentValueObject> getExpressionExperiments() {
         return expressionExperiments.values();
     }
-    
+
     /**
      * @return a collection of expressionExperiment Ids that were searched for coexpression
      */
@@ -226,7 +225,7 @@ public class CoexpressionTypeValueObject {
      */
     public void addExpressionExperiment( ExpressionExperimentValueObject vo ) {
         Long id = vo.getId();
-        if ( !expressionExperiments.containsKey( id ) ) this.expressionExperiments.put( id, vo );
+        this.expressionExperiments.put( id, vo );
     }
 
     /**
@@ -234,22 +233,7 @@ public class CoexpressionTypeValueObject {
      * @return an expressionexperimentValueObject or null if it isn't there
      */
     public ExpressionExperimentValueObject getExpressionExperiment( Long eeID ) {
-
-        if ( expressionExperiments.containsKey( eeID ) ) return this.expressionExperiments.get( eeID );
-
-        return null;
-    }
-
-    /**
-     * Add a collection of expression experiment to the list
-     * 
-     * @param vo
-     */
-    public void addExpressionExperiments( Collection<ExpressionExperimentValueObject> vos ) {
-        synchronized ( vos ) {
-            for ( ExpressionExperimentValueObject eeVo : vos )
-                addExpressionExperiment( eeVo );
-        }
+        return this.expressionExperiments.get( eeID );
     }
 
     /**
@@ -286,7 +270,7 @@ public class CoexpressionTypeValueObject {
 
         ExpressionExperimentValueObject eeVo = expressionExperiments.get( id );
 
-        if (( eeVo == null) || ( eeVo.getRawCoexpressionLinkCount() == null ))
+        if ( ( eeVo == null ) || ( eeVo.getRawCoexpressionLinkCount() == null ) )
             return ( long ) 0;
         else
             return eeVo.getRawCoexpressionLinkCount();
@@ -296,7 +280,7 @@ public class CoexpressionTypeValueObject {
 
         ExpressionExperimentValueObject eeVo = expressionExperiments.get( id );
 
-        if (( eeVo == null) || (eeVo.getCoexpressionLinkCount() == null ))
+        if ( ( eeVo == null ) || ( eeVo.getCoexpressionLinkCount() == null ) )
             return ( long ) 0;
         else
             return eeVo.getCoexpressionLinkCount();

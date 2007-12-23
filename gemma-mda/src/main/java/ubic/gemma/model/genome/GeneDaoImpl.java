@@ -393,6 +393,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         } else if ( vo.getGeneType().equalsIgnoreCase( CoexpressionCollectionValueObject.PROBE_ALIGNED_REGION_IMPL ) ) {
             coexpressions.getProbeAlignedCoexpressionType().addSpecificityInfo( eeID, probeID, geneId );
         }
+         
     }
 
     /**

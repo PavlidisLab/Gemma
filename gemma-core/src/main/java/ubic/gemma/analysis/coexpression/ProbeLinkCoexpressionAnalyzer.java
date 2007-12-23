@@ -32,6 +32,7 @@ import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.coexpression.CoexpressionTypeValueObject;
 import ubic.gemma.model.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.coexpression.GeneCoexpressionResults;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -77,7 +78,7 @@ public class ProbeLinkCoexpressionAnalyzer {
         StopWatch watch = new StopWatch();
         watch.start();
         if ( log.isDebugEnabled() ) log.debug( "Starting postprocessing" );
-        postProcessing( new GeneCoexpressionResults(), coexpressions );
+        postProcessing( coexpressions );
 
         watch.stop();
         Long elapsed = watch.getTime();
@@ -126,7 +127,7 @@ public class ProbeLinkCoexpressionAnalyzer {
             ExpressionExperimentValueObject eeVo = coexpressions.getExpressionExperiment( eeID );
 
             if ( eeVo == null ) {
-                log.warn( "Looked for " + eeID + " but not in coexpressions object" );
+                log.warn( "Looked for ee id=" + eeID + " but not in coexpressions object" );
                 continue;
             }
             if ( eeVo.getRawCoexpressionLinkCount() == null )
@@ -137,20 +138,23 @@ public class ProbeLinkCoexpressionAnalyzer {
     }
 
     /**
-     * @param genes
+     * @param coexpressedGenes
      * @param coexpressions
      * @throws Exception
      */
     @SuppressWarnings("unchecked")
-    private void postProcessGeneImpls( Map<Long, CoexpressionValueObject> genes,
-            CoexpressionCollectionValueObject coexpressions ) {
+    private void postProcessKnownGenes( CoexpressionCollectionValueObject coexpressions ) {
+
+        Map<Long, CoexpressionValueObject> coexpressedGenes = coexpressions.getGeneMap().getGeneImplMap();
+        if ( coexpressedGenes.size() == 0 ) return;
 
         int positiveLinkCount = 0;
         int negativeLinkCount = 0;
         int numStringencyGenes = 0;
 
-        Map<Long, Collection<Gene>> querySpecificity = compositeSequenceService.getGenes( coexpressions
-                .getQueryGeneProbes() );
+        Collection<Long> queryGeneProbeIds = coexpressions.getQueryGeneProbes();
+
+        Map<Long, Collection<Long>> querySpecificity = geneService.getCS2GeneMap( queryGeneProbeIds );
         coexpressions.addQueryGeneSpecifityInfo( querySpecificity );
         Collection<Long> allQuerySpecificEE = coexpressions.getQueryGeneSpecificExpressionExperiments();
 
@@ -158,9 +162,8 @@ public class ProbeLinkCoexpressionAnalyzer {
                 .getSpecificExpressionExperiments();
         List<Long> allEEIds = new ArrayList<Long>( coexpressions.getGeneCoexpressionType().getExpressionExperimentIds() );
 
-        for ( Long geneId : genes.keySet() ) {
-            CoexpressionValueObject coExValObj = genes.get( geneId );
-
+        for ( Long geneId : coexpressedGenes.keySet() ) {
+            CoexpressionValueObject coExValObj = coexpressedGenes.get( geneId );
             // determine which EE's that contributed to this gene's coexpression were non-specific
             // an ee is specific iff the ee is specific for the query gene and the target gene.
             Collection<Long> nonspecificEE = new HashSet<Long>( coExValObj.getExpressionExperiments() );
@@ -172,17 +175,15 @@ public class ProbeLinkCoexpressionAnalyzer {
             nonspecificEE.removeAll( specificEE );
             coExValObj.setNonspecificEE( nonspecificEE );
             coExValObj.computeExperimentBits( allEEIds );
-
-            if ( coExValObj.getGeneName().equalsIgnoreCase( "RPL27" ) ) log.debug( "at gene rpl27" );
-
+ 
             // figure out which genes where culprits for making this gene non-specific
             Collection<Long> probes = coExValObj.getProbes();
             for ( Long eeID : nonspecificEE ) {
                 for ( Long probeID : probes ) {
                     if ( coexpressions.getGeneCoexpressionType().getNonSpecificGenes( eeID, probeID ) != null ) {
                         for ( Long geneID : coexpressions.getGeneCoexpressionType().getNonSpecificGenes( eeID, probeID ) ) {
-                            coExValObj.addNonSpecificGene( genes.get( geneID ).getGeneName() );
-                            if ( geneID == coexpressions.getQueryGene().getId() )
+                            coExValObj.addNonSpecificGene( coexpressedGenes.get( geneID ).getGeneName() );
+                            if ( geneID.equals( coexpressions.getQueryGene().getId() ) )
                                 coExValObj.setHybridizesWithQueryGene( true );
                         }
                     }
@@ -224,7 +225,7 @@ public class ProbeLinkCoexpressionAnalyzer {
         // add count of pruned matches to coexpression data
         coexpressions.getGeneCoexpressionType().setPositiveStringencyLinkCount( positiveLinkCount );
         coexpressions.getGeneCoexpressionType().setNegativeStringencyLinkCount( negativeLinkCount );
-        coexpressions.getGeneCoexpressionType().setNumberOfGenes( genes.size() );
+        coexpressions.getGeneCoexpressionType().setNumberOfGenes( coexpressedGenes.size() );
     }
 
     /**
@@ -233,19 +234,20 @@ public class ProbeLinkCoexpressionAnalyzer {
      * @param coexpressions
      */
     @SuppressWarnings("unchecked")
-    private void postProcessing( GeneCoexpressionResults geneMap, CoexpressionCollectionValueObject coexpressions ) {
-        postProcessGeneImpls( geneMap.getGeneImplMap(), coexpressions );
-        postProcessProbeAlignedRegions( geneMap.getProbeAlignedRegionMap(), coexpressions );
-        postProcessPredictedGenes( geneMap.getPredictedGeneMap(), coexpressions );
+    private void postProcessing( CoexpressionCollectionValueObject coexpressions ) {
+        postProcessKnownGenes( coexpressions );
+        postProcessProbeAlignedRegions( coexpressions );
+        postProcessPredictedGenes( coexpressions );
     }
 
     /**
      * @param genes
      * @param coexpressions
      */
-    private void postProcessPredictedGenes( Map<Long, CoexpressionValueObject> genes,
-            CoexpressionCollectionValueObject coexpressions ) {
+    private void postProcessPredictedGenes( CoexpressionCollectionValueObject coexpressions ) {
+        Map<Long, CoexpressionValueObject> genes = coexpressions.getGeneMap().getGeneImplMap();
 
+        if ( genes.size() == 0 ) return;
         List<Long> allEEIds = new ArrayList<Long>( coexpressions.getGeneCoexpressionType().getExpressionExperimentIds() );
 
         CoexpressionTypeValueObject predictedCoexpressionType = coexpressions.getPredictedCoexpressionType();
@@ -270,9 +272,10 @@ public class ProbeLinkCoexpressionAnalyzer {
      * @param genes
      * @param coexpressions
      */
-    private void postProcessProbeAlignedRegions( Map<Long, CoexpressionValueObject> genes,
-            CoexpressionCollectionValueObject coexpressions ) {
+    private void postProcessProbeAlignedRegions( CoexpressionCollectionValueObject coexpressions ) {
+        Map<Long, CoexpressionValueObject> genes = coexpressions.getGeneMap().getGeneImplMap();
 
+        if ( genes.size() == 0 ) return;
         int numStringencyProbeAlignedRegions = 0;
         List<Long> allEEIds = new ArrayList<Long>( coexpressions.getGeneCoexpressionType().getExpressionExperimentIds() );
 

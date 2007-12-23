@@ -39,6 +39,11 @@ import ubic.gemma.ontology.OntologyTerm;
  */
 public class CoexpressionValueObject {
 
+    @Override
+    public String toString() {
+        return geneName;
+    }
+
     private String geneName;
     private Long geneId;
     private String geneOfficialName;

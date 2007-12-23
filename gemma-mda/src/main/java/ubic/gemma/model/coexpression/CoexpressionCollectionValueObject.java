@@ -83,23 +83,26 @@ public class CoexpressionCollectionValueObject {
             this.alignedCoexpressionData.addExpressionExperiment( eevo );
         else if ( geneType.equalsIgnoreCase( PREDICTED_GENE_IMPL ) )
             this.predictedCoexpressionData.addExpressionExperiment( eevo );
+        else
+            throw new IllegalArgumentException( "Unknown gene type" + geneType );
     }
 
     /*
      * Given a list of probes to genes adds this information to the crossHybridizingQueryProbes allowing for the
      * specificty of the queried gene to be determined on a expression experiment level.
      */
-    public void addQueryGeneSpecifityInfo( Map<Long, Collection<Gene>> probe2GeneMap ) {
+    public void addQueryGeneSpecifityInfo( Map<Long, Collection<Long>> probe2GeneMap ) {
 
         synchronized ( crossHybridizingQueryProbes ) {
             for ( Long eeID : crossHybridizingQueryProbes.keySet() ) {
                 Map<Long, Collection<Long>> probe2genes = crossHybridizingQueryProbes.get( eeID );
                 for ( Long probeID : probe2genes.keySet() ) {
                     Collection<Long> genes = probe2genes.get( probeID );
-                    for ( Gene g : probe2GeneMap.get( probeID ) )
-                        genes.add( g.getId() );
+                    assert probe2GeneMap.containsKey( probeID );
+                    for ( Long g : probe2GeneMap.get( probeID ) )
+                        genes.add( g );
 
-                    if ( ( genes.size() == 1 ) && ( genes.iterator().next() == queryGene.getId() ) ) {
+                    if ( ( genes.size() == 1 ) && ( genes.iterator().next().equals( queryGene.getId() ) ) ) {
 
                         if ( this.predictedCoexpressionData.getExpressionExperiment( eeID ) != null )
                             this.predictedCoexpressionData.getExpressionExperiment( eeID ).setSpecific( true );
@@ -325,7 +328,7 @@ public class CoexpressionCollectionValueObject {
 
                     Collection<Long> genes = probe2geneMap.get( probeID );
 
-                    if ( ( genes.size() == 1 ) && ( genes.iterator().next() == queryGene.getId() ) ) {
+                    if ( ( genes.size() == 1 ) && ( genes.iterator().next().equals( queryGene.getId() ) ) ) {
                         log.debug( "Expression Experiment: + " + eeID + " is specific" );
                         specificEE.add( eeID );
                     }
