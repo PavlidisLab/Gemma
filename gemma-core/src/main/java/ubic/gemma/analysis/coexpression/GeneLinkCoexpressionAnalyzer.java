@@ -100,6 +100,8 @@ public class GeneLinkCoexpressionAnalyzer {
 
         GeneCoexpressionAnalysis analysis = intializeAnalysis( expressionExperiments, taxon, toUseGenes,
                 toUseAnalysisName );
+        assert analysis != null;
+
         int totalLinks = 0;
 
         Map<Long, Integer> eeIdOrder = getOrderingMap( expressionExperiments );
@@ -108,9 +110,11 @@ public class GeneLinkCoexpressionAnalyzer {
             for ( Gene gene : toUseGenes ) {
                 CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis( gene,
                         expressionExperiments, stringency );
-                Collection<Gene2GeneCoexpression> created = persistCoexpressions( eeIdOrder, gene, coexpressions,
-                        analysis, genesToAnalyzeMap, processedGenes );
-                totalLinks += created.size();
+                if ( coexpressions.getNumGenes() > 0 ) {
+                    Collection<Gene2GeneCoexpression> created = persistCoexpressions( eeIdOrder, gene, coexpressions,
+                            analysis, genesToAnalyzeMap, processedGenes );
+                    totalLinks += created.size();
+                }
                 processedGenes.add( gene );
                 if ( processedGenes.size() % 100 == 0 ) {
                     log.info( "Processed " + processedGenes.size() + " genes..." );
@@ -278,6 +282,8 @@ public class GeneLinkCoexpressionAnalyzer {
     private Collection<Gene2GeneCoexpression> persistCoexpressions( Map<Long, Integer> eeIdOrder, Gene firstGene,
             CoexpressionCollectionValueObject toPersist, GeneCoexpressionAnalysis analysis,
             final Map<Long, Gene> genesToAnalyze, final Collection<Gene> alreadyPersisted ) {
+
+        assert analysis != null;
 
         Taxon taxon = firstGene.getTaxon();
         Gene2GeneCoexpression g2gCoexpression = getNewGGCOInstance( taxon );

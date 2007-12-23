@@ -345,12 +345,12 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * 
      * @param queryGene
      * @param geneMap
-     * @param scroll
+     * @param resultSet
      */
-    private void processCoexpQueryResult( Gene queryGene, GeneCoexpressionResults geneMap, ScrollableResults scroll,
+    private void processCoexpQueryResult( Gene queryGene, GeneCoexpressionResults geneMap, ScrollableResults resultSet,
             CoexpressionCollectionValueObject coexpressions ) {
         CoexpressionValueObject vo;
-        Long geneId = scroll.getLong( 0 );
+        Long geneId = resultSet.getLong( 0 );
         // check to see if geneId is already in the geneMap
 
         if ( geneMap.contains( geneId ) ) {
@@ -358,9 +358,9 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         } else {
             vo = new CoexpressionValueObject();
             vo.setGeneId( geneId );
-            vo.setGeneName( scroll.getString( 1 ) );
-            vo.setGeneOfficialName( scroll.getString( 2 ) );
-            vo.setGeneType( scroll.getString( 8 ) );
+            vo.setGeneName( resultSet.getString( 1 ) );
+            vo.setGeneOfficialName( resultSet.getString( 2 ) );
+            vo.setGeneType( resultSet.getString( 8 ) );
             vo.setStringencyFilterValue( coexpressions.getStringency() );
             geneMap.put( vo );
         }
@@ -368,26 +368,26 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         vo.setTaxonId( queryGene.getTaxon().getId() );
 
         // add the expression experiment
-        Long eeID = scroll.getLong( 3 );
+        Long eeID = resultSet.getLong( 3 );
         ExpressionExperimentValueObject eeVo = coexpressions.getExpressionExperiment( vo.getGeneType(), eeID );
 
         if ( eeVo == null ) {
             eeVo = new ExpressionExperimentValueObject();
             eeVo.setId( eeID );
-            eeVo.setName( scroll.getString( 9 ) );
+            eeVo.setName( resultSet.getString( 9 ) );
             coexpressions.addExpressionExperiment( vo.getGeneType(), eeVo );
         }
 
         vo.addExpressionExperimentValueObject( eeVo );
         coexpressions.addExpressionExperiment( vo.getGeneType(), eeVo );
 
-        Long probeID = scroll.getLong( 7 );
-        vo.addScore( eeID, scroll.getDouble( 5 ), probeID );
-        vo.addPValue( eeID, scroll.getDouble( 4 ), probeID );
+        Long probeID = resultSet.getLong( 7 );
+        vo.addScore( eeID, resultSet.getDouble( 5 ), probeID );
+        vo.addPValue( eeID, resultSet.getDouble( 4 ), probeID );
 
         if ( vo.getGeneType().equalsIgnoreCase( CoexpressionCollectionValueObject.GENE_IMPL ) ) {
             coexpressions.getGeneCoexpressionType().addSpecificityInfo( eeID, probeID, geneId );
-            coexpressions.addQuerySpecifityInfo( eeID, scroll.getLong( 6 ) );
+            coexpressions.addQuerySpecifityInfo( eeID, resultSet.getLong( 6 ) );
         } else if ( vo.getGeneType().equalsIgnoreCase( CoexpressionCollectionValueObject.PREDICTED_GENE_IMPL ) ) {
             coexpressions.getPredictedCoexpressionType().addSpecificityInfo( eeID, probeID, geneId );
         } else if ( vo.getGeneType().equalsIgnoreCase( CoexpressionCollectionValueObject.PROBE_ALIGNED_REGION_IMPL ) ) {
