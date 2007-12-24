@@ -52,7 +52,8 @@ public class DifferentialExpressionAnalyzerService {
     private static final String DIFFERENTIAL_EXPRESSION = "differential";
     private static final String ONE_WAY_ANOVA = "one";
     private static final String TWO_WAY_ANOVA = "two";
-    private static final int NUM_RESULT_SETS_OWA = 1;// num one way anova sets
+    private static final int NUM_OWA_RESULT_SETS = 1;// num one way anova sets
+    private static final int NUM_TWA_FACTORS = 2;// num two way anova factors
 
     private Log log = LogFactory.getLog( this.getClass() );
     private ExpressionExperimentService expressionExperimentService = null;
@@ -174,7 +175,7 @@ public class DifferentialExpressionAnalyzerService {
     }
 
     /**
-     * Returns the top results of a one way anova for the experiment
+     * Returns the top results of a one way anova for the experiment.
      * 
      * @param top
      * @param ee
@@ -190,7 +191,7 @@ public class DifferentialExpressionAnalyzerService {
 
         log.info( "Getting one way anova results for experiment: " + ee.getShortName() );
 
-        if ( resultSets.size() != NUM_RESULT_SETS_OWA )
+        if ( resultSets.size() != NUM_OWA_RESULT_SETS )
             throw new RuntimeException( "Invalid number of result sets for analysis for experiment: "
                     + ee.getShortName() );
         ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
@@ -205,7 +206,8 @@ public class DifferentialExpressionAnalyzerService {
     }
 
     /**
-     * Returns the top results of a two way anova for an experiment with shortName and the given factor.
+     * Returns the top results of a two way anova for an experiment with shortName and the given factor. If the analysis
+     * has already been run, the analysis is re-run only if forceAnalysis is true.
      * 
      * @param shortName
      * @param top
@@ -237,6 +239,9 @@ public class DifferentialExpressionAnalyzerService {
     }
 
     /**
+     * Returns the top results of a two way anova for an experiment with shortName and the given factor. If the analysis
+     * has already been run, the analysis is re-run only if forceAnalysis is true.
+     * 
      * @param ee
      * @param factor
      * @param top
@@ -254,8 +259,68 @@ public class DifferentialExpressionAnalyzerService {
         log.info( "Getting two way anova results for experiment: " + ee.getShortName() );
 
         for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
-            if ( factor.equals( resultSet.getExperimentalFactor() ) ) {
-                log.info( "Returning top results for factor with" + "\'" + factor.getName() + "\'"
+            Collection<ExperimentalFactor> factorFromResultSet = resultSet.getExperimentalFactor();
+            for ( ExperimentalFactor f : factorFromResultSet ) {
+                if ( factor.equals( f ) ) {
+                    log.info( "Returning top results for factor with" + "\'" + factor.getName() + "\'"
+                            + " in the name (or description)." );
+                    Collection<DifferentialExpressionAnalysisResult> analysisResults = resultSet.getResults();
+                    top = setTopLimit( ee.getShortName(), top, analysisResults );
+                    List<DifferentialExpressionAnalysisResult> topResults = sortResults( top, analysisResults );
+                    return topResults;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns the top interaction results for a two way anova (with interactions).
+     * 
+     * @param ee
+     * @param factorA
+     * @param factorB
+     * @param top
+     * @param forceAnalysis
+     * @return
+     */
+    public Collection<DifferentialExpressionAnalysisResult> getTopInteractionResults( String shortName, int top,
+            boolean forceAnalysis ) {
+
+        ExpressionExperiment ee = expressionExperimentService.findByShortName( shortName );
+        if ( ee == null ) {
+            log.error( "Could not find expeiment with name: " + shortName + ".  Returning ..." );
+            return null;
+        }
+        expressionExperimentService.thawLite( ee );
+
+        return this.getTopInteractionResults( ee, top, forceAnalysis );
+    }
+
+    /**
+     * Returns the top interaction results for a two way anova (with interactions).
+     * 
+     * @param ee
+     * @param factors
+     * @param top
+     * @param forceAnalysis
+     * @return
+     */
+    public Collection<DifferentialExpressionAnalysisResult> getTopInteractionResults( ExpressionExperiment ee, int top,
+            boolean forceAnalysis ) {
+        ExpressionAnalysis analysis = getExpressionAnalysis( ee, forceAnalysis, TWO_WAY_ANOVA );
+        if ( analysis == null ) return null;
+
+        Collection<ExpressionAnalysisResultSet> resultSets = analysis.getResultSets();
+
+        log.info( "Getting two way anova results for experiment: " + ee.getShortName() );
+
+        for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
+            Collection<ExperimentalFactor> factorsFromResult = resultSet.getExperimentalFactor();
+            // FIXME this is kind of cheating by only checking the size
+            if ( factorsFromResult.size() == NUM_TWA_FACTORS ) {
+                log.info( "Returning top interaction results for factors " + "\'" + factorsFromResult.iterator().next()
+                        + "\'" + " and \'" + factorsFromResult.iterator().next() + "\'"
                         + " in the name (or description)." );
                 Collection<DifferentialExpressionAnalysisResult> analysisResults = resultSet.getResults();
                 top = setTopLimit( ee.getShortName(), top, analysisResults );
@@ -263,10 +328,11 @@ public class DifferentialExpressionAnalyzerService {
                 return topResults;
             }
         }
+        log.error( "No interaction results found for " + ee.getShortName() + ".  Returning null ..." );
         return null;
     }
 
-    // TODO add getResultForProbe and getTopInteractionResults
+    // TODO add getResultsForProbe
 
     /**
      * @param analyses
