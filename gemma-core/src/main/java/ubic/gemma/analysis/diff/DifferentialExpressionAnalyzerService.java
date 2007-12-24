@@ -341,6 +341,7 @@ public class DifferentialExpressionAnalyzerService {
      * @return
      */
     private ExpressionAnalysis getAnalysisFromAnalyses( Collection<ExpressionAnalysis> analyses, String analysisType ) {
+        // TODO use a DifferentialExpressionAnalysis instead
         ExpressionAnalysis analysis = null;
         for ( ExpressionAnalysis a : analyses ) {
 
