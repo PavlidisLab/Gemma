@@ -246,6 +246,11 @@ public class DifferentialExpressionAnalyzerService {
             }
         }
 
+        if ( factorToUse == null ) {
+            log.error( "No matching factor.  Returning ..." );
+            return null;
+        }
+
         return getTopResultsForFactor( ee, factorToUse, top, forceAnalysis );
     }
 
