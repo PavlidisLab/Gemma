@@ -80,7 +80,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * @see ubic.gemma.analysis.diff.AbstractDifferentialExpressionAnalyzer#getExpressionAnalysis(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
-    public ExpressionAnalysis getExpressionAnalysis( ExpressionExperiment expressionExperiment ) {
+    public DifferentialExpressionAnalysis getDifferentialExpressionAnalysis( ExpressionExperiment expressionExperiment ) {
 
         return oneWayAnova( expressionExperiment );
     }
@@ -89,7 +89,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * @param expressionExperiment
      * @return
      */
-    public ExpressionAnalysis oneWayAnova( ExpressionExperiment expressionExperiment ) {
+    public DifferentialExpressionAnalysis oneWayAnova( ExpressionExperiment expressionExperiment ) {
 
         connectToR();
 

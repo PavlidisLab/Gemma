@@ -28,8 +28,8 @@ import org.rosuda.JRclient.REXP;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -71,7 +71,7 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
      *      ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
     @Override
-    public ExpressionAnalysis twoWayAnova( ExpressionExperiment expressionExperiment,
+    public DifferentialExpressionAnalysis twoWayAnova( ExpressionExperiment expressionExperiment,
             ExperimentalFactor experimentalFactorA, ExperimentalFactor experimentalFactorB ) {
 
         connectToR();

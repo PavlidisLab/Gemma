@@ -35,7 +35,6 @@ import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -110,8 +109,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                     }
 
                     try {
-                        Collection<ExpressionAnalysis> expressionAnalyses = this.differentialExpressionAnalyzerService
-                                .getExpressionAnalyses( ee, forceAnalysis );
+                        Collection<DifferentialExpressionAnalysis> expressionAnalyses = this.differentialExpressionAnalyzerService
+                                .getDifferentialExpressionAnalyses( ee, forceAnalysis );
 
                         logProcessing( expressionAnalyses );
 
@@ -145,8 +144,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                         }
 
                         try {
-                            Collection<ExpressionAnalysis> expressionAnalyses = this.differentialExpressionAnalyzerService
-                                    .getExpressionAnalyses( expressionExperiment, forceAnalysis );
+                            Collection<DifferentialExpressionAnalysis> expressionAnalyses = this.differentialExpressionAnalyzerService
+                                    .getDifferentialExpressionAnalyses( expressionExperiment, forceAnalysis );
 
                             logProcessing( expressionAnalyses );
                             successObjects.add( expressionExperiment.toString() );
@@ -174,8 +173,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 eeService.thaw( expressionExperiment );
 
                 try {
-                    Collection<ExpressionAnalysis> expressionAnalyses = this.differentialExpressionAnalyzerService
-                            .getExpressionAnalyses( expressionExperiment, forceAnalysis );
+                    Collection<DifferentialExpressionAnalysis> expressionAnalyses = this.differentialExpressionAnalyzerService
+                            .getDifferentialExpressionAnalyses( expressionExperiment, forceAnalysis );
 
                     logProcessing( expressionAnalyses );
 
@@ -240,8 +239,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     /**
      * @param expressionAnalyses
      */
-    private void logProcessing( Collection<ExpressionAnalysis> expressionAnalyses ) {
-        for ( ExpressionAnalysis analysis : expressionAnalyses ) {
+    private void logProcessing( Collection<DifferentialExpressionAnalysis> expressionAnalyses ) {
+        for ( DifferentialExpressionAnalysis analysis : expressionAnalyses ) {
             logProcessing( analysis );
         }
     }
@@ -249,7 +248,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     /**
      * @param expressionAnalysis
      */
-    private void logProcessing( ExpressionAnalysis expressionAnalysis ) {
+    private void logProcessing( DifferentialExpressionAnalysis expressionAnalysis ) {
 
         log.debug( "Summarizing results for expression analysis of type: " + expressionAnalysis.getName() );
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();

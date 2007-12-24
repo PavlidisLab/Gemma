@@ -68,7 +68,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
      * @param quantitationType
      * @return
      */
-    protected ExpressionAnalysis createExpressionAnalysis( ExpressionDataDoubleMatrix dmatrix,
+    protected DifferentialExpressionAnalysis createExpressionAnalysis( ExpressionDataDoubleMatrix dmatrix,
             double[] filteredPvalues, double[] filteredFStatistics, int numResultsFromR,
             ExperimentalFactor experimentalFactorA, ExperimentalFactor experimentalFactorB,
             QuantitationType quantitationType ) {
@@ -161,7 +161,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
      * @see ubic.gemma.analysis.diff.AbstractAnalyzer#getExpressionAnalysis(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
-    public ExpressionAnalysis getExpressionAnalysis( ExpressionExperiment expressionExperiment ) {
+    public DifferentialExpressionAnalysis getDifferentialExpressionAnalysis( ExpressionExperiment expressionExperiment ) {
 
         Collection<ExperimentalFactor> experimentalFactors = expressionExperiment.getExperimentalDesign()
                 .getExperimentalFactors();
@@ -187,7 +187,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
      * @param experimentalFactorB
      * @return
      */
-    public abstract ExpressionAnalysis twoWayAnova( ExpressionExperiment expressionExperiment,
+    public abstract DifferentialExpressionAnalysis twoWayAnova( ExpressionExperiment expressionExperiment,
             ExperimentalFactor experimentalFactorA, ExperimentalFactor experimentalFactorB );
 
 }

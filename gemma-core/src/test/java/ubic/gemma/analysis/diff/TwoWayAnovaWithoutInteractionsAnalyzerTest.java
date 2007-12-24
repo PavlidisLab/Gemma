@@ -23,7 +23,7 @@ import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
+import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
 
 /**
@@ -67,9 +67,10 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
 
         configureMocks();
 
-        ExpressionAnalysis expressionAnalysis = analyzer.getExpressionAnalysis( expressionExperiment );
+        DifferentialExpressionAnalysis differentialExpressionAnalysis = analyzer
+                .getDifferentialExpressionAnalysis( expressionExperiment );
 
-        Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
+        Collection<ExpressionAnalysisResultSet> resultSets = differentialExpressionAnalysis.getResultSets();
 
         assertEquals( NUM_TWA_RESULT_SETS - 1, resultSets.size() );
 

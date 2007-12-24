@@ -18,6 +18,7 @@
  */
 package ubic.gemma.analysis.diff;
 
+import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -36,7 +37,8 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
      * @param expressionExperiment
      * @return ExpressionAnalysis
      */
-    public abstract ExpressionAnalysis getExpressionAnalysis( ExpressionExperiment expressionExperiment );
+    public abstract DifferentialExpressionAnalysis getDifferentialExpressionAnalysis(
+            ExpressionExperiment expressionExperiment );
 
     /**
      * Sets the name and description on the analysis. Typically, this involves terms like "differential", "one", "two",

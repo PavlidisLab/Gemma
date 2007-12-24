@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -29,6 +30,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
@@ -60,6 +62,48 @@ public class DifferentialExpressionAnalyzerService {
     private DifferentialExpressionAnalyzer differentialExpressionAnalyzer = null;
 
     /**
+     * Finds the persistent expression experiment. If there are no associated analyses with this experiment, the
+     * differential expression analysis is first run and persisted if forceAnalysis = true and then returned.
+     * 
+     * @param expressionExperiment
+     * @param forceAnalysis
+     * @return
+     */
+    public Collection<DifferentialExpressionAnalysis> getDifferentialExpressionAnalyses(
+            ExpressionExperiment expressionExperiment, boolean forceAnalysis ) {
+
+        runDifferentialExpressionAnalysis( expressionExperiment, forceAnalysis );
+
+        Collection<ExpressionAnalysis> expressionAnalyses = expressionExperiment.getExpressionAnalyses();
+
+        DifferentialExpressionAnalysis expressionAnalysis = differentialExpressionAnalyzer.getExpressionAnalysis();
+
+        if ( expressionAnalysis == null ) {
+            // TODO get results from database. For now returning null.
+            return null;
+        }
+
+        Collection<ExpressionExperiment> experimentsAnalyzed = expressionAnalysis.getExperimentsAnalyzed();
+        experimentsAnalyzed.add( expressionExperiment );
+        expressionAnalysis.setExperimentsAnalyzed( experimentsAnalyzed );
+
+        expressionAnalyses.add( expressionAnalysis );
+        expressionExperiment.setExpressionAnalyses( expressionAnalyses );
+
+        expressionExperimentService.update( expressionExperiment );
+
+        Collection<DifferentialExpressionAnalysis> differentialExpressionAnalyses = new HashSet<DifferentialExpressionAnalysis>();
+        for ( ExpressionAnalysis ea : expressionAnalyses ) {
+            if ( ea instanceof DifferentialExpressionAnalysis ) {
+                DifferentialExpressionAnalysis dea = ( DifferentialExpressionAnalysis ) ea;
+                differentialExpressionAnalyses.add( dea );
+            }
+        }
+
+        return differentialExpressionAnalyses;
+    }
+
+    /**
      * Run differential expression on the {@link ExpressionExperiment} if analyses do not already exist. If forceRun =
      * true, run even if analyses exist.
      * 
@@ -83,57 +127,24 @@ public class DifferentialExpressionAnalyzerService {
     }
 
     /**
-     * Finds the persistent expression experiment. If there are no associated analyses with this experiment, the
-     * differential expression analysis is first run and persisted if forceAnalysis = true and then returned.
-     * 
-     * @param expressionExperiment
-     * @param forceAnalysis
-     * @return
-     */
-    public Collection<ExpressionAnalysis> getExpressionAnalyses( ExpressionExperiment expressionExperiment,
-            boolean forceAnalysis ) {
-
-        runDifferentialExpressionAnalysis( expressionExperiment, forceAnalysis );
-
-        Collection<ExpressionAnalysis> expressionAnalyses = expressionExperiment.getExpressionAnalyses();
-
-        ExpressionAnalysis expressionAnalysis = differentialExpressionAnalyzer.getExpressionAnalysis();
-
-        if ( expressionAnalysis == null ) {
-            // TODO get results from database. For now returning null.
-            return null;
-        }
-
-        Collection<ExpressionExperiment> experimentsAnalyzed = expressionAnalysis.getExperimentsAnalyzed();
-        experimentsAnalyzed.add( expressionExperiment );
-        expressionAnalysis.setExperimentsAnalyzed( experimentsAnalyzed );
-
-        expressionAnalyses.add( expressionAnalysis );
-        expressionExperiment.setExpressionAnalyses( expressionAnalyses );
-
-        expressionExperimentService.update( expressionExperiment );
-
-        return expressionAnalyses;
-    }
-
-    /**
      * @param ee
      * @param forceAnalysis
      * @return
      */
-    private ExpressionAnalysis getExpressionAnalysis( ExpressionExperiment ee, boolean forceAnalysis,
-            String analysisType ) {
-        Collection<ExpressionAnalysis> analyses = this.getExpressionAnalyses( ee, forceAnalysis );
+    private DifferentialExpressionAnalysis getDifferentialExpressionAnalysis( ExpressionExperiment ee,
+            boolean forceAnalysis, String analysisType ) {
+        Collection<DifferentialExpressionAnalysis> analyses = this
+                .getDifferentialExpressionAnalyses( ee, forceAnalysis );
         if ( analyses.isEmpty() ) {
             if ( !forceAnalysis ) {
                 log.error( "No analyses associated with experiment: " + ee.getShortName() );
                 return null;
             }
             runDifferentialExpressionAnalysis( ee, forceAnalysis );
-            analyses = this.getExpressionAnalyses( ee, forceAnalysis );
+            analyses = this.getDifferentialExpressionAnalyses( ee, forceAnalysis );
         }
 
-        ExpressionAnalysis analysis = getAnalysisFromAnalyses( analyses, analysisType );
+        DifferentialExpressionAnalysis analysis = getDifferentialExpressionAnalysisFromAnalyses( analyses, analysisType );
 
         if ( analysis == null ) {
             if ( !forceAnalysis ) {
@@ -144,7 +155,7 @@ public class DifferentialExpressionAnalyzerService {
             }
             log.debug( "Was told to run analyis.  Running now ... " );
             this.runDifferentialExpressionAnalysis( ee, forceAnalysis );
-            analysis = getAnalysisFromAnalyses( analyses, analysisType );
+            analysis = getDifferentialExpressionAnalysisFromAnalyses( analyses, analysisType );
         }
 
         return analysis;
@@ -184,7 +195,7 @@ public class DifferentialExpressionAnalyzerService {
     public Collection<DifferentialExpressionAnalysisResult> getTopResults( ExpressionExperiment ee, int top,
             boolean forceAnalysis ) {
 
-        ExpressionAnalysis analysis = getExpressionAnalysis( ee, forceAnalysis, ONE_WAY_ANOVA );
+        ExpressionAnalysis analysis = getDifferentialExpressionAnalysis( ee, forceAnalysis, ONE_WAY_ANOVA );
         if ( analysis == null ) return null;
 
         Collection<ExpressionAnalysisResultSet> resultSets = analysis.getResultSets();
@@ -251,7 +262,7 @@ public class DifferentialExpressionAnalyzerService {
     public Collection<DifferentialExpressionAnalysisResult> getTopResultsForFactor( ExpressionExperiment ee,
             ExperimentalFactor factor, int top, boolean forceAnalysis ) {
 
-        ExpressionAnalysis analysis = getExpressionAnalysis( ee, forceAnalysis, TWO_WAY_ANOVA );
+        ExpressionAnalysis analysis = getDifferentialExpressionAnalysis( ee, forceAnalysis, TWO_WAY_ANOVA );
         if ( analysis == null ) return null;
 
         Collection<ExpressionAnalysisResultSet> resultSets = analysis.getResultSets();
@@ -308,7 +319,7 @@ public class DifferentialExpressionAnalyzerService {
      */
     public Collection<DifferentialExpressionAnalysisResult> getTopInteractionResults( ExpressionExperiment ee, int top,
             boolean forceAnalysis ) {
-        ExpressionAnalysis analysis = getExpressionAnalysis( ee, forceAnalysis, TWO_WAY_ANOVA );
+        ExpressionAnalysis analysis = getDifferentialExpressionAnalysis( ee, forceAnalysis, TWO_WAY_ANOVA );
         if ( analysis == null ) return null;
 
         Collection<ExpressionAnalysisResultSet> resultSets = analysis.getResultSets();
@@ -340,10 +351,11 @@ public class DifferentialExpressionAnalyzerService {
      * @param analysisType
      * @return
      */
-    private ExpressionAnalysis getAnalysisFromAnalyses( Collection<ExpressionAnalysis> analyses, String analysisType ) {
+    private DifferentialExpressionAnalysis getDifferentialExpressionAnalysisFromAnalyses(
+            Collection<DifferentialExpressionAnalysis> analyses, String analysisType ) {
         // TODO use a DifferentialExpressionAnalysis instead
-        ExpressionAnalysis analysis = null;
-        for ( ExpressionAnalysis a : analyses ) {
+        DifferentialExpressionAnalysis analysis = null;
+        for ( DifferentialExpressionAnalysis a : analyses ) {
 
             if ( StringUtils.equalsIgnoreCase( a.getName().toLowerCase(), DIFFERENTIAL_EXPRESSION.toLowerCase() )
                     || StringUtils.contains( a.getDescription().toLowerCase(), DIFFERENTIAL_EXPRESSION.toLowerCase() ) ) {

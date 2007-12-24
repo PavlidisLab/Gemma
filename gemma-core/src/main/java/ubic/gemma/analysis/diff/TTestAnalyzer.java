@@ -76,7 +76,7 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
      * @see ubic.gemma.analysis.diff.AbstractAnalyzer#getExpressionAnalysis(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
-    public ExpressionAnalysis getExpressionAnalysis( ExpressionExperiment expressionExperiment ) {
+    public DifferentialExpressionAnalysis getDifferentialExpressionAnalysis( ExpressionExperiment expressionExperiment ) {
 
         Collection<ExperimentalFactor> experimentalFactors = expressionExperiment.getExperimentalDesign()
                 .getExperimentalFactors();
@@ -109,8 +109,8 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
      * @return
      */
     @SuppressWarnings("unchecked")
-    protected ExpressionAnalysis tTest( ExpressionExperiment expressionExperiment, FactorValue factorValueA,
-            FactorValue factorValueB ) {
+    protected DifferentialExpressionAnalysis tTest( ExpressionExperiment expressionExperiment,
+            FactorValue factorValueA, FactorValue factorValueB ) {
 
         connectToR();
 

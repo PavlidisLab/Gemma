@@ -23,7 +23,7 @@ import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
+import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -60,7 +60,7 @@ public class DifferentialExpressionAnalyzer {
     private TwoWayAnovaWithoutInteractionsAnalyzer twoWayAnovaWithoutInteractionsAnalyzer = null;
     private AnalyzerHelper analyzerHelper = null;
 
-    ExpressionAnalysis expressionAnalysis = null;
+    DifferentialExpressionAnalysis expressionAnalysis = null;
 
     /**
      * Initiates the differential expression analysis (this is the entry point).
@@ -71,7 +71,7 @@ public class DifferentialExpressionAnalyzer {
 
         AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment );
 
-        expressionAnalysis = analyzer.getExpressionAnalysis( expressionExperiment );
+        expressionAnalysis = analyzer.getDifferentialExpressionAnalysis( expressionExperiment );
 
     }
 
@@ -80,7 +80,7 @@ public class DifferentialExpressionAnalyzer {
      * 
      * @return
      */
-    public ExpressionAnalysis getExpressionAnalysis() {
+    public DifferentialExpressionAnalysis getExpressionAnalysis() {
         if ( expressionAnalysis == null ) return null;
 
         return expressionAnalysis;
