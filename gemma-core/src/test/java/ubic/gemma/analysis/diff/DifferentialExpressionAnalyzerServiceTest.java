@@ -30,7 +30,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @author keshav
  * @version $Id$
  */
-public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContextTest {
+public class DifferentialExpressionAnalyzerServiceTest extends BaseSpringContextTest {
 
     private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService = null;
 

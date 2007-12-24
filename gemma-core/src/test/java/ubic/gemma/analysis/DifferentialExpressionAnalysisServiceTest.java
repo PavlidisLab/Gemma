@@ -25,7 +25,6 @@ import java.util.HashSet;
 import java.util.Map;
 
 import ubic.gemma.model.analysis.Analysis;
-import ubic.gemma.model.analysis.AnalysisService;
 import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.Investigation;
