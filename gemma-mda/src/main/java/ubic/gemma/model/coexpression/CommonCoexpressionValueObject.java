@@ -29,54 +29,54 @@ import org.apache.commons.lang.StringUtils;
 import ubic.gemma.model.genome.Gene;
 
 /**
- * @author luke The CommonCoexpressionValueObject 
+ * @author luke The CommonCoexpressionValueObject
  */
 public class CommonCoexpressionValueObject {
-    
-//    private String geneName;
-//    private Long geneId;
-//    private String geneOfficialName;
-//    private String geneType;
-    
+
+    // private String geneName;
+    // private Long geneId;
+    // private String geneOfficialName;
+    // private String geneType;
+
     private Gene gene;
-    
+
     private Collection<Gene> commonCoexpressedQueryGenes;
     private Collection<Gene> commonPositiveCoexpressedQueryGenes;
     private Collection<Gene> commonNegativeCoexpressedQueryGenes;
-    
+
     private Collection<Long> positiveExperimentIds;
     private Collection<Long> negativeExperimentIds;
-    
+
     private List<Integer> experimentBitList = new ArrayList<Integer>();
-    
+
     /**
      * @param gene
      * @param coexpressed
      */
     public CommonCoexpressionValueObject( Gene gene ) {
         this.gene = gene;
-        
+
         commonCoexpressedQueryGenes = Collections.synchronizedSet( new HashSet<Gene>() );
         commonPositiveCoexpressedQueryGenes = Collections.synchronizedSet( new HashSet<Gene>() );
         commonNegativeCoexpressedQueryGenes = Collections.synchronizedSet( new HashSet<Gene>() );
-        
+
         positiveExperimentIds = Collections.synchronizedSet( new HashSet<Long>() );
         negativeExperimentIds = Collections.synchronizedSet( new HashSet<Long>() );
-        
+
         experimentBitList = new ArrayList<Integer>();
-//        commonCoexpressionData = new ArrayList<QueryGeneCoexpressionDataPair>();
+        // commonCoexpressionData = new ArrayList<QueryGeneCoexpressionDataPair>();
     }
-    
-    public void add(QueryGeneCoexpressionDataPair coexpressed) {
+
+    public void add( QueryGeneCoexpressionDataPair coexpressed ) {
         commonCoexpressedQueryGenes.add( coexpressed.getQueryGene() );
-        if (coexpressed.getCoexpressionData().getPositiveLinkCount() != null)
+        if ( coexpressed.getCoexpressionData().getPositiveLinkSupport() != 0 )
             commonPositiveCoexpressedQueryGenes.add( coexpressed.getQueryGene() );
-        if (coexpressed.getCoexpressionData().getNegativeLinkCount() != null)
+        if ( coexpressed.getCoexpressionData().getNegativeLinkSupport() != 0 )
             commonNegativeCoexpressedQueryGenes.add( coexpressed.getQueryGene() );
-        
+
         positiveExperimentIds.addAll( coexpressed.getCoexpressionData().getEEContributing2PositiveLinks() );
         negativeExperimentIds.addAll( coexpressed.getCoexpressionData().getEEContributing2NegativeLinks() );
-//        commonCoexpressionData.add( coexpressed );
+        // commonCoexpressionData.add( coexpressed );
     }
 
     /**
@@ -99,35 +99,35 @@ public class CommonCoexpressionValueObject {
     public String getGeneOfficialName() {
         return gene.getOfficialName();
     }
-    
+
     /**
      * @return the geneType
      */
     public String getGeneType() {
         return Gene.class.getName();
     }
-    
+
     /**
      * @return the collection of query genes this gene was coexpressed with
      */
     public Collection<Gene> getCommonCoexpressedQueryGenes() {
         return commonCoexpressedQueryGenes;
     }
-    
+
     /**
      * @return the collection of query genes this gene was positively coexpressed with
      */
     public Collection<Gene> getCommonPositiveCoexpressedQueryGenes() {
         return commonPositiveCoexpressedQueryGenes;
     }
-    
+
     /**
      * @return the collection of query genes this gene was positively coexpressed with
      */
     public Collection<Gene> getCommonNegativeCoexpressedQueryGenes() {
         return commonNegativeCoexpressedQueryGenes;
     }
-    
+
     /**
      * @return a collectino of EEids that contributed to this genes positive expression
      */
@@ -141,22 +141,22 @@ public class CommonCoexpressionValueObject {
     public Collection<Long> getEEContributing2NegativeLinks() {
         return negativeExperimentIds;
     }
-    
-//    /**
-//     * @return the collection of CoexpressionCollectionValueObjects representing the query genes this gene was coexpressed with
-//     */
-//    public Collection<QueryGeneCoexpressionDataPair> getCommonCoexpressionData() {
-//        return commonCoexpressionData;
-//    }
-    
+
+    // /**
+    // * @return the collection of CoexpressionCollectionValueObjects representing the query genes this gene was
+    // coexpressed with
+    // */
+    // public Collection<QueryGeneCoexpressionDataPair> getCommonCoexpressionData() {
+    // return commonCoexpressionData;
+    // }
+
     /**
-     * Function to return the max of negative or positive link count.
-     * This is used for sorting.
+     * Function to return the max of negative or positive link count. This is used for sorting.
+     * 
      * @return the max of negative or positive link count
      */
     public Integer getMaxLinkCount() {
-        return Math.max( commonPositiveCoexpressedQueryGenes.size(),
-                commonNegativeCoexpressedQueryGenes.size() );
+        return Math.max( commonPositiveCoexpressedQueryGenes.size(), commonNegativeCoexpressedQueryGenes.size() );
     }
 
     public String getExperimentBitList() {

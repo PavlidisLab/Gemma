@@ -74,7 +74,7 @@
 				&nbsp;&nbsp;Found
 			</td>
 			<td>
-				<c:out value="${numGenes}" />
+				<c:out value="${numKnownGenes}" />
 			</td>
 		</tr>
 		<tr>

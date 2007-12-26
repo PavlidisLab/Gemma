@@ -99,7 +99,7 @@ public class GeneLinkCoexpressionAnalyzer {
         }
 
         GeneCoexpressionAnalysis analysis = intializeAnalysis( expressionExperiments, taxon, toUseGenes,
-                toUseAnalysisName );
+                toUseAnalysisName, stringency );
         assert analysis != null;
 
         int totalLinks = 0;
@@ -110,7 +110,7 @@ public class GeneLinkCoexpressionAnalyzer {
             for ( Gene gene : toUseGenes ) {
                 CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis( gene,
                         expressionExperiments, stringency );
-                if ( coexpressions.getNumGenes() > 0 ) {
+                if ( coexpressions.getNumKnownGenes() > 0 ) {
                     Collection<Gene2GeneCoexpression> created = persistCoexpressions( eeIdOrder, gene, coexpressions,
                             analysis, genesToAnalyzeMap, processedGenes );
                     totalLinks += created.size();
@@ -188,7 +188,7 @@ public class GeneLinkCoexpressionAnalyzer {
      * @return
      */
     private byte[] computeSupportingDatasetVector( Collection<Long> idsToFlip, Map<Long, Integer> eeIdOrder ) {
-        byte[] supportVector = new byte[( int ) Math.ceil( eeIdOrder.keySet().size() / Byte.SIZE )];
+        byte[] supportVector = new byte[( int ) Math.ceil( eeIdOrder.keySet().size() / ( double ) Byte.SIZE )];
         for ( int i = 0, j = supportVector.length; i < j; i++ ) {
             supportVector[i] = 0x0;
         }
@@ -215,7 +215,7 @@ public class GeneLinkCoexpressionAnalyzer {
     }
 
     /**
-     * @param toUseTaxon2
+     * @param taxon
      * @return
      */
     private Gene2GeneCoexpression getNewGGCOInstance( Taxon taxon ) {
@@ -255,22 +255,25 @@ public class GeneLinkCoexpressionAnalyzer {
      * @param taxon
      * @param toUseGenes
      * @param analysisName
+     * @param stringency
      * @return
      */
     private GeneCoexpressionAnalysis intializeAnalysis( Collection<ExpressionExperiment> expressionExperiments,
-            Taxon taxon, Collection<Gene> toUseGenes, String analysisName ) {
+            Taxon taxon, Collection<Gene> toUseGenes, String analysisName, int stringency ) {
 
         GeneCoexpressionAnalysis analysis = GeneCoexpressionAnalysis.Factory.newInstance();
 
-        analysis.setDescription( "Coexpression analysis for " + taxon.getCommonName() + "using "
+        analysis.setDescription( "Coexpression analysis for " + taxon.getCommonName() + " using "
                 + expressionExperiments.size() + " expression experiments" );
 
         Protocol protocol = createProtocol( expressionExperiments, toUseGenes );
 
+        analysis.setName( analysisName );
         analysis.setProtocol( protocol );
         analysis.setExperimentsAnalyzed( expressionExperiments );
+        analysis.setSupportThreshold( stringency );
 
-        return ( GeneCoexpressionAnalysis ) geneCoexpressionAnalysisService.create( analysis );
+        return geneCoexpressionAnalysisService.create( analysis );
 
     }
 
@@ -286,14 +289,11 @@ public class GeneLinkCoexpressionAnalyzer {
         assert analysis != null;
 
         Taxon taxon = firstGene.getTaxon();
-        Gene2GeneCoexpression g2gCoexpression = getNewGGCOInstance( taxon );
-
-        g2gCoexpression.setSourceAnalysis( analysis );
 
         Collection<Gene2GeneCoexpression> all = new ArrayList<Gene2GeneCoexpression>();
         Collection<Gene2GeneCoexpression> batch = new ArrayList<Gene2GeneCoexpression>();
 
-        for ( CoexpressionValueObject co : toPersist.getCoexpressionData() ) {
+        for ( CoexpressionValueObject co : toPersist.getAllGeneCoexpressionData() ) {
 
             if ( !genesToAnalyze.containsKey( co.getGeneId() ) ) {
                 log.info( "coexpressed Gene " + co.getGeneId()
@@ -305,16 +305,16 @@ public class GeneLinkCoexpressionAnalyzer {
             Gene secondGene = genesToAnalyze.get( co.getGeneId() );
             if ( alreadyPersisted.contains( secondGene ) ) continue; // only need to go in one direction
 
-            g2gCoexpression.setFirstGene( firstGene );
-            g2gCoexpression.setSecondGene( secondGene );
-            g2gCoexpression.setPvalue( co.getCollapsedPValue() );
+            if ( co.getNegativeLinkSupport() >= analysis.getSupportThreshold() ) {
+                Gene2GeneCoexpression g2gCoexpression = getNewGGCOInstance( taxon );
+                Collection<Long> contributing2NegativeLinks = co.getEEContributing2NegativeLinks();
+                g2gCoexpression.setSourceAnalysis( analysis );
+                g2gCoexpression.setFirstGene( firstGene );
+                g2gCoexpression.setSecondGene( secondGene );
+                g2gCoexpression.setPvalue( co.getNegPValue() );
 
-            Collection<Long> contributing2NegativeLinks = co.getEEContributing2NegativeLinks();
-            Collection<Long> contributing2PositiveLinks = co.getEEContributing2NegativeLinks();
-
-            if ( co.getNegativeLinkCount() >= analysis.getSupportThreshold() ) {
                 byte[] supportVector = computeSupportingDatasetVector( contributing2NegativeLinks, eeIdOrder );
-                g2gCoexpression.setNumDataSets( co.getNegativeLinkCount() );
+                g2gCoexpression.setNumDataSets( co.getNegativeLinkSupport() );
                 g2gCoexpression.setEffect( co.getNegativeScore() );
                 g2gCoexpression.setDatasetsSupportingVector( supportVector );
                 batch.add( g2gCoexpression );
@@ -324,9 +324,16 @@ public class GeneLinkCoexpressionAnalyzer {
                 }
             }
 
-            if ( co.getPositiveLinkCount() >= analysis.getSupportThreshold() ) {
+            if ( co.getPositiveLinkSupport() >= analysis.getSupportThreshold() ) {
+                Gene2GeneCoexpression g2gCoexpression = getNewGGCOInstance( taxon );
+                Collection<Long> contributing2PositiveLinks = co.getEEContributing2NegativeLinks();
+                g2gCoexpression.setSourceAnalysis( analysis );
+                g2gCoexpression.setFirstGene( firstGene );
+                g2gCoexpression.setSecondGene( secondGene );
+                g2gCoexpression.setPvalue( co.getPosPValue() );
+
                 byte[] supportVector = computeSupportingDatasetVector( contributing2PositiveLinks, eeIdOrder );
-                g2gCoexpression.setNumDataSets( co.getPositiveLinkCount() );
+                g2gCoexpression.setNumDataSets( co.getPositiveLinkSupport() );
                 g2gCoexpression.setEffect( co.getPositiveScore() );
                 g2gCoexpression.setDatasetsSupportingVector( supportVector );
                 batch.add( g2gCoexpression );
@@ -336,11 +343,12 @@ public class GeneLinkCoexpressionAnalyzer {
                 }
             }
 
-            log.debug( "Persisted: " + firstGene.getOfficialSymbol() + " --> " + secondGene.getOfficialSymbol() + " ( "
-                    + co.getNegativeScore() + " , +" + co.getPositiveScore() + " )" );
+            if ( log.isDebugEnabled() )
+                log.debug( "Persisted: " + firstGene.getOfficialSymbol() + " --> " + secondGene.getOfficialSymbol()
+                        + " ( " + co.getNegativeScore() + " , +" + co.getPositiveScore() + " )" );
         }
 
-        if ( batch.size() == BATCH_SIZE ) {
+        if ( batch.size() > 0 ) {
             all.addAll( this.gene2GeneCoexpressionService.create( batch ) );
             batch.clear();
         }

@@ -79,12 +79,12 @@ public class CoexpressionWrapper extends TableDecorator {
     public String getLinkCount() {
         String count = "";
         CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
-        Integer positiveLinks = object.getPositiveLinkCount();
-        Integer negativeLinks = object.getNegativeLinkCount();
+        int positiveLinks = object.getPositiveLinkSupport();
+        int negativeLinks = object.getNegativeLinkSupport();
 
-        if ( positiveLinks != null && positiveLinks != 0 ) {
+        if ( positiveLinks > 0 ) {
             count += "<span class='positiveLink' >";
-            count += positiveLinks.toString();
+            count += positiveLinks;
 
             if ( !object.getExpressionExperiments().isEmpty() )
                 count += getNonSpecificString( object, object.getEEContributing2PositiveLinks(), positiveLinks );
@@ -92,12 +92,12 @@ public class CoexpressionWrapper extends TableDecorator {
             count += "</span>";
         }
 
-        if ( negativeLinks != null && negativeLinks != 0 ) {
+        if ( negativeLinks > 0 ) {
             if ( count.length() > 0 ) {
                 count += "/";
             }
             count += "<span class='negativeLink' >";
-            count += negativeLinks.toString();
+            count += negativeLinks;
             if ( !object.getExpressionExperiments().isEmpty() )
                 count += getNonSpecificString( object, object.getEEContributing2NegativeLinks(), negativeLinks );
 
@@ -109,29 +109,34 @@ public class CoexpressionWrapper extends TableDecorator {
     public String getSimpleLinkCount() {
         String count = "";
         CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
-        Integer positiveLinks = object.getPositiveLinkCount();
-        Integer negativeLinks = object.getNegativeLinkCount();
+        int positiveLinks = object.getPositiveLinkSupport();
+        int negativeLinks = object.getNegativeLinkSupport();
 
-        if ( positiveLinks != null && positiveLinks != 0 ) {
+        if ( positiveLinks > 0 ) {
             count += "<span class='positiveLink' >";
-            count += positiveLinks.toString();
+            count += positiveLinks;
 
             count += "</span>";
         }
 
-        if ( negativeLinks != null && negativeLinks != 0 ) {
+        if ( negativeLinks > 0 ) {
             if ( count.length() > 0 ) {
                 count += "/";
             }
             count += "<span class='negativeLink' >";
-            count += negativeLinks.toString();
+            count += negativeLinks;
             count += "</span>";
         }
         return count;
     }
 
-    private String getNonSpecificString( CoexpressionValueObject cvo, Collection<Long> contributingEE,
-            Integer numTotalLinks ) {
+    /**
+     * @param cvo
+     * @param contributingEE
+     * @param numTotalLinks
+     * @return
+     */
+    private String getNonSpecificString( CoexpressionValueObject cvo, Collection<Long> contributingEE, int numTotalLinks ) {
 
         Collection<Long> allNonSpecificEE = cvo.getNonspecificEE();
         Collection<String> nonSpecificGenes = cvo.getNonSpecificGenes();
@@ -202,7 +207,7 @@ public class CoexpressionWrapper extends TableDecorator {
 
         int width = object.getExperimentBitList().length() - 1; // probably okay
         int height = 10;
-        
+
         StringBuffer buf = new StringBuffer();
         buf.append( "<span style=\"background-color:#DDDDDD;\"><img src=\"/Gemma/spark?type=bar&width=" );
         buf.append( width );
@@ -212,24 +217,26 @@ public class CoexpressionWrapper extends TableDecorator {
         buf.append( object.getExperimentBitList() );
         buf.append( "\" usemap=\"" );
         buf.append( object.getImageMapName() );
-        buf.append( "\" /></span>");
+        buf.append( "\" /></span>" );
         buf.append( "<map name=\"" );
         buf.append( object.getImageMapName() );
         buf.append( "\">" );
-        int x=0, y=0, barWidth=2;
+        int x = 0, y = 0, barWidth = 2;
         for ( Long eeId : object.getExperimentBitIds() ) {
             if ( eeId != 0 ) {
                 ExpressionExperimentValueObject eevo = object.getExpressionExperimentValueObject( eeId );
-                buf.append( String.format( "<area shape=\"rect\" coords=\"%d,%d,%d,%d\" href=\"%s\" alt=\"%s\" title=\"%s\" />",
-                    x, y, x+barWidth, height-1, GemmaLinkUtils.getExpressionExperimentUrl( eeId ), eevo.getName(), eevo.getName() ) );
+                buf.append( String.format(
+                        "<area shape=\"rect\" coords=\"%d,%d,%d,%d\" href=\"%s\" alt=\"%s\" title=\"%s\" />", x, y, x
+                                + barWidth, height - 1, GemmaLinkUtils.getExpressionExperimentUrl( eeId ), eevo
+                                .getName(), eevo.getName() ) );
             }
             x += barWidth;
         }
         buf.append( "</map>" );
-        
+
         return buf.toString();
-//        return "<span style=\"background-color:#DDDDDD;\"><img src=\"/Gemma/spark?type=bar&width=" + width
-//                + "&height=10&color=black&spacing=0&data=" + object.getExperimentBitList() + "\" /></span>";
+        // return "<span style=\"background-color:#DDDDDD;\"><img src=\"/Gemma/spark?type=bar&width=" + width
+        // + "&height=10&color=black&spacing=0&data=" + object.getExperimentBitList() + "\" /></span>";
     }
 
     public String getGemmaLink() {
@@ -319,26 +326,29 @@ public class CoexpressionWrapper extends TableDecorator {
     public String getLinkCountExport() {
         StringBuffer buf = new StringBuffer();
         CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
-        Integer positiveLinks = object.getPositiveLinkCount();
-        Integer negativeLinks = object.getNegativeLinkCount();
+        int positiveLinks = object.getPositiveLinkSupport();
+        int negativeLinks = object.getNegativeLinkSupport();
 
-        if ( positiveLinks != null && positiveLinks != 0 ) {
+        if ( positiveLinks > 0 ) {
             buf.append( positiveLinks );
             if ( !object.getExpressionExperiments().isEmpty() )
-                buf.append( getNonSpecificStringExport( object, object.getEEContributing2PositiveLinks(), positiveLinks ) );
+                buf
+                        .append( getNonSpecificStringExport( object, object.getEEContributing2PositiveLinks(),
+                                positiveLinks ) );
         }
 
-        if ( negativeLinks != null && negativeLinks != 0 ) {
-            if ( buf.length() > 0 )
-                buf.append( " / " );
+        if ( negativeLinks > 0 ) {
+            if ( buf.length() > 0 ) buf.append( " / " );
             buf.append( negativeLinks );
             if ( !object.getExpressionExperiments().isEmpty() )
-                buf.append( getNonSpecificStringExport( object, object.getEEContributing2NegativeLinks(), negativeLinks ) );
+                buf
+                        .append( getNonSpecificStringExport( object, object.getEEContributing2NegativeLinks(),
+                                negativeLinks ) );
         }
-        
+
         return buf.toString();
     }
-    
+
     private String getNonSpecificStringExport( CoexpressionValueObject cvo, Collection<Long> contributingEE,
             Integer numTotalLinks ) {
 
@@ -347,7 +357,6 @@ public class CoexpressionWrapper extends TableDecorator {
         boolean hybridizesWithQueryGene = cvo.isHybridizesWithQueryGene();
         String coexpressedGeneName = cvo.getGeneName();
 
-        
         String nonSpecificList = "";
         String hybridizes = "";
 
@@ -357,13 +366,12 @@ public class CoexpressionWrapper extends TableDecorator {
                 nonSpecific++;
             }
         }
-        
+
         StringBuffer buf = new StringBuffer();
         if ( nonSpecific > 0 ) {
             buf.append( " ( " );
             buf.append( numTotalLinks - nonSpecific );
-            if ( hybridizesWithQueryGene )
-                buf.append( "*" );
+            if ( hybridizesWithQueryGene ) buf.append( "*" );
             buf.append( " )" );
         }
         return buf.toString();
@@ -372,22 +380,21 @@ public class CoexpressionWrapper extends TableDecorator {
     public String getSimpleLinkCountExport() {
         StringBuffer buf = new StringBuffer();
         CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
-        Integer positiveLinks = object.getPositiveLinkCount();
-        Integer negativeLinks = object.getNegativeLinkCount();
+        Integer positiveLinks = object.getPositiveLinkSupport();
+        Integer negativeLinks = object.getNegativeLinkSupport();
 
         if ( positiveLinks != null && positiveLinks != 0 ) {
             buf.append( positiveLinks );
         }
 
         if ( negativeLinks != null && negativeLinks != 0 ) {
-            if ( buf.length() > 0 )
-                buf.append( " / " );
+            if ( buf.length() > 0 ) buf.append( " / " );
             buf.append( negativeLinks );
         }
-        
+
         return buf.toString();
     }
-    
+
     /**
      * Function to return the data sets for a coexpression match
      * 

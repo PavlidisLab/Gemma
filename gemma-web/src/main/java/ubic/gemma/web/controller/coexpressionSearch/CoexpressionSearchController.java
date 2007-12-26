@@ -45,7 +45,7 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.analysis.coexpression.ProbeLinkCoexpressionAnalyzer;
 import ubic.gemma.loader.genome.taxon.SupportedTaxa;
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
-import ubic.gemma.model.coexpression.CoexpressionTypeValueObject;
+import ubic.gemma.model.coexpression.CoexpressedGenesDetails;
 import ubic.gemma.model.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -87,7 +87,7 @@ import ubic.gemma.web.util.MessageUtil;
  * @spring.property name = "searchService" ref="searchService"
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name = "geneOntologyService" ref="geneOntologyService"
- * @spring.property name = "probeLinkCoexpressionAnalyzer" ref="probeLinkCoexpressionAnalyzer" 
+ * @spring.property name = "probeLinkCoexpressionAnalyzer" ref="probeLinkCoexpressionAnalyzer"
  * @spring.property name = "validator" ref="genericBeanValidator"
  */
 public class CoexpressionSearchController extends BackgroundProcessingFormBindController {
@@ -323,10 +323,10 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         watch.start();
 
         // get all the coexpressed genes and sort them by dataset count
-        List<CoexpressionValueObject> coexpressedGenes = new ArrayList<CoexpressionValueObject>();
-        coexpressedGenes.addAll( coexpressions.getCoexpressionData() );
+        List<CoexpressionValueObject> coexpressedKnownGenes = new ArrayList<CoexpressionValueObject>();
+        coexpressedKnownGenes.addAll( coexpressions.getKnownGeneCoexpressionData() );
         // sort coexpressed genes by dataset count
-        Collections.sort( coexpressedGenes, new CoexpressionComparator() );
+        Collections.sort( coexpressedKnownGenes, new CoexpressionComparator() );
 
         // get all the coexpressed predicted genes and sort them by dataset count
         List<CoexpressionValueObject> coexpressedPredictedGenes = new ArrayList<CoexpressionValueObject>();
@@ -341,7 +341,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         Collections.sort( coexpressedAlignedRegions, new CoexpressionComparator() );
 
         Collection<ExpressionExperimentValueObject> geneEEVos = retreiveEEFromDB( coexpressions
-                .getGeneCoexpressionType().getExpressionExperimentIds(), coexpressions.getGeneCoexpressionType() );
+                .getKnownGeneCoexpression().getExpressionExperimentIds(), coexpressions.getKnownGeneCoexpression() );
         Collection<ExpressionExperimentValueObject> predictedEEVos = retreiveEEFromDB( coexpressions
                 .getPredictedCoexpressionType().getExpressionExperimentIds(), coexpressions
                 .getPredictedCoexpressionType() );
@@ -351,19 +351,19 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
 
         // Sort the Expression Experiments by contributing links.
 
-        if ( coexpressedGenes.size() == 0 ) {
+        if ( coexpressedKnownGenes.size() == 0 ) {
             this.saveMessage( request, "No genes are coexpressed with the given stringency." );
         }
-        int numSourceGeneGoTerms = computeGoOverlap( commandObject, coexpressedGenes );
+        int numSourceGeneGoTerms = computeGoOverlap( commandObject, coexpressedKnownGenes );
 
         Cookie cookie = new CoexpressionSearchCookie( commandObject );
         response.addCookie( cookie );
 
-        Long numPositiveCoexpressedGenes = new Long( coexpressions.getGeneCoexpressionType()
+        Long numPositiveCoexpressedGenes = new Long( coexpressions.getKnownGeneCoexpression()
                 .getPositiveStringencyLinkCount() );
-        Long numNegativeCoexpressedGenes = new Long( coexpressions.getGeneCoexpressionType()
+        Long numNegativeCoexpressedGenes = new Long( coexpressions.getKnownGeneCoexpression()
                 .getNegativeStringencyLinkCount() );
-        Long numGenes = new Long( coexpressions.getNumGenes() );
+        Long numKnownGenes = new Long( coexpressions.getNumKnownGenes() );
         Long numPredictedGenes = new Long( coexpressions.getNumPredictedGenes() );
         Long numProbeAlignedRegions = new Long( coexpressions.getNumProbeAlignedRegions() );
         Long numStringencyGenes = new Long( coexpressions.getNumStringencyGenes() );
@@ -372,7 +372,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
 
         ModelAndView mav = super.showForm( request, response, errors );
 
-        mav.addObject( "coexpressedGenes", coexpressedGenes );
+        mav.addObject( "coexpressedGenes", coexpressedKnownGenes );
         mav.addObject( "coexpressedPredictedGenes", coexpressedPredictedGenes );
         mav.addObject( "coexpressedAlignedRegions", coexpressedAlignedRegions );
 
@@ -384,7 +384,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         mav.addObject( "numLinkedPredictedExpressionExperiments", new Integer( predictedEEVos.size() ) );
         mav.addObject( "numLinkedAlignedExpressionExperiments", new Integer( alignedEEVos.size() ) );
 
-        mav.addObject( "numUsedExpressionExperiments", new Long( coexpressions.getGeneCoexpressionType()
+        mav.addObject( "numUsedExpressionExperiments", new Long( coexpressions.getKnownGeneCoexpression()
                 .getNumberOfUsedExpressonExperiments() ) );
         mav.addObject( "numUsedPredictedExpressionExperiments", new Long( coexpressions.getPredictedCoexpressionType()
                 .getNumberOfUsedExpressonExperiments() ) );
@@ -396,7 +396,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         mav.addObject( "numSearchedExpressionExperiments", numExpressionExperiments );
         mav.addObject( "numQuerySpecificEEs", coexpressions.getQueryGeneSpecificExpressionExperiments().size() );
 
-        mav.addObject( "numGenes", numGenes );
+        mav.addObject( "numKnownGenes", numKnownGenes );
         mav.addObject( "numPredictedGenes", numPredictedGenes );
         mav.addObject( "numProbeAlignedRegions", numProbeAlignedRegions );
 
@@ -417,7 +417,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         watch.stop();
         log.info( "Processing after DAO call (elapsed time): " + elapsed );
 
-        this.saveMessage( request, "Coexpression query took: " + coexpressions.getElapsedWallSeconds() );
+        this.saveMessage( request, "Coexpression query took: " + coexpressions.getDbQuerySeconds() );
 
         return mav;
 
@@ -425,7 +425,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
 
     @SuppressWarnings("unchecked")
     private Collection<ExpressionExperimentValueObject> retreiveEEFromDB( Collection<Long> eeIds,
-            CoexpressionTypeValueObject coexpressions ) {
+            CoexpressedGenesDetails coexpressions ) {
 
         // This is necessary for security filtering
         Collection<ExpressionExperimentValueObject> eeVos = expressionExperimentService.loadValueObjects( eeIds );
@@ -433,7 +433,8 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         for ( ExpressionExperimentValueObject eeVo : eeVos ) {
             eeVo.setCoexpressionLinkCount( coexpressions.getLinkCountForEE( eeVo.getId() ) );
             eeVo.setRawCoexpressionLinkCount( coexpressions.getRawLinkCountForEE( eeVo.getId() ) );
-            eeVo.setProbeSpecificForQueryGene(  coexpressions.getExpressionExperiment( eeVo.getId() ).isProbeSpecificForQueryGene() );
+            eeVo.setProbeSpecificForQueryGene( coexpressions.getExpressionExperiment( eeVo.getId() )
+                    .isProbeSpecificForQueryGene() );
         }
 
         List<ExpressionExperimentValueObject> eeList = new ArrayList<ExpressionExperimentValueObject>( eeVos );
@@ -640,23 +641,23 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         Map<Long, Collection<OntologyTerm>> overlap = geneOntologyService.calculateGoTermOverlap( csc.getSourceGene(),
                 overlapIds );
 
-        Integer numSourceGeneGoTerms;
+        Integer numQueryGeneGOTerms;
         if ( overlap == null ) // query gene had no go terms
-            numSourceGeneGoTerms = 0;
+            numQueryGeneGOTerms = 0;
         else {
-            numSourceGeneGoTerms = overlap.get( csc.getSourceGene().getId() ).size();
+            numQueryGeneGOTerms = overlap.get( csc.getSourceGene().getId() ).size();
 
             if ( overlap.keySet().size() > 1 ) {
                 for ( CoexpressionValueObject cvo : coexpressedGenes ) {
                     cvo.setGoOverlap( overlap.get( cvo.getGeneId() ) );
-                    cvo.setPossibleOverlap( numSourceGeneGoTerms );
+                    cvo.setNumQueryGeneGOTerms( numQueryGeneGOTerms );
                 }
             }
         }
         Long overlapTime = overlapWatch.getTime();
         overlapWatch.stop();
         log.info( "took " + overlapTime / 1000 + "s to calculate GO overlap" );
-        return numSourceGeneGoTerms;
+        return numQueryGeneGOTerms;
     }
 
     @Override
@@ -685,7 +686,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
 
                 // get all the coexpressed genes and sort them by dataset count
                 List<CoexpressionValueObject> coexpressedGenes = new ArrayList<CoexpressionValueObject>();
-                coexpressedGenes.addAll( coexpressions.getCoexpressionData() );
+                coexpressedGenes.addAll( coexpressions.getAllGeneCoexpressionData() );
 
                 // sort coexpressed genes by dataset count
                 Collections.sort( coexpressedGenes, new CoexpressionComparator() );
@@ -706,9 +707,9 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
                 // coexpressions.calculateRawLinkCounts();
 
                 for ( ExpressionExperimentValueObject eeVo : eeVos ) {
-                    eeVo.setCoexpressionLinkCount( coexpressions.getGeneCoexpressionType().getLinkCountForEE(
+                    eeVo.setCoexpressionLinkCount( coexpressions.getKnownGeneCoexpression().getLinkCountForEE(
                             eeVo.getId() ) );
-                    eeVo.setRawCoexpressionLinkCount( coexpressions.getGeneCoexpressionType().getRawLinkCountForEE(
+                    eeVo.setRawCoexpressionLinkCount( coexpressions.getKnownGeneCoexpression().getRawLinkCountForEE(
                             eeVo.getId() ) );
                 }
 
@@ -720,13 +721,13 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
                     this.saveMessage( "No genes are coexpressed with the given stringency." );
                 }
 
-                Long numUsedExpressionExperiments = new Long( coexpressions.getGeneCoexpressionType()
+                Long numUsedExpressionExperiments = new Long( coexpressions.getKnownGeneCoexpression()
                         .getNumberOfUsedExpressonExperiments() );
-                Long numPositiveCoexpressedGenes = new Long( coexpressions.getGeneCoexpressionType()
+                Long numPositiveCoexpressedGenes = new Long( coexpressions.getKnownGeneCoexpression()
                         .getPositiveStringencyLinkCount() );
-                Long numNegativeCoexpressedGenes = new Long( coexpressions.getGeneCoexpressionType()
+                Long numNegativeCoexpressedGenes = new Long( coexpressions.getKnownGeneCoexpression()
                         .getNegativeStringencyLinkCount() );
-                Long numGenes = new Long( coexpressions.getNumGenes() );
+                Long numKnownGenes = new Long( coexpressions.getNumKnownGenes() );
                 Long numPredictedGenes = new Long( coexpressions.getNumPredictedGenes() );
                 Long numProbeAlignedRegions = new Long( coexpressions.getNumProbeAlignedRegions() );
                 Long numStringencyGenes = new Long( coexpressions.getNumStringencyGenes() );
@@ -750,7 +751,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
                 mav.addObject( "numSearchedExpressionExperiments", csc.getToUseEE().size() );
                 mav.addObject( "numUsedExpressionExperiments", numUsedExpressionExperiments );
 
-                mav.addObject( "numGenes", numGenes );
+                mav.addObject( "numKnownGenes", numKnownGenes );
                 mav.addObject( "numPredictedGenes", numPredictedGenes );
                 mav.addObject( "numProbeAlignedRegions", numProbeAlignedRegions );
 
@@ -773,7 +774,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
                 watch.stop();
                 log.info( "Processing after DAO call (elapsed time): " + elapsed );
 
-                this.saveMessage( "Coexpression query took: " + coexpressions.getElapsedWallSeconds() );
+                this.saveMessage( "Coexpression query took: " + coexpressions.getDbQuerySeconds() );
 
                 return mav;
 

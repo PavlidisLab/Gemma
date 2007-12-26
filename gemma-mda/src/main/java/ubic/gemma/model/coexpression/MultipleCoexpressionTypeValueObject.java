@@ -58,7 +58,7 @@ public class MultipleCoexpressionTypeValueObject {
         expressionExperiments = Collections.synchronizedMap( new HashMap<Long, ExpressionExperimentValueObject>() );
     }
     
-    public void addCoexpressionCollection(Gene queryGene, CoexpressionTypeValueObject coexpressionType) {
+    public void addCoexpressionCollection(Gene queryGene, CoexpressedGenesDetails coexpressionType) {
         synchronized (this) {
             for ( CoexpressionValueObject coexpressed : coexpressionType.getCoexpressionData() ) {
                 getQueriesForGene( getGene(coexpressed) ).add( new QueryGeneCoexpressionDataPair( queryGene, coexpressed ) );

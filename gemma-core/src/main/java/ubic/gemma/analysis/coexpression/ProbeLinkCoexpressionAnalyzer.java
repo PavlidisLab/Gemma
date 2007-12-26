@@ -21,7 +21,6 @@ package ubic.gemma.analysis.coexpression;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.time.StopWatch;
@@ -29,10 +28,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
-import ubic.gemma.model.coexpression.CoexpressionTypeValueObject;
+import ubic.gemma.model.coexpression.CoexpressedGenesDetails;
 import ubic.gemma.model.coexpression.CoexpressionValueObject;
-import ubic.gemma.model.coexpression.GeneCoexpressionResults;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -57,7 +54,7 @@ public class ProbeLinkCoexpressionAnalyzer {
      * Call this!
      * <p>
      * Do not attempt to call the method GeneDao.getCoexpressedGenes() directly, the results that are returned will not
-     * be complete.
+     * be correctly initialized.
      * 
      * @param gene
      * @param ees
@@ -72,235 +69,210 @@ public class ProbeLinkCoexpressionAnalyzer {
 
         if ( stringency <= 0 ) stringency = 1;
 
+        // DB query with minimal postprocessing
         CoexpressionCollectionValueObject coexpressions = ( CoexpressionCollectionValueObject ) geneService
                 .getCoexpressedGenes( gene, ees, stringency );
 
-        StopWatch watch = new StopWatch();
-        watch.start();
-        if ( log.isDebugEnabled() ) log.debug( "Starting postprocessing" );
-        postProcessing( coexpressions );
+        postProcess( coexpressions );
 
-        watch.stop();
-        Long elapsed = watch.getTime();
-        coexpressions.setPostProcessTime( elapsed );
-        if ( elapsed > 1000 ) log.info( "Done postprocessing; time for postprocessing: " + elapsed );
         return coexpressions;
     }
 
+    /**
+     * @param compositeSequenceService
+     */
     public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
         this.compositeSequenceService = compositeSequenceService;
     }
 
+    /**
+     * @param geneService
+     */
     public void setGeneService( GeneService geneService ) {
         this.geneService = geneService;
     }
 
     /**
+     * @param allSpecificEE Map of genes to EEs that had at least one specific probe for that gene.
+     * @param querySpecificEEs
+     * @param coExValObj
+     * @return ids of expression experiments that had only non-specific probes to the given gene. An ee is considered
+     *         specific iff the ee is specific for the query gene and the target gene.
+     */
+    private Collection<Long> fillInNonspecificEEs( Map<Long, Collection<Long>> allSpecificEE,
+            Collection<Long> querySpecificEEs, CoexpressionValueObject coExValObj ) {
+
+        Collection<Long> result = new HashSet<Long>();
+        for ( Long eeId : coExValObj.getExpressionExperiments() ) {
+            if ( allSpecificEE.get( coExValObj.getGeneId() ).contains( eeId ) && querySpecificEEs.contains( eeId ) ) {
+                // then it is specific for this gene pair.
+                continue;
+            }
+            result.add( eeId );
+        }
+
+        coExValObj.setNonspecificEE( result );
+        return result;
+    }
+
+    /**
+     * Counting up how many support-threshold exceeding links each data set contributed.
+     * 
      * @param contributingEEs
      * @param coexpressions
      */
-    private void incrementEEContributions( Collection<Long> contributingEEs, CoexpressionTypeValueObject coexpressions ) {
+    private void incrementEEContributions( Collection<Long> contributingEEs, CoexpressedGenesDetails coexpressions ) {
 
         for ( Long eeID : contributingEEs ) {
             ExpressionExperimentValueObject eeVo = coexpressions.getExpressionExperiment( eeID );
 
-            if ( eeVo == null ) {
-                log.warn( "Looked for " + eeID + " but not in coexpressions object" );
-                continue;
-            }
-            if ( eeVo.getCoexpressionLinkCount() == null )
+            assert eeVo != null;
+
+            if ( eeVo.getCoexpressionLinkCount() == null ) {
                 eeVo.setCoexpressionLinkCount( new Long( 1 ) );
-            else
+            } else {
                 eeVo.setCoexpressionLinkCount( eeVo.getCoexpressionLinkCount() + 1 );
+            }
 
         }
     }
 
     /**
+     * Counting up how many links each data set contributed (including links that did not meet the stringency
+     * threshold).
+     * 
      * @param contributingEEs
      * @param coexpressions
      */
-    private void incrementRawEEContributions( Collection<Long> contributingEEs,
-            CoexpressionTypeValueObject coexpressions ) {
-
+    private void incrementRawEEContributions( Collection<Long> contributingEEs, CoexpressedGenesDetails coexpressions ) {
         for ( Long eeID : contributingEEs ) {
+
             ExpressionExperimentValueObject eeVo = coexpressions.getExpressionExperiment( eeID );
 
-            if ( eeVo == null ) {
-                log.warn( "Looked for ee id=" + eeID + " but not in coexpressions object" );
-                continue;
-            }
-            if ( eeVo.getRawCoexpressionLinkCount() == null )
+            assert eeVo != null;
+
+            if ( eeVo.getRawCoexpressionLinkCount() == null ) {
                 eeVo.setRawCoexpressionLinkCount( new Long( 1 ) );
-            else
+            } else {
                 eeVo.setRawCoexpressionLinkCount( eeVo.getRawCoexpressionLinkCount() + 1 );
+            }
         }
     }
 
     /**
-     * @param coexpressedGenes
      * @param coexpressions
-     * @throws Exception
+     * @param coexpressedGenes map of gene ids to CoexpressionValueObjects holding
+     * @param coexpressionDetails
      */
-    @SuppressWarnings("unchecked")
-    private void postProcessKnownGenes( CoexpressionCollectionValueObject coexpressions ) {
+    private void postProcess( CoexpressionCollectionValueObject coexpressions,
+            CoexpressedGenesDetails coexpressionDetails ) {
+        Map<Long, Collection<Long>> allSpecificEE = coexpressionDetails.getSpecificExpressionExperiments();
 
-        Map<Long, CoexpressionValueObject> coexpressedGenes = coexpressions.getGeneMap().getGeneImplMap();
-        if ( coexpressedGenes.size() == 0 ) return;
+        Collection<Long> querySpecificEEs = coexpressions.getQueryGeneSpecificExpressionExperiments();
+
+        Long queryGeneId = coexpressions.getQueryGene().getId();
 
         int positiveLinkCount = 0;
         int negativeLinkCount = 0;
-        int numStringencyGenes = 0;
 
-        Collection<Long> queryGeneProbeIds = coexpressions.getQueryGeneProbes();
+        for ( CoexpressionValueObject coExValObj : coexpressionDetails.getCoexpressionData() ) {
+            coExValObj.computeExperimentBits( new ArrayList<Long>( coexpressionDetails.getExpressionExperimentIds() ) );
 
-        Map<Long, Collection<Long>> querySpecificity = geneService.getCS2GeneMap( queryGeneProbeIds );
-        coexpressions.addQueryGeneSpecifityInfo( querySpecificity );
-        Collection<Long> allQuerySpecificEE = coexpressions.getQueryGeneSpecificExpressionExperiments();
+            Collection<Long> nonspecificEE = fillInNonspecificEEs( allSpecificEE, querySpecificEEs, coExValObj );
 
-        Map<Long, Collection<Long>> allSpecificEE = coexpressions.getGeneCoexpressionType()
-                .getSpecificExpressionExperiments();
-        List<Long> allEEIds = new ArrayList<Long>( coexpressions.getGeneCoexpressionType().getExpressionExperimentIds() );
-
-        for ( Long geneId : coexpressedGenes.keySet() ) {
-            CoexpressionValueObject coExValObj = coexpressedGenes.get( geneId );
-            // determine which EE's that contributed to this gene's coexpression were non-specific
-            // an ee is specific iff the ee is specific for the query gene and the target gene.
-            Collection<Long> nonspecificEE = new HashSet<Long>( coExValObj.getExpressionExperiments() );
-            Collection<Long> specificEE = new HashSet<Long>( allSpecificEE.get( geneId ) ); // get the EE's that are
-            // specific for the target
-            // gene
-            specificEE.retainAll( allQuerySpecificEE ); // get the EE's that are specific for both the target and
-            // the query gene
-            nonspecificEE.removeAll( specificEE );
-            coExValObj.setNonspecificEE( nonspecificEE );
-            coExValObj.computeExperimentBits( allEEIds );
- 
-            // figure out which genes where culprits for making this gene non-specific
-            Collection<Long> probes = coExValObj.getProbes();
+            // Fill in information about the other genes these probes hybridize to, if any.
             for ( Long eeID : nonspecificEE ) {
+                Collection<Long> probes = coExValObj.getProbes( eeID ); // just for that ee.
                 for ( Long probeID : probes ) {
-                    if ( coexpressions.getGeneCoexpressionType().getNonSpecificGenes( eeID, probeID ) != null ) {
-                        for ( Long geneID : coexpressions.getGeneCoexpressionType().getNonSpecificGenes( eeID, probeID ) ) {
-                            coExValObj.addNonSpecificGene( coexpressedGenes.get( geneID ).getGeneName() );
-                            if ( geneID.equals( coexpressions.getQueryGene().getId() ) )
+                    if ( coexpressionDetails.getNonSpecificGenes( eeID, probeID ) != null ) {
+                        for ( Long geneID : coexpressionDetails.getNonSpecificGenes( eeID, probeID ) ) {
+
+                            // FIXME this is probably wrong.
+                            coExValObj.addNonSpecificGene( coExValObj.getGeneName() ); // FIXME
+
+                            if ( geneID.equals( queryGeneId ) ) {
                                 coExValObj.setHybridizesWithQueryGene( true );
+                            }
                         }
                     }
                 }
 
             }
+
+            // FIXME This is some kind of internal issue for the coexvalobj and should not be here?
             coExValObj.getNonSpecificGenes().remove( coExValObj.getGeneOfficialName() );
 
             boolean added = false;
 
-            incrementRawEEContributions( coExValObj.getExpressionExperiments(), coexpressions.getGeneCoexpressionType() );
+            incrementRawEEContributions( coExValObj.getExpressionExperiments(), coexpressionDetails );
 
-            if ( coExValObj.getPositiveLinkCount() != null ) {
-                numStringencyGenes++;
+            if ( coExValObj.getPositiveLinkSupport() != 0 ) {
                 positiveLinkCount++;
                 added = true;
                 // add in coexpressions that match stringency
-                coexpressions.getCoexpressionData().add( coExValObj );
+                coexpressionDetails.add( coExValObj );
                 // add in expression experiments that match stringency
                 // update the link count for that EE
-                incrementEEContributions( coExValObj.getEEContributing2PositiveLinks(), coexpressions
-                        .getGeneCoexpressionType() );
+                incrementEEContributions( coExValObj.getEEContributing2PositiveLinks(), coexpressionDetails );
             }
 
-            if ( coExValObj.getNegativeLinkCount() != null ) {
+            if ( coExValObj.getNegativeLinkSupport() != 0 ) {
                 negativeLinkCount++;
                 // add in expression experiments that match stringency
                 // update the link count for that EE
-                incrementEEContributions( coExValObj.getEEContributing2NegativeLinks(), coexpressions
-                        .getGeneCoexpressionType() );
+                incrementEEContributions( coExValObj.getEEContributing2NegativeLinks(), coexpressionDetails );
 
                 if ( added ) continue; // no point in adding or counting the same element twice
-                coexpressions.getCoexpressionData().add( coExValObj );
-                numStringencyGenes++;
-
+                coexpressionDetails.add( coExValObj );
             }
         }
 
         // add count of pruned matches to coexpression data
-        coexpressions.getGeneCoexpressionType().setPositiveStringencyLinkCount( positiveLinkCount );
-        coexpressions.getGeneCoexpressionType().setNegativeStringencyLinkCount( negativeLinkCount );
-        coexpressions.getGeneCoexpressionType().setNumberOfGenes( coexpressedGenes.size() );
+        coexpressionDetails.setPositiveStringencyLinkCount( positiveLinkCount );
+        coexpressionDetails.setNegativeStringencyLinkCount( negativeLinkCount );
     }
 
     /**
-     * @param stringency
-     * @param geneMap
      * @param coexpressions
      */
     @SuppressWarnings("unchecked")
-    private void postProcessing( CoexpressionCollectionValueObject coexpressions ) {
+    private void postProcess( CoexpressionCollectionValueObject coexpressions ) {
+        StopWatch watch = new StopWatch();
+        watch.start();
+
         postProcessKnownGenes( coexpressions );
         postProcessProbeAlignedRegions( coexpressions );
         postProcessPredictedGenes( coexpressions );
+
+        watch.stop();
+        Long elapsed = watch.getTime();
+        coexpressions.setPostProcessTime( elapsed );
+        if ( elapsed > 1000 ) log.info( "Done postprocessing in " + elapsed + "ms." );
     }
 
     /**
-     * @param genes
+     * @param coexpressions
+     */
+    @SuppressWarnings("unchecked")
+    private void postProcessKnownGenes( CoexpressionCollectionValueObject coexpressions ) {
+        CoexpressedGenesDetails knownGeneCoexpression = coexpressions.getKnownGeneCoexpression();
+        postProcess( coexpressions, knownGeneCoexpression );
+    }
+
+    /**
      * @param coexpressions
      */
     private void postProcessPredictedGenes( CoexpressionCollectionValueObject coexpressions ) {
-        Map<Long, CoexpressionValueObject> genes = coexpressions.getGeneMap().getGeneImplMap();
-
-        if ( genes.size() == 0 ) return;
-        List<Long> allEEIds = new ArrayList<Long>( coexpressions.getGeneCoexpressionType().getExpressionExperimentIds() );
-
-        CoexpressionTypeValueObject predictedCoexpressionType = coexpressions.getPredictedCoexpressionType();
-        for ( Long geneId : genes.keySet() ) {
-            CoexpressionValueObject coExValObj = genes.get( geneId );
-            incrementRawEEContributions( coExValObj.getExpressionExperiments(), predictedCoexpressionType );
-
-            coExValObj.computeExperimentBits( allEEIds );
-            if ( ( coExValObj.getPositiveLinkCount() != null ) || ( coExValObj.getNegativeLinkCount() != null ) ) {
-                coexpressions.getPredictedCoexpressionData().add( coExValObj );
-
-                if ( coExValObj.getPositiveLinkCount() != null )
-                    incrementEEContributions( coExValObj.getEEContributing2PositiveLinks(), predictedCoexpressionType );
-                else
-                    incrementEEContributions( coExValObj.getEEContributing2NegativeLinks(), predictedCoexpressionType );
-            }
-        }
-        predictedCoexpressionType.setNumberOfGenes( genes.size() );
+        CoexpressedGenesDetails predictedCoexpressionType = coexpressions.getPredictedCoexpressionType();
+        postProcess( coexpressions, predictedCoexpressionType );
     }
 
     /**
-     * @param genes
      * @param coexpressions
      */
     private void postProcessProbeAlignedRegions( CoexpressionCollectionValueObject coexpressions ) {
-        Map<Long, CoexpressionValueObject> genes = coexpressions.getGeneMap().getGeneImplMap();
-
-        if ( genes.size() == 0 ) return;
-        int numStringencyProbeAlignedRegions = 0;
-        List<Long> allEEIds = new ArrayList<Long>( coexpressions.getGeneCoexpressionType().getExpressionExperimentIds() );
-
-        CoexpressionTypeValueObject probeAlignedCoexpressionType = coexpressions.getProbeAlignedCoexpressionType();
-        for ( Long geneId : genes.keySet() ) {
-            CoexpressionValueObject coExValObj = genes.get( geneId );
-
-            coExValObj.computeExperimentBits( allEEIds );
-            incrementRawEEContributions( coExValObj.getExpressionExperiments(), probeAlignedCoexpressionType );
-
-            if ( ( coExValObj.getPositiveLinkCount() != null ) || ( coExValObj.getNegativeLinkCount() != null ) ) {
-                numStringencyProbeAlignedRegions++;
-                coexpressions.getProbeAlignedCoexpressionData().add( coExValObj );
-
-                if ( coExValObj.getPositiveLinkCount() != null )
-                    incrementEEContributions( coExValObj.getEEContributing2PositiveLinks(),
-                            probeAlignedCoexpressionType );
-                else
-                    incrementEEContributions( coExValObj.getEEContributing2NegativeLinks(),
-                            probeAlignedCoexpressionType );
-            }
-
-        }
-
-        probeAlignedCoexpressionType.setNumberOfGenes( genes.size() );
+        CoexpressedGenesDetails probeAlignedCoexpressionType = coexpressions.getProbeAlignedCoexpressionType();
+        postProcess( coexpressions, probeAlignedCoexpressionType );
     }
 
 }

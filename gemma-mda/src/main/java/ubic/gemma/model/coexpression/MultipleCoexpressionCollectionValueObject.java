@@ -37,7 +37,7 @@ public class MultipleCoexpressionCollectionValueObject  {
         synchronized (this) {
 //            queries.put( coexpressionCollection.getQueryGene(), coexpressionCollection );
             queryGenes.add( coexpressionCollection.getQueryGene() );
-            geneCoexpressionData.addCoexpressionCollection( coexpressionCollection.getQueryGene(), coexpressionCollection.getGeneCoexpressionType() );
+            geneCoexpressionData.addCoexpressionCollection( coexpressionCollection.getQueryGene(), coexpressionCollection.getKnownGeneCoexpression() );
             predictedCoexpressionData.addCoexpressionCollection( coexpressionCollection.getQueryGene(), coexpressionCollection.getPredictedCoexpressionType() );
             alignedCoexpressionData.addCoexpressionCollection( coexpressionCollection.getQueryGene(), coexpressionCollection.getProbeAlignedCoexpressionType() );
         }

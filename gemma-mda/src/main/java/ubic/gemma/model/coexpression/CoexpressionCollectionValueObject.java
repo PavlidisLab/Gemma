@@ -46,29 +46,50 @@ public class CoexpressionCollectionValueObject {
 
     private static Log log = LogFactory.getLog( CoexpressionCollectionValueObject.class.getName() );
 
-    // the number of actual genes, predicted genes, and probe aligned regions in the query, filtered by stringency
-    private int stringencyFilterValue;
+    private int supportThreshold;
+
     private Gene queryGene;
-    private Map<Long, Map<Long, Collection<Long>>> crossHybridizingQueryProbes; // This will hold info pertaining to the
 
-    // involved in the query
-    private CoexpressionTypeValueObject geneCoexpressionData;
-    private CoexpressionTypeValueObject predictedCoexpressionData;
-    private CoexpressionTypeValueObject alignedCoexpressionData;
+    private Map<Long, Map<Long, Collection<Long>>> crossHybridizingQueryProbes;
 
-    private double firstQuerySeconds;
+    private CoexpressedGenesDetails knownGeneCoexpressionData;
+    private CoexpressedGenesDetails predictedCoexpressionData;
+    private CoexpressedGenesDetails alignedCoexpressionData;
+
     private double postProcessSeconds;
-    private double elapsedWallSeconds;
-    private GeneCoexpressionResults geneMap;
+    private double dbQuerySeconds;
+
+    // private GeneCoexpressionResults geneMap;
 
     /**
      * 
      */
     public CoexpressionCollectionValueObject() {
-        geneCoexpressionData = new CoexpressionTypeValueObject();
-        predictedCoexpressionData = new CoexpressionTypeValueObject();
-        alignedCoexpressionData = new CoexpressionTypeValueObject();
+        knownGeneCoexpressionData = new CoexpressedGenesDetails();
+        predictedCoexpressionData = new CoexpressedGenesDetails();
+        alignedCoexpressionData = new CoexpressedGenesDetails();
         crossHybridizingQueryProbes = Collections.synchronizedMap( new HashMap<Long, Map<Long, Collection<Long>>>() );
+    }
+
+    public void add( CoexpressionValueObject vo ) {
+        String geneType = vo.getGeneType();
+        if ( geneType.equalsIgnoreCase( GENE_IMPL ) )
+            this.knownGeneCoexpressionData.add( vo );
+        else if ( geneType.equalsIgnoreCase( PROBE_ALIGNED_REGION_IMPL ) )
+            this.alignedCoexpressionData.add( vo );
+        else if ( geneType.equalsIgnoreCase( PREDICTED_GENE_IMPL ) )
+            this.predictedCoexpressionData.add( vo );
+        else
+            throw new IllegalArgumentException( "Unknown gene type" + geneType );
+    }
+
+    /**
+     * @param id
+     * @return
+     */
+    public boolean contains( Long id ) {
+        return knownGeneCoexpressionData.containsKey( id ) || predictedCoexpressionData.containsKey( id )
+                || alignedCoexpressionData.containsKey( id );
     }
 
     /**
@@ -78,7 +99,7 @@ public class CoexpressionCollectionValueObject {
     public void addExpressionExperiment( String geneType, ExpressionExperimentValueObject eevo ) {
 
         if ( geneType.equalsIgnoreCase( GENE_IMPL ) )
-            this.geneCoexpressionData.addExpressionExperiment( eevo );
+            this.knownGeneCoexpressionData.addExpressionExperiment( eevo );
         else if ( geneType.equalsIgnoreCase( PROBE_ALIGNED_REGION_IMPL ) )
             this.alignedCoexpressionData.addExpressionExperiment( eevo );
         else if ( geneType.equalsIgnoreCase( PREDICTED_GENE_IMPL ) )
@@ -87,79 +108,77 @@ public class CoexpressionCollectionValueObject {
             throw new IllegalArgumentException( "Unknown gene type" + geneType );
     }
 
-    /*
+    /**
      * Given a list of probes to genes adds this information to the crossHybridizingQueryProbes allowing for the
      * specificty of the queried gene to be determined on a expression experiment level.
+     * 
+     * @param probe2GeneMap
      */
     public void addQueryGeneSpecifityInfo( Map<Long, Collection<Long>> probe2GeneMap ) {
 
-        synchronized ( crossHybridizingQueryProbes ) {
-            for ( Long eeID : crossHybridizingQueryProbes.keySet() ) {
-                Map<Long, Collection<Long>> probe2genes = crossHybridizingQueryProbes.get( eeID );
-                for ( Long probeID : probe2genes.keySet() ) {
-                    Collection<Long> genes = probe2genes.get( probeID );
-                    assert probe2GeneMap.containsKey( probeID );
-                    for ( Long g : probe2GeneMap.get( probeID ) )
-                        genes.add( g );
+        /*
+         * For each experiment, for each probe
+         */
+        for ( Long eeID : crossHybridizingQueryProbes.keySet() ) {
+            Map<Long, Collection<Long>> probe2genes = crossHybridizingQueryProbes.get( eeID );
+            for ( Long probeID : probe2genes.keySet() ) {
+                Collection<Long> genes = probe2genes.get( probeID );
 
-                    if ( ( genes.size() == 1 ) && ( genes.iterator().next().equals( queryGene.getId() ) ) ) {
+                for ( Long g : probe2GeneMap.get( probeID ) ) {
+                    genes.add( g );
+                }
 
-                        if ( this.predictedCoexpressionData.getExpressionExperiment( eeID ) != null )
-                            this.predictedCoexpressionData.getExpressionExperiment( eeID )
-                                    .setProbeSpecificForQueryGene( true );
+                if ( ( genes.size() == 1 ) && ( genes.iterator().next().equals( queryGene.getId() ) ) ) {
 
-                        if ( this.geneCoexpressionData.getExpressionExperiment( eeID ) != null )
-                            this.geneCoexpressionData.getExpressionExperiment( eeID ).setProbeSpecificForQueryGene(
-                                    true );
+                    if ( this.predictedCoexpressionData.getExpressionExperiment( eeID ) != null )
+                        this.predictedCoexpressionData.getExpressionExperiment( eeID ).setProbeSpecificForQueryGene(
+                                true );
 
-                        if ( this.alignedCoexpressionData.getExpressionExperiment( eeID ) != null )
-                            this.alignedCoexpressionData.getExpressionExperiment( eeID ).setProbeSpecificForQueryGene(
-                                    true );
+                    if ( this.knownGeneCoexpressionData.getExpressionExperiment( eeID ) != null )
+                        this.knownGeneCoexpressionData.getExpressionExperiment( eeID ).setProbeSpecificForQueryGene(
+                                true );
 
-                    }
+                    if ( this.alignedCoexpressionData.getExpressionExperiment( eeID ) != null )
+                        this.alignedCoexpressionData.getExpressionExperiment( eeID )
+                                .setProbeSpecificForQueryGene( true );
+
                 }
             }
+
         }
     }
 
     /**
+     * Merely initializes the data structure.
+     * 
      * @param eeID the expressionexperiment id
-     * @param probeID the probe ID Keeps track of which probe (CS) from what EE was responsible for expressing the
-     *        queried gene
+     * @param probeID the probe ID
      */
 
-    public void addQuerySpecifityInfo( Long eeID, Long probeID ) {
-
-        if ( crossHybridizingQueryProbes.containsKey( eeID ) ) {
-            Map<Long, Collection<Long>> probe2geneMap = crossHybridizingQueryProbes.get( eeID );
-            if ( !probe2geneMap.containsKey( probeID ) ) {
-                Collection<Long> genes = Collections.synchronizedSet( new HashSet<Long>() );
-                probe2geneMap.put( probeID, genes );
-            }
-        } else {
-            Map<Long, Collection<Long>> probe2geneMap = Collections
-                    .synchronizedMap( new HashMap<Long, Collection<Long>>() );
-            Collection<Long> genes = Collections.synchronizedSet( new HashSet<Long>() );
-            probe2geneMap.put( probeID, genes );
-            crossHybridizingQueryProbes.put( eeID, probe2geneMap );
+    public void initializeSpecificityDataStructure( Long eeID, Long probeID ) {
+        if ( !crossHybridizingQueryProbes.containsKey( eeID ) ) {
+            crossHybridizingQueryProbes.put( eeID, new HashMap<Long, Collection<Long>>() );
+        }
+        Map<Long, Collection<Long>> probe2geneMap = crossHybridizingQueryProbes.get( eeID );
+        if ( !probe2geneMap.containsKey( probeID ) ) {
+            probe2geneMap.put( probeID, new HashSet<Long>() );
         }
     }
 
     /**
-     * @return the coexpressionData for genes
+     * @return the coexpressionData for known genes
      */
-    public Collection<CoexpressionValueObject> getCoexpressionData() {
-        return this.geneCoexpressionData.getCoexpressionData();
+    public Collection<CoexpressionValueObject> getKnownGeneCoexpressionData() {
+        return this.knownGeneCoexpressionData.getCoexpressionData();
     }
 
     /**
-     * This gives the amount of time we had to wait for the queries (which can be less than the time per query because
-     * of threading)
+     * Gives the amount of time we had to wait for the database query.
      * 
      * @return
      */
-    public double getElapsedWallSeconds() {
-        return elapsedWallSeconds;
+    public double getDbQuerySeconds() {
+        return dbQuerySeconds;
     }
 
     /**
@@ -168,7 +187,7 @@ public class CoexpressionCollectionValueObject {
     public ExpressionExperimentValueObject getExpressionExperiment( String geneType, Long eeID ) {
 
         if ( geneType.equalsIgnoreCase( GENE_IMPL ) )
-            return geneCoexpressionData.getExpressionExperiment( eeID );
+            return knownGeneCoexpressionData.getExpressionExperiment( eeID );
         else if ( geneType.equalsIgnoreCase( PROBE_ALIGNED_REGION_IMPL ) )
             return alignedCoexpressionData.getExpressionExperiment( eeID );
         else if ( geneType.equalsIgnoreCase( PREDICTED_GENE_IMPL ) )
@@ -183,40 +202,36 @@ public class CoexpressionCollectionValueObject {
      */
     public Collection<ExpressionExperimentValueObject> getExpressionExperiments() {
         Collection<ExpressionExperimentValueObject> all = new HashSet<ExpressionExperimentValueObject>();
-        all.addAll( this.geneCoexpressionData.getExpressionExperiments() );
+        all.addAll( this.knownGeneCoexpressionData.getExpressionExperiments() );
         all.addAll( this.alignedCoexpressionData.getExpressionExperiments() );
         all.addAll( this.predictedCoexpressionData.getExpressionExperiments() );
         return all;
 
     }
 
-    public double getFirstQuerySeconds() {
-        return firstQuerySeconds;
-    }
-
     /**
-     * @return the standard Genes CoexpressionDataValueObjects
+     * @return the standard Genes CoexpressionDataValueObjects for all types of genes
      */
-    public Collection<CoexpressionValueObject> getGeneCoexpressionData() {
-        return this.geneCoexpressionData.getCoexpressionData();
+    public Collection<CoexpressionValueObject> getAllGeneCoexpressionData() {
+        Collection<CoexpressionValueObject> result = new HashSet<CoexpressionValueObject>();
+        result.addAll( this.knownGeneCoexpressionData.getCoexpressionData() );
+        result.addAll( this.predictedCoexpressionData.getCoexpressionData() );
+        result.addAll( this.alignedCoexpressionData.getCoexpressionData() );
+        return result;
     }
 
     /**
      * @return the CoexpressonTypeValueObject for standard genes
      */
-    public CoexpressionTypeValueObject getGeneCoexpressionType() {
-        return this.geneCoexpressionData;
-    }
-
-    public GeneCoexpressionResults getGeneMap() {
-        return geneMap;
+    public CoexpressedGenesDetails getKnownGeneCoexpression() {
+        return this.knownGeneCoexpressionData;
     }
 
     /**
      * @return the number of Genes
      */
-    public int getNumGenes() {
-        return this.geneCoexpressionData.getNumberOfGenes();
+    public int getNumKnownGenes() {
+        return this.knownGeneCoexpressionData.getNumberOfGenes();
     }
 
     /**
@@ -237,21 +252,21 @@ public class CoexpressionCollectionValueObject {
      * @return the numStringencyGenes
      */
     public int getNumStringencyGenes() {
-        return this.geneCoexpressionData.getNumberOfStringencyGenes();
+        return this.knownGeneCoexpressionData.getNumberOfGenes();
     }
 
     /**
      * @return the numStringencyPredictedGenes
      */
     public int getNumStringencyPredictedGenes() {
-        return this.predictedCoexpressionData.getNumberOfStringencyGenes();
+        return this.predictedCoexpressionData.getNumberOfGenes();
     }
 
     /**
      * @return the numStringencyProbeAlignedRegions
      */
     public int getNumStringencyProbeAlignedRegions() {
-        return this.alignedCoexpressionData.getNumberOfStringencyGenes();
+        return this.alignedCoexpressionData.getNumberOfGenes();
     }
 
     public double getPostProcessSeconds() {
@@ -268,7 +283,7 @@ public class CoexpressionCollectionValueObject {
     /**
      * @return the CoexpressionTypeValueObject for predicted Genes
      */
-    public CoexpressionTypeValueObject getPredictedCoexpressionType() {
+    public CoexpressedGenesDetails getPredictedCoexpressionType() {
         return this.predictedCoexpressionData;
     }
 
@@ -282,7 +297,7 @@ public class CoexpressionCollectionValueObject {
     /**
      * @return the CoexpressonTypeValueObject for probe aligned regions
      */
-    public CoexpressionTypeValueObject getProbeAlignedCoexpressionType() {
+    public CoexpressedGenesDetails getProbeAlignedCoexpressionType() {
         return this.alignedCoexpressionData;
     }
 
@@ -308,12 +323,9 @@ public class CoexpressionCollectionValueObject {
     }
 
     /**
-     * @param geneIDs The gene IDs to consider.
-     * @return returns a collection of expression experiment IDs that have <strong>specific</strong> probes (probes
-     *         that hit only 1 gene) for the query gene.
-     *         <p>
-     *         If an expression exp has two (or more) probes that hit the same gene, and one probe is specific, even if
-     *         some of the other(s) are not this EE is considered specific and will still be returned.
+     * @return a collection of expression experiment IDs that have <strong>at least one</strong> probes that are
+     *         predicted to be <strong>specific</strong> for the query gene. Thus, expression experiments that have
+     *         both specific and non-specific probes for the query gene will be included.
      */
     public Collection<Long> getQueryGeneSpecificExpressionExperiments() {
 
@@ -346,26 +358,22 @@ public class CoexpressionCollectionValueObject {
      * @return the stringency Filter Value
      */
     public int getStringency() {
-        return stringencyFilterValue;
+        return supportThreshold;
     }
 
     /**
-     * Set the amount of time we had to wait for the queries (which can be less than the time per query because
+     * Set the amount of time we had to wait for the query (mostly database access time)
      * 
      * @param elapsedWallTime (in milliseconds)
      */
-    public void setElapsedWallTimeElapsed( double elapsedWallMillisSeconds ) {
-        this.elapsedWallSeconds = elapsedWallMillisSeconds / 1000.0;
+    public void setDbQuerySeconds( double elapsedWallMillisSeconds ) {
+        this.dbQuerySeconds = elapsedWallMillisSeconds / 1000.0;
     }
 
-    public void setFirstQueryElapsedTime( Long elapsed ) {
-        this.firstQuerySeconds = elapsed / 1000.0;
-
-    }
-
-    public void setGeneCoexpressionResults( GeneCoexpressionResults geneMap ) {
-        this.geneMap = geneMap;
-    }
+    //
+    // public void setGeneCoexpressionResults( GeneCoexpressionResults geneMap ) {
+    // this.geneMap = geneMap;
+    // }
 
     public void setPostProcessTime( Long elapsed ) {
         this.postProcessSeconds = elapsed / 1000.0;
@@ -383,7 +391,33 @@ public class CoexpressionCollectionValueObject {
      * @param sets the stringency Value
      */
     public void setStringency( int stringency ) {
-        this.stringencyFilterValue = stringency;
+        this.supportThreshold = stringency;
     }
 
+    /**
+     * @param geneId
+     * @return
+     */
+    public CoexpressionValueObject get( Long geneId ) {
+        if ( !this.contains( geneId ) ) return null;
+
+        CoexpressionValueObject result = null;
+
+        if ( knownGeneCoexpressionData.containsKey( geneId ) ) {
+            result = knownGeneCoexpressionData.get( geneId );
+        }
+
+        if ( predictedCoexpressionData.containsKey( geneId ) ) {
+            assert result == null;
+            result = predictedCoexpressionData.get( geneId );
+        }
+
+        if ( alignedCoexpressionData.containsKey( geneId ) ) {
+            assert result == null;
+            result = alignedCoexpressionData.get( geneId );
+
+        }
+        return result;
+
+    }
 }

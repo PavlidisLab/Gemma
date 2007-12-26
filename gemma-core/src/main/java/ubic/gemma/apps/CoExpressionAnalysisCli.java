@@ -197,7 +197,7 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
             log.info( "Get co-expressed genes for " + gene.getName() );
             CoexpressionCollectionValueObject coexpressed = probeLinkCoexpressionAnalyzer.linkAnalysis( gene, null,
                     this.stringency );
-            Map<Long, Collection<Long>> geneEEMap = coexpressed.getGeneCoexpressionType()
+            Map<Long, Collection<Long>> geneEEMap = coexpressed.getKnownGeneCoexpression()
                     .getSpecificExpressionExperiments();
             for ( Long geneId : geneEEMap.keySet() ) {
                 Collection<Long> ees = geneEEMap.get( geneId );

@@ -165,7 +165,8 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         gene2GOAssociationService = ( Gene2GOAssociationService ) getBean( "gene2GOAssociationService" );
         ontologyEntryService = ( GeneOntologyService ) getBean( "geneOntologyService" );
         goMetric = ( GoMetric ) getBean( "goMetric" );
-        probeLinkCoexpressionAnalyzer = (ProbeLinkCoexpressionAnalyzer) this.getBean("probeLinkCoexpressionAnalyzer");
+        probeLinkCoexpressionAnalyzer = ( ProbeLinkCoexpressionAnalyzer ) this
+                .getBean( "probeLinkCoexpressionAnalyzer" );
         while ( !ontologyEntryService.isReady() ) {
             log.info( "waiting for ontology load.." );
             try {
@@ -338,39 +339,6 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         }
 
         return overlapTerms;
-    }
-
-    // private void printResults( Map<Gene, Map<Gene, Integer>> masterTermCountMap ) {
-    //
-    // for ( Gene g : masterTermCountMap.keySet() ) {
-    // log.info( "Master Gene: " + g.getOfficialSymbol() );
-    // Map<Gene, Integer> coexpressed = masterTermCountMap.get( g );
-    // for ( Gene coexpG : coexpressed.keySet() ) {
-    // log.info( "-------- Coexpressed Gene:" + coexpG.getOfficialSymbol() + " OverLap: "
-    // + coexpressed.get( coexpG ) );
-    //
-    // }
-    // log.info( "=============" );
-    // }
-    // }
-
-    private Collection<Gene> getCoexpressedGenes( Gene gene, Integer stringincy ) {
-
-        CoexpressionCollectionValueObject coexpressed =probeLinkCoexpressionAnalyzer.linkAnalysis( gene, null, stringincy );
-
-        Collection<Long> geneIds = new HashSet<Long>();
-        for ( CoexpressionValueObject co : coexpressed.getCoexpressionData() ) {
-            geneIds.add( co.getGeneId() );
-        }
-
-        Collection<Gene> cGenes = new HashSet<Gene>();
-        for ( long id : geneIds ) {
-            cGenes.add( geneService.load( id ) );
-        }
-        if ( cGenes.isEmpty() || cGenes == null ) return null;
-
-        return cGenes;
-
     }
 
     /**

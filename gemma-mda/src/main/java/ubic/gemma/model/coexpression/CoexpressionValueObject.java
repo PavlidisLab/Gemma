@@ -20,7 +20,6 @@ package ubic.gemma.model.coexpression;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -31,35 +30,61 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.ontology.OntologyTerm;
 
 /**
- * Used for storing the results of each gene that is coexpressed with a query gene. Keeps track of specificity, pValues,
- * Scores, goTerms, GO overlap with the query, stringency value.
+ * The results for one gene that is coexpressed with a query gene. Keeps track of specificity, pValues, Scores, goTerms,
+ * GO overlap with the query, stringency value. Information about positive and negative correlations are stored,
+ * separately.
  * 
  * @author klc
  * @version $Id$
  */
 public class CoexpressionValueObject {
 
-    @Override
-    public String toString() {
-        return geneName;
-    }
-
-    private String geneName;
+    /*
+     * Basic information about the gene.
+     */
     private Long geneId;
+    private String geneName;
     private String geneOfficialName;
     private String geneType;
     private Long taxonId;
 
+    /*
+     * Maps of Expression Experiment IDs to maps of Probe IDs to scores/pvalues that are in support of this
+     * coexpression.
+     */
     private Map<Long, Map<Long, Double>> positiveScores;
     private Map<Long, Map<Long, Double>> negativeScores;
-    private Map<Long, Map<Long, Double>> pValues;
-    private Integer stringencyFilterValue;
+    private Map<Long, Map<Long, Double>> posPvalues;
+    private Map<Long, Map<Long, Double>> negPvalues;
+
+    /**
+     * Expression Experiments whihc have evidence for coexpression of this gene with the query, but the probes are not
+     * specific for the target gene.
+     */
     private Collection<Long> nonspecificEE;
-    private int possibleOverlap;
-    private Collection<OntologyTerm> goOverlap;
-    private List<Long> experimentBitList = new ArrayList<Long>();
+
+    /**
+     * Genes that were predicted to cross-hybridize with the target gene. FIXME why are these strings?
+     */
     private Collection<String> nonSpecificGenes = new HashSet<String>();
+
+    /**
+     * True if any of the probes for this gene are predicted to cross-hybridize with the query gene. This is an obvious
+     * risk of false positives.
+     */
     private boolean hybridizesWithQueryGene;
+
+    /**
+     * Number of GO terms the query gene has. This is the highest possible overlap
+     */
+    private int numQueryGeneGOTerms;
+
+    /**
+     * Number of GO terms this gene shares with the query gene.
+     */
+    private Collection<OntologyTerm> goOverlap;
+
+    private List<Long> experimentBitList = new ArrayList<Long>();
 
     // the expression experiments that this coexpression was involved in
     private Map<Long, ExpressionExperimentValueObject> expressionExperimentValueObjects;
@@ -68,44 +93,46 @@ public class CoexpressionValueObject {
         geneName = "";
         geneId = null;
         geneOfficialName = null;
-        expressionExperimentValueObjects = Collections
-                .synchronizedMap( new HashMap<Long, ExpressionExperimentValueObject>() );
-        positiveScores = Collections.synchronizedMap( new HashMap<Long, Map<Long, Double>>() );
-        negativeScores = Collections.synchronizedMap( new HashMap<Long, Map<Long, Double>>() );
-        pValues = new HashMap<Long, Map<Long, Double>>();
-        stringencyFilterValue = null;
-        possibleOverlap = 0;
+        expressionExperimentValueObjects = new HashMap<Long, ExpressionExperimentValueObject>();
+        positiveScores = new HashMap<Long, Map<Long, Double>>();
+        negativeScores = new HashMap<Long, Map<Long, Double>>();
+        posPvalues = new HashMap<Long, Map<Long, Double>>();
+        negPvalues = new HashMap<Long, Map<Long, Double>>();
+
+        numQueryGeneGOTerms = 0;
     }
 
     /**
-     * @param expressionExperimentValueObjects the expressionExperimentValueObjects to set
+     * @param eeVo
      */
     public void addExpressionExperimentValueObject( ExpressionExperimentValueObject eeVo ) {
-        if ( !expressionExperimentValueObjects.containsKey( eeVo.getId() ) )
-            this.expressionExperimentValueObjects.put( eeVo.getId(), eeVo );
+        this.expressionExperimentValueObjects.put( eeVo.getId(), eeVo );
     }
 
+    /**
+     * @param gene
+     */
     public void addNonSpecificGene( String gene ) {
         this.nonSpecificGenes.add( gene );
     }
 
-    public void addPValue( Long eeID, Double pValue, Long probeID ) {
-
-        if ( !pValues.containsKey( eeID ) ) pValues.put( eeID, new HashMap<Long, Double>() );
-
-        pValues.get( eeID ).put( probeID, pValue );
-
-    }
-
-    public void addScore( Long eeID, Double score, long probeID ) {
+    /**
+     * @param eeID
+     * @param score
+     * @param pvalue
+     * @param probeID
+     */
+    public void addScore( Long eeID, Double score, Double pvalue, long probeID ) {
         if ( score < 0 ) {
             if ( !negativeScores.containsKey( eeID ) ) negativeScores.put( eeID, new HashMap<Long, Double>() );
-
+            if ( !negPvalues.containsKey( eeID ) ) negPvalues.put( eeID, new HashMap<Long, Double>() );
+            negPvalues.get( eeID ).put( probeID, pvalue );
             negativeScores.get( eeID ).put( probeID, score );
 
         } else {
             if ( !positiveScores.containsKey( eeID ) ) positiveScores.put( eeID, new HashMap<Long, Double>() );
-
+            if ( !posPvalues.containsKey( eeID ) ) posPvalues.put( eeID, new HashMap<Long, Double>() );
+            posPvalues.get( eeID ).put( probeID, pvalue );
             positiveScores.get( eeID ).put( probeID, score );
 
         }
@@ -126,27 +153,6 @@ public class CoexpressionValueObject {
                 experimentBitList.add( 0l );
             }
         }
-    }
-
-    /**
-     * @return
-     */
-    public double getCollapsedPValue() {
-
-        if ( pValues.keySet().size() == 0 ) return 0;
-
-        double mean = 0;
-        int size = 0;
-
-        synchronized ( pValues ) {
-            for ( Map<Long, Double> scores : pValues.values() ) {
-                for ( Double score : scores.values() ) {
-                    mean += score;
-                    size++;
-                }
-            }
-        }
-        return mean / size;
     }
 
     /**
@@ -172,7 +178,7 @@ public class CoexpressionValueObject {
     }
 
     /**
-     * @return
+     * @return String holding a list of values for creating the 'bit image'.
      */
     public String getExperimentBitList() {
         StringBuffer buf = new StringBuffer();
@@ -197,11 +203,7 @@ public class CoexpressionValueObject {
      *         EEValueObject if it does.
      */
     public ExpressionExperimentValueObject getExpressionExperimentValueObject( Long eeID ) {
-
-        if ( expressionExperimentValueObjects.containsKey( eeID ) )
-            return expressionExperimentValueObjects.get( eeID );
-
-        return null;
+        return expressionExperimentValueObjects.get( eeID );
     }
 
     /**
@@ -233,12 +235,15 @@ public class CoexpressionValueObject {
     }
 
     /**
-     * @return the geneType
+     * @return the geneType (known gene, predicted, or probe-aligned region)
      */
     public String getGeneType() {
         return geneType;
     }
 
+    /**
+     * @return Gene Ontology similarity with the query gene.
+     */
     public Collection<OntologyTerm> getGoOverlap() {
         return goOverlap;
     }
@@ -258,46 +263,30 @@ public class CoexpressionValueObject {
     }
 
     /**
-     * Function to return the max of negative or positive link count. This is used for sorting.
+     * Function to return the max of the negative and positive link support. This is used for sorting.
      * 
      * @return
      */
-    public Integer getMaxLinkCount() {
-        Integer positiveLinks = this.getPositiveLinkCount();
-        Integer negativeLinks = this.getNegativeLinkCount();
-
-        if ( positiveLinks == null && negativeLinks == null ) {
-            return 0;
-        }
-        if ( positiveLinks == null ) {
-            return negativeLinks;
-        }
-        if ( negativeLinks == null ) {
-            return positiveLinks;
-        }
-
-        if ( positiveLinks >= negativeLinks ) {
-            return positiveLinks;
-        } else {
-            return negativeLinks;
-        }
+    public int getMaxLinkCount() {
+        int positiveLinks = this.getPositiveLinkSupport();
+        int negativeLinks = this.getNegativeLinkSupport();
+        return Math.max( positiveLinks, negativeLinks );
     }
 
     /**
-     * Function to return the negative link counts. If the count equals or exceeds the stringency filter value or the
-     * filter value is not set, return the count. If the count is below the filter value, return null.
-     * 
+     * @param eeId
+     * @return
+     */
+    public Collection<Long> getNegativeCorrelationProbes( Long eeId ) {
+        if ( !negativeScores.containsKey( eeId ) ) return new HashSet<Long>();
+        return negativeScores.get( eeId ).keySet();
+    }
+
+    /**
      * @return the negative link counts
      */
-    public Integer getNegativeLinkCount() {
-        Integer count = this.negativeScores.keySet().size();
-        if ( stringencyFilterValue == null ) {
-            return count;
-        } else if ( count >= stringencyFilterValue ) {
-            return count;
-        } else {
-            return null;
-        }
+    public int getNegativeLinkSupport() {
+        return this.negativeScores.size();
     }
 
     /**
@@ -305,19 +294,18 @@ public class CoexpressionValueObject {
      */
     public double getNegativeScore() {
 
-        if ( negativeScores.keySet().size() == 0 ) return 0;
+        if ( getNegativeLinkSupport() == 0 ) return 0.0;
 
         double mean = 0;
         int size = 0;
 
-        synchronized ( negativeScores ) {
-            for ( Map<Long, Double> scores : negativeScores.values() ) {
-                for ( Double score : scores.values() ) {
-                    mean += score;
-                    size++;
-                }
+        for ( Map<Long, Double> scores : negativeScores.values() ) {
+            for ( Double score : scores.values() ) {
+                mean += score;
+                size++;
             }
         }
+
         return mean / size;
 
     }
@@ -327,6 +315,25 @@ public class CoexpressionValueObject {
      */
     public Map<Long, Map<Long, Double>> getNegativeScores() {
         return negativeScores;
+    }
+
+    /**
+     * @return geometric mean of the pvalues for the supporting links.
+     */
+    public double getNegPValue() {
+        if ( negPvalues.size() == 0 ) return 0.0;
+
+        double mean = 0;
+        int size = 0;
+
+        for ( Map<Long, Double> scores : negPvalues.values() ) {
+            for ( Double score : scores.values() ) {
+                mean += Math.log( score );
+                size++;
+            }
+        }
+
+        return Math.exp( mean / size );
     }
 
     /**
@@ -344,20 +351,19 @@ public class CoexpressionValueObject {
     }
 
     /**
-     * Function to return the positive link counts. If the count equals or exceeds the stringency filter value or the
-     * filter value is not set, return the count. If the count is below the filter value, return null.
-     * 
+     * @param eeId
+     * @return
+     */
+    public Collection<Long> getPositiveCorrelationProbes( Long eeId ) {
+        if ( !positiveScores.containsKey( eeId ) ) return new HashSet<Long>();
+        return positiveScores.get( eeId ).keySet();
+    }
+
+    /**
      * @return the positive link counts
      */
-    public Integer getPositiveLinkCount() {
-        Integer count = this.positiveScores.keySet().size();
-        if ( stringencyFilterValue == null ) {
-            return count;
-        } else if ( count >= stringencyFilterValue ) {
-            return count;
-        } else {
-            return null;
-        }
+    public int getPositiveLinkSupport() {
+        return this.positiveScores.size();
     }
 
     /**
@@ -365,61 +371,57 @@ public class CoexpressionValueObject {
      */
     public double getPositiveScore() {
 
-        if ( positiveScores.keySet().size() == 0 ) return 0;
+        if ( positiveScores.size() == 0 ) return 0.0;
 
-        double mean = 0;
+        double mean = 0.0;
         int size = 0;
 
-        synchronized ( positiveScores ) {
-            for ( Map<Long, Double> scores : positiveScores.values() ) {
-                for ( Double score : scores.values() ) {
-                    mean += score;
-                    size++;
-                }
+        for ( Map<Long, Double> scores : positiveScores.values() ) {
+            for ( Double score : scores.values() ) {
+                mean += score;
+                size++;
             }
         }
+
         return mean / size;
 
     }
 
     /**
-     * @return the positivePValues
+     * @return the positiveScores
      */
     public Map<Long, Map<Long, Double>> getPositiveScores() {
         return positiveScores;
     }
 
-    public int getPossibleOverlap() {
-        return possibleOverlap;
-    }
-
     /**
-     * @return
+     * @return geometric mean of the pvalues for the supporting links.
      */
-    public Collection<Long> getProbes() {
-        Collection<Long> results = new HashSet<Long>();
+    public double getPosPValue() {
+        if ( posPvalues.size() == 0 ) return 0.0;
 
-        for ( Map<Long, Double> obj : pValues.values() ) {
-            results.addAll( obj.keySet() );
+        double mean = 0.0;
+        int size = 0;
+
+        for ( Map<Long, Double> scores : posPvalues.values() ) {
+            for ( Double score : scores.values() ) {
+                mean += Math.log( score );
+                size++;
+            }
         }
 
-        return results;
-
+        return Math.exp( mean / size );
     }
 
-    /**
-     * @return
-     */
-    public Map<Long, Map<Long, Double>> getPValues() {
-        return pValues;
-
+    public int getPossibleOverlap() {
+        return numQueryGeneGOTerms;
     }
 
-    /**
-     * @return the stringencyFilterValue
-     */
-    public Integer getStringencyFilterValue() {
-        return stringencyFilterValue;
+    public Collection<Long> getProbes( Long eeId ) {
+        Collection<Long> result = new HashSet<Long>();
+        result.addAll( getPositiveCorrelationProbes( eeId ) );
+        result.addAll( getNegativeCorrelationProbes( eeId ) );
+        return result;
     }
 
     public Long getTaxonId() {
@@ -486,15 +488,11 @@ public class CoexpressionValueObject {
         this.nonSpecificGenes = nonSpecificGenes;
     }
 
-    public void setPossibleOverlap( int possibleOverlap ) {
-        this.possibleOverlap = possibleOverlap;
-    }
-
     /**
-     * @param stringencyFilterValue the stringencyFilterValue to set
+     * @param numQueryGeneGOTerms
      */
-    public void setStringencyFilterValue( Integer stringencyFilterValue ) {
-        this.stringencyFilterValue = stringencyFilterValue;
+    public void setNumQueryGeneGOTerms( int numQueryGeneGOTerms ) {
+        this.numQueryGeneGOTerms = numQueryGeneGOTerms;
     }
 
     /**
@@ -502,5 +500,10 @@ public class CoexpressionValueObject {
      */
     public void setTaxonId( Long taxonId ) {
         this.taxonId = taxonId;
+    }
+
+    @Override
+    public String toString() {
+        return geneName;
     }
 }
