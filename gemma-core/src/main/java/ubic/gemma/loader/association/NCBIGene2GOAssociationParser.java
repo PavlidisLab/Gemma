@@ -155,7 +155,7 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser implements Que
         oe.setValueUri( GeneOntologyService.BASE_GO_URI + value );
         oe.setValue( value );
 
-        g2GOAss.setSource( ncbiGeneDb );
+       // g2GOAss.setSource( ncbiGeneDb );
 
         g2GOAss.setGene( gene );
         g2GOAss.setOntologyEntry( oe );

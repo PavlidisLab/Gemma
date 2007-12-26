@@ -105,13 +105,16 @@ public class CoexpressionCollectionValueObject {
                     if ( ( genes.size() == 1 ) && ( genes.iterator().next().equals( queryGene.getId() ) ) ) {
 
                         if ( this.predictedCoexpressionData.getExpressionExperiment( eeID ) != null )
-                            this.predictedCoexpressionData.getExpressionExperiment( eeID ).setSpecific( true );
+                            this.predictedCoexpressionData.getExpressionExperiment( eeID )
+                                    .setProbeSpecificForQueryGene( true );
 
                         if ( this.geneCoexpressionData.getExpressionExperiment( eeID ) != null )
-                            this.geneCoexpressionData.getExpressionExperiment( eeID ).setSpecific( true );
+                            this.geneCoexpressionData.getExpressionExperiment( eeID ).setProbeSpecificForQueryGene(
+                                    true );
 
                         if ( this.alignedCoexpressionData.getExpressionExperiment( eeID ) != null )
-                            this.alignedCoexpressionData.getExpressionExperiment( eeID ).setSpecific( true );
+                            this.alignedCoexpressionData.getExpressionExperiment( eeID ).setProbeSpecificForQueryGene(
+                                    true );
 
                     }
                 }

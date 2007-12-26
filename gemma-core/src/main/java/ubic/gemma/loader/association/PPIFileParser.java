@@ -93,9 +93,9 @@ public class PPIFileParser extends BasicLineParser /* implements Persister */{
 
             assoc.setFirstProduct( g1 );
             assoc.setSecondProduct( g2 );
-            db = ExternalDatabase.Factory.newInstance();
-            db.setName( fields[3] );
-            assoc.setSource( db );
+            // db = ExternalDatabase.Factory.newInstance();
+            // db.setName( fields[3] );
+            //            assoc.setSource( db );
 
         } catch ( Exception e ) {
             log.error( e.toString() );

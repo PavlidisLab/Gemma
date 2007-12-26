@@ -514,7 +514,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         if ( eeVo == null ) return "Expression Experiment unavailable";
 
-        if ( eeVo.isSpecific() ) return "&bull;";
+        if ( eeVo.isProbeSpecificForQueryGene() ) return "&bull;";
 
         return "";
     }

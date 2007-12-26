@@ -433,7 +433,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         for ( ExpressionExperimentValueObject eeVo : eeVos ) {
             eeVo.setCoexpressionLinkCount( coexpressions.getLinkCountForEE( eeVo.getId() ) );
             eeVo.setRawCoexpressionLinkCount( coexpressions.getRawLinkCountForEE( eeVo.getId() ) );
-            eeVo.setSpecific( coexpressions.getExpressionExperiment( eeVo.getId() ).isSpecific() );
+            eeVo.setProbeSpecificForQueryGene(  coexpressions.getExpressionExperiment( eeVo.getId() ).isProbeSpecificForQueryGene() );
         }
 
         List<ExpressionExperimentValueObject> eeList = new ArrayList<ExpressionExperimentValueObject>( eeVos );
