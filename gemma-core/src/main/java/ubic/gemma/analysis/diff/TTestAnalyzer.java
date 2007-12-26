@@ -34,7 +34,6 @@ import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -197,7 +196,7 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
         expressionAnalysis.setResultSets( resultSets );
 
-        this.setAnalysisMetadata( expressionAnalysis, this.getClass().getSimpleName(), DIFFERENTIAL_EXPRESSION );
+        expressionAnalysis.setName( this.getClass().getSimpleName() );
 
         return expressionAnalysis;
     }

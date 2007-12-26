@@ -150,7 +150,8 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
         }
 
         expressionAnalysis.setResultSets( resultSets );
-        this.setAnalysisMetadata( expressionAnalysis, this.getClass().getSimpleName(), DIFFERENTIAL_EXPRESSION );
+
+        expressionAnalysis.setName( this.getClass().getSimpleName() );
 
         return expressionAnalysis;
     }

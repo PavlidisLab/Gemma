@@ -79,7 +79,7 @@ public class DifferentialExpressionAnalyzerService {
         DifferentialExpressionAnalysis expressionAnalysis = differentialExpressionAnalyzer.getExpressionAnalysis();
 
         if ( expressionAnalysis == null ) {
-            // TODO get results from database. For now returning null.
+            log.error( "No differential expression analyses for " + expressionExperiment.getShortName() );
             return null;
         }
 
@@ -358,18 +358,11 @@ public class DifferentialExpressionAnalyzerService {
      */
     private DifferentialExpressionAnalysis getDifferentialExpressionAnalysisFromAnalyses(
             Collection<DifferentialExpressionAnalysis> analyses, String analysisType ) {
-        // TODO use a DifferentialExpressionAnalysis instead
         DifferentialExpressionAnalysis analysis = null;
         for ( DifferentialExpressionAnalysis a : analyses ) {
 
-            if ( StringUtils.equalsIgnoreCase( a.getName().toLowerCase(), DIFFERENTIAL_EXPRESSION.toLowerCase() )
-                    || StringUtils.contains( a.getDescription().toLowerCase(), DIFFERENTIAL_EXPRESSION.toLowerCase() ) ) {
-
-                if ( StringUtils.contains( a.getName().toLowerCase(), analysisType.toLowerCase() )
-                        || StringUtils.contains( a.getDescription().toLowerCase(), analysisType.toLowerCase() ) ) {
-                    analysis = a;
-                    break;
-                }
+            if ( a instanceof DifferentialExpressionAnalysis ) {
+                analysis = a;
             }
         }
         return analysis;
