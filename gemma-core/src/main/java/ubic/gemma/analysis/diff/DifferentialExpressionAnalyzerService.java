@@ -363,6 +363,7 @@ public class DifferentialExpressionAnalyzerService {
 
             if ( a instanceof DifferentialExpressionAnalysis ) {
                 analysis = a;
+                break;
             }
         }
         return analysis;
