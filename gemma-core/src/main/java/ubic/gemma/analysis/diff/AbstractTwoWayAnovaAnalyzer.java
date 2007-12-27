@@ -51,6 +51,8 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
 
     protected Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
 
+    private ExpressionExperiment ee = null;
+
     private final int mainEffectAIndex = 0;
     private final int mainEffectBIndex = 1;
     private final int mainEffectInteractionIndex = 2;
@@ -152,6 +154,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
         expressionAnalysis.setResultSets( resultSets );
 
         expressionAnalysis.setName( this.getClass().getSimpleName() );
+        if ( ee != null ) expressionAnalysis.setDescription( ee.getShortName() );
 
         return expressionAnalysis;
     }
@@ -163,6 +166,8 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
      */
     @Override
     public DifferentialExpressionAnalysis getDifferentialExpressionAnalysis( ExpressionExperiment expressionExperiment ) {
+
+        ee = expressionExperiment;
 
         Collection<ExperimentalFactor> experimentalFactors = expressionExperiment.getExperimentalDesign()
                 .getExperimentalFactors();

@@ -197,6 +197,7 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
         expressionAnalysis.setResultSets( resultSets );
 
         expressionAnalysis.setName( this.getClass().getSimpleName() );
+        expressionAnalysis.setDescription( expressionExperiment.getShortName() );
 
         return expressionAnalysis;
     }
