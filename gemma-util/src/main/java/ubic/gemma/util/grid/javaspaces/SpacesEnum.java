@@ -30,7 +30,7 @@ import java.util.Properties;
  */
 public enum SpacesEnum {
 
-    DEFAULT_SPACE(System.getProperty( "user.home" ) + System.getProperty( "file.separator" ) + "build.properties");
+    DEFAULT_SPACE(System.getProperty( "user.home" ) + System.getProperty( "file.separator" ) + "Gemma.properties");
 
     private String spaceUrl = null;
 
