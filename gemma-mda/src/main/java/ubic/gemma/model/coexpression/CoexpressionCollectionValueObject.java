@@ -54,7 +54,7 @@ public class CoexpressionCollectionValueObject {
 
     private CoexpressedGenesDetails knownGeneCoexpressionData;
     private CoexpressedGenesDetails predictedCoexpressionData;
-    private CoexpressedGenesDetails alignedCoexpressionData;
+    private CoexpressedGenesDetails probeAlignedRegionCoexpressionData;
 
     private double postProcessSeconds;
     private double dbQuerySeconds;
@@ -64,10 +64,12 @@ public class CoexpressionCollectionValueObject {
     /**
      * 
      */
-    public CoexpressionCollectionValueObject() {
-        knownGeneCoexpressionData = new CoexpressedGenesDetails();
-        predictedCoexpressionData = new CoexpressedGenesDetails();
-        alignedCoexpressionData = new CoexpressedGenesDetails();
+    public CoexpressionCollectionValueObject( Gene queryGene, int supportThreshold ) {
+        this.queryGene = queryGene;
+        this.supportThreshold = supportThreshold;
+        knownGeneCoexpressionData = new CoexpressedGenesDetails( queryGene, supportThreshold );
+        predictedCoexpressionData = new CoexpressedGenesDetails( queryGene, supportThreshold );
+        probeAlignedRegionCoexpressionData = new CoexpressedGenesDetails( queryGene, supportThreshold );
         crossHybridizingQueryProbes = Collections.synchronizedMap( new HashMap<Long, Map<Long, Collection<Long>>>() );
     }
 
@@ -76,7 +78,7 @@ public class CoexpressionCollectionValueObject {
         if ( geneType.equalsIgnoreCase( GENE_IMPL ) )
             this.knownGeneCoexpressionData.add( vo );
         else if ( geneType.equalsIgnoreCase( PROBE_ALIGNED_REGION_IMPL ) )
-            this.alignedCoexpressionData.add( vo );
+            this.probeAlignedRegionCoexpressionData.add( vo );
         else if ( geneType.equalsIgnoreCase( PREDICTED_GENE_IMPL ) )
             this.predictedCoexpressionData.add( vo );
         else
@@ -89,7 +91,7 @@ public class CoexpressionCollectionValueObject {
      */
     public boolean contains( Long id ) {
         return knownGeneCoexpressionData.containsKey( id ) || predictedCoexpressionData.containsKey( id )
-                || alignedCoexpressionData.containsKey( id );
+                || probeAlignedRegionCoexpressionData.containsKey( id );
     }
 
     /**
@@ -97,11 +99,13 @@ public class CoexpressionCollectionValueObject {
      * @param eevo
      */
     public void addExpressionExperiment( String geneType, ExpressionExperimentValueObject eevo ) {
-
+        /*
+         * Maintain a list of which expression experiments participate in which type of coexpression
+         */
         if ( geneType.equalsIgnoreCase( GENE_IMPL ) )
             this.knownGeneCoexpressionData.addExpressionExperiment( eevo );
         else if ( geneType.equalsIgnoreCase( PROBE_ALIGNED_REGION_IMPL ) )
-            this.alignedCoexpressionData.addExpressionExperiment( eevo );
+            this.probeAlignedRegionCoexpressionData.addExpressionExperiment( eevo );
         else if ( geneType.equalsIgnoreCase( PREDICTED_GENE_IMPL ) )
             this.predictedCoexpressionData.addExpressionExperiment( eevo );
         else
@@ -138,8 +142,8 @@ public class CoexpressionCollectionValueObject {
                         this.knownGeneCoexpressionData.getExpressionExperiment( eeID ).setProbeSpecificForQueryGene(
                                 true );
 
-                    if ( this.alignedCoexpressionData.getExpressionExperiment( eeID ) != null )
-                        this.alignedCoexpressionData.getExpressionExperiment( eeID )
+                    if ( this.probeAlignedRegionCoexpressionData.getExpressionExperiment( eeID ) != null )
+                        this.probeAlignedRegionCoexpressionData.getExpressionExperiment( eeID )
                                 .setProbeSpecificForQueryGene( true );
 
                 }
@@ -168,8 +172,8 @@ public class CoexpressionCollectionValueObject {
     /**
      * @return the coexpressionData for known genes
      */
-    public Collection<CoexpressionValueObject> getKnownGeneCoexpressionData() {
-        return this.knownGeneCoexpressionData.getCoexpressionData();
+    public Collection<CoexpressionValueObject> getKnownGeneCoexpressionData(int supportThreshold) {
+        return this.knownGeneCoexpressionData.getCoexpressionData(supportThreshold);
     }
 
     /**
@@ -189,7 +193,7 @@ public class CoexpressionCollectionValueObject {
         if ( geneType.equalsIgnoreCase( GENE_IMPL ) )
             return knownGeneCoexpressionData.getExpressionExperiment( eeID );
         else if ( geneType.equalsIgnoreCase( PROBE_ALIGNED_REGION_IMPL ) )
-            return alignedCoexpressionData.getExpressionExperiment( eeID );
+            return probeAlignedRegionCoexpressionData.getExpressionExperiment( eeID );
         else if ( geneType.equalsIgnoreCase( PREDICTED_GENE_IMPL ) )
             return predictedCoexpressionData.getExpressionExperiment( eeID );
 
@@ -203,7 +207,7 @@ public class CoexpressionCollectionValueObject {
     public Collection<ExpressionExperimentValueObject> getExpressionExperiments() {
         Collection<ExpressionExperimentValueObject> all = new HashSet<ExpressionExperimentValueObject>();
         all.addAll( this.knownGeneCoexpressionData.getExpressionExperiments() );
-        all.addAll( this.alignedCoexpressionData.getExpressionExperiments() );
+        all.addAll( this.probeAlignedRegionCoexpressionData.getExpressionExperiments() );
         all.addAll( this.predictedCoexpressionData.getExpressionExperiments() );
         return all;
 
@@ -214,9 +218,9 @@ public class CoexpressionCollectionValueObject {
      */
     public Collection<CoexpressionValueObject> getAllGeneCoexpressionData() {
         Collection<CoexpressionValueObject> result = new HashSet<CoexpressionValueObject>();
-        result.addAll( this.knownGeneCoexpressionData.getCoexpressionData() );
-        result.addAll( this.predictedCoexpressionData.getCoexpressionData() );
-        result.addAll( this.alignedCoexpressionData.getCoexpressionData() );
+        result.addAll( this.knownGeneCoexpressionData.getCoexpressionData(0) );
+        result.addAll( this.predictedCoexpressionData.getCoexpressionData(0) );
+        result.addAll( this.probeAlignedRegionCoexpressionData.getCoexpressionData(0) );
         return result;
     }
 
@@ -245,7 +249,7 @@ public class CoexpressionCollectionValueObject {
      * @return the numProbeAlignedRegions
      */
     public int getNumProbeAlignedRegions() {
-        return this.alignedCoexpressionData.getNumberOfGenes();
+        return this.probeAlignedRegionCoexpressionData.getNumberOfGenes();
     }
 
     /**
@@ -266,7 +270,7 @@ public class CoexpressionCollectionValueObject {
      * @return the numStringencyProbeAlignedRegions
      */
     public int getNumStringencyProbeAlignedRegions() {
-        return this.alignedCoexpressionData.getNumberOfGenes();
+        return this.probeAlignedRegionCoexpressionData.getNumberOfGenes();
     }
 
     public double getPostProcessSeconds() {
@@ -276,8 +280,8 @@ public class CoexpressionCollectionValueObject {
     /**
      * @return the predicted genes CoexpressionDataValueobjects
      */
-    public Collection<CoexpressionValueObject> getPredictedCoexpressionData() {
-        return this.predictedCoexpressionData.getCoexpressionData();
+    public Collection<CoexpressionValueObject> getPredictedCoexpressionData(int supportThreshold) {
+        return this.predictedCoexpressionData.getCoexpressionData(supportThreshold);
     }
 
     /**
@@ -290,15 +294,15 @@ public class CoexpressionCollectionValueObject {
     /**
      * @return the probe aligned genes CoexpressionDataValueObjects
      */
-    public Collection<CoexpressionValueObject> getProbeAlignedCoexpressionData() {
-        return this.alignedCoexpressionData.getCoexpressionData();
+    public Collection<CoexpressionValueObject> getProbeAlignedCoexpressionData(int supportThreshold) {
+        return this.probeAlignedRegionCoexpressionData.getCoexpressionData(supportThreshold);
     }
 
     /**
      * @return the CoexpressonTypeValueObject for probe aligned regions
      */
     public CoexpressedGenesDetails getProbeAlignedCoexpressionType() {
-        return this.alignedCoexpressionData;
+        return this.probeAlignedRegionCoexpressionData;
     }
 
     /**
@@ -370,28 +374,12 @@ public class CoexpressionCollectionValueObject {
         this.dbQuerySeconds = elapsedWallMillisSeconds / 1000.0;
     }
 
-    //
-    // public void setGeneCoexpressionResults( GeneCoexpressionResults geneMap ) {
-    // this.geneMap = geneMap;
-    // }
-
+    /**
+     * @param elapsed
+     */
     public void setPostProcessTime( Long elapsed ) {
         this.postProcessSeconds = elapsed / 1000.0;
 
-    }
-
-    /**
-     * @param queryGene the queryGene to set
-     */
-    public void setQueryGene( Gene queryGene ) {
-        this.queryGene = queryGene;
-    }
-
-    /**
-     * @param sets the stringency Value
-     */
-    public void setStringency( int stringency ) {
-        this.supportThreshold = stringency;
     }
 
     /**
@@ -412,9 +400,9 @@ public class CoexpressionCollectionValueObject {
             result = predictedCoexpressionData.get( geneId );
         }
 
-        if ( alignedCoexpressionData.containsKey( geneId ) ) {
+        if ( probeAlignedRegionCoexpressionData.containsKey( geneId ) ) {
             assert result == null;
-            result = alignedCoexpressionData.get( geneId );
+            result = probeAlignedRegionCoexpressionData.get( geneId );
 
         }
         return result;

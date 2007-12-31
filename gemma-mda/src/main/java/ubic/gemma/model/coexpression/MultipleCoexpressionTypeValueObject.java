@@ -49,7 +49,7 @@ public class MultipleCoexpressionTypeValueObject {
 
     private Map<Gene, CommonCoexpressionValueObject> geneToQueries;
     private Map<Long, Gene> geneLookup;
-    
+
     public MultipleCoexpressionTypeValueObject() {
 
         geneToQueries = Collections.synchronizedMap( new HashMap<Gene, CommonCoexpressionValueObject>() );
@@ -57,39 +57,40 @@ public class MultipleCoexpressionTypeValueObject {
 
         expressionExperiments = Collections.synchronizedMap( new HashMap<Long, ExpressionExperimentValueObject>() );
     }
-    
-    public void addCoexpressionCollection(Gene queryGene, CoexpressedGenesDetails coexpressionType) {
-        synchronized (this) {
-            for ( CoexpressionValueObject coexpressed : coexpressionType.getCoexpressionData() ) {
-                getQueriesForGene( getGene(coexpressed) ).add( new QueryGeneCoexpressionDataPair( queryGene, coexpressed ) );
+
+    public void addCoexpressionCollection( Gene queryGene, CoexpressedGenesDetails coexpressionType ) {
+        synchronized ( this ) {
+            for ( CoexpressionValueObject coexpressed : coexpressionType.getCoexpressionData( 0 ) ) {
+                getQueriesForGene( getGene( coexpressed ) ).add(
+                        new QueryGeneCoexpressionDataPair( queryGene, coexpressed ) );
             }
             for ( ExpressionExperimentValueObject eevo : coexpressionType.getExpressionExperiments() ) {
                 expressionExperiments.put( eevo.getId(), eevo );
             }
         }
     }
-    
+
     /**
      * @param gene the Gene of interest
      * @return a subset of the CommonCoexpressionValueObjects that exhibit coexpression with the specified Gene
      */
-    public CommonCoexpressionValueObject getQueriesForGene(Gene gene) {
-        synchronized (this) {
+    public CommonCoexpressionValueObject getQueriesForGene( Gene gene ) {
+        synchronized ( this ) {
             CommonCoexpressionValueObject queries = geneToQueries.get( gene );
             if ( queries == null ) {
-                queries = new CommonCoexpressionValueObject(gene);
+                queries = new CommonCoexpressionValueObject( gene );
                 geneToQueries.put( gene, queries );
             }
             return queries;
         }
     }
-    
+
     /**
      * @param cutoff the minimum number of query genes to pass the filter
      * @return those coexpressed genes that are common to multiple query genes
      */
-    public Collection<CommonCoexpressionValueObject> getCommonCoexpressedGenes(int cutoff) {
-        synchronized (this) {
+    public Collection<CommonCoexpressionValueObject> getCommonCoexpressedGenes( int cutoff ) {
+        synchronized ( this ) {
             List<Long> allEEIds = new ArrayList<Long>( getExpressionExperimentIds() );
             Collection<CommonCoexpressionValueObject> coexpressedGenes = new ArrayList<CommonCoexpressionValueObject>();
             for ( CommonCoexpressionValueObject candidate : geneToQueries.values() ) {
@@ -101,7 +102,7 @@ public class MultipleCoexpressionTypeValueObject {
             return coexpressedGenes;
         }
     }
-    
+
     /**
      * @return the number of genes
      */
@@ -115,7 +116,7 @@ public class MultipleCoexpressionTypeValueObject {
     public Collection<ExpressionExperimentValueObject> getExpressionExperiments() {
         return expressionExperiments.values();
     }
-    
+
     /**
      * @return a collection of expressionExperiment Ids that were searched for coexpression
      */
@@ -139,35 +140,34 @@ public class MultipleCoexpressionTypeValueObject {
 
         ExpressionExperimentValueObject eeVo = expressionExperiments.get( id );
 
-        if (( eeVo == null) || ( eeVo.getRawCoexpressionLinkCount() == null ))
-            return ( long ) 0;
-        else
-            return eeVo.getRawCoexpressionLinkCount();
+        if ( ( eeVo == null ) || ( eeVo.getRawCoexpressionLinkCount() == null ) ) return ( long ) 0;
+
+        return eeVo.getRawCoexpressionLinkCount();
     }
 
     public Long getLinkCountForEE( Long id ) {
 
         ExpressionExperimentValueObject eeVo = expressionExperiments.get( id );
 
-        if (( eeVo == null) || (eeVo.getCoexpressionLinkCount() == null ))
-            return ( long ) 0;
-        else
-            return eeVo.getCoexpressionLinkCount();
+        if ( ( eeVo == null ) || ( eeVo.getCoexpressionLinkCount() == null ) ) return ( long ) 0;
+
+        return eeVo.getCoexpressionLinkCount();
 
     }
-    
-    private Gene getGene(CoexpressionValueObject coexpressed) {
+
+    private Gene getGene( CoexpressionValueObject coexpressed ) {
         // lookup might be unnecessary optimization; whole thing might be unnecessary if we can use load...
-        // another option is to just maintain the 4 things we have in a local object until we create the CommonCoexpressionValueObject...
+        // another option is to just maintain the 4 things we have in a local object until we create the
+        // CommonCoexpressionValueObject...
         Gene gene;
-        synchronized (geneLookup) {
+        synchronized ( geneLookup ) {
             gene = geneLookup.get( coexpressed.getGeneId() );
-            if (gene == null) {
+            if ( gene == null ) {
                 if ( coexpressed.getGeneType().equalsIgnoreCase( GENE_IMPL ) ) {
                     gene = Gene.Factory.newInstance();
-                } else if (coexpressed.getGeneType().equalsIgnoreCase( PREDICTED_GENE_IMPL ) ) {
+                } else if ( coexpressed.getGeneType().equalsIgnoreCase( PREDICTED_GENE_IMPL ) ) {
                     gene = PredictedGene.Factory.newInstance();
-                } else if (coexpressed.getGeneType().equals( PROBE_ALIGNED_REGION_IMPL ) ) {
+                } else if ( coexpressed.getGeneType().equals( PROBE_ALIGNED_REGION_IMPL ) ) {
                     gene = ProbeAlignedRegion.Factory.newInstance();
                 } else {
                     return null;
@@ -181,217 +181,218 @@ public class MultipleCoexpressionTypeValueObject {
         return gene;
     }
 
-//    /**
-//     * @return returns map of genes to a collection of expression experiment IDs that contained <strong>specific</strong>
-//     *         probes (probes that hit only 1 gene) for that gene.
-//     *         <p>
-//     *         If an expression exp has two (or more) probes that hit the same gene, and one probe is specific, even if
-//     *         some of the other(s) are not this EE is considered specific and will still be returned.
-//     */
-//    public Map<Long, Collection<Long>> getSpecificExpressionExperiments() {
-//
-//        Map<Long, Collection<Long>> specificEE = Collections.synchronizedMap( new HashMap<Long, Collection<Long>>() );
-//
-//        synchronized ( crossHybridizingProbes ) {
-//            for ( Long eeID : crossHybridizingProbes.keySet() ) {
-//
-//                // this is a map for ALL the probes from this data set that came up.
-//                Map<Long, Collection<Long>> probe2geneMap = crossHybridizingProbes.get( eeID );
-//
-//                for ( Long probeID : probe2geneMap.keySet() ) {
-//
-//                    Collection<Long> genes = probe2geneMap.get( probeID );
-//                    Integer genecount = genes.size();
-//
-//                    for ( Long geneId : genes ) {
-//
-//                        if ( !specificEE.containsKey( geneId ) ) {
-//                            specificEE.put( geneId, new HashSet<Long>() );
-//                        }
-//
-//                        if ( genecount == 1 ) {
-//                            specificEE.get( geneId ).add( eeID );
-//                        }
-//                    }
-//
-//                }
-//
-//            }
-//        }
-//
-//        return specificEE;
-//    }
-//
-//    /**
-//     * @param eeID
-//     * @returns a collection of Probe IDs for a given expression experiment that hybrydized to more than 1 gene
-//     */
-//    public Collection<Long> getNonSpecificProbes( Long eeID ) {
-//        Collection<Long> nonSpecificProbes = Collections.synchronizedSet( new HashSet<Long>() );
-//
-//        Map<Long, Collection<Long>> probe2geneMap = crossHybridizingProbes.get( eeID );
-//        synchronized ( probe2geneMap ) {
-//            for ( Long probeID : probe2geneMap.keySet() ) {
-//                Collection genes = probe2geneMap.get( probeID );
-//                if ( genes.size() > 1 ) nonSpecificProbes.add( eeID );
-//            }
-//        }
-//        return nonSpecificProbes;
-//    }
-//
-//    /**
-//     * @param eeID
-//     * @param probeID
-//     * @return a collection of gene IDs or null if the eeID and probeID were not found
-//     */
-//    public Collection<Long> getNonSpecificGenes( Long eeID, Long probeID ) {
-//
-//        if ( crossHybridizingProbes.containsKey( eeID ) )
-//            if ( crossHybridizingProbes.get( eeID ).containsKey( probeID ) )
-//                return crossHybridizingProbes.get( eeID ).get( probeID );
-//
-//        return null;
-//    }
-//
-//    /**
-//     * @return the coexpressionData
-//     */
-//    public Collection<CoexpressionValueObject> getCoexpressionData() {
-//        return coexpressionData;
-//    }
-//
-//    /**
-//     * @param coexpressionData the coexpressionData to set
-//     */
-//    public void setCoexpressionData( Collection<CoexpressionValueObject> coexpressionData ) {
-//        this.coexpressionData = coexpressionData;
-//    }
-//
-// 
-//    /**
-//     * @return the stringencyLinkCount
-//     */
-//    public int getPositiveStringencyLinkCount() {
-//        return positiveStringencyLinkCount;
-//    }
-//
-//    /**
-//     * @param stringencyLinkCount the stringencyLinkCount to set
-//     */
-//    public void setPositiveStringencyLinkCount( int stringencyLinkCount ) {
-//        this.positiveStringencyLinkCount = stringencyLinkCount;
-//    }
-//
-//    /**
-//     * @return the stringencyLinkCount
-//     */
-//    public int getNegativeStringencyLinkCount() {
-//        return negativeStringencyLinkCount;
-//    }
-//
-//    /**
-//     * @param stringencyLinkCount the stringencyLinkCount to set
-//     */
-//    public void setNegativeStringencyLinkCount( int stringencyLinkCount ) {
-//        this.negativeStringencyLinkCount = stringencyLinkCount;
-//    }
-//
-//    /**
-//     * @return the expressionExperiments that were searched for coexpression
-//     */
-//    public Collection<ExpressionExperimentValueObject> getExpressionExperiments() {
-//        return expressionExperiments.values();
-//    }
-//    
-//    /**
-//     * @return a collection of expressionExperiment Ids that were searched for coexpression
-//     */
-//    public Collection<Long> getExpressionExperimentIds() {
-//        return expressionExperiments.keySet();
-//    }
-//
-//    /**
-//     * Add an expression experiment to the list
-//     * 
-//     * @param vo
-//     */
-//    public void addExpressionExperiment( ExpressionExperimentValueObject vo ) {
-//        Long id = vo.getId();
-//        if ( !expressionExperiments.containsKey( id ) ) this.expressionExperiments.put( id, vo );
-//    }
-//
-//    /**
-//     * @param eeID expressionExperiment ID
-//     * @return an expressionexperimentValueObject or null if it isn't there
-//     */
-//    public ExpressionExperimentValueObject getExpressionExperiment( Long eeID ) {
-//
-//        if ( expressionExperiments.containsKey( eeID ) ) return this.expressionExperiments.get( eeID );
-//
-//        return null;
-//    }
-//
-//    /**
-//     * Add a collection of expression experiment to the list
-//     * 
-//     * @param vo
-//     */
-//    public void addExpressionExperiments( Collection<ExpressionExperimentValueObject> vos ) {
-//        synchronized ( vos ) {
-//            for ( ExpressionExperimentValueObject eeVo : vos )
-//                addExpressionExperiment( eeVo );
-//        }
-//    }
-//
-//    /**
-//     * @return the number of Genes that met the stringency requirement
-//     */
-//    public int getNumberOfStringencyGenes() {
-//        return this.coexpressionData.size();
-//    }
-//
-//    /**
-//     * @return the number of StringencyGenes
-//     */
-//    public int getNumberOfGenes() {
-//        return numGenes;
-//    }
-//
-//    /**
-//     * @param numGenes the total number of Genes that were coexpressed.
-//     */
-//    public void setNumberOfGenes( int numGenes ) {
-//        this.numGenes = numGenes;
-//    }
-//
-//    public int getNumberOfUsedExpressonExperiments() {
-//        return crossHybridizingProbes.keySet().size();
-//
-//    }
-//
-//    /**
-//     * @param id
-//     * @return an int representing the raw number of links a given ee contributed to the coexpression search
-//     */
-//    public Long getRawLinkCountForEE( Long id ) {
-//
-//        ExpressionExperimentValueObject eeVo = expressionExperiments.get( id );
-//
-//        if (( eeVo == null) || ( eeVo.getRawCoexpressionLinkCount() == null ))
-//            return ( long ) 0;
-//        else
-//            return eeVo.getRawCoexpressionLinkCount();
-//    }
-//
-//    public Long getLinkCountForEE( Long id ) {
-//
-//        ExpressionExperimentValueObject eeVo = expressionExperiments.get( id );
-//
-//        if (( eeVo == null) || (eeVo.getCoexpressionLinkCount() == null ))
-//            return ( long ) 0;
-//        else
-//            return eeVo.getCoexpressionLinkCount();
-//
-//    }
+    // /**
+    // * @return returns map of genes to a collection of expression experiment IDs that contained
+    // <strong>specific</strong>
+    // * probes (probes that hit only 1 gene) for that gene.
+    // * <p>
+    // * If an expression exp has two (or more) probes that hit the same gene, and one probe is specific, even if
+    // * some of the other(s) are not this EE is considered specific and will still be returned.
+    // */
+    // public Map<Long, Collection<Long>> getSpecificExpressionExperiments() {
+    //
+    // Map<Long, Collection<Long>> specificEE = Collections.synchronizedMap( new HashMap<Long, Collection<Long>>() );
+    //
+    // synchronized ( crossHybridizingProbes ) {
+    // for ( Long eeID : crossHybridizingProbes.keySet() ) {
+    //
+    // // this is a map for ALL the probes from this data set that came up.
+    // Map<Long, Collection<Long>> probe2geneMap = crossHybridizingProbes.get( eeID );
+    //
+    // for ( Long probeID : probe2geneMap.keySet() ) {
+    //
+    // Collection<Long> genes = probe2geneMap.get( probeID );
+    // Integer genecount = genes.size();
+    //
+    // for ( Long geneId : genes ) {
+    //
+    // if ( !specificEE.containsKey( geneId ) ) {
+    // specificEE.put( geneId, new HashSet<Long>() );
+    // }
+    //
+    // if ( genecount == 1 ) {
+    // specificEE.get( geneId ).add( eeID );
+    // }
+    // }
+    //
+    // }
+    //
+    // }
+    // }
+    //
+    // return specificEE;
+    // }
+    //
+    // /**
+    // * @param eeID
+    // * @returns a collection of Probe IDs for a given expression experiment that hybrydized to more than 1 gene
+    // */
+    // public Collection<Long> getNonSpecificProbes( Long eeID ) {
+    // Collection<Long> nonSpecificProbes = Collections.synchronizedSet( new HashSet<Long>() );
+    //
+    // Map<Long, Collection<Long>> probe2geneMap = crossHybridizingProbes.get( eeID );
+    // synchronized ( probe2geneMap ) {
+    // for ( Long probeID : probe2geneMap.keySet() ) {
+    // Collection genes = probe2geneMap.get( probeID );
+    // if ( genes.size() > 1 ) nonSpecificProbes.add( eeID );
+    // }
+    // }
+    // return nonSpecificProbes;
+    // }
+    //
+    // /**
+    // * @param eeID
+    // * @param probeID
+    // * @return a collection of gene IDs or null if the eeID and probeID were not found
+    // */
+    // public Collection<Long> getNonSpecificGenes( Long eeID, Long probeID ) {
+    //
+    // if ( crossHybridizingProbes.containsKey( eeID ) )
+    // if ( crossHybridizingProbes.get( eeID ).containsKey( probeID ) )
+    // return crossHybridizingProbes.get( eeID ).get( probeID );
+    //
+    // return null;
+    // }
+    //
+    // /**
+    // * @return the coexpressionData
+    // */
+    // public Collection<CoexpressionValueObject> getCoexpressionData() {
+    // return coexpressionData;
+    // }
+    //
+    // /**
+    // * @param coexpressionData the coexpressionData to set
+    // */
+    // public void setCoexpressionData( Collection<CoexpressionValueObject> coexpressionData ) {
+    // this.coexpressionData = coexpressionData;
+    // }
+    //
+    // 
+    // /**
+    // * @return the stringencyLinkCount
+    // */
+    // public int getPositiveStringencyLinkCount() {
+    // return positiveStringencyLinkCount;
+    // }
+    //
+    // /**
+    // * @param stringencyLinkCount the stringencyLinkCount to set
+    // */
+    // public void setPositiveStringencyLinkCount( int stringencyLinkCount ) {
+    // this.positiveStringencyLinkCount = stringencyLinkCount;
+    // }
+    //
+    // /**
+    // * @return the stringencyLinkCount
+    // */
+    // public int getNegativeStringencyLinkCount() {
+    // return negativeStringencyLinkCount;
+    // }
+    //
+    // /**
+    // * @param stringencyLinkCount the stringencyLinkCount to set
+    // */
+    // public void setNegativeStringencyLinkCount( int stringencyLinkCount ) {
+    // this.negativeStringencyLinkCount = stringencyLinkCount;
+    // }
+    //
+    // /**
+    // * @return the expressionExperiments that were searched for coexpression
+    // */
+    // public Collection<ExpressionExperimentValueObject> getExpressionExperiments() {
+    // return expressionExperiments.values();
+    // }
+    //    
+    // /**
+    // * @return a collection of expressionExperiment Ids that were searched for coexpression
+    // */
+    // public Collection<Long> getExpressionExperimentIds() {
+    // return expressionExperiments.keySet();
+    // }
+    //
+    // /**
+    // * Add an expression experiment to the list
+    // *
+    // * @param vo
+    // */
+    // public void addExpressionExperiment( ExpressionExperimentValueObject vo ) {
+    // Long id = vo.getId();
+    // if ( !expressionExperiments.containsKey( id ) ) this.expressionExperiments.put( id, vo );
+    // }
+    //
+    // /**
+    // * @param eeID expressionExperiment ID
+    // * @return an expressionexperimentValueObject or null if it isn't there
+    // */
+    // public ExpressionExperimentValueObject getExpressionExperiment( Long eeID ) {
+    //
+    // if ( expressionExperiments.containsKey( eeID ) ) return this.expressionExperiments.get( eeID );
+    //
+    // return null;
+    // }
+    //
+    // /**
+    // * Add a collection of expression experiment to the list
+    // *
+    // * @param vo
+    // */
+    // public void addExpressionExperiments( Collection<ExpressionExperimentValueObject> vos ) {
+    // synchronized ( vos ) {
+    // for ( ExpressionExperimentValueObject eeVo : vos )
+    // addExpressionExperiment( eeVo );
+    // }
+    // }
+    //
+    // /**
+    // * @return the number of Genes that met the stringency requirement
+    // */
+    // public int getNumberOfStringencyGenes() {
+    // return this.coexpressionData.size();
+    // }
+    //
+    // /**
+    // * @return the number of StringencyGenes
+    // */
+    // public int getNumberOfGenes() {
+    // return numGenes;
+    // }
+    //
+    // /**
+    // * @param numGenes the total number of Genes that were coexpressed.
+    // */
+    // public void setNumberOfGenes( int numGenes ) {
+    // this.numGenes = numGenes;
+    // }
+    //
+    // public int getNumberOfUsedExpressonExperiments() {
+    // return crossHybridizingProbes.keySet().size();
+    //
+    // }
+    //
+    // /**
+    // * @param id
+    // * @return an int representing the raw number of links a given ee contributed to the coexpression search
+    // */
+    // public Long getRawLinkCountForEE( Long id ) {
+    //
+    // ExpressionExperimentValueObject eeVo = expressionExperiments.get( id );
+    //
+    // if (( eeVo == null) || ( eeVo.getRawCoexpressionLinkCount() == null ))
+    // return ( long ) 0;
+    // else
+    // return eeVo.getRawCoexpressionLinkCount();
+    // }
+    //
+    // public Long getLinkCountForEE( Long id ) {
+    //
+    // ExpressionExperimentValueObject eeVo = expressionExperiments.get( id );
+    //
+    // if (( eeVo == null) || (eeVo.getCoexpressionLinkCount() == null ))
+    // return ( long ) 0;
+    // else
+    // return eeVo.getCoexpressionLinkCount();
+    //
+    // }
 
 }

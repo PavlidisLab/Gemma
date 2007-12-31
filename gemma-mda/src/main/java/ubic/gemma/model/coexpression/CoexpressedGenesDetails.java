@@ -19,6 +19,7 @@
 
 package ubic.gemma.model.coexpression;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,6 +27,7 @@ import java.util.HashSet;
 import java.util.Map;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.genome.Gene;
 
 /**
  * The details about coexpression for multiple target genes with respect to a query gene. All the genes should be of the
@@ -44,8 +46,7 @@ public class CoexpressedGenesDetails {
     private int negativeStringencyLinkCount;
 
     /**
-     * the expression experiments that were used. FIXME does this mean the EEs that were queried, or that show up in the
-     * results?
+     * the expression experiments that show up in the results - they contribute raw links.
      */
     private Map<Long, ExpressionExperimentValueObject> expressionExperiments;
 
@@ -55,11 +56,21 @@ public class CoexpressedGenesDetails {
     private Map<Long, CoexpressionValueObject> coexpressionData;
 
     /**
+     * The gene used to search from.
+     */
+    private Gene queryGene;
+
+    /**
      * Map of EE -> Probe -> Genes
      */
     private Map<Long, Map<Long, Collection<Long>>> expressionExperimentProbe2GeneMaps;
 
-    public CoexpressedGenesDetails() {
+    private final int supportThreshold;
+
+    public CoexpressedGenesDetails( Gene queryGene, int supportThreshold ) {
+
+        this.queryGene = queryGene;
+        this.supportThreshold = supportThreshold;
 
         positiveStringencyLinkCount = 0;
         negativeStringencyLinkCount = 0;
@@ -67,6 +78,10 @@ public class CoexpressedGenesDetails {
         coexpressionData = new HashMap<Long, CoexpressionValueObject>();
         expressionExperiments = new HashMap<Long, ExpressionExperimentValueObject>();
         expressionExperimentProbe2GeneMaps = new HashMap<Long, Map<Long, Collection<Long>>>();
+    }
+
+    public CoexpressionValueObject add( CoexpressionValueObject value ) {
+        return coexpressionData.put( value.getGeneId(), value );
     }
 
     /**
@@ -87,7 +102,10 @@ public class CoexpressedGenesDetails {
     public void addSpecificityInfo( Long eeID, Long probeID, Long geneID ) {
         Map<Long, Collection<Long>> probe2geneMap = getOrInitSpecificityMap( eeID, probeID );
         probe2geneMap.get( probeID ).add( geneID );
+    }
 
+    public boolean containsKey( Object key ) {
+        return coexpressionData.containsKey( key );
     }
 
     /**
@@ -99,10 +117,17 @@ public class CoexpressedGenesDetails {
     }
 
     /**
+     * @param supportThreshold
      * @return the coexpressionData
      */
-    public Collection<CoexpressionValueObject> getCoexpressionData() {
-        return coexpressionData.values();
+    public Collection<CoexpressionValueObject> getCoexpressionData( int supportThreshold ) {
+        Collection<CoexpressionValueObject> result = new HashSet<CoexpressionValueObject>();
+        for ( CoexpressionValueObject o : coexpressionData.values() ) {
+            if ( o.getNegativeLinkSupport() >= supportThreshold || o.getPositiveLinkSupport() >= supportThreshold ) {
+                result.add( o );
+            }
+        }
+        return result;
     }
 
     /**
@@ -135,7 +160,7 @@ public class CoexpressedGenesDetails {
 
         ExpressionExperimentValueObject eeVo = expressionExperiments.get( id );
 
-        if ( ( eeVo == null ) || ( eeVo.getCoexpressionLinkCount() == null ) ) return ( long ) 0;
+        if ( eeVo == null || eeVo.getCoexpressionLinkCount() == null ) return 0L;
 
         return eeVo.getCoexpressionLinkCount();
 
@@ -149,17 +174,12 @@ public class CoexpressedGenesDetails {
     }
 
     /**
-     * @param eeID
+     * @param eeID FIXME why is this actually needed?
      * @param probeID
-     * @return a collection of gene IDs or null if the eeID and probeID were not found
+     * @return a collection of gene IDs that the probe is predicted to detect
      */
-    public Collection<Long> getNonSpecificGenes( Long eeID, Long probeID ) {
-
-        if ( expressionExperimentProbe2GeneMaps.containsKey( eeID ) )
-            if ( expressionExperimentProbe2GeneMaps.get( eeID ).containsKey( probeID ) )
-                return expressionExperimentProbe2GeneMaps.get( eeID ).get( probeID );
-
-        return null;
+    public Collection<Long> getGenesForProbe( Long eeID, Long probeID ) {
+        return expressionExperimentProbe2GeneMaps.get( eeID ).get( probeID );
     }
 
     /**
@@ -209,7 +229,9 @@ public class CoexpressedGenesDetails {
 
         ExpressionExperimentValueObject eeVo = expressionExperiments.get( id );
 
-        if ( ( eeVo == null ) || ( eeVo.getRawCoexpressionLinkCount() == null ) ) return ( long ) 0;
+        if ( eeVo == null || eeVo.getRawCoexpressionLinkCount() == null ) {
+            return ( long ) 0;
+        }
 
         return eeVo.getRawCoexpressionLinkCount();
     }
@@ -219,40 +241,161 @@ public class CoexpressedGenesDetails {
      *         probes (probes that hit only 1 gene) for that gene.
      *         <p>
      *         If an EE has two (or more) probes that hit the same gene, and one probe is specific, even if some of the
-     *         other(s) are not, the EE is considered specific and will still be returned.
+     *         other(s) are not, the EE is considered specific and will still be included.
      */
     public Map<Long, Collection<Long>> getSpecificExpressionExperiments() {
 
         Map<Long, Collection<Long>> result = Collections.synchronizedMap( new HashMap<Long, Collection<Long>>() );
+        for ( Long eeID : expressionExperimentProbe2GeneMaps.keySet() ) {
 
-        synchronized ( expressionExperimentProbe2GeneMaps ) {
-            for ( Long eeID : expressionExperimentProbe2GeneMaps.keySet() ) {
+            // this is a map for ALL the probes from this data set that came up.
+            Map<Long, Collection<Long>> probe2geneMap = expressionExperimentProbe2GeneMaps.get( eeID );
 
-                // this is a map for ALL the probes from this data set that came up.
-                Map<Long, Collection<Long>> probe2geneMap = expressionExperimentProbe2GeneMaps.get( eeID );
+            for ( Long probeID : probe2geneMap.keySet() ) {
 
-                for ( Long probeID : probe2geneMap.keySet() ) {
+                Collection<Long> genes = probe2geneMap.get( probeID );
+                Integer genecount = genes.size();
 
-                    Collection<Long> genes = probe2geneMap.get( probeID );
-                    Integer genecount = genes.size();
+                for ( Long geneId : genes ) {
 
-                    for ( Long geneId : genes ) {
-
-                        if ( !result.containsKey( geneId ) ) {
-                            result.put( geneId, new HashSet<Long>() );
-                        }
-
-                        if ( genecount == 1 ) {
-                            result.get( geneId ).add( eeID );
-                        }
+                    if ( !result.containsKey( geneId ) ) {
+                        result.put( geneId, new HashSet<Long>() );
                     }
 
+                    if ( genecount == 1 ) {
+                        result.get( geneId ).add( eeID );
+                    }
                 }
 
             }
         }
 
         return result;
+    }
+
+    /**
+     * @param querySpecificEE Expression experiments that have probes specific for the query gene.
+     */
+    public void postProcess( Collection<Long> querySpecificEEs ) {
+        Map<Long, Collection<Long>> allSpecificEE = this.getSpecificExpressionExperiments();
+
+        int positiveLinkCount = 0;
+        int negativeLinkCount = 0;
+
+        for ( CoexpressionValueObject coExValObj : getCoexpressionData( 0 ) ) {
+            coExValObj.computeExperimentBits( new ArrayList<Long>( getExpressionExperimentIds() ) );
+
+            Collection<Long> nonspecificEE = fillInNonspecificEEs( allSpecificEE, querySpecificEEs, coExValObj );
+
+            // Fill in information about the other genes these probes hybridize to, if any.
+            for ( Long eeID : nonspecificEE ) {
+
+                for ( Long probeID : coExValObj.getProbes( eeID ) ) {
+
+                    for ( Long geneID : getGenesForProbe( eeID, probeID ) ) {
+
+                        if ( geneID.equals( queryGene.getId() ) ) {
+                            coExValObj.setHybridizesWithQueryGene( true );
+                        } else {
+                            coExValObj.addCrossHybridizingGene( geneID );
+                        }
+
+                    }
+                }
+
+            }
+
+            incrementRawEEContributions( coExValObj.getExpressionExperiments() );
+
+            if ( coExValObj.getPositiveLinkSupport() != 0 ) {
+                if ( coExValObj.getPositiveLinkSupport() >= this.supportThreshold ) {
+                    positiveLinkCount++;
+                }
+
+                incrementEEContributions( coExValObj.getEEContributing2PositiveLinks() );
+            }
+
+            if ( coExValObj.getNegativeLinkSupport() != 0 ) {
+                if ( coExValObj.getNegativeLinkSupport() >= this.supportThreshold ) {
+                    negativeLinkCount++;
+                }
+                incrementEEContributions( coExValObj.getEEContributing2NegativeLinks() );
+            }
+        }
+
+        // add count of pruned matches to coexpression data
+        setPositiveStringencyLinkCount( positiveLinkCount );
+        setNegativeStringencyLinkCount( negativeLinkCount );
+    }
+
+    /**
+     * Update a coexpression value object with data on which expression experiments lacked probes specific for both the
+     * query and target genes. The ids of expression experiments that were 'non-specific' are returned.
+     * 
+     * @param allSpecificEE Map of genes to EEs that had at least one specific probe for that gene.
+     * @param querySpecificEEs IDs of EEs which had probes specific for the query gene.
+     * @param coExValObj results for a single gene
+     * @return ids of expression experiments that had only non-specific probes to the given gene. An ee is considered
+     *         specific iff the ee has probes specific for both the query gene and the target gene.
+     */
+    private Collection<Long> fillInNonspecificEEs( Map<Long, Collection<Long>> allSpecificEE,
+            Collection<Long> querySpecificEEs, CoexpressionValueObject coExValObj ) {
+
+        Collection<Long> result = new HashSet<Long>();
+        for ( Long eeId : coExValObj.getExpressionExperiments() ) {
+            if ( allSpecificEE.get( coExValObj.getGeneId() ).contains( eeId ) && querySpecificEEs.contains( eeId ) ) {
+                // then it is specific for this gene pair.
+                continue;
+            }
+            result.add( eeId );
+        }
+
+        coExValObj.setNonspecificEE( result );
+        return result;
+    }
+
+    /**
+     * Counting up how many support-threshold exceeding links each data set contributed.
+     * 
+     * @param contributingEEs
+     * @param coexpressions
+     */
+    private void incrementEEContributions( Collection<Long> contributingEEs ) {
+
+        for ( Long eeID : contributingEEs ) {
+            ExpressionExperimentValueObject eeVo = getExpressionExperiment( eeID );
+
+            assert eeVo != null;
+
+            if ( eeVo.getCoexpressionLinkCount() == null ) {
+                eeVo.setCoexpressionLinkCount( new Long( 1 ) );
+            } else {
+                eeVo.setCoexpressionLinkCount( eeVo.getCoexpressionLinkCount() + 1 );
+            }
+
+        }
+    }
+
+    /**
+     * Counting up how many links each data set contributed (including links that did not meet the stringency
+     * threshold).
+     * 
+     * @param contributingEEs
+     * @param coexpressions
+     */
+    private void incrementRawEEContributions( Collection<Long> contributingEEs ) {
+        for ( Long eeID : contributingEEs ) {
+
+            ExpressionExperimentValueObject eeVo = getExpressionExperiment( eeID );
+
+            assert eeVo != null;
+
+            if ( eeVo.getRawCoexpressionLinkCount() == null ) {
+                eeVo.setRawCoexpressionLinkCount( new Long( 1 ) );
+            } else {
+                eeVo.setRawCoexpressionLinkCount( eeVo.getRawCoexpressionLinkCount() + 1 );
+            }
+        }
     }
 
     /**
@@ -287,14 +430,6 @@ public class CoexpressedGenesDetails {
             probe2geneMap.put( probeID, genes );
         }
         return probe2geneMap;
-    }
-
-    public boolean containsKey( Object key ) {
-        return coexpressionData.containsKey( key );
-    }
-
-    public CoexpressionValueObject add( CoexpressionValueObject value ) {
-        return coexpressionData.put( value.getGeneId(), value );
     }
 
 }

@@ -262,6 +262,9 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         Gene sourceGene = ( Gene ) ( genesFound.toArray() )[0];
         commandObject.setSourceGene( sourceGene );
 
+        ModelAndView mav = super.showForm( request, response, errors );
+        mav.addObject( "sourceGene", commandObject.getSourceGene() );
+
         // set command object to reflect that only one gene has been found
         commandObject.setSearchString( sourceGene.getOfficialSymbol() );
         commandObject.setGeneIdSearch( "false" );
@@ -271,7 +274,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         Collection<Long> possibleEEs = expressionExperimentService.findByGene( sourceGene );
 
         if ( ( possibleEEs == null ) || ( possibleEEs.isEmpty() ) ) {
-            ModelAndView mav = super.showForm( request, errors, getFormView() );
+            mav = super.showForm( request, errors, getFormView() );
             saveMessage( request, "There are no " + taxon.getScientificName()
                     + " arrays in the system that assay for the gene "
                     + commandObject.getSourceGene().getOfficialSymbol() );
@@ -292,7 +295,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
             eeSearchResults.removeAll( eeToRemove );
 
             if ( eeSearchResults.isEmpty() ) {
-                ModelAndView mav = super.showForm( request, errors, getFormView() );
+                mav = super.showForm( request, errors, getFormView() );
                 saveMessage( request, "There are no " + taxon.getScientificName()
                         + " arrays in the system that assay for the gene "
                         + commandObject.getSourceGene().getOfficialSymbol() + " matching search criteria "
@@ -324,19 +327,19 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
 
         // get all the coexpressed genes and sort them by dataset count
         List<CoexpressionValueObject> coexpressedKnownGenes = new ArrayList<CoexpressionValueObject>();
-        coexpressedKnownGenes.addAll( coexpressions.getKnownGeneCoexpressionData() );
+        coexpressedKnownGenes.addAll( coexpressions.getKnownGeneCoexpressionData( stringency ) );
         // sort coexpressed genes by dataset count
         Collections.sort( coexpressedKnownGenes, new CoexpressionComparator() );
 
         // get all the coexpressed predicted genes and sort them by dataset count
         List<CoexpressionValueObject> coexpressedPredictedGenes = new ArrayList<CoexpressionValueObject>();
-        coexpressedPredictedGenes.addAll( coexpressions.getPredictedCoexpressionData() );
+        coexpressedPredictedGenes.addAll( coexpressions.getPredictedCoexpressionData( stringency ) );
         // sort coexpressed genes by dataset count
         Collections.sort( coexpressedPredictedGenes, new CoexpressionComparator() );
 
         // get all the coexpressed probe aligned regions and sort them by dataset count
         List<CoexpressionValueObject> coexpressedAlignedRegions = new ArrayList<CoexpressionValueObject>();
-        coexpressedAlignedRegions.addAll( coexpressions.getProbeAlignedCoexpressionData() );
+        coexpressedAlignedRegions.addAll( coexpressions.getProbeAlignedCoexpressionData( stringency ) );
         // sort coexpressed genes by dataset count
         Collections.sort( coexpressedAlignedRegions, new CoexpressionComparator() );
 
@@ -369,8 +372,6 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         Long numStringencyGenes = new Long( coexpressions.getNumStringencyGenes() );
         Long numStringencyPredictedGenes = new Long( coexpressions.getNumStringencyPredictedGenes() );
         Long numStringencyProbeAlignedRegions = new Long( coexpressions.getNumStringencyProbeAlignedRegions() );
-
-        ModelAndView mav = super.showForm( request, response, errors );
 
         mav.addObject( "coexpressedGenes", coexpressedKnownGenes );
         mav.addObject( "coexpressedPredictedGenes", coexpressedPredictedGenes );
@@ -405,9 +406,6 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         mav.addObject( "numStringencyProbeAlignedRegions", numStringencyProbeAlignedRegions );
         mav.addObject( "numSourceGeneGoTerms", numSourceGeneGoTerms );
 
-        // mav.addObject( "numMatchedLinks", numMatchedLinks );
-        mav.addObject( "sourceGene", commandObject.getSourceGene() );
-
         // binding objects
         mav.addObject( "coexpressionSearchCommand", commandObject );
         populateTaxonReferenceData( mav.getModel() );
@@ -423,6 +421,11 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
 
     }
 
+    /**
+     * @param eeIds
+     * @param coexpressions
+     * @return
+     */
     @SuppressWarnings("unchecked")
     private Collection<ExpressionExperimentValueObject> retreiveEEFromDB( Collection<Long> eeIds,
             CoexpressedGenesDetails coexpressions ) {
@@ -478,6 +481,12 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         mapping.put( "taxa", taxa );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.BaseFormController#initBinder(javax.servlet.http.HttpServletRequest,
+     *      org.springframework.web.bind.ServletRequestDataBinder)
+     */
     @Override
     protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
         super.initBinder( request, binder );

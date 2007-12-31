@@ -401,7 +401,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         }
         queryObject.setCacheable( true );
         queryObject.setCacheRegion( "quantitationTypesForEes" );
-        // queryObject.setMaxResults( 10 ); testing.
+
         Map<Long, Collection<QuantitationType>> results = new HashMap<Long, Collection<QuantitationType>>();
         StopWatch watch = new StopWatch();
         watch.start();
@@ -421,7 +421,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
         }
         watch.stop();
-        log.info( "QT query+processing took " + watch.getTime() + "ms" );
+        if ( watch.getTime() > 1000 ) log.info( "QT query+processing took " + watch.getTime() + "ms" );
         return results;
     }
 
@@ -469,8 +469,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      * @param expressionExperiment
      * @param session
      */
+    @SuppressWarnings("unchecked")
     private void thawAnalyses( final ExpressionExperiment expressionExperiment, org.hibernate.Session session ) {
-        // Not doing anything with the session but passing it in just in case.
+        // Not doing anything with the session but passing it in just in case. ????
 
         Collection<ExpressionAnalysis> eas = expressionExperiment.getExpressionAnalyses();
 
@@ -601,9 +602,13 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     @Override
     protected Collection handleFindByGene( Gene gene ) throws Exception {
 
+        /*
+         * NOTE uses GENE2CS table.
+         */
         final String queryString = "select distinct ee.ID as eeID FROM "
                 + "GENE2CS g2s, COMPOSITE_SEQUENCE cs, ARRAY_DESIGN ad, BIO_ASSAY ba, EXPRESSION_EXPERIMENT ee "
-                + "WHERE g2s.CS = cs.ID AND ad.ID = cs.ARRAY_DESIGN_FK AND ba.ARRAY_DESIGN_USED_FK = ad.ID AND ba.EXPRESSION_EXPERIMENT_FK = ee.ID and g2s.gene = :geneID";
+                + "WHERE g2s.CS = cs.ID AND ad.ID = cs.ARRAY_DESIGN_FK AND ba.ARRAY_DESIGN_USED_FK = ad.ID AND"
+                + " ba.EXPRESSION_EXPERIMENT_FK = ee.ID and g2s.gene = :geneID";
 
         Collection<Long> eeIds = null;
 
@@ -763,13 +768,13 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             batch.add( probeId );
             if ( batch.size() == BATCH_SIZE ) {
                 List list = getHibernateTemplate().findByNamedParam( gqs, "ids", batch );
-                result.addAll( ( Collection<CompositeSequence> ) list );
+                result.addAll( list );
                 batch.clear();
             }
         }
         if ( batch.size() > 0 ) {
             List list = getHibernateTemplate().findByNamedParam( gqs, "ids", batch );
-            result.addAll( ( Collection<CompositeSequence> ) list );
+            result.addAll( list );
         }
         return result;
     }
@@ -1016,7 +1021,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     protected ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastAuditEvent(
             final ubic.gemma.model.common.Auditable auditable,
             final ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType type ) throws java.lang.Exception {
-        return this.handleGetLastAuditEvent( ( ExpressionExperiment ) auditable, type );
+        return this.handleGetLastAuditEvent( auditable, type );
     }
 
     /*

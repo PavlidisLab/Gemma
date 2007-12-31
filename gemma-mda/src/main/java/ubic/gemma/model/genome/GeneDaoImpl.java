@@ -26,7 +26,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -43,8 +42,9 @@ import org.hibernate.type.DoubleType;
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
 
+import ubic.gemma.model.coexpression.CoexpressedGenesDetails;
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
-import ubic.gemma.model.coexpression.CoexpressionValueObject; 
+import ubic.gemma.model.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -135,142 +135,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         return ( Gene ) this.load( geneValueObject.getId() );
     }
 
-    /**
-     * @param results
-     */
-    private void debug( List results ) {
-
-        StringBuilder buf = new StringBuilder();
-        buf.append( "\n" );
-        for ( Object object : results ) {
-            Gene g = ( Gene ) object;
-            buf.append( g + "\n" );
-        }
-        log.error( buf );
-
-    }
-
-    /**
-     * @param ees
-     * @return
-     */
-    private Collection<Long> getEEIds( Collection ees ) {
-        Collection<Long> eeIds = new ArrayList<Long>();
-        if ( ees != null && ees.size() > 0 ) {
-            for ( Iterator iter = ees.iterator(); iter.hasNext(); ) {
-                ExpressionExperiment e = ( ExpressionExperiment ) iter.next();
-                eeIds.add( e.getId() );
-            }
-        }
-        return eeIds;
-    }
-
-    /**
-     * This query does not return 'self-links' (gene coexpressed with itself) which happens when two probes for the same
-     * gene are correlated. STRAIGHT_JOIN is to ensure that mysql doesn't do something goofy with the index use.
-     * <ol >
-     * <li>output gene id</li>
-     * <li>output gene name</li>
-     * <li>output gene official name</li>
-     * <li>expression experiment
-     * <li>pvalue</li>
-     * <li>score</li>
-     * <li>query gene probe id</li>
-     * <li>output gene probe id</li>
-     * <li>output gene type (predicted etc)</li>
-     * <li>expression experiment name</li>
-     * </ol>
-     * 
-     * @param p2pClassName
-     * @param in
-     * @param out
-     * @return
-     */
-    private synchronized String getFastNativeQueryString( String p2pClassName, String in, String out,
-            Collection<Long> eeIds ) {
-        String inKey = in.equals( "firstVector" ) ? "FIRST_DESIGN_ELEMENT_FK" : "SECOND_DESIGN_ELEMENT_FK";
-        String outKey = out.equals( "firstVector" ) ? "FIRST_DESIGN_ELEMENT_FK" : "SECOND_DESIGN_ELEMENT_FK";
-        String eeClause = "";
-        if ( eeIds.size() > 0 ) {
-            eeClause += " coexp.EXPRESSION_EXPERIMENT_FK in (";
-            eeClause += StringUtils.join( eeIds.iterator(), "," );
-            eeClause += ") AND ";
-        }
-
-        String p2pClass = getP2PTableNameForClassName( p2pClassName );
-
-        String query = "SELECT STRAIGHT_JOIN geneout.ID as id, geneout.NAME as genesymb, "
-                + "geneout.OFFICIAL_NAME as genename, coexp.EXPRESSION_EXPERIMENT_FK as exper, coexp.PVALUE as pvalue, coexp.SCORE as score, "
-                + "gcIn.CS as csIdIn, gcOut.CS as csIdOut, geneout.class as geneType, " + "ee.NAME as eeName "
-                + "FROM GENE2CS gcIn " + " INNER JOIN " + p2pClass + " coexp ON gcIn.CS=coexp." + inKey + " "
-                + " INNER JOIN GENE2CS gcOut ON gcOut.CS=coexp." + outKey + " "
-                + " INNER JOIN CHROMOSOME_FEATURE geneout ON geneout.ID=gcOut.GENE "
-                + " INNER JOIN INVESTIGATION ee ON ee.ID=coexp.EXPRESSION_EXPERIMENT_FK " + "WHERE " + eeClause
-                + " gcIn.GENE=:id AND geneout.ID <> :id  ";
-
-        return query;
-    }
-
-    /**
-     * @param givenG
-     * @return
-     */
-    private String getP2PClassName( Gene givenG ) {
-        if ( TaxonUtility.isHuman( givenG.getTaxon() ) )
-            return "HumanProbeCoExpressionImpl";
-        else if ( TaxonUtility.isMouse( givenG.getTaxon() ) )
-            return "MouseProbeCoExpressionImpl";
-        else if ( TaxonUtility.isRat( givenG.getTaxon() ) )
-            return "RatProbeCoExpressionImpl";
-        else
-            return "OtherProbeCoExpressionImpl";
-    }
-
-    /**
-     * @param className
-     * @return
-     */
-    private String getP2PTableNameForClassName( String className ) {
-        if ( className.equals( "HumanProbeCoExpressionImpl" ) )
-            return "HUMAN_PROBE_CO_EXPRESSION";
-        else if ( className.equals( "MouseProbeCoExpressionImpl" ) )
-            return "MOUSE_PROBE_CO_EXPRESSION";
-        else if ( className.equals( "RatProbeCoExpressionImpl" ) )
-            return "RAT_PROBE_CO_EXPRESSION";
-        else
-            return "OTHER_PROBE_CO_EXPRESSION";
-    }
-
-    /**
-     * @param gene
-     * @param ees
-     * @param id
-     * @param eeIds
-     * @param queryString
-     * @return
-     */
-    private org.hibernate.Query setCoexpQueryParameters( Session session, Gene gene, long id, String queryString ) {
-        org.hibernate.SQLQuery queryObject;
-        queryObject = session.createSQLQuery( queryString ); // for native query.
-
-        queryObject.addScalar( "id", new LongType() );
-        queryObject.addScalar( "genesymb", new StringType() );
-        queryObject.addScalar( "genename", new StringType() );
-        queryObject.addScalar( "exper", new LongType() );
-        queryObject.addScalar( "pvalue", new DoubleType() );
-        queryObject.addScalar( "score", new DoubleType() );
-        queryObject.addScalar( "csIdIn", new LongType() );
-        queryObject.addScalar( "csIdOut", new LongType() );
-        queryObject.addScalar( "geneType", new StringType() );
-        queryObject.addScalar( "eeName", new StringType() );
-
-        queryObject.setLong( "id", id );
-        // this is to make the query faster by narrowing down the gene join
-        // queryObject.setLong( "taxonId", gene.getTaxon().getId() );
-
-        return queryObject;
-    }
-
     @Override
     protected Integer handleCountAll() throws Exception {
         final String query = "select count(*) from GeneImpl";
@@ -309,10 +173,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         final String p2pClassName = getP2PClassName( givenG );
 
-        final CoexpressionCollectionValueObject coexpressions = new CoexpressionCollectionValueObject();
-
-        coexpressions.setStringency( stringency );
-        coexpressions.setQueryGene( gene );
+        final CoexpressionCollectionValueObject coexpressions = new CoexpressionCollectionValueObject( gene, stringency );
 
         StopWatch overallWatch = new StopWatch();
         overallWatch.start();
@@ -338,80 +199,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         Collection<Long> queryGeneProbeIds = coexpressions.getQueryGeneProbes();
         Map<Long, Collection<Long>> querySpecificity = getCS2GeneMap( queryGeneProbeIds );
         coexpressions.addQueryGeneSpecifityInfo( querySpecificity );
-
+        postProcess( coexpressions );
         return coexpressions;
-    }
-
-    /**
-     * @param queryGene
-     * @param geneMap
-     * @param queryObject
-     */
-    private void processCoexpQuery( Gene queryGene, Query queryObject, CoexpressionCollectionValueObject coexpressions ) {
-        ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        while ( scroll.next() ) {
-            processCoexpQueryResult( queryGene, scroll, coexpressions );
-        }
-
-    }
-
-    /**
-     * Process a single query result from the coexpression search, converting it into a
-     * CoexpressionCollectionValueObject
-     * 
-     * @param queryGene
-     * @param geneMap
-     * @param resultSet
-     */
-    private void processCoexpQueryResult( Gene queryGene, ScrollableResults resultSet,
-            CoexpressionCollectionValueObject coexpressions ) {
-
-        CoexpressionValueObject vo;
-        Long geneId = resultSet.getLong( 0 );
-
-        // check to see if geneId is already in the geneMap
-        if ( coexpressions.contains( geneId ) ) {
-            vo = coexpressions.get( geneId );
-        } else {
-            vo = new CoexpressionValueObject();
-            vo.setGeneId( geneId );
-            vo.setGeneName( resultSet.getString( 1 ) );
-            vo.setGeneOfficialName( resultSet.getString( 2 ) );
-            vo.setGeneType( resultSet.getString( 8 ) );
-            coexpressions.add( vo );
-        }
-
-        vo.setTaxonId( queryGene.getTaxon().getId() );
-
-        // add the expression experiment
-        Long eeID = resultSet.getLong( 3 );
-        ExpressionExperimentValueObject eeVo = coexpressions.getExpressionExperiment( vo.getGeneType(), eeID );
-
-        if ( eeVo == null ) {
-            eeVo = new ExpressionExperimentValueObject();
-            eeVo.setId( eeID );
-            eeVo.setName( resultSet.getString( 9 ) );
-            coexpressions.addExpressionExperiment( vo.getGeneType(), eeVo );
-        }
-
-        vo.addExpressionExperimentValueObject( eeVo );
-        coexpressions.addExpressionExperiment( vo.getGeneType(), eeVo );
-
-        Long outputProbeId = resultSet.getLong( 7 );
-        vo.addScore( eeID, resultSet.getDouble( 5 ), resultSet.getDouble( 4 ), outputProbeId );
-
-        Long queryGeneProbe = resultSet.getLong( 6 );
-        coexpressions.initializeSpecificityDataStructure( eeID, queryGeneProbe );
-
-        if ( vo.getGeneType().equalsIgnoreCase( CoexpressionCollectionValueObject.GENE_IMPL ) ) {
-            coexpressions.getKnownGeneCoexpression().addSpecificityInfo( eeID, outputProbeId, geneId );
-
-        } else if ( vo.getGeneType().equalsIgnoreCase( CoexpressionCollectionValueObject.PREDICTED_GENE_IMPL ) ) {
-            coexpressions.getPredictedCoexpressionType().addSpecificityInfo( eeID, outputProbeId, geneId );
-        } else if ( vo.getGeneType().equalsIgnoreCase( CoexpressionCollectionValueObject.PROBE_ALIGNED_REGION_IMPL ) ) {
-            coexpressions.getProbeAlignedCoexpressionType().addSpecificityInfo( eeID, outputProbeId, geneId );
-        }
-
     }
 
     /**
@@ -637,18 +426,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.genome.GeneDaoBase#handleLoad(java.util.Collection)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Collection handleLoadMultiple( Collection ids ) throws Exception {
-        final String queryString = "select distinct gene from GeneImpl gene where gene.id in (:ids)";
-        return getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadGenes(ubic.gemma.model.genome.Taxon)
      */
     @Override
@@ -667,6 +444,18 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             throw super.convertHibernateAccessException( ex );
         }
         return genes;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.GeneDaoBase#handleLoad(java.util.Collection)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleLoadMultiple( Collection ids ) throws Exception {
+        final String queryString = "select distinct gene from GeneImpl gene where gene.id in (:ids)";
+        return getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
     }
 
     /*
@@ -714,6 +503,253 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             throw super.convertHibernateAccessException( ex );
         }
         return pars;
+    }
+
+    /**
+     * @param results
+     */
+    private void debug( List results ) {
+
+        StringBuilder buf = new StringBuilder();
+        buf.append( "\n" );
+        for ( Object object : results ) {
+            Gene g = ( Gene ) object;
+            buf.append( g + "\n" );
+        }
+        log.error( buf );
+
+    }
+
+    /**
+     * @param ees
+     * @return
+     */
+    private Collection<Long> getEEIds( Collection<ExpressionExperiment> ees ) {
+        Collection<Long> eeIds = new ArrayList<Long>();
+        for ( ExpressionExperiment e : ees ) {
+            eeIds.add( e.getId() );
+        }
+        return eeIds;
+    }
+
+    /**
+     * This query does not return 'self-links' (gene coexpressed with itself) which happens when two probes for the same
+     * gene are correlated. STRAIGHT_JOIN is to ensure that mysql doesn't do something goofy with the index use.
+     * <ol >
+     * <li>output gene id</li>
+     * <li>output gene name</li>
+     * <li>output gene official name</li>
+     * <li>expression experiment
+     * <li>pvalue</li>
+     * <li>score</li>
+     * <li>query gene probe id</li>
+     * <li>output gene probe id</li>
+     * <li>output gene type (predicted etc)</li>
+     * <li>expression experiment name</li>
+     * </ol>
+     * 
+     * @param p2pClassName
+     * @param in
+     * @param out
+     * @return
+     */
+    private synchronized String getFastNativeQueryString( String p2pClassName, String in, String out,
+            Collection<Long> eeIds ) {
+        String inKey = in.equals( "firstVector" ) ? "FIRST_DESIGN_ELEMENT_FK" : "SECOND_DESIGN_ELEMENT_FK";
+        String outKey = out.equals( "firstVector" ) ? "FIRST_DESIGN_ELEMENT_FK" : "SECOND_DESIGN_ELEMENT_FK";
+        String eeClause = "";
+        if ( eeIds.size() > 0 ) {
+            eeClause += " coexp.EXPRESSION_EXPERIMENT_FK in (";
+            eeClause += StringUtils.join( eeIds.iterator(), "," );
+            eeClause += ") AND ";
+        }
+
+        String p2pClass = getP2PTableNameForClassName( p2pClassName );
+
+        String query = "SELECT STRAIGHT_JOIN geneout.ID as id, geneout.NAME as genesymb, "
+                + "geneout.OFFICIAL_NAME as genename, coexp.EXPRESSION_EXPERIMENT_FK as exper, coexp.PVALUE as pvalue, coexp.SCORE as score, "
+                + "gcIn.CS as csIdIn, gcOut.CS as csIdOut, geneout.class as geneType, " + "ee.NAME as eeName "
+                + "FROM GENE2CS gcIn " + " INNER JOIN " + p2pClass + " coexp ON gcIn.CS=coexp." + inKey + " "
+                + " INNER JOIN GENE2CS gcOut ON gcOut.CS=coexp." + outKey + " "
+                + " INNER JOIN CHROMOSOME_FEATURE geneout ON geneout.ID=gcOut.GENE "
+                + " INNER JOIN INVESTIGATION ee ON ee.ID=coexp.EXPRESSION_EXPERIMENT_FK " + "WHERE " + eeClause
+                + " gcIn.GENE=:id AND geneout.ID <> :id  ";
+
+        return query;
+    }
+
+    /**
+     * @param givenG
+     * @return
+     */
+    private String getP2PClassName( Gene givenG ) {
+        if ( TaxonUtility.isHuman( givenG.getTaxon() ) )
+            return "HumanProbeCoExpressionImpl";
+        else if ( TaxonUtility.isMouse( givenG.getTaxon() ) )
+            return "MouseProbeCoExpressionImpl";
+        else if ( TaxonUtility.isRat( givenG.getTaxon() ) )
+            return "RatProbeCoExpressionImpl";
+        else
+            return "OtherProbeCoExpressionImpl";
+    }
+
+    /**
+     * @param className
+     * @return
+     */
+    private String getP2PTableNameForClassName( String className ) {
+        if ( className.equals( "HumanProbeCoExpressionImpl" ) )
+            return "HUMAN_PROBE_CO_EXPRESSION";
+        else if ( className.equals( "MouseProbeCoExpressionImpl" ) )
+            return "MOUSE_PROBE_CO_EXPRESSION";
+        else if ( className.equals( "RatProbeCoExpressionImpl" ) )
+            return "RAT_PROBE_CO_EXPRESSION";
+        else
+            return "OTHER_PROBE_CO_EXPRESSION";
+    }
+
+    /**
+     * @param coexpressions
+     */
+    @SuppressWarnings("unchecked")
+    private void postProcess( CoexpressionCollectionValueObject coexpressions ) {
+        StopWatch watch = new StopWatch();
+        watch.start();
+
+        postProcessKnownGenes( coexpressions );
+        postProcessProbeAlignedRegions( coexpressions );
+        postProcessPredictedGenes( coexpressions );
+
+        watch.stop();
+        Long elapsed = watch.getTime();
+        coexpressions.setPostProcessTime( elapsed );
+        if ( elapsed > 1000 ) log.info( "Done postprocessing in " + elapsed + "ms." );
+    }
+
+    /**
+     * @param coexpressions
+     */
+    @SuppressWarnings("unchecked")
+    private void postProcessKnownGenes( CoexpressionCollectionValueObject coexpressions ) {
+        CoexpressedGenesDetails knownGeneCoexpression = coexpressions.getKnownGeneCoexpression();
+        knownGeneCoexpression.postProcess( coexpressions.getQueryGeneSpecificExpressionExperiments() );
+    }
+
+    /**
+     * @param coexpressions
+     */
+    private void postProcessPredictedGenes( CoexpressionCollectionValueObject coexpressions ) {
+        CoexpressedGenesDetails predictedCoexpressionType = coexpressions.getPredictedCoexpressionType();
+        predictedCoexpressionType.postProcess( coexpressions.getQueryGeneSpecificExpressionExperiments() );
+    }
+
+    /**
+     * @param coexpressions
+     */
+    private void postProcessProbeAlignedRegions( CoexpressionCollectionValueObject coexpressions ) {
+        CoexpressedGenesDetails probeAlignedCoexpressionType = coexpressions.getProbeAlignedCoexpressionType();
+        probeAlignedCoexpressionType.postProcess( coexpressions.getQueryGeneSpecificExpressionExperiments() );
+    }
+
+    /**
+     * @param queryGene
+     * @param geneMap
+     * @param queryObject
+     */
+    private void processCoexpQuery( Gene queryGene, Query queryObject, CoexpressionCollectionValueObject coexpressions ) {
+        ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        while ( scroll.next() ) {
+            processCoexpQueryResult( queryGene, scroll, coexpressions );
+        }
+
+    }
+
+    /**
+     * Process a single query result from the coexpression search, converting it into a
+     * CoexpressionCollectionValueObject
+     * 
+     * @param queryGene
+     * @param geneMap
+     * @param resultSet
+     */
+    private void processCoexpQueryResult( Gene queryGene, ScrollableResults resultSet,
+            CoexpressionCollectionValueObject coexpressions ) {
+
+        CoexpressionValueObject vo;
+        Long geneId = resultSet.getLong( 0 );
+
+        // check to see if geneId is already in the results.
+        if ( coexpressions.contains( geneId ) ) {
+            vo = coexpressions.get( geneId );
+        } else {
+            vo = new CoexpressionValueObject();
+            vo.setGeneId( geneId );
+            vo.setGeneName( resultSet.getString( 1 ) );
+            vo.setGeneOfficialName( resultSet.getString( 2 ) );
+            vo.setGeneType( resultSet.getString( 8 ) );
+            vo.setTaxonId( queryGene.getTaxon().getId() );
+            coexpressions.add( vo );
+        }
+
+        // add the expression experiment.
+        Long eeID = resultSet.getLong( 3 );
+        ExpressionExperimentValueObject eeVo = coexpressions.getExpressionExperiment( vo.getGeneType(), eeID );
+
+        if ( eeVo == null ) {
+            eeVo = new ExpressionExperimentValueObject();
+            eeVo.setId( eeID );
+            eeVo.setName( resultSet.getString( 9 ) );
+            coexpressions.addExpressionExperiment( vo.getGeneType(), eeVo );
+        }
+
+        vo.addExpressionExperimentValueObject( eeVo );
+        coexpressions.addExpressionExperiment( vo.getGeneType(), eeVo );
+
+        Long outputProbeId = resultSet.getLong( 7 );
+        vo.addScore( eeID, resultSet.getDouble( 5 ), resultSet.getDouble( 4 ), outputProbeId );
+
+        Long queryGeneProbe = resultSet.getLong( 6 );
+
+        coexpressions.initializeSpecificityDataStructure( eeID, queryGeneProbe );
+
+        if ( vo.getGeneType().equalsIgnoreCase( CoexpressionCollectionValueObject.GENE_IMPL ) ) {
+            coexpressions.getKnownGeneCoexpression().addSpecificityInfo( eeID, outputProbeId, geneId );
+        } else if ( vo.getGeneType().equalsIgnoreCase( CoexpressionCollectionValueObject.PREDICTED_GENE_IMPL ) ) {
+            coexpressions.getPredictedCoexpressionType().addSpecificityInfo( eeID, outputProbeId, geneId );
+        } else if ( vo.getGeneType().equalsIgnoreCase( CoexpressionCollectionValueObject.PROBE_ALIGNED_REGION_IMPL ) ) {
+            coexpressions.getProbeAlignedCoexpressionType().addSpecificityInfo( eeID, outputProbeId, geneId );
+        }
+
+    }
+
+    /**
+     * @param gene
+     * @param ees
+     * @param id
+     * @param eeIds
+     * @param queryString
+     * @return
+     */
+    private org.hibernate.Query setCoexpQueryParameters( Session session, Gene gene, long id, String queryString ) {
+        org.hibernate.SQLQuery queryObject;
+        queryObject = session.createSQLQuery( queryString ); // for native query.
+
+        queryObject.addScalar( "id", new LongType() );
+        queryObject.addScalar( "genesymb", new StringType() );
+        queryObject.addScalar( "genename", new StringType() );
+        queryObject.addScalar( "exper", new LongType() );
+        queryObject.addScalar( "pvalue", new DoubleType() );
+        queryObject.addScalar( "score", new DoubleType() );
+        queryObject.addScalar( "csIdIn", new LongType() );
+        queryObject.addScalar( "csIdOut", new LongType() );
+        queryObject.addScalar( "geneType", new StringType() );
+        queryObject.addScalar( "eeName", new StringType() );
+
+        queryObject.setLong( "id", id );
+        // this is to make the query faster by narrowing down the gene join
+        // queryObject.setLong( "taxonId", gene.getTaxon().getId() );
+
+        return queryObject;
     }
 
 }

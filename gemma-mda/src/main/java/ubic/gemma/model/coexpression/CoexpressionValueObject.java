@@ -26,6 +26,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.ontology.OntologyTerm;
 
@@ -38,6 +41,8 @@ import ubic.gemma.ontology.OntologyTerm;
  * @version $Id$
  */
 public class CoexpressionValueObject {
+
+    private static Log log = LogFactory.getLog( CoexpressionValueObject.class.getName() );
 
     /*
      * Basic information about the gene.
@@ -64,9 +69,9 @@ public class CoexpressionValueObject {
     private Collection<Long> nonspecificEE;
 
     /**
-     * Genes that were predicted to cross-hybridize with the target gene. FIXME why are these strings?
+     * Genes that were predicted to cross-hybridize with the target gene
      */
-    private Collection<String> nonSpecificGenes = new HashSet<String>();
+    private Collection<Long> crossHybridizingGenes = new HashSet<Long>();
 
     /**
      * True if any of the probes for this gene are predicted to cross-hybridize with the query gene. This is an obvious
@@ -103,17 +108,23 @@ public class CoexpressionValueObject {
     }
 
     /**
-     * @param eeVo
+     * @param geneid of gene that is predicted to cross-hybridize with this gene
      */
-    public void addExpressionExperimentValueObject( ExpressionExperimentValueObject eeVo ) {
-        this.expressionExperimentValueObjects.put( eeVo.getId(), eeVo );
+    public void addCrossHybridizingGene( Long geneid ) {
+        if ( geneid.equals( this.geneId ) ) return;
+        this.crossHybridizingGenes.add( geneid );
     }
 
     /**
-     * @param gene
+     * Add another experiment that supports this coexpression.
+     * 
+     * @param eeVo
      */
-    public void addNonSpecificGene( String gene ) {
-        this.nonSpecificGenes.add( gene );
+    public void addExpressionExperimentValueObject( ExpressionExperimentValueObject eeVo ) {
+        if ( expressionExperimentValueObjects.containsKey( eeVo.getId() ) ) {
+            log.warn( "Already have seen this experiment" );
+        }
+        this.expressionExperimentValueObjects.put( eeVo.getId(), eeVo );
     }
 
     /**
@@ -153,6 +164,13 @@ public class CoexpressionValueObject {
                 experimentBitList.add( 0l );
             }
         }
+    }
+
+    /**
+     * @return IDs of genes that may be crosshybridizing with the target gene for this.
+     */
+    public Collection<Long> getCrossHybridizingGenes() {
+        return crossHybridizingGenes;
     }
 
     /**
@@ -344,13 +362,6 @@ public class CoexpressionValueObject {
     }
 
     /**
-     * @return the nonSpecificGenes
-     */
-    public Collection<String> getNonSpecificGenes() {
-        return nonSpecificGenes;
-    }
-
-    /**
      * @param eeId
      * @return
      */
@@ -413,10 +424,17 @@ public class CoexpressionValueObject {
         return Math.exp( mean / size );
     }
 
+    /**
+     * @return
+     */
     public int getPossibleOverlap() {
         return numQueryGeneGOTerms;
     }
 
+    /**
+     * @param eeId
+     * @return
+     */
     public Collection<Long> getProbes( Long eeId ) {
         Collection<Long> result = new HashSet<Long>();
         result.addAll( getPositiveCorrelationProbes( eeId ) );
@@ -424,6 +442,9 @@ public class CoexpressionValueObject {
         return result;
     }
 
+    /**
+     * @return
+     */
     public Long getTaxonId() {
         return taxonId;
     }
@@ -463,6 +484,9 @@ public class CoexpressionValueObject {
         this.geneType = geneType;
     }
 
+    /**
+     * @param goOverlap of this gene with the query gene
+     */
     public void setGoOverlap( Collection<OntologyTerm> goOverlap ) {
         this.goOverlap = goOverlap;
     }
@@ -479,13 +503,6 @@ public class CoexpressionValueObject {
      */
     public void setNonspecificEE( Collection<Long> nonspecificEE ) {
         this.nonspecificEE = nonspecificEE;
-    }
-
-    /**
-     * @param nonSpecificGenes the nonSpecificGenes to set
-     */
-    public void setNonSpecificGenes( Collection<String> nonSpecificGenes ) {
-        this.nonSpecificGenes = nonSpecificGenes;
     }
 
     /**

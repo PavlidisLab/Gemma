@@ -139,9 +139,8 @@ public class CoexpressionWrapper extends TableDecorator {
     private String getNonSpecificString( CoexpressionValueObject cvo, Collection<Long> contributingEE, int numTotalLinks ) {
 
         Collection<Long> allNonSpecificEE = cvo.getNonspecificEE();
-        Collection<String> nonSpecificGenes = cvo.getNonSpecificGenes();
+        Collection<Long> nonSpecificGenes = cvo.getCrossHybridizingGenes();
         boolean hybridizesWithQueryGene = cvo.isHybridizesWithQueryGene();
-        String coexpressedGeneName = cvo.getGeneName();
 
         int nonSpecific = 0;
         String nonSpecificList = "";
@@ -153,9 +152,9 @@ public class CoexpressionWrapper extends TableDecorator {
             }
         }
 
-        for ( String gene : nonSpecificGenes ) {
-            if ( !gene.equalsIgnoreCase( coexpressedGeneName ) ) // no point in displaying itself
-                nonSpecificList += StringUtils.abbreviate( gene, 8 ) + " ,";
+        for ( Long gene : nonSpecificGenes ) {
+               // nonSpecificList += StringUtils.abbreviate( gene, 8 ) + " ,";
+            
         }
         if ( nonSpecificList.length() > 1 )
             nonSpecificList = nonSpecificList.substring( 0, nonSpecificList.length() - 2 ); // remove trailing ' ,'
@@ -353,7 +352,7 @@ public class CoexpressionWrapper extends TableDecorator {
             Integer numTotalLinks ) {
 
         Collection<Long> allNonSpecificEE = cvo.getNonspecificEE();
-        Collection<String> nonSpecificGenes = cvo.getNonSpecificGenes();
+        Collection<Long> nonSpecificGenes = cvo.getCrossHybridizingGenes();
         boolean hybridizesWithQueryGene = cvo.isHybridizesWithQueryGene();
         String coexpressedGeneName = cvo.getGeneName();
 
