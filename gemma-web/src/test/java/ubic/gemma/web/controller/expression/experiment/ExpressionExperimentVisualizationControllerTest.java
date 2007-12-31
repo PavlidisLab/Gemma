@@ -22,6 +22,10 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.testing.BaseSpringWebTest;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.web.controller.visualization.ExpressionExperimentVisualizationController;
@@ -56,10 +60,28 @@ public class ExpressionExperimentVisualizationControllerTest extends BaseSpringW
 
         request.setRemoteUser( ConfigUtils.getString( "gemma.admin.user" ) );
 
-        request.setAttribute( "type", "profile" );
+        ExpressionExperimentService service = ( ExpressionExperimentService ) this
+                .getBean( "expressionExperimentService" );
+
+        String shortName = "GSE3434";
+        ExpressionExperiment ee = service.findByShortName( shortName );
+        if ( ee == null ) {
+            log.warn( "Could not find expression experiment with name " + shortName + ".  Skipping test ..." );
+            return;
+        }
+
+        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( ee.getDesignElementDataVectors() );
+        ExpressionDataMatrix matrix = builder.getPreferredData();
+
+        int i = 1;
+
+        request.setParameter( "id", String.valueOf( i ) );
+
+        request.getSession().setAttribute( String.valueOf( i ), matrix );
+
+        request.setParameter( "type", "heatmap" );
 
         ModelAndView mv = expressionExperimentVisualizationController.handleRequest( request, response );
         assertEquals( null, mv );
     }
-
 }
