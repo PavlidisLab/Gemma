@@ -96,6 +96,8 @@ abstract public class GenomePersister extends CommonPersister {
 
         if ( entity instanceof BioSequence ) {
             return this.persistOrUpdateBioSequence( ( BioSequence ) entity );
+        } else if ( entity instanceof Gene ) {
+            return this.persistOrUpdateGene( ( Gene ) entity );
         }
 
         return super.persistOrUpdate( entity );
@@ -160,12 +162,6 @@ abstract public class GenomePersister extends CommonPersister {
 
         for ( GeneProduct product : tempGeneProduct ) {
             product.setGene( newGene );
-            // for ( DatabaseEntry databaseEntry : product.getAccessions() ) {
-            // databaseEntry.setExternalDatabase( persistExternalDatabase( databaseEntry.getExternalDatabase() ) );
-            // }
-            // if ( product.getPhysicalLocation() != null ) {
-            // fillChromosomeLocationAssociations( product.getPhysicalLocation() );
-            // }
         }
 
         gene.setProducts( tempGeneProduct );
@@ -176,6 +172,63 @@ abstract public class GenomePersister extends CommonPersister {
         }
 
         return newGene;
+    }
+
+    /**
+     * @param gene transient instance that will be used to provide information to update persistent version.
+     * @return new or updated gene instance.
+     */
+    protected Gene persistOrUpdateGene( Gene gene ) {
+
+        if ( gene == null ) return null;
+        if ( !isTransient( gene ) ) return gene;
+
+        Gene existingGene = geneService.find( gene );
+
+        if ( existingGene == null ) {
+            return persistGene( gene );
+        }
+
+        log.info( "Updating " + existingGene );
+
+        // We assume the taxon hasn't changed ...
+
+        Collection<GeneProduct> tempGeneProduct = gene.getProducts();
+        existingGene.setProducts( null );
+
+        existingGene.setName( gene.getName() );
+        existingGene.setDescription( gene.getDescription() );
+        existingGene.setOfficialName( gene.getOfficialName() );
+        existingGene.setOfficialSymbol( gene.getOfficialSymbol() );
+
+        existingGene.setPhysicalLocation( gene.getPhysicalLocation() );
+        existingGene.setCytogenicLocation( gene.getCytogenicLocation() );
+        existingGene.setGeneticLocation( gene.getGeneticLocation() );
+
+        fillChromosomeLocationAssociations( existingGene.getPhysicalLocation() );
+        fillChromosomeLocationAssociations( existingGene.getCytogenicLocation() );
+        fillChromosomeLocationAssociations( existingGene.getGeneticLocation() );
+
+        // updated gene products. We simply replace them all.
+        for ( GeneProduct product : tempGeneProduct ) {
+            product.setGene( existingGene );
+        }
+
+        existingGene.setProducts( tempGeneProduct );
+        persistCollectionElements( gene.getProducts() );
+
+        existingGene.setAliases( gene.getAliases() );
+
+        geneService.update( existingGene );
+
+        for ( GeneAlias alias : existingGene.getAliases() ) {
+            alias.setGene( existingGene );
+        }
+
+        geneService.update( existingGene );
+
+        return existingGene;
+
     }
 
     /**
