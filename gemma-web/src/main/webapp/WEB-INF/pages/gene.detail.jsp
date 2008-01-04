@@ -2,32 +2,28 @@
 <jsp:directive.page import="org.apache.commons.lang.StringUtils" />
 <jsp:directive.page import="java.util.Collection" />
 <jsp:directive.page import="ubic.gemma.model.genome.gene.*" />
-<jsp:useBean id="gene" scope="request"
-	class="ubic.gemma.model.genome.GeneImpl" />
+<jsp:useBean id="gene" scope="request" class="ubic.gemma.model.genome.GeneImpl" />
 
-<script
-	src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>"
-	type="text/javascript"></script>
-<script src="<c:url value='/scripts/ext/ext-all.js'/>"
-	type="text/javascript"></script>
+<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
+<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
 
-<script type="text/javascript"
-	src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
-	
-<script type="text/javascript"
-	src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
+<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
 
-<script type='text/javascript'
-	src='/Gemma/dwr/interface/GeneController.js'></script>
+<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
+
+<script type='text/javascript' src='/Gemma/dwr/interface/GeneController.js'></script>
 
 <script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 <script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 
 
-<script type="text/javascript"
-	src="<c:url value='/scripts/ajax/gene.detail.js'/>"
-	type="text/javascript"></script>
+<script type="text/javascript" src="<c:url value='/scripts/ajax/gene.detail.js'/>" type="text/javascript"></script>
 
+<script type="text/javascript" src="<c:url value='/scripts/scriptaculous/effects.js'/>"></script>
+<authz:authorize ifAnyGranted="admin">
+	<script type='text/javascript' src='/Gemma/dwr/interface/AuditController.js'></script>
+	<script type="text/javascript" src="<c:url value='/scripts/ajax/auditTrail.js'/>" type="text/javascript"></script>
+</authz:authorize>
 
 <title><fmt:message key="gene.details" />
 </title>
@@ -38,8 +34,8 @@
 	for <jsp:getProperty name="gene" property="officialSymbol" />
 	</c:if>
 </h1>
-<table cellspacing="6" >
-	<tr >
+<table cellspacing="6">
+	<tr>
 		<td align="right" valign="top">
 			<b> <fmt:message key="gene.officialSymbol" /> </b>
 		</td>
@@ -59,10 +55,9 @@
 			&nbsp;&nbsp;
 			<a title="NCBI"
 				href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids=<%out.print(gene.getNcbiId()); %>">
-				<img alt="NCBI" src="<c:url value='/images/logo/ncbi.gif'/>" />
-			</a>
+				<img alt="NCBI" src="<c:url value='/images/logo/ncbi.gif'/>" /> </a>
 			<%
-			  }  
+			}
 			%>
 		</td>
 	</tr>
@@ -93,7 +88,7 @@
 			<%
 			if ( gene.getDescription() != null ) {
 			%>
-			<div class="clob" style="height:20px;">
+			<div class="clob" style="height: 20px;">
 				<jsp:getProperty name="gene" property="description" />
 			</div>
 			<%
@@ -148,8 +143,7 @@
 		</td>
 		<td valign="top">
 			<c:out value="${compositeSequenceCount}" />
-			<a
-				href="/Gemma/gene/showCompositeSequences.html?id=<%out.print(gene.getId());%>"><img
+			<a href="/Gemma/gene/showCompositeSequences.html?id=<%out.print(gene.getId());%>"><img
 					src="<c:url value='/images/magnifier.png'/>" /> </a>
 		</td>
 	</tr>
@@ -167,8 +161,7 @@
 
 </h3>
 
-<div id="go-grid" class="x-grid-mso"
-	style="border: 1px solid #c3daf9; overflow: hidden; width:550px; height:250px;"></div>
+<div id="go-grid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width: 550px; height: 250px;"></div>
 <input type="hidden" name="gene" id="gene" value="${gene.id}" />
 
 
@@ -178,6 +171,14 @@
 </h3>
 
 <div id="geneproduct-grid" class="x-grid-mso"
-	style="border: 1px solid #c3daf9; overflow: hidden; width:430px; height:250px;"></div>
+	style="border: 1px solid #c3daf9; overflow: hidden; width: 430px; height: 250px;"></div>
 
 
+<authz:authorize ifAnyGranted="admin">
+	<h3>
+		History
+	</h3>
+	<div id="auditTrail" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width: 650px;"></div>
+	<input type="hidden" name="auditableId" id="auditableId" value="${gene.id}" />
+	<input type="hidden" name="auditableClass" id="auditableClass" value="${gene.class.name}" />
+</authz:authorize>

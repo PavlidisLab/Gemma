@@ -156,6 +156,34 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
     }
 
     /**
+     * Persist or update the elements in a collection.
+     * <p>
+     * This method is necessary because in-place persisting does not work.
+     * 
+     * @param collection
+     * @return
+     */
+    protected void persistOrUpdateCollectionElements( Collection collection ) {
+        if ( collection == null ) return;
+        if ( collection.size() == 0 ) return;
+
+        try {
+            for ( Object object : collection ) {
+                Object persistedObj = persistOrUpdate( object );
+                if ( persistedObj == null ) continue;
+                BeanUtils.setProperty( object, "id", BeanUtils.getSimpleProperty( persistedObj, "id" ) );
+                assert BeanUtils.getSimpleProperty( object, "id" ) != null;
+            }
+        } catch ( IllegalAccessException e ) {
+            throw new RuntimeException( e );
+        } catch ( InvocationTargetException e ) {
+            throw new RuntimeException( e );
+        } catch ( NoSuchMethodException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
      * Determine if a entity is transient (not persistent).
      * 
      * @param entity

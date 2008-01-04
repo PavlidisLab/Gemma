@@ -25,12 +25,15 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.AuditableService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.web.controller.common.auditAndSecurity.AuditEventValueObject;
 
 /**
@@ -40,6 +43,8 @@ import ubic.gemma.web.controller.common.auditAndSecurity.AuditEventValueObject;
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="auditTrailService" ref="auditTrailService"
+ * @spring.property name="auditableService" ref="auditableService"
+ * @spring.property name="geneService" ref="geneService"
  * @author pavlidis
  * @version $Id$
  */
@@ -50,64 +55,25 @@ public class AuditController {
     ArrayDesignService arrayDesignService;
     ExpressionExperimentService expressionExperimentService;
     AuditTrailService auditTrailService;
+    AuditableService auditableService;
+    GeneService geneService;
 
-    public Auditable getAuditable( EntityDelegator e ) {
-        if ( e == null || e.getId() == null ) return null;
-        if ( e.getClassDelegatingFor() == null ) return null;
-        
-        Class<?> clazz;
-        try {
-            clazz = Class.forName( e.getClassDelegatingFor() );
-        } catch ( ClassNotFoundException e1 ) {
-            throw new RuntimeException( e1 );
-        }
-        if ( ExpressionExperiment.class.isAssignableFrom( clazz ) ) {
-            ExpressionExperiment entity = expressionExperimentService.load( e.getId() );
-            if ( entity == null ) {
-                log.warn( "Entity with id = " + e.getId() + " not found" );
-            }
-            return entity;
-        } else if ( ArrayDesign.class.isAssignableFrom( clazz ) ) {
-            ArrayDesign entity = arrayDesignService.load( e.getId() );
-            if ( entity == null ) {
-                log.warn( "Entity with id = " + e.getId() + " not found" );
-            }
-            return entity;
-        } else {
-            log.warn( "We don't support that class yet, sorry" );
-            return null;
-        }
-    }
-    
-    @SuppressWarnings("unchecked")
-    public Collection<AuditEventValueObject> getEvents( EntityDelegator e ) {
-        Collection<AuditEventValueObject> result = new HashSet<AuditEventValueObject>();
-        Collection events = new HashSet<AuditEvent>();
-        
-        Auditable entity = getAuditable( e );
-        if ( entity instanceof ExpressionExperiment ) {
-            events = expressionExperimentService.getEvents( (ExpressionExperiment)entity );
-        } else if ( entity instanceof ArrayDesign ) {
-            events = arrayDesignService.getEvents( (ArrayDesign)entity );
-        }
-        
-        for ( AuditEvent ev : ( Collection<AuditEvent> ) events ) {
-            result.add( new AuditEventValueObject( ev ) );
-        }
-
-        return result;
-    }
-    
+    /**
+     * @param e
+     * @param auditEventType
+     * @param comment
+     * @param detail
+     */
     public void addAuditEvent( EntityDelegator e, String auditEventType, String comment, String detail ) {
         Auditable entity = getAuditable( e );
         if ( entity == null ) {
             log.warn( "Couldn't find Auditable represented by " + e );
             return;
         }
-        
-        if ( auditEventType.equals("CommentedEvent") ) {
+
+        if ( auditEventType.equals( "CommentedEvent" ) ) {
             auditTrailService.addComment( entity, comment, detail );
-        } else if ( auditEventType.equals("TroubleStatusFlagEvent") ) {
+        } else if ( auditEventType.equals( "TroubleStatusFlagEvent" ) ) {
             auditTrailService.addTroubleFlag( entity, comment, detail );
         } else if ( auditEventType.equals( "OKStatusFlagEvent" ) ) {
             auditTrailService.addOkFlag( entity, comment, detail );
@@ -116,18 +82,81 @@ public class AuditController {
         } else {
             log.warn( "We don't support that type of audit event yet, sorry" );
         }
+
+    }
+
+    /**
+     * @param e
+     * @return
+     */
+    public Auditable getAuditable( EntityDelegator e ) {
+        if ( e == null || e.getId() == null ) return null;
+        if ( e.getClassDelegatingFor() == null ) return null;
+
+        Class<?> clazz;
+        Auditable result = null;
+        try {
+            clazz = Class.forName( e.getClassDelegatingFor() );
+        } catch ( ClassNotFoundException e1 ) {
+            throw new RuntimeException( e1 );
+        }
+        if ( ExpressionExperiment.class.isAssignableFrom( clazz ) ) {
+            result = expressionExperimentService.load( e.getId() );
+        } else if ( ArrayDesign.class.isAssignableFrom( clazz ) ) {
+           result = arrayDesignService.load( e.getId() );
+        } else if ( Gene.class.isAssignableFrom( clazz ) ) {
+            result = geneService.load( e.getId() );
+        } else {
+            log.warn( "We don't support that class yet, sorry" );
+            return null;
+        }
+
+        if ( result == null ) {
+            log.warn( "Entity with id = " + e.getId() + " not found" );
+        }
+        return result;
+    }
+
+    /**
+     * @param e
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<AuditEventValueObject> getEvents( EntityDelegator e ) {
+        Collection<AuditEventValueObject> result = new HashSet<AuditEventValueObject>();
+        Collection events = new HashSet<AuditEvent>();
+
+        Auditable entity = getAuditable( e );
         
+        if (entity == null) {
+            return result;
+        }
+        
+        events = auditableService.getEvents( entity );
+        for ( AuditEvent ev : ( Collection<AuditEvent> ) events ) {
+            result.add( new AuditEventValueObject( ev ) );
+        }
+
+        return result;
     }
 
     public void setArrayDesignService( ArrayDesignService auditableService ) {
         this.arrayDesignService = auditableService;
     }
 
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
+    public void setAuditableService( AuditableService auditableService ) {
+        this.auditableService = auditableService;
     }
 
     public void setAuditTrailService( AuditTrailService auditTrailService ) {
         this.auditTrailService = auditTrailService;
+    }
+
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    public void setGeneService( GeneService geneService ) {
+        this.geneService = geneService;
     }
 }

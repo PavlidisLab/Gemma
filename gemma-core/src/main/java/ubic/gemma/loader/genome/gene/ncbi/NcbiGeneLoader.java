@@ -33,6 +33,8 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.PersisterHelper;
 
 /**
+ * Load or update information about genes from the NCBI Gene database.
+ * 
  * @author jsantos
  * @version $Id$
  */
@@ -72,11 +74,9 @@ public class NcbiGeneLoader {
     }
 
     /**
-     * @param file the gene_info file
-     * @param file the gene2accession file
+     * @param geneInfoFile the gene_info file
+     * @param gene2AccFile the gene2accession file
      * @param filterTaxa should we filter out taxa we're not supporting
-     * @return
-     * @throws IOException
      */
     public void load( String geneInfoFile, String gene2AccFile, boolean filterTaxa ) {
         NcbiGeneDomainObjectGenerator sdog = new NcbiGeneDomainObjectGenerator();
@@ -154,7 +154,7 @@ public class NcbiGeneLoader {
                 if ( gene == null ) {
                     continue;
                 }
-                
+
                 persisterHelper.persistOrUpdate( gene );
 
                 if ( ++loadedGeneCount % 1000 == 0 ) {

@@ -22,11 +22,7 @@
  */
 package ubic.gemma.model.common;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
 import java.util.Map;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -109,27 +105,6 @@ public class AuditableServiceImpl extends ubic.gemma.model.common.AuditableServi
         if ( lastTroubleEvent != null )
             if ( lastOKEvent == null || lastOKEvent.getDate().before( lastTroubleEvent.getDate() ) )
                 return lastTroubleEvent;
-        return null;
-    }
-
-    @Deprecated
-    private AuditEvent getLastOutstandingTroubleEventWithSort( Collection<AuditEvent> events ) {
-        /*
-         * sort by date descending and step through the list; if we come to an OK event first, there's no problem; if we
-         * come to a Trouble before we see an OK event, there's a problem (in this case, we might go through the whole
-         * list...)
-         */
-        List<AuditEvent> eventList = new ArrayList<AuditEvent>( events );
-        Collections.sort( eventList, new Comparator<AuditEvent>() {
-            public int compare( AuditEvent o1, AuditEvent o2 ) {
-                return -1 * o1.getDate().compareTo( o2.getDate() );
-            }
-        } );
-        for ( AuditEvent event : eventList ) {
-            if ( OKStatusFlagEvent.class.isAssignableFrom( event.getEventType().getClass() ) )
-                return null;
-            else if ( TroubleStatusFlagEvent.class.isAssignableFrom( event.getEventType().getClass() ) ) return event;
-        }
         return null;
     }
 

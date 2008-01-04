@@ -97,8 +97,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                     } );
                     result = results.iterator().next();
                     log.error( "Returning arbitrary gene: " + result );
-                    // throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    // "More than one instance of '" + Gene.class.getName() + "' was found when executing query" );
 
                 } else if ( results.size() == 1 ) {
                     result = results.iterator().next();

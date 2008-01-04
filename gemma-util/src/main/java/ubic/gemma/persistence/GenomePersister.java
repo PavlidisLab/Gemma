@@ -98,6 +98,8 @@ abstract public class GenomePersister extends CommonPersister {
             return this.persistOrUpdateBioSequence( ( BioSequence ) entity );
         } else if ( entity instanceof Gene ) {
             return this.persistOrUpdateGene( ( Gene ) entity );
+        } else if ( entity instanceof GeneProduct ) {
+            return this.persistOrUpdateGeneProduct( ( GeneProduct ) entity );
         }
 
         return super.persistOrUpdate( entity );
@@ -181,9 +183,13 @@ abstract public class GenomePersister extends CommonPersister {
     protected Gene persistOrUpdateGene( Gene gene ) {
 
         if ( gene == null ) return null;
-        if ( !isTransient( gene ) ) return gene;
 
-        Gene existingGene = geneService.find( gene );
+        Gene existingGene = null;
+        if ( gene.getId() != null ) {
+            existingGene = geneService.load( gene.getId() );
+        } else {
+            existingGene = geneService.find( gene );
+        }
 
         if ( existingGene == null ) {
             return persistGene( gene );
@@ -191,10 +197,13 @@ abstract public class GenomePersister extends CommonPersister {
 
         log.info( "Updating " + existingGene );
 
-        // We assume the taxon hasn't changed ...
+        assert existingGene.getNcbiId().equals( gene.getNcbiId() ) : "NCBI identifier for " + gene + " has changed";
 
-        Collection<GeneProduct> tempGeneProduct = gene.getProducts();
-        existingGene.setProducts( null );
+        // We assume the taxon hasn't changed.
+
+        // FIXME Accessions: add with care. Cross-references from other databases should be preserved
+        existingGene.setAccessions( gene.getAccessions() );
+        this.persistOrUpdateCollectionElements( existingGene.getAccessions() );
 
         existingGene.setName( gene.getName() );
         existingGene.setDescription( gene.getDescription() );
@@ -210,16 +219,13 @@ abstract public class GenomePersister extends CommonPersister {
         fillChromosomeLocationAssociations( existingGene.getGeneticLocation() );
 
         // updated gene products. We simply replace them all.
-        for ( GeneProduct product : tempGeneProduct ) {
+        existingGene.setProducts( gene.getProducts() );
+        for ( GeneProduct product : existingGene.getProducts() ) {
             product.setGene( existingGene );
         }
-
-        existingGene.setProducts( tempGeneProduct );
-        persistCollectionElements( gene.getProducts() );
+        persistOrUpdateCollectionElements( existingGene.getProducts() );
 
         existingGene.setAliases( gene.getAliases() );
-
-        geneService.update( existingGene );
 
         for ( GeneAlias alias : existingGene.getAliases() ) {
             alias.setGene( existingGene );
@@ -487,6 +493,68 @@ abstract public class GenomePersister extends CommonPersister {
 
         return geneProduct;
         // ;
+    }
+
+    /**
+     * @param geneProduct
+     * @return
+     */
+    protected GeneProduct persistOrUpdateGeneProduct( GeneProduct geneProduct ) {
+        if ( geneProduct == null ) return null;
+
+        GeneProduct existing = null;
+        if ( geneProduct.getId() != null ) {
+            existing = geneProductService.load( geneProduct.getId() );
+        } else {
+            existing = geneProductService.find( geneProduct );
+        }
+
+        if ( existing == null ) {
+            return persistGeneProduct( geneProduct );
+        }
+
+        assert !isTransient( existing.getGene() );
+
+        assert existing.getNcbiId().equals( geneProduct.getNcbiId() ) : "NCBI identifier for " + geneProduct
+                + " has changed";
+
+        existing.setName( geneProduct.getName() );
+        existing.setDescription( geneProduct.getDescription() );
+
+        existing.setAccessions( geneProduct.getAccessions() );
+        if ( existing.getAccessions() != null ) {
+            this.persistCollectionElements( existing.getAccessions() );
+        }
+
+        existing.setCdsPhysicalLocation( geneProduct.getCdsPhysicalLocation() );
+        if ( existing.getCdsPhysicalLocation() != null ) {
+            existing.getCdsPhysicalLocation().setChromosome(
+                    persistChromosome( existing.getCdsPhysicalLocation().getChromosome() ) );
+        }
+
+        existing.setPhysicalLocation( geneProduct.getPhysicalLocation() );
+        if ( existing.getPhysicalLocation() != null ) {
+
+            existing.getPhysicalLocation().setChromosome(
+                    persistChromosome( existing.getPhysicalLocation().getChromosome() ) );
+
+            // sanity check, as we've had this problem...somehow.
+            if ( !existing.getPhysicalLocation().getChromosome().getTaxon().equals( existing.getGene().getTaxon() ) ) {
+                throw new IllegalStateException( "Taxa don't match for gene product location and gene" );
+            }
+        }
+
+        existing.setExons( geneProduct.getExons() );
+        if ( existing.getExons() != null ) {
+
+            for ( PhysicalLocation exon : existing.getExons() ) {
+                exon.setChromosome( persistChromosome( exon.getChromosome() ) );
+            }
+        }
+
+        geneProductService.update( existing );
+
+        return existing;
     }
 
     /**
