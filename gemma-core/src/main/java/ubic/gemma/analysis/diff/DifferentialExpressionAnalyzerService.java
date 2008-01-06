@@ -51,7 +51,6 @@ import ubic.gemma.util.DifferentialExpressionAnalysisResultComparator;
  */
 public class DifferentialExpressionAnalyzerService {
 
-    private static final String DIFFERENTIAL_EXPRESSION = "differential";
     private static final String ONE_WAY_ANOVA = "one";
     private static final String TWO_WAY_ANOVA = "two";
     private static final int NUM_OWA_RESULT_SETS = 1;// num one way anova sets
@@ -72,7 +71,10 @@ public class DifferentialExpressionAnalyzerService {
     public Collection<DifferentialExpressionAnalysis> getDifferentialExpressionAnalyses(
             ExpressionExperiment expressionExperiment, boolean forceAnalysis ) {
 
-        runDifferentialExpressionAnalysis( expressionExperiment, forceAnalysis );
+        boolean analysisRun = runDifferentialExpressionAnalysis( expressionExperiment, forceAnalysis );
+        if ( !analysisRun ) {
+            return null;
+        }
 
         Collection<ExpressionAnalysis> expressionAnalyses = expressionExperiment.getExpressionAnalyses();
 
@@ -109,21 +111,41 @@ public class DifferentialExpressionAnalyzerService {
      * 
      * @param expressionExperiment
      * @param forceRun
+     * @return boolean Whether analysis was run or not. This will be false if analysis had already been run on this
+     *         experiment and forceRun=false.
      */
-    public void runDifferentialExpressionAnalysis( ExpressionExperiment expressionExperiment, boolean forceRun ) {
+    public boolean runDifferentialExpressionAnalysis( ExpressionExperiment expressionExperiment, boolean forceRun ) {
+
+        boolean analysisRun = false;
 
         Collection<ExpressionAnalysis> expressionAnalyses = expressionExperiment.getExpressionAnalyses();
         if ( forceRun || expressionAnalyses.isEmpty() ) {
-            log
-                    .warn( "Experiment "
-                            + expressionExperiment.getShortName()
-                            + " does not have any associated analyses.  Running differenial expression analysis and persisting results.  This may take some time." );
+
+            String message = "Analyze " + expressionExperiment.getShortName() + ".  ";
+
+            if ( forceRun ) {
+                message = message + "Force analysis (re-analyze even if analysis was previously run)? " + forceRun
+                        + ".  ";
+            }
+
+            if ( expressionAnalyses.isEmpty() ) {
+                message = message + "Experiment " + expressionExperiment.getShortName()
+                        + " does not have any associated analyses.  ";
+            }
+
+            message = message + "Running analysis and persisting results.  This may take some time.";
+
+            log.warn( message );
 
             differentialExpressionAnalyzer.analyze( expressionExperiment );
+            analysisRun = true;
         } else {
             log.warn( "Differential expression analysis already run for experiment "
-                    + expressionExperiment.getShortName() + ".  Not running again." );
+                    + expressionExperiment.getShortName()
+                    + ".  Not running again.  To force a re-analysis, set forceRun = true." );
+            analysisRun = false;
         }
+        return analysisRun;
     }
 
     /**
@@ -140,7 +162,10 @@ public class DifferentialExpressionAnalyzerService {
                 log.error( "No analyses associated with experiment: " + ee.getShortName() );
                 return null;
             }
-            runDifferentialExpressionAnalysis( ee, forceAnalysis );
+            boolean analysisRun = runDifferentialExpressionAnalysis( ee, forceAnalysis );
+            if ( !analysisRun ) {
+                return null;
+            }
             analyses = this.getDifferentialExpressionAnalyses( ee, forceAnalysis );
         }
 
@@ -192,6 +217,7 @@ public class DifferentialExpressionAnalyzerService {
      * @param ee
      * @return
      */
+    @SuppressWarnings("unchecked")
     public Collection<DifferentialExpressionAnalysisResult> getTopResults( ExpressionExperiment ee, int top,
             boolean forceAnalysis ) {
 
@@ -264,6 +290,7 @@ public class DifferentialExpressionAnalyzerService {
      * @param forceAnalysis
      * @return
      */
+    @SuppressWarnings("unchecked")
     public Collection<DifferentialExpressionAnalysisResult> getTopResultsForFactor( ExpressionExperiment ee,
             ExperimentalFactor factor, int top, boolean forceAnalysis ) {
 
@@ -322,6 +349,7 @@ public class DifferentialExpressionAnalyzerService {
      * @param forceAnalysis
      * @return
      */
+    @SuppressWarnings("unchecked")
     public Collection<DifferentialExpressionAnalysisResult> getTopInteractionResults( ExpressionExperiment ee, int top,
             boolean forceAnalysis ) {
         ExpressionAnalysis analysis = getDifferentialExpressionAnalysis( ee, forceAnalysis, TWO_WAY_ANOVA );
