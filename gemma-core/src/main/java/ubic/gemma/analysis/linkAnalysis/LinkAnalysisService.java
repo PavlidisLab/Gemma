@@ -122,7 +122,7 @@ public class LinkAnalysisService {
             ProbeCoexpressionAnalysis analysis = linkAnalysisConfig.toAnalysis();
             analysis.setName( ee.getShortName() + " link analysis" );
             analysis.getProtocol().setDescription(
-                    ( analysis.getProtocol().getDescription() + "# FilterConfig:\n" + filterConfig.toString() ) );
+                    analysis.getProtocol().getDescription() + "# FilterConfig:\n" + filterConfig.toString() );
             la.setAnalysisObj( analysis );
 
             Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
