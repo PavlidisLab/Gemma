@@ -336,9 +336,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                 fillInProtocolApplication( protocolApplication );
             }
         }
-
-        // fillInOntologyEntries( entity.getCharacteristics() ); // characteristics themselves should cascade
-
         return bioMaterialService.findOrCreate( entity );
     }
 

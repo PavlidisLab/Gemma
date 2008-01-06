@@ -18,6 +18,8 @@
  */
 package ubic.gemma.persistence;
 
+import ubic.gemma.model.analysis.ProbeCoexpressionAnalysis;
+import ubic.gemma.model.analysis.ProbeCoexpressionAnalysisService;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 
@@ -27,10 +29,13 @@ import ubic.gemma.model.association.Gene2GOAssociationService;
  * @author pavlidis
  * @version $Id$
  * @spring.property name="gene2GOAssociationService" ref="gene2GOAssociationService"
+ * @spring.property name="probeCoexpressionAnalysisService" ref="probeCoexpressionAnalysisService"
  */
 public class RelationshipPersister extends ExpressionPersister {
 
     private Gene2GOAssociationService gene2GOAssociationService;
+
+    private ProbeCoexpressionAnalysisService probeCoexpressionAnalysisService;
 
     /*
      * (non-Javadoc)
@@ -43,21 +48,11 @@ public class RelationshipPersister extends ExpressionPersister {
 
         if ( entity instanceof Gene2GOAssociation ) {
             return persistGene2GOAssociation( ( Gene2GOAssociation ) entity );
+        } else if ( entity instanceof ProbeCoexpressionAnalysis ) {
+            return persistProbeCoexpressionAnalysis( ( ProbeCoexpressionAnalysis ) entity );
         }
         return super.persist( entity );
 
-    }
-
-    /**
-     * @param association
-     * @return
-     */
-    protected Gene2GOAssociation persistGene2GOAssociation( Gene2GOAssociation association ) {
-        if ( association == null ) return null;
-        if ( !isTransient( association ) ) return association;
-
-        association.setGene( persistGene( association.getGene() ) );
-        return gene2GOAssociationService.findOrCreate( association );
     }
 
     /*
@@ -76,6 +71,31 @@ public class RelationshipPersister extends ExpressionPersister {
      */
     public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
         this.gene2GOAssociationService = gene2GOAssociationService;
+    }
+
+    public void setProbeCoexpressionAnalysisService( ProbeCoexpressionAnalysisService probeCoexpressionAnalysisService ) {
+        this.probeCoexpressionAnalysisService = probeCoexpressionAnalysisService;
+    }
+
+    /**
+     * @param association
+     * @return
+     */
+    protected Gene2GOAssociation persistGene2GOAssociation( Gene2GOAssociation association ) {
+        if ( association == null ) return null;
+        if ( !isTransient( association ) ) return association;
+
+        association.setGene( persistGene( association.getGene() ) );
+        return gene2GOAssociationService.findOrCreate( association );
+    }
+
+    /**
+     * @param entity
+     * @return
+     */
+    protected ProbeCoexpressionAnalysis persistProbeCoexpressionAnalysis( ProbeCoexpressionAnalysis entity ) {
+        entity.setProtocol( persistProtocol( entity.getProtocol() ) );
+        return probeCoexpressionAnalysisService.create( entity );
     }
 
 }

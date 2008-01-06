@@ -128,6 +128,7 @@ public class LinkAnalysisConfig {
     public ProbeCoexpressionAnalysis toAnalysis() {
         ProbeCoexpressionAnalysis analysis = ProbeCoexpressionAnalysis.Factory.newInstance();
         Protocol protocol = Protocol.Factory.newInstance();
+        protocol.setName( "Link analysis settings" );
         protocol.setDescription( this.toString() );
         analysis.setProtocol( protocol );
         return analysis;

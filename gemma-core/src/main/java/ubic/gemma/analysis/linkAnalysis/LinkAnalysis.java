@@ -37,6 +37,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Stats;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.model.analysis.ProbeCoexpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -78,6 +79,8 @@ public class LinkAnalysis {
 
     private LinkAnalysisConfig config;
     private ExpressionExperiment expressionExperiment;
+
+    private ProbeCoexpressionAnalysis analysis;
 
     /**
      * @param config
@@ -388,6 +391,17 @@ public class LinkAnalysis {
 
     public Map<CompositeSequence, Collection<Gene>> getProbeToGeneMap() {
         return probeToGeneMap;
+    }
+
+    public void setAnalysisObj( ProbeCoexpressionAnalysis analysis ) {
+        this.analysis = analysis;
+    }
+
+    /**
+     * @return object containing the parameters used.
+     */
+    public ProbeCoexpressionAnalysis getAnalysisObj() {
+        return analysis;
     }
 
 }

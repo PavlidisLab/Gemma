@@ -24,7 +24,6 @@ import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.NumberFormat;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -57,6 +56,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.TaxonUtility;
 import cern.colt.list.ObjectArrayList;
 
@@ -69,6 +69,7 @@ import cern.colt.list.ObjectArrayList;
  * @spring.property name="csService" ref="compositeSequenceService"
  * @spring.property name="quantitationTypeService" ref="quantitationTypeService"
  * @spring.property name="analysisHelperService" ref="analysisHelperService"
+ * @spring.property name="persisterHelper" ref="persisterHelper"
  * @author Paul
  * @version $Id$
  */
@@ -83,6 +84,7 @@ public class LinkAnalysisService {
     ExpressionExperimentService eeService;
     CompositeSequenceService csService;
     private Probe2ProbeCoexpressionService ppService = null;
+    private PersisterHelper persisterHelper;
     private AnalysisHelperService analysisHelperService = null;
 
     /**
@@ -118,11 +120,11 @@ public class LinkAnalysisService {
         // output
         if ( linkAnalysisConfig.isUseDb() && !linkAnalysisConfig.isTextOut() ) {
             ProbeCoexpressionAnalysis analysis = linkAnalysisConfig.toAnalysis();
+            analysis.setName( ee.getShortName() + " link analysis" );
             analysis.getProtocol().setDescription(
                     ( analysis.getProtocol().getDescription() + "# FilterConfig:\n" + filterConfig.toString() ) );
+            la.setAnalysisObj( analysis );
 
-            
-            
             Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
             ees.add( ee );
 
@@ -249,6 +251,10 @@ public class LinkAnalysisService {
 
         if ( useDB ) {
             deleteOldLinks( la );
+            // Create new analysis object.
+            ProbeCoexpressionAnalysis analysisObj = la.getAnalysisObj();
+            analysisObj = ( ProbeCoexpressionAnalysis ) persisterHelper.persist( analysisObj );
+            la.setAnalysisObj( analysisObj );
         }
 
         log.info( "Start submitting data to database." );
@@ -322,7 +328,7 @@ public class LinkAnalysisService {
     private void deleteOldLinks( LinkAnalysis la ) {
         ExpressionExperiment expressionExperiment = la.getExpressionExperiment();
         log.info( "Deleting any old links for " + expressionExperiment + " ..." );
-        ppService.deleteLinks( expressionExperiment );
+        ppService.deleteLinks( expressionExperiment ); // TODO: Delete old Analysis object
     }
 
     // a closure would be just the thing here.
@@ -362,13 +368,16 @@ public class LinkAnalysisService {
      * @param w
      * @param c helper class
      * @param metric e.g. Pearson Correlation
+     * @param analysisObj
      * @return
      */
-    private Probe2ProbeCoexpression initCoexp( int numColumns, double w, Creator c, QuantitationType metric ) {
+    private Probe2ProbeCoexpression initCoexp( int numColumns, double w, Creator c, QuantitationType metric,
+            ProbeCoexpressionAnalysis analysisObj ) {
         Probe2ProbeCoexpression ppCoexpression = c.create();
         ppCoexpression.setScore( w );
         ppCoexpression.setPvalue( CorrelationStats.pvalue( w, numColumns ) );
         ppCoexpression.setMetric( metric );
+        ppCoexpression.setSourceAnalysis( analysisObj );
         return ppCoexpression;
     }
 
@@ -380,13 +389,15 @@ public class LinkAnalysisService {
      * @param v1
      * @param v2
      * @param metric type of score (pearson correlation for example)
+     * @param analysisObj
      * @param c class that can create instances of the correct type of probe2probecoexpression.
      * @return
      */
     private void persist( int numColumns, Collection<Probe2ProbeCoexpression> p2plinks, int i, double w,
-            DesignElementDataVector v1, DesignElementDataVector v2, QuantitationType metric, Creator c ) {
+            DesignElementDataVector v1, DesignElementDataVector v2, QuantitationType metric,
+            ProbeCoexpressionAnalysis analysisObj, Creator c ) {
 
-        Probe2ProbeCoexpression ppCoexpression = initCoexp( numColumns, w, c, metric );
+        Probe2ProbeCoexpression ppCoexpression = initCoexp( numColumns, w, c, metric, analysisObj );
 
         ppCoexpression.setFirstVector( v1 );
         ppCoexpression.setSecondVector( v2 );
@@ -437,9 +448,9 @@ public class LinkAnalysisService {
             DesignElementDataVector v2 = p2v.get( p2 );
 
             if ( flip ) {
-                persist( numColumns, p2plinkBatch, i, w, v2, v1, metric, c );
+                persist( numColumns, p2plinkBatch, i, w, v2, v1, metric, la.getAnalysisObj(), c );
             } else {
-                persist( numColumns, p2plinkBatch, i, w, v1, v2, metric, c );
+                persist( numColumns, p2plinkBatch, i, w, v1, v2, metric, la.getAnalysisObj(), c );
             }
 
             if ( i > 0 && i % 50000 == 0 ) {
@@ -471,6 +482,10 @@ public class LinkAnalysisService {
 
     public void setAnalysisHelperService( AnalysisHelperService analysisHelperService ) {
         this.analysisHelperService = analysisHelperService;
+    }
+
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
     }
 
 }

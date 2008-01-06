@@ -296,9 +296,10 @@ public class GeneLinkCoexpressionAnalyzer {
         for ( CoexpressionValueObject co : toPersist.getAllGeneCoexpressionData() ) {
 
             if ( !genesToAnalyze.containsKey( co.getGeneId() ) ) {
-                log.info( "coexpressed Gene " + co.getGeneId()
-                        + " is not among the genes selected for analysis, so it will be skipped (while analyzing "
-                        + firstGene + ")" );
+                if ( log.isDebugEnabled() )
+                    log.debug( "coexpressed Gene " + co.getGeneId() + " " + co.getGeneName()
+                            + " is not among the genes selected for analysis, so it will be skipped (while analyzing "
+                            + firstGene.getOfficialSymbol() + ")" );
                 continue;
             }
 

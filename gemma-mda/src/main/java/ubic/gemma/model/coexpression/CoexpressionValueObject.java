@@ -122,7 +122,8 @@ public class CoexpressionValueObject {
      */
     public void addExpressionExperimentValueObject( ExpressionExperimentValueObject eeVo ) {
         if ( expressionExperimentValueObjects.containsKey( eeVo.getId() ) ) {
-            log.warn( "Already have seen this experiment" );
+            // I guess this happens if there are two probes for the same gene.
+            if ( log.isDebugEnabled() ) log.debug( "Already have seen this experiment" );
         }
         this.expressionExperimentValueObjects.put( eeVo.getId(), eeVo );
     }

@@ -136,8 +136,6 @@ abstract public class CommonPersister extends AbstractPersister {
             return persistQuantitationType( ( QuantitationType ) entity );
         } else if ( entity instanceof ExternalDatabase ) {
             return persistExternalDatabase( ( ExternalDatabase ) entity );
-            // } else if ( entity instanceof OntologyEntry ) {
-            // return persistOntologyEntry( ( OntologyEntry ) entity ); // important: check before DatabasEntry
         } else if ( entity instanceof DatabaseEntry ) {
             return persistDatabaseEntry( ( DatabaseEntry ) entity );
         } else if ( entity instanceof LocalFile ) {
@@ -145,7 +143,7 @@ abstract public class CommonPersister extends AbstractPersister {
         } else if ( entity instanceof Software ) {
             return persistSoftware( ( Software ) entity );
         } else if ( entity instanceof Protocol ) {
-            return null;
+            return persistProtocol( ( Protocol ) entity );
         } else if ( entity instanceof VocabCharacteristic ) {
             return null; // cascade
         } else if ( entity instanceof Characteristic ) {
@@ -265,29 +263,6 @@ abstract public class CommonPersister extends AbstractPersister {
         return ( Organization ) persistContact( affiliation );
     }
 
-    // /**
-    // * Fill in the categoryTerm and valueTerm associations of characteristics
-    // *
-    // * @param Characteristics Collection of Characteristics
-    // */
-    // protected void fillInOntologyEntries( Collection<Characteristic> characteristics ) {
-    // for ( Characteristic characteristic : characteristics ) {
-    // fillInOntologyEntries( characteristic );
-    // }
-    // }
-
-    // /**
-    // * Fill in the categoryTerm and valueTerm associations of a characteristic
-    // *
-    // * @param characteristic
-    // */
-    // private void fillInOntologyEntries( Characteristic characteristic ) {
-    // if ( log.isDebugEnabled() ) log.debug( "Filling in " + characteristic );
-    // characteristic.setCategoryTerm( persistOntologyEntry( characteristic.getCategoryTerm() ) );
-    // characteristic.setValueTerm( persistOntologyEntry( characteristic.getValueTerm() ) );
-    // fillInOntologyEntries( characteristic.getConstituents() ); // recurse
-    // }
-
     /**
      * @param protocol
      */
@@ -307,10 +282,14 @@ abstract public class CommonPersister extends AbstractPersister {
         }
     }
 
+    protected Protocol persistProtocol( Protocol protocol ) {
+        fillInProtocol( protocol );
+        return protocolService.findOrCreate( protocol );
+    }
+
     /**
      * @param protocolApplication
      */
-
     protected void fillInProtocolApplication( ProtocolApplication protocolApplication ) {
         if ( !isTransient( protocolApplication ) ) return;
         if ( protocolApplication == null ) return;
@@ -323,8 +302,7 @@ abstract public class CommonPersister extends AbstractPersister {
 
         if ( protocol.getName() == null ) throw new IllegalStateException( "Protocol must have a name" );
 
-        fillInProtocol( protocol );
-        protocolApplication.setProtocol( protocolService.findOrCreate( protocol ) );
+        protocolApplication.setProtocol( persistProtocol( protocol ) );
 
         for ( Person performer : protocolApplication.getPerformers() ) {
             log.debug( "Filling in performer" );
