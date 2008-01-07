@@ -19,6 +19,7 @@
 package ubic.gemma.analysis.coexpression;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -66,15 +67,48 @@ public class ProbeLinkCoexpressionAnalyzer {
         CoexpressionCollectionValueObject coexpressions = ( CoexpressionCollectionValueObject ) geneService
                 .getCoexpressedGenes( gene, ees, stringency );
 
-        Collection eesQueryTestedIn = probe2ProbeCoexpressionService.getExpressionExperimentsLinkTestedIn( gene, ees,
-                false );
-        coexpressions.setEesQueryGeneTestedIn( eesQueryTestedIn );
-
-        // TODO: do numgenes tested for the result genes.
+        computeEesTestedIn( gene, ees, coexpressions );
 
         computeGoStats( coexpressions );
 
         return coexpressions;
+    }
+
+    /**
+     * Fill in gene tested information for genes coexpressed with the query.
+     * 
+     * @param gene
+     * @param ees
+     * @param coexpressions
+     */
+    @SuppressWarnings("unchecked")
+    private void computeEesTestedIn( Gene gene, Collection<ExpressionExperiment> ees,
+            CoexpressionCollectionValueObject coexpressions ) {
+
+        /*
+         * First for the query gene - this is fast and provides an upper bound.
+         */
+        Collection eesQueryTestedIn = probe2ProbeCoexpressionService.getExpressionExperimentsLinkTestedIn( gene, ees,
+                false );
+        coexpressions.setEesQueryGeneTestedIn( eesQueryTestedIn );
+
+        /*
+         * For all the rest of the genes. This is going to be slower. Note we do a lot of object <--> id transformations
+         * here, which is annoying and wasteful.
+         */
+        Collection<Long> coexGeneIds = new HashSet<Long>();
+        Map<Long, CoexpressionValueObject> gmap = new HashMap<Long, CoexpressionValueObject>();
+        for ( CoexpressionValueObject o : coexpressions.getAllGeneCoexpressionData() ) {
+            coexGeneIds.add( o.getGeneId() );
+            gmap.put( o.getGeneId(), o );
+        }
+        Collection<Gene> coexGenes = geneService.loadMultiple( coexGeneIds ); // this step might be avoidable.
+        Map<Gene, Collection<ExpressionExperiment>> eesTestedIn = probe2ProbeCoexpressionService
+                .getExpressionExperimentsLinkTestedIn( gene, coexGenes, ees, false );
+        for ( Gene g : eesTestedIn.keySet() ) {
+            CoexpressionValueObject o = gmap.get( g.getId() );
+            o.setNumDatasetsTestedIn( eesTestedIn.get( g ).size() );
+        }
     }
 
     /**

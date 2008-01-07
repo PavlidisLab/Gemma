@@ -63,6 +63,11 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     private Map<Long, Map<Long, Double>> negPvalues;
 
     /**
+     * Number of data sets in which the pair was tested
+     */
+    private int numDatasetsTestedIn = 0;
+
+    /**
      * Expression Experiments whihc have evidence for coexpression of this gene with the query, but the probes are not
      * specific for the target gene.
      */
@@ -147,6 +152,23 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
             posPvalues.get( eeID ).put( probeID, pvalue );
             positiveScores.get( eeID ).put( probeID, score );
 
+        }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Comparable#compareTo(java.lang.Object)
+     */
+    public int compareTo( CoexpressionValueObject o ) {
+        int o1Size = this.getMaxLinkCount();
+        int o2Size = o.getMaxLinkCount();
+        if ( o1Size > o2Size ) {
+            return -1;
+        } else if ( o1Size < o2Size ) {
+            return 1;
+        } else {
+            return this.getGeneName().compareTo( o.getGeneName() );
         }
     }
 
@@ -362,6 +384,10 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         return nonspecificEE;
     }
 
+    public int getNumDatasetsTestedIn() {
+        return numDatasetsTestedIn;
+    }
+
     /**
      * @param eeId
      * @return
@@ -506,6 +532,10 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         this.nonspecificEE = nonspecificEE;
     }
 
+    public void setNumDatasetsTestedIn( int numDatasetsTestedIn ) {
+        this.numDatasetsTestedIn = numDatasetsTestedIn;
+    }
+
     /**
      * @param numQueryGeneGOTerms
      */
@@ -523,23 +553,6 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     @Override
     public String toString() {
         return geneName;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Comparable#compareTo(java.lang.Object)
-     */
-    public int compareTo( CoexpressionValueObject o ) {
-        int o1Size = this.getMaxLinkCount();
-        int o2Size = o.getMaxLinkCount();
-        if ( o1Size > o2Size ) {
-            return -1;
-        } else if ( o1Size < o2Size ) {
-            return 1;
-        } else {
-            return this.getGeneName().compareTo( o.getGeneName() );
-        }
     }
 
 }

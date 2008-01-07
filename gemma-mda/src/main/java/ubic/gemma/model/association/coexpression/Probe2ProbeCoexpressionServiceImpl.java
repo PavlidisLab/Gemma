@@ -194,9 +194,9 @@ public class Probe2ProbeCoexpressionServiceImpl extends
     }
 
     @Override
-    protected Collection handleGetExpressionExperimentsLinkTestedIn( Gene geneA, Gene geneB,
+    protected Map handleGetExpressionExperimentsLinkTestedIn( Gene geneA, Collection genesB,
             Collection expressionExperiments, boolean filterNonSpecific ) throws Exception {
-        return this.getProbe2ProbeCoexpressionDao().getExpressionExperimentsLinkTestedIn( geneA, geneB,
+        return this.getProbe2ProbeCoexpressionDao().getExpressionExperimentsLinkTestedIn( geneA, genesB,
                 expressionExperiments, filterNonSpecific );
     }
 

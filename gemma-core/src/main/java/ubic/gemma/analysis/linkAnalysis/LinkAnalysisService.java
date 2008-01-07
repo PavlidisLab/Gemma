@@ -176,6 +176,8 @@ public class LinkAnalysisService {
         analysis.setName( ee.getShortName() + " link analysis" );
         analysis.getProtocol().setDescription(
                 analysis.getProtocol().getDescription() + "# FilterConfig:\n" + filterConfig.toString() );
+        
+        assert ee.getId() != null;
         analysis.getExperimentsAnalyzed().add( ee );
 
         /*

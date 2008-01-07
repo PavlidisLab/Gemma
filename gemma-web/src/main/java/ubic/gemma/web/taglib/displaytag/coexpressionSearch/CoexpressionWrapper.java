@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2008 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package ubic.gemma.web.taglib.displaytag.coexpressionSearch;
 
 import java.util.ArrayList;
@@ -15,13 +33,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.util.GemmaLinkUtils;
 
 /**
- * Used to generate hyperlinks in displaytag tables.
- * <p>
- * See http://displaytag.sourceforge.net/10/tut_decorators.html and http://displaytag.sourceforge.net/10/tut_links.html
- * for explanation of how this works.
+ * Displaytag decorator for Link analysis results display.
  * 
  * @author jsantos, klc, luke
- * @version $Id $
+ * @version $Id$
  */
 public class CoexpressionWrapper extends TableDecorator {
 
@@ -29,34 +44,43 @@ public class CoexpressionWrapper extends TableDecorator {
     Log log = LogFactory.getLog( this.getClass() );
 
     /**
-     * @return String
+     * Function to build a GET coexpression link
+     * 
+     * @return
      */
-    public String getNameLink() {
+    public String getCoexpressionLink() {
         CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
-        StringBuffer link = new StringBuffer();
-
-        // tmm-style coexpression search link
-
-        // gene link to gemma
-        link.append( "<a href=\"/Gemma/gene/showGene.html?id=" );
-        link.append( object.getGeneId() );
-        link.append( "\">" );
-        link.append( StringUtils.abbreviate( object.getGeneName(), 20 ) );
-        link.append( "</a>" );
-
-        return link.toString();
+        return getCoexpressionLink( object, GEMMA_ICON );
     }
 
-    public String getGoOverlap() {
-        CoexpressionValueObject cvo = ( CoexpressionValueObject ) getCurrentRowObject();
-        if ( ( cvo.getGoOverlap() == null ) || cvo.getPossibleOverlap() == 0 ) return "-";
+    /**
+     * Function to build a GET coexpression link, given a coexpressionValueObect
+     * 
+     * @param object the CoexpressionValueObject to build the link for
+     * @param innerHTML The html to show as a link. This is typically an image link or a gene name.
+     * @return
+     */
+    public String getCoexpressionLink( CoexpressionValueObject object, String innerHTML ) {
+        StringBuffer link = new StringBuffer();
+        Collection<String> paramList = new ArrayList<String>();
+        Collection<String> includeList = new ArrayList<String>();
+        // include just taxon params
+        includeList.add( "stringency" );
+        includeList.add( "eeSearchString" );
+        extractParameters( paramList, includeList );
+        // add in the current gene with exactSearch
+        // paramList.add( "searchString=" + object.getGeneName() );
+        paramList.add( "id=" + object.getGeneId() );
+        paramList.add( "taxon=" + object.getTaxonId() );
+        paramList.add( "exactSearch=on" );
 
-        String overlap = "" + cvo.getGoOverlap().size() + "/" + cvo.getPossibleOverlap() + "";
-        /*
-         * <br /> <span style = 'font-size:smaller'> "; int i = 0; for(OntologyEntry oe: cvo.getGoOverlap()){ if ( ++i %
-         * 5 == 0 ) { overlap += "<br />"; } overlap += oe.getAccession() + " "; } return overlap + "</span>";
-         */
-        return overlap;
+        // put in the tmm link
+        link.append( "&nbsp;" );
+        link.append( "<a href=\"/Gemma/searchCoexpression.html?" );
+        link.append( StringUtils.join( paramList.toArray(), "&" ) );
+        link.append( "\">" + innerHTML + "</a>" );
+
+        return link.toString();
     }
 
     /**
@@ -69,102 +93,6 @@ public class CoexpressionWrapper extends TableDecorator {
         CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
         count = ( new Integer( object.getExpressionExperimentValueObjects().size() ) ).toString();
         return count;
-    }
-
-    /**
-     * Function to return the number of data sets for a coexpression match
-     * 
-     * @return the data set count column
-     */
-    public String getLinkCount() {
-        String count = "";
-        CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
-        int positiveLinks = object.getPositiveLinkSupport();
-        int negativeLinks = object.getNegativeLinkSupport();
-
-        if ( positiveLinks > 0 ) {
-            count += "<span class='positiveLink' >";
-            count += positiveLinks;
-
-            if ( !object.getExpressionExperiments().isEmpty() )
-                count += getNonSpecificString( object, object.getEEContributing2PositiveLinks(), positiveLinks );
-
-            count += "</span>";
-        }
-
-        if ( negativeLinks > 0 ) {
-            if ( count.length() > 0 ) {
-                count += "/";
-            }
-            count += "<span class='negativeLink' >";
-            count += negativeLinks;
-            if ( !object.getExpressionExperiments().isEmpty() )
-                count += getNonSpecificString( object, object.getEEContributing2NegativeLinks(), negativeLinks );
-
-            count += "</span>";
-        }
-        return count;
-    }
-
-    public String getSimpleLinkCount() {
-        String count = "";
-        CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
-        int positiveLinks = object.getPositiveLinkSupport();
-        int negativeLinks = object.getNegativeLinkSupport();
-
-        if ( positiveLinks > 0 ) {
-            count += "<span class='positiveLink' >";
-            count += positiveLinks;
-
-            count += "</span>";
-        }
-
-        if ( negativeLinks > 0 ) {
-            if ( count.length() > 0 ) {
-                count += "/";
-            }
-            count += "<span class='negativeLink' >";
-            count += negativeLinks;
-            count += "</span>";
-        }
-        return count;
-    }
-
-    /**
-     * @param cvo
-     * @param contributingEE
-     * @param numTotalLinks
-     * @return
-     */
-    private String getNonSpecificString( CoexpressionValueObject cvo, Collection<Long> contributingEE, int numTotalLinks ) {
-
-        Collection<Long> allNonSpecificEE = cvo.getNonspecificEE();
-        Collection<Long> nonSpecificGenes = cvo.getCrossHybridizingGenes();
-        boolean hybridizesWithQueryGene = cvo.isHybridizesWithQueryGene();
-
-        int nonSpecific = 0;
-        String nonSpecificList = "";
-        String hybridizes = "";
-
-        for ( Long id : contributingEE ) {
-            if ( allNonSpecificEE.contains( id ) ) {
-                nonSpecific++;
-            }
-        }
-
-        for ( Long gene : nonSpecificGenes ) {
-               // nonSpecificList += StringUtils.abbreviate( gene, 8 ) + " ,";
-            
-        }
-        if ( nonSpecificList.length() > 1 )
-            nonSpecificList = nonSpecificList.substring( 0, nonSpecificList.length() - 2 ); // remove trailing ' ,'
-
-        if ( hybridizesWithQueryGene ) hybridizes = "*";
-
-        if ( nonSpecific == 0 ) return "";
-
-        return "<i> <span style = 'font-size:smaller' title='" + nonSpecificList + "' >  ( "
-                + ( numTotalLinks - nonSpecific ) + hybridizes + " )  </span> </i>";
     }
 
     /**
@@ -186,9 +114,20 @@ public class CoexpressionWrapper extends TableDecorator {
         return StringUtils.join( dsLinks.toArray(), "," );
     }
 
-    public String getExperimentBitList() {
+    /**
+     * Function to return the data sets for a coexpression match
+     * 
+     * @return the data set column
+     */
+    @SuppressWarnings("unchecked")
+    public String getDataSetsExport() {
         CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
-        return object.getExperimentBitList();
+        Collection<ExpressionExperimentValueObject> ees = object.getExpressionExperimentValueObjects();
+        Collection<String> dsNames = new ArrayList<String>();
+        for ( ExpressionExperimentValueObject ee : ees ) {
+            dsNames.add( ee.getShortName() );
+        }
+        return StringUtils.join( dsNames.toArray(), "," );
     }
 
     public String getExperimentBitImage() {
@@ -238,83 +177,70 @@ public class CoexpressionWrapper extends TableDecorator {
         // + "&height=10&color=black&spacing=0&data=" + object.getExperimentBitList() + "\" /></span>";
     }
 
+    /**
+     * @return
+     */
+    public String getExperimentBitList() {
+        CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
+        return object.getExperimentBitList();
+    }
+
+    /**
+     * @return
+     */
     public String getGemmaLink() {
         CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
         return getCoexpressionLink( object, GEMMA_ICON );
     }
 
     /**
-     * Function to build a GET coexpression link, given a coexpressionValueObect
-     * 
-     * @param object the CoexpressionValueObject to build the link for
-     * @param innerHTML The html to show as a link. This is typically an image link or a gene name.
      * @return
      */
-    public String getCoexpressionLink( CoexpressionValueObject object, String innerHTML ) {
-        StringBuffer link = new StringBuffer();
-        Collection<String> paramList = new ArrayList<String>();
-        Collection<String> includeList = new ArrayList<String>();
-        // include just taxon params
-        includeList.add( "stringency" );
-        includeList.add( "eeSearchString" );
-        extractParameters( paramList, includeList );
-        // add in the current gene with exactSearch
-        // paramList.add( "searchString=" + object.getGeneName() );
-        paramList.add( "id=" + object.getGeneId() );
-        paramList.add( "taxon=" + object.getTaxonId() );
-        paramList.add( "exactSearch=on" );
+    public String getGoOverlap() {
+        CoexpressionValueObject cvo = ( CoexpressionValueObject ) getCurrentRowObject();
+        if ( ( cvo.getGoOverlap() == null ) || cvo.getPossibleOverlap() == 0 ) return "-";
 
-        // put in the tmm link
-        link.append( "&nbsp;" );
-        link.append( "<a href=\"/Gemma/searchCoexpression.html?" );
-        link.append( StringUtils.join( paramList.toArray(), "&" ) );
-        link.append( "\">" + innerHTML + "</a>" );
-
-        return link.toString();
+        String overlap = "" + cvo.getGoOverlap().size() + "/" + cvo.getPossibleOverlap() + "";
+        return overlap;
     }
 
     /**
-     * Function to build a GET coexpression link
+     * Function to return the number of data sets for a coexpression match
      * 
-     * @return
+     * @return the data set count column
      */
-    public String getCoexpressionLink() {
+    public String getLinkCount() {
+        String count = "";
         CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
-        return getCoexpressionLink( object, GEMMA_ICON );
-    }
+        int positiveLinks = object.getPositiveLinkSupport();
+        int negativeLinks = object.getNegativeLinkSupport();
+        int numEesTestedIn = object.getNumDatasetsTestedIn();
 
-    /**
-     * Function for extracting the GET parameter list, excluding the parameters in excludeList
-     * 
-     * @param paramList
-     * @param excludeList
-     */
-    private void extractParameters( Collection<String> paramList, Collection<String> excludeList ) {
-        Set params = this.getPageContext().getRequest().getParameterMap().entrySet();
-        for ( Object param : params ) {
-            Map.Entry entry = ( Map.Entry ) param;
-            if ( !isInIncludeList( excludeList, entry ) ) {
-                continue;
-            }
-            String value = ( ( String[] ) entry.getValue() )[0];
-            paramList.add( entry.getKey() + "=" + value );
-        }
-    }
+        if ( positiveLinks > 0 ) {
+            count += "<span class='positiveLink' >";
+            count += positiveLinks;
 
-    /**
-     * Helper function. Checks to see if the entry is in the given include list
-     * 
-     * @param excludeList
-     * @param entry
-     * @return
-     */
-    private boolean isInIncludeList( Collection<String> includeList, Map.Entry entry ) {
-        for ( String include : includeList ) {
-            if ( ( ( String ) entry.getKey() ).equals( include ) ) {
-                return true;
-            }
+            if ( !object.getExpressionExperiments().isEmpty() )
+                count += getNonSpecificString( object, object.getEEContributing2PositiveLinks(), positiveLinks );
+
+            count += "</span>";
         }
-        return false;
+
+        if ( negativeLinks > 0 ) {
+            if ( count.length() > 0 ) {
+                count += " ";
+            }
+            count += "<span class='negativeLink' >";
+            count += negativeLinks;
+            if ( !object.getExpressionExperiments().isEmpty() )
+                count += getNonSpecificString( object, object.getEEContributing2NegativeLinks(), negativeLinks );
+
+            count += "</span>";
+        }
+        
+        count += " / " + numEesTestedIn;
+        
+        return count;
     }
 
     /**
@@ -348,6 +274,129 @@ public class CoexpressionWrapper extends TableDecorator {
         return buf.toString();
     }
 
+    /**
+     * @return String
+     */
+    public String getNameLink() {
+        CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
+        StringBuffer link = new StringBuffer();
+
+        // tmm-style coexpression search link
+
+        // gene link to gemma
+        link.append( "<a href=\"/Gemma/gene/showGene.html?id=" );
+        link.append( object.getGeneId() );
+        link.append( "\">" );
+        link.append( StringUtils.abbreviate( object.getGeneName(), 20 ) );
+        link.append( "</a>" );
+
+        return link.toString();
+    }
+
+    public String getSimpleLinkCount() {
+        String count = "";
+        CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
+        int positiveLinks = object.getPositiveLinkSupport();
+        int negativeLinks = object.getNegativeLinkSupport();
+
+        if ( positiveLinks > 0 ) {
+            count += "<span class='positiveLink' >";
+            count += positiveLinks;
+
+            count += "</span>";
+        }
+
+        if ( negativeLinks > 0 ) {
+            if ( count.length() > 0 ) {
+                count += "/";
+            }
+            count += "<span class='negativeLink' >";
+            count += negativeLinks;
+            count += "</span>";
+        }
+        return count;
+    }
+
+    public String getSimpleLinkCountExport() {
+        StringBuffer buf = new StringBuffer();
+        CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
+        Integer positiveLinks = object.getPositiveLinkSupport();
+        Integer negativeLinks = object.getNegativeLinkSupport();
+
+        if ( positiveLinks != null && positiveLinks != 0 ) {
+            buf.append( positiveLinks );
+        }
+
+        if ( negativeLinks != null && negativeLinks != 0 ) {
+            if ( buf.length() > 0 ) buf.append( " / " );
+            buf.append( negativeLinks );
+        }
+
+        return buf.toString();
+    }
+
+    /**
+     * Function for extracting the GET parameter list, excluding the parameters in excludeList
+     * 
+     * @param paramList
+     * @param excludeList
+     */
+    private void extractParameters( Collection<String> paramList, Collection<String> excludeList ) {
+        Set params = this.getPageContext().getRequest().getParameterMap().entrySet();
+        for ( Object param : params ) {
+            Map.Entry entry = ( Map.Entry ) param;
+            if ( !isInIncludeList( excludeList, entry ) ) {
+                continue;
+            }
+            String value = ( ( String[] ) entry.getValue() )[0];
+            paramList.add( entry.getKey() + "=" + value );
+        }
+    }
+
+    /**
+     * @param cvo
+     * @param contributingEE
+     * @param numTotalLinks
+     * @return
+     */
+    private String getNonSpecificString( CoexpressionValueObject cvo, Collection<Long> contributingEE, int numTotalLinks ) {
+
+        Collection<Long> allNonSpecificEE = cvo.getNonspecificEE();
+        Collection<Long> nonSpecificGenes = cvo.getCrossHybridizingGenes();
+        boolean hybridizesWithQueryGene = cvo.isHybridizesWithQueryGene();
+
+        int nonSpecific = 0;
+        String nonSpecificList = "";
+        String hybridizes = "";
+
+        for ( Long id : contributingEE ) {
+            if ( allNonSpecificEE.contains( id ) ) {
+                nonSpecific++;
+            }
+        }
+
+        // FIXME we are not passing the gene names around any more.
+        for ( Long gene : nonSpecificGenes ) {
+            // nonSpecificList += StringUtils.abbreviate( gene, 8 ) + " ,";
+        }
+
+        if ( nonSpecificList.length() > 1 )
+            nonSpecificList = nonSpecificList.substring( 0, nonSpecificList.length() - 2 ); // remove trailing ' ,'
+
+        if ( hybridizesWithQueryGene ) hybridizes = "*";
+
+        if ( nonSpecific == 0 ) return "";
+
+        return "<i> <span style = 'font-size:smaller' title='" + nonSpecificList + "' >  ( "
+                + ( numTotalLinks - nonSpecific ) + hybridizes + " )  </span> </i>";
+    }
+
+    /**
+     * @param cvo
+     * @param contributingEE
+     * @param numTotalLinks
+     * @return
+     */
     private String getNonSpecificStringExport( CoexpressionValueObject cvo, Collection<Long> contributingEE,
             Integer numTotalLinks ) {
 
@@ -376,37 +425,19 @@ public class CoexpressionWrapper extends TableDecorator {
         return buf.toString();
     }
 
-    public String getSimpleLinkCountExport() {
-        StringBuffer buf = new StringBuffer();
-        CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
-        Integer positiveLinks = object.getPositiveLinkSupport();
-        Integer negativeLinks = object.getNegativeLinkSupport();
-
-        if ( positiveLinks != null && positiveLinks != 0 ) {
-            buf.append( positiveLinks );
-        }
-
-        if ( negativeLinks != null && negativeLinks != 0 ) {
-            if ( buf.length() > 0 ) buf.append( " / " );
-            buf.append( negativeLinks );
-        }
-
-        return buf.toString();
-    }
-
     /**
-     * Function to return the data sets for a coexpression match
+     * Helper function. Checks to see if the entry is in the given include list
      * 
-     * @return the data set column
+     * @param excludeList
+     * @param entry
+     * @return
      */
-    @SuppressWarnings("unchecked")
-    public String getDataSetsExport() {
-        CoexpressionValueObject object = ( CoexpressionValueObject ) getCurrentRowObject();
-        Collection<ExpressionExperimentValueObject> ees = object.getExpressionExperimentValueObjects();
-        Collection<String> dsNames = new ArrayList<String>();
-        for ( ExpressionExperimentValueObject ee : ees ) {
-            dsNames.add( ee.getShortName() );
+    private boolean isInIncludeList( Collection<String> includeList, Map.Entry entry ) {
+        for ( String include : includeList ) {
+            if ( ( ( String ) entry.getKey() ).equals( include ) ) {
+                return true;
+            }
         }
-        return StringUtils.join( dsNames.toArray(), "," );
+        return false;
     }
 }
