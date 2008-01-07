@@ -193,30 +193,26 @@ public class GeneOntologyService implements InitializingBean {
     }
 
     /**
+     * <p>
+     * Given a query Gene, and a collection of gene ids calculates the go term overlap for each pair of queryGene and
+     * gene in the given collection. Returns a Map<Gene,Collection<OntologyEntries>>. The key is the gene (from the
+     * [queryGene,gene] pair) and the values are a collection of the overlapping ontology entries.
+     * </p>
+     * 
      * @param queryGene
      * @param geneIds
-     * @returns Map<Gene,Collection<OntologyEntries>>
-     * @throws Exception
-     *         <p>
-     *         Given a query Gene, and a collection of gene ids calculates the go term overlap for each pair of
-     *         queryGene and gene in the given collection. Returns a Map<Gene,Collection<OntologyEntries>>. The key is
-     *         the gene (from the [queryGene,gene] pair) and the values are a collection of the overlapping ontology
-     *         entries.
-     *         </p>
+     * @returns map of gene ids to collections of ontologyTerms. This will always be populated but collection values
+     *          will be empty when there is no overlap.
      */
     @SuppressWarnings("unchecked")
-    public Map<Long, Collection<OntologyTerm>> calculateGoTermOverlap( Gene queryGene, Collection geneIds )
-            throws Exception {
+    public Map<Long, Collection<OntologyTerm>> calculateGoTermOverlap( Gene queryGene, Collection geneIds ) {
 
         if ( queryGene == null ) return null;
         if ( geneIds.size() == 0 ) return null;
 
         Collection<OntologyTerm> queryGeneTerms = getGOTerms( queryGene );
-
-        // nothing to do.
-        if ( ( queryGeneTerms == null ) || ( queryGeneTerms.isEmpty() ) ) return null;
-
         Map<Long, Collection<OntologyTerm>> overlap = new HashMap<Long, Collection<OntologyTerm>>();
+
         overlap.put( queryGene.getId(), queryGeneTerms ); // include the query gene in the list. Clearly 100% overlap
         // with itself!
 
@@ -226,9 +222,14 @@ public class GeneOntologyService implements InitializingBean {
 
         for ( Object obj : genes ) {
             Gene gene = ( Gene ) obj;
+            if ( queryGeneTerms.isEmpty() ) {
+                overlap.put( gene.getId(), new HashSet<OntologyTerm>() );
+                continue;
+            }
+
             Collection<OntologyTerm> comparisonOntos = getGOTerms( gene );
 
-            if ( ( comparisonOntos == null ) || ( comparisonOntos.isEmpty() ) ) {
+            if ( comparisonOntos == null || comparisonOntos.isEmpty() ) {
                 overlap.put( gene.getId(), new HashSet<OntologyTerm>() );
                 continue;
             }

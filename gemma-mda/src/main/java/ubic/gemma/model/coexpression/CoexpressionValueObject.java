@@ -40,7 +40,7 @@ import ubic.gemma.ontology.OntologyTerm;
  * @author klc
  * @version $Id$
  */
-public class CoexpressionValueObject {
+public class CoexpressionValueObject implements Comparable<CoexpressionValueObject> {
 
     private static Log log = LogFactory.getLog( CoexpressionValueObject.class.getName() );
 
@@ -524,4 +524,22 @@ public class CoexpressionValueObject {
     public String toString() {
         return geneName;
     }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Comparable#compareTo(java.lang.Object)
+     */
+    public int compareTo( CoexpressionValueObject o ) {
+        int o1Size = this.getMaxLinkCount();
+        int o2Size = o.getMaxLinkCount();
+        if ( o1Size > o2Size ) {
+            return -1;
+        } else if ( o1Size < o2Size ) {
+            return 1;
+        } else {
+            return this.getGeneName().compareTo( o.getGeneName() );
+        }
+    }
+
 }

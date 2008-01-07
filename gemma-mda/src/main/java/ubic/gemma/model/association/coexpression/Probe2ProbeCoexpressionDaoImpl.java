@@ -31,6 +31,7 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
@@ -38,9 +39,11 @@ import org.hibernate.Session;
 import org.hibernate.type.DoubleType;
 import org.hibernate.type.LongType;
 
+import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.coexpression.Link;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.TaxonUtility;
@@ -57,6 +60,10 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     private static final int LINK_DELETE_BATCH_SIZE = 100000;
     private static final String TMP_TABLE_PREFIX = "TMP_";
     private static Log log = LogFactory.getLog( Probe2ProbeCoexpressionDaoImpl.class.getName() );
+
+    // FIXME figure out the taxon instead of this iteration.
+    private static final String[] p2pClassNames = new String[] { "HumanProbeCoExpressionImpl",
+            "MouseProbeCoExpressionImpl", "RatProbeCoExpressionImpl", "OtherProbeCoExpressionImpl" };
 
     private long eeId = 0L;
 
@@ -113,6 +120,322 @@ public class Probe2ProbeCoexpressionDaoImpl extends
                     + ")" );
 
         // log.debug( "Deleted " + count + " links" );
+    }
+
+    @Override
+    protected Integer handleCountLinks( ExpressionExperiment expressionExperiment ) throws Exception {
+
+        // FIXME figure out the taxon instead of this iteration.
+        String[] p2pClassNames = new String[] { "HumanProbeCoExpressionImpl", "MouseProbeCoExpressionImpl",
+                "RatProbeCoExpressionImpl", "OtherProbeCoExpressionImpl" };
+
+        Long result = 0l;
+        for ( String p2pClassName : p2pClassNames ) {
+
+            /*
+             * Note that we only have to query for the firstVector, because we're joining over all designelement
+             * datavectors for this ee.
+             */
+            final String queryString = "select count(pp) from ExpressionExperimentImpl ee inner join ee.designElementDataVectors as dv, "
+                    + p2pClassName + " as pp where pp.firstVector" + " = dv and ee.id=:eeId";
+
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setLong( "eeId", expressionExperiment.getId() );
+            java.util.List results = queryObject.list();
+
+            if ( results != null ) {
+                if ( results.size() > 1 ) {
+                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                            "More than one instance of 'Integer" + "' was found when executing query --> '"
+                                    + queryString + "'" );
+                } else if ( results.size() == 1 ) {
+                    result += ( Long ) results.iterator().next();
+                }
+
+            }
+
+        }
+
+        /*
+         * We divide by 2 because all links are stored twice
+         */
+
+        Integer resultAsInt = result.intValue();
+        return resultAsInt / 2;
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleDeleteLinks(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected void handleDeleteLinks( ExpressionExperiment ee ) throws Exception {
+
+        int totalDone = 0;
+
+        for ( String p2pClassName : p2pClassNames ) {
+
+            /*
+             * Note that we only have to query for the firstVector, because we're joining over all designelement
+             * datavectors for this ee.
+             */
+            final String queryString = "select pp from ExpressionExperimentImpl ee inner join ee.designElementDataVectors as dv, "
+                    + p2pClassName + " as pp where pp.firstVector" + " = dv and ee= :ee ";
+
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setMaxResults( LINK_DELETE_BATCH_SIZE );
+            queryObject.setParameter( "ee", ee );
+
+            // we query iteratively until there are no more links to get. This takes much less memory than doing it all
+            // at once. However, it is very easy for this loop to leak memory like crazy.
+            Collection results;
+            Probe2ProbeCoexpression oneLink = null; // used later.
+            while ( true ) {
+                results = queryObject.list();
+
+                if ( results.size() == 0 ) break;
+
+                if ( oneLink == null ) {
+                    oneLink = ( Probe2ProbeCoexpression ) results.iterator().next();
+                    Hibernate.initialize( oneLink );
+                    Analysis analysis = oneLink.getSourceAnalysis();
+                    if ( analysis != null ) {
+                        log.info( "Deleting analysis object" );
+                        this.getHibernateTemplate().delete( analysis );
+                    } else {
+                        log.info( "No analysis object associated with link " );
+                    }
+                }
+
+                remove( results );
+
+                Integer numDone = results.size();
+
+                totalDone += numDone;
+
+                log.info( "Delete link progress: " + totalDone + " ..." );
+
+                if ( results.size() < LINK_DELETE_BATCH_SIZE ) break;
+            }
+
+            if ( totalDone > 0 ) {
+                break;
+            }
+
+        }
+
+        if ( totalDone == 0 ) {
+            log.info( "No coexpression results to remove for " + ee );
+        } else {
+            log.info( totalDone + " coexpression results removed for " + ee );
+        }
+
+    }
+
+    @Override
+    protected Map handleFindCoexpressionRelationships( Collection genes, QuantitationType qt, Collection ees )
+            throws Exception {
+
+        Gene testG = ( Gene ) genes.iterator().next(); // todo: check to make sure that all the given genes are of the
+        // same taxon throw exception
+
+        String p2pClassName = getP2PClassName( testG );
+
+        final String queryStringFirstVector =
+        // source tables
+        "select distinct gene,p2pc.secondVector from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence,"
+                // join table
+                + p2pClassName
+                + " as p2pc "
+                // target tables
+                + " where gene.products.id=bs2gp.geneProduct.id "
+                + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
+                + " and compositeSequence.designElementDataVectors.id=p2pc.firstVector.id "
+                + " and p2pc.firstVector.expressionExperiment.id in (:collectionOfEE)"
+                + " and p2pc.quantitationType.id = :givenQtId" + " and gene.id in (:collectionOfGenes)";
+
+        final String queryStringSecondVector =
+        // source tables
+        "select distinct gene, p2pc.firstVector from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence,"
+                // join table
+                + p2pClassName
+                + " as p2pc "
+                // target tables
+                + " where gene.products.id=bs2gp.geneProduct.id "
+                + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
+                + " and compositeSequence.designElementDataVectors.id=p2pc.secondVector.id "
+                + " and p2pc.secondVector.expressionExperiment.id in (:collectionOfEE)"
+                + " and p2pc.quantitationType.id = :givenQtId" + " and gene.id in (:collectionOfGenes)";
+
+        Map<Gene, Collection<DesignElementDataVector>> results = new HashMap<Gene, Collection<DesignElementDataVector>>();
+
+        try {
+            // Must transform collection of objects into a collection of ids
+            Collection<Long> eeIds = new ArrayList<Long>();
+            for ( Iterator iter = ees.iterator(); iter.hasNext(); ) {
+                ExpressionExperiment e = ( ExpressionExperiment ) iter.next();
+                eeIds.add( e.getId() );
+            }
+
+            Collection<Long> geneIds = new ArrayList<Long>();
+            for ( Object obj : genes )
+                geneIds.add( ( ( Gene ) obj ).getId() );
+
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryStringFirstVector );
+            queryObject.setParameterList( "collectionOfEE", eeIds );
+            queryObject.setParameterList( "collectionOfGenes", geneIds );
+            queryObject.setLong( "givenQtId", qt.getId() );
+            ScrollableResults list1 = queryObject.scroll();
+            buildMap( results, list1 );
+
+            // do query joining coexpressed genes through the secondVector to the firstVector
+            queryObject = super.getSession( false ).createQuery( queryStringSecondVector );
+            queryObject.setParameterList( "collectionOfEE", eeIds );
+            queryObject.setParameterList( "collectionOfGenes", geneIds );
+            queryObject.setLong( "givenQtId", qt.getId() );
+            ScrollableResults list2 = queryObject.scroll();
+            buildMap( results, list2 );
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return results;
+    }
+
+    /**
+     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#findCoexpressionRelationships(ubic.gemma.model.genome.Gene,
+     *      java.util.Collection, ubic.gemma.model.common.quantitationtype.QuantitationType)
+     */
+    @SuppressWarnings("unchecked")
+    protected java.util.Collection handleFindCoexpressionRelationships( ubic.gemma.model.genome.Gene givenG,
+            java.util.Collection ees, ubic.gemma.model.common.quantitationtype.QuantitationType qt ) {
+
+        String p2pClassName = getP2PClassName( givenG );
+
+        final String queryStringFirstVector =
+        // source tables
+        "select distinct p2pc.secondVector from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence,"
+                // join table
+                + p2pClassName
+                + " as p2pc "
+                // target tables
+                + " where gene.products.id=bs2gp.geneProduct.id "
+                + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
+                + " and compositeSequence.designElementDataVectors.id=p2pc.firstVector.id "
+                + " and p2pc.firstVector.expressionExperiment.id in (:collectionOfEE)"
+                + " and p2pc.quantitationType.id = :givenQtId" + " and gene.id = :givenGId";
+
+        final String queryStringSecondVector =
+        // source tables
+        "select distinct p2pc.firstVector from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence,"
+                // join table
+                + p2pClassName
+                + " as p2pc "
+                // target tables
+                + " where gene.products.id=bs2gp.geneProduct.id "
+                + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
+                + " and compositeSequence.designElementDataVectors.id=p2pc.secondVector.id "
+                + " and p2pc.secondVector.expressionExperiment.id in (:collectionOfEE)"
+                + " and p2pc.quantitationType.id = :givenQtId" + " and gene.id = :givenGId";
+
+        Collection<DesignElementDataVector> dedvs = new HashSet<DesignElementDataVector>();
+
+        try {
+            // do query joining coexpressed genes through the firstVector to the secondVector
+            Collection<Long> eeIds = new ArrayList<Long>();
+            for ( Iterator iter = ees.iterator(); iter.hasNext(); ) {
+                ExpressionExperiment e = ( ExpressionExperiment ) iter.next();
+                eeIds.add( e.getId() );
+            }
+
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryStringFirstVector );
+            queryObject.setParameterList( "collectionOfEE", eeIds );
+            queryObject.setLong( "givenQtId", qt.getId() );
+            queryObject.setLong( "givenGId", givenG.getId() );
+            dedvs.addAll( queryObject.list() );
+            // do query joining coexpressed genes through the secondVector to the firstVector
+            queryObject = super.getSession( false ).createQuery( queryStringSecondVector );
+            queryObject.setParameterList( "collectionOfEE", eeIds );
+            queryObject.setLong( "givenQtId", qt.getId() );
+            queryObject.setLong( "givenGId", givenG.getId() );
+            dedvs.addAll( queryObject.list() );
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return dedvs;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetExpressionExperimentsLinkTestedIn(ubic.gemma.model.genome.Gene,
+     *      java.util.Collection, boolean)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection<ExpressionExperiment> handleGetExpressionExperimentsLinkTestedIn( Gene gene,
+            Collection expressionExperiments, boolean filterNonSpecific ) throws Exception {
+
+        Collection<DesignElement> probes = this.getCsForGene( gene );
+
+        // Locate analyses which use that probe.
+        String queryString = "select ees from ProbeCoexpressionAnalysisImpl pca inner join pca.experimentsAnalyzed ees inner join pca.probesUsed pu where ees in (:ees) and pu in (:probes)";
+        return this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "ees", "probes" },
+                new Object[] { expressionExperiments, probes } );
+
+        // FIXME implement filterNonSpecific.
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetExpressionExperimentsLinkTestedIn(ubic.gemma.model.genome.Gene,
+     *      ubic.gemma.model.genome.Gene, java.util.Collection, boolean)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection<ExpressionExperiment> handleGetExpressionExperimentsLinkTestedIn( Gene geneA, Gene geneB,
+            Collection expressionExperiments, boolean filterNonSpecific ) throws Exception {
+
+        Collection<ExpressionExperiment> eesA = getExpressionExperimentsLinkTestedIn( geneA, expressionExperiments,
+                filterNonSpecific );
+        Collection<ExpressionExperiment> eesB = getExpressionExperimentsLinkTestedIn( geneB, expressionExperiments,
+                filterNonSpecific );
+
+        if ( eesA.size() < eesB.size() ) {
+            eesA.retainAll( eesB );
+            return eesA;
+        } else {
+            eesB.retainAll( eesA );
+            return eesB;
+        }
+
+    }
+
+    @Override
+    protected Collection<ProbeLink> handleGetProbeCoExpression( ExpressionExperiment expressionExperiment,
+            String taxon, boolean cleaned ) throws Exception {
+        String tableName = getTableName( taxon, cleaned );
+        Collection<ProbeLink> links = getLinks( expressionExperiment, tableName );
+        return links;
+    }
+
+    @Override
+    protected void handlePrepareForShuffling( Collection ees, String taxon, boolean filterNonSpecific )
+            throws Exception {
+        String tableName = getTableName( taxon, true );
+        createTable( tableName );
+        int i = 1;
+        for ( Object ee : ees ) {
+            log.info( "Filtering EE " + ( ( ExpressionExperiment ) ee ).getShortName() + "(" + i + "/" + ees.size()
+                    + ")" );
+            doFiltering( ( ExpressionExperiment ) ee, taxon, filterNonSpecific );
+            i++;
+        }
     }
 
     /**
@@ -223,6 +546,29 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             }
         }
         return nonRedudantLinks;
+    }
+
+    /**
+     * @param gene
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<DesignElement> getCsForGene( Gene gene ) {
+        Long id = gene.getId();
+        String queryString = "SELECT CS as id from GENE2CS WHERE GENE = " + id;
+        Collection<Long> results = new HashSet<Long>();
+        Session session = getSessionFactory().openSession();
+        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+        queryObject.addScalar( "id", new LongType() );
+        ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        while ( scroll.next() ) {
+            Long cid = scroll.getLong( 0 );
+            results.add( cid );
+        }
+
+        return this.getHibernateTemplate().findByNamedParam( "from DesignElementImpl d where d.id in (:ids)", "ids",
+                results );
+
     }
 
     /**
@@ -404,264 +750,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     }
 
-    @Override
-    protected Integer handleCountLinks( ExpressionExperiment expressionExperiment ) throws Exception {
-
-        // FIXME figure out the taxon instead of this iteration.
-        String[] p2pClassNames = new String[] { "HumanProbeCoExpressionImpl", "MouseProbeCoExpressionImpl",
-                "RatProbeCoExpressionImpl", "OtherProbeCoExpressionImpl" };
-
-        Long result = 0l;
-        for ( String p2pClassName : p2pClassNames ) {
-
-            /*
-             * Note that we only have to query for the firstVector, because we're joining over all designelement
-             * datavectors for this ee.
-             */
-            final String queryString = "select count(pp) from ExpressionExperimentImpl ee inner join ee.designElementDataVectors as dv, "
-                    + p2pClassName + " as pp where pp.firstVector" + " = dv and ee.id=:eeId";
-
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setLong( "eeId", expressionExperiment.getId() );
-            java.util.List results = queryObject.list();
-
-            if ( results != null ) {
-                if ( results.size() > 1 ) {
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                            "More than one instance of 'Integer" + "' was found when executing query --> '"
-                                    + queryString + "'" );
-                } else if ( results.size() == 1 ) {
-                    result += ( Long ) results.iterator().next();
-                }
-
-            }
-
-        }
-
-        /*
-         * We divide by 2 because all links are stored twice
-         */
-
-        Integer resultAsInt = result.intValue();
-        return resultAsInt / 2;
-
-    }
-
-    // FIXME figure out the taxon instead of this iteration.
-    private static final String[] p2pClassNames = new String[] { "HumanProbeCoExpressionImpl",
-            "MouseProbeCoExpressionImpl", "RatProbeCoExpressionImpl", "OtherProbeCoExpressionImpl" };
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleDeleteLinks(ubic.gemma.model.expression.experiment.ExpressionExperiment)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected void handleDeleteLinks( ExpressionExperiment ee ) throws Exception {
-
-        int totalDone = 0;
-
-        for ( String p2pClassName : p2pClassNames ) {
-
-            /*
-             * Note that we only have to query for the firstVector, because we're joining over all designelement
-             * datavectors for this ee.
-             */
-            final String queryString = "select pp from ExpressionExperimentImpl ee inner join ee.designElementDataVectors as dv, "
-                    + p2pClassName + " as pp where pp.firstVector" + " = dv and ee= :ee ";
-
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setMaxResults( LINK_DELETE_BATCH_SIZE );
-            queryObject.setParameter( "ee", ee );
-
-            // we query iteratively until there are no more links to get. This takes much less memory than doing it all
-            // at once. However, it is very easy for this loop to leak memory like crazy.
-            while ( true ) {
-                final Collection results = queryObject.list();
-
-                if ( results.size() == 0 ) break;
-
-                remove( results );
-
-                Integer numDone = results.size();
-
-                totalDone += numDone;
-
-                log.info( "Delete link progress: " + totalDone + " ..." );
-
-                if ( results.size() < LINK_DELETE_BATCH_SIZE ) break;
-            }
-
-            if ( totalDone > 0 ) {
-                break;
-            }
-        }
-
-        if ( totalDone == 0 ) {
-            log.info( "No coexpression results to remove for " + ee );
-        } else {
-            log.info( totalDone + " coexpression results removed for " + ee );
-        }
-
-    }
-
-    @Override
-    protected Map handleFindCoexpressionRelationships( Collection genes, QuantitationType qt, Collection ees )
-            throws Exception {
-
-        Gene testG = ( Gene ) genes.iterator().next(); // todo: check to make sure that all the given genes are of the
-        // same taxon throw exception
-
-        String p2pClassName = getP2PClassName( testG );
-
-        final String queryStringFirstVector =
-        // source tables
-        "select distinct gene,p2pc.secondVector from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence,"
-                // join table
-                + p2pClassName
-                + " as p2pc "
-                // target tables
-                + " where gene.products.id=bs2gp.geneProduct.id "
-                + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
-                + " and compositeSequence.designElementDataVectors.id=p2pc.firstVector.id "
-                + " and p2pc.firstVector.expressionExperiment.id in (:collectionOfEE)"
-                + " and p2pc.quantitationType.id = :givenQtId" + " and gene.id in (:collectionOfGenes)";
-
-        final String queryStringSecondVector =
-        // source tables
-        "select distinct gene, p2pc.firstVector from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence,"
-                // join table
-                + p2pClassName
-                + " as p2pc "
-                // target tables
-                + " where gene.products.id=bs2gp.geneProduct.id "
-                + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
-                + " and compositeSequence.designElementDataVectors.id=p2pc.secondVector.id "
-                + " and p2pc.secondVector.expressionExperiment.id in (:collectionOfEE)"
-                + " and p2pc.quantitationType.id = :givenQtId" + " and gene.id in (:collectionOfGenes)";
-
-        Map<Gene, Collection<DesignElementDataVector>> results = new HashMap<Gene, Collection<DesignElementDataVector>>();
-
-        try {
-            // Must transform collection of objects into a collection of ids
-            Collection<Long> eeIds = new ArrayList<Long>();
-            for ( Iterator iter = ees.iterator(); iter.hasNext(); ) {
-                ExpressionExperiment e = ( ExpressionExperiment ) iter.next();
-                eeIds.add( e.getId() );
-            }
-
-            Collection<Long> geneIds = new ArrayList<Long>();
-            for ( Object obj : genes )
-                geneIds.add( ( ( Gene ) obj ).getId() );
-
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryStringFirstVector );
-            queryObject.setParameterList( "collectionOfEE", eeIds );
-            queryObject.setParameterList( "collectionOfGenes", geneIds );
-            queryObject.setLong( "givenQtId", qt.getId() );
-            ScrollableResults list1 = queryObject.scroll();
-            buildMap( results, list1 );
-
-            // do query joining coexpressed genes through the secondVector to the firstVector
-            queryObject = super.getSession( false ).createQuery( queryStringSecondVector );
-            queryObject.setParameterList( "collectionOfEE", eeIds );
-            queryObject.setParameterList( "collectionOfGenes", geneIds );
-            queryObject.setLong( "givenQtId", qt.getId() );
-            ScrollableResults list2 = queryObject.scroll();
-            buildMap( results, list2 );
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-        return results;
-    }
-
-    /**
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#findCoexpressionRelationships(ubic.gemma.model.genome.Gene,
-     *      java.util.Collection, ubic.gemma.model.common.quantitationtype.QuantitationType)
-     */
-    @SuppressWarnings("unchecked")
-    protected java.util.Collection handleFindCoexpressionRelationships( ubic.gemma.model.genome.Gene givenG,
-            java.util.Collection ees, ubic.gemma.model.common.quantitationtype.QuantitationType qt ) {
-
-        String p2pClassName = getP2PClassName( givenG );
-
-        final String queryStringFirstVector =
-        // source tables
-        "select distinct p2pc.secondVector from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence,"
-                // join table
-                + p2pClassName
-                + " as p2pc "
-                // target tables
-                + " where gene.products.id=bs2gp.geneProduct.id "
-                + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
-                + " and compositeSequence.designElementDataVectors.id=p2pc.firstVector.id "
-                + " and p2pc.firstVector.expressionExperiment.id in (:collectionOfEE)"
-                + " and p2pc.quantitationType.id = :givenQtId" + " and gene.id = :givenGId";
-
-        final String queryStringSecondVector =
-        // source tables
-        "select distinct p2pc.firstVector from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence,"
-                // join table
-                + p2pClassName
-                + " as p2pc "
-                // target tables
-                + " where gene.products.id=bs2gp.geneProduct.id "
-                + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
-                + " and compositeSequence.designElementDataVectors.id=p2pc.secondVector.id "
-                + " and p2pc.secondVector.expressionExperiment.id in (:collectionOfEE)"
-                + " and p2pc.quantitationType.id = :givenQtId" + " and gene.id = :givenGId";
-
-        Collection<DesignElementDataVector> dedvs = new HashSet<DesignElementDataVector>();
-
-        try {
-            // do query joining coexpressed genes through the firstVector to the secondVector
-            Collection<Long> eeIds = new ArrayList<Long>();
-            for ( Iterator iter = ees.iterator(); iter.hasNext(); ) {
-                ExpressionExperiment e = ( ExpressionExperiment ) iter.next();
-                eeIds.add( e.getId() );
-            }
-
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryStringFirstVector );
-            queryObject.setParameterList( "collectionOfEE", eeIds );
-            queryObject.setLong( "givenQtId", qt.getId() );
-            queryObject.setLong( "givenGId", givenG.getId() );
-            dedvs.addAll( queryObject.list() );
-            // do query joining coexpressed genes through the secondVector to the firstVector
-            queryObject = super.getSession( false ).createQuery( queryStringSecondVector );
-            queryObject.setParameterList( "collectionOfEE", eeIds );
-            queryObject.setLong( "givenQtId", qt.getId() );
-            queryObject.setLong( "givenGId", givenG.getId() );
-            dedvs.addAll( queryObject.list() );
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-        return dedvs;
-    }
-
-    @Override
-    protected Collection handleGetProbeCoExpression( ExpressionExperiment expressionExperiment, String taxon,
-            boolean cleaned ) throws Exception {
-        String tableName = getTableName( taxon, cleaned );
-        Collection<ProbeLink> links = getLinks( expressionExperiment, tableName );
-        return links;
-    }
-
-    @Override
-    protected void handlePrepareForShuffling( Collection ees, String taxon, boolean filterNonSpecific )
-            throws Exception {
-        String tableName = getTableName( taxon, true );
-        createTable( tableName );
-        int i = 1;
-        for ( Object ee : ees ) {
-            log.info( "Filtering EE " + ( ( ExpressionExperiment ) ee ).getShortName() + "(" + i + "/" + ees.size()
-                    + ")" );
-            doFiltering( ( ExpressionExperiment ) ee, taxon, filterNonSpecific );
-            i++;
-        }
-    }
-
     /**
      *
      */
@@ -697,13 +785,13 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             this.secondDesignElementId = second_design_element_fk;
         }
 
+        public String toSqlString() {
+            return "(" + firstDesignElementId + ", " + secondDesignElementId + ",  " + score + ", " + eeId + ")";
+        }
+
         public String toString() {
             return "DE1=" + firstDesignElementId + ", DE2=" + secondDesignElementId + ", SCORE=s" + score + ", EE="
                     + eeId;
-        }
-
-        public String toSqlString() {
-            return "(" + firstDesignElementId + ", " + secondDesignElementId + ",  " + score + ", " + eeId + ")";
         }
     }
 }

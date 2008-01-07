@@ -188,8 +188,23 @@ public class Probe2ProbeCoexpressionServiceImpl extends
     }
 
     @Override
-    protected void handlePrepareForShuffling( Collection ees, String taxon, boolean filterNonSpecific ) throws Exception {
+    protected void handlePrepareForShuffling( Collection ees, String taxon, boolean filterNonSpecific )
+            throws Exception {
         this.getProbe2ProbeCoexpressionDao().prepareForShuffling( ees, taxon, filterNonSpecific );
+    }
+
+    @Override
+    protected Collection handleGetExpressionExperimentsLinkTestedIn( Gene geneA, Gene geneB,
+            Collection expressionExperiments, boolean filterNonSpecific ) throws Exception {
+        return this.getProbe2ProbeCoexpressionDao().getExpressionExperimentsLinkTestedIn( geneA, geneB,
+                expressionExperiments, filterNonSpecific );
+    }
+
+    @Override
+    protected Collection handleGetExpressionExperimentsLinkTestedIn( Gene gene, Collection expressionExperiments,
+            boolean filterNonSpecific ) throws Exception {
+        return this.getProbe2ProbeCoexpressionDao().getExpressionExperimentsLinkTestedIn( gene, expressionExperiments,
+                filterNonSpecific );
     }
 
 }

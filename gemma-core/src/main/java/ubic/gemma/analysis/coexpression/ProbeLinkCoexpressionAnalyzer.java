@@ -19,23 +19,35 @@
 package ubic.gemma.analysis.coexpression;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
+import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
+import ubic.gemma.model.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.ontology.GeneOntologyService;
+import ubic.gemma.ontology.OntologyTerm;
 
 /**
  * Perform probe-to-probe coexpression link analysis ("TMM-style").
  * 
  * @spring.bean id="probeLinkCoexpressionAnalyzer"
  * @spring.property name="geneService" ref="geneService"
+ * @spring.property name="probe2ProbeCoexpressionService" ref="probe2ProbeCoexpressionService"
+ * @spring.property name="geneOntologyService" ref="geneOntologyService"
  * @author paul
  * @version $Id$
  */
 public class ProbeLinkCoexpressionAnalyzer {
 
+    private static final int MAX_GENES_TO_COMPUTE_GOOVERLAP = 50;
     GeneService geneService;
+    Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
+    GeneOntologyService geneOntologyService;
 
     /**
      * @param gene
@@ -54,7 +66,22 @@ public class ProbeLinkCoexpressionAnalyzer {
         CoexpressionCollectionValueObject coexpressions = ( CoexpressionCollectionValueObject ) geneService
                 .getCoexpressedGenes( gene, ees, stringency );
 
+        Collection eesQueryTestedIn = probe2ProbeCoexpressionService.getExpressionExperimentsLinkTestedIn( gene, ees,
+                false );
+        coexpressions.setEesQueryGeneTestedIn( eesQueryTestedIn );
+
+        // TODO: do numgenes tested for the result genes.
+
+        computeGoStats( coexpressions );
+
         return coexpressions;
+    }
+
+    /**
+     * @param geneOntologyService
+     */
+    public void setGeneOntologyService( GeneOntologyService geneOntologyService ) {
+        this.geneOntologyService = geneOntologyService;
     }
 
     /**
@@ -62,6 +89,63 @@ public class ProbeLinkCoexpressionAnalyzer {
      */
     public void setGeneService( GeneService geneService ) {
         this.geneService = geneService;
+    }
+
+    /**
+     * @param probe2ProbeCoexpressionService
+     */
+    public void setProbe2ProbeCoexpressionService( Probe2ProbeCoexpressionService probe2ProbeCoexpressionService ) {
+        this.probe2ProbeCoexpressionService = probe2ProbeCoexpressionService;
+    }
+
+    /**
+     * @param queryGene
+     * @param numQueryGeneGOTerms
+     * @param coexpressionData
+     */
+    private void computeGoOverlap( Gene queryGene, int numQueryGeneGOTerms,
+            List<CoexpressionValueObject> coexpressionData ) {
+        Collection<Long> overlapIds = new HashSet<Long>();
+        int i = 0;
+        for ( CoexpressionValueObject cvo : coexpressionData ) {
+            overlapIds.add( cvo.getGeneId() );
+            cvo.setNumQueryGeneGOTerms( numQueryGeneGOTerms );
+            if ( i++ > MAX_GENES_TO_COMPUTE_GOOVERLAP ) break;
+        }
+
+        Map<Long, Collection<OntologyTerm>> overlap = geneOntologyService
+                .calculateGoTermOverlap( queryGene, overlapIds );
+
+        for ( CoexpressionValueObject cvo : coexpressionData ) {
+            cvo.setGoOverlap( overlap.get( cvo.getGeneId() ) );
+        }
+    }
+
+    /**
+     * @param coexpressions
+     */
+    private void computeGoStats( CoexpressionCollectionValueObject coexpressions ) {
+
+        // don't compute this if we aren't loading GO into memory.
+        if ( !geneOntologyService.isGeneOntologyLoaded() ) {
+            return;
+        }
+
+        Gene queryGene = coexpressions.getQueryGene();
+        int numQueryGeneGOTerms = geneOntologyService.getGOTerms( queryGene ).size();
+        coexpressions.setQueryGeneGoTermCount( numQueryGeneGOTerms );
+        if ( numQueryGeneGOTerms == 0 ) return;
+
+        List<CoexpressionValueObject> knownGeneCoexpressionData = coexpressions.getKnownGeneCoexpressionData( 0 );
+        computeGoOverlap( queryGene, numQueryGeneGOTerms, knownGeneCoexpressionData );
+
+        List<CoexpressionValueObject> predictedGeneCoexpressionData = coexpressions.getPredictedCoexpressionData( 0 );
+        computeGoOverlap( queryGene, numQueryGeneGOTerms, predictedGeneCoexpressionData );
+
+        List<CoexpressionValueObject> probeAlignedRegionCoexpressiondata = coexpressions
+                .getProbeAlignedCoexpressionData( 0 );
+        computeGoOverlap( queryGene, numQueryGeneGOTerms, probeAlignedRegionCoexpressiondata );
+
     }
 
 }

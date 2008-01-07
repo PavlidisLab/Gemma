@@ -58,10 +58,18 @@
 		</tr>
 		<tr>
 			<td>
-				Datasets searched
+				Datasets available
 			</td>
 			<td>
 				<c:out value="${numSearchedExpressionExperiments}" />
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Datasets with query gene testable
+			</td>
+			<td>
+				<c:out value="${queryTestedEes}" />
 			</td>
 		</tr>
 		<tr>

@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -118,15 +119,16 @@ public class CoexpressedGenesDetails {
 
     /**
      * @param supportThreshold
-     * @return the coexpressionData
+     * @return the coexpressionData sorted in order of decreasing support.
      */
-    public Collection<CoexpressionValueObject> getCoexpressionData( int supportThreshold ) {
-        Collection<CoexpressionValueObject> result = new HashSet<CoexpressionValueObject>();
+    public List<CoexpressionValueObject> getCoexpressionData( int supportThreshold ) {
+        List<CoexpressionValueObject> result = new ArrayList<CoexpressionValueObject>();
         for ( CoexpressionValueObject o : coexpressionData.values() ) {
             if ( o.getNegativeLinkSupport() >= supportThreshold || o.getPositiveLinkSupport() >= supportThreshold ) {
                 result.add( o );
             }
         }
+        Collections.sort( result );
         return result;
     }
 

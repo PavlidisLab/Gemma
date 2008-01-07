@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.time.StopWatch;
@@ -39,6 +40,7 @@ import ubic.basecode.math.CorrelationStats;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.analysis.ProbeCoexpressionAnalysis;
 import ubic.gemma.model.association.coexpression.HumanProbeCoExpression;
 import ubic.gemma.model.association.coexpression.MouseProbeCoExpression;
@@ -111,6 +113,7 @@ public class LinkAnalysisService {
                 dataVectors );
 
         setUpAnalysisObject( ee, la, dataVectors, eeDoubleMatrix );
+        addAnalysisObj( ee, eeDoubleMatrix, filterConfig, linkAnalysisConfig, la );
 
         Map<CompositeSequence, DesignElementDataVector> p2v = getProbe2VectorMap( dataVectors );
 
@@ -119,11 +122,6 @@ public class LinkAnalysisService {
 
         // output
         if ( linkAnalysisConfig.isUseDb() && !linkAnalysisConfig.isTextOut() ) {
-            ProbeCoexpressionAnalysis analysis = linkAnalysisConfig.toAnalysis();
-            analysis.setName( ee.getShortName() + " link analysis" );
-            analysis.getProtocol().setDescription(
-                    analysis.getProtocol().getDescription() + "# FilterConfig:\n" + filterConfig.toString() );
-            la.setAnalysisObj( analysis );
 
             Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
             ees.add( ee );
@@ -137,25 +135,76 @@ public class LinkAnalysisService {
 
     }
 
+    public void setAnalysisHelperService( AnalysisHelperService analysisHelperService ) {
+        this.analysisHelperService = analysisHelperService;
+    }
+
+    public void setCsService( CompositeSequenceService csService ) {
+        this.csService = csService;
+    }
+
+    public void setEeService( ExpressionExperimentService eeService ) {
+        this.eeService = eeService;
+    }
+
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
+    }
+
+    public void setPpService( Probe2ProbeCoexpressionService ppService ) {
+        this.ppService = ppService;
+    }
+
+    public void setQuantitationTypeService( QuantitationTypeService quantitationTypeService ) {
+        this.quantitationTypeService = quantitationTypeService;
+    }
+
+    /**
+     * @param ee
+     * @param eeDoubleMatrix
+     * @param filterConfig
+     * @param linkAnalysisConfig
+     * @param la
+     */
+    private void addAnalysisObj( ExpressionExperiment ee, ExpressionDataDoubleMatrix eeDoubleMatrix,
+            FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig, LinkAnalysis la ) {
+
+        /*
+         * Set up basics.
+         */
+        ProbeCoexpressionAnalysis analysis = linkAnalysisConfig.toAnalysis();
+        analysis.setName( ee.getShortName() + " link analysis" );
+        analysis.getProtocol().setDescription(
+                analysis.getProtocol().getDescription() + "# FilterConfig:\n" + filterConfig.toString() );
+        analysis.getExperimentsAnalyzed().add( ee );
+
+        /*
+         * Add probes used.
+         */
+        List<ExpressionDataMatrixRowElement> rowElements = eeDoubleMatrix.getRowElements();
+        Collection<CompositeSequence> probesUsed = new HashSet<CompositeSequence>();
+        for ( ExpressionDataMatrixRowElement el : rowElements ) {
+            probesUsed.add( ( CompositeSequence ) el.getDesignElement() );
+        }
+        analysis.setProbesUsed( probesUsed );
+
+        la.setAnalysisObj( analysis );
+    }
+
+    /**
+     * @param ee
+     * @param dataVectors
+     */
     private void checkVectors( ExpressionExperiment ee, Collection<DesignElementDataVector> dataVectors ) {
         if ( dataVectors == null || dataVectors.size() == 0 )
             throw new IllegalArgumentException( "No data vectors in " + ee );
     }
 
-    /**
-     * @param ee
-     * @param la
-     * @param dataVectors
-     * @param eeDoubleMatrix
-     */
-    private void setUpAnalysisObject( ExpressionExperiment ee, LinkAnalysis la,
-            Collection<DesignElementDataVector> dataVectors, ExpressionDataDoubleMatrix eeDoubleMatrix ) {
-        la.setDataMatrix( eeDoubleMatrix );
-        la.setTaxon( eeService.getTaxon( ee.getId() ) );
-        eeService.thawLite( ee );
-        la.setExpressionExperiment( ee );
-
-        getProbe2GeneMap( la, dataVectors );
+    // Delete old links for this expressionexperiment
+    private void deleteOldLinks( LinkAnalysis la ) {
+        ExpressionExperiment expressionExperiment = la.getExpressionExperiment();
+        log.info( "Deleting any old links for " + expressionExperiment + " ..." );
+        ppService.deleteLinks( expressionExperiment );
     }
 
     /**
@@ -194,51 +243,50 @@ public class LinkAnalysisService {
     }
 
     /**
-     * Write links as text
-     * 
-     * @param la
-     * @param wr
+     * @param numColumns
+     * @param w
+     * @param c helper class
+     * @param metric e.g. Pearson Correlation
+     * @param analysisObj
+     * @return
      */
-    private void writeLinks( LinkAnalysis la, Writer wr ) throws IOException {
-        wr.write( la.getConfig().toString() );
-        Map<CompositeSequence, Collection<Gene>> probeToGeneMap = la.getProbeToGeneMap();
-        ObjectArrayList links = la.getKeep();
-        NumberFormat nf = NumberFormat.getInstance();
-        nf.setMaximumFractionDigits( 4 );
+    private Probe2ProbeCoexpression initCoexp( int numColumns, double w, Creator c, QuantitationType metric,
+            ProbeCoexpressionAnalysis analysisObj ) {
+        Probe2ProbeCoexpression ppCoexpression = c.create();
+        ppCoexpression.setScore( w );
+        ppCoexpression.setPvalue( CorrelationStats.pvalue( w, numColumns ) );
+        ppCoexpression.setMetric( metric );
+        ppCoexpression.setSourceAnalysis( analysisObj );
+        return ppCoexpression;
+    }
 
-        int i = 0;
-        for ( int n = links.size(); i < n; i++ ) {
-            Object val = links.getQuick( i );
-            if ( val == null ) continue;
-            Link m = ( Link ) val;
-            Double w = m.getWeight();
+    /**
+     * @param numColumns
+     * @param p2plinks
+     * @param i
+     * @param w
+     * @param v1
+     * @param v2
+     * @param metric type of score (pearson correlation for example)
+     * @param analysisObj
+     * @param c class that can create instances of the correct type of probe2probecoexpression.
+     * @return
+     */
+    private void persist( int numColumns, Collection<Probe2ProbeCoexpression> p2plinks, int i, double w,
+            DesignElementDataVector v1, DesignElementDataVector v2, QuantitationType metric,
+            ProbeCoexpressionAnalysis analysisObj, Creator c ) {
 
-            assert w != null;
+        Probe2ProbeCoexpression ppCoexpression = initCoexp( numColumns, w, c, metric, analysisObj );
 
-            DesignElement p1 = la.getMetricMatrix().getProbeForRow( la.getDataMatrix().getRowElement( m.getx() ) );
-            DesignElement p2 = la.getMetricMatrix().getProbeForRow( la.getDataMatrix().getRowElement( m.gety() ) );
+        ppCoexpression.setFirstVector( v1 );
+        ppCoexpression.setSecondVector( v2 );
 
-            Collection<Gene> g1 = probeToGeneMap.get( p1 );
-            Collection<Gene> g2 = probeToGeneMap.get( p1 );
+        p2plinks.add( ppCoexpression );
 
-            String genes1 = "";
-            for ( Gene g : g1 ) {
-                genes1 = genes1 + g.getOfficialSymbol() + "|";
-            }
-
-            String genes2 = "";
-            for ( Gene g : g2 ) {
-                genes2 = genes2 + g.getOfficialSymbol() + "|";
-            }
-            wr.write( p1.getId() + "\t" + p2.getId() + "\t" + genes1 + "\t" + genes2 + "\t" + nf.format( w ) + "\n" );
-
-            if ( i > 0 && i % 50000 == 0 ) {
-                log.info( i + " links printed" );
-            }
-
+        if ( i % LINK_BATCH_SIZE == 0 ) {
+            this.ppService.create( p2plinks );
+            p2plinks.clear();
         }
-        wr.flush();
-        log.info( "Done, " + i + " links printed" );
     }
 
     /**
@@ -324,92 +372,6 @@ public class LinkAnalysisService {
         log.info( "Seconds to process " + links.size() + " links plus flipped versions:" + watch.getTime() / 1000.0 );
     }
 
-    // Delete old links for this expressionexperiment
-    private void deleteOldLinks( LinkAnalysis la ) {
-        ExpressionExperiment expressionExperiment = la.getExpressionExperiment();
-        log.info( "Deleting any old links for " + expressionExperiment + " ..." );
-        ppService.deleteLinks( expressionExperiment ); // TODO: Delete old Analysis object
-    }
-
-    // a closure would be just the thing here.
-    private class Creator {
-
-        Method m;
-        private Object[] arg;
-        private Class clazz;
-
-        Creator( Class clazz ) {
-            this.clazz = clazz;
-            this.arg = new Object[] {};
-            try {
-                m = clazz.getMethod( "newInstance", new Class[] {} );
-            } catch ( SecurityException e ) {
-                throw new RuntimeException( e );
-            } catch ( NoSuchMethodException e ) {
-                throw new RuntimeException( e );
-            }
-        }
-
-        public Probe2ProbeCoexpression create() {
-            try {
-                return ( Probe2ProbeCoexpression ) m.invoke( clazz, arg );
-            } catch ( IllegalArgumentException e ) {
-                throw new RuntimeException( e );
-            } catch ( IllegalAccessException e ) {
-                throw new RuntimeException( e );
-            } catch ( InvocationTargetException e ) {
-                throw new RuntimeException( e );
-            }
-        }
-    }
-
-    /**
-     * @param numColumns
-     * @param w
-     * @param c helper class
-     * @param metric e.g. Pearson Correlation
-     * @param analysisObj
-     * @return
-     */
-    private Probe2ProbeCoexpression initCoexp( int numColumns, double w, Creator c, QuantitationType metric,
-            ProbeCoexpressionAnalysis analysisObj ) {
-        Probe2ProbeCoexpression ppCoexpression = c.create();
-        ppCoexpression.setScore( w );
-        ppCoexpression.setPvalue( CorrelationStats.pvalue( w, numColumns ) );
-        ppCoexpression.setMetric( metric );
-        ppCoexpression.setSourceAnalysis( analysisObj );
-        return ppCoexpression;
-    }
-
-    /**
-     * @param numColumns
-     * @param p2plinks
-     * @param i
-     * @param w
-     * @param v1
-     * @param v2
-     * @param metric type of score (pearson correlation for example)
-     * @param analysisObj
-     * @param c class that can create instances of the correct type of probe2probecoexpression.
-     * @return
-     */
-    private void persist( int numColumns, Collection<Probe2ProbeCoexpression> p2plinks, int i, double w,
-            DesignElementDataVector v1, DesignElementDataVector v2, QuantitationType metric,
-            ProbeCoexpressionAnalysis analysisObj, Creator c ) {
-
-        Probe2ProbeCoexpression ppCoexpression = initCoexp( numColumns, w, c, metric, analysisObj );
-
-        ppCoexpression.setFirstVector( v1 );
-        ppCoexpression.setSecondVector( v2 );
-
-        p2plinks.add( ppCoexpression );
-
-        if ( i % LINK_BATCH_SIZE == 0 ) {
-            this.ppService.create( p2plinks );
-            p2plinks.clear();
-        }
-    }
-
     /**
      * @param c
      * @param links
@@ -464,28 +426,100 @@ public class LinkAnalysisService {
         }
     }
 
-    public void setEeService( ExpressionExperimentService eeService ) {
-        this.eeService = eeService;
+    /**
+     * @param ee
+     * @param la
+     * @param dataVectors
+     * @param eeDoubleMatrix
+     */
+    private void setUpAnalysisObject( ExpressionExperiment ee, LinkAnalysis la,
+            Collection<DesignElementDataVector> dataVectors, ExpressionDataDoubleMatrix eeDoubleMatrix ) {
+        la.setDataMatrix( eeDoubleMatrix );
+        la.setTaxon( eeService.getTaxon( ee.getId() ) );
+        eeService.thawLite( ee );
+        la.setExpressionExperiment( ee );
+
+        getProbe2GeneMap( la, dataVectors );
     }
 
-    public void setPpService( Probe2ProbeCoexpressionService ppService ) {
-        this.ppService = ppService;
+    /**
+     * Write links as text
+     * 
+     * @param la
+     * @param wr
+     */
+    private void writeLinks( LinkAnalysis la, Writer wr ) throws IOException {
+        wr.write( la.getConfig().toString() );
+        Map<CompositeSequence, Collection<Gene>> probeToGeneMap = la.getProbeToGeneMap();
+        ObjectArrayList links = la.getKeep();
+        NumberFormat nf = NumberFormat.getInstance();
+        nf.setMaximumFractionDigits( 4 );
+
+        int i = 0;
+        for ( int n = links.size(); i < n; i++ ) {
+            Object val = links.getQuick( i );
+            if ( val == null ) continue;
+            Link m = ( Link ) val;
+            Double w = m.getWeight();
+
+            assert w != null;
+
+            DesignElement p1 = la.getMetricMatrix().getProbeForRow( la.getDataMatrix().getRowElement( m.getx() ) );
+            DesignElement p2 = la.getMetricMatrix().getProbeForRow( la.getDataMatrix().getRowElement( m.gety() ) );
+
+            Collection<Gene> g1 = probeToGeneMap.get( p1 );
+            Collection<Gene> g2 = probeToGeneMap.get( p1 );
+
+            String genes1 = "";
+            for ( Gene g : g1 ) {
+                genes1 = genes1 + g.getOfficialSymbol() + "|";
+            }
+
+            String genes2 = "";
+            for ( Gene g : g2 ) {
+                genes2 = genes2 + g.getOfficialSymbol() + "|";
+            }
+            wr.write( p1.getId() + "\t" + p2.getId() + "\t" + genes1 + "\t" + genes2 + "\t" + nf.format( w ) + "\n" );
+
+            if ( i > 0 && i % 50000 == 0 ) {
+                log.info( i + " links printed" );
+            }
+
+        }
+        wr.flush();
+        log.info( "Done, " + i + " links printed" );
     }
 
-    public void setCsService( CompositeSequenceService csService ) {
-        this.csService = csService;
-    }
+    // a closure would be just the thing here.
+    private class Creator {
 
-    public void setQuantitationTypeService( QuantitationTypeService quantitationTypeService ) {
-        this.quantitationTypeService = quantitationTypeService;
-    }
+        Method m;
+        private Object[] arg;
+        private Class clazz;
 
-    public void setAnalysisHelperService( AnalysisHelperService analysisHelperService ) {
-        this.analysisHelperService = analysisHelperService;
-    }
+        Creator( Class clazz ) {
+            this.clazz = clazz;
+            this.arg = new Object[] {};
+            try {
+                m = clazz.getMethod( "newInstance", new Class[] {} );
+            } catch ( SecurityException e ) {
+                throw new RuntimeException( e );
+            } catch ( NoSuchMethodException e ) {
+                throw new RuntimeException( e );
+            }
+        }
 
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
-        this.persisterHelper = persisterHelper;
+        public Probe2ProbeCoexpression create() {
+            try {
+                return ( Probe2ProbeCoexpression ) m.invoke( clazz, arg );
+            } catch ( IllegalArgumentException e ) {
+                throw new RuntimeException( e );
+            } catch ( IllegalAccessException e ) {
+                throw new RuntimeException( e );
+            } catch ( InvocationTargetException e ) {
+                throw new RuntimeException( e );
+            }
+        }
     }
 
 }
