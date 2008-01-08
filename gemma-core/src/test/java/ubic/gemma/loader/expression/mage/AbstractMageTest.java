@@ -56,7 +56,6 @@ public abstract class AbstractMageTest extends BaseSpringContextTest {
     protected void zipXslSetup( MageMLParser mlp, String resourceName ) throws IOException, TransformerException {
         ZipInputStream istMageExamples = new ZipInputStream( MageMLParserTest.class.getResourceAsStream( resourceName ) );
         istMageExamples.getNextEntry();
-        assert istMageExamples != null;
         mlp.createSimplifiedXml( istMageExamples );
         istMageExamples.close();
     }

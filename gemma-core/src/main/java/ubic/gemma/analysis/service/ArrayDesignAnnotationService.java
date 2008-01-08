@@ -345,11 +345,11 @@ public class ArrayDesignAnnotationService {
                 .findByGene( gene ) );
 
         Collection<OntologyTerm> results = new HashSet<OntologyTerm>();
+        if ( ontos.size() == 0 ) return results;
+
         for ( VocabCharacteristic vc : ontos ) {
             results.add( GeneOntologyService.getTermForId( vc.getValue() ) );
         }
-
-        if ( ( ontos == null ) || ( ontos.size() == 0 ) ) return results;
 
         if ( ty.equals( OutputType.SHORT ) ) return results;
 

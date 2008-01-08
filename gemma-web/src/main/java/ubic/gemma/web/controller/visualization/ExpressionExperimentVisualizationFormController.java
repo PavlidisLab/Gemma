@@ -294,13 +294,14 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         Long id = eevc.getExpressionExperimentId();
 
         ExpressionExperiment expressionExperiment = this.expressionExperimentService.load( id );
-        for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
-            bioAssayService.thaw( ba );
-        }
 
         if ( expressionExperiment == null ) {
             return processErrors( request, response, command, errors, "No expression experiment with id " + id
                     + " found" );
+        }
+
+        for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
+            bioAssayService.thaw( ba );
         }
 
         QuantitationType quantitationType = eevc.getQuantitationType();

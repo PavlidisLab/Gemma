@@ -111,8 +111,7 @@ public class GoMetric {
 
         Collection<OntologyTerm> children = geneOntologyService.getAllChildren( ont, partOf );
 
-        if ( children.isEmpty() || children == null ) {
-
+        if ( children.isEmpty() ) {
             return termCount;
         }
 
@@ -164,15 +163,13 @@ public class GoMetric {
                     score = getMetric( metric, pmin, probM, probC );
                     if ( score > checkScore ) checkScore = score;
                 }
-          
+
             }
         }
         log.info( "score for " + queryGene + " and " + targetGene + " is " + checkScore );
         return checkScore;
     }
 
-    
-    
     /**
      * @param queryGene
      * @param targetGene
@@ -193,7 +190,7 @@ public class GoMetric {
 
         HashSet<OntologyTerm> coExpGO = getOntologyTerms( targetGene );
         if ( ( coExpGO == null ) || coExpGO.isEmpty() ) return 0.0;
-        
+
         double total = 0;
         int count = 0;
 
@@ -336,13 +333,12 @@ public class GoMetric {
         return score;
     }
 
-
     /**
      * @param gene
      * @returndirect GO annotation terms
      */
     private HashSet<OntologyTerm> getOntologyTerms( Gene gene ) {
- 
+
         Collection<VocabCharacteristic> termsVoc = gene2GOAssociationService.findByGene( gene );
         HashSet<OntologyTerm> termsGO = new HashSet<OntologyTerm>();
 

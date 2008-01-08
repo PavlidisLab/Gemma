@@ -23,15 +23,11 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.GregorianCalendar;
 
-import ubic.gemma.model.analysis.Analysis;
-import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.GeneCoexpressionAnalysis;
 import ubic.gemma.model.analysis.GeneCoexpressionAnalysisService;
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.protocol.ProtocolService;
-import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;

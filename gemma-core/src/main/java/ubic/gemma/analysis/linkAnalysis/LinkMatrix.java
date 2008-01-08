@@ -284,8 +284,8 @@ public class LinkMatrix {
                 genes.add( gene );
             }
         }
-        log.info( "Get " + genes.size() + " genes" );
-        if ( genes == null || genes.size() == 0 ) return;
+        log.info( "Got " + genes.size() + " genes" );
+        if ( genes.size() == 0 ) return;
         init( genes );
     }
 

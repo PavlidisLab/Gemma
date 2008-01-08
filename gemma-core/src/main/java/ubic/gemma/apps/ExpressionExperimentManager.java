@@ -97,7 +97,6 @@ public class ExpressionExperimentManager extends AbstractSpringAwareCLI {
                     if ( this.hasOption( 'f' ) ) {
                         String fileList = getOptionValue( 'f' );
                         InputStream is = new FileInputStream( fileList );
-                        if ( is == null ) break;
                         BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
                         String accession = null;
                         while ( ( accession = br.readLine() ) != null ) {

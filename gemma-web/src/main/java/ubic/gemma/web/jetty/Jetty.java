@@ -73,10 +73,6 @@ public class Jetty {
 
             log.debug( "jetty config:" + jettyConfig );
 
-            if ( jettyConfig == null ) {
-                log.fatal( "Unable to locate jetty-test-config.xml on the classpath" );
-                System.exit( 0 );
-            }
             jettyServer = new Server( jettyConfig );
             jettyServer.start();
         } catch ( Exception e ) {

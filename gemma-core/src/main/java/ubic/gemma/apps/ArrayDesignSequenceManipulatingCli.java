@@ -135,10 +135,9 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
             Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
 
         if ( skipIfLastRunLaterThan == null ) return true;
+        if ( autoSeek == false ) return true;
 
         auditTrailService.thaw( arrayDesign );
-
-        if ( skipIfLastRunLaterThan == null && autoSeek == false ) return true;
 
         ArrayDesign subsumingArrayDesign = arrayDesign.getSubsumingArrayDesign();
 

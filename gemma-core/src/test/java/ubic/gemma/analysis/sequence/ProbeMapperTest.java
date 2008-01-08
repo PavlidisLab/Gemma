@@ -77,10 +77,6 @@ public class ProbeMapperTest extends TestCase {
         super.tearDown();
     }
 
-    // public void testProcessGbId() {
-    // // fail( "Not yet implemented" );
-    // }
-
     public void testProcessBlatResults() throws Exception {
         ProbeMapper pm = new ProbeMapper();
 
@@ -88,18 +84,13 @@ public class ProbeMapperTest extends TestCase {
             GoldenPathSequenceAnalysis gp = new GoldenPathSequenceAnalysis( 3306, "mm8", databaseHost, databaseUser,
                     databasePassword );
 
-            if ( gp == null ) {
-                log.warn( "Could not get Goldenpath database connection, skipping test" );
-                return;
-            }
-
             Map<String, Collection<BlatAssociation>> res = pm.processBlatResults( gp, blatres );
 
             // This test will fail if the database changes :)
             assertTrue( "No results", res.values().size() > 0 );
             assertTrue( "No results", res.values().iterator().next().size() > 0 );
-            assertEquals( "Col8a1", ( ( BlatAssociation ) res.values().iterator().next().iterator().next() )
-                    .getGeneProduct().getGene().getOfficialSymbol() );
+            assertEquals( "Col8a1", res.values().iterator().next().iterator().next().getGeneProduct().getGene()
+                    .getOfficialSymbol() );
         } catch ( java.sql.SQLException e ) {
             if ( e.getMessage().contains( "Unknown database" ) ) {
                 log.warn( "Test skipped due to missing mm8 database" );

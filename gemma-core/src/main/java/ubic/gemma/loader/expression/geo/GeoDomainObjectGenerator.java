@@ -408,7 +408,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
             }
             seriesAccession = StringUtils.removeEnd( seriesAccession, "," );
         } else {
-            if ( geoAccession == null || geoAccession.length() == 0 ) {
+            if ( StringUtils.isBlank( geoAccession ) ) {
                 throw new InvalidAccessionException( "GEO accession must not be blank. Enter a  GSE, GDS or GPL" );
             }
             throw new InvalidAccessionException( "'" + geoAccession

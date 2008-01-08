@@ -207,16 +207,14 @@ public class GeneOntologyService implements InitializingBean {
     @SuppressWarnings("unchecked")
     public Map<Long, Collection<OntologyTerm>> calculateGoTermOverlap( Gene queryGene, Collection geneIds ) {
 
+        Map<Long, Collection<OntologyTerm>> overlap = new HashMap<Long, Collection<OntologyTerm>>();
         if ( queryGene == null ) return null;
-        if ( geneIds.size() == 0 ) return null;
+        if ( geneIds.size() == 0 ) return overlap;
 
         Collection<OntologyTerm> queryGeneTerms = getGOTerms( queryGene );
-        Map<Long, Collection<OntologyTerm>> overlap = new HashMap<Long, Collection<OntologyTerm>>();
 
         overlap.put( queryGene.getId(), queryGeneTerms ); // include the query gene in the list. Clearly 100% overlap
         // with itself!
-
-        if ( ( geneIds == null ) || ( geneIds.isEmpty() ) ) return overlap;
 
         Collection<Gene> genes = this.geneService.loadMultiple( geneIds );
 

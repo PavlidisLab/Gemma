@@ -108,7 +108,6 @@ public class OntologyLoader {
             OntClass element = ( OntClass ) iterator.next();
             if ( element.isAnon() ) continue;
             OntologyTerm ontologyTerm = new OntologyTermImpl( element, database );
-            if ( ontologyTerm == null ) continue; // couldn't be converted for some reason.
             result.add( ontologyTerm );
             if ( ++count % 1000 == 0 ) {
                 log.debug( "Loaded " + count + " terms, last was " + ontologyTerm );
@@ -153,7 +152,6 @@ public class OntologyLoader {
             Individual element = ( Individual ) iterator.next();
             if ( element.isAnon() ) continue;
             OntologyIndividual ontologyTerm = new OntologyIndividualImpl( element, database );
-            if ( ontologyTerm == null ) continue; // couldn't be converted for some reason.
             result.add( ontologyTerm );
             if ( ++count % 1000 == 0 ) {
                 log.debug( "Loaded " + count + " individuals, last was " + ontologyTerm );

@@ -346,19 +346,16 @@ public class AuditInterceptor implements MethodInterceptor {
         if ( methodName.equals( "findOrCreate" ) ) {
             addLoadOrCreateAuditEvent( returnValue );
         } else if ( AUDIT_READ && CrudUtils.methodIsLoad( m ) ) {
-            if ( returnValue != null ) {
-                if ( Collection.class.isAssignableFrom( returnValue.getClass() ) ) {
-                    for ( Object object : ( Collection<?> ) returnValue ) {
-                        if ( !Auditable.class.isAssignableFrom( object.getClass() ) ) {
-                            break;
-                        }
-                        addLoadAuditEvent( returnValue );
+            if ( Collection.class.isAssignableFrom( returnValue.getClass() ) ) {
+                for ( Object object : ( Collection<?> ) returnValue ) {
+                    if ( !Auditable.class.isAssignableFrom( object.getClass() ) ) {
+                        break;
                     }
-                } else if ( Auditable.class.isAssignableFrom( returnValue.getClass() ) ) {
                     addLoadAuditEvent( returnValue );
                 }
+            } else if ( Auditable.class.isAssignableFrom( returnValue.getClass() ) ) {
+                addLoadAuditEvent( returnValue );
             }
-
         } else if ( AUDIT_CREATE && CrudUtils.methodIsCreate( m ) ) {
             addCreateAuditEvent( returnValue );
             visited.add( returnValue );

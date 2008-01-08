@@ -160,7 +160,7 @@ public class NCBIGene2GOAssociationLoader {
         // finish up.
         persisterHelper.persist( itemsToPersist );
 
-        log.info( "Loaded total of " + count + " GO association" );
+        log.info( "Finished, loaded total of " + count + " GO associations" );
         consumerDone.set( true );
 
     }
@@ -205,10 +205,6 @@ public class NCBIGene2GOAssociationLoader {
 
     public boolean isConsumerDone() {
         return consumerDone.get();
-    }
-
-    public void setProducerDoneFlag( AtomicBoolean flag ) {
-        this.producerDone = flag;
     }
 
     public int getCount() {

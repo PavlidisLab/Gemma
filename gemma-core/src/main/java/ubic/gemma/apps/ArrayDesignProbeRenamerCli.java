@@ -80,7 +80,7 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
 
         try {
             File file = new File( fileName );
-            if ( file == null || !file.canRead() ) {
+            if ( !file.canRead() ) {
                 throw new IOException( "Cannot read from " + fileName );
             }
             InputStream newIdFile = new FileInputStream( file );

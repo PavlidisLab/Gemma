@@ -280,15 +280,13 @@ public class GeneLinkCoexpressionAnalyzer {
         GeneCoexpressionAnalysis analysis = GeneCoexpressionAnalysis.Factory.newInstance();
 
         analysis.setDescription( "Coexpression analysis for " + taxon.getCommonName() + " using "
-                + expressionExperiments.size() + " expression experiments" );
+                + expressionExperiments.size() + " expression experiments; stringency=" + stringency );
 
         Protocol protocol = createProtocol( expressionExperiments, toUseGenes );
 
         analysis.setName( analysisName );
         analysis.setProtocol( protocol );
         analysis.setExperimentsAnalyzed( expressionExperiments );
-        analysis.setSupportThreshold( stringency );
-
         return geneCoexpressionAnalysisService.create( analysis );
 
     }

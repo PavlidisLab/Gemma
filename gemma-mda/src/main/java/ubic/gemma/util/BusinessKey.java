@@ -541,8 +541,6 @@ public class BusinessKey {
 
         boolean ok = true;
 
-        if ( geneProduct == null ) ok = false;
-
         if ( StringUtils.isNotBlank( geneProduct.getNcbiId() ) && StringUtils.isBlank( geneProduct.getName() ) )
             ok = true;
 

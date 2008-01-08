@@ -65,6 +65,12 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
         }
 
         ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
+
+        if ( arrayDesign == null ) {
+            log.error( "No arrayDesign " + arrayDesignName + " found" );
+            bail( ErrorCode.INVALID_OPTION );
+        }
+
         unlazifyArrayDesign( arrayDesign );
 
         for ( String otherArrayDesigName : otherArrayDesignNames ) {
@@ -72,11 +78,6 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
 
             if ( arrayDesign.equals( otherArrayDesign ) ) {
                 continue;
-            }
-
-            if ( arrayDesign == null ) {
-                log.error( "No arrayDesign " + arrayDesignName + " found" );
-                bail( ErrorCode.INVALID_OPTION );
             }
 
             if ( otherArrayDesign == null ) {

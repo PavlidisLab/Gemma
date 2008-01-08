@@ -733,9 +733,7 @@ public class GeoConverter implements Converter {
 
         CompositeSequence compositeSequence = designMap.get( designElementName );
 
-        if ( compositeSequence == null ) {
-            assert compositeSequence != null : "No composite sequence " + designElementName;
-        }
+        assert compositeSequence != null : "No composite sequence " + designElementName;
 
         if ( compositeSequence.getBiologicalCharacteristic() != null
                 && compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() != null ) {

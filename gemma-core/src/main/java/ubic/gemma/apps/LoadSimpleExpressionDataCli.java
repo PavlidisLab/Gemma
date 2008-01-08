@@ -115,7 +115,6 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
      */
     private void loadExperiment( String configurationLine ) throws Exception {
         int i = 0;
-        // String oneLoad[] = StringUtils.split( conf,SPLITCHAR );
         String fields[] = configurationLine.split( SPLITCHAR );
         if ( fields.length != TOTALFIELDS ) {
             throw new IllegalArgumentException( "Field Missing Got[" + fields.length + "]: " + configurationLine );
@@ -132,11 +131,7 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
 
         configureTaxon( fields, metaData );
 
-        // InputStream data = this.getClass().getResourceAsStream( this.dirName + oneLoad[DATAFILEI] );
         InputStream data = new FileInputStream( new File( this.dirName, fields[DATAFILEI] ) );
-        if ( data == null ) {
-            throw new IllegalArgumentException( "Data File " + this.dirName + fields[DATAFILEI] + " doesn't exist" );
-        }
 
         metaData.setSourceUrl( fields[SOURCEI] );
 

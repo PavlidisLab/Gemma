@@ -276,7 +276,7 @@ public class OntologyService {
         List<Characteristic> individualResults = new ArrayList<Characteristic>();
         if ( categoryUri != null && !categoryUri.equals( "" ) && !categoryUri.equals( "{}" ) ) {
             results = new HashSet<OntologyResource>( mgedOntologyService.getTermIndividuals( categoryUri ) );
-            if ( results != null ) individualResults.addAll( filter( results, search ) );
+            if ( results.size() > 0 ) individualResults.addAll( filter( results, search ) );
         }
         log.debug( "found " + individualResults.size() + " individuals from ontology term " + categoryUri + " in "
                 + watch.getTime() + " ms" );
@@ -513,7 +513,7 @@ public class OntologyService {
                 if ( characterIds.contains( characteristic.getId() ) ) found.add( characteristic );
 
             }
-            if ( found == null ) continue;
+            if ( found.size() == 0 ) continue;
 
             current.removeAll( found );
             ee.setCharacteristics( current );
@@ -551,7 +551,7 @@ public class OntologyService {
                 if ( characterIds.contains( characteristic.getId() ) ) found.add( characteristic );
 
             }
-            if ( found == null ) continue;
+            if ( found.size() == 0 ) continue;
 
             current.removeAll( found );
             bm.setCharacteristics( current );

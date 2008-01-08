@@ -96,10 +96,6 @@ public class GeoDatasetService extends AbstractGeoService {
         }
         log.debug( "Generated GEO domain objects for " + geoAccession );
 
-        if ( parseResult == null || parseResult.size() == 0 ) {
-            throw new RuntimeException( "Could not get domain objects for " + geoAccession );
-        }
-
         Object obj = parseResult.iterator().next();
         if ( !( obj instanceof GeoSeries ) ) {
             throw new RuntimeException( "Got a " + obj.getClass().getName() + " instead of a "
@@ -218,9 +214,6 @@ public class GeoDatasetService extends AbstractGeoService {
             throw new AlreadyExistsInSystemException( "All the samples in " + series
                     + " are in the system already (in other ExpressionExperiments" );
         }
-
-        // log.info( series.getSampleCorrespondence() );
-
     }
 
     /**
@@ -239,6 +232,7 @@ public class GeoDatasetService extends AbstractGeoService {
                     throw new IllegalArgumentException( "All datasets to be collapsed must use the same platform" );
                 }
             }
+            lastPlatform = platform;
         }
 
         // arbitrarily use the first.

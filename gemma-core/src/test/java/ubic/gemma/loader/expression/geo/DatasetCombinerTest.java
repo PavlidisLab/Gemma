@@ -83,7 +83,6 @@ public class DatasetCombinerTest extends TestCase {
         GeoFamilyParser parser = new GeoFamilyParser();
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/twoDatasets/GDS472.soft.gz" ) );
-        assert is != null;
         parser.parse( is );
         is.close();
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
@@ -135,25 +134,21 @@ public class DatasetCombinerTest extends TestCase {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/threeDatasets/GDS242.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/threeDatasets/GSE479_family.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/threeDatasets/GDS243.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/threeDatasets/GDS244.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
@@ -229,25 +224,21 @@ public class DatasetCombinerTest extends TestCase {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE611Short/GDS428.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE611Short/GSE611_family.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE611Short/GDS429.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE611Short/GDS430.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
         GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
         gds = parseResult.getDatasets().values();
@@ -279,19 +270,16 @@ public class DatasetCombinerTest extends TestCase {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/gse1133Short/GDS594.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/gse1133Short/GSE1133_family.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/gse1133Short/GDS596.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
@@ -323,19 +311,16 @@ public class DatasetCombinerTest extends TestCase {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE91Short/GDS168.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE91Short/GSE91_family.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE91Short/GDS169.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
@@ -370,19 +355,16 @@ public class DatasetCombinerTest extends TestCase {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE13Short/GDS44.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE13Short/GSE13_family.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE13Short/GDS52.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
@@ -417,19 +399,16 @@ public class DatasetCombinerTest extends TestCase {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE469Short/GDS233.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE469Short/GSE469_family.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE469Short/GDS234.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
@@ -464,43 +443,36 @@ public class DatasetCombinerTest extends TestCase {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE465Short/GDS214.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE465Short/GSE465_family.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE465Short/GDS262.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE465Short/GDS263.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE465Short/GDS264.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE465Short/GDS265.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE465Short/GDS270.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
@@ -530,19 +502,16 @@ public class DatasetCombinerTest extends TestCase {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE493Short/GDS215.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE493Short/GSE493_family.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE493Short/GDS258.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
@@ -573,13 +542,11 @@ public class DatasetCombinerTest extends TestCase {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE88Short/GDS184.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE88Short/GSE88_family.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
@@ -616,7 +583,6 @@ public class DatasetCombinerTest extends TestCase {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE3193Short/GSE3193_family.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
@@ -649,13 +615,11 @@ public class DatasetCombinerTest extends TestCase {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/gse106Short/GDS186.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/gse106Short/GSE106.soft.gz" ) );
         parser.parse( is );
-        assert is != null;
         is.close();
 
         GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
