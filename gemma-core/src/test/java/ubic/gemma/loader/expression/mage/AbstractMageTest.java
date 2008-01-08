@@ -22,8 +22,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.ZipInputStream;
 
-import javax.xml.transform.TransformerException;
-
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -53,10 +51,10 @@ public abstract class AbstractMageTest extends BaseSpringContextTest {
      * @param resourceName
      * @throws IOException
      */
-    protected void zipXslSetup( MageMLParser mlp, String resourceName ) throws IOException, TransformerException {
+    protected void zipXslSetup( MageMLParser mlp, String resourceName ) throws IOException {
         ZipInputStream istMageExamples = new ZipInputStream( MageMLParserTest.class.getResourceAsStream( resourceName ) );
         istMageExamples.getNextEntry();
-        mlp.createSimplifiedXml( istMageExamples );
+        // mlp.createSimplifiedXml( istMageExamples );
         istMageExamples.close();
     }
 
@@ -68,10 +66,10 @@ public abstract class AbstractMageTest extends BaseSpringContextTest {
      * @param resourceName
      * @throws IOException
      */
-    protected void xslSetup( MageMLParser mlp, String resourceName ) throws IOException, TransformerException {
+    protected void xslSetup( MageMLParser mlp, String resourceName ) throws IOException {
         InputStream istMageExamples = MageMLParserTest.class.getResourceAsStream( resourceName );
         assert istMageExamples != null;
-        mlp.createSimplifiedXml( istMageExamples );
+        // mlp.createSimplifiedXml( istMageExamples );
         istMageExamples.close();
     }
 

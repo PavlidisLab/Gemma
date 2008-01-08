@@ -19,7 +19,6 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -123,8 +122,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         }
 
         this.getHibernateTemplate().execute( new HibernateCallback() {
-
-            public Object doInHibernate( Session session ) throws HibernateException, SQLException {
+            public Object doInHibernate( Session session ) throws HibernateException {
                 session.update( arrayDesign );
                 arrayDesign.getMergees().clear();
                 arrayDesign.getSubsumedArrayDesigns().clear();

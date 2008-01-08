@@ -20,7 +20,6 @@ package ubic.gemma.loader.expression.mage;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -30,23 +29,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.stream.StreamSource;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.biomage.Common.MAGEJava;
 import org.biomage.tools.xmlutils.MAGEContentHandler;
-import org.dom4j.Document;
-import org.dom4j.DocumentException;
-import org.dom4j.io.DocumentResult;
-import org.dom4j.io.DocumentSource;
-import org.dom4j.io.OutputFormat;
-import org.dom4j.io.SAXReader;
-import org.dom4j.io.XMLWriter;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -197,71 +183,6 @@ public class MageMLParser extends AbstractMageTool implements Parser {
     }
 
     /**
-     * @param istMageXml Input MAGE-ML
-     * @param istXSL XSL for transforming the MAGE-ML into a simpler format preserving key structure
-     * @deprecated We no longer need to do this.
-     */
-    @Deprecated
-    private void createSimplifiedXml( InputStream istMageXml, InputStream istXsl ) throws IOException,
-            TransformerException {
-
-        log.info( "Creating simplified XML" );
-
-        if ( istXsl == null || istXsl.available() == 0 ) {
-            throw new IllegalArgumentException( "Null or no bytes to read from the XSL stream" );
-        }
-
-        if ( istMageXml == null || istMageXml.available() == 0 ) {
-            throw new IllegalArgumentException( "Null or no bytes to read from the MAGE-ML stream" );
-        }
-
-        SAXReader reader = new SAXReader();
-        reader.setEntityResolver( mageDtdResolver() );
-        Document xml;
-        try {
-            xml = reader.read( istMageXml );
-            TransformerFactory factory = TransformerFactory.newInstance();
-            Transformer transformer = factory.newTransformer( new StreamSource( istXsl ) );
-            DocumentSource source = new DocumentSource( xml );
-            DocumentResult result = new DocumentResult();
-            transformer.transform( source, result );
-            if ( result.getDocument() == null ) {
-                throw new IOException( "Simplified XML creation failed" );
-            }
-            this.simplifiedXml = result.getDocument();
-            if ( log.isDebugEnabled() ) {
-                log.debug( "--------  Simplified XML ---------" );
-                OutputFormat format = OutputFormat.createPrettyPrint();
-                XMLWriter writer = new XMLWriter( System.err, format );
-                writer.write( simplifiedXml );
-                log.debug( "-------------------------------------------" );
-            }
-
-        } catch ( DocumentException e ) {
-            log.error( e, e );
-            throw new RuntimeException( e );
-        } catch ( TransformerConfigurationException e ) {
-            log.error( e, e );
-            throw new RuntimeException( e );
-        }
-    }
-
-    /**
-     * @param fileName
-     * @throws IOException
-     * @throws FileNotFoundException
-     * @deprecated We no longer need to do this.
-     */
-    @Deprecated
-    private void createSimplifiedXml( String fileName ) throws IOException, FileNotFoundException, TransformerException {
-        InputStream is;
-        is = FileTools.getInputStreamFromPlainOrCompressedFile( fileName );
-        InputStream isXsl = getSimplifyXslStream();
-        createSimplifiedXml( is, isXsl );
-        is.close();
-    }
-
-    /**
      * @return
      */
     private void getDomainObjects() {
@@ -356,31 +277,12 @@ public class MageMLParser extends AbstractMageTool implements Parser {
     }
 
     /**
-     * @return
-     */
-    private InputStream getSimplifyXslStream() {
-        return this.getClass().getResourceAsStream( "MAGE-simplify.xsl" );
-    }
-
-    /**
      * Has the MAGE file already been parsed?
      * 
      * @return
      */
     private boolean isParsed() {
         return mageJava != null;
-    }
-
-    /**
-     * This method is exposed primarily to allow testing.
-     * 
-     * @param mage
-     * @throws IOException
-     * @throws TransformerException
-     */
-    protected void createSimplifiedXml( InputStream mage ) throws IOException, TransformerException {
-        InputStream isXsl = getSimplifyXslStream();
-        this.createSimplifiedXml( mage, isXsl );
     }
 
 }

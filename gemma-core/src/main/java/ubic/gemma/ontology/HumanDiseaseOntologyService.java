@@ -18,8 +18,6 @@
  */
 package ubic.gemma.ontology;
 
-import java.io.IOException;
-
 import com.hp.hpl.jena.ontology.OntModel;
 
 /**
