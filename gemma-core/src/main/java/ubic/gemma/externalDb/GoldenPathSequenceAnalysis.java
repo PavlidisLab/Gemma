@@ -232,8 +232,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
     }
 
     /**
-     * @param query Generic method to retrive Genes from the GoldenPath database. The query given must have the
-     *        appropriate form.
+     * Generic method to retrive Genes from the GoldenPath database. The query given must have the appropriate form.
+     * 
      * @param starti
      * @param endi
      * @param chromosome
@@ -269,14 +269,27 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                         GeneProduct product = GeneProduct.Factory.newInstance();
 
                         String name = rs.getString( 1 );
-                        assert StringUtils.isNotBlank( name );
 
-                        if ( StringUtils.isNotBlank( name ) ) {
-                            DatabaseEntry accession = DatabaseEntry.Factory.newInstance();
-                            accession.setAccession( name );
-                            accession.setExternalDatabase( NcbiGeneConverter.getGenbank() );
-                            product.getAccessions().add( accession );
+                        /*
+                         * This happens for a very few cases in kgXref, where the gene is 'abParts'. We have to skip
+                         * these.
+                         */
+                        if ( StringUtils.isBlank( name ) ) {
+                            continue;
                         }
+
+                        /*
+                         * The name is our database identifier (either genbank or ensembl)
+                         */
+                        DatabaseEntry accession = DatabaseEntry.Factory.newInstance();
+                        accession.setAccession( name );
+                        if ( name.startsWith( "ENST" ) ) {
+                            accession.setExternalDatabase( NcbiGeneConverter.getEnsembl() );
+                        } else {
+                            accession.setExternalDatabase( NcbiGeneConverter.getGenbank() );
+                        } // FIXME could be a microRNA.
+
+                        product.getAccessions().add( accession );
 
                         product.setType( GeneProductType.RNA );
 
@@ -293,12 +306,6 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                         PhysicalLocation genePl = PhysicalLocation.Factory.newInstance();
                         genePl.setStrand( pl.getStrand() );
 
-                        /*
-                         * Do not use this as the official_name: it isn't (?)
-                         */
-                        gene.setDescription( "Imported from Golden Path: " + rs.getString( 8 ) );
-                        // gene.setOfficialName( rs.getString( 8 ) );
-
                         Chromosome c = Chromosome.Factory.newInstance();
                         c.setName( SequenceManipulation.deBlatFormatChromosomeName( chromosome ) );
                         c.setTaxon( getTaxon() );
@@ -313,7 +320,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
 
                         product.setName( name );
 
-                        product.setDescription( "Imported from Golden Path" );
+                        product.setDescription( "Imported from Golden Path: " + rs.getString( 8 ) );
                         product.setPhysicalLocation( pl );
                         product.setGene( gene );
 
@@ -461,8 +468,6 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                 + "((kg.txStart >= ? AND kg.txEnd <= ?) OR (kg.txStart <= ? AND kg.txEnd >= ?) OR "
                 + "(kg.txStart >= ?  AND kg.txStart <= ?) OR  (kg.txEnd >= ? AND  kg.txEnd <= ? )) and kg.chrom = ? ";
 
-        // query = query + " and " + this.hAddBinToQuery( "kg", start, end );
-
         if ( strand != null ) {
             query = query + " AND strand = ? ";
         }
@@ -570,13 +575,40 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      */
     public Collection<GeneProduct> findRefGenesByLocation( String chromosome, Long start, Long end, String strand ) {
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
-        String query = "SELECT r.name, r.geneName, r.txStart, r.txEnd, r.strand, r.exonStarts, r.exonEnds, CONCAT('Refseq gene: ',kgXref.description) "
+        String query = "SELECT r.name, kgXref.geneSymbol, r.txStart, r.txEnd, r.strand, r.exonStarts, r.exonEnds, CONCAT('Refseq gene: ',kgXref.description) "
                 + "FROM refFlat as r inner join kgXref on r.geneName = kgXref.geneSymbol "
                 + "WHERE "
                 + "((r.txStart >= ? AND r.txEnd <= ?) OR (r.txStart <= ? AND r.txEnd >= ?) OR "
                 + "(r.txStart >= ?  AND r.txStart <= ?) OR  (r.txEnd >= ? AND  r.txEnd <= ? )) and r.chrom = ? ";
 
-        // query = query + " and " + this.hAddBinToQuery( "r", start, end );
+        if ( strand != null ) {
+            query = query + " AND r.strand = ?  ";
+        }
+        return findGenesByQuery( start, end, searchChrom, strand, query );
+    }
+
+    /**
+     * @param chromosome
+     * @param start
+     * @param end
+     * @param strand
+     * @return
+     */
+    public Collection<GeneProduct> findEnsemblGenesByLocation( String chromosome, Long start, Long end, String strand ) {
+
+        /*
+         * Mouse doesn't have ensembl tracks as of 1/2008.
+         */
+        if ( TaxonUtility.isMouse( this.getTaxon() ) ) {
+            return null;
+        }
+
+        String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
+        String query = "SELECT r.name, kgXref.geneSymbol, r.txStart, r.txEnd, r.strand, r.exonStarts, r.exonEnds, 'Ensembl gene prediction' "
+                + "FROM ensGene as r inner join knownToEnsembl on r.name = knownToEnsembl.value inner join kgXref on kgXref.kgID = knownToEnsembl.name "
+                + "WHERE "
+                + "((r.txStart >= ? AND r.txEnd <= ?) OR (r.txStart <= ? AND r.txEnd >= ?) OR "
+                + "(r.txStart >= ?  AND r.txStart <= ?) OR  (r.txEnd >= ? AND  r.txEnd <= ? )) and r.chrom = ? ";
 
         if ( strand != null ) {
             query = query + " AND r.strand = ?  ";
@@ -633,7 +665,6 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
             query = query + " AND r.strand = ?  ";
         }
         return findPredictedGenesByQuery( start, end, searchChrom, strand, query, "NScan" );
-
     }
 
     /**
@@ -829,15 +860,19 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         // get known genes as well, in case all we got was an intron.
         geneProducts.addAll( findKnownGenesByLocation( chromosome, queryStart, queryEnd, strand ) );
 
-        // get microRNAs
+        // ensembl transcripts
+        geneProducts.addAll( findEnsemblGenesByLocation( chromosome, queryStart, queryEnd, strand ) );
+
+        // microRNAs
         geneProducts.addAll( findMicroRNAGenesByLocation( chromosome, queryStart, queryEnd, strand ) );
 
-        // get predicted genes if there is nothing else at this location.
+        // predicted genes if there is nothing else at this location: AceView genes
         if ( geneProducts.size() == 0 ) {
             Collection<GeneProduct> acembly = findAcemblyGenesByLocation( chromosome, queryStart, queryEnd, strand );
             if ( acembly != null ) geneProducts.addAll( acembly );
         }
 
+        // Last ditch: NSCAN
         if ( geneProducts.size() == 0 ) {
             Collection<GeneProduct> nscan = findNscanGenesByLocation( chromosome, queryStart, queryEnd, strand );
             if ( nscan != null ) geneProducts.addAll( nscan );

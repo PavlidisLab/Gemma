@@ -132,6 +132,25 @@ public class GeneLinkCoexpressionAnalyzer {
 
     /**
      * @param experimentsAnalyzed
+     * @return Map of EE IDs to the location in the vector.
+     */
+    public Map<Long, Integer> getOrderingMap( Collection<ExpressionExperiment> experimentsAnalyzed ) {
+        List<Long> eeIds = new ArrayList<Long>();
+        for ( ExpressionExperiment ee : experimentsAnalyzed ) {
+            eeIds.add( ee.getId() );
+        }
+        Collections.sort( eeIds );
+        Map<Long, Integer> eeIdOrder = new HashMap<Long, Integer>();
+        int location = 0;
+        for ( Long id : eeIds ) {
+            eeIdOrder.put( id, location );
+            location++;
+        }
+        return eeIdOrder;
+    }
+
+    /**
+     * @param experimentsAnalyzed
      * @return Map of location in the vector to EE ID.
      */
     public Map<Integer, Long> getPositionToIdMap( Collection<ExpressionExperiment> experimentsAnalyzed ) {
@@ -172,8 +191,24 @@ public class GeneLinkCoexpressionAnalyzer {
         return expressionExperimentService.loadMultiple( ids );
     }
 
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    public void setGene2GeneCoexpressionService( Gene2GeneCoexpressionService gene2GeneCoexpressionService ) {
+        this.gene2GeneCoexpressionService = gene2GeneCoexpressionService;
+    }
+
+    public void setGeneCoexpressionAnalysisService( GeneCoexpressionAnalysisService geneCoexpressionAnalysisService ) {
+        this.geneCoexpressionAnalysisService = geneCoexpressionAnalysisService;
+    }
+
     public void setProbeLinkCoexpressionAnalyzer( ProbeLinkCoexpressionAnalyzer probeLinkCoexpressionAnalyzer ) {
         this.probeLinkCoexpressionAnalyzer = probeLinkCoexpressionAnalyzer;
+    }
+
+    public void setProtocolService( ProtocolService protocolService ) {
+        this.protocolService = protocolService;
     }
 
     /**
@@ -232,25 +267,6 @@ public class GeneLinkCoexpressionAnalyzer {
     }
 
     /**
-     * @param experimentsAnalyzed
-     * @return Map of EE IDs to the location in the vector.
-     */
-    private Map<Long, Integer> getOrderingMap( Collection<ExpressionExperiment> experimentsAnalyzed ) {
-        List<Long> eeIds = new ArrayList<Long>();
-        for ( ExpressionExperiment ee : experimentsAnalyzed ) {
-            eeIds.add( ee.getId() );
-        }
-        Collections.sort( eeIds );
-        Map<Long, Integer> eeIdOrder = new HashMap<Long, Integer>();
-        int location = 0;
-        for ( Long id : eeIds ) {
-            eeIdOrder.put( id, location );
-            location++;
-        }
-        return eeIdOrder;
-    }
-
-    /**
      * @param expressionExperiments
      * @param taxon
      * @param toUseGenes
@@ -306,18 +322,22 @@ public class GeneLinkCoexpressionAnalyzer {
             Gene secondGene = genesToAnalyze.get( co.getGeneId() );
             if ( alreadyPersisted.contains( secondGene ) ) continue; // only need to go in one direction
 
+            byte[] testedInVector = computeTestedDatasetVector( co.getDatasetsTestedIn(), eeIdOrder );
+
             if ( co.getNegativeLinkSupport() >= analysis.getSupportThreshold() ) {
                 Gene2GeneCoexpression g2gCoexpression = getNewGGCOInstance( taxon );
-                Collection<Long> contributing2NegativeLinks = co.getEEContributing2NegativeLinks();
+                g2gCoexpression.setDatasetsTestedVector( testedInVector );
                 g2gCoexpression.setSourceAnalysis( analysis );
                 g2gCoexpression.setFirstGene( firstGene );
                 g2gCoexpression.setSecondGene( secondGene );
                 g2gCoexpression.setPvalue( co.getNegPValue() );
 
+                Collection<Long> contributing2NegativeLinks = co.getEEContributing2NegativeLinks();
                 byte[] supportVector = computeSupportingDatasetVector( contributing2NegativeLinks, eeIdOrder );
                 g2gCoexpression.setNumDataSets( co.getNegativeLinkSupport() );
                 g2gCoexpression.setEffect( co.getNegativeScore() );
                 g2gCoexpression.setDatasetsSupportingVector( supportVector );
+
                 batch.add( g2gCoexpression );
                 if ( batch.size() == BATCH_SIZE ) {
                     all.addAll( this.gene2GeneCoexpressionService.create( batch ) );
@@ -327,12 +347,13 @@ public class GeneLinkCoexpressionAnalyzer {
 
             if ( co.getPositiveLinkSupport() >= analysis.getSupportThreshold() ) {
                 Gene2GeneCoexpression g2gCoexpression = getNewGGCOInstance( taxon );
-                Collection<Long> contributing2PositiveLinks = co.getEEContributing2NegativeLinks();
+                g2gCoexpression.setDatasetsTestedVector( testedInVector );
                 g2gCoexpression.setSourceAnalysis( analysis );
                 g2gCoexpression.setFirstGene( firstGene );
                 g2gCoexpression.setSecondGene( secondGene );
                 g2gCoexpression.setPvalue( co.getPosPValue() );
 
+                Collection<Long> contributing2PositiveLinks = co.getEEContributing2NegativeLinks();
                 byte[] supportVector = computeSupportingDatasetVector( contributing2PositiveLinks, eeIdOrder );
                 g2gCoexpression.setNumDataSets( co.getPositiveLinkSupport() );
                 g2gCoexpression.setEffect( co.getPositiveScore() );
@@ -360,19 +381,22 @@ public class GeneLinkCoexpressionAnalyzer {
 
     }
 
-    public void setGene2GeneCoexpressionService( Gene2GeneCoexpressionService gene2GeneCoexpressionService ) {
-        this.gene2GeneCoexpressionService = gene2GeneCoexpressionService;
-    }
+    /**
+     * @param datasetsTestedIn
+     * @param eeIdOrder
+     * @return
+     */
+    private byte[] computeTestedDatasetVector( Collection<ExpressionExperiment> datasetsTestedIn,
+            Map<Long, Integer> eeIdOrder ) {
+        byte[] result = new byte[( int ) Math.ceil( eeIdOrder.keySet().size() / ( double ) Byte.SIZE )];
+        for ( int i = 0, j = result.length; i < j; i++ ) {
+            result[i] = 0x0;
+        }
 
-    public void setGeneCoexpressionAnalysisService( GeneCoexpressionAnalysisService geneCoexpressionAnalysisService ) {
-        this.geneCoexpressionAnalysisService = geneCoexpressionAnalysisService;
-    }
-
-    public void setProtocolService( ProtocolService protocolService ) {
-        this.protocolService = protocolService;
-    }
-
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
+        for ( ExpressionExperiment ee : datasetsTestedIn ) {
+            Long id = ee.getId();
+            BitUtil.set( result, eeIdOrder.get( id ) );
+        }
+        return result;
     }
 }

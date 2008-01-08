@@ -29,6 +29,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 
@@ -62,7 +63,7 @@ public class CoexpressionCollectionValueObject {
 
     private double postProcessSeconds;
     private double dbQuerySeconds;
-    private Collection eesQueryTestedIn;
+    private Collection<ExpressionExperiment> eesQueryTestedIn;
 
     // private GeneCoexpressionResults geneMap;
 
@@ -208,7 +209,7 @@ public class CoexpressionCollectionValueObject {
     /**
      * @return
      */
-    public Collection getEesQueryTestedIn() {
+    public Collection<ExpressionExperiment> getEesQueryTestedIn() {
         return eesQueryTestedIn;
     }
 
@@ -421,7 +422,7 @@ public class CoexpressionCollectionValueObject {
     /**
      * @param eesQueryTestedIn
      */
-    public void setEesQueryGeneTestedIn( Collection eesQueryTestedIn ) {
+    public void setEesQueryGeneTestedIn( Collection<ExpressionExperiment> eesQueryTestedIn ) {
         this.eesQueryTestedIn = eesQueryTestedIn;
     }
 

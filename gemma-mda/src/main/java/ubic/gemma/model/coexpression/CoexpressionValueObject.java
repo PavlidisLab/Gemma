@@ -29,6 +29,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.ontology.OntologyTerm;
 
@@ -63,11 +64,6 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     private Map<Long, Map<Long, Double>> negPvalues;
 
     /**
-     * Number of data sets in which the pair was tested
-     */
-    private int numDatasetsTestedIn = 0;
-
-    /**
      * Expression Experiments whihc have evidence for coexpression of this gene with the query, but the probes are not
      * specific for the target gene.
      */
@@ -98,6 +94,8 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
 
     // the expression experiments that this coexpression was involved in
     private Map<Long, ExpressionExperimentValueObject> expressionExperimentValueObjects;
+
+    private Collection<ExpressionExperiment> datasetsTestedIn;
 
     public CoexpressionValueObject() {
         geneName = "";
@@ -385,7 +383,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     }
 
     public int getNumDatasetsTestedIn() {
-        return numDatasetsTestedIn;
+        return this.datasetsTestedIn.size();
     }
 
     /**
@@ -532,10 +530,6 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         this.nonspecificEE = nonspecificEE;
     }
 
-    public void setNumDatasetsTestedIn( int numDatasetsTestedIn ) {
-        this.numDatasetsTestedIn = numDatasetsTestedIn;
-    }
-
     /**
      * @param numQueryGeneGOTerms
      */
@@ -553,6 +547,14 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     @Override
     public String toString() {
         return geneName;
+    }
+
+    public Collection<ExpressionExperiment> getDatasetsTestedIn() {
+        return this.datasetsTestedIn;
+    }
+
+    public void setDatasetsTestedIn( Collection<ExpressionExperiment> datasetsTestedIn ) {
+        this.datasetsTestedIn = datasetsTestedIn;
     }
 
 }

@@ -57,10 +57,12 @@ public class NcbiGeneConverter implements Converter {
     AtomicBoolean producerDone = new AtomicBoolean( false );
     AtomicBoolean sourceDone = new AtomicBoolean( false );
     private static ExternalDatabase genBank;
-
+    private static ExternalDatabase ensembl;
     static {
         genBank = ExternalDatabase.Factory.newInstance();
         genBank.setName( "Genbank" );
+        ensembl = ExternalDatabase.Factory.newInstance();
+        ensembl.setName( "Ensembl" );
     }
 
     /*
@@ -219,7 +221,8 @@ public class NcbiGeneConverter implements Converter {
         if ( acc.getStartPosition() != null ) {
             pl.setNucleotide( acc.getStartPosition() );
             pl.setNucleotideLength( new Long( Math.abs( acc.getEndPosition() - acc.getStartPosition() ) ).intValue() );
-            pl.setBin( SequenceBinUtils.binFromRange( acc.getStartPosition().intValue(), acc.getEndPosition().intValue() ) );
+            pl.setBin( SequenceBinUtils.binFromRange( acc.getStartPosition().intValue(), acc.getEndPosition()
+                    .intValue() ) );
         }
         return pl;
     }
@@ -305,6 +308,13 @@ public class NcbiGeneConverter implements Converter {
      */
     public static ExternalDatabase getGenbank() {
         return genBank;
+    }
+
+    /**
+     * @return the ensembl
+     */
+    public static ExternalDatabase getEnsembl() {
+        return ensembl;
     }
 
 }

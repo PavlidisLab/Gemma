@@ -67,9 +67,11 @@ public class ProbeLinkCoexpressionAnalyzer {
         CoexpressionCollectionValueObject coexpressions = ( CoexpressionCollectionValueObject ) geneService
                 .getCoexpressedGenes( gene, ees, stringency );
 
-        computeEesTestedIn( gene, ees, coexpressions );
-
         computeGoStats( coexpressions );
+
+        if ( coexpressions.getAllGeneCoexpressionData().size() == 0 ) return coexpressions;
+
+        computeEesTestedIn( gene, ees, coexpressions );
 
         return coexpressions;
     }
@@ -90,6 +92,7 @@ public class ProbeLinkCoexpressionAnalyzer {
          */
         Collection eesQueryTestedIn = probe2ProbeCoexpressionService.getExpressionExperimentsLinkTestedIn( gene, ees,
                 false );
+
         coexpressions.setEesQueryGeneTestedIn( eesQueryTestedIn );
 
         /*
@@ -97,17 +100,19 @@ public class ProbeLinkCoexpressionAnalyzer {
          * here, which is annoying and wasteful.
          */
         Collection<Long> coexGeneIds = new HashSet<Long>();
+
         Map<Long, CoexpressionValueObject> gmap = new HashMap<Long, CoexpressionValueObject>();
         for ( CoexpressionValueObject o : coexpressions.getAllGeneCoexpressionData() ) {
             coexGeneIds.add( o.getGeneId() );
             gmap.put( o.getGeneId(), o );
         }
+
         Collection<Gene> coexGenes = geneService.loadMultiple( coexGeneIds ); // this step might be avoidable.
         Map<Gene, Collection<ExpressionExperiment>> eesTestedIn = probe2ProbeCoexpressionService
                 .getExpressionExperimentsLinkTestedIn( gene, coexGenes, ees, false );
         for ( Gene g : eesTestedIn.keySet() ) {
             CoexpressionValueObject o = gmap.get( g.getId() );
-            o.setNumDatasetsTestedIn( eesTestedIn.get( g ).size() );
+            o.setDatasetsTestedIn( eesTestedIn.get( g ) );
         }
     }
 
@@ -169,6 +174,8 @@ public class ProbeLinkCoexpressionAnalyzer {
         int numQueryGeneGOTerms = geneOntologyService.getGOTerms( queryGene ).size();
         coexpressions.setQueryGeneGoTermCount( numQueryGeneGOTerms );
         if ( numQueryGeneGOTerms == 0 ) return;
+
+        if ( coexpressions.getAllGeneCoexpressionData().size() == 0 ) return;
 
         List<CoexpressionValueObject> knownGeneCoexpressionData = coexpressions.getKnownGeneCoexpressionData( 0 );
         computeGoOverlap( queryGene, numQueryGeneGOTerms, knownGeneCoexpressionData );
