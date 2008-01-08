@@ -832,6 +832,60 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
     }
 
     /**
+     * Given a location, find the nearest gene on the same strand, including only "known", "refseq" or "ensembl"
+     * transcripts.
+     * 
+     * @param chromosome
+     * @param queryStart
+     * @param queryEnd
+     * @param strand Either '+' or '-'
+     * @param maxWindow the number of bases on each side to look, at most, in addition to looking inside the given
+     *        region.
+     * @return the Gene closest to the given location.
+     */
+    public Gene findClosestGene( String chromosome, Long queryStart, Long queryEnd, String strand, int maxWindow ) {
+        if ( queryEnd < queryStart ) throw new IllegalArgumentException( "End must not be less than start" );
+
+        long round = 0L;
+        int numRounds = 5;
+        int increment = ( int ) ( maxWindow / ( double ) numRounds );
+
+        // we look in a window at most increment * numRounds.
+
+        while ( round < numRounds ) {
+
+            long left = queryStart + round * increment;
+            long right = queryEnd + round * increment;
+
+            Collection<GeneProduct> geneProducts = findRefGenesByLocation( chromosome, left, right, strand );
+            geneProducts.addAll( findKnownGenesByLocation( chromosome, left, right, strand ) );
+            geneProducts.addAll( findEnsemblGenesByLocation( chromosome, left, right, strand ) );
+
+            Gene nearest = null;
+            int closestSoFar = Integer.MAX_VALUE;
+
+            for ( GeneProduct geneProduct : geneProducts ) {
+                PhysicalLocation gpl = geneProduct.getPhysicalLocation();
+                Long start = gpl.getNucleotide();
+                Long end = start + gpl.getNucleotideLength();
+
+                int gap = ( int ) Math.min( left - end, start - right );
+
+                if ( gap < closestSoFar ) {
+                    closestSoFar = gap;
+                    nearest = geneProduct.getGene();
+                }
+            }
+
+            if ( nearest != null ) return nearest;
+            round++;
+        }
+
+        return null;
+
+    }
+
+    /**
      * Given a physical location, identify overlapping genes or predicted genes.
      * 
      * @param chromosome The chromosome name (the organism is set by the constructor)

@@ -32,6 +32,7 @@ import ubic.gemma.apps.Blat;
 import ubic.gemma.externalDb.GoldenPathSequenceAnalysis;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.ChromosomeService;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
 import ubic.gemma.model.genome.ProbeAlignedRegionService;
@@ -164,6 +165,9 @@ public class ProbeMapper {
                     skipped++;
                     continue;
                 }
+
+                if ( blatResult.getQuerySequence().getTaxon() == null )
+                    blatResult.getQuerySequence().setTaxon( goldenPathDb.getTaxon() );
 
                 // here's the key line!
                 Collection<BlatAssociation> resultsForOneBlatResult = processBlatResult( goldenPathDb, blatResult );
@@ -424,9 +428,15 @@ public class ProbeMapper {
             return blatAssociations;
         }
 
+//        Gene nearestGene = goldenPathDb.findClosestGene( blatResult.getTargetChromosome().getName(), blatResult
+//                .getTargetStart(), blatResult.getTargetEnd(), strand, 50000 );
+
+//        if ( nearestGene != null ) {
+//            log.info( "Nearest gene to " + blatResult.getTargetChromosome().getName() + "(" + strand + "):"
+//                    + blatResult.getTargetStart() + "-" + blatResult.getTargetEnd() + " is " + nearestGene );
+//        }
+
         // no genes, have to look for pre-existing probealignedregions that overlap.
-        if ( blatResult.getQuerySequence().getTaxon() == null )
-            blatResult.getQuerySequence().setTaxon( goldenPathDb.getTaxon() );
 
         return findProbeAlignedRegionAssociations( blatResult, ignoreStrand );
     }
@@ -474,6 +484,7 @@ public class ProbeMapper {
         if ( log.isDebugEnabled() && pars.size() > 0 ) log.debug( "Found " + pars.size() + " PARS for " + blatResult );
         Collection<BlatAssociation> results = new HashSet<BlatAssociation>();
         for ( ProbeAlignedRegion region : pars ) {
+
             BlatAssociation ba = BlatAssociation.Factory.newInstance();
             GeneProduct product = region.getProducts().iterator().next();
             assert product.getId() != null;
