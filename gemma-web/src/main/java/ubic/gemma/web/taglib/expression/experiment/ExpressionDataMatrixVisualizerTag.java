@@ -299,10 +299,8 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
      * @see javax.servlet.jsp.tagext.TagSupport#doEndTag()
      */
     @Override
-    public int doEndTag() throws JspException {
-
+    public int doEndTag() {
         log.debug( "end tag" );
-
         return EVAL_PAGE;
     }
 

@@ -45,7 +45,7 @@ public class BirnLexOntologyService extends AbstractOntologyService {
     }
 
     @Override
-    protected OntModel loadModel( String url ) throws IOException {
+    protected OntModel loadModel( String url ) {
         return OntologyLoader.loadMemoryModel( url );
     }
 

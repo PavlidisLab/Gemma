@@ -73,7 +73,7 @@ public class OntologyTermConverter extends BeanConverter {
                             OntologyClassRestriction restriction = ( OntologyClassRestriction ) o;
                             OntologyTerm restrictedTo = restriction.getRestrictedTo();
 
-                            if ( ( restrictedTo != null ) && ( term != null ) && restrictedTo.equals( term ) ) { // is
+                            if ( restrictedTo != null && restrictedTo.equals( term ) ) { // is
                                 // it a
                                 // self
                                 // referential

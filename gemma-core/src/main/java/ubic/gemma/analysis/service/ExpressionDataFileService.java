@@ -72,7 +72,7 @@ public class ExpressionDataFileService {
      * @return
      * @throws IOException
      */
-    public File getOutputFile( QuantitationType type ) throws IOException {
+    public File getOutputFile( QuantitationType type ) {
         String filename = type.getId() + "_" + type.getName().replaceAll( "\\s+", "_" ) + DATA_FILE_SUFFIX;
         String fullFilePath = DATA_DIR + filename;
 

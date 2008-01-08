@@ -399,8 +399,12 @@ public class ProgressManager {
     public static synchronized void signalFailed( Object key, Throwable cause ) {
         log.error( key + " Failed: " + cause.getMessage() );
         ProgressJob job = progressJobsByTaskId.get( key );
-        assert job != null : "No job of id " + key;
-        if ( job != null ) job.getJobInfo().setFailedMessage( cause.toString() );
+        if ( job != null ) {
+            job.getJobInfo().setFailedMessage( cause.toString() );
+        } else {
+            log.warn( "No job of id " + key );
+            return;
+        }
         destroyFailedProgressJob( job, false, cause );
     }
 

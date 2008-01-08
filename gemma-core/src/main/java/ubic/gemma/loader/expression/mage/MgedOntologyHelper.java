@@ -121,18 +121,16 @@ public class MgedOntologyHelper {
         String retName = null;
 
         // Direct lookup, MGED Ontology class name equals refering objects class name + ontologyEntryName
-        if ( retName == null ) {
-            String query = new String( referingClassName + ontEntryName );
-            if ( classExists( query ) ) {
-                retName = query;
-            }
+        String query = new String( referingClassName + ontEntryName );
+        if ( classExists( query ) ) {
+            retName = query;
         }
 
         // Remove last 's' in case of plural 's' before comparing
         String withoutPluralS = null;
         if ( retName == null && ontEntryName.endsWith( "s" ) ) {
             withoutPluralS = ontEntryName.substring( 0, ontEntryName.length() - 1 );
-            String query = new String( referingClassName + withoutPluralS );
+            query = new String( referingClassName + withoutPluralS );
             if ( classExists( query ) ) {
                 retName = query;
             }

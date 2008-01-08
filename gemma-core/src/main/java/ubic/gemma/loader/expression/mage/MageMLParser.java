@@ -106,7 +106,7 @@ public class MageMLParser extends AbstractMageTool implements Parser {
      */
     private EntityResolver mageDtdResolver() {
         return new EntityResolver() {
-            public InputSource resolveEntity( String publicId, String systemId ) throws SAXException, IOException {
+            public InputSource resolveEntity( String publicId, String systemId ) {
                 InputStream dtd = this.getClass()
                         .getResourceAsStream( "/ubic/gemma/loader/expression/mage/MAGE-ML.dtd" );
                 assert dtd != null;

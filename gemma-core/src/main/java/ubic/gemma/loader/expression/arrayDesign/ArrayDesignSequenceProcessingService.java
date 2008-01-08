@@ -381,8 +381,6 @@ public class ArrayDesignSequenceProcessingService {
             if ( taxon == null ) throw new IllegalStateException( "No taxon found for " + arrayDesign );
         }
 
-        assert taxon != null;
-
         Map<String, CompositeSequence> quickFindMap = new HashMap<String, CompositeSequence>();
         List<BioSequence> sequenceBuffer = new ArrayList<BioSequence>();
         Map<String, CompositeSequence> csBuffer = new HashMap<String, CompositeSequence>();

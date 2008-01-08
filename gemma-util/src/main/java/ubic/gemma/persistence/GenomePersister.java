@@ -503,7 +503,7 @@ abstract public class GenomePersister extends CommonPersister {
      * @return
      */
     private GeneProduct updateGeneProduct( GeneProduct existing, GeneProduct geneProduct ) {
-        assert existing.getAuditTrail() != null;
+        // assert existing.getAuditTrail() != null : existing + " has no audit trail.";
         assert !isTransient( existing.getGene() );
 
         assert existing.getNcbiId().equals( geneProduct.getNcbiId() ) : "NCBI identifier for " + geneProduct

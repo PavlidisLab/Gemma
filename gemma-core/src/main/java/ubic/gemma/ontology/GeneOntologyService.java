@@ -576,7 +576,7 @@ public class GeneOntologyService implements InitializingBean {
      * @param is
      * @throws IOException
      */
-    protected void loadTermsInNameSpace( InputStream is ) throws IOException {
+    protected void loadTermsInNameSpace( InputStream is ) {
         Collection<OntologyResource> terms = OntologyLoader.initialize( null, OntologyLoader.loadMemoryModel( is, null,
                 OntModelSpec.OWL_MEM ) );
         addTerms( terms );
@@ -586,7 +586,7 @@ public class GeneOntologyService implements InitializingBean {
      * @param url
      * @throws IOException
      */
-    protected void loadTermsInNameSpace( String url ) throws IOException {
+    protected void loadTermsInNameSpace( String url ) {
         Collection<OntologyResource> terms = OntologyLoader.initialize( url, OntologyLoader.loadMemoryModel( url,
                 OntModelSpec.OWL_MEM ) );
         addTerms( terms );

@@ -159,7 +159,6 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
         if ( events.size() == 0 ) {
             return true; // always do it, it's never been done.
         }
-        assert skipIfLastRunLaterThan != null;
         // return true if the last time was older than the limit time.
         AuditEvent lastEvent = events.get( events.size() - 1 );
         return lastEvent.getDate().before( skipIfLastRunLaterThan );

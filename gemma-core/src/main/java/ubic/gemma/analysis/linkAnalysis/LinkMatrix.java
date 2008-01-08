@@ -242,7 +242,6 @@ public class LinkMatrix {
             in = new BufferedReader( new FileReader( new File( eeMapFile ) ) );
             this.eeIndexMap = new HashMap<Long, Integer>();
             int vectorSize = 0;
-            row = null;
             while ( ( row = in.readLine() ) != null ) {
                 row = row.trim();
                 if ( StringUtils.isBlank( row ) ) continue;

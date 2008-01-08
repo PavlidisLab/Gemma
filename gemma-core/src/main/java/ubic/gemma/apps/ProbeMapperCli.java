@@ -326,7 +326,6 @@ public class ProbeMapperCli extends AbstractSpringAwareCLI {
 
             log.debug( "Parsed " + sequences.size() + " sequences from the stream" );
 
-            assert goldenPathDb != null;
             Map<String, Collection<BlatAssociation>> allRes = probeMapper.processSequences( goldenPathDb, sequences );
 
             printBlatAssociations( output, allRes );

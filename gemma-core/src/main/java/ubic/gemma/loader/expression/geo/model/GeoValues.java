@@ -189,10 +189,9 @@ public class GeoValues {
 
         // we really don't allow null values at this stage.
         if ( value == null ) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException( "Attempted to add null for sample=" + sample + " qtype="
+                    + quantitationTypeIndex + " de=" + designElement );
         }
-        assert value != null : "Attempted to add null for sample=" + sample + " qtype=" + quantitationTypeIndex
-                + " de=" + designElement;
 
         if ( sample.getPlatforms().size() > 1 ) {
             throw new IllegalArgumentException( sample + ": Can't handle samples that use multiple platforms" );
@@ -490,7 +489,7 @@ public class GeoValues {
 
                 // if ( qtNames.size() > 1 ) {
                 // log.warn( "There are " + qtNames.size() + " names for this data column" );
-                //                }
+                // }
 
                 Map<String, List<Object>> q = d.get( qType );
                 boolean warned = false;

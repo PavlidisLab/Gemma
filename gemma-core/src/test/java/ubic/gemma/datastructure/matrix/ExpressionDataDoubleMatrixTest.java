@@ -234,39 +234,11 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
     }
 
     /**
-     * For bug 553 - original file is corrupted, so this test doesn't really help that much.
-     * 
-     * @throws Exception
-     */
-    // @SuppressWarnings("unchecked")
-    // public void testMatrixConversionGSE2870() throws Exception {
-    // endTransaction();
-    // ExpressionExperiment newee;
-    // try {
-    // String path = ConfigUtils.getString( "gemma.home" );
-    // assert path != null;
-    // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
-    // + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE2870Short" ) );
-    // Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
-    // .fetchAndLoad( "GSE2870" );
-    // newee = results.iterator().next();
-    // } catch ( AlreadyExistsInSystemException e ) {
-    // newee = ( ExpressionExperiment ) e.getData();
-    // }
-    //
-    // expressionExperimentService.thaw( newee );
-    // Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( newee );
-    // QuantitationType qt = quantitationTypes.iterator().next();
-    // ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( newee, qt );
-    // assertEquals( 30, matrix.rows() );
-    // assertEquals( 4, matrix.columns() );
-    // }
-    /**
      * Tests the construction of an ExpressionDataDoubleMatrix
      * 
      * @throws IOException
      */
-    public void testConstructExpressionDataDoubleMatrix() throws IOException {
+    public void testConstructExpressionDataDoubleMatrix() {
 
         /* test creating the ExpressionDataDoubleMatrix */
         QuantitationType quantitationType = QuantitationType.Factory.newInstance();

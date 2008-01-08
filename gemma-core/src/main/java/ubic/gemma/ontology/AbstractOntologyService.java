@@ -74,7 +74,7 @@ public abstract class AbstractOntologyService implements InitializingBean {
      * @return
      * @throws IOException
      */
-    protected abstract OntModel loadModel( String url ) throws IOException;
+    protected abstract OntModel loadModel( String url );
 
     /**
      * Defines the location of the ontology eg: http://mged.sourceforge.net/ontologies/MGEDOntology.owl
@@ -328,7 +328,7 @@ public abstract class AbstractOntologyService implements InitializingBean {
      * @param url
      * @throws IOException
      */
-    protected void loadTermsInNameSpace( String url ) throws IOException {
+    protected void loadTermsInNameSpace( String url ) {
         Collection<OntologyResource> terms = OntologyLoader.initialize( url, model );
         addTerms( terms );
     }

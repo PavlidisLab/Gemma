@@ -612,7 +612,7 @@ public class Blat {
             log.debug( "Starting blat run" );
 
             FutureTask<Boolean> blatThread = new FutureTask<Boolean>( new Callable<Boolean>() {
-                public Boolean call() throws FileNotFoundException, IOException {
+                public Boolean call() {
                     GfClientCall( host, Integer.toString( portToUse ), seqDir, querySequenceFile.getPath(), outputPath );
                     return true;
                 }

@@ -247,7 +247,6 @@ public class UserFormController extends UserAuthenticatingController {
                 user.getRoles().add( role );
             }
 
-            assert user != null;
             assert user.getRoles() != null && user.getRoles().size() > 0;
             return user;
         }

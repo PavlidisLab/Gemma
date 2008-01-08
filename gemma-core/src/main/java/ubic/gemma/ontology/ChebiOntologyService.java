@@ -60,7 +60,7 @@ public class ChebiOntologyService extends AbstractOntologyService {
      *      com.hp.hpl.jena.ontology.OntModelSpec)
      */
     @Override
-    protected OntModel loadModel( String url ) throws IOException {
+    protected OntModel loadModel( String url ) {
         return OntologyLoader.loadMemoryModel( url );
     }
 

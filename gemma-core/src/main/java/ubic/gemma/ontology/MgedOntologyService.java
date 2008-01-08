@@ -108,7 +108,7 @@ public class MgedOntologyService extends AbstractOntologyService {
         results.addAll( getAllTerms( term ) );
 
         // FIXME configure this externally.
-        
+
         // trim some terms out:
         Collection<OntologyTerm> trimmed = Collections.synchronizedSet( new HashSet<OntologyTerm>() );
         for ( OntologyTerm mgedTerm : results ) {
@@ -181,7 +181,7 @@ public class MgedOntologyService extends AbstractOntologyService {
     }
 
     @Override
-    protected OntModel loadModel( String url ) throws IOException {
+    protected OntModel loadModel( String url ) {
         return OntologyLoader.loadMemoryModel( url );
     }
 

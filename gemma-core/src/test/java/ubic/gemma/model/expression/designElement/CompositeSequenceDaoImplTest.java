@@ -58,7 +58,6 @@ public class CompositeSequenceDaoImplTest extends AbstractArrayDesignProcessingT
         NcbiGeneLoader loader = new NcbiGeneLoader();
         loader.setPersisterHelper( ( PersisterHelper ) this.getBean( "persisterHelper" ) );
         String filePath = ConfigUtils.getString( "gemma.home" ) + File.separatorChar;
-        assert filePath != null;
         filePath = filePath + "gemma-core/src/test/resources/data/loader/genome/gene";
         String geneInfoFile = filePath + File.separatorChar + "selected_gene_info.gz";
         String gene2AccFile = filePath + File.separatorChar + "selected_gene2accession.gz";

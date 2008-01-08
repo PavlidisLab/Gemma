@@ -101,7 +101,6 @@ public final class ContainerTestSetup extends TestSetup {
         File war = new File( ConfigUtils.getString( "gemma.home" ) + "/gemma-web/target/Gemma.war" );
         assert ( war.canRead() );
         WAR gemmaWar = new WAR( war.getAbsolutePath() );
-        assert gemmaWar != null;
 
         configuration.addDeployable( gemmaWar );
         assert configuration.getDeployables().size() == 1;

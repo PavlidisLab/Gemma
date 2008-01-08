@@ -120,7 +120,6 @@ public class ArrayExpressLoadService {
 
             ExpressionExperiment ee = locateExpressionExperimentInMageResults( result );
             ee.setShortName( accession );
-            assert ee != null;
             Collection<BioAssay> bioAssays = ee.getBioAssays();
             assert bioAssays != null && bioAssays.size() > 0;
 
@@ -201,26 +200,21 @@ public class ArrayExpressLoadService {
             String name = design.getName();
             Collection<LocalFile> designFiles = adFetcher.fetch( name );
             LocalFile compositeSequenceFile = null;
-            LocalFile reporterFile = null;
+
             for ( LocalFile file : designFiles ) {
                 String localPath = file.getLocalURL().getPath();
                 if ( localPath.contains( "compositesequences" ) ) {
                     compositeSequenceFile = file;
-                } else if ( localPath.contains( "reporters" ) ) {
-                    reporterFile = null;
                 }
             }
 
-            if ( compositeSequenceFile == null && reporterFile == null ) {
-                throw new IllegalStateException(
-                        "Could not locate the compositesequence or reporter file from ArrayExpress for " + design );
+            if ( compositeSequenceFile == null ) {
+                throw new IllegalStateException( "Could not locate the compositesequence file from ArrayExpress for "
+                        + design );
             }
 
             try {
                 LocalFile fileToParse = compositeSequenceFile; // first choice
-                if ( compositeSequenceFile == null ) {
-                    fileToParse = reporterFile;
-                }
                 adParser.parse( fileToParse.getLocalURL().getPath() );
                 Collection<CompositeSequence> results = adParser.getResults();
                 design.setCompositeSequences( results );

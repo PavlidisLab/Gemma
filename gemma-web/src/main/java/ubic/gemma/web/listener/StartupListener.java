@@ -113,7 +113,7 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
         servletContext.setAttribute( Constants.CONFIG, config );
 
         populateDropDowns( servletContext );
-        
+
         copyWorkerJars( servletContext );
 
         sw.stop();
@@ -214,7 +214,7 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
         assert ( context.getAttribute( Constants.AVAILABLE_ROLES ) != null );
 
     }
-    
+
     /**
      * Copy the JAR files required by the JavaSpaces workers to the defined shared location.
      */
@@ -231,26 +231,26 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
         File sourceLibdir = null;
         Collection<File> jars = new ArrayList<File>();
         for ( Enumeration e = servletContext.getAttributeNames(); e.hasMoreElements(); ) {
-            String key = (String)e.nextElement();
+            String key = ( String ) e.nextElement();
             if ( key.endsWith( "classpath" ) ) {
-                String classpath = (String)servletContext.getAttribute( key );
+                String classpath = ( String ) servletContext.getAttribute( key );
                 for ( String entry : classpath.split( ":" ) ) {
                     if ( entry.endsWith( ".jar" ) ) {
                         File jar = new File( entry );
                         jars.add( jar );
-                        if ( sourceLibdir == null && entry.matches( ".*Gemma/WEB-INF/lib.*") )
+                        if ( sourceLibdir == null && entry.matches( ".*Gemma/WEB-INF/lib.*" ) )
                             sourceLibdir = jar.getParentFile();
                     }
                 }
             }
         }
-        Map<String, String> appConfig = (Map<String, String>)servletContext.getAttribute("appConfig");
+        Map<String, String> appConfig = ( Map<String, String> ) servletContext.getAttribute( "appConfig" );
         String version = appConfig.get( "version" );
         jars.add( new File( sourceLibdir, String.format( "%s-%s", "gemma-core", version ) ) );
         jars.add( new File( sourceLibdir, String.format( "%s-%s", "gemma-mda", version ) ) );
         jars.add( new File( sourceLibdir, String.format( "%s-%s", "gemma-testing", version ) ) );
         jars.add( new File( sourceLibdir, String.format( "%s-%s", "gemma-util", version ) ) );
-        
+
         Collection<File> copiedJars = new ArrayList<File>();
         for ( File sourceJar : jars ) {
             try {
@@ -261,7 +261,7 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
                 log.error( "error copying " + sourceJar + " to " + targetLibdir + ": " + e );
             }
         }
-        
+
         try {
             File classpathFile = new File( targetLibdir, "CLASSPATH" );
             BufferedWriter out = new BufferedWriter( new FileWriter( classpathFile ) );
@@ -271,23 +271,21 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
             log.error( "error creating classpath file in " + targetLibdir );
         }
     }
-    
+
     private static void copyFile( File fromFile, File toFile ) throws IOException {
-        FileInputStream fis  = new FileInputStream(fromFile);
-        FileOutputStream fos = new FileOutputStream(toFile);
+        FileInputStream fis = new FileInputStream( fromFile );
+        FileOutputStream fos = new FileOutputStream( toFile );
         try {
             byte[] buf = new byte[1024];
             int i = 0;
-            while ((i = fis.read(buf)) != -1) {
-                fos.write(buf, 0, i);
+            while ( ( i = fis.read( buf ) ) != -1 ) {
+                fos.write( buf, 0, i );
             }
-        } 
-        catch (IOException e) {
+        } catch ( IOException e ) {
             throw e;
-        }
-        finally {
-            if (fis != null) fis.close();
-            if (fos != null) fos.close();
+        } finally {
+            fis.close();
+            fos.close();
         }
     }
 }
