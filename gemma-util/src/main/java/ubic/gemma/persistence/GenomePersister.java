@@ -428,7 +428,7 @@ abstract public class GenomePersister extends CommonPersister {
 
         // FIXME Accessions: add with care. Cross-references from other databases should be preserved
         existingGene.setAccessions( gene.getAccessions() );
-        this.persistOrUpdateCollectionElements( existingGene.getAccessions() );
+        this.persistCollectionElements( existingGene.getAccessions() );
 
         existingGene.setName( gene.getName() );
         existingGene.setDescription( gene.getDescription() );
@@ -443,21 +443,31 @@ abstract public class GenomePersister extends CommonPersister {
         fillChromosomeLocationAssociations( existingGene.getCytogenicLocation() );
         fillChromosomeLocationAssociations( existingGene.getGeneticLocation() );
 
+        existingGene.setAliases( gene.getAliases() );
+        for ( GeneAlias alias : existingGene.getAliases() ) {
+            alias.setGene( existingGene );
+        }
+
+        /*
+         * This is the only tricky part - the gene products. We update them if they are already there, and add them if
+         * not. We do not delete 'old' ones that the new gene instance does not have, because they might be from
+         * differenct sources. For example, Ensembl.
+         */
         Map<String, GeneProduct> updatedGpMap = new HashMap<String, GeneProduct>();
-        for ( GeneProduct gp : gene.getProducts() ) {
+        for ( GeneProduct gp : existingGene.getProducts() ) {
             updatedGpMap.put( gp.getNcbiId(), gp );
         }
 
-        for ( GeneProduct product : existingGene.getProducts() ) {
-            if ( updatedGpMap.containsKey( product.getNcbiId() ) ) {
-                updateGeneProduct( product, updatedGpMap.get( product.getNcbiId() ) );
+        for ( GeneProduct possiblyNewProduct : gene.getProducts() ) {
+            if ( updatedGpMap.containsKey( possiblyNewProduct.getNcbiId() ) ) {
+                log.debug( "Updating gene product: " + possiblyNewProduct );
+                updateGeneProduct( updatedGpMap.get( possiblyNewProduct.getNcbiId() ), possiblyNewProduct );
+            } else {
+                // it is, in fact, new.
+                log.info( "New product for " + existingGene + ": " + possiblyNewProduct );
+                possiblyNewProduct.setGene( existingGene );
+                existingGene.getProducts().add( persistGeneProduct( possiblyNewProduct ) );
             }
-        }
-
-        existingGene.setAliases( gene.getAliases() );
-
-        for ( GeneAlias alias : existingGene.getAliases() ) {
-            alias.setGene( existingGene );
         }
 
         geneService.update( existingGene );

@@ -64,15 +64,15 @@ public class BlatAssociationScorer {
      */
     public static BlatAssociation scoreResults( Collection<BlatAssociation> blatAssociations ) {
 
-        /*
-         * Break results down by gene product, and throw out duplicates (only allow one result per gene product)
-         */
-
         Map<GeneProduct, Collection<BlatAssociation>> geneProducts2Associations = organizeBlatAssociationsByGeneProduct( blatAssociations );
 
         BlatAssociation globalBest = removeExtraHitsPerGeneProduct( blatAssociations, geneProducts2Associations );
 
+        assert blatAssociations.size() > 0;
+
         Map<Gene, Collection<BlatAssociation>> genes2Associations = organizeBlatAssociationsByGene( blatAssociations );
+
+        assert genes2Associations.size() > 0;
 
         /*
          * At this point there should be just one blatAssociation per gene product. However, all of these really might
@@ -111,7 +111,7 @@ public class BlatAssociationScorer {
     }
 
     /**
-     * Are the genes really different?
+     * Are the genes _really_ different?
      */
     private static Collection<Gene> getDistinctGenes( Map<Gene, Collection<BlatAssociation>> associations ) {
 
@@ -184,6 +184,9 @@ public class BlatAssociationScorer {
     }
 
     /**
+     * Break results down by gene product, and throw out duplicates (only allow one result per gene product), fills in
+     * score and initializes specificity.
+     * 
      * @param blatAssociations
      * @param geneProducts
      * @return
@@ -208,28 +211,37 @@ public class BlatAssociationScorer {
             }
             geneProducts.get( geneProduct ).add( blatAssociation );
 
-            blatAssociation.setSpecificity( 1.0 );
+            blatAssociation.setSpecificity( 1.0 ); // an initial value.
         }
 
         return geneProducts;
     }
 
     /**
-     * Now go over and compute scores and find the best one, for each gene product, removing all other hits (so there is
-     * just one per gene product
+     * Compute scores and find the best one, for each gene product, removing all other hits (so there is just one per
+     * gene product
+     * 
+     * @param blatAssociations
+     * @param geneProduct2BlatAssociations
+     * @return
      */
     private static BlatAssociation removeExtraHitsPerGeneProduct( Collection<BlatAssociation> blatAssociations,
             Map<GeneProduct, Collection<BlatAssociation>> geneProduct2BlatAssociations ) {
 
         double globalMaxScore = 0.0;
         BlatAssociation globalBest = null;
+        Collection<BlatAssociation> keepers = new HashSet<BlatAssociation>();
         for ( GeneProduct geneProduct : geneProduct2BlatAssociations.keySet() ) {
             Collection<BlatAssociation> geneProductBlatAssociations = geneProduct2BlatAssociations.get( geneProduct );
 
-            double maxScore = 0.0;
-            BlatAssociation best = null;
+            if ( geneProductBlatAssociations.size() == 1 ) {
+                keepers = geneProductBlatAssociations;
+                continue;
+            }
 
             // Find the best one. If there are ties it's arbitrary which one we pick.
+            double maxScore = 0.0;
+            BlatAssociation best = null;
             for ( BlatAssociation blatAssociation : geneProductBlatAssociations ) {
                 double score = blatAssociation.getScore();
                 if ( score >= maxScore ) {
@@ -241,19 +253,10 @@ public class BlatAssociationScorer {
             assert best != null;
 
             // Remove the lower-scoring ones for this gene product
-            Collection<BlatAssociation> toRemove = new HashSet<BlatAssociation>();
-            for ( BlatAssociation blatAssociation : geneProductBlatAssociations ) {
-                if ( blatAssociation != best ) {
-                    toRemove.add( blatAssociation );
-                    if ( log.isDebugEnabled() ) log.debug( "Removing " + blatAssociation );
-                }
-            }
-
-            assert toRemove.size() < geneProductBlatAssociations.size();
-
-            for ( BlatAssociation association : toRemove ) {
-                blatAssociations.remove( association );
-            }
+            Collection<BlatAssociation> toKeep = new HashSet<BlatAssociation>();
+            toKeep.add( best );
+            keepers.add( best );
+            geneProduct2BlatAssociations.put( geneProduct, toKeep );
 
             if ( best.getScore() > globalMaxScore ) {
                 globalMaxScore = best.getScore();
@@ -261,6 +264,7 @@ public class BlatAssociationScorer {
             }
 
         }
+        blatAssociations.retainAll( keepers );
         return globalBest;
     }
 
@@ -273,7 +277,6 @@ public class BlatAssociationScorer {
                 return arg0.getOfficialSymbol().compareTo( arg1.getOfficialSymbol() );
             }
         } );
-
     }
 
     /**

@@ -21,7 +21,12 @@ package ubic.gemma.loader.expression.arrayDesign;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.acegisecurity.context.SecurityContext;
+import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -31,6 +36,7 @@ import ubic.gemma.externalDb.GoldenPathSequenceAnalysis;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
@@ -52,6 +58,8 @@ import ubic.gemma.persistence.PersisterHelper;
  * @spring.property name="probeMapper" ref="probeMapper"
  */
 public class ArrayDesignProbeMapperService {
+
+    private static final int QUEUE_SIZE = 2000;
 
     private static Log log = LogFactory.getLog( ArrayDesignProbeMapperService.class.getName() );
 
@@ -90,6 +98,12 @@ public class ArrayDesignProbeMapperService {
         probeMapper.setScoreThreshold( scoreThreshold );
         probeMapper.setBlatScoreThreshold( blatScoreThreshold );
 
+        BlockingQueue<BlatAssociation> persistingQueue = new ArrayBlockingQueue<BlatAssociation>( QUEUE_SIZE );
+        AtomicBoolean generatorDone = new AtomicBoolean( false );
+        AtomicBoolean loaderDone = new AtomicBoolean( false );
+
+        load( persistingQueue, generatorDone, loaderDone );
+
         log.info( "Removing any old associations" );
         arrayDesignService.deleteGeneProductAssociations( arrayDesign );
 
@@ -116,7 +130,8 @@ public class ArrayDesignProbeMapperService {
                     if ( log.isDebugEnabled() ) log.debug( association );
                 }
 
-                persisterHelper.persist( col );
+                // persisting is done in a separate thread.
+                persistingQueue.addAll( col );
                 ++hits;
             }
 
@@ -124,10 +139,24 @@ public class ArrayDesignProbeMapperService {
                 log.info( "Processed " + count + " composite sequences" + " with blat results; " + hits
                         + " mappings found." );
             }
+        }
 
+        generatorDone.set( true );
+
+        log.info( "Waiting for loading to complete ..." );
+        while ( !loaderDone.get() ) {
+            try {
+                Thread.sleep( 1000 );
+            } catch ( InterruptedException e ) {
+                e.printStackTrace();
+            }
         }
 
         log.info( "Processed " + count + " composite sequences with blat results; " + hits + " mappings found." );
+    }
+
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
     }
 
     /**
@@ -145,10 +174,10 @@ public class ArrayDesignProbeMapperService {
     }
 
     /**
-     * @param persisterHelper the persisterHelper to set
+     * @param blatScoreThreshold the blatScoreThreshold to set
      */
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
-        this.persisterHelper = persisterHelper;
+    public void setBlatScoreThreshold( double blatScoreThreshold ) {
+        this.blatScoreThreshold = blatScoreThreshold;
     }
 
     /**
@@ -159,25 +188,66 @@ public class ArrayDesignProbeMapperService {
     }
 
     /**
+     * @param persisterHelper the persisterHelper to set
+     */
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
+    }
+
+    public void setProbeMapper( ProbeMapper probeMapper ) {
+        this.probeMapper = probeMapper;
+    }
+
+    /**
      * @param scoreThreshold the scoreThreshold to set
      */
     public void setScoreThreshold( double scoreThreshold ) {
         this.scoreThreshold = scoreThreshold;
     }
 
-    /**
-     * @param blatScoreThreshold the blatScoreThreshold to set
-     */
-    public void setBlatScoreThreshold( double blatScoreThreshold ) {
-        this.blatScoreThreshold = blatScoreThreshold;
+    private void doLoad( final BlockingQueue<BlatAssociation> queue, AtomicBoolean generatorDone,
+            AtomicBoolean loaderDone ) {
+        int loadedAssociationCount = 0;
+        while ( !( generatorDone.get() && queue.isEmpty() ) ) {
+
+            try {
+                BlatAssociation ba = queue.poll();
+                if ( ba == null ) {
+                    continue;
+                }
+
+                persisterHelper.persist( ba );
+
+                if ( ++loadedAssociationCount % 1000 == 0 ) {
+                    log.info( "Persisted " + loadedAssociationCount + " blat associations. " + "Current queue has "
+                            + queue.size() + " items." );
+                }
+
+            } catch ( Exception e ) {
+                log.error( e, e );
+                loaderDone.set( true );
+                throw new RuntimeException( e );
+            }
+        }
+        log.info( "Loaded " + loadedAssociationCount + " blat associations. " );
+        loaderDone.set( true );
     }
 
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
-    }
+    private void load( final BlockingQueue<BlatAssociation> queue, final AtomicBoolean generatorDone,
+            final AtomicBoolean loaderDone ) {
+        final SecurityContext context = SecurityContextHolder.getContext();
+        assert context != null;
 
-    public void setProbeMapper( ProbeMapper probeMapper ) {
-        this.probeMapper = probeMapper;
+        Thread loadThread = new Thread( new Runnable() {
+            public void run() {
+                SecurityContextHolder.setContext( context );
+                doLoad( queue, generatorDone, loaderDone );
+            }
+
+        }, "PersistBlatAssociations" );
+
+        loadThread.start();
+
     }
 
 }

@@ -118,6 +118,15 @@ public class NcbiGeneConverter implements Converter {
             aliases.add( newAlias );
         }
 
+        for ( String dbname : info.getDbXrefs().keySet() ) {
+            if ( !dbname.equalsIgnoreCase( "Ensembl" ) ) continue;
+            String identifier = info.getDbXrefs().get( dbname );
+            DatabaseEntry crossref = DatabaseEntry.Factory.newInstance();
+            crossref.setAccession( identifier );
+            crossref.setExternalDatabase( getEnsembl() );
+            gene.getAccessions().add( crossref );
+        }
+
         return gene;
 
     }
