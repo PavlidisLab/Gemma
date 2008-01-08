@@ -88,26 +88,6 @@ abstract public class GenomePersister extends CommonPersister {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.persistence.CommonPersister#persistOrUpdate(java.lang.Object)
-     */
-    @Override
-    public Object persistOrUpdate( Object entity ) {
-        if ( entity == null ) return null;
-
-        if ( entity instanceof BioSequence ) {
-            return this.persistOrUpdateBioSequence( ( BioSequence ) entity );
-        } else if ( entity instanceof Gene ) {
-            return this.persistOrUpdateGene( ( Gene ) entity );
-        } else if ( entity instanceof GeneProduct ) {
-            return this.persistOrUpdateGeneProduct( ( GeneProduct ) entity );
-        }
-
-        return super.persistOrUpdate( entity );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.util.persister.Persister#persist(java.lang.Object)
      */
     @Override
@@ -128,6 +108,162 @@ abstract public class GenomePersister extends CommonPersister {
             return persistChromosome( ( Chromosome ) entity );
         }
         return super.persist( entity );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.CommonPersister#persistOrUpdate(java.lang.Object)
+     */
+    @Override
+    public Object persistOrUpdate( Object entity ) {
+        if ( entity == null ) return null;
+
+        if ( entity instanceof BioSequence ) {
+            return this.persistOrUpdateBioSequence( ( BioSequence ) entity );
+        } else if ( entity instanceof Gene ) {
+            return this.persistOrUpdateGene( ( Gene ) entity );
+        } else if ( entity instanceof GeneProduct ) {
+            return this.persistOrUpdateGeneProduct( ( GeneProduct ) entity );
+        }
+
+        return super.persistOrUpdate( entity );
+    }
+
+    /**
+     * @param bioSequenceService The bioSequenceService to set.
+     */
+    public void setBioSequenceService( BioSequenceService bioSequenceService ) {
+        this.bioSequenceService = bioSequenceService;
+    }
+
+    /**
+     * @param blastAssociationService The blastAssociationService to set.
+     */
+    public void setBlastAssociationService( BlastAssociationService blastAssociationService ) {
+        this.blastAssociationService = blastAssociationService;
+    }
+
+    /**
+     * @param blastResultService The blastResultService to set.
+     */
+    public void setBlastResultService( BlastResultService blastResultService ) {
+        this.blastResultService = blastResultService;
+    }
+
+    /**
+     * @param blatAssociationService The blatAssociationService to set.
+     */
+    public void setBlatAssociationService( BlatAssociationService blatAssociationService ) {
+        this.blatAssociationService = blatAssociationService;
+    }
+
+    /**
+     * @param blatResultService The blatResultService to set.
+     */
+    public void setBlatResultService( BlatResultService blatResultService ) {
+        this.blatResultService = blatResultService;
+    }
+
+    /**
+     * @param chromosomeService the chromosomeService to set
+     */
+    public void setChromosomeService( ChromosomeService chromosomeService ) {
+        this.chromosomeService = chromosomeService;
+    }
+
+    /**
+     * @param geneProductService the geneProductService to set
+     */
+    public void setGeneProductService( GeneProductService geneProductService ) {
+        this.geneProductService = geneProductService;
+    }
+
+    /**
+     * @param geneService The geneService to set.
+     */
+    public void setGeneService( GeneService geneService ) {
+        this.geneService = geneService;
+    }
+
+    /**
+     * @param taxonService The taxonService to set.
+     */
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
+    }
+
+    /**
+     * @param bioSequence
+     */
+    protected void fillInBioSequenceTaxon( BioSequence bioSequence ) {
+        Taxon t = bioSequence.getTaxon();
+        if ( t == null ) throw new IllegalArgumentException( "BioSequence Taxon cannot be null" );
+        if ( !isTransient( t ) ) return;
+
+        bioSequence.setTaxon( persistTaxon( t ) );
+
+    }
+
+    /**
+     * @param bioSequence
+     */
+    protected BioSequence persistBioSequence( BioSequence bioSequence ) {
+        if ( bioSequence == null || !isTransient( bioSequence ) ) return bioSequence;
+
+        BioSequence existingBioSequence = bioSequenceService.find( bioSequence );
+
+        // try to avoid making the instance 'dirty' if we don't have to, to avoid updates.
+        if ( existingBioSequence != null ) {
+            if ( log.isDebugEnabled() ) log.debug( "Found existing: " + existingBioSequence );
+            return existingBioSequence;
+        }
+
+        return persistNewBioSequence( bioSequence );
+    }
+
+    /**
+     * @param bioSequence2GeneProduct
+     * @return
+     */
+    protected BioSequence2GeneProduct persistBioSequence2GeneProduct( BioSequence2GeneProduct bioSequence2GeneProduct ) {
+        if ( bioSequence2GeneProduct == null ) return null;
+        if ( !isTransient( bioSequence2GeneProduct ) ) return bioSequence2GeneProduct;
+
+        if ( bioSequence2GeneProduct instanceof BlatAssociation ) {
+            return persistBlatAssociation( ( BlatAssociation ) bioSequence2GeneProduct );
+        } else if ( bioSequence2GeneProduct instanceof BlastAssociation ) {
+            return persistBlastAssociation( ( BlastAssociation ) bioSequence2GeneProduct );
+        } else {
+            throw new UnsupportedOperationException( "Don't know how to deal with "
+                    + bioSequence2GeneProduct.getClass().getName() );
+        }
+
+    }
+
+    /**
+     * @param association
+     */
+    protected BioSequence2GeneProduct persistBlastAssociation( BlastAssociation association ) {
+        BlastResult blastResult = association.getBlastResult();
+        persistBlastResult( blastResult );
+        return blastAssociationService.create( association );
+    }
+
+    /**
+     * @param association
+     */
+    protected BioSequence2GeneProduct persistBlatAssociation( BlatAssociation association ) {
+        BlatResult blatResult = association.getBlatResult();
+        if ( isTransient( blatResult ) ) {
+            blatResult = blatResultService.create( blatResult );
+        }
+        if ( log.isDebugEnabled() ) {
+            log.debug( "Persisting " + association );
+        }
+        association.setGeneProduct( persistGeneProduct( association.getGeneProduct() ) );
+        association.setBioSequence( persistBioSequence( association.getBioSequence() ) );
+        return blatAssociationService.create( association );
     }
 
     /**
@@ -174,266 +310,6 @@ abstract public class GenomePersister extends CommonPersister {
         }
 
         return newGene;
-    }
-
-    /**
-     * @param gene transient instance that will be used to provide information to update persistent version.
-     * @return new or updated gene instance.
-     */
-    protected Gene persistOrUpdateGene( Gene gene ) {
-
-        if ( gene == null ) return null;
-
-        Gene existingGene = null;
-        if ( gene.getId() != null ) {
-            existingGene = geneService.load( gene.getId() );
-        } else {
-            existingGene = geneService.find( gene );
-        }
-
-        if ( existingGene == null ) {
-            return persistGene( gene );
-        }
-
-        log.info( "Updating " + existingGene );
-
-        assert existingGene.getNcbiId().equals( gene.getNcbiId() ) : "NCBI identifier for " + gene + " has changed";
-
-        // We assume the taxon hasn't changed.
-
-        // FIXME Accessions: add with care. Cross-references from other databases should be preserved
-        existingGene.setAccessions( gene.getAccessions() );
-        this.persistOrUpdateCollectionElements( existingGene.getAccessions() );
-
-        existingGene.setName( gene.getName() );
-        existingGene.setDescription( gene.getDescription() );
-        existingGene.setOfficialName( gene.getOfficialName() );
-        existingGene.setOfficialSymbol( gene.getOfficialSymbol() );
-
-        existingGene.setPhysicalLocation( gene.getPhysicalLocation() );
-        existingGene.setCytogenicLocation( gene.getCytogenicLocation() );
-        existingGene.setGeneticLocation( gene.getGeneticLocation() );
-
-        fillChromosomeLocationAssociations( existingGene.getPhysicalLocation() );
-        fillChromosomeLocationAssociations( existingGene.getCytogenicLocation() );
-        fillChromosomeLocationAssociations( existingGene.getGeneticLocation() );
-
-        // updated gene products. We simply replace them all.
-        existingGene.setProducts( gene.getProducts() );
-        for ( GeneProduct product : existingGene.getProducts() ) {
-            product.setGene( existingGene );
-        }
-        persistOrUpdateCollectionElements( existingGene.getProducts() );
-
-        existingGene.setAliases( gene.getAliases() );
-
-        for ( GeneAlias alias : existingGene.getAliases() ) {
-            alias.setGene( existingGene );
-        }
-
-        geneService.update( existingGene );
-
-        return existingGene;
-
-    }
-
-    /**
-     * @param chromosomeLocation
-     * @return
-     */
-    private void fillChromosomeLocationAssociations( ChromosomeLocation chromosomeLocation ) {
-        if ( chromosomeLocation == null ) return;
-        chromosomeLocation.setChromosome( persistChromosome( chromosomeLocation.getChromosome() ) );
-    }
-
-    /**
-     * @param bioSequence
-     * @return
-     */
-    protected BioSequence persistOrUpdateBioSequence( BioSequence bioSequence ) {
-        if ( bioSequence == null ) return null;
-
-        BioSequence existingBioSequence = bioSequenceService.find( bioSequence );
-
-        if ( existingBioSequence == null ) {
-            if ( log.isDebugEnabled() ) log.debug( "Creating new: " + bioSequence );
-            return persistNewBioSequence( bioSequence );
-        }
-
-        if ( log.isDebugEnabled() ) log.debug( "Found existing: " + existingBioSequence );
-        bioSequence.setId( existingBioSequence.getId() );
-        persistBioSequenceAssociations( bioSequence );
-        if ( this.getSession( true ).contains( existingBioSequence ) ) {
-            this.getHibernateTemplate().evict( existingBioSequence );
-        }
-        bioSequenceService.update( bioSequence );
-
-        return bioSequence;
-
-    }
-
-    /**
-     * @param bioSequence
-     */
-    protected BioSequence persistBioSequence( BioSequence bioSequence ) {
-        if ( bioSequence == null || !isTransient( bioSequence ) ) return bioSequence;
-
-        BioSequence existingBioSequence = bioSequenceService.find( bioSequence );
-
-        // try to avoid making the instance 'dirty' if we don't have to, to avoid updates.
-        if ( existingBioSequence != null ) {
-            if ( log.isDebugEnabled() ) log.debug( "Found existing: " + existingBioSequence );
-            return existingBioSequence;
-        }
-
-        return persistNewBioSequence( bioSequence );
-    }
-
-    /**
-     * @param bioSequence
-     * @return
-     */
-    private BioSequence persistNewBioSequence( BioSequence bioSequence ) {
-        if ( log.isDebugEnabled() ) log.debug( "Creating new: " + bioSequence );
-
-        persistBioSequenceAssociations( bioSequence );
-
-        assert bioSequence.getTaxon().getId() != null;
-        return bioSequenceService.create( bioSequence );
-    }
-
-    /**
-     * @param bioSequence
-     */
-    private void persistBioSequenceAssociations( BioSequence bioSequence ) {
-        fillInBioSequenceTaxon( bioSequence );
-
-        if ( bioSequence.getSequenceDatabaseEntry() != null
-                && bioSequence.getSequenceDatabaseEntry().getExternalDatabase().getId() == null ) {
-            bioSequence.getSequenceDatabaseEntry().setExternalDatabase(
-                    persistExternalDatabase( bioSequence.getSequenceDatabaseEntry().getExternalDatabase() ) );
-        }
-
-        for ( BioSequence2GeneProduct bioSequence2GeneProduct : bioSequence.getBioSequence2GeneProduct() ) {
-            bioSequence2GeneProduct = persistBioSequence2GeneProduct( bioSequence2GeneProduct );
-        }
-    }
-
-    /**
-     * @param bioSequence2GeneProduct
-     * @return
-     */
-    protected BioSequence2GeneProduct persistBioSequence2GeneProduct( BioSequence2GeneProduct bioSequence2GeneProduct ) {
-        if ( bioSequence2GeneProduct == null ) return null;
-        if ( !isTransient( bioSequence2GeneProduct ) ) return bioSequence2GeneProduct;
-
-        if ( bioSequence2GeneProduct instanceof BlatAssociation ) {
-            return persistBlatAssociation( ( BlatAssociation ) bioSequence2GeneProduct );
-        } else if ( bioSequence2GeneProduct instanceof BlastAssociation ) {
-            return persistBlastAssociation( ( BlastAssociation ) bioSequence2GeneProduct );
-        } else {
-            throw new UnsupportedOperationException( "Don't know how to deal with "
-                    + bioSequence2GeneProduct.getClass().getName() );
-        }
-
-    }
-
-    /**
-     * @param association
-     */
-    protected BioSequence2GeneProduct persistBlastAssociation( BlastAssociation association ) {
-        BlastResult blastResult = association.getBlastResult();
-        persistBlastResult( blastResult );
-        return blastAssociationService.create( association );
-    }
-
-    /**
-     * NOTE this method is not a traditional 'persist' method: It does not use findOrCreate! A new result is made every
-     * time. (FIXME: this method might need to be moved)
-     * 
-     * @param blastResult
-     */
-    private BlastResult persistBlastResult( BlastResult blastResult ) {
-        blastResult.setQuerySequence( persistBioSequence( blastResult.getQuerySequence() ) );
-        blastResult.setTargetChromosome( persistChromosome( blastResult.getTargetChromosome() ) );
-        return blastResultService.create( blastResult );
-    }
-
-    /**
-     * NOTE this method is not a traditional 'persist' method: It does not use findOrCreate! A new result is made every
-     * time. (FIXME this method might need to be moved)
-     * 
-     * @param blatResult
-     */
-    private BlatResult persistBlatResult( BlatResult blatResult ) {
-        if ( blatResult.getQuerySequence() == null ) {
-            throw new IllegalArgumentException( "Blat result with null query sequence" );
-        }
-        blatResult.setQuerySequence( persistBioSequence( blatResult.getQuerySequence() ) );
-        blatResult.setTargetChromosome( persistChromosome( blatResult.getTargetChromosome() ) );
-        blatResult.setSearchedDatabase( persistExternalDatabase( blatResult.getSearchedDatabase() ) );
-        return blatResultService.create( blatResult );
-    }
-
-    /**
-     * @param chromosome
-     * @return
-     */
-    private Chromosome persistChromosome( Chromosome chromosome ) {
-        if ( chromosome == null ) return null;
-        if ( !isTransient( chromosome ) ) return chromosome;
-
-        // note that we can't use the native hashcode method because we need to ignore the ID.
-        int key = chromosome.getName().hashCode();
-        if ( chromosome.getTaxon().getNcbiId() != null )
-            key += chromosome.getTaxon().getNcbiId().hashCode();
-        else if ( chromosome.getTaxon().getCommonName() != null )
-            key += chromosome.getTaxon().getCommonName().hashCode();
-        else if ( chromosome.getTaxon().getScientificName() != null )
-            key += chromosome.getTaxon().getScientificName().hashCode();
-
-        if ( seenChromosomes.containsKey( key ) ) {
-            return seenChromosomes.get( key );
-        }
-
-        chromosome.setSequence( persistBioSequence( chromosome.getSequence() ) );
-        chromosome.setTaxon( persistTaxon( chromosome.getTaxon() ) );
-        chromosome = chromosomeService.findOrCreate( chromosome );
-
-        seenChromosomes.put( key, chromosome );
-
-        return chromosome;
-
-    }
-
-    /**
-     * @param result
-     * @return
-     */
-    private SequenceSimilaritySearchResult persistSequenceSimilaritySearchResult( SequenceSimilaritySearchResult result ) {
-        if ( result instanceof BlatResult ) {
-            return persistBlatResult( ( BlatResult ) result );
-        } else if ( result instanceof BlastResult ) {
-            return persistBlastResult( ( BlastResult ) result );
-        } else {
-            throw new UnsupportedOperationException( "Don't know how to deal with " + result.getClass().getName() );
-        }
-    }
-
-    /**
-     * @param association
-     */
-    protected BioSequence2GeneProduct persistBlatAssociation( BlatAssociation association ) {
-        BlatResult blatResult = association.getBlatResult();
-        if ( isTransient( blatResult ) ) {
-            blatResult = blatResultService.create( blatResult );
-        }
-        if ( log.isDebugEnabled() ) {
-            log.debug( "Persisting " + association );
-        }
-        association.setGeneProduct( persistGeneProduct( association.getGeneProduct() ) );
-        association.setBioSequence( persistBioSequence( association.getBioSequence() ) );
-        return blatAssociationService.create( association );
     }
 
     /**
@@ -496,6 +372,101 @@ abstract public class GenomePersister extends CommonPersister {
     }
 
     /**
+     * @param bioSequence
+     * @return
+     */
+    protected BioSequence persistOrUpdateBioSequence( BioSequence bioSequence ) {
+        if ( bioSequence == null ) return null;
+
+        BioSequence existingBioSequence = bioSequenceService.find( bioSequence );
+
+        if ( existingBioSequence == null ) {
+            if ( log.isDebugEnabled() ) log.debug( "Creating new: " + bioSequence );
+            return persistNewBioSequence( bioSequence );
+        }
+
+        if ( log.isDebugEnabled() ) log.debug( "Found existing: " + existingBioSequence );
+        bioSequence.setId( existingBioSequence.getId() );
+        persistBioSequenceAssociations( bioSequence );
+        if ( this.getSession( true ).contains( existingBioSequence ) ) {
+            this.getHibernateTemplate().evict( existingBioSequence );
+        }
+        bioSequenceService.update( bioSequence );
+
+        return bioSequence;
+
+    }
+
+    /**
+     * @param gene transient instance that will be used to provide information to update persistent version.
+     * @return new or updated gene instance.
+     */
+    protected Gene persistOrUpdateGene( Gene gene ) {
+
+        if ( gene == null ) return null;
+
+        Gene existingGene = null;
+        if ( gene.getId() != null ) {
+            existingGene = geneService.load( gene.getId() );
+        } else {
+            existingGene = geneService.find( gene );
+        }
+
+        if ( existingGene == null ) {
+            return persistGene( gene );
+        }
+
+        log.info( "Updating " + existingGene );
+
+        // updated gene products.
+        geneService.thaw( existingGene );
+
+        assert existingGene.getNcbiId().equals( gene.getNcbiId() ) : "NCBI identifier for " + gene + " has changed";
+        assert existingGene.getAuditTrail() != null;
+
+        // We assume the taxon hasn't changed.
+
+        // FIXME Accessions: add with care. Cross-references from other databases should be preserved
+        existingGene.setAccessions( gene.getAccessions() );
+        this.persistOrUpdateCollectionElements( existingGene.getAccessions() );
+
+        existingGene.setName( gene.getName() );
+        existingGene.setDescription( gene.getDescription() );
+        existingGene.setOfficialName( gene.getOfficialName() );
+        existingGene.setOfficialSymbol( gene.getOfficialSymbol() );
+
+        existingGene.setPhysicalLocation( gene.getPhysicalLocation() );
+        existingGene.setCytogenicLocation( gene.getCytogenicLocation() );
+        existingGene.setGeneticLocation( gene.getGeneticLocation() );
+
+        fillChromosomeLocationAssociations( existingGene.getPhysicalLocation() );
+        fillChromosomeLocationAssociations( existingGene.getCytogenicLocation() );
+        fillChromosomeLocationAssociations( existingGene.getGeneticLocation() );
+
+        Map<String, GeneProduct> updatedGpMap = new HashMap<String, GeneProduct>();
+        for ( GeneProduct gp : gene.getProducts() ) {
+            updatedGpMap.put( gp.getNcbiId(), gp );
+        }
+
+        for ( GeneProduct product : existingGene.getProducts() ) {
+            if ( updatedGpMap.containsKey( product.getNcbiId() ) ) {
+                updateGeneProduct( product, updatedGpMap.get( product.getNcbiId() ) );
+            }
+        }
+
+        existingGene.setAliases( gene.getAliases() );
+
+        for ( GeneAlias alias : existingGene.getAliases() ) {
+            alias.setGene( existingGene );
+        }
+
+        geneService.update( existingGene );
+
+        return existingGene;
+
+    }
+
+    /**
      * @param geneProduct
      * @return
      */
@@ -513,6 +484,16 @@ abstract public class GenomePersister extends CommonPersister {
             return persistGeneProduct( geneProduct );
         }
 
+        return updateGeneProduct( existing, geneProduct );
+    }
+
+    /**
+     * @param existing
+     * @param geneProduct information from this is copied onto the 'existing' gene product.
+     * @return
+     */
+    private GeneProduct updateGeneProduct( GeneProduct existing, GeneProduct geneProduct ) {
+        assert existing.getAuditTrail() != null;
         assert !isTransient( existing.getGene() );
 
         assert existing.getNcbiId().equals( geneProduct.getNcbiId() ) : "NCBI identifier for " + geneProduct
@@ -558,18 +539,6 @@ abstract public class GenomePersister extends CommonPersister {
     }
 
     /**
-     * @param bioSequence
-     */
-    protected void fillInBioSequenceTaxon( BioSequence bioSequence ) {
-        Taxon t = bioSequence.getTaxon();
-        if ( t == null ) throw new IllegalArgumentException( "BioSequence Taxon cannot be null" );
-        if ( !isTransient( t ) ) return;
-
-        bioSequence.setTaxon( persistTaxon( t ) );
-
-    }
-
-    /**
      * @param taxon
      */
     protected Taxon persistTaxon( Taxon taxon ) {
@@ -609,65 +578,114 @@ abstract public class GenomePersister extends CommonPersister {
     }
 
     /**
-     * @param bioSequenceService The bioSequenceService to set.
+     * @param chromosomeLocation
+     * @return
      */
-    public void setBioSequenceService( BioSequenceService bioSequenceService ) {
-        this.bioSequenceService = bioSequenceService;
+    private void fillChromosomeLocationAssociations( ChromosomeLocation chromosomeLocation ) {
+        if ( chromosomeLocation == null ) return;
+        chromosomeLocation.setChromosome( persistChromosome( chromosomeLocation.getChromosome() ) );
     }
 
     /**
-     * @param geneService The geneService to set.
+     * @param bioSequence
      */
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
+    private void persistBioSequenceAssociations( BioSequence bioSequence ) {
+        fillInBioSequenceTaxon( bioSequence );
+
+        if ( bioSequence.getSequenceDatabaseEntry() != null
+                && bioSequence.getSequenceDatabaseEntry().getExternalDatabase().getId() == null ) {
+            bioSequence.getSequenceDatabaseEntry().setExternalDatabase(
+                    persistExternalDatabase( bioSequence.getSequenceDatabaseEntry().getExternalDatabase() ) );
+        }
+
+        for ( BioSequence2GeneProduct bioSequence2GeneProduct : bioSequence.getBioSequence2GeneProduct() ) {
+            bioSequence2GeneProduct = persistBioSequence2GeneProduct( bioSequence2GeneProduct );
+        }
     }
 
     /**
-     * @param taxonService The taxonService to set.
+     * NOTE this method is not a traditional 'persist' method: It does not use findOrCreate! A new result is made every
+     * time. (FIXME: this method might need to be moved)
+     * 
+     * @param blastResult
      */
-    public void setTaxonService( TaxonService taxonService ) {
-        this.taxonService = taxonService;
+    private BlastResult persistBlastResult( BlastResult blastResult ) {
+        blastResult.setQuerySequence( persistBioSequence( blastResult.getQuerySequence() ) );
+        blastResult.setTargetChromosome( persistChromosome( blastResult.getTargetChromosome() ) );
+        return blastResultService.create( blastResult );
     }
 
     /**
-     * @param blatAssociationService The blatAssociationService to set.
+     * NOTE this method is not a traditional 'persist' method: It does not use findOrCreate! A new result is made every
+     * time. (FIXME this method might need to be moved)
+     * 
+     * @param blatResult
      */
-    public void setBlatAssociationService( BlatAssociationService blatAssociationService ) {
-        this.blatAssociationService = blatAssociationService;
+    private BlatResult persistBlatResult( BlatResult blatResult ) {
+        if ( blatResult.getQuerySequence() == null ) {
+            throw new IllegalArgumentException( "Blat result with null query sequence" );
+        }
+        blatResult.setQuerySequence( persistBioSequence( blatResult.getQuerySequence() ) );
+        blatResult.setTargetChromosome( persistChromosome( blatResult.getTargetChromosome() ) );
+        blatResult.setSearchedDatabase( persistExternalDatabase( blatResult.getSearchedDatabase() ) );
+        return blatResultService.create( blatResult );
     }
 
     /**
-     * @param blastAssociationService The blastAssociationService to set.
+     * @param chromosome
+     * @return
      */
-    public void setBlastAssociationService( BlastAssociationService blastAssociationService ) {
-        this.blastAssociationService = blastAssociationService;
+    private Chromosome persistChromosome( Chromosome chromosome ) {
+        if ( chromosome == null ) return null;
+        if ( !isTransient( chromosome ) ) return chromosome;
+
+        // note that we can't use the native hashcode method because we need to ignore the ID.
+        int key = chromosome.getName().hashCode();
+        if ( chromosome.getTaxon().getNcbiId() != null )
+            key += chromosome.getTaxon().getNcbiId().hashCode();
+        else if ( chromosome.getTaxon().getCommonName() != null )
+            key += chromosome.getTaxon().getCommonName().hashCode();
+        else if ( chromosome.getTaxon().getScientificName() != null )
+            key += chromosome.getTaxon().getScientificName().hashCode();
+
+        if ( seenChromosomes.containsKey( key ) ) {
+            return seenChromosomes.get( key );
+        }
+
+        chromosome.setSequence( persistBioSequence( chromosome.getSequence() ) );
+        chromosome.setTaxon( persistTaxon( chromosome.getTaxon() ) );
+        chromosome = chromosomeService.findOrCreate( chromosome );
+
+        seenChromosomes.put( key, chromosome );
+
+        return chromosome;
+
     }
 
     /**
-     * @param blatResultService The blatResultService to set.
+     * @param bioSequence
+     * @return
      */
-    public void setBlatResultService( BlatResultService blatResultService ) {
-        this.blatResultService = blatResultService;
+    private BioSequence persistNewBioSequence( BioSequence bioSequence ) {
+        if ( log.isDebugEnabled() ) log.debug( "Creating new: " + bioSequence );
+
+        persistBioSequenceAssociations( bioSequence );
+
+        assert bioSequence.getTaxon().getId() != null;
+        return bioSequenceService.create( bioSequence );
     }
 
     /**
-     * @param blastResultService The blastResultService to set.
+     * @param result
+     * @return
      */
-    public void setBlastResultService( BlastResultService blastResultService ) {
-        this.blastResultService = blastResultService;
-    }
-
-    /**
-     * @param geneProductService the geneProductService to set
-     */
-    public void setGeneProductService( GeneProductService geneProductService ) {
-        this.geneProductService = geneProductService;
-    }
-
-    /**
-     * @param chromosomeService the chromosomeService to set
-     */
-    public void setChromosomeService( ChromosomeService chromosomeService ) {
-        this.chromosomeService = chromosomeService;
+    private SequenceSimilaritySearchResult persistSequenceSimilaritySearchResult( SequenceSimilaritySearchResult result ) {
+        if ( result instanceof BlatResult ) {
+            return persistBlatResult( ( BlatResult ) result );
+        } else if ( result instanceof BlastResult ) {
+            return persistBlastResult( ( BlastResult ) result );
+        } else {
+            throw new UnsupportedOperationException( "Don't know how to deal with " + result.getClass().getName() );
+        }
     }
 }

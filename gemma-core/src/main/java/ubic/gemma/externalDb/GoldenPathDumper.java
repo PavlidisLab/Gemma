@@ -44,6 +44,8 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
 public class GoldenPathDumper extends GoldenPath {
 
     private static final String REF_GENE_TABLE_NAME = "refGene";
+    private static final String ENSEMBL_TABLE_NAME = "ensGene";
+
     // these are provided for testing (switch off ones not using)
     private boolean DO_EST = true;
     private boolean DO_MRNA = true;
@@ -64,6 +66,8 @@ public class GoldenPathDumper extends GoldenPath {
 
     ExternalDatabase genbank;
 
+    ExternalDatabase ensembl;
+
     /**
      * Get all ESTs and mRNAs for a taxon. This will return a very large collection.
      * 
@@ -72,6 +76,7 @@ public class GoldenPathDumper extends GoldenPath {
      */
     public void dumpTranscriptBioSequences( int limit, BlockingQueue<BioSequence> queue ) {
         initGenbank();
+        initEnsembl();
 
         double loadFactor = 0.5;
 
@@ -149,8 +154,32 @@ public class GoldenPathDumper extends GoldenPath {
             }
         }
 
+        log.info( "starting ensembl" ); // not for mouse.
+        offset = 0;
+        numInput = 0;
+        while ( DO_REFSEQ && !( limit > 0 && numInput >= limit ) ) {
+            try {
+                Collection<BioSequence> sequences = loadEnsemblByQuery( limitSuffix + " offset " + offset );
+                if ( sequences.size() == 0 ) {
+                    break;
+                }
+                Collection<BioSequence> toAdd = screenDuplicates( seen, sequences );
+                numInput = addToQueue( queue, numInput, toAdd );
+
+                offset += batchSize;
+            } catch ( Exception e ) {
+                log.info( e ); // This will happen if we run on a genome that doesn't have the ensembl tracks.
+                break;
+            }
+        }
+
     }
 
+    /**
+     * @param seen
+     * @param sequences
+     * @return
+     */
     private Collection<BioSequence> screenDuplicates( Collection<Integer> seen, Collection<BioSequence> sequences ) {
         Collection<BioSequence> toAdd = new HashSet<BioSequence>();
         for ( BioSequence sequence : sequences ) {
@@ -188,6 +217,15 @@ public class GoldenPathDumper extends GoldenPath {
         genbank = ExternalDatabase.Factory.newInstance();
         genbank.setName( "Genbank" );
         genbank.setType( DatabaseType.SEQUENCE );
+    }
+
+    /**
+     * 
+     */
+    private void initEnsembl() {
+        genbank = ExternalDatabase.Factory.newInstance();
+        genbank.setName( "Ensembl" );
+        genbank.setType( DatabaseType.GENOME );
     }
 
     /**
@@ -261,7 +299,39 @@ public class GoldenPathDumper extends GoldenPath {
 
             return bioSequence;
         }
+    }
 
+    /**
+     * @author paul
+     * @version $Id$
+     */
+    private class BioSequenceEnsemblMappingQuery extends MappingSqlQuery {
+
+        public BioSequenceEnsemblMappingQuery( DriverManagerDataSource ds, String query ) {
+            super( ds, query );
+            compile();
+        }
+
+        @Override
+        @SuppressWarnings("unused")
+        public Object mapRow( ResultSet rs, int rowNumber ) throws SQLException {
+            BioSequence bioSequence = BioSequence.Factory.newInstance();
+
+            DatabaseEntry de = DatabaseEntry.Factory.newInstance();
+
+            String name = rs.getString( "name" );
+            bioSequence.setName( name );
+            bioSequence.setPolymerType( PolymerType.RNA );
+            bioSequence.setIsCircular( false );
+
+            de.setAccession( name );
+            de.setExternalDatabase( ensembl );
+
+            bioSequence.setType( SequenceType.mRNA );
+            bioSequence.setSequenceDatabaseEntry( de );
+
+            return bioSequence;
+        }
     }
 
     /**
@@ -270,11 +340,8 @@ public class GoldenPathDumper extends GoldenPath {
      */
     @SuppressWarnings("unchecked")
     private Collection<BioSequence> loadSequencesByQuery( String table, SequenceType type, String limit ) {
-
         BioSequenceMappingQuery bsQuery = new BioSequenceMappingQuery( dataSource, table, type, limit );
-
         return bsQuery.execute();
-
     }
 
     /**
@@ -283,13 +350,20 @@ public class GoldenPathDumper extends GoldenPath {
      */
     @SuppressWarnings("unchecked")
     private Collection<BioSequence> loadRefseqByQuery( String limitSuffix ) {
-
         String query = "SELECT name FROM " + REF_GENE_TABLE_NAME + " " + limitSuffix;
-
         BioSequenceRefseqMappingQuery bsQuery = new BioSequenceRefseqMappingQuery( dataSource, query );
-
         return bsQuery.execute();
+    }
 
+    /**
+     * @param query
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<BioSequence> loadEnsemblByQuery( String limitSuffix ) {
+        String query = "SELECT name FROM " + ENSEMBL_TABLE_NAME + " " + limitSuffix;
+        BioSequenceEnsemblMappingQuery bsQuery = new BioSequenceEnsemblMappingQuery( dataSource, query );
+        return bsQuery.execute();
     }
 
 }

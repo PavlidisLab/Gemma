@@ -299,12 +299,17 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
     }
 
     /**
-     * This was created because calling saveGene with an existant gene actually causes a caching error in Spring.
+     * This was created because calling saveGene with an existing gene actually causes a caching error in Spring.
      * 
      * @see ubic.gemma.model.genome.gene.GeneService#updateGene(ubic.gemma.model.genome.Gene)
      */
     @Override
     protected void handleUpdate( ubic.gemma.model.genome.Gene gene ) throws java.lang.Exception {
         this.getGeneDao().update( gene );
+    }
+
+    @Override
+    protected void handleThaw( Gene gene ) throws Exception {
+        this.getGeneDao().thaw( gene );
     }
 }

@@ -34,6 +34,8 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
+import org.hibernate.LockMode;
 import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
@@ -41,6 +43,7 @@ import org.hibernate.Session;
 import org.hibernate.type.DoubleType;
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.coexpression.CoexpressedGenesDetails;
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
@@ -503,6 +506,19 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         return pars;
     }
 
+    @Override
+    protected void handleThaw( final Gene gene ) throws Exception {
+        HibernateTemplate templ = this.getHibernateTemplate();
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                Hibernate.initialize( gene );
+                session.lock( gene, LockMode.NONE );
+                gene.getProducts().size();
+                return null;
+            }
+        } );
+    }
+
     /**
      * @param results
      */
@@ -749,5 +765,4 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         return queryObject;
     }
-
 }

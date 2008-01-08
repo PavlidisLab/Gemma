@@ -74,10 +74,6 @@ public class GoldenPathSequenceLoadController extends SimpleFormController {
 
         final SecurityContext context = SecurityContextHolder.getContext();
 
-        // new Thread( new Runnable() {
-        // public void run() {
-        // try {
-        // SecurityContextHolder.setContext( context );
         Taxon taxon = params.getTaxon();
         GoldenPathDumper dumper = new GoldenPathDumper( taxon );
         GoldenPathBioSequenceLoader gp = new GoldenPathBioSequenceLoader( taxon );
@@ -90,13 +86,6 @@ public class GoldenPathSequenceLoadController extends SimpleFormController {
         ProgressJob job = ProgressManager.createProgressJob( null, "pavlidis", "Golden path loading" );
         gp.load( dumper );
         ProgressManager.destroyProgressJob( job );
-
-        // } catch ( SQLException e ) {
-        // throw new RuntimeException( e );
-        // }
-        // }
-        //
-        // } ).start();
 
         return new ModelAndView( this.getSuccessView() );
 

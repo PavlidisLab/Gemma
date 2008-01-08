@@ -261,20 +261,23 @@ public class AuditInterceptor implements MethodInterceptor {
     private void addUpdateAuditEvent( Auditable d ) {
         assert d != null;
         AuditTrail at = d.getAuditTrail();
-
+        assert at != null;
         if ( at.getId() != null ) {
             this.auditTrailDao.thaw( at );
         }
 
-        if ( at == null || at.getEvents().size() == 0 ) {
-            log.warn( "No audit trail for update method call, performing 'create'" );
-            addCreateAuditEvent( d );
+        if ( at.getEvents().size() == 0 ) {
+            if ( at.getId() != null ) {
+                throw new IllegalStateException( d + " is persistent but lacks a create event" );
+            } else {
+                log.warn( "No create event for update method call on " + d + ", performing 'create'" );
+                addCreateAuditEvent( d );
+            }
         } else {
             User user = getCurrentUser();
             at.update( getUpdateEventNote( d ), user );
             persistAndLogAuditEvent( d, user, at.getLast().getNote() );
         }
-
     }
 
     /**
@@ -453,9 +456,13 @@ public class AuditInterceptor implements MethodInterceptor {
 
         // saves us the trouble...
         if ( d != null && d.getAuditTrail() == null ) {
-            AuditTrail at = AuditTrail.Factory.newInstance();
-            d.setAuditTrail( at );
-            if ( log.isDebugEnabled() ) log.debug( "Added auditTrail to " + d );
+            if ( d.getId() != null ) {
+                throw new IllegalStateException( d + " has no audit trail, but it looks persistent." );
+            } else {
+                AuditTrail at = AuditTrail.Factory.newInstance();
+                d.setAuditTrail( at );
+                if ( log.isDebugEnabled() ) log.debug( "Added auditTrail to " + d );
+            }
         }
 
         if ( method.getName().equals( "create" ) ) {

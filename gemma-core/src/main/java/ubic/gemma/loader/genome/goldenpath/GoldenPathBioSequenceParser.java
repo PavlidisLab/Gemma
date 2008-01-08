@@ -35,10 +35,12 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * Parse a dump of a Goldenpath table. The input is expected to have just two columns: sequence identifier (accession)
- * and sequence length.
+ * and sequence length. This assumes that all sequences are Genbank entries, so be careful using this with Ensembl (we
+ * prefer to use GoldenPathDumper instead)
  * 
  * @author pavlidis
  * @version $Id$
+ * @see ubic.gemma.loader.genome.goldenpath.GoldenPathDumper
  */
 public class GoldenPathBioSequenceParser extends BasicLineParser implements QueuingParser {
 
@@ -66,13 +68,9 @@ public class GoldenPathBioSequenceParser extends BasicLineParser implements Queu
     }
 
     private void initGenbank() {
-        // if ( externalDatabaseService != null ) {
-        // genbank = externalDatabaseService.find( "Genbank" );
-        // } else {
         genbank = ExternalDatabase.Factory.newInstance();
         genbank.setName( "Genbank" );
         genbank.setType( DatabaseType.SEQUENCE );
-        // }
     }
 
     @SuppressWarnings("unchecked")
