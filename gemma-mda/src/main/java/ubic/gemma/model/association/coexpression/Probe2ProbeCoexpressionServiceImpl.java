@@ -22,12 +22,13 @@ package ubic.gemma.model.association.coexpression;
 import java.util.Collection;
 import java.util.Map;
 
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 
 /**
  * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService
+ * @versio n$Id$
+ * @author paul
  */
 public class Probe2ProbeCoexpressionServiceImpl extends
         ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionServiceBase {
@@ -152,18 +153,6 @@ public class Probe2ProbeCoexpressionServiceImpl extends
         return true;
     }
 
-    @Override
-    protected Collection handleFindCoexpressionRelationships( Gene givenG, Collection ees, QuantitationType qt )
-            throws Exception {
-        return this.getProbe2ProbeCoexpressionDao().findCoexpressionRelationships( givenG, ees, qt );
-    }
-
-    @Override
-    protected Map handleFindCoexpressionRelationships( Collection genes, QuantitationType qt, Collection ees )
-            throws Exception {
-        return this.getProbe2ProbeCoexpressionDao().findCoexpressionRelationships( genes, qt, ees );
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -205,6 +194,16 @@ public class Probe2ProbeCoexpressionServiceImpl extends
             boolean filterNonSpecific ) throws Exception {
         return this.getProbe2ProbeCoexpressionDao().getExpressionExperimentsLinkTestedIn( gene, expressionExperiments,
                 filterNonSpecific );
+    }
+
+    @Override
+    protected Collection handleGetVectorsForLinks( Gene gene, Collection ees ) throws Exception {
+        return this.getProbe2ProbeCoexpressionDao().getVectorsForLinks( gene, ees );
+    }
+
+    @Override
+    protected Map handleGetVectorsForLinks( Collection genes, Collection ees ) throws Exception {
+        return this.getProbe2ProbeCoexpressionDao().getVectorsForLinks( genes, ees );
     }
 
 }
