@@ -36,152 +36,142 @@ import ubic.gemma.loader.util.parser.FileFormatException;
 import ubic.gemma.model.genome.Taxon;
 
 /**
- * Class to parse the gene_info file from NCBI Gene. See
- * {@link ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/README} for details of the
- * format.
+ * Class to parse the gene_info file from NCBI Gene. See {@link ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/README} for details
+ * of the format.
  * 
  * @author pavlidis
  * @version $Id$
  */
-public class NcbiGeneInfoParser extends BasicLineMapParser implements
-		QueuingParser {
+public class NcbiGeneInfoParser extends BasicLineMapParser implements QueuingParser {
 
-	/**
-	 * 
-	 */
-	private static final int NCBI_GENEINFO_FIELDS_PER_ROW = 15;
+    /**
+     * 
+     */
+    private static final int NCBI_GENEINFO_FIELDS_PER_ROW = 15;
 
-	private Map<String, NCBIGeneInfo> results = new HashMap<String, NCBIGeneInfo>();
+    private Map<String, NCBIGeneInfo> results = new HashMap<String, NCBIGeneInfo>();
 
-	private BlockingQueue<String> resultsKeys;
+    private BlockingQueue<String> resultsKeys;
 
-	private boolean filter = true;
+    private boolean filter = true;
 
-	public void setFilter(boolean filter) {
-		this.filter = filter;
-	}
+    public void setFilter( boolean filter ) {
+        this.filter = filter;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see ubic.gemma.loader.loaderutils.LineParser#parseOneLine(java.lang.String)
-	 */
-	@Override
-	public Object parseOneLine(String line) {
-		String[] fields = StringUtils.splitPreserveAllTokens(line, '\t');
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.loaderutils.LineParser#parseOneLine(java.lang.String)
+     */
+    @Override
+    public Object parseOneLine( String line ) {
+        String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
 
-		if (fields.length != NCBI_GENEINFO_FIELDS_PER_ROW) {
-			if (fields.length == 13 || fields.length == 14) {
-				// backwards compatibility
-				// old format, hopefully okay
-			} else {
-				throw new FileFormatException("Line + " + line
-						+ " is not in the right format: has " + fields.length
-						+ " fields, expected " + NCBI_GENEINFO_FIELDS_PER_ROW);
-			}
-		}
-		NCBIGeneInfo geneInfo = new NCBIGeneInfo();
-		try {
+        if ( fields.length != NCBI_GENEINFO_FIELDS_PER_ROW ) {
+            if ( fields.length == 13 || fields.length == 14 ) {
+                // backwards compatibility
+                // old format, hopefully okay
+            } else {
+                throw new FileFormatException( "Line + " + line + " is not in the right format: has " + fields.length
+                        + " fields, expected " + NCBI_GENEINFO_FIELDS_PER_ROW );
+            }
+        }
+        NCBIGeneInfo geneInfo = new NCBIGeneInfo();
+        try {
 
-			// Skip taxa that we don't support.
-			int taxonId = Integer.parseInt(fields[0]);
-			if (filter) {
-				Taxon taxon = Taxon.Factory.newInstance();
-				taxon.setNcbiId(taxonId);
+            // Skip taxa that we don't support.
+            int taxonId = Integer.parseInt( fields[0] );
+            if ( filter ) {
+                Taxon taxon = Taxon.Factory.newInstance();
+                taxon.setNcbiId( taxonId );
 
-				if (!SupportedTaxa.contains(taxon)) {
-					return null;
-				}
-			}
+                if ( !SupportedTaxa.contains( taxon ) ) {
+                    return null;
+                }
+            }
 
-			geneInfo.setTaxId(taxonId);
-			geneInfo.setGeneId(fields[1]);
-			geneInfo.setDefaultSymbol(fields[2]);
-			geneInfo.setLocusTag(fields[3]);
-			String[] synonyms = StringUtils.splitPreserveAllTokens(fields[4],
-					'|');
-			for (int i = 0; i < synonyms.length; i++) {
-				geneInfo.addToSynonyms(synonyms[i]);
-			}
+            geneInfo.setTaxId( taxonId );
+            geneInfo.setGeneId( fields[1] );
+            geneInfo.setDefaultSymbol( fields[2] );
+            geneInfo.setLocusTag( fields[3] );
+            String[] synonyms = StringUtils.splitPreserveAllTokens( fields[4], '|' );
+            for ( int i = 0; i < synonyms.length; i++ ) {
+                if ( synonyms[i].equals( "-" ) ) continue;
+                geneInfo.addToSynonyms( synonyms[i] );
+            }
 
-			if (!fields[5].equals("-")) {
-				String[] dbXRefs = StringUtils.splitPreserveAllTokens(
-						fields[5], '|');
-				for (int i = 0; i < dbXRefs.length; i++) {
-					String dbXr = dbXRefs[i];
-					String[] dbF = StringUtils.split(dbXr, ':');
-					if (dbF.length != 2) {
-						throw new FileFormatException("Expected 2 fields, got "
-								+ dbF.length + " from '" + dbXr + "'");
-					}
-					geneInfo.addToDbXRefs(dbF[0], dbF[1]);
-				}
-			}
+            if ( !fields[5].equals( "-" ) ) {
+                String[] dbXRefs = StringUtils.splitPreserveAllTokens( fields[5], '|' );
+                for ( int i = 0; i < dbXRefs.length; i++ ) {
+                    String dbXr = dbXRefs[i];
+                    String[] dbF = StringUtils.split( dbXr, ':' );
+                    if ( dbF.length != 2 ) {
+                        throw new FileFormatException( "Expected 2 fields, got " + dbF.length + " from '" + dbXr + "'" );
+                    }
+                    geneInfo.addToDbXRefs( dbF[0], dbF[1] );
+                }
+            }
 
-			geneInfo.setChromosome(fields[6]);
-			geneInfo.setMapLocation(fields[7]);
-			geneInfo.setDescription(fields[8]);
-			geneInfo.setGeneType(NCBIGeneInfo.typeStringToGeneType(fields[9]));
-			geneInfo.setSymbolIsFromAuthority(fields[10].equals("-") ? false
-					: true);
-			geneInfo.setNameIsFromAuthority(fields[11].equals("-") ? false
-					: true);
-			geneInfo
-					.setNomenclatureStatus(fields[12].equals("-") ? NomenclatureStatus.UNKNOWN
-							: fields[11].equals("O") ? NomenclatureStatus.OFFICIAL
-									: NomenclatureStatus.INTERIM);
-			// ignore 14th field for now - it stores alternate protein names
-		} catch (NumberFormatException e) {
-			throw new FileFormatException(e);
-		}
-		return geneInfo;
-	}
+            geneInfo.setChromosome( fields[6] );
+            geneInfo.setMapLocation( fields[7] );
+            geneInfo.setDescription( fields[8] );
+            geneInfo.setGeneType( NCBIGeneInfo.typeStringToGeneType( fields[9] ) );
+            geneInfo.setSymbolIsFromAuthority( fields[10].equals( "-" ) ? false : true );
+            geneInfo.setNameIsFromAuthority( fields[11].equals( "-" ) ? false : true );
+            geneInfo.setNomenclatureStatus( fields[12].equals( "-" ) ? NomenclatureStatus.UNKNOWN : fields[11]
+                    .equals( "O" ) ? NomenclatureStatus.OFFICIAL : NomenclatureStatus.INTERIM );
+            // ignore 14th field for now - it stores alternate protein names
+        } catch ( NumberFormatException e ) {
+            throw new FileFormatException( e );
+        }
+        return geneInfo;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see ubic.gemma.loader.loaderutils.BasicLineMapParser#getKey(java.lang.Object)
-	 */
-	@Override
-	protected Object getKey(Object newItem) {
-		return ((NCBIGeneInfo) newItem).getGeneId();
-	}
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.loaderutils.BasicLineMapParser#getKey(java.lang.Object)
+     */
+    @Override
+    protected Object getKey( Object newItem ) {
+        return ( ( NCBIGeneInfo ) newItem ).getGeneId();
+    }
 
-	@Override
-	public Collection<NCBIGeneInfo> getResults() {
-		return results.values();
-	}
+    @Override
+    public Collection<NCBIGeneInfo> getResults() {
+        return results.values();
+    }
 
-	@Override
-	public NCBIGeneInfo get(Object key) {
-		return results.get(key);
-	}
+    @Override
+    public NCBIGeneInfo get( Object key ) {
+        return results.get( key );
+    }
 
-	@Override
-	protected void put(Object key, Object value) {
-		try {
-			if (resultsKeys != null) {
-				resultsKeys.put((String) key);
-			}
-			results.put((String) key, (NCBIGeneInfo) value);
-		} catch (InterruptedException e) {
-			log.error(e);
-			throw new RuntimeException(e);
-		}
-	}
+    @Override
+    protected void put( Object key, Object value ) {
+        try {
+            if ( resultsKeys != null ) {
+                resultsKeys.put( ( String ) key );
+            }
+            results.put( ( String ) key, ( NCBIGeneInfo ) value );
+        } catch ( InterruptedException e ) {
+            log.error( e );
+            throw new RuntimeException( e );
+        }
+    }
 
-	@Override
-	public boolean containsKey(Object key) {
-		return results.containsKey(key);
-	}
+    @Override
+    public boolean containsKey( Object key ) {
+        return results.containsKey( key );
+    }
 
-	@SuppressWarnings("unchecked")
-	public void parse(InputStream inputStream, BlockingQueue queue)
-			throws IOException {
-		this.resultsKeys = queue;
-		this.parse(inputStream);
-	}
-    
+    @SuppressWarnings("unchecked")
+    public void parse( InputStream inputStream, BlockingQueue queue ) throws IOException {
+        this.resultsKeys = queue;
+        this.parse( inputStream );
+    }
+
     @Override
     public Collection getKeySet() {
         return results.keySet();

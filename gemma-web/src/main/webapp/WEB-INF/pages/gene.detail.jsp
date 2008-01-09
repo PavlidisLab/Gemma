@@ -25,8 +25,7 @@
 	<script type="text/javascript" src="<c:url value='/scripts/ajax/auditTrail.js'/>" type="text/javascript"></script>
 </authz:authorize>
 
-<title><fmt:message key="gene.details" />
-</title>
+<title><fmt:message key="gene.details" /></title>
 
 <h1>
 	<fmt:message key="gene.details" />
@@ -59,6 +58,7 @@
 			<%
 			}
 			%>
+
 		</td>
 	</tr>
 

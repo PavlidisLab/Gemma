@@ -32,7 +32,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
-import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneService;
@@ -305,10 +304,6 @@ abstract public class GenomePersister extends CommonPersister {
         gene.setProducts( tempGeneProduct );
         persistCollectionElements( gene.getProducts() );
 
-        for ( GeneAlias alias : gene.getAliases() ) {
-            alias.setGene( gene );
-        }
-
         return newGene;
     }
 
@@ -426,7 +421,7 @@ abstract public class GenomePersister extends CommonPersister {
 
         // We assume the taxon hasn't changed.
 
-        // FIXME Accessions: add with care. Cross-references from other databases should be preserved
+        // FIXME Accessions: should add with more care. Cross-references from other databases should be preserved
         existingGene.setAccessions( gene.getAccessions() );
         this.persistCollectionElements( existingGene.getAccessions() );
 
@@ -443,10 +438,8 @@ abstract public class GenomePersister extends CommonPersister {
         fillChromosomeLocationAssociations( existingGene.getCytogenicLocation() );
         fillChromosomeLocationAssociations( existingGene.getGeneticLocation() );
 
-        existingGene.setAliases( gene.getAliases() );
-        for ( GeneAlias alias : existingGene.getAliases() ) {
-            alias.setGene( existingGene );
-        }
+        existingGene.getAliases().clear();
+        existingGene.getAliases().addAll( gene.getAliases() );
 
         /*
          * This is the only tricky part - the gene products. We update them if they are already there, and add them if

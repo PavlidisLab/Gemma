@@ -47,15 +47,7 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
     @Override
     protected Collection handleFindByGene( Gene gene ) throws Exception {
         final String queryString = "select distinct geneAss.ontologyEntry from Gene2GOAssociationImpl as geneAss  where geneAss.gene = :gene";
-
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameter( "gene", gene );
-            return queryObject.list();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
+        return this.getHibernateTemplate().findByNamedParam( queryString, "gene", gene );
     }
 
     /*
@@ -72,26 +64,12 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
         final String queryString = "select distinct geneAss.gene from Gene2GOAssociationImpl as geneAss  where geneAss.ontologyEntry.valueUri in (:goIDs) and geneAss.gene.taxon = :taxon";
 
         // need to turn the collection of goTerms into a collection of GOId's
-
         for ( Object obj : goTerms ) {
             VocabCharacteristic oe = ( VocabCharacteristic ) obj;
             goIDs.add( oe.getValueUri() );
         }
-
-        Collection<Gene> results;
-
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameterList( "goIDs", goIDs );
-            queryObject.setParameter( "taxon", taxon );
-
-            results = queryObject.list();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-        return results;
-
+        return this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "goIDs", "taxon" },
+                new Object[] { goIDs, taxon } );
     }
 
     /*
@@ -177,14 +155,6 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
     @Override
     protected Collection handleFindAssociationByGene( Gene gene ) throws Exception {
         final String queryString = "from Gene2GOAssociationImpl where gene = :gene";
-
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameter( "gene", gene );
-            return queryObject.list();
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
+        return this.getHibernateTemplate().findByNamedParam( queryString, "gene", gene );
     }
-
 }

@@ -112,7 +112,7 @@ public class GeneLinkCoexpressionAnalyzer {
                         expressionExperiments, stringency );
                 if ( coexpressions.getNumKnownGenes() > 0 ) {
                     Collection<Gene2GeneCoexpression> created = persistCoexpressions( eeIdOrder, gene, coexpressions,
-                            analysis, genesToAnalyzeMap, processedGenes );
+                            analysis, genesToAnalyzeMap, processedGenes, stringency );
                     totalLinks += created.size();
                 }
                 processedGenes.add( gene );
@@ -288,7 +288,6 @@ public class GeneLinkCoexpressionAnalyzer {
         analysis.setProtocol( protocol );
         analysis.setExperimentsAnalyzed( expressionExperiments );
         return geneCoexpressionAnalysisService.create( analysis );
-
     }
 
     /**
@@ -298,7 +297,7 @@ public class GeneLinkCoexpressionAnalyzer {
     @SuppressWarnings("unchecked")
     private Collection<Gene2GeneCoexpression> persistCoexpressions( Map<Long, Integer> eeIdOrder, Gene firstGene,
             CoexpressionCollectionValueObject toPersist, GeneCoexpressionAnalysis analysis,
-            final Map<Long, Gene> genesToAnalyze, final Collection<Gene> alreadyPersisted ) {
+            final Map<Long, Gene> genesToAnalyze, final Collection<Gene> alreadyPersisted, int stringency ) {
 
         assert analysis != null;
 
@@ -322,7 +321,7 @@ public class GeneLinkCoexpressionAnalyzer {
 
             byte[] testedInVector = computeTestedDatasetVector( co.getDatasetsTestedIn(), eeIdOrder );
 
-            if ( co.getNegativeLinkSupport() >= analysis.getSupportThreshold() ) {
+            if ( co.getNegativeLinkSupport() >= stringency ) {
                 Gene2GeneCoexpression g2gCoexpression = getNewGGCOInstance( taxon );
                 g2gCoexpression.setDatasetsTestedVector( testedInVector );
                 g2gCoexpression.setSourceAnalysis( analysis );
@@ -343,7 +342,7 @@ public class GeneLinkCoexpressionAnalyzer {
                 }
             }
 
-            if ( co.getPositiveLinkSupport() >= analysis.getSupportThreshold() ) {
+            if ( co.getPositiveLinkSupport() >= stringency ) {
                 Gene2GeneCoexpression g2gCoexpression = getNewGGCOInstance( taxon );
                 g2gCoexpression.setDatasetsTestedVector( testedInVector );
                 g2gCoexpression.setSourceAnalysis( analysis );

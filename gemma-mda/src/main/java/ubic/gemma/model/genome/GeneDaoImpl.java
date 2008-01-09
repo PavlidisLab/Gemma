@@ -152,7 +152,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @SuppressWarnings("unchecked")
     @Override
     protected Collection handleFindByAlias( String search ) throws Exception {
-        final String queryString = "select distinct g from GeneImpl as g inner join g.aliases als where als.Alias = :search";
+        final String queryString = "select distinct g from GeneImpl as g inner join g.aliases als where als.alias = :search";
         return getHibernateTemplate().findByNamedParam( queryString, "search", search );
     }
 
@@ -514,6 +514,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 Hibernate.initialize( gene );
                 session.lock( gene, LockMode.NONE );
                 gene.getProducts().size();
+                gene.getAliases().size();
+                gene.getAccessions().size();
                 return null;
             }
         } );

@@ -112,8 +112,6 @@ public class NcbiGeneConverter implements Converter {
         Collection<GeneAlias> aliases = gene.getAliases();
         for ( String alias : info.getSynonyms() ) {
             GeneAlias newAlias = GeneAlias.Factory.newInstance();
-            newAlias.setGene( gene );
-            newAlias.setSymbol( gene.getOfficialSymbol() );
             newAlias.setAlias( alias );
             aliases.add( newAlias );
         }

@@ -55,7 +55,7 @@ public class GeneDaoTest extends BaseSpringContextTest {
         Gene gene = Gene.Factory.newInstance();
         gene.setId( ( long ) 1 );
         gene.setName( "test_genedao" );
-        Collection<CompositeSequence> cs = geneDao.getCompositeSequencesById( ( long ) 1 );
+        Collection<CompositeSequence> cs = geneDao.getCompositeSequencesById( 1 );
         assertNotNull( cs );
     }
 
@@ -70,8 +70,6 @@ public class GeneDaoTest extends BaseSpringContextTest {
         GeneAlias alias = GeneAlias.Factory.newInstance();
         alias.setId( ( long ) 1 );
         alias.setAlias( "GRIN1" );
-        alias.setGene( gene );
-        alias.setSymbol( "test_genedao" );
         aliases.add( alias );
 
         gene.setAliases( aliases );
@@ -117,10 +115,9 @@ public class GeneDaoTest extends BaseSpringContextTest {
         geneDao.remove( gene );
 
     }
-    
-    public void testLoadGenes(){
-        
-        
+
+    public void testLoadGenes() {
+
         geneDao = ( GeneDao ) this.getBean( "geneDao" );
         TaxonService taxonSrv = ( TaxonService ) this.getBean( "taxonService" );
 
@@ -135,15 +132,13 @@ public class GeneDaoTest extends BaseSpringContextTest {
 
         Collection genes = geneDao.loadGenes( human );
         assertNotNull( genes );
-        assertTrue ( genes.contains( gene ) );
+        assertTrue( genes.contains( gene ) );
         geneDao.remove( gene );
-        
-    }
-    
 
-    public void testLoadProbeAlignedRegions(){
-        
-        
+    }
+
+    public void testLoadProbeAlignedRegions() {
+
         geneDao = ( GeneDao ) this.getBean( "geneDao" );
         TaxonService taxonSrv = ( TaxonService ) this.getBean( "taxonService" );
 
@@ -156,16 +151,15 @@ public class GeneDaoTest extends BaseSpringContextTest {
         gene.setTaxon( human );
         geneDao.create( gene );
 
-        Collection genes = geneDao.loadProbeAlignedRegions(  human );
+        Collection genes = geneDao.loadProbeAlignedRegions( human );
         assertNotNull( genes );
-        assertTrue ( genes.contains( gene ) );
+        assertTrue( genes.contains( gene ) );
         geneDao.remove( gene );
-        
+
     }
-    
-    public void testLoadPredictedGenes(){
-        
-        
+
+    public void testLoadPredictedGenes() {
+
         geneDao = ( GeneDao ) this.getBean( "geneDao" );
         TaxonService taxonSrv = ( TaxonService ) this.getBean( "taxonService" );
 
@@ -180,9 +174,9 @@ public class GeneDaoTest extends BaseSpringContextTest {
 
         Collection genes = geneDao.loadPredictedGenes( human );
         assertNotNull( genes );
-        assertTrue ( genes.contains( gene ) );
+        assertTrue( genes.contains( gene ) );
         geneDao.remove( gene );
-        
+
     }
-    
+
 }

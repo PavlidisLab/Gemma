@@ -21,6 +21,7 @@ package ubic.gemma.web.controller.genome.gene;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -56,29 +57,17 @@ import ubic.gemma.web.remote.EntityDelegator;
  * @spring.property name="methodNameResolver" ref="geneActions"
  */
 public class GeneController extends BaseMultiActionController {
-    private GeneService geneService = null;
-    private Gene2GOAssociationService gene2GOAssociationService = null;
-    private ArrayDesignMapResultService arrayDesignMapResultService = null;
-    private CompositeSequenceService compositeSequenceService = null;
-    private GeneOntologyService geneOntologyService;
-
     /**
      * Informs submit methods not to populate model with data that is going to be fetched with AJAX call. We'll
      * configure this externally, so this is temporary.
      */
     private static final boolean AJAX = true;
+    private GeneService geneService = null;
+    private Gene2GOAssociationService gene2GOAssociationService = null;
+    private ArrayDesignMapResultService arrayDesignMapResultService = null;
+    private CompositeSequenceService compositeSequenceService = null;
 
-    /**
-     * Provide the human-readable text for each GO term.
-     * 
-     * @param ontos
-     */
-    private void fillInTermNames( Collection<VocabCharacteristic> ontos ) {
-        for ( VocabCharacteristic v : ontos ) {
-            String desc = geneOntologyService.getTermName( v.getValue() );
-            v.setDescription( desc ); // we're just using this as a convenient spot.
-        }
-    }
+    private GeneOntologyService geneOntologyService;
 
     /**
      * For ajax
@@ -93,24 +82,23 @@ public class GeneController extends BaseMultiActionController {
         g.setId( geneDelegator.getId() );
         Collection<Gene2GOAssociation> associations = gene2GOAssociationService.findAssociationByGene( g );
         Collection<AnnotationValueObject> ontos = new HashSet<AnnotationValueObject>();
-        for(Gene2GOAssociation assoc : associations){
-        	
-        	if (assoc.getOntologyEntry() == null)
-        		continue;
-        	
-        	AnnotationValueObject annot = new AnnotationValueObject();
+        for ( Gene2GOAssociation assoc : associations ) {
 
-        	annot.setId(assoc.getOntologyEntry().getId());
-        	annot.setTermName(geneOntologyService.getTermName( assoc.getOntologyEntry().getValue() ));
-        	annot.setTermUri(assoc.getOntologyEntry().getValue());
-        	annot.setEvidenceCode(assoc.getEvidenceCode().getValue());
-        	annot.setDescription(assoc.getOntologyEntry().getDescription());
-        	annot.setClassUri(assoc.getOntologyEntry().getCategoryUri());
-        	annot.setClassName(assoc.getOntologyEntry().getCategory());
-        	
-        	ontos.add(annot);
+            if ( assoc.getOntologyEntry() == null ) continue;
+
+            AnnotationValueObject annot = new AnnotationValueObject();
+
+            annot.setId( assoc.getOntologyEntry().getId() );
+            annot.setTermName( geneOntologyService.getTermName( assoc.getOntologyEntry().getValue() ) );
+            annot.setTermUri( assoc.getOntologyEntry().getValue() );
+            annot.setEvidenceCode( assoc.getEvidenceCode().getValue() );
+            annot.setDescription( assoc.getOntologyEntry().getDescription() );
+            annot.setClassUri( assoc.getOntologyEntry().getCategoryUri() );
+            annot.setClassName( assoc.getOntologyEntry().getCategory() );
+
+            ontos.add( annot );
         }
-        
+
         return ontos;
     }
 
@@ -125,6 +113,38 @@ public class GeneController extends BaseMultiActionController {
         Long id = geneDelegator.getId();
         Gene gene = geneService.load( id );
         return gene.getProducts();
+    }
+
+    /**
+     * @param arrayDesignMapResultService the arrayDesignMapResultService to set
+     */
+    public void setArrayDesignMapResultService( ArrayDesignMapResultService arrayDesignMapResultService ) {
+        this.arrayDesignMapResultService = arrayDesignMapResultService;
+    }
+
+    /**
+     * @param compositeSequenceService the compositeSequenceService to set
+     */
+    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
+        this.compositeSequenceService = compositeSequenceService;
+    }
+
+    /**
+     * @param gene2GOAssociationService the gene2GOAssociationService to set
+     */
+    public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
+        this.gene2GOAssociationService = gene2GOAssociationService;
+    }
+
+    public void setGeneOntologyService( GeneOntologyService geneOntologyService ) {
+        this.geneOntologyService = geneOntologyService;
+    }
+
+    /**
+     * @param geneService The geneService to set.
+     */
+    public void setGeneService( GeneService geneService ) {
+        this.geneService = geneService;
     }
 
     /**
@@ -149,6 +169,7 @@ public class GeneController extends BaseMultiActionController {
             Collection<VocabCharacteristic> ontos = gene2GOAssociationService.findByGene( gene );
             if ( ontos.size() != 0 ) {
                 fillInTermNames( ontos );
+                cleanup( ontos );
                 mav.addObject( "ontologyEntries", ontos );
             }
             mav.addObject( "numOntologyEntries", ontos.size() );
@@ -238,35 +259,31 @@ public class GeneController extends BaseMultiActionController {
     }
 
     /**
-     * @param arrayDesignMapResultService the arrayDesignMapResultService to set
+     * Remove root terms.
+     * 
+     * @param ontos
      */
-    public void setArrayDesignMapResultService( ArrayDesignMapResultService arrayDesignMapResultService ) {
-        this.arrayDesignMapResultService = arrayDesignMapResultService;
+    private void cleanup( Collection<VocabCharacteristic> ontos ) {
+        for ( Iterator<VocabCharacteristic> it = ontos.iterator(); it.hasNext(); ) {
+            VocabCharacteristic v = it.next();
+            String term = v.getDescription();
+            if ( term.equals( "molecular_function" ) || term.equals( "biological_process" )
+                    || term.equals( "cellular_component" ) ) {
+                it.remove();
+            }
+        }
     }
 
     /**
-     * @param compositeSequenceService the compositeSequenceService to set
+     * Provide the human-readable text for each GO term.
+     * 
+     * @param ontos
      */
-    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
-        this.compositeSequenceService = compositeSequenceService;
-    }
-
-    /**
-     * @param gene2GOAssociationService the gene2GOAssociationService to set
-     */
-    public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
-        this.gene2GOAssociationService = gene2GOAssociationService;
-    }
-
-    public void setGeneOntologyService( GeneOntologyService geneOntologyService ) {
-        this.geneOntologyService = geneOntologyService;
-    }
-
-    /**
-     * @param geneService The geneService to set.
-     */
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
+    private void fillInTermNames( Collection<VocabCharacteristic> ontos ) {
+        for ( VocabCharacteristic v : ontos ) {
+            String desc = geneOntologyService.getTermName( v.getValue() );
+            v.setDescription( desc ); // we're just using this as a convenient spot.
+        }
     }
 
 }

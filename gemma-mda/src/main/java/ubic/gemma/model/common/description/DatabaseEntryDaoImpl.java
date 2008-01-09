@@ -26,7 +26,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.criterion.DetachedCriteria;
 
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -51,43 +50,12 @@ public class DatabaseEntryDaoImpl extends ubic.gemma.model.common.description.Da
         if ( results != null ) {
             if ( results.size() > 1 ) {
                 log.error( debug( results ) );
-
-                cleanup( databaseEntry );
                 result = results.iterator().next();
-
             } else if ( results.size() == 1 ) {
                 result = results.iterator().next();
             }
         }
         return ( DatabaseEntry ) result;
-
-    }
-
-    /**
-     * This is a hack to fix a problem that is still lingering in the persisting of some genbank identifiers.
-     * 
-     * @param databaseEntry
-     * @return
-     */
-    private void cleanup( DatabaseEntry databaseEntry ) {
-        final String queryString = "select cs from CompositeSequenceImpl as cs inner join fetch cs.biologicalCharacteristic as bs "
-                + "inner join fetch bs.sequenceDatabaseEntry de inner join de.externalDatabase ed "
-                + "where ed = :expdb and de.accession = :accession";
-
-        List compositeSequences = this.getHibernateTemplate().findByNamedParam( queryString,
-                new String[] { "expdb", "accession" },
-                new Object[] { databaseEntry.getExternalDatabase(), databaseEntry.getAccession() } );
-
-        if ( compositeSequences.size() <= 1 ) {
-            // ok
-        } else {
-            for ( Object object : compositeSequences ) {
-                log.info( object );
-            }
-            throw new org.springframework.dao.InvalidDataAccessResourceUsageException( compositeSequences.size()
-                    + " composite sequences associated with multiple database entries for the same accession: "
-                    + databaseEntry );
-        }
 
     }
 
@@ -105,7 +73,7 @@ public class DatabaseEntryDaoImpl extends ubic.gemma.model.common.description.Da
 
     private String debug( List results ) {
         StringBuilder buf = new StringBuilder();
-        buf.append( "\n" );
+        buf.append( "Multiple database entries match:\n" );
         for ( Object object : results ) {
             DatabaseEntry de = ( DatabaseEntry ) object;
             buf.append( de + "\n" );
