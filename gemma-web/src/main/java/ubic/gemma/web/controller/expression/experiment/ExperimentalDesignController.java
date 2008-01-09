@@ -149,6 +149,7 @@ public class ExperimentalDesignController extends BaseMultiActionController {
         ef.setName( efvo.getName() );
         ef.setDescription( efvo.getDescription() );
         ef.setCategory( createCategoryCharacteristic( efvo.getCategory(), efvo.getCategoryUri() ) );
+        experimentalFactorService.create( ef ); // until the larger problem is fixed...
         
         if ( ed.getExperimentalFactors() == null )
             ed.setExperimentalFactors( new HashSet<ExperimentalFactor>() );
@@ -257,6 +258,7 @@ public class ExperimentalDesignController extends BaseMultiActionController {
         FactorValue fv = FactorValue.Factory.newInstance();
         fv.setExperimentalFactor( ef );
         fv.setCharacteristics( chars );
+        factorValueService.create( fv ); // until the larger problem is fixed...
 
         if ( ef.getFactorValues() == null )
             ef.setFactorValues( new HashSet<FactorValue>() );
