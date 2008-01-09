@@ -176,7 +176,6 @@ Mapping URLS to controllers
 							<value>getBioMaterials</value>
 							<value>getAnnotation</value>
 							<value>getFactorValues</value>
-							<value>getBioMaterialsForEEWithFactor</value>
 							<value>addFactorValueTo</value>
 						</list>
 					</property>
@@ -256,10 +255,19 @@ Mapping URLS to controllers
 					</property>
 					<property name="includes">
 						<list>
-							<value>createNewFactor</value>
-							<value>deleteFactor</value>
-							<value>createNewFactorValue</value>
-							<value>deleteFactorValue</value>
+							<value>getExperimentalFactors</value>
+							<value>createExperimentalFactor</value>
+							<value>deleteExperimentalFactors</value>
+							<value>updateExperimentalFactors</value>
+							<value>getFactorValues</value>
+							<value>createFactorValue</value>
+							<value>deleteFactorValues</value>
+							<value>getFactorValuesWithCharacteristics</value>
+							<value>createFactorValueCharacteristic</value>
+							<value>deleteFactorValueCharacteristics</value>
+							<value>updateFactorValueCharacteristics</value>
+							<value>getBioMaterials</value>
+							<value>updateBioMaterials</value>
 						</list>
 					</property>
 				</bean>
@@ -649,16 +657,6 @@ Mapping URLS to controllers
 				key="ubic.gemma.web.controller.expression.experiment.BioMaterialValueObject">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean"/>
-					<property name="includes">
-						<list>
-							<value>id</value>
-							<value>name</value>
-							<value>description</value>
-							<value>factorValue</value>
-							<value>bioAssayDescription</value>							
-							<value>bioAssayName</value>							
-						</list>
-					</property>
 				</bean>
 			</entry>
 			
@@ -1078,6 +1076,18 @@ Mapping URLS to controllers
 							<value>count</value>						
 						</list>
 					</property>
+				</bean>
+			</entry>
+			<entry
+				key="ubic.gemma.web.controller.expression.experiment.ExperimentalFactorValueObject">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean"/>
+				</bean>
+			</entry>
+			<entry
+				key="ubic.gemma.web.controller.expression.experiment.FactorValueValueObject">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean"/>
 				</bean>
 			</entry>
 			<entry

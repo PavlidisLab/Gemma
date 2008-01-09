@@ -22,6 +22,13 @@
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/CharacteristicCombo.js'/>"></script>
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/MGEDCombo.js'/>"></script>
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/AnnotationToolBar.js'/>"></script>
+	<script type='text/javascript' src="<c:url value='/scripts/ajax/util/GemmaGridPanel.js'/>"></script>
+	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/ExperimentalFactorEditor.js'/>"></script>
+	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/ExperimentalFactorCombo.js'/>"></script>
+	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/FactorValueCombo.js'/>"></script>
+	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/FactorValueEditor.js'/>"></script>
+	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/BioMaterialEditor.js'/>"></script>
+	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/ExperimentalDesign.js'/>"></script>
 
 </head>
 
@@ -30,8 +37,10 @@
 </authz:authorize>
 <authz:authorize ifNotGranted="admin">
 <input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
-</authz:authorize>	
+</authz:authorize>
 
+<input type="hidden" name="expressionExperimentID" value="${expressionExperiment.id}" />
+<input type="hidden" name="experimentalDesignID" value="${experimentalDesign.id}" />
 
 <div style="padding: 2px;" onclick="Effect.toggle('edDetail', 'blind', {duration:0.1})">
 	<h2>
@@ -48,11 +57,15 @@
         	<b><fmt:message key="experimentalDesign.name" /></b>
         </td>
 		<td>
-        <%if (experimentalDesign.getName() != null){%>
+        <%
+        if ( experimentalDesign.getName() != null ) {
+        %>
         	<jsp:getProperty name="experimentalDesign" property="name" />
-        <%}else{
-        	out.print("Experimental Design Name unavailable");
-        }%>
+        <%
+                        } else {
+                        out.print( "Experimental Design Name unavailable" );
+                    }
+        %>
     	</td>
     </tr>    
     <tr>
@@ -62,11 +75,15 @@
                     </b>
                 </td>
                 <td>
-                	<%if (experimentalDesign.getDescription() != null){%>
+                	<%
+                	if ( experimentalDesign.getDescription() != null ) {
+                	%>
 						<jsp:getProperty name="experimentalDesign" property="description" />
-                    <%}else{
-                    	out.print("Description unavailable");
-                    }%>
+                    <%
+                                    } else {
+                                    out.print( "Description unavailable" );
+                                }
+                    %>
                 </td>
             </tr>
          
@@ -77,11 +94,15 @@
                     </b>
                 </td>
                 <td>
-                	<%if (experimentalDesign.getReplicateDescription() != null){%>
+                	<%
+                	if ( experimentalDesign.getReplicateDescription() != null ) {
+                	%>
                     	<jsp:getProperty name="experimentalDesign" property="replicateDescription" />
-                    <%}else{
-                    	out.print("Replicate description unavailable");
-                    }%>
+                    <%
+                                    } else {
+                                    out.print( "Replicate description unavailable" );
+                                }
+                    %>
                 </td>
             </tr>    
       
@@ -92,11 +113,15 @@
                     </b>
                 </td>
                 <td>
-                	<%if (experimentalDesign.getQualityControlDescription() != null){%>
+                	<%
+                	if ( experimentalDesign.getQualityControlDescription() != null ) {
+                	%>
                     	<jsp:getProperty name="experimentalDesign" property="qualityControlDescription" />
-                    <%}else{
-                    	out.print("Quality control description unavailable");
-                    }%>
+                    <%
+                                    } else {
+                                    out.print( "Quality control description unavailable" );
+                                }
+                    %>
                 </td>
             </tr>
             
@@ -107,11 +132,15 @@
                     </b>
                 </td>
                 <td>
-                	<%if (experimentalDesign.getNormalizationDescription() != null){%>
+                	<%
+                	if ( experimentalDesign.getNormalizationDescription() != null ) {
+                	%>
                     	<jsp:getProperty name="experimentalDesign" property="normalizationDescription" />
-                    <%}else{
-                    	out.print("Normalization description unavailable");
-                    }%>
+                    <%
+                                    } else {
+                                    out.print( "Normalization description unavailable" );
+                                }
+                    %>
                 </td>
             </tr>
 			<authz:authorize ifAllGranted="admin">
@@ -121,11 +150,11 @@
 					</td>
 					<td>
 						<%
-						                    if ( experimentalDesign.getAuditTrail() != null ) {
-						                    out.print( experimentalDesign.getAuditTrail().getCreationEvent().getDate() );
-						                } else {
-						                    out.print( "Create date unavailable" );
-						                }
+						                if ( experimentalDesign.getAuditTrail() != null ) {
+						                out.print( experimentalDesign.getAuditTrail().getCreationEvent().getDate() );
+						            } else {
+						                out.print( "Create date unavailable" );
+						            }
 						%>
 					</td>
 				</tr>
@@ -133,8 +162,6 @@
 </table>
 	</div>
 </div>
-
-
 
 <!-- Expression Experiment Details  -->	
 
@@ -153,11 +180,15 @@
         	<b><fmt:message key="expressionExperiment.name" /></b>
         </td>
 		<td>
-        <%if (expressionExperiment.getName() != null){%>
+        <%
+        if ( expressionExperiment.getName() != null ) {
+        %>
         	<jsp:getProperty name="expressionExperiment" property="name" />
-        <%}else{
-        	out.print("Expression Experiment Name unavailable");
-        }%>
+        <%
+                        } else {
+                        out.print( "Expression Experiment Name unavailable" );
+                    }
+        %>
     	</td>
     </tr>
     <tr>
@@ -207,14 +238,27 @@
 	</div>
 </div>
 
+<!-- Experimental Factors -->
+
+<!-- 
+<div id="tabPanel">
+	<div id="experimentalFactorPanel" class="x-hide-display"></div>
+	<div id="factorValuePanel" class="x-hide-display"></div>
+</div>
+-->
+<div id="experimentalFactorPanel" style="margin-bottom: 1em;"></div>
+<form name="factorValueForm">
+<div id="factorValuePanel" style="margin-bottom: 1em;"></div>
+</form>
+<div id="bioMaterialsPanel"></div>
+
+<!-- 
 <script type="text/javascript" src="<c:url value='/scripts/ajax/ExperimentalDesign.js'/>" type="text/javascript"></script>
-<input type="hidden" name="expressionExperimentID" id="expressionExperimentID" value="${expressionExperiment.id}" />
-<input type="hidden" name="experimentalDesignID" id="experimentalDesignID" value="${experimentalDesign.id}" />
 <authz:authorize ifAllGranted="admin">
 	<input type="hidden" name="experimentalDesignAdmin" value="true" />
 </authz:authorize>
 <authz:authorize ifNotGranted="admin">
-<input type="hidden" name="experimentalDesignAdmin" id="hasAdmin" value="" />
+<input type="hidden" name="experimentalDesignAdmin" value="" />
 </authz:authorize>
 
 <table>
@@ -241,23 +285,27 @@
 	</tr>
 	</authz:authorize>
 </table>
+-->
 
-    <table>
-    <!-- Doesn't work so comment out. 
-    <tr>
-    <td COLSPAN="2">    
-            <div align="left"><input type="button"
-            onclick="location.href='/Gemma/expressionExperiment/showAllExpressionExperiments.html'"
-            value="Back"></div>
-            </td>
-        <authz:acl domainObject="${experimentalDesign}" hasPermission="1,6">
-            <td COLSPAN="2">    
-            <div align="left"><input type="button"
-            onclick="location.href='editExperimentalDesign.html?id=<%=request.getAttribute("id")%>'"
-            value="Edit"></div>
-            </td>
-        </authz:acl>
-    </tr>
-    -->
-    
-    </table>
+<!-- Doesn't work so comment out.
+<table>
+	<tr>
+		<td COLSPAN="2">
+			<div align="left">
+				<input type="button"
+					onclick="location.href='/Gemma/expressionExperiment/showAllExpressionExperiments.html'"
+					value="Back">
+			</div>
+		</td>
+		<authz:acl domainObject="${experimentalDesign}" hasPermission="1,6">
+		<td COLSPAN="2">
+			<div align="left">
+				<input type="button"
+					onclick="location.href='editExperimentalDesign.html?id=<%=request.getAttribute( "id" )%>'"
+					value="Edit">
+			</div>
+		</td>
+		</authz:acl>
+	</tr>
+</table>
+-->

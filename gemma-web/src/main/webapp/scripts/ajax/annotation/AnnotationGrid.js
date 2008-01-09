@@ -200,15 +200,6 @@ Ext.extend( Ext.Gemma.AnnotationGrid, Ext.Gemma.GemmaGridPanel, {
 		return ( typeof this.readParams == "function" ) ? this.readParams() : this.readParams;
 	},
 	
-	getSelectedIds : function() {
-		var selected = this.getSelectionModel().getSelections();
-		var ids = [];
-		for ( var i=0; i<selected.length; ++i ) {
-			ids.push( selected[i].id );
-		}
-		return ids;	
-	},
-	
 	getSelectedCharacteristics : function() {
 		var selected = this.getSelectionModel().getSelections();
 		var chars = [];

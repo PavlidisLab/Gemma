@@ -43,7 +43,6 @@ import ubic.gemma.ontology.OntologyResource;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.web.controller.BaseMultiActionController;
 import ubic.gemma.web.controller.expression.experiment.AnnotationValueObject;
-import ubic.gemma.web.controller.expression.experiment.BioMaterialValueObject;
 import ubic.gemma.web.controller.expression.experiment.FactorValueObject;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.EntityNotFoundException;
@@ -168,80 +167,6 @@ public class BioMaterialController extends BaseMultiActionController {
             }
         }
         return bioMaterials;
-    }
-
-    /**
-     * AJAX
-     * 
-     * @param eeId
-     * @param factorId
-     * @return A collection of BioMaterialValueObjects. These value objects are all the biomaterials for the given
-     *         Expression Experiment. As a biomaterial can have many factor values for different factors the value
-     *         object only contains the factor values for the specified factor
-     */
-    public Collection<BioMaterialValueObject> getBioMaterialsForEEWithFactor( EntityDelegator eeId,
-            EntityDelegator factorId ) {
-
-        ExpressionExperiment expressionExperiment = expressionExperimentService.load( eeId.getId() );
-        if ( expressionExperiment == null ) {
-            throw new EntityNotFoundException( "Expression experiment with id=" + eeId + " not found" );
-        }
-
-        expressionExperimentService.thawLite( expressionExperiment );
-        Collection<BioAssay> bioAssays = expressionExperiment.getBioAssays();
-        Collection<BioMaterialValueObject> bioMaterials = new HashSet<BioMaterialValueObject>();
-
-        // There could be an issue here with attempting to add the same
-        // bioMaterail more than once if it is found
-        // in more than one bioAssay for the experiment. This should only cause
-        // a loss of information regarding which bioAssayDescription is
-        // displayed
-
-        for ( BioAssay assay : bioAssays ) {
-            Collection<BioMaterial> materials = assay.getSamplesUsed();
-
-            if ( materials == null ) continue;
-
-            for ( BioMaterial material : materials ) {
-                BioMaterialValueObject bmvo = new BioMaterialValueObject( material );
-                bmvo.setFactorValue( "None" );
-                bmvo.setBioAssayDescription( assay.getDescription() );
-                bmvo.setBioAssayName( assay.getName() );
-                bioMaterials.add( bmvo ); // a hashset won't add the same thing
-                // twice no worries about duplicates
-
-                // If there exisits a bioMaterial with the factor we are looking
-                // for then we want to make sure
-                // that bioM gets added instead of the one with "none" for
-                // factorvalue
-                if ( material.getFactorValues() == null ) continue;
-
-                for ( FactorValue value : material.getFactorValues() ) {
-                    if ( factorId.getId().equals( value.getExperimentalFactor().getId() ) ) {
-
-                        String factorName = "";
-                        if ( value.getCharacteristics().size() > 0 ) {
-                            for ( Characteristic c : value.getCharacteristics() )
-                                factorName += c.getValue();
-
-                        } else
-                            factorName += value.getValue();
-
-                        bmvo.setFactorValue( factorName );
-
-                        if ( bioMaterials.contains( bmvo ) ) bioMaterials.remove( bmvo );
-
-                        bioMaterials.add( bmvo );
-
-                    }
-                }
-
-            }
-
-        }
-
-        return bioMaterials;
-
     }
 
     /**

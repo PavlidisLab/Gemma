@@ -23,6 +23,8 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.HibernateException;
+import org.hibernate.Session;
 
 import ubic.gemma.util.BusinessKey;
 
@@ -34,6 +36,26 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
 
     private Log log = LogFactory.getLog( getClass().getName() );
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.FactorValueDaoBase#remove(ubic.gemma.model.expression.experiment.FactorValue)
+     */
+    @Override
+    public void remove( FactorValue factorValue ) {
+        final FactorValue toDelete = factorValue;
+        
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( Session session ) throws HibernateException {
+             
+                log.info( "Loading data for deletion..." );
+                session.update( toDelete );
+                
+                return null;
+            }
+        } );
+    }
+    
     /*
      * (non-Javadoc)
      * 

@@ -90,14 +90,12 @@ Ext.extend( Ext.Gemma.CharacteristicCombo, Ext.form.ComboBox, {
 				this.characteristic.value = this.getValue();
 				this.characteristic.valueUri = null;
 			}
-			/* if we don't have a valueURI set, don't return URI fields or
-			 * a VocabCharacteristic will be created when we only want a
-			 * Characteristic...
+			/* if we don't have a valueUri or categoryUri set, don't return URI
+			 * fields or a VocabCharacteristic will be created when we only want
+			 * a Characteristic...
 			 */
-			return this.characteristic.valueUri != null ? this.characteristic : {
-				category : this.characteristic.category,
-				value : this.characteristic.value
-			};
+			return ( this.characteristic.valueUri != null || this.characteristic.categoryUri != null ) ?
+				this.characteristic : {	category : this.characteristic.category, value : this.characteristic.value };
 		},
 		
 		setCategory : function ( category, categoryUri ) {
