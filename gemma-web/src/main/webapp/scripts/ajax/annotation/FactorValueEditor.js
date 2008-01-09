@@ -318,7 +318,7 @@ Ext.Gemma.FactorValueCharacteristicToolbar = function ( config ) {
 					thisToolbar.factorValueCombo.store.reload();
 				}
 			);
-			mgedCombo.reset();
+			// removed in response to bug 1016 mgedCombo.reset();
 			charCombo.reset();			
 			createButton.disable();
 		}
