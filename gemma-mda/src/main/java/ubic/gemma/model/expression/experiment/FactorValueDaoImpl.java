@@ -51,6 +51,11 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
                 log.info( "Loading data for deletion..." );
                 session.update( toDelete );
                 
+                session.delete( toDelete );
+                session.flush();
+                session.clear();
+
+                log.info( "Deleted " + toDelete );
                 return null;
             }
         } );
