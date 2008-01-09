@@ -57,4 +57,8 @@ Ext.onReady( function() {
 		bioMaterialEditor.init();
 	};
 	
+	factorValueGrid.onRefresh = function() {
+		bioMaterialEditor.grid.reloadFactorValues();
+	};
+	
 } );

@@ -20,6 +20,7 @@ Ext.Gemma.FactorValueGrid = function ( config ) {
 	delete config.efId;
 	
 	this.form = config.form; delete config.form;
+	this.onRefresh = config.onRefresh; delete config.onRefresh;
 	
 	this.categoryCombo = new Ext.Gemma.MGEDCombo( { lazyRender : true } );
 	var categoryEditor = new Ext.grid.GridEditor( this.categoryCombo );
@@ -168,6 +169,13 @@ Ext.extend( Ext.Gemma.FactorValueGrid, Ext.Gemma.GemmaGridPanel, {
 	
 	reloadExperimentalFactors : function() {
 		this.factorValueToolbar.reloadExperimentalFactors();
+	},
+	
+	refresh : function( ct, p ) {
+		Ext.Gemma.FactorValueGrid.superclass.refresh.call( this, ct, p );
+		if ( this.onRefresh ) {
+			this.onRefresh();
+		}
 	}
 	
 } );

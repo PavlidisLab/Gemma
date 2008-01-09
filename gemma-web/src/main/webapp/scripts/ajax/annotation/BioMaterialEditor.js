@@ -132,6 +132,15 @@ Ext.Gemma.BioMaterialGrid.createValueRenderer = function( factorValues ) {
  */
 Ext.extend( Ext.Gemma.BioMaterialGrid, Ext.Gemma.GemmaGridPanel, {
 
+	reloadFactorValues : function ( ) {
+		for ( factorId in this.factorValueCombo ) {
+			if ( factorId.substring(0, 6) == "factor" ) {
+				var combo = this.factorValueCombo[factorId];
+				combo.setExperimentalFactor( combo.experimentalFactor.id );
+			}
+		}
+	}
+	
 } );
 
 /* Ext.Gemma.BioMaterialToolbar constructor...
