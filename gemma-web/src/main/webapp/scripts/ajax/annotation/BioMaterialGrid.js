@@ -9,7 +9,8 @@ Ext.onReady( function() {
 	Ext.Gemma.BioMaterialGrid.grid = new Ext.Gemma.AnnotationGrid( "bmAnnotations", {
 		readMethod : BioMaterialController.getAnnotation,
 		readParams : [ { id:bmId, classDelegatingFor:bmClass } ],
-		editable : admin
+		editable : admin,
+		mgedTermKey : "factor"
 	} );
 	Ext.Gemma.BioMaterialGrid.grid.render();
 	

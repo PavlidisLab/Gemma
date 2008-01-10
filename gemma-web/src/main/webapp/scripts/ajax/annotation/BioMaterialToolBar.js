@@ -10,7 +10,8 @@ Ext.onReady( function() {
 		},
 		deleteHandler : function( ids, callback ) {
 			OntologyService.removeBioMaterialStatement( ids, [bmId], callback );
-		}
+		},
+		mgedTermKey : "factor"
 	} );
 
 } );

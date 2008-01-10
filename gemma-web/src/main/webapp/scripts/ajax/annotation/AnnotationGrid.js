@@ -21,6 +21,7 @@ Ext.Gemma.AnnotationGrid = function ( div, config ) {
 	this.showParent = config.showParent; delete config.showParent;
 	this.noInitialLoad = config.noInitialLoad; delete config.noInitialLoad;
 	this.pageSize = config.pageSize; delete config.pageSize;
+	this.mgedTermKey = config.mgedTermKey; delete config.mgedTermKey;
 	
 	/* keep a reference to ourselves to avoid convoluted scope issues below...
 	 */
@@ -60,7 +61,7 @@ Ext.Gemma.AnnotationGrid = function ( div, config ) {
 	var VALUE_COLUMN = 1;
 	var PARENT_COLUMN = 2;
 	if ( this.editable ) {
-		this.categoryCombo = new Ext.Gemma.MGEDCombo( { lazyRender : true } );
+		this.categoryCombo = new Ext.Gemma.MGEDCombo( { lazyRender : true, termKey : this.mgedTermKey } );
 		var categoryEditor = new Ext.grid.GridEditor( this.categoryCombo );
 		this.categoryCombo.on( "select", function ( combo, record, index ) { categoryEditor.completeEdit(); } );
 		superConfig.cm.setEditor( CATEGORY_COLUMN, categoryEditor );

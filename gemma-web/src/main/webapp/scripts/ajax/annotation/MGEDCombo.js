@@ -4,6 +4,15 @@ Ext.namespace('Ext.Gemma');
  */
 Ext.Gemma.MGEDCombo = function ( config ) {
 
+	if ( config.termKey ) {
+		this.dwrMethod = MgedOntologyService.getMgedTermsByKey;
+		this.dwrParams = [ config.termKey ];
+	} else {
+		this.dwrMethod = MgedOntologyService.getUsefulMgedTerms;
+		this.dwrParams = [ ];
+	}
+	delete config.termKey;
+
 	Ext.Gemma.MGEDCombo.superclass.constructor.call( this, config );
 	
 	if ( Ext.Gemma.MGEDCombo.record == undefined ) {
@@ -14,12 +23,12 @@ Ext.Gemma.MGEDCombo = function ( config ) {
 		] );
 	}
 	this.store = config.store || new Ext.data.Store( {
-		proxy : new Ext.data.DWRProxy( MgedOntologyService.getUsefulMgedTerms ),
+		proxy : new Ext.data.DWRProxy( this.dwrMethod ),
 		reader : new Ext.data.ListRangeReader( {id:"id"}, Ext.Gemma.MGEDCombo.record ),
 		remoteSort : false,
 		sortInfo : { field : "term" }
 	} );
-	this.store.load();
+	this.store.load( { params: this.dwrParams } );
 	
 	this.displayField = config.displayField || "term";
 	this.editable = config.editable || "false";

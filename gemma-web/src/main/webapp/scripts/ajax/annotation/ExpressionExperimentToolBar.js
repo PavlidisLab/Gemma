@@ -10,7 +10,8 @@ Ext.onReady( function() {
 		},
 		deleteHandler : function( ids, callback ) {
 			OntologyService.removeExpressionExperimentStatement( ids, [eeId], callback );
-		}
+		},
+		mgedTermKey : "experiment"
 	} );
 
 } );

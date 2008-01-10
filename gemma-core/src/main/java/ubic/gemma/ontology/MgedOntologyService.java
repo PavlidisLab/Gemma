@@ -19,11 +19,17 @@
 
 package ubic.gemma.ontology;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.logging.Log;
@@ -48,7 +54,7 @@ public class MgedOntologyService extends AbstractOntologyService {
             "BioMaterialPackage", "BioMaterialCharacteristics", "BioMaterial", "BiologicalProperty",
             "ExperimentalDesign", "ExperimentalFactor", "ExperimentalFactorCategory", "Experiment",
             "NormalizationDescriptionType", "NormalizationDescription", "QualityControlDescriptionType" } ) );
-
+    
     /*
      * (non-Javadoc)
      * 
@@ -118,6 +124,50 @@ public class MgedOntologyService extends AbstractOntologyService {
 
         return trimmed;
 
+    }
+    
+    private static Map<String, URL> keyToTermListUrl;
+    static {
+        keyToTermListUrl = new HashMap<String, URL>();
+        keyToTermListUrl.put( "design", MgedOntologyService.class.getResource("MO.design.categories.txt") );
+        keyToTermListUrl.put( "experiment", MgedOntologyService.class.getResource("MO.experiment.categories.txt") );
+        keyToTermListUrl.put( "factor", MgedOntologyService.class.getResource("MO.factor.categories.txt") );
+    }
+    private static Map<String, Collection<OntologyTerm>> keyToTermListCache = new HashMap<String, Collection<OntologyTerm>>();
+    
+    public Collection<OntologyTerm> getMgedTermsByKey( String key ) {
+        Collection<OntologyTerm> terms = keyToTermListCache.get( key );
+        if ( terms == null ) {
+            URL termListUrl = keyToTermListUrl.get( key );
+            if ( termListUrl == null ) {
+                log.warn( "Unknown term list key '" + key + "'; returning general term list" );
+                terms = getUsefulMgedTerms();
+            } else {
+                terms = new HashSet<OntologyTerm>();
+                try {
+                    Collection<String> wantedTerms = new ArrayList<String>();
+                    BufferedReader reader = new BufferedReader( new InputStreamReader( termListUrl.openStream() ) );
+                    String line;
+                    while ( ( line = reader.readLine() ) != null ) {
+                        if ( line.startsWith( "#" ) )
+                            continue;
+                        wantedTerms.add( line );
+                    }
+                    reader.close();
+                    
+                    for ( OntologyTerm term : getUsefulMgedTerms() ) {
+                        if ( wantedTerms.contains( term.getTerm() ) )
+                            terms.add( term );
+                    }
+                } catch ( IOException ioe ) {
+                    log.error( "Error reading from term list '" + termListUrl + "'; returning general term list", ioe );
+                    terms = getUsefulMgedTerms();
+                }
+            }
+            terms = Collections.unmodifiableCollection( terms );
+            keyToTermListCache.put( key, terms );
+        }
+        return terms;
     }
 
     /**

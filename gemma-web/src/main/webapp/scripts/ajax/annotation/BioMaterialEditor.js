@@ -130,7 +130,7 @@ Ext.Gemma.BioMaterialGrid.getRowExpander = function() {
 	if ( Ext.Gemma.BioMaterialGrid.rowExpander == undefined ) {
 		Ext.Gemma.BioMaterialGrid.rowExpander = new Ext.grid.RowExpander( {
 			tpl : new Ext.Template(
-				"<dl style='margin-bottom: 2px;'><dt>BioMaterial {bmName}</dt><dd>{bmDesc}<br>{bmChars}</dd>",
+				"<dl style='margin-left: 1em; margin-bottom: 2px;'><dt>BioMaterial {bmName}</dt><dd>{bmDesc}<br>{bmChars}</dd>",
 				"<dt>BioAssay {baName}</dt><dd>{baDesc}</dd></dl>"
 			)
 		} );

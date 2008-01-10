@@ -22,7 +22,7 @@ Ext.Gemma.FactorValueGrid = function ( config ) {
 	this.form = config.form; delete config.form;
 	this.onRefresh = config.onRefresh; delete config.onRefresh;
 	
-	this.categoryCombo = new Ext.Gemma.MGEDCombo( { lazyRender : true } );
+	this.categoryCombo = new Ext.Gemma.MGEDCombo( { lazyRender : true, termKey : "factor" } );
 	var categoryEditor = new Ext.grid.GridEditor( this.categoryCombo );
 	this.categoryCombo.on( "select", function ( combo, record, index ) { categoryEditor.completeEdit(); } );
 	
@@ -301,8 +301,9 @@ Ext.Gemma.FactorValueCharacteristicToolbar = function ( config ) {
 		
 	var mgedCombo = new Ext.Gemma.MGEDCombo( {
 		disabled: true,
-		emptyText: "Select a class" }
-	);
+		emptyText: "Select a class",
+		termKey: "factor"
+	} );
 	mgedCombo.on( "select", function ( combo, record, index ) {
 		charCombo.setCategory( record.data.term, record.data.uri );
 		charCombo.enable();

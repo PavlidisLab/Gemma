@@ -36,6 +36,9 @@ Ext.Gemma.AnnotationToolBar = function ( annotationGrid, config ) {
 	if ( config.mgedComboWidth ) {
 		mgedComboOpts.width = config.mgedComboWidth; delete config.mgedComboWidth;
 	}
+	if ( config.mgedTermKey ) {
+		mgedComboOpts.termKey = config.mgedTermKey; delete config.mgedTermKey;
+	}
 	
 	/* according to the docs, we shouldn't have to call this method, but
 	 * if we don't, we're left with the empty placeholder toolbar above

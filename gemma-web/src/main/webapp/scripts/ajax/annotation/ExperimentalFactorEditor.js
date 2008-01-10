@@ -16,7 +16,7 @@ Ext.Gemma.ExperimentalFactorGrid = function ( config ) {
 	
 	this.nameField = new Ext.form.TextField( { } );
 	
-	this.categoryCombo = new Ext.Gemma.MGEDCombo( { lazyRender : true } );
+	this.categoryCombo = new Ext.Gemma.MGEDCombo( { lazyRender : true, termKey : "factor" } );
 	var categoryEditor = new Ext.grid.GridEditor( this.categoryCombo );
 	this.categoryCombo.on( "select", function ( combo, record, index ) { categoryEditor.completeEdit(); } );
 	
@@ -128,7 +128,7 @@ Ext.Gemma.ExperimentalFactorToolbar = function ( config ) {
 	
 	/* add our items in front of anything specified in the config above...
 	 */
-	this.categoryCombo = new Ext.Gemma.MGEDCombo( { emptyText : "Select a category" } );
+	this.categoryCombo = new Ext.Gemma.MGEDCombo( { emptyText : "Select a category", termKey : "factor" } );
 	this.categoryCombo.on( "select", function() {
 		createButton.enable();
 	} );
