@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -36,6 +37,7 @@ public class BioMaterialValueObject {
     private long   id;
     private String name;
     private String description;
+    private String characteristics;
     private String assayName;
     private String assayDescription;
     private Map<String, String> factors;
@@ -49,6 +51,7 @@ public class BioMaterialValueObject {
         this.id = bm.getId();
         this.name = bm.getName();
         this.description = bm.getDescription();
+        this.characteristics = getCharacteristicString( bm.getCharacteristics() );
         this.assayName = ba.getName();
         this.assayDescription = ba.getDescription();
         
@@ -65,13 +68,9 @@ public class BioMaterialValueObject {
         }
     }
 
-    private String getExperimentalFactorString( ExperimentalFactor factor ) {
-        return factor.getName();
-    }
-
-    private String getFactorValueString( FactorValue value ) {
+    private String getCharacteristicString( Collection<Characteristic> characteristics ) {
         StringBuffer buf = new StringBuffer();
-        for ( Iterator<Characteristic> iter = value.getCharacteristics().iterator(); iter.hasNext(); ) {
+        for ( Iterator<Characteristic> iter = characteristics.iterator(); iter.hasNext(); ) {
             Characteristic c = iter.next();
             buf.append( c.getCategory() );
             buf.append( ": " );
@@ -80,6 +79,14 @@ public class BioMaterialValueObject {
                 buf.append( ", " );
         }
         return buf.length() > 0 ? buf.toString() : "no characteristics";
+    }
+
+    private String getExperimentalFactorString( ExperimentalFactor factor ) {
+        return factor.getName();
+    }
+
+    private String getFactorValueString( FactorValue value ) {
+        return getCharacteristicString( value.getCharacteristics() );
     }
 
     public long getId() {
@@ -104,6 +111,14 @@ public class BioMaterialValueObject {
     
     public void setDescription( String description ) {
         this.description = description;
+    }
+
+    public String getCharacteristics() {
+        return characteristics;
+    }
+
+    public void setCharacteristics( String characteristics ) {
+        this.characteristics = characteristics;
     }
     
     public String getAssayName() {

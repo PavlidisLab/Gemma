@@ -45,6 +45,7 @@ Ext.Gemma.BioMaterialGrid = function ( config ) {
 	
 	superConfig.cm = Ext.Gemma.BioMaterialGrid.createColumnModel.call( this, this.backingArray[0] );
 	superConfig.cm.defaultSortable = true;
+	superConfig.plugins = Ext.Gemma.BioMaterialGrid.getRowExpander();
 	superConfig.viewConfig = { forceFit: true };
 	
 	for ( property in config ) {
@@ -81,6 +82,7 @@ Ext.Gemma.BioMaterialGrid.transformData = function( incoming ) {
 			bmvo.id,
 			bmvo.name,
 			bmvo.description,
+			bmvo.characteristics,
 			bmvo.assayName,
 			bmvo.assayDescription
 		];
@@ -97,6 +99,7 @@ Ext.Gemma.BioMaterialGrid.createRecord = function( row ) {
 		{ name:"id", type:"int" },
 		{ name:"bmName", type:"string" },
 		{ name:"bmDesc", type:"string" },
+		{ name:"bmChars", type:"string" },
 		{ name:"baName", type:"string" },
 		{ name:"baDesc", type:"string" }
 	];
@@ -109,6 +112,7 @@ Ext.Gemma.BioMaterialGrid.createRecord = function( row ) {
 
 Ext.Gemma.BioMaterialGrid.createColumnModel = function( row ) {
 	var columns = [
+		Ext.Gemma.BioMaterialGrid.getRowExpander(),
 		{ id: "bm", header:"BioMaterial", dataIndex:"bmName" },
 		{ id: "ba", header:"BioAssay", dataIndex:"baName" }
 	];
@@ -120,6 +124,18 @@ Ext.Gemma.BioMaterialGrid.createColumnModel = function( row ) {
 		columns.push( { id: factorId, header:row.factors[factorId], dataIndex:factorId, renderer:renderer, editor:this.factorValueCombo[factorId] } );
 	}
 	return new Ext.grid.ColumnModel( columns );
+};
+
+Ext.Gemma.BioMaterialGrid.getRowExpander = function() {
+	if ( Ext.Gemma.BioMaterialGrid.rowExpander == undefined ) {
+		Ext.Gemma.BioMaterialGrid.rowExpander = new Ext.grid.RowExpander( {
+			tpl : new Ext.Template(
+				"<dl style='margin-bottom: 2px;'><dt>BioMaterial {bmName}</dt><dd>{bmDesc}<br>{bmChars}</dd>",
+				"<dt>BioAssay {baName}</dt><dd>{baDesc}</dd></dl>"
+			)
+		} );
+	}
+	return Ext.Gemma.BioMaterialGrid.rowExpander;
 };
 
 Ext.Gemma.BioMaterialGrid.createValueRenderer = function( factorValues ) {
