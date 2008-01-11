@@ -861,8 +861,7 @@ Mapping URLS to controllers
 					<property name="type" value="bean"/>
 					<property name="excludes">
 						<list>
-							<value>targetAlignedRegions</value>
-							<value>queryAlignedRegions</value>
+							<value>targetAlignedRegion</value>
 							<value>searchedDatabase</value>
 						</list>
 					</property>
