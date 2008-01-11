@@ -34,7 +34,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.dao.DataAccessException;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.common.auditAndSecurity.UserService;
+import ubic.gemma.model.common.auditAndSecurity.UserDao;
 
 /**
  * Implementation for Acegi
@@ -44,7 +44,7 @@ import ubic.gemma.model.common.auditAndSecurity.UserService;
  */
 public class UserDetailsServiceImpl implements UserDetailsService, ApplicationContextAware {
 
-    static UserService userService;
+    static UserDao userDao;
     private static ApplicationContext applicationContext;
     private static Map<String, User> userCache = new HashMap<String, User>();
 
@@ -52,8 +52,8 @@ public class UserDetailsServiceImpl implements UserDetailsService, ApplicationCo
      * @param userService the userService to set
      */
     @SuppressWarnings("static-access")
-    public void setUserService( UserService userService ) {
-        this.userService = userService;
+    public void setUserDao( UserDao userDao ) {
+        this.userDao = userDao;
     }
 
     /*
@@ -83,7 +83,7 @@ public class UserDetailsServiceImpl implements UserDetailsService, ApplicationCo
         String[] strings = StringUtils.split( username, "=" );
         if ( strings.length > 1 ) username = strings[1];
 
-        User u = userService.findByUserName( username );
+        User u = userDao.findByUserName( username );
 
         if ( u == null ) {
             throw new UsernameNotFoundException( username + " not found" );

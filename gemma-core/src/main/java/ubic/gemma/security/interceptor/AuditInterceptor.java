@@ -432,13 +432,16 @@ public class AuditInterceptor implements MethodInterceptor {
                             // break vicious cycle in bidirectional relation
                             if ( visited.contains( collectionMember ) ) continue;
 
-                            if ( Auditable.class.isAssignableFrom( collectionMember.getClass() ) ) {
-                                if ( log.isTraceEnabled() ) {
-                                    log.trace( "Processing audit for member " + collectionMember + " of collection "
-                                            + propertyName + ", Cascade=" + cs );
-                                }
-                                processAfter( m, ( Auditable ) collectionMember, visited );
+                            if ( !Auditable.class.isAssignableFrom( collectionMember.getClass() ) ) {
+                                break; // all the collection members are Auditable, or none of them are.
                             }
+
+                            if ( log.isTraceEnabled() ) {
+                                log.trace( "Processing audit for member " + collectionMember + " of collection "
+                                        + propertyName + ", Cascade=" + cs );
+                            }
+                            processAfter( m, ( Auditable ) collectionMember, visited );
+
                         }
                     } catch ( org.hibernate.LazyInitializationException e ) {
                         // This is almost always not a problem, as it means the collection is already in the system. But
@@ -516,15 +519,18 @@ public class AuditInterceptor implements MethodInterceptor {
 
                     try {
                         for ( Object collectionMember : associatedObjects ) {
-                            if ( Auditable.class.isAssignableFrom( collectionMember.getClass() ) ) {
-                                if ( log.isTraceEnabled() ) {
-                                    log.trace( "Processing audit for member " + collectionMember + " of collection "
-                                            + propertyName + ", Cascade=" + cs );
-                                }
-                                if ( ( ( Auditable ) collectionMember ).getAuditTrail() == null ) {
-                                    addCreateAuditEvent( ( Auditable ) collectionMember,
-                                            " - entity created by cascade from " + object );
-                                }
+
+                            if ( !Auditable.class.isAssignableFrom( collectionMember.getClass() ) ) {
+                                break; // all the collection members are Auditable, or none of them are.
+                            }
+
+                            if ( log.isTraceEnabled() ) {
+                                log.trace( "Processing audit for member " + collectionMember + " of collection "
+                                        + propertyName + ", Cascade=" + cs );
+                            }
+                            if ( ( ( Auditable ) collectionMember ).getAuditTrail() == null ) {
+                                addCreateAuditEvent( ( Auditable ) collectionMember,
+                                        " - entity created by cascade from " + object );
                             }
                         }
                     } catch ( org.hibernate.LazyInitializationException e ) {
@@ -549,16 +555,12 @@ public class AuditInterceptor implements MethodInterceptor {
     private void processBefore( Method method, Auditable d ) {
 
         /*
-         * Normally all auditables should have audit trails. But we must allow for errors. IInstead of throwng ian exception we just add itt.
+         * Add the audit trail if the object doesn't already have one.
          */
         if ( d != null && d.getAuditTrail() == null ) {
-            // if ( d.getId() != null ) {
-            // throw new IllegalStateException( d + " has no audit trail, but it looks persistent." );
-            // } else {
             AuditTrail at = AuditTrail.Factory.newInstance();
             d.setAuditTrail( at );
             if ( log.isDebugEnabled() ) log.debug( "Added auditTrail to " + d );
-            // }
         }
 
         if ( method.getName().equals( "create" ) ) {

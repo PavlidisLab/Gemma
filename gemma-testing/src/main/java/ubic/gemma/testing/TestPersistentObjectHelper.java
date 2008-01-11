@@ -53,7 +53,9 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -312,7 +314,7 @@ public class TestPersistentObjectHelper {
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
 
         ad.setName( "arrayDesign_" + RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH ) );
-      //  ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        // ad = ( ArrayDesign ) persisterHelper.persist( ad );
 
         for ( int i = 0; i < numCompositeSequences; i++ ) {
 
@@ -469,7 +471,15 @@ public class TestPersistentObjectHelper {
      */
     public BlatResult getTestPersistentBlatResult( BioSequence querySequence ) {
         BlatResult br = BlatResult.Factory.newInstance();
+        br.setTargetChromosome( Chromosome.Factory.newInstance( "X", this.getTestPersistentTaxon() ) );
         br.setQuerySequence( querySequence );
+        br.setTargetStart( 1L );
+        br.setTargetEnd( 1000L );
+        PhysicalLocation targetAlignedRegion = PhysicalLocation.Factory.newInstance();
+        targetAlignedRegion.setChromosome( br.getTargetChromosome() );
+        targetAlignedRegion.setNucleotide( 10000010L );
+        targetAlignedRegion.setNucleotideLength( 1001 );
+        targetAlignedRegion.setStrand( "-" );
         return ( BlatResult ) persisterHelper.persist( br );
     }
 

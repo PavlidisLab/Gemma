@@ -33,29 +33,6 @@ import ubic.gemma.model.genome.PhysicalLocation;
  */
 public class BlatResultImpl extends ubic.gemma.model.genome.sequenceAnalysis.BlatResult {
 
-    @Override
-    public PhysicalLocation getTargetAlignedRegion() {
-
-        // return super.getTargetAlignedRegion();
-
-        // This is needed until we fully populate this field.
-        return makePhysicalLocation();
-
-    }
-
-    /**
-     * @param ba
-     * @return
-     */
-    private PhysicalLocation makePhysicalLocation() {
-        PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
-        pl.setChromosome( this.getTargetChromosome() );
-        pl.setNucleotide( this.getTargetStart() );
-        pl.setNucleotideLength( ( new Long( this.getTargetEnd() - pl.getNucleotide() ) ).intValue() );
-        pl.setStrand( this.getStrand() );
-        return pl;
-    }
-
     /**
      * 
      */

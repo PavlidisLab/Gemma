@@ -24,8 +24,12 @@ import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService; 
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -34,6 +38,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class AuditInterceptorTest extends BaseSpringContextTest {
     private UserService userService;
+    private GeneService geneService;
     ExpressionExperimentService expressionExperimentService;
 
     /**
@@ -45,6 +50,20 @@ public class AuditInterceptorTest extends BaseSpringContextTest {
 
     public void setUserService( UserService userService ) {
         this.userService = userService;
+    }
+
+    public void testCascadingCreateOnUpdate() throws Exception {
+        Gene g = this.getTestPeristentGene();
+
+        GeneProduct gp = GeneProduct.Factory.newInstance();
+        gp.setName( RandomStringUtils.randomAlphabetic( 20 ) );
+        g.getProducts().add( gp );
+
+        this.geneService.update( g );
+
+        for ( GeneProduct prod : g.getProducts() ) {
+            assertNotNull( prod.getAuditTrail() );
+        }
     }
 
     public void testAuditCreateWithAssociatedCollection() throws Exception {
@@ -62,10 +81,13 @@ public class AuditInterceptorTest extends BaseSpringContextTest {
         user = userService.create( user );
         assertNotNull( user.getAuditTrail() );
         assertNotNull( user.getAuditTrail().getCreationEvent().getId() );
+        
         user.setFax( RandomStringUtils.randomNumeric( 10 ) ); // change something.
         userService.update( user );
 
+        // that should result in only a single update.
         assertEquals( "Should have a 'create' and an 'update'", 2, user.getAuditTrail().getEvents().size() );
+        
         assertEquals( AuditAction.UPDATE, user.getAuditTrail().getLast().getAction() );
         // third time.
         user.setFax( RandomStringUtils.randomNumeric( 10 ) ); // change something.
@@ -92,5 +114,9 @@ public class AuditInterceptorTest extends BaseSpringContextTest {
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
         endTransaction();
+    }
+
+    public void setGeneService( GeneService geneService ) {
+        this.geneService = geneService;
     }
 }

@@ -127,7 +127,7 @@
 	<!-- Read users from database -->
 	<bean id="userDetailsService"
 		class="ubic.gemma.security.principal.UserDetailsServiceImpl">
-		<property name="userService" ref="userService" />
+		<property name="userDao" ref="userDao" />
 	</bean>
 
 

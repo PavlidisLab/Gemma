@@ -607,31 +607,44 @@ abstract public class GenomePersister extends CommonPersister {
     }
 
     /**
-     * NOTE this method is not a traditional 'persist' method: It does not use findOrCreate! A new result is made every
-     * time. (FIXME: this method might need to be moved)
+     * NOTE this method is not a regular 'persist' method: It does not use findOrCreate! A new result is made every
+     * time.
      * 
      * @param blastResult
+     * @return
      */
     private BlastResult persistBlastResult( BlastResult blastResult ) {
+        if ( !isTransient( blastResult ) ) return blastResult;
         blastResult.setQuerySequence( persistBioSequence( blastResult.getQuerySequence() ) );
         blastResult.setTargetChromosome( persistChromosome( blastResult.getTargetChromosome() ) );
+        if ( blastResult.getTargetAlignedRegion() != null )
+            blastResult.getTargetAlignedRegion().setChromosome( blastResult.getTargetChromosome() );
         return blastResultService.create( blastResult );
     }
 
     /**
-     * NOTE this method is not a traditional 'persist' method: It does not use findOrCreate! A new result is made every
-     * time. (FIXME this method might need to be moved)
+     * NOTE this method is not a regular 'persist' method: It does not use findOrCreate! A new result is made every
+     * time.
      * 
      * @param blatResult
+     * @return
      */
     private BlatResult persistBlatResult( BlatResult blatResult ) {
+        if ( !isTransient( blatResult ) ) return blatResult;
         if ( blatResult.getQuerySequence() == null ) {
             throw new IllegalArgumentException( "Blat result with null query sequence" );
         }
         blatResult.setQuerySequence( persistBioSequence( blatResult.getQuerySequence() ) );
         blatResult.setTargetChromosome( persistChromosome( blatResult.getTargetChromosome() ) );
         blatResult.setSearchedDatabase( persistExternalDatabase( blatResult.getSearchedDatabase() ) );
+        if ( blatResult.getTargetAlignedRegion() != null )
+            blatResult.setTargetAlignedRegion( fillPhysicalLocationAssociations( blatResult.getTargetAlignedRegion() ) );
         return blatResultService.create( blatResult );
+    }
+
+    private PhysicalLocation fillPhysicalLocationAssociations( PhysicalLocation physicalLocation ) {
+        physicalLocation.setChromosome( persistChromosome( physicalLocation.getChromosome() ) );
+        return physicalLocation;
     }
 
     /**
@@ -688,7 +701,7 @@ abstract public class GenomePersister extends CommonPersister {
         } else if ( result instanceof BlastResult ) {
             return persistBlastResult( ( BlastResult ) result );
         } else {
-            throw new UnsupportedOperationException( "Don't know how to deal with " + result.getClass().getName() );
+            throw new UnsupportedOperationException( "Don't know how to persist a " + result.getClass().getName() );
         }
     }
 }
