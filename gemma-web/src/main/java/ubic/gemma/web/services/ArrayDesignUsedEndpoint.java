@@ -29,7 +29,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.w3c.dom.Text;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -77,7 +76,7 @@ public class ArrayDesignUsedEndpoint extends AbstractGemmaEndpoint {
 				"Invalid local name");
 
 		authenticate();
-		
+
 		String nodeValue = null;
 		NodeList children = requestElement.getElementsByTagName(
 				ARRAY_LOCAL_NAME + REQUEST).item(0).getChildNodes();
@@ -111,17 +110,16 @@ public class ArrayDesignUsedEndpoint extends AbstractGemmaEndpoint {
 				ARRAY_LOCAL_NAME + RESPONSE);
 		responseWrapper.appendChild(responseElement);
 
-		Text responseText;
-
 		if (ee == null)
-			responseText = document
-					.createTextNode("No experiment with that id");
+			responseElement.appendChild(document
+					.createTextNode("No experiment with that id"));
 		else {
 			Collection<ArrayDesign> ads = expressionExperimentService
 					.getArrayDesignsUsed(ee);
 			for (ArrayDesign ad : ads) {
-				responseText = document.createTextNode(ad.getName());
-				responseElement.appendChild(responseText);
+				Element e = document.createElement("adName");
+				e.appendChild(document.createTextNode(ad.getName()));
+				responseElement.appendChild(e);
 			}
 		}
 
