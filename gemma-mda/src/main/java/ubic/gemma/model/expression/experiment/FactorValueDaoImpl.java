@@ -24,8 +24,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
+import org.hibernate.Query;
 import org.hibernate.Session;
 
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -49,7 +51,22 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
             public Object doInHibernate( Session session ) throws HibernateException {
              
                 log.info( "Loading data for deletion..." );
-                session.update( toDelete );
+                session.update( toDelete ); 
+                
+                /* everything but the association to BioMaterials is taken care of by the cascade...
+                 */
+                final String queryString =
+                    "FROM BioMaterialImpl AS bm LEFT JOIN bm.factorValues AS fv " +
+                        "WHERE fv = :fv";
+                //List list = getHibernateTemplate().findByNamedParam( queryString, "fv", toDelete );
+                Query query = session.createQuery( queryString );
+                query.setEntity( "fv", toDelete );
+                for ( Object[] row : ( List<Object[]> )query.list() ) {
+                    BioMaterial bm = ( BioMaterial )row[0];
+                    bm.getFactorValues().remove( toDelete );
+                    session.update( bm );
+                    //session.evict( bm );    // required?
+                }
                 
                 session.delete( toDelete );
                 session.flush();
