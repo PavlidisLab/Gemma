@@ -25,12 +25,8 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -68,10 +64,8 @@ public class LinkAnalysis {
     private ExpressionDataDoubleMatrix dataMatrix = null;
     // private Collection<DesignElementDataVector> dataVectors = null;
 
-    private Map<CompositeSequence, Collection<Gene>> probeToGeneMap = null;
-    private Map<Gene, Collection<CompositeSequence>> geneToProbeMap = null;
+    private Map<CompositeSequence, Collection<Collection<Gene>>> probeToGeneMap = null;
     private Taxon taxon = null;
-    private int uniqueGenesInDataset = 0;
 
     private int minSamplesToKeepCorrelation = 0;
 
@@ -102,8 +96,7 @@ public class LinkAnalysis {
 
         log.debug( "Taxon: " + this.taxon.getCommonName() );
 
-        this.init();
-        if ( this.uniqueGenesInDataset == 0 ) {
+        if ( this.probeToGeneMap.size() == 0 ) {
             throw new IllegalStateException( "No genes found for this dataset. Is the 'GENE2CS' table up to date?" );
         }
 
@@ -119,10 +112,7 @@ public class LinkAnalysis {
      */
     public void clear() {
         this.dataMatrix = null;
-
         this.probeToGeneMap = null;
-        this.geneToProbeMap = null;
-        this.uniqueGenesInDataset = 0;
         this.metricMatrix = null;
     }
 
@@ -189,13 +179,18 @@ public class LinkAnalysis {
             metricMatrix = MatrixRowPairAnalysisFactory.spearmann( dataMatrix, config.getCorrelationCacheThreshold() );
         }
 
+        metricMatrix.setDuplicateMap( probeToGeneMap ); // populates numUniqueGenes
+        metricMatrix.setUseAbsoluteValue( config.isAbsoluteValue() );
+        metricMatrix.setMinNumpresent( minSamplesToKeepCorrelation );
+        this.init();
+
         /*
          * Determine the threshold number of samples in a gene pair before we consider keeping the result. This is
          * needed in data sets that have many missing values. In that case, some pairs will have a much smaller
          * effective sample size. Because with too few degrees of freedom, the values have no chance of being
          * significant (within reason), they shouldn't be included in the histograms.
          */
-        double maxP = config.getFwe() / uniqueGenesInDataset;
+        double maxP = config.getFwe() / metricMatrix.getNumUniqueGenes();
         for ( int i = 3; i < this.dataMatrix.columns(); i++ ) {
             double scoreForSmallSampleSize = CorrelationStats.correlationForPvalue( maxP, i );
             if ( scoreForSmallSampleSize > VERY_HIGH_CORRELATION_THRESHOLD ) {
@@ -208,9 +203,6 @@ public class LinkAnalysis {
             log.info( "Pairs must have at least " + minSamplesToKeepCorrelation + " mutual values to be considered" );
         }
 
-        metricMatrix.setDuplicateMap( probeToGeneMap, geneToProbeMap );
-        metricMatrix.setUseAbsoluteValue( config.isAbsoluteValue() );
-        metricMatrix.setMinNumpresent( minSamplesToKeepCorrelation );
         metricMatrix.calculateMetrics();
         log.info( "Completed first pass over the data. Cached " + metricMatrix.numCached()
                 + " values in the correlation matrix with values over " + config.getCorrelationCacheThreshold() );
@@ -267,10 +259,10 @@ public class LinkAnalysis {
         double maxP = 1.0;
         double scoreAtP = 0.0;
         if ( config.getFwe() != 0.0 ) {
-            maxP = config.getFwe() / uniqueGenesInDataset; // bonferroni.
+            maxP = config.getFwe() / metricMatrix.getNumUniqueGenes(); // bonferroni.
             scoreAtP = CorrelationStats.correlationForPvalue( maxP, this.dataMatrix.columns() );
             log.info( "Minimum correlation to get " + form.format( maxP ) + " is about " + form.format( scoreAtP )
-                    + " for " + uniqueGenesInDataset + " unique items (if all " + this.dataMatrix.columns()
+                    + " for " + metricMatrix.getNumUniqueGenes() + " unique items (if all " + this.dataMatrix.columns()
                     + " items are present)" );
 
             if ( scoreAtP > 0.9 ) {
@@ -312,40 +304,9 @@ public class LinkAnalysis {
      * 
      *
      */
-    @SuppressWarnings("unchecked")
     private void init() {
-        int[] stats = new int[10];
-
-        this.geneToProbeMap = new HashMap<Gene, Collection<CompositeSequence>>();
-
-        StopWatch watch = new StopWatch();
-        watch.start();
-
-        // populate geneToProbeMap and gather stats.
-        for ( CompositeSequence cs : probeToGeneMap.keySet() ) {
-            Collection<Gene> genes = probeToGeneMap.get( cs );
-            for ( Gene g : genes ) {
-                if ( !geneToProbeMap.containsKey( g ) ) {
-                    geneToProbeMap.put( g, new HashSet<CompositeSequence>() );
-                }
-                this.geneToProbeMap.get( g ).add( cs );
-            }
-
-            if ( genes.size() >= stats.length ) {
-                stats[stats.length - 1]++;
-            } else {
-                stats[genes.size()]++;
-            }
-        }
-
-        this.uniqueGenesInDataset = this.geneToProbeMap.keySet().size();
-        watch.stop();
-        log.info( "Finished mapping in " + watch.getTime() / 1000.0 + " seconds" );
-        log.info( "Mapping Stats " + ArrayUtils.toString( stats ) );
-        if ( this.uniqueGenesInDataset == 0 ) return;
-
         // estimate the correlation needed to reach significance.
-        double scoreP = CorrelationStats.correlationForPvalue( config.getFwe() / this.uniqueGenesInDataset,
+        double scoreP = CorrelationStats.correlationForPvalue( config.getFwe() / this.metricMatrix.getNumUniqueGenes(),
                 this.dataMatrix.columns() ) - 0.001;
         if ( scoreP > config.getCorrelationCacheThreshold() ) config.setCorrelationCacheThreshold( scoreP );
     }
@@ -369,7 +330,7 @@ public class LinkAnalysis {
         return this.taxon;
     }
 
-    public void setProbeToGeneMap( Map<CompositeSequence, Collection<Gene>> probeToGeneMap ) {
+    public void setProbeToGeneMap( Map<CompositeSequence, Collection<Collection<Gene>>> probeToGeneMap ) {
         this.probeToGeneMap = probeToGeneMap;
     }
 
@@ -389,7 +350,7 @@ public class LinkAnalysis {
         return config;
     }
 
-    public Map<CompositeSequence, Collection<Gene>> getProbeToGeneMap() {
+    public Map<CompositeSequence, Collection<Collection<Gene>>> getProbeToGeneMap() {
         return probeToGeneMap;
     }
 

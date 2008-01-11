@@ -60,9 +60,11 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     private static final String ONTOLOGIES_ON = "ontologiesOn";
 
     protected BeanFactory ctx = null;
-    PersisterHelper ph = null;
+    protected PersisterHelper ph = null;
     protected AuditTrailService auditTrailService;
     protected Collection<Exception> exceptionCache = new ArrayList<Exception>();
+
+    private boolean ontologiesOn = false;
 
     @Override
     protected void buildStandardOptions() {
@@ -227,7 +229,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
      */
     void createSpringContext() {
 
-        if ( hasOption( ONTOLOGIES_ON ) ) {
+        if ( hasOption( ONTOLOGIES_ON ) || ontologiesOn ) {
             ConfigUtils.setProperty( AbstractOntologyService.ENABLE_PROPERTY_NAME, true );
         } else {
             ConfigUtils.setProperty( AbstractOntologyService.ENABLE_PROPERTY_NAME, false );
@@ -286,6 +288,10 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         for ( Exception e : exceptionCache ) {
             log.info( e );
         }
+    }
+
+    public void setOntologiesOn( boolean ontologiesOn ) {
+        this.ontologiesOn = ontologiesOn;
     }
 
 }

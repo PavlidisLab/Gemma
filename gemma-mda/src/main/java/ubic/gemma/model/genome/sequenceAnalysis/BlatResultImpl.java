@@ -24,12 +24,37 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.model.genome.PhysicalLocation;
+
 /**
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.sequence.sequenceAnalysis.BlatResult
  */
 public class BlatResultImpl extends ubic.gemma.model.genome.sequenceAnalysis.BlatResult {
+
+    @Override
+    public PhysicalLocation getTargetAlignedRegion() {
+
+        // return super.getTargetAlignedRegion();
+
+        // This is needed until we fully populate this field.
+        return makePhysicalLocation();
+
+    }
+
+    /**
+     * @param ba
+     * @return
+     */
+    private PhysicalLocation makePhysicalLocation() {
+        PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
+        pl.setChromosome( this.getTargetChromosome() );
+        pl.setNucleotide( this.getTargetStart() );
+        pl.setNucleotideLength( ( new Long( this.getTargetEnd() - pl.getNucleotide() ) ).intValue() );
+        pl.setStrand( this.getStrand() );
+        return pl;
+    }
 
     /**
      * 

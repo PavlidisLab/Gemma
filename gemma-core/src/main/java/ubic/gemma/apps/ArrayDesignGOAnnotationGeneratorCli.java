@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Writer;
 import java.util.Collection;
+import java.util.Map;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -36,12 +37,17 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnnotationF
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceService;
+import ubic.gemma.model.genome.PhysicalLocation;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.ontology.GeneOntologyService;
 
 /**
- * Given an array design creates a Gene Ontology Annotation file Given a batch file creates all the Annotation files for
- * the AD's specified in the batch file Given nothing creates annotation files for every AD that isn't subsumed or
- * mergedInto another AD.
+ * Given an array design creates a Gene Ontology Annotation file
+ * <p>
+ * Given a batch file creates all the Annotation files for the AD's specified in the batch file
+ * <p>
+ * Given nothing creates annotation files for every AD that isn't subsumed or merged into another AD.
  * 
  * @author klc
  * @versio $Id$
@@ -49,6 +55,8 @@ import ubic.gemma.ontology.GeneOntologyService;
 public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceManipulatingCli {
 
     ArrayDesignAnnotationService arrayDesignAnnotationService;
+
+    CompositeSequenceService compositeSequenceService;
 
     GeneOntologyService goService;
 
@@ -59,8 +67,14 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
     String fileName = null;
 
-    boolean includeGemmaGenes;
+    /**
+     * Include predicted genes and probe aligned regions in the output
+     */
+    boolean includePredictedGenes = false;
 
+    /**
+     * Clobber existing file, if any.
+     */
     boolean overWrite = false;
 
     OutputType type;
@@ -143,10 +157,11 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
         int n = 0;
         try {
+            log.info( "Waiting for Gene Ontology to load" );
             while ( !goService.isReady() ) {
                 Thread.sleep( 500 );
                 if ( ( n++ % 100 ) == 0 ) {
-                    log.debug( "Waiting for ontologies to load" );
+                    log.info( "Waiting ..." );
                 }
             }
 
@@ -172,10 +187,6 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
      * Goes over all the AD's in the database and creates annotation 3 annotation files for each AD that is not merged
      * into or subsumed by another AD. Uses the Accession ID (GPL???) for the name of the annotation file. Appends
      * noparents, bioProcess, allParents to the file name.
-     * <p>
-     * FIXME: This could be sped up dramatically. The same AD is being thawed 3 times. the same genes are being loaded 3
-     * times. The same go terms are loaded 3 times... etc... Would make sense to parallelize this process as more than 1
-     * AD could be processed at once.
      * 
      * @throws IOException
      */
@@ -184,7 +195,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
         Collection<ArrayDesign> allADs = this.arrayDesignService.loadAll();
 
-        this.includeGemmaGenes = false;
+        this.includePredictedGenes = false;
 
         for ( ArrayDesign ad : allADs ) {
 
@@ -201,11 +212,17 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
             log.info( "Processing AD: " + ad.getName() );
 
-            processAD( ad, ad.getShortName() + "_NoParents", OutputType.SHORT );
+            unlazifyArrayDesign( ad );
+            Collection<CompositeSequence> compositeSequences = ad.getCompositeSequences();
+            Map<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>> genesWithSpecificity = compositeSequenceService
+                    .getGenesWithSpecificity( compositeSequences );
 
-            processAD( ad, ad.getShortName() + "_bioProcess", OutputType.BIOPROCESS );
+            processCompositeSequences( ad, ad.getShortName() + "_NoParents", OutputType.SHORT, genesWithSpecificity );
 
-            processAD( ad, ad.getShortName() + "_allParents", OutputType.LONG );
+            processCompositeSequences( ad, ad.getShortName() + "_bioProcess", OutputType.BIOPROCESS,
+                    genesWithSpecificity );
+
+            processCompositeSequences( ad, ad.getShortName() + "_allParents", OutputType.LONG, genesWithSpecificity );
 
         }
 
@@ -213,9 +230,35 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
     /**
      * @param outputType
-     * @throws IOException process the current AD
+     * @throws IOException
      */
+    @SuppressWarnings("unchecked")
     protected void processAD( ArrayDesign arrayDesign, String fileBaseName, OutputType outputType ) throws IOException {
+
+        log.info( "Loading gene information for " + arrayDesign );
+        unlazifyArrayDesign( arrayDesign );
+
+        Collection<CompositeSequence> compositeSequences = arrayDesign.getCompositeSequences();
+
+        Map<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>> genesWithSpecificity = compositeSequenceService
+                .getGenesWithSpecificity( compositeSequences );
+
+        log.info( "Preparing file" );
+        processCompositeSequences( arrayDesign, fileBaseName, outputType, genesWithSpecificity );
+    }
+
+    /**
+     * @param arrayDesign
+     * @param fileBaseName
+     * @param outputType
+     * @param writer
+     * @param genesWithSpecificity
+     * @throws IOException
+     */
+    @SuppressWarnings("unchecked")
+    private void processCompositeSequences( ArrayDesign arrayDesign, String fileBaseName, OutputType outputType,
+            Map<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>> genesWithSpecificity )
+            throws IOException {
 
         Writer writer = arrayDesignAnnotationService.initOutputFile( fileBaseName, this.overWrite );
 
@@ -225,14 +268,10 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
             return;
         }
 
-        unlazifyArrayDesign( arrayDesign );
+        log.info( arrayDesign.getName() + " has " + genesWithSpecificity.size() + " composite sequences" );
 
-        Collection<CompositeSequence> compositeSequences = arrayDesign.getCompositeSequences();
-
-        log.info( arrayDesign.getName() + " has " + compositeSequences.size() + " composite sequences" );
-
-        int numProcessed = arrayDesignAnnotationService.generateAnnotationFile( writer, compositeSequences, outputType,
-                !this.includeGemmaGenes );
+        int numProcessed = arrayDesignAnnotationService.generateAnnotationFile( writer, genesWithSpecificity,
+                outputType, !this.includePredictedGenes );
 
         log.info( "Finished processing platform: " + arrayDesign.getName() );
 
@@ -325,15 +364,17 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
      * @param genesToInclude
      */
     private void processGenesIncluded( String genesToInclude ) {
-        includeGemmaGenes = false;
+        includePredictedGenes = false;
 
-        if ( genesToInclude.equalsIgnoreCase( "all" ) ) includeGemmaGenes = true;
+        if ( genesToInclude.equalsIgnoreCase( "all" ) ) includePredictedGenes = true;
 
     }
 
     @Override
     protected void processOptions() {
-        super.processOptions();
+
+        // Turn on ontology loading.
+        this.setOntologiesOn( true );
 
         if ( this.hasOption( 'f' ) ) {
             this.fileName = this.getOptionValue( 'f' );
@@ -355,7 +396,10 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
         if ( this.hasOption( 'o' ) ) this.overWrite = true;
 
+        super.processOptions();
+
         this.arrayDesignAnnotationService = ( ArrayDesignAnnotationService ) getBean( "arrayDesignAnnotationService" );
         this.goService = ( GeneOntologyService ) getBean( "geneOntologyService" );
+        this.compositeSequenceService = ( CompositeSequenceService ) getBean( "compositeSequenceService" );
     }
 }

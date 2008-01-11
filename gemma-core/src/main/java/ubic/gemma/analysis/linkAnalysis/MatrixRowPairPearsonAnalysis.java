@@ -191,6 +191,11 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
         finishMetrics();
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.linkAnalysis.MatrixRowPairAnalysis#getMetricType()
+     */
     public QuantitationType getMetricType() {
         QuantitationType m = QuantitationType.Factory.newInstance();
         m.setIsBackground( false );
@@ -272,35 +277,39 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
 
     }
 
-    /**
-     * Get pvalue corrected for multiple testing of the genes. We conservatively penalize the pvalues for each
-     * additional test the gene received. For example, if correlation is between two probes that each assay two genes,
-     * the pvalue is penalized by a factor of 4.0.
+    /*
+     * (non-Javadoc)
      * 
-     * @param i int
-     * @param j int
-     * @param correl double
-     * @param numused int
-     * @return double
+     * @see ubic.gemma.analysis.linkAnalysis.MatrixRowPairAnalysis#correctedPvalue(int, int, double, int)
      */
     public double correctedPvalue( int i, int j, double correl, int numused ) {
 
         double p = CorrelationStats.pvalue( correl, numused );
 
         double k = 1, m = 1;
-        Collection<Gene> geneIdSet = getGenesForRow( i );
-        if ( geneIdSet != null ) {
-            for ( Gene geneId : geneIdSet ) {
-                int tmpK = this.geneToProbeMap.get( geneId ).size() + 1;
-                if ( k < tmpK ) k = tmpK;
+        Collection<Collection<Gene>> clusters = getGenesForRow( i );
+        if ( clusters != null ) {
+            for ( Collection<Gene> geneIdSet : clusters ) {
+                /*
+                 * Note we break on the first iteration because the number of probes per gene in the same cluster is
+                 * constant.
+                 */
+                for ( Gene geneId : geneIdSet ) {
+                    int tmpK = this.geneToProbeMap.get( geneId ).size() + 1;
+                    if ( k < tmpK ) k = tmpK;
+                    break;
+                }
             }
         }
 
-        geneIdSet = getGenesForRow( j );
-        if ( geneIdSet != null ) {
-            for ( Gene geneId : geneIdSet ) {
-                int tmpM = this.geneToProbeMap.get( geneId ).size() + 1;
-                if ( m < tmpM ) m = tmpM;
+        clusters = getGenesForRow( j );
+        if ( clusters != null ) {
+            for ( Collection<Gene> geneIdSet : clusters ) {
+                for ( Gene geneId : geneIdSet ) {
+                    int tmpM = this.geneToProbeMap.get( geneId ).size() + 1;
+                    if ( m < tmpM ) m = tmpM;
+                    break;
+                }
             }
         }
 

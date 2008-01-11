@@ -473,15 +473,15 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     private void thawAnalyses( final ExpressionExperiment expressionExperiment, org.hibernate.Session session ) {
         // Not doing anything with the session but passing it in just in case. ????
 
-        Collection<ExpressionAnalysis> eas = expressionExperiment.getExpressionAnalyses();
+      //  Collection<ExpressionAnalysis> eas = expressionExperiment.getExpressionAnalyses();
 
-        for ( ExpressionAnalysis ea : eas ) {
-            Collection<ExpressionAnalysisResultSet> resultSets = ea.getResultSets();
-            resultSets.size();
-            for ( ExpressionAnalysisResultSet rs : resultSets ) {
-                rs.getResults().size();
-            }
-        }
+//        for ( ExpressionAnalysis ea : eas ) {
+//            Collection<ExpressionAnalysisResultSet> resultSets = ea.getResultSets();
+//            resultSets.size();
+//            for ( ExpressionAnalysisResultSet rs : resultSets ) {
+//                rs.getResults().size();
+//            }
+//        }
 
     }
 

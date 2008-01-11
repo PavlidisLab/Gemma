@@ -462,17 +462,41 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      */
     public Collection<GeneProduct> findKnownGenesByLocation( String chromosome, Long start, Long end, String strand ) {
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
-        String query = "SELECT kgxr.mRNA, kgxr.geneSymbol, kg.txStart, kg.txEnd, kg.strand, kg.exonStarts, kg.exonEnds, CONCAT('Known gene: ', kgxr.description) "
-                + " FROM knownGene as kg INNER JOIN"
-                + " kgXref AS kgxr ON kg.name=kgxr.kgID WHERE "
+
+        Collection<GeneProduct> result = new HashSet<GeneProduct>();
+        /*
+         * Many known genes map to refseq genes. We use those gene symbols instead. Use kgXRef only to get the
+         * description
+         */
+        String query = "SELECT r.name, r.geneName, r.txStart, r.txEnd, r.strand, r.exonStarts, r.exonEnds, CONCAT('Refseq gene: ', kgr.description) "
+                + " FROM knownGene as kg INNER JOIN knownToRefSeq kr on kr.name=kg.name inner join kgXref kgr on kgr.kgID=kg.name "
+                + " INNER JOIN refFlat r ON r.name=kr.value  WHERE "
                 + "((kg.txStart >= ? AND kg.txEnd <= ?) OR (kg.txStart <= ? AND kg.txEnd >= ?) OR "
                 + "(kg.txStart >= ?  AND kg.txStart <= ?) OR  (kg.txEnd >= ? AND  kg.txEnd <= ? )) and kg.chrom = ? ";
 
         if ( strand != null ) {
-            query = query + " AND strand = ? ";
+            query = query + " AND kg.strand = ? ";
         }
 
-        return findGenesByQuery( start, end, searchChrom, strand, query );
+        Collection<GeneProduct> known2refseq = findGenesByQuery( start, end, searchChrom, strand, query );
+        result.addAll( known2refseq );
+
+        /*
+         * Ones that do not map to refseq using a left outer join.
+         */
+        query = "SELECT kgxr.mRNA, kgxr.geneSymbol, kg.txStart, kg.txEnd, kg.strand, kg.exonStarts, kg.exonEnds, CONCAT('Known gene: ', kgxr.description) "
+                + " FROM knownGene as kg INNER JOIN"
+                + " kgXref AS kgxr ON kg.name=kgxr.kgID LEFT OUTER JOIN knownToRefSeq kr on kr.name=kg.name WHERE kr.value IS NULL AND "
+                + "((kg.txStart >= ? AND kg.txEnd <= ?) OR (kg.txStart <= ? AND kg.txEnd >= ?) OR "
+                + "(kg.txStart >= ?  AND kg.txStart <= ?) OR  (kg.txEnd >= ? AND  kg.txEnd <= ? )) and kg.chrom = ? ";
+
+        if ( strand != null ) {
+            query = query + " AND kg.strand = ? ";
+        }
+        Collection<GeneProduct> knowng = findGenesByQuery( start, end, searchChrom, strand, query );
+        result.addAll( knowng );
+
+        return result;
     }
 
     /**
@@ -575,7 +599,10 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      */
     public Collection<GeneProduct> findRefGenesByLocation( String chromosome, Long start, Long end, String strand ) {
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
-        String query = "SELECT r.name, kgXref.geneSymbol, r.txStart, r.txEnd, r.strand, r.exonStarts, r.exonEnds, CONCAT('Refseq gene: ',kgXref.description) "
+        /*
+         * Use kgXRef only to get the description
+         */
+        String query = "SELECT r.name, r.geneName, r.txStart, r.txEnd, r.strand, r.exonStarts, r.exonEnds, CONCAT('Refseq gene: ',kgXref.description) "
                 + "FROM refFlat as r inner join kgXref on r.geneName = kgXref.geneSymbol "
                 + "WHERE "
                 + "((r.txStart >= ? AND r.txEnd <= ?) OR (r.txStart <= ? AND r.txEnd >= ?) OR "

@@ -38,6 +38,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
+import org.apache.commons.collections.Transformer;
+import org.apache.commons.collections.iterators.TransformIterator;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -47,11 +49,11 @@ import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.PredictedGene;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
-import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.ontology.OntologyTerm;
 import ubic.gemma.util.ConfigUtils;
@@ -59,24 +61,37 @@ import ubic.gemma.util.DateUtil;
 
 /**
  * Methods to generate annotations for array designs, based on information alreay in the database. This can be used to
- * generate annotation files used for ermineJ, for eexample.
+ * generate annotation files used for ermineJ, for eexample. The file format:
+ * <ul>
+ * <li> The file is tab-delimited text. Comma-delimited files or Excel spreadsheets (for example) are not supported.
+ * </li>
+ * <li> There is a one-line header included in the file for readability. </li>
+ * <li> The first column contains the probe identifier </li>
+ * <li> The second column contains a gene symbol(s). Clusters are delimited by '|' and genes within clusters are
+ * delimited by ','</li>
+ * <li> The third column contains the gene names (or description). Clusters are delimited by '|' and names within
+ * clusters are delimited by '$'</li>
+ * <li> The fourth column contains a delimited list of GO identifiers. These include the "GO:" prefix. Thus they read
+ * "GO:00494494" and not "494494". Delimited by '|'. </li>
+ * </ul>
+ * <p>
+ * Note that for backwards compatibility, GO terms are not segregated by gene cluster.
+ * </p>
  * 
  * @spring.bean id="arrayDesignAnnotationService"
  * @spring.property name="gene2GOAssociationService" ref="gene2GOAssociationService"
- * @spring.property name="geneService" ref="geneService"
- * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
  * @spring.property name="goService" ref="geneOntologyService"
  * @author paul
  * @version $Id$
  */
 public class ArrayDesignAnnotationService {
 
-    private static final String COMMENT_CHARACTER = "#";
-
     public static final String ANNOTATION_FILE_SUFFIX = ".an.txt.gz";
 
     public static final String ANNOT_DATA_DIR = ConfigUtils.getString( "gemma.appdata.home" ) + File.separatorChar
             + "microAnnots" + File.separatorChar;
+
+    private static final String COMMENT_CHARACTER = "#";
 
     private static Log log = LogFactory.getLog( ArrayDesignAnnotationService.class.getName() );;
 
@@ -149,11 +164,26 @@ public class ArrayDesignAnnotationService {
 
     private Gene2GOAssociationService gene2GOAssociationService;
 
-    private GeneService geneService;
-
-    private CompositeSequenceService compositeSequenceService;
-
     private GeneOntologyService goService;
+
+    Transformer officialSymbolExtractor = new Transformer() {
+        public Object transform( Object input ) {
+            return ( ( Gene ) input ).getOfficialSymbol();
+        }
+    };
+
+    Transformer descriptionExtractor = new Transformer() {
+        public Object transform( Object input ) {
+            Gene gene = ( Gene ) input;
+            return gene.getOfficialName();
+        }
+    };
+
+    Transformer goTermExtractor = new Transformer() {
+        public Object transform( Object input ) {
+            return GeneOntologyService.asRegularGoId( ( ( OntologyTerm ) input ) );
+        }
+    };
 
     /**
      * @param writer
@@ -165,62 +195,65 @@ public class ArrayDesignAnnotationService {
      * @throws IOException
      */
     @SuppressWarnings("unchecked")
-    public int generateAnnotationFile( Writer writer, Collection<CompositeSequence> compositeSequences, OutputType ty,
-            boolean knownGenesOnly ) throws IOException {
+    public int generateAnnotationFile( Writer writer,
+            Map<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>> genesWithSpecificity,
+            OutputType ty, boolean knownGenesOnly ) throws IOException {
 
         int compositeSequencesProcessed = 0;
 
-        for ( CompositeSequence sequence : compositeSequences ) {
+        for ( CompositeSequence cs : genesWithSpecificity.keySet() ) {
 
-            Collection<Gene> genes = compositeSequenceService.getGenes( sequence );
+            // Collection<Gene> genes = compositeSequenceService.getGenes( sequence );
+            Map<PhysicalLocation, Collection<BlatAssociation>> geneclusters = genesWithSpecificity.get( cs );
 
-            ++compositeSequencesProcessed;
-
-            if ( ( genes == null ) || ( genes.isEmpty() ) ) {
-                writeAnnotationLine( writer, sequence.getName(), "", "", null );
+            if ( geneclusters.isEmpty() ) {
+                writeAnnotationLine( writer, cs.getName(), "", "", null );
                 continue;
             }
 
-            // actually the collection gotten back is a collection of proxies
-            // which causes issues. Need to reload the
-            // genes from the db.
-            Collection<Long> geneIds = new ArrayList<Long>();
+            List<Collection<OntologyTerm>> goTerms = new ArrayList<Collection<OntologyTerm>>();
+            List<String> genes = new ArrayList<String>();
+            List<String> geneDescriptions = new ArrayList<String>();
+            for ( Collection<BlatAssociation> cluster : geneclusters.values() ) {
 
-            for ( Gene g : genes ) {
-                geneIds.add( g.getId() );
-            }
+                Collection<Gene> retained = new HashSet<Gene>();
 
-            genes = geneService.loadMultiple( geneIds );
+                Collection<OntologyTerm> clusterGoTerms = new HashSet<OntologyTerm>();
+                for ( BlatAssociation bla : cluster ) {
+                    Gene g = bla.getGeneProduct().getGene();
+                    if ( knownGenesOnly && ( g instanceof PredictedGene || g instanceof ProbeAlignedRegion ) ) {
+                        continue;
+                    }
 
-            String geneNames = null;
-            String geneDescriptions = null;
-            Collection<OntologyTerm> goTerms = new ArrayList<OntologyTerm>();
+                    if ( log.isDebugEnabled() )
+                        log.debug( "Adding gene: " + g.getOfficialSymbol() + " of type: " + g.getClass() );
 
-            // Might be mulitple genes for a given cs. Need to hash it into one.
-            for ( Gene gene : genes ) {
-
-                if ( gene == null ) continue;
-
-                // Add PARs or predicted gene info to annotation file?
-                if ( knownGenesOnly && ( ( gene instanceof ProbeAlignedRegion ) || ( gene instanceof PredictedGene ) ) ) {
-                    log.debug( "Gene:  " + gene.getOfficialSymbol()
-                            + "  not included in annotations because it is a probeAligedRegion or predictedGene" );
-                    continue;
+                    retained.add( g );
                 }
 
-                if ( log.isDebugEnabled() )
-                    log.debug( "Adding gene: " + gene.getOfficialSymbol() + " of type: " + gene.getClass() );
+                if ( retained.size() == 0 ) continue;
 
-                addGoTerms( goTerms, gene, ty );
-                geneNames = addGeneSymbol( geneNames, gene );
-                geneDescriptions = addGeneName( geneDescriptions, gene );
+                List<Gene> retainedGenes = new ArrayList<Gene>( retained );
+                for ( Gene g : retainedGenes ) {
+                    clusterGoTerms.addAll( getGoTerms( g, ty ) );
+                }
 
+                genes.add( StringUtils
+                        .join( new TransformIterator( retained.iterator(), officialSymbolExtractor ), "," ) );
+
+                // This breaks if the descriptions contain "$".
+                geneDescriptions.add( StringUtils.join( new TransformIterator( retained.iterator(),
+                        descriptionExtractor ), "$" ) );
+
+                goTerms.add( clusterGoTerms );
             }
 
-            writeAnnotationLine( writer, sequence.getName(), geneNames, geneDescriptions, goTerms );
+            String geneString = StringUtils.join( genes, "|" );
+            String geneDescriptionString = StringUtils.join( geneDescriptions, "|" );
+            writeAnnotationLine( writer, cs.getName(), geneString, geneDescriptionString, goTerms );
 
-            if ( compositeSequencesProcessed % 500 == 0 && log.isInfoEnabled() ) {
-                log.info( "Processed " + compositeSequencesProcessed + "/" + compositeSequences.size()
+            if ( ++compositeSequencesProcessed % 500 == 0 && log.isInfoEnabled() ) {
+                log.info( "Processed " + compositeSequencesProcessed + "/" + genesWithSpecificity.size()
                         + " compositeSequences " );
             }
 
@@ -272,64 +305,12 @@ public class ArrayDesignAnnotationService {
         return writer;
     }
 
-    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
-        this.compositeSequenceService = compositeSequenceService;
-    }
-
     public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
         this.gene2GOAssociationService = gene2GOAssociationService;
     }
 
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
-    }
-
     public void setGoService( GeneOntologyService goService ) {
         this.goService = goService;
-    }
-
-    /**
-     * @param geneDescriptions
-     * @param gene
-     * @return
-     */
-    private String addGeneName( String geneDescriptions, Gene gene ) {
-        if ( gene.getOfficialName() != null ) {
-            if ( geneDescriptions == null ) {
-                geneDescriptions = gene.getOfficialName();
-            } else {
-                geneDescriptions += "|" + gene.getOfficialName();
-            }
-        }
-        return geneDescriptions;
-    }
-
-    /**
-     * @param geneNames
-     * @param gene
-     * @return
-     */
-    private String addGeneSymbol( String geneNames, Gene gene ) {
-        if ( gene.getOfficialSymbol() != null ) {
-            if ( geneNames == null ) {
-                geneNames = gene.getOfficialSymbol();
-            } else {
-                geneNames += "|" + gene.getOfficialSymbol();
-            }
-        }
-        return geneNames;
-    }
-
-    /**
-     * @param goTerms
-     * @param gene
-     * @param ty
-     * @return
-     */
-    private Collection<OntologyTerm> addGoTerms( Collection<OntologyTerm> goTerms, Gene gene, OutputType ty ) {
-        Collection<OntologyTerm> terms = getGoTerms( gene, ty );
-        goTerms.addAll( terms );
-        return terms;
     }
 
     /**
@@ -372,7 +353,6 @@ public class ArrayDesignAnnotationService {
                 results.remove( toRemoveOnto );
             }
         }
-
         return results;
     }
 
@@ -384,7 +364,7 @@ public class ArrayDesignAnnotationService {
      * @throws IOException Adds one line at a time to the annotation file
      */
     private void writeAnnotationLine( Writer writer, String probeId, String gene, String description,
-            Collection<OntologyTerm> goTerms ) throws IOException {
+            List<Collection<OntologyTerm>> goTerms ) throws IOException {
 
         if ( log.isDebugEnabled() ) log.debug( "Generating line for annotation file  \n" );
 
@@ -399,16 +379,12 @@ public class ArrayDesignAnnotationService {
             return;
         }
 
-        boolean wrote = false;
-        for ( OntologyTerm oe : goTerms ) {
-            if ( oe == null ) continue;
-            if ( wrote ) {
-                writer.write( "|" + GeneOntologyService.asRegularGoId( oe ) );
-            } else {
-                writer.write( GeneOntologyService.asRegularGoId( oe ) );
-            }
-            wrote = true;
+        List<String> clusterGoterms = new ArrayList<String>();
+        for ( Collection<OntologyTerm> oe : goTerms ) {
+            clusterGoterms.add( StringUtils.join( new TransformIterator( oe.iterator(), goTermExtractor ), "|" ) );
         }
+        String goterms = StringUtils.join( clusterGoterms, "|" );
+        writer.write( goterms );
 
         writer.write( "\n" );
         writer.flush();

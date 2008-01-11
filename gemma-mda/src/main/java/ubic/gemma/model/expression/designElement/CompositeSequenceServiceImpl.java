@@ -32,7 +32,9 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 
 /**
  * @author keshav
@@ -273,6 +275,13 @@ public class CompositeSequenceServiceImpl extends
     @Override
     protected CompositeSequence handleLoad( Long id ) throws Exception {
         return ( CompositeSequence ) this.getCompositeSequenceDao().load( id );
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Map<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>> handleGetGenesWithSpecificity(
+            Collection compositeSequences ) throws Exception {
+        return this.getCompositeSequenceDao().getGenesWithSpecificity( compositeSequences );
     }
 
 }

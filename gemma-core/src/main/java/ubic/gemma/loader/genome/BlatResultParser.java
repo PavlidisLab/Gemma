@@ -26,10 +26,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.sequence.SequenceWriter;
-import ubic.gemma.apps.Blat;
 import ubic.gemma.loader.util.parser.BasicLineParser;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Chromosome;
+import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -147,9 +147,6 @@ public class BlatResultParser extends BasicLineParser {
             result.setTargetEnd( Long.parseLong( f[TEND_FIELD] ) );
             result.setBlockCount( Integer.parseInt( f[BLOCKCOUNT_FIELD] ) );
 
-            // these fields are comman-delimited lists
-            // FIXME - there should be an aligned regions
-            // association.
             result.setBlockSizes( f[BLOCKSIZES_FIELD] );
             result.setQueryStarts( f[QSTARTS_FIELD] );
             result.setTargetStarts( f[TSTARTS_FIELD] );
@@ -184,6 +181,8 @@ public class BlatResultParser extends BasicLineParser {
                 result.setSearchedDatabase( searchedDatabase );
             }
 
+            result.setTargetAlignedRegion( this.makePhysicalLocation( result ) );
+
             return result;
         } catch ( NumberFormatException e ) {
             log.error( "Invalid number format", e );
@@ -191,6 +190,15 @@ public class BlatResultParser extends BasicLineParser {
         } catch ( IllegalArgumentException e ) {
             throw new RuntimeException( e );
         }
+    }
+
+    private PhysicalLocation makePhysicalLocation( BlatResult blatResult ) {
+        PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
+        pl.setChromosome( blatResult.getTargetChromosome() );
+        pl.setNucleotide( blatResult.getTargetStart() );
+        pl.setNucleotideLength( ( new Long( blatResult.getTargetEnd() - pl.getNucleotide() ) ).intValue() );
+        pl.setStrand( blatResult.getStrand() );
+        return pl;
     }
 
     /**

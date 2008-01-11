@@ -31,6 +31,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
@@ -45,6 +46,7 @@ import ubic.gemma.util.DifferentialExpressionAnalysisResultComparator;
  * 
  * @spring.bean id="differentialExpressionAnalyzerService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
+ * @spring.property name="differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
  * @spring.property name="differentialExpressionAnalyzer" ref="differentialExpressionAnalyzer"
  * @author keshav
  * @version $Id$
@@ -59,6 +61,7 @@ public class DifferentialExpressionAnalyzerService {
     private Log log = LogFactory.getLog( this.getClass() );
     private ExpressionExperimentService expressionExperimentService = null;
     private DifferentialExpressionAnalyzer differentialExpressionAnalyzer = null;
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     /**
      * Finds the persistent expression experiment. If there are no associated analyses with this experiment, the
@@ -68,6 +71,7 @@ public class DifferentialExpressionAnalyzerService {
      * @param forceAnalysis
      * @return
      */
+    @SuppressWarnings("unchecked")
     public Collection<DifferentialExpressionAnalysis> getDifferentialExpressionAnalyses(
             ExpressionExperiment expressionExperiment, boolean forceAnalysis ) {
 
@@ -76,7 +80,8 @@ public class DifferentialExpressionAnalyzerService {
             return null;
         }
 
-        Collection<ExpressionAnalysis> expressionAnalyses = expressionExperiment.getExpressionAnalyses();
+        Collection<ExpressionAnalysis> expressionAnalyses = differentialExpressionAnalysisService
+                .findByInvestigation( expressionExperiment );
 
         DifferentialExpressionAnalysis expressionAnalysis = differentialExpressionAnalyzer.getExpressionAnalysis();
 
@@ -90,9 +95,9 @@ public class DifferentialExpressionAnalyzerService {
         expressionAnalysis.setExperimentsAnalyzed( experimentsAnalyzed );
 
         expressionAnalyses.add( expressionAnalysis );
-        expressionExperiment.setExpressionAnalyses( expressionAnalyses );
+        // expressionExperiment.setExpressionAnalyses( expressionAnalyses );
 
-        expressionExperimentService.update( expressionExperiment );
+        // expressionExperimentService.update( expressionExperiment );
 
         Collection<DifferentialExpressionAnalysis> differentialExpressionAnalyses = new HashSet<DifferentialExpressionAnalysis>();
         for ( ExpressionAnalysis ea : expressionAnalyses ) {
@@ -114,11 +119,13 @@ public class DifferentialExpressionAnalyzerService {
      * @return boolean Whether analysis was run or not. This will be false if analysis had already been run on this
      *         experiment and forceRun=false.
      */
+    @SuppressWarnings("unchecked")
     public boolean runDifferentialExpressionAnalysis( ExpressionExperiment expressionExperiment, boolean forceRun ) {
 
         boolean analysisRun = false;
 
-        Collection<ExpressionAnalysis> expressionAnalyses = expressionExperiment.getExpressionAnalyses();
+        Collection<ExpressionAnalysis> expressionAnalyses = differentialExpressionAnalysisService
+                .findByInvestigation( expressionExperiment );
         if ( forceRun || expressionAnalyses.isEmpty() ) {
 
             String message = "Analyze " + expressionExperiment.getShortName() + ".  ";
@@ -140,10 +147,18 @@ public class DifferentialExpressionAnalyzerService {
             differentialExpressionAnalyzer.analyze( expressionExperiment );
             analysisRun = true;
         } else {
-            log.warn( "Differential expression analysis already run for experiment "
-                    + expressionExperiment.getShortName()
-                    + ".  Not running again.  To force a re-analysis, set forceRun = true." );
-            analysisRun = false;
+            boolean hasDiffex = false;
+            for ( ExpressionAnalysis expressionAnalysis : expressionAnalyses ) {
+                if ( expressionAnalysis instanceof DifferentialExpressionAnalysis ) {
+                    hasDiffex = true;
+                }
+            }
+            if ( hasDiffex ) {
+                log.warn( "Differential expression analysis already run for experiment "
+                        + expressionExperiment.getShortName()
+                        + ".  Not running again.  To force a re-analysis, set forceRun = true." );
+                analysisRun = false;
+            }
         }
         return analysisRun;
     }
@@ -388,11 +403,8 @@ public class DifferentialExpressionAnalyzerService {
             Collection<DifferentialExpressionAnalysis> analyses, String analysisType ) {
         DifferentialExpressionAnalysis analysis = null;
         for ( DifferentialExpressionAnalysis a : analyses ) {
-
-            if ( a instanceof DifferentialExpressionAnalysis ) {
-                analysis = a;
-                break;
-            }
+            analysis = a;
+            break;
         }
         return analysis;
     }
@@ -455,5 +467,10 @@ public class DifferentialExpressionAnalyzerService {
      */
     public void setDifferentialExpressionAnalyzer( DifferentialExpressionAnalyzer differentialExpressionAnalyzer ) {
         this.differentialExpressionAnalyzer = differentialExpressionAnalyzer;
+    }
+
+    public void setDifferentialExpressionAnalysisService(
+            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
+        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
     }
 }

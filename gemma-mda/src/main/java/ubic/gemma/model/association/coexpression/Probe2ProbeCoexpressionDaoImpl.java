@@ -32,12 +32,14 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
+import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.type.DoubleType;
 import org.hibernate.type.LongType;
+import org.springframework.orm.hibernate3.HibernateCallback;
 
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.coexpression.Link;
@@ -90,7 +92,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
         Collection<Probe2ProbeCoexpression> batch = new HashSet<Probe2ProbeCoexpression>();
 
-        Query query = super.getSession( true ).createQuery( "DELETE from " + className + " d where d in (:vals)" );
+        Query query = super.getSession( false ).createQuery( "DELETE from " + className + " d where d in (:vals)" );
 
         int count = 0;
         for ( Probe2ProbeCoexpression o : ( Collection<Probe2ProbeCoexpression> ) entities ) {
@@ -130,11 +132,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     @Override
     protected Integer handleCountLinks( ExpressionExperiment expressionExperiment ) throws Exception {
 
-        // FIXME figure out the taxon instead of this iteration.
-        String[] p2pClassNames = new String[] { "HumanProbeCoExpressionImpl", "MouseProbeCoExpressionImpl",
-                "RatProbeCoExpressionImpl", "OtherProbeCoExpressionImpl" };
-
-        Long result = 0l;
         for ( String p2pClassName : p2pClassNames ) {
 
             /*
@@ -146,26 +143,34 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
             List results = this.getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
 
-            if ( results != null ) {
-                if ( results.size() > 1 ) {
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                            "More than one instance of 'Integer" + "' was found when executing query --> '"
-                                    + queryString + "'" );
-                } else if ( results.size() == 1 ) {
-                    result += ( Long ) results.iterator().next();
-                }
-
-            }
-
+            /*
+             * We divide by 2 because all links are stored twice
+             */
+            return ( ( Long ) results.iterator().next() ).intValue() / 2;
         }
 
-        /*
-         * We divide by 2 because all links are stored twice
-         */
+        log.warn( "No such expression experiment " + expressionExperiment + " for counting links" );
+        return 0;
 
-        Integer resultAsInt = result.intValue();
-        return resultAsInt / 2;
+    }
 
+    @Override
+    protected List handleCreate( final List links ) {
+        List result = ( List ) this.getHibernateTemplate().execute( new HibernateCallback() {
+            public Object doInHibernate( Session session ) throws HibernateException {
+                int numDone = 0;
+                List<Object> result = new ArrayList<Object>();
+                for ( Object object : links ) {
+                    result.add( session.save( object ) );
+                    if ( ++numDone % 500 == 0 ) {
+                        session.flush();
+                        session.clear();
+                    }
+                }
+                return result;
+            }
+        } );
+        return result;
     }
 
     /*
@@ -186,36 +191,33 @@ public class Probe2ProbeCoexpressionDaoImpl extends
              * datavectors for this ee.
              */
             final String queryString = "select pp from ExpressionExperimentImpl ee inner join ee.designElementDataVectors as dv, "
-                    + p2pClassName + " as pp where pp.firstVector" + " = dv and ee= :ee ";
+                    + p2pClassName + " as pp where pp.firstVector = dv and ee= :ee ";
 
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setMaxResults( LINK_DELETE_BATCH_SIZE );
             queryObject.setParameter( "ee", ee );
 
-            // we query iteratively until there are no more links to get. This takes much less memory than doing it all
-            // at once. However, it is very easy for this loop to leak memory like crazy.
+            /*
+             * we query iteratively until there are no more links to get. This takes much less memory than doing it all
+             * at once.
+             */
             Collection results;
+            Analysis analysis = null;
             Probe2ProbeCoexpression oneLink = null; // used later.
             while ( true ) {
                 results = queryObject.list();
 
                 if ( results.size() == 0 ) break;
 
+                // Retrieve the analysis object for later removal.
                 if ( oneLink == null ) {
                     oneLink = ( Probe2ProbeCoexpression ) results.iterator().next();
                     Hibernate.initialize( oneLink );
-                    Analysis analysis = oneLink.getSourceAnalysis();
-                    if ( analysis != null ) {
-                        log.info( "Deleting analysis object" );
-                        this.getHibernateTemplate().delete( analysis );
-                    } else {
-                        log.info( "No analysis object associated with link " );
-                    }
+                    analysis = oneLink.getSourceAnalysis();
                 }
 
-                remove( results );
-
                 Integer numDone = results.size();
+                remove( results );
                 totalDone += numDone;
                 log.info( "Delete link progress: " + totalDone + " ..." );
 
@@ -223,6 +225,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             }
 
             if ( totalDone > 0 ) {
+                removeAnalysisObject( analysis );
                 break;
             }
         }
@@ -538,7 +541,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         maximumId = maximumId + 1;
         if ( maximumId * maximumId > Long.MAX_VALUE ) {
             log.warn( "The maximum key value is too big. Redundancy detection may be incorrect" );
-            maximumId = ( long ) Math.sqrt( ( double ) Long.MAX_VALUE );
+            maximumId = ( long ) Math.sqrt( Long.MAX_VALUE );
         }
         // remove redundancy (links which are already listed)
         for ( ProbeLink link : specificLinks ) {
@@ -745,6 +748,19 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         if ( tmpTable ) tableName = TMP_TABLE_PREFIX + tableName;
 
         return tableName;
+    }
+
+    /**
+     * @param analysis
+     */
+    private void removeAnalysisObject( Analysis analysis ) {
+        if ( analysis != null ) {
+            log.info( "Deleting analysis object" );
+            this.getHibernateTemplate().delete( analysis );
+            this.getHibernateTemplate().flush();
+        } else {
+            log.info( "No analysis object associated with link " );
+        }
     }
 
     /**

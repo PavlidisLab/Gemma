@@ -23,13 +23,12 @@
 package ubic.gemma.model.analysis;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * @see ubic.gemma.model.analysis.ProbeCoexpressionAnalysis
  */
-public class ProbeCoexpressionAnalysisImpl
-    extends ubic.gemma.model.analysis.ProbeCoexpressionAnalysis
-{
+public class ProbeCoexpressionAnalysisImpl extends ubic.gemma.model.analysis.ProbeCoexpressionAnalysis {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
@@ -37,7 +36,7 @@ public class ProbeCoexpressionAnalysisImpl
 
     @Override
     public Collection getResultSets() {
-        throw new UnsupportedOperationException();
+        return new HashSet();
     }
 
 }

@@ -24,6 +24,7 @@ import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -31,6 +32,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections.Transformer;
+import org.apache.commons.collections.iterators.TransformIterator;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -57,7 +61,9 @@ import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.TaxonUtility;
 import cern.colt.list.ObjectArrayList;
@@ -176,7 +182,7 @@ public class LinkAnalysisService {
         analysis.setName( ee.getShortName() + " link analysis" );
         analysis.getProtocol().setDescription(
                 analysis.getProtocol().getDescription() + "# FilterConfig:\n" + filterConfig.toString() );
-        
+
         assert ee.getId() != null;
         analysis.getExperimentsAnalyzed().add( ee );
 
@@ -226,7 +232,31 @@ public class LinkAnalysisService {
             CompositeSequence cs = ( CompositeSequence ) v.getDesignElement();
             probesForVectors.add( cs );
         }
-        Map<CompositeSequence, Collection<Gene>> probeToGeneMap = csService.getGenes( probesForVectors );
+        // Map<CompositeSequence, Collection<Gene>> probeToGeneMap = csService.getGenes( probesForVectors );
+        // la.setProbeToGeneMap( probeToGeneMap );
+
+        Map<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>> specificityData = csService
+                .getGenesWithSpecificity( probesForVectors );
+
+        /*
+         * Convert the specificity
+         */
+        Map<CompositeSequence, Collection<Collection<Gene>>> probeToGeneMap = new HashMap<CompositeSequence, Collection<Collection<Gene>>>();
+        for ( CompositeSequence cs : specificityData.keySet() ) {
+            if ( !probeToGeneMap.containsKey( cs ) ) {
+                probeToGeneMap.put( cs, new HashSet() );
+            }
+            Map<PhysicalLocation, Collection<BlatAssociation>> plba = specificityData.get( cs );
+            for ( PhysicalLocation pl : plba.keySet() ) {
+                Collection<Gene> cluster = new HashSet<Gene>();
+                for ( BlatAssociation bla : plba.get( pl ) ) {
+                    Gene gene = bla.getGeneProduct().getGene();
+                    cluster.add( gene );
+                }
+                probeToGeneMap.get( cs ).add( cluster );
+            }
+        }
+
         la.setProbeToGeneMap( probeToGeneMap );
     }
 
@@ -274,7 +304,7 @@ public class LinkAnalysisService {
      * @param c class that can create instances of the correct type of probe2probecoexpression.
      * @return
      */
-    private void persist( int numColumns, Collection<Probe2ProbeCoexpression> p2plinks, int i, double w,
+    private void persist( int numColumns, List<Probe2ProbeCoexpression> p2plinks, int i, double w,
             DesignElementDataVector v1, DesignElementDataVector v2, QuantitationType metric,
             ProbeCoexpressionAnalysis analysisObj, Creator c ) {
 
@@ -315,9 +345,11 @@ public class LinkAnalysisService {
 
         /*
          * Important implementation note: For efficiency reason, it is important that they be stored in order of "x"
-         * (the first designelementdatavector) in the database: so all all links with probe=x are clustered. (the actual
-         * order of x1 vs x2 doesn't matter). This makes retrievals much faster for the most common types of queries.
-         * Note that this relies on expected behavior that links.sort() will sort by the x coordinate.
+         * (where x is the index of the first DEDV in the correlation matrix, not the ID of the DEDV.) in the database:
+         * so all all links with probe=x are clustered. (the actual order of x1 vs x2 doesn't matter, just so long they
+         * are clustered). This makes retrievals much faster for the most common types of queries. Note that this relies
+         * on expected behavior that links.sort() will sort by the x coordinate. It also requires that when we persist
+         * the elements, we retain the order.
          */
         links.sort();
 
@@ -396,7 +428,7 @@ public class LinkAnalysisService {
             c = new Creator( OtherProbeCoExpression.Factory.class );
         }
 
-        Collection<Probe2ProbeCoexpression> p2plinkBatch = new HashSet<Probe2ProbeCoexpression>();
+        List<Probe2ProbeCoexpression> p2plinkBatch = new ArrayList<Probe2ProbeCoexpression>();
         for ( int i = 0, n = links.size(); i < n; i++ ) {
             Object val = links.getQuick( i );
             if ( val == null ) continue;
@@ -452,10 +484,16 @@ public class LinkAnalysisService {
      */
     private void writeLinks( LinkAnalysis la, Writer wr ) throws IOException {
         wr.write( la.getConfig().toString() );
-        Map<CompositeSequence, Collection<Gene>> probeToGeneMap = la.getProbeToGeneMap();
+        Map<CompositeSequence, Collection<Collection<Gene>>> probeToGeneMap = la.getProbeToGeneMap();
         ObjectArrayList links = la.getKeep();
         NumberFormat nf = NumberFormat.getInstance();
         nf.setMaximumFractionDigits( 4 );
+
+        Transformer officialSymbolExtractor = new Transformer() {
+            public Object transform( Object input ) {
+                return ( ( Gene ) input ).getOfficialSymbol();
+            }
+        };
 
         int i = 0;
         for ( int n = links.size(); i < n; i++ ) {
@@ -469,19 +507,23 @@ public class LinkAnalysisService {
             DesignElement p1 = la.getMetricMatrix().getProbeForRow( la.getDataMatrix().getRowElement( m.getx() ) );
             DesignElement p2 = la.getMetricMatrix().getProbeForRow( la.getDataMatrix().getRowElement( m.gety() ) );
 
-            Collection<Gene> g1 = probeToGeneMap.get( p1 );
-            Collection<Gene> g2 = probeToGeneMap.get( p1 );
+            Collection<Collection<Gene>> g1 = probeToGeneMap.get( p1 );
+            Collection<Collection<Gene>> g2 = probeToGeneMap.get( p2 );
 
-            String genes1 = "";
-            for ( Gene g : g1 ) {
-                genes1 = genes1 + g.getOfficialSymbol() + "|";
+            List<String> genes1 = new ArrayList<String>();
+            for ( Collection<Gene> cluster : g1 ) {
+                genes1.add( StringUtils
+                        .join( new TransformIterator( cluster.iterator(), officialSymbolExtractor ), "," ) );
             }
 
-            String genes2 = "";
-            for ( Gene g : g2 ) {
-                genes2 = genes2 + g.getOfficialSymbol() + "|";
+            List<String> genes2 = new ArrayList<String>();
+            for ( Collection<Gene> cluster : g2 ) {
+                genes2.add( StringUtils
+                        .join( new TransformIterator( cluster.iterator(), officialSymbolExtractor ), "," ) );
             }
-            wr.write( p1.getId() + "\t" + p2.getId() + "\t" + genes1 + "\t" + genes2 + "\t" + nf.format( w ) + "\n" );
+
+            wr.write( p1.getId() + "\t" + p2.getId() + "\t" + StringUtils.join( genes1.iterator(), "|" ) + "\t"
+                    + StringUtils.join( genes2.iterator(), "|" ) + "\t" + nf.format( w ) + "\n" );
 
             if ( i > 0 && i % 50000 == 0 ) {
                 log.info( i + " links printed" );

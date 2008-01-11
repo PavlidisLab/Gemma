@@ -18,19 +18,17 @@
  */
 package ubic.gemma.analysis.sequence;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
@@ -64,7 +62,7 @@ public class BlatAssociationScorer {
      */
     public static BlatAssociation scoreResults( Collection<BlatAssociation> blatAssociations ) {
 
-        Map<GeneProduct, Collection<BlatAssociation>> geneProducts2Associations = organizeBlatAssociationsByGeneProduct( blatAssociations );
+        Map<GeneProduct, Collection<BlatAssociation>> geneProducts2Associations = organizeBlatAssociationsByGeneProductAndInitializeScores( blatAssociations );
 
         BlatAssociation globalBest = removeExtraHitsPerGeneProduct( blatAssociations, geneProducts2Associations );
 
@@ -82,15 +80,109 @@ public class BlatAssociationScorer {
             return globalBest;
         }
 
-        Collection<Gene> distinctGenes = getDistinctGenes( genes2Associations );
+        Map<PhysicalLocation, Collection<Gene>> geneClusters = clusterGenes( genes2Associations );
 
-        // TODO: adjust this to account for differences between scores.
-        for ( Gene gene : distinctGenes ) {
-            for ( BlatAssociation blatAssociation : genes2Associations.get( gene ) ) {
-                blatAssociation.setSpecificity( 1.0 / distinctGenes.size() );
+        // compute specificity at the level of genes. First, get the best score for each gene cluster.
+        Map<PhysicalLocation, Double> scores = new HashMap<PhysicalLocation, Double>();
+        for ( PhysicalLocation pl : geneClusters.keySet() ) {
+            Double geneScore = 0.0;
+            for ( Gene cgene : geneClusters.get( pl ) ) {
+                for ( BlatAssociation blatAssociation : genes2Associations.get( cgene ) ) {
+                    Double alignScore = blatAssociation.getScore();
+                    if ( alignScore > geneScore ) {
+                        geneScore = alignScore;
+                    }
+                }
+            }
+            scores.put( pl, geneScore );
+        }
+
+        for ( PhysicalLocation pl : geneClusters.keySet() ) {
+            Double alignScore = scores.get( pl );
+            for ( Gene cgene : geneClusters.get( pl ) ) {
+                // All members of the cluster get the same specificity.
+                for ( BlatAssociation blatAssociation : genes2Associations.get( cgene ) ) {
+                    blatAssociation.setSpecificity( computeSpecificity( scores.values(), alignScore ) );
+                }
             }
         }
+
         return globalBest;
+    }
+
+    /**
+     * Compute a score we use to quantify the quality of a hit to a GeneProduct.
+     * <p>
+     * There are two criteria being considered: the quality of the alignment, and the amount of overlap.
+     * 
+     * @param blatScore A value from 0-1 indicating alignment quality.
+     * @param overlap A value from 0-1 indicating how much of the alignment overlaps the GeneProduct being considered.
+     * @return
+     */
+    protected static int computeScore( double blatScore, double overlap ) {
+        return ( int ) ( 1000 * blatScore * overlap );
+    }
+
+    /**
+     * Compute a score to quantify the specificity of a hit to a Gene (not a GeneProduct!). A value between 0 and 1.
+     * <p>
+     * The specificity is estimated as the fraction of the signal we expect to come from a given gene. The amount of
+     * signal for each gene is estimated using the score for that gene. The total signal is the sum of scores.
+     * <p>
+     * FIXME this assumes a linear relationship between score and hybridization signal, which is unrealistic. Because
+     * the scores for our hits are already filtered, this method gives results fairly close to 1/N.
+     * 
+     * @param scores r of all the genes for the hit in question.
+     * @param score
+     * @return
+     */
+    protected static Double computeSpecificity( Collection<Double> scores, double score ) {
+        if ( scores.size() == 1 ) {
+            return 1.0;
+        }
+        double total = 0.0;
+        for ( Double s : scores ) {
+            total += s;
+        }
+        if ( total == 0.0 ) {
+            return 0.0;
+        }
+        return score / total;
+    }
+
+    /**
+     * @param associations
+     * @return map of physical locations for the alignments, and which genes are found there.
+     */
+    private static Map<PhysicalLocation, Collection<Gene>> clusterGenes(
+            Map<Gene, Collection<BlatAssociation>> associations ) {
+
+        Map<PhysicalLocation, Collection<Gene>> clusters = new HashMap<PhysicalLocation, Collection<Gene>>();
+
+        for ( Gene gene : associations.keySet() ) {
+
+            Collection<BlatAssociation> geneAssoc = associations.get( gene );
+
+            for ( BlatAssociation ba : geneAssoc ) {
+                PhysicalLocation pl = ba.getBlatResult().getTargetAlignedRegion();
+                if ( !clusters.containsKey( pl ) ) {
+                    clusters.put( pl, new HashSet<Gene>() );
+                }
+                clusters.get( pl ).add( gene );
+            }
+        }
+
+        // debugging information about clusters.
+        if ( log.isDebugEnabled() ) {
+            for ( PhysicalLocation pl : clusters.keySet() ) {
+                if ( clusters.get( pl ).size() > 1 ) {
+                    log.debug( "Cluster at " + pl + " with " + clusters.get( pl ).size() + " members:\n"
+                            + StringUtils.join( clusters.get( pl ).iterator(), "\n" ) );
+                }
+            }
+        }
+
+        return clusters;
     }
 
     /**
@@ -100,7 +192,7 @@ public class BlatAssociationScorer {
     private static double computeScore( BlatAssociation blatAssociation ) {
         BlatResult br = blatAssociation.getBlatResult();
 
-        assert br != null;
+        assert br.getQuerySequence().getLength() > 0;
 
         double blatScore = br.score();
         double overlap = ( double ) blatAssociation.getOverlap() / ( double ) ( br.getQuerySequence().getLength() );
@@ -111,70 +203,14 @@ public class BlatAssociationScorer {
     }
 
     /**
-     * Are the genes _really_ different?
-     */
-    private static Collection<Gene> getDistinctGenes( Map<Gene, Collection<BlatAssociation>> associations ) {
-
-        // sort them so we detect multiple genes easily.
-        List<Gene> geneList = new ArrayList<Gene>();
-        geneList.addAll( associations.keySet() );
-        if ( associations.size() > 2 ) {
-            sortGenes( geneList );
-        }
-
-        Collection<Gene> distinctGenes = new HashSet<Gene>();
-        Gene lastGene = null;
-        distinctGenes.add( geneList.get( 0 ) );
-        for ( Gene gene : geneList ) {
-            assert gene != null;
-            if ( lastGene != null ) {
-
-                // int overlap = SequenceManipulation.computeOverlap( gene.getPhysicalLocation(), lastGene
-                // .getPhysicalLocation() );
-                // int length = gene.getPhysicalLocation().getNucleotideLength();
-                //
-                // if ( log.isDebugEnabled() )
-                // log.debug( "Overlap is " + overlap + "/" + length + " between " + gene + " and " + lastGene );
-
-                // if ( gene.getOfficialSymbol().equals( lastGene.getOfficialSymbol() ) ) {
-                // if ( overlap > 0 ) {
-                // // same gene.
-                // } else {
-                // // rare case where symbols are the same but not the same gene.
-                // distinctGenes.add( gene );
-                // }
-                // } else {
-                // // definitely not the same gene.
-                // distinctGenes.add( gene );
-                // }
-
-                if ( gene.equals( lastGene ) ) {
-                    log.debug( "" );
-                    log.debug( gene + " is equal to " + lastGene );
-                } else {
-                    distinctGenes.add( gene );
-                    log.debug( gene + " is not equal to " + lastGene );
-                }
-
-            }
-            lastGene = gene;
-        }
-
-        if ( log.isDebugEnabled() ) log.debug( distinctGenes.size() + " genes." );
-        return distinctGenes;
-    }
-
-    /**
      * @param blatAssociations
      * @return
      */
     private static Map<Gene, Collection<BlatAssociation>> organizeBlatAssociationsByGene(
             Collection<BlatAssociation> blatAssociations ) {
-
         Map<Gene, Collection<BlatAssociation>> genes = new HashMap<Gene, Collection<BlatAssociation>>();
         for ( BlatAssociation blatAssociation : blatAssociations ) {
             Gene gene = blatAssociation.getGeneProduct().getGene();
-            assert gene != null;
             if ( !genes.containsKey( gene ) ) {
                 genes.put( gene, new HashSet<BlatAssociation>() );
             }
@@ -191,7 +227,7 @@ public class BlatAssociationScorer {
      * @param geneProducts
      * @return
      */
-    private static Map<GeneProduct, Collection<BlatAssociation>> organizeBlatAssociationsByGeneProduct(
+    private static Map<GeneProduct, Collection<BlatAssociation>> organizeBlatAssociationsByGeneProductAndInitializeScores(
             Collection<BlatAssociation> blatAssociations ) {
         Map<GeneProduct, Collection<BlatAssociation>> geneProducts = new HashMap<GeneProduct, Collection<BlatAssociation>>();
         Collection<BioSequence> sequences = new HashSet<BioSequence>();
@@ -235,7 +271,7 @@ public class BlatAssociationScorer {
             Collection<BlatAssociation> geneProductBlatAssociations = geneProduct2BlatAssociations.get( geneProduct );
 
             if ( geneProductBlatAssociations.size() == 1 ) {
-                keepers = geneProductBlatAssociations;
+                keepers.add( geneProductBlatAssociations.iterator().next() );
                 continue;
             }
 
@@ -267,77 +303,4 @@ public class BlatAssociationScorer {
         blatAssociations.retainAll( keepers );
         return globalBest;
     }
-
-    /**
-     * @param geneList
-     */
-    private static void sortGenes( List<Gene> geneList ) {
-        Collections.sort( geneList, new Comparator<Gene>() {
-            public int compare( Gene arg0, Gene arg1 ) {
-                return arg0.getOfficialSymbol().compareTo( arg1.getOfficialSymbol() );
-            }
-        } );
-    }
-
-    /**
-     * Compute a score we use to quantify the quality of a hit to a GeneProduct.
-     * <p>
-     * There are two criteria being considered: the quality of the alignment, and the amount of overlap.
-     * 
-     * @param blatScore A value from 0-1 indicating alignment quality.
-     * @param overlap A value from 0-1 indicating how much of the alignment overlaps the GeneProduct being considered.
-     * @return
-     */
-    protected static int computeScore( double blatScore, double overlap ) {
-        return ( int ) ( 1000 * blatScore * overlap );
-    }
-
-    /**
-     * FIXME not used as is. Compute a score to quantify the specificity of a hit to a Gene (not a GeneProduct!). A
-     * value between 0 and 1.
-     * <p>
-     * The criteria considered are: the number of equal or better hits, and the difference between this hit and the next
-     * worst hit.
-     * <p>
-     * If there are n identical or better hits (including this one), the specificity is 1/n.
-     * <p>
-     * If this is the best hit, then the specificity is (scoremax - nextscore)/scoremax.
-     * 
-     * @param scores A list in decreasing order. If it is not sorted you won't get the right results!
-     * @param score
-     * @return
-     */
-    protected static Double computeSpecificity( List<Double> scores, double score ) {
-
-        if ( scores.size() == 1 ) {
-            return 1.0;
-        }
-
-        // algorithm: compute the number of scores which are equal or higher than this one.
-        int numBetter = 0;
-        int i = 0;
-        double nextBest = 0.0;
-        double total = 0.0;
-        for ( Double s : scores ) {
-
-            total += s;
-
-            if ( s >= score ) {
-                numBetter++; // this is guaranteed to be at least one
-            }
-            if ( s < score ) {
-                nextBest = s;
-                break;
-            }
-            i++;
-        }
-
-        if ( numBetter > 1 ) {
-            return 1.0 / numBetter;
-        }
-
-        return ( score - nextBest ) / score;
-
-    }
-
 }

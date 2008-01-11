@@ -57,7 +57,7 @@ public class GeneImpl extends ubic.gemma.model.genome.Gene {
             boolean bothHaveTaxon = this.getTaxon() != null && that.getTaxon() != null;
 
             if ( bothHaveTaxon && bothHaveSymbol && this.getTaxon().equals( that.getTaxon() )
-                    && this.getOfficialSymbol().equals( that.getOfficialSymbol() ) ) {
+                    && this.getOfficialSymbol().equalsIgnoreCase( that.getOfficialSymbol() ) ) {
 
                 boolean bothHaveName = this.getOfficialName() != null && that.getOfficialName() != null;
                 boolean bothHavePhysicalLocation = this.getPhysicalLocation() != null

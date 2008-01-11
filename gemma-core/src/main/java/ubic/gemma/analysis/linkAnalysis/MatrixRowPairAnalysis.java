@@ -35,6 +35,17 @@ import cern.colt.list.ObjectArrayList;
  */
 public interface MatrixRowPairAnalysis {
 
+    /**
+     * Get pvalue corrected for multiple testing of the genes. We conservatively penalize the pvalues for each
+     * additional test the gene received. For example, if correlation is between two probes that each assay two genes,
+     * the pvalue is penalized by a factor of 4.0.
+     * 
+     * @param i int
+     * @param j int
+     * @param correl double
+     * @param numused int
+     * @return double
+     */
     double correctedPvalue( int i, int j, double correl, int numused );
 
     public void calculateMetrics();
@@ -45,8 +56,7 @@ public interface MatrixRowPairAnalysis {
 
     public void setPValueThreshold( double k );
 
-    public void setDuplicateMap( Map<CompositeSequence, Collection<Gene>> m1,
-            Map<Gene, Collection<CompositeSequence>> m2 );
+    public void setDuplicateMap( Map<CompositeSequence, Collection<Collection<Gene>>> m1 );
 
     public void setLowerTailThreshold( double k );
 
@@ -63,5 +73,7 @@ public interface MatrixRowPairAnalysis {
     public DesignElement getProbeForRow( ExpressionDataMatrixRowElement rowEl );
 
     public void setMinNumpresent( int minSamplesToKeepCorrelation );
+
+    double getNumUniqueGenes();
 
 }

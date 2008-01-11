@@ -82,6 +82,7 @@ public class GeneController extends BaseMultiActionController {
         g.setId( geneDelegator.getId() );
         Collection<Gene2GOAssociation> associations = gene2GOAssociationService.findAssociationByGene( g );
         Collection<AnnotationValueObject> ontos = new HashSet<AnnotationValueObject>();
+        
         for ( Gene2GOAssociation assoc : associations ) {
 
             if ( assoc.getOntologyEntry() == null ) continue;
@@ -98,7 +99,7 @@ public class GeneController extends BaseMultiActionController {
 
             ontos.add( annot );
         }
-
+        cleanup( ontos );
         return ontos;
     }
 
@@ -169,7 +170,7 @@ public class GeneController extends BaseMultiActionController {
             Collection<VocabCharacteristic> ontos = gene2GOAssociationService.findByGene( gene );
             if ( ontos.size() != 0 ) {
                 fillInTermNames( ontos );
-                cleanup( ontos );
+                cleanupVcs( ontos );
                 mav.addObject( "ontologyEntries", ontos );
             }
             mav.addObject( "numOntologyEntries", ontos.size() );
@@ -263,10 +264,26 @@ public class GeneController extends BaseMultiActionController {
      * 
      * @param ontos
      */
-    private void cleanup( Collection<VocabCharacteristic> ontos ) {
+    private void cleanupVcs( Collection<VocabCharacteristic> ontos ) {
         for ( Iterator<VocabCharacteristic> it = ontos.iterator(); it.hasNext(); ) {
             VocabCharacteristic v = it.next();
             String term = v.getDescription();
+            if ( term.equals( "molecular_function" ) || term.equals( "biological_process" )
+                    || term.equals( "cellular_component" ) ) {
+                it.remove();
+            }
+        }
+    }
+
+    /**
+     * Remove root terms.
+     * 
+     * @param associations
+     */
+    private void cleanup( Collection<AnnotationValueObject> associations ) {
+        for ( Iterator<AnnotationValueObject> it = associations.iterator(); it.hasNext(); ) {
+            String term = it.next().getTermName();
+            if ( term == null ) continue;
             if ( term.equals( "molecular_function" ) || term.equals( "biological_process" )
                     || term.equals( "cellular_component" ) ) {
                 it.remove();

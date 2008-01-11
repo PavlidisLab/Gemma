@@ -92,6 +92,8 @@ public class PubMedXMLParser {
             throw new RuntimeException( e );
         } catch ( SAXException e ) {
             throw new RuntimeException( e );
+        } catch ( TransformerException e ) {
+            throw new RuntimeException( e );
         }
     }
 
@@ -100,7 +102,7 @@ public class PubMedXMLParser {
      * @return
      * @throws IOException
      */
-    private String extractAuthorList( NodeList authorList ) throws IOException, TransformerException {
+    private String extractAuthorList( NodeList authorList ) throws IOException {
         StringBuilder al = new StringBuilder();
         for ( int i = 0; i < authorList.getLength(); i++ ) {
             Node item = authorList.item( i );
@@ -140,7 +142,8 @@ public class PubMedXMLParser {
      * @return
      * @throws IOException
      */
-    private Collection<BibliographicReference> extractBibRefs( Document document ) throws IOException {
+    private Collection<BibliographicReference> extractBibRefs( Document document ) throws IOException,
+            TransformerException {
 
         // Was there an error? (not found)
         if ( document.getElementsByTagName( ERROR_TAG ).getLength() > 0 ) {
@@ -152,35 +155,31 @@ public class PubMedXMLParser {
 
         log.debug( articles.getLength() + " articles found in document" );
 
-        try {
-            int i = 0;
-            for ( ; i < articles.getLength(); i++ ) {
-                BibliographicReference bibRef = BibliographicReference.Factory.newInstance();
-                Node record = articles.item( i );
+        int i = 0;
+        for ( ; i < articles.getLength(); i++ ) {
+            BibliographicReference bibRef = BibliographicReference.Factory.newInstance();
+            Node record = articles.item( i );
 
-                Node article = processRecord( bibRef, record );
+            Node article = processRecord( bibRef, record );
 
-                assert article != null;
+            assert article != null;
 
-                Node journal = processArticle( bibRef, article );
+            Node journal = processArticle( bibRef, article );
 
-                processJournalInfo( bibRef, journal );
+            processJournalInfo( bibRef, journal );
 
-                result.add( bibRef );
+            result.add( bibRef );
 
-                if ( i > 0 && i % 1000 == 0 ) {
-                    log.info( "Processed " + i + " articles" );
-                }
+            if ( i > 0 && i % 1000 == 0 ) {
+                log.info( "Processed " + i + " articles" );
             }
-            log.info( "Processed " + i + " articles" );
-        } catch ( TransformerException e ) {
-            throw new RuntimeException( e );
         }
+        log.info( "Processed " + i + " articles" );
+
         return result;
     }
 
-    private NodeList processJournalInfo( BibliographicReference bibRef, Node journal ) throws IOException,
-            TransformerException {
+    private NodeList processJournalInfo( BibliographicReference bibRef, Node journal ) throws IOException {
         NodeList journalNodes = journal.getChildNodes();
         for ( int j = 0; j < journalNodes.getLength(); j++ ) {
             Node item = journalNodes.item( j );
@@ -209,7 +208,7 @@ public class PubMedXMLParser {
         return journalNodes;
     }
 
-    private Node processRecord( BibliographicReference bibRef, Node record ) throws TransformerException, IOException {
+    private Node processRecord( BibliographicReference bibRef, Node record ) throws IOException {
         Node article = null;
 
         NodeList recordNodes = record.getChildNodes();
@@ -287,8 +286,7 @@ public class PubMedXMLParser {
      * @throws TransformerException
      * @throws IOException
      */
-    private Collection<PublicationType> extractPublicationTypes( Node pubtypeList ) throws TransformerException,
-            IOException {
+    private Collection<PublicationType> extractPublicationTypes( Node pubtypeList ) throws IOException {
         Collection<PublicationType> publicationTypes = new HashSet<PublicationType>();
         NodeList childNodes = pubtypeList.getChildNodes();
         for ( int i = 0; i < childNodes.getLength(); i++ ) {
@@ -310,7 +308,7 @@ public class PubMedXMLParser {
      * @throws TransformerException
      * @throws IOException
      */
-    private Collection<Keyword> extractKeywords( Node keywordNode ) throws TransformerException, IOException {
+    private Collection<Keyword> extractKeywords( Node keywordNode ) throws IOException {
         Collection<Keyword> keywords = new HashSet<Keyword>();
         NodeList childNodes = keywordNode.getChildNodes();
         for ( int i = 0; i < childNodes.getLength(); i++ ) {
@@ -335,7 +333,7 @@ public class PubMedXMLParser {
      * @throws TransformerException
      * @throws IOException
      */
-    private Collection<Compound> extractChemicals( Node chemNodes ) throws TransformerException, IOException {
+    private Collection<Compound> extractChemicals( Node chemNodes ) throws IOException {
         Collection<Compound> compounds = new HashSet<Compound>();
         NodeList childNodes = chemNodes.getChildNodes();
         for ( int i = 0; i < childNodes.getLength(); i++ ) {
@@ -371,8 +369,7 @@ public class PubMedXMLParser {
      * @throws TransformerException
      * @throws IOException
      */
-    private void processMESH( Node meshHeadings, BibliographicReference bibRef ) throws TransformerException,
-            IOException {
+    private void processMESH( Node meshHeadings, BibliographicReference bibRef ) throws IOException {
         NodeList childNodes = meshHeadings.getChildNodes();
 
         for ( int i = 0; i < childNodes.getLength(); i++ ) {
@@ -463,7 +460,7 @@ public class PubMedXMLParser {
      * @return
      * @throws IOException
      */
-    private Date extractPublicationDate( Node dateNode ) throws IOException, TransformerException {
+    private Date extractPublicationDate( Node dateNode ) throws IOException {
         Date d = extractJournalIssueDate( dateNode );
         // if ( d == null ) d = extractPubmedPubdate( dateNode );
         return d;
@@ -475,7 +472,7 @@ public class PubMedXMLParser {
      * @throws TransformerException
      * @throws IOException
      */
-    private Date extractJournalIssueDate( Node dateNode ) throws TransformerException, IOException {
+    private Date extractJournalIssueDate( Node dateNode ) throws IOException {
 
         String yearText = null;// = XMLUtils.getTextValue( ( Element ) y );
         String medLineText = null;// = XMLUtils.getTextValue( ( Element ) medLineDate );
@@ -553,7 +550,7 @@ public class PubMedXMLParser {
     // * @throws IOException
     // * @deprecated
     // */
-    // private Date extractPubmedPubdate( Node dateNode ) throws TransformerException, IOException {
+    // private Date extractPubmedPubdate( Node dateNode ) IOException {
     // NodeList dateList = org.apache.xpath.XPathAPI.selectNodeList( article, "/descendant::"
     // + PUBMED_PUB_DATE_ELEMENT );
     // int year = 0;

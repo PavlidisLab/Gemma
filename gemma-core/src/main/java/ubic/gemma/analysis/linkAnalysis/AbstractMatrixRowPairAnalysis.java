@@ -20,9 +20,11 @@ package ubic.gemma.analysis.linkAnalysis;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -44,6 +46,9 @@ import cern.colt.list.ObjectArrayList;
  */
 public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnalysis {
 
+    protected static final int NUM_BINS = 2048;
+    protected static final int HALF_BIN = NUM_BINS / 2;
+    protected static final Log log = LogFactory.getLog( MatrixRowPairPearsonAnalysis.class );
     protected CompressedSparseDoubleMatrix2DNamed results = null;
     protected int minSamplesToKeepCorrelation = 0;
     protected double storageThresholdValue;
@@ -54,13 +59,10 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     protected double globalMean = 0.0; // mean of the entire distribution.
     protected int numVals = 0; // number of values actually stored in the matrix
     protected ExpressionDataDoubleMatrix dataMatrix;
+
     protected boolean[] hasGenesCache;
     protected Map<ExpressionDataMatrixRowElement, DesignElement> rowMapCache = new HashMap<ExpressionDataMatrixRowElement, DesignElement>();
     protected int minNumUsed = 3;
-
-    protected static final int NUM_BINS = 2048;
-    protected static final int HALF_BIN = NUM_BINS / 2;
-    protected static final Log log = LogFactory.getLog( MatrixRowPairPearsonAnalysis.class );
 
     protected boolean[] hasMissing = null;
     protected double upperTailThreshold = 0.0;
@@ -68,10 +70,11 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     protected double lowerTailThreshold = 0.0;
     protected double pValueThreshold = 0.0;
     protected boolean histogramIsFilled = false;
-    protected Map<CompositeSequence, Collection<Gene>> probeToGeneMap = null;
+    protected Map<CompositeSequence, Collection<Collection<Gene>>> probeToGeneMap = null;
     protected Map<Gene, Collection<CompositeSequence>> geneToProbeMap = null;
 
     protected int[] fastHistogram = new int[NUM_BINS];
+    private int numUniqueGenes = 0;
 
     /**
      * Read back the histogram as a DoubleArrayList of counts.
@@ -88,6 +91,26 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     }
 
     /**
+     * Identify the correlations that are above the set thresholds.
+     * 
+     * @return cern.colt.list.ObjectArrayList
+     */
+    public ObjectArrayList getKeepers() {
+        return keepers;
+    }
+
+    /**
+     * @return baseCode.dataStructure.NamedMatrix
+     */
+    public NamedMatrix getMatrix() {
+        return results;
+    }
+
+    public double getNumUniqueGenes() {
+        return numUniqueGenes;
+    }
+
+    /**
      * @param rowEl
      * @return
      */
@@ -100,6 +123,34 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
         // bin 1024 = correlation of 0.0 1024/1024 - 1 = 0
         // bin 0 = correlation of -1.0 : 0/1024 - 1 = -1
         return ( ( double ) i / HALF_BIN ) - 1.0;
+    }
+
+    /**
+     * @return double
+     */
+    public double kurtosis() {
+        if ( !histogramIsFilled ) {
+            throw new IllegalStateException( "Don't call kurtosis when histogram isn't filled!" );
+        }
+
+        double sumfour = 0.0;
+        double sumsquare = 0.0;
+        for ( int i = 0, n = results.rows(); i < n; i++ ) {
+            for ( int j = i + 1, m = results.columns(); j < m; j++ ) {
+                double r;
+                if ( results.getQuick( i, j ) != 0 ) {
+                    r = results.getQuick( i, j );
+                } else {
+                    r = 0;
+                    /** @todo calculate the value */
+                }
+                double deviation = r - globalMean;
+                sumfour += Math.pow( deviation, 4.0 );
+                sumsquare += deviation * deviation;
+            }
+        }
+        return sumsquare * numVals * ( numVals + 1.0 ) / ( numVals - 1.0 ) - 3 * sumsquare * sumsquare / ( numVals - 2 )
+                * ( numVals - 3 );
     }
 
     /**
@@ -120,9 +171,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     /**
      * 
      */
-    public void setDuplicateMap( Map<CompositeSequence, Collection<Gene>> probeToGeneMap,
-            Map<Gene, Collection<CompositeSequence>> geneToProbeMap ) {
-        this.geneToProbeMap = geneToProbeMap;
+    public void setDuplicateMap( Map<CompositeSequence, Collection<Collection<Gene>>> probeToGeneMap ) {
         this.probeToGeneMap = probeToGeneMap;
         init();
     }
@@ -182,20 +231,6 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     }
 
     /**
-     * Set an (absolute value) correlation, below which values are not maintained in the correlation matrix. They are
-     * still kept in the histogram. (In some implementations this can greatly reduce the memory requirements for the
-     * correlation matrix).
-     * 
-     * @param k double
-     */
-    protected void setStorageThresholdValue( double k ) {
-        if ( k < 0.0 || k > 1.0 ) {
-            throw new IllegalArgumentException( "Correlation must be given as between 0 and 1" );
-        }
-        storageThresholdValue = k;
-    }
-
-    /**
      * Store information about whether data includes missing values.
      * 
      * @return int
@@ -234,12 +269,9 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     }
 
     /**
-     * @param duplicates Map
+     *  
      */
     protected void finishMetrics() {
-        if ( !this.histogramIsFilled && this.probeToGeneMap != null && this.geneToProbeMap != null ) {
-            // log.info( "Skipped " + duplicateSkip + " pairs of duplicates" );
-        }
         this.histogramIsFilled = true;
         globalMean = globalTotal / numVals;
     }
@@ -248,46 +280,8 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
      * @param j
      * @return
      */
-    protected Collection<Gene> getGenesForRow( int j ) {
+    protected Collection<Collection<Gene>> getGenesForRow( int j ) {
         return this.probeToGeneMap.get( getProbeForRow( dataMatrix.getRowElement( j ) ) );
-    }
-
-    /**
-     * Checks for valid values of correlation and encoding.
-     * 
-     * @param i int
-     * @param j int
-     * @param correl double
-     * @param numused int
-     */
-    protected void setCorrel( int i, int j, double correl, int numused ) {
-        if ( Double.isNaN( correl ) ) return;
-        double acorrel = Math.abs( correl );
-
-        // it is possible, due to roundoff, to overflow the bins.
-        int lastBinIndex = fastHistogram.length - 1;
-
-        if ( !histogramIsFilled ) {
-            if ( useAbsoluteValue ) {
-                int bin = Math.min( ( int ) ( ( 1.0 + acorrel ) * HALF_BIN ), lastBinIndex );
-                fastHistogram[bin]++;
-                globalTotal += acorrel;
-                // histogram.fill( acorrel ); // this is suprisingly slow due to zillions of calls to Math.floor.
-            } else {
-                globalTotal += correl;
-                int bin = Math.min( ( int ) ( ( 1.0 + correl ) * HALF_BIN ), lastBinIndex );
-                fastHistogram[bin]++;
-                // histogram.fill( correl );
-            }
-            numVals++;
-        }
-
-        if ( acorrel > storageThresholdValue && results != null ) {
-            results.setQuick( i, j, correl );
-        }
-
-        keepCorrel( i, j, correl, numused );
-
     }
 
     /**
@@ -301,6 +295,9 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
      * Initialize caches.
      */
     protected void init() {
+
+        initGeneToProbeMap();
+
         List<ExpressionDataMatrixRowElement> rowElements = this.dataMatrix.getRowElements();
         hasGenesCache = new boolean[rowElements.size()];
 
@@ -309,7 +306,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
             DesignElement de = element.getDesignElement();
             rowMapCache.put( element, de );
 
-            Collection<Gene> geneIdSet = this.probeToGeneMap.get( de );
+            Collection geneIdSet = this.probeToGeneMap.get( de );
             Integer i = element.getIndex();
             hasGenesCache[i] = geneIdSet != null && geneIdSet.size() > 0;
 
@@ -397,46 +394,82 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     }
 
     /**
-     * Identify the correlations that are above the set thresholds.
+     * Checks for valid values of correlation and encoding.
      * 
-     * @return cern.colt.list.ObjectArrayList
+     * @param i int
+     * @param j int
+     * @param correl double
+     * @param numused int
      */
-    public ObjectArrayList getKeepers() {
-        return keepers;
-    }
+    protected void setCorrel( int i, int j, double correl, int numused ) {
+        if ( Double.isNaN( correl ) ) return;
+        double acorrel = Math.abs( correl );
 
-    /**
-     * @return baseCode.dataStructure.NamedMatrix
-     */
-    public NamedMatrix getMatrix() {
-        return results;
-    }
+        // it is possible, due to roundoff, to overflow the bins.
+        int lastBinIndex = fastHistogram.length - 1;
 
-    /**
-     * @return double
-     */
-    public double kurtosis() {
         if ( !histogramIsFilled ) {
-            throw new IllegalStateException( "Don't call kurtosis when histogram isn't filled!" );
+            if ( useAbsoluteValue ) {
+                int bin = Math.min( ( int ) ( ( 1.0 + acorrel ) * HALF_BIN ), lastBinIndex );
+                fastHistogram[bin]++;
+                globalTotal += acorrel;
+                // histogram.fill( acorrel ); // this is suprisingly slow due to zillions of calls to Math.floor.
+            } else {
+                globalTotal += correl;
+                int bin = Math.min( ( int ) ( ( 1.0 + correl ) * HALF_BIN ), lastBinIndex );
+                fastHistogram[bin]++;
+                // histogram.fill( correl );
+            }
+            numVals++;
         }
 
-        double sumfour = 0.0;
-        double sumsquare = 0.0;
-        for ( int i = 0, n = results.rows(); i < n; i++ ) {
-            for ( int j = i + 1, m = results.columns(); j < m; j++ ) {
-                double r;
-                if ( results.getQuick( i, j ) != 0 ) {
-                    r = results.getQuick( i, j );
-                } else {
-                    r = 0;
-                    /** @todo calculate the value */
+        if ( acorrel > storageThresholdValue && results != null ) {
+            results.setQuick( i, j, correl );
+        }
+
+        keepCorrel( i, j, correl, numused );
+
+    }
+
+    /**
+     * Set an (absolute value) correlation, below which values are not maintained in the correlation matrix. They are
+     * still kept in the histogram. (In some implementations this can greatly reduce the memory requirements for the
+     * correlation matrix).
+     * 
+     * @param k double
+     */
+    protected void setStorageThresholdValue( double k ) {
+        if ( k < 0.0 || k > 1.0 ) {
+            throw new IllegalArgumentException( "Correlation must be given as between 0 and 1" );
+        }
+        storageThresholdValue = k;
+    }
+
+    /**
+     * populate geneToProbeMap and gather stats.
+     */
+    private void initGeneToProbeMap() {
+        int[] stats = new int[10];
+        this.numUniqueGenes = 0;
+        this.geneToProbeMap = new HashMap<Gene, Collection<CompositeSequence>>();
+        for ( CompositeSequence cs : probeToGeneMap.keySet() ) {
+            Collection<Collection<Gene>> genes = probeToGeneMap.get( cs );
+            for ( Collection<Gene> cluster : genes ) {
+                numUniqueGenes++;
+                for ( Gene g : cluster ) {
+                    if ( !geneToProbeMap.containsKey( g ) ) {
+                        geneToProbeMap.put( g, new HashSet<CompositeSequence>() );
+                    }
+                    this.geneToProbeMap.get( g ).add( cs );
                 }
-                double deviation = r - globalMean;
-                sumfour += Math.pow( deviation, 4.0 );
-                sumsquare += deviation * deviation;
+
+                if ( cluster.size() >= stats.length ) {
+                    stats[stats.length - 1]++;
+                } else {
+                    stats[cluster.size()]++;
+                }
             }
         }
-        return sumsquare * numVals * ( numVals + 1.0 ) / ( numVals - 1.0 ) - 3 * sumsquare * sumsquare / ( numVals - 2 )
-                * ( numVals - 3 );
+        log.info( "Mapping Stats: " + ArrayUtils.toString( stats ) );
     }
 }

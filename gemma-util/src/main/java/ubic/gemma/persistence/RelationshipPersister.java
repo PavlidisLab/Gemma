@@ -94,6 +94,8 @@ public class RelationshipPersister extends ExpressionPersister {
      * @return
      */
     protected ProbeCoexpressionAnalysis persistProbeCoexpressionAnalysis( ProbeCoexpressionAnalysis entity ) {
+        if ( entity == null ) return null;
+        if ( !isTransient( entity ) ) return entity;
         entity.setProtocol( persistProtocol( entity.getProtocol() ) );
         return probeCoexpressionAnalysisService.create( entity );
     }

@@ -46,7 +46,7 @@ public class ExpressionExperimentImpl extends ubic.gemma.model.expression.experi
 
     @Override
     public Collection getAnalyses() {
-       return this.getExpressionAnalyses();
+  //     return this.getExpressionAnalyses();
+        return null;
     }
-
 }

@@ -78,16 +78,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
     private LinkAnalysisConfig linkAnalysisConfig = new LinkAnalysisConfig();
 
-    /**
-     * @param arrayDesign
-     */
-    private void audit( ExpressionExperiment ee, String note, AuditEventType eventType ) {
-        if ( linkAnalysisConfig.isUseDb() ) {
-            expressionExperimentReportService.generateSummaryObject( ee.getId() );
-            auditTrailService.addUpdateEvent( ee, eventType, note );
-        }
-    }
-
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
@@ -130,24 +120,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
         addOption( metricOption );
 
-    }
-
-    @SuppressWarnings("static-access")
-    private void buildFilterConfigOptions() {
-        Option minPresentFraction = OptionBuilder.hasArg().withArgName( "Missing Value Threshold" ).withDescription(
-                "Fraction of data points that must be present in a profile to be retained , default="
-                        + FilterConfig.DEFAULT_MINPRESENT_FRACTION ).withLongOpt( "missingcut" ).create( 'm' );
-        addOption( minPresentFraction );
-
-        Option lowExpressionCut = OptionBuilder.hasArg().withArgName( "Expression Threshold" ).withDescription(
-                "Fraction of expression vectors to reject based on low values, default="
-                        + FilterConfig.DEFAULT_LOWEXPRESSIONCUT ).withLongOpt( "lowcut" ).create( 'l' );
-        addOption( lowExpressionCut );
-
-        Option lowVarianceCut = OptionBuilder.hasArg().withArgName( "Variance Threshold" ).withDescription(
-                "Fraction of expression vectors to reject based on low variance (or coefficient of variation), default="
-                        + FilterConfig.DEFAULT_LOWVARIANCECUT ).withLongOpt( "lowvarcut" ).create( "lv" );
-        addOption( lowVarianceCut );
     }
 
     @SuppressWarnings("unchecked")
@@ -253,19 +225,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         return null;
     }
 
-    /**
-     * @param expressionExperiment
-     * @param e
-     */
-    private void logFailure( ExpressionExperiment expressionExperiment, Exception e ) {
-        if ( e instanceof InsufficientSamplesException ) {
-            audit( expressionExperiment, e.getMessage(), TooSmallDatasetLinkAnalysisEvent.Factory.newInstance() );
-        } else {
-            audit( expressionExperiment, ExceptionUtils.getFullStackTrace( e ), FailedLinkAnalysisEvent.Factory
-                    .newInstance() );
-        }
-    }
-
     @Override
     protected void processOptions() {
         super.processOptions();
@@ -299,6 +258,34 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         this.auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
     }
 
+    /**
+     * @param arrayDesign
+     */
+    private void audit( ExpressionExperiment ee, String note, AuditEventType eventType ) {
+        if ( linkAnalysisConfig.isUseDb() ) {
+            expressionExperimentReportService.generateSummaryObject( ee.getId() );
+            auditTrailService.addUpdateEvent( ee, eventType, note );
+        }
+    }
+
+    @SuppressWarnings("static-access")
+    private void buildFilterConfigOptions() {
+        Option minPresentFraction = OptionBuilder.hasArg().withArgName( "Missing Value Threshold" ).withDescription(
+                "Fraction of data points that must be present in a profile to be retained , default="
+                        + FilterConfig.DEFAULT_MINPRESENT_FRACTION ).withLongOpt( "missingcut" ).create( 'm' );
+        addOption( minPresentFraction );
+
+        Option lowExpressionCut = OptionBuilder.hasArg().withArgName( "Expression Threshold" ).withDescription(
+                "Fraction of expression vectors to reject based on low values, default="
+                        + FilterConfig.DEFAULT_LOWEXPRESSIONCUT ).withLongOpt( "lowcut" ).create( 'l' );
+        addOption( lowExpressionCut );
+
+        Option lowVarianceCut = OptionBuilder.hasArg().withArgName( "Variance Threshold" ).withDescription(
+                "Fraction of expression vectors to reject based on low variance (or coefficient of variation), default="
+                        + FilterConfig.DEFAULT_LOWVARIANCECUT ).withLongOpt( "lowvarcut" ).create( "lv" );
+        addOption( lowVarianceCut );
+    }
+
     private void getFilterConfigOptions() {
         if ( hasOption( 'm' ) ) {
             filterConfig.setMinPresentFraction( Double.parseDouble( getOptionValue( 'm' ) ) );
@@ -308,6 +295,19 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         }
         if ( hasOption( "lv" ) ) {
             filterConfig.setLowVarianceCut( Double.parseDouble( getOptionValue( "lv" ) ) );
+        }
+    }
+
+    /**
+     * @param expressionExperiment
+     * @param e
+     */
+    private void logFailure( ExpressionExperiment expressionExperiment, Exception e ) {
+        if ( e instanceof InsufficientSamplesException ) {
+            audit( expressionExperiment, e.getMessage(), TooSmallDatasetLinkAnalysisEvent.Factory.newInstance() );
+        } else {
+            audit( expressionExperiment, ExceptionUtils.getFullStackTrace( e ), FailedLinkAnalysisEvent.Factory
+                    .newInstance() );
         }
     }
 }

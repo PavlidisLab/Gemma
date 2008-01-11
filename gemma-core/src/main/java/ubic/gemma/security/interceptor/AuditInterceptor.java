@@ -58,6 +58,12 @@ public class AuditInterceptor implements MethodInterceptor {
 
     private static Log log = LogFactory.getLog( AuditInterceptor.class.getName() );
 
+    AuditTrailDao auditTrailDao;
+
+    UserDao userDao;
+
+    CrudUtils crudUtils;
+
     private boolean AUDIT_CREATE = true;
 
     private boolean AUDIT_DELETE = true;
@@ -65,12 +71,6 @@ public class AuditInterceptor implements MethodInterceptor {
     private boolean AUDIT_READ = false;
 
     private boolean AUDIT_UPDATE = true;
-
-    AuditTrailDao auditTrailDao;
-
-    UserDao userDao;
-
-    CrudUtils crudUtils;
 
     /**
      * 
@@ -159,9 +159,9 @@ public class AuditInterceptor implements MethodInterceptor {
 
     /**
      * @param d
-     * @param user
+     * @param noteExtra Additional text to add to the automatically generated note.
      */
-    private void addCreateAuditEvent( Auditable d ) {
+    private void addCreateAuditEvent( Auditable d, String noteExtra ) {
         assert d != null;
         if ( log.isDebugEnabled() ) log.debug( "Create audit event for: " + d.getClass() );
         AuditTrail at = null;
@@ -196,8 +196,7 @@ public class AuditInterceptor implements MethodInterceptor {
 
         if ( at.getEvents().size() == 0 ) {
             User user = getCurrentUser();
-
-            at.start( getCreateEventNote( d ), user );
+            at.start( getCreateEventNote( d, noteExtra ), user );
             persistAndLogAuditEvent( d, user, at.getLast().getNote() );
         }
 
@@ -221,24 +220,15 @@ public class AuditInterceptor implements MethodInterceptor {
     private void addLoadAuditEvent( Auditable auditable ) {
         assert auditable != null;
         AuditTrail at = auditable.getAuditTrail();
-        this.auditTrailDao.thaw( at );
-
         if ( at == null ) {
             log.warn( "No audit trail for update method call" );
-            addCreateAuditEvent( auditable );
+            addCreateAuditEvent( auditable, " - Event added after a load on the existing object." );
         } else {
+            this.auditTrailDao.thaw( at );
             User user = getCurrentUser();
             at.read( getLoadEventNote( auditable ), user );
             persistAndLogAuditEvent( auditable, user, at.getLast().getNote() );
         }
-    }
-
-    /**
-     * @param auditable
-     * @return
-     */
-    private String getLoadEventNote( Auditable auditable ) {
-        return "Loaded " + auditable.getClass().getSimpleName() + " " + auditable.getId();
     }
 
     /**
@@ -251,7 +241,7 @@ public class AuditInterceptor implements MethodInterceptor {
             addLoadAuditEvent( auditable );
         } else if ( AUDIT_CREATE ) {
             log.trace( "FindOrCreate..create on " + auditable );
-            addCreateAuditEvent( auditable );
+            addCreateAuditEvent( auditable, " - from findOrCreate" );
         }
     }
 
@@ -267,12 +257,8 @@ public class AuditInterceptor implements MethodInterceptor {
         }
 
         if ( at.getEvents().size() == 0 ) {
-            if ( at.getId() != null ) {
-                throw new IllegalStateException( d + " is persistent but lacks a create event" );
-            } else {
-                log.warn( "No create event for update method call on " + d + ", performing 'create'" );
-                addCreateAuditEvent( d );
-            }
+            log.warn( "No create event for update method call on " + d + ", performing 'create'" );
+            addCreateAuditEvent( d, " - Event added on update of existing object." );
         } else {
             User user = getCurrentUser();
             at.update( getUpdateEventNote( d ), user );
@@ -314,8 +300,8 @@ public class AuditInterceptor implements MethodInterceptor {
      * @param d
      * @return
      */
-    private String getCreateEventNote( Auditable d ) {
-        return "Create " + d.getClass().getSimpleName() + " " + d.getId();
+    private String getCreateEventNote( Auditable d, String extra ) {
+        return "Create " + d.getClass().getSimpleName() + " " + d.getId() + extra;
     }
 
     /**
@@ -326,11 +312,35 @@ public class AuditInterceptor implements MethodInterceptor {
     }
 
     /**
+     * @param auditable
+     * @return
+     */
+    private String getLoadEventNote( Auditable auditable ) {
+        return "Loaded " + auditable.getClass().getSimpleName() + " " + auditable.getId();
+    }
+
+    /**
      * @param d
      * @return
      */
     private String getUpdateEventNote( Auditable d ) {
         return "Updated " + d.getClass().getSimpleName() + " " + d.getId();
+    }
+
+    /**
+     * Updates and logs the audit trail provided certain conditions are met (ie. user is not null).
+     * 
+     * @param at
+     */
+    private void persistAndLogAuditEvent( Auditable d, User user, String note ) {
+        if ( user != null ) {
+            AuditTrail at = d.getAuditTrail();
+            assert at != null;
+            auditTrailDao.update( at );
+            if ( log.isTraceEnabled() ) log.trace( note + " event on " + d + " by " + user.getUserName() );
+        } else {
+            log.info( "NULL user: Cannot update the audit trail with a null user" );
+        }
     }
 
     /**
@@ -357,9 +367,9 @@ public class AuditInterceptor implements MethodInterceptor {
                 addLoadAuditEvent( returnValue );
             }
         } else if ( AUDIT_CREATE && CrudUtils.methodIsCreate( m ) ) {
-            addCreateAuditEvent( returnValue );
+            addCreateAuditEvent( returnValue, "" );
             visited.add( returnValue );
-            processAssociations( m, returnValue, visited );
+            processAssociationsAfter( m, returnValue, visited );
         }
 
     }
@@ -371,7 +381,7 @@ public class AuditInterceptor implements MethodInterceptor {
      * @param m
      * @param object
      */
-    private void processAssociations( Method m, Object object, Collection<Object> visited ) {
+    private void processAssociationsAfter( Method m, Object object, Collection<Object> visited ) {
 
         if ( object instanceof AuditTrail ) return;
         EntityPersister persister = crudUtils.getEntityPersister( object );
@@ -446,26 +456,117 @@ public class AuditInterceptor implements MethodInterceptor {
     }
 
     /**
+     * Fills in audit trails on newly created child objects after an 'update'.
+     * <p>
+     * FIXME this only goes down one level, so if multiple levels of children are created by the cascade they will not
+     * be given audit trails.
+     * <p>
+     * FIXME this does not add update events to all child auditable objects. It is debatable whether it should (probably
+     * the answer is yes).
+     * 
+     * @param m
+     * @param object
+     */
+    private void processAssociationsBefore( Method m, Object object ) {
+
+        if ( object instanceof AuditTrail ) return;
+        EntityPersister persister = crudUtils.getEntityPersister( object );
+        if ( persister == null ) {
+            throw new IllegalArgumentException( "No persister found for " + object.getClass().getName() );
+        }
+        CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
+        String[] propertyNames = persister.getPropertyNames();
+        try {
+            for ( int j = 0; j < propertyNames.length; j++ ) {
+                CascadeStyle cs = cascadeStyles[j];
+
+                String propertyName = propertyNames[j];
+
+                if ( log.isTraceEnabled() )
+                    log.trace( "Checking property " + propertyName + " of " + object + " for cascade audit" );
+
+                /*
+                 * If the action being taken will result in a hibernate cascade, we need to update the audit information
+                 * for the child objects. (This is because this interceptor is only triggered by service actions.)
+                 * Otherwise, low-level hibernate activities (like cascading updates) are not seen.
+                 */
+                if ( !crudUtils.needCascade( m, cs ) ) {
+                    continue;
+                }
+
+                PropertyDescriptor descriptor = BeanUtils.getPropertyDescriptor( object.getClass(), propertyName );
+                Object associatedObject = ReflectionUtil.getProperty( object, descriptor );
+
+                if ( associatedObject == null ) continue;
+
+                Class<?> propertyType = descriptor.getPropertyType();
+
+                if ( Auditable.class.isAssignableFrom( propertyType ) ) {
+
+                    if ( log.isTraceEnabled() )
+                        log.trace( "Processing audit for property " + propertyName + ", Cascade=" + cs );
+
+                    if ( ( ( Auditable ) associatedObject ).getAuditTrail() == null ) {
+                        addCreateAuditEvent( ( Auditable ) associatedObject, " - entity created by cascade from "
+                                + object );
+                    }
+
+                } else if ( Collection.class.isAssignableFrom( propertyType ) ) {
+                    Collection associatedObjects = ( Collection ) associatedObject;
+
+                    try {
+                        for ( Object collectionMember : associatedObjects ) {
+                            if ( Auditable.class.isAssignableFrom( collectionMember.getClass() ) ) {
+                                if ( log.isTraceEnabled() ) {
+                                    log.trace( "Processing audit for member " + collectionMember + " of collection "
+                                            + propertyName + ", Cascade=" + cs );
+                                }
+                                if ( ( ( Auditable ) collectionMember ).getAuditTrail() == null ) {
+                                    addCreateAuditEvent( ( Auditable ) collectionMember,
+                                            " - entity created by cascade from " + object );
+                                }
+                            }
+                        }
+                    } catch ( org.hibernate.LazyInitializationException e ) {
+                        // This is almost always not a problem, as it means the collection is already in the system. But
+                        // it can indicate a problem in the thaw state of the audited object.
+                        log.warn( "Collection " + propertyName + " on " + object
+                                + " could not be initialized, it will not be audited" );
+                    }
+                }
+            }
+        } catch ( IllegalAccessException e ) {
+            throw new RuntimeException( e );
+        } catch ( InvocationTargetException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
      * @param method
      * @param d
      */
     private void processBefore( Method method, Auditable d ) {
 
-        // saves us the trouble...
+        /*
+         * Normally all auditables should have audit trails. But we must allow for errors. IInstead of throwng ian exception we just add itt.
+         */
         if ( d != null && d.getAuditTrail() == null ) {
-            if ( d.getId() != null ) {
-                throw new IllegalStateException( d + " has no audit trail, but it looks persistent." );
-            } else {
-                AuditTrail at = AuditTrail.Factory.newInstance();
-                d.setAuditTrail( at );
-                if ( log.isDebugEnabled() ) log.debug( "Added auditTrail to " + d );
-            }
+            // if ( d.getId() != null ) {
+            // throw new IllegalStateException( d + " has no audit trail, but it looks persistent." );
+            // } else {
+            AuditTrail at = AuditTrail.Factory.newInstance();
+            d.setAuditTrail( at );
+            if ( log.isDebugEnabled() ) log.debug( "Added auditTrail to " + d );
+            // }
         }
 
         if ( method.getName().equals( "create" ) ) {
             // Defer until afterwards.
         } else if ( AUDIT_UPDATE && CrudUtils.methodIsUpdate( method ) ) {
             addUpdateAuditEvent( d ); // no return value so we have to do it before.
+            // In case of a cascade that creates new objects. Make sure they get audit trails
+            processAssociationsBefore( method, d );
         } else if ( CrudUtils.methodIsLoad( method ) ) {
             // Defer until afterwards.
         } else if ( method.getName().startsWith( "find" ) ) {
@@ -476,22 +577,6 @@ public class AuditInterceptor implements MethodInterceptor {
             throw new IllegalArgumentException( "Shouldn't be getting method " + method );
         }
 
-    }
-
-    /**
-     * Updates and logs the audit trail provided certain conditions are met (ie. user is not null).
-     * 
-     * @param at
-     */
-    private void persistAndLogAuditEvent( Auditable d, User user, String note ) {
-        if ( user != null ) {
-            AuditTrail at = d.getAuditTrail();
-            assert at != null;
-            auditTrailDao.update( at );
-            if ( log.isTraceEnabled() ) log.trace( note + " event on " + d + " by " + user.getUserName() );
-        } else {
-            log.info( "NULL user: Cannot update the audit trail with a null user" );
-        }
     }
 
 }
