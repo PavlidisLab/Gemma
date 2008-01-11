@@ -347,6 +347,7 @@ Mapping URLS to controllers
 							<value>loadNewOntology</value>
 							<value>isOntologyLoaded</value>
 							<value>getUsefulMgedTerms</value>
+							<value>getMgedTermsByKey</value>
 						</list>
 					</property>
 				</bean>
