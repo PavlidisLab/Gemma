@@ -48,7 +48,7 @@ public class CommonsConfigurationPropertyPlaceholderConfigurerTest extends TestC
         super.setUp();
         CompositeConfiguration config = new CompositeConfiguration();
         config.addConfiguration( new SystemConfiguration() );
-        config.addConfiguration( new PropertiesConfiguration( "build.properties" ) );
+        config.addConfiguration( new PropertiesConfiguration( "Gemma.properties" ) );
         String home = ConfigUtils.getString( "gemma.home" );
 
         // InputStream doesn't work for maven...get 'don't read twice' error.

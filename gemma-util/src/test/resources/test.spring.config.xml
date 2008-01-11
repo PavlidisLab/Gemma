@@ -15,7 +15,7 @@
 
 	<bean id="buildProperties" class="org.apache.commons.configuration.PropertiesConfiguration">
 		<constructor-arg index="0">
-			<value>build.properties</value>
+			<value>Gemma.properties</value>
 		</constructor-arg>
 	</bean>
 
