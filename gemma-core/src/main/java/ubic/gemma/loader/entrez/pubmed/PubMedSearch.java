@@ -26,15 +26,13 @@ import java.util.HashSet;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.xml.sax.SAXException;
 
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * Search PubMed for terms, retrieve document records.
@@ -51,17 +49,12 @@ public class PubMedSearch {
      * 
      */
     public PubMedSearch() {
-        try {
-            Configuration config = new PropertiesConfiguration( "Gemma.properties" );
-            String baseURL = ( String ) config.getProperty( "entrez.esearch.baseurl" );
-            String db = ( String ) config.getProperty( "entrez.efetch.pubmed.db" );
-            // String idtag = ( String ) config.getProperty( "entrez.efetch.pubmed.idtag" );
-            String retmode = ( String ) config.getProperty( "entrez.efetch.pubmed.retmode" );
-            String rettype = ( String ) config.getProperty( "entrez.efetch.pubmed.rettype" );
-            uri = baseURL + "&" + db + "&" + retmode + "&" + rettype;
-        } catch ( ConfigurationException e ) {
-            throw new RuntimeException( e );
-        }
+        String baseURL = ( String ) ConfigUtils.getProperty( "entrez.esearch.baseurl" );
+        String db = ( String ) ConfigUtils.getProperty( "entrez.efetch.pubmed.db" );
+        // String idtag = ( String ) config.getProperty( "entrez.efetch.pubmed.idtag" );
+        String retmode = ( String ) ConfigUtils.getProperty( "entrez.efetch.pubmed.retmode" );
+        String rettype = ( String ) ConfigUtils.getProperty( "entrez.efetch.pubmed.rettype" );
+        uri = baseURL + "&" + db + "&" + retmode + "&" + rettype;
     }
 
     /**
@@ -113,7 +106,6 @@ public class PubMedSearch {
         return searchAndRetrieveIdsByHTTP( builder.toString() );
     }
 
-    
     /**
      * Gets all the pubmed ID's that would be returned from a pubmed search string, using two eUtil calls.
      * 
@@ -137,7 +129,7 @@ public class PubMedSearch {
         // parse how many
         int count = parser.getCount( toBeGotten.openStream() );
 
-        //now get them all
+        // now get them all
         URLString += "&retmax=" + count;
         toBeGotten = new URL( URLString );
         log.info( "Fetching " + count + " ID's from:" + toBeGotten );
@@ -154,7 +146,7 @@ public class PubMedSearch {
      * @throws IOException
      */
     public Collection<BibliographicReference> searchAndRetrieveIdByHTTP( Collection<String> searchTerms )
-            throws IOException, SAXException, ParserConfigurationException {
+            throws IOException {
 
         Collection<BibliographicReference> results = fetchById( searchTerms );
 
