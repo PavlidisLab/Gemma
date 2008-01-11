@@ -140,6 +140,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
             if ( ex != null ) {
                 ex.printStackTrace();
             }
+            System.exit( 0 );
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
@@ -155,22 +156,13 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
         Exception err = processCommandLine( "Array design probe ontology annotation ", args );
         if ( err != null ) return err;
 
-        int n = 0;
         try {
-            log.info( "Waiting for Gene Ontology to load" );
-            while ( !goService.isReady() ) {
-                Thread.sleep( 500 );
-                if ( ( n++ % 100 ) == 0 ) {
-                    log.info( "Waiting ..." );
-                }
-            }
+            waitForGeneOntologyReady();
 
             if ( processAllADs ) {
                 processAllADs();
-
             } else if ( batchFileName != null ) {
                 processBatchFile( this.batchFileName );
-
             } else {
                 ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
                 processAD( arrayDesign, this.fileName, type );
@@ -181,6 +173,21 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
         }
 
         return null;
+    }
+
+    /**
+     * @param n
+     * @throws InterruptedException
+     */
+    private void waitForGeneOntologyReady() throws InterruptedException {
+        int n = 0;
+        log.info( "Waiting for Gene Ontology to load" );
+        while ( !goService.isReady() ) {
+            Thread.sleep( 500 );
+            if ( ++n % 100 == 0 ) {
+                log.info( "Waiting ..." );
+            }
+        }
     }
 
     /**
