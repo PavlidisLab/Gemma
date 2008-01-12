@@ -25,6 +25,8 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import junit.framework.TestCase;
 
 /**
+ * These tests require a populated Human database. Valid as of 1/2008.
+ * 
  * @author pavlidis
  * @version $Id$
  */
@@ -45,10 +47,10 @@ public class GoldenPathQueryTest extends TestCase {
     }
 
     public final void testQueryMrna() throws Exception {
-        Collection<BlatResult> actualValue = queryer.findAlignments( "CR609160" );
-        assertEquals( 1, actualValue.size() );
+        Collection<BlatResult> actualValue = queryer.findAlignments( "AK095183" );
+        assertEquals( 3, actualValue.size() );
         BlatResult r = actualValue.iterator().next();
-        assertEquals( "CR609160", ( r.getQuerySequence().getName() ) );
+        assertEquals( "AK095183", ( r.getQuerySequence().getName() ) );
     }
 
     public final void testQueryNoResult() throws Exception {

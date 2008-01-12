@@ -42,7 +42,7 @@ public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfiguratio
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
 
-        analysis = ( DifferentialExpressionAnalyzer ) this.getBean( "differentialExpressionAnalysis" );
+        analysis = ( DifferentialExpressionAnalyzer ) this.getBean( "differentialExpressionAnalyzer" );
 
     }
 

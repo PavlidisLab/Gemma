@@ -123,7 +123,7 @@ public class SecurityService {
 
                         Collection returnedCollection = ( Collection ) clazz.getMethod( name, ( Class[] ) null )
                                 .invoke( targetObject, ( Object[] ) null );
-                        if ( returnedCollection.isEmpty() ) continue;
+                        if ( returnedCollection == null || returnedCollection.isEmpty() ) continue;
 
                         /* check if an object in collection is in unsecuredCol */
                         Object objInCol = returnedCollection.iterator().next();

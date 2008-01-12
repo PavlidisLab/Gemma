@@ -172,6 +172,7 @@ public class DesignElementDataVectorDaoImpl extends
                 .getBiologicalCharacteristic();
         if ( seq != null ) {
             session.update( seq );
+            Hibernate.initialize( seq );
         }
 
         ArrayDesign arrayDesign = ( ( CompositeSequence ) designElementDataVector.getDesignElement() ).getArrayDesign();

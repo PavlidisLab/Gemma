@@ -57,7 +57,6 @@ import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
@@ -82,8 +81,6 @@ public class TestPersistentObjectHelper {
     public static final int TEST_ELEMENT_COLLECTION_SIZE = 6;
     private PersisterHelper persisterHelper;
     private ExternalDatabaseService externalDatabaseService;
-
-    private TaxonService taxonService;
 
     private ExternalDatabase geo;
     private ExternalDatabase genbank;
@@ -610,7 +607,7 @@ public class TestPersistentObjectHelper {
             testTaxon.setCommonName( "elephant" );
             testTaxon.setScientificName( "Loxodonta" );
             testTaxon.setNcbiId( 1245 );
-            testTaxon = taxonService.findOrCreate( testTaxon );
+            testTaxon = ( Taxon ) persisterHelper.persist( testTaxon );
             assert testTaxon != null && testTaxon.getId() != null;
         }
         return testTaxon;
@@ -672,13 +669,6 @@ public class TestPersistentObjectHelper {
      */
     public void setPersisterHelper( PersisterHelper persisterHelper ) {
         this.persisterHelper = persisterHelper;
-    }
-
-    /**
-     * @param taxonService the taxonService to set
-     */
-    public void setTaxonService( TaxonService taxonService ) {
-        this.taxonService = taxonService;
     }
 
 }
