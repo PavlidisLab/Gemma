@@ -20,8 +20,10 @@ package ubic.gemma.analysis.util;
 
 import java.util.List;
 
+import org.rosuda.REngine.REXPMismatchException;
+
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
-import ubic.basecode.util.RCommand;
+import ubic.basecode.util.RServeClient;
 
 /**
  * Object used by the marray bioconductor package. See marrayRaw, marrayInfo, marrayLayout in the package documentations
@@ -39,7 +41,7 @@ public class MArrayRaw extends RCommander {
         rc.voidEval( "library(marray)" );
     }
 
-    public MArrayRaw( RCommand rc ) {
+    public MArrayRaw( RServeClient rc ) {
         super( rc );
         rc.voidEval( "library(marray)" );
     }
@@ -70,7 +72,7 @@ public class MArrayRaw extends RCommander {
         if ( red == null || green == null ) throw new IllegalArgumentException( "Signal matrices must not be null" );
 
         log.debug( "Making marrayRaw object" );
-        String rawObjectName = "marrayraw." + RCommand.variableIdentityNumber( red );
+        String rawObjectName = "marrayraw." + RServeClient.variableIdentityNumber( red );
 
         String redMaName = rc.assignMatrix( red );
         String greenMaName = rc.assignMatrix( green );
@@ -96,12 +98,16 @@ public class MArrayRaw extends RCommander {
 
         rc.voidEval( makeRawCmd );
 
-        // sanity check.
-        double[] c = rc.eval( "maGf(" + rawObjectName + ")[1,]" ).asDoubleArray();
-        if ( c == null || c.length == 0 ) {
-            throw new RuntimeException(
-                    "marrayRaw value was not propertly set: " + rc.getLastError() == null ? "(no error message)" : rc
-                            .getLastError() );
+        try {
+            // sanity check.
+            double[] c = rc.eval( "maGf(" + rawObjectName + ")[1,]" ).asDoubles();
+            if ( c == null || c.length == 0 ) {
+                throw new RuntimeException(
+                        "marrayRaw value was not propertly set: " + rc.getLastError() == null ? "(no error message)"
+                                : rc.getLastError() );
+            }
+        } catch ( REXPMismatchException e ) {
+            throw new RuntimeException( e );
         }
 
         return rawObjectName;
@@ -119,7 +125,7 @@ public class MArrayRaw extends RCommander {
     public String makeMArrayLayout( int gridRows, int gridColumns, int rowsPerGrid, int colsPerGrid ) {
         log.debug( "Making layout" );
         int numSpots = gridRows * gridColumns * rowsPerGrid * colsPerGrid;
-        String arrayLayoutName = "layout." + RCommand.variableIdentityNumber( this );
+        String arrayLayoutName = "layout." + RServeClient.variableIdentityNumber( this );
         String makeLayoutCmd = arrayLayoutName + "<-new(\"marrayLayout\", maNgr=" + gridRows + ", maNgc=" + gridColumns
                 + ", maNsr=" + rowsPerGrid + ", maNsc=" + colsPerGrid + ", maNspots=" + numSpots + ", maSub=TRUE)";
 
@@ -138,7 +144,7 @@ public class MArrayRaw extends RCommander {
     public String makeMArrayLayout( int numSpots ) {
         log.debug( "Making layout" );
 
-        String arrayLayoutName = "layout." + RCommand.variableIdentityNumber( this );
+        String arrayLayoutName = "layout." + RServeClient.variableIdentityNumber( this );
         String makeLayoutCmd = arrayLayoutName + "<-new(\"marrayLayout\", maNgr=" + 1 + ", maNgc=" + 1 + ", maNsr=" + 1
                 + ", maNsc=" + numSpots + ", maNspots=" + numSpots + ", maSub=TRUE)";
 
@@ -155,7 +161,7 @@ public class MArrayRaw extends RCommander {
      */
     public String makeMArrayInfo( List<String> labels ) {
         log.debug( "Making info" );
-        String infoName = "info." + RCommand.variableIdentityNumber( labels );
+        String infoName = "info." + RServeClient.variableIdentityNumber( labels );
         String labelsVarName = rc.assignStringList( labels );
         String makeInfoCmd = infoName + "<-new(\"marrayInfo\", maLabels=" + labelsVarName + ")";
         rc.voidEval( makeInfoCmd );

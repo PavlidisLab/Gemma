@@ -23,7 +23,7 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.rosuda.JRclient.REXP;
+import org.rosuda.JRI.REXP; 
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
@@ -123,9 +123,9 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
 
         log.debug( pvalueCommand.toString() );
 
-        REXP regExp = rc.eval( pvalueCommand.toString() );
+        REXP regExp = ( REXP ) rc.eval( pvalueCommand.toString() );
 
-        double[] pvalues = ( double[] ) regExp.getContent();
+        double[] pvalues = regExp.asDoubleArray();
 
         // removes NA row
         double[] filteredPvalues = new double[( pvalues.length / NUM_RESULTS_FROM_R ) * ACTUAL_NUM_RESULTS];
@@ -148,9 +148,9 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
 
         log.debug( fstatisticCommand.toString() );
 
-        REXP fregExp = rc.eval( fstatisticCommand.toString() );
+        REXP fregExp = ( REXP ) rc.eval( fstatisticCommand.toString() );
 
-        double[] fstatistics = ( double[] ) fregExp.getContent();
+        double[] fstatistics = fregExp.asDoubleArray();
 
         // removes NA row
         double[] filteredFStatistics = new double[( fstatistics.length / NUM_RESULTS_FROM_R ) * ACTUAL_NUM_RESULTS];

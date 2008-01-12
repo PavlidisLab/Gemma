@@ -27,7 +27,7 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.rosuda.JRclient.REXP;
+import org.rosuda.JRI.REXP;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.dataStructure.matrix.FastRowAccessDoubleMatrix2DNamed;
@@ -80,13 +80,13 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      */
     @Override
     public DifferentialExpressionAnalysis getDifferentialExpressionAnalysis( ExpressionExperiment expressionExperiment ) {
-
         return oneWayAnova( expressionExperiment );
     }
 
     /**
      * @param expressionExperiment
      * @return
+     * @throws REXPMismatchException
      */
     public DifferentialExpressionAnalysis oneWayAnova( ExpressionExperiment expressionExperiment ) {
 
@@ -136,9 +136,9 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         log.info( pvalueCommand.toString() );
 
-        REXP regExp = rc.eval( pvalueCommand.toString() );
+        REXP regExp = ( REXP ) rc.eval( pvalueCommand.toString() );
 
-        double[] pvalues = ( double[] ) regExp.getContent();
+        double[] pvalues = regExp.asDoubleArray();
 
         // removes NA row
         double[] filteredPvalues = new double[pvalues.length / NUM_RESULTS_FROM_R];
@@ -160,9 +160,9 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         log.info( fStatisticCommand.toString() );
 
-        REXP fRegExp = rc.eval( fStatisticCommand.toString() );
+        REXP fRegExp = ( REXP ) rc.eval( fStatisticCommand.toString() );
 
-        double[] fstatistics = ( double[] ) fRegExp.getContent();
+        double[] fstatistics = fRegExp.asDoubleArray();
 
         // removes NA row
         double[] filteredFStatistics = new double[fstatistics.length / NUM_RESULTS_FROM_R];

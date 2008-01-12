@@ -21,7 +21,8 @@ package ubic.gemma.analysis.util;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.util.RCommand;
+import ubic.basecode.util.RClient;
+import ubic.basecode.util.RServeClient;
 
 /**
  * Encapsulates a connection to the RServer.
@@ -35,7 +36,7 @@ public abstract class RCommander {
 
     protected static Log log = LogFactory.getLog( RCommander.class.getName() );
 
-    protected RCommand rc;
+    protected RServeClient rc;
 
     public RCommander() {
         this.init();
@@ -44,7 +45,7 @@ public abstract class RCommander {
     /**
      * @param rc2
      */
-    public RCommander( RCommand connection ) {
+    public RCommander( RServeClient connection ) {
         if ( connection != null && connection.isConnected() ) {
             this.rc = connection;
         } else {
@@ -53,7 +54,7 @@ public abstract class RCommander {
     }
 
     protected void init() {
-        rc = RCommand.newInstance( TIMEOUT_MILLI_SECONDS );
+        rc = RServeClient.newInstance( TIMEOUT_MILLI_SECONDS );
         if ( rc == null ) {
             throw new RuntimeException( "Error during getting RServer instance" );
         }
@@ -80,7 +81,7 @@ public abstract class RCommander {
         cleanup();
     }
 
-    public RCommand getRCommandObject() {
+    public RClient getRCommandObject() {
         return rc;
     }
 

@@ -181,6 +181,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
         ExperimentalFactor experimentalFactorB = ( ExperimentalFactor ) iter.next();
 
         return twoWayAnova( expressionExperiment, experimentalFactorA, experimentalFactorB );
+
     }
 
     /**

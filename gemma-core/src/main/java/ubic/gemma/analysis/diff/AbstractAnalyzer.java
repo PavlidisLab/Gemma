@@ -18,9 +18,8 @@
  */
 package ubic.gemma.analysis.diff;
 
-import ubic.basecode.util.RCommand;
+import ubic.basecode.util.JRIClient;
 import ubic.gemma.analysis.service.AnalysisHelperService;
-import ubic.gemma.analysis.util.RCommanderWrapper;
 
 /**
  * An abstract analyzer to be extended by analyzers which will make use of R.
@@ -31,9 +30,7 @@ import ubic.gemma.analysis.util.RCommanderWrapper;
  */
 public abstract class AbstractAnalyzer {
 
-    private RCommanderWrapper rCommanderWrapper = null;
-
-    protected RCommand rc = null;
+    protected JRIClient rc = null;
 
     protected AnalysisHelperService analysisHelperService = null;
 
@@ -42,8 +39,7 @@ public abstract class AbstractAnalyzer {
      *
      */
     public void connectToR() {
-        rCommanderWrapper = new RCommanderWrapper();
-        rc = rCommanderWrapper.getRCommandObject();
+        rc = new JRIClient();
     }
 
     /**

@@ -23,8 +23,9 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
 
-import org.rosuda.JRclient.REXP;
-import org.rosuda.JRclient.RList;
+import org.rosuda.REngine.REXP;
+import org.rosuda.REngine.REXPMismatchException;
+import org.rosuda.REngine.RList;
 
 import ubic.basecode.math.MultipleTestCorrection;
 import ubic.gemma.analysis.util.RCommander;
@@ -85,10 +86,14 @@ public class SimpleOneWayAnovaAnalyzer extends RCommander {
         Collection<DesignElementDataVector> dataVectors = manager.getDesignElementDataVectors();
         String[] subsetNamesForBioAssays = manager.getSubsetNamesForBioAssays();
 
-        for ( DesignElementDataVector dataVector : dataVectors ) {
-            double[] expressionLevels = manager.getExpressionLevels( dataVector );
-            double pVal = anovaAnalysis( subsetNamesForBioAssays, expressionLevels );
-            genesToPValuesTable.put( dataVector.getDesignElement().getName(), Double.valueOf( pVal ) );
+        try {
+            for ( DesignElementDataVector dataVector : dataVectors ) {
+                double[] expressionLevels = manager.getExpressionLevels( dataVector );
+                double pVal = anovaAnalysis( subsetNamesForBioAssays, expressionLevels );
+                genesToPValuesTable.put( dataVector.getDesignElement().getName(), Double.valueOf( pVal ) );
+            }
+        } catch ( REXPMismatchException e ) {
+            throw new RuntimeException( e );
         }
         return genesToPValuesTable;
     }
@@ -99,8 +104,9 @@ public class SimpleOneWayAnovaAnalyzer extends RCommander {
      * @param subsetNamesColumn array of the names of subsets corresponding to bioassays
      * @param expLevelsColumn array of the double values for expression levels
      * @return the p value for the gene
+     * @throws REXPMismatchException
      */
-    protected double anovaAnalysis( String[] subsetNamesColumn, double[] expLevelsColumn ) {
+    protected double anovaAnalysis( String[] subsetNamesColumn, double[] expLevelsColumn ) throws REXPMismatchException {
         rc.assign( "subsets", subsetNamesColumn );
         rc.assign( "expLevels", expLevelsColumn );
 
@@ -108,11 +114,14 @@ public class SimpleOneWayAnovaAnalyzer extends RCommander {
         rc.voidEval( "aov.result <- aov(expLevels ~ subsets, data = matrix)" );
         REXP exp = rc.eval( "anova(aov.result)" );
 
-        RList content = ( RList ) exp.getContent();
-        REXP tableExp = content.getBody();
-        Vector tableArray = ( Vector ) tableExp.getContent();
-        REXP pValExp = ( REXP ) tableArray.get( 4 ); // p value list
-        double[] pValList = ( double[] ) pValExp.getContent();
+        RList content = exp.asList();
+
+        double[] pValList = ( double[] ) content.get( 4 );
+
+        // REXP tableExp = content.getBody();
+        // Vector tableArray = ( Vector ) tableExp.getContent();
+        // REXP pValExp = ( REXP ) tableArray.get( 4 ); // p value list
+        // double[] pValList = ( double[] ) pValExp.getContent();
         double pVal = pValList[0];
 
         return pVal;

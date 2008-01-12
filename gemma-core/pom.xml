@@ -268,7 +268,7 @@
 		<dependency>
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
-			<version>0.3.3-SNAPSHOT</version>
+			<version>0.6-SNAPSHOT</version>
 			<type>jar</type>
 		</dependency>
 		<dependency>
@@ -424,9 +424,21 @@
 			<type>jar</type>
 		</dependency>
 		<dependency>
-			<groupId>rserve</groupId>
-			<artifactId>JRclient</artifactId>
-			<version>RE817</version>
+			<groupId>RoSuDA</groupId>
+			<artifactId>Rserve</artifactId>
+			<version>0.5-0</version>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>RoSuDA</groupId>
+			<artifactId>JRI</artifactId>
+			<version>0.4-0</version>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>RoSuDA</groupId>
+			<artifactId>REngine</artifactId>
+			<version>0.5-0</version>
 			<type>jar</type>
 		</dependency>
 		<dependency>

@@ -23,7 +23,8 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Vector;
 
-import org.rosuda.JRclient.RList;
+import org.rosuda.REngine.REXPMismatchException;
+import org.rosuda.REngine.RList;
 
 import ubic.basecode.math.MultipleTestCorrection;
 import ubic.gemma.analysis.util.RCommander;
@@ -57,7 +58,12 @@ public class SimpleTTestAnalyzer extends RCommander {
     protected Hashtable<String, Double> getSignificantGenes( String fileName, String subsetName1, String subsetName2 ) {
         manager = new ExpressionDataManager( fileName );
 
-        Hashtable<String, Double> pValuesTable = findPValues( subsetName1, subsetName2 );
+        Hashtable<String, Double> pValuesTable;
+        try {
+            pValuesTable = findPValues( subsetName1, subsetName2 );
+        } catch ( REXPMismatchException e ) {
+            throw new RuntimeException( e );
+        }
         log.info( pValuesTable.size() + " p values have been calculated." );
         DoubleArrayList list = new DoubleArrayList();
         Enumeration pVals = pValuesTable.elements();
@@ -78,8 +84,10 @@ public class SimpleTTestAnalyzer extends RCommander {
      * @param subsetName1 name for the first subset of bioassays
      * @param subsetName2 name for the second subset of bioassays
      * @return a Hashtable in which each entry is (ProbeId -> p value)
+     * @throws REXPMismatchException
      */
-    protected Hashtable<String, Double> findPValues( String subsetName1, String subsetName2 ) {
+    protected Hashtable<String, Double> findPValues( String subsetName1, String subsetName2 )
+            throws REXPMismatchException {
         log.info( "Finding p values of the experiment." );
         Hashtable<String, Double> pValuesList = new Hashtable<String, Double>();
         Hashtable<String, Object> table = manager.getExpressionData();
@@ -116,12 +124,14 @@ public class SimpleTTestAnalyzer extends RCommander {
 
     /**
      * This method performs t-test and returns the p value from the result
+     * 
+     * @throws REXPMismatchException
      */
-    protected double tTest( DoubleArrayList list1, DoubleArrayList list2 ) {
+    protected double tTest( DoubleArrayList list1, DoubleArrayList list2 ) throws REXPMismatchException {
         double[] list1values = list1.elements();
         double[] list2values = list2.elements();
         RList list = listTwoDoubleArrayEval( "t.test(x,y)", "x", list1values, "y", list2values );
-        double[] pval = ( double[] ) list.at( "p.value" ).getContent();
+        double[] pval = list.at( "p.value" ).asDoubles();
         return pval[0];
     }
 
@@ -129,8 +139,10 @@ public class SimpleTTestAnalyzer extends RCommander {
      * This method is the actual method that assigns parameters of the function to call R to perform t-test.
      * 
      * @return a list of values as the result of the t-test.
+     * @throws REXPMismatchException
      */
-    protected RList listTwoDoubleArrayEval( String command, String argName, double[] arg, String argName2, double[] arg2 ) {
+    protected RList listTwoDoubleArrayEval( String command, String argName, double[] arg, String argName2, double[] arg2 )
+            throws REXPMismatchException {
         rc.assign( argName, arg );
         rc.assign( argName2, arg2 );
         RList l = rc.eval( command ).asList();

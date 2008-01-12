@@ -19,7 +19,7 @@
 package ubic.gemma.analysis.preprocess;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
-import ubic.basecode.util.RCommand;
+import ubic.basecode.util.RServeClient;
 import ubic.gemma.analysis.util.MArrayRaw;
 import ubic.gemma.analysis.util.RCommander;
 
@@ -36,7 +36,7 @@ public abstract class MarrayNormalizer extends RCommander implements TwoChannelN
         rc.voidEval( "library(marray)" );
     }
 
-    public MarrayNormalizer( RCommand rc ) {
+    public MarrayNormalizer( RServeClient rc ) {
         super( rc );
         rc.voidEval( "library(marray)" );
     }

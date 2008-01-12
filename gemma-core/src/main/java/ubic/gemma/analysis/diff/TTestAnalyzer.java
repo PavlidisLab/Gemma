@@ -26,7 +26,7 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.rosuda.JRclient.REXP;
+import org.rosuda.JRI.REXP;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
@@ -97,6 +97,7 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
         FactorValue factorValueB = iter.next();
 
         return tTest( expressionExperiment, factorValueA, factorValueB );
+
     }
 
     /**
@@ -148,9 +149,9 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
         log.debug( pvalueCommand.toString() );
 
-        REXP regExpPValues = rc.eval( pvalueCommand.toString() );
+        REXP regExpPValues = ( REXP ) rc.eval( pvalueCommand.toString() );
 
-        double[] pvalues = ( double[] ) regExpPValues.getContent();
+        double[] pvalues = regExpPValues.asDoubleArray();
 
         /* handle the t-statistics */
         StringBuffer tstatisticCommand = new StringBuffer();
@@ -161,9 +162,9 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
         log.debug( tstatisticCommand.toString() );
 
-        REXP regExpTStatistics = rc.eval( tstatisticCommand.toString() );
+        REXP regExpTStatistics = ( REXP ) rc.eval( tstatisticCommand.toString() );
 
-        double[] tstatistics = ( double[] ) regExpTStatistics.getContent();
+        double[] tstatistics = regExpTStatistics.asDoubleArray();
 
         /* Create the expression analysis and pack the results. */
         DifferentialExpressionAnalysis expressionAnalysis = DifferentialExpressionAnalysis.Factory.newInstance();

@@ -19,7 +19,7 @@
 package ubic.gemma.analysis.util;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
-import ubic.basecode.util.RCommand;
+import ubic.basecode.util.RServeClient;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 /**
@@ -35,7 +35,7 @@ public class AffyBatch extends RCommander {
         rc.voidEval( "library(affy)" );
     }
 
-    public AffyBatch( RCommand rc ) {
+    public AffyBatch( RServeClient rc ) {
         super( rc );
         rc.voidEval( "library(affy)" );
     }
