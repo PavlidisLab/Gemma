@@ -64,7 +64,7 @@ public class Gene2GeneCoexpressionDaoImpl extends
         results.addAll( this.getHibernateTemplate().findByNamedParam( queryStringFirstVector,
                 new String[] { "analysisID", "geneID", "stringency" }, new Object[] { gene, analysis, stringency } ) );
         results.addAll( this.getHibernateTemplate().findByNamedParam( queryStringSecondVector,
-                new String[] { "analysisID", "geneId", "stringency" }, new Object[] { gene, analysis, stringency } ) );
+                new String[] { "analysisID", "geneID", "stringency" }, new Object[] { gene, analysis, stringency } ) );
 
         return results;
     }
