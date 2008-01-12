@@ -93,7 +93,8 @@ public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
         g2gCoexpression.setFirstGene( firstGene );
         g2gCoexpression.setSecondGene( secondGene );
         g2gCoexpression.setNumDataSets( 3 );
-
+        g2gCoexpression.setDatasetsSupportingVector( new byte[] { 2, 3, 8 } );
+        g2gCoexpression.setDatasetsTestedVector( new byte[] { 2, 9, 8 } );
         g2gCoexpressionS.create( g2gCoexpression );
     }
 

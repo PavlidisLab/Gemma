@@ -627,7 +627,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
          * Mouse doesn't have ensembl tracks as of 1/2008.
          */
         if ( TaxonUtility.isMouse( this.getTaxon() ) ) {
-            return null;
+            return new HashSet<GeneProduct>();
         }
 
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );

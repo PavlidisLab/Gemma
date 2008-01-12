@@ -22,6 +22,12 @@
  */
 package ubic.gemma.model.analysis;
 
+import java.util.Collection;
+import java.util.Map;
+
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Taxon;
+
 /**
  * @see ubic.gemma.model.analysis.ProbeCoexpressionAnalysisService
  * @version $Id$
@@ -36,6 +42,50 @@ public class ProbeCoexpressionAnalysisServiceImpl extends
     protected ubic.gemma.model.analysis.ProbeCoexpressionAnalysis handleCreate(
             ubic.gemma.model.analysis.ProbeCoexpressionAnalysis probeCoexpressionAnalysis ) throws java.lang.Exception {
         return ( ProbeCoexpressionAnalysis ) this.getProbeCoexpressionAnalysisDao().create( probeCoexpressionAnalysis );
+    }
+
+    @Override
+    protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
+        return this.getProbeCoexpressionAnalysisDao().findByInvestigation( investigation );
+    }
+
+    @Override
+    protected Map handleFindByInvestigations( Collection investigations ) throws Exception {
+        return this.getProbeCoexpressionAnalysisDao().findByInvestigations( investigations );
+    }
+
+    @Override
+    protected Collection handleFindByTaxon( Taxon taxon ) throws Exception {
+        return this.getProbeCoexpressionAnalysisDao().findByTaxon( taxon );
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected ProbeCoexpressionAnalysis handleFindByUniqueInvestigations( Collection investigations ) throws Exception {
+
+        Map<Investigation, Collection<ProbeCoexpressionAnalysis>> anas = this.getProbeCoexpressionAnalysisDao()
+                .findByInvestigations( investigations );
+
+        /*
+         * Find an analysis that uses all the investigations.
+         */
+
+        for ( ExpressionExperiment ee : ( Collection<ExpressionExperiment> ) investigations ) {
+
+            if ( !anas.containsKey( ee ) ) {
+                return null; // then there can be none meeting the criterion.
+            }
+
+            Collection<ProbeCoexpressionAnalysis> analyses = anas.get( ee );
+            for ( ProbeCoexpressionAnalysis a : analyses ) {
+                if ( a.getExperimentsAnalyzed().size() == investigations.size()
+                        && a.getExperimentsAnalyzed().containsAll( investigations ) ) {
+                    return a;
+                }
+            }
+        }
+
+        return null;
     }
 
 }

@@ -25,6 +25,8 @@ package ubic.gemma.model.analysis;
 import java.util.Collection;
 import java.util.Map;
 
+import ubic.gemma.model.genome.Taxon;
+
 /**
  * @see ubic.gemma.model.analysis.AnalysisService
  */
@@ -63,35 +65,6 @@ public class AnalysisServiceImpl extends ubic.gemma.model.analysis.AnalysisServi
         return mostRecent;
     }
 
-    @Override
-    protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
-        return this.getAnalysisDao().findByInvestigation( investigation );
-    }
-
-    @Override
-    protected Map handleFindByInvestigations( Collection investigations ) throws Exception {
-        return this.getAnalysisDao().findByInvestigations( investigations );
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Analysis handleFindByUniqueInvestigations( Collection Investigations ) throws Exception {
-
-        Map<Analysis, Collection<Investigation>> anas = this.getAnalysisDao().findByInvestigations( Investigations );
-
-        for ( Analysis ana : anas.keySet() ) {
-
-            Collection<Investigation> foundInvestigations = anas.get( ana );
-
-            if ( Investigations.size() == foundInvestigations.size() ) {
-                if ( Investigations.containsAll( foundInvestigations ) ) return ana;
-
-            }
-        }
-
-        return null;
-    }
-
     /**
      * @see ubic.gemma.model.analysis.AnalysisService#load(java.lang.Long)
      */
@@ -123,6 +96,26 @@ public class AnalysisServiceImpl extends ubic.gemma.model.analysis.AnalysisServi
     protected void handleDelete( java.lang.Long idToDelete ) throws java.lang.Exception {
 
         this.getAnalysisDao().remove( idToDelete );
+    }
+
+    @Override
+    protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
+        throw new UnsupportedOperationException( "Please call this method on a subclass" );
+    }
+
+    @Override
+    protected Map handleFindByInvestigations( Collection investigations ) throws Exception {
+        throw new UnsupportedOperationException( "Please call this method on a subclass" );
+    }
+
+    @Override
+    protected Collection handleFindByTaxon( Taxon taxon ) throws Exception {
+        throw new UnsupportedOperationException( "Please call this method on a subclass" );
+    }
+
+    @Override
+    protected Analysis handleFindByUniqueInvestigations( Collection investigations ) throws Exception {
+        throw new UnsupportedOperationException( "Please call this method on a subclass" );
     }
 
 }

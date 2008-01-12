@@ -21,10 +21,11 @@
  * You can (and have to!) safely modify it by hand.
  */
 package ubic.gemma.model.analysis;
+
 /**
+ * Note that due to limitations in Andromda we cannot make this class abstract.
+ * 
  * @see ubic.gemma.model.analysis.CoexpressionAnalysis
  */
-public class CoexpressionAnalysisDaoImpl
-    extends ubic.gemma.model.analysis.CoexpressionAnalysisDaoBase
-{
+public class CoexpressionAnalysisDaoImpl extends ubic.gemma.model.analysis.CoexpressionAnalysisDaoBase {
 }

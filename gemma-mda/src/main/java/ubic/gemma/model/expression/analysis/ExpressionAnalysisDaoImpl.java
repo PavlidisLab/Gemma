@@ -21,19 +21,12 @@
  * You can (and have to!) safely modify it by hand.
  */
 package ubic.gemma.model.expression.analysis;
+
 /**
+ * Note that due to limitations in Andromda we cannot make this class abstract.
+ * 
  * @see ubic.gemma.model.expression.analysis.ExpressionAnalysis
  */
-public class ExpressionAnalysisDaoImpl
-    extends ubic.gemma.model.expression.analysis.ExpressionAnalysisDaoBase
-{
-    /**
-     * @see ubic.gemma.model.expression.analysis.ExpressionAnalysisDao#findByTaxon(ubic.gemma.model.genome.Taxon)
-     */
-    protected java.util.Collection handleFindByTaxon(ubic.gemma.model.genome.Taxon taxon)
-    {
-        // @todo implement public java.util.Collection handleFindByTaxon(ubic.gemma.model.genome.Taxon taxon)
-        return null;
-}
+public class ExpressionAnalysisDaoImpl extends ubic.gemma.model.expression.analysis.ExpressionAnalysisDaoBase {
 
 }

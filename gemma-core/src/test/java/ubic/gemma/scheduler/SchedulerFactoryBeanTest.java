@@ -29,7 +29,7 @@ import org.quartz.impl.StdScheduler;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
- * Indexing has been scheduled to run declaratively by Quartz. This class tests the declarative configuration.
+ * Tests the declarative configuration of triggers.
  * 
  * @author keshav
  * @version $Id$
@@ -37,11 +37,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class SchedulerFactoryBeanTest extends BaseSpringContextTest {
     private Log log = LogFactory.getLog( this.getClass() );
 
-    /**
-     * Tests the indexAll method.
-     */
-    public void testIndexAll() {
-        log.info( "Running test" + this.getClass() );
+    public void testChangeSchedule() {
         StdScheduler scheduler = ( StdScheduler ) this.getBean( "schedulerFactoryBean" );
 
         try {
@@ -49,9 +45,9 @@ public class SchedulerFactoryBeanTest extends BaseSpringContextTest {
             for ( String name : names ) {
                 log.info( name );
             }
-            Trigger newTrigger = scheduler.getTrigger( "indexTrigger", null );
+            Trigger newTrigger = scheduler.getTrigger( "gene2CsUpdateTrigger", null );
             newTrigger.setStartTime( new Date() );
-            scheduler.rescheduleJob( "indexTrigger", null, newTrigger );
+            scheduler.rescheduleJob( "gene2CsUpdateTrigger", null, newTrigger );
             scheduler.start();
         } catch ( SchedulerException e ) {
             e.printStackTrace();

@@ -23,7 +23,9 @@
 package ubic.gemma.model.analysis;
 
 import java.util.Collection;
+import java.util.Map;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 
 /**
@@ -60,4 +62,44 @@ public class GeneCoexpressionAnalysisServiceImpl extends ubic.gemma.model.analys
     protected Collection handleFindByTaxon( Taxon taxon ) throws Exception {
         return this.getGeneCoexpressionAnalysisDao().findByTaxon( taxon );
     }
+
+    @Override
+    protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
+        return this.getGeneCoexpressionAnalysisDao().findByInvestigation( investigation );
+    }
+
+    @Override
+    protected Map handleFindByInvestigations( Collection investigations ) throws Exception {
+        return this.getGeneCoexpressionAnalysisDao().findByInvestigations( investigations );
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected GeneCoexpressionAnalysis handleFindByUniqueInvestigations( Collection investigations ) throws Exception {
+
+        Map<Investigation, Collection<GeneCoexpressionAnalysis>> anas = this.getGeneCoexpressionAnalysisDao()
+                .findByInvestigations( investigations );
+
+        /*
+         * Find an analysis that uses all the investigations.
+         */
+
+        for ( ExpressionExperiment ee : ( Collection<ExpressionExperiment> ) investigations ) {
+
+            if ( !anas.containsKey( ee ) ) {
+                return null; // then there can be none meeting the criterion.
+            }
+
+            Collection<GeneCoexpressionAnalysis> analyses = anas.get( ee );
+            for ( GeneCoexpressionAnalysis a : analyses ) {
+                if ( a.getExperimentsAnalyzed().size() == investigations.size()
+                        && a.getExperimentsAnalyzed().containsAll( investigations ) ) {
+                    return a;
+                }
+            }
+        }
+
+        return null;
+    }
+
 }

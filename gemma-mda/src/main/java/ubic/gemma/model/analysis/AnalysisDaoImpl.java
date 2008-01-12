@@ -23,51 +23,30 @@
 package ubic.gemma.model.analysis;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 
-import org.hibernate.ScrollableResults;
+import ubic.gemma.model.genome.Taxon;
 
 /**
+ * Note that due to limitations in Andromda we cannot make this class abstract.
+ * 
  * @see ubic.gemma.model.analysis.Analysis
  */
 public class AnalysisDaoImpl extends ubic.gemma.model.analysis.AnalysisDaoBase {
 
     @Override
-    protected Map handleFindByInvestigations( Collection investigators ) throws Exception {
-
-        // TODO: this query doesn't work. fix. Causses an npe when hibernate tries to generated the sql
-        final String queryString = "select distinct a,a.analyzedInvestigation from AnalysisImpl as a where a = any (select distinct analysis from AnalysisImpl where (:investigations) = any elements(analysis.analyzedInvestigation))";
-        // "select distinct a,a.analyzedInvestigation from AnalysisImpl as a where a = any (select distinct analysis
-        // from AnalysisImpl where i.analyzedInvestigation.id in (:investigations))
-        // "from AnalysisImpl i where :investigation = any elements(i.analyzedInvestigation)", investigation)
-
-        Collection<Long> investigatorsById = new HashSet<Long>();
-        for ( Object obj : investigators )
-            investigatorsById.add( ( ( Investigation ) obj ).getId() );
-
-        org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-        queryObject.setParameterList( "investigations", investigatorsById );
-
-        ScrollableResults list = queryObject.scroll();
-        Map<Analysis, Collection<Investigation>> results = new HashMap<Analysis, Collection<Investigation>>();
-
-        while ( list.next() ) {
-            Investigation inv = ( Investigation ) list.get( 1 );
-            Analysis ana = ( Analysis ) list.get( 0 );
-
-            if ( results.containsKey( ana ) )
-                results.get( ana ).add( inv );
-            else {
-                Collection<Investigation> invs = new HashSet<Investigation>();
-                invs.add( inv );
-                results.put( ana, invs );
-            }
-        }
-
-        return results;
+    protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
+        throw new UnsupportedOperationException( "Please call this method on a subclass" );
     }
 
+    @Override
+    protected Map handleFindByInvestigations( Collection investigators ) throws Exception {
+        throw new UnsupportedOperationException( "Please call this method on a subclass" );
+    }
+
+    @Override
+    protected Collection handleFindByTaxon( Taxon taxon ) throws Exception {
+        throw new UnsupportedOperationException( "Please call this method on a subclass" );
+    }
 
 }

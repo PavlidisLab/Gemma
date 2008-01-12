@@ -22,6 +22,12 @@
  */
 package ubic.gemma.model.analysis;
 
+import java.util.Collection; 
+import java.util.Map;
+
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Taxon;
+
 /**
  * @author paul
  * @author keshav
@@ -37,6 +43,51 @@ public class DifferentialExpressionAnalysisServiceImpl extends
     protected ubic.gemma.model.analysis.DifferentialExpressionAnalysis handleCreate(
             ubic.gemma.model.analysis.DifferentialExpressionAnalysis analysis ) throws java.lang.Exception {
         return ( DifferentialExpressionAnalysis ) this.getDifferentialExpressionAnalysisDao().create( analysis );
+    }
+
+    @Override
+    protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
+        return this.getDifferentialExpressionAnalysisDao().findByInvestigation( investigation );
+    }
+
+    @Override
+    protected Map handleFindByInvestigations( Collection investigations ) throws Exception {
+        return this.getDifferentialExpressionAnalysisDao().findByInvestigations( investigations );
+    }
+
+    @Override
+    protected Collection handleFindByTaxon( Taxon taxon ) throws Exception {
+        return this.getDifferentialExpressionAnalysisDao().findByTaxon( taxon );
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected DifferentialExpressionAnalysis handleFindByUniqueInvestigations( Collection investigations )
+            throws Exception {
+
+        Map<Investigation, Collection<DifferentialExpressionAnalysis>> anas = this
+                .getDifferentialExpressionAnalysisDao().findByInvestigations( investigations );
+
+        /*
+         * Find an analysis that uses all the investigations.
+         */
+
+        for ( ExpressionExperiment ee : ( Collection<ExpressionExperiment> ) investigations ) {
+
+            if ( !anas.containsKey( ee ) ) {
+                return null; // then there can be none meeting the criterion.
+            }
+
+            Collection<DifferentialExpressionAnalysis> analyses = anas.get( ee );
+            for ( DifferentialExpressionAnalysis a : analyses ) {
+                if ( a.getExperimentsAnalyzed().size() == investigations.size()
+                        && a.getExperimentsAnalyzed().containsAll( investigations ) ) {
+                    return a;
+                }
+            }
+        }
+
+        return null;
     }
 
 }

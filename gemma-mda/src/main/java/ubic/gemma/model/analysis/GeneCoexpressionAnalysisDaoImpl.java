@@ -23,7 +23,10 @@
 package ubic.gemma.model.analysis;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 
 /**
@@ -37,6 +40,21 @@ public class GeneCoexpressionAnalysisDaoImpl extends ubic.gemma.model.analysis.G
                 + "inner join ee.bioAssays as ba "
                 + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
         return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
+    }
+
+    @SuppressWarnings("unchecked")
+    protected Map handleFindByInvestigations( Collection investigations ) throws Exception {
+        Map<Investigation, Collection<GeneCoexpressionAnalysis>> results = new HashMap<Investigation, Collection<GeneCoexpressionAnalysis>>();
+        for ( ExpressionExperiment ee : ( Collection<ExpressionExperiment> ) investigations ) {
+            Collection<GeneCoexpressionAnalysis> ae = this.findByInvestigation( ee );
+            results.put( ee, ae );
+        }
+        return results;
+    }
+
+    protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
+        final String queryString = "select distinct a from GeneCoexpressionAnalysisImpl a where :e in elements (a.experimentsAnalyzed)";
+        return this.getHibernateTemplate().findByNamedParam( queryString, "e", investigation );
     }
 
 }

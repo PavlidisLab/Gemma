@@ -38,8 +38,8 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContextTest {
 
-    private DifferentialExpressionAnalysisService analysisS;
-    private ExpressionExperimentService eeS;
+    private DifferentialExpressionAnalysisService analysisService;
+    private ExpressionExperimentService expressionExperimentService;
 
     // Test Data
     DifferentialExpressionAnalysis eAnalysis1;
@@ -54,84 +54,91 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
 
+        this.analysisService = ( DifferentialExpressionAnalysisService ) getBean( "differentialExpressionAnalysisService" );
+
         e1 = ExpressionExperiment.Factory.newInstance();
         e1.setName( "test e1" );
-        e1 = eeS.create( e1 );
+        e1 = expressionExperimentService.create( e1 );
 
         e2 = ExpressionExperiment.Factory.newInstance();
         e2.setName( "test e2" );
-        e2 = eeS.create( e2 );
+        e2 = expressionExperimentService.create( e2 );
 
         e3 = ExpressionExperiment.Factory.newInstance();
         e3.setName( "test e3" );
-        e3 = eeS.create( e3 );
+        e3 = expressionExperimentService.create( e3 );
 
-        Collection<Investigation> investigations = new HashSet<Investigation>();
+        Collection<ExpressionExperiment> investigations = new HashSet<ExpressionExperiment>();
 
         eAnalysis1 = DifferentialExpressionAnalysis.Factory.newInstance();
         investigations.add( e1 );
-        // eAnalysis1.setAnalyzedInvestigation( investigations );
+        eAnalysis1.setExperimentsAnalyzed( investigations );
         eAnalysis1.setName( "TestAnalysis1" );
         eAnalysis1.setDescription( "An analysis Test 1" );
-        eAnalysis1 = analysisS.create( eAnalysis1 );
+        eAnalysis1 = analysisService.create( eAnalysis1 );
 
         eAnalysis2 = DifferentialExpressionAnalysis.Factory.newInstance();
-        investigations = new HashSet<Investigation>();
+        investigations = new HashSet<ExpressionExperiment>();
         investigations.add( e1 );
         investigations.add( e2 );
-        // eAnalysis2.setAnalyzedInvestigation( investigations );
+        eAnalysis2.setExperimentsAnalyzed( investigations );
         eAnalysis2.setName( "TestAnalysis2" );
         eAnalysis2.setDescription( "An analysis Test 2" );
-        eAnalysis2 = analysisS.create( eAnalysis2 );
+        eAnalysis2 = analysisService.create( eAnalysis2 );
 
         eAnalysis4 = DifferentialExpressionAnalysis.Factory.newInstance();
-        investigations = new HashSet<Investigation>();
+        investigations = new HashSet<ExpressionExperiment>();
         investigations.add( e1 );
         investigations.add( e2 );
         investigations.add( e3 );
 
-        // .setAnalyzedInvestigation( investigations );
+        eAnalysis4.setExperimentsAnalyzed( investigations );
         eAnalysis4.setName( "Test" );
         eAnalysis4.setDescription( "An analysis Test 4" );
-        eAnalysis4 = analysisS.create( eAnalysis4 );
+        eAnalysis4 = analysisService.create( eAnalysis4 );
 
         eAnalysis3 = DifferentialExpressionAnalysis.Factory.newInstance();
-        investigations = new HashSet<Investigation>();
+        investigations = new HashSet<ExpressionExperiment>();
         investigations.add( e1 );
         investigations.add( e2 );
         investigations.add( e3 );
-        // .setAnalyzedInvestigation( investigations );
+
+        eAnalysis3.setExperimentsAnalyzed( investigations );
         eAnalysis3.setName( "TestAnalysis3" );
         eAnalysis3.setDescription( "An analysis Test 3" );
-        eAnalysis3 = analysisS.create( eAnalysis3 );
+        eAnalysis3 = analysisService.create( eAnalysis3 );
 
     }
 
     /**
      * 
      */
+    @SuppressWarnings("unchecked")
     public void testFindByInvestigations() {
-        Collection<Investigation> investigations = new ArrayList<Investigation>();
+        Collection<ExpressionExperiment> investigations = new ArrayList<ExpressionExperiment>();
         investigations.add( e1 );
         investigations.add( e2 );
 
-        Map results = analysisS.findByInvestigations( investigations );
-        assertEquals( 3, results.keySet().size() );
+        Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysis>> results = analysisService
+                .findByInvestigations( investigations );
+        assertEquals( 2, results.keySet().size() );
 
+        assertEquals( 4, results.get( e1 ).size() );
+        assertEquals( 3, results.get( e2 ).size() );
     }
 
     /**
      * 
      */
-    public void testFindByInvestion() {
+    public void testFindByInvestigation() {
 
-        Collection results = analysisS.findByInvestigation( e1 );
+        Collection results = analysisService.findByInvestigation( e1 );
         assertEquals( 4, results.size() );
 
-        results = analysisS.findByInvestigation( e2 );
+        results = analysisService.findByInvestigation( e2 );
         assertEquals( 3, results.size() );
 
-        results = analysisS.findByInvestigation( e3 );
+        results = analysisService.findByInvestigation( e3 );
         assertEquals( 2, results.size() );
 
     }
@@ -144,35 +151,28 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         investigations.add( e1 );
         investigations.add( e2 );
 
-        Analysis results = analysisS.findByUniqueInvestigations( investigations );
-        assertEquals( e2.getId(), results.getId() );
+        Analysis results = analysisService.findByUniqueInvestigations( investigations );
+        assertEquals( eAnalysis2.getId(), results.getId() );
 
     }
 
     public void testFindByNameExact() {
 
-        Analysis result = analysisS.findByName( "Test" );
+        Analysis result = analysisService.findByName( "Test" );
         assertEquals( "Test", result.getName() );
     }
 
     public void testFindByNameRecent() {
 
-        Analysis result = analysisS.findByName( "TestA" );
+        Analysis result = analysisService.findByName( "TestA" );
         assertEquals( "TestAnalysis3", result.getName() );
-    }
-
-    /**
-     * @param analysisS the analysisS to set
-     */
-    public void setAnalysisService( DifferentialExpressionAnalysisService analysisS ) {
-        this.analysisS = analysisS;
     }
 
     /**
      * @param ees the expressionExperimentService to set
      */
-    public void setExpressionExperimentService( ExpressionExperimentService ees ) {
-        this.eeS = ees;
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
     }
 
 }
