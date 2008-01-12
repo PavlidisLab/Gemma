@@ -141,7 +141,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     @Override
     protected Collection handleCompositeSequenceWithoutBioSequences( ArrayDesign arrayDesign ) throws Exception {
         final String queryString = "select distinct cs from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-                + " left join cs.biologicalCharacteristic bs where ar = :ar " + " bs IS NULL";
+                + " left join cs.biologicalCharacteristic bs where ar = :ar and bs IS NULL";
         return getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign );
     }
 
@@ -157,7 +157,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         }
         long id = arrayDesign.getId();
         final String nativeQueryString = "SELECT distinct cs.id from "
-                + "COMPOSITE_SEQUENCE cs left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=BIOLOGICAL_CHARACTERISTIC_FK "
+                + "COMPOSITE_SEQUENCE cs left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on bs2gp.BIO_SEQUENCE_FK=cs.BIOLOGICAL_CHARACTERISTIC_FK "
                 + "left join SEQUENCE_SIMILARITY_SEARCH_RESULT ssResult on bs2gp.BLAT_RESULT_FK=ssResult.ID "
                 + "WHERE ssResult.ID is NULL AND ARRAY_DESIGN_FK = :id ";
 
