@@ -43,6 +43,7 @@ import cern.colt.matrix.ObjectMatrix1D;
  */
 public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
 
+    private static final long serialVersionUID = 1L;
     private ObjectMatrix2DNamed matrix;
 
     /**

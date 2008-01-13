@@ -18,6 +18,7 @@
  */
 package ubic.gemma.datastructure.matrix;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -49,9 +50,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author pavlidis
  * @version $Id$
  */
-abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix {
+abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix, Serializable {
 
     private Log log = LogFactory.getLog( ExpressionDataDoubleMatrix.class );
+    
     // protected LinkedHashSet<DesignElement> rowElements;
 
     protected Collection<BioAssayDimension> bioAssayDimensions;

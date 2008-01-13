@@ -40,6 +40,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix {
 
+    private static final long serialVersionUID = 1L;
+
     private static Log log = LogFactory.getLog( ExpressionDataStringMatrix.class.getName() );
 
     private StringMatrix2DNamed matrix;

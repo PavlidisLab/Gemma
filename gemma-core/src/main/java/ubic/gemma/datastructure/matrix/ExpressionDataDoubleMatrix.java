@@ -19,17 +19,13 @@
 package ubic.gemma.datastructure.matrix;
 
 import java.text.NumberFormat;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import edu.emory.mathcs.backport.java.util.Collections;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
@@ -53,6 +49,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  */
 public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
 
+    private static final long serialVersionUID = 1L;
     private static final int MAX_ROWS_TO_STRING = 100;
     private static Log log = LogFactory.getLog( ExpressionDataDoubleMatrix.class.getName() );
     private DoubleMatrixNamed matrix;
