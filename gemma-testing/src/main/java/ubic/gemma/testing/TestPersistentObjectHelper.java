@@ -43,6 +43,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -311,7 +312,7 @@ public class TestPersistentObjectHelper {
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
 
         ad.setName( "arrayDesign_" + RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH ) );
-        // ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        ad.setTechnologyType( TechnologyType.ONECOLOR );
 
         for ( int i = 0; i < numCompositeSequences; i++ ) {
 

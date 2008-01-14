@@ -50,9 +50,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
-import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
+import ubic.gemma.model.common.quantitationtype.QuantitationType; 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -473,15 +471,15 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     private void thawAnalyses( final ExpressionExperiment expressionExperiment, org.hibernate.Session session ) {
         // Not doing anything with the session but passing it in just in case. ????
 
-      //  Collection<ExpressionAnalysis> eas = expressionExperiment.getExpressionAnalyses();
+        // Collection<ExpressionAnalysis> eas = expressionExperiment.getExpressionAnalyses();
 
-//        for ( ExpressionAnalysis ea : eas ) {
-//            Collection<ExpressionAnalysisResultSet> resultSets = ea.getResultSets();
-//            resultSets.size();
-//            for ( ExpressionAnalysisResultSet rs : resultSets ) {
-//                rs.getResults().size();
-//            }
-//        }
+        // for ( ExpressionAnalysis ea : eas ) {
+        // Collection<ExpressionAnalysisResultSet> resultSets = ea.getResultSets();
+        // resultSets.size();
+        // for ( ExpressionAnalysisResultSet rs : resultSets ) {
+        // rs.getResults().size();
+        // }
+        // }
 
     }
 
@@ -1176,7 +1174,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 v.setArrayDesignCount( list.getLong( 8 ) );
                 v.setShortName( list.getString( 9 ) );
                 v.setDateCreated( list.getDate( 10 ).toString() );
-                String type = list.get( 11 ).toString();
+                String type = list.get( 11 ) != null ? list.get( 11 ).toString() : null;
 
                 fillQuantitationTypeInfo( qtMap, v, eeId, type );
                 vo.put( eeId, v );

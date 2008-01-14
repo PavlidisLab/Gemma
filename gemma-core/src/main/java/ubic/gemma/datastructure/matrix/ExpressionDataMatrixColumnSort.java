@@ -52,6 +52,10 @@ public class ExpressionDataMatrixColumnSort {
         List<BioMaterial> start = getBms( mat );
         Collections.sort( start, new Comparator<BioMaterial>() {
             public int compare( BioMaterial o1, BioMaterial o2 ) {
+
+                if ( o1.getBioAssaysUsedIn().isEmpty() || o2.getBioAssaysUsedIn().isEmpty() )
+                    return o1.getName().compareTo( o1.getName() );
+
                 BioAssay ba1 = o1.getBioAssaysUsedIn().iterator().next();
                 BioAssay ba2 = o2.getBioAssaysUsedIn().iterator().next();
                 if ( ba1.getName() != null && ba2.getName() != null ) {

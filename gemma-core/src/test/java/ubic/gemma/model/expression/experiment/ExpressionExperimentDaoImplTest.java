@@ -80,25 +80,6 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
         this.contactName = c.getName();
         ee.setOwner( c );
 
-        // Creating the bibReference association doesn't work like this
-        // BibliographicReferenceService bibRefService = ( BibliographicReferenceService ) this
-        // .getBean( "bibliographicReferenceService" );
-        // primary = BibliographicReference.Factory.newInstance();
-        // primary.setPubAccession( accessionEntry );
-        // primary.setTitle( "Primary" );
-        // primary = bibRefService.create( primary );
-        //        
-        // ee.setPrimaryPublication( primary );
-        //        
-        // other = BibliographicReference.Factory.newInstance();
-        // other.setPubAccession( accessionEntry );
-        // other.setTitle( "other" );
-        // other = bibRefService.create( other );
-        //        
-        // Collection<BibliographicReference> others = new HashSet<BibliographicReference>();
-        // others.add( other );
-        // ee.setOtherRelevantPublications( others ) ;
-
         expressionExperimentDao.update( ee );
         expressionExperimentDao.thaw( ee );
 
@@ -186,38 +167,6 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
         assertNotNull( list );
     }
 
-    // Test needs to be run against the production db. Comment out the onsetup and on tear down before running on
-    // production.
-    // The test db is just to trivial a db for this test to ever fail.
-    // there were issues with loadValueObjects not returning all the specified value objects
-    // because of join issues (difference between left join and inner join). Made this test to quickly test if it was
-    // working or not.
-    // public final void testVerifyLoadValueObjects() throws Exception {
-    //               
-    // Collection<ExpressionExperiment> eeAll = expressionExperimentDao.loadAll();
-    //        
-    // Collection<Long> ids = new LinkedHashSet<Long>();
-    // for ( ExpressionExperiment ee : eeAll ) {
-    // ids.add( ee.getId() );
-    // }
-    // log.debug( "loadAll: " + ids.toString() );
-    //
-    // Collection<ExpressionExperimentValueObject> valueObjs = expressionExperimentDao.loadValueObjects( ids );
-    //        
-    // Collection<Long> idsAfter = new LinkedHashSet<Long>();
-    // for (ExpressionExperimentValueObject ee : valueObjs){
-    // idsAfter.add( ee.getId());
-    // }
-    //        
-    // log.debug( "loadValueObjects: " + idsAfter.toString() );
-    //        
-    // Collection<Long> removedIds = new LinkedHashSet<Long>(ids);
-    // removedIds.removeAll( idsAfter );
-    //        
-    // log.debug( "Intersection of EEs: " + removedIds.toString() );
-    // assertEquals(idsAfter.size(), ids.size());
-    // }
-
     /**
      * @param expressionExperimentDao the expressionExperimentDao to set
      */
@@ -238,32 +187,5 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
         assertEquals( taxon, checkTaxon );
 
     }
-
-    // Creating test data for this was difficult. Needed to use a current data base for this test to work.
-    // public void testFindByGene() throws Exception {
-    // GeneService geneS = (GeneService) this.getBean( "geneService" );
-    // Collection<Gene> genes = geneS.findByOfficialSymbol( "grin1" );
-    // ExpressionExperimentService eeService = ( ExpressionExperimentService ) this
-    // .getBean( "expressionExperimentService" );
-    // Collection<Long> results = eeService.findByGene( genes.iterator().next());
-    // log.info( results );
-    // assertEquals(89, results.size() );
-    //        
-    // }
-
-    // This test uses the DB
-    // public void testFindByBibliographicReference(){
-    // ExpressionExperimentService eeService = ( ExpressionExperimentService ) this
-    // .getBean( "expressionExperimentService" );
-    // BibliographicReferenceService bibRefService = ( BibliographicReferenceService ) this
-    // .getBean( "bibliographicReferenceService" );
-    //        
-    // BibliographicReference bibRef = bibRefService.load( new Long(111 ));
-    //
-    // Collection<ExpressionExperiment> foundEEs = eeService.findByBibliographicReference( bibRef );
-    // assertEquals(1,foundEEs.size());
-    // assertEquals(new Long(8), (Long) foundEEs.iterator().next().getId());
-    //       
-    // }
 
 }

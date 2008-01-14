@@ -538,10 +538,10 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 v.setShortName( list.getString( 2 ) );
                 TechnologyType color = ( TechnologyType ) list.get( 3 );
                 v.setTechnologyType( color );
-                v.setColor( color.getValue() );
+                if ( color != null ) v.setColor( color.getValue() );
                 v.setDescription( list.getString( 4 ) );
                 v.setExpressionExperimentCount( ( Long ) eeCounts.get( v.getId() ) );
-                v.setDateCreated( ( Date ) list.getDate( 5 ) );
+                v.setDateCreated( list.getDate( 5 ) );
 
                 vo.add( v );
             }

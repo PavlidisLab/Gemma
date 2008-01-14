@@ -18,6 +18,8 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import java.util.Map;
+
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -25,6 +27,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignService;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -33,14 +36,11 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class ExperimentalDesignControllerTest extends BaseSpringContextTest {
 
-    ExperimentalDesignService experimentalDesignService = null;
-
     @SuppressWarnings("unchecked")
     @Override
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
 
-        experimentalDesignService = ( ExperimentalDesignService ) getBean( "experimentalDesignService" );
     }
 
     /**
@@ -52,19 +52,17 @@ public class ExperimentalDesignControllerTest extends BaseSpringContextTest {
      */
     public void testShowExperimentalDesign() throws Exception {
         endTransaction();
+
+        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
+
         ExperimentalDesignController c = ( ExperimentalDesignController ) getBean( "experimentalDesignController" );
 
         MockHttpServletRequest req = new MockHttpServletRequest( "GET",
                 "/experimentalDesign/showExperimentalDesign.html" );
 
-        ExperimentalDesign ed = experimentalDesignService.findByName( "Experimental Design 0" );
-        if ( ed == null ) {
-            ed = ExperimentalDesign.Factory.newInstance();
-            ed.setName( "Experimental Design 0" );
-            ed = experimentalDesignService.create( ed );
-        }
+        ExperimentalDesign ed = ee.getExperimentalDesign();
 
-        assertTrue( ed != null );
+        assertTrue( ed != null && ee.getId() != null );
 
         req.addParameter( "name", "Experimental Design 0" );
 
@@ -74,12 +72,10 @@ public class ExperimentalDesignControllerTest extends BaseSpringContextTest {
 
         ModelAndView mav = c.handleRequest( req, ( HttpServletResponse ) null );
 
-        // Map m = mav.getModel();
-        // assertNotNull( m.get( "expressionExperiments" ) );
+        Map m = mav.getModel();
+        assertNotNull( m.get( "expressionExperiment" ) );
 
         assertEquals( mav.getViewName(), "experimentalDesign.detail" );
 
-        /* uncomment to persist and leave data in database */
-        // setComplete();
     }
 }

@@ -37,6 +37,7 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.persistence.TableMaintenanceUtil;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -119,6 +120,9 @@ public class CompositeSequenceDaoImplTest extends AbstractArrayDesignProcessingT
 
     @SuppressWarnings("unchecked")
     public void testHandleGetGenesCompositeSequences() {
+
+        TableMaintenanceUtil tu = ( TableMaintenanceUtil ) this.getBean( "tableMaintenanceUtil" );
+        tu.updateGene2CsEntries();
 
         Collection<CompositeSequence> css = compositeSequenceService.findByName( "C277" );
 

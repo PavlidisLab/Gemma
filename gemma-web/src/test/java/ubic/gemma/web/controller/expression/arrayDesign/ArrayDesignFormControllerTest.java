@@ -89,7 +89,7 @@ public class ArrayDesignFormControllerTest extends BaseSpringContextTest {
 
         assertNull( errors );
         assertNotNull( request.getSession().getAttribute( "messages" ) );
-        assertEquals( "redirect:/arrays/showAllArrayDesigns.html", mav.getViewName() );
+        assertEquals( "redirect:/arrays/showArrayDesign.html?id=" + ad.getId(), mav.getViewName() );
 
     }
 

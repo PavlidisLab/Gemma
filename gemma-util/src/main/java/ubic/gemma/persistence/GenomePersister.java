@@ -499,8 +499,8 @@ abstract public class GenomePersister extends CommonPersister {
         // assert existing.getAuditTrail() != null : existing + " has no audit trail.";
         assert !isTransient( existing.getGene() );
 
-        assert existing.getNcbiId().equals( geneProduct.getNcbiId() ) : "NCBI identifier for " + geneProduct
-                + " has changed";
+        assert existing.getNcbiId() == null || existing.getNcbiId().equals( geneProduct.getNcbiId() ) : "NCBI identifier for "
+                + geneProduct + " has changed";
 
         existing.setName( geneProduct.getName() );
         existing.setDescription( geneProduct.getDescription() );
