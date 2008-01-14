@@ -35,11 +35,6 @@ public class AffyBatch extends RCommander {
         rc.voidEval( "library(affy)" );
     }
 
-    public AffyBatch( RServeClient rc ) {
-        super( rc );
-        rc.voidEval( "library(affy)" );
-    }
-
     /**
      * Available normalization methods.
      */

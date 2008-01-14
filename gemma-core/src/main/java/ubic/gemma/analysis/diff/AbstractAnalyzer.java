@@ -18,7 +18,8 @@
  */
 package ubic.gemma.analysis.diff;
 
-import ubic.basecode.util.JRIClient;
+import ubic.basecode.util.RClient;
+import ubic.basecode.util.RConnectionFactory;
 import ubic.gemma.analysis.service.AnalysisHelperService;
 
 /**
@@ -30,7 +31,7 @@ import ubic.gemma.analysis.service.AnalysisHelperService;
  */
 public abstract class AbstractAnalyzer {
 
-    protected JRIClient rc = null;
+    protected RClient rc = null;
 
     protected AnalysisHelperService analysisHelperService = null;
 
@@ -39,7 +40,7 @@ public abstract class AbstractAnalyzer {
      *
      */
     public void connectToR() {
-        rc = new JRIClient();
+        rc = RConnectionFactory.getRConnection();
     }
 
     /**

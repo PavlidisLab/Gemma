@@ -40,7 +40,7 @@ public class RMA extends RCommander implements ProbeSummarizer {
 
     public RMA() {
         super();
-        ab = new AffyBatch( rc );
+        ab = new AffyBatch();
     }
 
     private pmCorrectMethod pmMethod = pmCorrectMethod.PMONLY;

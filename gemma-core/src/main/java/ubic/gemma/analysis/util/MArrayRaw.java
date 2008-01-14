@@ -20,8 +20,6 @@ package ubic.gemma.analysis.util;
 
 import java.util.List;
 
-import org.rosuda.REngine.REXPMismatchException;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.util.RServeClient;
 
@@ -38,11 +36,6 @@ public class MArrayRaw extends RCommander {
 
     public MArrayRaw() {
         super();
-        rc.voidEval( "library(marray)" );
-    }
-
-    public MArrayRaw( RServeClient rc ) {
-        super( rc );
         rc.voidEval( "library(marray)" );
     }
 
@@ -98,16 +91,12 @@ public class MArrayRaw extends RCommander {
 
         rc.voidEval( makeRawCmd );
 
-        try {
-            // sanity check.
-            double[] c = rc.eval( "maGf(" + rawObjectName + ")[1,]" ).asDoubles();
-            if ( c == null || c.length == 0 ) {
-                throw new RuntimeException(
-                        "marrayRaw value was not propertly set: " + rc.getLastError() == null ? "(no error message)"
-                                : rc.getLastError() );
-            }
-        } catch ( REXPMismatchException e ) {
-            throw new RuntimeException( e );
+        // sanity check.
+        double[] c = rc.doubleArrayEval( "maGf(" + rawObjectName + ")[1,]" );
+        if ( c == null || c.length == 0 ) {
+            throw new RuntimeException(
+                    "marrayRaw value was not propertly set: " + rc.getLastError() == null ? "(no error message)" : rc
+                            .getLastError() );
         }
 
         return rawObjectName;

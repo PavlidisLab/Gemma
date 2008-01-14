@@ -27,8 +27,6 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.rosuda.JRI.REXP;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.dataStructure.matrix.FastRowAccessDoubleMatrix2DNamed;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
@@ -136,9 +134,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         log.info( pvalueCommand.toString() );
 
-        REXP regExp = ( REXP ) rc.eval( pvalueCommand.toString() );
-
-        double[] pvalues = regExp.asDoubleArray();
+        double[] pvalues = rc.doubleArrayEval( pvalueCommand.toString() );
 
         // removes NA row
         double[] filteredPvalues = new double[pvalues.length / NUM_RESULTS_FROM_R];
@@ -160,9 +156,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         log.info( fStatisticCommand.toString() );
 
-        REXP fRegExp = ( REXP ) rc.eval( fStatisticCommand.toString() );
-
-        double[] fstatistics = fRegExp.asDoubleArray();
+        double[] fstatistics =  rc.doubleArrayEval( fStatisticCommand.toString() );
 
         // removes NA row
         double[] filteredFStatistics = new double[fstatistics.length / NUM_RESULTS_FROM_R];

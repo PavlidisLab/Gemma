@@ -36,7 +36,7 @@ public class RMABackgroundAdjuster extends RCommander implements BackgroundAdjus
 
     public RMABackgroundAdjuster() {
         super();
-        ab = new AffyBatch( rc );
+        ab = new AffyBatch();
     }
 
     /**

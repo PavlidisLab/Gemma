@@ -23,9 +23,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Vector;
 
-import org.rosuda.REngine.REXP;
 import org.rosuda.REngine.REXPMismatchException;
-import org.rosuda.REngine.RList;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
@@ -60,13 +58,11 @@ public class SimpleSAMAnalyzer extends RCommander {
      */
     protected List<Object> getSignificantGenes( String fileName, String subsetName1, String subsetName2 ) {
         createExpressionMatrix( fileName, subsetName1, subsetName2 );
-        try {
-            List<Object> sigGenes = SAMAnalysis();
-            log.info( sigGenes.size() + " significant genes have been detected." );
-            return sigGenes;
-        } catch ( REXPMismatchException e ) {
-            throw new RuntimeException( e );
-        }
+
+        List<Object> sigGenes = SAMAnalysis();
+        log.info( sigGenes.size() + " significant genes have been detected." );
+        return sigGenes;
+
     }
 
     /**
@@ -144,12 +140,12 @@ public class SimpleSAMAnalyzer extends RCommander {
      * @return a list of probe ids of the significant genes
      * @throws REXPMismatchException
      */
-    protected List<Object> SAMAnalysis() throws REXPMismatchException {
+    protected List<Object> SAMAnalysis() {
         log.info( "Performing SAM analysis." );
         List<Object> significantGenes = new Vector<Object>();
 
         // change library to siggenes
-        rc.eval( "library(siggenes)" );
+        rc.loadLibrary( "siggenes)" );
         rc.assign( "cl", columnLabels );
 
         // sam.out <- sam(data, cl)
@@ -158,10 +154,7 @@ public class SimpleSAMAnalyzer extends RCommander {
         // rc.voidEval("sam.sum3 <- summary(sam.out, 3, ll=FALSE)");
         rc.voidEval( "sam.sum3 <- summary(sam.out, 3)" );
 
-        // sam.sum3@row.sig.genes
-        REXP exp = rc.eval( "sam.sum3@row.sig.genes" );
-
-        int[] rowsOfSigGenes = exp.asIntegers();
+        int[] rowsOfSigGenes = rc.intArrayEval( "sam.sum3@row.sig.genes" );
 
         for ( int k = 0; k < rowsOfSigGenes.length; k++ )
             significantGenes.add( expressionLevelsMatrix.getRowName( rowsOfSigGenes[k] - 1 ) );

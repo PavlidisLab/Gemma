@@ -19,7 +19,6 @@
 package ubic.gemma.analysis.preprocess;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
-import ubic.basecode.util.RServeClient;
 
 /**
  * @author pavlidis
@@ -29,10 +28,6 @@ public class TwoColorArrayMedianNormalizer extends MarrayNormalizer implements T
 
     public TwoColorArrayMedianNormalizer() {
         super();
-    }
-
-    public TwoColorArrayMedianNormalizer( RServeClient rc ) {
-        super( rc );
     }
 
     /*

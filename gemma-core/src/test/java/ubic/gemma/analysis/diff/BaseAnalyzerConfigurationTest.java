@@ -28,6 +28,7 @@ import org.easymock.classextension.MockClassControl;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.util.JRIClient;
 import ubic.basecode.util.RClient;
+import ubic.basecode.util.RConnectionFactory;
 import ubic.basecode.util.RServeClient;
 import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.model.common.description.Characteristic;
@@ -109,7 +110,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
     private ByteArrayConverter bac = new ByteArrayConverter();
 
-    private JRIClient rc = null;
+    private RClient rc = null;
     protected boolean connected = false;
 
     protected AnalysisHelperService analysisHelperService = null;
@@ -126,7 +127,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         /* Decide whether to skip test based on R connection. */
 
         // rc = RServeClient.newInstance( 20000 );
-        rc = new JRIClient();
+        rc = RConnectionFactory.getRConnection();
 
         if ( rc.isConnected() ) {
             connected = true;

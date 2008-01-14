@@ -22,10 +22,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.util.RClient;
-import ubic.basecode.util.RServeClient;
+import ubic.basecode.util.RConnectionFactory;
 
 /**
- * Encapsulates a connection to the RServer.
+ * A class that encapsulates a connection to R
  * 
  * @author pavlidis
  * @version $Id$
@@ -36,28 +36,14 @@ public abstract class RCommander {
 
     protected static Log log = LogFactory.getLog( RCommander.class.getName() );
 
-    protected RServeClient rc;
+    protected RClient rc;
 
     public RCommander() {
         this.init();
     }
 
-    /**
-     * @param rc2
-     */
-    public RCommander( RServeClient connection ) {
-        if ( connection != null && connection.isConnected() ) {
-            this.rc = connection;
-        } else {
-            throw new IllegalArgumentException( "connection was invalid" );
-        }
-    }
-
     protected void init() {
-        rc = RServeClient.newInstance( TIMEOUT_MILLI_SECONDS );
-        if ( rc == null ) {
-            throw new RuntimeException( "Error during getting RServer instance" );
-        }
+        rc = RConnectionFactory.getRConnection();
     }
 
     /**

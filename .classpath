@@ -224,7 +224,7 @@
 			<attribute name="javadoc_location" value="http://icbtools.med.cornell.edu/javadocs/Rserve/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/RoSuDA/JRI/0.4-0/JRI-0.4-0.jar">
+	<classpathentry kind="var" path="M2_REPO/RoSuDA/JRI/0.4-0/JRI-0.4-0.jar" sourcepath="/JAR_SOURCE/JRI/src">
 		<attributes>
 			<attribute name="javadoc_location" value="http://www.rosuda.org/R/nightly/JavaDoc/org/rosuda/JRI/package-frame.html"/>
 		</attributes>

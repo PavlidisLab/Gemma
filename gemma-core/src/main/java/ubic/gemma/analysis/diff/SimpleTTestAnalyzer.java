@@ -24,8 +24,6 @@ import java.util.List;
 import java.util.Vector;
 
 import org.rosuda.REngine.REXPMismatchException;
-import org.rosuda.REngine.RList;
-
 import ubic.basecode.math.MultipleTestCorrection;
 import ubic.gemma.analysis.util.RCommander;
 import cern.colt.list.DoubleArrayList;
@@ -127,11 +125,10 @@ public class SimpleTTestAnalyzer extends RCommander {
      * 
      * @throws REXPMismatchException
      */
-    protected double tTest( DoubleArrayList list1, DoubleArrayList list2 ) throws REXPMismatchException {
+    protected double tTest( DoubleArrayList list1, DoubleArrayList list2 ) {
         double[] list1values = list1.elements();
         double[] list2values = list2.elements();
-        RList list = listTwoDoubleArrayEval( "t.test(x,y)", "x", list1values, "y", list2values );
-        double[] pval = list.at( "p.value" ).asDoubles();
+        double[] pval = listTwoDoubleArrayEval( "t.test(x,y)$p.value", "x", list1values, "y", list2values );
         return pval[0];
     }
 
@@ -141,12 +138,11 @@ public class SimpleTTestAnalyzer extends RCommander {
      * @return a list of values as the result of the t-test.
      * @throws REXPMismatchException
      */
-    protected RList listTwoDoubleArrayEval( String command, String argName, double[] arg, String argName2, double[] arg2 )
-            throws REXPMismatchException {
+    protected double[] listTwoDoubleArrayEval( String command, String argName, double[] arg, String argName2,
+            double[] arg2 ) {
         rc.assign( argName, arg );
         rc.assign( argName2, arg2 );
-        RList l = rc.eval( command ).asList();
-        return l;
+        return rc.doubleArrayEval( command );
     }
 
     /**

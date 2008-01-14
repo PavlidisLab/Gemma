@@ -21,8 +21,6 @@ package ubic.gemma.analysis.diff;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
-import org.rosuda.REngine.REXPMismatchException;
-
 import ubic.basecode.math.MultipleTestCorrection;
 import ubic.basecode.math.metaanalysis.MetaAnalysis;
 import cern.colt.list.DoubleArrayList;
@@ -106,16 +104,13 @@ public class SimpleCombinedPValuesAnalyzer extends SimpleOneWayAnovaAnalyzer {
             String probeId = null;
             DoubleArrayList pValuesOfGene = new DoubleArrayList();
 
-            try {
-                for ( int y = 0; y < experimentsSize; y++ ) {
-                    probeId = ( String ) keys[y].nextElement();
-                    double[] expLevels = ( double[] ) tables[y].get( probeId );
-                    double pVal = anovaAnalysis( subsetNames[y], expLevels );
-                    pValuesOfGene.add( pVal );
-                }
-            } catch ( REXPMismatchException e ) {
-                throw new RuntimeException( e );
+            for ( int y = 0; y < experimentsSize; y++ ) {
+                probeId = ( String ) keys[y].nextElement();
+                double[] expLevels = ( double[] ) tables[y].get( probeId );
+                double pVal = anovaAnalysis( subsetNames[y], expLevels );
+                pValuesOfGene.add( pVal );
             }
+
             double combinedPValue = MetaAnalysis.fisherCombinePvalues( pValuesOfGene );
             pValuesTable.put( probeId, combinedPValue );
         }

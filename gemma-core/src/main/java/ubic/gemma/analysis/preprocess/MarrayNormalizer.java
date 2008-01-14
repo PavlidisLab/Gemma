@@ -18,8 +18,7 @@
  */
 package ubic.gemma.analysis.preprocess;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
-import ubic.basecode.util.RServeClient;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed; 
 import ubic.gemma.analysis.util.MArrayRaw;
 import ubic.gemma.analysis.util.RCommander;
 
@@ -33,11 +32,6 @@ public abstract class MarrayNormalizer extends RCommander implements TwoChannelN
 
     public MarrayNormalizer() {
         super();
-        rc.voidEval( "library(marray)" );
-    }
-
-    public MarrayNormalizer( RServeClient rc ) {
-        super( rc );
         rc.voidEval( "library(marray)" );
     }
 
@@ -56,7 +50,7 @@ public abstract class MarrayNormalizer extends RCommander implements TwoChannelN
     protected DoubleMatrixNamed normalize( DoubleMatrixNamed channelOneSignal, DoubleMatrixNamed channelTwoSignal,
             DoubleMatrixNamed channelOneBackground, DoubleMatrixNamed channelTwoBackground, DoubleMatrixNamed weights,
             String method ) {
-        MArrayRaw mRaw = new MArrayRaw( this.rc );
+        MArrayRaw mRaw = new MArrayRaw();
         mRaw.makeMArrayLayout( channelOneSignal.rows() );
         String mRawVarName = mRaw.makeMArrayRaw( channelOneSignal, channelTwoSignal, channelOneBackground,
                 channelTwoBackground, weights );
@@ -86,7 +80,7 @@ public abstract class MarrayNormalizer extends RCommander implements TwoChannelN
      */
     protected DoubleMatrixNamed normalize( DoubleMatrixNamed channelOneSignal, DoubleMatrixNamed channelTwoSignal,
             String method ) {
-        MArrayRaw mRaw = new MArrayRaw( this.rc );
+        MArrayRaw mRaw = new MArrayRaw();
         mRaw.makeMArrayLayout( channelOneSignal.rows() );
         String mRawVarName = mRaw.makeMArrayRaw( channelOneSignal, channelTwoSignal, null, null, null );
 
