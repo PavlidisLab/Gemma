@@ -295,20 +295,26 @@ public abstract class BaseFormController extends SimpleFormController {
     }
 
     /**
-     * Convenience message to send messages to users, includes app URL as footer.
+     * Convenience message to send messages to users
      * 
      * @param user
      * @param msg
-     * @param url
      */
-    protected void sendEmail( User user, String msg, String url ) {
+    protected void sendEmail( User user, String msg ) {
+        if ( StringUtils.isBlank( user.getEmail() ) ) {
+            log.warn( "Could not send email to " + user + ", no email address" );
+        }
         log.debug( "sending e-mail to user [" + user.getEmail() + "]..." );
         mailMessage.setTo( user.getFullName() + "<" + user.getEmail() + ">" );
 
-        Map<String, Object> model = new HashMap<String, Object>();
-        model.put( "user", user );
-        model.put( "message", msg );
-        model.put( "applicationURL", url );
+        mailEngine.send( mailMessage );
+    }
+
+    protected void sendEmail( User user, String templateName, Map model ) {
+        if ( StringUtils.isBlank( user.getEmail() ) ) {
+            log.warn( "Could not send email to " + user + ", no email address" );
+        }
+        mailMessage.setTo( user.getFullName() + "<" + user.getEmail() + ">" );
         mailEngine.sendMessage( mailMessage, templateName, model );
     }
 

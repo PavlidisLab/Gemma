@@ -18,7 +18,9 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -163,23 +165,27 @@ public abstract class UserAuthenticatingController extends BaseFormController {
      * @param request
      * @param user
      * @param locale
+     * @param unencryptedPassword 
      */
-    protected void sendConfirmationEmail( HttpServletRequest request, User user, Locale locale ) {
+    protected void sendConfirmationEmail( HttpServletRequest request, User user, Locale locale, String unencryptedPassword ) {
         // Send user an e-mail
         if ( log.isDebugEnabled() ) {
             log.debug( "Sending user '" + user.getUserName() + "' an account information e-mail" );
         }
 
         // Send an account information e-mail
-        // TODO use this property again
-        // mailMessage.setSubject( getText( "signup.email.subject", locale ) );
-        mailMessage.setSubject( "Gemma Account Information" );
+        mailMessage.setSubject( getText( "signup.email.subject", locale ) );
         try {
-            sendEmail( user, getText( "signup.email.message", locale ), RequestUtil.getAppURL( request ) );
+            Map<String, Object> model = new HashMap<String, Object>();
+            model.put( "userName", user.getUserName() );
+            model.put( "userPassword", unencryptedPassword );
+            model.put( "message", getText( "signup.email.message", locale ) );
+            model.put( "applicationURL", RequestUtil.getAppURL( request ) );
+            sendEmail( user, this.templateName, model );
             this.saveMessage( request, "email.sent", user.getEmail(), "Confirmation email was sent to "
                     + user.getEmail() );
         } catch ( Exception e ) {
-            log.error( "Couldn't send email to " + user );
+            log.error( "Couldn't send email to " + user, e );
         }
     }
 

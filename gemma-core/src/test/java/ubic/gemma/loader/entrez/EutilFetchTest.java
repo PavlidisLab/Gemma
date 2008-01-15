@@ -18,6 +18,11 @@
  */
 package ubic.gemma.loader.entrez;
 
+import java.io.IOException;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import junit.framework.TestCase;
 
 /**
@@ -26,10 +31,23 @@ import junit.framework.TestCase;
  */
 public class EutilFetchTest extends TestCase {
 
+    private static Log log = LogFactory.getLog( EutilFetchTest.class.getName() );
+
     final public void testFetch() throws Exception {
-        String result = EutilFetch.fetch( "gds", "GSE4595", 2 );
-        assertNotNull( result );
-        assertTrue( "Got " + result, result.startsWith( "1: GSE4595 record:" ) );
+        try {
+            String result = EutilFetch.fetch( "gds", "GSE4595", 2 );
+            assertNotNull( result );
+            assertTrue( "Got " + result, result.startsWith( "1: GSE4595 record:" ) );
+        } catch ( Exception e ) {
+            if ( e.getCause() instanceof IOException && e.getCause().getMessage().contains( "502" ) ) {
+                log.warn( "Error 502 from NCBI, skipping test" );
+                return;
+            } else if ( e.getCause() instanceof IOException && e.getCause().getMessage().contains( "503" ) ) {
+                log.warn( "Error 503 from NCBI, skipping test" );
+                return;
+            }
+            throw ( e );
+        }
     }
 
 }

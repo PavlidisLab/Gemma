@@ -18,8 +18,10 @@
  */
 package ubic.gemma.web.controller.common.description.bibref;
 
+import java.io.IOException;
+
 import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockHttpServletResponse; 
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
@@ -47,14 +49,26 @@ public class PubMedQueryControllerTest extends BaseSpringWebTest {
         MockHttpServletRequest request = newPost( "/pubMedSearch.html" );
         MockHttpServletResponse response = new MockHttpServletResponse();
         request.addParameter( "accession", "134444" );
-        ModelAndView mv = controller.handleRequest( request, response );
-        Errors errors = ( Errors ) mv.getModel().get( BindingResult.MODEL_KEY_PREFIX + "accession" );
-        assertNull( "Errors in model: " + errors, errors );
 
-        // verify that success messages are in the request
-        assertNotNull( mv.getModel().get( "bibliographicReference" ) );
-        assertNotNull( request.getSession().getAttribute( "messages" ) );
-        assertEquals( "bibRefView", mv.getViewName() );
+        try {
+            ModelAndView mv = controller.handleRequest( request, response );
+            Errors errors = ( Errors ) mv.getModel().get( BindingResult.MODEL_KEY_PREFIX + "accession" );
+            assertNull( "Errors in model: " + errors, errors );
+
+            // verify that success messages are in the request
+            assertNotNull( mv.getModel().get( "bibliographicReference" ) );
+            assertNotNull( request.getSession().getAttribute( "messages" ) );
+            assertEquals( "bibRefView", mv.getViewName() );
+        } catch ( Exception e ) {
+            if ( e.getCause() instanceof IOException && e.getCause().getMessage().contains( "502" ) ) {
+                log.warn( "Error 502 from NCBI, skipping test" );
+                return;
+            } else if ( e.getCause() instanceof IOException && e.getCause().getMessage().contains( "503" ) ) {
+                log.warn( "Error 503 from NCBI, skipping test" );
+                return;
+            }
+            throw ( e );
+        }
 
     }
 

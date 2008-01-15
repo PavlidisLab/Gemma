@@ -116,12 +116,11 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
         request.setParameter( "loadPlatformOnly", "false" );
 
         // goes to the progress page...
-        controller.handleRequest( request, response );
+        ModelAndView mv = controller.handleRequest( request, response );
 
-        String taskId = ( String ) request.getAttribute( BackgroundProcessingFormController.JOB_ATTRIBUTE );
-        assertNotNull( "No task Id", taskId );
-
-        MockClient.monitorTask( taskId );
+        Object taskId = mv.getModel().get( BackgroundProcessingFormController.JOB_ATTRIBUTE );
+        assertNotNull( taskId );
+        MockClient.monitorTask( ( String ) mv.getModel().get( taskId ) );
 
         Thread.sleep( 500 );// make sure it's really done.
 
@@ -130,7 +129,7 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
         TaskCompletionController taskCheckController = ( TaskCompletionController ) this
                 .getBean( "taskCompletionController" );
 
-        ModelAndView mv = null;
+        mv = null;
         long timeout = 60000;
         long startTime = System.currentTimeMillis();
         while ( mv == null ) {

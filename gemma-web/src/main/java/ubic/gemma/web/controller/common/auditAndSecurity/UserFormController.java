@@ -130,9 +130,8 @@ public class UserFormController extends UserAuthenticatingController {
             // user is editing their profile
             HttpSession session = request.getSession();
             session.setAttribute( Constants.USER_KEY, user );
-            // FIXME not using saveMessage with the user.update key because locale cannot be found. See bug 805.
-            // saveMessage( request, "user.updated", user.getUserName(), "User saved" );
-            saveMessage( request, "User saved" );
+
+            saveMessage( request, "user.updated", user.getUserName(), "User saved" );
 
             /* note difference here from signup: we don't log the user in -- unless the user changed their own password */
             if ( passwordChange && request.getRemoteUser().equals( user.getUserName() ) ) {
@@ -145,7 +144,7 @@ public class UserFormController extends UserAuthenticatingController {
             assert StringUtils.equals( request.getParameter( "from" ), "list" );
 
             // administrator is adding a new user manually, so we don't log them in. We return to the list
-            super.sendConfirmationEmail( request, user.asUser(), locale );
+            super.sendConfirmationEmail( request, user.asUser(), locale, user.getConfirmNewPassword() );
             saveMessage( request, "user.added", user.getUserName(), "User added successfully" );
             return new ModelAndView( getSuccessView() );
 

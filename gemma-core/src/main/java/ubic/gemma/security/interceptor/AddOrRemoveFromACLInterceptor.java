@@ -389,9 +389,12 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
 
         /*
          * First, check if we are adding a new user to the system. If so, set the entry in the acl permissions table to
-         * have a recipient equal to the username of the user to be added. Also, set the object_identity=1. FIXME - you
-         * only want to do this to the acl_permission of the UserImpl if the user being added is an administrator (has
-         * role=admin) since only admins can load data.
+         * have a recipient equal to the username of the user to be added. Also, set the object_identity=1.
+         */
+
+        /*
+         * FIXME - you only want to do this to the acl_permission of the UserImpl if the user being added is an
+         * administrator (has role=admin) since only admins can load data.
          */
         if ( object instanceof UserImpl ) {
             UserImpl newUser = ( UserImpl ) object;

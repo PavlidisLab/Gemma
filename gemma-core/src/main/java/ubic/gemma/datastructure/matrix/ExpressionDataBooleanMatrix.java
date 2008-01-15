@@ -200,7 +200,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(java.util.List, java.util.List)
      */
     public Boolean[][] get( List designElements, List bioAssays ) {
-        // TODO Auto-generated method stub
+        // TODO Implement me
         throw new UnsupportedOperationException();
     }
 
@@ -236,7 +236,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumns(java.util.List)
      */
     public Boolean[][] getColumns( List bioAssays ) {
-        // TODO Auto-generated method stub
+        // TODO Implement me
         throw new UnsupportedOperationException();
     }
 
@@ -246,7 +246,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getMatrix()
      */
     public Boolean[][] getMatrix() {
-        // TODO Auto-generated method stub
+        // TODO Implement me
         throw new UnsupportedOperationException();
     }
 

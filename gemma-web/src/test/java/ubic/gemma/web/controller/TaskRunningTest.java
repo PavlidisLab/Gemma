@@ -28,9 +28,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.testing.BaseSpringWebTest;
 import ubic.gemma.util.progress.ProgressData;
-import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.util.progress.ProgressStatusService;
-import ubic.gemma.web.util.MockLongJobController;
 
 /**
  * Test of long job control.
@@ -85,7 +83,6 @@ public class TaskRunningTest extends BaseSpringWebTest {
             Thread.sleep( 500 );
             List<ProgressData> result = progressStatusService.getProgressStatus( ( String ) taskId );
             if ( result.size() > 1 ) {
-
                 for ( ProgressData lr : result ) {
                     lastResult = lr;
                     if ( lr.isDone() ) break wait;
@@ -128,6 +125,7 @@ public class TaskRunningTest extends BaseSpringWebTest {
 
                 for ( ProgressData lr : result ) {
                     lastResult = lr;
+                    log.info( lr.isFailed() + " " + lr.isDone() );
                     if ( lr.isFailed() || lr.isDone() ) break wait;
                 }
             }

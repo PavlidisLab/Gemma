@@ -83,11 +83,9 @@ public class SignupController extends UserAuthenticatingController {
         // log user in automatically
         signInUser( request, user.asUser(), unencryptedPassword );
 
-        sendConfirmationEmail( request, user.asUser(), locale );
+        sendConfirmationEmail( request, user.asUser(), locale, unencryptedPassword );
 
-        // TODO use this property again
-        // saveMessage(request, "user.registered", user.getUserName(), "Registered");
-        saveMessage( request, "Registered" );
+        saveMessage( request, "user.registered", user.getUserName(), "Registered" );
         return new ModelAndView( getSuccessView() );
     }
 
