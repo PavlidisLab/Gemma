@@ -13,7 +13,7 @@ Ext.Gemma.GemmaGridPanel = function ( config ) {
 		autoHeight : true,
 		autoScroll : true,
 		bbar : [],
-		tbar : [],
+		tbar : []
 	};
 
 	/* apply user-defined config options and call the superclass constructor...
@@ -33,9 +33,9 @@ Ext.Gemma.GemmaGridPanel = function ( config ) {
 /* static methods
  */
 Ext.Gemma.GemmaGridPanel.formatTermWithStyle = function( value, uri ) {
-	var class = uri ? "unusedWithUri" : "unusedNoUri";
+	var style = uri ? "unusedWithUri" : "unusedNoUri";
 	var description = uri || "free text";
-	return String.format( "<span class='{0}' ext:qtip='{2}'>{1}</span>", class, value, description );
+	return String.format( "<span class='{0}' ext:qtip='{2}'>{1}</span>", style, value, description );
 };
 
 /* instance methods...
@@ -101,7 +101,7 @@ Ext.extend( Ext.Gemma.GemmaGridPanel, Ext.grid.EditorGridPanel, {
 	refresh : function( params ) {
 		var reloadOpts = { callback: this.getView().refresh.bind( this.getView() ) };
 		if ( params ) {
-			reloadOpts.params = params
+			reloadOpts.params = params;
 		}
 		this.getStore().reload( reloadOpts );
 	},

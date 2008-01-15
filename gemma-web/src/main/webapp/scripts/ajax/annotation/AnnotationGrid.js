@@ -87,20 +87,17 @@ Ext.Gemma.AnnotationGrid = function ( div, config ) {
 			var row = e.record.data;
 			var col = this.getColumnModel().getColumnId( e.column );
 			if ( col == VALUE_COLUMN ) {
-				var f = this.valueCombo.setCategory.bind( this.valueCombo );
-				f( row.className, row.classUri );
+				this.valueCombo.setCategory.call( this.valueCombo, row.className, row.classUri );
 			}
 		} );
 		this.on( "afteredit", function( e ) {
 			var col = this.getColumnModel().getColumnId( e.column );
 			if ( col == CATEGORY_COLUMN ) {
-				var f = this.categoryCombo.getTerm.bind( this.categoryCombo );
-				var term = f();
+				var term = this.categoryCombo.getTerm.call( this.categoryCombo );
 				e.record.set( "className", term.term );
 				e.record.set( "classUri", term.uri );
 			} else if ( col == VALUE_COLUMN ) {
-				var f = this.valueCombo.getCharacteristic.bind( this.valueCombo );
-				var c = f();
+				var c = this.valueCombo.getCharacteristic.call( this.valueCombo );
 				e.record.set( "termName", c.value );
 				e.record.set( "termUri", c.valueUri );
 			}
@@ -110,7 +107,7 @@ Ext.Gemma.AnnotationGrid = function ( div, config ) {
 	
 	this.on( "celldblclick", function ( grid, rowIndex, cellIndex ) {
 		var record = grid.getStore().getAt( rowIndex );
-		var column = grid.getColumnModel().getColumnId( cellIndex )
+		var column = grid.getColumnModel().getColumnId( cellIndex );
 		if ( column == PARENT_COLUMN ) {
 			record.expanded = record.expanded ? 0 : 1;
 			grid.getView().refresh( true );
@@ -122,14 +119,15 @@ Ext.Gemma.AnnotationGrid = function ( div, config ) {
 		this.doLayout();
 	}, this );
 	
-	if ( ! this.noInitialLoad )
+	if ( ! this.noInitialLoad ) {
 		this.getStore().load( { params : this.getReadParams() } );
+	}
 };
 
 /* static methods
  */
 Ext.Gemma.AnnotationGrid.getRecord = function() {
-	if ( Ext.Gemma.AnnotationGrid.record == undefined ) {
+	if ( Ext.Gemma.AnnotationGrid.record === undefined ) {
 		Ext.Gemma.AnnotationGrid.record = Ext.data.Record.create( [
 			{ name:"id", type:"int" },
 			{ name:"classUri", type:"string" },
@@ -146,32 +144,33 @@ Ext.Gemma.AnnotationGrid.getRecord = function() {
 };
 
 Ext.Gemma.AnnotationGrid.getTermStyler = function() {
-	if ( Ext.Gemma.AnnotationGrid.termStyler == undefined ) {
+	if ( Ext.Gemma.AnnotationGrid.termStyler === undefined ) {
 		/* apply a CSS class depending on whether or not the characteristic has a URI.
 		 */
 		Ext.Gemma.AnnotationGrid.termStyler = function ( value, metadata, record, row, col, ds ) {
 			return Ext.Gemma.GemmaGridPanel.formatTermWithStyle( value, record.data.termUri );
-		}
+		};
 	}
 	return Ext.Gemma.AnnotationGrid.termStyler;
 };
 
 Ext.Gemma.AnnotationGrid.formatParentWithStyle = function( id, expanded, parentLink, parentDescription, parentOfParentLink, parentOfParentDescription ) {
+	var value;
 	if ( parentOfParentLink ) {
-		var value = String.format( "{0}<br> from {1}", parentLink, parentOfParentLink );
+		value = String.format( "{0}<br> from {1}", parentLink, parentOfParentLink );
 	} else {
-		var value = parentLink;
+		value = parentLink;
 	}
 	return expanded ? value.concat( String.format( "<div style='white-space: normal;'>{0}</div>", parentDescription ) ) : value;
 };
 
 Ext.Gemma.AnnotationGrid.getParentStyler = function() {
-	if ( Ext.Gemma.AnnotationGrid.parentStyler == undefined ) {
+	if ( Ext.Gemma.AnnotationGrid.parentStyler === undefined ) {
 		/* apply a CSS class depending on whether or not the characteristic has a URI.
 		 */
 		Ext.Gemma.AnnotationGrid.parentStyler = function ( value, metadata, record, row, col, ds ) {
 			return Ext.Gemma.AnnotationGrid.formatParentWithStyle( record.id, record.expanded, record.data.parentLink, record.data.parentDescription, record.data.parentOfParentLink, record.data.parentOfParentDescription );
-		}
+		};
 	}
 	return Ext.Gemma.AnnotationGrid.parentStyler;
 };
