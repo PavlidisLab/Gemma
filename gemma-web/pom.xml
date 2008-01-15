@@ -488,6 +488,17 @@
 		</testResources>
 		<plugins>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<argLine>-enableassertions -Xmx2g -Djava.awt.headless=true</argLine>
+					<excludes>
+						<exclude>**/*Abstract*</exclude>
+						<exclude>**/*IntegrationTest.java</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+			<plugin>
 				<artifactId>xdoclet-maven-plugin</artifactId>
 				<groupId>org.codehaus.mojo</groupId>
 				<executions>
@@ -501,22 +512,26 @@
 							<tasks>
 								<springdoclet destdir="${project.build.directory}/Gemma/WEB-INF"
 									mergeDir="${basedir}/src/conf/xdoclet-merge" validating="false" force="false">
-									<fileset dir="${basedir}/src/main/java" includes="**/*.java" />
+									<fileset dir="${basedir}/src/main/java" includes="**/*.java"/>
 									<springxml destDir="${project.build.directory}/Gemma/WEB-INF"
-										destinationFile="action-servlet.xml" mergeDir="${basedir}/src/conf/xdoclet-merge" useIds="true" /><!-- templateFile="${basedir}/src/conf/springdoclet-custom-template.xdt" -->
+										destinationFile="action-servlet.xml" mergeDir="${basedir}/src/conf/xdoclet-merge"
+										useIds="true"/>
+									<!-- templateFile="${basedir}/src/conf/springdoclet-custom-template.xdt" -->
 								</springdoclet>
 								<webdoclet destdir="${project.build.directory}/Gemma/WEB-INF"
 									mergeDir="${basedir}/src/conf/xdoclet-merge" force="false">
-									<fileset dir="${basedir}/src/main/java" includes="**/*.java" />
+									<fileset dir="${basedir}/src/main/java" includes="**/*.java"/>
 									<!--  <deploymentdescriptor displayname="Gemma"
-										destdir="${project.build.directory}/Gemma/WEB-INF" servletspec="2.4"
-										mergeDir="${basedir}/src/conf/xdoclet-merge" sessiontimeout="60">
-										<welcomefile file="index.jsp" />
-										</deploymentdescriptor>-->
+									destdir="${project.build.directory}/Gemma/WEB-INF" servletspec="2.4"
+									mergeDir="${basedir}/src/conf/xdoclet-merge" sessiontimeout="60">
+									<welcomefile file="index.jsp" />
+									</deploymentdescriptor>-->
 									<jsptaglib Jspversion="2.0" taglibversion="1.0" shortname="Gemma"
-										description="Custom tag library for Gemma" destDir="${project.build.directory}/Gemma/WEB-INF"
-										filename="Gemma.tld" mergeDir="${basedir}/src/conf/xdoclet-merge" validateXML="false" xmlencoding="UTF-8" />
-									<springvalidationxml />
+										description="Custom tag library for Gemma"
+										destDir="${project.build.directory}/Gemma/WEB-INF" filename="Gemma.tld"
+										mergeDir="${basedir}/src/conf/xdoclet-merge" validateXML="false"
+										xmlencoding="UTF-8"/>
+									<springvalidationxml/>
 								</webdoclet>
 							</tasks>
 						</configuration>
@@ -581,14 +596,14 @@
 				</executions>
 			</plugin>
 			<!--   <plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>jetty-maven-plugin</artifactId>
-				<version>1.0.0-alpha-1-SNAPSHOT</version>
-				<configuration>
-				<contextPathSpec>Gemma</contextPathSpec>
-				<jettyConfig>${basedir}/etc/conf/jetty.xml</jettyConfig>
-				</configuration>
-				</plugin>-->
+			<groupId>org.codehaus.mojo</groupId>
+			<artifactId>jetty-maven-plugin</artifactId>
+			<version>1.0.0-alpha-1-SNAPSHOT</version>
+			<configuration>
+			<contextPathSpec>Gemma</contextPathSpec>
+			<jettyConfig>${basedir}/etc/conf/jetty.xml</jettyConfig>
+			</configuration>
+			</plugin>-->
 		</plugins>
 	</build>
 	<profiles>
