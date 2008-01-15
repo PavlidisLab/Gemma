@@ -41,6 +41,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 
+import ubic.basecode.math.RandomChooser;
 import ubic.gemma.analysis.coexpression.ProbeLinkCoexpressionAnalyzer;
 import ubic.gemma.analysis.linkAnalysis.GeneLink;
 import ubic.gemma.model.association.Gene2GOAssociationService;
@@ -261,8 +262,9 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         }
 
         Map<String, Double> scoreMap = new HashMap<String, Double>();
+        Collection<String> subsetMap = RandomChooser.chooseRandomSubset( 10, geneMap.keySet() );
 
-        for ( String key : geneMap.keySet() ) {
+        for ( String key : subsetMap ) {
             String[] genes = StringUtils.split( key, "_" );
             Gene masterGene = geneCache.get( genes[0] );
             Gene coExpGene = geneCache.get( genes[1] );
