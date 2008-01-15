@@ -59,8 +59,8 @@ public class NumberComparator implements Comparator {
             return s1.compareTo( s2 );
         }
 
-        num1 = Double.parseDouble( ( String ) s1 );
-        num2 = Double.parseDouble( ( String ) s2 );
+        num1 = Double.parseDouble( s1 );
+        num2 = Double.parseDouble( s2 );
         if ( num1 < num2 ) {
             return -1;
         } else if ( num1 > num2 ) {

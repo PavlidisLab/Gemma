@@ -482,8 +482,7 @@ public class DatasetCombiner {
 
                         distance -= bonus;
 
-                        double normalizedDistance = ( double ) distance
-                                / Math.max( trimmedTarget.length(), trimmedTest.length() );
+                        double normalizedDistance = distance / Math.max( trimmedTarget.length(), trimmedTest.length() );
 
                         double secondaryDistance = Double.MAX_VALUE;
                         if ( targetSecondaryTitle != null && testSecondaryTitle != null ) {
@@ -492,7 +491,7 @@ public class DatasetCombiner {
 
                         if ( secondaryDistance < distance ) {
                             distance = secondaryDistance;
-                            normalizedDistance = ( double ) distance
+                            normalizedDistance = distance
                                     / Math.max( targetSecondaryTitle.length(), testSecondaryTitle.length() );
                         }
 
