@@ -1,3 +1,17 @@
+function reset(data) {
+
+}
+
+function handleSuccess(data) {
+	Ext.DomHelper.overwrite("messages", {tag : 'div', html:data });   
+}
+
+function handleFailure(data, e) {
+	Ext.DomHelper.overwrite("taskId", "");
+	Ext.DomHelper.overwrite("messages", {tag : 'img', src:'/Gemma/images/icons/warning.png' });  
+	Ext.DomHelper.append("messages", {tag : 'span', html : "&nbsp;There was an error: " + data });  
+}
+
 function showDetails( accession ) {
 	var callParams = [];
 	callParams.push(accession);
@@ -11,17 +25,26 @@ function showDetails( accession ) {
 	Ext.DomHelper.overwrite("messages", {tag : 'img', src:'/Gemma/images/default/tree/loading.gif' });  
 	Ext.DomHelper.append("messages", {tag : 'span', html : "&nbsp;Please wait..." });  
 	
-};
+}
 
-function handleSuccess(data) {
-	Ext.DomHelper.overwrite("messages", {tag : 'div', html:data });   
-};
+function handleLoadSuccess(data) {
+	try {
+		taskId = data;
+		Ext.DomHelper.overwrite("messages", "");  
+		Ext.DomHelper.overwrite("taskId", "<input type = 'hidden' name='taskId' id='taskId' value= '" + taskId + "'/> ");
+		var p = new progressbar();
+	 	p.createIndeterminateProgressBar();
+		p.on('fail', handleFailure);
+		p.on('cancel', reset);
+	 	p.startProgress();
+	}
+	catch (e) {
+		handleFailure(data, e);
+		return;
+	}
+}
 
-function handleFailure(data, e) {
-	Ext.DomHelper.overwrite("taskId", "");
-	Ext.DomHelper.overwrite("messages", {tag : 'img', src:'/Gemma/images/icons/warning.png' });  
-	Ext.DomHelper.append("messages", {tag : 'span', html : "&nbsp;There was an error: " + data });  
-};
+
 
 function load(accession) {
 
@@ -47,25 +70,7 @@ function load(accession) {
 	Ext.DomHelper.append("messages", "&nbsp;Submitting job...");  
 	ExpressionExperimentLoadController.run.apply(this, callParams);
 	
-};
+}
 
-function reset(data) {
 
-};
 
-function handleLoadSuccess(data) {
-	try {
-		taskId = data;
-		Ext.DomHelper.overwrite("messages", "");  
-		Ext.DomHelper.overwrite("taskId", "<input type = 'hidden' name='taskId' id='taskId' value= '" + taskId + "'/> ");
-		var p = new progressbar();
-	 	p.createIndeterminateProgressBar();
-		p.on('fail', handleFailure);
-		p.on('cancel', reset);
-	 	p.startProgress();
-	}
-	catch (e) {
-		handleFailure(data, e);
-		return;
-	}
-};

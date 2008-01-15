@@ -1,10 +1,56 @@
-Ext.onReady(function() {
-	indexForm();
-});
-
 function reset(data) {
 	
-};
+}
+
+function handleSuccess(data) {
+	Ext.DomHelper.overwrite("messages", {tag : 'div', html:data });   
+}
+
+function handleFailure(data, e) {
+	Ext.DomHelper.overwrite("taskId", "");
+	Ext.DomHelper.overwrite("messages", {tag : 'img', src:'/Gemma/images/icons/warning.png' });  
+	Ext.DomHelper.append("messages", {tag : 'span', html : "&nbsp;There was an error: " + data });  
+}
+
+function handleIndexSuccess(data) {
+	try {
+		taskId = data;
+		Ext.DomHelper.overwrite("messages", "");  
+		Ext.DomHelper.overwrite("taskId", "<input type = 'hidden' name='taskId' id='taskId' value= '" + taskId + "'/> ");
+		var p = new progressbar();
+	 	p.createIndeterminateProgressBar();
+		p.on('fail', handleFailure);
+		p.on('cancel', reset);
+	 	p.startProgress();
+	}
+	catch (e) {
+		handleFailure(data, e);
+		return;
+	}
+}
+
+function index(event) {
+
+	var dh = Ext.DomHelper;	
+	var callParams = [];
+	
+
+	var commandObj = {indexArray: adCheckBox.getValue() , indexEE: eeCheckBox.getValue(), indexProbe : probeCheckBox.getValue(), indexBibliographic: bibRefCheckBox.getValue(), indexGene: geneCheckBox.getValue(), indexBioSequence: bsCheckBox.getValue()};
+
+	callParams.push(commandObj);
+	
+	var delegate = handleIndexSuccess.createDelegate(this, [], true);
+	var errorHandler = handleFailure.createDelegate(this, [], true);
+	
+	callParams.push({callback : delegate, errorHandler : errorHandler  });
+	
+	// this should return quickly, with the task id.
+	Ext.DomHelper.overwrite("messages", {tag : 'img', src:'/Gemma/images/default/tree/loading.gif' });  
+	Ext.DomHelper.append("messages", "&nbsp;Submitting job...");  
+	CustomCompassIndexController.run.apply(this, callParams);
+	
+}
+
 
 var indexForm = function() {
 	
@@ -59,53 +105,6 @@ var indexForm = function() {
     simple.render('index-form');
 };
 
-
-function handleSuccess(data) {
-	Ext.DomHelper.overwrite("messages", {tag : 'div', html:data });   
-};
-
-function handleFailure(data, e) {
-	Ext.DomHelper.overwrite("taskId", "");
-	Ext.DomHelper.overwrite("messages", {tag : 'img', src:'/Gemma/images/icons/warning.png' });  
-	Ext.DomHelper.append("messages", {tag : 'span', html : "&nbsp;There was an error: " + data });  
-};
-
-function index(event) {
-
-	var dh = Ext.DomHelper;	
-	var callParams = [];
-	
-
-	var commandObj = {indexArray: adCheckBox.getValue() , indexEE: eeCheckBox.getValue(), indexProbe : probeCheckBox.getValue(), indexBibliographic: bibRefCheckBox.getValue(), indexGene: geneCheckBox.getValue(), indexBioSequence: bsCheckBox.getValue()};
-
-	callParams.push(commandObj);
-	
-	var delegate = handleIndexSuccess.createDelegate(this, [], true);
-	var errorHandler = handleFailure.createDelegate(this, [], true);
-	
-	callParams.push({callback : delegate, errorHandler : errorHandler  });
-	
-	// this should return quickly, with the task id.
-	Ext.DomHelper.overwrite("messages", {tag : 'img', src:'/Gemma/images/default/tree/loading.gif' });  
-	Ext.DomHelper.append("messages", "&nbsp;Submitting job...");  
-	CustomCompassIndexController.run.apply(this, callParams);
-	
-};
-
-
-function handleIndexSuccess(data) {
-	try {
-		taskId = data;
-		Ext.DomHelper.overwrite("messages", "");  
-		Ext.DomHelper.overwrite("taskId", "<input type = 'hidden' name='taskId' id='taskId' value= '" + taskId + "'/> ");
-		var p = new progressbar();
-	 	p.createIndeterminateProgressBar();
-		p.on('fail', handleFailure);
-		p.on('cancel', reset);
-	 	p.startProgress();
-	}
-	catch (e) {
-		handleFailure(data, e);
-		return;
-	}
-};
+Ext.onReady(function() {
+	indexForm();
+});

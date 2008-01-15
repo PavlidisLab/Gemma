@@ -60,11 +60,12 @@ Ext.onReady(function() {
 			content = note;
 		}
 		if ( detail.length > 0 ) {
-			if ( content.length > 0 )
+			if ( content.length > 0 ) {
 				content = content + "\n--\n";
+			}
 			content = content + detail;
 		}
-		if ( content.length == 0 ) {
+		if ( content.length === 0 ) {
 			content = "no information available";
 		}
 		Ext.MessageBox.alert(title, content);
@@ -154,7 +155,7 @@ Ext.onReady(function() {
 			auditEventTypeCombo.getValue(),
 			auditEventCommentField.getValue(),
 			auditEventDetailField.getValue(),
-			function() { ds.reload( { callback : function() { grid.getView().refresh(true) } } ); }
+			function() { ds.reload( { callback : function() { grid.getView().refresh(true); } } ); }
 		);
 	}, addEventDialog); //.disable();
 	addEventForm.addButton('Cancel', function() { addEventDialog.hide(); }, addEventDialog);

@@ -15,12 +15,12 @@ var DesignMatrix = {
 		var cm = new Ext.grid.ColumnModel( columns );
 		
 		var data = [];
-		for (var i=0; i<rows.length; ++i) {
-			data[i] = [];
+		for (var k=0; k<rows.length; ++k) {
+			data[k] = [];
 			for (var j=0; j<factors.length; ++j) {
-				data[i][j] = rows[i].factorValueMap[factors[j]];
+				data[k][j] = rows[k].factorValueMap[factors[j]];
 			}
-			data[i][factors.length] = rows[i].count;
+			data[k][factors.length] = rows[k].count;
 		}
 		this.ds = new Ext.data.Store( {
 			proxy : new Ext.data.MemoryProxy( data ), 
@@ -62,6 +62,6 @@ var DesignMatrix = {
 		};
 		ExpressionExperimentController.getDesignMatrixRows( entityDelegator, this.dwrCallback );
 	}
-}
+};
 
 Ext.onReady( DesignMatrix.init, DesignMatrix );

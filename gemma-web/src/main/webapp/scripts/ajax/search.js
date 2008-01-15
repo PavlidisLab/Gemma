@@ -4,16 +4,11 @@
 var ds;
 var form;
 
-Ext.onReady(function() {
-	Ext.state.Manager.setProvider(new Ext.state.CookieProvider({expires:new Date(new Date().getTime()+(1000*60*60*24*30))}));
-	searchForm();
-	initGrid(); 
-});
 
 var handleLoadSuccess = function(scope,b,arg) {
 	Ext.DomHelper.overwrite("messages", scope.getCount() + " found" ); 
  	form.findById('submit-button').setDisabled(false);
-}
+};
 
 var handleLoadError = function(scope,b,message,exception) {
 	 Ext.DomHelper.overwrite('messages', {tag : 'img', src:'/Gemma/images/icons/warning.png' });  
@@ -119,7 +114,7 @@ var initGrid = function(id) {
 			{name:"id",type:"int"},
 			{name:"resultObject" },
 			{name:"highlightedText", type:"string"},
-			{name:"indexSearchResult", type:"boolean"},
+			{name:"indexSearchResult", type:"boolean"}
 	]);
 	
 	
@@ -214,3 +209,10 @@ var renderEntity = function( data, metadata, record, row, column, store  ) {
 		return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">" + data.title + "</a> [" + data.pubmedId + "]";
 	}
 };
+
+
+Ext.onReady(function() {
+	Ext.state.Manager.setProvider(new Ext.state.CookieProvider({expires:new Date(new Date().getTime()+(1000*60*60*24*30))}));
+	searchForm();
+	initGrid(); 
+});

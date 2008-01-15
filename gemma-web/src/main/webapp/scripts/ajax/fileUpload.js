@@ -7,7 +7,7 @@ FileUpload = function(form){
 	Ext.QuickTips.init();
 	this.formId = form;
 	Ext.form.Field.prototype.msgTarget = 'side';
-	Ext.BLANK_IMAGE_URL="/Gemma/images/s.gif"
+	Ext.BLANK_IMAGE_URL="/Gemma/images/s.gif";
     this.addEvents({
         finish : true,
         fail : true,
@@ -57,7 +57,7 @@ Ext.extend(FileUpload, Ext.util.Observable, {
 		} catch (e) {
 			handleFailure(e); // FIXME get exception from the response.
 		}
-		if (o == null ) {
+		if (o === null ) {
 			handleFailure("Unknown error");
 		} else if (  !o.success ) {
 			handleFailure(o.error);
@@ -111,7 +111,7 @@ Ext.extend(FileUpload, Ext.util.Observable, {
 		//FileUploadController.upload.apply( this, callParams);
 	
 	
-	},
+	}
 	
 });
 
