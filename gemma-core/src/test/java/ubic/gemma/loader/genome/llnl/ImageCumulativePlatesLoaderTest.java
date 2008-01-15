@@ -42,12 +42,17 @@ public class ImageCumulativePlatesLoaderTest extends BaseSpringContextTest {
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
         is = this.getClass().getResourceAsStream( "/data/loader/genome/cumulative.plates.test.txt" );
+        ImageCumulativePlatesParser parser = new ImageCumulativePlatesParser();
+        assertTrue( is.available() > 0 );
+        parser.parse( is );
+        is.close();
+        this.biosequences = parser.getResults();
+        // reopen.
+        is = this.getClass().getResourceAsStream( "/data/loader/genome/cumulative.plates.test.txt" );
     }
 
     public void testLoadInputStream() throws Exception {
-        ImageCumulativePlatesParser parser = new ImageCumulativePlatesParser();
-        parser.parse( is );
-        this.biosequences = parser.getResults();
+
         loader = new ImageCumulativePlatesLoader();
         loader.setPersisterHelper( persisterHelper );
         loader.setBioSequenceService( ( BioSequenceService ) this.getBean( "bioSequenceService" ) );
@@ -64,7 +69,7 @@ public class ImageCumulativePlatesLoaderTest extends BaseSpringContextTest {
         for ( BioSequence bs : biosequences ) {
             BioSequence found = bss.find( bs );
             if ( found == null ) continue;
-            log.info( "Deleting " + found );
+            log.debug( "Deleting " + found );
             bss.remove( found );
         }
     }
