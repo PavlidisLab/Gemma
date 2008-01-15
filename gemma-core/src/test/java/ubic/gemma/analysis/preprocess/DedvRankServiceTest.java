@@ -57,8 +57,7 @@ public class DedvRankServiceTest extends AbstractGeoServiceTest {
 
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "gds999Short" ) );
-        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                "GDS999", false, true, false );
+        Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GDS999", false, true, false );
         ee = results.iterator().next();
 
         serv.computeDevRankForExpressionExperiment( ee, Method.MAX );

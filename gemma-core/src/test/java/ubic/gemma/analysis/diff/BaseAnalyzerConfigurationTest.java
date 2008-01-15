@@ -26,10 +26,8 @@ import org.apache.commons.lang.math.RandomUtils;
 import org.easymock.classextension.MockClassControl;
 
 import ubic.basecode.io.ByteArrayConverter;
-import ubic.basecode.util.JRIClient;
 import ubic.basecode.util.RClient;
 import ubic.basecode.util.RConnectionFactory;
-import ubic.basecode.util.RServeClient;
 import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
