@@ -78,11 +78,11 @@ Ext.Gemma.FactorValueGrid = function ( config ) {
 	this.on( "afteredit", function( e ) {
 		var col = this.getColumnModel().getColumnId( e.column );
 		if ( col == CATEGORY_COLUMN ) {
-			 this.categoryCombo.getTerm.all(this, this.categoryCombo );
+			var term = this.categoryCombo.getTerm.call( this.categoryCombo );
 			e.record.set( "category", term.term );
 			e.record.set( "categoryUri", term.uri );
 		} else if ( col == VALUE_COLUMN ) {
-			this.valueCombo.getCharacteristic.call(this, this.valueCombo );
+			var c = this.valueCombo.getCharacteristic.call( this.valueCombo );
 			e.record.set( "value", c.value );
 			e.record.set( "valueUri", c.valueUri );
 		}
