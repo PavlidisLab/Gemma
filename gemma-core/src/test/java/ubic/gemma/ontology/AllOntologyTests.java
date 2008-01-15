@@ -34,9 +34,7 @@ public class AllOntologyTests {
         suite.addTestSuite( GoMetricTest.class );
         suite.addTestSuite( MeshServiceTest.class );
         suite.addTestSuite( OntologyIndexerTest.class );
-        suite.addTestSuite( OntologyLoaderTest.class );
         suite.addTestSuite( OntologyServiceTest.class );
-    //    suite.addTestSuite( StatementTest.class );
         return suite;
 
     }
