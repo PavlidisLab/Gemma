@@ -103,7 +103,7 @@ public class DatasetCombinerTest extends TestCase {
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
 
-        // log.info( result );
+        log.debug( result );
         assertEquals( 15, result.size() );
 
         // these are just all the sample names.
@@ -198,7 +198,7 @@ public class DatasetCombinerTest extends TestCase {
 
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
-        log.info( result );
+        log.debug( result );
         assertEquals( 9, result.size() ); // used to be 8..
 
         for ( int i = 0; i < keys.length; i++ ) {
@@ -256,7 +256,7 @@ public class DatasetCombinerTest extends TestCase {
         }
         assertEquals( 4, numBioMaterials );
 
-        log.info( result );
+        log.debug( result );
     }
 
     /**
@@ -289,7 +289,7 @@ public class DatasetCombinerTest extends TestCase {
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
 
-        log.info( result );
+        log.debug( result );
 
         Iterator<Set<String>> it = result.iterator();
         int numBioMaterials = 0;
@@ -330,7 +330,7 @@ public class DatasetCombinerTest extends TestCase {
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
 
-        log.info( result );
+        log.debug( result );
 
         Iterator<Set<String>> it = result.iterator();
         int numBioMaterials = 0;
@@ -374,7 +374,7 @@ public class DatasetCombinerTest extends TestCase {
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
 
-        log.info( result );
+        log.debug( result );
 
         Iterator<Set<String>> it = result.iterator();
         int numBioMaterials = 0;
@@ -418,7 +418,7 @@ public class DatasetCombinerTest extends TestCase {
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
 
-        log.info( result );
+        log.debug( result );
 
         Iterator<Set<String>> it = result.iterator();
         int numBioMaterials = 0;
