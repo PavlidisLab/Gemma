@@ -22,7 +22,7 @@
  */
 package ubic.gemma.model.analysis;
 
-import java.util.Collection; 
+import java.util.Collection;
 import java.util.Map;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -88,6 +88,16 @@ public class DifferentialExpressionAnalysisServiceImpl extends
         }
 
         return null;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisServiceBase#handleThaw(java.util.Collection)
+     */
+    @Override
+    protected void handleThaw( Collection expressionAnalyses ) throws Exception {
+        this.getDifferentialExpressionAnalysisDao().thaw( expressionAnalyses );
     }
 
 }

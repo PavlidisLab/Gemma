@@ -24,8 +24,14 @@ package ubic.gemma.model.analysis;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
+import org.springframework.orm.hibernate3.HibernateTemplate;
+
+import ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
+import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 
@@ -62,6 +68,38 @@ public class DifferentialExpressionAnalysisDaoImpl extends
     protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
         final String queryString = "select distinct a from DifferentialExpressionAnalysisImpl a where :e in elements (a.experimentsAnalyzed)";
         return this.getHibernateTemplate().findByNamedParam( queryString, "e", investigation );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisDaoBase#handleThaw(java.util.Collection)
+     */
+    @Override
+    public void handleThaw( final Collection expressionAnalyses ) throws Exception {
+        HibernateTemplate templ = this.getHibernateTemplate();
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                Iterator iter = expressionAnalyses.iterator();
+                while ( iter.hasNext() ) {
+                    ExpressionAnalysis ea = ( ExpressionAnalysis ) iter.next();
+                    if ( ea instanceof DifferentialExpressionAnalysis ) {
+                        DifferentialExpressionAnalysis dea = ( DifferentialExpressionAnalysis ) ea;
+                        Collection<ExpressionAnalysisResultSet> ears = dea.getResultSets();
+                        ears.size();
+                        for ( ExpressionAnalysisResultSet ear : ears ) {
+                            Collection<DifferentialExpressionAnalysisResult> ders = ear.getResults();
+                            ders.size();
+                            // for ( DifferentialExpressionAnalysisResult der : ders ) {
+                            //
+                            // }
+                        }
+
+                    }
+                }
+                return null;
+            }
+        }, true );
     }
 
 }
