@@ -67,7 +67,7 @@ public class FastaParserTest extends TestCase {
         assertEquals( 22, actualResult.size() );
         for ( Object object : actualResult ) {
             BioSequence b = ( BioSequence ) object;
-            log.info( "NAME=" + b.getName() + " DESC=" + b.getDescription() + " SEQ=" + b.getSequence() );
+            log.debug( "NAME=" + b.getName() + " DESC=" + b.getDescription() + " SEQ=" + b.getSequence() );
         }
     }
 
