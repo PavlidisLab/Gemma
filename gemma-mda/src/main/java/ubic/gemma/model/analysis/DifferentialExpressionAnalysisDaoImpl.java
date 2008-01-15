@@ -27,11 +27,14 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.hibernate.Hibernate;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
+import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 
@@ -85,14 +88,25 @@ public class DifferentialExpressionAnalysisDaoImpl extends
                     ExpressionAnalysis ea = ( ExpressionAnalysis ) iter.next();
                     if ( ea instanceof DifferentialExpressionAnalysis ) {
                         DifferentialExpressionAnalysis dea = ( DifferentialExpressionAnalysis ) ea;
+                        session.update( dea );
+                        Hibernate.initialize( dea );
                         Collection<ExpressionAnalysisResultSet> ears = dea.getResultSets();
-                        ears.size();
+                        Hibernate.initialize( ears );
                         for ( ExpressionAnalysisResultSet ear : ears ) {
+                            session.update( ear );
+                            Hibernate.initialize( ear );
                             Collection<DifferentialExpressionAnalysisResult> ders = ear.getResults();
-                            ders.size();
-                            // for ( DifferentialExpressionAnalysisResult der : ders ) {
-                            //
-                            // }
+                            Hibernate.initialize( ders );
+                            for ( DifferentialExpressionAnalysisResult der : ders ) {
+                                session.update( der );
+                                Hibernate.initialize( der );
+                                if ( der instanceof ProbeAnalysisResult ) {
+                                    ProbeAnalysisResult par = ( ProbeAnalysisResult ) der;
+                                    CompositeSequence cs = par.getProbe();
+                                    // session.update( cs );
+                                    Hibernate.initialize( cs );
+                                }
+                            }
                         }
 
                     }

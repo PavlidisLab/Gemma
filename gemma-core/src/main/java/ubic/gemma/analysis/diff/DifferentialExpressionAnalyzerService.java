@@ -82,7 +82,6 @@ public class DifferentialExpressionAnalyzerService {
 
         Collection<ExpressionAnalysis> expressionAnalyses = differentialExpressionAnalysisService
                 .findByInvestigation( expressionExperiment );
-        differentialExpressionAnalysisService.thaw( expressionAnalyses );
 
         DifferentialExpressionAnalysis diffExpressionAnalysis = differentialExpressionAnalyzer.getExpressionAnalysis();
 
@@ -94,9 +93,11 @@ public class DifferentialExpressionAnalyzerService {
         Collection<ExpressionExperiment> experimentsAnalyzed = diffExpressionAnalysis.getExperimentsAnalyzed();
         experimentsAnalyzed.add( expressionExperiment );
         diffExpressionAnalysis.setExperimentsAnalyzed( experimentsAnalyzed );
-        expressionAnalyses.add( diffExpressionAnalysis );
 
-        differentialExpressionAnalysisService.create( diffExpressionAnalysis );
+        diffExpressionAnalysis = differentialExpressionAnalysisService.create( diffExpressionAnalysis );
+        expressionAnalyses.add( diffExpressionAnalysis );
+        
+        differentialExpressionAnalysisService.thaw( expressionAnalyses );
 
         /* return the expression analyses of type differential expression */
         Collection<DifferentialExpressionAnalysis> differentialExpressionAnalyses = new HashSet<DifferentialExpressionAnalysis>();
