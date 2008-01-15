@@ -116,7 +116,7 @@
 						<link>http://jakarta.apache.org/regexp/apidocs/</link>
 						<link>http://jakarta.apache.org/velocity/api/</link>
 						<link>http://dsd.lbl.gov/~hoschek/colt/api/</link>
-						<link>http://static.springframework.org/spring/docs/1.2.x/api/</link>
+						<link>http://static.springframework.org/spring/docs/2.5.x/api/</link>
 					</links>
 				</configuration>
 			</plugin>

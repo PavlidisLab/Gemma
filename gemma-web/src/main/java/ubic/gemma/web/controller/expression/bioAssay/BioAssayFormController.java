@@ -29,7 +29,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
-import org.springframework.web.bind.RequestUtils;
+import org.springframework.web.bind.ServletRequestUtils;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -80,7 +80,7 @@ public class BioAssayFormController extends BaseFormController {
 
         log.debug( "entering formBackingObject" );
 
-        String id_param = RequestUtils.getStringParameter( request, "id", "" );
+        String id_param = ServletRequestUtils.getStringParameter( request, "id", "" );
 
         Long id = Long.parseLong( id_param );
 
