@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.io.Writer;
 import java.util.Collection;
 import java.util.HashMap;
@@ -142,6 +143,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
     private static final String HASH_MAP_RETURN = "HashMapReturn";
     private static final String GO_PROB_MAP = "GoProbMap";
     private static final String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
+    private static final String RANDOM_SUBSET = "RandomSubset";
     private String file_path = "";
 
     private Metric metric = GoMetric.Metric.simple;
@@ -207,7 +209,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
 
         File f = new File( HOME_DIR + File.separatorChar + HASH_MAP_RETURN );
         if ( f.exists() ) {
-            mouseGeneGOMap = getMapFromDisk( f );
+            mouseGeneGOMap = (Map<Long, Collection<String>>)getCacheFromDisk( f );
             log.info( "Found file!" );
         }
 
@@ -227,7 +229,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
                 mouseGeneGOMap.put( gene.getId(), termString );
 
             }
-            saveMapToDisk( mouseGeneGOMap, HASH_MAP_RETURN );
+            saveCacheToDisk( (HashMap)mouseGeneGOMap, HASH_MAP_RETURN );
 
         }
 
@@ -235,7 +237,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
 
         File f2 = new File( HOME_DIR + File.separatorChar + GO_PROB_MAP );
         if ( f2.exists() ) {
-            GOProbMap = getMapFromDisk( f2 );
+            GOProbMap = (HashMap<String, Double>)getCacheFromDisk( f2 );
             log.info( "Found probability file!" );
         }
 
@@ -256,13 +258,24 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
                 GOProbMap.put( uri, ( double ) count / total );
             }
 
-            this.saveMapToDisk( GOProbMap, GO_PROB_MAP );
+            this.saveCacheToDisk( (HashMap)GOProbMap, GO_PROB_MAP );
             Long Elapsed = overallWatch.getTime();
             log.info( "Creating GO probability map took: " + Elapsed / 1000 + "s " );
         }
 
         Map<String, Double> scoreMap = new HashMap<String, Double>();
-        Collection<String> subsetMap = RandomChooser.chooseRandomSubset( 10, geneMap.keySet() );
+        Collection<String> subsetMap = new HashSet<String>();
+        
+        File f3 = new File( HOME_DIR + File.separatorChar + RANDOM_SUBSET );
+        if ( f3.exists() ) {
+            subsetMap = (HashSet<String>)getCacheFromDisk( f3 );
+            log.info( "Found cached subset file!" );
+        }
+        else{
+            subsetMap = RandomChooser.chooseRandomSubset( 10, geneMap.keySet() );
+            this.saveCacheToDisk( (HashSet)subsetMap, RANDOM_SUBSET );
+        }
+        
 
         for ( String key : subsetMap ) {
             String[] genes = StringUtils.split( key, "_" );
@@ -545,9 +558,9 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         writer.flush();
     }
 
-    public void saveMapToDisk( Map toSaveMap, String filename ) {
+    public void saveCacheToDisk( Serializable toSave, String filename ) {
 
-        log.info( "Generating file from HashMap... " );
+        log.info( "Generating file ... " );
 
         try {
             // remove file first
@@ -557,7 +570,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
             }
             FileOutputStream fos = new FileOutputStream( f );
             ObjectOutputStream oos = new ObjectOutputStream( fos );
-            oos.writeObject( toSaveMap );
+            oos.writeObject( toSave );
             oos.flush();
             oos.close();
         } catch ( Throwable e ) {
@@ -567,20 +580,20 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         log.info( "Done making report." );
     }
 
-    public Map getMapFromDisk( File f ) {
-        Map<Long, Collection<String>> returnMap = null;
+    public Serializable getCacheFromDisk( File f ) {
+        Serializable returnObject = null;
         try {
             if ( f.exists() ) {
                 FileInputStream fis = new FileInputStream( f );
                 ObjectInputStream ois = new ObjectInputStream( fis );
-                returnMap = ( Map ) ois.readObject();
+                returnObject = ( Serializable ) ois.readObject();
                 ois.close();
                 fis.close();
             }
         } catch ( Throwable e ) {
             return null;
         }
-        return returnMap;
+        return returnObject;
     }
 
 }
