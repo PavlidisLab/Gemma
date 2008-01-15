@@ -78,13 +78,11 @@ Ext.Gemma.FactorValueGrid = function ( config ) {
 	this.on( "afteredit", function( e ) {
 		var col = this.getColumnModel().getColumnId( e.column );
 		if ( col == CATEGORY_COLUMN ) {
-			var f = this.categoryCombo.getTerm.bind( this.categoryCombo );
-			var term = f();
+			 this.categoryCombo.getTerm.all(this, this.categoryCombo );
 			e.record.set( "category", term.term );
 			e.record.set( "categoryUri", term.uri );
 		} else if ( col == VALUE_COLUMN ) {
-			var f = this.valueCombo.getCharacteristic.bind( this.valueCombo );
-			var c = f();
+			this.valueCombo.getCharacteristic.call(this, this.valueCombo );
 			e.record.set( "value", c.value );
 			e.record.set( "valueUri", c.valueUri );
 		}
@@ -97,7 +95,7 @@ Ext.Gemma.FactorValueGrid = function ( config ) {
 /* static methods
  */
 Ext.Gemma.FactorValueGrid.getRecord = function() {
-	if ( Ext.Gemma.FactorValueGrid.record == undefined ) {
+	if ( Ext.Gemma.FactorValueGrid.record === undefined ) {
 		Ext.Gemma.FactorValueGrid.record = Ext.data.Record.create( [
 			{ name:"charId", type:"int" },
 			{ name:"factorValueId", type:"int" },
@@ -112,7 +110,7 @@ Ext.Gemma.FactorValueGrid.getRecord = function() {
 };
 
 Ext.Gemma.FactorValueGrid.getCategoryStyler = function() {
-	if ( Ext.Gemma.FactorValueGrid.categoryStyler == undefined ) {
+	if ( Ext.Gemma.FactorValueGrid.categoryStyler === undefined ) {
 		/* apply a CSS class depending on whether or not the characteristic has a URI.
 		 */
 		Ext.Gemma.FactorValueGrid.categoryStyler = function ( value, metadata, record, row, col, ds ) {
@@ -123,7 +121,7 @@ Ext.Gemma.FactorValueGrid.getCategoryStyler = function() {
 };
 
 Ext.Gemma.FactorValueGrid.getValueStyler = function() {
-	if ( Ext.Gemma.FactorValueGrid.valueStyler == undefined ) {
+	if ( Ext.Gemma.FactorValueGrid.valueStyler === undefined ) {
 		/* apply a CSS class depending on whether or not the characteristic has a URI.
 		 */
 		Ext.Gemma.FactorValueGrid.valueStyler = function ( value, metadata, record, row, col, ds ) {
@@ -161,8 +159,9 @@ Ext.extend( Ext.Gemma.FactorValueGrid, Ext.Gemma.GemmaGridPanel, {
 		var checkboxes = form.selectedFactorValues;
 		var values = [];
 		for ( var i=0; i<checkboxes.length; ++i) {
-			if ( checkboxes[i].checked )
+			if ( checkboxes[i].checked ) {
 				values.push( checkboxes[i].value );
+			}
 		}
 		return values;
 	},

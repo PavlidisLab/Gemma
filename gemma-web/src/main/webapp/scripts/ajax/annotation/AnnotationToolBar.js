@@ -134,7 +134,7 @@ Ext.Gemma.AnnotationToolBar = function ( annotationGrid, config ) {
 	if ( ( createHandler || deleteHandler ) && saveHandler ) { this.addSeparator(); }
 	if ( saveHandler ) { this.addField( saveButton ); }
 	
-}
+};
 
 /* other public methods...
  */

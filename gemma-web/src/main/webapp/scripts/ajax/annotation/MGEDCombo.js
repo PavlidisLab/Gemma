@@ -15,11 +15,11 @@ Ext.Gemma.MGEDCombo = function ( config ) {
 
 	Ext.Gemma.MGEDCombo.superclass.constructor.call( this, config );
 	
-	if ( Ext.Gemma.MGEDCombo.record == undefined ) {
+	if ( Ext.Gemma.MGEDCombo.record === undefined ) {
 		Ext.Gemma.MGEDCombo.record = Ext.data.Record.create( [
 			{ name:"id", type:"int" },
 			{ name:"uri", type:"string" },
-			{ name:"term", type:"string" },
+			{ name:"term", type:"string" }
 		] );
 	}
 	this.store = config.store || new Ext.data.Store( {
@@ -40,7 +40,7 @@ Ext.Gemma.MGEDCombo = function ( config ) {
 	this.on( "select", function ( combo, record, index ) {
 		this.selectedTerm = record.data;
 	} );
-}
+};
 
 /* other public methods...
  */

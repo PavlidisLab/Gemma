@@ -66,10 +66,12 @@ Ext.onReady( function() {
 	} );
 	Ext.Gemma.CharacteristicBrowser.grid.getSelectionModel().on( "selectionchange", function( model ) {
 		var selected = model.getSelections();
-		if ( selected.length > 0 )
+		if ( selected.length > 0 ) {
 			deleteButton.enable();
-		else
+		}
+		else {
 			deleteButton.disable();
+		}
 	} );
 	
 	var revertButton = new Ext.Toolbar.Button( {
@@ -79,7 +81,7 @@ Ext.onReady( function() {
 		handler : function() {
 			var selected = Ext.Gemma.CharacteristicBrowser.grid.getSelectionModel().getSelections();
 			for ( var i=0; i<selected.length; ++i ) {
-				var record = selected[i]
+				var record = selected[i];
 				record.reject();
 			}
 			Ext.Gemma.CharacteristicBrowser.grid.getView().refresh();

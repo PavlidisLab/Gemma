@@ -10,29 +10,33 @@ Ext.Gemma.CharacteristicCombo = function ( config ) {
 		categoryUri : null,
 		value : null,
 		valueUri : null
-	}
+	};
 
 	var superConfig = { };
 	
-	if ( Ext.Gemma.CharacteristicCombo.record == undefined ) {
+	if ( Ext.Gemma.CharacteristicCombo.record === undefined ) {
 		/* if the characteristic has a URI, use that as the description;
 		 * if not, strip the " -USED- " string (added in OntologyService) if present.
 		 */
 		var getHover = function (record) {
-			if ( record.valueUri )
+			if ( record.valueUri ) {
 				return record.valueUri;
-			else
+			}
+			else {
 				return ( record.description.substring(0, 8) == " -USED- " ) ?
 					record.description.substring(8) : record.description;
+			}
 		};
 		/* return a CSS class depending on whether or not the characteristic has a URI
 		 * and whether or not it exists in the database.
 		 */
 		var getStyle = function (record) {
-			if ( record.description.substring(0, 8) == " -USED- ")
+			if ( record.description.substring(0, 8) == " -USED- ") {
 				return record.valueUri ? "usedWithUri" : "usedNoUri";
-			else
+			}
+			else {
 				return record.valueUri ? "unusedWithUri" : "unusedNoUri";
+			}
 		};
 		Ext.Gemma.CharacteristicCombo.record = Ext.data.Record.create( [
 			{ name:"id", type:"int" },
@@ -50,7 +54,7 @@ Ext.Gemma.CharacteristicCombo = function ( config ) {
 		remoteSort : true
 	} );
 	
-	if ( Ext.Gemma.CharacteristicCombo.template == undefined ) {
+	if ( Ext.Gemma.CharacteristicCombo.template === undefined ) {
 		Ext.Gemma.CharacteristicCombo.template = new Ext.XTemplate(
 			'<tpl for="."><div ext:qtip="{hover}" class="x-combo-list-item {style}">{value}</div></tpl>'
 		);
@@ -71,7 +75,7 @@ Ext.Gemma.CharacteristicCombo = function ( config ) {
 		this.characteristic.valueUri = record.data.valueUri;
 		combo.setValue( record.data.value );
 	} );
-}
+};
 
 /* other public methods...
  */
@@ -94,7 +98,7 @@ Ext.extend( Ext.Gemma.CharacteristicCombo, Ext.form.ComboBox, {
 			 * fields or a VocabCharacteristic will be created when we only want
 			 * a Characteristic...
 			 */
-			return ( this.characteristic.valueUri != null || this.characteristic.categoryUri != null ) ?
+			return ( this.characteristic.valueUri !== null || this.characteristic.categoryUri !== null ) ?
 				this.characteristic : {	category : this.characteristic.category, value : this.characteristic.value };
 		},
 		

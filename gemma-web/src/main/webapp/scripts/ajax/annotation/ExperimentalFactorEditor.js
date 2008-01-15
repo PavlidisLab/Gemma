@@ -72,7 +72,7 @@ Ext.Gemma.ExperimentalFactorGrid = function ( config ) {
 /* static methods
  */
 Ext.Gemma.ExperimentalFactorGrid.getRecord = function() {
-	if ( Ext.Gemma.ExperimentalFactorGrid.record == undefined ) {
+	if ( Ext.Gemma.ExperimentalFactorGrid.record === undefined ) {
 		Ext.Gemma.ExperimentalFactorGrid.record = Ext.data.Record.create( [
 			{ name:"id", type:"int" },
 			{ name:"name", type:"string" },
@@ -85,12 +85,12 @@ Ext.Gemma.ExperimentalFactorGrid.getRecord = function() {
 };
 
 Ext.Gemma.ExperimentalFactorGrid.getCategoryStyler = function() {
-	if ( Ext.Gemma.ExperimentalFactorGrid.categoryStyler == undefined ) {
+	if ( Ext.Gemma.ExperimentalFactorGrid.categoryStyler === undefined ) {
 		/* apply a CSS class depending on whether or not the characteristic has a URI.
 		 */
 		Ext.Gemma.ExperimentalFactorGrid.categoryStyler = function ( value, metadata, record, row, col, ds ) {
 			return Ext.Gemma.GemmaGridPanel.formatTermWithStyle( value, record.data.categoryUri );
-		}
+		};
 	}
 	return Ext.Gemma.ExperimentalFactorGrid.categoryStyler;
 };
@@ -163,10 +163,12 @@ Ext.Gemma.ExperimentalFactorToolbar = function ( config ) {
 	} );
 	this.grid.getSelectionModel().on( "selectionchange", function( model ) {
 		var selected = model.getSelections();
-		if ( selected.length > 0 )
+		if ( selected.length > 0 ) {
 			deleteButton.enable();
-		else
+		}
+		else {
 			deleteButton.disable();
+		}
 	} );
 	var saveButton = new Ext.Toolbar.Button( {
 		text : "save",
