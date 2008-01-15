@@ -154,7 +154,6 @@ public class TestPersistentObjectHelper {
 
         Collection<DesignElementDataVector> vectors = new HashSet<DesignElementDataVector>();
         for ( QuantitationType quantType : quantitationTypes ) {
-
             for ( CompositeSequence cs : ad.getCompositeSequences() ) {
                 DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
                 byte[] bdata = getDoubleData();
@@ -272,8 +271,13 @@ public class TestPersistentObjectHelper {
         Collection<QuantitationType> quantitationTypes = new HashSet<QuantitationType>();
         for ( int quantitationTypeNum = 0; quantitationTypeNum < NUM_QUANTITATION_TYPES; quantitationTypeNum++ ) {
             QuantitationType q = getTestNonPersistentQuantitationType();
+            if ( quantitationTypes.size() == 0 ) {
+                q.setIsPreferred( true );
+            }
             quantitationTypes.add( q );
         }
+
+        assert quantitationTypes.size() > 0;
 
         vectors.addAll( getDesignElementDataVectors( ee, quantitationTypes, bioAssaysA, adA ) );
         vectors.addAll( getDesignElementDataVectors( ee, quantitationTypes, bioAssaysB, adB ) );
@@ -584,6 +588,8 @@ public class TestPersistentObjectHelper {
     }
 
     /**
+     * Note that if you want a 'preferred' qt or other special properites you have to set it yourself.
+     * 
      * @return
      */
     public static QuantitationType getTestNonPersistentQuantitationType() {

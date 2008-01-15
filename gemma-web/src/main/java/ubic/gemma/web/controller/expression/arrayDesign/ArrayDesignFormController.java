@@ -147,6 +147,7 @@ public class ArrayDesignFormController extends BaseFormController {
             return processFormSubmission( request, response, command, errors );
         }
 
+        arrayDesignService.thawLite( existing );
         existing.setDescription( ad.getDescription() );
         existing.setName( ad.getName() );
         existing.setShortName( ad.getShortName() );

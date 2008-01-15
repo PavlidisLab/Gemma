@@ -52,7 +52,7 @@ public abstract class AbstractOntologyService implements InitializingBean {
     protected Map<String, OntologyTerm> terms;
     protected Map<String, OntologyIndividual> individuals;
 
-    private boolean enabled = true;
+    private boolean enabled = false;
 
     protected AtomicBoolean ready = new AtomicBoolean( false );
 
@@ -259,6 +259,8 @@ public abstract class AbstractOntologyService implements InitializingBean {
             log.info( "Loading " + ontologyName + " is disabled" );
             return;
         }
+
+        enabled = true;
 
         // Load the model for searching
 

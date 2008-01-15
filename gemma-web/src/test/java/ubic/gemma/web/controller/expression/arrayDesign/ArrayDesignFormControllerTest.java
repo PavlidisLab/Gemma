@@ -20,10 +20,11 @@ package ubic.gemma.web.controller.expression.arrayDesign;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockHttpServletResponse; 
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -89,7 +90,9 @@ public class ArrayDesignFormControllerTest extends BaseSpringContextTest {
 
         assertNull( errors );
         assertNotNull( request.getSession().getAttribute( "messages" ) );
-        assertEquals( "redirect:/arrays/showArrayDesign.html?id=" + ad.getId(), mav.getViewName() );
+        assertTrue( mav.getView() instanceof RedirectView );
+        assertEquals( "/Gemma/arrays/showArrayDesign.html?id=" + ad.getId(), ( ( RedirectView ) mav.getView() )
+                .getUrl() );
 
     }
 

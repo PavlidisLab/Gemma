@@ -42,6 +42,8 @@ import ubic.gemma.loader.genome.BlatResultParser;
 import ubic.gemma.loader.genome.FastaParser;
 import ubic.gemma.loader.util.parser.TabDelimParser;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.gene.GeneProduct;
@@ -50,6 +52,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.util.TaxonUtility;
 
 /**
  * Given a blat result set for an array design, annotate and find the 3' locations for all the really good hits. This
@@ -106,6 +109,10 @@ public class ProbeMapperCli extends AbstractSpringAwareCLI {
     private String fastaFileName = null;
 
     private String sequenceIdentifierFileName = null;
+
+    private TaxonService taxonService;
+
+    private Taxon taxon;
 
     public ProbeMapperCli() {
         super();
@@ -343,7 +350,7 @@ public class ProbeMapperCli extends AbstractSpringAwareCLI {
         super.processOptions();
 
         probeMapper = ( ProbeMapper ) this.getBean( "probeMapper" );
-
+        taxonService = ( TaxonService ) this.getBean( "taxonService" );
         if ( hasOption( 's' ) ) {
             probeMapper.setScoreThreshold( getDoubleOptionValue( 's' ) );
         }
@@ -357,6 +364,7 @@ public class ProbeMapperCli extends AbstractSpringAwareCLI {
         } else {
             this.databaseName = DEFAULT_DATABASE;
         }
+        guessTaxon();
 
         if ( hasOption( 'f' ) ) {
             this.fastaFileName = getOptionValue( 'f' );
@@ -375,6 +383,18 @@ public class ProbeMapperCli extends AbstractSpringAwareCLI {
         }
 
         this.outputFileName = getOptionValue( 'o' );
+    }
+
+    private void guessTaxon() {
+        if ( this.databaseName.startsWith( "hg" ) ) {
+            this.taxon = taxonService.findByCommonName( "human" );
+        } else if ( this.databaseName.startsWith( "mm" ) ) {
+            this.taxon = taxonService.findByCommonName( "mouse" );
+        } else if ( this.databaseName.startsWith( "rn" ) ) {
+            this.taxon = taxonService.findByCommonName( "rat" );
+        } else {
+            throw new IllegalStateException( "Unknown taxon for database: " + this.databaseName );
+        }
 
     }
 
@@ -435,6 +455,14 @@ public class ProbeMapperCli extends AbstractSpringAwareCLI {
         writeHeader( output );
 
         Collection<BlatResult> blatResults = brp.getResults();
+
+        // Fill in the taxon.
+        assert this.taxon != null;
+        for ( BlatResult blatResult : blatResults ) {
+            blatResult.getQuerySequence().setTaxon( taxon );
+            blatResult.getTargetChromosome().setTaxon( taxon );
+            blatResult.getTargetAlignedRegion().getChromosome().setTaxon( taxon );
+        }
 
         Map<String, Collection<BlatAssociation>> allRes = probeMapper.processBlatResults( goldenPathAnalysis,
                 blatResults );

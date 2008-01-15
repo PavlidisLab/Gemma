@@ -53,18 +53,18 @@ public class Gene2GeneCoexpressionDaoImpl extends
 
         final String queryStringFirstVector = "select distinct g2g from "
                 + g2gClassName
-                + " as g2g where g2g.sourceAnalysis.id = :analysisID and g2g.firstGene.id = :geneID and g2g.numDataSets >= :stringency";
+                + " as g2g where g2g.sourceAnalysis = :analysis and g2g.firstGene = :gene and g2g.numDataSets >= :stringency";
 
         final String queryStringSecondVector = "select distinct g2g from "
                 + g2gClassName
-                + " as g2g where g2g.sourceAnalysis.id = :analysisID and g2g.secondGene.id = :geneID and g2g.numDataSets >= :stringency";
+                + " as g2g where g2g.sourceAnalysis = :analysis and g2g.secondGene = :gene and g2g.numDataSets >= :stringency";
 
         Collection<Gene2GeneCoexpression> results = new HashSet<Gene2GeneCoexpression>();
 
         results.addAll( this.getHibernateTemplate().findByNamedParam( queryStringFirstVector,
-                new String[] { "analysisID", "geneID", "stringency" }, new Object[] { gene, analysis, stringency } ) );
+                new String[] { "analysis", "gene", "stringency" }, new Object[] {analysis,  gene, stringency } ) );
         results.addAll( this.getHibernateTemplate().findByNamedParam( queryStringSecondVector,
-                new String[] { "analysisID", "geneID", "stringency" }, new Object[] { gene, analysis, stringency } ) );
+                new String[] { "analysis", "gene", "stringency" }, new Object[] { gene, analysis, stringency } ) );
 
         return results;
     }

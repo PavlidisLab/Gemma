@@ -40,7 +40,7 @@ public class SupportedTaxa {
     }
 
     /**
-     * Test whether a taxon is supported by Gemma. The list of supported taxa is in Gemma.properties.
+     * Test whether a taxon is supported by Gemma
      * 
      * @param taxon
      * @return true if supported, false otherwise.

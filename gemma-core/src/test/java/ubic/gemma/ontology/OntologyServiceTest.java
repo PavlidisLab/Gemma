@@ -27,14 +27,19 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @author paul
  */
 public class OntologyServiceTest extends BaseSpringContextTest {
+    boolean mgodisabled = false;
 
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
         MgedOntologyService mgo = ( MgedOntologyService ) this.getBean( "mgedOntologyService" );
+        if ( !mgo.isEnabled() ) {
+            mgodisabled = true;
+            return;
+        }
         while ( !mgo.isOntologyLoaded() ) {
             Thread.sleep( 1000 );
-            log.info( "Waiting for Ontology to laod" );
+            log.info( "Waiting for Ontology to load" );
         }
     }
 
@@ -47,6 +52,10 @@ public class OntologyServiceTest extends BaseSpringContextTest {
     }
 
     public final void testFindExactMatch() throws Exception {
+        if ( mgodisabled ) {
+            log.warn( "MGED Ontology not loaded, skipping test" );
+            return;
+        }
         OntologyService os = ( OntologyService ) this.getBean( "ontologyService" );
         Collection<Characteristic> name = os.findExactTerm( "male",
                 "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Sex" );

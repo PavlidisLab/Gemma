@@ -25,12 +25,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.acegisecurity.context.SecurityContext;
-import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
+import ubic.gemma.util.progress.TaskRunningService;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BackgroundProcessingFormController;
 
@@ -46,7 +47,7 @@ public class MockLongJobController extends BackgroundProcessingFormController {
     /**
      * 
      */
-    public static final int JOB_LENGTH = 2000;
+    public static final int JOB_LENGTH = 20000;
     static Log log = LogFactory.getLog( MockLongJobController.class.getName() );
 
     /*
@@ -60,47 +61,50 @@ public class MockLongJobController extends BackgroundProcessingFormController {
     protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
             throws Exception {
 
-        return startJob( null );
+        Object die = request.getAttribute( "throw" );
+        return startJob( new WasteOfTime( die ) );
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.BackgroundProcessingFormController#getRunner(java.lang.String,
-     *      org.acegisecurity.context.SecurityContext, javax.servlet.http.HttpServletRequest, java.lang.Object,
-     *      ubic.gemma.web.util.MessageUtil)
-     */
-    @Override
-    protected BackgroundControllerJob<ModelAndView> getRunner( String jobId, SecurityContext securityContext,
-            Object command, MessageUtil messenger ) {
-        return new BackgroundControllerJob<ModelAndView>( jobId, securityContext, command, messenger ) {
+    class WasteOfTime extends BackgroundControllerJob<ModelAndView> {
 
-            public ModelAndView call() throws Exception {
+        Object die = null;
 
-                SecurityContextHolder.setContext( securityContext );
-                ProgressManager.createProgressJob( this.getTaskId(), "SomeUser", "Doin' sumpin'" );
-                //
-                // if ( this.getRequest().getAttribute( "throw" ) != null ) {
-                // log.info( "I'm throwing an exception" );
-                // throw new IllegalArgumentException( "I'm not happy." );
-                // }
+        public WasteOfTime( Object die ) {
+            super( getMessageUtil() );
+            this.die = die;
+        }
 
-                long millis = System.currentTimeMillis();
-                while ( System.currentTimeMillis() - millis < JOB_LENGTH ) {
-                    Thread.sleep( 500 );
-                    log.info( "Doing sumpin', done in " + ( JOB_LENGTH - ( System.currentTimeMillis() - millis ) )
-                            + " milliseconds" );
+        public ModelAndView call() throws Exception {
 
+            init();
+
+            ProgressJob job = ProgressManager.createProgressJob( TaskRunningService.generateTaskId(), securityContext
+                    .getAuthentication().getName(), "Doing something that will take a while" );
+
+            long millis = System.currentTimeMillis();
+            while ( System.currentTimeMillis() - millis < JOB_LENGTH ) {
+                Thread.sleep( 500 );
+                log.info( "Doing sumpin', done in " + ( JOB_LENGTH - ( System.currentTimeMillis() - millis ) )
+                        + " milliseconds" );
+                ProgressManager.updateCurrentThreadsProgressJob( "just sayin' hi" );
+                if ( this.die != null ) {
+                    throw new RuntimeException( "Sorry charlie" );
                 }
-
-                log.info( "Done doin sumpin" );
-
-                Map<String, Object> model = new HashMap<String, Object>();
-                model.put( "answer", "42" );
-                return new ModelAndView( "view", model );
             }
 
-        };
+            log.info( "Done doin sumpin'" );
+            ProgressManager.destroyProgressJob( job, false );
+
+            Map<String, Object> model = new HashMap<String, Object>();
+            model.put( "answer", "42" );
+            return new ModelAndView( "view", model );
+        }
+
+    }
+
+    protected BackgroundControllerJob<ModelAndView> getRunner( String taskId, SecurityContext securityContext,
+            Object command, MessageUtil messenger ) {
+        return new WasteOfTime( null );
     }
 }

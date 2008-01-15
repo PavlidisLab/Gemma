@@ -52,7 +52,8 @@ public class ChromosomeImpl extends ubic.gemma.model.genome.Chromosome {
     public int hashCode() {
         int hashCode = 0;
 
-        assert this.getName() != null && this.getName() != null;
+        assert this.getName() != null;
+        assert this.getTaxon() != null;
 
         hashCode = 29
                 * hashCode
