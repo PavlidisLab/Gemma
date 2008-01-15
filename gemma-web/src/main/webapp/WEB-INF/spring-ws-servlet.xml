@@ -25,6 +25,8 @@
        	 		
        	 		<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}experimentNumSamples">experimentNumSamplesEndpoint</prop>
 
+       	 		<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}experimentDEDV">experimentDEDVEndpoint</prop>
+
           	</props>
          </property>
          
@@ -93,14 +95,23 @@
         <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
     </bean>
     
-       <bean id="experimentNumSamplesEndpoint" class="ubic.gemma.web.services.ExperimentNumSamplesEndpoint">
+     <bean id="experimentNumSamplesEndpoint" class="ubic.gemma.web.services.ExperimentNumSamplesEndpoint">
         <description>
-            This endpoint given the short name returns the id of all the genes that match
+              This endpoint given the short name returns the id of all the genes that match
         </description>
         <property name="expressionExperimentService" ref="expressionExperimentService"/>
         <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
+         
     </bean>
 
+     <bean id="experimentDEDVEndpoint" class="ubic.gemma.web.services.ExperimentDEDVEndpoint">
+        <description>
+                        returns a matrix of design element data vectors for the given Expression experiment
+        </description>
+        <property name="expressionExperimentService" ref="expressionExperimentService"/>
+        <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
+        <property name="analysisHelperService" ref="analysisHelperService"/>
+    </bean>
 
 
     <bean id="gemma" class="org.springframework.ws.wsdl.wsdl11.DynamicWsdl11Definition">
@@ -112,5 +123,7 @@
             </bean>
         </property>
     </bean>
+    
+    
 
 </beans>

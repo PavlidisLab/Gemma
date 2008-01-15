@@ -107,4 +107,25 @@
     </element>
     
     
+        <element name="experimentDEDVRequest">
+        <simpleType>
+            <restriction base="integer">             
+            </restriction>
+        </simpleType>
+    </element>
+        
+    <element name="experimentDEDVResponse">
+        <complexType>
+        	<sequence>
+        		<element name="dedvData" type="string" minOccurs="0" maxOccurs="unbounded">
+        		  	<annotation>
+        		  		<documentation>
+        		  			   a tab delimted string of doubles
+        		  		</documentation>
+        		  	</annotation>
+        		</element>
+			</sequence>
+        </complexType>
+    </element>
+    
 </schema>
