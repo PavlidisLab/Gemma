@@ -82,23 +82,23 @@ public class DifferentialExpressionAnalyzerService {
 
         Collection<ExpressionAnalysis> expressionAnalyses = differentialExpressionAnalysisService
                 .findByInvestigation( expressionExperiment );
+        differentialExpressionAnalysisService.thaw( expressionAnalyses );
 
-        DifferentialExpressionAnalysis expressionAnalysis = differentialExpressionAnalyzer.getExpressionAnalysis();
+        DifferentialExpressionAnalysis diffExpressionAnalysis = differentialExpressionAnalyzer.getExpressionAnalysis();
 
-        if ( expressionAnalysis == null ) {
+        if ( diffExpressionAnalysis == null ) {
             log.error( "No differential expression analyses for " + expressionExperiment.getShortName() );
             return null;
         }
 
-        Collection<ExpressionExperiment> experimentsAnalyzed = expressionAnalysis.getExperimentsAnalyzed();
+        Collection<ExpressionExperiment> experimentsAnalyzed = diffExpressionAnalysis.getExperimentsAnalyzed();
         experimentsAnalyzed.add( expressionExperiment );
-        expressionAnalysis.setExperimentsAnalyzed( experimentsAnalyzed );
+        diffExpressionAnalysis.setExperimentsAnalyzed( experimentsAnalyzed );
+        expressionAnalyses.add( diffExpressionAnalysis );
 
-        expressionAnalyses.add( expressionAnalysis );
-        // expressionExperiment.setExpressionAnalyses( expressionAnalyses );
+        differentialExpressionAnalysisService.create( diffExpressionAnalysis );
 
-        // expressionExperimentService.update( expressionExperiment );
-
+        /* return the expression analyses of type differential expression */
         Collection<DifferentialExpressionAnalysis> differentialExpressionAnalyses = new HashSet<DifferentialExpressionAnalysis>();
         for ( ExpressionAnalysis ea : expressionAnalyses ) {
             if ( ea instanceof DifferentialExpressionAnalysis ) {
