@@ -49,6 +49,12 @@ public class CompositeSequenceDaoImplTest extends AbstractArrayDesignProcessingT
     Blat blat = new Blat();
     CompositeSequenceService compositeSequenceService;
 
+    /**
+     * The test files have only ~100 genes. This is still a very slow test to run, because it does many steps of
+     * processing the data. This is a good candidate for a test that would be better done with a 
+     * 
+     * @see ubic.gemma.loader.expression.arrayDesign.AbstractArrayDesignProcessingTest#onSetUpInTransaction()
+     */
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();

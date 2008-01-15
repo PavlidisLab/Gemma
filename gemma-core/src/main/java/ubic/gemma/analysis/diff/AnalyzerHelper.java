@@ -61,22 +61,10 @@ public class AnalyzerHelper {
      */
     public boolean blockComplete( ExpressionExperiment expressionExperiment ) {
 
-        Exception ex = null;
-        try {
-            checkBlockDesign( expressionExperiment );
-            checkBiologicalReplicates( expressionExperiment );
-        } catch ( Exception e ) {
-            e.printStackTrace();
-            ex = e;
-        } finally {
-            if ( ex != null ) {
-                log.info( "Incomplete block design." );
-                return false;
-            }
-        }
+        boolean completeBlock = checkBlockDesign( expressionExperiment );
+        boolean hasAllReps = checkBiologicalReplicates( expressionExperiment );
 
-        log.info( "Complete block design." );
-        return true;
+        return completeBlock && hasAllReps;
     }
 
     /**
@@ -87,7 +75,7 @@ public class AnalyzerHelper {
      * @return
      * @throws Exception
      */
-    protected void checkBlockDesign( ExpressionExperiment expressionExperiment ) throws Exception {
+    protected boolean checkBlockDesign( ExpressionExperiment expressionExperiment ) {
 
         Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
@@ -101,7 +89,7 @@ public class AnalyzerHelper {
          * from the other experimental factors
          */
         Collection<ExperimentalFactor> efs = expressionExperiment.getExperimentalDesign().getExperimentalFactors();
-        checkBlockDesign( biomaterials, efs );
+        return checkBlockDesign( biomaterials, efs );
     }
 
     /**
@@ -110,10 +98,10 @@ public class AnalyzerHelper {
      * 
      * @param biomaterials
      * @param factorValues
-     * @throws Exception
+     * @return false if not a complete block design.
      */
-    protected void checkBlockDesign( Collection<BioMaterial> biomaterials,
-            Collection<ExperimentalFactor> experimentalFactors ) throws Exception {
+    protected boolean checkBlockDesign( Collection<BioMaterial> biomaterials,
+            Collection<ExperimentalFactor> experimentalFactors ) {
 
         Collection<HashSet> factorValuePairings = generateFactorValuePairings( experimentalFactors );
 
@@ -122,14 +110,19 @@ public class AnalyzerHelper {
 
             Collection<FactorValue> factorValuesFromBioMaterial = m.getFactorValues();
 
-            if ( factorValuesFromBioMaterial.size() < 2 )
-                throw new Exception( "Biomaterial must have more than 1 factor value." );
+            if ( factorValuesFromBioMaterial.size() < 2 ) {
+                log.warn( "Biomaterial must have more than 1 factor value." );
+                return false;
+            }
 
-            if ( !factorValuePairings.contains( factorValuesFromBioMaterial ) )
-                throw new Exception(
-                        "Biomaterial does not have a factor value from one of the experimental factors.  Incomplete block design." );
+            if ( !factorValuePairings.contains( factorValuesFromBioMaterial ) ) {
+                log
+                        .warn( "Biomaterial does not have a factor value from one of the experimental factors.  Incomplete block design." );
+                return false;
+            }
 
         }
+        return true;
 
     }
 
@@ -139,9 +132,9 @@ public class AnalyzerHelper {
      * @param expressionExperiment
      * @param quantitationType
      * @param bioAssayDimension
-     * @throws Exception
+     * @return false if there are any factorvalues which do not have a matching BioMaterial.
      */
-    protected void checkBiologicalReplicates( ExpressionExperiment expressionExperiment ) throws Exception {
+    protected boolean checkBiologicalReplicates( ExpressionExperiment expressionExperiment ) {
 
         Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
@@ -170,8 +163,12 @@ public class AnalyzerHelper {
                     break;
                 }
             }
-            if ( !match ) throw new Exception( "No replicate found for biomaterial " + biomaterial + "." );
+            if ( !match ) {
+                log.warn( "No replicate found for biomaterial " + biomaterial + "." );
+                return false;
+            }
         }
+        return true;
     }
 
     /**
@@ -235,7 +232,7 @@ public class AnalyzerHelper {
      * @return
      * @throws Exception
      */
-    protected static Collection<BioMaterial> getBioMaterialsForAssays( ExpressionDataMatrix matrix ) throws Exception {
+    protected static Collection<BioMaterial> getBioMaterialsForAssays( ExpressionDataMatrix matrix ) {
 
         Collection<BioMaterial> biomaterials = new ArrayList<BioMaterial>();
 
@@ -243,17 +240,20 @@ public class AnalyzerHelper {
         Collection<BioAssay> assays = new ArrayList<BioAssay>();
         for ( int i = 0; i < matrix.columns(); i++ ) {
             Collection<BioAssay> bioassays = matrix.getBioAssaysForColumn( i );
-            if ( bioassays.size() != 1 )
-                throw new Exception( "Invalid number of bioassays for column " + i
+            if ( bioassays.size() != 1 ) {
+                throw new RuntimeException( "Invalid number of bioassays for column " + i
                         + " of the matrix.  Expecting 1, got " + bioassays.size() + "." );
+
+            }
             assays.add( bioassays.iterator().next() );
         }
 
         for ( BioAssay assay : assays ) {
             Collection<BioMaterial> materials = assay.getSamplesUsed();
-            if ( materials.size() != 1 )
-                throw new Exception( "Invalid number of biomaterials. Expecting 1 biomaterial/bioassay, got "
+            if ( materials.size() != 1 ) {
+                throw new RuntimeException( "Invalid number of biomaterials. Expecting 1 biomaterial/bioassay, got "
                         + materials.size() + "." );
+            }
 
             biomaterials.addAll( materials );
 

@@ -131,7 +131,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                 }
             }
 
-            throw new org.springframework.dao.InvalidDataAccessResourceUsageException( "No real match frond for  '"
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException( "No real match found for  '"
                     + DatabaseEntry.class.getName() + "' was found when executing query for accession="
                     + databaseEntry.getAccession() );
 

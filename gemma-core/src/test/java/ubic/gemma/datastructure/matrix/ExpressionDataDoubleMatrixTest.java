@@ -149,12 +149,22 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         }
         String path = ConfigUtils.getString( "gemma.home" );
         assert path != null;
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
-                + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE611Short" ) );
-        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                "GSE611", false, true, false );
-        newee = results.iterator().next();
-
+        try {
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
+                    + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE611Short" ) );
+            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
+                    "GSE611", false, true, false );
+            newee = results.iterator().next();
+        } catch ( Exception e ) {
+            if ( e.getCause() instanceof IOException && e.getCause().getMessage().contains( "502" ) ) {
+                log.warn( "Error 502 from NCBI, skipping test" );
+                return;
+            } else if ( e.getCause() instanceof IOException && e.getCause().getMessage().contains( "503" ) ) {
+                log.warn( "Error 503 from NCBI, skipping test" );
+                return;
+            }
+            throw ( e );
+        }
         expressionExperimentService.thaw( newee );
         // make sure we really thaw them, so we can get the design element sequences.
 

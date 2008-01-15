@@ -22,7 +22,6 @@ import java.util.Date;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.impl.StdScheduler;
 
@@ -37,20 +36,29 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class SchedulerFactoryBeanTest extends BaseSpringContextTest {
     private Log log = LogFactory.getLog( this.getClass() );
 
-    public void testChangeSchedule() {
+    /**
+     * @throws Exception
+     */
+    public final void testChangeSchedule() throws Exception {
         StdScheduler scheduler = ( StdScheduler ) this.getBean( "schedulerFactoryBean" );
+        boolean wasShutdown = false;
+        if ( scheduler.isShutdown() ) {
+            log.info( "Scheduler is shut down, cannot test it." );
+            return;
+        }
 
-        try {
-            String[] names = scheduler.getTriggerNames( null );
-            for ( String name : names ) {
-                log.info( name );
-            }
-            Trigger newTrigger = scheduler.getTrigger( "gene2CsUpdateTrigger", null );
-            newTrigger.setStartTime( new Date() );
-            scheduler.rescheduleJob( "gene2CsUpdateTrigger", null, newTrigger );
+        String[] names = scheduler.getTriggerNames( null );
+        for ( String name : names ) {
+            log.info( name );
+        }
+        Trigger newTrigger = scheduler.getTrigger( "gene2CsUpdateTrigger", null );
+        newTrigger.setStartTime( new Date() );
+        scheduler.rescheduleJob( "gene2CsUpdateTrigger", null, newTrigger );
+
+        if ( wasShutdown ) {
+            scheduler.shutdown();
+        } else {
             scheduler.start();
-        } catch ( SchedulerException e ) {
-            e.printStackTrace();
         }
 
     }

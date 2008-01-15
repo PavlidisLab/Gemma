@@ -784,7 +784,7 @@ public class GeoFamilyParser implements Parser {
                 if ( this.processPlatformsOnly ) return;
                 String value = extractValue( line );
                 currentSampleAccession = value;
-                log.info( "Starting new sample " + value );
+                log.debug( "Starting new sample " + value );
                 if ( results.getSampleMap().containsKey( value ) ) return;
                 addNewSample( value );
             } else if ( startsWithIgnoreCase( line, "^PLATFORM" ) ) {
@@ -1162,7 +1162,7 @@ public class GeoFamilyParser implements Parser {
          * In some data sets, the quantitation types are not in the same columns in different samples. ARRRGH!
          */
         GeoPlatform platformForSample = this.currentSample().getPlatforms().iterator().next();
-        log.info( "Initializing quantitation types for " + currentSample() + ", Platform=" + platformForSample );
+        log.debug( "Initializing quantitation types for " + currentSample() + ", Platform=" + platformForSample );
 
         for ( String columnName : currentSample().getColumnNames() ) {
             boolean isWanted = values.isWantedQuantitationType( columnName, this.aggressiveQuantitationTypeRemoval );

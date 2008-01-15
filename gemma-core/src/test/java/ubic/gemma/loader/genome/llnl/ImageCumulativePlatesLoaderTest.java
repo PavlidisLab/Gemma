@@ -19,9 +19,12 @@
 package ubic.gemma.loader.genome.llnl;
 
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
 
 import ubic.gemma.loader.genome.llnl.ImageCumulativePlatesLoader;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -33,6 +36,7 @@ public class ImageCumulativePlatesLoaderTest extends BaseSpringContextTest {
 
     InputStream is;
     ImageCumulativePlatesLoader loader;
+    private Collection<BioSequence> biosequences = new ArrayList<BioSequence>();
 
     @Override
     protected void onSetUpInTransaction() throws Exception {
@@ -41,6 +45,9 @@ public class ImageCumulativePlatesLoaderTest extends BaseSpringContextTest {
     }
 
     public void testLoadInputStream() throws Exception {
+        ImageCumulativePlatesParser parser = new ImageCumulativePlatesParser();
+        parser.parse( is );
+        this.biosequences = parser.getResults();
         loader = new ImageCumulativePlatesLoader();
         loader.setPersisterHelper( persisterHelper );
         loader.setBioSequenceService( ( BioSequenceService ) this.getBean( "bioSequenceService" ) );
@@ -53,7 +60,13 @@ public class ImageCumulativePlatesLoaderTest extends BaseSpringContextTest {
     @Override
     protected void onTearDownInTransaction() throws Exception {
         is.close();
-        // FIXME delete the created sequences.
+        BioSequenceService bss = ( BioSequenceService ) this.getBean( "bioSequenceService" );
+        for ( BioSequence bs : biosequences ) {
+            BioSequence found = bss.find( bs );
+            if ( found == null ) continue;
+            log.info( "Deleting " + found );
+            bss.remove( found );
+        }
     }
 
 }

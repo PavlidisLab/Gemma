@@ -137,7 +137,7 @@ public class MatrixConversionTest extends TestCase {
                 DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
                 double[] data = new double[baDimA.getBioAssays().size()];
                 for ( int k = 0; k < data.length; k++ ) {
-                    data[k] = ( double ) k;
+                    data[k] = k;
                 }
                 ByteArrayConverter bconverter = new ByteArrayConverter();
                 byte[] bdata = bconverter.doubleArrayToBytes( data );
@@ -154,7 +154,7 @@ public class MatrixConversionTest extends TestCase {
                 DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
                 double[] data = new double[baDimB.getBioAssays().size()];
                 for ( int k = 0; k < data.length; k++ ) {
-                    data[k] = ( double ) k;
+                    data[k] = k;
                 }
                 ByteArrayConverter bconverter = new ByteArrayConverter();
                 byte[] bdata = bconverter.doubleArrayToBytes( data );

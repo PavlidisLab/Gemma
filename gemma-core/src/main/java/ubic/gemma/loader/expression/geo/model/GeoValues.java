@@ -264,7 +264,7 @@ public class GeoValues {
         if ( !qtIndexMapForPlatform.containsKey( index ) ) {
             qtIndexMapForPlatform.put( index, new HashSet<String>() );
             qtIndexMapForPlatform.get( index ).add( columnName );
-            log.info( "Added quantitation type " + columnName + " at index " + index + " for platform " + platform );
+            log.debug( "Added quantitation type " + columnName + " at index " + index + " for platform " + platform );
         }
 
         // did we get a new column name for the same index?

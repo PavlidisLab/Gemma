@@ -67,8 +67,6 @@ public class ImageCumulativePlatesLoader {
 
     private int numLoaded;
 
-    // private TaxonService taxonService;
-
     public void setExternalDatabaseService( ExternalDatabaseService externalDatabaseService ) {
         this.externalDatabaseService = externalDatabaseService;
         genbank = externalDatabaseService.find( "Genbank" );
@@ -128,7 +126,7 @@ public class ImageCumulativePlatesLoader {
         Thread loadThread = new Thread( new Runnable() {
             public void run() {
                 log.info( "Starting loading" );
-                SecurityContextHolder.setContext( context ); // don't know why this is needed, but it works.
+                SecurityContextHolder.setContext( context );
                 load( queue );
             }
         } );

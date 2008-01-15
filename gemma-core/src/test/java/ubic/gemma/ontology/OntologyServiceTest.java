@@ -44,11 +44,12 @@ public class OntologyServiceTest extends BaseSpringContextTest {
     }
 
     public void testListAvailableOntologies() {
-        Collection<Ontology> name = OntologyService.listAvailableOntologies();
-        for ( Ontology ontology : name ) {
-            if ( ontology == null ) continue;
-            System.err.println( ontology );
+        if ( mgodisabled ) {
+            log.warn( "MGED Ontology not loaded, skipping test" );
+            return;
         }
+        Collection<Ontology> name = OntologyService.listAvailableOntologies();
+        assertTrue( name.size() > 0 );
     }
 
     public final void testFindExactMatch() throws Exception {
