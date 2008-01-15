@@ -138,6 +138,7 @@ public class AnalysisHelperService {
      * @param ee
      * @return
      */
+    @SuppressWarnings("unchecked")
     public Collection<DesignElementDataVector> getVectorsForPreferredQuantitationType( ExpressionExperiment ee ) {
 
         Collection<DesignElementDataVector> dataVectors = null;
