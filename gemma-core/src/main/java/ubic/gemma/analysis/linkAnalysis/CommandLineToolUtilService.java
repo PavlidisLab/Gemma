@@ -30,8 +30,6 @@ public class CommandLineToolUtilService {
     private GeneOntologyService goService = null;
     private GeneService geneService = null;
     private TaxonService taxonService;
-    private static Map<Long, Collection<OntologyTerm>> goTermsCache = Collections
-            .synchronizedMap( new HashMap<Long, Collection<OntologyTerm>>() );
 
     /**
      * @param name common name of a taxon.
@@ -47,14 +45,7 @@ public class CommandLineToolUtilService {
      * @return
      */
     public int computeGOOverlap( Gene gene1, Gene gene2 ) {
-        int res = 0;
-        try {
-            Collection<OntologyTerm> overlap = calculateGoTermOverlap( gene1, gene2 );
-            if ( overlap != null ) res = overlap.size();
-        } catch ( Exception e ) {
-            e.printStackTrace();
-        }
-        return res;
+        return goService.calculateGoTermOverlap( gene1, gene2 ).size();
     }
 
     /**
@@ -63,33 +54,7 @@ public class CommandLineToolUtilService {
      * @deprecated duplicates functionality found elsewhere.
      */
     public Collection<OntologyTerm> getGOTerms( Gene gene ) {
-        if ( goTermsCache.containsKey( gene.getId() ) ) return goTermsCache.get( gene.getId() );
-        Collection<OntologyTerm> goTerms = goService.getGOTerms( gene );
-        goTermsCache.put( gene.getId(), goTerms );
-        return goTerms;
-    }
-
-    /**
-     * @param queryGene1
-     * @param queryGene2
-     * @returns Collection<OntologyEntries>
-     * @throws Exception
-     * @deprecated this duplicates functionality implemented elsewhere.
-     */
-    @SuppressWarnings("unchecked")
-    public Collection<OntologyTerm> calculateGoTermOverlap( Gene queryGene1, Gene queryGene2 ) throws Exception {
-
-        if ( queryGene1 == null || queryGene2 == null ) return null;
-
-        Collection<OntologyTerm> queryGeneTerms1 = getGOTerms( queryGene1 );
-        Collection<OntologyTerm> queryGeneTerms2 = getGOTerms( queryGene2 );
-
-        // nothing to do.
-        if ( ( queryGeneTerms1 == null ) || ( queryGeneTerms1.isEmpty() ) ) return null;
-        if ( ( queryGeneTerms2 == null ) || ( queryGeneTerms2.isEmpty() ) ) return null;
-        Collection<OntologyTerm> overlap = new HashSet<OntologyTerm>( queryGeneTerms1 );
-        overlap.retainAll( queryGeneTerms2 );
-        return overlap;
+        return goService.getGOTerms( gene );
     }
 
     /**

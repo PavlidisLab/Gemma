@@ -36,7 +36,9 @@ import ubic.gemma.analysis.linkAnalysis.TreeNode;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 import ubic.gemma.visualization.GraphViewer;
 import cern.colt.list.ObjectArrayList;
@@ -56,6 +58,7 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
      */
     private CommandLineToolUtilService utilService = null;
     private GeneService geneService = null;
+    private GeneOntologyService goService;
     private ExpressionExperimentService eeService = null;
     private boolean writeClusteringTree = false;
     private boolean writeLinkMatrix = false;
@@ -172,12 +175,13 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
         try {
             eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
             geneService = ( GeneService ) this.getBean( "geneService" );
-            utilService = ( CommandLineToolUtilService ) this.getBean( "linkAnalysisUtilService" );
+            goService = ( GeneOntologyService ) this.getBean( "geneOntologyService" );
+            TaxonService taxonService = ( TaxonService ) this.getBean( "taxonService" );
             probeLinkCoexpressionAnalyzer = ( ProbeLinkCoexpressionAnalyzer ) this
                     .getBean( "probeLinkCoexpressionAnalyzer" );
-            taxon = utilService.getTaxon( taxonName );
+            taxon = taxonService.findByCommonName( taxonName );
             if ( taxon == null ) {
-                return new Exception( "The input species couldn't be found" );
+                return new IllegalArgumentException( "The input species couldn't be found: " + taxonName );
             }
             StopWatch watch = new StopWatch();
 
@@ -187,7 +191,7 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
                 linkMatrix = new LinkMatrix( taxon );
                 linkMatrix.setGeneService( geneService );
                 linkMatrix.setEEService( eeService );
-                linkMatrix.setUtilService( utilService );
+                linkMatrix.setGoService( goService );
                 linkMatrix.setProbeLinkCoexpressionAnalyzer( this.probeLinkCoexpressionAnalyzer );
                 try {
                     linkMatrix.toFile( this.matrixFile, this.eeMapFile );
@@ -199,7 +203,7 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
             } else {
                 watch.start();
                 try {
-                    linkMatrix = new LinkMatrix( this.matrixFile, this.eeMapFile, eeService, geneService );
+                    linkMatrix = new LinkMatrix( this.matrixFile, this.eeMapFile, eeService, geneService, goService );
                 } catch ( IOException e ) {
                     log.info( "Couldn't load the data from the files " );
                     return e;

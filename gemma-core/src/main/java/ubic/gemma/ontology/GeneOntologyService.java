@@ -248,10 +248,9 @@ public class GeneOntologyService implements InitializingBean {
      * @param queryGene1
      * @param queryGene2
      * @returns Collection<OntologyEntries>
-     * @throws Exception
      */
     @SuppressWarnings("unchecked")
-    public Collection<OntologyTerm> calculateGoTermOverlap( Gene queryGene1, Gene queryGene2 ) throws Exception {
+    public Collection<OntologyTerm> calculateGoTermOverlap( Gene queryGene1, Gene queryGene2 ) {
 
         if ( queryGene1 == null || queryGene2 == null ) return null;
 

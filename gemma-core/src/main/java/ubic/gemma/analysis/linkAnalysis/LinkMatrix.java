@@ -44,6 +44,7 @@ import ubic.gemma.model.genome.PredictedGeneImpl;
 import ubic.gemma.model.genome.ProbeAlignedRegionImpl;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.ontology.OntologyTerm;
 import cern.colt.list.ObjectArrayList;
 
@@ -147,11 +148,13 @@ public class LinkMatrix {
 
     private ExpressionExperimentService eeService = null;
 
-    private CommandLineToolUtilService utilService = null;
+    // private CommandLineToolUtilService utilService = null;
 
     private int stringency = 2;
 
     private ProbeLinkCoexpressionAnalyzer probeLinkCoexpressionAnalyzer;
+
+    private GeneOntologyService goService;
 
     /**
      * @param genes
@@ -171,7 +174,8 @@ public class LinkMatrix {
      */
     @SuppressWarnings("unchecked")
     public LinkMatrix( String matrixFile, String eeMapFile, ExpressionExperimentService eeService,
-            GeneService geneService ) throws IOException {
+            GeneService geneService, GeneOntologyService goService ) throws IOException {
+        this.goService = goService;
         BufferedReader in = new BufferedReader( new FileReader( new File( matrixFile ) ) );
         String row = null;
         int i;
@@ -317,7 +321,7 @@ public class LinkMatrix {
         for ( int i = 0; i < counter.size(); i++ )
             counter.add( new Integer( 0 ) );
         for ( Gene gene : genes ) {
-            Collection<OntologyTerm> goEntries = utilService.getGOTerms( gene );
+            Collection<OntologyTerm> goEntries = goService.getGOTerms( gene );
             for ( OntologyTerm goEntry : goEntries ) {
                 Integer goNum = new Integer( 1 );
                 if ( res.containsKey( goEntry ) ) {
@@ -353,7 +357,7 @@ public class LinkMatrix {
     public int computeGOOverlap( long packedId ) {
         int row = ( int ) ( packedId / shift );
         int col = ( int ) ( packedId % shift );
-        return utilService.computeGOOverlap( getRowGene( row ), getColGene( col ) );
+        return goService.calculateGoTermOverlap( getRowGene( row ), getColGene( col ) ).size();
     }
 
     /**
@@ -435,10 +439,9 @@ public class LinkMatrix {
     /**
      * @param gene
      * @return
-     * @deprecated
      */
     public Collection<OntologyTerm> getGOTerms( Gene gene ) {
-        return this.utilService.getGOTerms( gene );
+        return this.goService.getGOTerms( gene );
     }
 
     /**
@@ -448,9 +451,8 @@ public class LinkMatrix {
     public String getLinkName( long id ) {
         Gene[] pairOfGenes = getPairedGenes( id );
         assert pairOfGenes.length == 2;
-        // FIXME get the GO stuff moved outF
         return pairOfGenes[0].getName() + "_" + pairOfGenes[1].getName() + "_"
-                + utilService.computeGOOverlap( pairOfGenes[0], pairOfGenes[1] );
+                + goService.calculateGoTermOverlap( pairOfGenes[0], pairOfGenes[1] ).size();
     }
 
     /**
@@ -637,10 +639,6 @@ public class LinkMatrix {
         this.stringency = stringency;
     }
 
-    public void setUtilService( CommandLineToolUtilService utilService ) {
-        this.utilService = utilService;
-    }
-
     // The following codes for testing matrix and output
     public void testBitMatrix() {
         CompressedNamedBitMatrix matrix = new CompressedNamedBitMatrix( 21, 11, 125 );
@@ -755,5 +753,9 @@ public class LinkMatrix {
             }
         }
         init( ees, genes, coExpressedGenes );
+    }
+
+    public void setGoService( GeneOntologyService goService ) {
+        this.goService = goService;
     }
 }
