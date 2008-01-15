@@ -85,7 +85,7 @@ public class GeneOntologyServiceTest extends TestCase {
     }
 
     public final void testGetParents() throws Exception {
-        String id = "GO:1234567";  
+        String id = "GO:1234567";
         OntologyTerm termForId = gos.getTermForId( id );
         assertNotNull( termForId );
         Collection<OntologyTerm> terms = gos.getParents( termForId );
@@ -95,13 +95,12 @@ public class GeneOntologyServiceTest extends TestCase {
         }
         assertEquals( 1, terms.size() );
     }
-    
-    
+
     public final void testGetChildrenPartOf() throws Exception {
-        String id = "GO:0003720";  
+        String id = "GO:0003720";
         OntologyTerm termForId = gos.getTermForId( id );
         assertNotNull( termForId );
-        Collection<OntologyTerm> terms = gos.getAllChildren( termForId );
+        Collection<OntologyTerm> terms = gos.getAllChildren( termForId, true );
 
         for ( OntologyTerm term : terms ) {
             log.info( term );
@@ -109,9 +108,9 @@ public class GeneOntologyServiceTest extends TestCase {
         // has a part.
         assertEquals( 1, terms.size() );
     }
-    
+
     public final void testGetParentsPartOf() throws Exception {
-        String id = "GO:0000332";  
+        String id = "GO:0000332";
         OntologyTerm termForId = gos.getTermForId( id );
         assertNotNull( termForId );
         Collection<OntologyTerm> terms = gos.getAllParents( termForId );

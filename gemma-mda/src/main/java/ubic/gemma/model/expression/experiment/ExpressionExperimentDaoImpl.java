@@ -50,7 +50,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.model.common.quantitationtype.QuantitationType; 
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -278,6 +278,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
                 log.info( "Removing BioAssay Dimensions." );
                 for ( BioAssayDimension dim : dims ) {
+                    session.update( dim );
                     session.delete( dim );
                 }
 

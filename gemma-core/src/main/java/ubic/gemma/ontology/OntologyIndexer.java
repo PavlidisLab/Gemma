@@ -55,17 +55,16 @@ public class OntologyIndexer {
      */
     public static IndexLARQ indexOntology( String name, OntModel model ) {
         try {
-            return getSubjectIndex(name);
+            return getSubjectIndex( name );
         } catch ( Exception e ) {
-            log.info("Error loading index from disk, re-indexing");
-            return index(name, model);
+            log.info( "Error loading index from disk, re-indexing" );
+            return index( name, model );
         }
     }
-    
-    
+
     public static void eraseIndex( String name ) {
         File indexdir = getIndexPath( name );
-        for(File f : indexdir.listFiles()) {
+        for ( File f : indexdir.listFiles() ) {
             f.delete();
         }
     }
@@ -85,9 +84,9 @@ public class OntologyIndexer {
         IndexBuilderSubject larqSubjectBuilder = new IndexBuilderSubject( indexdir );
 
         // -- Create an index based on existing statements
-        // TODO: this needs to be refactored. 
+        // TODO: this needs to be refactored.
         log.info( "making selector" );
-        larqSubjectBuilder.indexStatements( model.listStatements(new IndexerSelector()));
+        larqSubjectBuilder.indexStatements( model.listStatements( new IndexerSelector() ) );
         // -- Finish indexing
         larqSubjectBuilder.closeForWriting();
         // -- Create the access index
@@ -104,7 +103,7 @@ public class OntologyIndexer {
         log.info( "Loading index: " + name );
         File indexdir = getIndexPath( name );
         try {
-            FSDirectory directory = FSDirectory.getDirectory( indexdir, false );
+            FSDirectory directory = FSDirectory.getDirectory( indexdir );
             if ( IndexReader.indexExists( directory ) ) {
                 IndexReader reader = IndexReader.open( directory );
                 return new IndexLARQ( reader );
@@ -115,8 +114,6 @@ public class OntologyIndexer {
             throw new RuntimeException( e );
         }
     }
-    
-
 
     /**
      * @param name
@@ -130,6 +127,4 @@ public class OntologyIndexer {
         return indexdir;
     }
 
-    
-    
 }

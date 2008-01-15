@@ -47,7 +47,7 @@ public class MockLongJobController extends BackgroundProcessingFormController {
     /**
      * 
      */
-    public static final int JOB_LENGTH = 20000;
+    public static final int JOB_LENGTH = 2000;
     static Log log = LogFactory.getLog( MockLongJobController.class.getName() );
 
     /*
@@ -62,34 +62,35 @@ public class MockLongJobController extends BackgroundProcessingFormController {
             throws Exception {
 
         Object die = request.getAttribute( "throw" );
-        return startJob( new WasteOfTime( die ) );
+        return startJob( die );
 
     }
 
     class WasteOfTime extends BackgroundControllerJob<ModelAndView> {
 
         Object die = null;
+ 
 
-        public WasteOfTime( Object die ) {
-            super( getMessageUtil() );
-            this.die = die;
+        public WasteOfTime( String taskId, SecurityContext securityContext, Object command, MessageUtil messenger ) {
+            super( taskId, securityContext, command, messenger );
+            this.die = command;
         }
 
         public ModelAndView call() throws Exception {
 
             init();
 
-            ProgressJob job = ProgressManager.createProgressJob( TaskRunningService.generateTaskId(), securityContext
-                    .getAuthentication().getName(), "Doing something that will take a while" );
+            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
+                    .getName(), "Doing something that will take a while" );
 
             long millis = System.currentTimeMillis();
             while ( System.currentTimeMillis() - millis < JOB_LENGTH ) {
                 Thread.sleep( 500 );
                 log.info( "Doing sumpin', done in " + ( JOB_LENGTH - ( System.currentTimeMillis() - millis ) )
                         + " milliseconds" );
-                ProgressManager.updateCurrentThreadsProgressJob( "just sayin' hi" );
+            //    ProgressManager.updateCurrentThreadsProgressJob( "just sayin' hi" );
                 if ( this.die != null ) {
-                    throw new RuntimeException( "Sorry charlie" );
+                    throw new RuntimeException( "Exception thrown on purpose." );
                 }
             }
 
@@ -105,6 +106,6 @@ public class MockLongJobController extends BackgroundProcessingFormController {
 
     protected BackgroundControllerJob<ModelAndView> getRunner( String taskId, SecurityContext securityContext,
             Object command, MessageUtil messenger ) {
-        return new WasteOfTime( null );
+        return new WasteOfTime( taskId, securityContext, command, messenger );
     }
 }

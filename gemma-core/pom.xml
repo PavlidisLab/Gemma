@@ -212,13 +212,7 @@
 		<dependency>
 			<groupId>jena</groupId>
 			<artifactId>arq</artifactId>
-			<version>2.5.2</version>
-			<type>jar</type>
-		</dependency>
-		<dependency>
-			<groupId>jena</groupId>
-			<artifactId>arq-extra</artifactId>
-			<version>2.5.2</version>
+			<version>2.5.6-pre</version>
 			<type>jar</type>
 		</dependency>
 		<dependency><!--  needed for jena -->

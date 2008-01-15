@@ -23,7 +23,6 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Vector;
 
-import org.rosuda.REngine.REXPMismatchException;
 import ubic.basecode.math.MultipleTestCorrection;
 import ubic.gemma.analysis.util.RCommander;
 import cern.colt.list.DoubleArrayList;
@@ -57,11 +56,9 @@ public class SimpleTTestAnalyzer extends RCommander {
         manager = new ExpressionDataManager( fileName );
 
         Hashtable<String, Double> pValuesTable;
-        try {
-            pValuesTable = findPValues( subsetName1, subsetName2 );
-        } catch ( REXPMismatchException e ) {
-            throw new RuntimeException( e );
-        }
+
+        pValuesTable = findPValues( subsetName1, subsetName2 );
+
         log.info( pValuesTable.size() + " p values have been calculated." );
         DoubleArrayList list = new DoubleArrayList();
         Enumeration pVals = pValuesTable.elements();
@@ -84,8 +81,7 @@ public class SimpleTTestAnalyzer extends RCommander {
      * @return a Hashtable in which each entry is (ProbeId -> p value)
      * @throws REXPMismatchException
      */
-    protected Hashtable<String, Double> findPValues( String subsetName1, String subsetName2 )
-            throws REXPMismatchException {
+    protected Hashtable<String, Double> findPValues( String subsetName1, String subsetName2 ) {
         log.info( "Finding p values of the experiment." );
         Hashtable<String, Double> pValuesList = new Hashtable<String, Double>();
         Hashtable<String, Object> table = manager.getExpressionData();

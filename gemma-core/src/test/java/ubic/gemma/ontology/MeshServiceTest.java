@@ -29,7 +29,8 @@ public class MeshServiceTest extends TestCase {
     public void testFind() throws Exception {
         OntologyTerm term = MeshService.find( "Genome, Human" );
         assertNotNull( term );
-        // note this is slow the first time but is fast once the index and model are initialized.
+        // note this is slow the first time but is fast once the index and model are initialized. At this wriring
+        // mesh.owl yields > 280,000 statements in the persistent store.
     }
 
 }

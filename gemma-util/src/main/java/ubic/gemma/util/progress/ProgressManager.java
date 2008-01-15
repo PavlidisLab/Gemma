@@ -292,7 +292,9 @@ public class ProgressManager {
 
         String toForwardTo = getForwardingUrl( progressJob, doForward );
 
-        progressJob.updateProgress( new ProgressData( 100, "Job failed.", true, toForwardTo ) );
+        ProgressData data = new ProgressData( 100, "Job failed.", true, toForwardTo );
+        data.setFailed( true );
+        progressJob.updateProgress( data );
         progressJob.failed( cause );
 
         currentJob.set( null );

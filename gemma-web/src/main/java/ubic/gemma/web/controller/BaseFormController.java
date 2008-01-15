@@ -284,7 +284,11 @@ public abstract class BaseFormController extends SimpleFormController {
             BindException errors, String message ) throws Exception {
         if ( !StringUtils.isEmpty( message ) ) {
             log.error( message );
-            errors.addError( new ObjectError( command.toString(), null, null, message ) );
+            if ( command == null ) {
+                errors.addError( new ObjectError( "nullCommand", null, null, message ) );
+            } else {
+                errors.addError( new ObjectError( command.toString(), null, null, message ) );
+            }
         }
 
         return this.processFormSubmission( request, response, command, errors );

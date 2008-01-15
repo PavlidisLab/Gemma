@@ -44,6 +44,7 @@ public class GoMetricTest extends BaseSpringContextTest {
 
     private OntologyTerm entry;
     private Collection<OntologyTerm> terms = new HashSet<OntologyTerm>();
+    private boolean enabled = true;
 
     private static Log log = LogFactory.getLog( GoMetricTest.class.getName() );
 
@@ -58,7 +59,10 @@ public class GoMetricTest extends BaseSpringContextTest {
         geneOntologyService = ( GeneOntologyService ) this.getBean( "geneOntologyService" );
         geneService = ( GeneService ) this.getBean( "geneService" );
         goMetric = ( GoMetric ) this.getBean( "goMetric" );
-
+        if ( !GeneOntologyService.isEnabled() ) {
+            this.enabled = false;
+            return;
+        }
         int n = 0;
         while ( !geneOntologyService.isReady() ) {
             try {
@@ -80,7 +84,10 @@ public class GoMetricTest extends BaseSpringContextTest {
      * @throws Exception
      */
     public final void testGetTermOccurrence() throws Exception {
-
+        if ( !enabled ) {
+            log.warn( "GO is not enabled, Test skipped" );
+            return;
+        }
         Collection<String> stringTerms = new HashSet<String>();
         for ( OntologyTerm t : terms )
             stringTerms.add( t.getUri() );
@@ -103,7 +110,10 @@ public class GoMetricTest extends BaseSpringContextTest {
      * @throws Exception
      */
     public final void testGetChildrenOccurrence() throws Exception {
-
+        if ( !enabled ) {
+            log.warn( "GO is not enabled, Test skipped" );
+            return;
+        }
         Map<String, Integer> countMap = new HashMap<String, Integer>();
         for ( OntologyTerm t : terms )
             countMap.put( t.getUri(), 1 );
@@ -117,7 +127,10 @@ public class GoMetricTest extends BaseSpringContextTest {
      * @throws Exception
      */
     public final void testCheckParents() throws Exception {
-
+        if ( !enabled ) {
+            log.warn( "GO is not enabled, Test skipped" );
+            return;
+        }
         Map<String, Double> probMap = new HashMap<String, Double>();
         Collection<OntologyTerm> probTerms = geneOntologyService.getAllParents( entry, true );
         probTerms.add( entry );
@@ -141,7 +154,10 @@ public class GoMetricTest extends BaseSpringContextTest {
      * @throws Exception
      */
     public final void testComputeSimilarity() throws Exception {
-
+        if ( !enabled ) {
+            log.warn( "GO is not enabled, Test skipped" );
+            return;
+        }
         Metric chooseMetric = Metric.simple;
 
         Gene gene1 = geneService.load( 599683 );

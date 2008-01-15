@@ -32,7 +32,7 @@ public class AllExpressionMatrixTests {
         // $JUnit-BEGIN$
         suite.addTestSuite( ExpressionDataDoubleMatrixTest.class );
         suite.addTestSuite( MatrixConversionTest.class );
-        suite.addTestSuite( ExpressionDataMatrixVectorMergingTest.class );
+        suite.addTestSuite( ExpressionDataMatrixVectorMergingIntegrationTest.class );
         // $JUnit-END$
         return suite;
     }

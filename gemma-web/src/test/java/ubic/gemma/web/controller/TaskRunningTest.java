@@ -78,15 +78,18 @@ public class TaskRunningTest extends BaseSpringWebTest {
         assertNotNull( taskId );
 
         // wait for job to run
-        long timeout = 30000;
+        long timeout = 10000;
         ProgressData lastResult = null;
         long startTime = System.currentTimeMillis();
-        while ( lastResult == null || !lastResult.isDone() ) {
+        wait: while ( true ) {
             Thread.sleep( 500 );
             List<ProgressData> result = progressStatusService.getProgressStatus( ( String ) taskId );
             if ( result.size() > 1 ) {
-                lastResult = result.iterator().next();
-                if ( lastResult.isDone() ) break;
+
+                for ( ProgressData lr : result ) {
+                    lastResult = lr;
+                    if ( lr.isDone() ) break wait;
+                }
             }
             log.info( "Waiting .." );
 
@@ -115,15 +118,18 @@ public class TaskRunningTest extends BaseSpringWebTest {
         assertNotNull( taskId );
 
         // wait for job to run
-        List<ProgressData> result = null;
         ProgressData lastResult = null;
-        long timeout = 60000;
+        long timeout = 10000;
         long startTime = System.currentTimeMillis();
-        while ( lastResult == null || !lastResult.isDone() ) {
+        wait: while ( true ) {
             Thread.sleep( 500 );
-            result = progressStatusService.getProgressStatus( ( String ) taskId );
+            List<ProgressData> result = progressStatusService.getProgressStatus( ( String ) taskId );
             if ( result.size() > 1 ) {
-                lastResult = result.iterator().next();
+
+                for ( ProgressData lr : result ) {
+                    lastResult = lr;
+                    if ( lr.isFailed() || lr.isDone() ) break wait;
+                }
             }
             log.info( "Waiting .." );
 

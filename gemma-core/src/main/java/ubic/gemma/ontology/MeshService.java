@@ -47,8 +47,8 @@ public class MeshService {
     private static IndexLARQ index;
     private static ExternalDatabase meshdb;
     static {
-        model = OntologyLoader.loadPersistentModel( MESH_ONT_URL, false );
-        index = OntologyIndexer.getSubjectIndex( MESH_INDEX_NAME );
+        model = OntologyLoader.loadPersistentModel( MESH_ONT_URL, false ); // no force.
+        index = OntologyIndexer.indexOntology( MESH_INDEX_NAME, model );
         meshdb = ExternalDatabase.Factory.newInstance();
         meshdb.setName( "mesh" );
         meshdb.setWebUri( MESH_ONT_URL );

@@ -155,7 +155,7 @@
 			<attribute name="javadoc_location" value="http://www.opensymphony.com/compass/versions/1.3M1-SNAPSHOT/api/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/lucene/lucene-core/2.2.0/lucene-core-2.2.0.jar"/>
+	<classpathentry kind="var" path="M2_REPO/lucene/lucene-core/2.2.0/lucene-core-2.2.0.jar" sourcepath="/JAR_SOURCE/lucene-2.0.0/src/java"/>
 	<classpathentry kind="var" path="M2_REPO/lucene/lucene-analyzers/2.2.0/lucene-analyzers-2.2.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/lucene/lucene-highlighter/2.2.0/lucene-highlighter-2.2.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/lucene/lucene-snowball/2.2.0/lucene-snowball-2.2.0.jar"/>
@@ -192,19 +192,14 @@
 			<attribute name="javadoc_location" value="http://www.representqueens.com/spark/release/spark-1.2/docs/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/jena/jena/2.5.2/jena-2.5.2.jar" sourcepath="/JAR_SOURCE/Jena-2.5.2/src">
+	<classpathentry kind="var" path="M2_REPO/jena/jena/2.5.6-pre/jena-2.5.6-pre.jar" sourcepath="/JAR_SOURCE/Jena-2.5.2/src">
 		<attributes>
 			<attribute name="javadoc_location" value="http://jena.sourceforge.net/javadoc/"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/jena/iri/2.5.2/iri-2.5.2.jar"/>
 	<classpathentry kind="var" path="M2_REPO/com/ibm/icu/icu4j/3.4/icu4j-3.4.jar"/>
-	<classpathentry kind="var" path="M2_REPO/jena/arq/2.5.2/arq-2.5.2.jar" sourcepath="/JAR_SOURCE/ARQ-1.5.1/src">
-		<attributes>
-			<attribute name="javadoc_location" value="http://jena.sourceforge.net/ARQ/javadoc/"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/jena/arq-extra/2.5.2/arq-extra-2.5.2.jar">
+	<classpathentry kind="var" path="M2_REPO/jena/arq/2.5.6-pre/arq-2.5.6-pre.jar" sourcepath="/JAR_SOURCE/ARQ-1.5.1/src">
 		<attributes>
 			<attribute name="javadoc_location" value="http://jena.sourceforge.net/ARQ/javadoc/"/>
 		</attributes>

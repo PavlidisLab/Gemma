@@ -18,12 +18,15 @@
  */
 package ubic.gemma.ontology;
 
+import java.io.InputStream;
 import java.util.Collection;
+import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.hp.hpl.jena.ontology.OntModel;
+import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.query.larq.IndexLARQ;
 
 import junit.framework.TestCase;
@@ -34,24 +37,25 @@ import junit.framework.TestCase;
  */
 public class OntologyIndexerTest extends TestCase {
 
+    private static final String ONTNAME_FOR_TESTS = "mgedtest";
     private static Log log = LogFactory.getLog( OntologyIndexerTest.class.getName() );
 
     public final void testIndexing() throws Exception {
-        String url = "http://www.berkeleybop.org/ontologies/obo-all/mged/mged.owl";
-        OntModel model = OntologyLoader.loadMemoryModel( url );
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream( "/data/loader/ontology/mged.owl.gz" ) );
+        OntModel model = OntologyLoader.loadMemoryModel( is, "owl-test", OntModelSpec.OWL_MEM_TRANS_INF );
 
-        IndexLARQ index = OntologyIndexer.indexOntology( "mged", model );
+        IndexLARQ index = OntologyIndexer.indexOntology( ONTNAME_FOR_TESTS, model );
 
-        Collection<OntologyTerm> name = OntologySearch.matchClasses( model, index, "bedding" );
+        Collection<OntologyTerm> name = OntologySearch.matchClasses( model, index, "Bedding" );
 
         assertEquals( 1, name.size() );
         index.close();
     }
 
     public final void testCellListings() throws Exception {
-        String url = "http://www.berkeleybop.org/ontologies/obo-all/mged/mged.owl";
-        OntModel model = OntologyLoader.loadMemoryModel( url );
-        IndexLARQ index = OntologyIndexer.indexOntology( "mged", model );
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream( "/data/loader/ontology/mged.owl.gz" ) );
+        OntModel model = OntologyLoader.loadMemoryModel( is, "owl-test", OntModelSpec.OWL_MEM_TRANS_INF );
+        IndexLARQ index = OntologyIndexer.indexOntology( ONTNAME_FOR_TESTS, model );
 
         Collection<OntologyTerm> names = OntologySearch.matchClasses( model, index, "cell*" );
         for ( OntologyTerm ot : names ) {
@@ -61,27 +65,23 @@ public class OntologyIndexerTest extends TestCase {
     }
 
     public final void testPersistanceFail() throws Exception {
-        OntologyIndexer.eraseIndex( "mged" );
-        Exception result = null;
+        OntologyIndexer.eraseIndex( ONTNAME_FOR_TESTS );
         try {
-            // so since it was erased, it should fail to load it
-            OntologyIndexer.getSubjectIndex( "mged" );
+            OntologyIndexer.getSubjectIndex( ONTNAME_FOR_TESTS );
+            fail( "Should have gotten an exception" );
         } catch ( Exception e ) {
-            result = e;
         }
-        assertNotNull( result );
     }
 
     public final void testPersistance() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream( "/data/loader/ontology/mged.owl.gz" ) );
+        OntModel model = OntologyLoader.loadMemoryModel( is, "owl-test", OntModelSpec.OWL_MEM_TRANS_INF );
 
-        String url = "http://www.berkeleybop.org/ontologies/obo-all/mged/mged.owl";
-        OntModel model = OntologyLoader.loadMemoryModel( url );
-
-        IndexLARQ index = OntologyIndexer.indexOntology( "mged", model );
+        IndexLARQ index = OntologyIndexer.indexOntology( ONTNAME_FOR_TESTS, model );
         index.close();
 
-        // now load it of disk
-        index = OntologyIndexer.getSubjectIndex( "mged" );
+        // now load it off disk
+        index = OntologyIndexer.getSubjectIndex( ONTNAME_FOR_TESTS );
 
         Collection<OntologyTerm> name = OntologySearch.matchClasses( model, index, "beddin*" );
         log.info( name.toString() );
@@ -89,16 +89,4 @@ public class OntologyIndexerTest extends TestCase {
         index.close();
     }
 
-    // public final void testIndexingDbModel() throws Exception { // MESH must be loaded into the DB for this to work in
-    // a
-    // // reasonable amount of time!
-    // String url = "http://www.berkeleybop.org/ontologies/obo-all/mesh/mesh.owl";
-    // OntModel model = OntologyLoader.loadPersistentModel( url, false ); // should be a one-time process
-    // log.info( "Indexing..." );
-    // IndexLARQ index = OntologyIndexer.indexOntology( "mesh", model );
-    // index = OntologyIndexer.getSubjectIndex( "mesh" );
-    // log.info( "Searching ... " );
-    // Collection<OntologyTerm> name = OntologySearch.matchClasses( model, index, "anatomy" );
-    // assertEquals( 7, name.size() );
-    // }
 }

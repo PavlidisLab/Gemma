@@ -62,9 +62,9 @@ import com.hp.hpl.jena.rdf.model.Resource;
  */
 public class GeneOntologyService implements InitializingBean {
 
-    private static final String LOAD_GENE_ONTOLOGY_OPTION = "loadGeneOntology";
-
     public static final String BASE_GO_URI = "http://purl.org/obo/owl/GO#";
+
+    private static final String LOAD_GENE_ONTOLOGY_OPTION = "loadGeneOntology";
 
     private final static String CC_URL = "http://www.berkeleybop.org/ontologies/obo-all/cellular_component/cellular_component.owl";
 
@@ -86,6 +86,8 @@ public class GeneOntologyService implements InitializingBean {
     private static final String ALL_ROOT = BASE_GO_URI + "ALL";
 
     private static final String PART_OF_URI = "http://purl.org/obo/owl/OBO_REL#OBO_REL_part_of";
+
+    private static boolean enabled = true;
 
     /**
      * @param term
@@ -138,6 +140,10 @@ public class GeneOntologyService implements InitializingBean {
     public static OntologyTerm getTermForURI( String uri ) {
         if ( terms == null ) return null;
         return terms.get( uri );
+    }
+
+    public static boolean isEnabled() {
+        return enabled;
     }
 
     /**
@@ -268,10 +274,19 @@ public class GeneOntologyService implements InitializingBean {
         return overlapTerms;
     }
 
+    /**
+     * @param entry
+     * @return children, NOT including part-of relations.
+     */
     public Collection<OntologyTerm> getAllChildren( OntologyTerm entry ) {
         return getAllChildren( entry, false );
     }
 
+    /**
+     * @param entry
+     * @param includePartOf
+     * @return
+     */
     public Collection<OntologyTerm> getAllChildren( OntologyTerm entry, boolean includePartOf ) {
         return getDescendants( entry, includePartOf );
     }
@@ -563,6 +578,7 @@ public class GeneOntologyService implements InitializingBean {
             log.info( "Loading Gene Ontology is disabled." );
             log
                     .info( "To turn on add loadGeneOntology=true to Gemma.properties; for CLIs you must also pass option to enable ontology loading" );
+            enabled = false;
             return;
         }
 

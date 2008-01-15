@@ -66,7 +66,7 @@ public class SecurityFormControllerTest extends BaseSpringWebTest {
         try {
             mav = securityFormController.onSubmit( request, response, command, null );
         } catch ( Exception e ) {
-            fail = true;
+            fail( e.getMessage() );
             e.printStackTrace();
         } finally {
             assertFalse( fail );
