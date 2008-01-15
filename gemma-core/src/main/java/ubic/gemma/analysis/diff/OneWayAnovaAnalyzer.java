@@ -106,7 +106,8 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                     "One way anova requires 2 or more factor values (2 factor values is a t-test).  Received "
                             + factorValues.size() + "." );
 
-        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
+        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService
+                .getVectorsForPreferredQuantitationType( expressionExperiment );
 
         QuantitationType quantitationType = vectorsToUse.iterator().next().getQuantitationType();
 
@@ -156,7 +157,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         log.info( fStatisticCommand.toString() );
 
-        double[] fstatistics =  rc.doubleArrayEval( fStatisticCommand.toString() );
+        double[] fstatistics = rc.doubleArrayEval( fStatisticCommand.toString() );
 
         // removes NA row
         double[] filteredFStatistics = new double[fstatistics.length / NUM_RESULTS_FROM_R];

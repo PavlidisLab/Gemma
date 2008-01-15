@@ -19,6 +19,7 @@
 package ubic.gemma.analysis.service;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -127,6 +128,38 @@ public class AnalysisHelperService {
 
         log.info( "Loading vectors..." );
         Collection<DesignElementDataVector> dataVectors = expressionExperimentService.getDesignElementDataVectors( qts );
+        vectorService.thaw( dataVectors );
+        return dataVectors;
+    }
+
+    /**
+     * Returns the vectors for the preferred quantitation type.
+     * 
+     * @param ee
+     * @return
+     */
+    public Collection<DesignElementDataVector> getVectorsForPreferredQuantitationType( ExpressionExperiment ee ) {
+
+        Collection<DesignElementDataVector> dataVectors = null;
+
+        checkForMixedTechnologies( ee );
+
+        Collection<QuantitationType> qts = ExpressionDataMatrixBuilder.getUsefulQuantitationTypes( ee );
+        if ( qts.size() == 0 ) throw new IllegalArgumentException( "No usable quantitation type in " + ee );
+
+        // needed to use the expressionExperimentService api
+        Collection<QuantitationType> qtToUseAsCol = new HashSet<QuantitationType>();
+
+        for ( QuantitationType qt : qts ) {
+            if ( qt.getIsPreferred() ) {
+                qtToUseAsCol.add( qt );
+                dataVectors = expressionExperimentService.getDesignElementDataVectors( qtToUseAsCol );
+                break;
+            }
+        }
+
+        if ( qtToUseAsCol.isEmpty() ) throw new RuntimeException( "No preferred quantitation type found in " + ee );
+
         vectorService.thaw( dataVectors );
         return dataVectors;
     }
