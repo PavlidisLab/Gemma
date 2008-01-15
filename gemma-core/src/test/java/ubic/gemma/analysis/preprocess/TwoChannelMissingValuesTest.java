@@ -152,19 +152,21 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
 
         BioAssayDimension dim = calls.iterator().next().getBioAssayDimension();
 
-        System.err.print( "\n" );
-        for ( BioAssay bas : dim.getBioAssays() ) {
-            System.err.print( "\t" + bas );
-        }
-        System.err.print( "\n" );
-        for ( DesignElementDataVector vector : calls ) {
-            System.err.print( vector.getDesignElement() );
-            byte[] dat = vector.getData();
-            boolean[] row = bac.byteArrayToBooleans( dat );
-            for ( boolean b : row ) {
-                System.err.print( "\t" + b );
+        if ( log.isDebugEnabled() ) {
+            System.err.print( "\n" );
+            for ( BioAssay bas : dim.getBioAssays() ) {
+                System.err.print( "\t" + bas );
             }
             System.err.print( "\n" );
+            for ( DesignElementDataVector vector : calls ) {
+                System.err.print( vector.getDesignElement() );
+                byte[] dat = vector.getData();
+                boolean[] row = bac.byteArrayToBooleans( dat );
+                for ( boolean b : row ) {
+                    System.err.print( "\t" + b );
+                }
+                System.err.print( "\n" );
+            }
         }
 
         /*
