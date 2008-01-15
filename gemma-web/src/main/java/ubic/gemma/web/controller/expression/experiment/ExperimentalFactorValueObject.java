@@ -46,6 +46,8 @@ public class ExperimentalFactorValueObject  {
     }
     
     private String getCategoryString( Characteristic category ) {
+        if ( category == null )
+            return "no category";
         StringBuffer buf = new StringBuffer();
         if ( category.getCategory() != null ) {
             buf.append( category.getCategory() );
