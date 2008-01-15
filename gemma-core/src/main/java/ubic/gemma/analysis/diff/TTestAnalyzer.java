@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -112,7 +113,8 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
         connectToR();
 
-        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
+        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService
+                .getVectorsForPreferredQuantitationType( expressionExperiment );
 
         QuantitationType quantitationType = vectorsToUse.iterator().next().getQuantitationType();
 
