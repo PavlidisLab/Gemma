@@ -83,8 +83,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
                             + " or experimental factor " + experimentalFactorB.getName() + "." );
         }
 
-        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService
-                .getVectorsForPreferredQuantitationType( expressionExperiment );
+        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
 
         QuantitationType quantitationType = vectorsToUse.iterator().next().getQuantitationType();
 

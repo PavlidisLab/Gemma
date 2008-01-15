@@ -113,8 +113,7 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
         connectToR();
 
-        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService
-                .getVectorsForPreferredQuantitationType( expressionExperiment );
+        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
 
         QuantitationType quantitationType = vectorsToUse.iterator().next().getQuantitationType();
 
