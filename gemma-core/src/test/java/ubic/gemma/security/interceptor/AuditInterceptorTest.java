@@ -24,9 +24,8 @@ import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService; 
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneService;
@@ -67,7 +66,7 @@ public class AuditInterceptorTest extends BaseSpringContextTest {
     }
 
     public void testAuditCreateWithAssociatedCollection() throws Exception {
-        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment();
+        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( true );
         BioAssay ba = ee.getBioAssays().iterator().next();
         assertNotNull( ba.getAuditTrail() );
     }
@@ -81,13 +80,13 @@ public class AuditInterceptorTest extends BaseSpringContextTest {
         user = userService.create( user );
         assertNotNull( user.getAuditTrail() );
         assertNotNull( user.getAuditTrail().getCreationEvent().getId() );
-        
+
         user.setFax( RandomStringUtils.randomNumeric( 10 ) ); // change something.
         userService.update( user );
 
         // that should result in only a single update.
         assertEquals( "Should have a 'create' and an 'update'", 2, user.getAuditTrail().getEvents().size() );
-        
+
         assertEquals( AuditAction.UPDATE, user.getAuditTrail().getLast().getAction() );
         // third time.
         user.setFax( RandomStringUtils.randomNumeric( 10 ) ); // change something.

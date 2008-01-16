@@ -54,7 +54,6 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class ArrayDesignFetcher extends FtpFetcher {
 
-    // private static final String[] suffixes = { "compositesequences", "features", "reporters" };
     private static final String[] suffixes = { "compositesequences.txt", "reporters.txt" };
 
     /*

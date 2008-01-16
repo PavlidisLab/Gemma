@@ -56,8 +56,18 @@ public abstract class FtpFetcher extends AbstractFetcher {
 
     public Collection<LocalFile> fetch( String identifier ) {
 
-        File existingFile = null;
         String seekFile = formRemoteFilePath( identifier );
+
+        return fetch( identifier, seekFile );
+    }
+
+    /**
+     * @param identifier
+     * @param seekFile
+     * @return
+     */
+    protected Collection<LocalFile> fetch( String identifier, String seekFile ) {
+        File existingFile = null;
         try {
             File newDir = mkdir( identifier );
             String outputFileName = formLocalFilePath( identifier, newDir );
@@ -84,7 +94,6 @@ public abstract class FtpFetcher extends AbstractFetcher {
             Collection<LocalFile> fallback = getExistingFile( existingFile, seekFile );
             return fallback;
         } catch ( IOException e ) {
-            log.error( e, e );
             throw new RuntimeException( "Couldn't fetch " + seekFile, e );
         }
     }
@@ -101,12 +110,14 @@ public abstract class FtpFetcher extends AbstractFetcher {
         try {
             expectedSize = NetUtils.ftpFileSize( ftpClient, seekFile );
         } catch ( FileNotFoundException e ) {
-            // when this happens we need to reconnect.
-            log.error( e );
-            log.warn( "Couldn't get remote file size for " + seekFile );
-            InetAddress ad = ftpClient.getRemoteAddress();
-            ftpClient.disconnect();
-            ftpClient.connect( ad );
+            log.warn( e );
+            throw ( e );
+            // // when this happens we need to reconnect.
+            // log.error( e );
+            // log.warn( "Couldn't get remote file size for " + seekFile );
+            // InetAddress ad = ftpClient.getRemoteAddress();
+            // ftpClient.disconnect();
+            // ftpClient.connect( ad );
         }
         return expectedSize;
     }
@@ -130,7 +141,7 @@ public abstract class FtpFetcher extends AbstractFetcher {
             File outputFile = new File( outputFileName );
             boolean ok = waitForDownload( future, expectedSize, outputFile );
 
-            if (!ok) {
+            if ( !ok ) {
                 // cancelled, probably.
                 return null;
             } else if ( future.get().booleanValue() ) {
@@ -145,8 +156,8 @@ public abstract class FtpFetcher extends AbstractFetcher {
         } catch ( InterruptedException e ) {
             log.warn( "Interrupted: Couldn't fetch " + seekFileName, e );
             return null;
-        } catch (CancellationException e ) {
-            log.info("Cancelled");
+        } catch ( CancellationException e ) {
+            log.info( "Cancelled" );
             return null;
         }
         throw new RuntimeException( "Couldn't fetch file for " + seekFileName );

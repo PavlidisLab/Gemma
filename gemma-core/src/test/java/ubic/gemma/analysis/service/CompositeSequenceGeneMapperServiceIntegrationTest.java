@@ -22,9 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.zip.GZIPInputStream;
 
 import ubic.gemma.apps.Blat;
@@ -70,7 +68,7 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
 
     AbstractGeoService geoService = null;
 
-    ArrayDesign ad = null;
+    static ArrayDesign ad = null;
 
     String arrayAccession = "GPL96";
 
@@ -82,7 +80,7 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
 
     Blat blat = new Blat();
 
-    boolean alreadyPersistedData = false;
+    static boolean alreadyPersistedData = false;
 
     /**
      *
@@ -238,9 +236,6 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
 
         log.info( "Found " + compositeSequences.size() + " composite sequence(s) for gene " + g.getOfficialSymbol()
                 + " ... " );
-        for ( CompositeSequence cs : compositeSequences ) {
-            log.info( "CompositeSequence: " + cs.getName() );
-        }
 
         assertNotNull( compositeSequences );
         // assertEquals( compositeSequences.size(), 1 );

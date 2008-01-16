@@ -285,6 +285,7 @@ public class MageMLConverterHelper {
         result.getExternalReferences().add( acc );
 
         convertIdentifiable( mageObj, result );
+        result.setShortName( result.getName() );
         convertAssociations( mageObj, result );
         return result;
     }

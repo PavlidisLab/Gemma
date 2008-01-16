@@ -35,15 +35,17 @@ public class ArrayDesignFetcherIntegrationTest extends TestCase {
      */
     public final void testFetch() {
         ArrayDesignFetcher fetcher = new ArrayDesignFetcher();
-     //   fetcher.setForce( true );
         Collection<LocalFile> results = fetcher.fetch( "A-AFFY-6" );
-        assertEquals( 3, results.size() );
+        assertEquals( 2, results.size() );
     }
 
+    /**
+     * This has no composite sequences - just reporters.
+     */
     public final void testFetchNoCompositeSequences() {
         ArrayDesignFetcher fetcher = new ArrayDesignFetcher();
         Collection<LocalFile> results = fetcher.fetch( "A-FPMI-3" );
-        assertEquals( 2, results.size() );
+        assertEquals( 1, results.size() );
     }
 
 }

@@ -26,7 +26,6 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -53,7 +52,7 @@ public class ExperimentalDesignControllerTest extends BaseSpringContextTest {
     public void testShowExperimentalDesign() throws Exception {
         endTransaction();
 
-        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
+        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( true ); // readonly
 
         ExperimentalDesignController c = ( ExperimentalDesignController ) getBean( "experimentalDesignController" );
 

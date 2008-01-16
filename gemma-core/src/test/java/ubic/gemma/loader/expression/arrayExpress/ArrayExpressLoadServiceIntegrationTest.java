@@ -22,7 +22,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
- * These are full-sized tests.
+ * These are full-sized tests (but not too big)
  * 
  * @author pavlidis
  * @version $Id$
@@ -36,11 +36,6 @@ public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTes
         assertNotNull( experiment );
     }
 
-    /**
-     * This test fails as of 1/2008 due to problems with the input files.
-     * 
-     * @throws Exception
-     */
     final public void testLoadWithAD() throws Exception {
         endTransaction();
         ArrayExpressLoadService svc = ( ArrayExpressLoadService ) this.getBean( "arrayExpressLoadService" );

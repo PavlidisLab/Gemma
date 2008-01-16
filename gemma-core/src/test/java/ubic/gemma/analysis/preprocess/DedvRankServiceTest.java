@@ -23,6 +23,7 @@ import java.util.Collection;
 import ubic.gemma.analysis.preprocess.DedvRankService.Method;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.testing.AbstractGeoServiceTest;
@@ -45,23 +46,27 @@ public class DedvRankServiceTest extends AbstractGeoServiceTest {
         endTransaction();
         DedvRankService serv = ( DedvRankService ) this.getBean( "dedvRankService" );
 
-        ExpressionExperiment ee;
+        ExpressionExperiment ee = null;
         String path = getTestFileBasePath();
 
         ExpressionExperimentService eeService = ( ExpressionExperimentService ) this
                 .getBean( "expressionExperimentService" );
-        ExpressionExperiment existing = eeService.findByShortName( "GSE2018" );
-        if ( existing != null ) {
-            eeService.delete( existing );
+        ExpressionExperiment existing = eeService.findByShortName( "GSE2982" );
+        if ( existing == null ) {
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
+                    + "gse2982Short" ) );
+            Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GSE2982", false, true, false );
+            ee = results.iterator().next();
+        } else {
+            ee = existing;
         }
-
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                + "gds999Short" ) );
-        Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GDS999", false, true, false );
-        ee = results.iterator().next();
 
         serv.computeDevRankForExpressionExperiment( ee, Method.MAX );
 
+        eeService.thaw( ee );
+        for ( DesignElementDataVector d : ee.getDesignElementDataVectors() ) {
+            assertNotNull( d.getRank() );
+        }
     }
 
     @Override

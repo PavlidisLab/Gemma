@@ -21,8 +21,6 @@ package ubic.gemma;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import ubic.gemma.analysis.AllAnalysisTests;
-import ubic.gemma.analysis.diff.AllDifferentialExpressionTests;
-import ubic.gemma.analysis.preprocess.AllPreProcessTests;
 import ubic.gemma.analysis.report.ArrayDesignReportServiceTest;
 import ubic.gemma.apps.ProbeMapperCliTest;
 import ubic.gemma.datastructure.matrix.AllExpressionMatrixTests;
@@ -31,7 +29,6 @@ import ubic.gemma.externalDb.GoldenPathQueryTest;
 import ubic.gemma.loader.AllLoaderTests;
 import ubic.gemma.loader.genome.AllGenomeTests;
 import ubic.gemma.model.AllModelTests;
-import ubic.gemma.model.analysis.DifferentialExpressionAnalysisServiceTest;
 import ubic.gemma.ontology.AllOntologyTests;
 import ubic.gemma.persistence.AllPersistenceTests;
 import ubic.gemma.scheduler.SchedulerFactoryBeanTest;
@@ -55,12 +52,12 @@ public class AllCoreTests {
         TestSuite suite = new TestSuite( "Tests for gemma-core" );
 
         suite.addTest( AllAnalysisTests.suite() );
-        suite.addTest( AllGenomeTests.suite() );
-        suite.addTest( AllModelTests.suite() );
-        suite.addTest( AllSecurityTests.suite() );
-        suite.addTest( AllPersistenceTests.suite() );
         suite.addTest( AllExpressionMatrixTests.suite() );
+        suite.addTest( AllLoaderTests.suite() );
+        suite.addTest( AllModelTests.suite() );
         suite.addTest( AllOntologyTests.suite() );
+        suite.addTest( AllPersistenceTests.suite() );
+        suite.addTest( AllSecurityTests.suite() );
 
         // tests in externalDb
         suite.addTestSuite( ExternalDatabaseTest.class );

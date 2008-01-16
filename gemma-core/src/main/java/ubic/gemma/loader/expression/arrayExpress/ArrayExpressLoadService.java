@@ -196,6 +196,7 @@ public class ArrayExpressLoadService {
         }
         log.info( "There are " + ads.size() + " array designs for this experiment" );
 
+        // At this point the name is like "A-AFFY-6"
         for ( ArrayDesign design : ads ) {
             String name = design.getName();
             Collection<LocalFile> designFiles = adFetcher.fetch( name );

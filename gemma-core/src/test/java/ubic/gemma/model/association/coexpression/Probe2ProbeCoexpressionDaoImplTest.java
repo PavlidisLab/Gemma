@@ -44,7 +44,7 @@ public class Probe2ProbeCoexpressionDaoImplTest extends BaseSpringContextTest {
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
         this.endTransaction();
-        ee = this.getTestPersistentCompleteExpressionExperiment();
+        ee = this.getTestPersistentCompleteExpressionExperiment( true );
         ees = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
 
         ees.thaw( ee );

@@ -51,6 +51,18 @@ public class DataFileFetcher extends FtpArchiveFetcher {
         initArchiveHandler( "gzip" );
     }
 
+    @Override
+    public Collection<LocalFile> fetch( String identifier ) {
+        Collection<LocalFile> results = null;
+        try {
+            results = super.fetch( identifier );
+        } catch ( Exception e ) {
+            log.warn( "Trying alternative file name" );
+            results = super.fetch( identifier, formRemoteFilePath( identifier, MAGE_ML_SUFFIX_A ) );
+        }
+        return results;
+    }
+
     /**
      * @param files
      * @return
@@ -81,9 +93,19 @@ public class DataFileFetcher extends FtpArchiveFetcher {
      */
     @Override
     public String formRemoteFilePath( String identifier ) {
+        String suffix = MAGE_ML_SUFFIX_B;
+        return formRemoteFilePath( identifier, suffix );
+    }
+
+    /**
+     * @param identifier
+     * @param suffix
+     * @return
+     */
+    private String formRemoteFilePath( String identifier, String suffix ) {
         String dirName = identifier.replaceFirst( "-\\d+", "" );
         dirName = dirName.replace( "E-", "" );
-        String seekFile = remoteBaseDir + "/" + dirName + "/" + identifier + "/" + identifier + MAGE_ML_SUFFIX_B;
+        String seekFile = remoteBaseDir + "/" + dirName + "/" + identifier + "/" + identifier + suffix;
         return seekFile;
     }
 

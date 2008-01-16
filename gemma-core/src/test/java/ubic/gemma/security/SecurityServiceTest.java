@@ -140,7 +140,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
      */
     public void testMakeTestExpressionExperimentPrivate() throws Exception {
         endTransaction();
-        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
+        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false ); // not readonly.
 
         SecurityService securityService = new SecurityService();
         securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );

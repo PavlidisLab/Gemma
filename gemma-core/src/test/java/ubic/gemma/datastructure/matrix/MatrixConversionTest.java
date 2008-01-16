@@ -62,6 +62,8 @@ public class MatrixConversionTest extends TestCase {
         Collection<DesignElementDataVector> vectors = getDesignElementDataVectors( quantTypes );
         ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectors );
         log.debug( vectors.size() + " vectors" );
+
+        // for some strange reason, occasionally we get 199.
         assertEquals( NUM_CS, mat.rows() );
         assertEquals( NUM_BIOMATERIALS, mat.columns() );
 

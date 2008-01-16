@@ -88,6 +88,7 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
     };
 
     private ConfigurableApplicationContext context;
+    private static ExpressionExperiment readOnlyee = null;
 
     /**
      * 
@@ -261,9 +262,17 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
     /**
      * Convenience method to get a (fairly) complete randomly generated persisted expression experiment.
      * 
+     * @param readOnly If the test only needs to read, a new data set might not be created.
      * @return
      */
-    protected ExpressionExperiment getTestPersistentCompleteExpressionExperiment() {
+    protected ExpressionExperiment getTestPersistentCompleteExpressionExperiment( boolean readOnly ) {
+        if ( readOnly ) {
+            if ( readOnlyee == null ) {
+                log.info( "Initializing test expression experimement (one-time for read-only tests)" );
+                readOnlyee = testHelper.getTestExpressionExperimentWithAllDependencies();
+            }
+            return readOnlyee;
+        }
         return testHelper.getTestExpressionExperimentWithAllDependencies();
     }
 
@@ -273,8 +282,8 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
      * @param doSequence Should the Arraydesign sequence information be filled in? (slower)
      * @return
      */
-    protected ExpressionExperiment getTestPersistentCompleteExpressionExperiment( boolean doSequence ) {
-        return testHelper.getTestExpressionExperimentWithAllDependencies( doSequence );
+    protected ExpressionExperiment getTestPersistentCompleteExpressionExperimentWithSequences() {
+        return testHelper.getTestExpressionExperimentWithAllDependencies( true );
     }
 
     /**

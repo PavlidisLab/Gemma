@@ -28,10 +28,8 @@ import java.util.zip.GZIPInputStream;
 
 import junit.framework.TestCase;
 import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
-import ubic.gemma.loader.expression.geo.model.GeoValues;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -349,7 +347,7 @@ public class GeoConverterTest extends TestCase {
     @SuppressWarnings("unchecked")
     public void testConvertGSE2982() throws Exception {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/gse2982Short/GSE2982.soft.gz" ) );
+                "/data/loader/expression/geo/gse2982Short/GSE2982_family.soft.gz" ) );
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.parse( is );
         GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE2982" );
