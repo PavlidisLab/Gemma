@@ -37,6 +37,8 @@ public class AllUtilTests {
         suite.addTestSuite( CommonsConfigurationPropertyPlaceholderConfigurerTest.class );
         suite.addTestSuite( ConfigUtilsTest.class );
         suite.addTestSuite( ProgressDataTest.class );
+        suite.addTestSuite( DateUtilTest.class );
+        suite.addTestSuite( CountingMapTest.class );
         // $JUnit-END$
         return suite;
     }

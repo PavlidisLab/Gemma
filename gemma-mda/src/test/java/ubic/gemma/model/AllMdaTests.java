@@ -27,6 +27,7 @@ import ubic.gemma.model.common.description.LocalFileServiceImplTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceImplTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentServiceImplTest;
 import ubic.gemma.model.genome.GeneImplTest;
+import ubic.gemma.model.genome.biosequence.BioSequenceImplTest;
 import ubic.gemma.model.genome.gene.CandidateGeneImplTest;
 import ubic.gemma.model.genome.gene.CandidateGeneListImplTest;
 import ubic.gemma.model.genome.gene.CandidateGeneListServiceImplTest;
@@ -43,18 +44,25 @@ public class AllMdaTests extends TestSuite {
 
     public static Test suite() {
         TestSuite suite = new TestSuite( "Tests for gemma-mda" );
-        suite.addTestSuite( GeneImplTest.class );
+
         suite.addTestSuite( UserServiceImplTest.class );
+
         suite.addTestSuite( BibliographicReferenceServiceImplTest.class );
         suite.addTestSuite( ExternalDatabaseServiceImplTest.class );
         suite.addTestSuite( LocalFileServiceImplTest.class );
+
         suite.addTestSuite( ArrayDesignServiceImplTest.class );
         suite.addTestSuite( ExpressionExperimentServiceImplTest.class );
+
+        suite.addTestSuite( BioSequenceImplTest.class );
+
         suite.addTestSuite( CandidateGeneImplTest.class );
         suite.addTestSuite( CandidateGeneListImplTest.class );
         suite.addTestSuite( CandidateGeneListServiceImplTest.class );
         suite.addTestSuite( GeneServiceImplTest.class );
+
         suite.addTestSuite( BlatResultImplTest.class );
+        suite.addTestSuite( GeneImplTest.class );
         return suite;
     }
 
