@@ -96,7 +96,7 @@ public class DifferentialExpressionAnalyzerService {
 
         diffExpressionAnalysis = differentialExpressionAnalysisService.create( diffExpressionAnalysis );
         expressionAnalyses.add( diffExpressionAnalysis );
-        
+
         differentialExpressionAnalysisService.thaw( expressionAnalyses );
 
         /* return the expression analyses of type differential expression */
@@ -127,7 +127,7 @@ public class DifferentialExpressionAnalyzerService {
 
         Collection<ExpressionAnalysis> expressionAnalyses = differentialExpressionAnalysisService
                 .findByInvestigation( expressionExperiment );
-        if ( forceRun || expressionAnalyses.isEmpty() ) {
+        if ( forceRun || expressionAnalyses.isEmpty() || !wasDifferentialAnalysisRun( expressionExperiment ) ) {
 
             String message = "Analyze " + expressionExperiment.getShortName() + ".  ";
 
@@ -139,6 +139,11 @@ public class DifferentialExpressionAnalyzerService {
             if ( expressionAnalyses.isEmpty() ) {
                 message = message + "Experiment " + expressionExperiment.getShortName()
                         + " does not have any associated analyses.  ";
+            }
+
+            if ( !wasDifferentialAnalysisRun( expressionExperiment ) ) {
+                message = message + "Experiment " + expressionExperiment.getShortName()
+                        + " does not have any associated differential expression data.  ";
             }
 
             message = message + "Running analysis and persisting results.  This may take some time.";
@@ -393,6 +398,30 @@ public class DifferentialExpressionAnalyzerService {
     }
 
     // TODO add getResultsForProbe
+
+    /**
+     * Returns true if differential expression data exists for the experiment, else false.
+     * 
+     * @param ee
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public boolean wasDifferentialAnalysisRun( ExpressionExperiment ee ) {
+
+        boolean wasRun = false;
+
+        Collection<ExpressionAnalysis> expressionAnalyses = differentialExpressionAnalysisService
+                .findByInvestigation( ee );
+
+        for ( ExpressionAnalysis ea : expressionAnalyses ) {
+            if ( ea instanceof DifferentialExpressionAnalysis ) {
+                wasRun = true;
+                break;
+            }
+        }
+
+        return wasRun;
+    }
 
     /**
      * @param analyses
