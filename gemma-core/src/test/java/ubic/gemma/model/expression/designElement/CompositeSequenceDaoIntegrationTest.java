@@ -44,7 +44,7 @@ import ubic.gemma.util.ConfigUtils;
  * @author pavlidis
  * @version $Id$
  */
-public class CompositeSequenceDaoImplTest extends AbstractArrayDesignProcessingTest {
+public class CompositeSequenceDaoIntegrationTest extends AbstractArrayDesignProcessingTest {
 
     Blat blat = new Blat();
     CompositeSequenceService compositeSequenceService;
