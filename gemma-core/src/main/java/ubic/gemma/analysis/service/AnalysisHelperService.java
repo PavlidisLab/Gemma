@@ -132,39 +132,6 @@ public class AnalysisHelperService {
         return dataVectors;
     }
 
-    /**
-     * Returns the vectors for the preferred quantitation type.
-     * 
-     * @param ee
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public Collection<DesignElementDataVector> getVectorsForPreferredQuantitationType( ExpressionExperiment ee ) {
-
-        Collection<DesignElementDataVector> dataVectors = null;
-
-        checkForMixedTechnologies( ee );
-
-        Collection<QuantitationType> qts = ExpressionDataMatrixBuilder.getUsefulQuantitationTypes( ee );
-        if ( qts.size() == 0 ) throw new IllegalArgumentException( "No usable quantitation type in " + ee );
-
-        // needed to use the expressionExperimentService api
-        Collection<QuantitationType> qtToUseAsCol = new HashSet<QuantitationType>();
-
-        for ( QuantitationType qt : qts ) {
-            if ( qt.getIsPreferred() ) {
-                qtToUseAsCol.add( qt );
-                dataVectors = expressionExperimentService.getDesignElementDataVectors( qtToUseAsCol );
-                break;
-            }
-        }
-
-        if ( qtToUseAsCol.isEmpty() ) throw new RuntimeException( "No preferred quantitation type found in " + ee );
-
-        vectorService.thaw( dataVectors );
-        return dataVectors;
-    }
-
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
     }
