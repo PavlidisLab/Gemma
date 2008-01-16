@@ -32,7 +32,7 @@ import ubic.gemma.web.controller.expression.bioAssay.BioAssayFormControllerTest;
 import ubic.gemma.web.controller.expression.experiment.ExperimentalDesignControllerTest;
 import ubic.gemma.web.controller.expression.experiment.ExperimentalDesignFormControllerTest;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentControllerTest;
-import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadControllerIntegrationTest;
+import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadControllerTest;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentVisualizationFormControllerIntegrationTest;
 import ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentLoadControllerTest;
 import ubic.gemma.web.controller.testdata.TestDataAddingControllerTest;
@@ -67,7 +67,7 @@ public class AllWebTests extends TestSuite {
         suite.addTestSuite( ExperimentalDesignFormControllerTest.class );
         suite.addTestSuite( ExpressionExperimentControllerTest.class );
         suite.addTestSuite( ExpressionExperimentVisualizationFormControllerIntegrationTest.class );
-        suite.addTestSuite( ExpressionExperimentLoadControllerIntegrationTest.class );
+        suite.addTestSuite( ExpressionExperimentLoadControllerTest.class );
         suite.addTestSuite( SimpleExpressionExperimentLoadControllerTest.class );
 
         suite.addTestSuite( TestDataAddingControllerTest.class );

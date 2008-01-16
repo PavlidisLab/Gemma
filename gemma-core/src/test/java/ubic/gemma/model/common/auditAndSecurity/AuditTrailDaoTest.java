@@ -23,6 +23,9 @@ import java.util.Date;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -33,7 +36,7 @@ public class AuditTrailDaoTest extends BaseSpringContextTest {
     protected static final Log log = LogFactory.getLog( AuditTrailDaoTest.class );
 
     AuditTrailDao auditTrailDao;
-
+    Auditable auditable;
     AuditTrail auditTrail;
     AuditEvent auditEvent0;
     AuditEvent auditEvent1;
@@ -46,6 +49,13 @@ public class AuditTrailDaoTest extends BaseSpringContextTest {
      */
     @Override
     protected void onSetUpInTransaction() throws Exception {
+
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        ad.setName( "testing" );
+
+        ArrayDesignService ads = ( ArrayDesignService ) getBean( "arrayDesignService" );
+        ad = ads.create( ad );
+        auditable = ad;
 
         auditTrail = AuditTrail.Factory.newInstance();
 
@@ -82,6 +92,17 @@ public class AuditTrailDaoTest extends BaseSpringContextTest {
         AuditTrail t = getAuditTrailDao().create( auditTrail );
         assertNotNull( t );
         assertNotNull( t.getId() );
+    }
+
+    public void testHandleAddEventAuditableAuditEvent() throws Exception {
+        AuditTrailDao atd = ( AuditTrailDao ) getBean( "auditTrailDao" );
+        AuditEvent auditEvent = AuditEvent.Factory.newInstance();
+        auditEvent.setAction( AuditAction.UPDATE );
+        auditEvent.setNote( "this is a test" );
+        auditEvent = atd.addEvent( auditable, auditEvent );
+        assertNotNull( auditEvent.getId() );
+        assertTrue( auditable.getAuditTrail().getEvents().size() > 1 );
+
     }
 
     /**

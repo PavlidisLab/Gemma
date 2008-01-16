@@ -20,12 +20,15 @@ package ubic.gemma.model;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
+import ubic.gemma.model.analysis.DifferentialExpressionAnalysisServiceTest;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionServiceTest;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImplTest;
+import ubic.gemma.model.common.auditAndSecurity.AuditEventDaoImplTest;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailDaoTest;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceImplTest;
 import ubic.gemma.model.common.auditAndSecurity.UserDaoImplTest;
 import ubic.gemma.model.common.description.BibliographicReferenceDaoImplTest;
+import ubic.gemma.model.common.description.CharacteristicDaoImplTest;
 import ubic.gemma.model.common.description.DatabaseEntryDaoImplTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoImplTest;
 import ubic.gemma.model.expression.bioAssay.BioAssayDaoImplTest;
@@ -51,32 +54,36 @@ public class AllModelTests {
     public static Test suite() {
         TestSuite suite = new TestSuite( "Model-related tests for gemma-core" );
 
+        suite.addTestSuite( DifferentialExpressionAnalysisServiceTest.class );
+
         suite.addTestSuite( AuditTrailDaoTest.class );
+        suite.addTestSuite( AuditEventDaoImplTest.class );
         suite.addTestSuite( AuditTrailServiceImplTest.class );
         suite.addTestSuite( UserDaoImplTest.class );
 
         suite.addTestSuite( BibliographicReferenceDaoImplTest.class );
         suite.addTestSuite( DatabaseEntryDaoImplTest.class );
+        suite.addTestSuite( CharacteristicDaoImplTest.class );
 
         suite.addTestSuite( ArrayDesignDaoImplTest.class );
         suite.addTestSuite( BioAssayDaoImplTest.class );
         suite.addTestSuite( BioAssayDimensionDaoImplTest.class );
         suite.addTestSuite( BioMaterialDaoImplTest.class );
-        suite.addTestSuite( BioSequencePersistTest.class );
-        suite.addTestSuite( CandidateGeneListDaoImplTest.class );
-        suite.addTestSuite( GeneDaoTest.class );
-
-        suite.addTestSuite( BlatAssociationDaoImplTest.class );
-        suite.addTestSuite( BlatResultDaoImplTest.class );
-
+        suite.addTestSuite( DesignElementDataVectorDaoImplTest.class );
+        suite.addTestSuite( CompositeSequenceDaoIntegrationTest.class );
         suite.addTestSuite( ExpressionExperimentDaoImplTest.class );
         suite.addTestSuite( ExpressionExperimentDeleteTest.class );
 
+        suite.addTestSuite( CandidateGeneListDaoImplTest.class );
+        suite.addTestSuite( GeneDaoTest.class );
+
+        suite.addTestSuite( BioSequencePersistTest.class );
+        suite.addTestSuite( BlatAssociationDaoImplTest.class );
+        suite.addTestSuite( BlatResultDaoImplTest.class );
+
         suite.addTestSuite( QtlDaoImplTest.class );
-        suite.addTestSuite( DesignElementDataVectorDaoImplTest.class );
         suite.addTestSuite( Probe2ProbeCoexpressionDaoImplTest.class );
-        suite.addTestSuite( CompositeSequenceDaoIntegrationTest.class );
-        suite.addTestSuite(Gene2GeneCoexpressionServiceTest.class);
+        suite.addTestSuite( Gene2GeneCoexpressionServiceTest.class );
 
         return suite;
     }

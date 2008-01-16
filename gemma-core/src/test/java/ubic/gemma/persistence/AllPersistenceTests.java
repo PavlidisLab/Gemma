@@ -33,6 +33,7 @@ public class AllPersistenceTests {
         suite.addTestSuite( GenomePersisterTest.class );
         suite.addTestSuite( PersisterTest.class );
         suite.addTestSuite( BlatAssociationPersisterTest.class );
+        suite.addTestSuite( HibernateXmlTest.class );
         // $JUnit-END$
         return suite;
     }

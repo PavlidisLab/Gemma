@@ -54,10 +54,10 @@ public class AuditEventDaoImplTest extends BaseSpringContextTest {
         Date d = c.getTime();
         Collection<Auditable> objs = aed.getUpdatedSinceDate( d );
         assertTrue( objs.size() > 0 );
-        for ( Auditable auditable : objs ) {
-            if ( objs instanceof ArrayDesign ) {
-            }
-        }
+        // for ( Auditable auditable : objs ) {
+        // if ( objs instanceof ArrayDesign ) {
+        // }
+        // }
     }
 
     @SuppressWarnings("unchecked")
@@ -68,10 +68,10 @@ public class AuditEventDaoImplTest extends BaseSpringContextTest {
         Date d = c.getTime();
         Collection<Auditable> objs = aed.getNewSinceDate( d );
         assertTrue( objs.size() > 0 );
-        for ( Auditable auditable : objs ) {
-            if ( objs instanceof ArrayDesign ) {
-            }
-        }
+        // for ( Auditable auditable : objs ) {
+        // if ( objs instanceof ArrayDesign ) {
+        // }
+        // }
     }
 
 }

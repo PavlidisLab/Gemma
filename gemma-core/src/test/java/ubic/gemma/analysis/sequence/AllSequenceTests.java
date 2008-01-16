@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2008 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,31 +16,26 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.analysis.preprocess;
+package ubic.gemma.analysis.sequence;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
 /**
- * Test for ubic.gemma.analysis.preprocess
- * 
- * @author pavlidis
+ * @author paul
  * @version $Id$
  */
-public class AllPreProcessTests {
+public class AllSequenceTests {
 
     public static Test suite() {
-        TestSuite suite = new TestSuite( "Test for ubic.gemma.analysis.preprocess" );
-        // $JUnit-BEGIN$
-        suite.addTestSuite( RMATest.class );
-        suite.addTestSuite( QuantileNormalizerTest.class );
-        suite.addTestSuite( TwoColorArrayLoessNormalizerTest.class );
-        suite.addTestSuite( RMABackgroundAdjusterTest.class );
-        suite.addTestSuite( TwoChannelMissingValuesTest.class );
-        suite.addTestSuite( DedvRankServiceTest.class );
-        suite.addTestSuite( RMATest.class );
-        // $JUnit-END$
+
+        TestSuite suite = new TestSuite( "Tests for gemma-core sequence analysis" );
+
+        suite.addTestSuite( ProbeMapperTest.class );
+        suite.addTestSuite( RepeatScanTest.class );
+        suite.addTestSuite( SequenceBinUtilsTest.class );
+        suite.addTestSuite( SequenceManipulationTest.class );
+        
         return suite;
     }
-
 }

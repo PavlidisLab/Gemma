@@ -105,7 +105,7 @@ public class ExpressionDataMatrixVectorMergingIntegrationTest extends BaseSpring
          * Show the expression expermient is in the old state
          */
         Collection<DesignElementDataVector> designElementDataVectors = newee.getDesignElementDataVectors();
-        assertEquals( 100, newee.getDesignElementDataVectors().size() );
+        assertEquals( 600, newee.getDesignElementDataVectors().size() );
 
         designElementDataVectorService.thaw( designElementDataVectors );
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( designElementDataVectors );

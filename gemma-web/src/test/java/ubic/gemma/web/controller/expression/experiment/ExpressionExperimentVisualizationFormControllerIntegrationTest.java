@@ -23,6 +23,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.testing.BaseSpringWebTest;
@@ -44,7 +45,12 @@ public class ExpressionExperimentVisualizationFormControllerIntegrationTest exte
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
         ee = this.getTestPersistentCompleteExpressionExperiment( false );
-        qt = ee.getDesignElementDataVectors().iterator().next().getQuantitationType();
+        for ( DesignElementDataVector d : ee.getDesignElementDataVectors() ) {
+            if ( d.getQuantitationType().getIsPreferred() ) {
+                qt = d.getQuantitationType();
+            }
+        }
+        assertNotNull( qt );
     }
 
     @Override

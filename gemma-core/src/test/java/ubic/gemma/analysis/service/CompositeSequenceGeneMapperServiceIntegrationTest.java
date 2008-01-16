@@ -200,28 +200,6 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
     }
 
     /**
-     * Tests finding genes given official symbols.
-     * 
-     * @throws Exception
-     */
-    public void testFindGenesByOfficialSymbols() throws Exception {
-
-        Collection<String> geneSymbols = new HashSet<String>();
-        geneSymbols.add( geneOfficialSymbol );
-
-        LinkedHashMap<String, Collection<Gene>> genesMap = compositeSequenceGeneMapperService
-                .findGenesByOfficialSymbols( geneSymbols );
-
-        Collection<String> keyset = genesMap.keySet();
-        for ( String key : keyset ) {
-            // log.info( "key: " + key + " , gene: " + genesMap.get( key ) );
-        }
-        assertNotNull( genesMap );
-        // assertEquals( keyset.size(), 1 );
-
-    }
-
-    /**
      * Tests finding all genes for a given composite sequence.
      * 
      * @throws Exception

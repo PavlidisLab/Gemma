@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.expression.arrayDesign;
+package ubic.gemma.analysis.report;
 
 import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;

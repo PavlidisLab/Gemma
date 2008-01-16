@@ -41,11 +41,11 @@ public class SpacesUtilTest extends BaseSpringContextTest {
 
         boolean isRunning = SpacesUtil.isSpaceRunning( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
 
-        if ( isRunning )
+        if ( isRunning ) {
             assertTrue( isRunning );
-
-        else
+        } else {
             assertFalse( isRunning );
+        }
 
     }
 
@@ -95,8 +95,8 @@ public class SpacesUtilTest extends BaseSpringContextTest {
     public void testAreWorkersRegistered() {
 
         SpacesUtil gigaspacesUtil = ( SpacesUtil ) this.getBean( "spacesUtil" );
-        ApplicationContext updatedCtx = gigaspacesUtil
-                .addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+        ApplicationContext updatedCtx = gigaspacesUtil.addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE
+                .getSpaceUrl() );
 
         /*
          * NOTE: These assertions do not test anything ... I've added them for the sake of the unit test. This test
@@ -117,8 +117,8 @@ public class SpacesUtilTest extends BaseSpringContextTest {
      */
     public void testNumWorkersRegistered() {
         SpacesUtil gigaspacesUtil = ( SpacesUtil ) this.getBean( "spacesUtil" );
-        ApplicationContext updatedCtx = gigaspacesUtil
-                .addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+        ApplicationContext updatedCtx = gigaspacesUtil.addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE
+                .getSpaceUrl() );
 
         int count = gigaspacesUtil.numWorkersRegistered( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
         log.info( count );

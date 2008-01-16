@@ -17,7 +17,7 @@
  *
  */
 
-package ubic.gemma.analysis;
+package ubic.gemma.model.analysis;
 
 import java.util.ArrayList;
 import java.util.Collection;
