@@ -35,9 +35,11 @@ import ubic.gemma.model.analysis.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysis;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
+import ubic.gemma.model.expression.analysis.GeneAnalysisResult;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.DifferentialExpressionAnalysisResultComparator;
 
 /**
@@ -421,6 +423,50 @@ public class DifferentialExpressionAnalyzerService {
         }
 
         return wasRun;
+    }
+
+    /**
+     * Returns a collection of differential expression analyses with differential evidence for the Gene gene.
+     * 
+     * @param gene
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<DifferentialExpressionAnalysis> getDiffAnalysesForGene( Gene gene ) {
+        // TODO add proper implementation here
+        Collection<ExpressionAnalysis> expressionAnalyses = differentialExpressionAnalysisService.loadAll();
+
+        Collection<DifferentialExpressionAnalysis> analysesWithGene = new HashSet<DifferentialExpressionAnalysis>();
+        for ( ExpressionAnalysis ea : expressionAnalyses ) {
+            if ( ea instanceof DifferentialExpressionAnalysis ) {
+
+                boolean foundMatch = false;
+
+                DifferentialExpressionAnalysis dea = ( DifferentialExpressionAnalysis ) ea;
+
+                Collection<ExpressionAnalysisResultSet> eaResultSets = dea.getResultSets();
+
+                for ( ExpressionAnalysisResultSet ears : eaResultSets ) {
+                    Collection<DifferentialExpressionAnalysisResult> dears = ears.getResults();
+                    for ( DifferentialExpressionAnalysisResult dear : dears ) {
+                        if ( dears instanceof GeneAnalysisResult ) {
+                            GeneAnalysisResult gear = ( GeneAnalysisResult ) dear;
+                            Gene g = gear.getGene();
+                            if ( gene.equals( g ) ) {
+                                analysesWithGene.add( dea );
+                                foundMatch = true;
+                                break;
+                            }
+                        }
+                    }
+                    if ( foundMatch ) break;
+                }
+                if ( foundMatch ) break;
+            } else {
+                log.debug( "Not differential expression analysis.  Skipping ..." );
+            }
+        }
+        return analysesWithGene;
     }
 
     /**
