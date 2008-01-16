@@ -72,6 +72,12 @@
 			<email>kesley@bioinformatics.ubc.ca</email>
 			<organization>University of British Columbia</organization>
 		</developer>
+		<developer>
+			<name>Luke McCarthy</name>
+			<id>luke</id>
+			<email>luke@bioinformatics.ubc.ca</email>
+			<organization>University of British Columbia</organization>
+		</developer>
 	</developers>
 	<reporting>
 		<outputDirectory>target/site</outputDirectory>
