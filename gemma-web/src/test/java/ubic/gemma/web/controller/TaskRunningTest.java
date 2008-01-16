@@ -125,7 +125,10 @@ public class TaskRunningTest extends BaseSpringWebTest {
 
                 for ( ProgressData lr : result ) {
                     lastResult = lr;
-                    if ( lr.isFailed() ) break wait;
+                    if ( lr.isFailed() ) {
+                        return; // yay
+                    }
+                    if ( lr.isDone() ) break wait;
                 }
             }
             log.info( "Waiting .." );

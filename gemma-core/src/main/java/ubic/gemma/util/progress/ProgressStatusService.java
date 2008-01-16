@@ -69,18 +69,22 @@ public class ProgressStatusService {
 
         Queue<ProgressData> pd = job.getProgressData();
 
-        // if progress has finished need to remove observer from session and get make sure observer cleans up after
-        // itself.
-        while ( !pd.isEmpty() ) {
-            ProgressData data = pd.poll();
-            result.add( data );
-            if ( data.isDone() ) {
-                log.debug( "Job is done!" );
-                if ( data.getForwardingURL() != null ) {
-                    log.debug( "forward to " + data.getForwardingURL() );
+        boolean isDone = false;
+        synchronized ( pd ) {
+            // cleanup.
+            while ( !pd.isEmpty() ) {
+                ProgressData data = pd.poll();
+                result.add( data );
+
+                if ( isDone || data.isDone() ) {
+                    log.info( "Job " + taskId + " is done!" );
+                    if ( data.getForwardingURL() != null ) {
+                        log.debug( "forward to " + data.getForwardingURL() );
+                    }
+                    progressManager.cleanupJob( taskId );
+                    isDone = true;
+                    // Do not break. keep adding any stored data to the results.
                 }
-                progressManager.cleanupJob( taskId );
-                break;
             }
         }
 

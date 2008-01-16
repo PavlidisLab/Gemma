@@ -70,9 +70,11 @@ public class TestDataAddingController extends SimpleFormController {
         helper.setPersisterHelper( this.persisterHelper );
         helper.setExternalDatabaseService( externalDatabaseService );
 
-        ProgressJob job = ProgressManager.createProgressJob( TaskRunningService.generateTaskId(), request.getRemoteUser(),
-                "Test data adding to the database" );
-        ExpressionExperiment ee = helper.getTestExpressionExperimentWithAllDependencies();
+        ProgressJob job = ProgressManager.createProgressJob( TaskRunningService.generateTaskId(), request
+                .getRemoteUser(), "Test data adding to the database" );
+        ExpressionExperiment ee = helper.getTestExpressionExperimentWithAllDependencies( false ); // no sequences.
+                                                                                                    // This is just a
+                                                                                                    // test.
         ProgressManager.destroyProgressJob( job );
 
         ModelAndView mav = new ModelAndView( getSuccessView() );
