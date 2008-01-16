@@ -1,5 +1,4 @@
 
-
 /*
  * The Gemma project
  * 
@@ -44,14 +43,15 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.gui.ColorMap;
 import ubic.basecode.gui.ColorMatrix;
 import ubic.basecode.gui.JMatrixDisplay;
-import ubic.gemma.analysis.linkAnalysis.CommandLineToolUtilService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImpl.ProbeLink;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
@@ -64,9 +64,10 @@ public class LinkGOAnalysisCli extends AbstractSpringAwareCLI {
     private final static int GO_MAXIMUM_COUNT = 50;
     private final static int ITERATION_NUM = 1;
     private Probe2ProbeCoexpressionService p2pService = null;
-    private CommandLineToolUtilService linkAnalysisUtilService = null;
     private ExpressionExperimentService eeService = null;
     private GeneService geneService = null;
+    private GeneOntologyService goService;
+    private TaxonService taxonService;
 
     private String taxonName = "mouse";
     private String eeNameFile = null;
@@ -100,10 +101,11 @@ public class LinkGOAnalysisCli extends AbstractSpringAwareCLI {
         }
 
         p2pService = ( Probe2ProbeCoexpressionService ) this.getBean( "probe2ProbeCoexpressionService" );
-        linkAnalysisUtilService = ( CommandLineToolUtilService ) this.getBean( "linkAnalysisUtilService" );
         eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
         geneService = ( GeneService ) this.getBean( "geneService" );
         noLinkEEs = new HashSet<ExpressionExperiment>();
+        goService = ( GeneOntologyService ) this.getBean( "geneOntologyService" );
+        taxonService = ( TaxonService ) this.getBean( "taxonService" );
     }
 
     private Collection<ExpressionExperiment> getCandidateEE( String fileName, Collection<ExpressionExperiment> ees ) {
@@ -155,7 +157,7 @@ public class LinkGOAnalysisCli extends AbstractSpringAwareCLI {
                         log.info( "Wrong setting for gene" + firstGeneId + "\t" + secondGeneId );
                         continue;
                     }
-                    int goOverlap = linkAnalysisUtilService.computeGOOverlap( gene1, gene2 );
+                    int goOverlap = goService.calculateGoTermOverlap( gene1, gene2 ).size();
                     if ( goOverlap >= GO_MAXIMUM_COUNT )
                         stats[GO_MAXIMUM_COUNT - 1]++;
                     else
@@ -252,10 +254,11 @@ public class LinkGOAnalysisCli extends AbstractSpringAwareCLI {
         if ( err != null ) {
             return err;
         }
-        Taxon taxon = linkAnalysisUtilService.getTaxon( taxonName );
+
+        Taxon taxon = taxonService.findByCommonName( taxonName );
         Collection<ExpressionExperiment> ees = eeService.findByTaxon( taxon );
         Collection<ExpressionExperiment> eeCandidates = getCandidateEE( this.eeNameFile, ees );
-        Collection<Gene> allGenes = linkAnalysisUtilService.loadKnownGenes( taxon );
+        Collection<Gene> allGenes = geneService.loadKnownGenes( taxon );
 
         log.info( "Load " + allGenes.size() + " genes" );
 

@@ -237,7 +237,7 @@ public class ExpressionAnalysisCLI extends AbstractGeneCoexpressionManipulatingC
         Collection<Gene> genes;
 
         log.info( "Getting genes" );
-        genes = geneService.loadGenes( taxon );
+        genes = geneService.loadKnownGenes( taxon );
         log.info( "Loaded " + genes.size() + " genes" );
 
         DenseDoubleMatrix2DNamed rankMatrix = getRankMatrix( genes, expressionExperiments );

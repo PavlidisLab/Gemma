@@ -130,7 +130,7 @@ public class GeneDaoTest extends BaseSpringContextTest {
         gene.setTaxon( human );
         geneDao.create( gene );
 
-        Collection genes = geneDao.loadGenes( human );
+        Collection genes = geneDao.loadKnownGenes( human );
         assertNotNull( genes );
         assertTrue( genes.contains( gene ) );
         geneDao.remove( gene );

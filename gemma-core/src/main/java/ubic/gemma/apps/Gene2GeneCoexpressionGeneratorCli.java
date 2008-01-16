@@ -118,7 +118,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
                 throw new RuntimeException( e );
             }
         } else {
-            toUseGenes = super.geneService.loadGenes( taxon );
+            toUseGenes = super.geneService.loadKnownGenes( taxon );
         }
 
         toUseStringency = DEFAULT_STRINGINCY;

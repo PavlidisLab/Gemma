@@ -98,7 +98,7 @@ public class RankAnalysisCLI extends ExpressionExperimentManipulatingCLI {
     protected Exception doWork( String[] args ) {
         processCommandLine( "RankAnalysisCLI", args );
 
-        Collection<Gene> genes = geneService.loadGenes( taxon );
+        Collection<Gene> genes = geneService.loadKnownGenes( taxon );
         AbstractNamedMatrix rankMatrix = dedvRankService.getRankMatrix( genes, expressionExperiments, method );
 
         // gene names

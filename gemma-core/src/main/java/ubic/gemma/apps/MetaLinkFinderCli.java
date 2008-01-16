@@ -27,8 +27,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.time.StopWatch;
 
-import ubic.gemma.analysis.coexpression.ProbeLinkCoexpressionAnalyzer;
-import ubic.gemma.analysis.linkAnalysis.CommandLineToolUtilService;
+import ubic.gemma.analysis.coexpression.ProbeLinkCoexpressionAnalyzer; 
 import ubic.gemma.analysis.linkAnalysis.FrequentLinkSetFinder;
 import ubic.gemma.analysis.linkAnalysis.LinkMatrix;
 import ubic.gemma.analysis.linkAnalysis.LinkGraphClustering;
@@ -55,8 +54,7 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
      * (non-Javadoc)
      * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
-     */
-    private CommandLineToolUtilService utilService = null;
+     */ 
     private GeneService geneService = null;
     private GeneOntologyService goService;
     private ExpressionExperimentService eeService = null;
@@ -146,7 +144,7 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
                 if ( tmp == null ) break;
                 count = Integer.valueOf( tmp.trim() ).intValue();
                 // Gene gene = geneService.load(Long.valueOf(geneName).longValue());
-                Gene gene = utilService.getGene( geneName, taxon );
+                Gene gene = geneService.findByOfficialSymbol( geneName, taxon );
                 if ( gene != null ) {
                     System.out.println( "Got " + geneName + " " + count );
                     linkMatrix.output( gene, count );

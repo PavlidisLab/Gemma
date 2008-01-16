@@ -156,6 +156,19 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         return getHibernateTemplate().findByNamedParam( queryString, "search", search );
     }
 
+    @Override
+    protected Gene handleFindByOfficialSymbol( String symbol, Taxon taxon ) {
+        final String queryString = "select distinct g from GeneImpl as g inner join g.taxon t where g.officialSymbol = :symbol and t= :taxon";
+        List results = getHibernateTemplate().findByNamedParam( queryString, new String[] { "symbol", "taxon" },
+                new Object[] { symbol, taxon } );
+        if ( results.size() == 0 ) {
+            return null;
+        } else if ( results.size() > 1 ) {
+            log.warn( "Multiple genes match " + symbol + " in " + taxon + ", return first hit" );
+        }
+        return ( Gene ) results.iterator().next();
+    }
+
     /**
      * Gets all the genes that are coexpressed with another gene.
      * 
@@ -427,10 +440,10 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadGenes(ubic.gemma.model.genome.Taxon)
+     * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadKnownGenes(ubic.gemma.model.genome.Taxon)
      */
     @Override
-    protected Collection handleLoadGenes( Taxon taxon ) throws Exception {
+    protected Collection handleLoadKnownGenes( Taxon taxon ) throws Exception {
         final String queryString = "select gene from GeneImpl as gene where gene.taxon = :taxon"
                 + " and (gene.class = " + CoexpressionCollectionValueObject.GENE_IMPL + " )";
 

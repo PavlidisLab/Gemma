@@ -184,6 +184,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
      * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Exception doWork( String[] args ) {
 
@@ -215,7 +216,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
 
         else {
 
-            Collection<Gene> mouseGenes = geneService.loadGenes( taxon );
+            Collection<Gene> mouseGenes = geneService.loadKnownGenes( taxon );
 
             for ( Gene gene : mouseGenes ) {
                 Set<OntologyTerm> GOTerms = getGOTerms( gene );

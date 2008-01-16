@@ -242,8 +242,8 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
     }
 
     @Override
-    protected Collection handleLoadGenes( Taxon taxon ) throws Exception {
-        return this.getGeneDao().loadGenes( taxon );
+    protected Collection handleLoadKnownGenes( Taxon taxon ) throws Exception {
+        return this.getGeneDao().loadKnownGenes( taxon );
     }
 
     /*
@@ -312,4 +312,10 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
     protected void handleThaw( Gene gene ) throws Exception {
         this.getGeneDao().thaw( gene );
     }
+
+    @Override
+    protected Gene handleFindByOfficialSymbol( String symbol, Taxon taxon ) throws Exception {
+        return this.getGeneDao().findByOfficialSymbol( symbol, taxon );
+    }
+
 }

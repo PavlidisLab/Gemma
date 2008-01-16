@@ -18,12 +18,8 @@
  */
 package ubic.gemma.apps;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileWriter;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -34,10 +30,7 @@ import java.util.Random;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
-
-import cern.colt.list.DoubleArrayList;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
@@ -47,7 +40,6 @@ import ubic.basecode.gui.JMatrixDisplay;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.CorrelationStats;
 import ubic.gemma.analysis.coexpression.GeneEffectSizeCoExpressionAnalyzer;
-import ubic.gemma.analysis.linkAnalysis.CommandLineToolUtilService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -55,6 +47,7 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
+import cern.colt.list.DoubleArrayList;
 
 /**
  * @author raymond,xwan
@@ -62,7 +55,6 @@ import ubic.gemma.model.genome.Gene;
  */
 public class CorrelationDistCli extends ExpressionExperimentManipulatingCLI {
 
-    private CommandLineToolUtilService linkAnalysisUtilService = null;
     private ArrayDesignService adService = null;
 
     private int binNum = 100;
@@ -87,32 +79,8 @@ public class CorrelationDistCli extends ExpressionExperimentManipulatingCLI {
         if ( hasOption( 'b' ) ) {
             this.binNum = Integer.valueOf( getOptionValue( 'b' ) );
         }
-        linkAnalysisUtilService = ( CommandLineToolUtilService ) this.getBean( "linkAnalysisUtilService" );
         adService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
         noLinkEEs = new HashSet<ExpressionExperiment>();
-    }
-
-    private Collection<ExpressionExperiment> getCandidateEE( String fileName, Collection<ExpressionExperiment> ees ) {
-        if ( fileName == null ) return ees;
-        Collection<ExpressionExperiment> candidates = new HashSet<ExpressionExperiment>();
-        Collection<String> eeNames = new HashSet<String>();
-        try {
-            InputStream is = new FileInputStream( fileName );
-            BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-            String shortName = null;
-            while ( ( shortName = br.readLine() ) != null ) {
-                if ( StringUtils.isBlank( shortName ) ) continue;
-                eeNames.add( shortName.trim().toUpperCase() );
-            }
-        } catch ( Exception e ) {
-            e.printStackTrace();
-            return candidates;
-        }
-        for ( ExpressionExperiment ee : ees ) {
-            String shortName = ee.getShortName();
-            if ( eeNames.contains( shortName.trim().toUpperCase() ) ) candidates.add( ee );
-        }
-        return candidates;
     }
 
     /**
@@ -230,7 +198,7 @@ public class CorrelationDistCli extends ExpressionExperimentManipulatingCLI {
         for ( DesignElement cs : allCSs ) {
             csIds.add( cs.getId() );
         }
-        // FIXME this used to provide only known genes.
+
         Map<Long, Collection<Long>> cs2genes = geneService.getCS2GeneMap( csIds );
         Map<Long, Collection<Long>> cs2knowngenes = new HashMap<Long, Collection<Long>>();
         for ( Long csId : cs2genes.keySet() ) {
@@ -317,7 +285,7 @@ public class CorrelationDistCli extends ExpressionExperimentManipulatingCLI {
                 eeIndexMap.put( ee, index );
                 index++;
             }
-            Collection<Gene> genes = linkAnalysisUtilService.loadKnownGenes( taxon );
+            Collection<Gene> genes = geneService.loadKnownGenes( taxon );
             Collection<Long> geneIds = new HashSet<Long>();
             for ( Gene gene : genes )
                 geneIds.add( gene.getId() );
