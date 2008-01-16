@@ -227,6 +227,8 @@ public class ArrayExpressLoadService {
                 for ( BioAssay assay : bioAssays ) {
                     if ( assay.getArrayDesignUsed().equals( design ) ) {
                         assay.setArrayDesignUsed( design );
+                    } else {
+                        log.info( "Assay uses " + assay.getArrayDesignUsed() );
                     }
                 }
 

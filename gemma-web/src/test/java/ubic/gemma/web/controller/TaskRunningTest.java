@@ -76,7 +76,7 @@ public class TaskRunningTest extends BaseSpringWebTest {
         assertNotNull( taskId );
 
         // wait for job to run
-        long timeout = 10000;
+        long timeout = 5000;
         ProgressData lastResult = null;
         long startTime = System.currentTimeMillis();
         wait: while ( true ) {
@@ -116,7 +116,7 @@ public class TaskRunningTest extends BaseSpringWebTest {
 
         // wait for job to run
         ProgressData lastResult = null;
-        long timeout = 10000;
+        long timeout = 5000;
         long startTime = System.currentTimeMillis();
         wait: while ( true ) {
             Thread.sleep( 500 );
@@ -125,8 +125,7 @@ public class TaskRunningTest extends BaseSpringWebTest {
 
                 for ( ProgressData lr : result ) {
                     lastResult = lr;
-                    log.info( lr.isFailed() + " " + lr.isDone() );
-                    if ( lr.isFailed() || lr.isDone() ) break wait;
+                    if ( lr.isFailed() ) break wait;
                 }
             }
             log.info( "Waiting .." );

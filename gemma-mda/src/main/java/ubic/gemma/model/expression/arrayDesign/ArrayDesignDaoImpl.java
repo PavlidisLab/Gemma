@@ -386,7 +386,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     @SuppressWarnings("unchecked")
     @Override
-    // FIXME why is this so much different than handleLoadAllValueObjects(collection)?
+    // FIXME why is this so much different than handleLoadValueObjects(collection)?
     // refarctoring is necessary
     protected Collection handleLoadAllValueObjects() throws Exception {
 
@@ -401,38 +401,13 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 + "where event.action='C' group by ad order by ad.name";
 
         // separated out composite sequence query to grab just one to make it easier to join to the taxon
-        final String csString = "select ad.id, cs.id from ArrayDesignImpl as ad inner join ad.compositeSequences as cs where cs.biologicalCharacteristic IS NOT NULL group by ad";
-        final String taxonString = "select cs.id, taxon.commonName from CompositeSequenceImpl as cs inner join cs.biologicalCharacteristic as bioC inner join bioC.taxon as taxon"
-                + "   WHERE cs.id in (:id) group by cs.id";
+
         try {
-            // do queries for representative compositeSequences so we can get taxon information easily
+            Map<Long, String> arrayToTaxon = getArrayToTaxonMap();
 
-            Map<Long, Long> csToArray = new HashMap<Long, Long>();
-            Map<Long, String> arrayToTaxon = new HashMap<Long, String>();
-
-            org.hibernate.Query csQueryObject = super.getSession( false ).createQuery( csString );
-            csQueryObject.setCacheable( true );
-
-            // the name of the cache region is configured in ehcache.xml.vsl
-            csQueryObject.setCacheRegion( "arrayDesignListing" );
-
-            List csList = csQueryObject.list();
-            for ( Object object : csList ) {
-                Object[] res = ( Object[] ) object;
-                Long arrayId = ( Long ) res[0];
-                Long csId = ( Long ) res[1];
-                csToArray.put( csId, arrayId );
-            }
-
-            List<Object[]> taxonList = getHibernateTemplate().findByNamedParam( taxonString, "id", csToArray.keySet() );
-
-            for ( Object[] o : taxonList ) {
-                Long csId = ( Long ) o[0];
-                String taxon = ( String ) o[1];
-                Long arrayId = csToArray.get( csId );
-                arrayToTaxon.put( arrayId, taxon );
-            }
-
+            /*
+             * Now load the ADs.
+             */
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             ScrollableResults list = queryObject.scroll( ScrollMode.FORWARD_ONLY );
             if ( list != null ) {
@@ -448,7 +423,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                     v.setDescription( list.getString( 4 ) );
                     v.setTaxon( arrayToTaxon.get( v.getId() ) );
                     v.setExpressionExperimentCount( ( Long ) eeCounts.get( v.getId() ) );
-                    v.setDateCreated( ( Date ) list.getDate( 5 ) );
+                    v.setDateCreated( list.getDate( 5 ) );
                     result.add( v );
                 }
             }
@@ -456,6 +431,50 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             throw super.convertHibernateAccessException( ex );
         }
         return result;
+    }
+
+    /**
+     * @return Map of ArrayDesign id to Taxon string for ValueObjects.
+     */
+    @SuppressWarnings("unchecked")
+    private Map<Long, String> getArrayToTaxonMap() {
+        // do queries for representative compositeSequences so we can get taxon information easily
+        final String csString = "select ad.id, cs.id from ArrayDesignImpl as ad inner join ad.compositeSequences as cs where cs.biologicalCharacteristic IS NOT NULL group by ad";
+
+        final String taxonString = "select cs.id, taxon.commonName from CompositeSequenceImpl as cs inner join cs.biologicalCharacteristic as bioC inner join bioC.taxon as taxon"
+                + "   WHERE cs.id in (:id) group by cs.id";
+
+        Map<Long, Long> csToArray = new HashMap<Long, Long>();
+        Map<Long, String> arrayToTaxon = new HashMap<Long, String>();
+
+        org.hibernate.Query csQueryObject = super.getSession( false ).createQuery( csString );
+        csQueryObject.setCacheable( true );
+
+        // the name of the cache region is configured in ehcache.xml.vsl
+        csQueryObject.setCacheRegion( "arrayDesignListing" );
+
+        List csList = csQueryObject.list();
+
+        if ( csList.size() == 0 ) {
+            throw new IllegalStateException( "No probes were found for any microarray" );
+        }
+
+        for ( Object object : csList ) {
+            Object[] res = ( Object[] ) object;
+            Long arrayId = ( Long ) res[0];
+            Long csId = ( Long ) res[1];
+            csToArray.put( csId, arrayId );
+        }
+
+        List<Object[]> taxonList = getHibernateTemplate().findByNamedParam( taxonString, "id", csToArray.keySet() );
+
+        for ( Object[] o : taxonList ) {
+            Long csId = ( Long ) o[0];
+            String taxon = ( String ) o[1];
+            Long arrayId = csToArray.get( csId );
+            arrayToTaxon.put( arrayId, taxon );
+        }
+        return arrayToTaxon;
     }
 
     /*
@@ -475,6 +494,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleLoadFully(java.lang.Long)
      */
     @Override
+    @Deprecated
     protected ArrayDesign handleLoadFully( Long id ) throws Exception {
         StopWatch timer = new StopWatch();
         timer.start();
