@@ -52,7 +52,11 @@ public class BioAssayDimensionDaoImplTest extends BaseSpringContextTest {
         List<BioAssay> bas = new ArrayList<BioAssay>();
         ExpressionExperiment ee = this.getTestPersistentExpressionExperiment();
         bad = ( BioAssayDimension ) bioAssayDimensionDao.create( BioAssayDimension.Factory.newInstance() );
-        ArrayDesign ad = this.getTestPersistentArrayDesign( NUMTESTCOMPOSITESEQUENCES, true, false );
+        ArrayDesign ad = this.getTestPersistentArrayDesign( NUMTESTCOMPOSITESEQUENCES, true, false, false ); // need
+                                                                                                                // specific
+                                                                                                                // number
+                                                                                                                // of
+                                                                                                                // sequences.
         for ( int i = 0; i < NUMTESTBIOASSAYS; i++ ) {
             BioAssay ba = this.getTestPersistentBioAssay( ad );
             bas.add( ba );

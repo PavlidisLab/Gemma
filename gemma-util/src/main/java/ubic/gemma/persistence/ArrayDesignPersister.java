@@ -164,6 +164,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
      *
      */
     protected void clearArrayDesignCache() {
+        log.info( "Clearing cache" );
         this.arrayDesignCache.clear();
         this.designElementCache.clear();
     }

@@ -55,7 +55,7 @@ public class BioAssayDaoImplTest extends BaseSpringContextTest {
                 .newInstance() );
 
         if ( !setupDone ) {
-            ArrayDesign a = this.getTestPersistentArrayDesign( 5, true, false );
+            ArrayDesign a = this.getTestPersistentArrayDesign( 5, true, false, true ); // readonly
 
             for ( int i = 0; i < NUMTESTBIOASSAYS; i++ ) {
                 ba = this.getTestPersistentBioAssay( a );

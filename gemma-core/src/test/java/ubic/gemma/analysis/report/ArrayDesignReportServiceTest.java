@@ -43,7 +43,7 @@ public class ArrayDesignReportServiceTest extends BaseSpringContextTest {
         adrs = ( ArrayDesignReportService ) this.getBean( "arrayDesignReportService" );
         ads = ( AuditTrailService ) this.getBean( "auditTrailService" );
         if ( !persisted ) {
-            ad = this.getTestPersistentArrayDesign( 5, true, false );
+            ad = this.getTestPersistentArrayDesign( 5, true, false, false ); // not read only.
 
             ads.addUpdateEvent( ad, ArrayDesignSequenceUpdateEvent.Factory.newInstance(), "sequences" );
 

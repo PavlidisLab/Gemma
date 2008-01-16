@@ -89,6 +89,7 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
 
     private ConfigurableApplicationContext context;
     private static ExpressionExperiment readOnlyee = null;
+    private static ArrayDesign readOnlyad = null;
 
     /**
      * 
@@ -220,7 +221,13 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
      * @return
      */
     protected ArrayDesign getTestPersistentArrayDesign( int numCompositeSequences, boolean randomNames,
-            boolean doSequence ) {
+            boolean doSequence, boolean readOnly ) {
+        if ( readOnly ) {
+            if ( readOnlyad == null ) {
+                readOnlyad = testHelper.getTestPersistentArrayDesign( numCompositeSequences, randomNames, doSequence );
+            }
+            return readOnlyad;
+        }
         return testHelper.getTestPersistentArrayDesign( numCompositeSequences, randomNames, doSequence );
     }
 
