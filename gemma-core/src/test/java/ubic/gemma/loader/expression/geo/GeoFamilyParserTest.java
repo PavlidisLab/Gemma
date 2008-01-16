@@ -24,8 +24,6 @@ import java.util.zip.GZIPInputStream;
 import junit.framework.TestCase;
 import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.loader.expression.geo.model.GeoSample;
-import ubic.gemma.loader.expression.geo.model.GeoSeries;
-import ubic.gemma.loader.expression.geo.model.GeoValues;
 
 /**
  * @author pavlidis
@@ -83,9 +81,10 @@ public class GeoFamilyParserTest extends TestCase {
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/gse432Short/GSE432_family.soft.gz" ) );
         parser.parse( is );
-        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE432" );
-        GeoValues values = series.getValues();
-        System.err.print( values );
+        // GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE432"
+        // );
+        // GeoValues values = series.getValues();
+        // System.err.print( values );
     }
 
     /**
@@ -93,16 +92,14 @@ public class GeoFamilyParserTest extends TestCase {
      * 
      * @throws Exception
      */
-    public void testParseGse59() throws Exception {
-        is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE59Short/GSE59_family.soft.gz" ) );
-        parser.parse( is );
-        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE59" );
-        GeoValues values = series.getValues();
-        System.err.print( values );
-
-    }
-
+    // public void testParseGse59() throws Exception {
+    // is = new GZIPInputStream( this.getClass().getResourceAsStream(
+    // "/data/loader/expression/geo/GSE59Short/GSE59_family.soft.gz" ) );
+    // parser.parse( is );
+    // GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE59" );
+    // // GeoValues values = series.getValues();
+    // System.err.print( values );
+    // }
     // /**
     // * This data set has a lot of changes in the column ordering, etc. for samples
     // *
@@ -118,7 +115,6 @@ public class GeoFamilyParserTest extends TestCase {
     // GeoValues values = series.getValues();
     // // System.err.print( values );
     // }
-
     // /**
     // * Failed assertio durin gstoring CH1_BKG_MEAN
     // *
@@ -129,7 +125,6 @@ public class GeoFamilyParserTest extends TestCase {
     // "/data/loader/expression/geo/gse2776Short/GSE2776.soft.gz" ) );
     // parser.parse( is );
     // }
-
     public void testParseBigBPlatformOnly() throws Exception {
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/fullSizeTests/GSE1623_family.soft.txt.gz" ) );
