@@ -47,9 +47,6 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
 
     ExpressionExperimentDao expressionExperimentDao;
 
-    /**
-     * 
-     */
     private static final String EE_NAME = RandomStringUtils.randomAlphanumeric( 20 );
     ContactService cs = null;
     ExpressionExperiment ee = null;
@@ -58,6 +55,7 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
     String contactName;
     BibliographicReference primary;
     BibliographicReference other;
+    boolean persisted = false;
 
     /**
      * @exception Exception
@@ -68,28 +66,22 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
         super.onSetUpInTransaction();
 
         endTransaction();
-        ee = this.getTestPersistentCompleteExpressionExperiment();
-        ee.setName( EE_NAME );
+        if ( !persisted ) {
+            ee = this.getTestPersistentCompleteExpressionExperiment();
+            ee.setName( EE_NAME );
 
-        DatabaseEntry accessionEntry = this.getTestPersistentDatabaseEntry();
-        accession = accessionEntry.getAccession();
-        ed = accessionEntry.getExternalDatabase();
-        ee.setAccession( accessionEntry );
+            DatabaseEntry accessionEntry = this.getTestPersistentDatabaseEntry();
+            accession = accessionEntry.getAccession();
+            ed = accessionEntry.getExternalDatabase();
+            ee.setAccession( accessionEntry );
 
-        Contact c = this.getTestPersistentContact();
-        this.contactName = c.getName();
-        ee.setOwner( c );
+            Contact c = this.getTestPersistentContact();
+            this.contactName = c.getName();
+            ee.setOwner( c );
 
-        expressionExperimentDao.update( ee );
-        expressionExperimentDao.thaw( ee );
-
-    }
-
-    @Override
-    protected void onTearDownInTransaction() throws Exception {
-        super.onTearDownInTransaction();
-        if ( ee != null ) {
-            expressionExperimentDao.remove( ee );
+            expressionExperimentDao.update( ee );
+            expressionExperimentDao.thaw( ee );
+            persisted = true;
         }
     }
 
@@ -111,6 +103,8 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
             designElements.add( it.next().getDesignElement() );
         }
 
+        assert ( designElements.size() == 2 );
+
         Collection<DesignElementDataVector> vectors = expressionExperimentDao.getDesignElementDataVectors(
                 designElements, quantitationType );
 
@@ -123,12 +117,8 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
         QuantitationType quantitationType = ee.getDesignElementDataVectors().iterator().next().getQuantitationType();
         Collection<QuantitationType> quantitationTypes = new HashSet<QuantitationType>();
         quantitationTypes.add( quantitationType );
-
-        log.info( "***********************" );
-        Collection<DesignElementDataVector> vectors = expressionExperimentDao.getDesignElementDataVectors(
-
-        quantitationTypes );
-        log.info( "***********************" );
+        Collection<DesignElementDataVector> vectors = expressionExperimentDao
+                .getDesignElementDataVectors( quantitationTypes );
         assertEquals( 12, vectors.size() );
 
     }

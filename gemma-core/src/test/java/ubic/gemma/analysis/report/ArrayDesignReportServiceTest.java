@@ -35,26 +35,29 @@ public class ArrayDesignReportServiceTest extends BaseSpringContextTest {
     AuditTrailService ads;
 
     ArrayDesign ad;
+    boolean persisted = false;
 
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
 
-        ad = this.getTestPersistentArrayDesign( 10, true );
-        ads = ( AuditTrailService ) this.getBean( "auditTrailService" );
+        if ( !persisted ) {
+            ad = this.getTestPersistentArrayDesign( 10, true );
+            ads = ( AuditTrailService ) this.getBean( "auditTrailService" );
 
-        ads.addUpdateEvent( ad, ArrayDesignSequenceUpdateEvent.Factory.newInstance(), "sequences" );
+            ads.addUpdateEvent( ad, ArrayDesignSequenceUpdateEvent.Factory.newInstance(), "sequences" );
 
-        ads.addUpdateEvent( ad, ArrayDesignSequenceAnalysisEvent.Factory.newInstance(), "alignment" );
+            ads.addUpdateEvent( ad, ArrayDesignSequenceAnalysisEvent.Factory.newInstance(), "alignment" );
 
-        ads.addUpdateEvent( ad, ArrayDesignGeneMappingEvent.Factory.newInstance(), "mapping" );
+            ads.addUpdateEvent( ad, ArrayDesignGeneMappingEvent.Factory.newInstance(), "mapping" );
 
-        Thread.sleep( 100 );
+            Thread.sleep( 100 );
 
-        ads.addUpdateEvent( ad, ArrayDesignSequenceAnalysisEvent.Factory.newInstance(), "alignment 2" );
+            ads.addUpdateEvent( ad, ArrayDesignSequenceAnalysisEvent.Factory.newInstance(), "alignment 2" );
 
-        ads.addUpdateEvent( ad, ArrayDesignGeneMappingEvent.Factory.newInstance(), "mapping 2" );
-
+            ads.addUpdateEvent( ad, ArrayDesignGeneMappingEvent.Factory.newInstance(), "mapping 2" );
+            persisted = true;
+        }
         Thread.sleep( 100 );
 
         endTransaction();

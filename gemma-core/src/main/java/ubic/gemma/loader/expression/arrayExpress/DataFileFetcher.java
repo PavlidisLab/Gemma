@@ -39,13 +39,15 @@ import ubic.gemma.util.ConfigUtils;
 public class DataFileFetcher extends FtpArchiveFetcher {
 
     /*
-     * FIXME they seem to change this from mageml.tgz 
+     * They seem to vary/change this. As of 1/2008, SMDB-14 had the .tgz suffix.
      */
-    private static final String MAGE_ML_SUFFIX = ".mageml.tar.gz";
+    private static final String MAGE_ML_SUFFIX_A = ".mageml.tar.gz";
+    private static final String MAGE_ML_SUFFIX_B = ".mageml.tgz";
 
     public DataFileFetcher() {
         super();
-        this.setExcludePattern( MAGE_ML_SUFFIX );
+        this.setExcludePattern( MAGE_ML_SUFFIX_A );
+        this.setExcludePattern( MAGE_ML_SUFFIX_B );
         initArchiveHandler( "gzip" );
     }
 
@@ -69,7 +71,7 @@ public class DataFileFetcher extends FtpArchiveFetcher {
      */
     @Override
     public String formLocalFilePath( String identifier, File newDir ) {
-        String outputFileName = newDir + System.getProperty( "file.separator" ) + identifier + MAGE_ML_SUFFIX;
+        String outputFileName = newDir + System.getProperty( "file.separator" ) + identifier + MAGE_ML_SUFFIX_B;
         return outputFileName;
     }
 
@@ -81,7 +83,7 @@ public class DataFileFetcher extends FtpArchiveFetcher {
     public String formRemoteFilePath( String identifier ) {
         String dirName = identifier.replaceFirst( "-\\d+", "" );
         dirName = dirName.replace( "E-", "" );
-        String seekFile = remoteBaseDir + "/" + dirName + "/" + identifier + "/" + identifier + MAGE_ML_SUFFIX;
+        String seekFile = remoteBaseDir + "/" + dirName + "/" + identifier + "/" + identifier + MAGE_ML_SUFFIX_B;
         return seekFile;
     }
 

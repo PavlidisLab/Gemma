@@ -49,7 +49,7 @@ public class PersistentOntology {
      * @param dbURL
      * @param dbUser
      * @param dbPw
-     * @param dbType
+     * @param dbType e.g. 'mysql'
      * @param cleanDB
      * @return
      */
