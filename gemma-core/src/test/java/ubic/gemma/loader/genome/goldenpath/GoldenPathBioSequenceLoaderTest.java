@@ -72,7 +72,7 @@ public class GoldenPathBioSequenceLoaderTest extends BaseSpringContextTest {
         gp.setExternalDatabaseService( externalDatabaseService );
         gp.setBioSequenceService( bioSequenceService );
 
-        gp.setLimit( 2000 );
+        gp.setLimit( 20 );
         gp.load( dumper );
 
     }
