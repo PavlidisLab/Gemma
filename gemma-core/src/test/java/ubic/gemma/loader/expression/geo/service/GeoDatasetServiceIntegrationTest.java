@@ -27,8 +27,6 @@ import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -132,89 +130,15 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     // geoService.fetchAndLoad( "GDS1033" );
     // }
     //
-    // /**
-    // * Three patforms
-    // * @throws Exception
-    // */
-    // public void testFetchAndLoadE() throws Exception {
-    // geoService.fetchAndLoad( "GDS835" );
-    // }
 
-    // Two samples don't have the same data columns etc.
-    // public void testGDS637() throws Exception {
-    // geoService.fetchAndLoad( "GDS637" );
-    // }
-
-    // // too big for memory <1gb - parkinson's model with 80 arrays.
-    // public void testGSE30() throws Exception {
-    // geoService.fetchAndLoad( "GSE30" );
-    // }
-
-    /**
-     * This test uses all three MG-U74 arrays.
-     */
-    // public void testFetchAndLoadThreePlatforms() throws Exception {
-    // gds.fetchAndLoad( "GDS243" );
-    // }
-    /**
-     * HG-U133A. GDS473 is for the other chip (B). Series is GSE674. see {@link 
-     * http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search)
-     */
-    // public void testFetchAndLoadMultiChipPerSeries() throws Exception {
-    // geoService.fetchAndLoad( "GDS472" );
-    // }
-    /**
-     * This test uses just one dataset, one series
-     */
-    // public void testFetchAndLoadOneDataset() throws Exception {
-    // geoService.fetchAndLoad( "GDS599" );
-    // log.info( "**** done ****" );
-    // }
-    /**
-     * Another basic one, but we also use cut-down versions for testing below.
-     */
-    // public void testFetchAndLoadG() throws Exception {
-    // geoService.fetchAndLoad( "GDS994" );
-    // }
-    // /////////////////////////////////////////////////////////////
-    // Medium-sized tests, quite a bit faster than the above but more realistic (in size) then the ones below
-    // ////////////////////////////////////////////////////////////
-    // public void testFetchAndLoadCacheExercise() throws Exception {
-    // assert config != null;
-    // String path = getTestFileBasePath();
-    // geoService.setGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT + "gds994medium" ) );
-    // this.setFlushModeCommit();
-    // geoService.fetchAndLoad( "GDS994" );
-    // }
-    //
-    // 
-    /**
-     * Failure because there are two series and two data sets. This is
+    /*
+     * Please leave this here, we use it to load data sets for chopping.
      */
     // @SuppressWarnings("unchecked")
-    // public void testFetchAndLoadGDS395() throws Exception {
+    // public void testFetchASeries() throws Exception {
     // endTransaction();
     // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-    // Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
-    // .fetchAndLoad( "GDS395" );
-    // ee = results.iterator().next();
-    // assertEquals( 1, results.size() );
-    //
-    // }
-    // /**
-    // * GDS246 results in duplicate platfomr error
-    // */
-    // @SuppressWarnings("unchecked")
-    // public void testFetchAndLoadGDS246() throws Exception {
-    // endTransaction();
-    // String path = getTestFileBasePath();
-    // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-    // + "gse480Short" ) );
-    // Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
-    // .fetchAndLoad( "GDS246" );
-    // ee = results.iterator().next();
-    // assertEquals( 1, results.size() );
-    //
+    // geoService.fetchAndLoad( "GSE3500", false, false, false );
     // }
     /**
      * Has multiple species (mouse and human, one and two platforms respectively), also test publication entry.
@@ -233,30 +157,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         assertEquals( 2, results.size() );
 
     }
-
-    // // /**
-    // // * Causes a stack overflow in audit trail. - not reproduced in this small data set.
-    // // * @throws Exception
-    // // */
-    // @SuppressWarnings("unchecked")
-    // public void testFetchAndLoadGSE3497() throws Exception {
-    // endTransaction();
-    // String path = getTestFileBasePath();
-    // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT ) );
-    // Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-    // "GSE3497", false, true, true );
-    // ee = results.iterator().next();
-    // eeService.thawLite( ee );
-    //
-    // }
-
-    // Please leave this here, we use it to load data sets for chopping.
-    // @SuppressWarnings("unchecked")
-    // public void testFetchASeries() throws Exception {
-    // endTransaction();
-    // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-    // geoService.fetchAndLoad( "GSE3500", false, false, false );
-    // }
 
     /**
      * GSE3434 has no dataset. It's small so okay to download.
@@ -304,32 +204,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         // int actualValue = ( ( ArrayDesignDao ) this.getBean( "arrayDesignDao" ) ).numCompositeSequences( ad.getId()
         // );
         // assertEquals( 107, actualValue );
-    }
-
-    @SuppressWarnings("unchecked")
-    public void testFetchAndLoadGDS999() throws Exception {
-        int expectedValue = 20;
-        String path = getTestFileBasePath();
-
-        ee = eeService.findByShortName( "GSE2018" );
-        if ( ee != null ) {
-            eeService.delete( ee );
-        }
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                + "gds999Short" ) );
-        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                "GDS999", false, true, false );
-        ee = results.iterator().next();
-
-        eeService.thawLite( ee );
-        assertEquals( 34, ee.getBioAssays().size() );
-
-        assertEquals( 1, ee.getExperimentalDesign().getExperimentalFactors().size() );
-
-        assertEquals( 2, ee.getExperimentalDesign().getExperimentalFactors().iterator().next().getFactorValues().size() );
-
-        assertEquals( 3 * expectedValue, ee.getDesignElementDataVectors().size() ); // 3 quantitation types
-
     }
 
     /**
@@ -383,34 +257,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     }
 
     /**
-     * Suffers from two data sets with the same platform - but has other problems, GEO must fix them.
-     * 
-     * @throws Exception
-     */
-    // @SuppressWarnings("unchecked")
-    // public void testFetchAndLoadGSE1074() throws Exception {
-    // String path = getTestFileBasePath();
-    // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-    // + "gse1074Short" ) );
-    //
-    // Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
-    // .fetchAndLoad( "GSE1074" );
-    // ee = results.iterator().next();
-    // }
-    // /**
-    // * Suffers from two data sets with the same platform
-    // */
-    // @SuppressWarnings("unchecked")
-    // public void testFetchAndLoadGSE464() throws Exception {
-    // String path = getTestFileBasePath();
-    // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-    // + "gse464Short" ) );
-    //
-    // Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-    // "GSE464", false, true, false );
-    // ee = results.iterator().next();
-    // }
-    /**
      * @throws Exception
      */
     @SuppressWarnings("unchecked")
@@ -434,24 +280,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         }
 
     }
-
-    // @SuppressWarnings("unchecked")
-    // public void testFetchAndLoadCancel() throws Exception {
-    //
-    // endTransaction();
-    // String path = getTestFileBasePath();
-    // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-    // + "gds994Short" ) );
-    //
-    // try {
-    // Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
-    // .fetchAndLoad( "GDS994" );
-    // } catch ( AlreadyExistsInSystemException e ) {
-    // log.warn( "Skipping test, data already exists in system" );
-    // }
-    // }
-
-    //
 
     @SuppressWarnings("unchecked")
     public void testFetchAndLoadMultiChipPerSeriesShort() throws Exception {
@@ -487,9 +315,9 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
          */
         ExperimentalFactor factor = newee.getExperimentalDesign().getExperimentalFactors().iterator().next();
         assertEquals( 2, factor.getFactorValues().size() ); // otherwise get 4.
-        for ( FactorValue s : factor.getFactorValues() ) {
-            // if ( s.getValue().equals( "20-29 years" ) ) assertEquals( 14, s..size() );
-        }
+        // for ( FactorValue s : factor.getFactorValues() ) {
+        // if ( s.getValue().equals( "20-29 years" ) ) assertEquals( 14, s..size() );
+        // }
 
         // Collection<QuantitationType> qTypes = expressionExperimentService.getQuantitationTypes( ee );
 
@@ -527,100 +355,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
         // GSM10380 = C7-U133A
         testMatrixValue( newee, matrix, "1007_s_at", "GSM10380", 1272.0 );
-    }
-
-    //
-    // /**
-    // * This data set has a corrupted GSE file; it is not parsed correctly and it isn't very easy for us to fix.
-    // * @throws Exception
-    // */
-    // @SuppressWarnings("unchecked")
-    // public void testMatrixCreationGDS1794() throws Exception {
-    // endTransaction();
-    // String path = getTestFileBasePath();
-    // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-    // Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
-    // .fetchAndLoad( "GDS1794" );
-    // ExpressionExperiment newee = results.iterator().next();
-    // ExpressionExperimentService expressionExperimentService = ( ExpressionExperimentService ) this
-    // .getBean( "expressionExperimentService" );
-    // expressionExperimentService.thaw( newee );
-    // Collection<QuantitationType> qts = expressionExperimentService.getQuantitationTypes( newee );
-    // ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( newee, qts.iterator().next() );
-    // assertNotNull( matrix );
-    // }
-
-    /**
-     * This test uses 4 data sets, 4 platforms, and samples that aren't run on all platforms. Insane! And has messed up
-     * values in double and string conversion. (GSE1299)
-     * <p>
-     * Unfortunately this data set uses two technologies (cDNA and Affy) so we can't really handle it very well.
-     * 
-     * @throws Exception
-     */
-    @SuppressWarnings("unchecked")
-    public void testConversionGDS825Family() throws Exception {
-        String path = getTestFileBasePath();
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                + "complexShortTest" ) );
-        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                "GDS825", false, false, false );
-
-        ExpressionExperimentService expressionExperimentService = ( ExpressionExperimentService ) this
-                .getBean( "expressionExperimentService" );
-
-        ExpressionExperiment newee = results.iterator().next();
-        expressionExperimentService.thaw( newee );
-
-        ee = eeService.findByName( "Breast Cancer Cell Line Experiment" );
-        eeService.thaw( ee );
-        Collection<QuantitationType> qTypes = expressionExperimentService.getQuantitationTypes( ee );
-
-        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( newee.getDesignElementDataVectors() );
-        ExpressionDataMatrix matrix = builder.getPreferredData();
-        assertTrue( matrix != null );
-        if ( log.isDebugEnabled() ) {
-            log.debug( matrix );
-        }
-
-        log.info( matrix );
-
-        // assertEquals( 30, matrix.rows() );
-
-        // these are all the affymetrix samples.
-        assertEquals( 22, matrix.columns() );
-
-        testMatrixValue( newee, matrix, "224501_at", "GSM21252", 7.63 );
-
-        testMatrixValue( newee, matrix, "224444_s_at", "GSM21251", 8.16 );
-
-        // ///////////////////////////////////
-        // / now for the other platform // For the agilent array
-        QuantitationType qt = null;
-        for ( QuantitationType c : qTypes ) {
-            if ( c.getIsPreferred() && c.getScale().equals( ScaleType.LOG2 ) ) {
-                qt = c;
-                break;
-            }
-        }
-        assertTrue( qt != null );
-        assertTrue( ee != null );
-        assertTrue( newee.equals( ee ) );
-
-        // if ( log.isDebugEnabled() ) {
-        // log.debug( matrix );
-        // }
-        //        
-        // assertTrue( matrix != null );
-        //        
-        // assertEquals( 17, matrix.rows() );
-        //        
-        // assertEquals( 4, matrix.columns() );
-        //        
-        // testMatrixValue( newee, matrix, "885", "GSM21256", -0.1202943 );
-        //        
-        // testMatrixValue( newee, matrix, "878", "GSM21254", 0.6135323 );
-
     }
 
     @SuppressWarnings("unchecked")

@@ -46,12 +46,13 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class CompositeSequenceDaoIntegrationTest extends AbstractArrayDesignProcessingTest {
 
-    Blat blat = new Blat();
-    CompositeSequenceService compositeSequenceService;
+    static Blat blat = new Blat();
+    static CompositeSequenceService compositeSequenceService;
+    static boolean setupDone = false;
 
     /**
      * The test files have only ~100 genes. This is still a very slow test to run, because it does many steps of
-     * processing the data. This is a good candidate for a test that would be better done with a 
+     * processing the data. This is a good candidate for a test that would be better done with a mini-database.
      * 
      * @see ubic.gemma.loader.expression.arrayDesign.AbstractArrayDesignProcessingTest#onSetUpInTransaction()
      */
@@ -61,37 +62,40 @@ public class CompositeSequenceDaoIntegrationTest extends AbstractArrayDesignProc
         compositeSequenceService = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
         Taxon taxon = ( ( TaxonService ) getBean( "taxonService" ) ).findByScientificName( "Homo sapiens" );
 
-        // insert the needed genes and geneproducts into the system.(can use NCBI gene loader, but for subset)
-        NcbiGeneLoader loader = new NcbiGeneLoader();
-        loader.setPersisterHelper( ( PersisterHelper ) this.getBean( "persisterHelper" ) );
-        String filePath = ConfigUtils.getString( "gemma.home" ) + File.separatorChar;
-        filePath = filePath + "gemma-core/src/test/resources/data/loader/genome/gene";
-        String geneInfoFile = filePath + File.separatorChar + "selected_gene_info.gz";
-        String gene2AccFile = filePath + File.separatorChar + "selected_gene2accession.gz";
-        loader.load( geneInfoFile, gene2AccFile, true );
+        if ( !setupDone ) {
+            // insert the needed genes and geneproducts into the system.(can use NCBI gene loader, but for subset)
+            NcbiGeneLoader loader = new NcbiGeneLoader();
+            loader.setPersisterHelper( ( PersisterHelper ) this.getBean( "persisterHelper" ) );
+            String filePath = ConfigUtils.getString( "gemma.home" ) + File.separatorChar;
+            filePath = filePath + "gemma-core/src/test/resources/data/loader/genome/gene";
+            String geneInfoFile = filePath + File.separatorChar + "selected_gene_info.gz";
+            String gene2AccFile = filePath + File.separatorChar + "selected_gene2accession.gz";
+            loader.load( geneInfoFile, gene2AccFile, true );
 
-        // needed to fill in the sequence information for blat scoring.
-        InputStream sequenceFile = this.getClass().getResourceAsStream( "/data/loader/genome/gpl140.sequences.fasta" );
-        ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
-        app.processArrayDesign( getAd(), sequenceFile, SequenceType.EST );
+            // needed to fill in the sequence information for blat scoring.
+            InputStream sequenceFile = this.getClass().getResourceAsStream(
+                    "/data/loader/genome/gpl140.sequences.fasta" );
+            ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
+            app.processArrayDesign( getAd(), sequenceFile, SequenceType.EST );
 
-        // fill in the blat results. Note that each time you run this test you
-        // get the results loaded again (so they
-        // pile up)
-        ArrayDesignSequenceAlignmentService aligner = ( ArrayDesignSequenceAlignmentService ) getBean( "arrayDesignSequenceAlignmentService" );
+            // fill in the blat results. Note that each time you run this test you
+            // get the results loaded again (so they
+            // pile up)
+            ArrayDesignSequenceAlignmentService aligner = ( ArrayDesignSequenceAlignmentService ) getBean( "arrayDesignSequenceAlignmentService" );
 
-        InputStream blatResultInputStream = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/genome/gpl140.blatresults.psl.gz" ) );
+            InputStream blatResultInputStream = new GZIPInputStream( this.getClass().getResourceAsStream(
+                    "/data/loader/genome/gpl140.blatresults.psl.gz" ) );
 
-        Collection<BlatResult> results = blat.processPsl( blatResultInputStream, taxon );
+            Collection<BlatResult> results = blat.processPsl( blatResultInputStream, taxon );
 
-        aligner.processArrayDesign( getAd(), results );
+            aligner.processArrayDesign( getAd(), results );
 
-        // real stuff.
-        ArrayDesignProbeMapperService arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this
-                .getBean( "arrayDesignProbeMapperService" );
-        arrayDesignProbeMapperService.processArrayDesign( getAd() );
-
+            // real stuff.
+            ArrayDesignProbeMapperService arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this
+                    .getBean( "arrayDesignProbeMapperService" );
+            arrayDesignProbeMapperService.processArrayDesign( getAd() );
+            setupDone = true;
+        }
         endTransaction();
 
     }

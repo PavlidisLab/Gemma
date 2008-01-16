@@ -50,7 +50,7 @@ public class BioAssayFormControllerTest extends BaseSpringContextTest {
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
         endTransaction();
-        ArrayDesign ad = this.getTestPersistentArrayDesign( 10, true );
+        ArrayDesign ad = this.getTestPersistentArrayDesign( 10, true, false );
         ba = this.getTestPersistentBioAssay( ad );
         BioAssayService bas = ( BioAssayService ) getBean( "bioAssayService" );
         ba = bas.findOrCreate( ba );

@@ -45,17 +45,17 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
 
-    ExpressionExperimentDao expressionExperimentDao;
+    static ExpressionExperimentDao expressionExperimentDao;
 
     private static final String EE_NAME = RandomStringUtils.randomAlphanumeric( 20 );
-    ContactService cs = null;
-    ExpressionExperiment ee = null;
-    ExternalDatabase ed;
-    String accession;
-    String contactName;
-    BibliographicReference primary;
-    BibliographicReference other;
-    boolean persisted = false;
+    static ContactService cs = null;
+    static ExpressionExperiment ee = null;
+    static ExternalDatabase ed;
+    static String accession;
+    static String contactName;
+    static BibliographicReference primary;
+    static BibliographicReference other;
+    static boolean persisted = false;
 
     /**
      * @exception Exception
@@ -76,12 +76,14 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
             ee.setAccession( accessionEntry );
 
             Contact c = this.getTestPersistentContact();
-            this.contactName = c.getName();
+            contactName = c.getName();
             ee.setOwner( c );
 
             expressionExperimentDao.update( ee );
             expressionExperimentDao.thaw( ee );
             persisted = true;
+        } else {
+            log.debug( "Skipping making new ee for test" );
         }
     }
 
@@ -160,6 +162,7 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
     /**
      * @param expressionExperimentDao the expressionExperimentDao to set
      */
+    @SuppressWarnings("static-access")
     public void setExpressionExperimentDao( ExpressionExperimentDao expressionExperimentDao ) {
         this.expressionExperimentDao = expressionExperimentDao;
     }

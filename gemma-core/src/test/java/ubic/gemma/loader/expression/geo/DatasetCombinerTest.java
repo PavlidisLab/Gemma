@@ -167,30 +167,30 @@ public class DatasetCombinerTest extends TestCase {
 
         /**
          * <pre>
-         *                                                            GSM4045     PGA-MFD-CtrPD1-1aAv2-s2a
-         *                                                            GSM4047     PGA-MFD-CtrPD1-1aBv2-s2
-         *                                                            GSM4049     PGA-MFD-CtrPD1-1aCv2-s2
-         *                                                            GSM4051     PGA-MFD-CtrPD1-2aAv2-s2b
-         *                                                            GSM4053     PGA-MFD-CtrPD1-2aBv2-s2
-         *                                                            GSM4055     PGA-MFD-CtrPD1-2aCv2-s2
-         *                                                            GSM4057     PGA-MFD-CtrPD5-1aAv2-s2
-         *                                                            GSM4059     PGA-MFD-CtrPD5-1aBv2-s2
-         *                                                            GSM4061     PGA-MFD-CtrPD5-1aCv2-s2
-         *                                                            GSM4063     PGA-MFD-CtrPD5-2aAv2-s2
-         *                                                            GSM4065     PGA-MFD-CtrPD5-2aBv2-s2
-         *                                                            GSM4067     PGA-MFD-CtrPD5-2aCv2-s2
-         *                                                            GSM4069     PGA-MFD-MutantPD1-1aAv2-s2b
-         *                                                            GSM4071     PGA-MFD-MutantPD1-1aBv2-s2
-         *                                                            GSM4073     PGA-MFD-MutantPD1-1aCv2-s2
-         *                                                            GSM4075     PGA-MFD-MutantPD1-2aAv2-s2a
-         *                                                            GSM4077     PGA-MFD-MutantPD1-2aBv2-s2
-         *                                                            GSM4079     PGA-MFD-MutantPD1-2aCv2-s2
-         *                                                            GSM4081     PGA-MFD-MutantPD5-1aAv2-s2
-         *                                                            GSM4083     PGA-MFD-MutantPD5-1aBv2-s2
-         *                                                            GSM4085     PGA-MFD-MutantPD5-1aCv2-s2
-         *                                                            GSM4087     PGA-MFD-MutantPD5-2aAv2-s2
-         *                                                            GSM4089     PGA-MFD-MutantPD5-2aBv2-s2
-         *                                                            GSM4091     PGA-MFD-MutantPD5-2aCv2-s2
+         *GSM4045     PGA-MFD-CtrPD1-1aAv2-s2a
+         *GSM4047     PGA-MFD-CtrPD1-1aBv2-s2
+         *GSM4049     PGA-MFD-CtrPD1-1aCv2-s2
+         *GSM4051     PGA-MFD-CtrPD1-2aAv2-s2b
+         *GSM4053     PGA-MFD-CtrPD1-2aBv2-s2
+         *GSM4055     PGA-MFD-CtrPD1-2aCv2-s2
+         *GSM4057     PGA-MFD-CtrPD5-1aAv2-s2
+         *GSM4059     PGA-MFD-CtrPD5-1aBv2-s2
+         *GSM4061     PGA-MFD-CtrPD5-1aCv2-s2
+         *GSM4063     PGA-MFD-CtrPD5-2aAv2-s2
+         *GSM4065     PGA-MFD-CtrPD5-2aBv2-s2
+         *GSM4067     PGA-MFD-CtrPD5-2aCv2-s2
+         *GSM4069     PGA-MFD-MutantPD1-1aAv2-s2b
+         *GSM4071     PGA-MFD-MutantPD1-1aBv2-s2
+         *GSM4073     PGA-MFD-MutantPD1-1aCv2-s2
+         *GSM4075     PGA-MFD-MutantPD1-2aAv2-s2a
+         *GSM4077     PGA-MFD-MutantPD1-2aBv2-s2
+         *GSM4079     PGA-MFD-MutantPD1-2aCv2-s2
+         *GSM4081     PGA-MFD-MutantPD5-1aAv2-s2
+         *GSM4083     PGA-MFD-MutantPD5-1aBv2-s2
+         *GSM4085     PGA-MFD-MutantPD5-1aCv2-s2
+         *GSM4087     PGA-MFD-MutantPD5-2aAv2-s2
+         *GSM4089     PGA-MFD-MutantPD5-2aBv2-s2
+         *GSM4091     PGA-MFD-MutantPD5-2aCv2-s2
          * </pre>
          */
 

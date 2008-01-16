@@ -208,6 +208,21 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
         return testHelper.getTestPersistentArrayDesign( numCompositeSequences, randomNames, true );
     }
 
+    /**
+     * Convenience method to provide an ArrayDesign that can be used to fill non-nullable associations in test objects.
+     * The ArrayDesign is provided with some CompositeSequenece DesignElements if desired. If composite seequences are
+     * created, they are each associated with a single generated Reporter.
+     * 
+     * @param numCompositeSequences The number of CompositeSequences to populate the ArrayDesign with.
+     * @param randomNames If true, probe names will be random strings; otherwise they will be 0_at....N_at
+     * @param doSequence add sequences to the array design that is created. Faster to avoid if you can.
+     * @return
+     */
+    protected ArrayDesign getTestPersistentArrayDesign( int numCompositeSequences, boolean randomNames,
+            boolean doSequence ) {
+        return testHelper.getTestPersistentArrayDesign( numCompositeSequences, randomNames, doSequence );
+    }
+
     protected BibliographicReference getTestPersistentBibliographicReference( String accession ) {
         return testHelper.getTestPersistentBibliographicReference( accession );
     }

@@ -32,18 +32,18 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class ArrayDesignReportServiceTest extends BaseSpringContextTest {
 
-    AuditTrailService ads;
-
-    ArrayDesign ad;
-    boolean persisted = false;
+    static AuditTrailService ads;
+    static ArrayDesignReportService adrs;
+    static ArrayDesign ad;
+    static boolean persisted = false;
 
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-
+        adrs = ( ArrayDesignReportService ) this.getBean( "arrayDesignReportService" );
+        ads = ( AuditTrailService ) this.getBean( "auditTrailService" );
         if ( !persisted ) {
-            ad = this.getTestPersistentArrayDesign( 10, true );
-            ads = ( AuditTrailService ) this.getBean( "auditTrailService" );
+            ad = this.getTestPersistentArrayDesign( 5, true, false );
 
             ads.addUpdateEvent( ad, ArrayDesignSequenceUpdateEvent.Factory.newInstance(), "sequences" );
 
@@ -56,15 +56,14 @@ public class ArrayDesignReportServiceTest extends BaseSpringContextTest {
             ads.addUpdateEvent( ad, ArrayDesignSequenceAnalysisEvent.Factory.newInstance(), "alignment 2" );
 
             ads.addUpdateEvent( ad, ArrayDesignGeneMappingEvent.Factory.newInstance(), "mapping 2" );
+            Thread.sleep( 100 );
             persisted = true;
         }
-        Thread.sleep( 100 );
 
         endTransaction();
     }
 
     public void testGenerateArrayDesignSequenceAnalysisEvent() {
-        ArrayDesignReportService adrs = ( ArrayDesignReportService ) this.getBean( "arrayDesignReportService" );
 
         String report = adrs.getLastSequenceAnalysisEvent( ad.getId() );
 
@@ -74,7 +73,6 @@ public class ArrayDesignReportServiceTest extends BaseSpringContextTest {
     }
 
     public void testGenerateArrayDesignSequenceUpdateEvent() {
-        ArrayDesignReportService adrs = ( ArrayDesignReportService ) this.getBean( "arrayDesignReportService" );
 
         String report = adrs.getLastSequenceUpdateEvent( ad.getId() );
 
@@ -84,7 +82,6 @@ public class ArrayDesignReportServiceTest extends BaseSpringContextTest {
     }
 
     public void testGenerateArrayDesignGeneMappingEvent() {
-        ArrayDesignReportService adrs = ( ArrayDesignReportService ) this.getBean( "arrayDesignReportService" );
 
         String report = adrs.getLastGeneMappingEvent( ad.getId() );
 

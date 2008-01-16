@@ -55,7 +55,7 @@ public class PersistAclInterceptorTest extends BaseSpringContextTest {
      * @throws Exception
      */
     public void testAddPermissionsInterceptor() throws Exception {
-        ArrayDesign ad = this.getTestPersistentArrayDesign( 10, true );
+        ArrayDesign ad = this.getTestPersistentArrayDesign( 5, true, false );
 
         if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( ad ) ) == null ) {
             arrayDesignService.remove( ad );

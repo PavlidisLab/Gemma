@@ -40,29 +40,31 @@ public class BioAssayDaoImplTest extends BaseSpringContextTest {
 
     protected BioAssayDimensionDao bioAssayDimensionDao;
 
-    private BioAssay ba;
+    private static BioAssay ba;
 
     private BioAssayDao bioAssayDao;
+
+    static boolean setupDone = false;
 
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
         this.bioAssayDao = ( BioAssayDao ) getBean( "bioAssayDao" );
         List<BioAssay> bas = new ArrayList<BioAssay>();
-        // ExpressionExperiment ee = this.getTestPersistentExpressionExperiment();
         BioAssayDimension bad = ( BioAssayDimension ) bioAssayDimensionDao.create( BioAssayDimension.Factory
                 .newInstance() );
 
-        ArrayDesign a = this.getTestPersistentArrayDesign( 10, true );
+        if ( !setupDone ) {
+            ArrayDesign a = this.getTestPersistentArrayDesign( 5, true, false );
 
-        for ( int i = 0; i < NUMTESTBIOASSAYS; i++ ) {
-            ba = this.getTestPersistentBioAssay( a );
-            bas.add( ba );
+            for ( int i = 0; i < NUMTESTBIOASSAYS; i++ ) {
+                ba = this.getTestPersistentBioAssay( a );
+                bas.add( ba );
+            }
+
+            bad.setBioAssays( bas );
+            bioAssayDimensionDao.update( bad );
         }
-
-        bad.setBioAssays( bas );
-        bioAssayDimensionDao.update( bad );
-
     }
 
     /**
@@ -73,11 +75,11 @@ public class BioAssayDaoImplTest extends BaseSpringContextTest {
         Collection result = bioAssayDao.findBioAssayDimensions( ba );
         assertEquals( 1, result.size() );
     }
-    
+
     public void testGetCount() {
         Integer count = bioAssayDao.countAll();
-        assertNotNull(count);
-        assertTrue(count > 0);
+        assertNotNull( count );
+        assertTrue( count > 0 );
     }
 
     public void setBioAssayDimensionDao( BioAssayDimensionDao bioAssayDimensionDao ) {
