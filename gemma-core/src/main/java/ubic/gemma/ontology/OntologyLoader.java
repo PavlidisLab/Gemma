@@ -248,9 +248,11 @@ public class OntologyLoader {
         String type = ConfigUtils.getString( "gemma.jena.db.type" );
         String driver = ConfigUtils.getString( "gemma.jena.db.driver" );
 
+        assert driver != null;
         try {
             Class.forName( driver );
         } catch ( Exception e ) {
+            log.error("Failed to load driver: " + driver);
             throw new RuntimeException( e );
         }
 
