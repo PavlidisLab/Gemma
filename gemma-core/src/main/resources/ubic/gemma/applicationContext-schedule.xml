@@ -85,6 +85,9 @@
 		<property name="repeatInterval">
 			<value>1800000</value> <!-- every 30 minutes -->
 		</property>
+		<property name="startDelay">
+			<value>1800000</value><!-- after the first 30 minutes -->
+		</property>
 	</bean>
 	
 	<!-- Job details -->
