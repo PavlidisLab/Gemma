@@ -160,7 +160,7 @@ public class TaskRunningTest extends BaseSpringWebTest {
         assertNotNull( taskId );
 
         // let it go a little while
-        Thread.sleep( 1000 );
+        Thread.sleep( 100 );
 
         // cancel it.
         boolean cancelJob = progressStatusService.cancelJob( ( String ) taskId );
