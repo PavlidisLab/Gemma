@@ -507,10 +507,19 @@ public class AuditInterceptor implements MethodInterceptor {
 
                 if ( Auditable.class.isAssignableFrom( propertyType ) ) {
 
+                    if ( !Hibernate.isInitialized( associatedObject ) ) {
+                        // assume it has not changed
+                        if ( log.isTraceEnabled() )
+                            log.trace( "Associated object for property " + propertyName
+                                    + " was an unitialized proxy, so we won't bother trying to check its audit trail" );
+                        continue;
+                    }
+
                     if ( log.isTraceEnabled() )
                         log.trace( "Processing audit for property " + propertyName + ", Cascade=" + cs );
 
-                    if ( ( ( Auditable ) associatedObject ).getAuditTrail() == null ) {
+                    AuditTrail auditTrail = ( ( Auditable ) associatedObject ).getAuditTrail();
+                    if ( auditTrail == null ) {
                         addCreateAuditEvent( ( Auditable ) associatedObject, " - entity created by cascade from "
                                 + object );
                     }
@@ -518,7 +527,10 @@ public class AuditInterceptor implements MethodInterceptor {
                 } else if ( Collection.class.isAssignableFrom( propertyType ) ) {
                     Collection associatedObjects = ( Collection ) associatedObject;
                     if ( !Hibernate.isInitialized( associatedObjects ) ) {
-                        // assume it has not changed.
+                        // assume it has not changed
+                        if ( log.isTraceEnabled() )
+                            log.trace( "Associated collection of objects for property " + propertyName
+                                    + " was an unitialized proxy, so we won't bother trying to check its audit trail" );
                         continue;
                     }
                     try {
