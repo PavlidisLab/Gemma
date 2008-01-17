@@ -66,26 +66,22 @@ public class DiffExpressionSearchController extends SimpleFormController {
 
         String officialSymbol = diffCommand.getSearchString();
 
-        /*
-         * multiple genes can have the same symbol ... storing all experiments analyzed for all analyses for all genes
-         * with symbol here
-         */
-        List<ExpressionExperiment> experimentsWithEvidence = new ArrayList<ExpressionExperiment>();
-
         /* multiple genes can have the same symbol */
         Collection<Gene> genes = geneService.findByOfficialSymbol( officialSymbol );
 
+        ModelAndView mav = new ModelAndView();
         for ( Gene g : genes ) {
             Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
                     .getDiffAnalysesForGene( g );
 
             for ( DifferentialExpressionAnalysis d : analyses ) {
                 Collection<ExpressionExperiment> experimentsAnalyzed = d.getExperimentsAnalyzed();
-                experimentsWithEvidence.addAll( experimentsAnalyzed );
+
+                mav.addObject( g.getOfficialSymbol(), experimentsAnalyzed );
             }
         }
 
-        return null;
+        return mav;
     }
 
     /**

@@ -40,6 +40,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.util.DifferentialExpressionAnalysisResultComparator;
 
 /**
@@ -48,6 +49,7 @@ import ubic.gemma.util.DifferentialExpressionAnalysisResultComparator;
  * 
  * @spring.bean id="differentialExpressionAnalyzerService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
+ * @spring.property name="geneService" ref="geneService"
  * @spring.property name="differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
  * @spring.property name="differentialExpressionAnalyzer" ref="differentialExpressionAnalyzer"
  * @author keshav
@@ -63,7 +65,8 @@ public class DifferentialExpressionAnalyzerService {
     private Log log = LogFactory.getLog( this.getClass() );
     private ExpressionExperimentService expressionExperimentService = null;
     private DifferentialExpressionAnalyzer differentialExpressionAnalyzer = null;
-    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
+    private GeneService geneService = null;
 
     /**
      * Finds the persistent expression experiment. If there are no associated analyses with this experiment, the
@@ -433,40 +436,10 @@ public class DifferentialExpressionAnalyzerService {
      */
     @SuppressWarnings("unchecked")
     public Collection<DifferentialExpressionAnalysis> getDiffAnalysesForGene( Gene gene ) {
-        // TODO add proper implementation here
-        Collection<ExpressionAnalysis> expressionAnalyses = differentialExpressionAnalysisService.loadAll();
 
-        Collection<DifferentialExpressionAnalysis> analysesWithGene = new HashSet<DifferentialExpressionAnalysis>();
-        for ( ExpressionAnalysis ea : expressionAnalyses ) {
-            if ( ea instanceof DifferentialExpressionAnalysis ) {
-
-                boolean foundMatch = false;
-
-                DifferentialExpressionAnalysis dea = ( DifferentialExpressionAnalysis ) ea;
-
-                Collection<ExpressionAnalysisResultSet> eaResultSets = dea.getResultSets();
-
-                for ( ExpressionAnalysisResultSet ears : eaResultSets ) {
-                    Collection<DifferentialExpressionAnalysisResult> dears = ears.getResults();
-                    for ( DifferentialExpressionAnalysisResult dear : dears ) {
-                        if ( dears instanceof GeneAnalysisResult ) {
-                            GeneAnalysisResult gear = ( GeneAnalysisResult ) dear;
-                            Gene g = gear.getGene();
-                            if ( gene.equals( g ) ) {
-                                analysesWithGene.add( dea );
-                                foundMatch = true;
-                                break;
-                            }
-                        }
-                    }
-                    if ( foundMatch ) break;
-                }
-                if ( foundMatch ) break;
-            } else {
-                log.debug( "Not differential expression analysis.  Skipping ..." );
-            }
-        }
-        return analysesWithGene;
+        Collection<DifferentialExpressionAnalysis> diffAnalyses = null;
+        // gene.getAnalysisResults();TODO add this association end to the model
+        return diffAnalyses;
     }
 
     /**
@@ -548,5 +521,9 @@ public class DifferentialExpressionAnalyzerService {
     public void setDifferentialExpressionAnalysisService(
             DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
         this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
+    }
+
+    public void setGeneService( GeneService geneService ) {
+        this.geneService = geneService;
     }
 }
