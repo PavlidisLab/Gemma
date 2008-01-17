@@ -29,6 +29,7 @@ import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Hibernate;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.persister.entity.EntityPersister;
 import org.springframework.beans.BeanUtils;
@@ -516,7 +517,10 @@ public class AuditInterceptor implements MethodInterceptor {
 
                 } else if ( Collection.class.isAssignableFrom( propertyType ) ) {
                     Collection associatedObjects = ( Collection ) associatedObject;
-
+                    if ( !Hibernate.isInitialized( associatedObjects ) ) {
+                        // assume it has not changed.
+                        continue;
+                    }
                     try {
                         for ( Object collectionMember : associatedObjects ) {
 

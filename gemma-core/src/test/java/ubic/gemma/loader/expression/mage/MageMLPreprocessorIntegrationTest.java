@@ -83,7 +83,7 @@ public class MageMLPreprocessorIntegrationTest extends AbstractMageTest {
      */
 
     @SuppressWarnings("unchecked")
-    public void testPreprocess() throws IOException, TransformerException {
+    public void testPreprocess() throws IOException {
 
         /* PARSING */
         log.info( "***** PARSING *****  " );
@@ -125,7 +125,6 @@ public class MageMLPreprocessorIntegrationTest extends AbstractMageTest {
          * set it. CURRENTLY NOT USING THIS
          */
         // mageMLConverter.setSimplifiedXml( simplifiedXml );
-
         mageMLConverter.addLocalExternalDataPath( ConfigUtils.getString( "gemma.home" ) + File.separatorChar
                 + "gemma-core/src/test/resources" + MAGE_DATA_RESOURCE_PATH + "E-AFMX-13" );
 

@@ -50,6 +50,9 @@ public class PubMedSearcherTest extends AbstractCLITestCase {
                 if ( result instanceof java.net.UnknownHostException ) {
                     log.warn( "Test skipped because of UnknownHostException" );
                     return;
+                } else if ( result.getMessage().contains( "code: 503" ) ) {
+                    log.warn( "Test skipped because of a 502 from NCBI" );
+                    return;
                 }
                 fail( result.getMessage() );
             }

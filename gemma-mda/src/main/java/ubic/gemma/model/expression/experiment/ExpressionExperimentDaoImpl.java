@@ -1244,8 +1244,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 v.setArrayDesignCount( ( Long ) res[8] );
                 v.setShortName( ( String ) res[9] );
                 v.setDateCreated( ( ( Date ) res[10] ).toString() );
-                String type = res[11].toString();
-                fillQuantitationTypeInfo( qtMap, v, eeId, type );
+                if ( res[11] != null ) {
+                    String type = res[11].toString();
+                    fillQuantitationTypeInfo( qtMap, v, eeId, type );
+                }
                 vo.put( eeId, v );
             }
         } catch ( org.hibernate.HibernateException ex ) {

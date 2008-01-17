@@ -75,6 +75,7 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
         assert ( compSequences.size() != 0 );
     }
 
+    @SuppressWarnings("unchecked")
     public void testGetGenesByTaxon() throws Exception {
         // get geneService
         GeneService geneService = ( GeneService ) this.getBean( "geneService" );
@@ -86,45 +87,52 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
 
     }
 
+    static boolean setupDone = false;
+
     // preloads GPL140. See ArrayDesignProbeMapperServiceIntegrationTest
     @Override
     @SuppressWarnings("unchecked")
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
+        endTransaction();
+        if ( !setupDone ) {
+            ArrayDesign ad;
+            // first load small twoc-color
+            AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+            final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( accession, true,
+                    true, false );
+            ad = ads.iterator().next();
 
-        ArrayDesign ad;
-        // first load small twoc-color
-        AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-        final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( accession, true, true, false );
-        ad = ads.iterator().next();
+            ArrayDesignService arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
 
-        ArrayDesignService arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
+            arrayDesignService.thaw( ad );
 
-        arrayDesignService.thaw( ad );
+            Taxon taxon = ( ( TaxonService ) getBean( "taxonService" ) ).findByScientificName( "Homo sapiens" );
 
-        Taxon taxon = ( ( TaxonService ) getBean( "taxonService" ) ).findByScientificName( "Homo sapiens" );
+            // needed to fill in the sequence information for blat scoring.
+            InputStream sequenceFile = this.getClass().getResourceAsStream(
+                    "/data/loader/genome/gpl140.sequences.fasta" );
+            ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
+            app.processArrayDesign( ad, sequenceFile, SequenceType.EST );
 
-        // needed to fill in the sequence information for blat scoring.
-        InputStream sequenceFile = this.getClass().getResourceAsStream( "/data/loader/genome/gpl140.sequences.fasta" );
-        ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
-        app.processArrayDesign( ad, sequenceFile, SequenceType.EST );
+            // fill in the blat results. Note that each time you run this test you get the results loaded again (so they
+            // pile up)
+            ArrayDesignSequenceAlignmentService aligner = ( ArrayDesignSequenceAlignmentService ) getBean( "arrayDesignSequenceAlignmentService" );
 
-        // fill in the blat results. Note that each time you run this test you get the results loaded again (so they
-        // pile up)
-        ArrayDesignSequenceAlignmentService aligner = ( ArrayDesignSequenceAlignmentService ) getBean( "arrayDesignSequenceAlignmentService" );
+            InputStream blatResultInputStream = new GZIPInputStream( this.getClass().getResourceAsStream(
+                    "/data/loader/genome/gpl140.blatresults.psl.gz" ) );
 
-        InputStream blatResultInputStream = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/genome/gpl140.blatresults.psl.gz" ) );
+            Blat blat = new Blat();
+            Collection<BlatResult> results = blat.processPsl( blatResultInputStream, taxon );
 
-        Blat blat = new Blat();
-        Collection<BlatResult> results = blat.processPsl( blatResultInputStream, taxon );
+            aligner.processArrayDesign( ad, results );
 
-        aligner.processArrayDesign( ad, results );
-
-        // real stuff.
-        ArrayDesignProbeMapperService arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this
-                .getBean( "arrayDesignProbeMapperService" );
-        arrayDesignProbeMapperService.processArrayDesign( ad );
+            // real stuff.
+            ArrayDesignProbeMapperService arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this
+                    .getBean( "arrayDesignProbeMapperService" );
+            arrayDesignProbeMapperService.processArrayDesign( ad );
+            setupDone = true;
+        }
     }
 }

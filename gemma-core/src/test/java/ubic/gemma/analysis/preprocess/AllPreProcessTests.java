@@ -38,7 +38,6 @@ public class AllPreProcessTests {
         suite.addTestSuite( RMABackgroundAdjusterTest.class );
         suite.addTestSuite( TwoChannelMissingValuesTest.class );
         suite.addTestSuite( DedvRankServiceTest.class );
-        suite.addTestSuite( RMATest.class );
         // $JUnit-END$
         return suite;
     }

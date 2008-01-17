@@ -51,11 +51,11 @@ public class DedvRankServiceTest extends AbstractGeoServiceTest {
 
         ExpressionExperimentService eeService = ( ExpressionExperimentService ) this
                 .getBean( "expressionExperimentService" );
-        ExpressionExperiment existing = eeService.findByShortName( "GSE2982" );
+        ExpressionExperiment existing = eeService.findByShortName( "GSE3500" );
         if ( existing == null ) {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                    + "gse2982Short" ) );
-            Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GSE2982", false, true, false );
+                    + "gse3500Short" ) );
+            Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GSE3500", false, true, false );
             ee = results.iterator().next();
         } else {
             ee = existing;
@@ -65,7 +65,9 @@ public class DedvRankServiceTest extends AbstractGeoServiceTest {
 
         eeService.thaw( ee );
         for ( DesignElementDataVector d : ee.getDesignElementDataVectors() ) {
-            assertNotNull( d.getRank() );
+            if ( d.getQuantitationType().getIsPreferred() ) {
+                assertNotNull( d.getRank() );
+            }
         }
     }
 

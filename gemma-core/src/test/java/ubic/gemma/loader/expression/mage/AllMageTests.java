@@ -34,6 +34,7 @@ public class AllMageTests {
         // $JUnit-BEGIN$
         suite.addTestSuite( MageMLParserTest.class );
         suite.addTestSuite( MageLoadIntegrationTest.class );
+        suite.addTestSuite( MageMLConverterTest.class );
         suite.addTestSuite( MageMLPreprocessorIntegrationTest.class );
         // $JUnit-END$
         return suite;
