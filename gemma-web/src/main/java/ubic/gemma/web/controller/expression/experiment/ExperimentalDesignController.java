@@ -29,6 +29,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -172,6 +173,7 @@ public class ExperimentalDesignController extends BaseMultiActionController {
         }
         c.setCategory( category );
         c.setValue( category );
+        c.setEvidenceCode( GOEvidenceCode.IC ); // manually added characteristic
         return c;
     }
 
@@ -277,6 +279,7 @@ public class ExperimentalDesignController extends BaseMultiActionController {
         if ( source instanceof VocabCharacteristic ) {
             ( ( VocabCharacteristic ) template ).setCategoryUri( ( ( VocabCharacteristic ) source ).getCategoryUri() );
         }
+        template.setEvidenceCode( GOEvidenceCode.IEA ); // automatically added characteristic
         return template;
     }
 
@@ -367,6 +370,7 @@ public class ExperimentalDesignController extends BaseMultiActionController {
                 vc.setCategoryUri( fvvo.getCategoryUri() );
                 vc.setValueUri( fvvo.getValueUri() );
             }
+            c.setEvidenceCode( GOEvidenceCode.IC ); // characteristic has been manually updated
             characteristicService.update( c );
         }
     }

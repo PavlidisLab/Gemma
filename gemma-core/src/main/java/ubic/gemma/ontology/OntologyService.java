@@ -30,6 +30,7 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -439,6 +440,7 @@ public class OntologyService {
         log.debug( "Vocab Characteristic: " + vc );
         log.debug( "Biomaterial ID List: " + bioMaterialIdList );
 
+        vc.setEvidenceCode( GOEvidenceCode.IC ); // manually added characteristic
         Set<Characteristic> chars = new HashSet<Characteristic>();
         chars.add( vc );
         Collection<BioMaterial> biomaterials = bioMaterialService.loadMultiple( bioMaterialIdList );
@@ -469,7 +471,8 @@ public class OntologyService {
 
         log.debug( "Vocab Characteristic: " + vc );
         log.debug( "Expression Experiment ID List: " + bmIdList );
-
+        
+        vc.setEvidenceCode( GOEvidenceCode.IC ); // manually added characteristic
         Set<Characteristic> chars = new HashSet<Characteristic>();
         chars.add( vc );
         Collection<ExpressionExperiment> ees = eeService.loadMultiple( bmIdList );

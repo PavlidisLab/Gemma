@@ -76,10 +76,10 @@ Ext.Gemma.AnnotationToolBar = function ( annotationGrid, config ) {
 					characteristic.description = descriptionField.getValue();
 				}
 				createHandler( characteristic, annotationGrid.refresh.bind( annotationGrid ) );
-				mgedCombo.reset();
+				//mgedCombo.reset(); 
 				charCombo.reset();
 				descriptionField.reset();			
-				createButton.disable();
+				//createButton.disable();
 			}
 		} );
 	}

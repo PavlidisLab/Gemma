@@ -11,6 +11,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -146,7 +147,8 @@ public class CharacteristicBrowserController extends BaseFormController {
             /* at this point, cFromDatabase points to the class-corrected characteristic in the
              * database that must be updated with the information coming from the client; at the
              * moment, the only things that the client can change are the category, value and
-             * associated URIs.  TODO allow changing of the evidence code.
+             * associated URIs.  Updated the evidence code to reflect that the characteristic has
+             * been manually curated.
              */
             cFromDatabase.setValue( cFromClient.getValue() );
             cFromDatabase.setCategory( cFromClient.getCategory() );
@@ -155,6 +157,7 @@ public class CharacteristicBrowserController extends BaseFormController {
                 vcFromDatabase.setValueUri( vcFromClient.getValueUri() );
                 vcFromDatabase.setCategoryUri( vcFromClient.getCategoryUri() );
             }
+            cFromDatabase.setEvidenceCode( GOEvidenceCode.IC ); // characteristic has been manually updated
             characteristicService.update( cFromDatabase );
         }
     }

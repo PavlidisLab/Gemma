@@ -104,6 +104,11 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
     }
 
     @Override
+    protected Collection handleLoadAll() throws Exception {
+        return this.getCharacteristicDao().loadAll();
+    }
+
+    @Override
     protected void handleDelete( Characteristic c ) throws Exception {
         this.getCharacteristicDao().remove( c );
     }
