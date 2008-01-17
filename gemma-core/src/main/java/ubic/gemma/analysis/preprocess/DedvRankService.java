@@ -85,10 +85,11 @@ public class DedvRankService {
     /**
      * @param ee
      * @param method2
-     * @return
+     * @return the vectors that were modified.
      */
     @SuppressWarnings("unchecked")
-    public void computeDevRankForExpressionExperiment( ExpressionExperiment ee, Method method ) {
+    public Collection<DesignElementDataVector> computeDevRankForExpressionExperiment( ExpressionExperiment ee,
+            Method method ) {
 
         eeService.thawLite( ee );
         Collection<DesignElementDataVector> vectors = eeService
@@ -97,6 +98,8 @@ public class DedvRankService {
         devService.thaw( vectors );
 
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectors );
+
+        Collection<DesignElementDataVector> result = new HashSet<DesignElementDataVector>();
         for ( ArrayDesign ad : ( Collection<ArrayDesign> ) this.eeService.getArrayDesignsUsed( ee ) ) {
             Collection<DesignElementDataVector> preferredVectors = computeRanks( ad, builder, method );
             if ( preferredVectors == null ) {
@@ -106,7 +109,9 @@ public class DedvRankService {
 
             log.info( "Updating ranks data for " + preferredVectors.size() + " vectors" );
             this.devService.update( preferredVectors );
+            result.addAll( preferredVectors );
         }
+        return result;
 
     }
 
@@ -350,7 +355,7 @@ public class DedvRankService {
             }
             Integer i = intensities.getRowIndex( de );
             assert i != null;
-            double rank = ( double ) ranks.get( i ) / ranks.size();
+            double rank = ranks.get( i ) / ranks.size();
             vector.setRank( rank );
         }
         return preferredVectors;

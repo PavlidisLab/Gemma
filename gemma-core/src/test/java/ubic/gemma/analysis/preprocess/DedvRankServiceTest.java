@@ -61,13 +61,13 @@ public class DedvRankServiceTest extends AbstractGeoServiceTest {
             ee = existing;
         }
 
-        serv.computeDevRankForExpressionExperiment( ee, Method.MAX );
+        Collection<DesignElementDataVector> preferredVectors = serv.computeDevRankForExpressionExperiment( ee,
+                Method.MAX );
 
         eeService.thaw( ee );
-        for ( DesignElementDataVector d : ee.getDesignElementDataVectors() ) {
-            if ( d.getQuantitationType().getIsPreferred() ) {
-                assertNotNull( d.getRank() );
-            }
+        for ( DesignElementDataVector d : preferredVectors ) {
+            assertTrue( d.getQuantitationType().getIsPreferred() );
+            assertNotNull( d.getRank() );
         }
     }
 
