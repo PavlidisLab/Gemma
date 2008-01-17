@@ -27,6 +27,24 @@
 		<property name="biosequenceGps">
 			<ref bean="biosequenceGps"/>
 		</property>
+		<property name="compassExpression">
+			<ref bean="compassExpression"/>
+		</property>		
+		<property name="compassArray">
+			<ref bean="compassArray"/>
+		</property>
+		<property name="compassProbe">
+			<ref bean="compassProbe"/>
+		</property>
+		<property name="compassGene">
+			<ref bean="compassGene"/>
+		</property>
+		<property name="compassBiosequence">
+			<ref bean="compassBiosequence"/>
+		</property>
+		<property name="compassBibliographic">
+			<ref bean="compassBibliographic"/>
+		</property>
 	</bean>
 	<bean id="searchService" class="ubic.gemma.search.SearchService">
 		<property name="geneService">
