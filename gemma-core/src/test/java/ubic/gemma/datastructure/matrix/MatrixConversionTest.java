@@ -63,7 +63,6 @@ public class MatrixConversionTest extends TestCase {
         ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectors );
         log.debug( vectors.size() + " vectors" );
 
-        // for some strange reason, occasionally we get 199.
         assertEquals( NUM_CS, mat.rows() );
         assertEquals( NUM_BIOMATERIALS, mat.columns() );
 
@@ -125,7 +124,7 @@ public class MatrixConversionTest extends TestCase {
             Iterator<BioMaterial> bmitb = bioMaterials.iterator();
             for ( long i = 0; i < NUM_BIOMATERIALS; i++ ) {
                 BioAssay ba = ubic.gemma.model.expression.bioAssay.BioAssay.Factory.newInstance();
-                ba.setName( RandomStringUtils.randomNumeric( 5 ) + "_testbioassay" );
+                ba.setName( RandomStringUtils.randomNumeric( 15 ) + "_testbioassay" );
                 ba.getSamplesUsed().add( bmitb.next() );
                 ba.setArrayDesignUsed( adb );
                 ba.setId( i + 20 );
@@ -176,7 +175,7 @@ public class MatrixConversionTest extends TestCase {
         List<BioMaterial> bioMaterials = new ArrayList<BioMaterial>();
         for ( long i = 0; i < NUM_BIOMATERIALS; i++ ) {
             BioMaterial bm = BioMaterial.Factory.newInstance();
-            bm.setName( RandomStringUtils.randomNumeric( 5 ) + "_testbiomaterial" );
+            bm.setName( RandomStringUtils.randomNumeric( 15 ) + "_testbiomaterial" );
             bm.setId( i );
             bioMaterials.add( bm );
         }
@@ -189,9 +188,9 @@ public class MatrixConversionTest extends TestCase {
 
             Reporter reporter = Reporter.Factory.newInstance();
             CompositeSequence compositeSequence = CompositeSequence.Factory.newInstance();
-            reporter.setName( RandomStringUtils.randomNumeric( 5 ) + "_testreporter" );
+            reporter.setName( RandomStringUtils.randomNumeric( 15 ) + "_testreporter" );
 
-            compositeSequence.setName( RandomStringUtils.randomNumeric( 5 ) + "_testcs" );
+            compositeSequence.setName( RandomStringUtils.randomNumeric( 15 ) + "_testcs" );
             compositeSequence.setId( i );
             compositeSequence.setArrayDesign( ad );
             sequences.add( compositeSequence );
