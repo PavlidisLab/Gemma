@@ -4,3 +4,4 @@ surefire-classloader.properties
 
 cobertura.ser
 pom.properties
+logs
