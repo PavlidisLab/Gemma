@@ -100,11 +100,11 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.update( auditable );
+            //    session.update( auditable );
                 if ( !Hibernate.isInitialized( auditable ) ) Hibernate.initialize( auditable );
                 session.persist( auditEvent );
                 auditable.getAuditTrail().addEvent( auditEvent );
-                session.update( auditable );
+             //   session.update( auditable );
                 session.flush();
                 session.evict( auditable );
                 return null;
