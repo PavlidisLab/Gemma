@@ -18,7 +18,11 @@
  */
 package ubic.gemma.analysis.diff;
 
+import java.util.Collection;
+
 import ubic.gemma.model.analysis.DifferentialExpressionAnalysisDao;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneDao;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -42,17 +46,17 @@ public class DifferentialExpressionAnalysisDaoImplTest extends BaseSpringContext
     @SuppressWarnings("unchecked")
     public void testFindGene() {
 
-        // Collection<Gene> genes = geneDao.findByOfficalSymbol( officialSymbol );
-        //
-        // if ( genes == null || genes.isEmpty() ) {
-        // log.error( "Problems obtaining genes. Skipping test ..." );
-        // return;
-        // }
-        //
-        // for ( Gene g : genes ) {
-        // Collection<ExpressionExperiment> experiments = differentialExpressionAnalysisDao.find( g );
-        // log.info( experiments.size() );
-        // }
+        Collection<Gene> genes = geneDao.findByOfficalSymbol( officialSymbol );
+
+        if ( genes == null || genes.isEmpty() ) {
+            log.error( "Problems obtaining genes. Skipping test ..." );
+            return;
+        }
+
+        for ( Gene g : genes ) {
+            Collection<ExpressionExperiment> experiments = differentialExpressionAnalysisDao.find( g );
+            log.info( experiments.size() );
+        }
 
     }
 
