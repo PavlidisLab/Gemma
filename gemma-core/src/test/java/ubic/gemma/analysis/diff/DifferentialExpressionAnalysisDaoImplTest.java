@@ -16,8 +16,9 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.analysis;
+package ubic.gemma.analysis.diff;
 
+import ubic.gemma.model.analysis.DifferentialExpressionAnalysisDao;
 import ubic.gemma.model.genome.GeneDao;
 import ubic.gemma.testing.BaseSpringContextTest;
 

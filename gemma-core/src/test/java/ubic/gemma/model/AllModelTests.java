@@ -20,6 +20,7 @@ package ubic.gemma.model;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
+import ubic.gemma.analysis.diff.DifferentialExpressionAnalysisDaoImplTest;
 import ubic.gemma.model.analysis.DifferentialExpressionAnalysisServiceTest;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionServiceTest;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImplTest;
@@ -84,6 +85,8 @@ public class AllModelTests {
         suite.addTestSuite( QtlDaoImplTest.class );
         suite.addTestSuite( Probe2ProbeCoexpressionDaoImplTest.class );
         suite.addTestSuite( Gene2GeneCoexpressionServiceTest.class );
+
+        suite.addTestSuite( DifferentialExpressionAnalysisDaoImplTest.class );
 
         return suite;
     }
