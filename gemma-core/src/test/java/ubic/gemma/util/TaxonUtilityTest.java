@@ -19,40 +19,39 @@
 
 package ubic.gemma.util;
 
-import java.util.Collection;
-import java.util.Iterator;
-
-import ubic.gemma.loader.genome.gene.ncbi.NcbiGeneLoader;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
+/**
+ * @author kelsey
+ * @version $Id$
+ */
 public class TaxonUtilityTest extends BaseSpringContextTest {
 
     GeneService geneService;
     TaxonService taxonService;
-    
+
     @SuppressWarnings("unchecked")
     public void testIsHuman() throws Exception {
         Taxon humanTax = taxonService.findByCommonName( "human" );
-        assertTrue(TaxonUtility.isHuman( humanTax ));
+        assertTrue( TaxonUtility.isHuman( humanTax ) );
     }
 
     @SuppressWarnings("unchecked")
     public void testIsMouse() throws Exception {
 
         Taxon mouseTax = taxonService.findByCommonName( "mouse" );
-        assertTrue(TaxonUtility.isMouse( mouseTax ));
- 
+        assertTrue( TaxonUtility.isMouse( mouseTax ) );
+
     }
-    
+
     public void testIsRat() throws Exception {
-     
+
         Taxon ratTax = taxonService.findByCommonName( "rat" );
-        assertTrue(TaxonUtility.isRat( ratTax ));
- 
+        assertTrue( TaxonUtility.isRat( ratTax ) );
+
     }
 
     @Override
@@ -61,38 +60,6 @@ public class TaxonUtilityTest extends BaseSpringContextTest {
         super.onSetUpInTransaction();
 
         geneService = ( GeneService ) this.getBean( "geneService" );
-        taxonService = (TaxonService) this.getBean( "taxonService" );                      
-    }
-    
-    //xiang was able to get lazy load error's when he passed the taxon in to the taxon utilty. 
-    //my attempt at recreating this error.  doesn't seem to happen. 
-    //fixme: perhaps load a better gene data in, or 
-    public void testTaxonLazyLoad() throws Exception {
-        
-        NcbiGeneLoader loader = new NcbiGeneLoader( persisterHelper );
-
-        String geneInfoTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene_info.sample.gz";
-        String gene2AccTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene2accession.sample.gz";
-
-        // threaded load
-        String basePath = ConfigUtils.getString( "gemma.home" );
-        loader.load( basePath + geneInfoTestFile, basePath + gene2AccTestFile, false );
-
-        // wait until the loader is done.
-        while ( !loader.isLoaderDone() ) {
-            Thread.sleep( 100 );
-        }
-
-        
-        Collection<Gene> geneCollection = geneService.findByOfficialName( "orf31" );
-        Iterator<Gene> geneIterator = geneCollection.iterator();
-        Gene g = geneIterator.next();
-        
-        log.info( g.getTaxon() );    
-        
-        assertFalse( TaxonUtility.isHuman( g.getTaxon() ));
-        assertFalse( TaxonUtility.isMouse( g.getTaxon() ));
-        assertFalse( TaxonUtility.isRat( g.getTaxon() ));
-        
+        taxonService = ( TaxonService ) this.getBean( "taxonService" );
     }
 }
