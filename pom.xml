@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<name>Gemma</name>
@@ -22,14 +21,14 @@
 	<packaging>pom</packaging>
 	<scm>
 		<connection>scm:cvs:local:/cvs:Gemma</connection>
-		<developerConnection>
-			scm:cvs:local:/cvs:Gemma
-		</developerConnection>
+		<developerConnection>scm:cvs:local:/cvs:Gemma</developerConnection>
 		<url>http://broca.ubic.ca:8081/viewrep/pavlab/Gemma</url>
 	</scm>
 	<issueManagement>
 		<system>Bugzilla</system>
-		<url>http://www.bioinformatics.ubc.ca/pavlidis/lab/bugzilla/buglist.cgi?product=Gemma&amp;bug_status=__open__</url>
+		<url>
+			http://www.bioinformatics.ubc.ca/pavlidis/lab/bugzilla/buglist.cgi?product=Gemma&amp;bug_status=__open__
+		</url>
 	</issueManagement>
 	<ciManagement>
 		<system>continuum</system>
@@ -79,6 +78,62 @@
 			<organization>University of British Columbia</organization>
 		</developer>
 	</developers>
+	<dependencies>
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate</artifactId>
+			<version>3.2.5.ga</version>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring</artifactId>
+			<version>2.0.7</version>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-hibernate3</artifactId>
+			<version>2.0.7</version>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>baseCode</groupId>
+			<artifactId>baseCode</artifactId>
+			<version>0.6-SNAPSHOT</version>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>org.acegisecurity</groupId>
+			<artifactId>acegi-security</artifactId>
+			<version>1.0.3</version>
+			<type>jar</type>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework</groupId>
+					<artifactId>spring-remoting</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.springframework</groupId>
+					<artifactId>spring-support</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.springframework</groupId>
+					<artifactId>spring-jdbc</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>ehcache</groupId>
+					<artifactId>ehcache</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+			<version>2.3</version>
+			<type>jar</type>
+		</dependency>
+	</dependencies>
 	<reporting>
 		<outputDirectory>target/site</outputDirectory>
 		<plugins>
@@ -103,26 +158,26 @@
 				</reportSets>
 			</plugin>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<configuration>
-					<quiet>true</quiet>
+					<quiet>false</quiet>
+					<aggregate>true</aggregate>
 					<links>
 						<link>http://java.sun.com/j2ee/1.4/docs/api</link>
 						<link>http://java.sun.com/j2se/1.5.0/docs/api</link>
-						<link>
-							http://jakarta.apache.org/commons/collections/apidocs-COLLECTIONS_3_0/
-						</link>
+						<link>http://jakarta.apache.org/commons/collections/apidocs-COLLECTIONS_3_0/</link>
 						<link>http://jakarta.apache.org/commons/dbcp/apidocs/</link>
 						<link>http://jakarta.apache.org/commons/fileupload/apidocs/</link>
 						<link>http://jakarta.apache.org/commons/httpclient/apidocs/</link>
-						<link>http://jakarta.apache.org/commons/logging/api/</link>
+						<link>http://commons.apache.org/logging/apidocs/</link>
 						<link>http://jakarta.apache.org/commons/pool/apidocs/</link>
-						<link>http://www.junit.org/junit/javadoc/</link>
 						<link>http://logging.apache.org/log4j/docs/api/</link>
 						<link>http://jakarta.apache.org/regexp/apidocs/</link>
 						<link>http://jakarta.apache.org/velocity/api/</link>
 						<link>http://dsd.lbl.gov/~hoschek/colt/api/</link>
-						<link>http://static.springframework.org/spring/docs/2.5.x/api/</link>
+						<link>http://static.springframework.org/spring/docs/2.0.7/api/</link>
+						<link>http://www.hibernate.org/hib_docs/v3/api/</link>
 					</links>
 				</configuration>
 			</plugin>
@@ -132,6 +187,10 @@
 				<configuration>
 					<argLine>-Xmx1024m</argLine>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jxr-plugin</artifactId>
 			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
@@ -151,6 +210,10 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>jdepend-maven-plugin</artifactId>
+				<configuration>
+					<linkJavadoc>true</linkJavadoc>
+					<javadocDir>${basedir}/target/site/apidocs</javadocDir>
+				</configuration>
 			</plugin>
 		</plugins>
 	</reporting>

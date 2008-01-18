@@ -38,12 +38,6 @@
 			<type>jar</type>
 		</dependency>
 		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate</artifactId>
-			<version>3.2.5.ga</version>
-			<type>jar</type>
-		</dependency>
-		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
 			<version>3.1.11</version>
@@ -78,12 +72,6 @@
 			<groupId>commons-digester</groupId>
 			<artifactId>commons-digester</artifactId>
 			<version>1.6</version>
-			<type>jar</type>
-		</dependency>
-		<dependency>
-			<groupId>commons-lang</groupId>
-			<artifactId>commons-lang</artifactId>
-			<version>2.3</version>
 			<type>jar</type>
 		</dependency>
 		<dependency>
@@ -234,35 +222,9 @@
 			<type>jar</type>
 		</dependency>
 		<dependency>
-			<groupId>org.acegisecurity</groupId>
-			<artifactId>acegi-security</artifactId>
-			<version>1.0.3</version>
-			<type>jar</type>
-			<exclusions>
-				<exclusion>
-					<groupId>org.springframework</groupId>
-					<artifactId>spring-remoting</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.springframework</groupId>
-					<artifactId>spring-support</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.springframework</groupId>
-					<artifactId>spring-jdbc</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
 			<groupId>odmg</groupId>
 			<artifactId>odmg</artifactId>
 			<version>3.0</version>
-			<type>jar</type>
-		</dependency>
-		<dependency>
-			<groupId>baseCode</groupId>
-			<artifactId>baseCode</artifactId>
-			<version>0.6-SNAPSHOT</version>
 			<type>jar</type>
 		</dependency>
 		<dependency>
@@ -285,12 +247,6 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
-			<artifactId>spring</artifactId>
-			<version>2.0.7</version>
-			<type>jar</type>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
 			<artifactId>spring-mock</artifactId>
 			<version>2.0.7</version>
 			<type>jar</type>
@@ -305,12 +261,6 @@
 			<groupId>org.springframework</groupId><!--  is this needed here? -->
 			<artifactId>spring-binding</artifactId>
 			<version>1.0.3</version>
-			<type>jar</type>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-hibernate3</artifactId>
-			<version>2.0.7</version>
 			<type>jar</type>
 		</dependency>
 		<dependency>
