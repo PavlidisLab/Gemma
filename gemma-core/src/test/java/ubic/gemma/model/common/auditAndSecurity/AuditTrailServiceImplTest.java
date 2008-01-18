@@ -18,8 +18,11 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import java.util.List;
+
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEventImpl;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -32,6 +35,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
 
     Auditable auditable;
     AuditTrailService auditTrailService;
+    private int size;
 
     @Override
     protected void onSetUpInTransaction() throws Exception {
@@ -41,17 +45,22 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         auditable = ( ArrayDesign ) this.persisterHelper.persist( auditable );
         auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
         endTransaction();
+        size = auditable.getAuditTrail().getEvents().size();
     }
 
     public final void testAddUpdateEventAuditableString() {
         AuditEvent ev = auditTrailService.addUpdateEvent( auditable, "nothing special, just testing" );
         assertNotNull( ev.getId() );
+        assertEquals( size + 1, auditable.getAuditTrail().getEvents().size() );
     }
 
     public final void testAddUpdateEventAuditableAuditEventTypeString() {
         AuditEventType f = ArrayDesignGeneMappingEvent.Factory.newInstance();
         AuditEvent ev = auditTrailService.addUpdateEvent( auditable, f, "nothing special, just testing" );
         assertNotNull( ev.getId() );
+        assertEquals( size + 1, auditable.getAuditTrail().getEvents().size() );
+        assertEquals( ArrayDesignGeneMappingEventImpl.class, ( ( List<AuditEvent> ) auditable.getAuditTrail()
+                .getEvents() ).get( 2 ).getEventType().getClass() );
     }
 
 }
