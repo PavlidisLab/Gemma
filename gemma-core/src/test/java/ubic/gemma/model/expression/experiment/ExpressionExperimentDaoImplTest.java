@@ -67,7 +67,7 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
 
         endTransaction();
         if ( !persisted ) {
-            ee = this.getTestPersistentCompleteExpressionExperiment( true );
+            ee = this.getTestPersistentCompleteExpressionExperiment( false );
             ee.setName( EE_NAME );
 
             DatabaseEntry accessionEntry = this.getTestPersistentDatabaseEntry();

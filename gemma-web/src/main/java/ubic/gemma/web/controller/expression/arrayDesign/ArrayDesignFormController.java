@@ -143,7 +143,8 @@ public class ArrayDesignFormController extends BaseFormController {
         ArrayDesign existing = arrayDesignService.load( ad.getId() );
 
         if ( existing == null ) {
-            errors.addError( new ObjectError( command.toString(), null, null, "No such array design" ) );
+            errors.addError( new ObjectError( command.toString(), null, null, "No such array design with id="
+                    + ad.getId() ) );
             return processFormSubmission( request, response, command, errors );
         }
 
