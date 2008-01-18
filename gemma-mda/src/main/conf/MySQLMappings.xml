@@ -9,4 +9,12 @@
 		<from>datatype::byte[]</from>
 		<to>TINYBLOB</to>
 	</mapping>
+	<mapping>
+		<from>datatype::String</from>
+		<to>VARCHAR(255) character set latin1 collate latin1_swedish_ci</to>
+	</mapping>
+	<mapping>
+		<from>datatype::Clob</from>
+		<to>text character set latin1 collate latin1_swedish_ci</to>
+	</mapping>
 </mappings>
