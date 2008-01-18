@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
 /**
@@ -98,6 +99,16 @@ public class DifferentialExpressionAnalysisServiceImpl extends
     @Override
     protected void handleThaw( Collection expressionAnalyses ) throws Exception {
         this.getDifferentialExpressionAnalysisDao().thaw( expressionAnalyses );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisServiceBase#handleFind(ubic.gemma.model.genome.Gene)
+     */
+    @Override
+    protected Collection handleFind( Gene gene ) throws Exception {
+        return this.getDifferentialExpressionAnalysisDao().find( gene );
     }
 
 }

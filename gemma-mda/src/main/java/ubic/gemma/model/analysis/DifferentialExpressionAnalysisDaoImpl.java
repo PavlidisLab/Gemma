@@ -36,6 +36,7 @@ import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
 /**
@@ -114,6 +115,17 @@ public class DifferentialExpressionAnalysisDaoImpl extends
                 return null;
             }
         }, true );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisDaoBase#handleFind(ubic.gemma.model.genome.Gene)
+     */
+    @Override
+    protected Collection handleFind( Gene gene ) throws Exception {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }
