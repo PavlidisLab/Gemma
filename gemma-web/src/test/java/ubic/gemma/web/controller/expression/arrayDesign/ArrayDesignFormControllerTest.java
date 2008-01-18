@@ -50,6 +50,7 @@ public class ArrayDesignFormControllerTest extends BaseSpringContextTest {
     @Override
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
+        endTransaction();
         ad = ArrayDesign.Factory.newInstance();
         ad.setName( RandomStringUtils.randomAlphabetic( 20 ) );
         ad.setDescription( "An array design created in the ArrayDesignFormControllerTest." );
@@ -60,6 +61,7 @@ public class ArrayDesignFormControllerTest extends BaseSpringContextTest {
 
         PersisterHelper persisterHelper = ( PersisterHelper ) getBean( "persisterHelper" );
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        assert ad.getId() != null;
     }
 
     @Override
@@ -75,7 +77,7 @@ public class ArrayDesignFormControllerTest extends BaseSpringContextTest {
      * @throws Exception
      */
     public void testSave() throws Exception {
-        endTransaction();
+
         ArrayDesignFormController c = ( ArrayDesignFormController ) getBean( "arrayDesignFormController" );
 
         request = new MockHttpServletRequest( "POST", "/arrays/editArrayDesign.html" );
@@ -88,7 +90,7 @@ public class ArrayDesignFormControllerTest extends BaseSpringContextTest {
         String errorsKey = BindingResult.MODEL_KEY_PREFIX + c.getCommandName();
         Errors errors = ( Errors ) mav.getModel().get( errorsKey );
 
-        assertNull( errors );
+        assertNull( "Got errors:" + errors, errors );
         assertNotNull( request.getSession().getAttribute( "messages" ) );
         assertTrue( mav.getView() instanceof RedirectView );
         assertEquals( "/Gemma/arrays/showArrayDesign.html?id=" + ad.getId(), ( ( RedirectView ) mav.getView() )
