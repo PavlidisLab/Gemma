@@ -124,8 +124,11 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      */
     @Override
     protected Collection handleFind( Gene gene ) throws Exception {
-        // TODO Auto-generated method stub
-        return null;
+        final String queryString = "select e from DifferentialExpressionAnalysisImpl a, BlatAssociationImpl ba"
+                + " inner join a.experimentsAnalyzed e inner join e.bioAssay ba inner join ba.arrayDesignUsed ad"
+                + " inner join ad.compositeSequences cs inner join cs.biologicalCharacteristic bs inner join ba.geneProduct gp inner join gp.gene gene "
+                + " where ba.bioSequence=bs and gene = :gene where g = :gene";
+        return this.getHibernateTemplate().findByNamedParam( queryString, "gene", gene );
     }
 
 }
