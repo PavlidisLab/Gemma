@@ -38,13 +38,13 @@ public class DifferentialExpressionAnalysisDaoImplTest extends BaseSpringContext
     private GeneDao geneDao = null;
 
     // FIXME using an invalid gene official symbol so test skips
-    private String officialSymbol = "pavlab";
+    private String officialSymbol = "CALR";
 
     /**
      * 
      */
     @SuppressWarnings("unchecked")
-    public void testFindGene() {
+    public void testFind() {
 
         Collection<Gene> genes = geneDao.findByOfficalSymbol( officialSymbol );
 
