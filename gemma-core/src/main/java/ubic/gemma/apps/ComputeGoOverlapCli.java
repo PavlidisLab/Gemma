@@ -144,6 +144,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
     private static final String GO_PROB_MAP = "GoProbMap";
     private static final String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
     private static final String RANDOM_SUBSET = "RandomSubset";
+    private static final String GENE_CACHE = "geneCache";
     private String file_path = "";
 
     private Metric metric = GoMetric.Metric.simple;
@@ -193,18 +194,10 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
 
         initBeans();
 
-        StopWatch overallWatch = new StopWatch();
-        overallWatch.start();
-
         Map<String, Integer> geneMap = new HashMap<String, Integer>();
         String commonName = "mouse";
         Taxon taxon = taxonService.findByCommonName( commonName );
 
-        try {
-            geneMap = loadLinks( file_path, taxon );
-        } catch ( IOException e ) {
-            return e;
-        }
 
         log.info( "Checking for Gene2GO Map file..." );
 
@@ -219,7 +212,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
             Collection<Gene> mouseGenes = geneService.loadKnownGenes( taxon );
 
             for ( Gene gene : mouseGenes ) {
-                Set<OntologyTerm> GOTerms = getGOTerms( gene );
+                Collection<OntologyTerm> GOTerms = ontologyEntryService.getGOTerms( gene, partOf );
                 if ( GOTerms == null || GOTerms.isEmpty() ) continue;
                 log.info( "Got go terms for " + gene.getName() );
 
@@ -234,6 +227,20 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
 
         }
 
+        try {
+            geneMap = loadLinks( file_path, taxon );
+        } catch ( IOException e ) {
+            return e;
+        }
+        
+//      File cache = new File( HOME_DIR + File.separatorChar + GENE_CACHE );
+//      if ( cache.exists() ) {
+//          geneCache = (Map<String, Gene>)getCacheFromDisk( cache );
+//          log.info( "Found gene cache file!" );
+//      }
+
+        StopWatch overallWatch = new StopWatch();
+        overallWatch.start();
         Map<String, Double> GOProbMap = new HashMap<String, Double>();
 
         File f2 = new File( HOME_DIR + File.separatorChar + GO_PROB_MAP );
@@ -357,28 +364,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         return overlapTerms;
     }
 
-    /**
-     * @param Take a gene and return a set of all GO terms including the parents of each GO term
-     * @param geneOntologyTerms
-     */
-    @SuppressWarnings("unchecked")
-    private Set<OntologyTerm> getGOTerms( Gene gene ) {
-
-        Set<OntologyTerm> termSet = new HashSet<OntologyTerm>();
-
-        Collection<VocabCharacteristic> stringTerms = gene2GOAssociationService.findByGene( gene );
-
-        for ( VocabCharacteristic characteristic : stringTerms ) {
-            String term = characteristic.getValueUri();
-            if ( ( term != null ) ) {
-                termSet.add( GeneOntologyService.getTermForURI( term ) );
-            }
-        }
-
-        termSet.addAll( ontologyEntryService.getAllParents( termSet, partOf ) );
-
-        return termSet;
-    }
+ 
 
     /**
      * @param take a collection of GOTerm URIs
@@ -462,6 +448,8 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
                     }
                 }
             }
+            
+            if (! mouseGeneGOMap.containsKey(gene1.getId()) ) continue;
 
             if ( geneCache.containsKey( g2 ) ) {
                 gene2 = geneCache.get( g2 );
@@ -475,11 +463,14 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
                     }
                 }
             }
+            
+            if (! mouseGeneGOMap.containsKey(gene2.getId()) ) continue;
 
             String key = g1 + "_" + g2;
             geneMap.put( key, support );
         }
 
+        saveCacheToDisk( (HashMap)geneCache, GENE_CACHE );
         return geneMap;
     }
 
