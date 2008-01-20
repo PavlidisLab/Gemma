@@ -50,11 +50,13 @@ public class GenomePersisterTest extends BaseSpringContextTest {
 
         gene.setProducts( gps );
 
-        gene = ( Gene ) this.persisterHelper.persist( gene );
+        gene = ( Gene ) this.persisterHelper.persistOrUpdate( gene );
 
         assertNotNull( gene.getId() );
+        assertNotNull( gene.getName() );
         for ( GeneProduct product : gene.getProducts() ) {
             assertNotNull( product.getId() );
+            assertNotNull( product.getName() );
         }
     }
 

@@ -309,9 +309,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                         session.evict( bm );
                     }
                     biomaterials.clear();
-                    session.update( ba );
-                    session.delete( ba );
-                    log.info( "Removed BioAssay " + ba.getName() + " and its associations." );
+//                    session.update( ba ); // these cascade.
+//                    session.delete( ba );
+ //                   log.info( "Removed BioAssay " + ba.getName() + " and its associations." );
                 }
 
                 for ( ExpressionExperimentSubSet subset : toDelete.getSubsets() ) {

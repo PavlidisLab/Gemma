@@ -281,12 +281,12 @@ abstract public class GenomePersister extends CommonPersister {
             return existingGene;
         }
 
-        if ( log.isDebugEnabled() ) log.debug( "*** New  " + gene + " ***" );
+        log.info( "New gene: " + gene );
 
         if ( gene.getAccessions().size() > 0 ) {
-           for(DatabaseEntry de: gene.getAccessions() ) {
-               fillInDatabaseEntry( de );
-           }
+            for ( DatabaseEntry de : gene.getAccessions() ) {
+                fillInDatabaseEntry( de );
+            }
         }
 
         Collection<GeneProduct> tempGeneProduct = gene.getProducts();
@@ -305,7 +305,12 @@ abstract public class GenomePersister extends CommonPersister {
         }
 
         gene.setProducts( tempGeneProduct );
-        persistCollectionElements( gene.getProducts() );
+        for ( GeneProduct gp : gene.getProducts() ) {
+            fillInGeneProductAssociations( gp );
+        }
+
+        // attach the products.
+        geneService.update( gene );
 
         return newGene;
     }

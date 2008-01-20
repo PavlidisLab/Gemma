@@ -19,13 +19,12 @@
 
 package ubic.gemma.model.expression.experiment;
 
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
+import java.util.ArrayList;
+import java.util.List;
 
-import ubic.gemma.model.common.description.ExternalDatabaseService;
-import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.testing.BaseSpringContextTest;
-import ubic.gemma.testing.TestPersistentObjectHelper;
 
 /**
  * @author kelsey
@@ -33,46 +32,26 @@ import ubic.gemma.testing.TestPersistentObjectHelper;
  */
 public class ExpressionExperimentDeleteTest extends BaseSpringContextTest {
 
-    private PersisterHelper persisterHelper;
-    private ExternalDatabaseService externalDatabaseService;
     private ExpressionExperimentService svc;
 
-    public void testExpressionExperimentDelete() {
+    public final void testRemove() throws Exception {
+        endTransaction();
+        ExpressionExperiment ee = getTestPersistentCompleteExpressionExperiment( false );
+        BioAssayService bas = ( BioAssayService ) this.getBean( "bioAssayService" );
+        List<Long> ids = new ArrayList<Long>();
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            ids.add( ba.getId() );
+        }
 
-        SessionFactory sessf = ( SessionFactory ) this.getBean( "sessionFactory" );
-        Session sess = sessf.openSession();
-        sess.beginTransaction();
-
-        TestPersistentObjectHelper helper = new TestPersistentObjectHelper();
-        helper.setPersisterHelper( this.persisterHelper );
-        helper.setExternalDatabaseService( externalDatabaseService );
-
-        ExpressionExperiment ee = helper.getTestExpressionExperimentWithAllDependencies();
-
-        assertNotNull( svc.load( ee.getId() ) );
         svc.delete( ee );
-        assertEquals( svc.load( ee.getId() ), null );
 
-        // designElementDataVectors.size(); // lazy-load...
-        sess.getTransaction().commit();
-        sess.evict( ee );
-        sess.close();
+        assertNull( svc.load( ee.getId() ) );
 
-    }
-
-    /**
-     * @param externalDatabaseService the externalDatabaseService to set
-     */
-    public void setExternalDatabaseService( ExternalDatabaseService externalDatabaseService ) {
-        this.externalDatabaseService = externalDatabaseService;
-    }
-
-    /**
-     * @param persisterHelper the persisterHelper to set
-     */
-    @Override
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
-        this.persisterHelper = persisterHelper;
+        // sure bioassays are gone.
+        for ( Long id : ids ) {
+            BioAssay ba = bas.load( id );
+            assertNull( ba );
+        }
     }
 
     /**

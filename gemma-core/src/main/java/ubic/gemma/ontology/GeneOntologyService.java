@@ -64,7 +64,7 @@ public class GeneOntologyService implements InitializingBean {
 
     public static final String BASE_GO_URI = "http://purl.org/obo/owl/GO#";
 
-    private static final String LOAD_GENE_ONTOLOGY_OPTION = "loadGeneOntology";
+    private static final String LOAD_GENE_ONTOLOGY_OPTION = "load.geneOntology";
 
     private final static String CC_URL = "http://www.berkeleybop.org/ontologies/obo-all/cellular_component/cellular_component.owl";
 
@@ -564,25 +564,22 @@ public class GeneOntologyService implements InitializingBean {
      * 
      */
     protected synchronized void forceLoadOntology() {
-
         initilizeGoOntology();
-
     }
 
+    /**
+     * 
+     */
     protected synchronized void init() {
-
         boolean loadOntology = ConfigUtils.getBoolean( LOAD_GENE_ONTOLOGY_OPTION, LOAD_BY_DEFAULT );
         boolean globalLoadOntologies = ConfigUtils.getBoolean( AbstractOntologyService.ENABLE_PROPERTY_NAME );
         if ( !loadOntology || !globalLoadOntologies ) {
-            log.info( "Loading Gene Ontology is disabled." );
-            log
-                    .info( "To turn on add loadGeneOntology=true to Gemma.properties; for CLIs you must also pass option to enable ontology loading" );
+            log.info( "Loading Gene Ontology is disabled. To enable add " + LOAD_GENE_ONTOLOGY_OPTION
+                    + "=true to Gemma.properties; for CLIs you must also pass option to enable ontology loading" );
             enabled = false;
             return;
         }
-
         initilizeGoOntology();
-
     }
 
     /**
