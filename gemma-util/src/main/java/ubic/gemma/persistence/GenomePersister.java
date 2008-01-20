@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ubic.gemma.model.association.BioSequence2GeneProduct;
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.ChromosomeLocation;
 import ubic.gemma.model.genome.ChromosomeService;
@@ -283,7 +284,9 @@ abstract public class GenomePersister extends CommonPersister {
         if ( log.isDebugEnabled() ) log.debug( "*** New  " + gene + " ***" );
 
         if ( gene.getAccessions().size() > 0 ) {
-            this.persistCollectionElements( gene.getAccessions() );
+           for(DatabaseEntry de: gene.getAccessions() ) {
+               fillInDatabaseEntry( de );
+           }
         }
 
         Collection<GeneProduct> tempGeneProduct = gene.getProducts();
@@ -324,32 +327,7 @@ abstract public class GenomePersister extends CommonPersister {
 
         if ( log.isDebugEnabled() ) log.debug( "*** New: " + geneProduct + " *** " );
 
-        if ( geneProduct.getAccessions() != null ) {
-            this.persistCollectionElements( geneProduct.getAccessions() );
-        }
-
-        if ( geneProduct.getCdsPhysicalLocation() != null ) {
-            geneProduct.getCdsPhysicalLocation().setChromosome(
-                    persistChromosome( geneProduct.getCdsPhysicalLocation().getChromosome() ) );
-        }
-
-        if ( geneProduct.getPhysicalLocation() != null ) {
-            geneProduct.getPhysicalLocation().setChromosome(
-                    persistChromosome( geneProduct.getPhysicalLocation().getChromosome() ) );
-
-            // sanity check, as we've had this problem...somehow.
-            if ( !geneProduct.getPhysicalLocation().getChromosome().getTaxon()
-                    .equals( geneProduct.getGene().getTaxon() ) ) {
-                throw new IllegalStateException( "Taxa don't match for gene product location and gene" );
-            }
-
-        }
-
-        if ( geneProduct.getExons() != null ) {
-            for ( PhysicalLocation exon : geneProduct.getExons() ) {
-                exon.setChromosome( persistChromosome( exon.getChromosome() ) );
-            }
-        }
+        fillInGeneProductAssociations( geneProduct );
 
         if ( isTransient( geneProduct.getGene() ) ) {
             // this results in the persistenct of the geneproducts, but only if the gene is transient.
@@ -364,6 +342,37 @@ abstract public class GenomePersister extends CommonPersister {
 
         return geneProduct;
         // ;
+    }
+
+    /**
+     * @param geneProduct
+     */
+    private void fillInGeneProductAssociations( GeneProduct geneProduct ) {
+        if ( geneProduct.getAccessions() != null ) {
+            for ( DatabaseEntry de : geneProduct.getAccessions() ) {
+                de.setExternalDatabase( persistExternalDatabase( de.getExternalDatabase() ) );
+            }
+        }
+
+        if ( geneProduct.getCdsPhysicalLocation() != null ) {
+            geneProduct.getCdsPhysicalLocation().setChromosome(
+                    persistChromosome( geneProduct.getCdsPhysicalLocation().getChromosome() ) );
+        }
+
+        if ( geneProduct.getPhysicalLocation() != null ) {
+            geneProduct.getPhysicalLocation().setChromosome(
+                    persistChromosome( geneProduct.getPhysicalLocation().getChromosome() ) );
+
+            // sanity check, as we've had this problem...somehow.
+            assert geneProduct.getPhysicalLocation().getChromosome().getTaxon().equals(
+                    geneProduct.getGene().getTaxon() );
+        }
+
+        if ( geneProduct.getExons() != null ) {
+            for ( PhysicalLocation exon : geneProduct.getExons() ) {
+                exon.setChromosome( persistChromosome( exon.getChromosome() ) );
+            }
+        }
     }
 
     /**
@@ -421,9 +430,16 @@ abstract public class GenomePersister extends CommonPersister {
 
         // We assume the taxon hasn't changed.
 
-        // FIXME Accessions: should add with more care. Cross-references from other databases should be preserved
-        existingGene.setAccessions( gene.getAccessions() );
-        this.persistCollectionElements( existingGene.getAccessions() );
+        Map<String, DatabaseEntry> updatedacMap = new HashMap<String, DatabaseEntry>();
+        for ( DatabaseEntry de : existingGene.getAccessions() ) {
+            updatedacMap.put( de.getAccession(), de );
+        }
+        for ( DatabaseEntry de : gene.getAccessions() ) {
+            if ( !updatedacMap.containsKey( de.getAccession() ) ) {
+                fillInDatabaseEntry( de );
+                existingGene.getAccessions().add( de );
+            }
+        }
 
         existingGene.setName( gene.getName() );
         existingGene.setDescription( gene.getDescription() );
@@ -448,18 +464,19 @@ abstract public class GenomePersister extends CommonPersister {
          */
         Map<String, GeneProduct> updatedGpMap = new HashMap<String, GeneProduct>();
         for ( GeneProduct gp : existingGene.getProducts() ) {
-            updatedGpMap.put( gp.getNcbiId(), gp );
+            updatedGpMap.put( gp.getName(), gp );
         }
 
         for ( GeneProduct possiblyNewProduct : gene.getProducts() ) {
-            if ( updatedGpMap.containsKey( possiblyNewProduct.getNcbiId() ) ) {
-                log.debug( "Updating gene product: " + possiblyNewProduct );
-                updateGeneProduct( updatedGpMap.get( possiblyNewProduct.getNcbiId() ), possiblyNewProduct );
+            if ( updatedGpMap.containsKey( possiblyNewProduct.getName() ) ) {
+                log.debug( "Updating gene product based on name: " + possiblyNewProduct );
+                updateGeneProduct( updatedGpMap.get( possiblyNewProduct.getName() ), possiblyNewProduct );
             } else {
                 // it is, in fact, new.
-                log.info( "New product for " + existingGene + ": " + possiblyNewProduct );
                 possiblyNewProduct.setGene( existingGene );
-                existingGene.getProducts().add( persistGeneProduct( possiblyNewProduct ) );
+                fillInGeneProductAssociations( possiblyNewProduct );
+                log.info( "New product for " + existingGene + ": " + possiblyNewProduct );
+                existingGene.getProducts().add( possiblyNewProduct );
             }
         }
 
@@ -496,19 +513,13 @@ abstract public class GenomePersister extends CommonPersister {
      * @return
      */
     private GeneProduct updateGeneProduct( GeneProduct existing, GeneProduct geneProduct ) {
-        // assert existing.getAuditTrail() != null : existing + " has no audit trail.";
         assert !isTransient( existing.getGene() );
-
-        assert existing.getNcbiId() == null || existing.getNcbiId().equals( geneProduct.getNcbiId() ) : "NCBI identifier for "
-                + geneProduct + " has changed";
 
         existing.setName( geneProduct.getName() );
         existing.setDescription( geneProduct.getDescription() );
+        existing.setNcbiId( geneProduct.getNcbiId() );
 
-        existing.setAccessions( geneProduct.getAccessions() );
-        if ( existing.getAccessions() != null ) {
-            this.persistCollectionElements( existing.getAccessions() );
-        }
+        addAnyNewAccessions( existing, geneProduct );
 
         existing.setCdsPhysicalLocation( geneProduct.getCdsPhysicalLocation() );
         if ( existing.getCdsPhysicalLocation() != null ) {
@@ -536,9 +547,26 @@ abstract public class GenomePersister extends CommonPersister {
             }
         }
 
-        geneProductService.update( existing );
+        // geneProductService.update( existing );
 
         return existing;
+    }
+
+    /**
+     * @param existing
+     * @param geneProduct
+     */
+    private void addAnyNewAccessions( GeneProduct existing, GeneProduct geneProduct ) {
+        Map<String, DatabaseEntry> updatedGpMap = new HashMap<String, DatabaseEntry>();
+        for ( DatabaseEntry de : existing.getAccessions() ) {
+            updatedGpMap.put( de.getAccession(), de );
+        }
+        for ( DatabaseEntry de : geneProduct.getAccessions() ) {
+            if ( !updatedGpMap.containsKey( de.getAccession() ) ) {
+                fillInDatabaseEntry( de );
+                existing.getAccessions().add( de );
+            }
+        }
     }
 
     /**

@@ -43,13 +43,9 @@ public class DatabaseEntryDaoImplTest extends BaseSpringContextTest {
         super.onSetUpInTransaction();
     }
 
-    /*
-     * Class under test for DatabaseEntry findOrCreate(DatabaseEntry)
-     */
-    public void testFindOrCreateDatabaseEntry() {
+    public void testCreateDatabaseEntry() {
         DatabaseEntry de = this.getTestPersistentDatabaseEntry();
-        databaseEntryDao.remove( de );
-        DatabaseEntry actualReturn = databaseEntryDao.findOrCreate( de );
+        DatabaseEntry actualReturn = databaseEntryDao.create( de );
         assertEquals( de.getAccession(), actualReturn.getAccession() );
     }
 
@@ -59,6 +55,7 @@ public class DatabaseEntryDaoImplTest extends BaseSpringContextTest {
      */
     public void testFindDatabaseEntry() {
         DatabaseEntry de = this.getTestPersistentDatabaseEntry();
+        databaseEntryDao.create( de );
         DatabaseEntry actualReturn = databaseEntryDao.find( de );
         assertEquals( de, actualReturn );
     }

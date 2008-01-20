@@ -22,8 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 
-import ubic.gemma.apps.Blat;
-import ubic.gemma.loader.genome.SimpleFastaCmd;
+import ubic.gemma.apps.Blat; 
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.util.ConfigUtils;
 

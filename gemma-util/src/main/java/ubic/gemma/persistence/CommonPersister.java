@@ -136,8 +136,6 @@ abstract public class CommonPersister extends AbstractPersister {
             return persistQuantitationType( ( QuantitationType ) entity );
         } else if ( entity instanceof ExternalDatabase ) {
             return persistExternalDatabase( ( ExternalDatabase ) entity );
-        } else if ( entity instanceof DatabaseEntry ) {
-            return persistDatabaseEntry( ( DatabaseEntry ) entity );
         } else if ( entity instanceof LocalFile ) {
             return persistLocalFile( ( LocalFile ) entity );
         } else if ( entity instanceof Software ) {
@@ -362,7 +360,7 @@ abstract public class CommonPersister extends AbstractPersister {
      * @return
      */
     protected Object persistBibliographicReference( BibliographicReference reference ) {
-        reference.setPubAccession( ( DatabaseEntry ) persist( reference.getPubAccession() ) );
+        fillInDatabaseEntry( reference.getPubAccession() );
         final BibliographicReference perReference = this.bibliographicReferenceService.findOrCreate( reference );
 
         // thaw - this is necessary to avoid lazy exceptions later, but perhaps could be done more elegantly!
@@ -388,17 +386,16 @@ abstract public class CommonPersister extends AbstractPersister {
 
     /**
      * @param databaseEntry
-     * @return
      */
-    protected DatabaseEntry persistDatabaseEntry( DatabaseEntry databaseEntry ) {
-        if ( databaseEntry == null ) return null;
+    protected void fillInDatabaseEntry( DatabaseEntry databaseEntry ) {
+        if ( !isTransient( databaseEntry ) ) return;
+        if ( databaseEntry == null ) return;
         ExternalDatabase tempExternalDb = databaseEntry.getExternalDatabase();
         databaseEntry.setExternalDatabase( null );
         ExternalDatabase persistedDb = persistExternalDatabase( tempExternalDb );
         databaseEntry.setExternalDatabase( persistedDb );
 
         assert databaseEntry.getExternalDatabase().getId() != null;
-        return databaseEntryService.findOrCreate( databaseEntry );
     }
 
     /**
@@ -416,9 +413,7 @@ abstract public class CommonPersister extends AbstractPersister {
         }
 
         database = externalDatabaseService.findOrCreate( database );
-
         seenDatabases.put( database.getName(), database );
-
         return database;
     }
 

@@ -22,6 +22,8 @@
  */
 package ubic.gemma.model.genome;
 
+import java.util.List;
+
 import org.hibernate.Criteria;
 
 import ubic.gemma.util.BusinessKey;
@@ -49,9 +51,9 @@ public class ChromosomeDaoImpl extends ubic.gemma.model.genome.ChromosomeDaoBase
             Object result = null;
             if ( results != null ) {
                 if ( results.size() > 1 ) {
-
+                    String details = debug( results );
                     throw new org.springframework.dao.InvalidDataAccessResourceUsageException( results.size() + " "
-                            + Chromosome.class.getName() + "s were found when executing query" );
+                            + Chromosome.class.getName() + "s were found when executing query\n" + details );
 
                 } else if ( results.size() == 1 ) {
                     result = results.iterator().next();
@@ -61,6 +63,14 @@ public class ChromosomeDaoImpl extends ubic.gemma.model.genome.ChromosomeDaoBase
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
+    }
+
+    private String debug( List results ) {
+        StringBuilder buf = new StringBuilder();
+        for ( Object object : results ) {
+            buf.append( object + "\n" );
+        }
+        return buf.toString();
     }
 
     @Override

@@ -91,32 +91,6 @@ public class NCBIGeneIntegrationTest extends BaseSpringContextTest {
         assertTrue( geneQueue.size() == 99 );
     }
 
-    /**
-     *  this test is too slow
-     * 
-     * @throws Exception
-     */
-    // public void testGeneConverterBigger() throws Exception {
-    // NcbiGeneLoader loader = new NcbiGeneLoader( persisterHelper );
-    //
-    // String geneInfoTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene_info.biggersample.gz";
-    // String gene2AccTestFile =
-    // "/gemma-core/src/test/resources/data/loader/genome/gene/gene2accession.biggersample.gz";
-    //
-    // // threaded load
-    // String basePath = ConfigUtils.getString( "gemma.home" );
-    // loader.load( basePath + geneInfoTestFile, basePath + gene2AccTestFile, false );
-    //
-    // while ( !loader.isLoaderDone() ) {
-    // Thread.sleep( 100 );
-    // }
-    //
-    // // loader is done.
-    // // check if it loaded elements to the database
-    // log.debug( "Loader done with number of elements: " + loader.getLoadedGeneCount() );
-    //        assertEquals( 1999, loader.getLoadedGeneCount() );
-    //    }
-
     @SuppressWarnings("unchecked")
     public void testGeneLoader() throws Exception {
         GeneService geneService = ( GeneService ) getBean( "geneService" );

@@ -66,9 +66,4 @@ public class DatabaseEntryServiceImpl extends ubic.gemma.model.common.descriptio
         this.getDatabaseEntryDao().remove( databaseEntry );
     }
 
-    @Override
-    protected DatabaseEntry handleFindOrCreate( DatabaseEntry databaseEntry ) throws Exception {
-        return this.getDatabaseEntryDao().findOrCreate( databaseEntry );
-    }
-
 }

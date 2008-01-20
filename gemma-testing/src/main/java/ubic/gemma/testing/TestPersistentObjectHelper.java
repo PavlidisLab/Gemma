@@ -529,7 +529,6 @@ public class TestPersistentObjectHelper {
         }
 
         result.setExternalDatabase( ed );
-        result = ( DatabaseEntry ) persisterHelper.persist( result );
         return result;
     }
 

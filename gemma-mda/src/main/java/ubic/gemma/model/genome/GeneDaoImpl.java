@@ -527,6 +527,10 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 Hibernate.initialize( gene );
                 session.lock( gene, LockMode.NONE );
                 gene.getProducts().size();
+                for ( ubic.gemma.model.genome.gene.GeneProduct gp : gene.getProducts() ) {
+                    gp.getAccessions().size();
+                    if ( gp.getPhysicalLocation() != null ) gp.getPhysicalLocation().getChromosome().getName();
+                }
                 gene.getAliases().size();
                 gene.getAccessions().size();
                 return null;

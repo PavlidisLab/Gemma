@@ -49,7 +49,7 @@ public class DatabaseEntryDaoImpl extends ubic.gemma.model.common.description.Da
         Object result = null;
         if ( results != null ) {
             if ( results.size() > 1 ) {
-                log.error( debug( results ) );
+                log.debug( debug( results ) );
                 result = results.iterator().next();
             } else if ( results.size() == 1 ) {
                 result = results.iterator().next();
@@ -81,16 +81,4 @@ public class DatabaseEntryDaoImpl extends ubic.gemma.model.common.description.Da
         return buf.toString();
     }
 
-    @Override
-    public DatabaseEntry findOrCreate( DatabaseEntry databaseEntry ) {
-        if ( databaseEntry == null || databaseEntry.getAccession() == null
-                || databaseEntry.getExternalDatabase() == null ) {
-            throw new IllegalArgumentException( "No valid business key for " + databaseEntry );
-        }
-        DatabaseEntry newDatabaseEntry = find( databaseEntry );
-        if ( newDatabaseEntry != null ) {
-            return newDatabaseEntry;
-        }
-        return create( databaseEntry );
-    }
 }

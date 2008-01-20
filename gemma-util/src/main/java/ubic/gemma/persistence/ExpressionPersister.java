@@ -324,7 +324,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         assert entity.getSourceTaxon() != null;
 
-        entity.setExternalAccession( persistDatabaseEntry( entity.getExternalAccession() ) );
+        fillInDatabaseEntry( entity.getExternalAccession() );
         entity.setSourceTaxon( persistTaxon( entity.getSourceTaxon() ) );
 
         for ( Treatment treatment : entity.getTreatments() ) {
@@ -407,7 +407,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         persistCollectionElements( expExp.getInvestigators() );
 
         if ( expExp.getAccession() != null ) {
-            expExp.setAccession( persistDatabaseEntry( expExp.getAccession() ) );
+            fillInDatabaseEntry( expExp.getAccession() );
         }
 
         // this has to come first and be persisted, so our factorvalues get persisted before we process the bioassays.

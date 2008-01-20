@@ -387,7 +387,6 @@
                 ubic.gemma.model.common.description.LocalFileService.update=user,admin 
                 ubic.gemma.model.common.description.LocalFileService.findOrCreate=user,admin
                 ubic.gemma.model.common.description.DatabaseEntryService.find=user,admin,ROLE_ANONYMOUS 
-                ubic.gemma.model.common.description.DatabaseEntryService.findOrCreate=user,admin
                 ubic.gemma.model.common.description.DatabaseEntryService.update=user,admin 
                 ubic.gemma.model.common.description.DatabaseEntryService.remove=user,admin
                 ubic.gemma.model.common.auditAndSecurity.PersonService.create=user,admin 
