@@ -144,7 +144,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
 
             if ( !needToRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignGeneMappingEvent.class ) ) {
-                log.warn( arrayDesign + " was last run more recently than " + skipIfLastRunLaterThan );
+                log.warn( arrayDesign + " not ready to run" );
                 return null;
             }
 

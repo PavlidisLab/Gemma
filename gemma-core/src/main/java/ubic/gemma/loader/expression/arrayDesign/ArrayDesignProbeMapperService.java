@@ -58,7 +58,7 @@ import ubic.gemma.persistence.PersisterHelper;
  */
 public class ArrayDesignProbeMapperService {
 
-    private static final int QUEUE_SIZE = 2000;
+    private static final int QUEUE_SIZE = 20000;
 
     private static Log log = LogFactory.getLog( ArrayDesignProbeMapperService.class.getName() );
 

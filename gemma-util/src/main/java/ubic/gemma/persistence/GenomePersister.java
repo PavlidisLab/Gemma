@@ -281,7 +281,7 @@ abstract public class GenomePersister extends CommonPersister {
             return existingGene;
         }
 
-        log.info( "New gene: " + gene );
+        log.debug( "New gene: " + gene );
 
         if ( gene.getAccessions().size() > 0 ) {
             for ( DatabaseEntry de : gene.getAccessions() ) {
@@ -425,7 +425,7 @@ abstract public class GenomePersister extends CommonPersister {
             return persistGene( gene );
         }
 
-        log.info( "Updating " + existingGene );
+        log.debug( "Updating " + existingGene );
 
         // updated gene products.
         geneService.thaw( existingGene );
@@ -480,7 +480,7 @@ abstract public class GenomePersister extends CommonPersister {
                 // it is, in fact, new.
                 possiblyNewProduct.setGene( existingGene );
                 fillInGeneProductAssociations( possiblyNewProduct );
-                log.info( "New product for " + existingGene + ": " + possiblyNewProduct );
+                log.debug( "New product for " + existingGene + ": " + possiblyNewProduct );
                 existingGene.getProducts().add( possiblyNewProduct );
             }
         }
