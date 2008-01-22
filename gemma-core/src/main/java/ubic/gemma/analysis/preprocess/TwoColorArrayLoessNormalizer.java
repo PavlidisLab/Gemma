@@ -37,11 +37,12 @@ public class TwoColorArrayLoessNormalizer extends MarrayNormalizer implements Tw
      *      baseCode.dataStructure.matrix.DoubleMatrixNamed, baseCode.dataStructure.matrix.DoubleMatrixNamed,
      *      baseCode.dataStructure.matrix.DoubleMatrixNamed, baseCode.dataStructure.matrix.DoubleMatrixNamed)
      */
-    public DoubleMatrixNamed normalize( DoubleMatrixNamed channelOneSignal, DoubleMatrixNamed channelTwoSignal,
-            DoubleMatrixNamed channelOneBackground, DoubleMatrixNamed channelTwoBackground, DoubleMatrixNamed weights ) {
+    public DoubleMatrixNamed<String, String> normalize( DoubleMatrixNamed<String, String> channelOneSignal,
+            DoubleMatrixNamed<String, String> channelTwoSignal, DoubleMatrixNamed<String, String> channelOneBackground,
+            DoubleMatrixNamed<String, String> channelTwoBackground, DoubleMatrixNamed<String, String> weights ) {
         log.debug( "normalizing..." );
-        DoubleMatrixNamed resultObject = normalize( channelOneSignal, channelTwoSignal, channelOneBackground,
-                channelTwoBackground, weights, "loess" );
+        DoubleMatrixNamed<String, String> resultObject = normalize( channelOneSignal, channelTwoSignal,
+                channelOneBackground, channelTwoBackground, weights, "loess" );
         return resultObject;
     }
 
@@ -51,9 +52,10 @@ public class TwoColorArrayLoessNormalizer extends MarrayNormalizer implements Tw
      * @see ubic.gemma.analysis.preprocess.TwoChannelNormalizer#normalize(baseCode.dataStructure.matrix.DoubleMatrixNamed,
      *      baseCode.dataStructure.matrix.DoubleMatrixNamed)
      */
-    public DoubleMatrixNamed normalize( DoubleMatrixNamed channelOneSignal, DoubleMatrixNamed channelTwoSignal ) {
+    public DoubleMatrixNamed<String, String> normalize( DoubleMatrixNamed<String, String> channelOneSignal,
+            DoubleMatrixNamed<String, String> channelTwoSignal ) {
         log.debug( "normalizing..." );
-        DoubleMatrixNamed resultObject = normalize( channelOneSignal, channelTwoSignal, "loess" );
+        DoubleMatrixNamed<String, String> resultObject = normalize( channelOneSignal, channelTwoSignal, "loess" );
         return resultObject;
     }
 }

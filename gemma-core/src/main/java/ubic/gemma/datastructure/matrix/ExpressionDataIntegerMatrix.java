@@ -29,7 +29,7 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix {
 
     private static Log log = LogFactory.getLog( ExpressionDataIntegerMatrix.class.getName() );
 
-    private IntegerMatrix2DNamed matrix;
+    private IntegerMatrix2DNamed<DesignElement, Integer> matrix;
 
     public ExpressionDataIntegerMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
 
@@ -197,11 +197,13 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix {
      * @param maxSize
      * @return DoubleMatrixNamed
      */
-    private IntegerMatrix2DNamed createMatrix( Collection<DesignElementDataVector> vectors, int maxSize ) {
+    private IntegerMatrix2DNamed<DesignElement, Integer> createMatrix( Collection<DesignElementDataVector> vectors,
+            int maxSize ) {
 
         int numRows = this.rowDesignElementMapByInteger.keySet().size();
 
-        IntegerMatrix2DNamed matrix = new IntegerMatrix2DNamed( numRows, maxSize );
+        IntegerMatrix2DNamed<DesignElement, Integer> matrix = new IntegerMatrix2DNamed<DesignElement, Integer>(
+                numRows, maxSize );
 
         for ( int j = 0; j < matrix.columns(); j++ ) {
             matrix.addColumnName( j );
@@ -223,7 +225,7 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix {
             Integer rowIndex = this.rowElementMap.get( designElement );
             assert rowIndex != null;
 
-            matrix.addRowName( rowIndex );
+            matrix.addRowName( designElement );
 
             byte[] bytes = vector.getData();
             int[] vals = bac.byteArrayToInts( bytes );

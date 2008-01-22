@@ -163,7 +163,7 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix {
 
         int numRows = this.rowDesignElementMapByInteger.keySet().size();
 
-        StringMatrix2DNamed matrix = new StringMatrix2DNamed( numRows, maxSize );
+        StringMatrix2DNamed<Integer, Integer> matrix = new StringMatrix2DNamed<Integer, Integer>( numRows, maxSize );
 
         for ( int j = 0; j < matrix.columns(); j++ ) {
             matrix.addColumnName( j );

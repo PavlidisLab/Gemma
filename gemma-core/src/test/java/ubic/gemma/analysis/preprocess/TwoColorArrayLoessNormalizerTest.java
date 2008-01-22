@@ -71,16 +71,20 @@ public class TwoColorArrayLoessNormalizerTest extends TestCase {
             return;
         }
         DoubleMatrixReader reader = new DoubleMatrixReader();
-        DoubleMatrixNamed maGb = ( DoubleMatrixNamed ) reader.read( new GZIPInputStream( this.getClass()
-                .getResourceAsStream( "/data/swirldata/maGb.small.sample.txt.gz" ) ) );
-        DoubleMatrixNamed maGf = ( DoubleMatrixNamed ) reader.read( new GZIPInputStream( this.getClass()
-                .getResourceAsStream( "/data/swirldata/maGf.small.sample.txt.gz" ) ) );
-        DoubleMatrixNamed maRb = ( DoubleMatrixNamed ) reader.read( new GZIPInputStream( this.getClass()
-                .getResourceAsStream( "/data/swirldata/maRb.small.sample.txt.gz" ) ) );
-        DoubleMatrixNamed maRf = ( DoubleMatrixNamed ) reader.read( new GZIPInputStream( this.getClass()
-                .getResourceAsStream( "/data/swirldata/maRf.small.sample.txt.gz" ) ) );
+        DoubleMatrixNamed<String, String> maGb = ( DoubleMatrixNamed<String, String> ) reader
+                .read( new GZIPInputStream( this.getClass().getResourceAsStream(
+                        "/data/swirldata/maGb.small.sample.txt.gz" ) ) );
+        DoubleMatrixNamed<String, String> maGf = ( DoubleMatrixNamed<String, String> ) reader
+                .read( new GZIPInputStream( this.getClass().getResourceAsStream(
+                        "/data/swirldata/maGf.small.sample.txt.gz" ) ) );
+        DoubleMatrixNamed<String, String> maRb = ( DoubleMatrixNamed<String, String> ) reader
+                .read( new GZIPInputStream( this.getClass().getResourceAsStream(
+                        "/data/swirldata/maRb.small.sample.txt.gz" ) ) );
+        DoubleMatrixNamed<String, String> maRf = ( DoubleMatrixNamed<String, String> ) reader
+                .read( new GZIPInputStream( this.getClass().getResourceAsStream(
+                        "/data/swirldata/maRf.small.sample.txt.gz" ) ) );
         assert maRf != null && maGf != null && maRb != null && maGb != null;
-        DoubleMatrixNamed result = normalizer.normalize( maRf, maGf, maRb, maGb, null );
+        DoubleMatrixNamed<String, String> result = normalizer.normalize( maRf, maGf, maRb, maGb, null );
 
         assertEquals( 100, result.rows() );
         assertEquals( 4, result.columns() );
@@ -94,10 +98,12 @@ public class TwoColorArrayLoessNormalizerTest extends TestCase {
             return;
         }
         DoubleMatrixReader reader = new DoubleMatrixReader();
-        DoubleMatrixNamed maRf = ( DoubleMatrixNamed ) reader.read( new GZIPInputStream( this.getClass()
-                .getResourceAsStream( "/data/swirldata/maRf.small.sample.txt.gz" ) ) );
-        DoubleMatrixNamed maGf = ( DoubleMatrixNamed ) reader.read( new GZIPInputStream( this.getClass()
-                .getResourceAsStream( "/data/swirldata/maGf.small.sample.txt.gz" ) ) );
+        DoubleMatrixNamed<String, String> maRf = ( DoubleMatrixNamed<String, String> ) reader
+                .read( new GZIPInputStream( this.getClass().getResourceAsStream(
+                        "/data/swirldata/maRf.small.sample.txt.gz" ) ) );
+        DoubleMatrixNamed<String, String> maGf = ( DoubleMatrixNamed<String, String> ) reader
+                .read( new GZIPInputStream( this.getClass().getResourceAsStream(
+                        "/data/swirldata/maGf.small.sample.txt.gz" ) ) );
 
         assert maRf != null && maGf != null;
 

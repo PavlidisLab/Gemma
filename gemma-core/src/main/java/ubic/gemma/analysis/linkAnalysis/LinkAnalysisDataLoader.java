@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2008 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package ubic.gemma.analysis.linkAnalysis;
 
 import java.io.BufferedWriter;
@@ -25,7 +43,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class LinkAnalysisDataLoader extends ExpressionDataLoader {
 
-    private DoubleMatrixNamed dataMatrix = null;
+    private DoubleMatrixNamed<String, String> dataMatrix = null;
 
     public LinkAnalysisDataLoader( ExpressionExperiment paraExpressionExperiment, String goFile ) {
         super( paraExpressionExperiment, goFile );
@@ -34,8 +52,8 @@ public class LinkAnalysisDataLoader extends ExpressionDataLoader {
     }
 
     private void filter() {
-        Filter x = new AffymetrixProbeNameFilter();
-        DoubleMatrixNamed r = ( DoubleMatrixNamed ) x.filter( this.dataMatrix );
+        Filter<String, String> x = new AffymetrixProbeNameFilter<String, String>();
+        DoubleMatrixNamed<String, String> r = ( DoubleMatrixNamed<String, String> ) x.filter( this.dataMatrix );
         this.dataMatrix = r;
         System.err.println( this.dataMatrix );
         this.uniqueItems = this.dataMatrix.rows();
@@ -69,7 +87,7 @@ public class LinkAnalysisDataLoader extends ExpressionDataLoader {
         }
     }
 
-    private DoubleMatrixNamed vectorsToDoubleMatrix( Collection<DesignElementDataVector> vectors ) {
+    private DoubleMatrixNamed<String, String> vectorsToDoubleMatrix( Collection<DesignElementDataVector> vectors ) {
         if ( vectors == null || vectors.size() == 0 ) {
             return null;
         }
@@ -80,7 +98,8 @@ public class LinkAnalysisDataLoader extends ExpressionDataLoader {
 
         assert bioAssays.size() > 0 : "Empty BioAssayDimension for the vectors";
 
-        DoubleMatrixNamed matrix = DoubleMatrix2DNamedFactory.fastrow( vectors.size(), bioAssays.size() );
+        DoubleMatrixNamed<String, String> matrix = DoubleMatrix2DNamedFactory
+                .fastrow( vectors.size(), bioAssays.size() );
 
         // Use BioMaterial names to represent the column in the matrix (as it can span multiple BioAssays)
         for ( BioAssay assay : bioAssays ) {

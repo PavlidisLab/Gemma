@@ -96,7 +96,8 @@ public class ExpressionAnalysisCLI extends AbstractGeneCoexpressionManipulatingC
      */
     @SuppressWarnings("unchecked")
     private DenseDoubleMatrix2DNamed getRankMatrix( Collection<Gene> genes, Collection<ExpressionExperiment> ees ) {
-        DenseDoubleMatrix2DNamed matrix = new DenseDoubleMatrix2DNamed( genes.size(), ees.size() );
+        DenseDoubleMatrix2DNamed<Gene, ExpressionExperiment> matrix = new DenseDoubleMatrix2DNamed<Gene, ExpressionExperiment>(
+                genes.size(), ees.size() );
         for ( int i = 0; i < matrix.rows(); i++ ) {
             for ( int j = 0; j < matrix.columns(); j++ ) {
                 matrix.set( i, j, Double.NaN );

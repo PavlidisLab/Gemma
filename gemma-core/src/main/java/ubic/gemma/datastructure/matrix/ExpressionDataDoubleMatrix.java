@@ -27,7 +27,7 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
+import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -52,7 +52,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
     private static final long serialVersionUID = 1L;
     private static final int MAX_ROWS_TO_STRING = 100;
     private static Log log = LogFactory.getLog( ExpressionDataDoubleMatrix.class.getName() );
-    private DoubleMatrixNamed matrix;
+    private DoubleMatrixNamed<DesignElement, Integer> matrix;
 
     /**
      * To comply with bean specifications. Not to be instantiated.
@@ -367,11 +367,13 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
      * @param maxSize
      * @return DoubleMatrixNamed
      */
-    private DoubleMatrixNamed createMatrix( Collection<DesignElementDataVector> vectors, int maxSize ) {
+    private DoubleMatrixNamed<DesignElement, Integer> createMatrix( Collection<DesignElementDataVector> vectors,
+            int maxSize ) {
 
         int numRows = this.rowDesignElementMapByInteger.keySet().size();
 
-        DoubleMatrixNamed matrix = DoubleMatrix2DNamedFactory.fastrow( numRows, maxSize );
+        DoubleMatrixNamed<DesignElement, Integer> matrix = new DenseDoubleMatrix2DNamed<DesignElement, Integer>(
+                numRows, maxSize );
 
         for ( int j = 0; j < matrix.columns(); j++ ) {
             matrix.addColumnName( j );
@@ -393,9 +395,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
             Integer rowIndex = this.rowElementMap.get( designElement );
             assert rowIndex != null;
 
-            // Rows are indexed by the underlying designElement.
-            // if ( log.isTraceEnabled() ) log.trace( "Adding row " + rowIndex );
-            matrix.addRowName( rowIndex );
+            matrix.addRowName( designElement );
 
             byte[] bytes = vector.getData();
             double[] vals = bac.byteArrayToDoubles( bytes );
@@ -470,7 +470,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         this.columnBioMaterialMap = sourceMatrix.columnBioMaterialMap;
         this.columnBioMaterialMapByInteger = sourceMatrix.columnBioMaterialMapByInteger;
 
-        this.matrix = DoubleMatrix2DNamedFactory.fastrow( rowsToUse.size(), sourceMatrix.columns() );
+        this.matrix = new DenseDoubleMatrix2DNamed<DesignElement, Integer>( rowsToUse.size(), sourceMatrix.columns() );
 
         log.info( "Creating a filtered matrix " + rowsToUse.size() + " x " + sourceMatrix.columns() );
 

@@ -70,8 +70,7 @@ public class MatrixWriter<T> {
             CompositeSequence probeForRow = ( CompositeSequence ) matrix.getDesignElementForRow( j );
             buf.append( probeForRow.getName() );
             if ( writeSequence ) {
-                BioSequence biologicalCharacteristic = ( ( CompositeSequence ) probeForRow )
-                        .getBiologicalCharacteristic();
+                BioSequence biologicalCharacteristic = probeForRow.getBiologicalCharacteristic();
                 if ( biologicalCharacteristic != null ) buf.append( "\t" + biologicalCharacteristic.getName() );
             }
 

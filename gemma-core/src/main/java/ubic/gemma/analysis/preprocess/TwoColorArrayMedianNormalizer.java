@@ -37,8 +37,9 @@ public class TwoColorArrayMedianNormalizer extends MarrayNormalizer implements T
      *      baseCode.dataStructure.matrix.DoubleMatrixNamed, baseCode.dataStructure.matrix.DoubleMatrixNamed,
      *      baseCode.dataStructure.matrix.DoubleMatrixNamed, baseCode.dataStructure.matrix.DoubleMatrixNamed)
      */
-    public DoubleMatrixNamed normalize( DoubleMatrixNamed channelOneSignal, DoubleMatrixNamed channelTwoSignal,
-            DoubleMatrixNamed channelOneBackground, DoubleMatrixNamed channelTwoBackground, DoubleMatrixNamed weights ) {
+    public DoubleMatrixNamed<String, String> normalize( DoubleMatrixNamed<String, String> channelOneSignal,
+            DoubleMatrixNamed<String, String> channelTwoSignal, DoubleMatrixNamed<String, String> channelOneBackground,
+            DoubleMatrixNamed<String, String> channelTwoBackground, DoubleMatrixNamed<String, String> weights ) {
         log.debug( "normalizing..." );
         DoubleMatrixNamed resultObject = normalize( channelOneSignal, channelTwoSignal, channelOneBackground,
                 channelTwoBackground, weights, "median" );
@@ -51,9 +52,10 @@ public class TwoColorArrayMedianNormalizer extends MarrayNormalizer implements T
      * @see ubic.gemma.analysis.preprocess.TwoChannelNormalizer#normalize(baseCode.dataStructure.matrix.DoubleMatrixNamed,
      *      baseCode.dataStructure.matrix.DoubleMatrixNamed)
      */
-    public DoubleMatrixNamed normalize( DoubleMatrixNamed channelOneSignal, DoubleMatrixNamed channelTwoSignal ) {
+    public DoubleMatrixNamed<String, String> normalize( DoubleMatrixNamed<String, String> channelOneSignal,
+            DoubleMatrixNamed<String, String> channelTwoSignal ) {
         log.debug( "normalizing..." );
-        DoubleMatrixNamed resultObject = normalize( channelOneSignal, channelTwoSignal, "median" );
+        DoubleMatrixNamed<String, String> resultObject = normalize( channelOneSignal, channelTwoSignal, "median" );
         return resultObject;
     }
 

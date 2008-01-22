@@ -135,7 +135,7 @@ public class LinkMatrix {
      */
     private int shift = 50000; // to encode two geneid into one long id
 
-    private CompressedNamedBitMatrix linkCountMatrix = null;
+    private CompressedNamedBitMatrix<Long, Long> linkCountMatrix = null;
 
     private Map<Long, Integer> eeIndexMap = null;
     private Map<Integer, ExpressionExperiment> eeMap = null;
@@ -198,7 +198,7 @@ public class LinkMatrix {
                     log.info( mesg );
                     throw new IOException( mesg );
                 }
-                linkCountMatrix = new CompressedNamedBitMatrix( Integer.valueOf( subItems[0] ), Integer
+                linkCountMatrix = new CompressedNamedBitMatrix<Long, Long>( Integer.valueOf( subItems[0] ), Integer
                         .valueOf( subItems[1] ), Integer.valueOf( subItems[2] ) );
                 hasConfig = true;
             } else if ( !hasRowNames ) {
@@ -489,8 +489,8 @@ public class LinkMatrix {
      */
     public void init( Collection<ExpressionExperiment> ees, Collection<Gene> targetGenes,
             Collection<Gene> coExpressedGenes ) {
-        CompressedNamedBitMatrix linkCount = new CompressedNamedBitMatrix( targetGenes.size(), coExpressedGenes.size(),
-                ees.size() );
+        CompressedNamedBitMatrix<Long, Long> linkCount = new CompressedNamedBitMatrix<Long, Long>( targetGenes.size(),
+                coExpressedGenes.size(), ees.size() );
         for ( Gene geneIter : targetGenes ) {
             linkCount.addRowName( geneIter.getId() );
         }
@@ -641,7 +641,7 @@ public class LinkMatrix {
 
     // The following codes for testing matrix and output
     public void testBitMatrix() {
-        CompressedNamedBitMatrix matrix = new CompressedNamedBitMatrix( 21, 11, 125 );
+        CompressedNamedBitMatrix<Long, Long> matrix = new CompressedNamedBitMatrix<Long, Long>( 21, 11, 125 );
         for ( int i = 0; i < 21; i++ )
             matrix.addRowName( new Long( i ) );
         for ( int i = 0; i < 11; i++ )

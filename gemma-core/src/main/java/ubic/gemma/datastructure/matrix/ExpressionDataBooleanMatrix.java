@@ -44,7 +44,7 @@ import cern.colt.matrix.ObjectMatrix1D;
 public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
 
     private static final long serialVersionUID = 1L;
-    private ObjectMatrix2DNamed matrix;
+    private ObjectMatrix2DNamed<DesignElement, Integer> matrix;
 
     /**
      * @param expressionExperiment
@@ -90,8 +90,10 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
      * @param maxSize
      * @return
      */
-    private ObjectMatrix2DNamed createMatrix( Collection<DesignElementDataVector> vectors, int maxSize ) {
-        ObjectMatrix2DNamed matrix = new ObjectMatrix2DNamed( vectors.size(), maxSize );
+    private ObjectMatrix2DNamed<DesignElement, Integer> createMatrix( Collection<DesignElementDataVector> vectors,
+            int maxSize ) {
+        ObjectMatrix2DNamed<DesignElement, Integer> matrix = new ObjectMatrix2DNamed<DesignElement, Integer>( vectors
+                .size(), maxSize );
 
         // initialize the matrix to false
         for ( int i = 0; i < matrix.rows(); i++ ) {

@@ -46,7 +46,7 @@ public class MArrayRaw extends RCommander {
      * @param green Matrix of green channel intensities
      * @return
      */
-    public String makeMArrayRaw( DoubleMatrixNamed red, DoubleMatrixNamed green ) {
+    public String makeMArrayRaw( DoubleMatrixNamed<String, String> red, DoubleMatrixNamed<String, String> green ) {
         return this.makeMArrayRaw( red, green, null, null, null );
     }
 
@@ -59,8 +59,9 @@ public class MArrayRaw extends RCommander {
      * @return The name of the variable in the R context.
      */
     @SuppressWarnings("unchecked")
-    public String makeMArrayRaw( DoubleMatrixNamed red, DoubleMatrixNamed green, DoubleMatrixNamed redBg,
-            DoubleMatrixNamed greenBg, DoubleMatrixNamed weights ) {
+    public String makeMArrayRaw( DoubleMatrixNamed<String, String> red, DoubleMatrixNamed<String, String> green,
+            DoubleMatrixNamed<String, String> redBg, DoubleMatrixNamed<String, String> greenBg,
+            DoubleMatrixNamed<String, String> weights ) {
 
         if ( red == null || green == null ) throw new IllegalArgumentException( "Signal matrices must not be null" );
 

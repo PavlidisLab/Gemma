@@ -51,8 +51,8 @@ public class LinkStatistics {
      * Gene-by-gene matrix
      */
     private Collection<Gene> genes;
-    private CompressedNamedBitMatrix posLinkCounts = null;
-    private CompressedNamedBitMatrix negLinkCounts = null;
+    private CompressedNamedBitMatrix<Long, Long> posLinkCounts = null;
+    private CompressedNamedBitMatrix<Long, Long> negLinkCounts = null;
     // private int totalLinks = 0;
     private Set<Long> geneCoverage = new HashSet<Long>();
 
@@ -77,8 +77,9 @@ public class LinkStatistics {
      * @param genes
      * @return
      */
-    public CompressedNamedBitMatrix initMatrix( Collection<ExpressionExperiment> ees, Collection<Gene> genes ) {
-        CompressedNamedBitMatrix linkCount = new CompressedNamedBitMatrix( genes.size(), genes.size(), ees.size() );
+    public CompressedNamedBitMatrix<Long, Long> initMatrix( Collection<ExpressionExperiment> ees, Collection<Gene> genes ) {
+        CompressedNamedBitMatrix<Long, Long> linkCount = new CompressedNamedBitMatrix<Long, Long>( genes.size(), genes
+                .size(), ees.size() );
         for ( Gene geneIter : genes ) {
             linkCount.addRowName( geneIter.getId() );
         }

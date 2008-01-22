@@ -20,7 +20,8 @@ package ubic.gemma.model.common.auditAndSecurity;
 
 import java.util.List;
 
-import ubic.gemma.model.common.Auditable;
+import org.apache.commons.lang.RandomStringUtils;
+
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEventImpl;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -33,18 +34,19 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class AuditTrailServiceImplTest extends BaseSpringContextTest {
 
-    Auditable auditable;
+    ArrayDesign auditable;
     AuditTrailService auditTrailService;
     private int size;
 
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
+        endTransaction();
         auditable = ArrayDesign.Factory.newInstance();
-        auditable.setName( "testing audit" );
+        auditable.setName( "testing audit " + RandomStringUtils.randomAlphanumeric( 32 ) );
+        auditable.setShortName( RandomStringUtils.randomAlphanumeric( 8 ) );
         auditable = ( ArrayDesign ) this.persisterHelper.persist( auditable );
         auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
-        endTransaction();
         size = auditable.getAuditTrail().getEvents().size();
     }
 
@@ -58,9 +60,10 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         AuditEventType f = ArrayDesignGeneMappingEvent.Factory.newInstance();
         AuditEvent ev = auditTrailService.addUpdateEvent( auditable, f, "nothing special, just testing" );
         assertNotNull( ev.getId() );
-        assertEquals( size + 1, auditable.getAuditTrail().getEvents().size() );
-        assertEquals( ArrayDesignGeneMappingEventImpl.class, ( ( List<AuditEvent> ) auditable.getAuditTrail()
-                .getEvents() ).get( 2 ).getEventType().getClass() );
+        AuditTrail auditTrail = auditable.getAuditTrail();
+        assertEquals( size + 1, auditTrail.getEvents().size() );
+        assertEquals( ArrayDesignGeneMappingEventImpl.class, ( ( List<AuditEvent> ) auditTrail.getEvents() ).get( size )
+                .getEventType().getClass() );
     }
 
 }
