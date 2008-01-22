@@ -76,20 +76,17 @@ public class DifferentialExpressionSearchController extends SimpleFormController
      */
     @Override
     protected Object formBackingObject( HttpServletRequest request ) {
+        /* enter on a GET */
 
-        Long id = null;
-        try {
-            id = Long.parseLong( request.getParameter( "id" ) );
-        } catch ( NumberFormatException e ) {
-            throw new RuntimeException( "Id was not valid Long integer", e );
-        }
+        String stringId = null;
 
         Gene g = null;
         DiffExpressionSearchCommand diffCommand = new DiffExpressionSearchCommand();
 
-        id = Long.parseLong( request.getParameter( "id" ) );
+        stringId = request.getParameter( "id" );
 
-        if ( id != null && StringUtils.isNotBlank( id.toString() ) ) {
+        if ( StringUtils.isNotBlank( stringId ) ) {
+            Long id = Long.parseLong( stringId );
             g = geneService.load( id );
             diffCommand.setGeneId( g.getId() );
             diffCommand.setGeneOfficialSymbol( g.getOfficialSymbol() );
@@ -132,7 +129,7 @@ public class DifferentialExpressionSearchController extends SimpleFormController
         }
 
         /* If we've come this far, we have a cookie but not one that matches COOKIE_NAME. Provide friendly defaults. */
-        diffSearchCommand.setGeneOfficialSymbol( "<gene symbol>" );
+        diffSearchCommand.setGeneOfficialSymbol( "<gene sym>" );
 
         return diffSearchCommand;
     }
@@ -146,6 +143,7 @@ public class DifferentialExpressionSearchController extends SimpleFormController
     @SuppressWarnings("unchecked")
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
+        /* enter on a POST */
 
         DiffExpressionSearchCommand diffCommand = ( ( DiffExpressionSearchCommand ) command );
 
