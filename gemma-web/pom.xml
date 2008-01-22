@@ -271,12 +271,6 @@
 			<type>jar</type>
 		</dependency>
 		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-			<version>1.2.13</version>
-			<type>jar</type>
-		</dependency>
-		<dependency>
 			<groupId>javax.activation</groupId>
 			<artifactId>activation</artifactId>
 			<version>1.0.2</version>
@@ -313,13 +307,6 @@
 			<version>2.0</version>
 			<type>jar</type>
 			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>3.8.1</version>
-			<type>jar</type>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>jetty</groupId>
@@ -360,33 +347,33 @@
 			<classifier>jdk15</classifier>
 			<type>jar</type>
 		</dependency>
- 		<dependency>
-	        <groupId>org.springframework.ws</groupId>
-	        <artifactId>spring-ws-core</artifactId>
-	        <version>1.0.3</version>
-	    </dependency>
-	    <dependency>
-	        <groupId>jdom</groupId>
-	        <artifactId>jdom</artifactId>
-	        <version>1.0</version>
-	    </dependency>
-	    <dependency>
-	        <groupId>jaxen</groupId>
-	        <artifactId>jaxen</artifactId>
-	        <version>1.1</version>
-	    </dependency>
-	    <dependency>
-	        <groupId>javax.xml.soap</groupId>
-	        <artifactId>saaj-api</artifactId>
-	        <version>1.3</version>
-	        <scope>runtime</scope>
-	    </dependency>
-	    <dependency>
-	        <groupId>com.sun.xml.messaging.saaj</groupId>
-	        <artifactId>saaj-impl</artifactId>
-	        <version>1.3</version>
-	        <scope>runtime</scope>
-	    </dependency>				
+		<dependency>
+			<groupId>org.springframework.ws</groupId>
+			<artifactId>spring-ws-core</artifactId>
+			<version>1.0.3</version>
+		</dependency>
+		<dependency>
+			<groupId>jdom</groupId>
+			<artifactId>jdom</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>jaxen</groupId>
+			<artifactId>jaxen</artifactId>
+			<version>1.1</version>
+		</dependency>
+		<dependency>
+			<groupId>javax.xml.soap</groupId>
+			<artifactId>saaj-api</artifactId>
+			<version>1.3</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.sun.xml.messaging.saaj</groupId>
+			<artifactId>saaj-impl</artifactId>
+			<version>1.3</version>
+			<scope>runtime</scope>
+		</dependency>
 	</dependencies>
 	<build>
 		<directory>target</directory>
@@ -462,26 +449,23 @@
 							<tasks>
 								<springdoclet destdir="${project.build.directory}/Gemma/WEB-INF"
 									mergeDir="${basedir}/src/conf/xdoclet-merge" validating="false" force="false">
-									<fileset dir="${basedir}/src/main/java" includes="**/*.java"/>
+									<fileset dir="${basedir}/src/main/java" includes="**/*.java" />
 									<springxml destDir="${project.build.directory}/Gemma/WEB-INF"
-										destinationFile="action-servlet.xml" mergeDir="${basedir}/src/conf/xdoclet-merge"
-										useIds="true"/>
+										destinationFile="action-servlet.xml" mergeDir="${basedir}/src/conf/xdoclet-merge" useIds="true" />
 									<!-- templateFile="${basedir}/src/conf/springdoclet-custom-template.xdt" -->
 								</springdoclet>
 								<webdoclet destdir="${project.build.directory}/Gemma/WEB-INF"
 									mergeDir="${basedir}/src/conf/xdoclet-merge" force="false">
-									<fileset dir="${basedir}/src/main/java" includes="**/*.java"/>
+									<fileset dir="${basedir}/src/main/java" includes="**/*.java" />
 									<!--  <deploymentdescriptor displayname="Gemma"
-									destdir="${project.build.directory}/Gemma/WEB-INF" servletspec="2.4"
-									mergeDir="${basedir}/src/conf/xdoclet-merge" sessiontimeout="60">
-									<welcomefile file="index.jsp" />
-									</deploymentdescriptor>-->
+										destdir="${project.build.directory}/Gemma/WEB-INF" servletspec="2.4"
+										mergeDir="${basedir}/src/conf/xdoclet-merge" sessiontimeout="60">
+										<welcomefile file="index.jsp" />
+										</deploymentdescriptor>-->
 									<jsptaglib Jspversion="2.0" taglibversion="1.0" shortname="Gemma"
-										description="Custom tag library for Gemma"
-										destDir="${project.build.directory}/Gemma/WEB-INF" filename="Gemma.tld"
-										mergeDir="${basedir}/src/conf/xdoclet-merge" validateXML="false"
-										xmlencoding="UTF-8"/>
-									<springvalidationxml/>
+										description="Custom tag library for Gemma" destDir="${project.build.directory}/Gemma/WEB-INF"
+										filename="Gemma.tld" mergeDir="${basedir}/src/conf/xdoclet-merge" validateXML="false" xmlencoding="UTF-8" />
+									<springvalidationxml />
 								</webdoclet>
 							</tasks>
 						</configuration>
@@ -546,14 +530,14 @@
 				</executions>
 			</plugin>
 			<!--   <plugin>
-			<groupId>org.codehaus.mojo</groupId>
-			<artifactId>jetty-maven-plugin</artifactId>
-			<version>1.0.0-alpha-1-SNAPSHOT</version>
-			<configuration>
-			<contextPathSpec>Gemma</contextPathSpec>
-			<jettyConfig>${basedir}/etc/conf/jetty.xml</jettyConfig>
-			</configuration>
-			</plugin>-->
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>jetty-maven-plugin</artifactId>
+				<version>1.0.0-alpha-1-SNAPSHOT</version>
+				<configuration>
+				<contextPathSpec>Gemma</contextPathSpec>
+				<jettyConfig>${basedir}/etc/conf/jetty.xml</jettyConfig>
+				</configuration>
+				</plugin>-->
 		</plugins>
 	</build>
 	<profiles>
