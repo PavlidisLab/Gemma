@@ -18,9 +18,7 @@
  */
 package ubic.gemma.web.controller.diff;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -29,8 +27,7 @@ import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.SimpleFormController;
 
-import ubic.gemma.analysis.diff.DifferentialExpressionAnalyzerService;
-import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
@@ -38,17 +35,17 @@ import ubic.gemma.model.genome.gene.GeneService;
 /**
  * @author keshav
  * @version $Id$ *
- * @spring.bean id="diffExpressionSearchController"
+ * @spring.bean id="differentialExpressionSearchController"
  * @spring.property name = "commandName" value="diffExpressionSearchCommand"
  * @spring.property name = "commandClass" value="ubic.gemma.web.controller.diff.DiffExpressionSearchCommand"
  * @spring.property name = "formView" value="searchDiffExpression"
  * @spring.property name = "successView" value="searchDiffExpression"
- * @spring.property name = "differentialExpressionAnalyzerService" ref="differentialExpressionAnalyzerService"
+ * @spring.property name = "differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
  * @spring.property name = "geneService" ref="geneService"
  */
-public class DiffExpressionSearchController extends SimpleFormController {
+public class DifferentialExpressionSearchController extends SimpleFormController {
 
-    private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService = null;
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
 
     private GeneService geneService = null;
 
@@ -71,14 +68,10 @@ public class DiffExpressionSearchController extends SimpleFormController {
 
         ModelAndView mav = new ModelAndView();
         for ( Gene g : genes ) {
-            Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
-                    .getDiffAnalysesForGene( g );
+            Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService.find( g );
 
-            for ( DifferentialExpressionAnalysis d : analyses ) {
-                Collection<ExpressionExperiment> experimentsAnalyzed = d.getExperimentsAnalyzed();
+            mav.addObject( g.getOfficialSymbol(), experimentsAnalyzed );
 
-                mav.addObject( g.getOfficialSymbol(), experimentsAnalyzed );
-            }
         }
 
         return mav;
@@ -88,8 +81,8 @@ public class DiffExpressionSearchController extends SimpleFormController {
      * @param differentialExpressionAnalyzerService
      */
     public void setDifferentialExpressionAnalyzerService(
-            DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService ) {
-        this.differentialExpressionAnalyzerService = differentialExpressionAnalyzerService;
+            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
+        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
     }
 
     /**

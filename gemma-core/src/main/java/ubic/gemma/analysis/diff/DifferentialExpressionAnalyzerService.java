@@ -38,7 +38,6 @@ import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.util.DifferentialExpressionAnalysisResultComparator;
 
@@ -425,20 +424,6 @@ public class DifferentialExpressionAnalyzerService {
         }
 
         return wasRun;
-    }
-
-    /**
-     * Returns a collection of differential expression analyses with differential evidence for the Gene gene.
-     * 
-     * @param gene
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public Collection<DifferentialExpressionAnalysis> getDiffAnalysesForGene( Gene gene ) {
-
-        Collection<DifferentialExpressionAnalysis> diffAnalyses = null;
-        // gene.getAnalysisResults();TODO add this association end to the model
-        return diffAnalyses;
     }
 
     /**
