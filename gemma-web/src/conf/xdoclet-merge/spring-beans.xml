@@ -96,6 +96,10 @@ Mapping URLS to controllers
 			<prop key="/blatTrack.html">blatResultTrackController</prop>
 			<prop key="/maintenanceMode.html">maintenanceModeController</prop>
 			<prop key="/ontology.html">ontologyController</prop>
+			<prop
+				key="/diff/diffExpressionSearch.html">
+				differentialExpressionSearchController
+			</prop>
 		</props>
 	</property>
 </bean>
