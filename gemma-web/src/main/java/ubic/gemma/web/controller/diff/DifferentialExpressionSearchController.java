@@ -45,7 +45,7 @@ import ubic.gemma.web.util.ConfigurationCookie;
  * @spring.property name = "commandName" value="diffExpressionSearchCommand"
  * @spring.property name = "commandClass" value="ubic.gemma.web.controller.diff.DiffExpressionSearchCommand"
  * @spring.property name = "formView" value="diffExpressionSearchForm"
- * @spring.property name = "successView" value="diffExpressionSearchForm"
+ * @spring.property name = "successView" value="expressionExperiments"
  * @spring.property name = "differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
  * @spring.property name = "geneService" ref="geneService"
  */
