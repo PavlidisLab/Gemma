@@ -1047,7 +1047,7 @@ public class SearchService implements InitializingBean {
     private Collection<SearchResult> filterCharacteristicOwnersByClass( Collection<Class> classes, Map parentMap ) {
         Collection<SearchResult> results = new HashSet<SearchResult>();
         for ( Object c : parentMap.keySet() ) {
-            Object o = parentMap.get( ( Characteristic ) c );
+            Object o = parentMap.get( c );
             for ( Class clazz : classes ) {
                 if ( clazz.isAssignableFrom( o.getClass() ) ) {
                     results.add( new SearchResult( o, 1.0 ) );
