@@ -20,9 +20,14 @@ package ubic.gemma.web.controller.diff;
 
 import java.util.Collection;
 
+import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.SimpleFormController;
@@ -31,6 +36,7 @@ import ubic.gemma.model.analysis.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.web.util.ConfigurationCookie;
 
 /**
  * @author keshav
@@ -38,16 +44,98 @@ import ubic.gemma.model.genome.gene.GeneService;
  * @spring.bean id="differentialExpressionSearchController"
  * @spring.property name = "commandName" value="diffExpressionSearchCommand"
  * @spring.property name = "commandClass" value="ubic.gemma.web.controller.diff.DiffExpressionSearchCommand"
- * @spring.property name = "formView" value="searchDiffExpression"
- * @spring.property name = "successView" value="searchDiffExpression"
+ * @spring.property name = "formView" value="diffExpressionSearchForm"
+ * @spring.property name = "successView" value="diffExpressionSearchForm"
  * @spring.property name = "differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
  * @spring.property name = "geneService" ref="geneService"
  */
 public class DifferentialExpressionSearchController extends SimpleFormController {
 
+    private Log log = LogFactory.getLog( this.getClass() );
+
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
 
     private GeneService geneService = null;
+
+    private static final String COOKIE_NAME = "diffExpressionSearchCookie";
+
+    /**
+     * 
+     */
+    public DifferentialExpressionSearchController() {
+        /*
+         * if true, reuses the same command object across the edit-submit-process (get-post-process).
+         */
+        setSessionForm( true );
+    }
+
+    /**
+     * @param request
+     * @return Object
+     * @throws ServletException
+     */
+    @Override
+    protected Object formBackingObject( HttpServletRequest request ) {
+
+        Long id = null;
+        try {
+            id = Long.parseLong( request.getParameter( "id" ) );
+        } catch ( NumberFormatException e ) {
+            throw new RuntimeException( "Id was not valid Long integer", e );
+        }
+
+        Gene g = null;
+        DiffExpressionSearchCommand diffCommand = new DiffExpressionSearchCommand();
+
+        id = Long.parseLong( request.getParameter( "id" ) );
+
+        if ( id != null && StringUtils.isNotBlank( id.toString() ) ) {
+            g = geneService.load( id );
+            diffCommand.setGeneId( g.getId() );
+            diffCommand.setGeneOfficialSymbol( g.getOfficialSymbol() );
+        } else {
+            g = Gene.Factory.newInstance();
+            diffCommand = loadCookie( request, diffCommand );
+        }
+
+        return diffCommand;
+
+    }
+
+    /**
+     * @param request
+     * @param diffSearchCommand
+     * @return
+     */
+    private DiffExpressionSearchCommand loadCookie( HttpServletRequest request,
+            DiffExpressionSearchCommand diffSearchCommand ) {
+
+        /*
+         * If we don't have any cookies, just return. We probably won't get this situation as we'll always have at least
+         * one cookie (the one with the JSESSION ID).
+         */
+        if ( request == null || request.getCookies() == null ) {
+            return null;
+        }
+
+        for ( Cookie cook : request.getCookies() ) {
+            if ( cook.getName().equals( COOKIE_NAME ) ) {
+                try {
+                    ConfigurationCookie cookie = new ConfigurationCookie( cook );
+                    diffSearchCommand.setGeneOfficialSymbol( cookie.getString( "geneOfficalSymbol" ) );
+
+                } catch ( Exception e ) {
+                    log.warn( "Cookie could not be loaded: " + e.getMessage() );
+                    // that's okay, we just don't get a cookie.
+                }
+            }
+        }
+
+        /* If we've come this far, we have a cookie but not one that matches COOKIE_NAME. Provide friendly defaults. */
+        diffSearchCommand.setGeneOfficialSymbol( "<gene symbol>" );
+
+        return diffSearchCommand;
+    }
 
     /*
      * (non-Javadoc)
@@ -61,7 +149,7 @@ public class DifferentialExpressionSearchController extends SimpleFormController
 
         DiffExpressionSearchCommand diffCommand = ( ( DiffExpressionSearchCommand ) command );
 
-        String officialSymbol = diffCommand.getSearchString();
+        String officialSymbol = diffCommand.getGeneOfficialSymbol();
 
         /* multiple genes can have the same symbol */
         Collection<Gene> genes = geneService.findByOfficialSymbol( officialSymbol );
@@ -80,7 +168,7 @@ public class DifferentialExpressionSearchController extends SimpleFormController
     /**
      * @param differentialExpressionAnalyzerService
      */
-    public void setDifferentialExpressionAnalyzerService(
+    public void setDifferentialExpressionAnalysisService(
             DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
         this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
     }

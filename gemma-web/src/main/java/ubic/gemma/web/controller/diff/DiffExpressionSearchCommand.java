@@ -28,14 +28,24 @@ public class DiffExpressionSearchCommand implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private String searchString = null;
+    private String geneOfficialSymbol = null;
 
-    public String getSearchString() {
-        return searchString;
+    private Long geneId = null;
+
+    public Long getGeneId() {
+        return geneId;
     }
 
-    public void setSearchString( String searchString ) {
-        this.searchString = searchString;
+    public void setGeneId( Long geneId ) {
+        this.geneId = geneId;
+    }
+
+    public String getGeneOfficialSymbol() {
+        return geneOfficialSymbol;
+    }
+
+    public void setGeneOfficialSymbol( String geneOfficialSymbol ) {
+        this.geneOfficialSymbol = geneOfficialSymbol;
     }
 
 }
