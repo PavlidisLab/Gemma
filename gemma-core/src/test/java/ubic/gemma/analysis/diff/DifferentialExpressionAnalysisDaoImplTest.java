@@ -33,12 +33,13 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class DifferentialExpressionAnalysisDaoImplTest extends BaseSpringContextTest {
 
+    /* to load data, use mini-gemma */
+
     private DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao = null;
 
     private GeneDao geneDao = null;
 
-    // FIXME using an invalid gene official symbol so test skips
-    private String officialSymbol = "CALR";
+    private String officialSymbol = "ACAA1";
 
     /**
      * 

@@ -124,7 +124,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      */
     @Override
     protected Collection handleFind( Gene gene ) throws Exception {
-        final String queryString = "select e from DifferentialExpressionAnalysisImpl a, BlatAssociationImpl bla"
+        final String queryString = "select distinct e from DifferentialExpressionAnalysisImpl a, BlatAssociationImpl bla"
                 + " inner join a.experimentsAnalyzed e inner join e.bioAssays ba inner join ba.arrayDesignUsed ad"
                 + " inner join ad.compositeSequences cs inner join cs.biologicalCharacteristic bs inner join bs.bioSequence2GeneProduct bs2gp inner join bs2gp.geneProduct gp inner join gp.gene gene where bla.bioSequence=bs and gene = :gene";
         return this.getHibernateTemplate().findByNamedParam( queryString, "gene", gene );
