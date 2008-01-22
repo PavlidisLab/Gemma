@@ -194,7 +194,7 @@
 
   <Call name="addWebApplication">
     <Arg>/Gemma</Arg>
-    <Arg>target/Gemma</Arg> 
+    <Arg>build/Gemma</Arg> 
     <Set name="extractWAR">false</Set> 
     <Set name="defaultsDescriptor">org/mortbay/jetty/servlet/webdefault.xml</Set>
     <Set name="classLoaderJava2Compliant">true</Set> 
