@@ -34,7 +34,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.util.StringUtil;
 import ubic.gemma.loader.util.parser.FileCombiningParser;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -168,7 +167,7 @@ public class RawDataParser implements FileCombiningParser {
      * @see ubic.gemma.loader.loaderutils.LineParser#parseOneLine(java.lang.String)
      */
     public Object parseOneLine( String line ) {
-        return StringUtil.splitPreserveAllTokens( line, this.separator );
+        return StringUtils.splitPreserveAllTokens( line, this.separator );
     }
 
     /**

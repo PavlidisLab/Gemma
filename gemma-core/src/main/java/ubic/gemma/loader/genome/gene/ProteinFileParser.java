@@ -21,10 +21,10 @@ package ubic.gemma.loader.genome.gene;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.util.StringUtil;
 import ubic.gemma.loader.util.parser.BasicLineParser;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneDao;
@@ -68,7 +68,7 @@ public class ProteinFileParser extends BasicLineParser {
     @SuppressWarnings("unchecked")
     public Object parseOneLine( String line ) {
         log.debug( line );
-        String[] fields = StringUtil.splitPreserveAllTokens( line, '\t' );
+        String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
 
         if ( fields.length != FIELDS_PER_ROW ) {
             throw new IllegalArgumentException( "Line is not in the right format: has " + fields.length
