@@ -161,8 +161,8 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<configuration>
-					<quiet>false</quiet>
-					<aggregate>true</aggregate>
+					<quiet>true</quiet>
+					<aggregate>false</aggregate>
 					<links>
 						<link>http://java.sun.com/j2ee/1.4/docs/api</link>
 						<link>http://java.sun.com/j2se/1.5.0/docs/api</link>
@@ -234,12 +234,43 @@
 					<argLine>-Xmx1024m -enableassertions</argLine>
 				</configuration>
 			</plugin>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>assemble-src</id>
+						<configuration>
+							<descriptors>
+								<descriptor>src/assembly/src-assembly.xml</descriptor>
+							</descriptors>
+						</configuration>
+					</execution>
+					<execution>
+						<id>assemble-bin</id>
+						<configuration>
+							<descriptors>
+								<descriptor>src/assembly/bin-assembly.xml</descriptor>
+							</descriptors>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 	<distributionManagement>
 		<site>
 			<id>website</id>
-			<url>file:///www/projects/gemma-dev</url>
+			<url>scp://hebb.ubic.ca:/spacef/gemmaData/gemma-devsite</url>
 		</site>
+		<repository>
+			<id>repo</id>
+			<name>Broca</name>
+			<url>scp://broca.ubic.ca:/www/maven2</url>
+		</repository>
+		<snapshotRepository>
+			<id>repo</id>
+			<name>Broca</name>
+			<url>scp://broca.ubic.ca:/www/maven2</url>
+		</snapshotRepository>
 	</distributionManagement>
 </project>

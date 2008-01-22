@@ -1,38 +1,17 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <project name="Gemma">
-	<skin>
-		<groupId>org.apache.maven.skins</groupId>
-		<artifactId>maven-stylus-skin</artifactId>
-		<version>1.0.1</version>
-	</skin>
 	<bannerLeft>
 		<name>Gemma</name>
 	</bannerLeft>
 	<bannerRight>
 		<src>http://www.bioinformatics.ubc.ca/pavlidis/lab/graphics/logo_gemma.gif</src>
 	</bannerRight>
-
 	<body>
 		<links>
-			<item name="Gemma" href="http://broca.ubic.ca/gemma/" />
-			<item name="Gemma dev" href="http://broca.ubic.ca/gemma-dev/" />
-			<item name="Confluence" href="http://broca.ubic.ca/confluence/display/PavLab/Home" />
+			<item name="Gemma" href="http://bioinformatics.ubc.ca/Gemma/" />
 			<item name="Pavlidis lab" href="http://bioinformatics.ubc.ca/pavlidis/lab" />
-			<item name="Apache" href="http://www.apache.org/" />
-			<item name="Maven 2" href="http://maven.apache.org/maven2/" />
 		</links>
-
-		<menu name="Modules">
-			<item name="gemma-util" href="gemma-util/project-info.html" />
-			<item name="gemma-mda" href="gemma-mda/project-info.html" />
-			<item name="gemma-testing" href="gemma-testing/project-info.html" />
-			<item name="gemma-core" href="gemma-core/project-info.html" />
-			<item name="gemma-web" href="gemma-web/project-info.html" />
-		</menu>
-		<!-- 
-			${modules}
-		-->
-		${reports}
-
+		<menu ref="modules" />
+		<menu ref="reports" />
 	</body>
 </project>
