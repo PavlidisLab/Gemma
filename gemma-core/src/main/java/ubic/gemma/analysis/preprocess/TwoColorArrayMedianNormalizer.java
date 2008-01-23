@@ -41,8 +41,8 @@ public class TwoColorArrayMedianNormalizer extends MarrayNormalizer implements T
             DoubleMatrixNamed<String, String> channelTwoSignal, DoubleMatrixNamed<String, String> channelOneBackground,
             DoubleMatrixNamed<String, String> channelTwoBackground, DoubleMatrixNamed<String, String> weights ) {
         log.debug( "normalizing..." );
-        DoubleMatrixNamed resultObject = normalize( channelOneSignal, channelTwoSignal, channelOneBackground,
-                channelTwoBackground, weights, "median" );
+        DoubleMatrixNamed<String, String> resultObject = normalize( channelOneSignal, channelTwoSignal,
+                channelOneBackground, channelTwoBackground, weights, "median" );
         return resultObject;
     }
 

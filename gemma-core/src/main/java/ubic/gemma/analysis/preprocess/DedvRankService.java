@@ -32,6 +32,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.matrix.AbstractNamedMatrix;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
+import ubic.basecode.dataStructure.matrix.NamedMatrix;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.Rank;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -299,8 +300,10 @@ public class DedvRankService {
      * @param intensities
      * @return
      */
-    private AbstractNamedMatrix computeSampleRanks( ExpressionDataDoubleMatrix intensities ) {
-        DenseDoubleMatrix2DNamed rankMatrix = new DenseDoubleMatrix2DNamed( intensities.rows(), intensities.columns() );
+    protected NamedMatrix<ExpressionDataMatrixRowElement, Object> computeSampleRanks(
+            ExpressionDataDoubleMatrix intensities ) {
+        DenseDoubleMatrix2DNamed<ExpressionDataMatrixRowElement, Object> rankMatrix = new DenseDoubleMatrix2DNamed<ExpressionDataMatrixRowElement, Object>(
+                intensities.rows(), intensities.columns() );
         rankMatrix.setRowNames( intensities.getRowElements() );
 
         for ( int column = 0; column < intensities.columns(); column++ ) {

@@ -31,6 +31,7 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.gui.ColorMatrix;
@@ -81,15 +82,20 @@ public class ExpressionDataSampleCorrelation {
     private static Log log = LogFactory.getLog( ExpressionDataSampleCorrelation.class.getName() );
 
     /**
-     * @param matrix
-     * @return
+     * @param matrix a n x m
+     * @return m x m symmetric matrix containing correlations of the columns. Names are the column names from the
+     *         original matrix.
      */
+    @SuppressWarnings("unchecked")
     public static DoubleMatrixNamed getMatrix( ExpressionDataDoubleMatrix matrix ) {
         int cols = matrix.columns();
         double[][] rawcols = new double[cols][];
 
         List<BioMaterial> ordered = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( matrix );
 
+        /*
+         * Transpose the matrix, basically.
+         */
         int m = 0;
         for ( BioMaterial bioMaterial : ordered ) {
             int i = matrix.getColumnIndex( bioMaterial );
@@ -101,10 +107,10 @@ public class ExpressionDataSampleCorrelation {
             m++;
         }
 
-        DoubleMatrixNamed columns = DoubleMatrix2DNamedFactory.dense( rawcols );
-        DoubleMatrixNamed mat = MatrixStats.correlationMatrix( columns );
+        DoubleMatrixNamed<Object, Object> columns = new DenseDoubleMatrix2DNamed<Object, Object>( rawcols );
+        DoubleMatrixNamed<BioAssay, BioAssay> mat = MatrixStats.correlationMatrix( columns );
 
-        List<Object> colElements = new ArrayList<Object>();
+        List<BioAssay> colElements = new ArrayList<BioAssay>();
         for ( BioMaterial bioMaterial : ordered ) {
             int i = matrix.getColumnIndex( bioMaterial );
             Collection<BioAssay> bas = matrix.getBioAssaysForColumn( i );
@@ -122,7 +128,7 @@ public class ExpressionDataSampleCorrelation {
      * @param location directory where files will be saved
      * @param fileBaseName root name for files (without .png ending)
      */
-    public static void createMatrixImages( DoubleMatrixNamed matrix, File location, String fileBaseName )
+    public static void createMatrixImages( DoubleMatrixNamed<String, String> matrix, File location, String fileBaseName )
             throws IOException {
 
         writeMatrix( matrix, location, fileBaseName + ".txt" );
@@ -186,10 +192,11 @@ public class ExpressionDataSampleCorrelation {
     /**
      * Clip matrix so values are within the limits; this operates on a copy.
      */
-    private static DoubleMatrixNamed clipData( DoubleMatrixNamed data, double lowThresh, double highThresh ) {
+    private static DoubleMatrixNamed<String, String> clipData( DoubleMatrixNamed<String, String> data,
+            double lowThresh, double highThresh ) {
 
         // create a copy
-        DoubleMatrixNamed copy = DoubleMatrix2DNamedFactory.dense( data );
+        DoubleMatrixNamed<String, String> copy = DoubleMatrix2DNamedFactory.dense( data );
 
         // clip the copy and return it.
         for ( int i = 0; i < copy.rows(); i++ ) {

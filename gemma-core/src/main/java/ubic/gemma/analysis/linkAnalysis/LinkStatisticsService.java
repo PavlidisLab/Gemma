@@ -558,7 +558,7 @@ public class LinkStatisticsService {
      * 
      * @param links
      */
-    private void shuffleGeneLinks( List<GeneLink> links ) {
+    protected void shuffleGeneLinks( List<GeneLink> links ) {
         Random random = new Random();
         int i = links.size();
         while ( --i > 0 ) {

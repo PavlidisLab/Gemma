@@ -18,8 +18,7 @@
  */
 package ubic.gemma.analysis.service;
 
-import java.util.Collection;
-import java.util.HashSet;
+import java.util.Collection; 
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
