@@ -13,9 +13,6 @@ import org.apache.commons.lang.time.StopWatch;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix3DNamed;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
-import ubic.basecode.gui.ColorMap;
-import ubic.basecode.gui.ColorMatrix;
-import ubic.basecode.gui.JMatrixDisplay;
 import ubic.basecode.io.writer.MatrixWriter;
 import ubic.gemma.analysis.linkAnalysis.CoexpressionAnalysisService;
 import ubic.gemma.analysis.linkAnalysis.CoexpressionAnalysisService.CoexpressionMatrices;
@@ -43,12 +40,7 @@ public class EffectSizeCalculationCli extends AbstractGeneCoexpressionManipulati
 
     private CoexpressionAnalysisService coexpressionAnalysisService;
 
-    private ExpressionExperimentService eeService;
-
-    private GeneService geneService;
-    private GeneOntologyService goService;
-
-    private int stringency = 3;
+    private GeneOntologyService goService;;
 
     public static final int DEFAULT_STRINGENCY = 3;
 
@@ -90,11 +82,6 @@ public class EffectSizeCalculationCli extends AbstractGeneCoexpressionManipulati
         }
         if ( hasOption( 'o' ) ) {
             this.outFilePrefix = getOptionValue( 'o' );
-        }
-        if ( hasOption( 'r' ) ) {
-            this.stringency = Integer.parseInt( getOptionValue( 'r' ) );
-        } else {
-            this.stringency = DEFAULT_STRINGENCY;
         }
 
         initBeans();
@@ -140,8 +127,8 @@ public class EffectSizeCalculationCli extends AbstractGeneCoexpressionManipulati
         FilterConfig filterConfig = new FilterConfig();
         CoexpressionMatrices matrices = coexpressionAnalysisService.calculateCoexpressionMatrices(
                 expressionExperiments, queryGenes, targetGenes, filterConfig, null );
-        DenseDoubleMatrix3DNamed correlationMatrix = matrices.getCorrelationMatrix();
-        DenseDoubleMatrix3DNamed sampleSizeMatrix = matrices.getSampleSizeMatrix();
+        DenseDoubleMatrix3DNamed<Gene, Gene, ExpressionExperiment> correlationMatrix = matrices.getCorrelationMatrix();
+        DenseDoubleMatrix3DNamed<Gene, Gene, ExpressionExperiment> sampleSizeMatrix = matrices.getSampleSizeMatrix();
         DoubleMatrixNamed effectSizeMatrix = coexpressionAnalysisService.calculateEffectSizeMatrix( correlationMatrix,
                 sampleSizeMatrix );
 

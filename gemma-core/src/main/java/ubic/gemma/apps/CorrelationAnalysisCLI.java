@@ -105,7 +105,7 @@ public class CorrelationAnalysisCLI extends AbstractGeneCoexpressionManipulating
         // calculate matrices
         CoexpressionMatrices matrices = coexpressionAnalysisService.calculateCoexpressionMatrices(
                 expressionExperiments, queryGenes, targetGenes, filterConfig, CorrelationMethod.SPEARMAN );
-        DenseDoubleMatrix3DNamed correlationMatrix = matrices.getCorrelationMatrix();
+        DenseDoubleMatrix3DNamed<Gene, Gene, ExpressionExperiment> correlationMatrix = matrices.getCorrelationMatrix();
         // DenseDoubleMatrix3DNamed sampleSizeMatrix = matrices
         // .getSampleSizeMatrix();
 
