@@ -155,7 +155,7 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
         List<String> classes = getClassHierarchy( type.getClass() );
 
         final String queryString = "select trail, event from ubic.gemma.model.common.auditAndSecurity.AuditTrail trail "
-                + "inner join trail.events event inner join event.eventType et where trail in (:trails) "
+                + "inner join trail.events event inner join event.eventType et inner join fetch event.performer where trail in (:trails) "
                 + "and et.class in (" + StringUtils.join( classes, "," ) + ") order by event.date desc ";
 
         Map<Auditable, AuditEvent> result = new HashMap<Auditable, AuditEvent>();
