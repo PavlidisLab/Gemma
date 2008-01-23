@@ -99,7 +99,6 @@ public class InitializeCharacteristicEvidenceCodes extends AbstractSpringAwareCL
         
         Map<Characteristic, FactorValue> fvChars = characteristicService.findByParentClass( FactorValueImpl.class );
         initializeFactorValueCharacteristics( fvChars.keySet() );
-        //initializeCharacteristicEvidenceCode( fvChars.keySet(), GOEvidenceCode.IEA );
         
         Map<Characteristic, Gene2GOAssociation> goChars = characteristicService.findByParentClass( Gene2GOAssociationImpl.class );
         intializeGene2GOAssociationCharacteristics( goChars );
@@ -119,8 +118,11 @@ public class InitializeCharacteristicEvidenceCodes extends AbstractSpringAwareCL
     
     private void initializeFactorValueCharacteristics( Collection<Characteristic> chars ) {
         for ( Characteristic c : chars ) {
-            if ( c.getDescription().startsWith( "GEO" ) || c.getDescription().startsWith ( "Converted from GEO" ) ) {
+            if ( c.getDescription() != null && ( c.getDescription().startsWith( "GEO" ) || c.getDescription().startsWith ( "Converted from GEO" ) ) ) {
                 c.setEvidenceCode( GOEvidenceCode.IEA );
+                characteristicService.update( c );
+            } else {
+                c.setEvidenceCode( GOEvidenceCode.IC );
                 characteristicService.update( c );
             }
         }
@@ -135,12 +137,16 @@ public class InitializeCharacteristicEvidenceCodes extends AbstractSpringAwareCL
     }
     
     private void initializeExperimentalFactorCategoryCharacteristics() {
-        // deal with ExperimentalFactor.category (which is a characteristic) specially...
         Collection<ExperimentalFactor> experimentalFactors = experimentalFactorService.loadAll();
         for ( ExperimentalFactor ef : experimentalFactors ) {
             Characteristic c = ef.getCategory();
-            if ( c.getDescription().startsWith( "GEO" ) || c.getDescription().startsWith ( "Converted from GEO" ) ) {
+            if ( c == null )
+                continue;
+            if ( c.getDescription() != null && ( c.getDescription().startsWith( "GEO" ) || c.getDescription().startsWith ( "Converted from GEO" ) ) ) {
                 c.setEvidenceCode( GOEvidenceCode.IEA );
+                characteristicService.update( c );
+            } else {
+                c.setEvidenceCode( GOEvidenceCode.IC );
                 characteristicService.update( c );
             }
         }
