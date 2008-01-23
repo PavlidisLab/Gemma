@@ -19,13 +19,29 @@
 package ubic.gemma.search;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.acegisecurity.context.SecurityContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.compass.core.spi.InternalCompass;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
+import org.compass.spring.web.mvc.CompassIndexResults;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.grid.javaspaces.AbstractSpacesProgressService;
+import ubic.gemma.grid.javaspaces.index.IndexGemmaResult;
+import ubic.gemma.grid.javaspaces.index.IndexGemmaTask;
+import ubic.gemma.grid.javaspaces.index.SpacesIndexGemmaCommand;
 import ubic.gemma.util.CompassUtils;
+import ubic.gemma.util.IndexGemmaCommand;
+import ubic.gemma.util.grid.javaspaces.SpacesEnum;
+import ubic.gemma.util.progress.BackgroundProgressJob;
+import ubic.gemma.util.progress.ProgressJob;
+import ubic.gemma.util.progress.ProgressManager;
+import ubic.gemma.util.progress.TaskRunningService;
 
 /**
  * Services for updating the search indexes.
@@ -33,17 +49,20 @@ import ubic.gemma.util.CompassUtils;
  * @author keshav
  * @version $Id$
  */
-public class IndexService {
+public class IndexService extends AbstractSpacesProgressService {
 
 	/*
 	 * Note: IndexService has not been configured with xdoclet tags because we
 	 * it needs to reside in applicationContext-search.xml so we can choose
 	 * whether or not to load this part of the application context at spring
 	 * startup.
+	 * 
+	 * Note:  three  inherited dependencies from AbstractSpacesProgressService: TaskRunningService, SpacesUtil, manualAuthenticationProcessing
+	 * 
 	 */
 
 	private Log log = LogFactory.getLog(this.getClass());
-
+	
 	private CompassGpsInterfaceDevice expressionGps;
 
 	private CompassGpsInterfaceDevice geneGps;
@@ -84,6 +103,15 @@ public class IndexService {
 	}
 
 	/**
+	 * @return   Used by quartz to start the index process in a space
+	 */
+	public String runAll() {
+		IndexGemmaCommand command = new IndexGemmaCommand();
+		command.setAll(true);
+		return run(command, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(),
+				IndexGemmaTask.class.getName(), false);
+	}
+	/**
 	 * Indexes array designs.
 	 */
 	public void indexArrayDesigns() {
@@ -116,6 +144,13 @@ public class IndexService {
 	 */
 	public void indexGenes() {
 		CompassUtils.rebuildCompassIndex(geneGps);
+	}
+
+	/**
+	 * Indexes probes.
+	 */
+	public void indexProbes() {
+		CompassUtils.rebuildCompassIndex(probeGps);
 	}
 
 	/**
@@ -167,6 +202,187 @@ public class IndexService {
 	public void replaceBibliographicIndex(String pathToNewIndex)
 			throws IOException {
 		CompassUtils.swapCompassIndex(compassBibliographic, pathToNewIndex);
+	}
+
+	
+	protected BackgroundProgressJob<ModelAndView> getRunner(String taskId,
+			SecurityContext securityContext, Object command) {
+
+		return new IndexJob(taskId, securityContext, command);
+	}
+
+	/**
+	 * Starts the job on a compute server resource if the space is running and
+	 * the task can be serviced. If runInWebapp is true, the task will be run in
+	 * the webapp virtual machine. If false the task will only be run if the
+	 * space is started and workers that can service the task exist.
+	 * 
+	 * @param command
+	 * @param spaceUrl
+	 * @param taskName
+	 * @param runInWebapp
+	 * @return {@link ModelAndView}
+	 */
+	public  synchronized ModelAndView startJob(Object command,
+			String spaceUrl, String taskName, boolean runInWebapp) {
+		String taskId = run(command, spaceUrl, taskName, runInWebapp);
+
+		ModelAndView mnv = new ModelAndView(new RedirectView(
+				"/Gemma/processProgress.html?taskid=" + taskId));
+		mnv.addObject(TaskRunningService.JOB_ATTRIBUTE, taskId);
+		return mnv;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see ubic.gemma.web.controller.javaspaces.gigaspaces.AbstractGigaSpacesFormController#getSpaceRunner(java.lang.String,
+	 *      org.acegisecurity.context.SecurityContext,
+	 *      javax.servlet.http.HttpServletRequest, java.lang.Object,
+	 *      ubic.gemma.web.util.MessageUtil)
+	 */
+	// @Override
+	protected BackgroundProgressJob<ModelAndView> getSpaceRunner(String taskId,
+			SecurityContext securityContext, Object command) {
+		return new LoadInSpaceJob(taskId, securityContext, command);
+	}
+
+	/**
+	 * Job that loads in a javaspace.
+	 * 
+	 * @author Paul
+	 * @version $Id: CustomCompassIndexController.java,v 1.22 2007/12/20
+	 *          23:11:05 kelsey Exp $
+	 */
+	private class LoadInSpaceJob extends IndexJob {
+
+		final IndexGemmaTask indexGemmaTaskProxy = (IndexGemmaTask) updatedContext
+				.getBean("proxy");
+
+		/**
+		 * @param taskId
+		 * @param parentSecurityContext
+		 * @param commandObj
+		 * @param messenger
+		 */
+		public LoadInSpaceJob(String taskId,
+				SecurityContext parentSecurityContext, Object commandObj) {
+			super(taskId, parentSecurityContext, commandObj);
+
+		}
+
+		@Override
+		protected void index(IndexGemmaCommand indexCommand) {
+
+			SpacesIndexGemmaCommand jsCommand = createCommandObject(indexCommand);
+			IndexGemmaResult result = indexGemmaTaskProxy.execute(jsCommand);
+
+			try {
+				if (indexCommand.isIndexGene()) {
+					replaceGeneIndex(result.getPathToGeneIndex());
+				}
+				if (indexCommand.isIndexEE()) {
+					replaceExperimentIndex(result.getPathToExpresionIndex());
+				}
+				if (indexCommand.isIndexArray()) {
+					replaceArrayIndex(result.getPathToArrayIndex());
+				}
+				if (indexCommand.isIndexBibliographic()) {
+					replaceBibliographicIndex(result
+							.getPathToBibliographicIndex());
+				}
+				if (indexCommand.isIndexProbe()) {
+					replaceProbeIndex(result.getPathToProbeIndex());
+				}
+				if (indexCommand.isIndexBioSequence()) {
+					replaceBiosequenceIndex(result.getPathToBiosequenceIndex());
+				}
+
+			} catch (IOException ioe) {
+				log.error("Unable to swap indexes. " + ioe);
+			}
+		}
+
+		private SpacesIndexGemmaCommand createCommandObject(IndexGemmaCommand ic) {
+			return new SpacesIndexGemmaCommand(taskId, true, ic.isIndexArray(),
+					ic.isIndexEE(), ic.isIndexGene(), ic.isIndexProbe(), ic
+							.isIndexBibliographic(), ic.isIndexBioSequence());
+		}
+
+	}
+
+	/**
+	 * @author klc
+	 * @version $Id: CustomCompassIndexController.java,v 1.22 2007/12/20
+	 *          23:11:05 kelsey Exp $ This inner class is used for creating a
+	 *          seperate thread that will delete the compass ee index
+	 */
+	class IndexJob extends BackgroundProgressJob<ModelAndView> {
+
+		private String description;
+
+		/**
+		 * @param taskId
+		 * @param parentSecurityContext
+		 * @param commandObj
+		 * @param messenger
+		 */
+		public IndexJob(String taskId, SecurityContext parentSecurityContext,
+				Object commandObj) {
+			super(taskId, parentSecurityContext, commandObj);
+
+		}
+
+		@SuppressWarnings("unchecked")
+		public ModelAndView call() throws Exception {
+
+			init();
+
+			ProgressJob job = ProgressManager.createProgressJob(this
+					.getTaskId(),
+					securityContext.getAuthentication().getName(),
+					"Attempting to index");
+
+			long time = System.currentTimeMillis();
+
+			job.updateProgress("Preparing to rebuild selected indexes ");
+			log.info("Preparing to rebuild selected indexes");
+
+			IndexGemmaCommand indexGemmaCommand = ((IndexGemmaCommand) command);
+
+			index(indexGemmaCommand);
+
+			time = System.currentTimeMillis() - time;
+			CompassIndexResults indexResults = new CompassIndexResults(time);
+			Map<Object, Object> data = new HashMap<Object, Object>();
+			data.put("indexResults", indexResults);
+
+			ProgressManager.destroyProgressJob(job);
+
+			ModelAndView mv = new ModelAndView("indexer");
+			mv.addObject("time", time);
+			mv.addObject("description", this.description);
+
+			return mv;
+
+		}
+
+		protected void index(IndexGemmaCommand command) {
+
+			if (command.isIndexArray())
+				indexArrayDesigns();
+			if (command.isIndexBibliographic())
+				indexBibligraphicReferences();
+			if (command.isIndexEE())
+				indexExpressionExperiments();
+			if (command.isIndexGene())
+				indexGenes();
+			if (command.isIndexProbe())
+				indexProbes();
+			if (command.isIndexBioSequence())
+				indexBibligraphicReferences();
+
+		}
 	}
 
 	/**

@@ -97,7 +97,7 @@ public abstract class AbstractSpacesFormController extends BackgroundProcessingF
         String taskId = run( command, spaceUrl, taskName, runInWebapp );
 
         ModelAndView mnv = new ModelAndView( new RedirectView( "/Gemma/processProgress.html?taskid=" + taskId ) );
-        mnv.addObject( JOB_ATTRIBUTE, taskId );
+        mnv.addObject( TaskRunningService.JOB_ATTRIBUTE, taskId );
         return mnv;
     }
 
@@ -130,9 +130,15 @@ public abstract class AbstractSpacesFormController extends BackgroundProcessingF
                 // .getAuthentication().getPrincipal() );
                 // this.sendEmail( user, "Cannot service task " + taskName + " on the compute server at this time.",
                 // "http://www.bioinformatics.ubc.ca/Gemma/" );
-
-                throw new RuntimeException( "No workers are registered to service task " + taskName
-                        + " on the compute server at this time." );
+//
+//                throw new RuntimeException( "No workers are registered to service task " + taskName
+//                        + " on the compute server at this time." );
+            	
+            	//Throwing an exception here brings down Gemma.  All that is needed is an ERROR message, ie gemma is fine its the space thats problematic at this point
+            	
+            	log.error("Cannot execute task in space.  No service registered for: " + taskName);
+            	return null;
+            	
             }
             /* register this "spaces client" to receive notifications */
             SpacesJobObserver javaSpacesJobObserver = new SpacesJobObserver( taskId );

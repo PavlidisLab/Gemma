@@ -29,6 +29,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.testing.BaseSpringWebTest;
 import ubic.gemma.util.progress.ProgressData;
 import ubic.gemma.util.progress.ProgressStatusService;
+import ubic.gemma.util.progress.TaskRunningService;
 
 /**
  * Test of long job control.
@@ -72,7 +73,7 @@ public class TaskRunningTest extends BaseSpringWebTest {
         assertTrue( "Got " + ( ( RedirectView ) mv.getView() ).getUrl(), ( ( RedirectView ) mv.getView() ).getUrl()
                 .startsWith( "/Gemma/processProgress.html?taskid=" ) );
 
-        Object taskId = mv.getModel().get( BackgroundProcessingFormController.JOB_ATTRIBUTE );
+        Object taskId = mv.getModel().get( TaskRunningService.JOB_ATTRIBUTE );
         assertNotNull( taskId );
 
         // wait for job to run
@@ -111,7 +112,7 @@ public class TaskRunningTest extends BaseSpringWebTest {
         assertTrue( "Got " + ( ( RedirectView ) mv.getView() ).getUrl(), ( ( RedirectView ) mv.getView() ).getUrl()
                 .startsWith( "/Gemma/processProgress.html?taskid=" ) );
 
-        Object taskId = mv.getModel().get( BackgroundProcessingFormController.JOB_ATTRIBUTE );
+        Object taskId = mv.getModel().get( TaskRunningService.JOB_ATTRIBUTE );
         assertNotNull( taskId );
 
         // wait for job to run
@@ -156,7 +157,7 @@ public class TaskRunningTest extends BaseSpringWebTest {
         assertTrue( "Got " + ( ( RedirectView ) mv.getView() ).getUrl(), ( ( RedirectView ) mv.getView() ).getUrl()
                 .startsWith( "/Gemma/processProgress.html?taskid=" ) );
 
-        Object taskId = mv.getModel().get( BackgroundProcessingFormController.JOB_ATTRIBUTE );
+        Object taskId = mv.getModel().get( TaskRunningService.JOB_ATTRIBUTE );
         assertNotNull( taskId );
 
         // let it go a little while

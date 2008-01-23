@@ -81,7 +81,7 @@ public class TaskCompletionController extends BaseFormController {
     @SuppressWarnings("unused")
     protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
             throws Exception {
-        String taskId = request.getParameter( BackgroundProcessingFormController.JOB_ATTRIBUTE );
+        String taskId = request.getParameter( TaskRunningService.JOB_ATTRIBUTE );
         if ( taskId == null ) {
             this.saveMessage( request, "Can not monitor a task with a null task Id" );
             return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) ); // have to replace this...

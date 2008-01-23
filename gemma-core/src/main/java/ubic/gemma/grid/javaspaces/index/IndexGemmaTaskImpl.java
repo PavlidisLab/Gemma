@@ -21,36 +21,56 @@ package ubic.gemma.grid.javaspaces.index;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.compass.core.spi.InternalCompass;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
 import org.springframework.beans.factory.InitializingBean;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.grid.javaspaces.BaseSpacesTask;
-import ubic.gemma.grid.javaspaces.SpacesResult;
 import ubic.gemma.util.CompassUtils;
 import ubic.gemma.util.progress.TaskRunningService;
 
 /**
  * @author klc
- * @version $Id: IndexGemmaTaskImpl.java,v 1.2 2007/12/11 06:15:49
- *          paul Exp $
+ * @version $Id$
  */
 public class IndexGemmaTaskImpl extends BaseSpacesTask implements
 		IndexGemmaTask, InitializingBean {
 
+	private static final String PATH_PROPERTY = "compass.engine.connection";
+
+	private static final String PATH_SUFFIX = "/index/";
+
+	private static final String FILE = "file://";
+
 	private Log log = LogFactory.getLog(this.getClass().getName());
 
 	private String taskId = null;
-	
-	
+
 	private CompassGpsInterfaceDevice geneGps;
+
 	private CompassGpsInterfaceDevice expressionGps;
+
 	private CompassGpsInterfaceDevice arrayGps;
+
 	private CompassGpsInterfaceDevice bibliographicGps;
+
 	private CompassGpsInterfaceDevice probeGps;
+
 	private CompassGpsInterfaceDevice bioSequenceGps;
 
-	
+	private InternalCompass compassExpression;
+
+	private InternalCompass compassGene;
+
+	private InternalCompass compassArray;
+
+	private InternalCompass compassProbe;
+
+	private InternalCompass compassBiosequence;
+
+	private InternalCompass compassBibliographic;
+
 	public void setArrayGps(CompassGpsInterfaceDevice arrayGps) {
 		this.arrayGps = arrayGps;
 	}
@@ -70,12 +90,34 @@ public class IndexGemmaTaskImpl extends BaseSpacesTask implements
 	public void setGeneGps(CompassGpsInterfaceDevice geneGps) {
 		this.geneGps = geneGps;
 	}
-	
+
 	public void setBioSequenceGps(CompassGpsInterfaceDevice bsGps) {
 		this.bioSequenceGps = bsGps;
 	}
-	
-	
+
+	public void setCompassArray(InternalCompass compassArray) {
+		this.compassArray = compassArray;
+	}
+
+	public void setCompassBibliographic(InternalCompass compassBibliographic) {
+		this.compassBibliographic = compassBibliographic;
+	}
+
+	public void setCompassBiosequence(InternalCompass compassBiosequence) {
+		this.compassBiosequence = compassBiosequence;
+	}
+
+	public void setCompassExpression(InternalCompass compassExpression) {
+		this.compassExpression = compassExpression;
+	}
+
+	public void setCompassGene(InternalCompass compassGene) {
+		this.compassGene = compassGene;
+	}
+
+	public void setCompassProbe(InternalCompass compassProbe) {
+		this.compassProbe = compassProbe;
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -84,55 +126,77 @@ public class IndexGemmaTaskImpl extends BaseSpacesTask implements
 	 *      boolean, boolean)
 	 */
 	@SuppressWarnings("unchecked")
-	public SpacesResult execute(SpacesIndexGemmaCommand indexCommand) {
+	public IndexGemmaResult execute(SpacesIndexGemmaCommand indexCommand) {
 
 		super.initProgressAppender(this.getClass());
 
-		 SpacesResult result = new SpacesResult();
-        try {
-            if ( indexCommand.isIndexGene() ) {
-                rebuildIndex( geneGps, "Gene index" );
-            }
-            if ( indexCommand.isIndexEE() ) {
-                rebuildIndex( expressionGps, "Expression Experiment index" );
-            }
-            if ( indexCommand.isIndexAD() ) {
-                rebuildIndex( arrayGps, "Array Design index" );
-            }
-            if ( indexCommand.isIndexBibRef() ) {
-                rebuildIndex( bibliographicGps, "Bibliographic Reference Index" );
-            }
-            if ( indexCommand.isIndexProbe() ) {
-                rebuildIndex( probeGps, "Probe Reference Index" );
-            }
-            if (indexCommand.isIndexBioSequence()){
-            	rebuildIndex(bioSequenceGps, "Biosequence Reference Index");
-            }
+		IndexGemmaResult result = new IndexGemmaResult();
 
-        } catch ( Exception e ) {
-            log.error( e );          
-        }
-		
+		try {
+			if (indexCommand.isIndexGene()) {
+				rebuildIndex(geneGps, "Gene index");
+				result.setPathToGeneIndex(compassGene.getSettings().getSetting(
+						PATH_PROPERTY).replaceFirst(FILE, "")
+						+ PATH_SUFFIX);
+			}
+			if (indexCommand.isIndexEE()) {
+				rebuildIndex(expressionGps, "Expression Experiment index");
+				result.setPathToExpresionIndex(compassExpression.getSettings()
+						.getSetting(PATH_PROPERTY).replaceFirst(FILE, "")
+						+ PATH_SUFFIX);
+			}
+			if (indexCommand.isIndexAD()) {
+				rebuildIndex(arrayGps, "Array Design index");
+				result.setPathToArrayIndex(compassArray.getSettings()
+						.getSetting(PATH_PROPERTY).replaceFirst(FILE, "")
+						+ PATH_SUFFIX);
+
+			}
+			if (indexCommand.isIndexBibRef()) {
+				rebuildIndex(bibliographicGps, "Bibliographic Reference Index");
+				result.setPathToBibliographicIndex(compassBibliographic
+						.getSettings().getSetting(PATH_PROPERTY).replaceFirst(
+								FILE, "")
+						+ PATH_SUFFIX);
+			}
+			if (indexCommand.isIndexProbe()) {
+				rebuildIndex(probeGps, "Probe Reference Index");
+				result.setPathToProbeIndex(compassProbe.getSettings()
+						.getSetting(PATH_PROPERTY).replaceFirst(FILE, "")
+						+ PATH_SUFFIX);
+			}
+			if (indexCommand.isIndexBioSequence()) {
+				rebuildIndex(bioSequenceGps, "Biosequence Reference Index");
+				result.setPathToBiosequenceIndex(compassBiosequence
+						.getSettings().getSetting(PATH_PROPERTY).replaceFirst(
+								FILE, "")
+						+ PATH_SUFFIX);
+
+			}
+
+		} catch (Exception e) {
+			log.error(e);
+		}
+
 		return result;
 	}
-	
-	
-	
-    protected void rebuildIndex( CompassGpsInterfaceDevice device, String whatIndexingMsg ) throws Exception {
 
-        long time = System.currentTimeMillis();
+	protected void rebuildIndex(CompassGpsInterfaceDevice device,
+			String whatIndexingMsg) throws Exception {
 
+		long time = System.currentTimeMillis();
 
-        log.info( "Rebuilding " + whatIndexingMsg );
-        
-        CompassUtils.rebuildCompassIndex( device );
+		log.info("Rebuilding " + whatIndexingMsg);
 
-        time = System.currentTimeMillis() - time;
+		CompassUtils.rebuildCompassIndex(device);
 
-        log.info( "Finished rebuilding " + whatIndexingMsg + ".  Took (ms): " + time );
-        log.info( " \n " );
+		time = System.currentTimeMillis() - time;
 
-    }
+		log.info("Finished rebuilding " + whatIndexingMsg + ".  Took (ms): "
+				+ time);
+		log.info(" \n ");
+
+	}
 
 	/**
 	 * @param gigaSpacesTemplate

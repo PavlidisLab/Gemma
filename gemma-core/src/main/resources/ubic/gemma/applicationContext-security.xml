@@ -460,6 +460,7 @@
                 ubic.gemma.model.genome.TaxonService.loadAll=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.genome.TaxonService.findByScientificName=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.genome.TaxonService.findByCommonName=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.search.IndexService.runAll=admin
            ]]>
 			</value>
 		</property>

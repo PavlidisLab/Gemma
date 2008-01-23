@@ -20,7 +20,6 @@
 
 package ubic.gemma.grid.javaspaces.index;
 
-import ubic.gemma.grid.javaspaces.SpacesResult;
 import ubic.gemma.grid.javaspaces.SpacesTask;
 
 public interface IndexGemmaTask extends SpacesTask {
@@ -29,7 +28,7 @@ public interface IndexGemmaTask extends SpacesTask {
      * @param javaSpacesExpressionExperimentLoadCommand
      * @return
      */
-    public SpacesResult execute(
+    public IndexGemmaResult execute(
             SpacesIndexGemmaCommand spacesIndexGemmaCommand );
 
 

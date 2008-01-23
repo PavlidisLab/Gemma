@@ -43,7 +43,7 @@
 			<ref bean="indexJobDetail"/>
 		</property>
 		<property name="cronExpression">
-			<value>0 15 1 ? * *</value><!-- daily after 1:15 -->
+			<value>0 15 13 ? * *</value><!-- daily after 1:15 -->
 		</property>
 	</bean>
 	<bean id="arrayDesignReportTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
@@ -96,7 +96,7 @@
 			<ref bean="indexService"/>
 		</property>
 		<property name="targetMethod">
-			<value>indexAll</value>
+			<value>runAll</value>
 		</property>
 	</bean>
 	<bean id="arrayDesignReportJobDetail"

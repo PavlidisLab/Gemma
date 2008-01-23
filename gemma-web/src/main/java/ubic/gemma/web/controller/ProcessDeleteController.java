@@ -59,7 +59,7 @@ public class ProcessDeleteController extends BaseFormController {
 
         // String taskId = ( String ) request.getSession().getAttribute(
         // BackgroundProcessingFormController.JOB_ATTRIBUTE );
-        String taskId = request.getParameter( BackgroundProcessingFormController.JOB_ATTRIBUTE );
+        String taskId = request.getParameter( TaskRunningService.JOB_ATTRIBUTE );
         if ( taskId == null ) {
             log.warn( "No thread in session.  Can't stop process" + this.getClass() );
             return new ModelAndView( new RedirectView( "/mainMenu.html" ) );

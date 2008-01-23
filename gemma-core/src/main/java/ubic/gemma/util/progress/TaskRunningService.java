@@ -26,6 +26,12 @@ public class TaskRunningService {
     static Log log = LogFactory.getLog( TaskRunningService.class.getName() );
 
     private static final int KEY_LENGTH = 32;
+    
+    /**
+     * Use this to access the task id in the request.
+     */
+    public final static String JOB_ATTRIBUTE = "taskId";
+    
 
     final Map<Object, Future> submittedTasks = new ConcurrentHashMap<Object, Future>();
 

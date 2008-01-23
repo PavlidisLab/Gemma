@@ -54,7 +54,13 @@ public abstract class AbstractSpacesService {
 	}
 
 	protected String run(String spaceUrl, String taskName,
-			boolean runInLocalContext) {
+			boolean runInLocalContext){
+		
+			return run(spaceUrl, taskName, runInLocalContext, null);
+	}
+			
+	protected String run(String spaceUrl, String taskName,
+			boolean runInLocalContext, Object command) {
 
 		String taskId = null;
 
@@ -65,7 +71,7 @@ public abstract class AbstractSpacesService {
 			log.info("Running task " + taskName + " remotely.");
 
 			taskId = SpacesHelper.getTaskIdFromTask(updatedContext, taskName);
-			runRemotely(taskId);
+			runRemotely(taskId, command);
 		} else if (!updatedContext.containsBean("gigaspacesTemplate")
 				&& !runInLocalContext) {
 			throw new RuntimeException(
@@ -75,15 +81,23 @@ public abstract class AbstractSpacesService {
 		else {
 			log.info("Running task " + taskName + " locally.");
 			taskId = TaskRunningService.generateTaskId();
-			runLocally(taskId);
+			runLocally(taskId, command);
 		}
 
 		return taskId;
 	}
 
-	public abstract void runLocally(String taskId);
+	/**
+	 * @param taskId
+	 * @param command could be null
+	 */
+	public abstract void runLocally(String taskId, Object command);
 
-	public abstract void runRemotely(String taskId);
+	/**
+	 * @param taskId
+	 * @param command could be null
+	 */
+	public abstract void runRemotely(String taskId, Object command);
 
 	/**
 	 * 

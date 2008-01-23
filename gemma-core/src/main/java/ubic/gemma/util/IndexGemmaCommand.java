@@ -18,7 +18,7 @@
  */
 
 
-package ubic.gemma.web.controller.compass;
+package ubic.gemma.util;
 
 import java.io.Serializable;
 
@@ -46,6 +46,17 @@ public class IndexGemmaCommand implements Serializable {
 	private boolean indexBioSequence;
 	
 	
+	/**
+	 * @param all  Sets all the flags to index to whatever is passed in (false/true)
+	 */
+	public void setAll(boolean all){
+		setIndexArray(all);
+		setIndexBibliographic(all);
+		setIndexBioSequence(all);
+		setIndexEE(all);
+		setIndexGene(all);
+		setIndexProbe(all);		
+	}
 	
 	public boolean isIndexArray() {
 		return indexArray;

@@ -38,10 +38,6 @@ import ubic.gemma.web.util.MessageUtil;
  */
 public abstract class BackgroundProcessingFormController extends BaseFormController {
 
-    /**
-     * Use this to access the task id in the request.
-     */
-    public final static String JOB_ATTRIBUTE = "taskId";
 
     protected TaskRunningService taskRunningService;
 

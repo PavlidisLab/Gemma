@@ -50,6 +50,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
 import ubic.gemma.util.progress.ProgressManager;
+import ubic.gemma.util.progress.TaskRunningService;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.gemmaspaces.AbstractSpacesFormController;
 import ubic.gemma.web.propertyeditor.ArrayDesignPropertyEditor;
@@ -218,7 +219,7 @@ public class ExpressionExperimentLoadController extends AbstractSpacesFormContro
      * @deprecated
      */
     private void cancel( HttpServletRequest request ) {
-        Future job = ( Future ) request.getSession().getAttribute( JOB_ATTRIBUTE );
+        Future job = ( Future ) request.getSession().getAttribute( TaskRunningService.JOB_ATTRIBUTE );
         job.cancel( true );
     }
 

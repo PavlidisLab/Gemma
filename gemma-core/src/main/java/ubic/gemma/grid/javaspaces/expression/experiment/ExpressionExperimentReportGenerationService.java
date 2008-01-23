@@ -22,7 +22,6 @@ import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.grid.javaspaces.AbstractSpacesService;
 import ubic.gemma.grid.javaspaces.SpacesCommand;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
-import ubic.gemma.util.grid.javaspaces.SpacesUtil;
 
 /**
  * @author keshav
@@ -53,7 +52,7 @@ public class ExpressionExperimentReportGenerationService extends
 	 * @see ubic.gemma.grid.javaspaces.AbstractSpacesService#runLocally(java.lang.String)
 	 */
 	@Override
-	public void runLocally(String taskId) {
+	public void runLocally(String taskId, Object command) {
 		expressionExperimentReportService.generateSummaryObjects();
 	}
 
@@ -63,7 +62,7 @@ public class ExpressionExperimentReportGenerationService extends
 	 * @see ubic.gemma.grid.javaspaces.AbstractSpacesService#runRemotely(java.lang.String)
 	 */
 	@Override
-	public void runRemotely(String taskId) {
+	public void runRemotely(String taskId, Object command) {
 		// ExpressionExperimentReportTask reportProxy = (
 		// ExpressionExperimentReportTask ) updatedContext
 		// .getBean( "expressionExperimentReportTask" );
