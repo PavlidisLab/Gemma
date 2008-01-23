@@ -9,7 +9,7 @@ Ext.onReady( function() {
 		editable : true,
 		showParent : true,
 		noInitialLoad : true,
-		pageSize : 10
+		pageSize : 20
 	} );
 	Ext.Gemma.CharacteristicBrowser.grid.render();
 	
