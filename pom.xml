@@ -219,7 +219,7 @@
 			<!--  <plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-changelog-plugin</artifactId>
-			</plugin> -->
+				</plugin> -->
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>cobertura-maven-plugin</artifactId>
@@ -251,30 +251,54 @@
 					<argLine>-Xmx1024m -enableassertions</argLine>
 				</configuration>
 			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>assemble-src</id>
-						<configuration>
-							<descriptors>
-								<descriptor>${basedir}/src/assembly/src-assembly.xml</descriptor>
-							</descriptors>
-						</configuration>
-					</execution>
-					<execution>
-						<id>assemble-bin</id>
-						<configuration>
-							<descriptors>
-								<descriptor>${basedir}/src/assembly/bin-assembly.xml</descriptor>
-							</descriptors>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
 		</plugins>
 	</build>
+	<profiles>
+		<profile>
+			<id>assemble-src</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+				<property>
+					<name>assemble-src</name>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-assembly-plugin</artifactId>
+						<configuration>
+							<descriptors>
+								<descriptor>src/assembly/src-assembly.xml</descriptor>
+							</descriptors>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>assemble-bin</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+				<property>
+					<name>assemble-bin</name>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-assembly-plugin</artifactId>
+						<configuration>
+							<descriptors>
+								<descriptor>src/assembly/bin-assembly.xml</descriptor>
+							</descriptors>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 	<distributionManagement>
 		<site>
 			<id>website</id>
