@@ -24,10 +24,8 @@ import ubic.gemma.analysis.AllAnalysisTests;
 import ubic.gemma.analysis.report.ArrayDesignReportServiceTest;
 import ubic.gemma.apps.ProbeMapperCliTest;
 import ubic.gemma.datastructure.matrix.AllExpressionMatrixTests;
-import ubic.gemma.externalDb.ExternalDatabaseTest;
 import ubic.gemma.externalDb.GoldenPathQueryTest;
 import ubic.gemma.loader.AllLoaderTests;
-import ubic.gemma.loader.genome.AllGenomeTests;
 import ubic.gemma.model.AllModelTests;
 import ubic.gemma.ontology.AllOntologyTests;
 import ubic.gemma.persistence.AllPersistenceTests;
@@ -60,7 +58,6 @@ public class AllCoreTests {
         suite.addTest( AllSecurityTests.suite() );
 
         // tests in externalDb
-        suite.addTestSuite( ExternalDatabaseTest.class );
         suite.addTestSuite( GoldenPathQueryTest.class );
 
         // tests in apps
