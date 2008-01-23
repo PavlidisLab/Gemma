@@ -74,6 +74,7 @@ public class CharacteristicBrowserController extends BaseFormController {
                 avo.setId( c.getId() );
                 avo.setClassName( c.getCategory() );
                 avo.setTermName( c.getValue() );
+                avo.setEvidenceCode( c.getEvidenceCode().toString() );
                 if ( c instanceof VocabCharacteristic ) {
                     VocabCharacteristic vc = (VocabCharacteristic)c;
                     avo.setClassUri( vc.getCategoryUri() );

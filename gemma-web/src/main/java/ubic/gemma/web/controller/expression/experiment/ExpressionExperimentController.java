@@ -274,6 +274,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             annotationValue.setId( c.getId() );
             annotationValue.setClassName( c.getCategory() );
             annotationValue.setTermName( c.getValue() );
+            annotationValue.setEvidenceCode( c.getEvidenceCode().toString() );
             if ( c instanceof VocabCharacteristic ) {
                 VocabCharacteristic vc = ( VocabCharacteristic ) c;
                 annotationValue.setClassUri( vc.getCategoryUri() );
