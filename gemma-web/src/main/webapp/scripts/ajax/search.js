@@ -181,7 +181,7 @@ var renderEntityClass = function(data, metadata, record, row, column, store  ) {
 		return "Expression dataset";		
 	} else if (clazz == "CompositeSequence") {
 		return "Probe";
-	} else if (clazz == "ArrayDesign") {
+	} else if (clazz == "ArrayDesignValueObject") {
 		return "Array";
 	} else if (clazz == "BioSequence") {
 		return "Sequence";
@@ -199,7 +199,7 @@ var renderEntity = function( data, metadata, record, row, column, store  ) {
 		return "<a href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + data.id + "\">" + data.shortName + "</a> - " + data.name ;
 	} else if (clazz == "CompositeSequence") {
 		return "<a href=\"/Gemma/compositeSequence/show.html?id=" + data.id + "\">" + data.name  + "</a> - " + data.description + "; Array: " + data.arrayDesign.shortName;
-	} else if (clazz == "ArrayDesign") {
+	} else if (clazz == "ArrayDesignValueObject") {
 		return "<a href=\"/Gemma/arrays/showArrayDesign.html?id=" + data.id + "\">" + data.shortName + "</a>  " + data.name;
 	}else if (clazz == "BioSequence") {
 		return "<a href=\"/Gemma/genome/bioSequence/showBioSequence.html?id=" + data.id + "\">" + data.name + "</a> - " + data.taxon.commonName + " " + data.description ;

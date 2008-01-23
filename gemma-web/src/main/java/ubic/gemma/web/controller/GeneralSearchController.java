@@ -360,9 +360,9 @@ public class GeneralSearchController extends BaseFormController {
         Taxon tax = settings.getTaxon();
         if ( tax == null ) return toFilter;
         Collection<ArrayDesignValueObject> filtered = new HashSet<ArrayDesignValueObject>();
-        for ( ArrayDesignValueObject eevo : toFilter ) {
-            if ( ( eevo.getTaxon() == null ) || ( eevo.getTaxon().equalsIgnoreCase( tax.getCommonName() ) ) )
-                filtered.add( eevo );
+        for ( ArrayDesignValueObject aavo : toFilter ) {
+            if ( ( aavo.getTaxon() == null ) || ( aavo.getTaxon().equalsIgnoreCase( tax.getCommonName() ) ) )
+                filtered.add( aavo );
         }
 
         return filtered;

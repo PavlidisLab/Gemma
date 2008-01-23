@@ -1116,6 +1116,9 @@ Mapping URLS to controllers
 					<property name="includes">
 						<list>
 							<value>id</value>
+							<value>name</value>
+							<value>shortName</value>
+							<value>description</value>
 						</list>
 					</property>
 				</bean>
