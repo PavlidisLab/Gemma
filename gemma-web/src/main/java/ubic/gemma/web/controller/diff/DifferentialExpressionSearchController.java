@@ -18,7 +18,9 @@
  */
 package ubic.gemma.web.controller.diff;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
@@ -31,6 +33,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.SimpleFormController;
+import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.model.analysis.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -45,7 +48,7 @@ import ubic.gemma.web.util.ConfigurationCookie;
  * @spring.property name = "commandName" value="diffExpressionSearchCommand"
  * @spring.property name = "commandClass" value="ubic.gemma.web.controller.diff.DiffExpressionSearchCommand"
  * @spring.property name = "formView" value="diffExpressionSearchForm"
- * @spring.property name = "successView" value="expressionExperiments"
+ * @spring.property name = "successView" value="redirect:/expressionExperiment/showAllExpressionExperiments.html"
  * @spring.property name = "differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
  * @spring.property name = "geneService" ref="geneService"
  */
@@ -158,15 +161,23 @@ public class DifferentialExpressionSearchController extends SimpleFormController
         /* multiple genes can have the same symbol */
         Collection<Gene> genes = geneService.findByOfficialSymbol( officialSymbol );
 
-        ModelAndView mav = new ModelAndView();
+        List<ExpressionExperiment> allExperiments = new ArrayList<ExpressionExperiment>();
         for ( Gene g : genes ) {
             Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService.find( g );
 
-            mav.addObject( g.getOfficialSymbol(), experimentsAnalyzed );
+            allExperiments.addAll( experimentsAnalyzed );
 
         }
 
-        return mav;
+        String url = "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath()
+                + "/expressionExperiment/showAllExpressionExperiments.html?id=";
+
+        for ( ExpressionExperiment e : allExperiments ) {
+            url = url + "," + e.getId();
+        }
+
+        return new ModelAndView( new RedirectView( url ) );
+
     }
 
     /**
