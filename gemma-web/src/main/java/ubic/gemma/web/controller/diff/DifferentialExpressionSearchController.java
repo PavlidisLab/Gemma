@@ -84,7 +84,7 @@ public class DifferentialExpressionSearchController extends SimpleFormController
         String stringId = null;
 
         Gene g = null;
-        DiffExpressionSearchCommand diffCommand = null;
+        DiffExpressionSearchCommand diffCommand = new DiffExpressionSearchCommand();
 
         stringId = request.getParameter( "id" );
 
