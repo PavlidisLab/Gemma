@@ -27,6 +27,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import ubic.gemma.model.association.Gene2GOAssociationImpl;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorImpl;
+
 /**
  * @author Luke
  * @author Paul
@@ -35,6 +38,8 @@ import java.util.Map;
  */
 public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.CharacteristicDaoBase {
 
+    private static final int BATCH_SIZE = 1000;
+    
     /*
      * (non-Javadoc)
      * 
@@ -43,8 +48,14 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
     @SuppressWarnings("unchecked")
     @Override
     protected Map handleFindByParentClass( Class parentClass ) throws Exception {
+        String field = "characteristics";
+        if ( parentClass == ExperimentalFactorImpl.class )
+            field = "category";
+        else if ( parentClass == Gene2GOAssociationImpl.class )
+            field = "ontologyEntry";
+        
         final String queryString = "select parent, char from " + parentClass.getSimpleName() + " as parent "
-                + "inner join parent.characteristics as char";
+                + "inner join parent." + field + " as char";
 
         Map charToParent = new HashMap<Characteristic, Object>();
         for ( Object o : getHibernateTemplate().find( queryString ) ) {
@@ -112,17 +123,35 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
     @SuppressWarnings("unchecked")
     @Override
     protected Map handleGetParents( Class parentClass, Collection characteristics ) throws Exception {
-        if ( characteristics.isEmpty() ) return new HashMap();
+        Collection<Characteristic> batch = new HashSet<Characteristic>();
+        Map<Characteristic, Object> charToParent = new HashMap<Characteristic, Object>();
+        for ( Characteristic c : ( Collection<Characteristic> )characteristics ) {
+            batch.add( c );
+            if ( batch.size() == BATCH_SIZE ) {
+                batchGetParents( parentClass, batch, charToParent );
+                batch.clear();
+            }
+        }
+        batchGetParents( parentClass, batch, charToParent );
+        return charToParent;
+    }
+    
+    private void batchGetParents( Class parentClass, Collection<Characteristic> characteristics, Map<Characteristic, Object> charToParent ) {
+        if ( characteristics.isEmpty() ) return;
+        
+        String field = "characteristics";
+        if ( parentClass == ExperimentalFactorImpl.class )
+            field = "category";
+        else if ( parentClass == Gene2GOAssociationImpl.class )
+            field = "ontologyEntry";
 
         final String queryString = "select parent, char from " + parentClass.getSimpleName() + " as parent "
-                + "inner join parent.characteristics as char " + "where char in (:chars)";
+                + "inner join parent." + field + " as char " + "where char in (:chars)";
 
-        Map charToParent = new HashMap<Characteristic, Object>();
         for ( Object o : getHibernateTemplate().findByNamedParam( queryString, "chars", characteristics ) ) {
             Object[] row = ( Object[] ) o;
             charToParent.put( ( Characteristic ) row[1], row[0] );
         }
-        return charToParent;
     }
-
+    
 }

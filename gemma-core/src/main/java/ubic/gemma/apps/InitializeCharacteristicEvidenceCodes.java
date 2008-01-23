@@ -25,6 +25,8 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.model.association.GOEvidenceCode;
+import ubic.gemma.model.association.Gene2GOAssociation;
+import ubic.gemma.model.association.Gene2GOAssociationImpl;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -99,7 +101,10 @@ public class InitializeCharacteristicEvidenceCodes extends AbstractSpringAwareCL
         initializeFactorValueCharacteristics( fvChars.keySet() );
         //initializeCharacteristicEvidenceCode( fvChars.keySet(), GOEvidenceCode.IEA );
         
-        initializeExpressionExperimentCategoryCharacteristics();
+        Map<Characteristic, Gene2GOAssociation> goChars = characteristicService.findByParentClass( Gene2GOAssociationImpl.class );
+        intializeGene2GOAssociationCharacteristics( goChars );
+        
+        initializeExperimentalFactorCategoryCharacteristics();
         
         return null;
 
@@ -114,21 +119,30 @@ public class InitializeCharacteristicEvidenceCodes extends AbstractSpringAwareCL
     
     private void initializeFactorValueCharacteristics( Collection<Characteristic> chars ) {
         for ( Characteristic c : chars ) {
-            if ( c.getDescription().startsWith( "GEO" ) ) {
+            if ( c.getDescription().startsWith( "GEO" ) || c.getDescription().startsWith ( "Converted from GEO" ) ) {
                 c.setEvidenceCode( GOEvidenceCode.IEA );
                 characteristicService.update( c );
             }
         }
     }
+
+    private void intializeGene2GOAssociationCharacteristics( Map<Characteristic, Gene2GOAssociation> charToParent ) {
+        for ( Characteristic c : charToParent.keySet() ) {
+            Gene2GOAssociation go = charToParent.get( c );
+            c.setEvidenceCode( go.getEvidenceCode() );
+            characteristicService.update( c );
+        }
+    }
     
-    private void initializeExpressionExperimentCategoryCharacteristics() {
+    private void initializeExperimentalFactorCategoryCharacteristics() {
         // deal with ExperimentalFactor.category (which is a characteristic) specially...
         Collection<ExperimentalFactor> experimentalFactors = experimentalFactorService.loadAll();
         for ( ExperimentalFactor ef : experimentalFactors ) {
-            Characteristic category = ef.getCategory();
-            GOEvidenceCode ec = GOEvidenceCode.IEA;
-            category.setEvidenceCode( ec );
-            characteristicService.update( category );
+            Characteristic c = ef.getCategory();
+            if ( c.getDescription().startsWith( "GEO" ) || c.getDescription().startsWith ( "Converted from GEO" ) ) {
+                c.setEvidenceCode( GOEvidenceCode.IEA );
+                characteristicService.update( c );
+            }
         }
     }
 

@@ -27,7 +27,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import ubic.gemma.model.association.Gene2GOAssociationImpl;
 import ubic.gemma.model.expression.biomaterial.BioMaterialImpl;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorImpl;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
 import ubic.gemma.model.expression.experiment.FactorValueImpl;
 
@@ -39,7 +41,8 @@ import ubic.gemma.model.expression.experiment.FactorValueImpl;
 public class CharacteristicServiceImpl extends ubic.gemma.model.common.description.CharacteristicServiceBase {
 
     private static final Class[] CLASSES_WITH_CHARACTERISTICS = new Class[] { ExpressionExperimentImpl.class,
-            BioMaterialImpl.class, FactorValueImpl.class };
+            BioMaterialImpl.class, FactorValueImpl.class, ExperimentalFactorImpl.class,
+            Gene2GOAssociationImpl.class };
 
     /**
      * @see ubic.gemma.model.common.description.CharacteristicService#findByValue(java.lang.String)

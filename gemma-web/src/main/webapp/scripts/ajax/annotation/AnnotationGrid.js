@@ -54,14 +54,14 @@ Ext.Gemma.AnnotationGrid = function ( div, config ) {
 	superConfig.cm = new Ext.grid.ColumnModel( [
 		{ header: "Class", dataIndex: "className" },
 		{ header: "Term", dataIndex: "termName", renderer: Ext.Gemma.AnnotationGrid.getTermStyler() },
-		{ header: "Evidence", dataIndex: "evidenceCode" },
-		{ header: "Parent", dataIndex: "parentLink", renderer: Ext.Gemma.AnnotationGrid.getParentStyler(), hidden: this.showParent ? false: true }
+		{ header: "Parent", dataIndex: "parentLink", renderer: Ext.Gemma.AnnotationGrid.getParentStyler(), hidden: this.showParent ? false: true },
+		{ header: "Evidence", dataIndex: "evidenceCode" }
 	] );
 	superConfig.cm.defaultSortable = true;
 	var CATEGORY_COLUMN = 0;
 	var VALUE_COLUMN = 1;
-	var EVIDENCE_COLUMN = 2;
-	var PARENT_COLUMN = 3;
+	var PARENT_COLUMN = 2;
+	var EVIDENCE_COLUMN = 3;
 	if ( this.editable ) {
 		this.categoryCombo = new Ext.Gemma.MGEDCombo( { lazyRender : true, termKey : this.mgedTermKey } );
 		var categoryEditor = new Ext.grid.GridEditor( this.categoryCombo );
