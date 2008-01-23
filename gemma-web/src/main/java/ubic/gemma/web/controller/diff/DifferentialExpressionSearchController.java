@@ -81,17 +81,18 @@ public class DifferentialExpressionSearchController extends SimpleFormController
         String stringId = null;
 
         Gene g = null;
-        DiffExpressionSearchCommand diffCommand = new DiffExpressionSearchCommand();
+        DiffExpressionSearchCommand diffCommand = null;
 
         stringId = request.getParameter( "id" );
 
         if ( StringUtils.isNotBlank( stringId ) ) {
             Long id = Long.parseLong( stringId );
             g = geneService.load( id );
+
+            diffCommand = new DiffExpressionSearchCommand();
             diffCommand.setGeneId( g.getId() );
             diffCommand.setGeneOfficialSymbol( g.getOfficialSymbol() );
         } else {
-            g = Gene.Factory.newInstance();
             diffCommand = loadCookie( request, diffCommand );
         }
 
@@ -120,11 +121,13 @@ public class DifferentialExpressionSearchController extends SimpleFormController
                 try {
                     ConfigurationCookie cookie = new ConfigurationCookie( cook );
                     diffSearchCommand.setGeneOfficialSymbol( cookie.getString( "geneOfficalSymbol" ) );
+                    diffSearchCommand.setGeneOfficialSymbol( cookie.getString( "geneId" ) );
 
                 } catch ( Exception e ) {
                     log.warn( "Cookie could not be loaded: " + e.getMessage() );
                     // that's okay, we just don't get a cookie.
                 }
+                break;
             }
         }
 
@@ -146,6 +149,9 @@ public class DifferentialExpressionSearchController extends SimpleFormController
         /* enter on a POST */
 
         DiffExpressionSearchCommand diffCommand = ( ( DiffExpressionSearchCommand ) command );
+
+        Cookie cookie = new DiffExpressionSearchCookie( diffCommand );
+        response.addCookie( cookie );
 
         String officialSymbol = diffCommand.getGeneOfficialSymbol();
 
@@ -176,5 +182,26 @@ public class DifferentialExpressionSearchController extends SimpleFormController
      */
     public void setGeneService( GeneService geneService ) {
         this.geneService = geneService;
+    }
+
+    /**
+     * @author keshav
+     */
+    class DiffExpressionSearchCookie extends ConfigurationCookie {
+
+        public DiffExpressionSearchCookie( DiffExpressionSearchCommand command ) {
+
+            super( COOKIE_NAME );
+
+            log.debug( "creating cookie" );
+
+            this.setProperty( "geneId", command.getGeneId() );
+            this.setProperty( "geneOfficialSymbol", command.getGeneOfficialSymbol() );
+
+            /* set cookie to expire after 2 days. */
+            this.setMaxAge( 172800 );
+            this.setComment( "User selections for differential expression search form." );
+        }
+
     }
 }
