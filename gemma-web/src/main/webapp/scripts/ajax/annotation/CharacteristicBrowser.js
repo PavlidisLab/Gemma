@@ -100,6 +100,49 @@ Ext.onReady( function() {
 	Ext.Gemma.CharacteristicBrowser.grid.on( "afteredit", function( e ) {
 		revertButton.enable();
 	} );
+	
+	var savedCharacteristic;
+	var copyButton = new Ext.Toolbar.Button( {
+		text : "copy",
+		tooltip : "Copy values from the selected characteristic",
+		disabled : true,
+		handler : function() {
+			var selected = Ext.Gemma.CharacteristicBrowser.grid.getSelectionModel().getSelections();
+			for ( var i=0; i<selected.length; ++i ) {
+				var record = selected[i];
+				savedCharacteristic = record.data;
+				break;
+			}
+			pasteButton.enable();
+		}
+	} );
+	Ext.Gemma.CharacteristicBrowser.grid.getSelectionModel().on( "selectionchange", function( model ) {
+		var selected = model.getSelections();
+		if ( selected.length > 0 ) {
+			copyButton.enable();
+		}
+		else {
+			copyButton.disable();
+		}
+	} );
+	
+	var pasteButton = new Ext.Toolbar.Button( {
+		text : "paste",
+		tooltip : "Paste copied values onto the selected characteristics",
+		disabled : true,
+		handler : function() {
+			var selected = Ext.Gemma.CharacteristicBrowser.grid.getSelectionModel().getSelections();
+			for ( var i=0; i<selected.length; ++i ) {
+				var record = selected[i];
+				record.set( "classUri", savedCharacteristic.classUri );
+				record.set( "className", savedCharacteristic.className );
+				record.set( "termUri", savedCharacteristic.termUri );
+				record.set( "termName", savedCharacteristic.termName );
+			}
+			pasteButton.disable();
+			Ext.Gemma.CharacteristicBrowser.grid.getView().refresh();
+		}
+	} );
 
 /*
 	var testButton = new Ext.Toolbar.Button( {
@@ -150,6 +193,10 @@ Ext.onReady( function() {
 	toolbar.addField( deleteButton );
 	toolbar.addSeparator();
 	toolbar.addField( revertButton );
+	toolbar.addSeparator();
+	toolbar.addField( copyButton );
+	toolbar.addSeparator();
+	toolbar.addField( pasteButton );
 /*
 	toolbar.addSeparator();
 	toolbar.addField( testButton );

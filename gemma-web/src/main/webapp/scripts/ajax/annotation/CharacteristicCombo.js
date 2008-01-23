@@ -102,6 +102,14 @@ Ext.extend( Ext.Gemma.CharacteristicCombo, Ext.form.ComboBox, {
 				this.characteristic : {	category : this.characteristic.category, value : this.characteristic.value };
 		},
 		
+		setCharacteristic : function ( value, valueUri, category, categoryUri ) {
+			this.characteristic.value = value;
+			this.characteristic.valueUri = valueUri;
+			this.characteristic.category = category;
+			this.characteristic.categoryUri = categoryUri;
+			this.setValue( value );
+		},
+		
 		setCategory : function ( category, categoryUri ) {
 			this.characteristic.category = category;
 			this.characteristic.categoryUri = categoryUri;
