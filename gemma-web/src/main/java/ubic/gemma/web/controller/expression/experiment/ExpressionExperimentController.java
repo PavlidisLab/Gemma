@@ -343,6 +343,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         }
 
         ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
+        expressionExperimentService.thawLite( expressionExperiment );
         if ( expressionExperiment == null ) {
             return redirectToList( request );
         }

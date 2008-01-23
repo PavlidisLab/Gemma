@@ -87,8 +87,8 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
         List<String> classes = getClassHierarchy( type.getClass() );
 
         final String queryString = "select event " + "from ubic.gemma.model.common.auditAndSecurity.AuditTrail trail "
-                + "inner join fetch trail.events event inner join event.eventType et inner join fetch event.performer "
-                + "where trail = :trail " + "and et.class in (" + StringUtils.join( classes, "," )
+                + "inner join trail.events event inner join event.eventType et inner join fetch event.performer "
+                + "where trail.id = :trail " + "and et.class in (" + StringUtils.join( classes, "," )
                 + ") order by event.date desc ";
 
         try {
@@ -96,7 +96,7 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
             queryObject.setCacheable( true );
             queryObject.setCacheRegion( "auditEvents" );
 
-            queryObject.setParameter( "trail", auditTrail );
+            queryObject.setParameter( "trail", auditTrail.getId() );
             queryObject.setMaxResults( 1 );
 
             Collection results = queryObject.list();
