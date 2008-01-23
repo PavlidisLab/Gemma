@@ -19,7 +19,6 @@
 package ubic.gemma.analysis.util;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
-import ubic.basecode.util.RServeClient;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 /**
@@ -74,44 +73,5 @@ public class AffyBatch extends RCommander {
 
         return abName;
     }
-
-    // /**
-    // * Corresponds to a R method of the same name in the affy package.
-    // *
-    // * @param name
-    // * @return
-    // */
-    // private String cleanCdfName( String name ) {
-    // if ( name == null || name.length() == 0 )
-    // throw new IllegalArgumentException( "invalid name (null or zero length" );
-    // name = bioCName( name );
-    // name = name.toLowerCase();
-    // name = name.replaceAll( "_", "" );
-    // name = name.replaceAll( "-", "" );
-    // name = name.replaceAll( " ", "" );
-    // return name;
-    // }
-    //
-    // /**
-    // * Special cases for internal bioconductor names, corresponds to the "mapCdfName". We do not replicate the
-    // behavior
-    // * of a bug in some versions of affy which caused the corresponding method in BioConductor to return
-    // "cdenv.example"
-    // * for all of the special cases.
-    // *
-    // * @param cdfName
-    // * @return
-    // */
-    // private String bioCName( String cdfName ) {
-    // if ( cdfName.equals( "cdfenv.example" ) ) {
-    // return "cdfenv.example";
-    // } else if ( cdfName.equals( "3101_a03" ) ) {
-    // return "hu6800";
-    // } else if ( cdfName.equals( "EColiGenome" ) ) {
-    // return "ecoli";
-    // } else {
-    // return cdfName;
-    // }
-    // }
 
 }

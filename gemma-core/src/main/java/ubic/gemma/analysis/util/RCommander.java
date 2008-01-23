@@ -32,8 +32,6 @@ import ubic.basecode.util.RConnectionFactory;
  */
 public abstract class RCommander {
 
-    private static final int TIMEOUT_MILLI_SECONDS = 1000;
-
     protected static Log log = LogFactory.getLog( RCommander.class.getName() );
 
     protected RClient rc;

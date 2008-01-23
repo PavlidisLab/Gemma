@@ -19,17 +19,17 @@
 package ubic.gemma.analysis.diff;
 
 import java.util.Collection;
-import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 import org.rosuda.REngine.REXPMismatchException;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
 import ubic.gemma.analysis.util.RCommander;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.designElement.DesignElement;
 import cern.colt.list.DoubleArrayList;
 
 /**
@@ -42,7 +42,7 @@ import cern.colt.list.DoubleArrayList;
 public class SimpleSAMAnalyzer extends RCommander {
 
     ExpressionDataManager manager;
-    DenseDoubleMatrix2DNamed expressionLevelsMatrix = null;
+    DenseDoubleMatrix2DNamed<DesignElement, Object> expressionLevelsMatrix = null;
     int[] columnLabels;
 
     public SimpleSAMAnalyzer() {
@@ -82,7 +82,7 @@ public class SimpleSAMAnalyzer extends RCommander {
         int numOfColumns = subset1BioAssays.size() + subset2BioAssays.size();
 
         // initialize the expression matrix and give the column names
-        expressionLevelsMatrix = DoubleMatrix2DNamedFactory.dense( numOfRows, numOfColumns );
+        expressionLevelsMatrix = new DenseDoubleMatrix2DNamed<DesignElement, Object>( numOfRows, numOfColumns );
 
         // write column labels
         columnLabels = new int[numOfColumns];
@@ -122,7 +122,7 @@ public class SimpleSAMAnalyzer extends RCommander {
                 }
 
                 // put the expression levels of two subsets into one row of the matrix
-                expressionLevelsMatrix.addRowName( dataVector.getDesignElement().getName() );
+                expressionLevelsMatrix.addRowName( dataVector.getDesignElement() );
                 for ( int k = 0; k < group1ExpressionLevels.size(); k++ )
                     expressionLevelsMatrix.set( geneCtr, k, group1ExpressionLevels.get( k ) );
                 for ( int y = 0; y < group2ExpressionLevels.size(); y++ )
@@ -176,14 +176,14 @@ public class SimpleSAMAnalyzer extends RCommander {
      * @return a hashtable whose entries contain significant genes in the form: probeId: list of experiment names in
      *         which this gene is significant
      */
-    protected Hashtable<String, List<String>> getSignificantGenesAcrossExperiments( List<String> list ) {
+    protected Map<String, List<String>> getSignificantGenesAcrossExperiments( List<String> list ) {
         return manager.getSignificantGenesAcrossExperimentsWithoutPValues( list );
     }
 
     /**
      * This method writes the hashtable of significant genes across experiments to an output file
      */
-    protected void writeSignificantGenesAcrossExperimentsToFile( String fileName, Hashtable<String, List<String>> table ) {
+    protected void writeSignificantGenesAcrossExperimentsToFile( String fileName, Map<String, List<String>> table ) {
         manager.writeSignificantGenesAcrossExperimentsToFile( fileName, table );
     }
 
@@ -204,7 +204,7 @@ public class SimpleSAMAnalyzer extends RCommander {
         List<String> list = new Vector<String>();
         list.add( "GDS1318" );
         list.add( "GDS1328" );
-        Hashtable<String, List<String>> table = analyzer.getSignificantGenesAcrossExperiments( list );
+        Map<String, List<String>> table = analyzer.getSignificantGenesAcrossExperiments( list );
         analyzer.writeSignificantGenesAcrossExperimentsToFile( "siggenes_across_experiments", table );
 
         System.exit( 0 );

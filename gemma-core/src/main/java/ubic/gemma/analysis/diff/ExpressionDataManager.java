@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 import org.apache.commons.logging.Log;
@@ -140,8 +141,8 @@ public class ExpressionDataManager {
      * @return a hashtable with one entry containing a String array of the subset names corresponding to bioassays and
      *         the others a double array of expression levels of genes
      */
-    protected Hashtable<String, Object> getExpressionData() {
-        Hashtable<String, Object> table = new Hashtable<String, Object>();
+    protected Map<String, Object> getExpressionData() {
+        Map<String, Object> table = new Hashtable<String, Object>();
 
         String[] subsetNames = getSubsetNamesForBioAssays();
         table.put( "subsets", subsetNames );
@@ -209,7 +210,7 @@ public class ExpressionDataManager {
             log.error( "File to write DesignElementDataVectors cannot be opened." );
         }
 
-        Hashtable<String, Object> table = getExpressionData();
+        Map<String, Object> table = getExpressionData();
         String[] subsetNames = ( String[] ) table.get( "subsets" );
         table.remove( "subsets" );
 
@@ -217,9 +218,7 @@ public class ExpressionDataManager {
             for ( int h = 0; h < subsetNames.length; h++ )
                 writer.write( subsetNames[h] + "\t" );
             writer.write( "\n" );
-            Enumeration keys = table.keys();
-            for ( int j = 0; j < table.size(); j++ ) {
-                String key = ( String ) keys.nextElement();
+            for ( String key : table.keySet() ) {
                 writer.write( key + "\t" );
                 double[] expressionLevels = ( double[] ) table.get( key );
                 for ( int k = 0; k < expressionLevels.length; k++ )
@@ -476,7 +475,7 @@ public class ExpressionDataManager {
      * @param table hashtable that contains the significant genes for each experiment in the form experimentName -> List
      *        of significant genes
      */
-    protected void writeSignificantGenesAcrossExperimentsToFile( String fileName, Hashtable<String, List<String>> table ) {
+    protected void writeSignificantGenesAcrossExperimentsToFile( String fileName, Map<String, List<String>> table ) {
         log.info( "Writing significant genes across experiments to file." );
         BufferedWriter writer = null;
         try {
@@ -485,10 +484,8 @@ public class ExpressionDataManager {
             log.error( "File to write significant genes across experiments cannot be opened." );
         }
 
-        Enumeration keys = table.keys();
-        for ( int k = 0; k < table.size(); k++ ) {
+        for ( String key : table.keySet() ) {
             try {
-                String key = ( String ) keys.nextElement();
                 writer.write( key + " : " );
                 List list = table.get( key );
                 for ( int j = 0; j < list.size(); j++ )

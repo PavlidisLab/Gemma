@@ -21,6 +21,7 @@ package ubic.gemma.analysis.diff;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 import ubic.basecode.math.MultipleTestCorrection;
@@ -84,19 +85,16 @@ public class SimpleTTestAnalyzer extends RCommander {
     protected Hashtable<String, Double> findPValues( String subsetName1, String subsetName2 ) {
         log.info( "Finding p values of the experiment." );
         Hashtable<String, Double> pValuesList = new Hashtable<String, Double>();
-        Hashtable<String, Object> table = manager.getExpressionData();
-        int numberOfGenes = table.size() - 1;
-        Enumeration keys = table.keys();
+        Map<String, Object> table = manager.getExpressionData();
 
         String[] subsetNames = ( String[] ) table.get( "subsets" );
         table.remove( "subsets" );
 
-        for ( int g = 0; g < numberOfGenes; g++ ) {
+        for ( String key : table.keySet() ) {
             // create two DoubleArrayLists for the expression levels of two groups
             DoubleArrayList group1ExpLevels = new DoubleArrayList();
             DoubleArrayList group2ExpLevels = new DoubleArrayList();
 
-            String key = ( String ) keys.nextElement();
             // read the expression levels and seperate them into two groups
             double[] expLevels = ( double[] ) table.get( key );
 
