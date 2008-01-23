@@ -172,8 +172,10 @@ public class DifferentialExpressionSearchController extends SimpleFormController
         String url = "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath()
                 + "/expressionExperiment/showAllExpressionExperiments.html?id=";
 
+        int i = 0;
         for ( ExpressionExperiment e : allExperiments ) {
-            url = url + "," + e.getId();
+            url = url + e.getId();
+            if ( i < ( allExperiments.size() - 1 ) ) url = url + ",";
         }
 
         return new ModelAndView( new RedirectView( url ) );
