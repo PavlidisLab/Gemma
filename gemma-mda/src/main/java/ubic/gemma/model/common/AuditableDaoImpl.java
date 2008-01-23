@@ -87,8 +87,9 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
         List<String> classes = getClassHierarchy( type.getClass() );
 
         final String queryString = "select event " + "from ubic.gemma.model.common.auditAndSecurity.AuditTrail trail "
-                + "inner join trail.events event inner join event.eventType et " + "where trail = :trail "
-                + "and et.class in (" + StringUtils.join( classes, "," ) + ") order by event.date desc ";
+                + "inner join fetch trail.events event inner join event.eventType et inner join fetch event.performer "
+                + "where trail = :trail " + "and et.class in (" + StringUtils.join( classes, "," )
+                + ") order by event.date desc ";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
@@ -196,7 +197,8 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
         }
 
         final String queryString = "select trail,event,et from ubic.gemma.model.common.auditAndSecurity.AuditTrail trail "
-                + "inner join trail.events event inner join event.eventType et where trail in (:trails) order by event.date desc ";
+                + "inner join fetch rail.events event inner join event.eventType et inner join fetch event.performer "
+                + "where trail in (:trails) order by event.date desc ";
 
         Map<Class, Map<Auditable, AuditEvent>> result = new HashMap<Class, Map<Auditable, AuditEvent>>();
         try {
