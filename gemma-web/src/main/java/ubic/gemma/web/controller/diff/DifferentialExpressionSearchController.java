@@ -124,11 +124,13 @@ public class DifferentialExpressionSearchController extends SimpleFormController
                 try {
                     ConfigurationCookie cookie = new ConfigurationCookie( cook );
                     diffSearchCommand.setGeneOfficialSymbol( cookie.getString( "geneOfficalSymbol" ) );
-                    diffSearchCommand.setGeneOfficialSymbol( cookie.getString( "geneId" ) );
+
+                    Long id = Long.parseLong( cookie.getString( "geneId" ) );
+                    diffSearchCommand.setGeneId( id );
 
                 } catch ( Exception e ) {
                     log.warn( "Cookie could not be loaded: " + e.getMessage() );
-                    // that's okay, we just don't get a cookie.
+                    // fine, just don't get a cookie.
                 }
                 break;
             }
