@@ -25,8 +25,9 @@
 		<Menu name="UserMenu" title="menu.user" description="User Menu" page="/editProfile.html" roles="admin,user" />
 		<Menu name="AdminMenu" title="menu.admin" description="Admin Menu" roles="admin">
 			<Item name="LoadData" title="Load data" page="/loadExpressionExperiment.html" />
-			<Item name="BrowsGeo" title="Browse GEO" page="/geoBrowser/showBatch.html" />
+			<Item name="BrowseGeo" title="Browse GEO" page="/geoBrowser/showBatch.html" />
 			<Item name="EeCurate" title="View EE reports" page="/expressionExperiment/showAllExpressionExperimentLinkSummaries.html" />
+			<Item name="CharBrowse" title="Search annotations" page="/characteristicBrowser.html" />
 			<Item name="ViewUsers" title="menu.admin.users" page="/activeUsers.html" />
 			<Item name="ReloadContext" title="menu.admin.reload" page="/reload.html" />
 			<Item name="FlushCache" title="menu.flushCache" page="/flushCache.html" />
