@@ -44,8 +44,13 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 Hibernate.initialize( auditTrail );
-                if ( auditTrail.getEvents() == null ) return null;
-                auditTrail.getEvents().size();
+                if ( auditTrail.getEvents() != null ) {
+                    for ( AuditEvent ae : auditTrail.getEvents() ) {
+                        Hibernate.initialize( ae );
+                        Hibernate.initialize( ae.getPerformer() );
+                        session.evict( ae );
+                    }
+                }
                 session.evict( auditTrail );
                 return null;
             }
@@ -63,16 +68,10 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.update( auditable );
-                if ( auditable.getAuditTrail() == null ) return null;
-                if ( auditable.getAuditTrail().getEvents() == null ) return null;
-
-                auditable.getAuditTrail().getEvents().size();
-                for ( AuditEvent event : auditable.getAuditTrail().getEvents() ) {
-                    if ( event == null ) continue;
-                    session.update( event );
-                    if ( event.getEventType() != null ) session.update( event.getEventType() );
+                if ( auditable.getAuditTrail() != null ) {
+                    thaw( auditable.getAuditTrail() );
+                    session.evict( auditable );
                 }
-                session.evict( auditable );
                 return null;
             }
         }, true );
