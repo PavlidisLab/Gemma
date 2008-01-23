@@ -139,8 +139,8 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
                 rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "geneGps" ), "Gene index" );
             }
             if ( this.indexEE ) {
-                rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "expressionGps" ),
-                        "Expression Experiment index" );
+                    rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "expressionGps" ),
+                    "Expression Experiment index" );								
             }
             if ( this.indexAD ) {
                 rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "arrayGps" ), "Array Design index" );
@@ -156,7 +156,7 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
                 rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "probeGps" ), "Probe Reference Index" );
             }
             if ( this.indexQ ) {
-                rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "sequenceGps" ), "BioSequence Index" );
+                rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "biosequenceGps" ), "BioSequence Index" );
             }
         } catch ( Exception e ) {
             log.error( e );
