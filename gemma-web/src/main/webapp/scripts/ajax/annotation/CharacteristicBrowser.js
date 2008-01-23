@@ -139,8 +139,8 @@ Ext.onReady( function() {
 				record.set( "termUri", savedCharacteristic.termUri );
 				record.set( "termName", savedCharacteristic.termName );
 			}
-			pasteButton.disable();
 			Ext.Gemma.CharacteristicBrowser.grid.getView().refresh();
+			saveButton.enable();
 		}
 	} );
 
