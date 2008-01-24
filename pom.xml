@@ -20,8 +20,8 @@
 	</modules>
 	<packaging>pom</packaging>
 	<scm>
-		<connection>scm:cvs:local:/cvs:Gemma</connection>
-		<developerConnection>scm:cvs:local:/cvs:Gemma</developerConnection>
+		<connection>scm:cvs:ext:@broca.ubic.ca:local:/cvs:Gemma</connection>
+		<developerConnection>scm:cvs:ext:@broca.ubic.ca:/cvs:Gemma</developerConnection>
 		<url>http://broca.ubic.ca:8081/viewrep/pavlab/Gemma</url>
 	</scm>
 	<issueManagement>
@@ -100,7 +100,7 @@
 		<dependency>
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
-			<version>0.6-SNAPSHOT</version>
+			<version>0.6</version>
 			<type>jar</type>
 		</dependency>
 		<dependency>
