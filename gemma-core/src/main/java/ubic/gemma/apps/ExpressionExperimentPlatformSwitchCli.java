@@ -131,4 +131,9 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
         }
         return arrayDesign;
     }
+    
+    @Override
+    public String getShortDesc() {
+        return "Switch an experiment to a different array design (usually a merged one)";
+    }
 }

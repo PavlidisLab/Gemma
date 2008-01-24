@@ -57,6 +57,11 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
     private Taxon taxon;
 
+    @Override
+    public String getShortDesc() {
+        return "Run BLAT on the sequences for a microarray; the results are persisted in the DB.";
+    }
+
     /*
      * (non-Javadoc)
      * 

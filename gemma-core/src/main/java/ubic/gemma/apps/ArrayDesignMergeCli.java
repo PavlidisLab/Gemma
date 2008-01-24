@@ -54,6 +54,11 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
     private String newName;
     private ArrayDesignMergeService arrayDesignMergeService;
 
+    @Override
+    public String getShortDesc() {
+        return "Make a new array design that combines the reporters from others.";
+    }
+
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {

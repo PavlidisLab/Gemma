@@ -220,4 +220,9 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
         addOption( lowVarianceCut );
     }
 
+    @Override
+    public String getShortDesc() {
+        return "Create visualizations of the sample correlation matrices for expression experiments";
+    }
+
 }

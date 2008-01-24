@@ -278,5 +278,10 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         AuditEventType eventType = ArrayDesignGeneMappingEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }
+    
+    @Override
+    public String getShortDesc() {
+        return "Process the BLAT results for an array design to map them onto genes";
+    }
 
 }
