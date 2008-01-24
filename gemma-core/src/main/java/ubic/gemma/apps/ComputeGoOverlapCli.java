@@ -32,9 +32,12 @@ import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.Writer;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.cli.Option;
@@ -248,32 +251,28 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         }
 
         Map<Collection<Gene>, Double> scoreMap = new HashMap<Collection<Gene>, Double>();
-        
-        Collection<Collection<Gene>> subsetPairs = new HashSet<Collection<Gene>>();
-     
+
+        Collection<List<Gene>> subsetPairs = new HashSet<List<Gene>>();
+
         File f3 = new File( HOME_DIR + File.separatorChar + RANDOM_SUBSET );
         if ( f3.exists() ) {
-            subsetPairs = ( HashSet<Collection<Gene>> ) getCacheFromDisk( f3 );
+            subsetPairs = ( HashSet<List<Gene>> ) getCacheFromDisk( f3 );
             log.info( "Found cached subset file!" );
         } else {
-            Collection<Gene> allGenes = geneService.loadKnownGenes( taxon );
-            for (Gene g : allGenes){
-                geneService.thaw( g );
+            Collection<Gene> allGenes = new HashSet<Gene>();
+            for ( Long g : mouseGeneGOMap.keySet() ) {
+                allGenes.add( geneService.load( g ) );
             }
-            
+
             subsetPairs = getRandomPairs( 10000, allGenes );
             this.saveCacheToDisk( ( HashSet ) subsetPairs, RANDOM_SUBSET );
         }
-        
 
         StopWatch overallWatch = new StopWatch();
         overallWatch.start();
 
-        for ( Collection<Gene> pair : subsetPairs ) {
+        for ( List<Gene> pair : subsetPairs ) {
 
-            if (pair.size() != 2){
-                log.warn( "A pair consists of two objects. More than two is unacceptable. Fix it!!" );
-            }
             Iterator<Gene> genePair = pair.iterator();
             Gene masterGene = genePair.next();
             Gene coExpGene = genePair.next();
@@ -312,7 +311,8 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
                     coExpGOTerms = ( mouseGeneGOMap.get( cGene.getId() ) ).size();
 
                 Collection<OntologyTerm> goTerms = getTermOverlap( mGene, cGene );
-                writeOverlapLine( write, mGene.getOfficialSymbol(), cGene.getOfficialSymbol(), overlap, goTerms, masterGOTerms, coExpGOTerms );
+                writeOverlapLine( write, mGene.getOfficialSymbol(), cGene.getOfficialSymbol(), overlap, goTerms,
+                        masterGOTerms, coExpGOTerms );
             }
             overallWatch.stop();
             log.info( "Compute GoOverlap takes " + overallWatch.getTime() + "ms" );
@@ -323,6 +323,23 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
 
         }
         return null;
+
+    }
+
+    class GeneComparator implements Comparator {
+
+        public int compare( Object o1, Object o2 ) {
+
+            if ( o1 instanceof Gene && o2 instanceof Gene ) {
+                Long g1 = ( ( Gene ) o1 ).getId();
+                Long g2 = ( ( Gene ) o2 ).getId();
+
+                if ( g1 > g2 )
+                    return 1;
+                else if ( g1 < g2 ) return -1;
+            }
+            return 0;
+        }
 
     }
 
@@ -393,44 +410,40 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
     }
 
     /**
-     * @param take a collection of genes and size of susbset 
+     * @param take a collection of genes and size of susbset
      * @return a collection of random gene pairs that have GO annotations
      */
-    private Collection<Collection<Gene>> getRandomPairs (int size, Collection<Gene> genes){
-        
-        Collection<Collection<Gene>> subsetPairs = new HashSet<Collection<Gene>>();
-        int i =0;
-        
-        while (i < size) {
-            Collection<Gene> gene1 = RandomChooser.chooseRandomSubset( 1, genes );
-            Collection<Gene> gene2 = RandomChooser.chooseRandomSubset( 1, genes );
+    private Collection<List<Gene>> getRandomPairs( int size, Collection<Gene> genes ) {
 
-           if ( gene1.containsAll( gene2 ) ) continue;
-           
-           Collection<Gene> genePair = new HashSet<Gene>();
-           if (subsetPairs.contains( genePair )) continue;
-           genePair.addAll( gene1 );
-           genePair.addAll( gene2 );
-           
-           Iterator<Gene> iterator = genePair.iterator();
-           boolean noGoTerms = false;
-           while (iterator.hasNext()){
-               if (! mouseGeneGOMap.containsKey( iterator.next())){
-                   noGoTerms = true;
-                   break;
-               }
-           }
-           
-           if (noGoTerms) continue;
-           subsetPairs.add( genePair );
-           log.info( "Added pair to subset!" );
-           i++;
+        Collection<List<Gene>> subsetPairs = new HashSet<List<Gene>>();
+        int i = 0;
+
+        while ( i < size ) {
+            List<Gene> genePair = ( ( List<Gene> ) RandomChooser.chooseRandomSubset( 2, genes ) );
+            if ( genePair.size() != 2 ) {
+                log.warn( "A pair consists of two objects. More than two is unacceptable. Fix it!!" );
+            }
+            Collections.sort( genePair, new GeneComparator() );
+            if ( subsetPairs.contains( genePair ) ) continue;
+
+            Iterator<Gene> iterator = genePair.iterator();
+            boolean noGoTerms = false;
+            while ( iterator.hasNext() ) {
+                if ( !mouseGeneGOMap.containsKey( iterator.next().getId() ) ) {
+                    noGoTerms = true;
+                    break;
+                }
+            }
+
+            if ( noGoTerms ) continue;
+            subsetPairs.add( genePair );
+            log.info( "Added pair to subset!" );
+            i++;
         }
-        
+
         return subsetPairs;
     }
-    
-    
+
     private Map<String, Integer> loadLinks( String filepath, Taxon taxon ) throws IOException {
 
         File f = new File( filepath );
