@@ -91,7 +91,7 @@ public class ProbeAlignedRegionAnalysisCLI extends AbstractSpringAwareCLI {
         addOption( taxonOption );
         Option thresholdOption = OptionBuilder.hasArg().withArgName( "threshold" ).withDescription(
                 "the rank threshold" ).withLongOpt( "threshold" ).create( 'h' );
-        addOption( taxonOption );
+        addOption( thresholdOption );
         Option outputFileOption = OptionBuilder.hasArg().isRequired().withArgName( "outFileName" ).withDescription(
                 "File name for saving the correlation data" ).withLongOpt( "outFilePrefix" ).create( 'o' );
         addOption( outputFileOption );
@@ -100,6 +100,7 @@ public class ProbeAlignedRegionAnalysisCLI extends AbstractSpringAwareCLI {
         addOption( inputFileOption );
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected Exception doWork( String[] args ) {
         Collection<Long> parIds = new HashSet<Long>();
@@ -153,6 +154,9 @@ public class ProbeAlignedRegionAnalysisCLI extends AbstractSpringAwareCLI {
             }
         }
 
+        /*
+         * FIXME finish implementation
+         */
         Map<Long, Integer> geneId2LinkCountMap = new HashMap<Long, Integer>();
         for ( Long parId : parIds ) {
             int i = linkMatrix.getRowIndexByName( parId );
@@ -189,6 +193,10 @@ public class ProbeAlignedRegionAnalysisCLI extends AbstractSpringAwareCLI {
         initBeans();
     }
 
+    /**
+     * @param EEs
+     * @return
+     */
     private Map<Long, Integer> getEeId2IndexMap( Collection<ExpressionExperiment> EEs ) {
         Map<Long, Integer> eeId2IndexMap = new HashMap<Long, Integer>();
         int index = 0;
@@ -198,6 +206,11 @@ public class ProbeAlignedRegionAnalysisCLI extends AbstractSpringAwareCLI {
         return eeId2IndexMap;
     }
 
+    /**
+     * @param gene2dedvMap
+     * @param parId
+     * @return
+     */
     private Double getGeneRank( Map<Long, Collection<DesignElementDataVector>> gene2dedvMap, Long parId ) {
         Collection<DesignElementDataVector> dedvs = gene2dedvMap.get( parId );
         ArrayList<Double> ranks = new ArrayList<Double>();
@@ -209,6 +222,10 @@ public class ProbeAlignedRegionAnalysisCLI extends AbstractSpringAwareCLI {
         return rank;
     }
 
+    /**
+     * @param map
+     * @return
+     */
     private Map<Integer, Long> getInvertedMap( Map<Long, Integer> map ) {
         Map<Integer, Long> invertedMap = new HashMap<Integer, Long>();
         for ( Map.Entry<Long, Integer> entry : map.entrySet() ) {
@@ -225,10 +242,11 @@ public class ProbeAlignedRegionAnalysisCLI extends AbstractSpringAwareCLI {
      * @param knownGeneIds known gene IDs
      * @return
      */
-    private CompressedNamedBitMatrix getLinkCountMatrix( Collection<ExpressionExperiment> EEs, Collection<Long> parIds,
-            Collection<Long> knownGeneIds ) {
+    private CompressedNamedBitMatrix<Long, Long> getLinkCountMatrix( Collection<ExpressionExperiment> EEs,
+            Collection<Long> parIds, Collection<Long> knownGeneIds ) {
         int n = parIds.size() + knownGeneIds.size();
-        CompressedNamedBitMatrix linkCountMatrix = new CompressedNamedBitMatrix( n, n, EEs.size() );
+        CompressedNamedBitMatrix<Long, Long> linkCountMatrix = new CompressedNamedBitMatrix<Long, Long>( n, n, EEs
+                .size() );
         for ( Long l : parIds ) {
             linkCountMatrix.addColumnName( l );
             linkCountMatrix.addRowName( l );
@@ -240,6 +258,12 @@ public class ProbeAlignedRegionAnalysisCLI extends AbstractSpringAwareCLI {
         return linkCountMatrix;
     }
 
+    /**
+     * @param parIds
+     * @param EEs
+     * @return
+     */
+    @SuppressWarnings("unchecked")
     private Map<Long, List<Double>> getParId2eeRankMap( Collection<Long> parIds, Collection<ExpressionExperiment> EEs ) {
         Map<Long, List<Double>> parId2eeRankMap = new HashMap<Long, List<Double>>();
         for ( ExpressionExperiment EE : EEs ) {
@@ -291,6 +315,9 @@ public class ProbeAlignedRegionAnalysisCLI extends AbstractSpringAwareCLI {
         return parId2eeRankMap;
     }
 
+    /**
+     * 
+     */
     private void initBeans() {
         eeService = ( ExpressionExperimentService ) getBean( "expressionExperimentService" );
         adService = ( ArrayDesignService ) getBean( "arrayDesignService" );
@@ -298,6 +325,9 @@ public class ProbeAlignedRegionAnalysisCLI extends AbstractSpringAwareCLI {
         p2pService = ( Probe2ProbeCoexpressionService ) getBean( "probe2ProbeCoexpressionService" );
     }
 
+    /**
+     * @param parId2eeRankMap
+     */
     private void removeAboveThreshold( Map<Long, List<Double>> parId2eeRankMap ) {
         for ( Iterator<List<Double>> it = parId2eeRankMap.values().iterator(); it.hasNext(); ) {
             List<Double> eeRanks = it.next();
@@ -307,6 +337,10 @@ public class ProbeAlignedRegionAnalysisCLI extends AbstractSpringAwareCLI {
         }
     }
 
+    /**
+     * @param parId2eeRankMap
+     * @throws IOException
+     */
     private void saveRanksToFile( Map<Long, List<Double>> parId2eeRankMap ) throws IOException {
         PrintWriter out = new PrintWriter( new FileWriter( outFileName ) );
 
