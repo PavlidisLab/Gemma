@@ -73,7 +73,7 @@ public abstract class AbstractCLI {
 
     private static final char VERBOSITY_OPTION = 'v';
     private static final String HEADER = "Options:";
-    private static final String FOOTER = "The Gemma project, Copyright (c) 2007 University of British Columbia.";
+    public static final String FOOTER = "The Gemma project, Copyright (c) 2007-2008 University of British Columbia.";
     private static final int DEFAULT_PORT = 3306;
     private static int DEFAULT_VERBOSITY = 2;
     protected static Log log = LogFactory.getLog( AbstractCLI.class );
@@ -111,6 +111,8 @@ public abstract class AbstractCLI {
         this.buildStandardOptions();
         this.buildOptions();
     }
+
+    public abstract String getShortDesc();
 
     /**
      * @param opt

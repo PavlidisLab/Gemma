@@ -91,4 +91,9 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
             this.dimId = new Long( this.getIntegerOptionValue( 'd' ) );
         }
     }
+
+    @Override
+    public String getShortDesc() {
+        return "For experiments that used multiple array designs, merge the expression profiles";
+    }
 }

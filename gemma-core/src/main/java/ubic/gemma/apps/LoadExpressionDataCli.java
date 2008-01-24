@@ -54,6 +54,11 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
         AE, GEO
     };
 
+    @Override
+    public String getShortDesc() {
+        return "Load data from GEO or ArrayExpress";
+    }
+
     // Command line Options
     protected String accessionFile = null;
     protected String accessions = null;

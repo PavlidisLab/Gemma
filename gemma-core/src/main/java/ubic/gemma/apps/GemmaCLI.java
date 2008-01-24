@@ -47,9 +47,10 @@ public class GemmaCLI {
      */
     public static void main( String[] args ) {
         System.err.println( "============ Gemma command line tools ============" );
+
         System.err
                 .print( "You've evoked the Gemma CLI in a mode that doesn't do anything.\n"
-                        + "To operate Gemma tools, run a command like:\n\njava [jre options] -classpath gemmaCLI.jar <classname> [options]\n\n"
+                        + "To operate Gemma tools, run a command like:\n\njava [jre options] -classpath /path/to/gemmaCLI.jar <classname> [options]\n\n"
                         + "Here is a list of the classnames for some available tools:\n\n" );
         Arrays.sort( apps );
         for ( String a : apps ) {
@@ -78,6 +79,8 @@ public class GemmaCLI {
 
             System.err.println( a + " :\t" + desc );
         }
+        System.err
+                .println( "\nTo get help for a specific tool, use \n\njava -classpath /path/to/gemmaCLI.jar <classname> --help" );
         System.err.print( "\n" + AbstractCLI.FOOTER + "\n=========================================\n" );
     }
 }

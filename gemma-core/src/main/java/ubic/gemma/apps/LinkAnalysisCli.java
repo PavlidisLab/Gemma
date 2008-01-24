@@ -51,6 +51,11 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
+    @Override
+    public String getShortDesc() {
+        return "Analyze expression data sets for coexpressed genes";
+    }
+
     /**
      * @param args
      */

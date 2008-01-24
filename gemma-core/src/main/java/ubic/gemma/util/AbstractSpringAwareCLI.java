@@ -64,6 +64,11 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     protected AuditTrailService auditTrailService;
     protected Collection<Exception> exceptionCache = new ArrayList<Exception>();
 
+    @Override
+    public String getShortDesc() {
+        return "";
+    }
+
     private boolean ontologiesOn = false;
 
     @Override

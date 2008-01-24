@@ -52,8 +52,8 @@ public class OwlOntologyLoadCli extends AbstractCLI {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        addOption( OptionBuilder.isRequired().hasArg().withArgName( "url" ).withDescription( "Base URL for the OWL file" )
-                .withLongOpt( "url" ).create( "o" ) );
+        addOption( OptionBuilder.isRequired().hasArg().withArgName( "url" ).withDescription(
+                "Base URL for the OWL file" ).withLongOpt( "url" ).create( "o" ) );
 
         addOption( OptionBuilder.withDescription( "Force reloading of Ontology in Database" ).withLongOpt( "force" )
                 .create( "f" ) );
@@ -117,9 +117,13 @@ public class OwlOntologyLoadCli extends AbstractCLI {
     protected void processOptions() {
         this.url = this.getOptionValue( 'o' );
         this.force = this.hasOption( 'f' );
-        
-        if (this.getOptionValue( 'l' ) != null)
-            this.file = new File( this.getOptionValue( 'l' ) );
+
+        if ( this.getOptionValue( 'l' ) != null ) this.file = new File( this.getOptionValue( 'l' ) );
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Load an Ontology into the persistent store";
     }
 
 }
