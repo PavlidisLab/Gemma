@@ -10,7 +10,7 @@ build
 generated-sources
 andromda*.exc
 *.jar
-
+*.log
 velocity.log.*
 .myumldata
 .fatjar
