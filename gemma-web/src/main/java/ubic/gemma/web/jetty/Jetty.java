@@ -58,9 +58,7 @@ public class Jetty {
             jettyServer = new Server( jettyConfig );
             jettyServer.start();
         } catch ( Exception e ) {
-            log
-                    .fatal( "Could not start the Jetty server.  Have you tried adding servlet-api.jar, jsp-api.jar, tomcat-juli.jar, and jasper.jar to your classpath?  The error is: "
-                            + e );
+            log.fatal( "Could not start the Jetty server.  The error is: " + e );
             if ( jettyServer != null ) {
                 try {
                     jettyServer.stop();
