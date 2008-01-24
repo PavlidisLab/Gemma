@@ -191,7 +191,7 @@ public class ExpressionDataMatrixVisualizationService {
             colLabels.add( ba.getName() );
         }
 
-        DoubleMatrixNamed matrix = new DenseDoubleMatrix2DNamed( data );
+        DoubleMatrixNamed<String, String> matrix = new DenseDoubleMatrix2DNamed<String, String>( data );
 
         matrix.setRowNames( rowLabels );
 

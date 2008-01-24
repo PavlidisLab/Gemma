@@ -40,6 +40,12 @@ import ubic.gemma.model.genome.biosequence.BioSequenceService;
  * @version $Id$
  */
 public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli {
+
+    @Override
+    public String getShortDesc() {
+        return "Run RepeatMasker on sequences for an Array design";
+    }
+
     BioSequenceService bsService;
     private String inputFileName;
 
