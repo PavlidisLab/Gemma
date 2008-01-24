@@ -21,6 +21,7 @@ package ubic.gemma.web.services;
 
 import java.util.Collection;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
@@ -32,6 +33,8 @@ import org.w3c.dom.Text;
 
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.ontology.GeneOntologyService;
+import ubic.gemma.ontology.OntologyTerm;
 
 /**
  * 
@@ -39,21 +42,27 @@ import ubic.gemma.model.genome.gene.GeneService;
  * 
  */
 
-public class GeneIdEndpoint extends AbstractGemmaEndpoint {
+public class Gene2GoTermEndpoint extends AbstractGemmaEndpoint {
 
-	private static Log log = LogFactory.getLog(GeneIdEndpoint.class);
+	private static Log log = LogFactory.getLog(Gene2GoTermEndpoint.class);
+
+	private GeneOntologyService geneOntologyService;
 
 	private GeneService geneService;
 
 	/**
-	 * The local name of the expected Request/Response.
+	 * The local name of the expected request/response.
 	 */
-	public static final String GENE_LOCAL_NAME = "geneId";
+	public static final String GENE2GO_LOCAL_NAME = "gene2Go";
 
 	/**
 	 * Sets the "business service" to delegate to.
 	 */
-	public void setGeneService(GeneService geneS) {
+	public void setGeneOntologyService(GeneOntologyService goS) {
+		this.geneOntologyService = goS;
+	}
+	
+	public void setGeneService(GeneService geneS){
 		this.geneService = geneS;
 	}
 
@@ -69,48 +78,64 @@ public class GeneIdEndpoint extends AbstractGemmaEndpoint {
 	 */
 	protected Element invokeInternal(Element requestElement, Document document)
 			throws Exception {
-
-		// TODO: might be wise to not assert this and just send back an error
-		// code or something 
 		Assert.isTrue(NAMESPACE_URI.equals(requestElement.getNamespaceURI()),
 				"Invalid namespace");
-		Assert.isTrue(GENE_LOCAL_NAME.equals(requestElement.getLocalName()),
+		Assert.isTrue(GENE2GO_LOCAL_NAME.equals(requestElement.getLocalName()),
 				"Invalid local name");
 
 		authenticate();
-		
-		NodeList children = requestElement.getElementsByTagName(
-				GENE_LOCAL_NAME + REQUEST).item(0).getChildNodes();
+		// Tried to use a generic way to extract just the node with the data but
+		// no luck getting this to work... perhaps the namespace is invalid...
+		// NodeIterator nodeList = org.apache.xpath.XPathAPI.selectNodeIterator(
+		// requestElement, "experimentNameRequest" );
 
-		Text requestText = null;
+		// The ExperimentNameRequest Element is going to be wrapped inside the
+		// ExperimentName Element as specifided by the wsdl
+
+		// NodeList children = requestElement.getChildNodes();
+
+		NodeList children = requestElement.getElementsByTagName(
+				GENE2GO_LOCAL_NAME + REQUEST).item(0).getChildNodes();
+		String nodeValue = null;
+
+		// We unwrapped the node, now get the 1st value that is a number (should
+		// only be one)
 		for (int i = 0; i < children.getLength(); i++) {
+
 			if (children.item(i).getNodeType() == Node.TEXT_NODE) {
-				requestText = (Text) children.item(i);
-				break;
+				nodeValue = children.item(i).getNodeValue();
+				if (StringUtils.isNotEmpty(nodeValue)
+						&& StringUtils.isNumeric(nodeValue)) {
+					break;
+				}
 			}
+			nodeValue = null;
 		}
-		if (requestText == null) {
+
+		if (nodeValue == null) {
 			throw new IllegalArgumentException(
 					"Could not find request text node");
 		}
 
-		Collection<Gene> genes = geneService
-				.findByOfficialSymbolInexact(requestText.getNodeValue());
+		Long geneId = Long.parseLong(nodeValue);
+		Gene gene = geneService.load(geneId);
+		Collection<OntologyTerm> terms = geneOntologyService.getGOTerms(gene);
 
 		Element responseWrapper = document.createElementNS(NAMESPACE_URI,
-				GENE_LOCAL_NAME);
+				GENE2GO_LOCAL_NAME);
 		Element responseElement = document.createElementNS(NAMESPACE_URI,
-				GENE_LOCAL_NAME + RESPONSE);
+				GENE2GO_LOCAL_NAME + RESPONSE);
 		responseWrapper.appendChild(responseElement);
 
-		
-		if (genes == null || genes.isEmpty())
-					responseElement.appendChild(document.createTextNode("No genes with that common name"));
+		if (terms == null || terms.isEmpty())
+			responseElement.appendChild(document
+					.createTextNode("No go terms found for given gene:  "
+							+ geneId));
 		else {
-			//Need to create a list (array) of the geneIds
-			for (Gene gene : genes) {
-				Element e = document.createElement("geneIds");
-				e.appendChild(document.createTextNode(gene.getId().toString()));
+			// Need to create a list (array) of the geneIds
+			for (OntologyTerm term : terms) {
+				Element e = document.createElement("goId");
+				e.appendChild(document.createTextNode(term.getUri()));
 				responseElement.appendChild(e);
 			}
 		}

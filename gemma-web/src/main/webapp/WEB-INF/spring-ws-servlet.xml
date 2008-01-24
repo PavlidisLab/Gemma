@@ -27,6 +27,8 @@
 
        	 		<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}experimentDEDV">experimentDEDVEndpoint</prop>
 
+				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}gene2Go">gene2GoTermEndpoint</prop>
+
           	</props>
          </property>
          
@@ -37,6 +39,17 @@
         </property>
     </bean>
 
+
+    <bean id="gemma" class="org.springframework.ws.wsdl.wsdl11.DynamicWsdl11Definition">
+        <property name="builder">
+            <bean class="org.springframework.ws.wsdl.wsdl11.builder.XsdBasedSoap11Wsdl4jDefinitionBuilder">
+                <property name="schema" value="/WEB-INF/gemmaServices.xsd"/>
+                <property name="portTypeName" value="gemma"/>
+                <property name="locationUri" value="http://localhost:8080/Gemma/ws"/>
+            </bean>
+        </property>
+    </bean>
+    
     <bean id="validatingInterceptor"
           class="org.springframework.ws.soap.server.endpoint.interceptor.PayloadValidatingInterceptor">
         <description>
@@ -112,17 +125,16 @@
         <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
         <property name="analysisHelperService" ref="analysisHelperService"/>
     </bean>
-
-
-    <bean id="gemma" class="org.springframework.ws.wsdl.wsdl11.DynamicWsdl11Definition">
-        <property name="builder">
-            <bean class="org.springframework.ws.wsdl.wsdl11.builder.XsdBasedSoap11Wsdl4jDefinitionBuilder">
-                <property name="schema" value="/WEB-INF/gemmaServices.xsd"/>
-                <property name="portTypeName" value="gemma"/>
-                <property name="locationUri" value="http://localhost:8080/Gemma/ws"/>
-            </bean>
-        </property>
+    
+    <bean id="gene2GoTermEndpoint" class="ubic.gemma.web.services.Gene2GoTermEndpoint">
+        <description>
+				returns a list of go ids
+        </description>
+        <property name="geneService" ref="geneService"/>
+        <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
+        <property name="geneOntologyService" ref="geneOntologyService"/>
     </bean>
+
     
     
 

@@ -127,5 +127,27 @@
 			</sequence>
         </complexType>
     </element>
+
+
+    <element name="gene2GoRequest">
+        <simpleType>
+            <restriction base="integer">             
+            </restriction>
+        </simpleType>
+    </element>
+        
+    <element name="gene2GoResponse">
+   <complexType>
+        	<sequence>
+        		<element name="goId" type="string" minOccurs="0" maxOccurs="unbounded">
+        		  	<annotation>
+        		  		<documentation>
+        		  			   A Gene Ontology URI
+        		  		</documentation>
+        		  	</annotation>
+        		</element>
+			</sequence>
+        </complexType>
+    </element>
     
 </schema>
