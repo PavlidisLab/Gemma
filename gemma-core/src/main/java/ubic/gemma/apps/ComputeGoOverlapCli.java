@@ -31,6 +31,7 @@ import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -141,13 +142,13 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
     private static final String HASH_MAP_RETURN = "HashMapReturn";
     private static final String GO_PROB_MAP = "GoProbMap";
     private static final String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
-    private static final String RANDOM_SUBSET = "RandomSubset2";
+    private static final String RANDOM_SUBSET = "RandomSubset";
     private static final String GENE_CACHE = "geneCache";
     private String file_path = "";
 
     private Metric metric = GoMetric.Metric.simple;
     private boolean max = false;
-    private String OUT_FILE = "outPutFile";
+    private String OUT_FILE = "outFile";
 
     // INCLUDE PARTOF OR CHANGE STRINGENCY
     private boolean partOf = true;
@@ -419,7 +420,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         int i = 0;
 
         while ( i < size ) {
-            List<Gene> genePair = ( ( List<Gene> ) RandomChooser.chooseRandomSubset( 2, genes ) );
+            List<Gene> genePair = new ArrayList( RandomChooser.chooseRandomSubset( 2, genes ) );
             if ( genePair.size() != 2 ) {
                 log.warn( "A pair consists of two objects. More than two is unacceptable. Fix it!!" );
             }
