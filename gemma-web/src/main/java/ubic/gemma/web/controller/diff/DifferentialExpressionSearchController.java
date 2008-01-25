@@ -83,7 +83,10 @@ public class DifferentialExpressionSearchController extends SimpleFormController
 
         DiffExpressionSearchCommand diffCommand = new DiffExpressionSearchCommand();
 
-        diffCommand = loadCookie( request, diffCommand );
+        DiffExpressionSearchCommand diffCommandFromCookie = loadCookie( request, diffCommand );
+        if ( diffCommandFromCookie != null ) {
+            diffCommand = diffCommandFromCookie;
+        }
 
         return diffCommand;
 
