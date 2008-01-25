@@ -30,16 +30,6 @@ public class DiffExpressionSearchCommand implements Serializable {
 
     private String geneOfficialSymbol = null;
 
-    private Long geneId = null;
-
-    public Long getGeneId() {
-        return geneId;
-    }
-
-    public void setGeneId( Long geneId ) {
-        this.geneId = geneId;
-    }
-
     public String getGeneOfficialSymbol() {
         return geneOfficialSymbol;
     }
