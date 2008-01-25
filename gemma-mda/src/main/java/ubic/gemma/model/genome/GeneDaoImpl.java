@@ -567,7 +567,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /**
      * This query does not return 'self-links' (gene coexpressed with itself) which happens when two probes for the same
-     * gene are correlated. STRAIGHT_JOIN is to ensure that mysql doesn't do something goofy with the index use.
+     * gene are correlated.
      * <ol >
      * <li>output gene id</li>
      * <li>output gene name</li>
@@ -591,6 +591,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         String inKey = in.equals( "firstVector" ) ? "FIRST_DESIGN_ELEMENT_FK" : "SECOND_DESIGN_ELEMENT_FK";
         String outKey = out.equals( "firstVector" ) ? "FIRST_DESIGN_ELEMENT_FK" : "SECOND_DESIGN_ELEMENT_FK";
         String eeClause = "";
+
+        // note that with current index scheme, you have to have EE ids specified.
         if ( eeIds.size() > 0 ) {
             eeClause += " coexp.EXPRESSION_EXPERIMENT_FK in (";
             eeClause += StringUtils.join( eeIds.iterator(), "," );
@@ -599,7 +601,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         String p2pClass = getP2PTableNameForClassName( p2pClassName );
 
-        String query = "SELECT STRAIGHT_JOIN geneout.ID as id, geneout.NAME as genesymb, "
+        String query = "SELECT geneout.ID as id, geneout.NAME as genesymb, "
                 + "geneout.OFFICIAL_NAME as genename, coexp.EXPRESSION_EXPERIMENT_FK as exper, coexp.PVALUE as pvalue, coexp.SCORE as score, "
                 + "gcIn.CS as csIdIn, gcOut.CS as csIdOut, geneout.class as geneType, " + "ee.NAME as eeName "
                 + "FROM GENE2CS gcIn " + " INNER JOIN " + p2pClass + " coexp ON gcIn.CS=coexp." + inKey + " "
