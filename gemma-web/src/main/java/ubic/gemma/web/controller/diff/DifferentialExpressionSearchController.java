@@ -31,6 +31,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.SimpleFormController;
 import org.springframework.web.servlet.view.RedirectView;
@@ -175,6 +176,10 @@ public class DifferentialExpressionSearchController extends SimpleFormController
 
         /* multiple genes can have the same symbol */
         Collection<Gene> genes = geneService.findByOfficialSymbol( officialSymbol );
+        if ( genes == null || genes.isEmpty() ) {
+            String message = "Gene(s) could not be found for symbol: " + officialSymbol;
+            errors.addError( new ObjectError( command.toString(), null, null, message ) );
+        }
 
         List<ExpressionExperiment> allExperiments = new ArrayList<ExpressionExperiment>();
         for ( Gene g : genes ) {
