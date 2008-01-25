@@ -204,6 +204,11 @@ public class ArrayDesignProbeMapperService {
         this.scoreThreshold = scoreThreshold;
     }
 
+    /**
+     * @param queue
+     * @param generatorDone
+     * @param loaderDone
+     */
     private void doLoad( final BlockingQueue<BlatAssociation> queue, AtomicBoolean generatorDone,
             AtomicBoolean loaderDone ) {
         int loadedAssociationCount = 0;
@@ -228,10 +233,15 @@ public class ArrayDesignProbeMapperService {
                 throw new RuntimeException( e );
             }
         }
-        log.info( "Loaded " + loadedAssociationCount + " blat associations. " );
+        log.info( "Load thread done: loaded " + loadedAssociationCount + " blat associations. " );
         loaderDone.set( true );
     }
 
+    /**
+     * @param queue
+     * @param generatorDone
+     * @param loaderDone
+     */
     private void load( final BlockingQueue<BlatAssociation> queue, final AtomicBoolean generatorDone,
             final AtomicBoolean loaderDone ) {
         final SecurityContext context = SecurityContextHolder.getContext();

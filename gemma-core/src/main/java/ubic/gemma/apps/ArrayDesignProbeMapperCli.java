@@ -97,7 +97,19 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             log.warn( "*** Running mapping for all " + taxon.getCommonName() + " Array designs *** " );
         }
 
-        if ( taxon != null || skipIfLastRunLaterThan != null || autoSeek ) {
+        if ( arrayDesignName != null ) {
+            // we've been given a specific array design; still use mdate to check.
+            ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
+
+            if ( !needToRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignGeneMappingEvent.class ) ) {
+                log.warn( arrayDesign + " not ready to run" );
+                return null;
+            }
+
+            unlazifyArrayDesign( arrayDesign );
+            arrayDesignProbeMapperService.processArrayDesign( arrayDesign );
+            audit( arrayDesign, "Run with default parameters" );
+        } else if ( taxon != null || skipIfLastRunLaterThan != null || autoSeek ) {
             // look at all array designs.
             Collection<ArrayDesign> allArrayDesigns = arrayDesignService.loadAll();
             for ( ArrayDesign design : allArrayDesigns ) {
@@ -140,17 +152,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             }
             summarizeProcessing();
         } else {
-            // we've been given a specific array design; still use mdate to check.
-            ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
-
-            if ( !needToRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignGeneMappingEvent.class ) ) {
-                log.warn( arrayDesign + " not ready to run" );
-                return null;
-            }
-
-            unlazifyArrayDesign( arrayDesign );
-            arrayDesignProbeMapperService.processArrayDesign( arrayDesign );
-            audit( arrayDesign, "Run with default parameters" );
+            return new IllegalArgumentException( "Seems you did not set options to get anything to happen." );
         }
 
         return null;
@@ -205,7 +207,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             } else if ( lastProbeMapping == null
                     && ArrayDesignGeneMappingEvent.class.isAssignableFrom( currentEventClass ) ) {
                 lastProbeMapping = currentEvent;
-                log.debug( "Last probe mapping analysis: " + lastProbeMapping.getDate() );
+                log.info( "Last probe mapping analysis: " + lastProbeMapping.getDate() );
             }
 
         }
@@ -249,6 +251,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             return false;
         }
 
+        if ( lastProbeMapping.getDate().after( skipIfLastRunLaterThan ) ) {
+            log.info( arrayDesign + " was probemapped since " + skipIfLastRunLaterThan + ", skipping." );
+            return false;
+        }
+
         // we've validated the super.needToRun result, so we pass it on.
         return true;
     }
@@ -278,7 +285,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         AuditEventType eventType = ArrayDesignGeneMappingEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }
-    
+
     @Override
     public String getShortDesc() {
         return "Process the BLAT results for an array design to map them onto genes";
