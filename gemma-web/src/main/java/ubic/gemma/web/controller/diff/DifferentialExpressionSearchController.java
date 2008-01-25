@@ -81,23 +81,9 @@ public class DifferentialExpressionSearchController extends SimpleFormController
     protected Object formBackingObject( HttpServletRequest request ) {
         /* enter on a GET */
 
-        String stringId = null;
-
-        Gene g = null;
         DiffExpressionSearchCommand diffCommand = new DiffExpressionSearchCommand();
 
-        stringId = request.getParameter( "id" );
-
-        if ( StringUtils.isNotBlank( stringId ) ) {
-            Long id = Long.parseLong( stringId );
-            g = geneService.load( id );
-
-            diffCommand = new DiffExpressionSearchCommand();
-            diffCommand.setGeneId( g.getId() );
-            diffCommand.setGeneOfficialSymbol( g.getOfficialSymbol() );
-        } else {
-            diffCommand = loadCookie( request, diffCommand );
-        }
+        diffCommand = loadCookie( request, diffCommand );
 
         return diffCommand;
 
@@ -123,16 +109,21 @@ public class DifferentialExpressionSearchController extends SimpleFormController
             if ( cook.getName().equals( COOKIE_NAME ) ) {
                 try {
                     ConfigurationCookie cookie = new ConfigurationCookie( cook );
-                    diffSearchCommand.setGeneOfficialSymbol( cookie.getString( "geneOfficalSymbol" ) );
+                    String officialSymbol = cookie.getString( "geneOfficalSymbol" );
+                    if ( StringUtils.isBlank( officialSymbol ) )
+                        throw new Exception( "Invalid official symbol in cookie - " + officialSymbol );
 
-                    Long id = Long.parseLong( cookie.getString( "geneId" ) );
-                    diffSearchCommand.setGeneId( id );
+                    diffSearchCommand.setGeneOfficialSymbol( officialSymbol );
+
+                    // Long id = Long.parseLong( cookie.getString( "geneId" ) );
+                    // diffSearchCommand.setGeneId( id );
+                    return diffSearchCommand;
 
                 } catch ( Exception e ) {
                     log.warn( "Cookie could not be loaded: " + e.getMessage() );
+                    break;
                     // fine, just don't get a cookie.
                 }
-                break;
             }
         }
 
@@ -155,10 +146,10 @@ public class DifferentialExpressionSearchController extends SimpleFormController
 
         DiffExpressionSearchCommand diffCommand = ( ( DiffExpressionSearchCommand ) command );
 
+        String officialSymbol = diffCommand.getGeneOfficialSymbol();
+
         Cookie cookie = new DiffExpressionSearchCookie( diffCommand );
         response.addCookie( cookie );
-
-        String officialSymbol = diffCommand.getGeneOfficialSymbol();
 
         /* multiple genes can have the same symbol */
         Collection<Gene> genes = geneService.findByOfficialSymbol( officialSymbol );
@@ -168,7 +159,6 @@ public class DifferentialExpressionSearchController extends SimpleFormController
             Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService.find( g );
 
             allExperiments.addAll( experimentsAnalyzed );
-
         }
 
         String url = "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath()
@@ -178,6 +168,7 @@ public class DifferentialExpressionSearchController extends SimpleFormController
         for ( ExpressionExperiment e : allExperiments ) {
             url = url + e.getId();
             if ( i < ( allExperiments.size() - 1 ) ) url = url + ",";
+            i++;
         }
 
         return new ModelAndView( new RedirectView( url ) );
@@ -210,8 +201,9 @@ public class DifferentialExpressionSearchController extends SimpleFormController
 
             log.debug( "creating cookie" );
 
-            this.setProperty( "geneId", command.getGeneId() );
-            this.setProperty( "geneOfficialSymbol", command.getGeneOfficialSymbol() );
+            // this.setProperty( "geneId", command.getGeneId() );
+            String officialSymbol = command.getGeneOfficialSymbol();
+            this.setProperty( "geneOfficialSymbol", officialSymbol );
 
             /* set cookie to expire after 2 days. */
             this.setMaxAge( 172800 );
