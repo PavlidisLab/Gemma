@@ -39,6 +39,8 @@ public class Gene2CsStatus implements Serializable {
 
     Exception error;
 
+    private String annotation;
+
     public Exception getError() {
         return error;
     }
@@ -53,6 +55,14 @@ public class Gene2CsStatus implements Serializable {
 
     public void setLastUpdate( Date lastUpdate ) {
         this.lastUpdate = lastUpdate;
+    }
+
+    public void setAnnotation( String annotation ) {
+        this.annotation = annotation;
+    }
+
+    public String getAnnotation() {
+        return annotation;
     }
 
 }

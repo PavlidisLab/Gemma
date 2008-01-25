@@ -29,6 +29,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.HibernateException;
@@ -38,7 +39,9 @@ import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.util.ConfigUtils;
@@ -53,7 +56,6 @@ import ubic.gemma.util.MailEngine;
  * @spring.property name="sessionFactory" ref="sessionFactory"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
  * @spring.property name="mailEngine" ref="mailEngine"
- * 
  * @author jsantos
  * @author paul
  * @version $Id$
@@ -71,7 +73,7 @@ public class TableMaintenanceUtil extends HibernateDaoSupport {
      * So we can check the details of what the updates were. (not implemented yet)
      */
     private ArrayDesignService arrayDesignService;
-    
+
     //
     private MailEngine mailEngine;
 
@@ -93,10 +95,9 @@ public class TableMaintenanceUtil extends HibernateDaoSupport {
     @SuppressWarnings("unchecked")
     public void updateGene2CsEntries() {
 
+        String annotation = "";
         try {
-            /*
-             * FIXME look for probe analysis events in particular. This is rather crude.
-             */
+
             Gene2CsStatus status = getLastGene2CsUpdateStatus();
             boolean needToRefresh = false;
             if ( status == null ) {
@@ -109,7 +110,8 @@ public class TableMaintenanceUtil extends HibernateDaoSupport {
                 for ( Auditable a : newObj ) {
                     if ( a instanceof ArrayDesign ) {
                         needToRefresh = true;
-                        log.info( a + " is new since " + status.getLastUpdate() );
+                        annotation = a + " is new since " + status.getLastUpdate();
+                        log.info( annotation );
                         break;
                     }
                 }
@@ -119,9 +121,17 @@ public class TableMaintenanceUtil extends HibernateDaoSupport {
                 Collection<Auditable> updatedObj = auditEventService.getUpdatedSinceDate( status.getLastUpdate() );
                 for ( Auditable a : updatedObj ) {
                     if ( a instanceof ArrayDesign ) {
-                        needToRefresh = true;
-                        log.info( a + " is updated since " + status.getLastUpdate() );
-                        break;
+                        arrayDesignService.thawLite( ( ArrayDesign ) a );
+                        for ( AuditEvent ae : a.getAuditTrail().getEvents() ) {
+                            if ( ae.getEventType() != null && ae.getEventType() instanceof ArrayDesignGeneMappingEvent
+                                    && ae.getDate().after( status.getLastUpdate() ) ) {
+                                needToRefresh = true;
+                                annotation = a + " had probe mapping done since: " + status.getLastUpdate();
+                                log.info( annotation );
+                                break;
+                            }
+                        }
+
                     }
                 }
             }
@@ -129,7 +139,7 @@ public class TableMaintenanceUtil extends HibernateDaoSupport {
             if ( needToRefresh ) {
                 log.info( "Update of GENE2CS initiated" );
                 generateGene2CsEntries();
-                Gene2CsStatus updatedStatus = writeUpdateStatus( null );
+                Gene2CsStatus updatedStatus = writeUpdateStatus( annotation, null );
                 sendEmail( updatedStatus );
 
             } else {
@@ -139,7 +149,7 @@ public class TableMaintenanceUtil extends HibernateDaoSupport {
         } catch ( Exception e ) {
             try {
                 log.info( "Error during attempt to check status or update GENE2CS", e );
-                Gene2CsStatus updatedStatus = writeUpdateStatus( e );
+                Gene2CsStatus updatedStatus = writeUpdateStatus( annotation, e );
                 sendEmail( updatedStatus );
 
                 /*
@@ -221,16 +231,18 @@ public class TableMaintenanceUtil extends HibernateDaoSupport {
     }
 
     /**
+     * @param annotation extra text that describes the status
      * @param e
      * @throws IOException
      */
-    private Gene2CsStatus writeUpdateStatus( Exception e ) throws IOException {
+    private Gene2CsStatus writeUpdateStatus( String annotation, Exception e ) throws IOException {
         initDirectories();
         Gene2CsStatus status = new Gene2CsStatus();
         Calendar c = Calendar.getInstance();
         Date date = c.getTime();
         status.setLastUpdate( date );
         status.setError( e );
+        status.setAnnotation( annotation );
 
         FileOutputStream fos = new FileOutputStream( getGene2CsInfopath() );
         ObjectOutputStream oos = new ObjectOutputStream( fos );
@@ -245,9 +257,14 @@ public class TableMaintenanceUtil extends HibernateDaoSupport {
      */
     private void sendEmail( Gene2CsStatus results ) {
         SimpleMailMessage msg = new SimpleMailMessage();
-        msg.setTo( "paul@ubic.ca" ); // FIXME use configured nag person.
+        String adminEmailAddress = ConfigUtils.getAdminEmailAddress();
+        if ( StringUtils.isBlank( adminEmailAddress ) ) {
+            log.warn( "No administrator email address could be found, so gene2cs status email will not be sent." );
+            return;
+        }
+        msg.setTo( adminEmailAddress );
         msg.setSubject( "Gene2Cs update status." );
-        msg.setText( "Gene2Cs updating was run." );
+        msg.setText( "Gene2Cs updating was run.\n" + results.getAnnotation() );
         mailEngine.send( msg );
     }
 
