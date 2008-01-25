@@ -7,6 +7,7 @@
 	<version>1.0-SNAPSHOT</version>
 	<inceptionYear>2005</inceptionYear>
 	<description>The Gemma Project for meta-analysis of genomics data</description>
+	<url>http://www.bioinformatics.ubc.ca/Gemma</url>
 	<organization>
 		<name>UBC Bioinformatics Centre</name>
 		<url>http://bioinformatics.ubc.ca/</url>
@@ -78,6 +79,29 @@
 			<organization>University of British Columbia</organization>
 		</developer>
 	</developers>
+	<contributors>
+		<contributor>
+			<name>Joseph Santos</name>
+		</contributor>
+		<contributor>
+			<name>David Quigley</name>
+		</contributor>
+		<contributor>
+			<name>Anshu Sinha</name>
+		</contributor>
+		<contributor>
+			<name>Suzanne Lane</name>
+		</contributor>
+		<contributor>
+			<name>Meeta Mistry</name>
+		</contributor>
+		<contributor>
+			<name>Xiang Wan</name>
+		</contributor>
+		<contributor>
+			<name>Jesse Gillis</name>
+		</contributor>
+	</contributors>
 	<dependencies>
 		<dependency>
 			<groupId>org.hibernate</groupId>

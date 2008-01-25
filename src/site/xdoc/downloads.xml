@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<document>
+	<properties>
+		<title>Downloads</title>
+	</properties>
+	<body>
+		<section name="Gemma 1.0">
+			<p>
+				For details see the
+				<a href="http://www.bioinformatics.ubc.ca/gemma-dev/dist/RELEASE-NOTES-1.0.txt">release notes</a>
+				.
+			</p>
+			<subsection name="Binaries">
+				<ul>
+					<li>
+						<a href="http://www.bioinformatics.ubc.ca/gemma-dev/dist/gemma-1.0-jar-with-dependencies.jar">
+							gemma-1.0-jar-with-dependencies.jar
+						</a>
+					</li>
+				</ul>
+			</subsection>
+			<subsection name="Source Code"></subsection>
+			<ul>
+				<li>
+					<a href="http://www.bioinformatics.ubc.ca/gemma-dev/dist/gemma-1.0-src.zip">gemma-1.0-src.zip</a>
+				</li>
+			</ul>
+		</section>
+	</body>
+</document>

@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<!-- $Id$
+-->
+<document>
+	<properties>
+		<title>Welcome to Gemma</title>
+	</properties>
+	<body>
+		<section name="Gemma - open source genomics data metaanalysis">
+			<p>
+				The navigation at left is focused on the software development process for Gemma, including downloadable
+				source.
+			</p>
+			<p>
+				If you want to
+				<em>use</em>
+				Gemma for analysis, please head over to the Gemma web interface
+				<a href="http://www.bioinformatics.ubc.ca/Gemma">here</a>
+				.
+			</p>
+			<p>
+				Gemma is a project of the
+				<a href="http://bioinformatics.ubc.ca/pavlidis/lab">Pavlidis lab</a>
+				at the
+				<a href="http://www.ubc.ca">University of British Columbia</a>
+				<a href="http://www.psychiatry.ubc.ca/">Department of Psychiatry</a>
+				.
+			</p>
+			<subsection name="Gemma news">
+				<dl>
+					<dt>
+						<strong>January 22, 2008 - Gemma 1.0 is on the way</strong>
+					</dt>
+					<dd>
+						See the
+						<a href="downloads.html">downloads page</a>
+						for more details.
+					</dd>
+				</dl>
+				<p>
+					See the
+					<a href="news.html">news archive</a>
+					for past news.
+				</p>
+			</subsection>
+		</section>
+	</body>
+</document>

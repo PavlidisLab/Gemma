@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
+<!--  $Id$ -->
 <project name="Gemma">
 	<bannerLeft>
 		<name>Gemma</name>
@@ -11,7 +12,18 @@
 			<item name="Gemma" href="http://bioinformatics.ubc.ca/Gemma/" />
 			<item name="Pavlidis lab" href="http://bioinformatics.ubc.ca/pavlidis/lab" />
 		</links>
-		<menu ref="modules" />
-		<menu ref="reports" />
+		<menu name="Gemma" collapse="false">
+			<item name="Home" href="/" />
+			<item name="Web application" href="http://bioinformatics.ubc.ca/Gemma/" />
+			<item name="Downloads" href="/downloads.html" />
+			<item name="FAQ" href="/faq.html" />
+			<item name="Acknowledgements" href="/thanks.html" />
+		</menu>
+		<menu name="Documentation" collapse="false">
+			<item name="Installing Gemma" href="/doc/installing.html" />
+			<item name="Building Gemma" href="/doc/building.html" />
+		</menu>
+		<menu ref="modules" collapse="false" />
+		<menu ref="reports" collapse="false" />
 	</body>
 </project>
