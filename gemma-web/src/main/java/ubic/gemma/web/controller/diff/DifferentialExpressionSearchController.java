@@ -139,6 +139,25 @@ public class DifferentialExpressionSearchController extends SimpleFormController
     /*
      * (non-Javadoc)
      * 
+     * @see org.springframework.web.servlet.mvc.SimpleFormController#processFormSubmission(javax.servlet.http.HttpServletRequest,
+     *      javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
+            Object command, BindException errors ) throws Exception {
+
+        if ( request.getParameter( "cancel" ) != null ) {
+            log.info( "Cancelled" );
+            return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) );
+        }
+
+        return super.processFormSubmission( request, response, command, errors );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.springframework.web.servlet.mvc.SimpleFormController#onSubmit(javax.servlet.http.HttpServletRequest,
      *      javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)
      */
