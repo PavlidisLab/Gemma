@@ -309,9 +309,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                         session.evict( bm );
                     }
                     biomaterials.clear();
-//                    session.update( ba ); // these cascade.
-//                    session.delete( ba );
- //                   log.info( "Removed BioAssay " + ba.getName() + " and its associations." );
+                    // session.update( ba ); // these cascade.
+                    // session.delete( ba );
+                    // log.info( "Removed BioAssay " + ba.getName() + " and its associations." );
                 }
 
                 for ( ExpressionExperimentSubSet subset : toDelete.getSubsets() ) {
@@ -1337,6 +1337,53 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 return null;
             }
         }, true );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetAnnotationCounts(java.util.Collection)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Map<Long, Integer> handleGetAnnotationCounts( Collection ids ) throws Exception {
+        String queryString = "select e.id,count(c.id) from ExpressionExperimentImpl e inner join e.characteristics c where e.id in (:ids) group by e.id";
+        List res = this.getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
+        Map<Long, Integer> results = new HashMap<Long, Integer>();
+        for ( Long id : ( Collection<Long> ) ids ) {
+            results.put( id, 0 );
+        }
+        for ( Object r : res ) {
+            Object[] ro = ( Object[] ) r;
+            Long id = ( Long ) ro[0];
+            Integer count = ( ( Long ) ro[1] ).intValue();
+            results.put( id, count );
+        }
+        return results;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetPopulatedFactorCounts(java.util.Collection)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Map<Long, Integer> handleGetPopulatedFactorCounts( Collection ids ) throws Exception {
+        String queryString = "select e.id,count(distinct ef.id) from ExpressionExperimentImpl e inner join e.bioAssays ba"
+                + " inner join ba.samplesUsed bm inner join bm.factorValues fv inner join fv.experimentalFactor ef where e.id in (:ids) group by e.id";
+        List res = this.getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
+        Map<Long, Integer> results = new HashMap<Long, Integer>();
+        for ( Long id : ( Collection<Long> ) ids ) {
+            results.put( id, 0 );
+        }
+        for ( Object r : res ) {
+            Object[] ro = ( Object[] ) r;
+            Long id = ( Long ) ro[0];
+            Integer count = ( ( Long ) ro[1] ).intValue();
+            results.put( id, count );
+        }
+        return results;
     }
 
 }

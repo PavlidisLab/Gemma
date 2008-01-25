@@ -523,4 +523,14 @@ public class ExpressionExperimentServiceImpl extends
         this.getExpressionExperimentDao().update( expressionExperiment );
     }
 
+    @Override
+    protected Map handleGetAnnotationCounts( Collection ids ) throws Exception {
+        return this.getExpressionExperimentDao().getAnnotationCounts( ids );
+    }
+
+    @Override
+    protected Map handleGetPopulatedFactorCounts( Collection ids ) throws Exception {
+        return this.getExpressionExperimentDao().getPopulatedFactorCounts( ids );
+    }
+
 }

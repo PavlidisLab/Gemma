@@ -511,6 +511,9 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         // load event data
         expressionExperimentReportService.fillEventInformation( expressionExperiments );
 
+        // load annotation information
+        expressionExperimentReportService.fillAnnotationInformation( expressionExperiments );
+
         // sort expression experiments by name first
         Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments, new Comparator() {
             public int compare( Object o1, Object o2 ) {

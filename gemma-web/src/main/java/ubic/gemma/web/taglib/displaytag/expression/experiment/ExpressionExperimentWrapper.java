@@ -323,6 +323,22 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         return "No design";
     }
 
+    public Integer getNumAnnotations() {
+        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
+        if ( object != null ) {
+            return object.getNumAnnotations();
+        }
+        return 0;
+    }
+
+    public Integer getNumFactors() {
+        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
+        if ( object != null ) {
+            return object.getNumPopulatedFactors();
+        }
+        return 0;
+    }
+
     /**
      * link to the expression experiment view, with the name as the link view
      * 

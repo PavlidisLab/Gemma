@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.commons.lang.time.DateFormatUtils;
@@ -256,7 +257,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
      * @return the filled out value objects
      */
     @SuppressWarnings("unchecked")
-    public void fillEventInformation( Collection vos ) {
+    public void fillEventInformation( Collection<ExpressionExperimentValueObject> vos ) {
 
         StopWatch watch = new StopWatch();
         watch.start();
@@ -288,8 +289,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         watch.unsplit();
 
         // add in the last events of interest for all eeVos
-        for ( Object object : vos ) {
-            ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) object;
+        for ( ExpressionExperimentValueObject eeVo : vos ) {
             Long id = eeVo.getId();
             if ( linkAnalysisEvents.containsKey( id ) ) {
                 AuditEvent event = linkAnalysisEvents.get( id );
@@ -325,6 +325,31 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
             eeVo.setTroubleFlag( troubleEvents.get( id ) );
             eeVo.setValidatedFlag( validationEvents.get( id ) );
         }
+    }
+
+    /**
+     * Populate information about how many annotations there are, and how many factor values there are.
+     * 
+     * @param vos
+     */
+    @SuppressWarnings("unchecked")
+    public void fillAnnotationInformation( Collection<ExpressionExperimentValueObject> vos ) {
+        Collection<Long> ids = new HashSet<Long>();
+        for ( ExpressionExperimentValueObject eeVo : vos ) {
+            Long id = eeVo.getId();
+            ids.add( id );
+        }
+
+        Map<Long, Integer> annotationCounts = expressionExperimentService.getAnnotationCounts( ids );
+
+        Map<Long, Integer> factorCounts = expressionExperimentService.getPopulatedFactorCounts( ids );
+
+        for ( ExpressionExperimentValueObject eeVo : vos ) {
+            Long id = eeVo.getId();
+            eeVo.setNumAnnotations( annotationCounts.get( id ) );
+            eeVo.setNumPopulatedFactors( factorCounts.get( id ) );
+        }
+
     }
 
     @SuppressWarnings("unchecked")

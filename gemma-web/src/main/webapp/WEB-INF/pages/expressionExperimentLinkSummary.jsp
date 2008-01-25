@@ -50,6 +50,15 @@
 			defaultorder="descending"
 			titleKey="expressionExperiment.bioMaterialCount"
 			comparator="ubic.gemma.web.taglib.displaytag.NumberComparator" />
+
+		<display:column property="numAnnotations" sortable="true" defaultorder="descending" title="# Annots"
+			comparator="ubic.gemma.web.taglib.displaytag.NumberComparator" />
+
+		<display:column property="numFactors" sortable="true"
+			defaultorder="descending"
+			title="# Factors" 
+			comparator="ubic.gemma.web.taglib.displaytag.NumberComparator" />
+			
 		<display:column property="dateCreatedNoTime" sortable="true"
 			defaultorder="descending" title="Created"
 			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />
