@@ -438,42 +438,31 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      */
     @SuppressWarnings("unchecked")
     private Map<Long, String> getArrayToTaxonMap() {
-        // do queries for representative compositeSequences so we can get taxon information easily
-        final String csString = "select ad.id, cs.id from ArrayDesignImpl as ad inner join ad.compositeSequences as cs where cs.biologicalCharacteristic IS NOT NULL group by ad";
-
-        final String taxonString = "select cs.id, taxon.commonName from CompositeSequenceImpl as cs inner join cs.biologicalCharacteristic as bioC inner join bioC.taxon as taxon"
-                + "   WHERE cs.id in (:id) group by cs.id";
-
-        Map<Long, Long> csToArray = new HashMap<Long, Long>();
         Map<Long, String> arrayToTaxon = new HashMap<Long, String>();
+        Collection<ArrayDesign> arrayDesigns = this.loadAll();
+        for ( ArrayDesign ad : arrayDesigns ) {
+            final String csString = "select taxon from ArrayDesignImpl "
+                    + "as ad inner join ad.compositeSequences as cs inner join cs.biologicalCharacteristic as bioC inner join bioC.taxon as taxon"
+                    + " where ad = :ad";
+            org.hibernate.Query csQueryObject = super.getSession( false ).createQuery( csString );
+            csQueryObject.setParameter( "ad", ad );
+            csQueryObject.setCacheable( true );
+            csQueryObject.setMaxResults( 1 );
+            // the name of the cache region is configured in ehcache.xml.vsl
+            csQueryObject.setCacheRegion( "arrayDesignListing" );
 
-        org.hibernate.Query csQueryObject = super.getSession( false ).createQuery( csString );
-        csQueryObject.setCacheable( true );
+            List csList = csQueryObject.list();
 
-        // the name of the cache region is configured in ehcache.xml.vsl
-        csQueryObject.setCacheRegion( "arrayDesignListing" );
+            if ( csList.size() == 0 ) {
+                continue;
+            }
 
-        List csList = csQueryObject.list();
-
-        if ( csList.size() == 0 ) {
-            throw new IllegalStateException( "No probes were found for any microarray" );
+            for ( Object object : csList ) {
+                Taxon t = ( Taxon ) object;
+                arrayToTaxon.put( ad.getId(), t.getCommonName() );
+            }
         }
 
-        for ( Object object : csList ) {
-            Object[] res = ( Object[] ) object;
-            Long arrayId = ( Long ) res[0];
-            Long csId = ( Long ) res[1];
-            csToArray.put( csId, arrayId );
-        }
-
-        List<Object[]> taxonList = getHibernateTemplate().findByNamedParam( taxonString, "id", csToArray.keySet() );
-
-        for ( Object[] o : taxonList ) {
-            Long csId = ( Long ) o[0];
-            String taxon = ( String ) o[1];
-            Long arrayId = csToArray.get( csId );
-            arrayToTaxon.put( arrayId, taxon );
-        }
         return arrayToTaxon;
     }
 
