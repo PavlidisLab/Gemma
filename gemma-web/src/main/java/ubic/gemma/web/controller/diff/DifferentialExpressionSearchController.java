@@ -33,13 +33,13 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.SimpleFormController;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.model.analysis.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.util.ConfigurationCookie;
 
 /**
@@ -53,7 +53,7 @@ import ubic.gemma.web.util.ConfigurationCookie;
  * @spring.property name = "differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
  * @spring.property name = "geneService" ref="geneService"
  */
-public class DifferentialExpressionSearchController extends SimpleFormController {
+public class DifferentialExpressionSearchController extends BaseFormController {
 
     private Log log = LogFactory.getLog( this.getClass() );
 
@@ -176,9 +176,11 @@ public class DifferentialExpressionSearchController extends SimpleFormController
 
         /* multiple genes can have the same symbol */
         Collection<Gene> genes = geneService.findByOfficialSymbol( officialSymbol );
+
         if ( genes == null || genes.isEmpty() ) {
             String message = "Gene(s) could not be found for symbol: " + officialSymbol;
             errors.addError( new ObjectError( command.toString(), null, null, message ) );
+            return processErrors( request, response, command, errors, null );
         }
 
         List<ExpressionExperiment> allExperiments = new ArrayList<ExpressionExperiment>();
