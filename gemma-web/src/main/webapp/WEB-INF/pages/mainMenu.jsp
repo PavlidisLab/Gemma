@@ -16,8 +16,7 @@
 </spring:bind>
 
 
-<title><fmt:message key="mainMenu.title" />
-</title>
+<title><fmt:message key="mainMenu.title" /></title>
 
 
 
@@ -146,6 +145,7 @@
 		Administrative functions
 	</h2>
 	<ul class="glassList">
+
 		<li>
 			<a href="<c:url value="/indexer.html"/>"> <fmt:message key="menu.compassIndexer" /> </a>
 		</li>
@@ -192,6 +192,9 @@
 		<li>
 			<a href="<c:url value="/searchCoexpressionMultiple.html"/>"> <fmt:message key="menu.searchCoexpressionMultiple" />
 			</a>
+		</li>
+		<li>
+			<a href="<c:url value="/diff/diffExpressionSearch.html"/>"> <fmt:message key="menu.diffexSearch" /> </a>
 		</li>
 	</ul>
 
