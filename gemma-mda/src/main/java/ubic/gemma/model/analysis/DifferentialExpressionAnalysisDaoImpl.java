@@ -130,4 +130,21 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         return this.getHibernateTemplate().findByNamedParam( queryString, "gene", gene );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisDaoBase#handleFind(ubic.gemma.model.genome.Gene,
+     *      ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     */
+    @Override
+    protected Collection handleFind( Gene gene, ExpressionExperiment experimentAnalyzed ) throws Exception {
+        final String queryString = "select distinct r from DifferentialExpressionAnalysisImpl a"
+                + " inner join a.experimentsAnalyzed e inner join a.resultSets rs inner join rs.results r inner join r.gene g where g=:gene and e=:experimentAnalyzed";
+
+        String[] paramNames = { "gene", "experimentAnalyzed" };
+        Object[] objectValues = { gene, experimentAnalyzed };
+
+        return this.getHibernateTemplate().findByNamedParam( queryString, paramNames, objectValues );
+    }
+
 }

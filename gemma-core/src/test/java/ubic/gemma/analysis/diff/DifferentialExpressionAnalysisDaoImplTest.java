@@ -21,6 +21,7 @@ package ubic.gemma.analysis.diff;
 import java.util.Collection;
 
 import ubic.gemma.model.analysis.DifferentialExpressionAnalysisDao;
+import ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneDao;
@@ -59,6 +60,33 @@ public class DifferentialExpressionAnalysisDaoImplTest extends BaseSpringContext
             log.info( experiments.size() );
         }
 
+    }
+
+    /**
+     * 
+     */
+    public void testFindResults() {
+        Collection<Gene> genes = geneDao.findByOfficalSymbol( officialSymbol );
+
+        if ( genes == null || genes.isEmpty() ) {
+            log.error( "Problems obtaining genes. Skipping test ..." );
+            return;
+        }
+
+        for ( Gene g : genes ) {
+            Collection<ExpressionExperiment> experiments = differentialExpressionAnalysisDao.find( g );
+            log.info( "num experiments for " + g.getOfficialSymbol() + ": " + experiments.size() );
+            for ( ExpressionExperiment e : experiments ) {
+                Collection<DifferentialExpressionAnalysisResult> results = differentialExpressionAnalysisDao
+                        .find( g, e );
+                log.info( "num results for gene " + g.getOfficialSymbol() + " and experiment " + e.getName() + ": "
+                        + results.size() );
+                for ( DifferentialExpressionAnalysisResult r : results ) {
+                    double pval = r.getPvalue();
+                    log.info( "pval: " + pval );
+                }
+            }
+        }
     }
 
     /**

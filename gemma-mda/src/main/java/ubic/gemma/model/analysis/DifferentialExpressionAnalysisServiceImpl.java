@@ -25,6 +25,7 @@ package ubic.gemma.model.analysis;
 import java.util.Collection;
 import java.util.Map;
 
+import ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -109,6 +110,16 @@ public class DifferentialExpressionAnalysisServiceImpl extends
     @Override
     protected Collection handleFind( Gene gene ) throws Exception {
         return this.getDifferentialExpressionAnalysisDao().find( gene );
+    }
+    
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisServiceBase#handleFind(ubic.gemma.model.genome.Gene, ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     */
+    @Override
+    protected Collection handleFind( Gene gene, ExpressionExperiment experimentAnalyzed )
+            throws Exception {
+        return this.getDifferentialExpressionAnalysisDao().find( gene, experimentAnalyzed );
     }
 
 }
