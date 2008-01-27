@@ -25,7 +25,6 @@ package ubic.gemma.model.analysis;
 import java.util.Collection;
 import java.util.Map;
 
-import ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
