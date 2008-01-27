@@ -9,7 +9,8 @@ version: $Id$
 <jsp:useBean id="diffExpressionSearchCommand" scope="request"
 	class="ubic.gemma.web.controller.diff.DiffExpressionSearchCommand" />
 
-<title><fmt:message key="diffExpressionSearch.title" /></title>
+<title><fmt:message key="diffExpressionSearch.title" />
+</title>
 
 <spring:bind path="diffExpressionSearchCommand.*">
 	<c:if test="${not empty status.errorMessages}">
@@ -43,6 +44,18 @@ version: $Id$
 			<td>
 				<spring:bind path="diffExpressionSearchCommand.geneOfficialSymbol">
 					<input type="text" size=10
+						name="<c:out value="${status.expression}"/>"
+						value="<c:out value="${status.value}"/>" />
+				</spring:bind>
+			</td>
+		</tr>
+		<tr>
+			<td valign="top">
+				<b> <fmt:message key="diff.threshold" /> <br /> </b>
+			</td>
+			<td>
+				<spring:bind path="diffExpressionSearchCommand.threshold">
+					<input type="text" size=5
 						name="<c:out value="${status.expression}"/>"
 						value="<c:out value="${status.value}"/>" />
 				</spring:bind>

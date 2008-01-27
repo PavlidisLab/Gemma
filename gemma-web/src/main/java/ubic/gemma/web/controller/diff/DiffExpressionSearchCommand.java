@@ -30,12 +30,34 @@ public class DiffExpressionSearchCommand implements Serializable {
 
     private String geneOfficialSymbol = null;
 
+    private double threshold;
+
+    /**
+     * @return
+     */
     public String getGeneOfficialSymbol() {
         return geneOfficialSymbol;
     }
 
+    /**
+     * @param geneOfficialSymbol
+     */
     public void setGeneOfficialSymbol( String geneOfficialSymbol ) {
         this.geneOfficialSymbol = geneOfficialSymbol;
+    }
+
+    /**
+     * @return
+     */
+    public double getThreshold() {
+        return threshold;
+    }
+
+    /**
+     * @param threshold
+     */
+    public void setThreshold( double threshold ) {
+        this.threshold = threshold;
     }
 
 }

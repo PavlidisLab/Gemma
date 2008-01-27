@@ -18,9 +18,9 @@
  */
 package ubic.gemma.web.controller.diff;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
@@ -36,6 +36,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.model.analysis.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
@@ -49,7 +50,7 @@ import ubic.gemma.web.util.ConfigurationCookie;
  * @spring.property name = "commandName" value="diffExpressionSearchCommand"
  * @spring.property name = "commandClass" value="ubic.gemma.web.controller.diff.DiffExpressionSearchCommand"
  * @spring.property name = "formView" value="diffExpressionSearchForm"
- * @spring.property name = "successView" value="redirect:/expressionExperiment/showAllExpressionExperiments.html"
+ * @spring.property name = "successView" value="diffExpressionResultsByExperiment"
  * @spring.property name = "differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
  * @spring.property name = "geneService" ref="geneService"
  */
@@ -114,13 +115,18 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                 try {
                     ConfigurationCookie cookie = new ConfigurationCookie( cook );
                     String officialSymbol = cookie.getString( "geneOfficalSymbol" );
-                    if ( StringUtils.isBlank( officialSymbol ) )
+                    if ( StringUtils.isBlank( officialSymbol ) ) {
                         throw new Exception( "Invalid official symbol in cookie - " + officialSymbol );
-
+                    }
                     diffSearchCommand.setGeneOfficialSymbol( officialSymbol );
 
-                    // Long id = Long.parseLong( cookie.getString( "geneId" ) );
-                    // diffSearchCommand.setGeneId( id );
+                    String thresholdAsString = cookie.getString( "threshold" );
+                    if ( StringUtils.isBlank( thresholdAsString ) ) {
+                        throw new Exception( "Invalid threshold - " + thresholdAsString );
+                    }
+                    double threshold = Double.parseDouble( thresholdAsString );
+                    diffSearchCommand.setThreshold( threshold );
+
                     return diffSearchCommand;
 
                 } catch ( Exception e ) {
@@ -133,6 +139,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         /* If we've come this far, we have a cookie but not one that matches COOKIE_NAME. Provide friendly defaults. */
         diffSearchCommand.setGeneOfficialSymbol( "<gene sym>" );
+        diffSearchCommand.setThreshold( 0.1 );
 
         return diffSearchCommand;
     }
@@ -169,38 +176,50 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         DiffExpressionSearchCommand diffCommand = ( ( DiffExpressionSearchCommand ) command );
 
-        String officialSymbol = diffCommand.getGeneOfficialSymbol();
-
         Cookie cookie = new DiffExpressionSearchCookie( diffCommand );
         response.addCookie( cookie );
+
+        String officialSymbol = diffCommand.getGeneOfficialSymbol();
+
+        double threshold = diffCommand.getThreshold();
 
         /* multiple genes can have the same symbol */
         Collection<Gene> genes = geneService.findByOfficialSymbol( officialSymbol );
 
+        String message = null;
         if ( genes == null || genes.isEmpty() ) {
-            String message = "Gene(s) could not be found for symbol: " + officialSymbol;
+            message = "Gene(s) could not be found for symbol: " + officialSymbol;
             errors.addError( new ObjectError( command.toString(), null, null, message ) );
             return processErrors( request, response, command, errors, null );
         }
 
-        List<ExpressionExperiment> allExperiments = new ArrayList<ExpressionExperiment>();
-        for ( Gene g : genes ) {
-            Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService.find( g );
-
-            allExperiments.addAll( experimentsAnalyzed );
+        if ( genes.size() > 1 ) {
+            message = " More than one gene maps to the symbol: " + officialSymbol
+                    + ".  Not sure what to gene you are referring to at this time.";
+            errors.addError( new ObjectError( command.toString(), null, null, message ) );
+            return processErrors( request, response, command, errors, null );
         }
 
-        String url = "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath()
-                + "/expressionExperiment/showAllExpressionExperiments.html?id=";
+        Gene g = genes.iterator().next();
+        Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> resultsByExperiment = new HashMap<ExpressionExperiment, Collection<ProbeAnalysisResult>>();
 
-        int i = 0;
-        for ( ExpressionExperiment e : allExperiments ) {
-            url = url + e.getId();
-            if ( i < ( allExperiments.size() - 1 ) ) url = url + ",";
-            i++;
+        Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService.find( g );
+        for ( ExpressionExperiment e : experimentsAnalyzed ) {
+            Collection<ProbeAnalysisResult> results = differentialExpressionAnalysisService.find( g, e );
+            resultsByExperiment.put( e, results );
         }
 
-        return new ModelAndView( new RedirectView( url ) );
+        ModelAndView mav = new ModelAndView( this.getSuccessView() );
+
+        mav.addObject( "gene", g );
+
+        mav.addObject( "threshold", threshold );
+
+        mav.addObject( "diffResults", resultsByExperiment );
+
+        mav.addObject( "numDiffResults", resultsByExperiment.size() );
+
+        return mav;
 
     }
 
