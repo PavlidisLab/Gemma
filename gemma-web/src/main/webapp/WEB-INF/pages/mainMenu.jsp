@@ -172,6 +172,10 @@
 			<a href="<c:url value="/genome/goldenPathSequenceLoad.html"/>"> <fmt:message key="menu.goldenPathSequenceLoad" />
 			</a>
 		</li>
+		<li>
+			<a href="<c:url value="/diff/diffExpressionSearch.html"/>"> <fmt:message key="menu.diffexSearch" />
+			</a>
+		</li>
 	</ul>
 	<h2>
 		Inactive, deprecated, or not ready for prime time
