@@ -1,8 +1,7 @@
 <%@ include file="/common/taglibs.jsp"%>
 
 
-<title><fmt:message key="expressionExperiments.title" />
-</title>
+<title><fmt:message key="expressionExperiments.title" /></title>
 
 <h3>
 	Displaying
@@ -42,7 +41,7 @@
 			<td>
 				<c:forEach items="${results}" var="r">
 					<c:set var="pvalues" value="${r.pvalue}" />
-					${pvalues};
+					<pre>${pvalues}</pre>
 				</c:forEach>
 			</td>
 		</tr>
