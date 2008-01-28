@@ -163,7 +163,7 @@ public class SimpleFastaCmd implements FastaCmd {
     }
 
     /**
-     * @param accession
+     * @param ACCESSION
      * @param database
      * @blastHome
      * @throws IOException

@@ -76,10 +76,9 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                     for ( BioSequence res : ( Collection<BioSequence> ) results ) {
                         if ( res.equals( bioSequence ) ) {
                             if ( match != null ) {
-                                log.warn( "More than one sequence in the database matches " + bioSequence );
-                                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                                        "More than one instance of '" + BioSequence.class.getName()
-                                                + "' was found when executing query for " + bioSequence );
+                                log.warn( "More than one sequence in the database matches " + bioSequence
+                                        + ", returning arbitrary match: " + match );
+                                break;
                             }
                             match = res;
                         }
@@ -131,9 +130,8 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                 }
             }
 
-            throw new org.springframework.dao.InvalidDataAccessResourceUsageException( "No real match found for  '"
-                    + DatabaseEntry.class.getName() + "' was found when executing query for accession="
-                    + databaseEntry.getAccession() );
+            log.error( "No biosequence really matches " + databaseEntry.getAccession() );
+            return null;
 
         } else if ( results.size() == 1 ) {
             return ( BioSequence ) results.iterator().next();

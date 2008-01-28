@@ -96,8 +96,8 @@ public class ProbeLinkCoexpressionAnalyzer {
         coexpressions.setEesQueryGeneTestedIn( eesQueryTestedIn );
 
         /*
-         * For all the rest of the genes. This is going to be slower. Note we do a lot of object <--> id transformations
-         * here, which is annoying and wasteful.
+         * For all the rest of the genes. This is going to be slower. We work with IDs directly to avoid having to
+         * convert back to Entities etc.
          */
         Collection<Long> coexGeneIds = new HashSet<Long>();
 
@@ -107,11 +107,10 @@ public class ProbeLinkCoexpressionAnalyzer {
             gmap.put( o.getGeneId(), o );
         }
 
-        Collection<Gene> coexGenes = geneService.loadMultiple( coexGeneIds ); // this step might be avoidable.
-        Map<Gene, Collection<ExpressionExperiment>> eesTestedIn = probe2ProbeCoexpressionService
-                .getExpressionExperimentsLinkTestedIn( gene, coexGenes, ees, false );
-        for ( Gene g : eesTestedIn.keySet() ) {
-            CoexpressionValueObject o = gmap.get( g.getId() );
+        Map<Long, Collection<ExpressionExperiment>> eesTestedIn = probe2ProbeCoexpressionService
+                .getExpressionExperimentsLinkTestedIn( gene, coexGeneIds, ees, false );
+        for ( Long g : eesTestedIn.keySet() ) {
+            CoexpressionValueObject o = gmap.get( g );
             o.setDatasetsTestedIn( eesTestedIn.get( g ) );
         }
     }

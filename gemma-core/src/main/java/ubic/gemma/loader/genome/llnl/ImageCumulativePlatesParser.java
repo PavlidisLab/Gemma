@@ -93,8 +93,9 @@ public class ImageCumulativePlatesParser extends BasicLineParser implements Queu
         }
 
         BioSequence seq = BioSequence.Factory.newInstance();
-
-        seq.setName( "IMAGE:" + fields[0] );
+        String[] accessions = StringUtils.split( fields[7] );
+        assert accessions.length > 0;
+        seq.setName( accessions[0] );
 
         seq.setType( SequenceType.EST );
 
@@ -104,8 +105,7 @@ public class ImageCumulativePlatesParser extends BasicLineParser implements Queu
         seq.setTaxon( t );
 
         DatabaseEntry acc = DatabaseEntry.Factory.newInstance();
-        String[] accessions = StringUtils.split( fields[7] );
-        assert accessions.length > 0;
+
         acc.setAccession( accessions[0] );
         acc.setExternalDatabase( genbank );
         seq.setSequenceDatabaseEntry( acc );
@@ -119,7 +119,7 @@ public class ImageCumulativePlatesParser extends BasicLineParser implements Queu
                 buf.append( " " + accessions[i] );
             }
         }
-        seq.setDescription( buf.toString() );
+        seq.setDescription( "IMAGE:" + fields[0] + "; accessions:" + buf.toString() );
 
         seen.add( fields[0].hashCode() );
         return seq;

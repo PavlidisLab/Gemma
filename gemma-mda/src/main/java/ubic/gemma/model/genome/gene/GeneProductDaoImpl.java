@@ -21,6 +21,7 @@ package ubic.gemma.model.genome.gene;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -98,6 +99,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
 
                         if ( numFound == 0 ) {
                             log.error( "Multiple gene products match " + geneProduct + ", but none with " + gene );
+                            debug(results);
                             log.error( "Returning arbitrary match " + results.iterator().next() );
                             return ( GeneProduct ) results.iterator().next();
                         }
@@ -105,11 +107,14 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
                         if ( numFound > 1 ) {
                             log.error( "Multiple gene products match " + geneProduct + ", and matches " + numFound
                                     + " genes" );
+                            debug(results);
+                            log.error( "Returning arbitrary match " + results.iterator().next() );
+                            return ( GeneProduct ) results.iterator().next();
                         }
                     }
 
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                            "More than one instance of '" + geneProduct + "' was found when executing query" );
+                    //throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    //        "More than one instance of '" + geneProduct + "' was found when executing query" );
 
                 } else if ( results.size() == 1 ) {
                     result = results.iterator().next();
@@ -122,6 +127,20 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
         }
     }
 
+    /**
+     * @param results
+     */
+    private void debug( List results ) {
+
+        StringBuilder buf = new StringBuilder();
+        buf.append( "\n" );
+        for ( Object o : results ) {
+            buf.append( o + "\n" );
+        }
+        log.error( buf );
+
+    }
+    
     /*
      * (non-Javadoc)
      * 

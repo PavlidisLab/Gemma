@@ -272,20 +272,20 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Map<Gene, Collection<ExpressionExperiment>> handleGetExpressionExperimentsLinkTestedIn( Gene geneA,
-            Collection genesB, Collection expressionExperiments, boolean filterNonSpecific ) throws Exception {
+    protected Map<Long, Collection<ExpressionExperiment>> handleGetExpressionExperimentsLinkTestedIn( Gene geneA,
+            Collection /* Long */ genesB, Collection expressionExperiments, boolean filterNonSpecific ) throws Exception {
 
         // FIXME implement filterNonSpecific.
         if ( filterNonSpecific ) {
             throw new UnsupportedOperationException( "Sorry, filterNonSpecific is not supported yet" );
         }
 
-        Map<Gene, Collection<ExpressionExperiment>> result = new HashMap<Gene, Collection<ExpressionExperiment>>();
-        Map<Long, Gene> id2gene = new HashMap<Long, Gene>();
-        for ( Gene g : ( Collection<Gene> ) genesB ) {
-            result.put( g, new HashSet<ExpressionExperiment>() );
-            id2gene.put( g.getId(), g );
-        }
+        Map<Long, Collection<ExpressionExperiment>> result = new HashMap<Long, Collection<ExpressionExperiment>>();
+ //       Map<Long, Gene> id2gene = new HashMap<Long, Gene>();
+//        for ( Gene g : ( Collection<Long> ) genesB ) {
+//            result.put( g, new HashSet<ExpressionExperiment>() );
+//            id2gene.put( g.getId(), g );
+//        }
 
         // this is an upper bound.
         Collection<ExpressionExperiment> eesA = getExpressionExperimentsLinkTestedIn( geneA, expressionExperiments,
@@ -306,8 +306,8 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             ExpressionExperiment e = ( ExpressionExperiment ) ol[1];
             Collection<Long> geneIds = cs2genes.get( c.getId() );
             for ( Long id : geneIds ) {
-                Gene g = id2gene.get( id );
-                result.get( g ).add( e );
+              //  Gene g = id2gene.get( id );
+                result.get( id ).add( e );
             }
         }
 
@@ -603,12 +603,12 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * @param genes
      * @return
      */
-    private Map<Long, Collection<Long>> getCs2GenesMapFromGenes( Collection<Gene> genes ) {
+    private Map<Long, Collection<Long>> getCs2GenesMapFromGenes( Collection<Long> genes ) {
         Map<Long, Collection<Long>> cs2genes = new HashMap<Long, Collection<Long>>();
-        Collection<Long> geneIds = new HashSet<Long>();
-        for ( Gene g : genes ) {
-            geneIds.add( g.getId() );
-        }
+//        Collection<Long> geneIds = new HashSet<Long>();
+//        for ( Gene g : genes ) {
+//            geneIds.add( g.getId() );
+//        }
 
         Session session = getSessionFactory().openSession();
 
@@ -617,7 +617,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         queryObject.addScalar( "csid", new LongType() );
         queryObject.addScalar( "geneId", new LongType() );
 
-        queryObject.setParameterList( "geneIds", geneIds );
+        queryObject.setParameterList( "geneIds", genes );
         ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
         while ( scroll.next() ) {
             Long csid = scroll.getLong( 0 );

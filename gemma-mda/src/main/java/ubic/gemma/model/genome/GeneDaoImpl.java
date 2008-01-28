@@ -203,6 +203,10 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         // This is the actual business of querying the database.
         processCoexpQuery( gene, queryObject, coexpressions );
 
+        if ( coexpressions.getQueryGeneProbes().size() == 0 ) {
+            log.warn( "Query gene has no probes" );
+        }
+
         overallWatch.stop();
         Long overallElapsed = overallWatch.getTime();
         if ( overallElapsed > 1000 )
@@ -468,8 +472,34 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @SuppressWarnings("unchecked")
     @Override
     protected Collection handleLoadMultiple( Collection ids ) throws Exception {
-        final String queryString = "select distinct gene from GeneImpl gene where gene.id in (:ids)";
-        return getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
+        if ( ids.size() == 0 ) {
+            return new HashSet();
+        }
+        log.info( "Loading " + ids.size() + " genes." );
+        final String queryString = "select gene from GeneImpl gene where gene.id in (:ids)";
+        Collection<Long> batch = new HashSet<Long>();
+        Collection<Gene> genes = new HashSet<Gene>();
+
+        int BATCH_SIZE = 1000;
+        for ( Long gene : ( Collection<Long> ) ids ) {
+            if (gene == null) {
+                log.warn("null gene!");
+                continue;
+            }
+            batch.add( gene );
+            if ( batch.size() == BATCH_SIZE ) {
+                log.info( "Processing batch ... " );
+                genes.addAll( getHibernateTemplate().findByNamedParam( queryString, "ids", batch ) );
+                batch.clear();
+            }
+        }
+
+        if ( batch.size() > 0 ) {
+            log.info( "Processing last batch ... " );
+            genes.addAll( getHibernateTemplate().findByNamedParam( queryString, "ids", batch ) );
+        }
+
+        return genes;
     }
 
     /*

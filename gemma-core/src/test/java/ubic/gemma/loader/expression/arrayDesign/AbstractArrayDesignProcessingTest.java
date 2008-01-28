@@ -36,14 +36,7 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
 
     ArrayDesign ad;
 
-    String accession = "GPL140";
-
-    /**
-     * @param accession the accession to set
-     */
-    public void setAccession( String accession ) {
-        this.accession = accession;
-    }
+    final static String ACCESSION = "GPL140";
 
     /*
      * (non-Javadoc)
@@ -56,7 +49,7 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
         super.onSetUpInTransaction();
         endTransaction();
         ArrayDesignService arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
-        ad = arrayDesignService.findByShortName( "GPL140" );
+        ad = arrayDesignService.findByShortName( ACCESSION );
 
         if ( ad == null ) {
 
@@ -64,7 +57,7 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
             AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
 
-            final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( accession, true,
+            final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( ACCESSION, true,
                     true, false );
             ad = ads.iterator().next();
 

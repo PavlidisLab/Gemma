@@ -919,7 +919,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         for ( Object[] o : list ) {
             Long id = ( Long ) o[0];
             Long count = ( Long ) o[1];
-            ;
             eeCount.put( id, count );
         }
         return eeCount;
@@ -934,6 +933,11 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         if ( arrayDesign == null ) return;
         if ( arrayDesign.getId() == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
+        templ.setFetchSize( 400 );
+
+        final String deepQuery = "select cs from CompositeSequenceImpl cs left outer join fetch cs.biologicalCharacteristic bs "
+                + "left outer join fetch bs.taxon left outer join fetch bs.bioSequence2GeneProduct bs2gp "
+                + " left outer join fetch bs2gp.geneProduct gp left outer join fetch gp.gene g left outer join fetch g.aliases where cs = :cs";
 
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
@@ -943,7 +947,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 CacheMode oldCacheMode = session.getCacheMode();
                 session.setCacheMode( CacheMode.IGNORE ); // Don't hit the secondary cache
                 session.setFlushMode( FlushMode.MANUAL ); // We're READ-ONLY so this is okay.
-
                 session.lock( arrayDesign, LockMode.NONE );
 
                 if ( log.isDebugEnabled() ) log.debug( "Thawing " + arrayDesign + " ..." );
@@ -971,9 +974,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 int numToDo = arrayDesign.getCompositeSequences().size(); // this takes a little while.
                 // log.info( "Must thaw " + numToDo + " composite sequence associations ..." );
 
-                String deepQuery = "select cs from CompositeSequenceImpl cs left outer join fetch cs.biologicalCharacteristic bs "
-                        + "left outer join fetch bs.taxon left outer join fetch bs.bioSequence2GeneProduct bs2gp "
-                        + " left outer join fetch bs2gp.geneProduct gp left outer join fetch gp.gene g left outer join fetch g.aliases where cs = :cs";
                 org.hibernate.Query queryObject = session.createQuery( deepQuery );
                 queryObject.setReadOnly( true );
 
@@ -983,6 +983,10 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
                 Collection<BioSequence> seen = new HashSet<BioSequence>();
                 for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+
+                    if ( i % 100 == 0 ) {
+                        session.clear();
+                    }
 
                     if ( ++i % LOGGING_UPDATE_EVENT_COUNT == 0 && timer.getTime() > 5000 ) {
                         log.info( arrayDesign.getShortName() + " CS assoc thaw progress: " + i + "/" + numToDo
@@ -994,62 +998,54 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                         }
                     }
 
-                    cs.getComponentReporters().size();
+                    if ( cs.getId() != null ) session.lock( cs, LockMode.NONE );
+
                     BioSequence bs = cs.getBiologicalCharacteristic();
                     if ( bs == null ) {
                         continue;
                     }
 
+                    session.evict( cs );
+
                     // Sequences can show up more than once per arraydesign. Skipping this check will result in a
                     // hibernate exception.
-                    try { // just in case...
-                        if ( !seen.contains( bs ) ) {
-                            // note: LockMode.NONE results in lazy errors in TESTS but not actual runs.
-                            session.lock( bs, LockMode.READ );
+                    if ( !seen.contains( bs ) ) {
+                        // session.lock( bs, LockMode.NONE );
+                        session.update( bs ); // this really shouldn't be necessary. Lock is better.
+                        seen.add( bs );
+
+                        if ( Hibernate.isInitialized( bs ) ) {
+                            Hibernate.initialize( bs );
+                            Hibernate.initialize( bs.getTaxon() );
                             seen.add( bs );
                         }
-                    } catch ( org.hibernate.NonUniqueObjectException e ) {
-                        continue; // no need to process it then, we've already thawed it.
-                    } catch ( org.hibernate.HibernateException e ) {
-                        continue; // during tests.
-                    }
 
-                    bs.getTaxon();
-
-                    if ( !deep ) {
-                        continue;
-                    }
-
-                    // maddingly, some tests get lazy-load if you don't do this.
-                    try {
-                        session.lock( bs, LockMode.READ );
-                    } catch ( org.hibernate.NonUniqueObjectException e ) {
-                        continue; // no need to process it then, we've already thawed it.
-                    }
-
-                    for ( BioSequence2GeneProduct bs2gp : bs.getBioSequence2GeneProduct() ) {
-                        GeneProduct geneProduct = bs2gp.getGeneProduct();
-                        Gene g = geneProduct.getGene();
-                        if ( g != null ) {
-                            g.getAliases().size();
+                        if ( !deep ) {
+                            continue;
                         }
-                        session.evict( g );
+
+                        // Hibernate.initialize( bs.getBioSequence2GeneProduct() );
+
+                        for ( BioSequence2GeneProduct bs2gp : bs.getBioSequence2GeneProduct() ) {
+                            GeneProduct geneProduct = bs2gp.getGeneProduct();
+                            Gene g = geneProduct.getGene();
+                            if ( g != null ) {
+                                g.getAliases().size();
+                            }
+                        }
+
+                        if ( bs.getSequenceDatabaseEntry() != null ) {
+                            Hibernate.initialize( bs.getSequenceDatabaseEntry() );
+                        }
+                        session.evict( bs );
                     }
 
-                    if ( bs.getSequenceDatabaseEntry() != null ) {
-                        Hibernate.initialize( bs.getSequenceDatabaseEntry() );
-                    }
-
-                    session.evict( bs );
-                    session.evict( cs );
                 }
 
                 if ( timer.getTime() > 5000 )
                     log.info( arrayDesign.getShortName() + ": CS assoc thaw done (" + timer.getTime() / 1000
                             + "s elapsed)" );
 
-                // session.update( arrayDesign );
-                // session.clear();
                 session.setFlushMode( oldFlushMode );
                 session.setCacheMode( oldCacheMode );
                 return null;
