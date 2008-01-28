@@ -149,6 +149,8 @@ Mapping URLS to controllers
 				value="ubic.gemma.web.remote.OntologyTermConverter"></entry>
 			<entry key="classConverter"
 				value="ubic.gemma.web.remote.ClassConverter"></entry>
+			<entry key="goEvidenceCodeConverter"
+				value="ubic.gemma.web.remote.GOEvidenceCodeConverter"></entry>
 		</map>
 	</property>
 	<property name="creators">
@@ -544,6 +546,12 @@ Mapping URLS to controllers
 							<value>auditTrail</value>
 						</list>
 					</property>
+				</bean>
+			</entry>
+			<entry
+				key="ubic.gemma.model.association.GOEvidenceCode">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="goEvidenceCodeConverter"/>
 				</bean>
 			</entry>
 			<entry
