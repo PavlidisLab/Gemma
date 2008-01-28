@@ -20,6 +20,7 @@ package ubic.gemma.web.controller.diff;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 import javax.servlet.ServletException;
@@ -206,7 +207,16 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService.find( g );
         for ( ExpressionExperiment e : experimentsAnalyzed ) {
             Collection<ProbeAnalysisResult> results = differentialExpressionAnalysisService.find( g, e );
-            resultsByExperiment.put( e, results );
+
+            Collection<ProbeAnalysisResult> validResults = new HashSet<ProbeAnalysisResult>();
+            for ( ProbeAnalysisResult r : results ) {
+                double pval = r.getPvalue();
+                log.info( pval );
+                if ( pval < threshold ) {
+                    validResults.add( r );
+                }
+            }
+            resultsByExperiment.put( e, validResults );
         }
 
         ModelAndView mav = new ModelAndView( this.getSuccessView() );
