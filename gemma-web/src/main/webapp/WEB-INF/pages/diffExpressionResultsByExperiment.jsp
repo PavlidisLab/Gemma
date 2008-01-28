@@ -1,8 +1,7 @@
 <%@ include file="/common/taglibs.jsp"%>
 
 
-<title><fmt:message key="expressionExperiments.title" />
-</title>
+<title><fmt:message key="expressionExperiments.title" /></title>
 
 <h3>
 	Displaying
@@ -48,3 +47,7 @@
 		</tr>
 	</c:forEach>
 </table>
+
+<a href="/Gemma/diff/diffExpressionSearch.html"> 
+	Differential Expression Search 
+</a>
