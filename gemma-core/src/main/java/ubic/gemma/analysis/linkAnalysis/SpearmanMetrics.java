@@ -62,7 +62,7 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
     /**
      * @param size Dimensions of the required (square) matrix.
      */
-    private SpearmanMetrics( int size ) {
+    protected SpearmanMetrics( int size ) {
         if ( size > 0 ) {
             results = DoubleMatrix2DNamedFactory.compressedsparse( size, size );
         }
@@ -154,7 +154,7 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
         /* for each vector, compare it to all other vectors */
 
         // value to use if there are no missing values.
-        double denom = Math.pow( numcols, 3 ) - numcols;
+        double denom = ( Math.pow( numcols, 2 ) - 1 ) * numcols;
 
         ExpressionDataMatrixRowElement itemA = null;
         double[] vectorA = null;
@@ -261,16 +261,16 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
      * 
      * @param ival double[]
      * @param jval double[]
-     * @param denom n^3 - n, to avoid having to compute this every time.
+     * @param denom n(n^2-1), to avoid having to compute this every time.
      * @return double
      */
-    private double correlFast( double[] ival, double[] jval, double denom ) {
+    protected double correlFast( double[] ival, double[] jval, double denom ) {
         double sse = 0.0;
         int n = ival.length;
         for ( int i = 0; i < n; i++ ) {
             sse += Math.pow( ival[i] - jval[i], 2 );
         }
-        return 1.0 - sse / denom;
+        return 1.0 - 6.0 * sse / denom;
     }
 
     /**
