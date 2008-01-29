@@ -1322,7 +1322,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 for ( BioAssay ba : ee.getBioAssays() ) {
                     Hibernate.initialize( ba );
                     for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                        bm.getName();
+                        Hibernate.initialize( bm );
+                        Hibernate.initialize( bm.getBioAssaysUsedIn() );
+                        Hibernate.initialize( bm.getFactorValues() );
                     }
                     ba.getDerivedDataFiles().size();
                     Hibernate.initialize( ba.getArrayDesignUsed() );
