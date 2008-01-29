@@ -53,7 +53,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
-import ubic.gemma.model.genome.gene.GeneService; 
+import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
@@ -357,7 +357,12 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         Long numStringencyPredictedGenes = new Long( coexpressions.getNumStringencyPredictedGenes() );
         Long numStringencyProbeAlignedRegions = new Long( coexpressions.getNumStringencyProbeAlignedRegions() );
 
-        mav.addObject( "queryTestedEes", coexpressions.getEesQueryTestedIn().size() );
+        Collection<ExpressionExperiment> eesQueryTestedIn = coexpressions.getEesQueryTestedIn();
+        if ( eesQueryTestedIn != null ) {
+            mav.addObject( "queryTestedEes", eesQueryTestedIn.size() );
+        } else {
+            mav.addObject( "queryTestedEes", 0 );
+        }
 
         mav.addObject( "coexpressedGenes", coexpressedKnownGenes );
         mav.addObject( "coexpressedPredictedGenes", coexpressedPredictedGenes );
