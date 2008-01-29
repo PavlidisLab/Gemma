@@ -84,6 +84,11 @@ public class Probe2ProbeCoexpressionDaoImplTest extends BaseSpringContextTest {
         }
     }
 
+    public void testCountLinks() {
+        Integer countLinks = ppcs.countLinks( ee );
+        assertEquals( 6, countLinks.intValue() );
+    }
+
     /**
      * 
      *

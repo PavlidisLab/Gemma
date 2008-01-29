@@ -41,6 +41,12 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
  * @version $Id$
  */
 public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipulatingCli {
+
+    @Override
+    public String getShortDesc() {
+        return "Attach sequences to array design, from a file or fetching from BLAST database.";
+    }
+
     ArrayDesignSequenceProcessingService arrayDesignSequenceProcessingService;
 
     private String sequenceType;

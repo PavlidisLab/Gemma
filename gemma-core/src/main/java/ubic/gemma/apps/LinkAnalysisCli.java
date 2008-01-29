@@ -138,7 +138,29 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         this.linkAnalysisService = ( LinkAnalysisService ) this.getBean( "linkAnalysisService" );
 
         if ( this.getExperimentShortName() == null ) {
-            if ( this.experimentListFile == null ) {
+            if ( this.taxon != null ) {
+                if ( this.expressionExperiments.size() == 0 ) {
+                    log.error( "No experiments for " + taxon + ", bye" );
+                    return null;
+                }
+                for ( ExpressionExperiment ee : expressionExperiments ) {
+                    eeService.thawLite( ee );
+                    if ( !needToRun( ee, LinkAnalysisEvent.class ) ) {
+                        continue;
+                    }
+
+                    try {
+                        linkAnalysisService.process( ee, filterConfig, linkAnalysisConfig );
+                        successObjects.add( ee.toString() );
+                        audit( ee, "Part of run on all EEs from " + taxon.getCommonName(), LinkAnalysisEvent.Factory
+                                .newInstance() );
+                    } catch ( Exception e ) {
+                        errorObjects.add( ee + ": " + e.getMessage() );
+                        logFailure( ee, e );
+                        log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********" );
+                    }
+                }
+            } else if ( this.experimentListFile == null ) {
                 // run on all experiments
                 Collection<ExpressionExperiment> all = eeService.loadAll();
                 log.info( "Total ExpressionExperiment: " + all.size() );

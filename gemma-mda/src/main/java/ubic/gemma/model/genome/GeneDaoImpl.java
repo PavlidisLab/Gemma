@@ -204,7 +204,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         processCoexpQuery( gene, queryObject, coexpressions );
 
         if ( coexpressions.getQueryGeneProbes().size() == 0 ) {
-            log.warn( "Query gene has no probes" );
+            log.debug( "Coexpressio query gene " + gene + " has no probes" );
+            // should return...
         }
 
         overallWatch.stop();

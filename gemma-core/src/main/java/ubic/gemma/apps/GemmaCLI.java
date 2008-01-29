@@ -40,7 +40,8 @@ public class GemmaCLI {
             "ubic.gemma.apps.VectorMergingCli", "ubic.gemma.apps.ArrayDesignProbeRenamerCli",
             "ubic.gemma.apps.ArrayDesignMergeCli", "ubic.gemma.apps.LinkAnalysisCli",
             "ubic.gemma.apps.DifferentialExpressionAnalysisCli",
-            "ubic.gemma.apps.ExpressionExperimentPlatformSwitchCli", "ubic.gemma.apps.ExpressionDataCorrMatCli" };
+            "ubic.gemma.apps.ExpressionExperimentPlatformSwitchCli", "ubic.gemma.apps.ExpressionDataCorrMatCli",
+            "ubic.gemma.apps.ArrayDesignSubsumptionTesterCli" };
 
     /**
      * @param args
@@ -73,7 +74,6 @@ public class GemmaCLI {
             } catch ( NoSuchMethodException e ) {
                 e.printStackTrace();
             } catch ( InstantiationException e ) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
 

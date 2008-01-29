@@ -19,9 +19,7 @@
 package ubic.gemma.apps;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
@@ -30,14 +28,12 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.util.ConfigUtils;
 
 /**
  * Create correlation visualizations for expression experiments
@@ -49,7 +45,6 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
 
     private FilterConfig filterConfig = new FilterConfig();
     private AnalysisHelperService analysisHelperService = null;
-    private File directory;
 
     /**
      * @param arrayDesign
@@ -58,25 +53,15 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
         auditTrailService.addUpdateEvent( ee, eventType, "Generated correlation matrix images" );
     }
 
-    private void process( ExpressionExperiment ee ) throws IOException {
+    private void process( ExpressionExperiment ee ) {
         ExpressionDataDoubleMatrix matrix = analysisHelperService.getFilteredMatrix( ee, filterConfig );
-        DoubleMatrixNamed cormat = ExpressionDataSampleCorrelation.getMatrix( matrix );
-        String fileBaseName = ee.getShortName() + "_corrmat";
-        ExpressionDataSampleCorrelation.createMatrixImages( cormat, directory, fileBaseName );
+        ExpressionDataSampleCorrelation.process( matrix, ee );
     }
 
     @SuppressWarnings("unchecked")
     @Override
     protected Exception doWork( String[] args ) {
         this.processCommandLine( "corrMat", args );
-        this.directory = new File( ConfigUtils.getAnalysisStoragePath() + File.separatorChar
-                + ExpressionDataSampleCorrelation.CORRMAT_DIR_NAME );
-        if ( !directory.exists() ) {
-            boolean success = directory.mkdir();
-            if ( !success ) {
-                return new IOException( "Could not create directory to store results: " + directory );
-            }
-        }
 
         if ( this.getExperimentShortName() == null ) {
             if ( this.experimentListFile == null ) {

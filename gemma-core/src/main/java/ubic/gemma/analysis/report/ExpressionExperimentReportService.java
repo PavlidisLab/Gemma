@@ -173,7 +173,9 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
             eeVo.setPreferredDesignElementDataVectorCount( expressionExperimentService
                     .getPreferredDesignElementDataVectorCount( tempEe ) );
 
-            eeVo.setCoexpressionLinkCount( probe2ProbeCoexpressionService.countLinks( tempEe ).longValue() );
+            long numLinks = probe2ProbeCoexpressionService.countLinks( tempEe ).longValue();
+            log.info( numLinks + " links." );
+            eeVo.setCoexpressionLinkCount( numLinks );
 
             eeVo.setDateCached( timestamp );
 

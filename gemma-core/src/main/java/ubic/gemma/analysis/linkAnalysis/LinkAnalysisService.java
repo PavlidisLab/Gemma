@@ -43,6 +43,7 @@ import ubic.basecode.dataStructure.Link;
 import ubic.basecode.math.CorrelationStats;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.analysis.service.AnalysisHelperService;
+import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.analysis.ProbeCoexpressionAnalysis;
@@ -110,7 +111,8 @@ public class LinkAnalysisService {
         LinkAnalysis la = new LinkAnalysis( linkAnalysisConfig );
         la.clear();
 
-        log.info( "Begin link processing: " + ee );
+        log.info( "Fetching expression data ... " + ee );
+        eeService.thawLite( ee );
         Collection<DesignElementDataVector> dataVectors = analysisHelperService.getVectors( ee );
 
         checkVectors( ee, dataVectors );
@@ -118,12 +120,19 @@ public class LinkAnalysisService {
         ExpressionDataDoubleMatrix eeDoubleMatrix = analysisHelperService.getFilteredMatrix( ee, filterConfig,
                 dataVectors );
 
+        /*
+         * Might as well while we have the data handy.
+         */
+        log.info( "Creating sample correlation matrix ..." );
+        ExpressionDataSampleCorrelation.process( eeDoubleMatrix, ee );
+
+        /*
+         * Link analysis section.
+         */
+        log.info( "Starting link analysis... " + ee );
         setUpAnalysisObject( ee, la, dataVectors, eeDoubleMatrix );
         addAnalysisObj( ee, eeDoubleMatrix, filterConfig, linkAnalysisConfig, la );
-
         Map<CompositeSequence, DesignElementDataVector> p2v = getProbe2VectorMap( dataVectors );
-
-        log.info( "Starting generating Raw Links for " + ee );
         la.analyze();
 
         // output
@@ -470,7 +479,7 @@ public class LinkAnalysisService {
             Collection<DesignElementDataVector> dataVectors, ExpressionDataDoubleMatrix eeDoubleMatrix ) {
         la.setDataMatrix( eeDoubleMatrix );
         la.setTaxon( eeService.getTaxon( ee.getId() ) );
-        eeService.thawLite( ee );
+
         la.setExpressionExperiment( ee );
 
         getProbe2GeneMap( la, dataVectors );

@@ -251,7 +251,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             return false;
         }
 
-        if ( lastProbeMapping.getDate().after( skipIfLastRunLaterThan ) ) {
+        if ( lastProbeMapping != null && lastProbeMapping.getDate().after( skipIfLastRunLaterThan ) ) {
             log.info( arrayDesign + " was probemapped since " + skipIfLastRunLaterThan + ", skipping." );
             return false;
         }

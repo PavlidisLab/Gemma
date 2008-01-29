@@ -183,44 +183,6 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
         return experimentShortName;
     }
 
-    // @SuppressWarnings("unchecked")
-    // protected Collection<ExpressionExperiment> getExpressionExperiments( Taxon taxon ) throws IOException {
-    // Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
-    // if ( experimentShortName != null ) {
-    // ExpressionExperiment ee = eeService.findByShortName( experimentShortName );
-    // if ( ee == null )
-    // log.error( "No experiment " + experimentShortName + " found" );
-    // else
-    // ees.add( ee );
-    // }
-    // if ( experimentListFile != null ) {
-    // log.info( "Reading list of expression experiments from " + experimentListFile );
-    // ees.addAll( readExpressionExperimentListFile( experimentListFile ) );
-    // }
-    // if ( ees.isEmpty() ) {
-    // if ( taxon != null ) {
-    // log.info( "Loading expression experiments for " + taxon.getCommonName() );
-    // ees.addAll( eeService.findByTaxon( taxon ) );
-    // } else {
-    // log.info( "Loading all expression experiments" );
-    // ees.addAll( eeService.loadAll() );
-    // }
-    // }
-    // if ( excludeEeFileName != null ) {
-    // Collection<String> excludedEeNames = readExpressionExperimentListFileToStrings( excludeEeFileName );
-    // int count = 0;
-    // for ( Iterator<ExpressionExperiment> it = ees.iterator(); it.hasNext(); ) {
-    // ExpressionExperiment ee = it.next();
-    // if ( excludedEeNames.contains( ee.getShortName() ) ) {
-    // it.remove();
-    // count++;
-    // }
-    // }
-    // log.info( "Excluded " + count + " expression experiments" );
-    // }
-    // return ees;
-    // }
-
     private Collection<String> readExpressionExperimentListFileToStrings( String fileName ) throws IOException {
         Collection<String> eeNames = new HashSet<String>();
         BufferedReader in = new BufferedReader( new FileReader( fileName ) );

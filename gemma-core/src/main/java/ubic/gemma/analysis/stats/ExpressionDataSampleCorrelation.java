@@ -43,6 +43,8 @@ import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * Given an ExpressionDataMatrix, compute the correlation of the columns (samples) and also create images.sf
@@ -51,6 +53,8 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
  * @version $Id$
  */
 public class ExpressionDataSampleCorrelation {
+
+    private static final String FILE_SUFFIX = "_corrmat";
 
     private static final int LARGE_CELL_SIZE = 10;
 
@@ -80,6 +84,22 @@ public class ExpressionDataSampleCorrelation {
     public static final String LARGE_HIGHCONTRAST = ".hictlg.png";
 
     private static Log log = LogFactory.getLog( ExpressionDataSampleCorrelation.class.getName() );
+
+    /**
+     * Compute the sample correlation matrix, save it to configured file location, and create PNG images.
+     * 
+     * @param eeDoubleMatrix
+     * @param ee
+     */
+    public static void process( ExpressionDataDoubleMatrix eeDoubleMatrix, ExpressionExperiment ee ) {
+        DoubleMatrixNamed cormat = getMatrix( eeDoubleMatrix );
+        String fileBaseName = getMatrixFileBaseName( ee );
+        try {
+            ExpressionDataSampleCorrelation.createMatrixImages( cormat, getStorageDirectory(), fileBaseName );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+    }
 
     /**
      * @param matrix a n x m
@@ -122,14 +142,23 @@ public class ExpressionDataSampleCorrelation {
     }
 
     /**
+     * @param ee
+     * @return
+     */
+    public static String getMatrixFileBaseName( ExpressionExperiment ee ) {
+        String fileBaseName = ee.getShortName() + FILE_SUFFIX;
+        return fileBaseName;
+    }
+
+    /**
      * Generate images of sample correlation (also saes text file)
      * 
      * @param matrix
      * @param location directory where files will be saved
      * @param fileBaseName root name for files (without .png ending)
      */
-    public static void createMatrixImages( DoubleMatrixNamed<String, String> matrix, File location, String fileBaseName )
-            throws IOException {
+    protected static void createMatrixImages( DoubleMatrixNamed<String, String> matrix, File location,
+            String fileBaseName ) throws IOException {
 
         writeMatrix( matrix, location, fileBaseName + ".txt" );
 
@@ -169,8 +198,9 @@ public class ExpressionDataSampleCorrelation {
         o = new FileOutputStream( f );
         MatrixWriter writer = new ubic.basecode.io.writer.MatrixWriter( o );
         writer.writeMatrix( matrix, true );
+        o.flush();
         o.close();
-        log.info( "Wrote " + f.getAbsolutePath() );
+        log.info( "Wrote " + f.length() + " bytes to " + f.getAbsolutePath() );
     }
 
     /**
@@ -230,6 +260,21 @@ public class ExpressionDataSampleCorrelation {
 
         DoubleMatrixNamed columns = DoubleMatrix2DNamedFactory.dense( rawcols );
         return MatrixStats.correlationMatrix( columns ); // This has col/row names after the samples.
+    }
+
+    /**
+     * 
+     */
+    public static File getStorageDirectory() throws IOException {
+        File dir = new File( ConfigUtils.getAnalysisStoragePath() + File.separatorChar
+                + ExpressionDataSampleCorrelation.CORRMAT_DIR_NAME );
+        if ( !dir.exists() ) {
+            boolean success = dir.mkdir();
+            if ( !success ) {
+                throw new IOException( "Could not create directory to store results: " + dir );
+            }
+        }
+        return dir;
     }
 
 }

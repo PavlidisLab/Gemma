@@ -160,6 +160,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 + "left join SEQUENCE_SIMILARITY_SEARCH_RESULT ssResult on bs2gp.BLAT_RESULT_FK=ssResult.ID "
                 + "WHERE ssResult.ID is NULL AND ARRAY_DESIGN_FK = :id ";
 
+//        final String queryString = "select distinct cs id from CompositeSequenceImpl cs, BlatAssociationImpl bs2gp inner join bs2gp.blatResult";
+        
         return QueryUtils.nativeQueryById( getSession(), id, nativeQueryString );
     }
 
@@ -289,11 +291,13 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         final String queryString = "select t from ArrayDesignImpl as arrayD "
                 + "inner join arrayD.compositeSequences as cs inner join " + "cs.biologicalCharacteristic as bioC"
                 + " inner join bioC.taxon t where arrayD.id = :id";
+        getHibernateTemplate().setMaxResults( 1 );
         List list = getHibernateTemplate().findByNamedParam( queryString, "id", id );
         if ( list.size() == 0 ) {
             log.warn( "Could not determine taxon for array design" + id + " (no sequences?)" );
             return null;
         }
+        getHibernateTemplate().setMaxResults( 0 ); // restore to default.
         return ( Taxon ) list.iterator().next();
     }
 
@@ -933,7 +937,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         if ( arrayDesign == null ) return;
         if ( arrayDesign.getId() == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
-        templ.setFetchSize( 400 );
+        final int FETCH_SIZE = 400;
+        templ.setFetchSize( FETCH_SIZE );
 
         final String deepQuery = "select cs from CompositeSequenceImpl cs left outer join fetch cs.biologicalCharacteristic bs "
                 + "left outer join fetch bs.taxon left outer join fetch bs.bioSequence2GeneProduct bs2gp "
@@ -971,8 +976,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
                 if ( arrayDesign.getCompositeSequences() == null ) return null;
 
+                log.info( "Loading CS proxies for " + arrayDesign + " ..." );
                 int numToDo = arrayDesign.getCompositeSequences().size(); // this takes a little while.
-                // log.info( "Must thaw " + numToDo + " composite sequence associations ..." );
+                log.info( "Must thaw " + numToDo + " composite sequence associations ..." );
 
                 org.hibernate.Query queryObject = session.createQuery( deepQuery );
                 queryObject.setReadOnly( true );
@@ -985,7 +991,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
 
                     if ( i % 100 == 0 ) {
-                        session.clear();
+                        session.clear(); // recover memory.
                     }
 
                     if ( ++i % LOGGING_UPDATE_EVENT_COUNT == 0 && timer.getTime() > 5000 ) {
@@ -1005,7 +1011,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                         continue;
                     }
 
-                    session.evict( cs );
+                    // session.evict( cs );
 
                     // Sequences can show up more than once per arraydesign. Skipping this check will result in a
                     // hibernate exception.
@@ -1016,7 +1022,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
                         if ( Hibernate.isInitialized( bs ) ) {
                             Hibernate.initialize( bs );
-                            Hibernate.initialize( bs.getTaxon() );
+                            // Hibernate.initialize( bs.getTaxon() );
                             seen.add( bs );
                         }
 
@@ -1037,7 +1043,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                         if ( bs.getSequenceDatabaseEntry() != null ) {
                             Hibernate.initialize( bs.getSequenceDatabaseEntry() );
                         }
-                        session.evict( bs );
+                        // session.evict( bs );
                     }
 
                 }
