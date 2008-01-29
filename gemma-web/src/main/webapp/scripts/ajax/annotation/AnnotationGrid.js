@@ -188,7 +188,7 @@ Ext.Gemma.AnnotationGrid.convertToCharacteristic = function( record ) {
 	 * a VocabCharacteristic will be created when we only want a
 	 * Characteristic...
 	 */
-	if ( record.termUri ) {
+	if ( record.termUri || record.classUri ) {
 		c.categoryUri = record.classUri;
 		c.valueUri = record.termUri;
 	}

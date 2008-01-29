@@ -121,7 +121,7 @@ public class CharacteristicBrowserController extends BaseFormController {
                         cFromDatabase.getName(),
                         cFromDatabase.getDescription(),
                         null,
-                        cFromDatabase.getAuditTrail()
+                        null // don't copy AuditTrail to avoid cascade error... cFromDatabase.getAuditTrail()
                     ) );
                 Object parent = charToParent.get( cFromDatabase );
                 removeFromParent( cFromDatabase, parent );
@@ -136,7 +136,7 @@ public class CharacteristicBrowserController extends BaseFormController {
                         vcFromDatabase.getEvidenceCode(),
                         vcFromDatabase.getName(),
                         vcFromDatabase.getDescription(),
-                        vcFromDatabase.getAuditTrail()
+                        null // don't copy AuditTrail to avoid cascade error... vcFromDatabase.getAuditTrail()
                     )
                 );
                 Object parent = charToParent.get( vcFromDatabase );
