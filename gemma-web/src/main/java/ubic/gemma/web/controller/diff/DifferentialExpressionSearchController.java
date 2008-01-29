@@ -195,7 +195,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         }
 
         if ( genes.size() > 1 ) {
-            message = " More than one gene maps to the symbol: " + officialSymbol
+            message = "More than one gene maps to the symbol: " + officialSymbol
                     + ".  Not sure what to gene you are referring to at this time.";
             errors.addError( new ObjectError( command.toString(), null, null, message ) );
             return processErrors( request, response, command, errors, null );
@@ -205,6 +205,12 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> resultsByExperiment = new HashMap<ExpressionExperiment, Collection<ProbeAnalysisResult>>();
 
         Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService.find( g );
+        if ( experimentsAnalyzed == null || experimentsAnalyzed.isEmpty() ) {
+            message = "No experiments analyzed with differential evidence for gene: " + officialSymbol;
+            errors.addError( new ObjectError( command.toString(), null, null, message ) );
+            return processErrors( request, response, command, errors, null );
+        }
+
         for ( ExpressionExperiment e : experimentsAnalyzed ) {
             Collection<ProbeAnalysisResult> results = differentialExpressionAnalysisService.find( g, e );
 
@@ -216,7 +222,15 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                     validResults.add( r );
                 }
             }
-            resultsByExperiment.put( e, validResults );
+            if ( !validResults.isEmpty() ) {
+                resultsByExperiment.put( e, validResults );
+            }
+        }
+
+        if ( resultsByExperiment.isEmpty() ) {
+            message = "No experiments found for gene " + officialSymbol + " that meet the threshold " + threshold;
+            errors.addError( new ObjectError( command.toString(), null, null, message ) );
+            return processErrors( request, response, command, errors, null );
         }
 
         ModelAndView mav = new ModelAndView( this.getSuccessView() );
