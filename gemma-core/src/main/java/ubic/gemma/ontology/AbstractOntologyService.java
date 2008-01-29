@@ -275,15 +275,30 @@ public abstract class AbstractOntologyService implements InitializingBean {
                 log.info( "Loading " + ontologyName + " Ontology..." );
                 StopWatch loadTime = new StopWatch();
                 loadTime.start();
+                
+                boolean interrupted = false;
+                int waitMs = 1000;
+                while ( !interrupted ) {
+                    try {
+                        /*
+                         * We use the OWL_MEM_TRANS_INF spec so we can do 'getChildren' and get _all_ the children in one
+                         * query.
+                         */
+                        model = loadModel( ontology_URL );
+                        modelReady.set( true );
+                    } catch ( Exception e ) {
+                        log.error( "error loading model for " + ontologyName, e );
+                        try {
+                            log.error( "waiting " + waitMs + "ms before trying to reload" );
+                            Thread.sleep( waitMs );
+                            waitMs *= 2;
+                        } catch ( InterruptedException ie ) {
+                            interrupted = true;
+                        }
+                    }
+                }
 
                 try {
-
-                    /*
-                     * We use the OWL_MEM_TRANS_INF spec so we can do 'getChildren' and get _all_ the children in one
-                     * query.
-                     */
-                    model = loadModel( ontology_URL );
-                    modelReady.set( true );
 
                     /*
                      * Indexing will be slow the first time (can take hours for large ontologies).
