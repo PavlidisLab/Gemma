@@ -325,6 +325,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
      * @return the negative link counts
      */
     public int getNegativeLinkSupport() {
+        if ( negativeScores.size() == 0 ) return 0;
         return this.negativeScores.size();
     }
 
@@ -383,6 +384,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     }
 
     public int getNumDatasetsTestedIn() {
+        if ( datasetsTestedIn == null ) return 0;
         return this.datasetsTestedIn.size();
     }
 
@@ -399,6 +401,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
      * @return the positive link counts
      */
     public int getPositiveLinkSupport() {
+        if ( positiveScores == null ) return 0;
         return this.positiveScores.size();
     }
 
