@@ -17,6 +17,7 @@
 			<Item name="Home" title="menu.home" page="/mainMenu.html" />
 			<Item name="Analyze" title="menu.analyze" page="/searchCoexpression.html" />
 			<Item name="Search" title="menu.search" page="/searcher.html" />
+			<Item name="Differential" title="menu.differential" page="/diff/diffExpressionSearch.html" />
 			<Item name="Experiments" title="menu.experiments"
 				page="/expressionExperiment/showAllExpressionExperiments.html" />
 			<Item name="Array Designs" title="menu.arrays" page="/arrays/showAllArrayDesigns.html" />
