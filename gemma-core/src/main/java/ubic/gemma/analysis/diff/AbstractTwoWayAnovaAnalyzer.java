@@ -93,7 +93,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
         List<DifferentialExpressionAnalysisResult> analysisResultsInteractionEffect = new ArrayList<DifferentialExpressionAnalysisResult>();
 
         /* q-value */
-        // double[] qvalues = super.getQValues( filteredPvalues );
+        double[] qvalues = super.getQValues( filteredPvalues );
 
         int k = 0;
         for ( int i = 0; i < dmatrix.rows(); i++ ) {
@@ -113,7 +113,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
 
                 probeAnalysisResult.setPvalue( filteredPvalues[k] );
                 probeAnalysisResult.setScore( filteredFStatistics[k] );
-                // probeAnalysisResult.setCorrectedPvalue( qvalue[k] );
+                probeAnalysisResult.setCorrectedPvalue( qvalues[k] );
                 // probeAnalysisResult.setParameters( parameters );
 
                 analysisResultsPerProbe.add( probeAnalysisResult );

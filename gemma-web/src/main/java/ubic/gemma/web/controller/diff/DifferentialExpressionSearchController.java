@@ -216,9 +216,9 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
             Collection<ProbeAnalysisResult> validResults = new HashSet<ProbeAnalysisResult>();
             for ( ProbeAnalysisResult r : results ) {
-                double pval = r.getPvalue();
-                log.info( pval );
-                if ( pval < threshold ) {
+                double qval = r.getCorrectedPvalue();
+                log.info( qval );
+                if ( qval < threshold ) {
                     validResults.add( r );
                 }
             }

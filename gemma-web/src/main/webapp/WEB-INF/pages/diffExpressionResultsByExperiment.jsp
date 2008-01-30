@@ -40,8 +40,8 @@
 			</td>
 			<td>
 				<c:forEach items="${results}" var="r">
-					<c:set var="pvalues" value="${r.pvalue}" />
-					<pre>${pvalues}</pre>
+					<c:set var="qvalues" value="${r.correctedPvalue}" />
+					<pre>${qvalues}</pre>
 				</c:forEach>
 			</td>
 		</tr>

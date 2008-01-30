@@ -173,7 +173,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         }
 
         /* q-value */
-        // double[] qvalues = super.getQValues( filteredPvalues );
+        double[] qvalues = super.getQValues( filteredPvalues );
 
         /* Create the expression analysis and pack the results. */
         // TODO pass the DifferentialExpressionAnalysisConfig in (see LinkAnalysisService)
@@ -193,7 +193,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();
             probeAnalysisResult.setProbe( cs );
             probeAnalysisResult.setPvalue( filteredPvalues[i] );
-            // TODO probeAnalysisResult.setCorrectedPvalue( qvalues[i] );
+            probeAnalysisResult.setCorrectedPvalue( qvalues[i] );
             probeAnalysisResult.setScore( filteredFStatistics[i] );
 
             probeAnalysisResult.setQuantitationType( quantitationType );
