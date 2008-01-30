@@ -278,7 +278,7 @@ public abstract class AbstractOntologyService implements InitializingBean {
                 
                 boolean interrupted = false;
                 int waitMs = 1000;
-                while ( !interrupted ) {
+                while ( !interrupted && !modelReady.get() ) {
                     try {
                         /*
                          * We use the OWL_MEM_TRANS_INF spec so we can do 'getChildren' and get _all_ the children in one
