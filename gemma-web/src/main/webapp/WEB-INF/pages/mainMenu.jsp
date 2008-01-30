@@ -197,9 +197,6 @@
 			<a href="<c:url value="/searchCoexpressionMultiple.html"/>"> <fmt:message key="menu.searchCoexpressionMultiple" />
 			</a>
 		</li>
-		<li>
-			<a href="<c:url value="/diff/diffExpressionSearch.html"/>"> <fmt:message key="menu.diffexSearch" /> </a>
-		</li>
 	</ul>
 
 </authz:authorize>
