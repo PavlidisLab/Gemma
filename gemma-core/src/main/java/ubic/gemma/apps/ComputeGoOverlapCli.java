@@ -84,16 +84,13 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
                 "MAX" ).withLongOpt( "max" ).create( 'x' );
         addOption( maxOption );
 
-        Option fileOption = OptionBuilder.hasArg().withArgName( "fpath" )
-                .withDescription( "Path where file is located" ).create( 'f' );
-        addOption( fileOption );
+        Option dataOption = OptionBuilder.hasArg().withArgName(
+                "Choice of generating random gene pairs OR Input data file" ).withDescription( "dataType" ).isRequired()
+                .create( 'd' );
+        addOption( dataOption );
 
-        Option randomOption = OptionBuilder.hasArg().withArgName( "Choice of generating random gene pairs" ).withType(
-                SET_SIZE ).withDescription( "random" ).create( 'r' );
-        addOption( randomOption );
-
-        Option taxonOption = OptionBuilder.hasArg().withArgName( "Choice of taxon" ).isRequired().withDescription(
-                "mouse, human, rat" ).create( 't' );
+        Option taxonOption = OptionBuilder.hasArg().withArgName( "Choice of taxon" ).withDescription(
+                "human, rat, mouse" ).isRequired().create( 't' );
         addOption( taxonOption );
 
     }
@@ -102,17 +99,39 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
     protected void processOptions() {
         super.processOptions();
 
-        if ( hasOption( 't' ) )
+        if ( hasOption( 't' ) ) {
             this.commonName = getOptionValue( 't' );
-        else
-            this.commonName = "";
+            if ( StringUtils.isEmpty( commonName ) ) {
+                System.out.println( "MUST enter a valid taxon!" );
+                System.exit( 0 );
+            }
+            if ( !StringUtils.equalsIgnoreCase( "mouse", commonName )
+                    && !StringUtils.equalsIgnoreCase( "rat", commonName )
+                    && !StringUtils.equalsIgnoreCase( "human", commonName ) ){
+                System.out.println( "MUST enter a valid taxon!" );
+                System.exit( 0 );
+            }
+        }
 
-        if ( hasOption( 'r' ) ) {
-            String max = getOptionValue( 'r' );
-            if ( max.equalsIgnoreCase( "random" ) )
+        if ( hasOption( 'd' ) ) {
+
+            String input = getOptionValue( 'd' );
+
+            if ( StringUtils.isNumeric( input ) ) {
+                SET_SIZE = Integer.parseInt( input );
                 this.random = true;
-            else
-                this.random = false;
+                System.out.println( "Will create a set of " + SET_SIZE + " random gene pairs!" );
+            } else {
+                File f = new File( input );
+                if ( f.canRead() ) {
+                    this.file_path = input;
+                    this.random = false;
+                } else
+                    System.out.println( input
+                            + "is NOT a valid filename! You MUST enter a valid filename OR size of dataset" );
+                System.exit( 0 );
+            }
+
         }
 
         if ( hasOption( 'x' ) ) {
@@ -137,16 +156,6 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
             }
         }
 
-        if ( hasOption( 'f' ) ) {
-            String file = getOptionValue( 'f' );
-            File f = new File( file );
-            if ( f.canRead() ) {
-                this.file_path = file;
-                this.random = false;
-            } else
-                System.out.println( "Cannot read from " + file + "!" );
-        }
-
     }
 
     // A list of service beans
@@ -168,7 +177,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
     private static final String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
     private static final String RANDOM_SUBSET = "RandomSubset";
     private static final String GENE_CACHE = "geneCache";
-    private static final int SET_SIZE = 10;
+    private static Integer SET_SIZE = 0;
     private String file_path = "";
 
     private Metric metric = GoMetric.Metric.simple;
@@ -193,6 +202,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         gene2GOAssociationService = ( Gene2GOAssociationService ) getBean( "gene2GOAssociationService" );
         ontologyEntryService = ( GeneOntologyService ) getBean( "geneOntologyService" );
         goMetric = ( GoMetric ) getBean( "goMetric" );
+
 
         /*
          * Initialize the Gene Ontology.
