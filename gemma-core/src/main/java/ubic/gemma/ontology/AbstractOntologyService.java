@@ -29,7 +29,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.InitializingBean;
 
 import ubic.gemma.util.ConfigUtils;
 
@@ -40,14 +39,9 @@ import com.hp.hpl.jena.query.larq.IndexLARQ;
  * @author kelsey
  * @version $Id$
  */
-public abstract class AbstractOntologyService implements InitializingBean {
+public abstract class AbstractOntologyService {
 
     protected static final Log log = LogFactory.getLog( AbstractOntologyService.class );
-
-    /**
-     * Used to determine whether the loading should proceed. It is often disabled for CLIs.
-     */
-    public static final String ENABLE_PROPERTY_NAME = "loadOntologies";
 
     protected Map<String, OntologyTerm> terms;
     protected Map<String, OntologyIndividual> individuals;
@@ -95,20 +89,6 @@ public abstract class AbstractOntologyService implements InitializingBean {
         super();
         ontology_URL = getOntologyUrl();
         ontologyName = getOntologyName();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-     */
-    public void afterPropertiesSet() throws Exception {
-        log.debug( "entering AfterpropertiesSet" );
-        if ( running.get() ) {
-            log.warn( ontology_URL + " initialization is already running" );
-            return;
-        }
-        init();
     }
 
     /**
@@ -248,15 +228,20 @@ public abstract class AbstractOntologyService implements InitializingBean {
         return indis;
     }
 
-    protected synchronized void init() {
+    public synchronized void init( boolean force ) {
 
-        boolean globalLoadOntologies = ConfigUtils.getBoolean( ENABLE_PROPERTY_NAME, false );
+        if ( running.get() ) {
+            log.warn( ontology_URL + " initialization is already running" );
+            return;
+        }
 
-        boolean loadOntology = ConfigUtils.getBoolean( "load." + ontologyName, true );
+        String configParameter = "load." + ontologyName;
+        boolean loadOntology = ConfigUtils.getBoolean( configParameter, true );
 
         // if loading ontologies is disabled in the configuration, return
-        if ( !globalLoadOntologies || !loadOntology ) {
-            log.info( "Loading " + ontologyName + " is disabled" );
+        if ( !force && !loadOntology ) {
+            log.info( "Loading " + ontologyName + " is disabled (force=" + force + ", " + configParameter + "="
+                    + loadOntology + ")" );
             return;
         }
 
@@ -275,14 +260,14 @@ public abstract class AbstractOntologyService implements InitializingBean {
                 log.info( "Loading " + ontologyName + " Ontology..." );
                 StopWatch loadTime = new StopWatch();
                 loadTime.start();
-                
+
                 boolean interrupted = false;
                 int waitMs = 1000;
                 while ( !interrupted && !modelReady.get() ) {
                     try {
                         /*
-                         * We use the OWL_MEM_TRANS_INF spec so we can do 'getChildren' and get _all_ the children in one
-                         * query.
+                         * We use the OWL_MEM_TRANS_INF spec so we can do 'getChildren' and get _all_ the children in
+                         * one query.
                          */
                         model = loadModel( ontology_URL );
                         modelReady.set( true );
@@ -331,7 +316,7 @@ public abstract class AbstractOntologyService implements InitializingBean {
                 }
             }
 
-        } );
+        }, this.ontologyName + "_load_thread" );
 
         synchronized ( running ) {
             if ( running.get() ) return;

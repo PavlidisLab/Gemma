@@ -88,8 +88,8 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
                 .withDescription( "Path where file is located" ).create( 'f' );
         addOption( fileOption );
 
-        Option randomOption = OptionBuilder.hasArg().withArgName( "Choice of generating random gene pairs" ).withType( SET_SIZE )
-                .withDescription( "random" ).create( 'r' );
+        Option randomOption = OptionBuilder.hasArg().withArgName( "Choice of generating random gene pairs" ).withType(
+                SET_SIZE ).withDescription( "random" ).create( 'r' );
         addOption( randomOption );
 
         Option taxonOption = OptionBuilder.hasArg().withArgName( "Choice of taxon" ).isRequired().withDescription(
@@ -102,12 +102,11 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
     protected void processOptions() {
         super.processOptions();
 
-        if ( hasOption( 't' ) ) 
+        if ( hasOption( 't' ) )
             this.commonName = getOptionValue( 't' );
         else
             this.commonName = "";
-          
-        
+
         if ( hasOption( 'r' ) ) {
             String max = getOptionValue( 'r' );
             if ( max.equalsIgnoreCase( "random" ) )
@@ -181,7 +180,6 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
     // INCLUDE PARTOF OR CHANGE STRINGENCY
     private boolean partOf = true;
 
-
     private String process = "http://purl.org/obo/owl/GO#GO_0008150";
     private String function = "http://purl.org/obo/owl/GO#GO_0003674";
     private String component = "http://purl.org/obo/owl/GO#GO_0005575";
@@ -189,14 +187,18 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
     private int fCount = 0;
     private int cCount = 0;
 
-
     protected void initBeans() {
         taxonService = ( TaxonService ) getBean( "taxonService" );
         geneService = ( GeneService ) getBean( "geneService" );
         gene2GOAssociationService = ( Gene2GOAssociationService ) getBean( "gene2GOAssociationService" );
         ontologyEntryService = ( GeneOntologyService ) getBean( "geneOntologyService" );
         goMetric = ( GoMetric ) getBean( "goMetric" );
-        
+
+        /*
+         * Initialize the Gene Ontology.
+         */
+        this.ontologyEntryService.init( true );
+
         while ( !ontologyEntryService.isReady() ) {
             log.info( "waiting for ontology load.." );
             try {
@@ -245,7 +247,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
             saveCacheToDisk( ( HashMap ) mouseGeneGOMap, HASH_MAP_RETURN );
         }
 
-        if (! metric.equals( GoMetric.Metric.simple )){
+        if ( !metric.equals( GoMetric.Metric.simple ) ) {
             File f2 = new File( HOME_DIR + File.separatorChar + GO_PROB_MAP );
             if ( f2.exists() ) {
                 GOProbMap = ( HashMap<String, Double> ) getCacheFromDisk( f2 );
@@ -257,17 +259,16 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
 
                 GOcountMap = goMetric.getTermOccurrence( mouseGeneGOMap );
                 makeRootMap( GOcountMap.keySet() );
-                GOProbMap = makeProbMap(GOcountMap);
-               
+                GOProbMap = makeProbMap( GOcountMap );
+
                 this.saveCacheToDisk( ( HashMap ) GOProbMap, GO_PROB_MAP );
             }
         }
-        
 
         Map<Collection<Gene>, Double> scoreMap = new HashMap<Collection<Gene>, Double>();
         Collection<List<Gene>> subsetPairs = new HashSet<List<Gene>>();
 
-        if ( random ){
+        if ( random ) {
             File f3 = new File( HOME_DIR + File.separatorChar + RANDOM_SUBSET );
             if ( f3.exists() ) {
                 subsetPairs = ( HashSet<List<Gene>> ) getCacheFromDisk( f3 );
@@ -282,8 +283,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
                 this.saveCacheToDisk( ( HashSet ) subsetPairs, RANDOM_SUBSET );
             }
 
-        }
-        else if (!random){
+        } else if ( !random ) {
             try {
                 subsetPairs = loadLinks( file_path, taxon );
                 log.info( "Done loading data..." );
@@ -291,9 +291,8 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-            
+
         }
-        
 
         StopWatch overallWatch = new StopWatch();
         overallWatch.start();
@@ -369,9 +368,9 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         }
 
     }
-    
-    private Map<String, Double> makeProbMap (Map<String, Integer> GOcountMap){
-        
+
+    private Map<String, Double> makeProbMap( Map<String, Integer> GOcountMap ) {
+
         for ( String uri : GOcountMap.keySet() ) {
             int total = 0;
             log.info( "Counting children for " + uri );
@@ -382,7 +381,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
 
             GOProbMap.put( uri, ( double ) count / total );
         }
-        
+
         return GOProbMap;
     }
 
@@ -487,8 +486,6 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         return subsetPairs;
     }
 
-    
-    
     private HashSet<List<Gene>> loadLinks( String filepath, Taxon taxon ) throws IOException {
 
         File f = new File( filepath );
@@ -549,7 +546,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
             genePair.add( gene2 );
 
             Collections.sort( genePair, new GeneComparator() );
-            geneMap.add( genePair );          
+            geneMap.add( genePair );
         }
 
         saveCacheToDisk( ( HashMap ) geneCache, GENE_CACHE );

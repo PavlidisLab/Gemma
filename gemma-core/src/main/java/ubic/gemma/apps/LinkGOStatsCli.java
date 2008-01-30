@@ -408,6 +408,8 @@ public class LinkGOStatsCli extends ExpressionExperimentManipulatingCLI {
             return err;
         }
 
+        geneOntologyService.init( true );
+
         while ( !this.geneOntologyService.isReady() ) {
             log.info( "Waiting for GO to load ..." );
             try {

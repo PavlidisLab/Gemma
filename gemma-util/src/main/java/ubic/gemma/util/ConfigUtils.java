@@ -98,6 +98,16 @@ public class ConfigUtils {
             log.warn( "version.properties not found" );
         }
 
+        if ( log.isDebugEnabled() ) {
+            log.debug( "********** Configuration details ***********" );
+            for ( Iterator it = config.getKeys(); it.hasNext(); ) {
+                String key = ( String ) it.next();
+                Object prop = config.getProperty( key );
+                log.debug( key + " = " + prop );
+            }
+            log.debug( "********** End of configuration details ***********" );
+        }
+
     }
 
     /**

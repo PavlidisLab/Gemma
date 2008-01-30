@@ -157,6 +157,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
         if ( err != null ) return err;
 
         try {
+            this.goService.init( true );
             waitForGeneOntologyReady();
 
             if ( processAllADs ) {
@@ -165,7 +166,12 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
                 processBatchFile( this.batchFileName );
             } else {
                 ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
-                processAD( arrayDesign, this.fileName, type );
+                if ( type != null ) {
+                    processAD( arrayDesign, this.fileName, type );
+                } else {
+                    // make all three
+                    processOneAD( arrayDesign );
+                }
             }
 
         } catch ( Exception e ) {
@@ -217,22 +223,25 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
                 continue;
             }
 
-            log.info( "Processing AD: " + ad.getName() );
-
-            unlazifyArrayDesign( ad );
-            Collection<CompositeSequence> compositeSequences = ad.getCompositeSequences();
-            Map<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>> genesWithSpecificity = compositeSequenceService
-                    .getGenesWithSpecificity( compositeSequences );
-
-            processCompositeSequences( ad, ad.getShortName() + "_NoParents", OutputType.SHORT, genesWithSpecificity );
-
-            processCompositeSequences( ad, ad.getShortName() + "_bioProcess", OutputType.BIOPROCESS,
-                    genesWithSpecificity );
-
-            processCompositeSequences( ad, ad.getShortName() + "_allParents", OutputType.LONG, genesWithSpecificity );
+            processOneAD( ad );
 
         }
 
+    }
+
+    @SuppressWarnings("unchecked")
+    private void processOneAD( ArrayDesign ad ) throws IOException {
+        log.info( "Processing AD: " + ad.getName() );
+        unlazifyArrayDesign( ad );
+        Collection<CompositeSequence> compositeSequences = ad.getCompositeSequences();
+        Map<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>> genesWithSpecificity = compositeSequenceService
+                .getGenesWithSpecificity( compositeSequences );
+
+        processCompositeSequences( ad, ad.getShortName() + "_NoParents", OutputType.SHORT, genesWithSpecificity );
+
+        processCompositeSequences( ad, ad.getShortName() + "_bioProcess", OutputType.BIOPROCESS, genesWithSpecificity );
+
+        processCompositeSequences( ad, ad.getShortName() + "_allParents", OutputType.LONG, genesWithSpecificity );
     }
 
     /**
@@ -379,9 +388,6 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
     @Override
     protected void processOptions() {
-
-        // Turn on ontology loading.
-        this.setOntologiesOn( true );
 
         if ( this.hasOption( 'f' ) ) {
             this.fileName = this.getOptionValue( 'f' );

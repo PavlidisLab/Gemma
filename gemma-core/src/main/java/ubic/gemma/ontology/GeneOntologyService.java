@@ -31,7 +31,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.InitializingBean;
 
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.Characteristic;
@@ -60,7 +59,7 @@ import com.hp.hpl.jena.rdf.model.Resource;
  * @spring.property name="gene2GOAssociationService" ref="gene2GOAssociationService"
  * @spring.property name="geneService" ref="geneService"
  */
-public class GeneOntologyService implements InitializingBean {
+public class GeneOntologyService {
 
     public static final String BASE_GO_URI = "http://purl.org/obo/owl/GO#";
 
@@ -183,20 +182,6 @@ public class GeneOntologyService implements InitializingBean {
             .synchronizedMap( new HashMap<String, Collection<OntologyTerm>>() );
 
     private Map<Gene, Collection<OntologyTerm>> goTerms = new HashMap<Gene, Collection<OntologyTerm>>();
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-     */
-    public void afterPropertiesSet() throws Exception {
-        log.debug( "entering AfterpropertiesSet" );
-        if ( running.get() ) {
-            log.warn( "GO initialization is already running" );
-            return;
-        }
-        init();
-    }
 
     /**
      * <p>
@@ -570,12 +555,18 @@ public class GeneOntologyService implements InitializingBean {
     /**
      * 
      */
-    protected synchronized void init() {
+    public synchronized void init( boolean force ) {
+
+        if ( running.get() ) {
+            log.warn( "Gene Ontology initialization is already running" );
+            return;
+        }
+
         boolean loadOntology = ConfigUtils.getBoolean( LOAD_GENE_ONTOLOGY_OPTION, LOAD_BY_DEFAULT );
-        boolean globalLoadOntologies = ConfigUtils.getBoolean( AbstractOntologyService.ENABLE_PROPERTY_NAME );
-        if ( !loadOntology || !globalLoadOntologies ) {
-            log.info( "Loading Gene Ontology is disabled. To enable add " + LOAD_GENE_ONTOLOGY_OPTION
-                    + "=true to Gemma.properties; for CLIs you must also pass option to enable ontology loading" );
+
+        if ( !force && !loadOntology ) {
+            log.info( "Loading Gene Ontology is disabled (force=" + force + ", " + LOAD_GENE_ONTOLOGY_OPTION + "="
+                    + loadOntology + ")" );
             enabled = false;
             return;
         }

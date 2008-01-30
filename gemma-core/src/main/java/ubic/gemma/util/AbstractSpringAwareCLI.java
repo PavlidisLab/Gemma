@@ -40,7 +40,6 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.ontology.AbstractOntologyService;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.security.authentication.ManualAuthenticationProcessing;
 
@@ -57,8 +56,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     private static final String GIGASPACES_ON = "gigaspacesOn";
 
-    private static final String ONTOLOGIES_ON = "ontologiesOn";
-
     protected BeanFactory ctx = null;
     protected PersisterHelper ph = null;
     protected AuditTrailService auditTrailService;
@@ -68,8 +65,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     public String getShortDesc() {
         return "";
     }
-
-    private boolean ontologiesOn = false;
 
     @Override
     protected void buildStandardOptions() {
@@ -83,11 +78,9 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         Option compassOnOpt = new Option( COMPASS_ON, false,
                 "Turn on compass indexing (Does not turn on index mirroring)" );
         Option gigaspacesOnOpt = new Option( GIGASPACES_ON, false, "Use the gigaspaces compute-server for large jobs." );
-        Option ontologiesOnOpt = new Option( ONTOLOGIES_ON, false,
-                "Allow loading of ontologies as configured in your properties file. Ontology loading is off by default." );
+
         options.addOption( compassOnOpt );
         options.addOption( gigaspacesOnOpt );
-        options.addOption( ontologiesOnOpt );
     }
 
     public AbstractSpringAwareCLI() {
@@ -234,12 +227,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
      */
     void createSpringContext() {
 
-        if ( hasOption( ONTOLOGIES_ON ) || ontologiesOn ) {
-            ConfigUtils.setProperty( AbstractOntologyService.ENABLE_PROPERTY_NAME, true );
-        } else {
-            ConfigUtils.setProperty( AbstractOntologyService.ENABLE_PROPERTY_NAME, false );
-        }
-
         ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), hasOption( COMPASS_ON ),
                 hasOption( GIGASPACES_ON ), false );
 
@@ -293,10 +280,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         for ( Exception e : exceptionCache ) {
             log.info( e );
         }
-    }
-
-    public void setOntologiesOn( boolean ontologiesOn ) {
-        this.ontologiesOn = ontologiesOn;
     }
 
 }

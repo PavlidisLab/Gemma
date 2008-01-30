@@ -186,7 +186,7 @@ public class MgedOntologyService extends AbstractOntologyService {
         ready = new AtomicBoolean( false );
         running = new AtomicBoolean( false );
 
-        init();
+        init( true );
 
     }
 
