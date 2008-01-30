@@ -46,6 +46,8 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * apply(matrix,1,function(x){anova(aov(x~farea+ftreat+farea*ftreat))$F})
  * <p>
  * where area and treat are first transposed and then factor is called on each to give farea and ftreat.
+ * <p>
+ * qvalue(pvals)$qvalues
  * 
  * @spring.bean id="twoWayAnovaWithInteractionsAnalyzer"
  * @author keshav

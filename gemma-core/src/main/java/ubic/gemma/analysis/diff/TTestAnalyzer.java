@@ -55,6 +55,8 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * apply(matrix, 1, function(x) {t.test(x ~ factor(t(facts)))$statistic})
  * <p>
  * NOTE: facts is first transposed and then factor is applied (as indicated in the equations above)
+ * <p>
+ * qvalue(pvals)$qvalues
  * 
  * @spring.bean id="tTestAnalyzer"
  * @author keshav
@@ -164,6 +166,7 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
         /* q-value */
         // double[] qvalues = super.getQValues( filteredPvalues );
 
+        // TODO pass the DifferentialExpressionAnalysisConfig in (see LinkAnalysisService)
         /* Create the expression analysis and pack the results. */
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         DifferentialExpressionAnalysis expressionAnalysis = config.toAnalysis();

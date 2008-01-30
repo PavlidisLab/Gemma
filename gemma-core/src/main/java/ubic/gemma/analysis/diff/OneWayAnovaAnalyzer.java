@@ -51,13 +51,15 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * <p>
  * See http://www.bioinformatics.ubc.ca/pavlidis/lab/docs/reprints/anova-methods.pdf.
  * <p>
- * R Call:
+ * R Calls:
  * <p>
  * apply(matrix,1,function(x){anova(aov(x~factor))$Pr})
  * <p>
  * apply(matrix,1,function(x){anova(aov(x~factor))$F})
  * <p>
  * where factor is a vector that has first been transposed and then had factor() applied.
+ * <p>
+ * qvalue(pvals)$qvalues
  * 
  * @spring.bean id="oneWayAnovaAnalyzer"
  * @author keshav
@@ -174,7 +176,6 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         // double[] qvalues = super.getQValues( filteredPvalues );
 
         /* Create the expression analysis and pack the results. */
-
         // TODO pass the DifferentialExpressionAnalysisConfig in (see LinkAnalysisService)
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         DifferentialExpressionAnalysis expressionAnalysis = config.toAnalysis();

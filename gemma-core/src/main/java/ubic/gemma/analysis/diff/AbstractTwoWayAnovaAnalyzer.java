@@ -75,6 +75,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
             ExperimentalFactor experimentalFactorA, ExperimentalFactor experimentalFactorB,
             QuantitationType quantitationType ) {
 
+        // TODO pass the DifferentialExpressionAnalysisConfig in (see LinkAnalysisService)
         /* Create the expression analysis and pack the results. */
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         DifferentialExpressionAnalysis expressionAnalysis = config.toAnalysis();
