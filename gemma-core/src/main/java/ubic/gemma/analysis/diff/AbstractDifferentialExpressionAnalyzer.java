@@ -52,7 +52,6 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
 
         StringBuffer qvalueCommand = new StringBuffer();
         String pvalsName = "pvals";
-        Arrays.sort( pvalues );
         rc.assign( pvalsName, pvalues );
         qvalueCommand.append( "qvalue(" + pvalsName + ")$qvalues" );
         double[] qvalues = rc.doubleArrayEval( qvalueCommand.toString() );
