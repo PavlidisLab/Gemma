@@ -27,6 +27,8 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.rosuda.REngine.REXPMismatchException;
+
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.dataStructure.matrix.FastRowAccessDoubleMatrix2DNamed;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
@@ -168,8 +170,14 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             }
         }
 
+        /* q-value */
+        // double[] qvalues = super.getQValues( filteredPvalues );
+
         /* Create the expression analysis and pack the results. */
-        DifferentialExpressionAnalysis expressionAnalysis = DifferentialExpressionAnalysis.Factory.newInstance();
+
+        // TODO pass the DifferentialExpressionAnalysisConfig in (see LinkAnalysisService)
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        DifferentialExpressionAnalysis expressionAnalysis = config.toAnalysis();
 
         Collection<ExpressionExperiment> experimentsAnalyzed = new HashSet<ExpressionExperiment>();
         expressionAnalysis.setExperimentsAnalyzed( experimentsAnalyzed );
@@ -184,6 +192,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();
             probeAnalysisResult.setProbe( cs );
             probeAnalysisResult.setPvalue( filteredPvalues[i] );
+            // TODO probeAnalysisResult.setCorrectedPvalue( qvalues[i] );
             probeAnalysisResult.setScore( filteredFStatistics[i] );
 
             probeAnalysisResult.setQuantitationType( quantitationType );

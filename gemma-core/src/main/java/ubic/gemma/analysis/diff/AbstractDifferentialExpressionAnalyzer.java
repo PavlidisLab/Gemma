@@ -18,6 +18,11 @@
  */
 package ubic.gemma.analysis.diff;
 
+import java.util.Arrays;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -30,6 +35,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAnalyzer {
 
+    private Log log = LogFactory.getLog( this.getClass() );
+
     /**
      * @param expressionExperiment
      * @return ExpressionAnalysis
@@ -37,4 +44,30 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
     public abstract DifferentialExpressionAnalysis getDifferentialExpressionAnalysis(
             ExpressionExperiment expressionExperiment );
 
+    /**
+     * @param pvalues
+     * @return returns the qvalues for the pvalues
+     */
+    protected double[] getQValues( double[] pvalues ) {
+
+        StringBuffer qvalueCommand = new StringBuffer();
+        String pvalsName = "pvals";
+        Arrays.sort( pvalues );
+        rc.assign( pvalsName, pvalues );
+        qvalueCommand.append( "qvalue(" + pvalsName + ")$qvalues" );
+        double[] qvalues = rc.doubleArrayEval( qvalueCommand.toString() );
+
+        if ( qvalues == null ) {
+            log.error( "Null qvalues.  Check the R side." );
+            return null;
+        }
+
+        if ( qvalues.length != pvalues.length ) {
+            log.error( "Number of q values and p values must match.  Qvalues - " + qvalues.length + ": Pvalues - "
+                    + pvalues.length );
+            return null;
+        }
+
+        return qvalues;
+    }
 }

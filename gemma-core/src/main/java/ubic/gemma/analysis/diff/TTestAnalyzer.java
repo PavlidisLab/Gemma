@@ -161,8 +161,12 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
         double[] tstatistics = rc.doubleArrayEval( tstatisticCommand.toString() );
 
+        /* q-value */
+        // double[] qvalues = super.getQValues( filteredPvalues );
+
         /* Create the expression analysis and pack the results. */
-        DifferentialExpressionAnalysis expressionAnalysis = DifferentialExpressionAnalysis.Factory.newInstance();
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        DifferentialExpressionAnalysis expressionAnalysis = config.toAnalysis();
 
         Collection<ExpressionExperiment> experimentsAnalyzed = new HashSet<ExpressionExperiment>();
         expressionAnalysis.setExperimentsAnalyzed( experimentsAnalyzed );
@@ -177,6 +181,7 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
             ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();
             probeAnalysisResult.setProbe( cs );
             probeAnalysisResult.setPvalue( pvalues[i] );
+            // TODO probeAnalysisResult.setCorrectedPvalue( qvalues[i] );
             probeAnalysisResult.setScore( tstatistics[i] );
             probeAnalysisResult.setQuantitationType( quantitationType );
 
