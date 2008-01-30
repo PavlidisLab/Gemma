@@ -50,7 +50,7 @@ public class GoMetric {
     private static org.apache.commons.logging.Log log = LogFactory.getLog( GoMetric.class.getName() );
 
     public enum Metric {
-        jiang, lin, resnik, simple
+        jiang, lin, resnik, simple, percent
     };
 
     /**
@@ -184,6 +184,11 @@ public class GoMetric {
             double score = computeSimpleOverlap( queryGene, targetGene, partOf );
             return score;
         }
+        
+        if ( metric.equals( GoMetric.Metric.percent ) ) {
+            double score = computePercentOverlap( queryGene, targetGene, partOf );
+            return score;
+        }
 
         HashSet<OntologyTerm> masterGO = getOntologyTerms( queryGene );
         if ( ( masterGO == null ) || masterGO.isEmpty() ) return 0.0;
@@ -292,6 +297,30 @@ public class GoMetric {
         }
 
         double avgScore = ( double ) overlappingTerms.size();
+        return avgScore;
+    }
+
+    /**
+     * @param masterGO terms
+     * @param coExpGO terms
+     * @return percent of overlapping terms wrt to the gene with the lower number of GO terms
+     */
+    private Double computePercentOverlap( Gene gene1, Gene gene2, boolean includePartOf ) {
+        if ( !geneOntologyService.isReady() )
+            log.error( "computeSimpleOverlap called before geneOntologyService is ready!!!" );
+
+        Double avgScore = 0.0;
+        Collection<OntologyTerm> masterGO = geneOntologyService.getGOTerms( gene1, includePartOf );
+        Collection<OntologyTerm> coExpGO = geneOntologyService.getGOTerms( gene2, includePartOf );
+
+        Collection<OntologyTerm> overlappingTerms = new HashSet<OntologyTerm>();
+        for ( OntologyTerm o : masterGO ) {
+            if ( coExpGO.contains( o ) && !isRoot( o ) ) overlappingTerms.add( o );
+        }
+
+        if ( masterGO.size() < coExpGO.size() ) avgScore = ( double ) ( overlappingTerms.size() / masterGO.size() );
+        if ( coExpGO.size() < masterGO.size() ) avgScore = ( double ) ( overlappingTerms.size() / coExpGO.size() );
+        
         return avgScore;
     }
 
