@@ -50,6 +50,9 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
      */
     protected double[] getQValues( double[] pvalues ) {
 
+        if ( rc == null ) {
+            connectToR();
+        }
         rc.loadLibrary( "qvalue" );
 
         StringBuffer qvalueCommand = new StringBuffer();
