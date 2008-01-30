@@ -77,7 +77,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
     @SuppressWarnings("static-access")
     protected void buildOptions() {
         Option goMetricOption = OptionBuilder.hasArg().withArgName( "Choice of GO Metric" ).withDescription(
-                "resnik, lin, jiang; default = simple" ).withLongOpt( "metric" ).create( 'm' );
+                "resnik, lin, jiang, percent; default = simple" ).withLongOpt( "metric" ).create( 'm' );
         addOption( goMetricOption );
 
         Option maxOption = OptionBuilder.hasArg().withArgName( "Choice of using MAX calculation" ).withDescription(
@@ -150,6 +150,8 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
                 this.metric = GoMetric.Metric.lin;
             else if ( metricName.equalsIgnoreCase( "jiang" ) )
                 this.metric = GoMetric.Metric.jiang;
+            else if ( metricName.equalsIgnoreCase( "percent" ) )
+                this.metric = GoMetric.Metric.percent;
             else {
                 this.metric = GoMetric.Metric.simple;
                 this.max = false;
