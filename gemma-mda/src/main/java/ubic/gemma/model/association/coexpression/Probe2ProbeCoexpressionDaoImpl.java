@@ -41,6 +41,7 @@ import org.hibernate.type.DoubleType;
 import org.hibernate.type.LongType;
 import org.springframework.orm.hibernate3.HibernateCallback;
 
+import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.coexpression.Link;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -251,6 +252,9 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     @Override
     protected Collection<ExpressionExperiment> handleGetExpressionExperimentsLinkTestedIn( Gene gene,
             Collection expressionExperiments, boolean filterNonSpecific ) throws Exception {
+        
+        if ( expressionExperiments == null || expressionExperiments.isEmpty() )
+            return new HashSet<ExpressionExperiment>();
 
         // FIXME implement filterNonSpecific.
         if ( filterNonSpecific ) {
@@ -296,8 +300,11 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         String queryString = "select distinct pu,ees from ProbeCoexpressionAnalysisImpl pca inner join pca.experimentsAnalyzed ees inner join pca.probesUsed pu where ees in (:ees) and pu.id in (:probes)";
 
         Map<Long, Collection<Long>> cs2genes = this.getCs2GenesMapFromGenes( genesB );
-        List eesre = this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "ees", "probes" },
-                new Object[] { eesA, cs2genes.keySet() } );
+        List eesre = new ArrayList();
+        for ( Collection<Long> csBatch : BatchIterator.batches( cs2genes.keySet(), 2000 ) ) {
+            eesre.addAll( this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "ees", "probes" },
+                    new Object[] { eesA, csBatch } ) );
+        }
 
         for ( Object o : eesre ) {
             Object[] ol = ( Object[] ) o;
