@@ -21,7 +21,7 @@
 			Regenerate Expression Experiment Link Summaries </a>
 
 	</p>
-	<display:table pagesize="200" name="expressionExperiments" sort="list" defaultsort="8" defaultorder="descending"
+	<display:table pagesize="200" name="expressionExperiments" sort="list" defaultsort="10" defaultorder="descending"
 		class="list" requestURI="" id="expressionExperimentList"
 		decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
 	
