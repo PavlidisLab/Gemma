@@ -44,7 +44,8 @@
 		defaultorder="descending" comparator="ubic.gemma.web.taglib.displaytag.NumberComparator" />
 
 	<display:column property="taxon" sortable="true" titleKey="taxon.title" />
-
+	
+	<display:column property="dateDifferentialAnalysisNoTime" sortable="true" titleKey="menu.differential" />
 
 	<authz:authorize ifAnyGranted="admin">
 		<display:column property="dateCreatedNoTime" sortable="true" defaultorder="descending" title="Created" />

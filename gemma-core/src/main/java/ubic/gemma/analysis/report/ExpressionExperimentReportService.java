@@ -48,6 +48,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent;
@@ -352,6 +353,33 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
             eeVo.setNumPopulatedFactors( factorCounts.get( id ) );
         }
 
+    }
+
+    /**
+     * @param vos
+     */
+    @SuppressWarnings("unchecked")
+    public void fillDifferentialInformation( Collection<ExpressionExperimentValueObject> vos ) {
+        Collection<Long> ids = new HashSet<Long>();
+        for ( ExpressionExperimentValueObject eeVo : vos ) {
+            Long id = eeVo.getId();
+            ids.add( id );
+        }
+
+        Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( ids );
+        Map<Long, AuditEvent> differentialAnalysisEvents = getEvents( ees, DifferentialExpressionAnalysisEvent.Factory
+                .newInstance() );
+
+        for ( ExpressionExperimentValueObject eeVo : vos ) {
+            Long id = eeVo.getId();
+            if ( differentialAnalysisEvents.containsKey( id ) ) {
+                AuditEvent event = differentialAnalysisEvents.get( id );
+                if ( event != null ) {
+                    eeVo.setDataDifferentialAnalysis( event.getDate() );
+                    eeVo.setDifferentialAnalysisEventType( event.getEventType() );
+                }
+            }
+        }
     }
 
     @SuppressWarnings("unchecked")

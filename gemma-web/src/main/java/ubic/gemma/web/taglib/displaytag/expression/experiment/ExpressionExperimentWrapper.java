@@ -229,6 +229,36 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     /**
      * @return String
      */
+    public String getDateDifferentialAnalysisNoTime() {
+        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
+        Date dateObject = object.getDataDifferentialAnalysis();
+        String style = "";
+        if ( dateObject != null ) {
+            boolean mostRecent = determineIfMostRecent( dateObject, object );
+
+            // AuditEventType type = object.getDifferentialAnalysisEventType();
+            // if ( type instanceof FailedDifferentialAnalysisEvent ) {
+            // style = "style=\"color:#F33;\" title='There was an error during analysis'";
+            // } else if ( type instanceof TooSmallDatasetLinkAnalysisEvent ) {
+            // style = "style=\"font-style:italic;\" title='This dataset may be too small to analyze'";
+            // return "<span " + style + "'>small</span>";
+            // }
+
+            String fullDate = dateObject.toString();
+            String shortDate = StringUtils.left( fullDate, 10 );
+            shortDate = formatIfRecent( mostRecent, shortDate );
+            return "<span " + style + " title='" + fullDate + "'>" + shortDate + "</span>";
+        } else if ( object.getBioAssayCount() <= 4 ) {
+            style = "style=\"font-style:italic;\" title='This dataset may be too small to analyze'";
+            return "<span " + style + "'>small</span>";
+        }
+        style = "style=\"color:#3A3;\" title='Needs to be done'";
+        return "<span " + style + "'>Needed</span>";
+    }
+
+    /**
+     * @return String
+     */
     public String getDataSource() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         if ( object != null && object.getAccession() != null ) {
@@ -546,11 +576,13 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         Date mvdate = object.getDateMissingValueAnalysis();
         Date rankDate = object.getDateRankComputation();
         Date adDate = object.getDateArrayDesignLastUpdated();
+        Date differentialDate = object.getDataDifferentialAnalysis();
 
         if ( adDate != null && dateObject.before( adDate ) ) return false;
         if ( rankDate != null && dateObject.before( rankDate ) ) return false;
         if ( mvdate != null && dateObject.before( mvdate ) ) return false;
         if ( linksdate != null && dateObject.before( linksdate ) ) return false;
+        if ( differentialDate != null && dateObject.before( differentialDate ) ) return false;
 
         return true;
     }
