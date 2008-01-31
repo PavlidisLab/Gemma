@@ -59,6 +59,7 @@ public class GoMetricTest extends BaseSpringContextTest {
         geneOntologyService = ( GeneOntologyService ) this.getBean( "geneOntologyService" );
         geneService = ( GeneService ) this.getBean( "geneService" );
         goMetric = ( GoMetric ) this.getBean( "goMetric" );
+        geneOntologyService.init( false );
         if ( !GeneOntologyService.isEnabled() ) {
             this.enabled = false;
             return;
