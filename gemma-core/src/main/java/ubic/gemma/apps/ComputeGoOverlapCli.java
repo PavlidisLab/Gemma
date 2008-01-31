@@ -177,7 +177,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
     private static final String HASH_MAP_RETURN = "HashMapReturn";
     private static final String GO_PROB_MAP = "GoProbMap";
     private static final String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
-    private static final String RANDOM_SUBSET = "RandomSubset";
+    private static final String RANDOM_SUBSET = "RandomSubset1K";
     private static final String GENE_CACHE = "geneCache";
     private static Integer SET_SIZE = 0;
     private String file_path = "";
@@ -186,7 +186,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
     private boolean max = false;
     private boolean random = false;
     private String commonName = "";
-    private String OUT_FILE = "outFile";
+    private String OUT_FILE = "1K_percent";
 
     // INCLUDE PARTOF OR CHANGE STRINGENCY
     private boolean partOf = true;
@@ -259,7 +259,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
             saveCacheToDisk( ( HashMap ) mouseGeneGOMap, HASH_MAP_RETURN );
         }
 
-        if ( !metric.equals( GoMetric.Metric.simple ) ) {
+        if ( !metric.equals( GoMetric.Metric.simple ) && !metric.equals( GoMetric.Metric.percent ) ) {
             File f2 = new File( HOME_DIR + File.separatorChar + GO_PROB_MAP );
             if ( f2.exists() ) {
                 GOProbMap = ( HashMap<String, Double> ) getCacheFromDisk( f2 );
