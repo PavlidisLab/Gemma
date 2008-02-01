@@ -145,11 +145,12 @@ public class GoMetric {
 
         for ( OntologyTerm ontoM : masterGO ) {
             if ( isRoot( ontoM ) ) continue;
+            if (! GOProbMap.containsKey(ontoM.getUri())) continue;
             double probM = GOProbMap.get( ontoM.getUri() );
 
             for ( OntologyTerm ontoC : coExpGO ) {
                 if ( isRoot( ontoC ) ) continue;
-
+                if (! GOProbMap.containsKey(ontoC.getUri())) continue;
                 Double probC = GOProbMap.get( ontoC.getUri() );
                 Double pmin = 1.0;
                 Double score = 0.0;
@@ -201,11 +202,12 @@ public class GoMetric {
 
         for ( OntologyTerm ontoM : masterGO ) {
             if ( isRoot( ontoM ) ) continue;
+            if (! GOProbMap.containsKey(ontoM.getUri())) continue;
             double probM = GOProbMap.get( ontoM.getUri() );
 
             for ( OntologyTerm ontoC : coExpGO ) {
                 if ( isRoot( ontoC ) ) continue;
-
+                if (! GOProbMap.containsKey(ontoC.getUri())) continue;
                 Double probC = GOProbMap.get( ontoC.getUri() );
                 Double pmin = 1.0;
                 Double score = 0.0;
