@@ -319,10 +319,13 @@ public class GoMetric {
         }
 
         if ( masterGO.size() < coExpGO.size() ) {
-        	avgScore = ( double )  overlappingTerms.size() / masterGO.size() ;
+        	avgScore = ( double )  overlappingTerms.size() / masterGO.size();
         }
         if ( coExpGO.size() < masterGO.size() ) {
-        	avgScore = ( double )  overlappingTerms.size() / coExpGO.size() ;
+        	avgScore = ( double )  overlappingTerms.size() / coExpGO.size();
+        }
+        if ( coExpGO.size() == masterGO.size() ) {
+            	avgScore = ( double )  overlappingTerms.size() / coExpGO.size();
         }
         
         return avgScore;
