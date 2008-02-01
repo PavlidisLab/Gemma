@@ -19,6 +19,7 @@
 package ubic.gemma.analysis.diff;
 
 import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
+import ubic.gemma.model.common.protocol.Protocol;
 
 /**
  * @author keshav
@@ -31,10 +32,10 @@ public class DifferentialExpressionAnalysisConfig {
      */
     public DifferentialExpressionAnalysis toAnalysis() {
         DifferentialExpressionAnalysis analysis = DifferentialExpressionAnalysis.Factory.newInstance();
-        // Protocol protocol = Protocol.Factory.newInstance();
-        // protocol.setName( "Differential expression analysis settings" );
-        // protocol.setDescription( "qvalue: " + true );// TODO override toString and use this.toString
-        // analysis.setProtocol( protocol );
+        Protocol protocol = Protocol.Factory.newInstance();
+        protocol.setName( "Differential expression analysis settings" );
+        protocol.setDescription( "qvalue: " + true );// TODO override toString and use this.toString
+        analysis.setProtocol( protocol );
         return analysis;
     }
 

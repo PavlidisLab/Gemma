@@ -18,6 +18,8 @@
  */
 package ubic.gemma.persistence;
 
+import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.ProbeCoexpressionAnalysis;
 import ubic.gemma.model.analysis.ProbeCoexpressionAnalysisService;
 import ubic.gemma.model.association.Gene2GOAssociation;
@@ -30,12 +32,15 @@ import ubic.gemma.model.association.Gene2GOAssociationService;
  * @version $Id$
  * @spring.property name="gene2GOAssociationService" ref="gene2GOAssociationService"
  * @spring.property name="probeCoexpressionAnalysisService" ref="probeCoexpressionAnalysisService"
+ * @spring.property name="differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
  */
 public class RelationshipPersister extends ExpressionPersister {
 
     private Gene2GOAssociationService gene2GOAssociationService;
 
     private ProbeCoexpressionAnalysisService probeCoexpressionAnalysisService;
+
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     /*
      * (non-Javadoc)
@@ -50,6 +55,8 @@ public class RelationshipPersister extends ExpressionPersister {
             return persistGene2GOAssociation( ( Gene2GOAssociation ) entity );
         } else if ( entity instanceof ProbeCoexpressionAnalysis ) {
             return persistProbeCoexpressionAnalysis( ( ProbeCoexpressionAnalysis ) entity );
+        } else if ( entity instanceof DifferentialExpressionAnalysis ) {
+            return persistDifferentialExpressionAnalysis( ( DifferentialExpressionAnalysis ) entity );
         }
         return super.persist( entity );
 
@@ -64,17 +71,6 @@ public class RelationshipPersister extends ExpressionPersister {
     public Object persistOrUpdate( Object entity ) {
         if ( entity == null ) return null;
         return super.persistOrUpdate( entity );
-    }
-
-    /**
-     * @param gene2GOAssociationService the gene2GOAssociationService to set
-     */
-    public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
-        this.gene2GOAssociationService = gene2GOAssociationService;
-    }
-
-    public void setProbeCoexpressionAnalysisService( ProbeCoexpressionAnalysisService probeCoexpressionAnalysisService ) {
-        this.probeCoexpressionAnalysisService = probeCoexpressionAnalysisService;
     }
 
     /**
@@ -98,6 +94,34 @@ public class RelationshipPersister extends ExpressionPersister {
         if ( !isTransient( entity ) ) return entity;
         entity.setProtocol( persistProtocol( entity.getProtocol() ) );
         return probeCoexpressionAnalysisService.create( entity );
+    }
+
+    /**
+     * @param entity
+     * @return
+     */
+    protected DifferentialExpressionAnalysis persistDifferentialExpressionAnalysis(
+            DifferentialExpressionAnalysis entity ) {
+        if ( entity == null ) return null;
+        if ( !isTransient( entity ) ) return entity;
+        entity.setProtocol( persistProtocol( entity.getProtocol() ) );
+        return differentialExpressionAnalysisService.create( entity );
+    }
+
+    /**
+     * @param gene2GOAssociationService the gene2GOAssociationService to set
+     */
+    public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
+        this.gene2GOAssociationService = gene2GOAssociationService;
+    }
+
+    public void setProbeCoexpressionAnalysisService( ProbeCoexpressionAnalysisService probeCoexpressionAnalysisService ) {
+        this.probeCoexpressionAnalysisService = probeCoexpressionAnalysisService;
+    }
+
+    public void setDifferentialExpressionAnalysisService(
+            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
+        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
     }
 
 }

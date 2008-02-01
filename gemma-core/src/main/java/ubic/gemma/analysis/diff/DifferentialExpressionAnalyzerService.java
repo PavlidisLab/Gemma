@@ -38,7 +38,7 @@ import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.DifferentialExpressionAnalysisResultComparator;
 
 /**
@@ -47,9 +47,9 @@ import ubic.gemma.util.DifferentialExpressionAnalysisResultComparator;
  * 
  * @spring.bean id="differentialExpressionAnalyzerService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
- * @spring.property name="geneService" ref="geneService"
  * @spring.property name="differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
  * @spring.property name="differentialExpressionAnalyzer" ref="differentialExpressionAnalyzer"
+ * @spring.property name="persisterHelper" ref="persisterHelper"
  * @author keshav
  * @version $Id$
  */
@@ -64,7 +64,7 @@ public class DifferentialExpressionAnalyzerService {
     private ExpressionExperimentService expressionExperimentService = null;
     private DifferentialExpressionAnalyzer differentialExpressionAnalyzer = null;
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
-    private GeneService geneService = null;
+    private PersisterHelper persisterHelper = null;
 
     /**
      * Finds the persistent expression experiment. If there are no associated analyses with this experiment, the
@@ -97,7 +97,7 @@ public class DifferentialExpressionAnalyzerService {
         experimentsAnalyzed.add( expressionExperiment );
         diffExpressionAnalysis.setExperimentsAnalyzed( experimentsAnalyzed );
 
-        diffExpressionAnalysis = differentialExpressionAnalysisService.create( diffExpressionAnalysis );
+        diffExpressionAnalysis = ( DifferentialExpressionAnalysis ) persisterHelper.persist( diffExpressionAnalysis );
         expressionAnalyses.add( diffExpressionAnalysis );
 
         differentialExpressionAnalysisService.thaw( expressionAnalyses );
@@ -507,7 +507,8 @@ public class DifferentialExpressionAnalyzerService {
         this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
     }
 
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
     }
+
 }
