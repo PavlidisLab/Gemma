@@ -18,9 +18,10 @@
  */
 package ubic.gemma.security.acl.basic.jdbc;
 
+import javax.sql.DataSource;
+
 import org.acegisecurity.acl.basic.AbstractBasicAclEntry;
 import org.acegisecurity.acl.basic.BasicAclEntry;
-import org.apache.commons.dbcp.BasicDataSource;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
@@ -33,7 +34,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
  */
 public class CustomAclDao {
 
-    private BasicDataSource dataSource = null;
+    private DataSource dataSource = null;
 
     /**
      * Updates the acl_object_identity of the acl_permission table.
@@ -49,7 +50,7 @@ public class CustomAclDao {
     /**
      * @param dataSource
      */
-    public void setDataSource( BasicDataSource dataSource ) {
+    public void setDataSource( DataSource dataSource ) {
         this.dataSource = dataSource;
     }
 
