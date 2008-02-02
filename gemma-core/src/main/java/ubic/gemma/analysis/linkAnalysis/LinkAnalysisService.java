@@ -84,7 +84,7 @@ import cern.colt.list.ObjectArrayList;
  */
 public class LinkAnalysisService {
 
-    private static final int LINK_BATCH_SIZE = 1000;
+    private static final int LINK_BATCH_SIZE = 5000;
 
     private static final boolean useDB = true; // useful for debugging.
 
@@ -463,6 +463,8 @@ public class LinkAnalysisService {
             }
 
         }
+
+        // last batch.
         if ( p2plinkBatch.size() > 0 ) {
             this.ppService.create( p2plinkBatch );
             p2plinkBatch.clear();

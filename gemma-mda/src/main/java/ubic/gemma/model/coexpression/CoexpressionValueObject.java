@@ -51,7 +51,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     private Long geneId;
     private String geneName;
     private String geneOfficialName;
-    private String geneType;
+    private String geneType = null;
     private Long taxonId;
 
     /*

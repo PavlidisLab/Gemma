@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
@@ -128,6 +129,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
 
         // save the collection
         saveValueObjects( vos );
+        log.info( "Stats completed." );
     }
 
     /**
@@ -146,6 +148,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         // save the collection
 
         saveValueObjects( vos );
+        log.info( "Stats completed." );
     }
 
     /**
@@ -188,7 +191,6 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
             log.info( "Generated report for " + eeVo.getShortName() );
 
         }
-        log.info( "Stats completed." );
     }
 
     /**
@@ -275,7 +277,9 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( ids );
 
         watch.split();
-        log.info( "Load ees in " + watch.getSplitTime() + "ms (wall time)" );
+        if ( watch.getSplitTime() > 1000 ) {
+            log.info( "Load ees in " + watch.getSplitTime() + "ms (wall time)" );
+        }
         watch.unsplit();
 
         // This is substantially faster than expressionExperimentService.getLastLinkAnalysis( ids ).
@@ -288,7 +292,9 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         Map<Long, AuditEvent> arrayDesignEvents = getEvents( ees, ArrayDesignGeneMappingEvent.Factory.newInstance() );
 
         watch.split();
-        log.info( "Retrieval of event information done after " + watch.getSplitTime() + "ms (wall time)" );
+        if ( watch.getSplitTime() > 1000 ) {
+            log.info( "Retrieval of event information done after " + watch.getSplitTime() + "ms (wall time)" );
+        }
         watch.unsplit();
 
         // add in the last events of interest for all eeVos
@@ -398,8 +404,10 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
             result.put( ( ( ExpressionExperiment ) a ).getId(), events.get( a ) );
         }
         watch.split();
-        log.info( "Retrieval of events of type " + type.getClass().getSimpleName() + " done after "
-                + watch.getSplitTime() + "ms (wall time)" );
+        if ( watch.getSplitTime() > 1000 ) {
+            log.info( "Retrieval of events of type " + type.getClass().getSimpleName() + " done after "
+                    + watch.getSplitTime() + "ms (wall time)" );
+        }
         return result;
     }
 
@@ -424,8 +432,12 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                 eeValueObjects = ( Collection ) ois.readObject();
                 ois.close();
                 fis.close();
-            } catch ( Throwable e ) {
-                return null;
+            } catch ( IOException e ) {
+                log.warn( "Unable to read report object from " + objectFile, e );
+                continue;
+            } catch ( ClassNotFoundException e ) {
+                log.warn( "Unable to read report object from " + objectFile, e );
+                continue;
             }
         }
         return eeValueObjects;
@@ -452,8 +464,12 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                 } else {
                     continue;
                 }
-            } catch ( Throwable e ) {
-                return null;
+            } catch ( IOException e ) {
+                log.warn( "Unable to read report object for id =" + id, e );
+                continue;
+            } catch ( ClassNotFoundException e ) {
+                log.warn( "Unable to read report object for id =" + id, e );
+                continue;
             }
         }
         return eeValueObjects;
@@ -474,7 +490,11 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                 ois.close();
                 fis.close();
             }
-        } catch ( Throwable e ) {
+        } catch ( IOException e ) {
+            log.warn( "Unable to read report object for id =" + id, e );
+            return null;
+        } catch ( ClassNotFoundException e ) {
+            log.warn( "Unable to read report object for id =" + id, e );
             return null;
         }
         return eeVo;
@@ -488,9 +508,14 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         return HOME_DIR + File.separatorChar + EE_REPORT_DIR + File.separatorChar + EE_LINK_SUMMARY + "." + id;
     }
 
+    /**
+     * Check to see if the top level report storage directory exists. If it doesn't, create it, Check to see if the
+     * reports directory exists. If it doesn't, create it.
+     * 
+     * @param deleteFiles
+     */
     private void initDirectories( boolean deleteFiles ) {
-        // check to see if the home directory exists. If it doesn't, create it.
-        // check to see if the reports directory exists. If it doesn't, create it.
+
         FileTools.createDir( HOME_DIR );
         FileTools.createDir( HOME_DIR + File.separatorChar + EE_REPORT_DIR );
         File f = new File( HOME_DIR + File.separatorChar + EE_REPORT_DIR );

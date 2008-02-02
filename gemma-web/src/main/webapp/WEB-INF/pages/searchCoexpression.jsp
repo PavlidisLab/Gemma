@@ -320,17 +320,18 @@
 				decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
 
 				<display:column property="rawCoexpressionLinkCount" sortable="true" defaultorder="descending"
-					titleKey="expressionExperiment.rawLinkcount" />
+					titleKey="expressionExperiment.rawLinkcount" comparator="ubic.gemma.web.taglib.displaytag.NumberComparator" />
 
-				<display:column property="coexpressionLinkCount" sortable="true" defaultorder="ascending"
-					titleKey="expressionExperiment.linkcount" />
+				<display:column property="coexpressionLinkCount" sortable="true" defaultorder="descending"
+					titleKey="expressionExperiment.linkcount" comparator="ubic.gemma.web.taglib.displaytag.NumberComparator" />
 				<display:column property="nameLink" sortable="true" sortProperty="name" titleKey="expressionExperiment.name" />
 				<display:column property="shortName" sortable="true" titleKey="expressionExperiment.shortName" />
 				<display:column property="specific" sortable="true" titleKey="expressionExperiment.specific" />
 				<authz:authorize ifAnyGranted="admin">
 					<display:column property="arrayDesignLink" sortable="true" title="Arrays" />
 				</authz:authorize>
-				<display:column property="assaysLink" sortable="true" titleKey="bioAssays.title" />
+				<display:column property="assaysLink" sortable="true" titleKey="bioAssays.title"
+					comparator="ubic.gemma.web.taglib.displaytag.NumberComparator" />
 				<display:setProperty name="basic.empty.showtable" value="false" />
 			</display:table>
 		</div>
@@ -427,14 +428,16 @@
 	<br />
 
 
-	<display:table name="coexpressedPredictedGenes" export="true" class="list" sort="list" requestURI="" id="predictedFoundGenes"
-		decorator="ubic.gemma.web.taglib.displaytag.coexpressionSearch.CoexpressionWrapper" pagesize="200">
+	<display:table name="coexpressedPredictedGenes" export="true" class="list" sort="list" requestURI=""
+		id="predictedFoundGenes" decorator="ubic.gemma.web.taglib.displaytag.coexpressionSearch.CoexpressionWrapper"
+		pagesize="200">
 		<display:column media="html" property="gemmaLink" sortable="false"
 			title="<a class='helpLink' name='?' href='' onclick='getQueryHelp(event);return false;'><img src='/Gemma/images/help.png' /></a>" />
 		<display:column media="html" property="nameLink" sortable="true" sortProperty="geneName" title="Gene" />
 		<display:column media="excel" property="geneName" title="Gene" />
 		<display:column property="geneOfficialName" maxLength="40" sortable="true" titleKey="gene.officialName" />
-		<display:column media="html" property="simpleLinkCount" sortable="true" sortProperty="maxLinkCount" style="width:50px;"
+		<display:column media="html" property="simpleLinkCount" sortable="true" sortProperty="maxLinkCount"
+			style="width:50px;"
 			title="Support&nbsp;<a class='helpLink' href='' onclick='getCoexpressionHelp(event);return false;'><img src='/Gemma/images/help.png' /></a>" />
 		<display:column media="excel" property="simpleLinkCountExport" title="Support" />
 		<display:column media="html" property="goOverlap" sortable="true" style="width:50px;"
@@ -495,14 +498,16 @@
 	<br />
 
 
-	<display:table name="coexpressedAlignedRegions" export="true" class="list" sort="list" requestURI="" id="alignedFoundGenes"
-		decorator="ubic.gemma.web.taglib.displaytag.coexpressionSearch.CoexpressionWrapper" pagesize="200">
+	<display:table name="coexpressedAlignedRegions" export="true" class="list" sort="list" requestURI=""
+		id="alignedFoundGenes" decorator="ubic.gemma.web.taglib.displaytag.coexpressionSearch.CoexpressionWrapper"
+		pagesize="200">
 		<display:column media="html" property="gemmaLink" sortable="false"
 			title="<a class='helpLink' name='?' href='' onclick='getQueryHelp(event);return false;'><img src='/Gemma/images/help.png' /></a>" />
 		<display:column media="html" property="nameLink" sortable="true" sortProperty="geneName" title="Gene" />
 		<display:column media="excel" property="geneName" title="Gene" />
 		<display:column property="geneOfficialName" maxLength="40" sortable="true" titleKey="gene.officialName" />
-		<display:column media="html" property="simpleLinkCount" sortable="true" sortProperty="maxLinkCount" style="width:50px;"
+		<display:column media="html" property="simpleLinkCount" sortable="true" sortProperty="maxLinkCount"
+			style="width:50px;"
 			title="Support&nbsp;<a class='helpLink' href='' onclick='getCoexpressionHelp(event);return false;'><img src='/Gemma/images/help.png' /></a>" />
 		<display:column media="excel" property="simpleLinkCountExport" title="Support" />
 		<display:column media="html" property="goOverlap" sortable="true" style="width:50px;"

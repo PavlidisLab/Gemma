@@ -108,6 +108,7 @@ public class ArrayDesignProbeMapperService {
 
         int count = 0;
         int hits = 0;
+        log.info( "Start processing probes ..." );
         for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
             BioSequence bs = compositeSequence.getBiologicalCharacteristic();
 

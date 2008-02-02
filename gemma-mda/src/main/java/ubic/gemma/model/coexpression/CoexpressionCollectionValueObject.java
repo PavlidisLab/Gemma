@@ -32,6 +32,9 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.GeneImpl;
+import ubic.gemma.model.genome.PredictedGeneImpl;
+import ubic.gemma.model.genome.ProbeAlignedRegionImpl;
 
 /**
  * The coexpressioncollectionValueObject is used for storing the results of a coexpression search. The object is thread
@@ -43,9 +46,9 @@ import ubic.gemma.model.genome.Gene;
  */
 public class CoexpressionCollectionValueObject {
 
-    public static final String PREDICTED_GENE_IMPL = "PredictedGeneImpl";
-    public static final String PROBE_ALIGNED_REGION_IMPL = "ProbeAlignedRegionImpl";
-    public static final String GENE_IMPL = "GeneImpl";
+    public static final String PREDICTED_GENE_IMPL = PredictedGeneImpl.class.getSimpleName();
+    public static final String PROBE_ALIGNED_REGION_IMPL = ProbeAlignedRegionImpl.class.getSimpleName();
+    public static final String GENE_IMPL = GeneImpl.class.getSimpleName();
 
     private static Log log = LogFactory.getLog( CoexpressionCollectionValueObject.class.getName() );
 
@@ -81,11 +84,11 @@ public class CoexpressionCollectionValueObject {
 
     public void add( CoexpressionValueObject vo ) {
         String geneType = vo.getGeneType();
-        if ( geneType.equalsIgnoreCase( GENE_IMPL ) )
+        if ( geneType.equals( GENE_IMPL ) )
             this.knownGeneCoexpressionData.add( vo );
-        else if ( geneType.equalsIgnoreCase( PROBE_ALIGNED_REGION_IMPL ) )
+        else if ( geneType.equals( PROBE_ALIGNED_REGION_IMPL ) )
             this.probeAlignedRegionCoexpressionData.add( vo );
-        else if ( geneType.equalsIgnoreCase( PREDICTED_GENE_IMPL ) )
+        else if ( geneType.equals( PREDICTED_GENE_IMPL ) )
             this.predictedCoexpressionData.add( vo );
         else
             throw new IllegalArgumentException( "Unknown gene type" + geneType );
@@ -99,11 +102,11 @@ public class CoexpressionCollectionValueObject {
         /*
          * Maintain a list of which expression experiments participate in which type of coexpression
          */
-        if ( geneType.equalsIgnoreCase( GENE_IMPL ) )
+        if ( geneType.equals( GENE_IMPL ) )
             this.knownGeneCoexpressionData.addExpressionExperiment( eevo );
-        else if ( geneType.equalsIgnoreCase( PROBE_ALIGNED_REGION_IMPL ) )
+        else if ( geneType.equals( PROBE_ALIGNED_REGION_IMPL ) )
             this.probeAlignedRegionCoexpressionData.addExpressionExperiment( eevo );
-        else if ( geneType.equalsIgnoreCase( PREDICTED_GENE_IMPL ) )
+        else if ( geneType.equals( PREDICTED_GENE_IMPL ) )
             this.predictedCoexpressionData.addExpressionExperiment( eevo );
         else
             throw new IllegalArgumentException( "Unknown gene type" + geneType );
@@ -217,12 +220,11 @@ public class CoexpressionCollectionValueObject {
      * Only searches the given geneType for the specified EE. if not found return null.
      */
     public ExpressionExperimentValueObject getExpressionExperiment( String geneType, Long eeID ) {
-
-        if ( geneType.equalsIgnoreCase( GENE_IMPL ) )
+        if ( geneType.equals( GENE_IMPL ) )
             return knownGeneCoexpressionData.getExpressionExperiment( eeID );
-        else if ( geneType.equalsIgnoreCase( PROBE_ALIGNED_REGION_IMPL ) )
+        else if ( geneType.equals( PROBE_ALIGNED_REGION_IMPL ) )
             return probeAlignedRegionCoexpressionData.getExpressionExperiment( eeID );
-        else if ( geneType.equalsIgnoreCase( PREDICTED_GENE_IMPL ) )
+        else if ( geneType.equals( PREDICTED_GENE_IMPL ) )
             return predictedCoexpressionData.getExpressionExperiment( eeID );
 
         return null;
@@ -397,9 +399,8 @@ public class CoexpressionCollectionValueObject {
      * Merely initializes the data structure.
      * 
      * @param eeID the expressionexperiment id
-     * @param probeID the probe ID
+     * @param probeID the probe ID for the query gene.
      */
-
     public void initializeSpecificityDataStructure( Long eeID, Long probeID ) {
         if ( !crossHybridizingQueryProbes.containsKey( eeID ) ) {
             crossHybridizingQueryProbes.put( eeID, new HashMap<Long, Collection<Long>>() );
@@ -437,4 +438,5 @@ public class CoexpressionCollectionValueObject {
     public void setQueryGeneGoTermCount( int queryGeneGoTermCount ) {
         this.queryGeneGoTermCount = queryGeneGoTermCount;
     }
+
 }

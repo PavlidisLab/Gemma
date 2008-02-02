@@ -225,8 +225,8 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             fileType = "allParents";
 
         ArrayDesign arrayDesign = arrayDesignService.load( Long.parseLong( arrayDesignIdStr ) );
-        String fileName = arrayDesign.getShortName() + "_" + fileType
-                + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
+        String fileBaseName = ArrayDesignAnnotationService.mungeFileName( arrayDesign.getShortName() );
+        String fileName = fileBaseName + "_" + fileType + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
 
         File f = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
         InputStream reader;

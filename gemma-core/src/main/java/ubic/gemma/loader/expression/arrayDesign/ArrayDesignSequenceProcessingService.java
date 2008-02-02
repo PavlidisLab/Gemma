@@ -362,7 +362,7 @@ public class ArrayDesignSequenceProcessingService {
             Taxon taxon ) throws IOException {
 
         log.info( "Processing Affymetrix design" );
-        arrayDesignService.thaw( arrayDesign );
+        //arrayDesignService.thaw( arrayDesign );
         boolean wasOriginallyLackingCompositeSequences = arrayDesign.getCompositeSequences().size() == 0;
 
         Collection<BioSequence> bioSequences = new HashSet<BioSequence>();

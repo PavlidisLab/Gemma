@@ -150,9 +150,6 @@
 			<a href="<c:url value="/indexer.html"/>"> <fmt:message key="menu.compassIndexer" /> </a>
 		</li>
 		<li>
-			<a href="<c:url value="/bibRef/showAllEeBibRefs.html"/>">Articles referenced by Experiments in Gemma</a>
-		</li>
-		<li>
 			<a href="<c:url value="/securityManager.html"/>"> <fmt:message key="menu.securityManager" /> </a>
 		</li>
 		<li>

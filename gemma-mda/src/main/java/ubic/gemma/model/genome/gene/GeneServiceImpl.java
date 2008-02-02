@@ -133,8 +133,8 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
      * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetCoexpressedGenes(ubic.gemma.model.genome.Gene)
      */
     @Override
-    protected Object handleGetCoexpressedGenes( Gene gene, Collection ees, Integer stringency ) throws Exception {
-        return this.getGeneDao().getCoexpressedGenes( gene, ees, stringency );
+    protected Object handleGetCoexpressedGenes( Gene gene, Collection ees, Integer stringency, boolean knownGenesOnly ) throws Exception {
+        return this.getGeneDao().getCoexpressedGenes( gene, ees, stringency, knownGenesOnly );
     }
 
     /*

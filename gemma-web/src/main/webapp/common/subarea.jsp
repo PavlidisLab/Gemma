@@ -5,26 +5,18 @@
 </h2>
 <p>
 	Gemma is a database and software system for the
-	<strong>meta-analysis of gene expression data</strong>. Currently Gemma
-	is focused on using "guilt-by-association" to assist in gene function
-	prediction. Later stages of the project will introduce additional types
-	of analysis.
-</p>
-<hr />
-
-<p class="line">
-	<strong>To use Gemma</strong>, enter a term to locate a gene of
-	interest; Gemma will tell you what genes are coexpressed (have
-	correlated expression profiles) with your selected genes. Gemma
-	contains data from hundreds of public microarray data sets.
+	<strong>meta-analysis of gene expression data</strong>. Gemma
+	contains data from hundreds of 
+	<a href="<c:url value="/expressionExperiment/showAllExpressionExperiments.html"/>">public microarray data sets</a>, 
+	referencing hundreds of <a href="<c:url value="/bibRef/showAllEeBibRefs.html"/>">published papers</a>.
 </p>
 <p class="line">
-	<strong>We're in an beta-release stage</strong>, so use the site at
-	your own risk. We're very interested in your
+	<strong>We're in an alpha-release stage</strong>, so use the site at
+	your own risk (and pardon the mess while we set things up). We're very interested in your
 	<a href="mailto:gemma@bioinformatics.ubc.ca">feedback</a>. More information about the
 	project is available
 	<a href="<c:url value="/static/about.html"/>">here</a>, or help with
 	analysis is
-	<a href="<c:url value="/static/help.html"/>">here</a>.
+	<a href="<c:url value="/static/help.html"/>">here</a>. Gemma 1.0 is coming soon!
 
 </p>

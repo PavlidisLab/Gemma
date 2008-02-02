@@ -32,12 +32,14 @@ public class ImageCumulativePlatesFetcherTest extends TestCase {
 
     /**
      * See {@link ftp://image.llnl.gov/image/outgoing/arrayed_plate_data/cumulative/} for appropriate test files.
+     * <p>
+     * FIXME this test isn't great because the files get retired from time to time.
      * 
      * @throws Exception
      */
     public void testFetch() throws Exception {
         ImageCumulativePlatesFetcher fetcher = new ImageCumulativePlatesFetcher();
-        Collection<LocalFile> files = fetcher.fetch( "20070801" );
+        Collection<LocalFile> files = fetcher.fetch( "20080101" );
         assertEquals( 1, files.size() );
     }
 

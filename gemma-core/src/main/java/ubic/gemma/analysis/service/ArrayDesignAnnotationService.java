@@ -46,6 +46,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.association.Gene2GOAssociationService;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -262,6 +263,32 @@ public class ArrayDesignAnnotationService {
         return compositeSequencesProcessed;
     }
 
+    public int generateAnnotationFile( Writer writer, Collection<Gene> genes, OutputType type ) {
+        for ( Gene gene : genes ) {
+            Collection<OntologyTerm> ontos = getGoTerms( gene, type );
+            List<Collection<OntologyTerm>> termList = new ArrayList<Collection<OntologyTerm>>();
+            termList.add( ontos );
+            String geneString = gene.getOfficialSymbol();
+            String geneDescriptionString = gene.getOfficialName();
+            try {
+                writeAnnotationLine( writer, geneString, geneString, geneDescriptionString, termList );
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
+        }
+        return genes.size();
+    }
+
+    /**
+     * Remove file separators (e.g., "/") from the file names.
+     * 
+     * @param fileBaseName
+     * @return
+     */
+    public static String mungeFileName( String fileBaseName ) {
+        return fileBaseName.replaceAll( File.separator, "_" );
+    }
+
     /**
      * Opens a file for writing and adds the header.
      * 
@@ -278,9 +305,8 @@ public class ArrayDesignAnnotationService {
             writer = new PrintWriter( System.out );
         } else {
 
-            log.info( "Attempting to create new annotation file " + fileBaseName + " \n" );
-
-            File f = new File( ANNOT_DATA_DIR + fileBaseName + ANNOTATION_FILE_SUFFIX );
+            File f = getFileName( fileBaseName );
+            log.info( "Attempting to create new annotation file " + f + " \n" );
 
             if ( f.exists() ) {
                 if ( overWrite ) {
@@ -303,6 +329,15 @@ public class ArrayDesignAnnotationService {
         writer.write( "ProbeName\tGeneSymbols\tGeneNames\tGOTerms\n" );
 
         return writer;
+    }
+
+    /**
+     * @param mungedFileName
+     * @return
+     */
+    public static File getFileName( String fileBaseName ) {
+        String mungedFileName = mungeFileName( fileBaseName );
+        return new File( ANNOT_DATA_DIR + mungedFileName + ANNOTATION_FILE_SUFFIX );
     }
 
     public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {

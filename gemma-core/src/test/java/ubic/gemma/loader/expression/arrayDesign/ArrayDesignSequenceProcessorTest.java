@@ -86,7 +86,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
     @Override
     protected void onTearDownInTransaction() throws Exception {
         if ( result != null ) {
-            arrayDesignService.thaw( result );
+            arrayDesignService.thawLite( result );
             BioSequenceService bss = ( BioSequenceService ) this.getBean( "bioSequenceService" );
             for ( CompositeSequence cs : result.getCompositeSequences() ) {
                 bss.remove( cs.getBiologicalCharacteristic() );
@@ -160,7 +160,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL226", true, true,
                 false );
         result = ads.iterator().next();
-        arrayDesignService.thaw( result );
+        arrayDesignService.thawLite( result );
         try {
             Collection<BioSequence> res = app.processArrayDesign( result, new String[] { "testblastdb",
                     "testblastdbPartTwo" }, ConfigUtils.getString( "gemma.home" )
@@ -201,7 +201,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL226", true, true,
                 false );
         result = ads.iterator().next();
-        arrayDesignService.thaw( result );
+        arrayDesignService.thawLite( result );
 
         InputStream f = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/identifierTest.txt" );
         Collection<BioSequence> res = app.processArrayDesign( result, f, new String[] { "testblastdb",
@@ -224,7 +224,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL88", true, true,
                 false );
         result = ads.iterator().next();
-        arrayDesignService.thaw( result );
+        arrayDesignService.thawLite( result );
 
         // now do the sequences.
         ZipInputStream z = new ZipInputStream( this.getClass().getResourceAsStream(

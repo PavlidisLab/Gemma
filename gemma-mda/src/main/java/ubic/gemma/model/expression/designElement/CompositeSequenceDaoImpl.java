@@ -43,7 +43,6 @@ import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
-import ubic.gemma.util.QueryUtils;
 
 /**
  * @author pavlidis
@@ -394,6 +393,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
     protected Map<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>> handleGetGenesWithSpecificity(
             Collection compositeSequences ) throws Exception {
 
+        log.info( "Getting cs -> alignment specificity map for " + compositeSequences.size() + " composite sequences" );
         Collection<CompositeSequence> batch = new HashSet<CompositeSequence>();
         Map<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>> results = new HashMap<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>>();
 
@@ -449,9 +449,10 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
         } else {
             // just a chunk.
-            final String queryString = "select cs from CompositeSequenceImpl as cs inner join cs.arrayDesign as ar where ar.id = :id";
-            Collection<CompositeSequence> cs = QueryUtils.queryByIdReturnCollection( getSession(), arrayDesign.getId(),
-                    queryString, numResults );
+            final String queryString = "select cs from CompositeSequenceImpl as cs inner join cs.arrayDesign as ar where ar  :ar";
+            this.getHibernateTemplate().setMaxResults( numResults );
+            List cs = this.getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign );
+            this.getHibernateTemplate().setMaxResults( 0 );
             return getRawSummary( cs, 0 );
         }
 

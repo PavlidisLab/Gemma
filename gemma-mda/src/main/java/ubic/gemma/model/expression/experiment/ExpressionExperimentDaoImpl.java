@@ -607,7 +607,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         final String queryString = "select distinct ee.ID as eeID FROM "
                 + "GENE2CS g2s, COMPOSITE_SEQUENCE cs, ARRAY_DESIGN ad, BIO_ASSAY ba, EXPRESSION_EXPERIMENT ee "
                 + "WHERE g2s.CS = cs.ID AND ad.ID = cs.ARRAY_DESIGN_FK AND ba.ARRAY_DESIGN_USED_FK = ad.ID AND"
-                + " ba.EXPRESSION_EXPERIMENT_FK = ee.ID and g2s.gene = :geneID";
+                + " ba.EXPRESSION_EXPERIMENT_FK = ee.ID and g2s.GENE = :geneID";
 
         Collection<Long> eeIds = null;
 
@@ -620,11 +620,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
             eeIds = new HashSet<Long>();
 
-            // Post Processing
-            while ( results.next() )
+            while ( results.next() ) {
                 eeIds.add( results.getLong( 0 ) );
-
-            session.clear();
+            }
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }

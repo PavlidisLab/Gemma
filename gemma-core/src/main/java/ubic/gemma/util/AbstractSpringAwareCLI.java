@@ -152,6 +152,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
                 if ( event.getEventType() != null && eventClass != null
                         && eventClass.isAssignableFrom( event.getEventType().getClass() ) ) {
                     if ( event.getDate().after( skipIfLastRunLaterThan ) ) {
+                        log.info( auditable + ": " + " run more recently than " + skipIfLastRunLaterThan );
                         errorObjects.add( auditable + ": " + " run more recently than " + skipIfLastRunLaterThan );
                         needToRun = false;
                     }
@@ -160,24 +161,25 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         }
 
         /*
-         * If we're running in an 'auto' mode (by date, or with the --auto option, skip if we're in a 'trouble' state.
+         * Always skip if we have trouble.
          */
-        if ( autoSeek || skipIfLastRunLaterThan != null ) {
-            AuditEvent lastTrouble = this.auditTrailService.getLastTroubleEvent( auditable );
+        // if ( autoSeek || skipIfLastRunLaterThan != null ) {
+        AuditEvent lastTrouble = this.auditTrailService.getLastTroubleEvent( auditable );
 
-            // special case for expression experiments - check associated ADs.
-            if ( lastTrouble == null && auditable instanceof ExpressionExperiment ) {
-                ExpressionExperimentService ees = ( ExpressionExperimentService ) this
-                        .getBean( "expressionExperimentService" );
-                for ( Object o : ees.getArrayDesignsUsed( ( ExpressionExperiment ) auditable ) ) {
-                    lastTrouble = auditTrailService.getLastTroubleEvent( ( ArrayDesign ) o );
-                }
+        // special case for expression experiments - check associated ADs.
+        if ( lastTrouble == null && auditable instanceof ExpressionExperiment ) {
+            ExpressionExperimentService ees = ( ExpressionExperimentService ) this
+                    .getBean( "expressionExperimentService" );
+            for ( Object o : ees.getArrayDesignsUsed( ( ExpressionExperiment ) auditable ) ) {
+                lastTrouble = auditTrailService.getLastTroubleEvent( ( ArrayDesign ) o );
             }
-
-            okToRun = lastTrouble == null;
         }
 
+        okToRun = lastTrouble == null;
+        // }
+
         if ( !okToRun ) {
+            log.info( auditable + ": has an active 'trouble' flag" );
             errorObjects.add( auditable + ": has an active 'trouble' flag" );
         }
 

@@ -28,7 +28,7 @@ import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
 import ubic.gemma.util.BusinessKey;
-import ubic.gemma.util.QueryUtils;
+import ubic.gemma.util.NativeQueryUtils;
 
 /**
  * @author pavlidis
@@ -101,24 +101,16 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
     @SuppressWarnings("unchecked")
     public Collection<BibliographicReference> handleGetAllExperimentLinkedReferences() {
         final String query = "select distinct e.primaryPublication from ExpressionExperimentImpl e ";
-        return QueryUtils.queryForCollection( this.getSession( true ), query );
+        return this.getHibernateTemplate().find( query );
     }
 
-    // FIXME Note that almost the same method is also available from the EEservice
+    // Note that almost the same method is also available from the EEservice
     @Override
     protected Collection handleGetRelatedExperiments( BibliographicReference bibliographicReference ) throws Exception {
         final String queryString = "select distinct ee FROM ExpressionExperimentImpl as ee left join ee.otherRelevantPublications as eeO"
                 + " WHERE ee.primaryPublication = :bib OR (eeO = :bib) ";
 
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameter( "bib", bibliographicReference );
-
-            Collection results = queryObject.list();
-            return results;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
+        return this.getHibernateTemplate().findByNamedParam( queryString, "bib", bibliographicReference );
     }
 
     @Override

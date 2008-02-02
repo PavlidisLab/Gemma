@@ -25,9 +25,12 @@ import java.util.List;
 import java.util.Map;
 
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
+import ubic.gemma.model.coexpression.CoexpressedGenesDetails;
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.GeneOntologyService;
@@ -40,40 +43,164 @@ import ubic.gemma.ontology.OntologyTerm;
  * @spring.property name="geneService" ref="geneService"
  * @spring.property name="probe2ProbeCoexpressionService" ref="probe2ProbeCoexpressionService"
  * @spring.property name="geneOntologyService" ref="geneOntologyService"
+ * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @author paul
  * @version $Id$
  */
 public class ProbeLinkCoexpressionAnalyzer {
 
     private static final int MAX_GENES_TO_COMPUTE_GOOVERLAP = 50;
-    GeneService geneService;
-    Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
-    GeneOntologyService geneOntologyService;
+    private GeneService geneService;
+    private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
+    private GeneOntologyService geneOntologyService;
+    private ExpressionExperimentService expressionExperimentService;
 
     /**
      * @param gene
      * @param ees
      * @param stringency A positive non-zero integer. If a value less than or equal to zero is entered, the value 1 will
      *        be silently used.
+     * @param knownGenesOnly if false, 'predicted genes' and 'probe aligned regions' will be populated.
      * @see ubic.gemma.model.genome.GeneDao.getCoexpressedGenes
      * @see ubic.gemma.model.coexpression.CoexpressionCollectionValueObject
      * @return Fully initialized CoexpressionCollectionValueObject.
      */
+    @SuppressWarnings("unchecked")
     public CoexpressionCollectionValueObject linkAnalysis( Gene gene, Collection<ExpressionExperiment> ees,
-            int stringency ) {
+            int stringency, boolean knownGenesOnly ) {
 
         if ( stringency <= 0 ) stringency = 1;
 
-        CoexpressionCollectionValueObject coexpressions = ( CoexpressionCollectionValueObject ) geneService
-                .getCoexpressedGenes( gene, ees, stringency );
+        /*
+         * Identify data sets the query gene is expressed in - this is fast (?) and provides an upper bound for EEs we
+         * need to search in the first place.
+         */
+        /*
+         * FIXME Commented out until the database is populated with this information.
+         */
+        //Collection<ExpressionExperiment> eesQueryTestedIn = probe2ProbeCoexpressionService
+                //.getExpressionExperimentsLinkTestedIn( gene, ees, false );
+        Collection<ExpressionExperiment> eesQueryTestedIn = ees;
 
-        computeGoStats( coexpressions );
+        /*
+         * Perform the coexpression search, some postprocessing done.
+         */
+        CoexpressionCollectionValueObject coexpressions = ( CoexpressionCollectionValueObject ) geneService
+                .getCoexpressedGenes( gene, eesQueryTestedIn, stringency, knownGenesOnly );
+
+        /*
+         * Finish the postprocessing.
+         */
+        coexpressions.setEesQueryGeneTestedIn( eesQueryTestedIn );
+        if ( coexpressions.getAllGeneCoexpressionData().size() == 0 ) {
+            return coexpressions;
+        }
+
+        fillInEEInfo( coexpressions ); // do first...
+
+        fillInGeneInfo( stringency, coexpressions );
+
+        computeGoStats( coexpressions, stringency );
 
         if ( coexpressions.getAllGeneCoexpressionData().size() == 0 ) return coexpressions;
 
-        computeEesTestedIn( gene, ees, coexpressions );
+        computeEesTestedIn( gene, ees, coexpressions, eesQueryTestedIn );
 
         return coexpressions;
+    }
+
+    private void fillInEEInfo( CoexpressionCollectionValueObject coexpressions ) {
+        Collection<Long> eeIds = new HashSet<Long>();
+
+        CoexpressedGenesDetails coexps = coexpressions.getKnownGeneCoexpression();
+        fillInEEInfo( coexpressions, eeIds, coexps );
+
+        coexps = coexpressions.getPredictedCoexpressionType();
+        fillInEEInfo( coexpressions, eeIds, coexps );
+
+        coexps = coexpressions.getProbeAlignedCoexpressionType();
+        fillInEEInfo( coexpressions, eeIds, coexps );
+
+    }
+
+    /**
+     * @param coexpressions
+     * @param eeIds
+     * @param coexps
+     */
+    @SuppressWarnings("unchecked")
+    private void fillInEEInfo( CoexpressionCollectionValueObject coexpressions, Collection<Long> eeIds,
+            CoexpressedGenesDetails coexps ) {
+        for ( ExpressionExperimentValueObject evo : coexpressions.getExpressionExperiments() ) {
+            eeIds.add( evo.getId() );
+        }
+        Collection<ExpressionExperimentValueObject> ees = expressionExperimentService.loadValueObjects( eeIds );
+        Map<Long, ExpressionExperimentValueObject> em = new HashMap<Long, ExpressionExperimentValueObject>();
+        for ( ExpressionExperimentValueObject evo : ees ) {
+            em.put( evo.getId(), evo );
+        }
+
+        for ( ExpressionExperimentValueObject evo : coexps.getExpressionExperiments() ) {
+            em.put( evo.getId(), evo );
+        }
+        for ( ExpressionExperimentValueObject evo : coexpressions.getExpressionExperiments() ) {
+            ExpressionExperimentValueObject ee = em.get( evo.getId() );
+            evo.setShortName( ee.getShortName() );
+            evo.setName( ee.getName() );
+        }
+
+        for ( ExpressionExperimentValueObject evo : coexps.getExpressionExperiments() ) {
+            ExpressionExperimentValueObject ee = em.get( evo.getId() );
+            evo.setShortName( ee.getShortName() );
+            evo.setName( ee.getName() );
+        }
+    }
+
+    /**
+     * @param stringency
+     * @param unorganizedGeneCoexpression
+     * @param coexpressions
+     */
+    @SuppressWarnings("unchecked")
+    private void fillInGeneInfo( int stringency, CoexpressionCollectionValueObject coexpressions ) {
+
+        CoexpressedGenesDetails coexp = coexpressions.getKnownGeneCoexpression();
+        fillInGeneInfo( stringency, coexpressions, coexp );
+
+        coexp = coexpressions.getPredictedCoexpressionType();
+        fillInGeneInfo( stringency, coexpressions, coexp );
+
+        coexp = coexpressions.getProbeAlignedCoexpressionType();
+        fillInGeneInfo( stringency, coexpressions, coexp );
+
+    }
+
+    /**
+     * @param stringency
+     * @param coexpressions
+     * @param coexp
+     */
+    @SuppressWarnings("unchecked")
+    private void fillInGeneInfo( int stringency, CoexpressionCollectionValueObject coexpressions,
+            CoexpressedGenesDetails coexp ) {
+        List<CoexpressionValueObject> coexpressionData = coexp.getCoexpressionData( stringency );
+        Collection<Long> geneIds = new HashSet<Long>();
+        for ( CoexpressionValueObject cod : coexpressionData ) {
+            geneIds.add( cod.getGeneId() );
+        }
+
+        Collection<Gene> genes = geneService.loadMultiple( geneIds ); // this can be slow if there are a lot.
+        Map<Long, Gene> gm = new HashMap<Long, Gene>();
+        for ( Gene g : genes ) {
+            gm.put( g.getId(), g );
+        }
+        for ( CoexpressionValueObject cod : coexpressionData ) {
+            Gene g = gm.get( cod.getGeneId() );
+            cod.setGeneName( g.getName() );
+            cod.setGeneOfficialName( g.getOfficialName() );
+            cod.setGeneType( g.getClass().getSimpleName() );
+            coexpressions.add( cod );
+        }
     }
 
     /**
@@ -82,18 +209,11 @@ public class ProbeLinkCoexpressionAnalyzer {
      * @param gene
      * @param ees
      * @param coexpressions
+     * @param eesQueryTestedIn
      */
     @SuppressWarnings("unchecked")
     private void computeEesTestedIn( Gene gene, Collection<ExpressionExperiment> ees,
-            CoexpressionCollectionValueObject coexpressions ) {
-
-        /*
-         * First for the query gene - this is fast and provides an upper bound.
-         */
-        Collection eesQueryTestedIn = probe2ProbeCoexpressionService.getExpressionExperimentsLinkTestedIn( gene, ees,
-                false );
-
-        coexpressions.setEesQueryGeneTestedIn( eesQueryTestedIn );
+            CoexpressionCollectionValueObject coexpressions, Collection eesQueryTestedIn ) {
 
         /*
          * For all the rest of the genes. This is going to be slower. We work with IDs directly to avoid having to
@@ -162,7 +282,7 @@ public class ProbeLinkCoexpressionAnalyzer {
     /**
      * @param coexpressions
      */
-    private void computeGoStats( CoexpressionCollectionValueObject coexpressions ) {
+    private void computeGoStats( CoexpressionCollectionValueObject coexpressions, int stringency ) {
 
         // don't compute this if we aren't loading GO into memory.
         if ( !geneOntologyService.isGeneOntologyLoaded() ) {
@@ -176,16 +296,23 @@ public class ProbeLinkCoexpressionAnalyzer {
 
         if ( coexpressions.getAllGeneCoexpressionData().size() == 0 ) return;
 
-        List<CoexpressionValueObject> knownGeneCoexpressionData = coexpressions.getKnownGeneCoexpressionData( 0 );
+        List<CoexpressionValueObject> knownGeneCoexpressionData = coexpressions
+                .getKnownGeneCoexpressionData( stringency );
         computeGoOverlap( queryGene, numQueryGeneGOTerms, knownGeneCoexpressionData );
 
-        List<CoexpressionValueObject> predictedGeneCoexpressionData = coexpressions.getPredictedCoexpressionData( 0 );
-        computeGoOverlap( queryGene, numQueryGeneGOTerms, predictedGeneCoexpressionData );
+        // Only known genes have GO terms.
+        // List<CoexpressionValueObject> predictedGeneCoexpressionData = coexpressions
+        // .getPredictedCoexpressionData( stringency );
+        // computeGoOverlap( queryGene, numQueryGeneGOTerms, predictedGeneCoexpressionData );
+        //
+        // List<CoexpressionValueObject> probeAlignedRegionCoexpressiondata = coexpressions
+        // .getProbeAlignedCoexpressionData( stringency );
+        // computeGoOverlap( queryGene, numQueryGeneGOTerms, probeAlignedRegionCoexpressiondata );
 
-        List<CoexpressionValueObject> probeAlignedRegionCoexpressiondata = coexpressions
-                .getProbeAlignedCoexpressionData( 0 );
-        computeGoOverlap( queryGene, numQueryGeneGOTerms, probeAlignedRegionCoexpressiondata );
+    }
 
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
     }
 
 }

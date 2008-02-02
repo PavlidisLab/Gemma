@@ -314,7 +314,8 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         commandObject.setStringency( stringency );
 
         CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis( commandObject
-                .getSourceGene(), commandObject.getToUseEE(), commandObject.getStringency() );
+                .getSourceGene(), commandObject.getToUseEE(), commandObject.getStringency(), true ); // true = known
+        // genes only.
 
         StopWatch watch = new StopWatch();
 
@@ -339,8 +340,14 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
 
         // Sort the Expression Experiments by contributing links.
 
-        if ( coexpressedKnownGenes.size() == 0 ) {
-            this.saveMessage( request, "No genes are coexpressed with the given stringency." );
+        Collection<ExpressionExperiment> eesQueryTestedIn = coexpressions.getEesQueryTestedIn();
+
+        if ( eesQueryTestedIn != null && eesQueryTestedIn.size() == 0 ) {
+            this.saveMessage( request, commandObject.getSourceGene().getName() + " was not tested in any available data set." );
+        } else if ( coexpressedKnownGenes.size() == 0 ) {
+            // this only makes sense if we are only returning known genes.
+            this.saveMessage( request, "No genes are coexpressed with " + commandObject.getSourceGene().getName()
+                    + " at the requested stringency." );
         }
 
         Cookie cookie = new CoexpressionSearchCookie( commandObject );
@@ -357,7 +364,6 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         Long numStringencyPredictedGenes = new Long( coexpressions.getNumStringencyPredictedGenes() );
         Long numStringencyProbeAlignedRegions = new Long( coexpressions.getNumStringencyProbeAlignedRegions() );
 
-        Collection<ExpressionExperiment> eesQueryTestedIn = coexpressions.getEesQueryTestedIn();
         if ( eesQueryTestedIn != null ) {
             mav.addObject( "queryTestedEes", eesQueryTestedIn.size() );
         } else {
@@ -404,7 +410,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
 
         Long elapsed = watch.getTime();
         watch.stop();
-        log.info( "Processing after DAO call (elapsed time): " + elapsed );
+        if ( elapsed > 1000 ) log.info( "Processing after DAO call (elapsed time): " + elapsed );
 
         this.saveMessage( request, "Coexpression query took: " + coexpressions.getDbQuerySeconds() );
 
@@ -635,7 +641,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
 
                 job.updateProgress( "Analyzing coexpresson for " + csc.getSourceGene().getOfficialSymbol() );
                 CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis( csc
-                        .getSourceGene(), csc.getToUseEE(), csc.getStringency() );
+                        .getSourceGene(), csc.getToUseEE(), csc.getStringency(), true ); // true = known genes only.
 
                 StopWatch watch = new StopWatch();
 
@@ -756,7 +762,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
             }
 
             this.setProperty( "stringency", command.getStringency() );
-            this.setProperty( "taxonId", command.getTaxon().getId() );
+            if ( command.getTaxon() != null ) this.setProperty( "taxonId", command.getTaxon().getId() );
 
             this.setMaxAge( 100000 );
             this.setComment( "Information for coexpression search form" );

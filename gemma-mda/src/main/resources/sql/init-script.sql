@@ -59,8 +59,10 @@ insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, AUDIT_TRAIL
 create table GENE2CS (
 	GENE BIGINT not null, 
 	CS BIGINT not null, 
+	GTYPE CHAR(25) not null,
 	INDEX USING HASH (GENE),
-	INDEX USING HASH (CS)
+	INDEX USING HASH (CS),
+	INDEX USING HASH (GTYPE)
 ) ENGINE=MEMORY;
 
 -- denormalize probe2probe coexpressions

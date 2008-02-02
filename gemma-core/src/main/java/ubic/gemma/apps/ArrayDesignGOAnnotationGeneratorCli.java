@@ -19,12 +19,15 @@
 package ubic.gemma.apps;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.commons.cli.Option;
@@ -38,7 +41,11 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
+import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.ontology.GeneOntologyService;
 
@@ -53,6 +60,8 @@ import ubic.gemma.ontology.GeneOntologyService;
  * @versio $Id$
  */
 public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceManipulatingCli {
+
+    private static final String GENENAME_LISTFILE_OPTION = "genefile";
 
     ArrayDesignAnnotationService arrayDesignAnnotationService;
 
@@ -78,6 +87,10 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
     boolean overWrite = false;
 
     OutputType type;
+
+    private String geneFileName;
+
+    private String taxonName;
 
     /*
      * (non-Javadoc)
@@ -118,6 +131,15 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
                         "Generates annotation files for all Array Designs (omits ones that are subsumed or merged) uses accession as annotation file name."
                                 + "Creates 3 zip files for each AD, no parents, parents, biological process. Overrides all other settings." )
                 .withLongOpt( "batch" ).create( 'b' );
+
+        Option geneListFile = OptionBuilder.hasArg().withDescription(
+                "Create from a file containing a list of gene symbols instead of probe ids" ).create(
+                GENENAME_LISTFILE_OPTION );
+        addOption( geneListFile );
+
+        Option taxonName = OptionBuilder.hasArg()
+                .withDescription( "Taxon short name e.g. 'mouse' (use with --genefile" ).create( "taxon" );
+        addOption( taxonName );
 
         Option overWrite = OptionBuilder.withArgName( "Overwrites existing files" ).withDescription(
                 "If set will overwrite existing annotation files in the output directory" ).withLongOpt( "overwrite" )
@@ -160,7 +182,9 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
             this.goService.init( true );
             waitForGeneOntologyReady();
 
-            if ( processAllADs ) {
+            if ( StringUtils.isNotBlank( geneFileName ) ) {
+                processGeneList();
+            } else if ( processAllADs ) {
                 processAllADs();
             } else if ( batchFileName != null ) {
                 processBatchFile( this.batchFileName );
@@ -232,16 +256,41 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
     @SuppressWarnings("unchecked")
     private void processOneAD( ArrayDesign ad ) throws IOException {
         log.info( "Processing AD: " + ad.getName() );
+
+        String shortFileBaseName = ad.getShortName() + "_NoParents";
+        File sf = ArrayDesignAnnotationService.getFileName( shortFileBaseName );
+        String biocFileBaseName = ad.getShortName() + "_bioProcess";
+        File bf = ArrayDesignAnnotationService.getFileName( biocFileBaseName );
+        String allparFileBaseName = ad.getShortName() + "_allParents";
+        File af = ArrayDesignAnnotationService.getFileName( allparFileBaseName );
+
+        if ( !overWrite && sf.exists() && bf.exists() && af.exists() ) {
+            log.info( "Files exist already, will not overwrite (use -overwrite option to override)" );
+            return;
+        }
+
         unlazifyArrayDesign( ad );
         Collection<CompositeSequence> compositeSequences = ad.getCompositeSequences();
         Map<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>> genesWithSpecificity = compositeSequenceService
                 .getGenesWithSpecificity( compositeSequences );
 
-        processCompositeSequences( ad, ad.getShortName() + "_NoParents", OutputType.SHORT, genesWithSpecificity );
+        if ( overWrite || !sf.exists() ) {
+            processCompositeSequences( ad, shortFileBaseName, OutputType.SHORT, genesWithSpecificity );
+        } else {
+            log.info( sf + " exists, will not overwrite" );
+        }
 
-        processCompositeSequences( ad, ad.getShortName() + "_bioProcess", OutputType.BIOPROCESS, genesWithSpecificity );
+        if ( overWrite || !bf.exists() ) {
+            processCompositeSequences( ad, biocFileBaseName, OutputType.BIOPROCESS, genesWithSpecificity );
+        } else {
+            log.info( bf + " exists, will not overwrite" );
+        }
 
-        processCompositeSequences( ad, ad.getShortName() + "_allParents", OutputType.LONG, genesWithSpecificity );
+        if ( overWrite || !af.exists() ) {
+            processCompositeSequences( ad, allparFileBaseName, OutputType.LONG, genesWithSpecificity );
+        } else {
+            log.info( af + " exists, will not overwrite" );
+        }
     }
 
     /**
@@ -249,9 +298,15 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
      * @throws IOException
      */
     @SuppressWarnings("unchecked")
-    protected void processAD( ArrayDesign arrayDesign, String fileBaseName, OutputType outputType ) throws IOException {
+    protected boolean processAD( ArrayDesign arrayDesign, String fileBaseName, OutputType outputType )
+            throws IOException {
 
         log.info( "Loading gene information for " + arrayDesign );
+
+        /*
+         * FIXME: first Check if file exists.
+         */
+
         unlazifyArrayDesign( arrayDesign );
 
         Collection<CompositeSequence> compositeSequences = arrayDesign.getCompositeSequences();
@@ -260,7 +315,8 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
                 .getGenesWithSpecificity( compositeSequences );
 
         log.info( "Preparing file" );
-        processCompositeSequences( arrayDesign, fileBaseName, outputType, genesWithSpecificity );
+        return processCompositeSequences( arrayDesign, fileBaseName, outputType, genesWithSpecificity );
+
     }
 
     /**
@@ -269,19 +325,25 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
      * @param outputType
      * @param writer
      * @param genesWithSpecificity
+     * @return true if the file was made.
      * @throws IOException
      */
     @SuppressWarnings("unchecked")
-    private void processCompositeSequences( ArrayDesign arrayDesign, String fileBaseName, OutputType outputType,
+    private boolean processCompositeSequences( ArrayDesign arrayDesign, String fileBaseName, OutputType outputType,
             Map<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>> genesWithSpecificity )
             throws IOException {
+
+        if ( genesWithSpecificity.size() == 0 ) {
+            log.info( "No sequence information for " + arrayDesign + ", skipping" );
+            return false;
+        }
 
         Writer writer = arrayDesignAnnotationService.initOutputFile( fileBaseName, this.overWrite );
 
         // if no writer then we should abort (this could happen in case where we don't want to overwrite files)
         if ( writer == null ) {
             log.info( arrayDesign.getName() + " annotation file already exits.  Skipping. " );
-            return;
+            return false;
         }
 
         log.info( arrayDesign.getName() + " has " + genesWithSpecificity.size() + " composite sequences" );
@@ -297,11 +359,11 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
             log.info( "Processed " + numProcessed + " composite sequences" );
             audit( arrayDesign, "Processed " + numProcessed + " composite sequences" );
         } else {
-            log.info( "Created file:  " + fileBaseName + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX + " with "
-                    + numProcessed + " values" );
-            audit( arrayDesign, "Created file: " + fileBaseName + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX
-                    + " with " + numProcessed + " values" );
+            String filename = fileBaseName + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
+            log.info( "Created file:  " + filename + " with " + numProcessed + " values" );
+            audit( arrayDesign, "Created file: " + filename + " with " + numProcessed + " values" );
         }
+        return true;
     }
 
     /**
@@ -310,6 +372,39 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
     private void audit( ArrayDesign arrayDesign, String note ) {
         AuditEventType eventType = ArrayDesignAnnotationFileEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
+    }
+
+    private void processGeneList() throws IOException {
+        log.info( "Loading genes to annotate from " + geneFileName );
+        InputStream is = new FileInputStream( geneFileName );
+        BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+        String line = null;
+        int lineNumber = 0;
+        GeneService geneService = ( GeneService ) getBean( "geneService" );
+        TaxonService taxonService = ( TaxonService ) getBean( "taxonService" );
+        Taxon taxon = taxonService.findByCommonName( taxonName );
+        if ( taxon == null ) {
+            throw new IllegalArgumentException( "Unknown taxon: " + taxonName );
+        }
+        Collection<Gene> genes = new HashSet<Gene>();
+        while ( ( line = br.readLine() ) != null ) {
+            lineNumber++;
+            if ( StringUtils.isBlank( line ) ) {
+                continue;
+            }
+            String[] arguments = StringUtils.split( line, '\t' );
+            String gene = arguments[0];
+            Gene g = geneService.findByOfficialSymbol( gene, taxon );
+            if ( g == null ) {
+                log.info( "Gene: " + gene + " not found." );
+                continue;
+            }
+            genes.add( g );
+        }
+        log.info( "File contained " + genes.size() + " potential gene symbols" );
+        int numProcessed = arrayDesignAnnotationService.generateAnnotationFile( new PrintWriter( System.out ), genes,
+                OutputType.SHORT );
+        log.info( "Processed " + numProcessed + " genes that were found" );
     }
 
     /**
@@ -403,6 +498,15 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
 
         if ( this.hasOption( 'b' ) ) {
             this.processAllADs = true;
+        }
+
+        if ( this.hasOption( GENENAME_LISTFILE_OPTION ) ) {
+            this.geneFileName = this.getOptionValue( GENENAME_LISTFILE_OPTION );
+            if ( !this.hasOption( "taxon" ) ) {
+                throw new IllegalArgumentException( "You must specify the taxon when using --genefile" );
+            } else {
+                this.taxonName = this.getOptionValue( "taxon" );
+            }
         }
 
         if ( this.hasOption( 'g' ) ) processGenesIncluded( this.getOptionValue( 'g' ) );

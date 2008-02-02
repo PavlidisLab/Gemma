@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.association.coexpression;
 
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -29,11 +30,12 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
+import org.hibernate.SQLQuery;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -43,6 +45,7 @@ import org.springframework.orm.hibernate3.HibernateCallback;
 
 import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.analysis.Analysis;
+import ubic.gemma.model.analysis.ProbeCoexpressionAnalysisImpl;
 import ubic.gemma.model.coexpression.Link;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -60,7 +63,6 @@ import ubic.gemma.util.TaxonUtility;
 public class Probe2ProbeCoexpressionDaoImpl extends
         ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase {
 
-    private static final int LINK_DELETE_BATCH_SIZE = 100000;
     private static final String TMP_TABLE_PREFIX = "TMP_";
     private static Log log = LogFactory.getLog( Probe2ProbeCoexpressionDaoImpl.class.getName() );
 
@@ -135,25 +137,22 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
         for ( String p2pClassName : p2pClassNames ) {
 
-            /*
-             * Note that we only have to query for the firstVector, because we're joining over all designelement
-             * datavectors for this ee.
-             */
-            final String queryString = "select count(pp) from ExpressionExperimentImpl ee inner join ee.designElementDataVectors as dv, "
-                    + p2pClassName + " as pp where pp.firstVector = dv and ee=:ee";
+            final String queryString = "SELECT COUNT(*) FROM " + getTableName( p2pClassName, false )
+                    + " where EXPRESSION_EXPERIMENT_FK = :eeid";
 
-            List results = this.getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
-
+            SQLQuery queryObject = super.getSession( false ).createSQLQuery( queryString );
+            queryObject.setMaxResults( 1 );
+            queryObject.setParameter( "eeid", expressionExperiment.getId() );
+            List results = queryObject.list();
             /*
              * We divide by 2 because all links are stored twice
              */
-            Integer count = ( ( Long ) results.iterator().next() ).intValue() / 2;
-            if ( count > 0 ) {
-                return count;
-            }
+
+            BigInteger count = ( BigInteger ) results.iterator().next();
+            if ( count.intValue() > 0 ) return ( count.intValue() ) / 2;
+
         }
 
-        log.warn( "No such expression experiment " + expressionExperiment + " for counting links" );
         return 0;
 
     }
@@ -184,60 +183,58 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected void handleDeleteLinks( ExpressionExperiment ee ) throws Exception {
+    protected void handleDeleteLinks( final ExpressionExperiment ee ) throws Exception {
 
+        /*
+         * Note that the expression experiment is not directly associated with P2P objects. The EE column in the P2P
+         * tables is a denormalization and is indexed, but not accessible via Hibernate. Thus it is much more efficient
+         * to access P2P with native queries.
+         */
         int totalDone = 0;
-
+        Analysis analysis = null;
         for ( String p2pClassName : p2pClassNames ) {
 
             /*
-             * Note that we only have to query for the firstVector, because we're joining over all designelement
-             * datavectors for this ee.
+             * Get one vector to locate the analysis object to delete.
              */
-            final String queryString = "select pp from ExpressionExperimentImpl ee inner join ee.designElementDataVectors as dv, "
-                    + p2pClassName + " as pp where pp.firstVector = dv and ee= :ee ";
+            final String queryString = "SELECT SOURCE_ANALYSIS_FK FROM " + getTableName( p2pClassName, false )
+                    + " where EXPRESSION_EXPERIMENT_FK = :eeid";
 
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setMaxResults( LINK_DELETE_BATCH_SIZE );
-            queryObject.setParameter( "ee", ee );
+            SQLQuery queryObject = super.getSession( false ).createSQLQuery( queryString );
+            queryObject.setMaxResults( 1 );
+            queryObject.setParameter( "eeid", ee.getId() );
+            List results = queryObject.list();
 
-            /*
-             * we query iteratively until there are no more links to get. This takes much less memory than doing it all
-             * at once.
-             */
-            Collection results;
-            Analysis analysis = null;
-            Probe2ProbeCoexpression oneLink = null; // used later.
-            while ( true ) {
-                results = queryObject.list();
+            if ( results.size() > 0 ) {
+                BigInteger analysisId = ( BigInteger ) results.iterator().next();
+                if ( analysisId != null )
+                    analysis = ( Analysis ) this.getHibernateTemplate().load( ProbeCoexpressionAnalysisImpl.class,
+                            analysisId.longValue() );
+            }
 
-                if ( results.size() == 0 ) break;
+            final String nativeDeleteQuery = "DELETE FROM " + getTableName( p2pClassName, false )
+                    + " where EXPRESSION_EXPERIMENT_FK = :eeid";
 
-                // Retrieve the analysis object for later removal.
-                if ( oneLink == null ) {
-                    oneLink = ( Probe2ProbeCoexpression ) results.iterator().next();
-                    Hibernate.initialize( oneLink );
-                    analysis = oneLink.getSourceAnalysis();
-                }
-
-                Integer numDone = results.size();
-                remove( results );
-                totalDone += numDone;
-                log.info( "Delete link progress: " + totalDone + " ..." );
-
-                if ( results.size() < LINK_DELETE_BATCH_SIZE ) break;
+            SQLQuery q = super.getSession( false ).createSQLQuery( nativeDeleteQuery );
+            q.setParameter( "eeid", ee.getId() );
+            StopWatch timer = new StopWatch();
+            timer.start();
+            totalDone = q.executeUpdate();
+            if ( timer.getTime() > 1000 ) {
+                log.info( "Done in " + timer.getTime() + "ms" );
             }
 
             if ( totalDone > 0 ) {
-                removeAnalysisObject( analysis );
+                log.info( totalDone + " coexpression results removed for " + ee );
                 break;
             }
-        }
 
+        }
         if ( totalDone == 0 ) {
             log.info( "No coexpression results to remove for " + ee );
-        } else {
-            log.info( totalDone + " coexpression results removed for " + ee );
+        }
+        if ( analysis != null ) {
+            removeAnalysisObject( analysis );
         }
 
     }
@@ -252,7 +249,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     @Override
     protected Collection<ExpressionExperiment> handleGetExpressionExperimentsLinkTestedIn( Gene gene,
             Collection expressionExperiments, boolean filterNonSpecific ) throws Exception {
-        
+
         if ( expressionExperiments == null || expressionExperiments.isEmpty() )
             return new HashSet<ExpressionExperiment>();
 
@@ -737,22 +734,22 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     /**
      * Generate a name for the table to be used for coexpression analysis.
      * 
-     * @param taxon
+     * @param key the name of the taxon (human) or class name (HumanProbeCoExpressionImpl)
      * @param tmpTable if true, the table used is a temporary table.
      * @return
      */
-    private String getTableName( String taxon, boolean tmpTable ) {
+    private String getTableName( String key, boolean tmpTable ) {
         String tableName = "";
 
-        if ( taxon.equalsIgnoreCase( "human" ) )
+        if ( key.equalsIgnoreCase( "human" ) || key.toUpperCase().startsWith( "HUMAN" ) ) {
             tableName = "HUMAN_PROBE_CO_EXPRESSION";
-        else if ( taxon.equalsIgnoreCase( "mouse" ) )
+        } else if ( key.equalsIgnoreCase( "mouse" ) || key.toUpperCase().startsWith( "MOUSE" ) ) {
             tableName = "MOUSE_PROBE_CO_EXPRESSION";
-        else if ( taxon.equalsIgnoreCase( "rat" ) )
+        } else if ( key.equalsIgnoreCase( "rat" ) || key.toUpperCase().startsWith( "RAT" ) ) {
             tableName = "RAT_PROBE_CO_EXPRESSION";
-        else
+        } else {
             tableName = "OTHER_PROBE_CO_EXPRESSION";
-
+        }
         if ( tmpTable ) tableName = TMP_TABLE_PREFIX + tableName;
 
         return tableName;
@@ -772,6 +769,8 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     }
 
     /**
+     * Used for creating simplified 'shuffled' links etc.
+     * 
      * @param links
      * @param ee
      * @param tableName

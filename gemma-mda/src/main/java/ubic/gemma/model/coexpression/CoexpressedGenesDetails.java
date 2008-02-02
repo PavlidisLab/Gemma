@@ -312,16 +312,17 @@ public class CoexpressedGenesDetails {
             if ( coExValObj.getPositiveLinkSupport() != 0 ) {
                 if ( coExValObj.getPositiveLinkSupport() >= this.supportThreshold ) {
                     positiveLinkCount++;
+                    incrementEEContributions( coExValObj.getEEContributing2PositiveLinks() );
                 }
 
-                incrementEEContributions( coExValObj.getEEContributing2PositiveLinks() );
             }
 
             if ( coExValObj.getNegativeLinkSupport() != 0 ) {
                 if ( coExValObj.getNegativeLinkSupport() >= this.supportThreshold ) {
                     negativeLinkCount++;
+                    incrementEEContributions( coExValObj.getEEContributing2NegativeLinks() );
                 }
-                incrementEEContributions( coExValObj.getEEContributing2NegativeLinks() );
+
             }
         }
 
@@ -360,7 +361,6 @@ public class CoexpressedGenesDetails {
      * Counting up how many support-threshold exceeding links each data set contributed.
      * 
      * @param contributingEEs
-     * @param coexpressions
      */
     private void incrementEEContributions( Collection<Long> contributingEEs ) {
 
@@ -383,7 +383,6 @@ public class CoexpressedGenesDetails {
      * threshold).
      * 
      * @param contributingEEs
-     * @param coexpressions
      */
     private void incrementRawEEContributions( Collection<Long> contributingEEs ) {
         for ( Long eeID : contributingEEs ) {
@@ -417,7 +416,7 @@ public class CoexpressedGenesDetails {
     /**
      * @param eeID
      * @param probeID
-     * @return
+     * @return map of probeID to Gene ids for the specific eee
      */
     private Map<Long, Collection<Long>> getOrInitSpecificityMap( Long eeID, Long probeID ) {
         if ( !expressionExperimentProbe2GeneMaps.containsKey( eeID ) ) {

@@ -218,10 +218,10 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                         }
                     }
                 } catch ( Exception e ) {
+                    summarizeProcessing();
                     return e;
                 }
             }
-            summarizeProcessing();
         } else {
             String[] shortNames = this.getExperimentShortName().split( "," );
 
@@ -233,7 +233,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 }
                 eeService.thawLite( expressionExperiment );
                 if ( !needToRun( expressionExperiment, LinkAnalysisEvent.class ) ) {
-                    return null;
+                    continue;
                 }
 
                 try {
@@ -249,6 +249,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             }
 
         }
+        summarizeProcessing();
         return null;
     }
 
@@ -293,6 +294,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             expressionExperimentReportService.generateSummaryObject( ee.getId() );
             auditTrailService.addUpdateEvent( ee, eventType, note );
         }
+        log.info( "Audit information saved." );
     }
 
     @SuppressWarnings("static-access")

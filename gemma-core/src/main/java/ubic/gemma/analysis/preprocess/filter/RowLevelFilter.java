@@ -80,7 +80,9 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
         log.debug( "Low cut = " + realLowCut );
         log.debug( "High cut = " + realHighCut );
 
-        assert realHighCut > realLowCut : "High cut is lower or same as low cut";
+        if ( realHighCut <= realLowCut ) {
+            throw new RuntimeException( "High cut " + realHighCut + " is lower or same as low cut " + realLowCut );
+        }
 
         List<DesignElement> kept = new ArrayList<DesignElement>();
 

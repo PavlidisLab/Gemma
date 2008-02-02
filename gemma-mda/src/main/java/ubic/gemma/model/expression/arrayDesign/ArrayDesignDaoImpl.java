@@ -50,7 +50,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.util.BusinessKey;
-import ubic.gemma.util.QueryUtils;
+import ubic.gemma.util.NativeQueryUtils;
 
 /**
  * @author pavlidis
@@ -160,9 +160,10 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 + "left join SEQUENCE_SIMILARITY_SEARCH_RESULT ssResult on bs2gp.BLAT_RESULT_FK=ssResult.ID "
                 + "WHERE ssResult.ID is NULL AND ARRAY_DESIGN_FK = :id ";
 
-//        final String queryString = "select distinct cs id from CompositeSequenceImpl cs, BlatAssociationImpl bs2gp inner join bs2gp.blatResult";
-        
-        return QueryUtils.nativeQueryById( getSession(), id, nativeQueryString );
+        // final String queryString = "select distinct cs id from CompositeSequenceImpl cs, BlatAssociationImpl bs2gp
+        // inner join bs2gp.blatResult";
+
+        return NativeQueryUtils.findByNamedParam( this.getHibernateTemplate(), nativeQueryString, "id", id );
     }
 
     /*
@@ -182,7 +183,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 + "left join CHROMOSOME_FEATURE geneProduct on (geneProduct.ID=bs2gp.GENE_PRODUCT_FK AND geneProduct.class='GeneProductImpl') "
                 + "left join CHROMOSOME_FEATURE gene on (geneProduct.GENE_FK=gene.ID AND gene.class in ('GeneImpl', 'PredictedGeneImpl', 'ProbeAlignedRegionImpl')) "
                 + "WHERE gene.ID IS NULL AND ARRAY_DESIGN_FK = :id";
-        return QueryUtils.nativeQueryById( getSession(), id, nativeQueryString );
+        return NativeQueryUtils.findByNamedParam( this.getHibernateTemplate(), nativeQueryString, "id", id );
     }
 
     @Override
@@ -977,8 +978,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 if ( arrayDesign.getCompositeSequences() == null ) return null;
 
                 log.info( "Loading CS proxies for " + arrayDesign + " ..." );
-                int numToDo = arrayDesign.getCompositeSequences().size(); // this takes a little while.
-                log.info( "Must thaw " + numToDo + " composite sequence associations ..." );
+                int numToDo = arrayDesign.getCompositeSequences().size();
+                log.info( "Must thaw " + ( deep ? " (deep) " : " (lite) " ) + numToDo
+                        + " composite sequence associations ..." );
 
                 org.hibernate.Query queryObject = session.createQuery( deepQuery );
                 queryObject.setReadOnly( true );
@@ -990,61 +992,43 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 Collection<BioSequence> seen = new HashSet<BioSequence>();
                 for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
 
-                    if ( i % 100 == 0 ) {
-                        session.clear(); // recover memory.
-                    }
-
                     if ( ++i % LOGGING_UPDATE_EVENT_COUNT == 0 && timer.getTime() > 5000 ) {
                         log.info( arrayDesign.getShortName() + " CS assoc thaw progress: " + i + "/" + numToDo
                                 + " ... (" + timer.getTime() / 1000 + "s elapsed)" );
-                        try {
-                            Thread.sleep( 10 );
-                        } catch ( InterruptedException e ) {
-                            //
-                        }
                     }
 
+                    if ( log.isDebugEnabled() ) log.debug( "Processing: " + cs );
                     if ( cs.getId() != null ) session.lock( cs, LockMode.NONE );
 
                     BioSequence bs = cs.getBiologicalCharacteristic();
-                    if ( bs == null ) {
-                        continue;
-                    }
-
-                    // session.evict( cs );
-
-                    // Sequences can show up more than once per arraydesign. Skipping this check will result in a
-                    // hibernate exception.
-                    if ( !seen.contains( bs ) ) {
+                    if ( bs != null && !seen.contains( bs ) ) {
                         // session.lock( bs, LockMode.NONE );
-                        session.update( bs ); // this really shouldn't be necessary. Lock is better.
+                        // session.update( bs ); // this really shouldn't be necessary. Lock is better.
                         seen.add( bs );
 
-                        if ( Hibernate.isInitialized( bs ) ) {
+                        if ( !Hibernate.isInitialized( bs ) ) {
                             Hibernate.initialize( bs );
-                            // Hibernate.initialize( bs.getTaxon() );
                             seen.add( bs );
                         }
 
-                        if ( !deep ) {
-                            continue;
-                        }
-
-                        // Hibernate.initialize( bs.getBioSequence2GeneProduct() );
-
-                        for ( BioSequence2GeneProduct bs2gp : bs.getBioSequence2GeneProduct() ) {
-                            GeneProduct geneProduct = bs2gp.getGeneProduct();
-                            Gene g = geneProduct.getGene();
-                            if ( g != null ) {
-                                g.getAliases().size();
+                        if ( deep ) {
+                            
+                       /*     for ( BioSequence2GeneProduct bs2gp : bs.getBioSequence2GeneProduct() ) {
+                                GeneProduct geneProduct = bs2gp.getGeneProduct();
+                                Gene g = geneProduct.getGene();
+                                if ( g != null ) {
+                                    g.getAliases().size();
+                                }
                             }
-                        }
 
-                        if ( bs.getSequenceDatabaseEntry() != null ) {
-                            Hibernate.initialize( bs.getSequenceDatabaseEntry() );
+                            if ( bs.getSequenceDatabaseEntry() != null ) {
+                                Hibernate.initialize( bs.getSequenceDatabaseEntry() );
+                            }
+                            */
                         }
                         // session.evict( bs );
                     }
+                    session.evict( cs );
 
                 }
 

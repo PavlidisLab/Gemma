@@ -172,7 +172,7 @@ public class DesignElementDataVectorDaoImpl extends
         BioSequence seq = ( ( CompositeSequence ) designElementDataVector.getDesignElement() )
                 .getBiologicalCharacteristic();
         if ( seq != null ) {
-            session.update( seq );
+            session.lock( seq, LockMode.NONE );
             Hibernate.initialize( seq );
         }
 
@@ -182,11 +182,10 @@ public class DesignElementDataVectorDaoImpl extends
 
         // thaw the bioassays.
         for ( BioAssay ba : designElementDataVector.getBioAssayDimension().getBioAssays() ) {
-            session.update( ba );
-            ba.setArrayDesignUsed( ( ArrayDesign ) session.merge( ba.getArrayDesignUsed() ) );
-            ba.getArrayDesignUsed().hashCode();
-            ba.getSamplesUsed().size();
-            ba.getDerivedDataFiles().size();
+            session.lock( ba, LockMode.NONE );
+            Hibernate.initialize( ba.getArrayDesignUsed() );
+            Hibernate.initialize( ba.getSamplesUsed() );
+            Hibernate.initialize( ba.getDerivedDataFiles() );
         }
     }
 
@@ -504,45 +503,42 @@ public class DesignElementDataVectorDaoImpl extends
                     session.evict( v );
                 }
 
+                session.clear();
+
+                Collection<BioAssay> seen = new HashSet<BioAssay>();
                 for ( BioAssayDimension bad : dims ) {
-                    try {
-                        for ( BioAssay ba : bad.getBioAssays() ) {
-                            session.update( ba );
-                            ba.setArrayDesignUsed( ( ArrayDesign ) session.merge( ba.getArrayDesignUsed() ) );
-                            ba.getArrayDesignUsed().hashCode();
-                            ba.getDerivedDataFiles().size();
-                            for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                                Hibernate.initialize( bm );
-                                Hibernate.initialize( bm.getBioAssaysUsedIn() );
-                                Hibernate.initialize( bm.getFactorValues() );
-                            }
-                            session.evict( ba );
+                    for ( BioAssay ba : bad.getBioAssays() ) {
+                        if ( seen.contains( ba ) ) continue;
+                        session.update( ba );
+                        Hibernate.initialize( ba.getArrayDesignUsed() );
+                        Hibernate.initialize( ba.getDerivedDataFiles() );
+                        for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                            Hibernate.initialize( bm );
+                            Hibernate.initialize( bm.getBioAssaysUsedIn() );
+                            Hibernate.initialize( bm.getFactorValues() );
                         }
-                    } catch ( org.hibernate.NonUniqueObjectException e ) {
-                        log.warn( e, e );
-                        // no problem. Ignore it. This happens in tests.
+                        session.evict( ba );
+                        seen.add( ba );
                     }
+                    session.clear();
                 }
 
                 for ( DesignElement de : cs ) {
-                    try {
-                        BioSequence seq = ( ( CompositeSequence ) de ).getBiologicalCharacteristic();
-                        if ( seq != null ) {
-                            session.lock( seq, LockMode.NONE );
-                            Hibernate.initialize( seq );
-                            // session.evict( seq );
-                        }
-
-                        ArrayDesign arrayDesign = ( ( CompositeSequence ) de ).getArrayDesign();
-                        Hibernate.initialize( arrayDesign );
-                    } catch ( org.hibernate.NonUniqueObjectException e ) {
-                        log.warn( e.getMessage() );
-                        // no problem. Ignore it. This happens in tests.
+                    BioSequence seq = ( ( CompositeSequence ) de ).getBiologicalCharacteristic();
+                    if ( seq != null ) {
+                        session.lock( seq, LockMode.NONE );
+                        Hibernate.initialize( seq );
+                        // session.evict( seq );
                     }
 
-                    if ( ++count % 10000 == 0 && count >= 10000 ) {
+                    ArrayDesign arrayDesign = ( ( CompositeSequence ) de ).getArrayDesign();
+                    Hibernate.initialize( arrayDesign );
+
+                    if ( ++count % 10000 == 0 ) {
                         timer.split();
-                        log.info( "Thawed " + count + " vector-associated probes " + timer.getSplitTime() + " ms" );
+                        if ( timer.getSplitTime() > 1000 ) {
+                            log.info( "Thawed " + count + " vector-associated probes " + timer.getSplitTime() + " ms" );
+                        }
                         timer.unsplit();
                     }
                     // session.evict( de );

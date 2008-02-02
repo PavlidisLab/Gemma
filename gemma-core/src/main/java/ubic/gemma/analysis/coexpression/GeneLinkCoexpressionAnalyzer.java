@@ -109,7 +109,7 @@ public class GeneLinkCoexpressionAnalyzer {
         try {
             for ( Gene gene : toUseGenes ) {
                 CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis( gene,
-                        expressionExperiments, stringency );
+                        expressionExperiments, stringency, false );
                 if ( coexpressions.getNumKnownGenes() > 0 ) {
                     Collection<Gene2GeneCoexpression> created = persistCoexpressions( eeIdOrder, gene, coexpressions,
                             analysis, genesToAnalyzeMap, processedGenes, stringency );

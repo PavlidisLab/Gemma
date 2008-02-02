@@ -140,7 +140,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
                 log.info( "============== Start processing: " + design + " ==================" );
                 try {
-                    arrayDesignService.thaw( design );
+                    // arrayDesignService.thaw( design );
                     arrayDesignProbeMapperService.processArrayDesign( design );
                     successObjects.add( design.getName() );
                     audit( design, "Part of a batch job" );
@@ -251,7 +251,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             return false;
         }
 
-        if ( lastProbeMapping != null && lastProbeMapping.getDate().after( skipIfLastRunLaterThan ) ) {
+        if ( skipIfLastRunLaterThan != null && lastProbeMapping != null
+                && lastProbeMapping.getDate().after( skipIfLastRunLaterThan ) ) {
             log.info( arrayDesign + " was probemapped since " + skipIfLastRunLaterThan + ", skipping." );
             return false;
         }

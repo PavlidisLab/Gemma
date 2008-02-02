@@ -179,9 +179,9 @@ public class TableMaintenanceUtil extends HibernateDaoSupport {
                 int deleted = queryObject.executeUpdate();
 
                 log.info( "Deleted " + deleted + "; Recreating all entries for Gene2Cs." );
-                queryString = "INSERT INTO GENE2CS (GENE, CS) SELECT DISTINCT gene.ID AS GENE, cs.ID AS CS "
+                queryString = "INSERT INTO GENE2CS (GENE, CS, GTYPE) SELECT DISTINCT gene.ID AS GENE, cs.ID AS CS, gene.class AS geneType "
                         + " FROM CHROMOSOME_FEATURE AS gene, CHROMOSOME_FEATURE AS geneprod,BIO_SEQUENCE2_GENE_PRODUCT AS bsgp,COMPOSITE_SEQUENCE cs "
-                        + " WHERE gene.CLASS <> 'GeneProduct' and geneprod.GENE_FK = gene.ID and bsgp.GENE_PRODUCT_FK = geneprod.ID and "
+                        + " WHERE gene.CLASS <> 'GeneProductImpl' and geneprod.GENE_FK = gene.ID and bsgp.GENE_PRODUCT_FK = geneprod.ID and "
                         + " bsgp.BIO_SEQUENCE_FK = cs.BIOLOGICAL_CHARACTERISTIC_FK;";
                 queryObject = session.createSQLQuery( queryString ); // for native query.
                 queryObject.executeUpdate();

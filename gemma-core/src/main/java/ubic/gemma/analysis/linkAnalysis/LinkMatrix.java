@@ -369,7 +369,7 @@ public class LinkMatrix {
             System.out.println( i + "/" + targetGenes.size() + "\t" + gene.getName() );
             // Get the gene->eeIds map
             CoexpressionCollectionValueObject coexpressed = probeLinkCoexpressionAnalyzer.linkAnalysis( gene, null,
-                    stringency );
+                    stringency, false );
             Map<Long, Collection<Long>> geneEEMap = coexpressed.getKnownGeneCoexpression()
                     .getSpecificExpressionExperiments();
             this.count( gene.getId(), geneEEMap );

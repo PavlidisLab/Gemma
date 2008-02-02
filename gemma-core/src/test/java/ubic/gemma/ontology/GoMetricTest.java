@@ -33,6 +33,9 @@ import ubic.gemma.ontology.GoMetric.Metric;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
+ * FIXME Unfortunately this test requires a completely loaded database. Really a 'mini-go' with known properties must be
+ * used. Tests disabled.
+ * 
  * @author meeta
  * @version $Id$
  */
@@ -58,27 +61,31 @@ public class GoMetricTest extends BaseSpringContextTest {
 
         geneOntologyService = ( GeneOntologyService ) this.getBean( "geneOntologyService" );
         geneService = ( GeneService ) this.getBean( "geneService" );
+        // tests disabled.
         goMetric = ( GoMetric ) this.getBean( "goMetric" );
-        geneOntologyService.init( false );
-        if ( !GeneOntologyService.isEnabled() ) {
-            this.enabled = false;
-            return;
-        }
-        int n = 0;
-        while ( !geneOntologyService.isReady() ) {
-            try {
-                if ( ++n % 10 == 0 ) {
-                    log.info( "Test is waiting for GO to load ..." );
-                }
-                Thread.sleep( 1000 );
-            } catch ( InterruptedException e ) {
-            }
-        }
-        log.info( "Ready to test" );
+        this.enabled = false;
 
-        entry = GeneOntologyService.getTermForId( "GO:0001963" );
-        terms = geneOntologyService.getAllChildren( entry, true );
-        terms.add( entry );
+        return;
+        // geneOntologyService.init( false );
+        // if ( !GeneOntologyService.isEnabled() ) {
+        // this.enabled = false;
+        // return;
+        // }
+        // int n = 0;
+        // while ( !geneOntologyService.isReady() ) {
+        // try {
+        // if ( ++n % 10 == 0 ) {
+        // log.info( "Test is waiting for GO to load ..." );
+        // }
+        // Thread.sleep( 1000 );
+        // } catch ( InterruptedException e ) {
+        // }
+        // }
+        // log.info( "Ready to test" );
+        //
+        // entry = GeneOntologyService.getTermForId( "GO:0001963" );
+        // terms = geneOntologyService.getAllChildren( entry, true );
+        // terms.add( entry );
     }
 
     /**
@@ -86,7 +93,8 @@ public class GoMetricTest extends BaseSpringContextTest {
      */
     public final void testGetTermOccurrence() throws Exception {
         if ( !enabled ) {
-            log.warn( "GO is not enabled, Test skipped" );
+            // log.warn( "GO is not enabled, Test skipped" );
+            log.info( "Test is disabled." );
             return;
         }
         Collection<String> stringTerms = new HashSet<String>();
@@ -112,7 +120,8 @@ public class GoMetricTest extends BaseSpringContextTest {
      */
     public final void testGetChildrenOccurrence() throws Exception {
         if ( !enabled ) {
-            log.warn( "GO is not enabled, Test skipped" );
+            // log.warn( "GO is not enabled, Test skipped" );
+            log.info( "Test is disabled." );
             return;
         }
         Map<String, Integer> countMap = new HashMap<String, Integer>();
@@ -129,7 +138,8 @@ public class GoMetricTest extends BaseSpringContextTest {
      */
     public final void testCheckParents() throws Exception {
         if ( !enabled ) {
-            log.warn( "GO is not enabled, Test skipped" );
+            // log.warn( "GO is not enabled, Test skipped" );
+            log.info( "Test is disabled." );
             return;
         }
         Map<String, Double> probMap = new HashMap<String, Double>();
@@ -154,47 +164,42 @@ public class GoMetricTest extends BaseSpringContextTest {
     /**
      * @throws Exception
      */
-    public final void testComputeSimilarity() throws Exception {
-        if ( !enabled ) {
-            log.warn( "GO is not enabled, Test skipped" );
-            return;
-        }
-        Metric chooseMetric = Metric.simple;
-
-        Gene gene1 = geneService.load( 599683 );
-        Gene gene2 = geneService.load( 640008 );
-
-        log.info( "The genes retrieved: " + gene1 + gene2 );
-
-        Collection<OntologyTerm> probTerms = geneOntologyService.getGOTerms( gene1, true );
-        // goMetric.logIds( "computeSimilarityOverlap gene1 terms", probTerms );
-        Collection<OntologyTerm> terms2 = geneOntologyService.getGOTerms( gene2, true );
-        // goMetric.logIds( "computeSimilarityOverlap gene2 terms", terms2 );
-        Collection<OntologyTerm> allTerms = new HashSet<OntologyTerm>( probTerms );
-        allTerms.addAll( terms2 );
-
-        Map<String, Double> probMap = new HashMap<String, Double>();
-
-        for ( OntologyTerm t : allTerms ) {
-
-            if ( t.getUri().equalsIgnoreCase( "http://purl.org/obo/owl/GO#GO_0042592" ) )
-                probMap.put( t.getUri(), 0.1 );
-            else
-                probMap.put( t.getUri(), 0.5 );
-        }
-
-        Double value = goMetric.computeSimilarity( gene1, gene2, probMap, chooseMetric );
-
-        /*
-         * FIXME Unfortunately this test requires a completely loaded database. Really a 'mini-go' with known properties
-         * must be used.
-         */
-        // if ( chooseMetric.equals( Metric.simple ) ) assertEquals( 4.0, value );
-        // if ( chooseMetric.equals( Metric.resnik ) ) assertEquals( 1.4978661367769954, value );
-        // if ( chooseMetric.equals( Metric.lin ) ) assertEquals( 2.160964047443681, value );
-        // if ( chooseMetric.equals( Metric.jiang ) ) assertEquals( 0.6185149837908823, value );
-    }
-
+    // public final void testComputeSimilarity() throws Exception {
+    // if ( !enabled ) {
+    // log.warn( "GO is not enabled, Test skipped" );
+    // return;
+    // }
+    // Metric chooseMetric = Metric.simple;
+    //
+    // Gene gene1 = geneService.load( 599683 );
+    // Gene gene2 = geneService.load( 640008 );
+    //
+    // log.info( "The genes retrieved: " + gene1 + " " + gene2 );
+    //
+    // Collection<OntologyTerm> probTerms = geneOntologyService.getGOTerms( gene1, true );
+    // // goMetric.logIds( "computeSimilarityOverlap gene1 terms", probTerms );
+    // Collection<OntologyTerm> terms2 = geneOntologyService.getGOTerms( gene2, true );
+    // // goMetric.logIds( "computeSimilarityOverlap gene2 terms", terms2 );
+    // Collection<OntologyTerm> allTerms = new HashSet<OntologyTerm>( probTerms );
+    // allTerms.addAll( terms2 );
+    //
+    // Map<String, Double> probMap = new HashMap<String, Double>();
+    //
+    // for ( OntologyTerm t : allTerms ) {
+    //
+    // if ( t.getUri().equalsIgnoreCase( "http://purl.org/obo/owl/GO#GO_0042592" ) )
+    // probMap.put( t.getUri(), 0.1 );
+    // else
+    // probMap.put( t.getUri(), 0.5 );
+    // }
+    //
+    // Double value = goMetric.computeSimilarity( gene1, gene2, probMap, chooseMetric );
+    //
+    // // if ( chooseMetric.equals( Metric.simple ) ) assertEquals( 4.0, value );
+    // // if ( chooseMetric.equals( Metric.resnik ) ) assertEquals( 1.4978661367769954, value );
+    // // if ( chooseMetric.equals( Metric.lin ) ) assertEquals( 2.160964047443681, value );
+    // // if ( chooseMetric.equals( Metric.jiang ) ) assertEquals( 0.6185149837908823, value );
+    // }
     /**
      * @param geneOntologyService the geneOntologyService to set
      */

@@ -148,7 +148,13 @@ public class ExpressionDataMatrixColumnSort {
          * to sort each of those by any EFs they _refer to_.
          */
 
-        assert organized.size() == bms.size();
+        if ( organized.size() != bms.size() ) {
+            // fail gracefully.
+            log.error( "Could not order by factor: " + ef + " Biomaterial count (" + bms.size()
+                    + ") does not equal the size of the reorganized biomaterial list (" + organized.size()
+                    + "). Check the experimental design for completeness/correctness" );
+            return bms;
+        }
 
         if ( !doneFactors.containsKey( ef ) ) {
             doneFactors.put( ef, new HashSet<BioMaterial>() );
