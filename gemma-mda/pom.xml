@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>gemma</groupId>
@@ -33,18 +32,14 @@
 				</includes>
 			</resource>
 			<resource>
-				<directory>
-					target/generated-sources/resources
-				</directory>
+				<directory>target/generated-sources/resources</directory>
 				<includes>
 					<include>**/*</include>
 				</includes>
 			</resource>
 		</resources>
 		<filters>
-			<filter>
-				${project.basedir}/src/main/filters/project.properties
-			</filter>
+			<filter>${project.basedir}/src/main/filters/project.properties</filter>
 		</filters>
 		<plugins>
 			<plugin>
@@ -59,9 +54,7 @@
 						</goals>
 						<configuration>
 							<sources>
-								<source>
-									target/generated-sources/java
-								</source>
+								<source>target/generated-sources/java</source>
 							</sources>
 						</configuration>
 					</execution>
@@ -79,9 +72,7 @@
 						</goals>
 						<configuration>
 							<sourceDirectories>
-								<directory>
-									target/generated-sources/java
-								</directory>
+								<directory>target/generated-sources/java</directory>
 							</sourceDirectories>
 						</configuration>
 					</execution>
@@ -92,23 +83,16 @@
 				<artifactId>maven-antrun-plugin</artifactId>
 				<configuration>
 					<tasks>
-						<echo
-							message="*******  Building DDL file *******" />
-						<taskdef name="schemaexport"
-							classname="org.hibernate.tool.hbm2ddl.SchemaExportTask">
+						<echo message="*******  Building DDL file *******" />
+						<taskdef name="schemaexport" classname="org.hibernate.tool.hbm2ddl.SchemaExportTask">
 							<classpath>
-								<path
-									refid="maven.dependency.classpath" />
+								<path refid="maven.dependency.classpath" />
 							</classpath>
 						</taskdef>
 						<mkdir dir="target/schema" />
-						<schemaexport quiet="true" text="true"
-							create="true" drop="false" delimiter=";"
-							output="target/schema/gemma-ddl.sql"
-							properties="src/main/resources/hibernate.properties">
-							<fileset
-								dir="target/generated-sources/resources"
-								includes="**/*.hbm.xml" />
+						<schemaexport quiet="true" text="true" create="true" drop="false" delimiter=";"
+							output="target/schema/gemma-ddl.sql" properties="src/main/resources/hibernate.properties">
+							<fileset dir="target/generated-sources/resources" includes="**/*.hbm.xml" />
 						</schemaexport>
 					</tasks>
 				</configuration>
@@ -136,12 +120,8 @@
 				<executions>
 					<execution>
 						<configuration>
-							<buildSourceDirectory>
-								target/generated-sources
-							</buildSourceDirectory>
-							<configurationUri>
-								file:${project.basedir}/src/main/conf/andromda.xml
-							</configurationUri>
+							<buildSourceDirectory>target/generated-sources</buildSourceDirectory>
+							<configurationUri>file:${project.basedir}/src/main/conf/andromda.xml</configurationUri>
 							<lastModifiedCheck>true</lastModifiedCheck>
 						</configuration>
 						<goals>
@@ -159,36 +139,28 @@
 					</dependency>
 					<dependency>
 						<groupId>org.andromda.profiles.uml14</groupId>
-						<artifactId>
-							andromda-profile-datatype
-						</artifactId>
+						<artifactId>andromda-profile-datatype</artifactId>
 						<version>3.3-SNAPSHOT</version>
 						<scope>provided</scope>
 						<type>xml.zip</type>
 					</dependency>
 					<dependency>
 						<groupId>org.andromda.profiles.uml14</groupId>
-						<artifactId>
-							andromda-profile-webservice
-						</artifactId>
+						<artifactId>andromda-profile-webservice</artifactId>
 						<version>3.3-SNAPSHOT</version>
 						<scope>provided</scope>
 						<type>xml.zip</type>
 					</dependency>
 					<dependency>
 						<groupId>org.andromda.profiles.uml14</groupId>
-						<artifactId>
-							andromda-profile-service
-						</artifactId>
+						<artifactId>andromda-profile-service</artifactId>
 						<version>3.3-SNAPSHOT</version>
 						<scope>provided</scope>
 						<type>xml.zip</type>
 					</dependency>
 					<dependency>
 						<groupId>org.andromda.profiles.uml14</groupId>
-						<artifactId>
-							andromda-profile-process
-						</artifactId>
+						<artifactId>andromda-profile-process</artifactId>
 						<version>3.3-SNAPSHOT</version>
 						<scope>provided</scope>
 						<type>xml.zip</type>
@@ -209,43 +181,33 @@
 					</dependency>
 					<dependency>
 						<groupId>org.andromda.profiles.uml14</groupId>
-						<artifactId>
-							andromda-profile-persistence
-						</artifactId>
+						<artifactId>andromda-profile-persistence</artifactId>
 						<version>3.3-SNAPSHOT</version>
 						<scope>provided</scope>
 						<type>xml.zip</type>
 					</dependency>
 					<dependency>
 						<groupId>org.andromda.profiles.uml14</groupId>
-						<artifactId>
-							andromda-profile-presentation
-						</artifactId>
+						<artifactId>andromda-profile-presentation</artifactId>
 						<version>3.3-SNAPSHOT</version>
 						<scope>provided</scope>
 						<type>xml.zip</type>
 					</dependency>
 					<dependency>
 						<groupId>org.andromda.cartridges</groupId>
-						<artifactId>
-							andromda-spring-cartridge
-						</artifactId>
+						<artifactId>andromda-spring-cartridge</artifactId>
 						<version>3.3-SNAPSHOT</version>
 						<scope>provided</scope>
 					</dependency>
 					<dependency>
 						<groupId>org.andromda.cartridges</groupId>
-						<artifactId>
-							andromda-hibernate-cartridge
-						</artifactId>
+						<artifactId>andromda-hibernate-cartridge</artifactId>
 						<version>3.3-SNAPSHOT</version>
 						<scope>provided</scope>
 					</dependency>
 					<dependency>
 						<groupId>org.andromda.cartridges</groupId>
-						<artifactId>
-							andromda-webservice-cartridge
-						</artifactId>
+						<artifactId>andromda-webservice-cartridge</artifactId>
 						<version>3.3-SNAPSHOT</version>
 						<scope>provided</scope>
 					</dependency>
@@ -262,22 +224,14 @@
 						<scope>provided</scope>
 					</dependency>
 					<dependency>
-						<groupId>
-							org.andromda.translationlibraries
-						</groupId>
-						<artifactId>
-							andromda-ocl-validation-library
-						</artifactId>
+						<groupId>org.andromda.translationlibraries</groupId>
+						<artifactId>andromda-ocl-validation-library</artifactId>
 						<version>3.3-SNAPSHOT</version>
 						<scope>provided</scope>
 					</dependency>
 					<dependency>
-						<groupId>
-							org.andromda.translationlibraries
-						</groupId>
-						<artifactId>
-							andromda-ocl-query-library
-						</artifactId>
+						<groupId>org.andromda.translationlibraries</groupId>
+						<artifactId>andromda-ocl-query-library</artifactId>
 						<version>3.3-SNAPSHOT</version>
 						<scope>provided</scope>
 					</dependency>
@@ -334,9 +288,7 @@
 						<dependencies>
 							<dependency>
 								<groupId>mysql</groupId>
-								<artifactId>
-									mysql-connector-java
-								</artifactId>
+								<artifactId>mysql-connector-java</artifactId>
 								<version>3.1.11</version>
 								<type>jar</type>
 							</dependency>
@@ -345,9 +297,7 @@
 						<configuration>
 							<driver>com.mysql.jdbc.Driver</driver>
 							<username>${gemma.db.build.user}</username>
-							<password>
-								${gemma.db.build.password}
-							</password>
+							<password>${gemma.db.build.password}</password>
 							<onError>continue</onError>
 							<autocommit>true</autocommit>
 						</configuration>
@@ -388,18 +338,10 @@
 								<configuration>
 									<url>${gemma.testdb.build.url}</url>
 									<srcFiles>
-										<srcFile>
-											target/schema/gemma-ddl.sql
-										</srcFile>
-										<scrFile>
-											src/main/resources/sql/init-indices.sql
-										</scrFile>
-										<srcFile>
-											src/main/resources/sql/mysql-acegi-acl.sql
-										</srcFile>
-										<srcFile>
-											src/main/resources/sql/init-script.sql
-										</srcFile>
+										<srcFile>target/schema/gemma-ddl.sql</srcFile>
+										<scrFile>src/main/resources/sql/init-indices.sql</scrFile>
+										<srcFile>src/main/resources/sql/mysql-acegi-acl.sql</srcFile>
+										<srcFile>src/main/resources/sql/init-script.sql</srcFile>
 									</srcFiles>
 									<onError>abort</onError>
 								</configuration>
@@ -414,10 +356,9 @@
 									<url>${gemma.testdb.build.url}</url>
 									<delimiter>|</delimiter>
 									<srcFiles>
-										<srcFile>src/main/resources/sql/init-triggers.sql
-										</srcFile>
+										<srcFile>src/main/resources/sql/init-triggers.sql</srcFile>
 									</srcFiles>
-									<onError>continue</onError>
+									<onError>abort</onError>
 								</configuration>
 							</execution>
 						</executions>
@@ -455,9 +396,7 @@
 						<dependencies>
 							<dependency>
 								<groupId>mysql</groupId>
-								<artifactId>
-									mysql-connector-java
-								</artifactId>
+								<artifactId>mysql-connector-java</artifactId>
 								<version>3.1.11</version>
 								<type>jar</type>
 							</dependency>
@@ -466,9 +405,7 @@
 						<configuration>
 							<driver>com.mysql.jdbc.Driver</driver>
 							<username>${gemma.db.build.user}</username>
-							<password>
-								${gemma.db.build.password}
-							</password>
+							<password>${gemma.db.build.password}</password>
 						</configuration>
 						<executions>
 							<execution>
@@ -508,18 +445,25 @@
 									<url>${gemma.db.build.url}</url>
 									<autocommit>false</autocommit>
 									<srcFiles>
-										<srcFile>
-											target/schema/gemma-ddl.sql
-										</srcFile>
-										<srcFile>
-											src/main/resources/sql/init-indices.sql
-										</srcFile>
-										<srcFile>
-											src/main/resources/sql/mysql-acegi-acl.sql
-										</srcFile>
-										<srcFile>
-											src/main/resources/sql/init-script.sql
-										</srcFile>
+										<srcFile>target/schema/gemma-ddl.sql</srcFile>
+										<srcFile>src/main/resources/sql/init-indices.sql</srcFile>
+										<srcFile>src/main/resources/sql/mysql-acegi-acl.sql</srcFile>
+										<srcFile>src/main/resources/sql/init-script.sql</srcFile>
+									</srcFiles>
+									<onError>abort</onError>
+								</configuration>
+							</execution>
+							<execution>
+								<id>install-triggers</id>
+								<phase>process-test-resources</phase>
+								<goals>
+									<goal>execute</goal>
+								</goals>
+								<configuration>
+									<url>${gemma.testdb.build.url}</url>
+									<delimiter>|</delimiter>
+									<srcFiles>
+										<srcFile>src/main/resources/sql/init-triggers.sql</srcFile>
 									</srcFiles>
 									<onError>abort</onError>
 								</configuration>
