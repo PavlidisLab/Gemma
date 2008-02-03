@@ -61,7 +61,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
     protected static final int NUM_BIOASSAYS = 8;
 
-    protected final int NUM_TWA_RESULT_SETS = 7;
+    protected final int NUM_TWA_RESULT_SETS = 103;
 
     protected ArrayDesign arrayDesign = null;
 
