@@ -401,7 +401,7 @@
 											src/main/resources/sql/init-script.sql
 										</srcFile>
 									</srcFiles>
-									<onError>continue</onError>
+									<onError>abort</onError>
 								</configuration>
 							</execution>
 							<execution>
@@ -521,7 +521,7 @@
 											src/main/resources/sql/init-script.sql
 										</srcFile>
 									</srcFiles>
-									<onError>continue</onError>
+									<onError>abort</onError>
 								</configuration>
 							</execution>
 						</executions>
