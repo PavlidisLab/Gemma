@@ -57,7 +57,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
 
-    protected static final int NUM_DESIGN_ELEMENTS = 4;
+    protected static final int NUM_DESIGN_ELEMENTS = 100;
 
     protected static final int NUM_BIOASSAYS = 8;
 
