@@ -123,7 +123,6 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
         securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
 
-        boolean fail = false;
         try {
             securityService.setPermissions( ad, 0, new HashSet<Object>() );
             fail( "Should have gotten a unauthorized user exception" );
