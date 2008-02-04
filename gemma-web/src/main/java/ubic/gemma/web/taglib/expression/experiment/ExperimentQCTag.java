@@ -70,7 +70,14 @@ public class ExperimentQCTag extends TagSupport {
                         + "&size=large\"><img src=\"visualizeCorrMat.html?id="
                         + this.eeid
                         + "&size="
-                        + this.size + "\" /></a></td>" );
+                        + this.size + "\" /></a><br>" );
+
+        // link to lower contrast version
+        buf
+                .append( "<a target=\"_blank\" title=\"Click for larger lower contrast version (opens in new window)\" href=\"visualizeCorrMat.html?id="
+                        + this.eeid + "&size=large&contr=lo\">lower contrast version</a>" );
+
+        buf.append( "</td>" );
 
         buf.append( "<td valign=\"top\" align=\"center\"><strong>Probe correlation</strong><br />" );
         buf.append( " <img src=\"visualizeProbeCorrDist.html?id=" + this.eeid + "\" /></td>" );

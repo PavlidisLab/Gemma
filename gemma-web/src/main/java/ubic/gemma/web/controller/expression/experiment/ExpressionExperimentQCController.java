@@ -71,10 +71,16 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
     public ModelAndView showCorrMat( HttpServletRequest request, HttpServletResponse response ) throws Exception {
         String id = request.getParameter( "id" );
         String size = request.getParameter( "size" ); // okay if null
+        String contrast = request.getParameter( "contr" ); // okay if null, default is 'hi'
 
         if ( id == null ) {
             log.warn( "No id!" );
             return null;
+        }
+
+        String contrVal = "hi";
+        if ( StringUtils.isNotBlank( contrast ) ) {
+            contrVal = contrast;
         }
 
         Long idl;
@@ -92,7 +98,7 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
             return null;
         }
 
-        writeCorrMatImage( response, ee, size );
+        writeCorrMatImage( response, ee, size, contrVal );
 
         return null; // nothing to return;
     }
@@ -131,18 +137,28 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
     /**
      * @param ee
      * @param size 'large' or 'small'.
+     * @param contrast
      * @return
      */
-    private File locateCorrMatImageFile( ExpressionExperiment ee, String size ) {
+    private File locateCorrMatImageFile( ExpressionExperiment ee, String size, String contrast ) {
         // locate the image.
         String shortName = ee.getShortName();
         String analysisStoragePath = ConfigUtils.getAnalysisStoragePath() + File.separatorChar
                 + ExpressionDataSampleCorrelation.CORRMAT_DIR_NAME;
 
-        String suffix = ExpressionDataSampleCorrelation.SMALL_HIGHCONTRAST;
+        String suffix;
+        if ( contrast.equalsIgnoreCase( "hi" ) ) {
+            suffix = ExpressionDataSampleCorrelation.SMALL_HIGHCONTRAST;
+        } else {
+            suffix = ExpressionDataSampleCorrelation.SMALL_LOWCONTRAST;
+        }
 
         if ( size != null && size.equals( "large" ) ) {
-            suffix = ExpressionDataSampleCorrelation.LARGE_HIGHCONTRAST;
+            if ( contrast.equalsIgnoreCase( "hi" ) ) {
+                suffix = ExpressionDataSampleCorrelation.LARGE_HIGHCONTRAST;
+            } else {
+                suffix = ExpressionDataSampleCorrelation.LARGE_LOWCONTRAST;
+            }
         }
 
         File f = new File( analysisStoragePath + File.separatorChar + shortName + "_corrmat" + suffix );
@@ -168,8 +184,8 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
      * @param ee
      * @param size
      */
-    private void writeCorrMatImage( HttpServletResponse response, ExpressionExperiment ee, String size ) {
-        File f = locateCorrMatImageFile( ee, size );
+    private void writeCorrMatImage( HttpServletResponse response, ExpressionExperiment ee, String size, String contrast ) {
+        File f = locateCorrMatImageFile( ee, size, contrast );
 
         writeImage( response, f );
     }
