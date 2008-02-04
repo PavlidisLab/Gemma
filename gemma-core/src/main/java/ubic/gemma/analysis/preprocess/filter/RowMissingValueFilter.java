@@ -96,8 +96,23 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
 
         List<DesignElement> kept = new ArrayList<DesignElement>();
 
+        /*
+         * Do not allow minpresentfraction to override minpresent if minpresent is higher.
+         */
         if ( minPresentFractionIsSet ) {
-            setMinPresentCount( ( int ) Math.ceil( minPresentFraction * numCols ) );
+            int proposedMinimumNumberOfSamples = ( int ) Math.ceil( minPresentFraction * numCols );
+            if ( !minPresentIsSet ) {
+                setMinPresentCount( proposedMinimumNumberOfSamples );
+            } else if ( proposedMinimumNumberOfSamples > minPresentCount ) {
+                log.info( "The minimum number of samples is already set to " + this.minPresentCount
+                        + " but computed missing threshold from fraction of " + minPresentFraction + " is higher ("
+                        + proposedMinimumNumberOfSamples + ")" );
+                setMinPresentCount( proposedMinimumNumberOfSamples );
+            } else {
+                log.info( "The minimum number of samples is already set to " + this.minPresentCount
+                        + " and computed missing threshold from fraction of " + minPresentFraction + " is lower ("
+                        + proposedMinimumNumberOfSamples + "), keeping higher value." );
+            }
         }
 
         if ( minPresentCount > numCols ) {

@@ -42,6 +42,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class ExpressionExperimentFilter {
 
+    private static final int MIN_NUMBER_OF_SAMPLES_PRESENT = 5;
     private static Log log = LogFactory.getLog( ExpressionExperimentFilter.class.getName() );
     private final FilterConfig config;
 
@@ -249,6 +250,12 @@ public class ExpressionExperimentFilter {
             rowMissingFilter.setAbsentPresentCalls( absentPresent );
         }
         rowMissingFilter.setMinPresentFraction( config.getMinPresentFraction() );
+
+        /*
+         * Always require at least 5 samples.
+         */
+        rowMissingFilter.setMinPresentCount( MIN_NUMBER_OF_SAMPLES_PRESENT );
+
         return rowMissingFilter.filter( matrix );
     }
 
