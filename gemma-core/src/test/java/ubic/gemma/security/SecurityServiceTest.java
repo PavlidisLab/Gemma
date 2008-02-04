@@ -126,12 +126,9 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         boolean fail = false;
         try {
             securityService.setPermissions( ad, 0, new HashSet<Object>() );
+            fail( "Should have gotten a unauthorized user exception" );
         } catch ( Exception e ) {
-            fail = true;
-            log.error( "TEST SUCCESSFULLY FAILED WITH: " );
-            e.printStackTrace();
-        } finally {
-            assertTrue( fail );
+            // ok.
         }
     }
 
