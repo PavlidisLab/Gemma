@@ -52,17 +52,11 @@ import cern.colt.list.ObjectArrayList;
  */
 public class LinkAnalysis {
 
-    /**
-     * A value above which we would be concerned that statistical significance is going to be hard to achieve.
-     */
-    private static final double VERY_HIGH_CORRELATION_THRESHOLD = 0.9;
-
     protected static final Log log = LogFactory.getLog( LinkAnalysis.class );
     private MatrixRowPairAnalysis metricMatrix;
     private DoubleArrayList cdf;
     private ObjectArrayList keep; // links that are retained.
     private ExpressionDataDoubleMatrix dataMatrix = null;
-    // private Collection<DesignElementDataVector> dataVectors = null;
 
     private Map<CompositeSequence, Collection<Collection<Gene>>> probeToGeneMap = null;
     private Taxon taxon = null;
@@ -183,25 +177,6 @@ public class LinkAnalysis {
         metricMatrix.setUseAbsoluteValue( config.isAbsoluteValue() );
         metricMatrix.setMinNumpresent( minSamplesToKeepCorrelation );
         this.init();
-
-        /*
-         * Determine the threshold number of samples in a gene pair before we consider keeping the result. This is
-         * needed in data sets that have many missing values. In that case, some pairs will have a much smaller
-         * effective sample size. Because with too few degrees of freedom, the values have no chance of being
-         * significant (within reason), they shouldn't be included in the histograms.
-         */
-        double maxP = config.getFwe() / metricMatrix.getNumUniqueGenes();
-        for ( int i = 3; i < this.dataMatrix.columns(); i++ ) {
-            double scoreForSmallSampleSize = CorrelationStats.correlationForPvalue( maxP, i );
-            if ( scoreForSmallSampleSize > VERY_HIGH_CORRELATION_THRESHOLD ) {
-                minSamplesToKeepCorrelation = i + 1;
-                break;
-            }
-        }
-
-        if ( minSamplesToKeepCorrelation > 0 ) {
-            log.info( "Pairs must have at least " + minSamplesToKeepCorrelation + " mutual values to be considered" );
-        }
 
         metricMatrix.calculateMetrics();
         log.info( "Completed first pass over the data. Cached " + metricMatrix.numCached()

@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2007 Columbia University
+ * Copyright (c) 2008 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,32 +16,29 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.analysis.preprocess.filter;
+package ubic.gemma.analysis.preprocess;
+
+import ubic.gemma.analysis.preprocess.filter.InsufficientDataException;
 
 /**
- * @author Paul
+ * @author paul
  * @version $Id$
  */
-public class InsufficientSamplesException extends InsufficientDataException {
+public class InsufficientProbesException extends InsufficientDataException {
 
-    /**
-     * 
-     */
-    private static final long serialVersionUID = 1L;
-
-    public InsufficientSamplesException() {
+    public InsufficientProbesException() {
         super();
     }
 
-    public InsufficientSamplesException( String arg0, Throwable arg1 ) {
+    public InsufficientProbesException( String arg0, Throwable arg1 ) {
         super( arg0, arg1 );
     }
 
-    public InsufficientSamplesException( String arg0 ) {
-        super( arg0 );
+    public InsufficientProbesException( String message ) {
+        super( message );
     }
 
-    public InsufficientSamplesException( Throwable arg0 ) {
+    public InsufficientProbesException( Throwable arg0 ) {
         super( arg0 );
     }
 

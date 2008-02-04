@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2007 Columbia University
+ * Copyright (c) 2008 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,29 +19,26 @@
 package ubic.gemma.analysis.preprocess.filter;
 
 /**
- * @author Paul
+ * Used to indicate that analysis was skipped, not necessarily an error.
+ * 
+ * @author paul
  * @version $Id$
  */
-public class InsufficientSamplesException extends InsufficientDataException {
+public class InsufficientDataException extends RuntimeException {
 
-    /**
-     * 
-     */
-    private static final long serialVersionUID = 1L;
+    public InsufficientDataException( String message ) {
+        super( message );
+    }
 
-    public InsufficientSamplesException() {
+    public InsufficientDataException() {
         super();
     }
 
-    public InsufficientSamplesException( String arg0, Throwable arg1 ) {
+    public InsufficientDataException( String arg0, Throwable arg1 ) {
         super( arg0, arg1 );
     }
 
-    public InsufficientSamplesException( String arg0 ) {
-        super( arg0 );
-    }
-
-    public InsufficientSamplesException( Throwable arg0 ) {
+    public InsufficientDataException( Throwable arg0 ) {
         super( arg0 );
     }
 

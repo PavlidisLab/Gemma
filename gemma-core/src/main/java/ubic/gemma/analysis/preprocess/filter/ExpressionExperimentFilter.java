@@ -24,6 +24,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
+import ubic.gemma.analysis.preprocess.InsufficientProbesException;
 import ubic.gemma.analysis.preprocess.filter.AffyProbeNameFilter.Pattern;
 import ubic.gemma.analysis.preprocess.filter.RowLevelFilter.Method;
 import ubic.gemma.analysis.preprocess.filter.InsufficientSamplesException;
@@ -42,7 +43,16 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class ExpressionExperimentFilter {
 
-    private static final int MIN_NUMBER_OF_SAMPLES_PRESENT = 5;
+    /**
+     * Minimum number of samples for keeping rows when min-present filtering. Note that this should be set to be the
+     * same as {@link  ubic.gemma.analysis.preprocess.filter.FilterConfig.MINIMUM_SAMPLE}. Rows with more missing
+     * values than this are always removed. This can be increased by the use of the min fractio npresent filter which
+     * sets a fraction.
+     * 
+     * @see ubic.gemma.analysis.preprocess.filter.FilterConfig.MINIMUM_SAMPLE
+     */
+    public static final int MIN_NUMBER_OF_SAMPLES_PRESENT = 7;
+
     private static Log log = LogFactory.getLog( ExpressionExperimentFilter.class.getName() );
     private final FilterConfig config;
 
@@ -158,19 +168,32 @@ public class ExpressionExperimentFilter {
         if ( eeDoubleMatrix == null || eeDoubleMatrix.rows() == 0 )
             throw new IllegalArgumentException( "No data found!" );
 
-        if ( eeDoubleMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER )
-            throw new IllegalArgumentException( "To few rows in " + ee.getShortName() + " (" + eeDoubleMatrix.rows()
-                    + "), data sets are not analyzed unless they have at least " + FilterConfig.MINIMUM_ROWS_TO_BOTHER
-                    + " rows" );
-
-        if ( eeDoubleMatrix.columns() < FilterConfig.MINIMUM_SAMPLE )
+        if ( eeDoubleMatrix.columns() < FilterConfig.MINIMUM_SAMPLE ) {
             throw new InsufficientSamplesException( "Not enough samples " + ee.getShortName() + ", must have at least "
                     + FilterConfig.MINIMUM_SAMPLE + " to be eligble for link analysis." );
+        } else if ( eeDoubleMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
+            throw new InsufficientProbesException( "To few rows in " + ee.getShortName() + " (" + eeDoubleMatrix.rows()
+                    + ") prior to filtering, data sets are not analyzed unless they have at least "
+                    + FilterConfig.MINIMUM_SAMPLE + " to be eligble for link analysis." );
+        }
 
         eeDoubleMatrix = this.filter( eeDoubleMatrix, builder );
 
         if ( eeDoubleMatrix == null )
             throw new IllegalStateException( "Failed to get filtered data matrix, it was null " + ee.getShortName() );
+
+        if ( eeDoubleMatrix.rows() == 0 ) {
+            log.info( "No rows left after filtering" );
+            throw new InsufficientProbesException( "No rows left after filtering" );
+        } else if ( eeDoubleMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
+            throw new InsufficientProbesException( "To few rows in " + ee.getShortName() + " (" + eeDoubleMatrix.rows()
+                    + ") after filtering, data sets are not analyzed unless they have at least "
+                    + FilterConfig.MINIMUM_ROWS_TO_BOTHER + " rows" );
+        } else if ( eeDoubleMatrix.columns() < FilterConfig.MINIMUM_SAMPLE ) {
+            throw new InsufficientSamplesException( "Not enough samples " + ee.getShortName() + ", must have at least "
+                    + FilterConfig.MINIMUM_SAMPLE + " to be eligble for link analysis." );
+        }
+
         return eeDoubleMatrix;
     }
 

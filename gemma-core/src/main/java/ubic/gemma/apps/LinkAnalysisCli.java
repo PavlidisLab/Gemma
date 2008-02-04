@@ -32,6 +32,7 @@ import org.apache.commons.lang.time.StopWatch;
 
 import ubic.gemma.analysis.linkAnalysis.LinkAnalysisConfig;
 import ubic.gemma.analysis.linkAnalysis.LinkAnalysisService;
+import ubic.gemma.analysis.preprocess.InsufficientProbesException;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.analysis.preprocess.filter.InsufficientSamplesException;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
@@ -344,6 +345,8 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
      */
     private void logFailure( ExpressionExperiment expressionExperiment, Exception e ) {
         if ( e instanceof InsufficientSamplesException ) {
+            audit( expressionExperiment, e.getMessage(), TooSmallDatasetLinkAnalysisEvent.Factory.newInstance() );
+        } else if ( e instanceof InsufficientProbesException ) {
             audit( expressionExperiment, e.getMessage(), TooSmallDatasetLinkAnalysisEvent.Factory.newInstance() );
         } else {
             audit( expressionExperiment, ExceptionUtils.getFullStackTrace( e ), FailedLinkAnalysisEvent.Factory

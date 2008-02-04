@@ -38,8 +38,10 @@ public class FilterConfig {
 
     /**
      * How many samples a dataset has to have before we consider analyzing it.
+     * 
+     * @see ExpressionExperimentFilter.MIN_NUMBER_OF_SAMPLES_PRESENT for a related setting.
      */
-    public final static int MINIMUM_SAMPLE = 5;
+    public final static int MINIMUM_SAMPLE = 7;
 
     /**
      * Fewer rows than this, and we bail.

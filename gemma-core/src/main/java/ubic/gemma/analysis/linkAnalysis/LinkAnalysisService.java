@@ -41,6 +41,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.math.CorrelationStats;
+import ubic.gemma.analysis.preprocess.InsufficientProbesException;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
@@ -119,6 +120,15 @@ public class LinkAnalysisService {
 
         ExpressionDataDoubleMatrix eeDoubleMatrix = analysisHelperService.getFilteredMatrix( ee, filterConfig,
                 dataVectors );
+
+        if ( eeDoubleMatrix.rows() == 0 ) {
+            log.info( "No rows left after filtering" );
+            throw new InsufficientProbesException( "No rows left after filtering" );
+        } else if ( eeDoubleMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
+            throw new InsufficientProbesException( "To few rows (" + eeDoubleMatrix.rows()
+                    + "), data sets are not analyzed unless they have at least " + FilterConfig.MINIMUM_ROWS_TO_BOTHER
+                    + " rows" );
+        }
 
         /*
          * Might as well while we have the data handy.
