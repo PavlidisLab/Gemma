@@ -83,6 +83,8 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
     private LinkAnalysisConfig linkAnalysisConfig = new LinkAnalysisConfig();
 
+    private boolean force;
+
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
@@ -125,6 +127,11 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
         addOption( metricOption );
 
+        Option forceOption = OptionBuilder.withArgName( "Force analysis to run" ).withLongOpt( "force" )
+                .withDescription( "Even if trouble flagged etc." ).create( "force" );
+
+        addOption( forceOption );
+
     }
 
     @SuppressWarnings("unchecked")
@@ -145,7 +152,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 }
                 for ( ExpressionExperiment ee : expressionExperiments ) {
                     eeService.thawLite( ee );
-                    if ( !needToRun( ee, LinkAnalysisEvent.class ) ) {
+                    if ( !force && !needToRun( ee, LinkAnalysisEvent.class ) ) {
                         continue;
                     }
 
@@ -166,7 +173,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 log.info( "Total ExpressionExperiment: " + all.size() );
                 for ( ExpressionExperiment ee : all ) {
                     eeService.thawLite( ee );
-                    if ( !needToRun( ee, LinkAnalysisEvent.class ) ) {
+                    if ( !force && !needToRun( ee, LinkAnalysisEvent.class ) ) {
                         continue;
                     }
 
@@ -197,7 +204,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
                         eeService.thawLite( expressionExperiment );
 
-                        if ( !needToRun( expressionExperiment, LinkAnalysisEvent.class ) ) {
+                        if ( !force && !needToRun( expressionExperiment, LinkAnalysisEvent.class ) ) {
                             continue;
                         }
 
@@ -232,12 +239,13 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                     continue;
                 }
                 eeService.thawLite( expressionExperiment );
-                if ( !needToRun( expressionExperiment, LinkAnalysisEvent.class ) ) {
+                if ( !force && !needToRun( expressionExperiment, LinkAnalysisEvent.class ) ) {
                     continue;
                 }
 
                 try {
                     linkAnalysisService.process( expressionExperiment, filterConfig, linkAnalysisConfig );
+                    successObjects.add( expressionExperiment.toString() );
                     audit( expressionExperiment, "From item(s) given from command line", LinkAnalysisEvent.Factory
                             .newInstance() );
                 } catch ( Exception e ) {
@@ -280,6 +288,9 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         }
         if ( hasOption( "text" ) ) {
             this.linkAnalysisConfig.setTextOut( true );
+        }
+        if ( hasOption( "force" ) ) {
+            this.force = true;
         }
         this.expressionExperimentReportService = ( ExpressionExperimentReportService ) this
                 .getBean( "expressionExperimentReportService" );
