@@ -22,6 +22,7 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.math.RandomUtils;
 import org.easymock.classextension.MockClassControl;
 
@@ -135,10 +136,11 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         arrayDesign = ArrayDesign.Factory.newInstance();
         arrayDesign.setTechnologyType( TechnologyType.ONECOLOR );
         arrayDesign.setId( 1L );
-        arrayDesign.setName( "MG-U74Test" );
+        arrayDesign.setName( "MG-U74Test_" + RandomStringUtils.randomAlphanumeric( 12 ) );
 
         expressionExperiment = ExpressionExperiment.Factory.newInstance();
         expressionExperiment.setName( "a test expression experiment" );
+        expressionExperiment.setShortName( RandomStringUtils.randomAlphanumeric( 12 ) );
 
         /* experimental factor "area" */
         experimentalFactorA = ExperimentalFactor.Factory.newInstance();

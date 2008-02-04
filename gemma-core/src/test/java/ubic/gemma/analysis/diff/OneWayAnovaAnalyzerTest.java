@@ -59,7 +59,6 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
     @Override
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-
         analyzer = ( OneWayAnovaAnalyzer ) this.getBean( "oneWayAnovaAnalyzer" );
     }
 
@@ -68,12 +67,11 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
      */
     public void testOneWayAnova() throws Exception {
 
-        log.debug( "Testing OneWayAnova method in " + OneWayAnovaAnalyzer.class.getName() );
-
         if ( !connected ) {
             log.warn( "Could not establish R connection.  Skipping test ..." );
             return;
         }
+        log.debug( "Testing OneWayAnova method in " + OneWayAnovaAnalyzer.class.getName() );
 
         super.configureTestDataForOneWayAnova();
 
@@ -82,15 +80,11 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
         ExpressionAnalysis expressionAnalysis = analyzer.oneWayAnova( expressionExperiment );
 
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
-
         ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
-
         int numResults = resultSet.getResults().size();
 
         assertEquals( numResults, NUM_DESIGN_ELEMENTS );
-
         logResults( resultSet );
-
     }
 
     /*
@@ -102,7 +96,6 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
     protected void configureMocks() throws Exception {
 
         configureMockAnalysisServiceHelper( 1 );
-
         analyzer.setAnalysisHelperService( analysisHelperService );
 
     }
