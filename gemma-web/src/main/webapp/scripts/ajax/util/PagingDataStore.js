@@ -47,7 +47,7 @@ Ext.extend( Ext.Gemma.PagingDataStore, Ext.data.Store, {
     
     load : function ( options ) {
 		options = options || {};
-		if ( options.params.start !== undefined || options.params.limit !== undefined ) {
+		if ( options.params !== undefined && ( options.params.start !== undefined || options.params.limit !== undefined ) ) {
 			if ( this.fireEvent( "beforeload", this, options ) !== false ) {
 				if ( options.params.start !== undefined ) 
 					this.currentStartIndex = options.params.start;

@@ -31,7 +31,10 @@ Ext.extend(Ext.data.ListRangeReader, Ext.data.DataReader, {
 			return Ext.emptyFn;
 		};
 	}(), 
-	 
+	
+	readRecords:function (o) {
+		return this.read(o);
+	},
 	
 	read:function (o) {
 		var recordType = this.recordType, fields = recordType.prototype.fields;

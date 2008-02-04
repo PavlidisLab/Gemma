@@ -16,18 +16,18 @@ Ext.Gemma.GemmaGridPanel = function ( config ) {
 		tbar : []
 	};
 
+	/* if the toolbars weren't passed in, destroy the default elements that were created...
+	 * (defaults were created so that we can have the option of adding toolbars later)
+	 */
+	if ( ! config.tbar ) { this.destroyTopToolbar = true; }
+	if ( ! config.bbar ) { this.destroyBottomToolbar = true; }
+
 	/* apply user-defined config options and call the superclass constructor...
 	 */
 	for ( property in config ) {
 		superConfig[property] = config[property];
 	}
 	Ext.Gemma.GemmaGridPanel.superclass.constructor.call( this, superConfig );
-
-	/* if the toolbars weren't passed in, destroy the default elements that were created...
-	 * (defaults were created so that we can have the option of adding toolbars later)
-	 */
-	if ( ! config.tbar ) { this.destroyTopToolbar = true; }
-	if ( ! config.bbar ) { this.destroyBottomToolbar = true; }
 };
 
 /* static methods

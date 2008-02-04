@@ -86,10 +86,9 @@ Mapping URLS to controllers
 			<prop key="/mock.html">mockController</prop>
 			<prop key="/indexer.html">indexController</prop>
 			<prop key="/searcher.html">generalSearchController</prop>
-			<prop key="/searchCoexpression.html">
-				coexpressionSearchController</prop>
-			<prop key="/searchCoexpressionMultiple.html">
-				multipleCoexpressionSearchController</prop>
+			<prop key="/searchCoexpression.html">coexpressionSearchController</prop>
+			<prop key="/searchCoexpressionMultiple.html">multipleCoexpressionSearchController</prop>
+			<prop key="/searchCoexpressionExt.html">extCoexpressionSearchController</prop>
 			<prop key="/securityManager.html">securityFormController</prop>
 			<prop key="/geoBrowser/*">geoRecordBrowserController</prop>
 			<prop key="/whatsnew/*">whatsNewController</prop>
@@ -484,6 +483,23 @@ Mapping URLS to controllers
 						<list>
 							<value>getTaxa</value>
 							<value>searchGenes</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="ExtCoexpressionSearchController">
+				<bean class="org.directwebremoting.spring.CreatorConfig">
+					<property name="creator">
+						<bean class="org.directwebremoting.spring.BeanCreator">
+							<property name="bean"
+								ref="extCoexpressionSearchController"/>
+						</bean>
+					</property>
+					<property name="includes">
+						<list>
+							<value>doSearch</value>
+							<value>getCannedAnalyses</value>
+							<value>findExpressionExperiments</value>
 						</list>
 					</property>
 				</bean>
@@ -952,7 +968,7 @@ Mapping URLS to controllers
 					</property>
 				</bean>
 			</entry>
-			<entry key="ubic.gemma.model.expression.ExpressionExperiment">
+			<entry key="ubic.gemma.model.expression.experiment.ExpressionExperiment">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="hibernate3"/>
 					<property name="includes">
@@ -974,8 +990,33 @@ Mapping URLS to controllers
 							<value>name</value>
 							<value>shortName</value>
 							<value>description</value>
+							<value>probeSpecificForQueryGene</value>
+							<value>arrayDesignCount</value>
+							<value>bioAssayCount</value>
+							<value>rawCoexpressionLinkCount</value>
+							<value>coexpressionLinkCount</value>
 						</list>
 					</property>
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.web.controller.coexpressionSearch.ExtCoexpressionSearchCommand">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean"/>
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.web.controller.coexpressionSearch.ExtCoexpressionValueObject">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean"/>
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.web.controller.coexpressionSearch.ExtCoexpressionMetaValueObject">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean"/>
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.web.controller.coexpressionSearch.CannedAnalysisValueObject">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean"/>
 				</bean>
 			</entry>
 			<entry

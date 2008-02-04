@@ -13,7 +13,16 @@ Ext.Gemma.MGEDCombo = function ( config ) {
 	}
 	delete config.termKey;
 
-	Ext.Gemma.MGEDCombo.superclass.constructor.call( this, config );
+	/* establish default config options...
+	 */
+	var superConfig = {
+		displayField : 'term',
+		editable : false,
+		mode : 'local',
+		selectOnFocus : true,
+		triggerAction : 'all',
+		typeAhead : true
+	};
 	
 	if ( Ext.Gemma.MGEDCombo.record === undefined ) {
 		Ext.Gemma.MGEDCombo.record = Ext.data.Record.create( [
@@ -22,20 +31,20 @@ Ext.Gemma.MGEDCombo = function ( config ) {
 			{ name:"term", type:"string" }
 		] );
 	}
-	this.store = config.store || new Ext.data.Store( {
+	superConfig.store = new Ext.data.Store( {
 		proxy : new Ext.data.DWRProxy( this.dwrMethod ),
 		reader : new Ext.data.ListRangeReader( {id:"id"}, Ext.Gemma.MGEDCombo.record ),
 		remoteSort : false,
 		sortInfo : { field : "term" }
 	} );
-	this.store.load( { params: this.dwrParams } );
-	
-	this.displayField = config.displayField || "term";
-	this.editable = config.editable || "false";
-	this.mode = config.mode || "local";
-	this.selectOnFocus = config.selectOnFocus || "true";
-	this.triggerAction = config.triggerAction || "all";
-	this.typeAhead = config.typeAhead || true;
+	superConfig.store.load( { params: this.dwrParams } );
+
+	/* apply user-defined config options and call the superclass constructor...
+	 */
+	for ( property in config ) {
+		superConfig[property] = config[property];
+	}
+	Ext.Gemma.MGEDCombo.superclass.constructor.call( this, superConfig );
 	
 	this.on( "select", function ( combo, record, index ) {
 		this.selectedTerm = record.data;
