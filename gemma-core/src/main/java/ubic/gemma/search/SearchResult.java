@@ -94,10 +94,16 @@ public class SearchResult implements Comparable<SearchResult> {
         this.indexSearch = isIndexSearchResult;
     }
 
+    /**
+     * @param resultObject if null, the resultObject is reset to null, but the class and id information will not be
+     *        overwritten.
+     */
     public void setResultObject( Object resultObject ) {
         this.resultObject = resultObject;
-        this.resultClass = ReflectionUtil.getBaseForImpl( resultObject.getClass() );
-        this.objectId = EntityUtils.getId( resultObject );
+        if ( resultObject != null ) {
+            this.resultClass = ReflectionUtil.getBaseForImpl( resultObject.getClass() );
+            this.objectId = EntityUtils.getId( resultObject );
+        }
     }
 
     @Override
