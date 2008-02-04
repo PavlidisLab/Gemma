@@ -51,7 +51,6 @@ public class ComputeDEVRankingCli extends ExpressionExperimentManipulatingCLI {
 
     private static Log log = LogFactory.getLog( ComputeDEVRankingCli.class.getName() );
 
-    private String geneExpressionList = null;
     private Method method = Method.MAX;
 
     /**
@@ -62,13 +61,6 @@ public class ComputeDEVRankingCli extends ExpressionExperimentManipulatingCLI {
     protected void buildOptions() {
 
         super.buildOptions();
-
-        Option geneFileListOption = OptionBuilder.hasArg().withArgName( "list of Gene Expression file" )
-                .withDescription(
-                        "File with list of short names of expression experiments (one per line; use instead of '-g')" )
-                .withLongOpt( "listfile" ).create( 'f' );
-
-        addOption( geneFileListOption );
 
         Option methodOption = OptionBuilder.hasArg().withArgName( "Method for determining row statistics" )
                 .withDescription( "MEAN, MEDIAN, MAX or MIN; default = MAX" ).withLongOpt( "method" ).create( 'm' );
@@ -97,9 +89,6 @@ public class ComputeDEVRankingCli extends ExpressionExperimentManipulatingCLI {
     protected void processOptions() {
         super.processOptions();
 
-        if ( hasOption( 'f' ) ) {
-            this.geneExpressionList = getOptionValue( 'f' );
-        }
         if ( hasOption( 'm' ) ) {
             this.method = Method.valueOf( getOptionValue( 'm' ) );
         }
@@ -121,34 +110,15 @@ public class ComputeDEVRankingCli extends ExpressionExperimentManipulatingCLI {
             return err;
         }
 
-        ExpressionExperiment expressionExperiment = null;
-
         if ( this.getExperimentShortName() == null ) {
 
-            if ( this.geneExpressionList == null ) {
-                Collection<ExpressionExperiment> all = eeService.loadAll();
-                log.info( "Total ExpressionExperiment: " + all.size() );
-                for ( ExpressionExperiment ee : all ) {
-                    processExperiment( ee );
-                }
-            } else {
-                try {
-                    InputStream is = new FileInputStream( this.geneExpressionList );
-                    BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-                    String shortName = null;
-                    while ( ( shortName = br.readLine() ) != null ) {
-                        if ( StringUtils.isBlank( shortName ) ) continue;
-                        expressionExperiment = eeService.findByShortName( shortName );
+            if ( this.expressionExperiments == null ) {
+                Collection<ExpressionExperiment> expressionExperiments = eeService.loadAll();
+                log.info( "Processing all experiments " + expressionExperiments.size() );
+            }
 
-                        if ( expressionExperiment == null ) {
-                            errorObjects.add( shortName + " is not found in the database! " );
-                            continue;
-                        }
-                        processExperiment( expressionExperiment );
-                    }
-                } catch ( Exception e ) {
-                    return e;
-                }
+            for ( ExpressionExperiment ee : expressionExperiments ) {
+                processExperiment( ee );
             }
             summarizeProcessing();
         } else {
