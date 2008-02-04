@@ -208,7 +208,6 @@ public class ExpressionExperimentServiceImpl extends
     @Override
     protected Collection<ArrayDesign> handleGetArrayDesignsUsed( ExpressionExperiment expressionExperiment ) {
         Collection<ArrayDesign> result = new HashSet<ArrayDesign>();
-        this.getExpressionExperimentDao().thawBioAssays( expressionExperiment );
         for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
             result.add( ba.getArrayDesignUsed() );
         }

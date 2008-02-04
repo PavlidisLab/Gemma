@@ -36,6 +36,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -1300,7 +1301,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
 
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.update( ee );
+                session.lock( ee, LockMode.READ );
 
                 for ( QuantitationType type : ee.getQuantitationTypes() ) {
                     session.update( type );
@@ -1323,9 +1324,11 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                         Hibernate.initialize( bm );
                         Hibernate.initialize( bm.getBioAssaysUsedIn() );
                         Hibernate.initialize( bm.getFactorValues() );
+                        session.evict( bm );
                     }
                     ba.getDerivedDataFiles().size();
                     Hibernate.initialize( ba.getArrayDesignUsed() );
+                    session.evict( ba );
                 }
 
                 ee.getInvestigators().size();
@@ -1336,7 +1339,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
                 return null;
             }
-        }, true );
+        }, false );
     }
 
     /*
