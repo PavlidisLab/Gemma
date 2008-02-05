@@ -104,6 +104,7 @@ public class ExtCoexpressionSearchController extends BaseFormController {
         ExtCoexpressionMetaValueObject result = new ExtCoexpressionMetaValueObject();
         GeneCoexpressionAnalysis analysis = (GeneCoexpressionAnalysis)geneCoexpressionAnalysisService.load( cannedAnalysisId );
         result.setDatasets( new ArrayList( analysis.getExperimentsAnalyzed() ) );
+        result.setKnownGeneDatasets( new ArrayList<ExtCoexpressionDatasetValueObject>() );
         result.setKnownGeneResults( new ArrayList<ExtCoexpressionValueObject>() );
         for ( Gene queryGene : genes ) {
             for ( Object o : gene2GeneCoexpressionService.findCoexpressionRelationships( queryGene, analysis, stringency ) ) {
