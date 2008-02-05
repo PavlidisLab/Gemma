@@ -4,7 +4,7 @@
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
 	<artifactId>gemma</artifactId>
-	<version>1.0-SNAPSHOT</version>
+	<version>1.0RC1</version>
 	<inceptionYear>2005</inceptionYear>
 	<description>The Gemma Project for meta-analysis of genomics data</description>
 	<url>http://www.bioinformatics.ubc.ca/Gemma</url>
@@ -282,6 +282,11 @@
 					<allowTimestampedSnapshots>true</allowTimestampedSnapshots>
 					<autoVersionSubmodules>true</autoVersionSubmodules>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>snapshot-pin-maven-plugin</artifactId>
+				<version>1.0-SNAPSHOT</version>
 			</plugin>
 		</plugins>
 	</build>

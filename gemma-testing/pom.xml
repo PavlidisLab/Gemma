@@ -10,19 +10,19 @@
 	<parent>
 		<groupId>gemma</groupId>
 		<artifactId>gemma</artifactId>
-		<version>1.0-SNAPSHOT</version>
+		<version>1.0RC1</version>
 	</parent>
 	<dependencies>
 		<dependency>
 			<groupId>gemma</groupId>
 			<artifactId>gemma-util</artifactId>
-			<version>1.0-SNAPSHOT</version>
+			<version>1.0RC1</version>
 			<type>jar</type>
 		</dependency>
 		<dependency>
 			<groupId>gemma</groupId>
 			<artifactId>gemma-mda</artifactId>
-			<version>1.0-SNAPSHOT</version>
+			<version>1.0RC1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.easymock</groupId>
