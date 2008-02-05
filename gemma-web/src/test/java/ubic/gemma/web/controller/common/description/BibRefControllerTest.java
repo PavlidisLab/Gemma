@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.common.description;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 
@@ -124,9 +125,17 @@ public class BibRefControllerTest extends BaseSpringContextTest {
         req = new MockHttpServletRequest( "POST", "/bibRef/bibRefView.html" );
         req.addParameter( "accession", "" + 1294000 );
 
-        ModelAndView mav = brc.handleRequest( req, new MockHttpServletResponse() );
-        assertTrue( mav != null );
-        assertEquals( "bibRefView", mav.getViewName() );
+        try {
+            ModelAndView mav = brc.handleRequest( req, new MockHttpServletResponse() );
+            assertTrue( mav != null );
+            assertEquals( "bibRefView", mav.getViewName() );
+        } catch ( RuntimeException e ) {
+            if ( e.getCause() instanceof IOException && e.getMessage().contains( "503" ) ) {
+                log.warn( "503 error from NCBI, skipping test: ", e );
+            } else {
+                throw e;
+            }
+        }
     }
 
     /**
@@ -150,9 +159,9 @@ public class BibRefControllerTest extends BaseSpringContextTest {
         assert b != null; // ?
         assertEquals( "bibRefView", b.getViewName() );
         // in addition there should be a message "0000000 not found".
-  //      Collection<String> errors = ( Collection<String> ) req.getAttribute( "errors" );
-//        assertTrue( errors != null && errors.size() > 0 );
-//        assertTrue( "Got: " + errors.iterator().next(), errors.iterator().next().startsWith( nonexistentpubmedid ) );
+        // Collection<String> errors = ( Collection<String> ) req.getAttribute( "errors" );
+        // assertTrue( errors != null && errors.size() > 0 );
+        // assertTrue( "Got: " + errors.iterator().next(), errors.iterator().next().startsWith( nonexistentpubmedid ) );
 
     }
 
