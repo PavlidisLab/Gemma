@@ -289,6 +289,10 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
             }
             eeSearchResults.removeAll( eeToRemove );
 
+            /*
+             * FIXME - remove data sets that have trouble flags. (Bug 1093)
+             */
+
             if ( eeSearchResults.isEmpty() ) {
                 mav = super.showForm( request, errors, getFormView() );
                 saveMessage( request, "There are no " + taxon.getScientificName()
@@ -343,7 +347,8 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         Collection<ExpressionExperiment> eesQueryTestedIn = coexpressions.getEesQueryTestedIn();
 
         if ( eesQueryTestedIn != null && eesQueryTestedIn.size() == 0 ) {
-            this.saveMessage( request, commandObject.getSourceGene().getName() + " was not tested in any available data set." );
+            this.saveMessage( request, commandObject.getSourceGene().getName()
+                    + " was not tested in any available data set." );
         } else if ( coexpressedKnownGenes.size() == 0 ) {
             // this only makes sense if we are only returning known genes.
             this.saveMessage( request, "No genes are coexpressed with " + commandObject.getSourceGene().getName()
