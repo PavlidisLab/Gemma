@@ -439,7 +439,7 @@
     <dependency>
       <groupId>compass</groupId>
       <artifactId>compass</artifactId>
-      <version>2.0M1-20080123.034823-1</version>
+      <version>2.0M1</version>
     </dependency>
     <dependency>
       <groupId>lucene</groupId>
