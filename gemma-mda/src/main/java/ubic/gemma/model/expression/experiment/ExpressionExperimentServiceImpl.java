@@ -328,7 +328,7 @@ public class ExpressionExperimentServiceImpl extends
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Map handleGetLastTroubleEvent( Collection ids ) throws Exception {
+    protected Map handleGetLastTroubleEvent( Collection /* <Long> */ids ) throws Exception {
         Map<Long, Collection<AuditEvent>> eeEvents = this.getExpressionExperimentDao().getAuditEvents( ids );
         Map<Long, Map<Long, Collection<AuditEvent>>> adEvents = this.getExpressionExperimentDao()
                 .getArrayDesignAuditEvents( ids );
