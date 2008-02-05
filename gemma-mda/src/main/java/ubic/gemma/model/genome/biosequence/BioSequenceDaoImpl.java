@@ -31,6 +31,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
 import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
+import org.hibernate.LockMode;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.association.BioSequence2GeneProduct;
@@ -346,8 +347,8 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                 int count = 0;
                 for ( Object object : bioSequences ) {
                     BioSequence bioSequence = ( BioSequence ) object;
+                    session.lock( bioSequence, LockMode.NONE );
                     Hibernate.initialize( bioSequence );
-                    session.update( bioSequence );
 
                     if ( deep ) {
                         bioSequence.getTaxon();
@@ -356,13 +357,15 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
                     DatabaseEntry dbEntry = bioSequence.getSequenceDatabaseEntry();
                     if ( dbEntry != null ) {
-                        session.update( dbEntry );
-                        session.update( dbEntry.getExternalDatabase() );
+                        session.lock( dbEntry, LockMode.NONE );
+                        Hibernate.initialize( dbEntry );
+                        session.lock( dbEntry.getExternalDatabase(), LockMode.NONE );
+                        Hibernate.initialize( dbEntry.getExternalDatabase() );
+                        session.evict( dbEntry );
                     }
 
                     if ( ++count % 2000 == 0 ) {
                         log.info( "Thawed " + count + " sequences ..." );
-                        session.clear();
                     }
                     EntityUtils.unProxy( bioSequence );
                 }
