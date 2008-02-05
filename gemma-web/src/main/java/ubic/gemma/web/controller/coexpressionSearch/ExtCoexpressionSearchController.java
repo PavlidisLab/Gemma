@@ -35,10 +35,12 @@ import ubic.gemma.model.analysis.GeneCoexpressionAnalysis;
 import ubic.gemma.model.analysis.GeneCoexpressionAnalysisService;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService;
+import ubic.gemma.model.coexpression.CoexpressedGenesDetails;
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
@@ -109,26 +111,32 @@ public class ExtCoexpressionSearchController extends BaseFormController {
                 ExtCoexpressionValueObject ecvo = new ExtCoexpressionValueObject();
                 ecvo.setQueryGene( g2g.getFirstGene() );
                 ecvo.setFoundGene( g2g.getSecondGene() );
+                ecvo.setTestedDatasetVector( convertG2GBitVector( g2g.getDatasetsTestedVector() ) );
+                ecvo.setSupportingDatasetVector( convertG2GBitVector( g2g.getDatasetsSupportingVector() ) );
+                int numTestingDatasets = countBits( ecvo.getTestedDatasetVector() );
+                int numSupportingDatasets = countBits( ecvo.getSupportingDatasetVector() );
                 if ( g2g.getEffect() < 0 ) {
                     ecvo.setPositiveLinks( 0 );
-                    ecvo.setNegativeLinks( countBits( g2g.getDatasetsSupportingVector() ) );
+                    ecvo.setNegativeLinks( numSupportingDatasets );
                 } else {
-                    ecvo.setPositiveLinks( countBits( g2g.getDatasetsSupportingVector() ) );
+                    ecvo.setPositiveLinks( numSupportingDatasets );
                     ecvo.setNegativeLinks( 0 );
                 }
                 ecvo.setSupportKey( ecvo.getPositiveLinks() - ecvo.getNegativeLinks() );
-                ecvo.setNumDatasetsLinkTestedIn( countBits( g2g.getDatasetsTestedVector() ) );
+                ecvo.setNumDatasetsLinkTestedIn( numTestingDatasets );
                 ecvo.setGoOverlap( 0 );
                 ecvo.setPossibleOverlap( 0 );
-                ecvo.setTestedDatasetVector( g2g.getDatasetsTestedVector() );
-                ecvo.setSupportingDatasetVector( g2g.getDatasetsSupportingVector() );
                 result.getKnownGeneResults().add( ecvo );
             }
         }
         return result;
     }
     
-    private int countBits( byte[] vector ) {
+    private Long[] convertG2GBitVector( byte[] datasetsTestedVector ) {
+        return new Long[0];
+    }
+
+    private int countBits( Long[] vector ) {
         int n=0;
         for ( int i=0; i<vector.length; ++i )
             if ( vector[i] > 0 )
@@ -141,9 +149,23 @@ public class ExtCoexpressionSearchController extends BaseFormController {
         Collection<ExpressionExperiment> ees = ( eeIds != null && !eeIds.isEmpty() ) ?
                 expressionExperimentService.loadMultiple( eeIds ) :
                 getPossibleExpressionExperiments( genes );
-        result.setDatasets( new ArrayList( ees ) );
+        
+        /* repopulate eeIds with the actual eeIds we'll be searching through and load
+         * ExpressionExperimentValueObjects to get summary information about the datasets...
+         */
+        eeIds.clear();
+        for ( ExpressionExperiment ee : ees ) {
+            eeIds.add( ee.getId() );
+        }
+        List<ExpressionExperimentValueObject> eevos = new ArrayList( expressionExperimentService.loadValueObjects( eeIds ) );
+        
+        result.setQueryGenes( genes );
+        result.setDatasets( eevos );
+        result.setKnownGeneDatasets( new ArrayList<ExtCoexpressionDatasetValueObject>() );
         result.setKnownGeneResults( new ArrayList<ExtCoexpressionValueObject>() );
+        result.setPredictedGeneDatasets( new ArrayList<ExtCoexpressionDatasetValueObject>() );
         result.setPredictedGeneResults( new ArrayList<ExtCoexpressionValueObject>() );
+        result.setProbeAlignedRegionDatasets( new ArrayList<ExtCoexpressionDatasetValueObject>() );
         result.setProbeAlignedRegionResults( new ArrayList<ExtCoexpressionValueObject>() );
         
         /* TODO this is done just naively right now.
@@ -153,16 +175,16 @@ public class ExtCoexpressionSearchController extends BaseFormController {
         for ( Gene queryGene : genes ) {
             CoexpressionCollectionValueObject coexpressions =
                 probeLinkCoexpressionAnalyzer.linkAnalysis( queryGene, ees, stringency, !SecurityService.isUserAdmin() );
-            addExtCoexpressionValueObjects( queryGene, result.getDatasets(), coexpressions.getKnownGeneCoexpressionData( stringency ), result.getKnownGeneResults() );
-            addExtCoexpressionValueObjects( queryGene, result.getDatasets(), coexpressions.getPredictedCoexpressionData( stringency ), result.getPredictedGeneResults() );
-            addExtCoexpressionValueObjects( queryGene, result.getDatasets(), coexpressions.getProbeAlignedCoexpressionData( stringency ), result.getProbeAlignedRegionResults() );
+            addExtCoexpressionValueObjects( queryGene, result.getDatasets(), coexpressions.getKnownGeneCoexpression(), stringency, result.getKnownGeneResults(), result.getKnownGeneDatasets() );
+            addExtCoexpressionValueObjects( queryGene, result.getDatasets(), coexpressions.getPredictedCoexpressionType(), stringency, result.getPredictedGeneResults(), result.getPredictedGeneDatasets() );
+            addExtCoexpressionValueObjects( queryGene, result.getDatasets(), coexpressions.getProbeAlignedCoexpressionType(), stringency, result.getProbeAlignedRegionResults(), result.getProbeAlignedRegionDatasets() );
         }
         
         return result;
     }
     
-    private void addExtCoexpressionValueObjects( Gene queryGene, List<ExpressionExperiment> ees, List<CoexpressionValueObject> coexp, Collection<ExtCoexpressionValueObject> results ) {
-        for ( CoexpressionValueObject cvo : coexp ) {
+    private void addExtCoexpressionValueObjects( Gene queryGene, List<ExpressionExperimentValueObject> eevos, CoexpressedGenesDetails coexp, int stringency, Collection<ExtCoexpressionValueObject> results, Collection<ExtCoexpressionDatasetValueObject> datasets ) {
+        for ( CoexpressionValueObject cvo : coexp.getCoexpressionData( stringency ) ) {
             ExtCoexpressionValueObject ecvo = new ExtCoexpressionValueObject();
             ecvo.setQueryGene( queryGene );
             ecvo.setFoundGene( new SimpleGene( cvo.getGeneId(), cvo.getGeneName(), cvo.getGeneOfficialName() ) );
@@ -176,16 +198,32 @@ public class ExtCoexpressionSearchController extends BaseFormController {
             ecvo.setPossibleOverlap( cvo.getPossibleOverlap() );
             
             // these are here because I have to cast if I assign directly in the loop; try it, it's weird...
-            final byte ON=1, OFF=0;
-            byte[] tested = new byte[ ees.size() ];
-            byte[] supported = new byte[ ees.size() ];
-            for ( int i=0; i<ees.size(); ++i ) {
-                ExpressionExperiment ee = ees.get( i );
-                tested[i] = cvo.getDatasetsTestedIn().contains( ee.getId() ) ? ON : OFF;
-                supported[i] = cvo.getExperimentBitIds().contains( ee.getId() ) ? ON : OFF;
+            Long[] tested = new Long[ eevos.size() ];
+            Long[] supported = new Long[ eevos.size() ];
+            for ( int i=0; i<eevos.size(); ++i ) {
+                ExpressionExperimentValueObject eevo = eevos.get( i );
+                ExpressionExperimentValueObject coexpEevo = coexp.getExpressionExperiment( eevo.getId() );
+                if ( coexpEevo == null )
+                    continue;
+                ExtCoexpressionDatasetValueObject ecdvo = new ExtCoexpressionDatasetValueObject();
+                ecdvo.setId( eevo.getId() );
+                ecdvo.setQueryGene( queryGene.getOfficialSymbol() );
+                ecdvo.setCoexpressionLinkCount( coexp.getLinkCountForEE( coexpEevo.getId() ) );
+                ecdvo.setRawCoexpressionLinkCount( coexp.getRawLinkCountForEE( coexpEevo.getId() ) );
+                ecdvo.setProbeSpecificForQueryGene( coexpEevo.isProbeSpecificForQueryGene() );
+                ecdvo.setArrayDesignCount( eevo.getArrayDesignCount() );
+                ecdvo.setBioAssayCount( eevo.getBioAssayCount() );
+                datasets.add( ecdvo );
+                
+                tested[i] = cvo.getDatasetsTestedIn().contains( eevo.getId() ) ? eevo.getId() : 0;
+                supported[i] = cvo.getExperimentBitIds().contains( eevo.getId() ) ? eevo.getId() : 0;
             }
             ecvo.setTestedDatasetVector( tested );
             ecvo.setSupportingDatasetVector( supported );
+            
+            for ( ExpressionExperimentValueObject eevo : cvo.getExpressionExperimentValueObjects() ) {
+            }
+            
             results.add( ecvo );
         }
     }
@@ -222,7 +260,8 @@ public class ExtCoexpressionSearchController extends BaseFormController {
     
     public Collection<Long> findExpressionExperiments( String query ) {
         Collection<Long> eeIds = new HashSet<Long>();
-        for ( SearchResult result : searchService.search( SearchSettings.ExpressionExperimentSearch( query ) ).get( ExpressionExperiment.class ) ) {
+        List<SearchResult> results = searchService.search( SearchSettings.ExpressionExperimentSearch( query ), false ).get( ExpressionExperiment.class );
+        for ( SearchResult result : results ) {
             eeIds.add( result.getId() );
         }
         return eeIds;

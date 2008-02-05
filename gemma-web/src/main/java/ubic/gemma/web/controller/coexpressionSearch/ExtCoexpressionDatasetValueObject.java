@@ -25,14 +25,12 @@ package ubic.gemma.web.controller.coexpressionSearch;
 public class ExtCoexpressionDatasetValueObject {
     
     private Long id;
-    private String name;
-    private String shortName;
-    private Boolean probeSpecificForQueryGene;
-    private Integer arrayDesignCount;
-    private Integer bioAssayCount;
     private String queryGene;
-    private Integer rawCoexpressionLinkCount;
-    private Integer coexpressionLinkCount;
+    private Boolean probeSpecificForQueryGene;
+    private Long arrayDesignCount;
+    private Long bioAssayCount;
+    private Long rawCoexpressionLinkCount;
+    private Long coexpressionLinkCount;
     
     public Long getId() {
         return id;
@@ -41,21 +39,13 @@ public class ExtCoexpressionDatasetValueObject {
     public void setId( Long id ) {
         this.id = id;
     }
-    
-    public String getName() {
-        return name;
+
+    public String getQueryGene() {
+        return queryGene;
     }
-    
-    public void setName( String name ) {
-        this.name = name;
-    }
-    
-    public String getShortName() {
-        return shortName;
-    }
-    
-    public void setShortName( String shortName ) {
-        this.shortName = shortName;
+
+    public void setQueryGene( String queryGene ) {
+        this.queryGene = queryGene;
     }
     
     public Boolean getProbeSpecificForQueryGene() {
@@ -66,35 +56,35 @@ public class ExtCoexpressionDatasetValueObject {
         this.probeSpecificForQueryGene = probeSpecificForQueryGene;
     }
     
-    public Integer getArrayDesignCount() {
+    public Long getArrayDesignCount() {
         return arrayDesignCount;
     }
     
-    public void setArrayDesignCount( Integer arrayDesignCount ) {
+    public void setArrayDesignCount( Long arrayDesignCount ) {
         this.arrayDesignCount = arrayDesignCount;
     }
     
-    public Integer getBioAssayCount() {
+    public Long getBioAssayCount() {
         return bioAssayCount;
     }
     
-    public void setBioAssayCount( Integer bioAssayCount ) {
+    public void setBioAssayCount( Long bioAssayCount ) {
         this.bioAssayCount = bioAssayCount;
     }
     
-    public Integer getRawCoexpressionLinkCount() {
+    public Long getRawCoexpressionLinkCount() {
         return rawCoexpressionLinkCount;
     }
     
-    public void setRawCoexpressionLinkCount( Integer rawCoexpressionLinkCount ) {
+    public void setRawCoexpressionLinkCount( Long rawCoexpressionLinkCount ) {
         this.rawCoexpressionLinkCount = rawCoexpressionLinkCount;
     }
     
-    public Integer getCoexpressionLinkCount() {
+    public Long getCoexpressionLinkCount() {
         return coexpressionLinkCount;
     }
     
-    public void setCoexpressionLinkCount( Integer coexpressionLinkCount ) {
+    public void setCoexpressionLinkCount( Long coexpressionLinkCount ) {
         this.coexpressionLinkCount = coexpressionLinkCount;
     }
         

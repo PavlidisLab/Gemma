@@ -43,6 +43,7 @@ Ext.Gemma.CoexpressionGrid = function ( config ) {
 		{ id: 'datasets', header: "Datasets", dataIndex: "supportingDatasetVector", renderer: Ext.Gemma.CoexpressionGrid.getBitImageStyler() }
 	] );
 	superConfig.cm.defaultSortable = true;
+	superConfig.plugins = Ext.Gemma.CoexpressionGrid.getRowExpander();
 	
 	superConfig.autoExpandColumn = 'found';
 
@@ -149,10 +150,7 @@ Ext.Gemma.CoexpressionGrid.getBitImageStyler = function() {
 Ext.Gemma.CoexpressionGrid.getRowExpander = function() {
 	if ( Ext.Gemma.CoexpressionGrid.rowExpander === undefined ) {
 		Ext.Gemma.CoexpressionGrid.rowExpander = new Ext.grid.RowExpander( {
-			tpl : new Ext.Template(
-				"<ul style='margin-left: 1em; margin-bottom: 2px; list-style-type: none;'><dt>BioMaterial {bmName}</dt><dd>{bmDesc}<br>{bmChars}</dd>",
-				"<dt>BioAssay {baName}</dt><dd>{baDesc}</dd></dl>"
-			)
+			
 		} );
 	}
 	return Ext.Gemma.CoexpressionGrid.rowExpander;
@@ -181,5 +179,20 @@ Ext.extend( Ext.Gemma.CoexpressionGrid, Ext.Gemma.GemmaGridPanel, {
 		this.refresh();
 		this.getView().refresh( true );
 	}
+	
+} );
+
+/* Ext.Gemma.CoexpressionGridRowExpander constructor...
+ */
+Ext.Gemma.CoexpressionGridRowExpander = function ( config ) {
+};
+
+/* instance methods...
+ */
+Ext.extend( Ext.Gemma.CoexpressionGridRowExpander, Ext.grid.RowExpander, {
+	
+	generateBodyContent : function (record, rowIndex) {
+    	
+    }
 	
 } );

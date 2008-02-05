@@ -90,8 +90,8 @@ Ext.Gemma.AnnotationToolBar = function ( annotationGrid, config ) {
 			tooltip : "Removes the selected annotation",
 			disabled : true,
 			handler : function() {
-				deleteHandler( annotationGrid.getSelectedIds(), annotationGrid.refresh.bind( annotationGrid ) );
 				deleteButton.disable();
+				deleteHandler( annotationGrid.getSelectedIds(), annotationGrid.refresh.bind( annotationGrid ) );
 			}
 		} );
 		annotationGrid.getSelectionModel().on( "selectionchange", function( model ) {

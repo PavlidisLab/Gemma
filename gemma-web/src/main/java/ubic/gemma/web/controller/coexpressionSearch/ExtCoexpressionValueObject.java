@@ -33,8 +33,8 @@ public class ExtCoexpressionValueObject {
     private Integer numDatasetsLinkTestedIn;
     private Integer goOverlap;
     private Integer possibleOverlap;
-    private byte[] testedDatasetVector;
-    private byte[] supportingDatasetVector;
+    private Long[] testedDatasetVector;
+    private Long[] supportingDatasetVector;
     
     public Gene getQueryGene() {
         return queryGene;
@@ -100,19 +100,19 @@ public class ExtCoexpressionValueObject {
         this.possibleOverlap = possibleOverlap;
     }
 
-    public byte[] getTestedDatasetVector() {
+    public Long[] getTestedDatasetVector() {
         return testedDatasetVector;
     }
 
-    public void setTestedDatasetVector( byte[] testedDatasetVector ) {
+    public void setTestedDatasetVector( Long[] testedDatasetVector ) {
         this.testedDatasetVector = testedDatasetVector;
     }
 
-    public byte[] getSupportingDatasetVector() {
+    public Long[] getSupportingDatasetVector() {
         return supportingDatasetVector;
     }
 
-    public void setSupportingDatasetVector( byte[] supportingDatasetVector ) {
+    public void setSupportingDatasetVector( Long[] supportingDatasetVector ) {
         this.supportingDatasetVector = supportingDatasetVector;
     }
     

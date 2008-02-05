@@ -1009,6 +1009,11 @@ Mapping URLS to controllers
 					<property name="type" value="bean"/>
 				</bean>
 			</entry>
+			<entry key="ubic.gemma.web.controller.coexpressionSearch.ExtCoexpressionDatasetValueObject">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean"/>
+				</bean>
+			</entry>
 			<entry key="ubic.gemma.web.controller.coexpressionSearch.ExtCoexpressionMetaValueObject">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean"/>

@@ -66,14 +66,18 @@ Ext.extend(Ext.grid.RowExpander, Ext.util.Observable, {
 
     getBodyContent : function(record, index){
         if(!this.enableCaching){
-            return this.tpl.apply(record.data);
+            return generateBodyContent(record, index);
         }
         var content = this.bodyContent[record.id];
         if(!content){
-            content = this.tpl.apply(record.data);
+            content = this.generateBodyContent(record, index);
             this.bodyContent[record.id] = content;
         }
         return content;
+    },
+    
+    generateBodyContent : function(record, rowIndex){
+    	return this.tpl.apply(record.data);
     },
 
     onMouseDown : function(e, t){
