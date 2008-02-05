@@ -120,6 +120,16 @@
 			<artifactId>spring-hibernate3</artifactId>
 			<version>2.0.7</version>
 			<type>jar</type>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework</groupId>
+					<artifactId>spring-beans</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.springframework</groupId>
+					<artifactId>spring-core</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>baseCode</groupId>
@@ -275,7 +285,7 @@
 					<argLine>-Xmx1024m -enableassertions</argLine>
 				</configuration>
 			</plugin>
-				<plugin>
+			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-release-plugin</artifactId>
 				<configuration>
