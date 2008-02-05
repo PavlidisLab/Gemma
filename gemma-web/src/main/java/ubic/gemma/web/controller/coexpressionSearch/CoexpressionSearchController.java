@@ -34,6 +34,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Predicate;
+import org.apache.commons.collections.Transformer;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -47,6 +50,7 @@ import ubic.gemma.loader.genome.taxon.SupportedTaxa;
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.coexpression.CoexpressedGenesDetails;
 import ubic.gemma.model.coexpression.CoexpressionValueObject;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -289,10 +293,6 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
             }
             eeSearchResults.removeAll( eeToRemove );
 
-            /*
-             * FIXME - remove data sets that have trouble flags. (Bug 1093)
-             */
-
             if ( eeSearchResults.isEmpty() ) {
                 mav = super.showForm( request, errors, getFormView() );
                 saveMessage( request, "There are no " + taxon.getScientificName()
@@ -305,6 +305,9 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         } else {
             ees = expressionExperimentService.loadMultiple( possibleEEs );
         }
+
+        removeTroubledEes( ees );
+
         commandObject.setToUseEE( ees );
         numExpressionExperiments = ees.size();
 
@@ -421,6 +424,24 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
 
         return mav;
 
+    }
+
+    /**
+     * @param ees
+     */
+    @SuppressWarnings("unchecked")
+    private void removeTroubledEes( Collection<ExpressionExperiment> ees ) {
+        final Map<Long, AuditEvent> trouble = expressionExperimentService.getLastTroubleEvent( CollectionUtils.collect(
+                ees, new Transformer() {
+                    public Object transform( Object input ) {
+                        return ( ( ExpressionExperiment ) input ).getId();
+                    }
+                } ) );
+        CollectionUtils.filter( ees, new Predicate() {
+            public boolean evaluate( Object object ) {
+                return !trouble.containsKey( ( ( ExpressionExperiment ) object ).getId() );
+            }
+        } );
     }
 
     /**
