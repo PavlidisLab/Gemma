@@ -256,16 +256,6 @@
 				<javadocDir>${basedir}/target/site/apidocs</javadocDir>
 				</configuration>
 				</plugin> -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-release-plugin</artifactId>
-				<version>2.0-beta-7</version>
-				<configuration>
-					<allowTimestampedSnapshots>true</allowTimestampedSnapshots>
-					<ignoreSnapshots>true</ignoreSnapshots>
-					<autoVersionSubmodules>true</autoVersionSubmodules>
-				</configuration>
-			</plugin>
 		</plugins>
 	</reporting>
 	<build>
@@ -283,6 +273,14 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
 					<argLine>-Xmx1024m -enableassertions</argLine>
+				</configuration>
+			</plugin>
+				<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<configuration>
+					<allowTimestampedSnapshots>true</allowTimestampedSnapshots>
+					<autoVersionSubmodules>true</autoVersionSubmodules>
 				</configuration>
 			</plugin>
 		</plugins>
