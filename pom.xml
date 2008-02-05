@@ -262,6 +262,7 @@
 				<version>2.0-beta-7</version>
 				<configuration>
 					<allowTimestampedSnapshots>true</allowTimestampedSnapshots>
+					<ignoreSnapshots>true</ignoreSnapshots>
 					<autoVersionSubmodules>true</autoVersionSubmodules>
 				</configuration>
 			</plugin>
