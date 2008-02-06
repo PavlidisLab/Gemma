@@ -89,7 +89,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
     @Override
     protected void configureMocks() throws Exception {
 
-        configureMockAnalysisServiceHelper( 1 );
+        configureMockAnalysisServiceHelper( 2 );
 
         analyzer.setAnalysisHelperService( analysisHelperService );
 

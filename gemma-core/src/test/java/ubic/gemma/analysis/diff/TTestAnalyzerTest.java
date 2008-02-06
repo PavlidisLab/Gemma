@@ -129,7 +129,7 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
     @Override
     protected void configureMocks() throws Exception {
 
-        configureMockAnalysisServiceHelper( 1 );
+        configureMockAnalysisServiceHelper( 2 );
 
         analyzer.setAnalysisHelperService( analysisHelperService );
 
