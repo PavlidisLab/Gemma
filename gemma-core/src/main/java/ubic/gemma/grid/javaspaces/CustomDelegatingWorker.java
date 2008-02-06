@@ -145,6 +145,10 @@ public class CustomDelegatingWorker implements Runnable {
                     }
 
                     log.info( "Received method call entry.  Will execute task." );
+                    log.debug("Call:   " + call);
+                    log.debug("MethodCallEntryTemplate:   " + methodCallEntryTemplate);
+                    log.debug("SpacesRegistrationEntry:   " + spacesRegistrationEntry);
+                    
 
                     // custom
                     js.take( spacesRegistrationEntry, null, 600000000 );
