@@ -284,7 +284,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
      */
     @Override
     public String getShortDesc() {
-        return "Analyze expression data sets for differentially genes.";
+        return "Analyze expression data sets for differentially expressed genes.";
     }
 
 }
