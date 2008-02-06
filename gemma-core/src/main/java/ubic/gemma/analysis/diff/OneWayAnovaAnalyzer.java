@@ -31,7 +31,6 @@ import org.rosuda.REngine.REXPMismatchException;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.dataStructure.matrix.FastRowAccessDoubleMatrix2DNamed;
-import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -110,19 +109,12 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                     "One way anova requires 2 or more factor values (2 factor values is a t-test).  Received "
                             + factorValues.size() + "." );
 
-        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
-
-        QuantitationType quantitationType = getPreferredQuantitationType( vectorsToUse );
-        if ( quantitationType == null ) {
-            throw new RuntimeException( // FIXME could be excessive ... log as an error?
-                    "Could not determine the preferred quantitation type.  Not sure what type to associate with the analysis." );
-        }
-
-        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
-
-        ExpressionDataDoubleMatrix dmatrix = builder.getMaskedPreferredData( null );
+        ExpressionDataDoubleMatrix dmatrix = this.createMatrix( expressionExperiment );
 
         DoubleMatrixNamed filteredNamedMatrix = this.filterMatrix( dmatrix, factorValues );
+
+        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
+        QuantitationType quantitationType = getPreferredQuantitationType( vectorsToUse );
 
         String facts = rc.assignStringList( rFactors );
 

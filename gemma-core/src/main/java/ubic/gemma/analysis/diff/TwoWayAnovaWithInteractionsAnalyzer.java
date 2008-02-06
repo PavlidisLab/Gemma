@@ -23,8 +23,8 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
-import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -87,16 +87,9 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
         }
 
         Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
-
         QuantitationType quantitationType = getPreferredQuantitationType( vectorsToUse );
-        if ( quantitationType == null ) {
-            throw new RuntimeException( // FIXME could be excessive ... log as an error?
-                    "Could not determine the preferred quantitation type.  Not sure what type to associate with the analysis." );
-        }
 
-        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
-
-        ExpressionDataDoubleMatrix dmatrix = builder.getMaskedPreferredData( null );
+        ExpressionDataDoubleMatrix dmatrix = this.createMatrix( expressionExperiment );
 
         Collection<BioMaterial> samplesUsed = AnalyzerHelper.getBioMaterialsForBioAssays( dmatrix );
 

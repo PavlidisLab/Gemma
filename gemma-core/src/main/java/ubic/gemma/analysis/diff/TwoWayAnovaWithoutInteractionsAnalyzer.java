@@ -85,17 +85,10 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
                             + " or experimental factor " + experimentalFactorB.getName() + "." );
         }
 
+        ExpressionDataDoubleMatrix dmatrix = this.createMatrix( expressionExperiment );
+
         Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
-
         QuantitationType quantitationType = getPreferredQuantitationType( vectorsToUse );
-        if ( quantitationType == null ) {
-            throw new RuntimeException( // FIXME could be excessive ... log as an error?
-                    "Could not determine the preferred quantitation type.  Not sure what type to associate with the analysis." );
-        }
-
-        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
-
-        ExpressionDataDoubleMatrix dmatrix = builder.getMaskedPreferredData( null );
 
         Collection<BioMaterial> samplesUsed = AnalyzerHelper.getBioMaterialsForBioAssays( dmatrix );
 

@@ -23,6 +23,8 @@ import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -89,9 +91,28 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
         for ( DesignElementDataVector vector : vectors ) {
             qt = vector.getQuantitationType();
             if ( qt.getIsPreferred() ) {
-                break;
+                return qt;
             }
         }
-        return qt;
+        log
+                .error( "Could not determine the preferred quantitation type.  Not sure what type to associate with the analysis result." );
+        return null;
+    }
+
+    /**
+     * Creates the matrix using the preferred data. Masks the data for two color arrays.
+     * 
+     * @param expressionExperiment
+     * @return
+     */
+    protected ExpressionDataDoubleMatrix createMatrix( ExpressionExperiment expressionExperiment ) {
+
+        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
+
+        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
+
+        ExpressionDataDoubleMatrix dmatrix = builder.getMaskedPreferredData( null );
+
+        return dmatrix;
     }
 }
