@@ -35,7 +35,7 @@ import org.springframework.web.context.support.GenericWebApplicationContext;
 import ubic.gemma.util.grid.javaspaces.SpacesUtil;
 
 /**
- * Methods to create Spring contexts. For tests see ubic.gemma.testing.
+ * Methods to create Spring contexts for Gemma.
  * 
  * @author pavlidis
  * @version $Id$
@@ -46,7 +46,10 @@ public class SpringContextUtil {
 
     /**
      * @param testing If true, it will get a test configured-BeanFactory
-     * @return BeanFactory
+     * @param compassOn Include the compass (search) configuration. This is usually false for CLIs and tests.
+     * @param gigaspacesOn Include the gigaspaces (grid) configuration. This is usually false for CLIs and tests.
+     * @param isWebApp If true, configuration specific to the web application will be included.
+     * @return BeanFactory or null if no context could be created.
      */
     public static BeanFactory getApplicationContext( boolean testing, boolean compassOn, boolean gigaspacesOn,
             boolean isWebApp ) {
@@ -76,6 +79,7 @@ public class SpringContextUtil {
      * 
      * @param testing - if true, it will use the test configuration.
      * @return
+     * @see getApplicationContext
      */
     public static String[] getConfigLocations( boolean testing, boolean compassOn, boolean gigaspacesOn,
             boolean isWebapp ) {
@@ -102,11 +106,15 @@ public class SpringContextUtil {
      * @param paths
      */
     private static void addCommonConfig( boolean isWebapp, List<String> paths ) {
+        /*
+         * Note that the order here matters, somewhat - in some environments, configuring beans in schedule fails if
+         * search is not listed first.
+         */
         paths.add( "classpath*:ubic/gemma/applicationContext-security.xml" );
         paths.add( "classpath*:ubic/gemma/applicationContext-hibernate.xml" );
         paths.add( "classpath*:ubic/gemma/applicationContext-serviceBeans.xml" );
-        paths.add( "classpath*:ubic/gemma/applicationContext-schedule.xml" );
         paths.add( "classpath*:ubic/gemma/applicationContext-search.xml" );
+        paths.add( "classpath*:ubic/gemma/applicationContext-schedule.xml" );
         paths.add( "classpath*:ubic/gemma/applicationContext-persisterBeans.xml" );
         File f = new File( getGemmaHomeProperty() );
         try {
@@ -128,9 +136,9 @@ public class SpringContextUtil {
         List<String> paths = new ArrayList<String>();
         paths.add( "classpath*:ubic/gemma/dataSource.xml" );
 
-//        if ( compassOn ) {
-//            CompassUtils.turnOnCompass( false, paths );
-//        }
+        if ( compassOn ) {
+            CompassUtils.turnOnCompass( false, paths );
+        }
 
         if ( gigaspacesOn ) {
             SpacesUtil.addGigaspacesContextToPaths( paths );

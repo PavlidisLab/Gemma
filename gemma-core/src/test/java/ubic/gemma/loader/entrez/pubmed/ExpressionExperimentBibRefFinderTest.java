@@ -18,6 +18,11 @@
  */
 package ubic.gemma.loader.entrez.pubmed;
 
+import java.io.IOException;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -30,6 +35,8 @@ import junit.framework.TestCase;
  */
 public class ExpressionExperimentBibRefFinderTest extends TestCase {
 
+    private static Log log = LogFactory.getLog( ExpressionExperimentBibRefFinderTest.class.getName() );
+
     public void testLocatePrimaryReference() {
         ExpressionExperimentBibRefFinder finder = new ExpressionExperimentBibRefFinder();
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
@@ -39,9 +46,16 @@ public class ExpressionExperimentBibRefFinderTest extends TestCase {
         de.setAccession( "GSE3023" );
         de.setExternalDatabase( ed );
         ee.setAccession( de );
-        BibliographicReference bibref = finder.locatePrimaryReference( ee );
-        assertNotNull( bibref );
-        assertEquals( "Differential gene expression in anatomical compartments of the human eye.", bibref.getTitle() );
+        try {
+            BibliographicReference bibref = finder.locatePrimaryReference( ee );
+            assertNotNull( bibref );
+            assertEquals( "Differential gene expression in anatomical compartments of the human eye.", bibref
+                    .getTitle() );
+        } catch ( RuntimeException e ) {
+            checkCause( e );
+            return;
+        }
+
     }
 
     public void testLocatePrimaryReferenceInvalidGSE() {
@@ -53,8 +67,25 @@ public class ExpressionExperimentBibRefFinderTest extends TestCase {
         de.setAccession( "GSE30231111111111111" );
         de.setExternalDatabase( ed );
         ee.setAccession( de );
-        BibliographicReference bibref = finder.locatePrimaryReference( ee );
-        assert ( bibref == null );
+        try {
+            BibliographicReference bibref = finder.locatePrimaryReference( ee );
+            assert ( bibref == null );
+        } catch ( RuntimeException e ) {
+            checkCause( e );
+            return;
+        }
+    }
+
+    /**
+     * @param e
+     */
+    private void checkCause( RuntimeException e ) {
+        if ( e.getCause() instanceof IOException && e.getMessage().contains( "503" ) ) {
+            log.warn( "Test skipped due to a 503 error from NCBI" );
+            return;
+        } else {
+            throw e;
+        }
     }
 
 }

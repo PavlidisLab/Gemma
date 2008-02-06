@@ -18,6 +18,7 @@
  */
 package ubic.gemma.loader.entrez.pubmed;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 
 import org.apache.commons.logging.Log;
@@ -34,6 +35,31 @@ public class PubMedXMLFetcherTest extends TestCase {
     private static Log log = LogFactory.getLog( PubMedXMLFetcherTest.class.getName() );
     PubMedXMLFetcher pmf;
 
+    public final void testRetrieveByHTTP() throws Exception {
+        try {
+            BibliographicReference br = pmf.retrieveByHTTP( 15173114 );
+            assertEquals( "Lee, Homin K; Hsu, Amy K; Sajdak, Jon; Qin, Jie; Pavlidis, Paul", br.getAuthorList() );
+            assertEquals( "Genome Res", br.getPublication() );
+            assertEquals( "Coexpression analysis of human genes across many microarray data sets.", br.getTitle() );
+
+            SimpleDateFormat f = new SimpleDateFormat( "mm/HH/MM/dd/yyyy" );
+            assertEquals( "00/00/06/01/2004", f.format( br.getPublicationDate() ) );
+        } catch ( RuntimeException e ) {
+            checkCause( e );
+            return;
+        }
+    }
+
+    public final void testRetrieveByHTTPNotFound() throws Exception {
+        try {
+            BibliographicReference br = pmf.retrieveByHTTP( 1517311444 );
+            assertNull( br );
+        } catch ( RuntimeException e ) {
+            checkCause( e );
+            return;
+        }
+    }
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
@@ -46,42 +72,21 @@ public class PubMedXMLFetcherTest extends TestCase {
         pmf = null;
     }
 
-    public final void testRetrieveByHTTP() throws Exception {
-        try {
-            BibliographicReference br = pmf.retrieveByHTTP( 15173114 );
-            assertEquals( "Lee, Homin K; Hsu, Amy K; Sajdak, Jon; Qin, Jie; Pavlidis, Paul", br.getAuthorList() );
-            assertEquals( "Genome Res", br.getPublication() );
-            assertEquals( "Coexpression analysis of human genes across many microarray data sets.", br.getTitle() );
-
-            SimpleDateFormat f = new SimpleDateFormat( "mm/HH/MM/dd/yyyy" );
-            assertEquals( "00/00/06/01/2004", f.format( br.getPublicationDate() ) );
-        } catch ( RuntimeException e ) {
-            if ( e.getCause() instanceof java.net.ConnectException ) {
-                log.warn( "Test skipped due to connection exception" );
-                return;
-            } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
-                log.warn( "Test skipped due to unknown host exception" );
-                return;
-            } else {
-                throw ( e );
-            }
-        }
-    }
-
-    public final void testRetrieveByHTTPNotFound() throws Exception {
-        try {
-            BibliographicReference br = pmf.retrieveByHTTP( 1517311444 );
-            assertNull( br );
-        } catch ( RuntimeException e ) {
-            if ( e.getCause() instanceof java.net.ConnectException ) {
-                log.warn( "Test skipped due to connection exception" );
-                return;
-            } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
-                log.warn( "Test skipped due to unknown host exception" );
-                return;
-            } else {
-                throw ( e );
-            }
+    /**
+     * @param e
+     */
+    private void checkCause( RuntimeException e ) {
+        if ( e.getCause() instanceof java.net.ConnectException ) {
+            log.warn( "Test skipped due to connection exception" );
+            return;
+        } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
+            log.warn( "Test skipped due to unknown host exception" );
+            return;
+        } else if ( e.getCause() instanceof IOException && e.getMessage().contains( "503" ) ) {
+            log.warn( "Test skipped due to a 503 error from NCBI" );
+            return;
+        } else {
+            throw ( e );
         }
     }
 }
