@@ -277,4 +277,14 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         }
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractSpringAwareCLI#getShortDesc()
+     */
+    @Override
+    public String getShortDesc() {
+        return "Analyze expression data sets for differentially genes.";
+    }
+
 }
