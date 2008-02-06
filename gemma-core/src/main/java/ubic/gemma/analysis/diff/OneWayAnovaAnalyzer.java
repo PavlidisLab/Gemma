@@ -109,11 +109,12 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                     "One way anova requires 2 or more factor values (2 factor values is a t-test).  Received "
                             + factorValues.size() + "." );
 
-        ExpressionDataDoubleMatrix dmatrix = this.createMatrix( expressionExperiment );
+        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
+
+        ExpressionDataDoubleMatrix dmatrix = this.createMaskedMatrix( vectorsToUse );
 
         DoubleMatrixNamed filteredNamedMatrix = this.filterMatrix( dmatrix, factorValues );
 
-        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
         QuantitationType quantitationType = getPreferredQuantitationType( vectorsToUse );
 
         String facts = rc.assignStringList( rFactors );

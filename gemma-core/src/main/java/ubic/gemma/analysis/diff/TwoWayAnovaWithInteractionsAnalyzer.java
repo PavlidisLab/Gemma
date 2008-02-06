@@ -89,7 +89,7 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
         Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
         QuantitationType quantitationType = getPreferredQuantitationType( vectorsToUse );
 
-        ExpressionDataDoubleMatrix dmatrix = this.createMatrix( expressionExperiment );
+        ExpressionDataDoubleMatrix dmatrix = this.createMaskedMatrix( vectorsToUse );
 
         Collection<BioMaterial> samplesUsed = AnalyzerHelper.getBioMaterialsForBioAssays( dmatrix );
 

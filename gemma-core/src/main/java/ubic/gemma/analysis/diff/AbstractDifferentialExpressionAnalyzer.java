@@ -100,14 +100,12 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
     }
 
     /**
-     * Creates the matrix using the preferred data. Masks the data for two color arrays.
+     * Creates the matrix using the vectors. Masks the data for two color arrays.
      * 
-     * @param expressionExperiment
+     * @param vectorsToUse
      * @return
      */
-    protected ExpressionDataDoubleMatrix createMatrix( ExpressionExperiment expressionExperiment ) {
-
-        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
+    protected ExpressionDataDoubleMatrix createMaskedMatrix( Collection<DesignElementDataVector> vectorsToUse ) {
 
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
 

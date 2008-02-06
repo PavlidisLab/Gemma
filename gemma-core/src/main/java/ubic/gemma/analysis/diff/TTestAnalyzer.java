@@ -28,7 +28,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
-import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -115,7 +114,9 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
         connectToR();
 
-        ExpressionDataDoubleMatrix dmatrix = this.createMatrix( expressionExperiment );
+        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
+
+        ExpressionDataDoubleMatrix dmatrix = this.createMaskedMatrix( vectorsToUse );
 
         Collection<BioMaterial> samplesUsed = AnalyzerHelper.getBioMaterialsForBioAssays( dmatrix );
 
@@ -127,7 +128,6 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
         DoubleMatrixNamed namedMatrix = dmatrix.getNamedMatrix();
 
-        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
         QuantitationType quantitationType = getPreferredQuantitationType( vectorsToUse );
 
         String facts = rc.assignStringList( rFactors );

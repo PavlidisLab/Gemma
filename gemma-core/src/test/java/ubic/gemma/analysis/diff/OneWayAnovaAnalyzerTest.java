@@ -95,7 +95,7 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
     @Override
     protected void configureMocks() throws Exception {
 
-        configureMockAnalysisServiceHelper( 2 );
+        configureMockAnalysisServiceHelper( 1 );
         analyzer.setAnalysisHelperService( analysisHelperService );
 
     }
