@@ -87,7 +87,11 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
 
         Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
 
-        QuantitationType quantitationType = vectorsToUse.iterator().next().getQuantitationType();
+        QuantitationType quantitationType = getPreferredQuantitationType( vectorsToUse );
+        if ( quantitationType == null ) {
+            throw new RuntimeException( // FIXME could be excessive ... log as an error?
+                    "Could not determine the preferred quantitation type.  Not sure what type to associate with the analysis." );
+        }
 
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
 

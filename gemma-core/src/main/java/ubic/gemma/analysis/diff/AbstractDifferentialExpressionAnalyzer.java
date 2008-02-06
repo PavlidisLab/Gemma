@@ -18,12 +18,14 @@
  */
 package ubic.gemma.analysis.diff;
 
-import java.util.Arrays;
+import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -73,5 +75,23 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
         }
 
         return qvalues;
+    }
+
+    /**
+     * Returns the preferred {@link QuantitationType}.
+     * 
+     * @param vectors
+     * @return
+     */
+    protected QuantitationType getPreferredQuantitationType( Collection<DesignElementDataVector> vectors ) {
+        // FIXME could be slow?
+        QuantitationType qt = null;
+        for ( DesignElementDataVector vector : vectors ) {
+            qt = vector.getQuantitationType();
+            if ( qt.getIsPreferred() ) {
+                break;
+            }
+        }
+        return qt;
     }
 }
