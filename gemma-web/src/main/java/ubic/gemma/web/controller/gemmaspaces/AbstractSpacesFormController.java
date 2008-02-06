@@ -120,26 +120,10 @@ public abstract class AbstractSpacesFormController extends BackgroundProcessingF
 
         updatedContext = addGemmaSpacesToApplicationContext();
         BackgroundControllerJob<ModelAndView> job = null;
-        if ( updatedContext.containsBean( "gigaspacesTemplate" ) ) {
+        if ( updatedContext.containsBean( "gigaspacesTemplate" ) && (spacesUtil.canServiceTask( taskName, spaceUrl )) ) {
 
             taskId = SpacesHelper.getTaskIdFromTask( updatedContext, taskName );
 
-            if ( !spacesUtil.canServiceTask( taskName, spaceUrl ) ) {
-                // TODO Add sending of email to user.
-                // User user = SecurityUtil.getUserFromUserDetails( ( UserDetails ) SecurityContextHolder.getContext()
-                // .getAuthentication().getPrincipal() );
-                // this.sendEmail( user, "Cannot service task " + taskName + " on the compute server at this time.",
-                // "http://www.bioinformatics.ubc.ca/Gemma/" );
-//
-//                throw new RuntimeException( "No workers are registered to service task " + taskName
-//                        + " on the compute server at this time." );
-            	
-            	//Throwing an exception here brings down Gemma.  All that is needed is an ERROR message, ie gemma is fine its the space thats problematic at this point
-            	
-            	log.error("Cannot execute task in space.  No service registered for: " + taskName);
-            	return null;
-            	
-            }
             /* register this "spaces client" to receive notifications */
             SpacesJobObserver javaSpacesJobObserver = new SpacesJobObserver( taskId );
 
@@ -149,7 +133,7 @@ public abstract class AbstractSpacesFormController extends BackgroundProcessingF
                     Lease.FOREVER, NotifyModifiers.NOTIFY_ALL );
 
             job = getSpaceRunner( taskId, context, command, this.getMessageUtil() );
-        } else if ( !updatedContext.containsBean( "gigaspacesTemplate" ) && !runInWebapp ) {
+        } else if ( !runInWebapp ) {
             throw new RuntimeException(
                     "This task must be run on the compute server, but the space is not running. Please try again later" );
         } else {
