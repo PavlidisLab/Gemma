@@ -18,8 +18,14 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashSet;
+
+import org.hibernate.Hibernate;
+import org.hibernate.HibernateException;
+import org.hibernate.Session;
+import org.springframework.orm.hibernate3.HibernateCallback;
 
 import ubic.gemma.model.common.Auditable;
 
@@ -31,9 +37,9 @@ import ubic.gemma.model.common.Auditable;
 public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.AuditEventDaoBase {
 
     /**
-     * FIXME this isn't complete.
+     * Classes that we track for 'updated since'. This is used for "What's new" functionality.
      */
-    private static String[] AUDITABLES = {
+    private static String[] AUDITABLES_TO_TRACK_FOR_WHATSNEW = {
     // "ubic.gemma.model.expression.analysis.ExpressionAnalysisImpl",
             "ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl",
             // "ubic.gemma.model.common.description.BibliographicReferenceImpl",
@@ -50,7 +56,7 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
     @SuppressWarnings("unchecked")
     protected java.util.Collection handleGetUpdatedSinceDate( java.util.Date date ) {
         Collection<Auditable> result = new HashSet<Auditable>();
-        for ( String clazz : AUDITABLES ) {
+        for ( String clazz : AUDITABLES_TO_TRACK_FOR_WHATSNEW ) {
             String queryString = "select distinct adb from "
                     + clazz
                     + " adb inner join adb.auditTrail atr inner join atr.events as ae where ae.date > :date and ae.action='U'";
@@ -75,7 +81,7 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
     @SuppressWarnings("unchecked")
     protected java.util.Collection<Auditable> handleGetNewSinceDate( java.util.Date date ) {
         Collection<Auditable> result = new HashSet<Auditable>();
-        for ( String clazz : AUDITABLES ) {
+        for ( String clazz : AUDITABLES_TO_TRACK_FOR_WHATSNEW ) {
             String queryString = "select distinct adb from "
                     + clazz
                     + " adb inner join adb.auditTrail atr inner join atr.events as ae where ae.date > :date and ae.action='C'";
@@ -88,6 +94,18 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
             }
         }
         return result;
+    }
+
+    @Override
+    protected void handleThaw( final AuditEvent auditEvent ) throws Exception {
+        this.getHibernateTemplate().execute( new HibernateCallback() {
+            public Object doInHibernate( Session session ) throws HibernateException, SQLException {
+                Hibernate.initialize( auditEvent );
+                Hibernate.initialize( auditEvent.getPerformer() );
+                return null;
+            }
+        } );
+
     }
 
 }

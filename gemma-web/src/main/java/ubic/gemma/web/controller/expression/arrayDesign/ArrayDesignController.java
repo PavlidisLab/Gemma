@@ -67,8 +67,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
-import ubic.gemma.search.SearchSettings;
-import ubic.gemma.util.ToStringUtil;
+import ubic.gemma.search.SearchSettings; 
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
@@ -575,14 +574,14 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         AuditEvent troubleEvent = auditTrailService.getLastTroubleEvent( arrayDesign );
         if ( troubleEvent != null ) {
             mav.addObject( "troubleEvent", troubleEvent );
-            mav.addObject( "troubleEventDescription", StringEscapeUtils.escapeHtml( ToStringUtil
-                    .toString( troubleEvent ) ) );
+            mav.addObject( "troubleEventDescription", StringEscapeUtils.escapeHtml( troubleEvent
+                    .toString(  ) ) );
         }
         AuditEvent validatedEvent = auditTrailService.getLastValidationEvent( arrayDesign );
         if ( validatedEvent != null ) {
             mav.addObject( "validatedEvent", validatedEvent );
-            mav.addObject( "validatedEventDescription", StringEscapeUtils.escapeHtml( ToStringUtil
-                    .toString( validatedEvent ) ) );
+            mav.addObject( "validatedEventDescription", StringEscapeUtils.escapeHtml( validatedEvent
+                    .toString(  ) ) );
         }
 
         Collection<ArrayDesign> subsumees = arrayDesign.getSubsumedArrayDesigns();

@@ -36,7 +36,6 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.util.GemmaLinkUtils;
-import ubic.gemma.util.ToStringUtil;
 
 /**
  * Used to generate hyperlinks in displaytag tables.
@@ -418,7 +417,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         if ( object.getTroubleFlag() != null ) {
             buf
                     .append( "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt='trouble' title='" );
-            buf.append( StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getTroubleFlag() ) ) );
+            buf.append( StringEscapeUtils.escapeHtml( object.getTroubleFlag().toString() ) );
             buf.append( "' />" );
         }
         return buf.toString();
@@ -429,7 +428,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         StringBuffer buf = new StringBuffer();
         if ( object.getValidatedFlag() != null ) {
             buf.append( "&nbsp;<img src='/Gemma/images/icons/ok.png' height='16' width='16' alt='validated' title='" );
-            buf.append( StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getValidatedFlag() ) ) );
+            buf.append( StringEscapeUtils.escapeHtml( object.getValidatedFlag().toString() ) );
             buf.append( "' />" );
         }
         return buf.toString();

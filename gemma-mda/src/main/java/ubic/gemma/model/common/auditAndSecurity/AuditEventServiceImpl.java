@@ -45,4 +45,9 @@ public class AuditEventServiceImpl extends ubic.gemma.model.common.auditAndSecur
         return this.getAuditEventDao().getNewSinceDate( date );
     }
 
+    @Override
+    protected void handleThaw( AuditEvent auditEvent ) throws Exception {
+        this.getAuditEventDao().thaw( auditEvent );
+    }
+
 }

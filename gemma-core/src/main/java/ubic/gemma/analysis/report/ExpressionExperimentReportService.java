@@ -45,6 +45,7 @@ import ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentRepo
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
@@ -66,6 +67,7 @@ import ubic.gemma.util.progress.TaskRunningService;
  * @spring.bean name="expressionExperimentReportService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="auditTrailService" ref="auditTrailService"
+ * @spring.property name="auditEventService" ref="auditEventService"
  * @spring.property name="probe2ProbeCoexpressionService" ref="probe2ProbeCoexpressionService"
  */
 public class ExpressionExperimentReportService implements ExpressionExperimentReportTask, InitializingBean {
@@ -77,181 +79,76 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
     private ExpressionExperimentService expressionExperimentService;
     private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
     private AuditTrailService auditTrailService;
+    private AuditEventService auditEventService;
     private String taskId = null;
 
-    /**
-     * @param auditTrailService the auditTrailService to set
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
-    public void setAuditTrailService( AuditTrailService auditTrailService ) {
-        this.auditTrailService = auditTrailService;
+    public void afterPropertiesSet() throws Exception {
+        this.taskId = TaskRunningService.generateTaskId();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask#execute()
+     */
+    public SpacesResult execute( SpacesCommand spacesCommand ) {
+        this.generateSummaryObjects();
+        return null;
     }
 
     /**
-     * @return the probe2ProbeCoexpressionService
-     */
-    public Probe2ProbeCoexpressionService getProbe2ProbeCoexpressionService() {
-        return probe2ProbeCoexpressionService;
-    }
-
-    /**
-     * @param probe2ProbeCoexpressionService the probe2ProbeCoexpressionService to set
-     */
-    public void setProbe2ProbeCoexpressionService( Probe2ProbeCoexpressionService probe2ProbeCoexpressionService ) {
-        this.probe2ProbeCoexpressionService = probe2ProbeCoexpressionService;
-    }
-
-    /**
-     * @return the expressionExperimentService
-     */
-    public ExpressionExperimentService getExpressionExperimentService() {
-        return expressionExperimentService;
-    }
-
-    /**
-     * @param expressionExperimentService the expressionExperimentService to set
-     */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    /**
-     * generates a collection of value objects that contain summary information about links, biomaterials, and
-     * datavectors
-     */
-    public void generateSummaryObjects() {
-        initDirectories( false );
-        // first, load all expression experiment value objects
-        // this will have no stats filled in
-
-        // for each expression experiment, load in stats
-        Collection vos = expressionExperimentService.loadAllValueObjects();
-        getStats( vos );
-
-        // save the collection
-        saveValueObjects( vos );
-        log.info( "Stats completed." );
-    }
-
-    /**
-     * generates a collection of value objects that contain summary information about links, biomaterials, and
-     * datavectors
-     */
-    public void generateSummaryObjects( Collection ids ) {
-        initDirectories( false );
-        // first, load all expression experiment value objects
-        // this will have no stats filled in
-
-        // for each expression experiment, load in stats
-        Collection vos = expressionExperimentService.loadValueObjects( ids );
-        getStats( vos );
-
-        // save the collection
-
-        saveValueObjects( vos );
-        log.info( "Stats completed." );
-    }
-
-    /**
-     * generates a collection of value objects that contain summary information about links, biomaterials, and
-     * datavectors
+     * Populate information about how many annotations there are, and how many factor values there are.
+     * 
+     * @param vos
      */
     @SuppressWarnings("unchecked")
-    public void generateSummaryObject( Long id ) {
-        Collection ids = new ArrayList<Long>();
-        ids.add( id );
+    public void fillAnnotationInformation( Collection<ExpressionExperimentValueObject> vos ) {
+        Collection<Long> ids = new HashSet<Long>();
+        for ( ExpressionExperimentValueObject eeVo : vos ) {
+            Long id = eeVo.getId();
+            ids.add( id );
+        }
 
-        generateSummaryObjects( ids );
+        Map<Long, Integer> annotationCounts = expressionExperimentService.getAnnotationCounts( ids );
+
+        Map<Long, Integer> factorCounts = expressionExperimentService.getPopulatedFactorCounts( ids );
+
+        for ( ExpressionExperimentValueObject eeVo : vos ) {
+            Long id = eeVo.getId();
+            eeVo.setNumAnnotations( annotationCounts.get( id ) );
+            eeVo.setNumPopulatedFactors( factorCounts.get( id ) );
+        }
+
     }
 
     /**
      * @param vos
      */
-    private void getStats( Collection vos ) {
-        log.info( "Getting stats for " + vos.size() + " value objects." );
-        String timestamp = DateFormatUtils.format( new Date( System.currentTimeMillis() ), "yyyy.MM.dd HH:mm" );
-        for ( Object object : vos ) {
-            ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) object;
-            ExpressionExperiment tempEe = expressionExperimentService.load( eeVo.getId() );
-
-            eeVo.setBioMaterialCount( expressionExperimentService.getBioMaterialCount( tempEe ) );
-            eeVo.setPreferredDesignElementDataVectorCount( expressionExperimentService
-                    .getPreferredDesignElementDataVectorCount( tempEe ) );
-
-            long numLinks = probe2ProbeCoexpressionService.countLinks( tempEe ).longValue();
-            log.info( numLinks + " links." );
-            eeVo.setCoexpressionLinkCount( numLinks );
-
-            eeVo.setDateCached( timestamp );
-
-            auditTrailService.thaw( tempEe.getAuditTrail() );
-            if ( tempEe.getAuditTrail() != null ) {
-                eeVo.setDateCreated( tempEe.getAuditTrail().getCreationEvent().getDate().toString() );
-            }
-            eeVo.setDateLastUpdated( tempEe.getAuditTrail().getLast().getDate() );
-            log.info( "Generated report for " + eeVo.getShortName() );
-
+    @SuppressWarnings("unchecked")
+    public void fillDifferentialInformation( Collection<ExpressionExperimentValueObject> vos ) {
+        Collection<Long> ids = new HashSet<Long>();
+        for ( ExpressionExperimentValueObject eeVo : vos ) {
+            Long id = eeVo.getId();
+            ids.add( id );
         }
-    }
 
-    /**
-     * retrieves a collection of cached value objects containing summary information
-     * 
-     * @return a collection of cached value objects
-     */
-    public Collection retrieveSummaryObjects() {
-        return retrieveValueObjects();
-    }
+        Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( ids );
+        Map<Long, AuditEvent> differentialAnalysisEvents = getEvents( ees, DifferentialExpressionAnalysisEvent.Factory
+                .newInstance() );
 
-    /**
-     * retrieves a collection of cached value objects containing summary information
-     * 
-     * @return a collection of cached value objects
-     */
-    public Collection retrieveSummaryObjects( Collection ids ) {
-        return retrieveValueObjects( ids );
-    }
-
-    /**
-     * @param eeValueObjects the collection of Expression Experiment value objects to serialize
-     * @return true if successful, false otherwise serialize value objects
-     */
-    private boolean saveValueObjects( Collection eeValueObjects ) {
-        for ( Object object : eeValueObjects ) {
-            ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) object;
-
-            try {
-                // remove file first
-                File f = new File( getReportPath( eeVo.getId() ) );
-                if ( f.exists() ) {
-                    f.delete();
+        for ( ExpressionExperimentValueObject eeVo : vos ) {
+            Long id = eeVo.getId();
+            if ( differentialAnalysisEvents.containsKey( id ) ) {
+                AuditEvent event = differentialAnalysisEvents.get( id );
+                if ( event != null ) {
+                    eeVo.setDataDifferentialAnalysis( event.getDate() );
+                    eeVo.setDifferentialAnalysisEventType( event.getEventType() );
                 }
-                FileOutputStream fos = new FileOutputStream( getReportPath( eeVo.getId() ) );
-                ObjectOutputStream oos = new ObjectOutputStream( fos );
-                oos.writeObject( eeVo );
-                oos.flush();
-                oos.close();
-            } catch ( Throwable e ) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * @return the filled out value objects fills the link statistics from the cache. If it is not in the cache, the
-     *         values will be null.
-     */
-    public void fillLinkStatsFromCache( Collection vos ) {
-        for ( Object object : vos ) {
-            ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) object;
-            ExpressionExperimentValueObject cacheVo = retrieveValueObject( eeVo.getId() );
-            if ( cacheVo != null ) {
-                eeVo.setBioMaterialCount( cacheVo.getBioMaterialCount() );
-                eeVo.setPreferredDesignElementDataVectorCount( cacheVo.getPreferredDesignElementDataVectorCount() );
-                eeVo.setCoexpressionLinkCount( cacheVo.getCoexpressionLinkCount() );
-                eeVo.setDateCached( cacheVo.getDateCached() );
-                eeVo.setDateCreated( cacheVo.getDateCreated() );
-                eeVo.setDateLastUpdated( cacheVo.getDateLastUpdated() );
             }
         }
     }
@@ -331,61 +228,152 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                 }
             }
 
-            eeVo.setTroubleFlag( troubleEvents.get( id ) );
-            eeVo.setValidatedFlag( validationEvents.get( id ) );
-        }
-    }
-
-    /**
-     * Populate information about how many annotations there are, and how many factor values there are.
-     * 
-     * @param vos
-     */
-    @SuppressWarnings("unchecked")
-    public void fillAnnotationInformation( Collection<ExpressionExperimentValueObject> vos ) {
-        Collection<Long> ids = new HashSet<Long>();
-        for ( ExpressionExperimentValueObject eeVo : vos ) {
-            Long id = eeVo.getId();
-            ids.add( id );
-        }
-
-        Map<Long, Integer> annotationCounts = expressionExperimentService.getAnnotationCounts( ids );
-
-        Map<Long, Integer> factorCounts = expressionExperimentService.getPopulatedFactorCounts( ids );
-
-        for ( ExpressionExperimentValueObject eeVo : vos ) {
-            Long id = eeVo.getId();
-            eeVo.setNumAnnotations( annotationCounts.get( id ) );
-            eeVo.setNumPopulatedFactors( factorCounts.get( id ) );
-        }
-
-    }
-
-    /**
-     * @param vos
-     */
-    @SuppressWarnings("unchecked")
-    public void fillDifferentialInformation( Collection<ExpressionExperimentValueObject> vos ) {
-        Collection<Long> ids = new HashSet<Long>();
-        for ( ExpressionExperimentValueObject eeVo : vos ) {
-            Long id = eeVo.getId();
-            ids.add( id );
-        }
-
-        Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( ids );
-        Map<Long, AuditEvent> differentialAnalysisEvents = getEvents( ees, DifferentialExpressionAnalysisEvent.Factory
-                .newInstance() );
-
-        for ( ExpressionExperimentValueObject eeVo : vos ) {
-            Long id = eeVo.getId();
-            if ( differentialAnalysisEvents.containsKey( id ) ) {
-                AuditEvent event = differentialAnalysisEvents.get( id );
-                if ( event != null ) {
-                    eeVo.setDataDifferentialAnalysis( event.getDate() );
-                    eeVo.setDifferentialAnalysisEventType( event.getEventType() );
-                }
+            if ( troubleEvents.containsKey( id ) ) {
+                AuditEvent trouble = troubleEvents.get( id );
+                // we find we are getting lazy-load exceptions from this guy.
+                auditEventService.thaw( trouble );
+                eeVo.setTroubleFlag( trouble );
+            }
+            if ( validationEvents.containsKey( id ) ) {
+                AuditEvent validated = validationEvents.get( id );
+                auditEventService.thaw( validated );
+                eeVo.setValidatedFlag( validated );
             }
         }
+    }
+
+    /**
+     * @return the filled out value objects fills the link statistics from the cache. If it is not in the cache, the
+     *         values will be null.
+     */
+    public void fillLinkStatsFromCache( Collection vos ) {
+        for ( Object object : vos ) {
+            ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) object;
+            ExpressionExperimentValueObject cacheVo = retrieveValueObject( eeVo.getId() );
+            if ( cacheVo != null ) {
+                eeVo.setBioMaterialCount( cacheVo.getBioMaterialCount() );
+                eeVo.setPreferredDesignElementDataVectorCount( cacheVo.getPreferredDesignElementDataVectorCount() );
+                eeVo.setCoexpressionLinkCount( cacheVo.getCoexpressionLinkCount() );
+                eeVo.setDateCached( cacheVo.getDateCached() );
+                eeVo.setDateCreated( cacheVo.getDateCreated() );
+                eeVo.setDateLastUpdated( cacheVo.getDateLastUpdated() );
+            }
+        }
+    }
+
+    /**
+     * generates a collection of value objects that contain summary information about links, biomaterials, and
+     * datavectors
+     */
+    @SuppressWarnings("unchecked")
+    public void generateSummaryObject( Long id ) {
+        Collection ids = new ArrayList<Long>();
+        ids.add( id );
+
+        generateSummaryObjects( ids );
+    }
+
+    /**
+     * generates a collection of value objects that contain summary information about links, biomaterials, and
+     * datavectors
+     */
+    public void generateSummaryObjects() {
+        initDirectories( false );
+        // first, load all expression experiment value objects
+        // this will have no stats filled in
+
+        // for each expression experiment, load in stats
+        Collection vos = expressionExperimentService.loadAllValueObjects();
+        getStats( vos );
+
+        // save the collection
+        saveValueObjects( vos );
+        log.info( "Stats completed." );
+    }
+
+    /**
+     * generates a collection of value objects that contain summary information about links, biomaterials, and
+     * datavectors
+     */
+    public void generateSummaryObjects( Collection ids ) {
+        initDirectories( false );
+        // first, load all expression experiment value objects
+        // this will have no stats filled in
+
+        // for each expression experiment, load in stats
+        Collection vos = expressionExperimentService.loadValueObjects( ids );
+        getStats( vos );
+
+        // save the collection
+
+        saveValueObjects( vos );
+        log.info( "Stats completed." );
+    }
+
+    /**
+     * @return the expressionExperimentService
+     */
+    public ExpressionExperimentService getExpressionExperimentService() {
+        return expressionExperimentService;
+    }
+
+    /**
+     * @return the probe2ProbeCoexpressionService
+     */
+    public Probe2ProbeCoexpressionService getProbe2ProbeCoexpressionService() {
+        return probe2ProbeCoexpressionService;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.grid.javaspaces.SpacesTask#getTaskId()
+     */
+    public String getTaskId() {
+        return taskId;
+    }
+
+    /**
+     * retrieves a collection of cached value objects containing summary information
+     * 
+     * @return a collection of cached value objects
+     */
+    public Collection retrieveSummaryObjects() {
+        return retrieveValueObjects();
+    }
+
+    /**
+     * retrieves a collection of cached value objects containing summary information
+     * 
+     * @return a collection of cached value objects
+     */
+    public Collection retrieveSummaryObjects( Collection ids ) {
+        return retrieveValueObjects( ids );
+    }
+
+    public void setAuditEventService( AuditEventService auditEventService ) {
+        this.auditEventService = auditEventService;
+    }
+
+    /**
+     * @param auditTrailService the auditTrailService to set
+     */
+    public void setAuditTrailService( AuditTrailService auditTrailService ) {
+        this.auditTrailService = auditTrailService;
+    }
+
+    /**
+     * @param expressionExperimentService the expressionExperimentService to set
+     */
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    /**
+     * @param probe2ProbeCoexpressionService the probe2ProbeCoexpressionService to set
+     */
+    public void setProbe2ProbeCoexpressionService( Probe2ProbeCoexpressionService probe2ProbeCoexpressionService ) {
+        this.probe2ProbeCoexpressionService = probe2ProbeCoexpressionService;
     }
 
     @SuppressWarnings("unchecked")
@@ -409,6 +397,93 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                     + watch.getSplitTime() + "ms (wall time)" );
         }
         return result;
+    }
+
+    /**
+     * @param id
+     * @return
+     */
+    private String getReportPath( long id ) {
+        return HOME_DIR + File.separatorChar + EE_REPORT_DIR + File.separatorChar + EE_LINK_SUMMARY + "." + id;
+    }
+
+    /**
+     * @param vos
+     */
+    private void getStats( Collection vos ) {
+        log.info( "Getting stats for " + vos.size() + " value objects." );
+        String timestamp = DateFormatUtils.format( new Date( System.currentTimeMillis() ), "yyyy.MM.dd HH:mm" );
+        for ( Object object : vos ) {
+            ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) object;
+            ExpressionExperiment tempEe = expressionExperimentService.load( eeVo.getId() );
+
+            eeVo.setBioMaterialCount( expressionExperimentService.getBioMaterialCount( tempEe ) );
+            eeVo.setPreferredDesignElementDataVectorCount( expressionExperimentService
+                    .getPreferredDesignElementDataVectorCount( tempEe ) );
+
+            long numLinks = probe2ProbeCoexpressionService.countLinks( tempEe ).longValue();
+            log.info( numLinks + " links." );
+            eeVo.setCoexpressionLinkCount( numLinks );
+
+            eeVo.setDateCached( timestamp );
+
+            auditTrailService.thaw( tempEe.getAuditTrail() );
+            if ( tempEe.getAuditTrail() != null ) {
+                eeVo.setDateCreated( tempEe.getAuditTrail().getCreationEvent().getDate().toString() );
+            }
+            eeVo.setDateLastUpdated( tempEe.getAuditTrail().getLast().getDate() );
+            log.info( "Generated report for " + eeVo.getShortName() );
+
+        }
+    }
+
+    /**
+     * Check to see if the top level report storage directory exists. If it doesn't, create it, Check to see if the
+     * reports directory exists. If it doesn't, create it.
+     * 
+     * @param deleteFiles
+     */
+    private void initDirectories( boolean deleteFiles ) {
+
+        FileTools.createDir( HOME_DIR );
+        FileTools.createDir( HOME_DIR + File.separatorChar + EE_REPORT_DIR );
+        File f = new File( HOME_DIR + File.separatorChar + EE_REPORT_DIR );
+        Collection<File> files = new ArrayList<File>();
+        File[] fileArray = f.listFiles();
+        for ( File file : fileArray ) {
+            files.add( file );
+        }
+        // clear out all files
+        if ( deleteFiles ) {
+            FileTools.deleteFiles( files );
+        }
+    }
+
+    // Methods needed to allow this to be used in a space.
+
+    /**
+     * @return the serialized value object
+     */
+    private ExpressionExperimentValueObject retrieveValueObject( long id ) {
+
+        ExpressionExperimentValueObject eeVo = null;
+        try {
+            File f = new File( getReportPath( id ) );
+            if ( f.exists() ) {
+                FileInputStream fis = new FileInputStream( getReportPath( id ) );
+                ObjectInputStream ois = new ObjectInputStream( fis );
+                eeVo = ( ExpressionExperimentValueObject ) ois.readObject();
+                ois.close();
+                fis.close();
+            }
+        } catch ( IOException e ) {
+            log.warn( "Unable to read report object for id =" + id, e );
+            return null;
+        } catch ( ClassNotFoundException e ) {
+            log.warn( "Unable to read report object for id =" + id, e );
+            return null;
+        }
+        return eeVo;
     }
 
     /**
@@ -476,88 +551,29 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
     }
 
     /**
-     * @return the serialized value object
+     * @param eeValueObjects the collection of Expression Experiment value objects to serialize
+     * @return true if successful, false otherwise serialize value objects
      */
-    private ExpressionExperimentValueObject retrieveValueObject( long id ) {
+    private boolean saveValueObjects( Collection eeValueObjects ) {
+        for ( Object object : eeValueObjects ) {
+            ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) object;
 
-        ExpressionExperimentValueObject eeVo = null;
-        try {
-            File f = new File( getReportPath( id ) );
-            if ( f.exists() ) {
-                FileInputStream fis = new FileInputStream( getReportPath( id ) );
-                ObjectInputStream ois = new ObjectInputStream( fis );
-                eeVo = ( ExpressionExperimentValueObject ) ois.readObject();
-                ois.close();
-                fis.close();
+            try {
+                // remove file first
+                File f = new File( getReportPath( eeVo.getId() ) );
+                if ( f.exists() ) {
+                    f.delete();
+                }
+                FileOutputStream fos = new FileOutputStream( getReportPath( eeVo.getId() ) );
+                ObjectOutputStream oos = new ObjectOutputStream( fos );
+                oos.writeObject( eeVo );
+                oos.flush();
+                oos.close();
+            } catch ( Throwable e ) {
+                return false;
             }
-        } catch ( IOException e ) {
-            log.warn( "Unable to read report object for id =" + id, e );
-            return null;
-        } catch ( ClassNotFoundException e ) {
-            log.warn( "Unable to read report object for id =" + id, e );
-            return null;
         }
-        return eeVo;
-    }
-
-    /**
-     * @param id
-     * @return
-     */
-    private String getReportPath( long id ) {
-        return HOME_DIR + File.separatorChar + EE_REPORT_DIR + File.separatorChar + EE_LINK_SUMMARY + "." + id;
-    }
-
-    /**
-     * Check to see if the top level report storage directory exists. If it doesn't, create it, Check to see if the
-     * reports directory exists. If it doesn't, create it.
-     * 
-     * @param deleteFiles
-     */
-    private void initDirectories( boolean deleteFiles ) {
-
-        FileTools.createDir( HOME_DIR );
-        FileTools.createDir( HOME_DIR + File.separatorChar + EE_REPORT_DIR );
-        File f = new File( HOME_DIR + File.separatorChar + EE_REPORT_DIR );
-        Collection<File> files = new ArrayList<File>();
-        File[] fileArray = f.listFiles();
-        for ( File file : fileArray ) {
-            files.add( file );
-        }
-        // clear out all files
-        if ( deleteFiles ) {
-            FileTools.deleteFiles( files );
-        }
-    }
-
-    // Methods needed to allow this to be used in a space.
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask#execute()
-     */
-    public SpacesResult execute( SpacesCommand spacesCommand ) {
-        this.generateSummaryObjects();
-        return null;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-     */
-    public void afterPropertiesSet() throws Exception {
-        this.taskId = TaskRunningService.generateTaskId();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.grid.javaspaces.SpacesTask#getTaskId()
-     */
-    public String getTaskId() {
-        return taskId;
+        return true;
     }
 
 }

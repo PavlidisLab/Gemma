@@ -27,7 +27,6 @@ import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
-import ubic.gemma.util.ToStringUtil;
 import ubic.gemma.web.taglib.arrayDesign.ArrayDesignHtmlUtil;
 
 /**
@@ -42,28 +41,29 @@ import ubic.gemma.web.taglib.arrayDesign.ArrayDesignHtmlUtil;
 public class ArrayDesignWrapper extends TableDecorator {
 
     Log log = LogFactory.getLog( this.getClass() );
-    
+
     public String getStatus() {
         return getTroubleFlag().concat( getValidatedFlag() );
     }
-    
+
     public String getTroubleFlag() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
         StringBuffer buf = new StringBuffer();
         if ( object.getTroubleEvent() != null ) {
-            buf.append( "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt='trouble' title='" );
-            buf.append(  StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getTroubleEvent() ) ) );
+            buf
+                    .append( "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt='trouble' title='" );
+            buf.append( StringEscapeUtils.escapeHtml( object.getTroubleEvent().toString() ) );
             buf.append( "' />" );
         }
         return buf.toString();
     }
-    
+
     public String getValidatedFlag() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
         StringBuffer buf = new StringBuffer();
         if ( object.getValidationEvent() != null ) {
             buf.append( "&nbsp;<img src='/Gemma/images/icons/ok.png' height='16' width='16' alt='validated' title='" );
-            buf.append( StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getValidationEvent() ) ) );
+            buf.append( StringEscapeUtils.escapeHtml( object.getValidationEvent().toString() ) );
             buf.append( "' />" );
         }
         return buf.toString();
@@ -220,7 +220,8 @@ public class ArrayDesignWrapper extends TableDecorator {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
         String arraySummary = "arraySummary_" + object.getId();
 
-        buf.append( "<div style=\"float:left\" onclick=\"Effect.toggle('" + arraySummary + "', 'blind', {duration:0.5})\">" );
+        buf.append( "<div style=\"float:left\" onclick=\"Effect.toggle('" + arraySummary
+                + "', 'blind', {duration:0.5})\">" );
         buf.append( "<img src=\"/Gemma/images/plus.gif\" />" );
 
         buf.append( "</div>" );
