@@ -128,7 +128,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         // rc = RServeClient.newInstance( 20000 );
         rc = RConnectionFactory.getRConnection();
 
-        if ( rc.isConnected() ) {
+        if ( rc != null && rc.isConnected() ) {
             connected = true;
         }
 
