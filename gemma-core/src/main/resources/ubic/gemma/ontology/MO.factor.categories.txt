@@ -1,6 +1,7 @@
 # Lists MGED Ontology terms to be displayed for detailed annotation of experimental design factors and factorvalues.
 # $Id$
 # Author: Paul
+Age
 Treatment
 StrainOrLine
 TargetCellType

@@ -1,6 +1,7 @@
 # Lists MGED Ontology terms to be displayed for 'high-level' ExpressionExperiment annotation
 # $Id$
 # Author: Paul
+Age
 Treatment
 StrainOrLine
 TargetCellType
