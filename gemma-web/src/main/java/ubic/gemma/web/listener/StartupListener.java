@@ -18,11 +18,7 @@
  */
 package ubic.gemma.web.listener;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -40,6 +36,7 @@ import javax.servlet.ServletContextListener;
 import org.acegisecurity.providers.AuthenticationProvider;
 import org.acegisecurity.providers.ProviderManager;
 import org.acegisecurity.providers.rememberme.RememberMeAuthenticationProvider;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -272,16 +269,16 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
         }
         Map<String, String> appConfig = ( Map<String, String> ) servletContext.getAttribute( "appConfig" );
         String version = appConfig.get( "version" );
-        jars.add( new File( sourceLibdir, String.format( "%s-%s", "gemma-core", version ) ) );
-        jars.add( new File( sourceLibdir, String.format( "%s-%s", "gemma-mda", version ) ) );
-        jars.add( new File( sourceLibdir, String.format( "%s-%s", "gemma-testing", version ) ) );
-        jars.add( new File( sourceLibdir, String.format( "%s-%s", "gemma-util", version ) ) );
+        jars.add( new File( sourceLibdir, String.format( "%s-%s.jar", "gemma-core", version ) ) );
+        jars.add( new File( sourceLibdir, String.format( "%s-%s.jar", "gemma-mda", version ) ) );
+        jars.add( new File( sourceLibdir, String.format( "%s-%s.jar", "gemma-testing", version ) ) );
+        jars.add( new File( sourceLibdir, String.format( "%s-%s.jar", "gemma-util", version ) ) );
 
         Collection<File> copiedJars = new ArrayList<File>();
         for ( File sourceJar : jars ) {
             try {
                 File targetJar = new File( targetLibdir, sourceJar.getName() );
-                copyFile( sourceJar, targetJar );
+                FileUtils.copyFile( sourceJar, targetJar );
                 copiedJars.add( targetJar );
             } catch ( IOException e ) {
                 log.error( "error copying " + sourceJar + " to " + targetLibdir + ": " + e );
@@ -290,28 +287,10 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
 
         try {
             File classpathFile = new File( targetLibdir, "CLASSPATH" );
-            BufferedWriter out = new BufferedWriter( new FileWriter( classpathFile ) );
-            out.write( StringUtils.join( copiedJars, ":" ) );
-            out.close();
+            String classpath = StringUtils.join( copiedJars, ":" );
+            FileUtils.writeStringToFile( classpathFile, classpath, null);
         } catch ( IOException e ) {
             log.error( "error creating classpath file in " + targetLibdir );
-        }
-    }
-
-    private static void copyFile( File fromFile, File toFile ) throws IOException {
-        FileInputStream fis = new FileInputStream( fromFile );
-        FileOutputStream fos = new FileOutputStream( toFile );
-        try {
-            byte[] buf = new byte[1024];
-            int i = 0;
-            while ( ( i = fis.read( buf ) ) != -1 ) {
-                fos.write( buf, 0, i );
-            }
-        } catch ( IOException e ) {
-            throw e;
-        } finally {
-            fis.close();
-            fos.close();
         }
     }
 }
