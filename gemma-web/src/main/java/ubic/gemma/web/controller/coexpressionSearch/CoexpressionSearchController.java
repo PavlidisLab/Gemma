@@ -673,7 +673,8 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
 
                 watch.start();
 
-                List<CoexpressionValueObject> coexpressedGenes = coexpressions.getAllGeneCoexpressionData();
+                List<CoexpressionValueObject> coexpressedGenes = coexpressions.getAllGeneCoexpressionData( csc
+                        .getStringency() );
 
                 // load expression experiment value objects
                 Collection<Long> eeIds = new HashSet<Long>();

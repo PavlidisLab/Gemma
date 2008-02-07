@@ -504,6 +504,10 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             genes.addAll( getHibernateTemplate().findByNamedParam( queryString, "ids", batch ) );
         }
 
+        if ( ids.size() > BATCH_SIZE ) {
+            log.info( "... done" );
+        }
+
         return genes;
     }
 
@@ -798,6 +802,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             coexpressions.getPredictedCoexpressionType().addSpecificityInfo( eeID, outputProbeId, geneId );
         } else if ( geneType.equals( CoexpressionCollectionValueObject.PROBE_ALIGNED_REGION_IMPL ) ) {
             coexpressions.getProbeAlignedCoexpressionType().addSpecificityInfo( eeID, outputProbeId, geneId );
+        } else {
+            throw new IllegalStateException( "Gene is not one of the recognized types" );
         }
 
     }

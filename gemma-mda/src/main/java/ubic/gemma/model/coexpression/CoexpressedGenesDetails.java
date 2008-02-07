@@ -276,6 +276,8 @@ public class CoexpressedGenesDetails {
     }
 
     /**
+     * This computes the support for each link, as well as updating information on specificity of probes.
+     * 
      * @param querySpecificEE Expression experiments that have probes specific for the query gene.
      */
     public void postProcess( Collection<Long> querySpecificEEs ) {

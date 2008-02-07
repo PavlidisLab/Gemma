@@ -306,7 +306,7 @@ public class GeneLinkCoexpressionAnalyzer {
         Collection<Gene2GeneCoexpression> all = new ArrayList<Gene2GeneCoexpression>();
         Collection<Gene2GeneCoexpression> batch = new ArrayList<Gene2GeneCoexpression>();
 
-        for ( CoexpressionValueObject co : toPersist.getAllGeneCoexpressionData() ) {
+        for ( CoexpressionValueObject co : toPersist.getAllGeneCoexpressionData( stringency ) ) {
 
             if ( !genesToAnalyze.containsKey( co.getGeneId() ) ) {
                 if ( log.isDebugEnabled() )

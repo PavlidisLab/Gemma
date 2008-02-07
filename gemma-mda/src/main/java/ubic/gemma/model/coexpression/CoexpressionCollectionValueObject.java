@@ -189,13 +189,14 @@ public class CoexpressionCollectionValueObject {
     }
 
     /**
+     * @param stringency enter 0 to get everything (entering 1 would have the same effect).
      * @return the standard Genes CoexpressionDataValueObjects for all types of genes, sorted by decreasing support
      */
-    public List<CoexpressionValueObject> getAllGeneCoexpressionData() {
+    public List<CoexpressionValueObject> getAllGeneCoexpressionData( int stringency ) {
         List<CoexpressionValueObject> result = new ArrayList<CoexpressionValueObject>();
-        result.addAll( this.knownGeneCoexpressionData.getCoexpressionData( 0 ) );
-        result.addAll( this.predictedCoexpressionData.getCoexpressionData( 0 ) );
-        result.addAll( this.probeAlignedRegionCoexpressionData.getCoexpressionData( 0 ) );
+        result.addAll( this.knownGeneCoexpressionData.getCoexpressionData( stringency ) );
+        result.addAll( this.predictedCoexpressionData.getCoexpressionData( stringency ) );
+        result.addAll( this.probeAlignedRegionCoexpressionData.getCoexpressionData( stringency ) );
         Collections.sort( result );
         return result;
     }
