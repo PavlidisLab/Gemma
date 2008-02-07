@@ -50,6 +50,10 @@ public class ProbeMapperTest extends TestCase {
     private String databaseUser;
     private String databasePassword;
     List<Double> tester;
+    GoldenPathSequenceAnalysis mousegp = null;
+    GoldenPathSequenceAnalysis humangp = null;
+    private boolean hasMousegp = true;
+    private boolean hasHumangp = true;
 
     @Override
     protected void setUp() throws Exception {
@@ -72,6 +76,26 @@ public class ProbeMapperTest extends TestCase {
         databaseUser = ConfigUtils.getString( "gemma.testdb.user" );
         databasePassword = ConfigUtils.getString( "gemma.testdb.password" );
 
+        try {
+            mousegp = new GoldenPathSequenceAnalysis( 3306, "mm8", databaseHost, databaseUser, databasePassword );
+        } catch ( java.sql.SQLException e ) {
+            if ( e.getMessage().contains( "Unknown database" ) ) {
+                hasMousegp = false;
+            } else if ( e.getMessage().contains( "Access denied" ) ) {
+                hasMousegp = false;
+            }
+            throw e;
+        }
+        try {
+            humangp = new GoldenPathSequenceAnalysis( 3306, "hg18", databaseHost, databaseUser, databasePassword );
+        } catch ( java.sql.SQLException e ) {
+            if ( e.getMessage().contains( "Unknown database" ) ) {
+                hasHumangp = false;
+            } else if ( e.getMessage().contains( "Access denied" ) ) {
+                hasHumangp = false;
+            }
+            throw e;
+        }
     }
 
     @Override
@@ -80,29 +104,18 @@ public class ProbeMapperTest extends TestCase {
     }
 
     public void testProcessBlatResults() throws Exception {
-        ProbeMapper pm = new ProbeMapper();
-
-        try {
-            GoldenPathSequenceAnalysis gp = new GoldenPathSequenceAnalysis( 3306, "mm8", databaseHost, databaseUser,
-                    databasePassword );
-
-            Map<String, Collection<BlatAssociation>> res = pm.processBlatResults( gp, blatres );
-
-            // This test will fail if the database changes :)
-            assertTrue( "No results", res.values().size() > 0 );
-            assertTrue( "No results", res.values().iterator().next().size() > 0 );
-            assertEquals( "Col8a1", res.values().iterator().next().iterator().next().getGeneProduct().getGene()
-                    .getOfficialSymbol() );
-        } catch ( java.sql.SQLException e ) {
-            if ( e.getMessage().contains( "Unknown database" ) ) {
-                log.warn( "Test skipped due to missing mm8 database" );
-                return;
-            } else if ( e.getMessage().contains( "Access denied" ) ) {
-                log.warn( "Test skipped due to database authentication problem - check username and password in test" );
-                return;
-            }
-            throw e;
+        if ( !hasMousegp ) {
+            log.warn( "Skipping test because mm8 could not be configured" );
+            return;
         }
+        ProbeMapper pm = new ProbeMapper();
+        Map<String, Collection<BlatAssociation>> res = pm.processBlatResults( mousegp, blatres );
+
+        // This test will fail if the database changes :)
+        assertTrue( "No results", res.values().size() > 0 );
+        assertTrue( "No results", res.values().iterator().next().size() > 0 );
+        assertEquals( "Col8a1", res.values().iterator().next().iterator().next().getGeneProduct().getGene()
+                .getOfficialSymbol() );
 
     }
 
@@ -111,11 +124,12 @@ public class ProbeMapperTest extends TestCase {
      * {@link http://genome.ucsc.edu/cgi-bin/hgTracks?hgsid=79741184&hgt.out1=1.5x&position=chr2%3A73320308-73331929}
      */
     public void testLocateGene() throws Exception {
-        GoldenPathSequenceAnalysis gp = new GoldenPathSequenceAnalysis( 3306, "hg18", databaseHost, databaseUser,
-                databasePassword );
-
-        Collection<GeneProduct> products = gp.findRefGenesByLocation( "2", new Long( 73320308 ), new Long( 73331929 ),
-                "+" );
+        if ( !hasHumangp ) {
+            log.warn( "Skipping test because hg18 could not be configured" );
+            return;
+        }
+        Collection<GeneProduct> products = humangp.findRefGenesByLocation( "2", new Long( 73320308 ), new Long(
+                73331929 ), "+" );
         assertEquals( 2, products.size() );
         GeneProduct gprod = products.iterator().next();
         assertEquals( "CCT7", gprod.getGene().getOfficialSymbol() ); // okay as of 1/2008.
@@ -125,10 +139,12 @@ public class ProbeMapperTest extends TestCase {
      * @throws Exception
      */
     public void testLocateMiRNA() throws Exception {
-        GoldenPathSequenceAnalysis gp = new GoldenPathSequenceAnalysis( 3306, "hg18", databaseHost, databaseUser,
-                databasePassword );
+        if ( !hasHumangp ) {
+            log.warn( "Skipping test because hg18 could not be configured" );
+            return;
+        }
 
-        Collection<GeneProduct> products = gp.findMicroRNAGenesByLocation( "X", new Long( 133131074 ), new Long(
+        Collection<GeneProduct> products = humangp.findMicroRNAGenesByLocation( "X", new Long( 133131074 ), new Long(
                 133131148 ), "-" );
         assertEquals( 1, products.size() );
         GeneProduct gprod = products.iterator().next();
@@ -136,20 +152,23 @@ public class ProbeMapperTest extends TestCase {
     }
 
     public void testLocateAcembly() throws Exception {
-        GoldenPathSequenceAnalysis gp = new GoldenPathSequenceAnalysis( 3306, "hg18", databaseHost, databaseUser,
-                databasePassword );
+        if ( !hasHumangp ) {
+            log.warn( "Skipping test because hg18 could not be configured" );
+            return;
+        }
 
-        Collection<GeneProduct> products = gp.findAcemblyGenesByLocation( "7", new Long( 80145000 ),
-                new Long( 80146000 ), "+" );
+        Collection<GeneProduct> products = humangp.findAcemblyGenesByLocation( "7", new Long( 80145000 ), new Long(
+                80146000 ), "+" );
         assertTrue( products.size() > 0 ); // This is 2 as of Jan 2008.
     }
 
     public void testLocateNscan() throws Exception {
-        GoldenPathSequenceAnalysis gp = new GoldenPathSequenceAnalysis( 3306, "hg18", databaseHost, databaseUser,
-                databasePassword );
-
-        Collection<GeneProduct> products = gp.findNscanGenesByLocation( "3", new Long( 181237455 ),
-                new Long( 181318731 ), "+" );
+        if ( !hasHumangp ) {
+            log.warn( "Skipping test because hg18 could not be configured" );
+            return;
+        }
+        Collection<GeneProduct> products = humangp.findNscanGenesByLocation( "3", new Long( 181237455 ), new Long(
+                181318731 ), "+" );
         assertEquals( 1, products.size() );
         GeneProduct gprod = products.iterator().next();
         assertEquals( "chr3.182.002.a", gprod.getGene().getOfficialSymbol() ); // okay as of 1/2008.
@@ -160,11 +179,12 @@ public class ProbeMapperTest extends TestCase {
      * strand works.
      */
     public void testLocateGeneOnWrongStrand() throws Exception {
-        GoldenPathSequenceAnalysis gp = new GoldenPathSequenceAnalysis( 3306, "hg18", databaseHost, databaseUser,
-                databasePassword );
-
-        Collection<GeneProduct> products = gp.findRefGenesByLocation( "6", new Long( 32916471 ), new Long( 32918445 ),
-                null );
+        if ( !hasHumangp ) {
+            log.warn( "Skipping test because hg18 could not be configured" );
+            return;
+        }
+        Collection<GeneProduct> products = humangp.findRefGenesByLocation( "6", new Long( 32916471 ), new Long(
+                32918445 ), null );
         assertEquals( 2, products.size() );
         GeneProduct gprod = products.iterator().next();
         assertEquals( "PSMB8", gprod.getGene().getOfficialSymbol() );

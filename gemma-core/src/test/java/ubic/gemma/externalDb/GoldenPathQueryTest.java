@@ -20,6 +20,9 @@ package ubic.gemma.externalDb;
 
 import java.util.Collection;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import junit.framework.TestCase;
@@ -32,21 +35,40 @@ import junit.framework.TestCase;
  */
 public class GoldenPathQueryTest extends TestCase {
 
+    private static Log log = LogFactory.getLog( GoldenPathQueryTest.class.getName() );
     GoldenPathQuery queryer;
+    private boolean hasDb = true;;
 
     @Override
     protected void setUp() throws Exception {
         Taxon t = Taxon.Factory.newInstance();
         t.setCommonName( "human" );
-        queryer = new GoldenPathQuery( t );
+        try {
+            queryer = new GoldenPathQuery( t );
+        } catch ( java.sql.SQLException e ) {
+            if ( e.getMessage().contains( "Unknown database" ) ) {
+                hasDb = false;
+            } else if ( e.getMessage().contains( "Access denied" ) ) {
+                hasDb = false;
+            }
+            throw e;
+        }
     }
 
     public final void testQueryEst() throws Exception {
+        if ( !hasDb ) {
+            log.warn( "Skipping test because hg18 could not be configured" );
+            return;
+        }
         Collection<BlatResult> actualValue = queryer.findAlignments( "AA411542" );
         assertEquals( 5, actualValue.size() );
     }
 
     public final void testQueryMrna() throws Exception {
+        if ( !hasDb ) {
+            log.warn( "Skipping test because hg18 could not be configured" );
+            return;
+        }
         Collection<BlatResult> actualValue = queryer.findAlignments( "AK095183" );
         assertEquals( 3, actualValue.size() );
         BlatResult r = actualValue.iterator().next();
@@ -54,6 +76,10 @@ public class GoldenPathQueryTest extends TestCase {
     }
 
     public final void testQueryNoResult() throws Exception {
+        if ( !hasDb ) {
+            log.warn( "Skipping test because hg18 could not be configured" );
+            return;
+        }
         Collection<BlatResult> actualValue = queryer.findAlignments( "YYYYYUUYUYUYUY" );
         assertEquals( 0, actualValue.size() );
     }
