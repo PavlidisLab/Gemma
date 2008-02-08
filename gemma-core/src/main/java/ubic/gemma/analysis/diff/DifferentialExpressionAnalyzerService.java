@@ -427,6 +427,23 @@ public class DifferentialExpressionAnalyzerService {
     }
 
     /**
+     * Delete the differential expression analysis for the experiment with shortName.
+     * 
+     * @param shortName
+     */
+    @SuppressWarnings("unchecked")
+    public void delete( String shortName ) {
+        ExpressionExperiment ee = expressionExperimentService.findByShortName( shortName );
+        Collection<DifferentialExpressionAnalysis> diffAnalysis = differentialExpressionAnalysisService
+                .findByInvestigation( ee );
+
+        for ( DifferentialExpressionAnalysis de : diffAnalysis ) {
+            Long toDelete = de.getId();
+            differentialExpressionAnalysisService.delete( toDelete );
+        }
+    }
+
+    /**
      * @param analyses
      * @param analysis
      * @param analysisType
