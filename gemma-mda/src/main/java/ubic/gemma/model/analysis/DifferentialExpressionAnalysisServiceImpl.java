@@ -110,15 +110,26 @@ public class DifferentialExpressionAnalysisServiceImpl extends
     protected Collection handleFind( Gene gene ) throws Exception {
         return this.getDifferentialExpressionAnalysisDao().find( gene );
     }
-    
+
     /*
      * (non-Javadoc)
-     * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisServiceBase#handleFind(ubic.gemma.model.genome.Gene, ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     * 
+     * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisServiceBase#handleFind(ubic.gemma.model.genome.Gene,
+     *      ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
-    protected Collection handleFind( Gene gene, ExpressionExperiment experimentAnalyzed )
-            throws Exception {
+    protected Collection handleFind( Gene gene, ExpressionExperiment experimentAnalyzed ) throws Exception {
         return this.getDifferentialExpressionAnalysisDao().find( gene, experimentAnalyzed );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisServiceBase#handleDelete(java.lang.Long)
+     */
+    @Override
+    protected void handleDelete( Long idToDelete ) throws Exception {
+        this.getDifferentialExpressionAnalysisDao().remove( idToDelete );
     }
 
 }
