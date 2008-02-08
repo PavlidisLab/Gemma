@@ -108,6 +108,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                         continue;
                     }
 
+                    this.delete( ee );
+
                     try {
                         Collection<DifferentialExpressionAnalysis> expressionAnalyses = this.differentialExpressionAnalyzerService
                                 .getDifferentialExpressionAnalyses( ee, forceAnalysis );
@@ -143,6 +145,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                             continue;
                         }
 
+                        this.delete( expressionExperiment );
+
                         try {
                             Collection<DifferentialExpressionAnalysis> expressionAnalyses = this.differentialExpressionAnalyzerService
                                     .getDifferentialExpressionAnalyses( expressionExperiment, forceAnalysis );
@@ -171,6 +175,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 if ( expressionExperiment == null ) continue;
 
                 eeService.thaw( expressionExperiment );
+
+                this.delete( expressionExperiment );
 
                 try {
                     Collection<DifferentialExpressionAnalysis> expressionAnalyses = this.differentialExpressionAnalyzerService
@@ -276,6 +282,13 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             expressionExperimentReportService.generateSummaryObject( ee.getId() );
             auditTrailService.addUpdateEvent( ee, eventType, note );
         }
+    }
+
+    /**
+     * @param expressionExperiment
+     */
+    private void delete( ExpressionExperiment expressionExperiment ) {
+        differentialExpressionAnalyzerService.delete( expressionExperiment );
     }
 
     /*
