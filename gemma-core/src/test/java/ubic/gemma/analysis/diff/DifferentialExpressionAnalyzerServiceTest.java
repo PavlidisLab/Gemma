@@ -86,7 +86,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends BaseSpringContext
                 ProbeAnalysisResult presult = ( ProbeAnalysisResult ) result;
                 log.info( presult.getProbe().getName() + "; " + presult.getPvalue() );
             } else {
-                assertFalse( "Invalid result type.  Expected a " + ProbeAnalysisResult.class.getName() + ", received "
+                assertFalse( "Invalid result type. Expected a " + ProbeAnalysisResult.class.getName() + ", received "
                         + result.getClass().getClass().getName(), false );
             }
         }
@@ -96,6 +96,31 @@ public class DifferentialExpressionAnalyzerServiceTest extends BaseSpringContext
         watch.stop();
 
         log.info( "time: " + watch.getTime() );
+
+    }
+
+    /**
+     * @throws Exception
+     */
+    public void testDelete() throws Exception {
+
+        Collection<DifferentialExpressionAnalysisResult> analysisResults = differentialExpressionAnalyzerService
+                .getTopResultsForFactor( shortName, 100, "protocol", true );
+
+        if ( analysisResults == null ) {
+            log.warn( "Could not find analyses for expression experiment with short name " + shortName
+                    + ". Expression experiment probably does not exist. Skipping test ..." );
+            return;
+        }
+
+        StopWatch watch = new StopWatch();
+        watch.start();
+
+        differentialExpressionAnalyzerService.delete( shortName );
+
+        watch.stop();
+
+        log.info( "deletion time: " + watch.getTime() );
 
     }
 }
