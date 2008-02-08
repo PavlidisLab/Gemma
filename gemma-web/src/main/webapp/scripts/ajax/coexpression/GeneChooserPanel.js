@@ -20,6 +20,7 @@ Ext.Gemma.GeneChooserPanel = function ( config ) {
 			geneCombo.setTaxonId( record.data.id );
 		} );
 	}
+	this.taxonCombo = taxonCombo;
 	
 	var geneCombo = new Ext.Gemma.GeneCombo( {
 		emptyText : 'search for a gene'

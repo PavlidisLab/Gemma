@@ -35,11 +35,12 @@ Ext.onReady( function() {
 	}
 	
 	searchPanel.processSearchResults = function ( result ) {
-		
 		var eeMap = {};
-		for ( var i=0; i<result.datasets.length; ++i ) {
-			var ee = result.datasets[i];
-			eeMap[ee.id] = ee;
+		if ( result.datasets ) {
+			for ( var i=0; i<result.datasets.length; ++i ) {
+				var ee = result.datasets[i];
+				eeMap[ee.id] = ee;
+			}
 		}
 		
 		Ext.Gemma.CoexpressionDatasetGrid.updateDatasetInfo( result.knownGeneDatasets, eeMap );
@@ -81,7 +82,7 @@ Ext.Gemma.CoexpressionSearchPanel = function ( config ) {
 	Ext.Gemma.CoexpressionSearchPanel.superclass.constructor.call( this, superConfig );
 	
 	var geneChooserPanel = new Ext.Gemma.GeneChooserPanel( {
-		showTaxon : false // true
+		showTaxon : true
 	} );
 	this.geneChooserPanel = geneChooserPanel;
 	
@@ -120,8 +121,7 @@ Ext.Gemma.CoexpressionSearchPanel = function ( config ) {
 	
 	var eeSearchField = new Ext.Gemma.DatasetSearchField( {
 		fieldLabel : "Experiment keywords",
-		callback : this.updateDatasetsToBeSearched.bind( this ),
-		form : this
+		callback : this.updateDatasetsToBeSearched.bind( this )
 	} );
 	this.eeSearchField = eeSearchField;
 	
@@ -162,10 +162,24 @@ Ext.Gemma.CoexpressionSearchPanel = function ( config ) {
  */
 Ext.extend( Ext.Gemma.CoexpressionSearchPanel, Ext.FormPanel, {
 
+	onRender : function ( ct, position ) {
+		Ext.Gemma.CoexpressionSearchPanel.superclass.onRender.apply(this, arguments);
+		
+		if ( ! this.loadMask ) {
+			this.createLoadMask();
+		}
+	},
+	
+	createLoadMask : function () {
+		this.loadMask = new Ext.LoadMask( this.getEl() );
+		this.eeSearchField.loadMask = this.loadMask;
+	},
+
 	doSearch : function () {
+		this.loadMask.show();
 		ExtCoexpressionSearchController.doSearch(
 			this.getCoexpressionSearchCommand(),
-			this.processSearchResults.bind( this )
+			this.returnFromSearch.bind( this )
 		);
 	},
 
@@ -181,6 +195,11 @@ Ext.extend( Ext.Gemma.CoexpressionSearchPanel, Ext.FormPanel, {
 			csc.cannedAnalysisId = analysisId;
 		}
 		return csc;
+	},
+	
+	returnFromSearch : function ( result ) {
+		this.processSearchResults( result );
+		this.loadMask.hide();
 	},
 
 	processSearchResults : function ( result ) {
@@ -199,7 +218,7 @@ Ext.extend( Ext.Gemma.CoexpressionSearchPanel, Ext.FormPanel, {
 Ext.Gemma.DatasetSearchField = function ( config ) {
 
 	this.callback = config.callback; delete config.callback;
-	this.form = config.form; delete config.form;
+	this.loadMask = config.loadMask; delete config.loadMask;
 	this.eeIds = [];
 
 	Ext.Gemma.DatasetSearchField.superclass.constructor.call( this, config );
@@ -223,11 +242,9 @@ Ext.extend( Ext.Gemma.DatasetSearchField, Ext.form.TextField, {
 			this.foundDatasets( [] );
 		} else {
 			this.lastQuery = query;
-			if ( this.form ) {
-				if ( ! this.loadMask ) {
-					this.loadMask = new Ext.LoadMask( this.form.getEl() );
-				}
-				this.loadMask.enable();
+			if ( this.loadMask ) {
+//				this.loadMask.enable();
+				this.loadMask.show();
 			}
 			ExtCoexpressionSearchController.findExpressionExperiments( query, this.foundDatasets.bind( this ) );
 		}
@@ -239,7 +256,8 @@ Ext.extend( Ext.Gemma.DatasetSearchField, Ext.form.TextField, {
 			this.callback( results );
 		}
 		if ( this.loadMask ) {
-			this.loadMask.disable();
+			this.loadMask.hide();
+//			this.loadMask.disable();
 		}
 	},
 	
