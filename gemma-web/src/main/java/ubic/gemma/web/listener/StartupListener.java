@@ -51,7 +51,6 @@ import ubic.gemma.model.common.auditAndSecurity.UserRole;
 import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.ontology.AbstractOntologyService;
 import ubic.gemma.ontology.GeneOntologyService;
-import ubic.gemma.ontology.MgedOntologyService;
 import ubic.gemma.util.CompassUtils;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.LabelValue;
@@ -241,6 +240,7 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
     /**
      * Copy the JAR files required by the JavaSpaces workers to the defined shared location.
      */
+    @SuppressWarnings("unchecked")
     private void copyWorkerJars( ServletContext servletContext ) {
         String libpath = ConfigUtils.getString( "gemma.lib.path" );
         File targetLibdir = new File( libpath );
@@ -288,7 +288,7 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
         try {
             File classpathFile = new File( targetLibdir, "CLASSPATH" );
             String classpath = StringUtils.join( copiedJars, ":" );
-            FileUtils.writeStringToFile( classpathFile, classpath, null);
+            FileUtils.writeStringToFile( classpathFile, classpath, null );
         } catch ( IOException e ) {
             log.error( "error creating classpath file in " + targetLibdir );
         }
