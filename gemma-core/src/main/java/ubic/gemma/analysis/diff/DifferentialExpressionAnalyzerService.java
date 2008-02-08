@@ -452,6 +452,11 @@ public class DifferentialExpressionAnalyzerService {
         Collection<DifferentialExpressionAnalysis> diffAnalysis = differentialExpressionAnalysisService
                 .findByInvestigation( expressionExperiment );
 
+        if ( diffAnalysis == null || diffAnalysis.isEmpty() ) {
+            log.info( "No differential expression analyses to delete for " + expressionExperiment.getShortName() );
+            return;
+        }
+
         for ( DifferentialExpressionAnalysis de : diffAnalysis ) {
             Long toDelete = de.getId();
             differentialExpressionAnalysisService.delete( toDelete );
