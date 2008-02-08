@@ -212,10 +212,11 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         /* Supports: running on all data sets that have not been run since a given date. */
         super.addDateOption();
 
-        Option topOpt = OptionBuilder.withLongOpt( "top" ).hasArg( true ).create();
+        Option topOpt = OptionBuilder.withLongOpt( "top" ).hasArg( true ).withDescription(
+                "The top (most significant) results to display." ).create();
         super.addOption( topOpt );
 
-        Option forceAnalysisOpt = OptionBuilder.hasArg( false ).create( 'r' );
+        Option forceAnalysisOpt = OptionBuilder.hasArg( false ).withDescription( "Force the run." ).create( 'r' );
         super.addOption( forceAnalysisOpt );
     }
 
