@@ -20,6 +20,8 @@ package ubic.gemma.persistence;
 
 import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.analysis.GeneCoexpressionAnalysis;
+import ubic.gemma.model.analysis.GeneCoexpressionAnalysisService;
 import ubic.gemma.model.analysis.ProbeCoexpressionAnalysis;
 import ubic.gemma.model.analysis.ProbeCoexpressionAnalysisService;
 import ubic.gemma.model.association.Gene2GOAssociation;
@@ -33,6 +35,7 @@ import ubic.gemma.model.association.Gene2GOAssociationService;
  * @spring.property name="gene2GOAssociationService" ref="gene2GOAssociationService"
  * @spring.property name="probeCoexpressionAnalysisService" ref="probeCoexpressionAnalysisService"
  * @spring.property name="differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
+ * @spring.property name="geneCoexpressionAnalysisService" ref="geneCoexpressionAnalysisService"
  */
 public class RelationshipPersister extends ExpressionPersister {
 
@@ -41,6 +44,8 @@ public class RelationshipPersister extends ExpressionPersister {
     private ProbeCoexpressionAnalysisService probeCoexpressionAnalysisService;
 
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+
+    private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
 
     /*
      * (non-Javadoc)
@@ -57,6 +62,8 @@ public class RelationshipPersister extends ExpressionPersister {
             return persistProbeCoexpressionAnalysis( ( ProbeCoexpressionAnalysis ) entity );
         } else if ( entity instanceof DifferentialExpressionAnalysis ) {
             return persistDifferentialExpressionAnalysis( ( DifferentialExpressionAnalysis ) entity );
+        } else if ( entity instanceof GeneCoexpressionAnalysis ) {
+            return persistGeneCoexpressionAnalysis( ( GeneCoexpressionAnalysis ) entity );
         }
         return super.persist( entity );
 
@@ -100,6 +107,17 @@ public class RelationshipPersister extends ExpressionPersister {
      * @param entity
      * @return
      */
+    protected GeneCoexpressionAnalysis persistGeneCoexpressionAnalysis( GeneCoexpressionAnalysis entity ) {
+        if ( entity == null ) return null;
+        if ( !isTransient( entity ) ) return entity;
+        entity.setProtocol( persistProtocol( entity.getProtocol() ) );
+        return geneCoexpressionAnalysisService.create( entity );
+    }
+
+    /**
+     * @param entity
+     * @return
+     */
     protected DifferentialExpressionAnalysis persistDifferentialExpressionAnalysis(
             DifferentialExpressionAnalysis entity ) {
         if ( entity == null ) return null;
@@ -122,6 +140,10 @@ public class RelationshipPersister extends ExpressionPersister {
     public void setDifferentialExpressionAnalysisService(
             DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
         this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
+    }
+
+    public void setGeneCoexpressionAnalysisService( GeneCoexpressionAnalysisService geneCoexpressionAnalysisService ) {
+        this.geneCoexpressionAnalysisService = geneCoexpressionAnalysisService;
     }
 
 }
