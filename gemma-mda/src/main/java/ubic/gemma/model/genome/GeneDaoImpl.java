@@ -508,20 +508,10 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      */
     @Override
     protected Collection handleLoadPredictedGenes( Taxon taxon ) throws Exception {
-        final String queryString = "select gene from GeneImpl as gene fetch all where gene.taxon = :taxon"
+        final String queryString = "select gene from GeneImpl as gene fetch all properties where gene.taxon = :taxon"
                 + " and gene.class = " + CoexpressionCollectionValueObject.PREDICTED_GENE_IMPL;
 
-        Collection predictedGenes;
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameter( "taxon", taxon );
-
-            predictedGenes = queryObject.list();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-        return predictedGenes;
+        return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
 
     }
 
@@ -532,20 +522,10 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      */
     @Override
     protected Collection handleLoadProbeAlignedRegions( Taxon taxon ) throws Exception {
-        final String queryString = "select gene from GeneImpl as gene fetch all where gene.taxon = :taxon"
+        final String queryString = "select gene from GeneImpl as gene fetch all properties where gene.taxon = :taxon"
                 + " and gene.class = " + CoexpressionCollectionValueObject.PROBE_ALIGNED_REGION_IMPL;
 
-        Collection pars;
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameter( "taxon", taxon );
-
-            pars = queryObject.list();
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-        return pars;
+        return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }
 
     @Override
