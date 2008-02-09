@@ -225,7 +225,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         Collection<Long> queryGeneProbeIds = coexpressions.getQueryGeneProbes();
         Map<Long, Collection<Long>> querySpecificity = getCS2GeneMap( queryGeneProbeIds );
         coexpressions.addQueryGeneSpecifityInfo( querySpecificity );
-        postProcess( coexpressions );
+        postProcess( coexpressions, knownGenesOnly );
         return coexpressions;
     }
 
@@ -667,15 +667,20 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /**
      * @param coexpressions
+     * @param knownGenesOnly this probably doesn't matter much, as results are already determined, but defensive
+     *        programming.
      */
     @SuppressWarnings("unchecked")
-    private void postProcess( CoexpressionCollectionValueObject coexpressions ) {
+    private void postProcess( CoexpressionCollectionValueObject coexpressions, boolean knownGenesOnly ) {
         StopWatch watch = new StopWatch();
         watch.start();
 
         postProcessKnownGenes( coexpressions );
-        postProcessProbeAlignedRegions( coexpressions );
-        postProcessPredictedGenes( coexpressions );
+
+        if ( !knownGenesOnly ) {
+            postProcessProbeAlignedRegions( coexpressions );
+            postProcessPredictedGenes( coexpressions );
+        }
 
         watch.stop();
         Long elapsed = watch.getTime();
@@ -760,7 +765,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             coexpressions.addExpressionExperiment( geneType, eeVo ); // unorganized.
         }
         // add the ee here so we know it is associated with this specific gene.
-        geneCoexpressionVo.addExpressionExperimentValueObject( eeVo );
+        geneCoexpressionVo.addSupportingExperiment( eeVo );
 
         geneCoexpressionVo.addScore( eeID, score, pvalue, outputProbeId );
 

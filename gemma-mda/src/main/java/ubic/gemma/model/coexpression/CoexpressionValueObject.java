@@ -123,7 +123,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
      * 
      * @param eeVo
      */
-    public void addExpressionExperimentValueObject( ExpressionExperimentValueObject eeVo ) {
+    public void addSupportingExperiment( ExpressionExperimentValueObject eeVo ) {
         if ( expressionExperimentValueObjects.containsKey( eeVo.getId() ) ) {
             // I guess this happens if there are two probes for the same gene.
             if ( log.isDebugEnabled() ) log.debug( "Already have seen this experiment" );

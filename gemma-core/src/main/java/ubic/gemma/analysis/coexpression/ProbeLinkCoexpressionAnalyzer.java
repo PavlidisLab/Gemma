@@ -115,7 +115,7 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
         if ( stringency <= 0 ) stringency = 1;
 
         if ( log.isInfoEnabled() )
-            log.info( "Starting link query for " + gene.getName() + " stringency=" + stringency + " knowngenesonly?="
+            log.info( "Link query for " + gene.getName() + " stringency=" + stringency + " knowngenesonly?="
                     + knownGenesOnly );
 
         /*
@@ -147,11 +147,9 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
             computeGoStats( coexpressions, stringency );
         }
 
-        if ( coexpressions.getAllGeneCoexpressionData( stringency ).size() == 0 ) return coexpressions;
-
         computeEesTestedIn( gene, ees, coexpressions, eesQueryTestedIn, stringency, limit );
 
-        log.info( "Analysis completed" );
+        log.debug( "Analysis completed" );
         return coexpressions;
     }
 
@@ -284,7 +282,7 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
      * passed in (no limit). This method uses a cache to speed repeated calls, so it is very slow at first and then
      * faster.
      * 
-     * @param gene
+     * @param gene that is coexpressed with the query gene.
      * @param ees
      * @param coexpressionData
      * @param limit how many to populate. If <= 0, all will be done.
@@ -293,20 +291,14 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
     @SuppressWarnings("unchecked")
     private void computeEesTestedInBatch( Gene gene, Collection<ExpressionExperiment> ees,
             List<CoexpressionValueObject> coexpressionData ) {
-        Collection<Long> coexGeneIds = new HashSet<Long>();
 
-        int i = 0;
         Map<Long, CoexpressionValueObject> gmap = new HashMap<Long, CoexpressionValueObject>();
-
         for ( CoexpressionValueObject o : coexpressionData ) {
-            coexGeneIds.add( o.getGeneId() );
             gmap.put( o.getGeneId(), o );
-            i++;
         }
 
-        log.info( "Computing EEs tested in for " + coexGeneIds.size() + " genes." );
+        log.info( "Computing EEs tested in for " + coexpressionData.size() + " genes coexpressed with query." );
 
-        Map<Gene, Collection<ExpressionExperiment>> eesTestedIn = new HashMap<Gene, Collection<ExpressionExperiment>>();
         for ( ExpressionExperiment ee : ees ) {
             Element element = this.eetestedGeneCache.get( ee.getId() );
             Collection<Long> genes;
@@ -325,10 +317,11 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
             }
         }
 
-        for ( Gene g : eesTestedIn.keySet() ) {
-            CoexpressionValueObject o = gmap.get( g.getId() );
-            o.setDatasetsTestedIn( eesTestedIn.get( g ) );
+        // debugging.
+        for ( CoexpressionValueObject o : coexpressionData ) {
+            assert o.getDatasetsTestedIn().size() > 0;// has to be at least stringency actually.
         }
+
     }
 
     /**

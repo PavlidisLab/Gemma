@@ -114,11 +114,13 @@ public class GeneLinkCoexpressionAnalyzer {
             for ( Gene gene : toUseGenes ) {
                 CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis( gene,
                         expressionExperiments, stringency, knownGenesOnly, 0 );
-                if ( coexpressions.getNumKnownGenes() > 0 ) {
+                if ( knownGenesOnly && coexpressions.getNumKnownGenes() > 0 ) {
                     Collection<Gene2GeneCoexpression> created = persistCoexpressions( eeIdOrder, gene, coexpressions,
                             analysis, genesToAnalyzeMap, processedGenes, stringency );
                     totalLinks += created.size();
                 }
+                // FIXME support using other than known genes (though we really don't do that now).
+
                 processedGenes.add( gene );
                 if ( processedGenes.size() % 100 == 0 ) {
                     log.info( "Processed " + processedGenes.size() + " genes..." );
@@ -361,6 +363,7 @@ public class GeneLinkCoexpressionAnalyzer {
                 g2gCoexpression.setPvalue( co.getNegPValue() );
 
                 Collection<Long> contributing2NegativeLinks = co.getEEContributing2NegativeLinks();
+                assert contributing2NegativeLinks.size() == co.getNegativeLinkSupport();
                 byte[] supportVector = computeSupportingDatasetVector( contributing2NegativeLinks, eeIdOrder );
                 g2gCoexpression.setNumDataSets( co.getNegativeLinkSupport() );
                 g2gCoexpression.setEffect( co.getNegativeScore() );
@@ -381,7 +384,8 @@ public class GeneLinkCoexpressionAnalyzer {
                 g2gCoexpression.setSecondGene( secondGene );
                 g2gCoexpression.setPvalue( co.getPosPValue() );
 
-                Collection<Long> contributing2PositiveLinks = co.getEEContributing2NegativeLinks();
+                Collection<Long> contributing2PositiveLinks = co.getEEContributing2PositiveLinks();
+                assert contributing2PositiveLinks.size() == co.getPositiveLinkSupport();
                 byte[] supportVector = computeSupportingDatasetVector( contributing2PositiveLinks, eeIdOrder );
                 g2gCoexpression.setNumDataSets( co.getPositiveLinkSupport() );
                 g2gCoexpression.setEffect( co.getPositiveScore() );
@@ -403,7 +407,8 @@ public class GeneLinkCoexpressionAnalyzer {
             batch.clear();
         }
         if ( all.size() > 0 ) {
-            log.info( "Persisted " + all.size() + " gene2geneCoexpressions for analysis: " + analysis.getName() );
+            log.info( "Persisted " + all.size() + " gene2geneCoexpressions for gene + " + firstGene.getName()
+                    + " in analysis: " + analysis.getName() );
         }
         return all;
 
