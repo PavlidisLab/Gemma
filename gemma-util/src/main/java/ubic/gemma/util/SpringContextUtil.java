@@ -23,6 +23,7 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
@@ -55,14 +56,25 @@ public class SpringContextUtil {
             boolean isWebApp ) {
         if ( ctx == null ) {
             String[] paths = getConfigLocations( testing, compassOn, gigaspacesOn, isWebApp );
+            StopWatch timer = new StopWatch();
+            timer.start();
             ctx = new ClassPathXmlApplicationContext( paths );
+            timer.stop();
             if ( ctx != null ) {
-                log.debug( "Got context" );
+                log.info( "Got context in " + timer.getTime() + "ms" );
             } else {
-                log.error( "Failed to load context" );
+                log.fatal( "Failed to load context!" );
             }
         }
         return ctx;
+    }
+
+    /**
+     * @return a minimally-configured standard BeanFactory: no Compass, no Gigaspaces, no Web config.
+     * @see getApplicationContext( boolean testing, boolean compassOn, boolean gigaspacesOn, boolean isWebApp)
+     */
+    public static BeanFactory getApplicationContext() {
+        return getApplicationContext( false, false, false, false );
     }
 
     /**
