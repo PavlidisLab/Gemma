@@ -52,6 +52,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.util.NativeQueryUtils;
 import ubic.gemma.util.TaxonUtility;
 
 /**
@@ -268,6 +269,32 @@ public class Probe2ProbeCoexpressionDaoImpl extends
                 new Object[] { expressionExperiments, probes } );
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection<Long> handleGetGenesTestedBy( ExpressionExperiment ee, boolean filterNonSpecific )
+            throws Exception {
+
+        // FIXME implement filterNonSpecific.
+        if ( filterNonSpecific ) {
+            throw new UnsupportedOperationException( "Sorry, filterNonSpecific is not supported yet" );
+        }
+
+        // this is _much_ faster than going through blatassociation.
+        final String nativeQueryString = "SELECT gc.GENE FROM EXPRESSION_EXPERIMENT e "
+                + "INNER JOIN EXPERIMENTS_ANALYZED ea ON e.ID=ea.EXPERIMENTS_ANALYZED_FK "
+                + "INNER JOIN ANALYSIS a ON a.ID=ea.EXPRESSION_ANALYSES_FK "
+                + "INNER JOIN  PROBE_COEXPRESSION_ANALYSIS_PROBES_USED pu ON pu.PROBE_COEXPRESSION_ANALYSES_FK=a.ID "
+                + "INNER JOIN GENE2CS gc ON gc.CS=pu.PROBES_USED_FK WHERE a.class='ProbeCoexpressionAnalysisImpl' AND e.ID= :eeid ";
+
+        List<BigInteger> r = NativeQueryUtils.findByNamedParam( this.getHibernateTemplate(), nativeQueryString, "eeid",
+                ee.getId() );
+        List<Long> results = new ArrayList<Long>();
+        for ( BigInteger i : r ) {
+            results.add( i.longValue() );
+        }
+        return results;
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -294,19 +321,33 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             return result;
         }
 
-        String queryString = "select distinct pu,ees from ProbeCoexpressionAnalysisImpl pca inner join pca.experimentsAnalyzed ees inner join pca.probesUsed pu where ees in (:ees) and pu.id in (:probes)";
+        String queryString = "select distinct pu,ees from ProbeCoexpressionAnalysisImpl pca inner join pca.experimentsAnalyzed ees inner join pca.probesUsed pu where pu.id in (:probes)";
 
+        // this step is fast.
         Map<Long, Collection<Long>> cs2genes = this.getCs2GenesMapFromGenes( genesB );
+
+        log.info( cs2genes.size() + " probes for " + genesB.size() + " genes to examine in "
+                + expressionExperiments.size() + " ees." );
         List eesre = new ArrayList();
+        StopWatch watch = new StopWatch();
+        watch.start();
         for ( Collection<Long> csBatch : BatchIterator.batches( cs2genes.keySet(), 2000 ) ) {
-            eesre.addAll( this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "ees", "probes" },
-                    new Object[] { eesA, csBatch } ) );
+            // This is very slow.
+            // eesre.addAll( this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "ees", "probes"
+            // },
+            // new Object[] { eesA, csBatch } ) );
+            eesre.addAll( this.getHibernateTemplate().findByNamedParam( queryString, "probes", csBatch ) );
+            watch.split();
+            log.info( "Batch completed in " + watch.getSplitTime() + "ms" );
+            watch.unsplit();
         }
+        log.info( "Done in " + watch.getTime() + "ms: " + eesre.size() + " records." );
 
         for ( Object o : eesre ) {
             Object[] ol = ( Object[] ) o;
             CompositeSequence c = ( CompositeSequence ) ol[0];
             ExpressionExperiment e = ( ExpressionExperiment ) ol[1];
+            if ( !eesA.contains( e ) ) continue;
             Collection<Long> geneIds = cs2genes.get( c.getId() );
             for ( Long id : geneIds ) {
                 if ( !result.containsKey( id ) ) {
@@ -606,17 +647,12 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /**
      * @param genes
-     * @return
+     * @return map of CS ids to Gene ids.
      */
     private Map<Long, Collection<Long>> getCs2GenesMapFromGenes( Collection<Long> genes ) {
         Map<Long, Collection<Long>> cs2genes = new HashMap<Long, Collection<Long>>();
-        // Collection<Long> geneIds = new HashSet<Long>();
-        // for ( Gene g : genes ) {
-        // geneIds.add( g.getId() );
-        // }
 
         Session session = getSessionFactory().openSession();
-
         String queryString = "SELECT CS as csid, GENE as geneId FROM GENE2CS g WHERE g.GENE in (:geneIds)";
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
         queryObject.addScalar( "csid", new LongType() );

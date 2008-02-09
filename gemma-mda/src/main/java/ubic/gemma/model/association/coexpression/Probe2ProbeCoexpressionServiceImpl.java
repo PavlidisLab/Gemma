@@ -206,4 +206,10 @@ public class Probe2ProbeCoexpressionServiceImpl extends
         return this.getProbe2ProbeCoexpressionDao().getVectorsForLinks( genes, ees );
     }
 
+    @Override
+    protected Collection handleGetGenesTestedBy( ExpressionExperiment expressionExperiment, boolean filterNonSpecific )
+            throws Exception {
+        return this.getProbe2ProbeCoexpressionDao().getGenesTestedBy( expressionExperiment, filterNonSpecific );
+    }
+
 }
