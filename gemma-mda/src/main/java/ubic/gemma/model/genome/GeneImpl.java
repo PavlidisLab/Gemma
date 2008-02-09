@@ -30,9 +30,7 @@ public class GeneImpl extends ubic.gemma.model.genome.Gene {
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -557590340503789274L;
-    
-    
-    
+
     @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
@@ -132,8 +130,11 @@ public class GeneImpl extends ubic.gemma.model.genome.Gene {
         buf.append( this.getId() == null ? " " : " Id:" + this.getId() + " " );
         buf.append( this.getOfficialSymbol() + " " );
         buf.append( this.getOfficialName() == null ? "" : this.getOfficialName() + " " );
-        buf.append( this.getOfficialName() == null && this.getPhysicalLocation() != null ? "["
-                + this.getPhysicalLocation() + "] " : "" );
+
+        // This causes too many lazy load problems.
+        // buf.append( this.getOfficialName() == null && this.getPhysicalLocation() != null ? "["
+        // + this.getPhysicalLocation() + "] " : "" );
+
         buf.append( this.getNcbiId() == null ? "" : " (NCBI " + this.getNcbiId() + ")" );
         return buf.toString();
     }
