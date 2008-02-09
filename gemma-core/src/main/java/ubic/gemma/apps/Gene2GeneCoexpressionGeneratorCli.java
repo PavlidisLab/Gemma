@@ -36,6 +36,7 @@ import ubic.gemma.model.genome.Gene;
  */
 public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManipulatingCLI {
 
+    private static final String ALLGENES_OPTION = "allgenes";
     private static final int DEFAULT_STRINGINCY = 2;
 
     public static void main( String[] args ) {
@@ -55,6 +56,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
     private int toUseStringency;
 
     private String toUseAnalysisName;
+    private boolean knownGenesOnly = true;
 
     @SuppressWarnings("static-access")
     @Override
@@ -71,9 +73,13 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
         Option analysisNameOption = OptionBuilder.hasArg().isRequired().withArgName( "name" ).withDescription(
                 "The name of the analysis to create" ).withLongOpt( "name" ).create( 'a' );
 
+        Option allGenesOption = OptionBuilder.withDescription( "Run on all genes, including predicted and PARs" )
+                .create( ALLGENES_OPTION );
+
         addOption( geneFileOption );
         addOption( stringencyOption );
         addOption( analysisNameOption );
+        addOption( allGenesOption );
 
     }
 
@@ -88,9 +94,10 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
         if ( err != null ) return err;
 
         log.info( "Using " + expressionExperiments.size() + " Expression Experiments." );
-        log.info( displayEEs() );
+        log.debug( displayEEs() );
 
-        geneVoteAnalyzer.analyze( expressionExperiments, toUseGenes, toUseStringency, toUseAnalysisName );
+        geneVoteAnalyzer
+                .analyze( expressionExperiments, toUseGenes, toUseStringency, knownGenesOnly, toUseAnalysisName );
 
         return null;
     }
@@ -117,8 +124,12 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
             } catch ( IOException e ) {
                 throw new RuntimeException( e );
             }
+        } else if ( knownGenesOnly ) {
+            toUseGenes = super.geneService.loadKnownGenes( taxon );
         } else {
             toUseGenes = super.geneService.loadKnownGenes( taxon );
+            toUseGenes.addAll( geneService.loadPredictedGenes( taxon ) );
+            toUseGenes.addAll( geneService.loadProbeAlignedRegions( taxon ) );
         }
 
         toUseStringency = DEFAULT_STRINGINCY;
@@ -128,6 +139,10 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
 
         if ( this.hasOption( 'a' ) ) {
             toUseAnalysisName = this.getOptionValue( 'a' );
+        }
+
+        if ( this.hasOption( ALLGENES_OPTION ) ) {
+            this.knownGenesOnly = false;
         }
 
     }

@@ -321,7 +321,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
         commandObject.setStringency( stringency );
 
         CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis( commandObject
-                .getSourceGene(), commandObject.getToUseEE(), commandObject.getStringency(), true ); // true = known
+                .getSourceGene(), commandObject.getToUseEE(), commandObject.getStringency(), true, 100 ); // true = known
         // genes only.
 
         StopWatch watch = new StopWatch();
@@ -667,7 +667,7 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
 
                 job.updateProgress( "Analyzing coexpresson for " + csc.getSourceGene().getOfficialSymbol() );
                 CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis( csc
-                        .getSourceGene(), csc.getToUseEE(), csc.getStringency(), true ); // true = known genes only.
+                        .getSourceGene(), csc.getToUseEE(), csc.getStringency(), true, 100 ); // true = known genes only.
 
                 StopWatch watch = new StopWatch();
 

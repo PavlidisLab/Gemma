@@ -25,11 +25,16 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Predicate;
+import org.apache.commons.collections.Transformer;
 
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
@@ -158,6 +163,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
             log.info( "Loaded " + this.expressionExperiments.size() + " expressionExperiments" );
         }
 
+        removeTroubledEes( expressionExperiments );
+
         if ( hasOption( 'x' ) ) {
             excludeEeFileName = getOptionValue( 'x' );
             try {
@@ -177,6 +184,31 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
             if ( count > 0 ) log.info( "Excluded " + count + " expression experiments" );
         }
 
+    }
+
+    @SuppressWarnings("unchecked")
+    private void removeTroubledEes( Collection<ExpressionExperiment> ees ) {
+        int size = ees.size();
+        final Map<Long, AuditEvent> trouble = eeService.getLastTroubleEvent( CollectionUtils.collect( ees,
+                new Transformer() {
+                    public Object transform( Object input ) {
+                        return ( ( ExpressionExperiment ) input ).getId();
+                    }
+                } ) );
+        CollectionUtils.filter( ees, new Predicate() {
+            public boolean evaluate( Object object ) {
+                boolean hasTrouble = trouble.containsKey( ( ( ExpressionExperiment ) object ).getId() );
+                if ( hasTrouble ) {
+                    log.info( "Troubled: " + object );
+                }
+                return !hasTrouble;
+            }
+        } );
+        int newSize = ees.size();
+        if ( newSize != size ) {
+            assert newSize < size;
+            log.info( "Removed " + ( size - newSize ) + " experiments with 'trouble' flags" );
+        }
     }
 
     protected String getExperimentShortName() {

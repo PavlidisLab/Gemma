@@ -44,6 +44,7 @@ import net.sf.ehcache.Element;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
 import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
@@ -67,7 +68,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
-import ubic.gemma.search.SearchSettings; 
+import ubic.gemma.search.SearchSettings;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
@@ -144,8 +145,8 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             }
 
             cache = new Cache( "ArrayDesignCompositeSequenceCache", ARRAY_INFO_CACHE_SIZE,
-                    MemoryStoreEvictionPolicy.LFU, false, null, false, ARRAY_INFO_CACHE_TIME_TO_DIE,
-                    ARRAY_INFO_CACHE_TIME_TO_IDLE, false, 500, null );
+                    MemoryStoreEvictionPolicy.LFU, false, "/tmp/" + RandomStringUtils.randomNumeric( 40 ), false,
+                    ARRAY_INFO_CACHE_TIME_TO_DIE, ARRAY_INFO_CACHE_TIME_TO_IDLE, false, 500, null );
 
             manager.addCache( cache );
             cache = manager.getCache( "ArrayDesignCompositeSequenceCache" );
@@ -574,14 +575,12 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         AuditEvent troubleEvent = auditTrailService.getLastTroubleEvent( arrayDesign );
         if ( troubleEvent != null ) {
             mav.addObject( "troubleEvent", troubleEvent );
-            mav.addObject( "troubleEventDescription", StringEscapeUtils.escapeHtml( troubleEvent
-                    .toString(  ) ) );
+            mav.addObject( "troubleEventDescription", StringEscapeUtils.escapeHtml( troubleEvent.toString() ) );
         }
         AuditEvent validatedEvent = auditTrailService.getLastValidationEvent( arrayDesign );
         if ( validatedEvent != null ) {
             mav.addObject( "validatedEvent", validatedEvent );
-            mav.addObject( "validatedEventDescription", StringEscapeUtils.escapeHtml( validatedEvent
-                    .toString(  ) ) );
+            mav.addObject( "validatedEventDescription", StringEscapeUtils.escapeHtml( validatedEvent.toString() ) );
         }
 
         Collection<ArrayDesign> subsumees = arrayDesign.getSubsumedArrayDesigns();

@@ -47,6 +47,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.PersisterHelper;
 
 /**
  * Used to analyze already-persisted probe-level 'links' and turn them into gene-level coexpression information. The
@@ -61,6 +62,7 @@ import ubic.gemma.model.genome.Taxon;
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="geneCoexpressionAnalysisService" ref="geneCoexpressionAnalysisService"
  * @spring.property name = "probeLinkCoexpressionAnalyzer" ref="probeLinkCoexpressionAnalyzer"
+ * @spring.property name="persisterHelper" ref="persisterHelper"
  * @author paul
  * @version $Id$
  */
@@ -68,20 +70,22 @@ public class GeneLinkCoexpressionAnalyzer {
     private static Log log = LogFactory.getLog( GeneLinkCoexpressionAnalyzer.class.getName() );
 
     private static final int BATCH_SIZE = 500;
-    Gene2GeneCoexpressionService gene2GeneCoexpressionService;
-    GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
-    ProtocolService protocolService;
-    ExpressionExperimentService expressionExperimentService;
-    ProbeLinkCoexpressionAnalyzer probeLinkCoexpressionAnalyzer;
+    private Gene2GeneCoexpressionService gene2GeneCoexpressionService;
+    private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
+    private ProtocolService protocolService;
+    private ExpressionExperimentService expressionExperimentService;
+    private ProbeLinkCoexpressionAnalyzer probeLinkCoexpressionAnalyzer;
+    private PersisterHelper persisterHelper;
 
     /**
      * @param expressionExperiments
      * @param toUseGenes
      * @param stringency
+     * @param knownGenesOnly
      * @param toUseAnalysisName
      */
     public void analyze( Set<ExpressionExperiment> expressionExperiments, Collection<Gene> toUseGenes, int stringency,
-            String toUseAnalysisName ) {
+            boolean knownGenesOnly, String toUseAnalysisName ) {
         Collection<Gene> processedGenes = new HashSet<Gene>();
 
         log.info( "Starting gene link analysis '" + toUseAnalysisName + " on " + toUseGenes.size() + " genes in "
@@ -109,7 +113,7 @@ public class GeneLinkCoexpressionAnalyzer {
         try {
             for ( Gene gene : toUseGenes ) {
                 CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis( gene,
-                        expressionExperiments, stringency, false );
+                        expressionExperiments, stringency, knownGenesOnly, 0 );
                 if ( coexpressions.getNumKnownGenes() > 0 ) {
                     Collection<Gene2GeneCoexpression> created = persistCoexpressions( eeIdOrder, gene, coexpressions,
                             analysis, genesToAnalyzeMap, processedGenes, stringency );
@@ -203,6 +207,10 @@ public class GeneLinkCoexpressionAnalyzer {
         this.geneCoexpressionAnalysisService = geneCoexpressionAnalysisService;
     }
 
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
+    }
+
     public void setProbeLinkCoexpressionAnalyzer( ProbeLinkCoexpressionAnalyzer probeLinkCoexpressionAnalyzer ) {
         this.probeLinkCoexpressionAnalyzer = probeLinkCoexpressionAnalyzer;
     }
@@ -233,6 +241,25 @@ public class GeneLinkCoexpressionAnalyzer {
         }
 
         return supportVector;
+    }
+
+    /**
+     * @param datasetsTestedIn
+     * @param eeIdOrder
+     * @return
+     */
+    private byte[] computeTestedDatasetVector( Collection<ExpressionExperiment> datasetsTestedIn,
+            Map<Long, Integer> eeIdOrder ) {
+        byte[] result = new byte[( int ) Math.ceil( eeIdOrder.keySet().size() / ( double ) Byte.SIZE )];
+        for ( int i = 0, j = result.length; i < j; i++ ) {
+            result[i] = 0x0;
+        }
+
+        for ( ExpressionExperiment ee : datasetsTestedIn ) {
+            Long id = ee.getId();
+            BitUtil.set( result, eeIdOrder.get( id ) );
+        }
+        return result;
     }
 
     /**
@@ -287,7 +314,11 @@ public class GeneLinkCoexpressionAnalyzer {
         analysis.setName( analysisName );
         analysis.setProtocol( protocol );
         analysis.setExperimentsAnalyzed( expressionExperiments );
-        return geneCoexpressionAnalysisService.create( analysis );
+        analysis = ( GeneCoexpressionAnalysis ) persisterHelper.persist( analysis );
+
+        // assert analysis.getAuditTrail() != null;
+
+        return analysis;
     }
 
     /**
@@ -376,24 +407,5 @@ public class GeneLinkCoexpressionAnalyzer {
         }
         return all;
 
-    }
-
-    /**
-     * @param datasetsTestedIn
-     * @param eeIdOrder
-     * @return
-     */
-    private byte[] computeTestedDatasetVector( Collection<ExpressionExperiment> datasetsTestedIn,
-            Map<Long, Integer> eeIdOrder ) {
-        byte[] result = new byte[( int ) Math.ceil( eeIdOrder.keySet().size() / ( double ) Byte.SIZE )];
-        for ( int i = 0, j = result.length; i < j; i++ ) {
-            result[i] = 0x0;
-        }
-
-        for ( ExpressionExperiment ee : datasetsTestedIn ) {
-            Long id = ee.getId();
-            BitUtil.set( result, eeIdOrder.get( id ) );
-        }
-        return result;
     }
 }
