@@ -95,7 +95,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     // the expression experiments that this coexpression was involved in
     private Map<Long, ExpressionExperimentValueObject> expressionExperimentValueObjects;
 
-    private Collection<ExpressionExperiment> datasetsTestedIn;
+    private Collection<ExpressionExperiment> datasetsTestedIn = new HashSet<ExpressionExperiment>();
 
     public CoexpressionValueObject() {
         geneName = "";
@@ -346,6 +346,8 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
             }
         }
 
+        assert size > 0;
+
         return mean / size;
 
     }
@@ -363,17 +365,34 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     public double getNegPValue() {
         if ( negPvalues.size() == 0 ) return 0.0;
 
-        double mean = 0;
-        int size = 0;
+        Collection<Map<Long, Double>> values = negPvalues.values();
+        return computePvalue( values );
+    }
 
-        for ( Map<Long, Double> scores : negPvalues.values() ) {
-            for ( Double score : scores.values() ) {
-                mean += Math.log( score );
-                size++;
-            }
-        }
-
-        return Math.exp( mean / size );
+    /**
+     * FIXME just returning zero for now.
+     * 
+     * @param mean
+     * @param size
+     * @param values
+     * @return
+     */
+    private double computePvalue( Collection<Map<Long, Double>> values ) {
+        return 0.0;
+        // double mean = 0.0;
+        // int size = 0;
+        // for ( Map<Long, Double> scores : values ) {
+        // for ( Double score : scores.values() ) {
+        // if ( score.doubleValue() == 0 ) {
+        // score = Constants.SMALL;
+        // }
+        // mean += Math.log( score );
+        // size++;
+        // }
+        // }
+        // assert size > 0;
+        //
+        // return Math.exp( mean / size );
     }
 
     /**
@@ -421,6 +440,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
                 size++;
             }
         }
+        assert size > 0;
 
         return mean / size;
 
@@ -438,18 +458,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
      */
     public double getPosPValue() {
         if ( posPvalues.size() == 0 ) return 0.0;
-
-        double mean = 0.0;
-        int size = 0;
-
-        for ( Map<Long, Double> scores : posPvalues.values() ) {
-            for ( Double score : scores.values() ) {
-                mean += Math.log( score );
-                size++;
-            }
-        }
-
-        return Math.exp( mean / size );
+        return computePvalue( this.posPvalues.values() );
     }
 
     /**
