@@ -102,7 +102,7 @@ public class ExtCoexpressionSearchController extends BaseFormController {
         for ( Gene g : genes ) {
             eeIds.addAll( expressionExperimentService.findByGene( g ) );
         }
-        return expressionExperimentService.loadMultiple( eeIds );
+        return eeIds.isEmpty() ? new HashSet<ExpressionExperiment>() : expressionExperimentService.loadMultiple( eeIds );
     }
 
     private ExtCoexpressionMetaValueObject getCannedAnalysisResults( Long cannedAnalysisId, Collection<Gene> genes, int stringency ) {
@@ -188,9 +188,21 @@ public class ExtCoexpressionSearchController extends BaseFormController {
 
     private ExtCoexpressionMetaValueObject getCustomAnalysisResults( Collection<Long> eeIds, Collection<Gene> genes, int stringency ) {
         ExtCoexpressionMetaValueObject result = new ExtCoexpressionMetaValueObject();
-        Collection<ExpressionExperiment> ees = ( eeIds != null && !eeIds.isEmpty() ) ?
-                expressionExperimentService.loadMultiple( eeIds ) :
-                getPossibleExpressionExperiments( genes );
+        if ( eeIds == null )
+            eeIds = new HashSet<Long>();
+        Collection<ExpressionExperiment> ees = getPossibleExpressionExperiments( genes );
+        
+        if ( eeIds == null ) {
+            eeIds = new HashSet<Long>();
+        } else if ( !eeIds.isEmpty() ){
+            // remove the expression experiments we're not interested in...
+            Collection<ExpressionExperiment> eesToRemove = new HashSet<ExpressionExperiment>();
+            for ( ExpressionExperiment ee : ees ) {
+                if ( !eeIds.contains( ee.getId() ) )
+                    eesToRemove.add( ee );
+            }
+            ees.removeAll( eesToRemove );
+        }
         
         /* repopulate eeIds with the actual eeIds we'll be searching through and load
          * ExpressionExperimentValueObjects to get summary information about the datasets...
@@ -243,8 +255,10 @@ public class ExtCoexpressionSearchController extends BaseFormController {
             Long[] supported = new Long[ eevos.size() ];
             for ( int i=0; i<eevos.size(); ++i ) {
                 ExpressionExperimentValueObject eevo = eevos.get( i );
-                tested[i] = cvo.getDatasetsTestedIn().contains( eevo.getId() ) ? eevo.getId() : 0;
-                supported[i] = cvo.getExperimentBitIds().contains( eevo.getId() ) ? eevo.getId() : 0;
+                tested[i] = ( cvo.getDatasetsTestedIn() != null && cvo.getDatasetsTestedIn().contains( eevo.getId() ) ) ?
+                        eevo.getId() : 0;
+                supported[i] = ( cvo.getExperimentBitIds() != null && cvo.getExperimentBitIds().contains( eevo.getId() ) ) ?
+                        eevo.getId() : 0;
             }
             ecvo.setTestedDatasetVector( tested );
             ecvo.setSupportingDatasetVector( supported );
