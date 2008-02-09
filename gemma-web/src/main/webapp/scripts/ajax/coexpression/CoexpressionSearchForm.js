@@ -6,6 +6,7 @@ Ext.onReady( function() {
 	var admin = dwr.util.getValue("hasAdmin");
 
 	var searchPanel = new Ext.Gemma.CoexpressionSearchPanel( {
+		style : "margin-bottom: 1em;"
 	} );
 	searchPanel.render( "coexpression-form" );
 	

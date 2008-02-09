@@ -15,7 +15,8 @@ Ext.Gemma.CoexpressionGrid = function ( config ) {
 	 */
 	var superConfig = {
 		collapsible : true,
-		editable : false
+		editable : false,
+		style : "margin-bottom: 1em;"
 	};
 	
 	if ( this.pageSize ) {

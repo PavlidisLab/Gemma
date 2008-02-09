@@ -121,7 +121,7 @@ public class CountingMap<K> implements Map<K, Integer>
     /* (non-Javadoc)
      * @see java.util.Map#get(java.lang.Object)
      */
-    public Integer get( Object key ) { return map.get( key ); }
+    public Integer get( Object key ) { return map.containsKey( key ) ? map.get( key ) : 0; }
 
     /* (non-Javadoc)
      * @see java.util.Map#isEmpty()

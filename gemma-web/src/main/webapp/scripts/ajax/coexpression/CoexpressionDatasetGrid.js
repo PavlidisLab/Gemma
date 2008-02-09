@@ -16,7 +16,8 @@ Ext.Gemma.CoexpressionDatasetGrid = function ( config ) {
 		editable : false,
 		header : true,
 		collapsed : true,
-		hidden : true
+		hidden : true,
+		style : "margin-top: 1em; margin-bottom: .5em;"
 	};
 	
 	superConfig.ds = new Ext.data.GroupingStore( {
