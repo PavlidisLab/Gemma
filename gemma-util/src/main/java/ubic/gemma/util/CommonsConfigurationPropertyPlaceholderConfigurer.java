@@ -30,7 +30,7 @@ public class CommonsConfigurationPropertyPlaceholderConfigurer extends PropertyP
      * @param conf the conf to set
      */
     public void setConfiguration( PropertiesConfiguration configuration ) {
-        log.info( "Got configuration from " + configuration.getFileName() );
+        log.debug( "Got configuration from " + configuration.getFileName() );
         this.configuration = configuration;
     }
 
