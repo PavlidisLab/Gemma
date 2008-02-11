@@ -154,7 +154,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                             logProcessing( expressionAnalyses );
                             successObjects.add( expressionExperiment.toString() );
 
-                            audit( expressionExperiment, "Part of run on all EEs",
+                            audit( expressionExperiment, "Differential expression run on EE " + shortName,
                                     DifferentialExpressionAnalysisEvent.Factory.newInstance() );
                         } catch ( Exception e ) {
                             errorObjects.add( expressionExperiment + ": " + e.getMessage() );
@@ -186,8 +186,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
                     successObjects.add( expressionExperiment.toString() );
 
-                    audit( expressionExperiment, "Part of run on all EEs", DifferentialExpressionAnalysisEvent.Factory
-                            .newInstance() );
+                    audit( expressionExperiment, "Differential expression run on EE " + shortName,
+                            DifferentialExpressionAnalysisEvent.Factory.newInstance() );
                 } catch ( Exception e ) {
                     errorObjects.add( expressionExperiment + ": " + e.getMessage() );
                     continue;
