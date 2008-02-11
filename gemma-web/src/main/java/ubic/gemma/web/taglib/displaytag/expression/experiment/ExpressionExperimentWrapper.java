@@ -51,6 +51,9 @@ public class ExpressionExperimentWrapper extends TableDecorator {
 
     Log log = LogFactory.getLog( this.getClass() );
 
+    private static final int MIN_FACTORS = 1;
+    private static final int MAX_FACTORS = 2;
+
     /**
      * @return String
      */
@@ -247,12 +250,28 @@ public class ExpressionExperimentWrapper extends TableDecorator {
             String shortDate = StringUtils.left( fullDate, 10 );
             shortDate = formatIfRecent( mostRecent, shortDate );
             return "<span " + style + " title='" + fullDate + "'>" + shortDate + "</span>";
-        } else if ( object.getBioAssayCount() <= 4 ) {
-            style = "style=\"font-style:italic;\" title='This dataset may be too small to analyze'";
-            return "<span " + style + "'>small</span>";
         }
-        style = "style=\"color:#3A3;\" title='Needs to be done'";
+
+        if ( isDifferentialPossible() ) {
+            style = "style=\"color:#3A3;\" title='Needs to be done'";
+        } else {
+            style = "style=\"color:#808080;\" title='Needs to be done'";
+        }
+
         return "<span " + style + "'>Needed</span>";
+    }
+
+    /**
+     * @return Returns true if the experiment has either 1 or 2 experimental factors.
+     */
+    public boolean isDifferentialPossible() {
+
+        int numFactors = getNumFactors();
+
+        if ( numFactors < MIN_FACTORS || numFactors > MAX_FACTORS ) {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -352,6 +371,9 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         return "No design";
     }
 
+    /**
+     * @return
+     */
     public Integer getNumAnnotations() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         if ( object != null ) {
@@ -360,6 +382,9 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         return 0;
     }
 
+    /**
+     * @return
+     */
     public Integer getNumFactors() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         if ( object != null ) {
