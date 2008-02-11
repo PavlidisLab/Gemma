@@ -62,6 +62,9 @@
 		<display:column property="dateCreatedNoTime" sortable="true"
 			defaultorder="descending" title="Created"
 			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />
+			
+		<display:column property="dateDifferentialAnalysisNoTime" sortable="true" titleKey="menu.differential" />
+		
 		<display:column property="dateMissingValueAnalysisNoTime"
 			sortable="true" defaultorder="descending" title="MV Analysis"
 			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />
