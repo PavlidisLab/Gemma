@@ -21,15 +21,17 @@
 			Regenerate Expression Experiment Link Summaries </a>
 
 	</p>
-	<display:table pagesize="200" name="expressionExperiments" sort="list" defaultsort="10" defaultorder="descending"
-		class="list" requestURI="" id="expressionExperimentList"
+	<display:table pagesize="200" name="expressionExperiments" sort="list"
+		defaultsort="10" defaultorder="descending" class="list" requestURI=""
+		id="expressionExperimentList"
 		decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
-	
-		<display:column property="nameLink" sortable="true" sortProperty="name"
-			titleKey="expressionExperiment.name"
+
+		<display:column property="nameLink" sortable="true"
+			sortProperty="name" titleKey="expressionExperiment.name"
 			comparator="ubic.gemma.web.taglib.displaytag.StringComparator" />
 		<display:column property="status" sortable="true"
-			titleKey="expressionExperiment.status" style="text-align:center; vertical-align:middle;"
+			titleKey="expressionExperiment.status"
+			style="text-align:center; vertical-align:middle;"
 			comparator="ubic.gemma.web.taglib.displaytag.StringComparator"
 			defaultorder="descending" />
 		<display:column property="shortName" sortable="true"
@@ -43,28 +45,30 @@
 			sortable="true" defaultorder="descending"
 			comparator="ubic.gemma.web.taglib.displaytag.NumberComparator"
 			titleKey="expressionExperiment.preferredDesignElementDataVectorCount" />
-			<display:column property="technologyType"
-			sortable="true" defaultorder="descending"
-			title="Tech"  />
+		<display:column property="technologyType" sortable="true"
+			defaultorder="descending" title="Tech" />
 		<display:column property="bioMaterialCount" sortable="true"
 			defaultorder="descending"
 			titleKey="expressionExperiment.bioMaterialCount"
 			comparator="ubic.gemma.web.taglib.displaytag.NumberComparator" />
 
-		<display:column property="numAnnotations" sortable="true" defaultorder="descending" title="# Annots"
+		<display:column property="numAnnotations" sortable="true"
+			defaultorder="descending" title="# Annots"
 			comparator="ubic.gemma.web.taglib.displaytag.NumberComparator" />
 
 		<display:column property="numFactors" sortable="true"
-			defaultorder="descending"
-			title="# Factors" 
+			defaultorder="descending" title="# Factors"
 			comparator="ubic.gemma.web.taglib.displaytag.NumberComparator" />
-			
+
 		<display:column property="dateCreatedNoTime" sortable="true"
 			defaultorder="descending" title="Created"
 			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />
-			
-		<display:column property="dateDifferentialAnalysisNoTime" sortable="true" titleKey="menu.differential" />
-		
+
+		<display:column property="dateDifferentialAnalysisNoTime"
+			sortable="true" defaultorder="descending"
+			titleKey="menu.differential"
+			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />
+
 		<display:column property="dateMissingValueAnalysisNoTime"
 			sortable="true" defaultorder="descending" title="MV Analysis"
 			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />
@@ -75,11 +79,11 @@
 			sortable="true" defaultorder="descending" title="Probe Map"
 			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />
 		<display:column property="dateLinkAnalysisNoTime" sortable="true"
-			defaultorder="descending" title="Link Analyzed" 
+			defaultorder="descending" title="Link Analyzed"
 			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />
 		<display:column property="refreshReport" title="Refresh" />
 		<display:setProperty name="basic.empty.showtable" value="true" />
-		
+
 	</display:table>
 </authz:authorize>
 <authz:authorize ifNotGranted="admin">
