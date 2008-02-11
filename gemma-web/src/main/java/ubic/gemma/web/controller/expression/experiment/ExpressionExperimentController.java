@@ -453,8 +453,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             expressionExperiments.addAll( eeValObjectCol );
         }
 
-        expressionExperimentReportService.fillDifferentialInformation( expressionExperiments );
-
         // sort expression experiments by name first
         Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments,
                 new ExpressionExperimentValueObjectComparator() );
