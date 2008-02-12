@@ -82,7 +82,7 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
         if ( log.isDebugEnabled() ) log.debug( "Creating new bioAssay: " + bioAssay );
         return ( BioAssay ) create( bioAssay );
     }
-    
+
     @Override
     public void handleThaw( final BioAssay bioAssay ) throws Exception {
         HibernateTemplate templ = this.getHibernateTemplate();
@@ -109,7 +109,8 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
         final String query = "select count(*) from BioAssayImpl";
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
-
+            queryObject.setCacheable( true );
+            queryObject.setCacheRegion( "countsCache" );
             return ( ( Long ) queryObject.iterate().next() ).intValue();
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
