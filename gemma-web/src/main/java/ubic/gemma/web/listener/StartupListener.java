@@ -20,7 +20,6 @@ package ubic.gemma.web.listener;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -252,7 +251,7 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
         }
 
         File sourceLibdir = null;
-        Collection<File> jars = new ArrayList<File>();
+        Collection<File> jars = new HashSet<File>();
         for ( Enumeration e = servletContext.getAttributeNames(); e.hasMoreElements(); ) {
             String key = ( String ) e.nextElement();
             if ( key.endsWith( "classpath" ) ) {
@@ -274,7 +273,7 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
         jars.add( new File( sourceLibdir, String.format( "%s-%s.jar", "gemma-testing", version ) ) );
         jars.add( new File( sourceLibdir, String.format( "%s-%s.jar", "gemma-util", version ) ) );
 
-        Collection<File> copiedJars = new ArrayList<File>();
+        Collection<File> copiedJars = new HashSet<File>();
         for ( File sourceJar : jars ) {
             try {
                 File targetJar = new File( targetLibdir, sourceJar.getName() );

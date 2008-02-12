@@ -17,7 +17,7 @@ Ext.Gemma.GeneCombo = function ( config ) {
 		store : new Ext.data.Store( {
 			proxy : new Ext.data.DWRProxy( GenePickerController.searchGenes ),
 			reader : new Ext.data.ListRangeReader( {id:"id"}, Ext.Gemma.GeneCombo.getRecord() ),
-			remoteSort : true
+			sortInfo : { field: "officialSymbol", dir: "ASC" }
 		} ),
 		tpl : Ext.Gemma.GeneCombo.getTemplate()
 	};
