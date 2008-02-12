@@ -4,6 +4,7 @@
 Age
 Treatment
 StrainOrLine
+CellType
 TargetCellType
 OrganismPart
 CellLine

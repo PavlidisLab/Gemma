@@ -2,9 +2,10 @@
 # $Id$
 # Author: Paul
 Age
+CellType
 Treatment
 StrainOrLine
-TargetCellType
+TargetedCellType
 OrganismPart
 CellLine
 DevelopmentalStage
