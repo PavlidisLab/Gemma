@@ -161,9 +161,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
 
         if ( expressionExperiments != null ) {
             log.info( "Loaded " + this.expressionExperiments.size() + " expressionExperiments" );
+            removeTroubledEes( expressionExperiments );
         }
-
-        removeTroubledEes( expressionExperiments );
 
         if ( hasOption( 'x' ) ) {
             excludeEeFileName = getOptionValue( 'x' );
