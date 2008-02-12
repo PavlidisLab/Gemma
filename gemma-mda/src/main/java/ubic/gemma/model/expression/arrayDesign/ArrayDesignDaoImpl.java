@@ -41,14 +41,11 @@ import org.hibernate.Session;
 import org.springframework.orm.hibernate3.HibernateCallback;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
-import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.util.BusinessKey;
 import ubic.gemma.util.NativeQueryUtils;
 
@@ -1012,19 +1009,13 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                         }
 
                         if ( deep ) {
-                            
-                       /*     for ( BioSequence2GeneProduct bs2gp : bs.getBioSequence2GeneProduct() ) {
-                                GeneProduct geneProduct = bs2gp.getGeneProduct();
-                                Gene g = geneProduct.getGene();
-                                if ( g != null ) {
-                                    g.getAliases().size();
-                                }
-                            }
 
-                            if ( bs.getSequenceDatabaseEntry() != null ) {
-                                Hibernate.initialize( bs.getSequenceDatabaseEntry() );
-                            }
-                            */
+                            /*
+                             * for ( BioSequence2GeneProduct bs2gp : bs.getBioSequence2GeneProduct() ) { GeneProduct
+                             * geneProduct = bs2gp.getGeneProduct(); Gene g = geneProduct.getGene(); if ( g != null ) {
+                             * g.getAliases().size(); } } if ( bs.getSequenceDatabaseEntry() != null ) {
+                             * Hibernate.initialize( bs.getSequenceDatabaseEntry() ); }
+                             */
                         }
                         // session.evict( bs );
                     }

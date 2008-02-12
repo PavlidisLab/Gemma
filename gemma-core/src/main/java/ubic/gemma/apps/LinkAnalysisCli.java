@@ -18,15 +18,8 @@
  */
 package ubic.gemma.apps;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.Collection;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang.time.StopWatch;
 
@@ -84,8 +77,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
     private LinkAnalysisConfig linkAnalysisConfig = new LinkAnalysisConfig();
 
-    private boolean force;
-
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
@@ -127,12 +118,8 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 "Similarity metric {pearson|spearman}, default is pearson" ).create( "metric" );
 
         addOption( metricOption );
-
-        Option forceOption = OptionBuilder.withArgName( "Force analysis to run" ).withLongOpt( "force" )
-                .withDescription( "Even if trouble flagged etc." ).create( "force" );
-
-        addOption( forceOption );
-
+        addForceOption();
+        addAutoOption();
     }
 
     @SuppressWarnings("unchecked")
@@ -145,121 +132,33 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
         this.linkAnalysisService = ( LinkAnalysisService ) this.getBean( "linkAnalysisService" );
 
-        if ( this.getExperimentShortName() == null ) {
-            if ( this.taxon != null ) {
-                if ( this.expressionExperiments.size() == 0 ) {
-                    log.error( "No experiments for " + taxon + ", bye" );
-                    return null;
-                }
-                for ( ExpressionExperiment ee : expressionExperiments ) {
-                    eeService.thawLite( ee );
-                    if ( !force && !needToRun( ee, LinkAnalysisEvent.class ) ) {
-                        continue;
-                    }
-
-                    try {
-                        linkAnalysisService.process( ee, filterConfig, linkAnalysisConfig );
-                        successObjects.add( ee.toString() );
-                        audit( ee, "Part of run on all EEs from " + taxon.getCommonName(), LinkAnalysisEvent.Factory
-                                .newInstance() );
-                    } catch ( Exception e ) {
-                        errorObjects.add( ee + ": " + e.getMessage() );
-                        logFailure( ee, e );
-                        log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********" );
-                    }
-                }
-            } else if ( this.experimentListFile == null ) {
-                // run on all experiments
-                Collection<ExpressionExperiment> all = eeService.loadAll();
-                log.info( "Total ExpressionExperiment: " + all.size() );
-                for ( ExpressionExperiment ee : all ) {
-                    eeService.thawLite( ee );
-                    if ( !force && !needToRun( ee, LinkAnalysisEvent.class ) ) {
-                        continue;
-                    }
-
-                    try {
-                        linkAnalysisService.process( ee, filterConfig, linkAnalysisConfig );
-                        successObjects.add( ee.toString() );
-                        audit( ee, "Part of run on all EEs", LinkAnalysisEvent.Factory.newInstance() );
-                    } catch ( Exception e ) {
-                        errorObjects.add( ee + ": " + e.getMessage() );
-                        logFailure( ee, e );
-                        log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********" );
-                    }
-                }
-            } else {
-                // read short names from specified experiment list file
-                try {
-                    InputStream is = new FileInputStream( this.experimentListFile );
-                    BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-                    String shortName = null;
-                    while ( ( shortName = br.readLine() ) != null ) {
-                        if ( StringUtils.isBlank( shortName ) ) continue;
-                        ExpressionExperiment expressionExperiment = eeService.findByShortName( shortName );
-
-                        if ( expressionExperiment == null ) {
-                            errorObjects.add( shortName + " is not found in the database! " );
-                            continue;
-                        }
-
-                        eeService.thawLite( expressionExperiment );
-
-                        if ( !force && !needToRun( expressionExperiment, LinkAnalysisEvent.class ) ) {
-                            continue;
-                        }
-
-                        try {
-                            linkAnalysisService.process( expressionExperiment, filterConfig, linkAnalysisConfig );
-                            successObjects.add( expressionExperiment.toString() );
-
-                            audit( expressionExperiment, "From list in file: " + experimentListFile,
-                                    LinkAnalysisEvent.Factory.newInstance() );
-                        } catch ( Exception e ) {
-                            errorObjects.add( expressionExperiment + ": " + e.getMessage() );
-
-                            logFailure( expressionExperiment, e );
-
-                            e.printStackTrace();
-                            log.error( "**** Exception while processing " + expressionExperiment + ": "
-                                    + e.getMessage() + " ********" );
-                        }
-                    }
-                } catch ( Exception e ) {
-                    summarizeProcessing();
-                    return e;
-                }
-            }
-        } else {
-            String[] shortNames = this.getExperimentShortName().split( "," );
-
-            for ( String shortName : shortNames ) {
-                ExpressionExperiment expressionExperiment = locateExpressionExperiment( shortName );
-
-                if ( expressionExperiment == null ) {
-                    continue;
-                }
-                eeService.thawLite( expressionExperiment );
-                if ( !force && !needToRun( expressionExperiment, LinkAnalysisEvent.class ) ) {
-                    continue;
-                }
-
-                try {
-                    linkAnalysisService.process( expressionExperiment, filterConfig, linkAnalysisConfig );
-                    successObjects.add( expressionExperiment.toString() );
-                    audit( expressionExperiment, "From item(s) given from command line", LinkAnalysisEvent.Factory
-                            .newInstance() );
-                } catch ( Exception e ) {
-                    e.printStackTrace();
-                    logFailure( expressionExperiment, e );
-                    log.error( "**** Exception while processing " + expressionExperiment + ": " + e.getMessage()
-                            + " ********" );
-                }
-            }
-
+        for ( ExpressionExperiment ee : expressionExperiments ) {
+            processExperiment( ee );
         }
+
         summarizeProcessing();
         return null;
+    }
+
+    /**
+     * @param ee
+     */
+    private void processExperiment( ExpressionExperiment ee ) {
+        eeService.thawLite( ee );
+
+        if ( !force && !needToRun( ee, LinkAnalysisEvent.class ) ) {
+            return;
+        }
+
+        try {
+            linkAnalysisService.process( ee, filterConfig, linkAnalysisConfig );
+            successObjects.add( ee.toString() );
+            audit( ee, "Part of run on all EEs from " + taxon.getCommonName(), LinkAnalysisEvent.Factory.newInstance() );
+        } catch ( Exception e ) {
+            errorObjects.add( ee + ": " + e.getMessage() );
+            logFailure( ee, e );
+            log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********" );
+        }
     }
 
     @Override
@@ -306,7 +205,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             expressionExperimentReportService.generateSummaryObject( ee.getId() );
             auditTrailService.addUpdateEvent( ee, eventType, note );
         }
-        log.info( "Audit information saved." );
     }
 
     @SuppressWarnings("static-access")

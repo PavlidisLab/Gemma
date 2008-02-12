@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -47,7 +46,22 @@ import ubic.gemma.search.SearchSettings;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
- * Base class for CLIs that need an expression experiment as an input.
+ * Base class for CLIs that needs one or more expression experiment as an input. It offers the following ways of reading
+ * them in:
+ * <ul>
+ * <li>All EEs
+ * <li>All EEs for a particular taxon.
+ * <li>OA comma-delimited list of one or more EEs identified by short name given on the command line
+ * <li>From a file, with one short name per line.
+ * <li>EEs matching a query string (e.g., 'brain')
+ * <li>(Optional) 'Auto' mode, in which experiments to analyze are selected automatically based on their workflow
+ * state. This can be enabled and modified by subclasses who override the "needToRun" method.
+ * <li>All EEs that were last processed after a given date, similar to 'auto' otherwise.
+ * </ul>
+ * Some of these options can be (or should be) combined, and modified by a (optional) "force" option, and will have
+ * customized behavior.
+ * <p>
+ * In addition, EEs can be excluded based on a list given in a separate file.
  * 
  * @author Paul
  * @version $Id$
@@ -62,17 +76,29 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
 
     protected TaxonService taxonService;
 
-    private String experimentShortName = null;
-
-    private String excludeEeFileName;
-
-    protected String experimentListFile = null;
-
     protected Taxon taxon = null;
 
-    protected Set<ExpressionExperiment> expressionExperiments;
+    protected Set<ExpressionExperiment> expressionExperiments = new HashSet<ExpressionExperiment>();
 
     protected Collection<ExpressionExperiment> excludeExperiments;
+
+    protected boolean force = false;
+
+    protected void addForceOption() {
+        this.addForceOption( null );
+    }
+
+    /**
+     * 
+     */
+    @SuppressWarnings("static-access")
+    protected void addForceOption( String explanation ) {
+        String defaultExplanation = "Ignore other reasons for skipping experiments (e.g., trouble) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)";
+        String usedExpl = explanation == null ? defaultExplanation : explanation;
+        Option forceOption = OptionBuilder.withArgName( "Force processing" ).withLongOpt( "force" ).withDescription(
+                usedExpl ).create( "force" );
+        addOption( forceOption );
+    }
 
     @Override
     @SuppressWarnings("static-access")
@@ -103,6 +129,30 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
                 "Use a query string for defining which expression experiments to use" ).withLongOpt( "expressionQuery" )
                 .create( 'q' );
         addOption( eeSearchOption );
+
+    }
+
+    @SuppressWarnings("unchecked")
+    protected Gene findGeneByOfficialSymbol( String symbol, Taxon taxon ) {
+        Collection<Gene> genes = geneService.findByOfficialSymbolInexact( symbol );
+        for ( Gene gene : genes ) {
+            if ( taxon.equals( gene.getTaxon() ) ) return gene;
+        }
+        return null;
+    }
+
+    /**
+     * @param ee
+     * @return true if the expression experiment has an active 'trouble' flag
+     */
+    protected boolean isTroubled( ExpressionExperiment ee ) {
+        Collection<ExpressionExperiment> eec = new HashSet<ExpressionExperiment>();
+        eec.add( ee );
+        removeTroubledEes( eec );
+        if ( eec.size() == 0 ) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -142,132 +192,49 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
             }
         }
 
+        if ( hasOption( "force" ) ) {
+            this.force = true;
+        }
+
+        if ( hasOption( AUTO_OPTION_NAME ) ) {
+            this.autoSeek = true;
+        }
+
         if ( this.hasOption( 'e' ) ) {
-            this.experimentShortName = this.getOptionValue( 'e' );
+            experimentsFromCliList();
         } else if ( hasOption( 'f' ) ) {
-            this.experimentListFile = getOptionValue( 'f' );
+            String experimentListFile = getOptionValue( 'f' );
+            log.info( "Reading experiment list from " + experimentListFile );
             try {
                 this.expressionExperiments = readExpressionExperimentListFile( experimentListFile );
             } catch ( IOException e ) {
                 throw new RuntimeException( e );
             }
         } else if ( hasOption( 'q' ) ) {
+            log.info( "Processing all experiments that match query " + getOptionValue( 'q' ) );
             this.expressionExperiments = this.findExpressionExperimentsByQuery( getOptionValue( 'q' ), taxon );
         } else if ( taxon != null ) {
+            log.info( "Processing all experiments for " + taxon.getCommonName() );
             this.expressionExperiments = new HashSet( eeService.findByTaxon( taxon ) );
         } else {
+            log.info( "Processing all experiments (futher filtering may modify)" );
             this.expressionExperiments = new HashSet( eeService.loadAll() );
         }
 
-        if ( expressionExperiments != null ) {
-            log.info( "Loaded " + this.expressionExperiments.size() + " expressionExperiments" );
+        if ( hasOption( 'x' ) ) {
+            excludeFromFile();
+        }
+
+        if ( expressionExperiments != null && expressionExperiments.size() > 0 && !force ) {
             removeTroubledEes( expressionExperiments );
         }
 
-        if ( hasOption( 'x' ) ) {
-            excludeEeFileName = getOptionValue( 'x' );
-            try {
-                this.excludeExperiments = readExpressionExperimentListFile( excludeEeFileName );
-            } catch ( IOException e ) {
-                throw new RuntimeException( e );
-            }
-            assert expressionExperiments.size() > 0;
-            int count = 0;
-            for ( Iterator<ExpressionExperiment> it = expressionExperiments.iterator(); it.hasNext(); ) {
-                ExpressionExperiment ee = it.next();
-                if ( excludeExperiments.contains( ee.getShortName() ) ) {
-                    it.remove();
-                    count++;
-                }
-            }
-            if ( count > 0 ) log.info( "Excluded " + count + " expression experiments" );
+        if ( expressionExperiments.size() > 1 ) {
+            log.info( "Final list: " + this.expressionExperiments.size()
+                    + " expressionExperiments (futher filtering may modify)" );
+        } else if ( expressionExperiments.size() == 0 ) {
+            log.info( "No experiments selected" );
         }
-
-    }
-
-    @SuppressWarnings("unchecked")
-    private void removeTroubledEes( Collection<ExpressionExperiment> ees ) {
-        int size = ees.size();
-        final Map<Long, AuditEvent> trouble = eeService.getLastTroubleEvent( CollectionUtils.collect( ees,
-                new Transformer() {
-                    public Object transform( Object input ) {
-                        return ( ( ExpressionExperiment ) input ).getId();
-                    }
-                } ) );
-        CollectionUtils.filter( ees, new Predicate() {
-            public boolean evaluate( Object object ) {
-                boolean hasTrouble = trouble.containsKey( ( ( ExpressionExperiment ) object ).getId() );
-                if ( hasTrouble ) {
-                    log.info( "Troubled: " + object );
-                }
-                return !hasTrouble;
-            }
-        } );
-        int newSize = ees.size();
-        if ( newSize != size ) {
-            assert newSize < size;
-            log.info( "Removed " + ( size - newSize ) + " experiments with 'trouble' flags" );
-        }
-    }
-
-    protected String getExperimentShortName() {
-        return experimentShortName;
-    }
-
-    private Collection<String> readExpressionExperimentListFileToStrings( String fileName ) throws IOException {
-        Collection<String> eeNames = new HashSet<String>();
-        BufferedReader in = new BufferedReader( new FileReader( fileName ) );
-        while ( in.ready() ) {
-            String eeName = in.readLine().trim();
-            if ( eeName.startsWith( "#" ) ) {
-                continue;
-            }
-            eeNames.add( eeName );
-        }
-        return eeNames;
-    }
-
-    /**
-     * Load expression experiments based on a list of short names in a file.
-     * 
-     * @param fileName
-     * @return
-     * @throws IOException
-     */
-    private Set<ExpressionExperiment> readExpressionExperimentListFile( String fileName ) throws IOException {
-        Set<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
-        for ( String eeName : readExpressionExperimentListFileToStrings( fileName ) ) {
-            ExpressionExperiment ee = eeService.findByShortName( eeName );
-            if ( ee == null ) {
-                log.error( "No experiment " + eeName + " found" );
-                continue;
-            }
-            ees.add( ee );
-        }
-        return ees;
-    }
-
-    /**
-     * Use the search engine to locate expression experiments.
-     * 
-     * @param query
-     */
-    private Set<ExpressionExperiment> findExpressionExperimentsByQuery( String query, Taxon taxon ) {
-        Set<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
-        Collection<SearchResult> eeSearchResults = searchService.search(
-                SearchSettings.ExpressionExperimentSearch( query ) ).get( ExpressionExperiment.class );
-
-        log.info( ees.size() + " Expression experiments matched '" + query + "'" );
-
-        // Filter out all the ee that are not of correct taxon
-        for ( SearchResult sr : eeSearchResults ) {
-            ExpressionExperiment ee = ( ExpressionExperiment ) sr.getResultObject();
-            Taxon t = eeService.getTaxon( ee.getId() );
-            if ( t.getCommonName().equalsIgnoreCase( taxon.getCommonName() ) ) {
-                ees.add( ee );
-            }
-        }
-        return ees;
 
     }
 
@@ -298,13 +265,136 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
         return genes;
     }
 
-    @SuppressWarnings("unchecked")
-    protected Gene findGeneByOfficialSymbol( String symbol, Taxon taxon ) {
-        Collection<Gene> genes = geneService.findByOfficialSymbolInexact( symbol );
-        for ( Gene gene : genes ) {
-            if ( taxon.equals( gene.getTaxon() ) ) return gene;
+    /**
+     * 
+     */
+    private void excludeFromFile() {
+        String excludeEeFileName = getOptionValue( 'x' );
+        try {
+            this.excludeExperiments = readExpressionExperimentListFile( excludeEeFileName );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
         }
-        return null;
+        assert expressionExperiments.size() > 0;
+        int count = 0;
+        expressionExperiments.removeAll( excludeExperiments );
+        if ( count > 0 ) log.info( "Excluded " + excludeExperiments.size() + " expression experiments" );
+    }
+
+    /**
+     * 
+     */
+    private void experimentsFromCliList() {
+        String experimentShortNames = this.getOptionValue( 'e' );
+        String[] shortNames = experimentShortNames.split( "," );
+
+        for ( String shortName : shortNames ) {
+            ExpressionExperiment expressionExperiment = locateExpressionExperiment( shortName );
+            if ( expressionExperiment == null ) {
+                log.error( shortName + " not found" );
+                bail( ErrorCode.INVALID_OPTION );
+            }
+            expressionExperiments.add( expressionExperiment );
+        }
+    }
+
+    /**
+     * Use the search engine to locate expression experiments.
+     * 
+     * @param query
+     */
+    private Set<ExpressionExperiment> findExpressionExperimentsByQuery( String query, Taxon taxon ) {
+        Set<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
+        Collection<SearchResult> eeSearchResults = searchService.search(
+                SearchSettings.ExpressionExperimentSearch( query ) ).get( ExpressionExperiment.class );
+
+        log.info( ees.size() + " Expression experiments matched '" + query + "'" );
+
+        // Filter out all the ee that are not of correct taxon
+        for ( SearchResult sr : eeSearchResults ) {
+            ExpressionExperiment ee = ( ExpressionExperiment ) sr.getResultObject();
+            Taxon t = eeService.getTaxon( ee.getId() );
+            if ( t.getCommonName().equalsIgnoreCase( taxon.getCommonName() ) ) {
+                ees.add( ee );
+            }
+        }
+        return ees;
+
+    }
+
+    /**
+     * Load expression experiments based on a list of short names in a file.
+     * 
+     * @param fileName
+     * @return
+     * @throws IOException
+     */
+    private Set<ExpressionExperiment> readExpressionExperimentListFile( String fileName ) throws IOException {
+        Set<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
+        for ( String eeName : readExpressionExperimentListFileToStrings( fileName ) ) {
+            ExpressionExperiment ee = eeService.findByShortName( eeName );
+            if ( ee == null ) {
+                log.error( "No experiment " + eeName + " found" );
+                continue;
+            }
+            ees.add( ee );
+        }
+        return ees;
+    }
+
+    /**
+     * @param fileName
+     * @return
+     * @throws IOException
+     */
+    private Collection<String> readExpressionExperimentListFileToStrings( String fileName ) throws IOException {
+        Collection<String> eeNames = new HashSet<String>();
+        BufferedReader in = new BufferedReader( new FileReader( fileName ) );
+        while ( in.ready() ) {
+            String eeName = in.readLine().trim();
+            if ( eeName.startsWith( "#" ) ) {
+                continue;
+            }
+            eeNames.add( eeName );
+        }
+        return eeNames;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void removeTroubledEes( Collection<ExpressionExperiment> ees ) {
+        if ( ees == null || ees.size() == 0 ) {
+            log.warn( "No experiments to remove troubled from" );
+            return;
+        }
+        ExpressionExperiment theOnlyOne = null;
+        if ( ees.size() == 1 ) {
+            theOnlyOne = ees.iterator().next();
+        }
+        int size = ees.size();
+        final Map<Long, AuditEvent> trouble = eeService.getLastTroubleEvent( CollectionUtils.collect( ees,
+                new Transformer() {
+                    public Object transform( Object input ) {
+                        return ( ( ExpressionExperiment ) input ).getId();
+                    }
+                } ) );
+        CollectionUtils.filter( ees, new Predicate() {
+            public boolean evaluate( Object object ) {
+                boolean hasTrouble = trouble.containsKey( ( ( ExpressionExperiment ) object ).getId() );
+                if ( hasTrouble ) {
+                    log.info( "Troubled: " + object );
+                }
+                return !hasTrouble;
+            }
+        } );
+        int newSize = ees.size();
+        if ( newSize != size ) {
+            assert newSize < size;
+            if ( size == 0 && theOnlyOne != null ) {
+                log.info( theOnlyOne.getShortName() + " has an active trouble flag" );
+            } else {
+                log.info( "Removed " + ( size - newSize ) + " experiments with 'trouble' flags, leaving " + size );
+            }
+        }
     }
 
 }

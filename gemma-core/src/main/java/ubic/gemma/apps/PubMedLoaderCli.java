@@ -32,7 +32,23 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  */
 public class PubMedLoaderCli extends AbstractSpringAwareCLI {
 
+    /**
+     * @param args
+     */
+    public static void main( String[] args ) {
+        PubMedLoaderCli p = new PubMedLoaderCli();
+        Exception exception = p.doWork( args );
+        if ( exception != null ) {
+            log.error( exception, exception );
+        }
+    }
+
     private String directory;
+
+    @Override
+    public String getShortDesc() {
+        return "Loads PubMed records into the database from XML files";
+    }
 
     @SuppressWarnings("static-access")
     @Override
@@ -49,17 +65,6 @@ public class PubMedLoaderCli extends AbstractSpringAwareCLI {
         PubMedService pms = ( PubMedService ) this.getBean( "pubMedService" );
         pms.loadFromDirectory( new File( directory ) );
         return null;
-    }
-
-    /**
-     * @param args
-     */
-    public static void main( String[] args ) {
-        PubMedLoaderCli p = new PubMedLoaderCli();
-        Exception exception = p.doWork( args );
-        if ( exception != null ) {
-            log.error( exception, exception );
-        }
     }
 
     @Override

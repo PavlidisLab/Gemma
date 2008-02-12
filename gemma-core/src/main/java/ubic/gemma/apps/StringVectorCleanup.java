@@ -36,7 +36,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * Remove tabs from strings stored in the database. Can also check all vectors for correct sizes (a useful database
- * check, but slow).
+ * check, but slow). This is more or less a one-off, it was used to clean up errors that shouldn't happen any more (!)
  * 
  * @author pavlidis
  * @version $Id$
@@ -63,6 +63,8 @@ public class StringVectorCleanup extends ExpressionExperimentManipulatingCLI {
         }
     }
 
+    DesignElementDataVectorService dedvs;
+    QuantitationTypeService qts;
     private boolean fullCheck = false;
 
     @SuppressWarnings("unchecked")
@@ -71,19 +73,25 @@ public class StringVectorCleanup extends ExpressionExperimentManipulatingCLI {
         Exception e = processCommandLine( "remove tabs from strings and check vectors", args );
         if ( e != null ) return e;
 
-        QuantitationTypeService qts = ( QuantitationTypeService ) this.getBean( "quantitationTypeService" );
+        qts = ( QuantitationTypeService ) this.getBean( "quantitationTypeService" );
 
-        DesignElementDataVectorService dedvs = ( DesignElementDataVectorService ) this
-                .getBean( "designElementDataVectorService" );
+        dedvs = ( DesignElementDataVectorService ) this.getBean( "designElementDataVectorService" );
 
-        Collection<QuantitationType> types;
-        if ( this.getExperimentShortName() != null ) {
-            ExpressionExperiment ee = this.locateExpressionExperiment( this.getExperimentShortName() );
-            if ( ee == null ) return null;
-            types = this.eeService.getQuantitationTypes( ee );
-        } else {
-            types = qts.loadAll();
+        for ( ExpressionExperiment ee : expressionExperiments ) {
+            processExperiment( ee );
         }
+
+        summarizeProcessing();
+        return null;
+
+    }
+
+    /**
+     * @param ee
+     */
+    @SuppressWarnings("unchecked")
+    private void processExperiment( ExpressionExperiment ee ) {
+        Collection<QuantitationType> types = this.eeService.getQuantitationTypes( ee );
 
         ByteArrayConverter converter = new ByteArrayConverter();
 
@@ -151,8 +159,6 @@ public class StringVectorCleanup extends ExpressionExperimentManipulatingCLI {
             }
 
         }
-        return null;
-
     }
 
     /**

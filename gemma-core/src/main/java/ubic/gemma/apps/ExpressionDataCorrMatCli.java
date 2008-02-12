@@ -18,15 +18,8 @@
  */
 package ubic.gemma.apps;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.Collection;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.analysis.service.AnalysisHelperService;
@@ -53,105 +46,28 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
         auditTrailService.addUpdateEvent( ee, eventType, "Generated correlation matrix images" );
     }
 
-    private void process( ExpressionExperiment ee ) {
+    /**
+     * @param ee
+     */
+    private void processExperiment( ExpressionExperiment ee ) {
+        if ( !needToRun( ee, null ) ) {
+            return;
+        }
         ExpressionDataDoubleMatrix matrix = analysisHelperService.getFilteredMatrix( ee, filterConfig );
         ExpressionDataSampleCorrelation.process( matrix, ee );
+        audit( ee, "", null );
+
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected Exception doWork( String[] args ) {
         this.processCommandLine( "corrMat", args );
 
-        if ( this.getExperimentShortName() == null ) {
-            if ( this.experimentListFile == null ) {
-                // run on all experiments
-                Collection<ExpressionExperiment> all = eeService.loadAll();
-                log.info( "Total ExpressionExperiment: " + all.size() );
-                for ( ExpressionExperiment ee : all ) {
-                    eeService.thawLite( ee );
-                    if ( !needToRun( ee, null ) ) {
-                        continue;
-                    }
-
-                    try {
-                        process( ee );
-                        successObjects.add( ee.toString() );
-                        audit( ee, "Part of run on all EEs", null );
-                    } catch ( Exception e ) {
-                        errorObjects.add( ee + ": " + e.getMessage() );
-                        log.error( ee, e );
-                        log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********" );
-                    }
-                }
-            } else {
-                // read short names from specified experiment list file
-                try {
-                    InputStream is = new FileInputStream( this.experimentListFile );
-                    BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-                    String shortName = null;
-                    while ( ( shortName = br.readLine() ) != null ) {
-                        if ( StringUtils.isBlank( shortName ) ) continue;
-                        ExpressionExperiment expressionExperiment = eeService.findByShortName( shortName );
-
-                        if ( expressionExperiment == null ) {
-                            errorObjects.add( shortName + " is not found in the database! " );
-                            continue;
-                        }
-
-                        eeService.thawLite( expressionExperiment );
-
-                        if ( !needToRun( expressionExperiment, null ) ) {
-                            continue;
-                        }
-
-                        try {
-                            process( expressionExperiment );
-                            successObjects.add( expressionExperiment.toString() );
-
-                            audit( expressionExperiment, "From list in file: " + experimentListFile, null );
-                        } catch ( Exception e ) {
-                            errorObjects.add( expressionExperiment + ": " + e.getMessage() );
-
-                            // logFailure( expressionExperiment, e );
-
-                            log.error( e, e );
-                            log.error( "**** Exception while processing " + expressionExperiment + ": "
-                                    + e.getMessage() + " ********" );
-                        }
-                    }
-                } catch ( Exception e ) {
-                    return e;
-                }
-            }
-            summarizeProcessing();
-        } else {
-            String[] shortNames = this.getExperimentShortName().split( "," );
-
-            for ( String shortName : shortNames ) {
-                ExpressionExperiment expressionExperiment = locateExpressionExperiment( shortName );
-
-                if ( expressionExperiment == null ) {
-                    continue;
-                }
-                eeService.thawLite( expressionExperiment );
-                if ( !needToRun( expressionExperiment, null ) ) {
-                    return null;
-                }
-
-                try {
-                    process( expressionExperiment );
-                    audit( expressionExperiment, "From item(s) given from command line", null );
-                } catch ( Exception e ) {
-                    log.error( e, e );
-                    log.error( "**** Exception while processing " + expressionExperiment + ": " + e.getMessage()
-                            + " ********" );
-                }
-            }
-
+        for ( ExpressionExperiment ee : expressionExperiments ) {
+            processExperiment( ee );
         }
+        summarizeProcessing();
         return null;
-
     }
 
     public static void main( String[] args ) {
@@ -164,11 +80,13 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
         }
     }
 
+    @Override
     protected void buildOptions() {
         super.buildOptions();
         this.buildFilterConfigOptions();
     }
 
+    @Override
     protected void processOptions() {
         super.processOptions();
         getFilterConfigOptions();

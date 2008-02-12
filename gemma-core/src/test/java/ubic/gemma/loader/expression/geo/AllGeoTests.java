@@ -21,7 +21,6 @@ package ubic.gemma.loader.expression.geo;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import ubic.gemma.loader.expression.geo.fetcher.RawDataFetcherTest;
-import ubic.gemma.loader.expression.geo.service.GeoDatasetServiceIntegrationTest;
 import ubic.gemma.loader.expression.geo.service.GeoPlatformServiceTest;
 
 /**
@@ -33,16 +32,20 @@ import ubic.gemma.loader.expression.geo.service.GeoPlatformServiceTest;
 public class AllGeoTests {
 
     public static Test suite() {
-        TestSuite suite = new TestSuite( "Test for ubic.gemma.loader.expression.geo" );
+        TestSuite suite = new TestSuite( "Test for ubic.gemma.loader.expression.geo (skip slow tests)" );
         // $JUnit-BEGIN$
         suite.addTestSuite( DatasetCombinerTest.class );
         suite.addTestSuite( GeoFamilyParserTest.class );
         suite.addTestSuite( GeoConverterTest.class );
-        suite.addTestSuite( GeoDatasetServiceIntegrationTest.class );
         suite.addTestSuite( RawDataFetcherTest.class );
         suite.addTestSuite( GeoPlatformServiceTest.class );
         suite.addTestSuite( QuantitationTypeParameterGuesserTest.class );
         // $JUnit-END$
+
+        /*
+         * Very slow tests.
+         */
+        // suite.addTestSuite( GeoDatasetServiceIntegrationTest.class );
         return suite;
     }
 

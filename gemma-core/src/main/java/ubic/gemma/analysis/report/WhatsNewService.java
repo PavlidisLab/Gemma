@@ -30,12 +30,20 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheException;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
+
 import org.apache.commons.lang.time.DateUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.InitializingBean;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.datastructure.AuditableObject;
+import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -53,17 +61,39 @@ import ubic.gemma.util.ConfigUtils;
  * @author pavlidis
  * @version $Id$
  */
-public class WhatsNewService {
+public class WhatsNewService implements InitializingBean {
 
     private static Log log = LogFactory.getLog( WhatsNewService.class.getName() );
 
     private String WHATS_NEW_FILE = "WhatsNew";
     private String WHATS_NEW_DIR = "WhatsNew";
+    private String WHATS_NEW_CACHE = "WhatsNew";
     private String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
 
     AuditEventService auditEventService;
     ExpressionExperimentService expressionExperimentService = null;
     ArrayDesignService arrayDesignService = null;
+
+    private Cache whatsNewCache;
+
+    public void afterPropertiesSet() throws Exception {
+        try {
+            CacheManager manager = CacheManager.getInstance();
+
+            if ( manager.cacheExists( WHATS_NEW_CACHE ) ) {
+                return;
+            }
+
+            whatsNewCache = new Cache( WHATS_NEW_CACHE, 500, false, false, 10000, 10000 );
+
+            manager.addCache( whatsNewCache );
+            whatsNewCache = manager.getCache( WHATS_NEW_CACHE );
+
+        } catch ( CacheException e ) {
+            throw new RuntimeException( e );
+        }
+
+    }
 
     /**
      * @param arrayDesignService the arrayDesignService to set
@@ -129,7 +159,8 @@ public class WhatsNewService {
     @SuppressWarnings("unchecked")
     public WhatsNew retrieveReport() {
         WhatsNew wn = new WhatsNew();
-
+        StopWatch timer = new StopWatch();
+        timer.start();
         try {
             File newObjects = new File( HOME_DIR + File.separatorChar + WHATS_NEW_DIR + File.separatorChar
                     + WHATS_NEW_FILE + ".new" );
@@ -143,20 +174,11 @@ public class WhatsNewService {
             if ( newObjects.exists() ) {
                 Collection<AuditableObject> aos = loadAuditableObjects( newObjects );
 
-                Collection<Long> newEeIds = new ArrayList<Long>();
                 for ( AuditableObject object : aos ) {
-                    if ( object.type.equalsIgnoreCase( "ArrayDesign" ) ) {
-                        wn.addNewObjects( arrayDesignService.load( object.id ) );
-                    }
-                    if ( object.type.equalsIgnoreCase( "ExpressionExperiment" ) ) {
-                        newEeIds.add( object.id );
-                    }
-                    if ( object.date != null ) {
-                        wn.setDate( object.date );
-                    }
-                }
-                if ( newEeIds.size() > 0 ) {
-                    wn.addNewObjects( expressionExperimentService.loadMultiple( newEeIds ) );
+                    Auditable auditable = fetch( wn, object );
+
+                    if ( auditable != null ) wn.addNewObjects( auditable );
+                    updateDate( wn, object );
                 }
 
             }
@@ -164,29 +186,59 @@ public class WhatsNewService {
             // load up all updated objects
             if ( updatedObjects.exists() ) {
                 Collection<AuditableObject> aos = loadAuditableObjects( updatedObjects );
-
-                Collection<Long> updatedEeIds = new ArrayList<Long>();
                 for ( AuditableObject object : aos ) {
-                    if ( object.type.equalsIgnoreCase( "ArrayDesign" ) ) {
-                        ArrayDesign ad = arrayDesignService.load( object.id );
-                        wn.addUpdatedObjects( ad );
-                    }
-                    if ( object.type.equalsIgnoreCase( "ExpressionExperiment" ) ) {
-                        updatedEeIds.add( object.id );
-                    }
-                    if ( object.date != null ) {
-                        wn.setDate( object.date );
-                    }
-                }
-                if ( updatedEeIds.size() > 0 ) {
-                    wn.addUpdatedObjects( expressionExperimentService.loadMultiple( updatedEeIds ) );
+                    Auditable auditable = fetch( wn, object );
+
+                    if ( auditable != null ) wn.addNewObjects( auditable );
+                    updateDate( wn, object );
                 }
             }
         } catch ( Throwable e ) {
             return null;
         }
-
+        timer.stop();
+        if ( log.isDebugEnabled() ) log.debug( "What's new processing: " + timer.getTime() + "ms" );
         return wn;
+    }
+
+    /**
+     * Sets the date to the earliest update date of any object that has been retrieved so far.
+     * 
+     * @param wn
+     * @param object
+     */
+    private void updateDate( WhatsNew wn, AuditableObject object ) {
+        if ( object.getDate() != null && ( wn.getDate() == null || wn.getDate().after( object.getDate() ) ) ) {
+            wn.setDate( object.getDate() );
+        }
+    }
+
+    /**
+     * @param wn
+     * @param object
+     * @return
+     */
+    private Auditable fetch( WhatsNew wn, AuditableObject object ) {
+        Auditable auditable = null;
+        Element element = this.whatsNewCache.get( object );
+        if ( object.type.equalsIgnoreCase( "ArrayDesign" ) ) {
+            if ( element != null ) {
+                auditable = ( Auditable ) element.getValue();
+            } else {
+                auditable = arrayDesignService.load( object.getId() );
+                whatsNewCache.put( new Element( object, auditable ) );
+            }
+
+        } else if ( object.type.equalsIgnoreCase( "ExpressionExperiment" ) ) {
+            if ( element != null ) {
+                auditable = ( Auditable ) element.getValue();
+            } else {
+                // this is slower than loading them all at once but the cache saves even more time.
+                auditable = expressionExperimentService.load( object.getId() );
+                whatsNewCache.put( new Element( object, auditable ) );
+            }
+        }
+        return auditable;
     }
 
     /**

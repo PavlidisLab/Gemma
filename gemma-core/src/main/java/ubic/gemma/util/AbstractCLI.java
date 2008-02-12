@@ -283,7 +283,8 @@ public abstract class AbstractCLI {
     }
 
     /**
-     * FIXME this causes subclasses to be unable to safely use 'h', 'p', 'u' and 'P' etc for their own purposes.
+     * Somewhat annoying: This causes subclasses to be unable to safely use 'h', 'p', 'u' and 'P' etc for their own
+     * purposes.
      */
     private void processStandardOptions() {
 
@@ -351,8 +352,8 @@ public abstract class AbstractCLI {
     @SuppressWarnings("static-access")
     protected void addAutoOption() {
         Option autoSeek = OptionBuilder.withArgName( AUTO_OPTION_NAME ).withDescription(
-                "Attempt to run all entities that need updating based on last date of previous modifications." )
-                .create( AUTO_OPTION_NAME );
+                "Attempt to run all entities that need processing based on workflow criteria." ).create(
+                AUTO_OPTION_NAME );
 
         addOption( autoSeek );
     }

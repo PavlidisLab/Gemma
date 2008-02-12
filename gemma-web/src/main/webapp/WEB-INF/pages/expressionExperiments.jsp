@@ -1,34 +1,44 @@
+<%-- 
+
+Display table of expression experiments.
+$Id$ 
+--%>
 <%@ include file="/common/taglibs.jsp"%>
-
-
-<title><fmt:message key="expressionExperiments.title" />
-</title>
-
-<form name="ExpresssionExperimentFilter" action="filterExpressionExperiments.html" method="POST">
-	<h4>
-		Enter search criteria for finding a specific dataset here
-	</h4>
-	<input type="text" name="filter" size="78" />
-	<input type="submit" value="Find" />
-</form>
-
+<title><fmt:message key="expressionExperiments.title" /></title>
 <h3>
 	Displaying
 	<b> <c:out value="${numExpressionExperiments}" /> </b> datasets
+	<c:choose>
+		<c:when test="${taxon != null}">
+	for <c:out value="${taxon.commonName}" />
+		</c:when>
+	</c:choose>
+	<c:choose>
+		<c:when test="${showAll == false}">
+			<span style="font-size: smaller">&nbsp;&nbsp;(<a
+				href="<c:url value="/expressionExperiment/showAllExpressionExperiments.html" />">Show all</a>)</span>
+		</c:when>
+	</c:choose>
 </h3>
-<a class="helpLink" href="?" onclick="showHelpTip(event, 'Summarizes multiple expression experiments.'); return false">Help</a>
 
-<display:table pagesize="50" name="expressionExperiments" sort="list" 
-	class="list" requestURI="" id="expressionExperimentList"
+<form
+	style="border-color: #444; border-style: solid; border-width: 1px; width: 450px; padding: 10px; background-color: #DDD"
+	name="ExpresssionExperimentFilter" action="filterExpressionExperiments.html" method="POST">
+	<span class="list">Enter search criteria for finding datasets</span>
+	<br>
+	<input type="text" name="filter" size="48" />
+	<input type="submit" value="Search" />
+</form>
+
+<display:table pagesize="100" name="expressionExperiments" sort="list" requestURI="" id="expressionExperimentList"
 	decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
 
 	<display:column property="nameLink" sortable="true" sortProperty="name" titleKey="expressionExperiment.name"
 		comparator="ubic.gemma.web.taglib.displaytag.StringComparator" />
 
 	<authz:authorize ifAnyGranted="admin">
-		<display:column property="status" sortable="true"
-			titleKey="expressionExperiment.status" style="text-align:center; vertical-align:middle;"
-			comparator="ubic.gemma.web.taglib.displaytag.StringComparator"
+		<display:column property="status" sortable="true" titleKey="expressionExperiment.status"
+			style="text-align:center; vertical-align:middle;" comparator="ubic.gemma.web.taglib.displaytag.StringComparator"
 			defaultorder="descending" />
 	</authz:authorize>
 
@@ -53,3 +63,8 @@
 
 	<display:setProperty name="basic.empty.showtable" value="true" />
 </display:table>
+
+<p>
+	<a class="helpLink" href="?"
+		onclick="showHelpTip(event, 'Summarizes multiple expression experiments, click on link to see details; click on magnifier to see bioassay details'); return false">Help</a>
+</p>

@@ -43,6 +43,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -448,6 +449,8 @@ public class GeoFamilyParser implements Parser {
         parsedLines = 0;
         processedDesignElements.clear();
 
+        StopWatch timer = new StopWatch();
+        timer.start();
         try {
 
             while ( ( line = dis.readLine() ) != null ) {
@@ -467,7 +470,12 @@ public class GeoFamilyParser implements Parser {
             throw new RuntimeException( e );
         }
 
-        log.info( "Parsed total of " + parsedLines + " lines." );
+        timer.stop();
+        if ( timer.getTime() > 10000 ) { // 10 s
+            log
+                    .info( "Parsed total of " + parsedLines + " lines in "
+                            + String.format( "%.2fs", timer.getTime() / 1000 ) );
+        }
         log.debug( this.platformLines + " platform  lines" );
         log.debug( this.seriesDataLines + " series data lines" );
         log.debug( this.dataSetDataLines + " data set data lines" );
@@ -716,7 +724,7 @@ public class GeoFamilyParser implements Parser {
             // FIXME this is really a bug: the same series comes up more than once, but empty in some case.
             GeoSeries series = results.getSeriesMap().get( value );
             if ( !results.getDatasetMap().get( currentDatasetAccession ).getSeries().contains( series ) ) {
-                log.warn( currentDatasetAccession + " already has reference to series " + value );
+                log.debug( currentDatasetAccession + " already has reference to series " + value );
             }
 
             if ( series.getSamples() != null && series.getSamples().size() > 0 ) {
@@ -1163,7 +1171,9 @@ public class GeoFamilyParser implements Parser {
          */
         GeoPlatform platformForSample = this.currentSample().getPlatforms().iterator().next();
         log.debug( "Initializing quantitation types for " + currentSample() + ", Platform=" + platformForSample );
-
+        boolean alreadyWarnedAboutClobbering = false;
+        boolean alreadyWarnedAboutInconsistentColumnOrder = false;
+        boolean alreadyWarnedAboutDuplicateColumnName = false;
         for ( String columnName : currentSample().getColumnNames() ) {
             boolean isWanted = values.isWantedQuantitationType( columnName, this.aggressiveQuantitationTypeRemoval );
 
@@ -1180,8 +1190,16 @@ public class GeoFamilyParser implements Parser {
              * by adding a suffix to the name.
              */
             if ( seenColumnNames.contains( columnName ) ) {
-                log.warn( columnName + " appears more than once for sample " + currentSample()
-                        + ", will mangle. This usually indicates a problem with the GEO file format!" );
+
+                if ( !alreadyWarnedAboutDuplicateColumnName ) {
+                    log
+                            .warn( "\n---------- WARNING ------------\n"
+                                    + columnName
+                                    + " appears more than once for sample "
+                                    + currentSample()
+                                    + ", it will be mangled to make it unique.\nThis usually indicates a problem with the GEO file format! (future similar warnings for this data set suppressed)\n" );
+                    alreadyWarnedAboutDuplicateColumnName = true;
+                }
                 /*
                  * This method of mangling the name means that the repeated name had better show up in the same column
                  * each time. If it doesn't, then things are REALLY confused.
@@ -1203,9 +1221,20 @@ public class GeoFamilyParser implements Parser {
             if ( qtMapForPlatform.containsKey( columnName ) ) {
                 desiredColumnNumber = qtMapForPlatform.get( columnName );
                 if ( desiredColumnNumber != actualColumnNumber ) {
-                    log.warn( columnName + " is not in previous column " + desiredColumnNumber + ": For sample "
-                            + currentSample() + ", it is in column " + actualColumnNumber );
-
+                    if ( !alreadyWarnedAboutInconsistentColumnOrder ) {
+                        log
+                                .warn( "\n---------- POSSIBLE GEO FILE FORMAT PROBLEM WARNING! ------------\n"
+                                        + columnName
+                                        + " is not in previous column "
+                                        + desiredColumnNumber
+                                        + ":\nFor sample "
+                                        + currentSample()
+                                        + ", it is in column "
+                                        + actualColumnNumber
+                                        + ". This usually isn't a problem but it's worth checking to make sure data isn't misaligned"
+                                        + " (future warnings for this data set suppressed)\n" );
+                        alreadyWarnedAboutInconsistentColumnOrder = true;
+                    }
                     /*
                      * This is used to put the data in the right place later. We know the actual column is where it is
                      * NOW, for this sample, but in our data structure we put it where we EXPECT it to be (where it was
@@ -1234,8 +1263,17 @@ public class GeoFamilyParser implements Parser {
                     }
                     desiredColumnNumber = max + 1;
                     quantitationTypeTargetColumn.get( platformForSample ).put( actualColumnNumber, desiredColumnNumber );
-                    log.warn( "Current column name " + columnName + " reassigned to index " + desiredColumnNumber
-                            + " to avoid clobbering." );
+                    if ( !alreadyWarnedAboutClobbering ) {
+                        log
+                                .warn( "\n---------- POSSIBLE GEO FILE FORMAT PROBLEM WARNING! ------------\n"
+                                        + "Current column name "
+                                        + columnName
+                                        + " reassigned to index "
+                                        + desiredColumnNumber
+                                        + " to avoid clobbering. This usually isn't a problem but it's worth checking to make sure data isn't misaligned "
+                                        + "(future similar warnings for this data set suppressed)\n" );
+                        alreadyWarnedAboutClobbering = true;
+                    }
                 }
                 log.debug( columnName + " ---> " + desiredColumnNumber );
                 qtMapForPlatform.put( columnName, desiredColumnNumber );
@@ -1250,7 +1288,7 @@ public class GeoFamilyParser implements Parser {
                     log.debug( "Data column " + columnName + " will be skipped for " + currentSample()
                             + " - it is an 'unwanted' quantitation type (column number "
                             + currentIndex.get( platformForSample ) + ", " + desiredColumnNumber
-                            + "th quantitation type.)" );
+                            + "the quantitation type.)" );
             } else {
                 wantedQuantitationTypes.add( desiredColumnNumber );
             }
@@ -1277,9 +1315,9 @@ public class GeoFamilyParser implements Parser {
             if ( !qtMapForPlatform.containsKey( name ) ) continue;
             Integer checkColInd = qtMapForPlatform.get( name );
             if ( checkColInd == actualColumnNumber ) {
-                log.warn( "Current column name " + columnName
-                        + " is new for the current platform, would be going in the index previously occupied by "
-                        + name );
+                // log.warn( "Current column name " + columnName
+                // + " is new for the current platform, would be going in the index previously occupied by "
+                // + name );
                 clobbers = true;
                 break;
             }

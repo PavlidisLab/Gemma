@@ -30,7 +30,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.StringUtils; 
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
@@ -51,6 +51,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.ontology.OntologyResource;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.search.SearchResult;
@@ -75,6 +76,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * @spring.property name="methodNameResolver" ref="expressionExperimentActions"
  * @spring.property name="searchService" ref="searchService"
  * @spring.property name="ontologyService" ref="ontologyService"
+ * @spring.property name="taxonService" ref="taxonService"
  * @spring.property name="auditTrailService" ref="auditTrailService"
  * @spring.property name="experimentalFactorService" ref="experimentalFactorService"
  */
@@ -88,6 +90,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     private ExpressionExperimentSubSetService expressionExperimentSubSetService = null;
     private ExpressionExperimentReportService expressionExperimentReportService = null;
 
+    private TaxonService taxonService;
     private SearchService searchService;
 
     private OntologyService ontologyService;
@@ -408,6 +411,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     }
 
     /**
+     * Show all experiments (optionally conditioned on either a taxon, or a list of ids)
+     * 
      * @param request
      * @param response
      * @return ModelAndView
@@ -418,49 +423,56 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         String sId = request.getParameter( "id" );
         String taxonId = request.getParameter( "taxonId" );
         Collection<ExpressionExperimentValueObject> expressionExperiments = new ArrayList<ExpressionExperimentValueObject>();
+        Collection<ExpressionExperimentValueObject> eeValObjectCol;
+        ModelAndView mav = new ModelAndView( "expressionExperiments" );
 
-        // if a taxon ID is specified, load all expression experiments for this taxon
         if ( taxonId != null ) {
-            Taxon taxon = Taxon.Factory.newInstance();
-            Long tId = Long.parseLong( taxonId );
-            taxon.setId( tId );
-            // taxon = taxonService.find( taxon );
-            Collection<ExpressionExperimentValueObject> eeValObjectCol = this
-                    .getExpressionExperimentValueObjects( expressionExperimentService.findByTaxon( taxon ) );
-            expressionExperiments.addAll( eeValObjectCol );
-        }
-        // if no IDs are specified, then load all expressionExperiments
-        else if ( sId == null ) {
+            // if a taxon ID is specified, load all expression experiments for this taxon
+            try {
+                Long tId = Long.parseLong( taxonId );
+                Taxon taxon = taxonService.load( tId );
+                eeValObjectCol = this.getExpressionExperimentValueObjects( expressionExperimentService
+                        .findByTaxon( taxon ) );
+                mav.addObject( "showAll", false );
+                mav.addObject( "taxon", taxon );
+            } catch ( NumberFormatException e ) {
+                this.saveMessage( request, "Invalid taxon id, must be an integer" );
+                return mav;
+            }
+        } else if ( sId == null ) {
             this.saveMessage( request, "Displaying all Datasets" );
-            // TODO refactor this and make more generic (that is, turning securable objects into value objects).
-            // I did this because I need to go through security.
-            Collection<ExpressionExperimentValueObject> eeValObjectCol = this
-                    .getFilteredExpressionExperimentValueObjects( null );
-
-            expressionExperiments.addAll( eeValObjectCol );
-        }
-        // if ids are specified, then display only those expressionExperiments
-        else {
+            mav.addObject( "showAll", true );
+            // if no IDs are specified, then load all expressionExperiments
+            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null );
+        } else {
+            // if ids are specified, then display only those expressionExperiments
             Collection<Long> eeIdList = new ArrayList<Long>();
             String[] idList = StringUtils.split( sId, ',' );
-            for ( int i = 0; i < idList.length; i++ ) {
-                if ( StringUtils.isNotBlank( idList[i] ) ) {
-                    eeIdList.add( new Long( idList[i] ) );
+            try {
+                for ( int i = 0; i < idList.length; i++ ) {
+                    if ( StringUtils.isNotBlank( idList[i] ) ) {
+                        eeIdList.add( Long.parseLong( idList[i] ) );
+                    }
                 }
+            } catch ( NumberFormatException e ) {
+                this.saveMessage( request, "Invalid ids, must be a list of integers separated by commas." );
+                return mav;
             }
-            Collection<ExpressionExperimentValueObject> eeValObjectCol = this
-                    .getFilteredExpressionExperimentValueObjects( eeIdList );
-            expressionExperiments.addAll( eeValObjectCol );
+            mav.addObject( "showAll", false );
+            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( eeIdList );
         }
+        expressionExperiments.addAll( eeValObjectCol );
 
         // sort expression experiments by name first
         Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments,
                 new ExpressionExperimentValueObjectComparator() );
+
         if ( SecurityService.isUserAdmin() ) {
             expressionExperimentReportService.fillEventInformation( expressionExperiments );
         }
+
         Long numExpressionExperiments = new Long( expressionExperiments.size() );
-        ModelAndView mav = new ModelAndView( "expressionExperiments" );
+ 
         mav.addObject( "expressionExperiments", expressionExperiments );
         mav.addObject( "numExpressionExperiments", numExpressionExperiments );
         return mav;
@@ -685,11 +697,9 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     private Collection<ExpressionExperimentValueObject> getFilteredExpressionExperimentValueObjects(
             Collection<Long> eeIds ) {
 
-        log.debug( SecurityService.getPrincipal() );
-
-        /* Filtering happens here. */
         Collection<ExpressionExperiment> securedEEs = new ArrayList<ExpressionExperiment>();
 
+        /* Filtering happens here. */
         if ( eeIds == null ) {
             securedEEs = expressionExperimentService.loadAll();
         } else {
@@ -698,6 +708,10 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         return getExpressionExperimentValueObjects( securedEEs );
     }
 
+    /**
+     * @param request
+     * @return
+     */
     private ModelAndView redirectToList( HttpServletRequest request ) {
         this.addMessage( request, "errors.objectnotfound", new Object[] { "Expression Experiment" } );
         return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
@@ -856,6 +870,10 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         if ( ee == null ) return null;
 
         return DesignMatrixRowValueObject.Factory.getDesignMatrix( ee );
+    }
+
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
     }
 
 }

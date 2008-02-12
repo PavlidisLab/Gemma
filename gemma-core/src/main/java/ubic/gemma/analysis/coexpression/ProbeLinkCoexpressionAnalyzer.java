@@ -28,7 +28,6 @@ import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheException;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
-import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -65,9 +64,10 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
     private static final int MAX_GENES_TO_COMPUTE_EESTESTEDIN = 100;
 
     /**
-     * We won't return more genes than this (per gene type category)
+     * We won't return more genes than this (per gene type category) TODO implement this.
      */
     private static final int MAX_GENES_TO_RETURN = 300;
+
     private static final int EETESTEDGENE_CACHE_SIZE = 500; // number of data sets.
 
     private GeneService geneService;

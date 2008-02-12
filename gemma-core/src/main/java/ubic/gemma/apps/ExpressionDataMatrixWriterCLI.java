@@ -20,7 +20,6 @@ package ubic.gemma.apps;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Collection;
 import java.util.HashMap;
 
 import org.apache.commons.cli.Option;
@@ -39,21 +38,29 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulatingCLI {
 
+    public static void main( String[] args ) {
+        ExpressionDataMatrixWriterCLI cli = new ExpressionDataMatrixWriterCLI();
+        Exception exc = cli.doWork( args );
+        if ( exc != null ) {
+            log.error( exc.getMessage() );
+        }
+    }
+
     private String outFileName;
+
+    @Override
+    public String getShortDesc() {
+        return "Prints preferred data matrix to a file.";
+    }
 
     @Override
     @SuppressWarnings("static-access")
     protected void buildOptions() {
         super.buildOptions();
         Option outputFileOption = OptionBuilder.hasArg().isRequired().withArgName( "outFilePrefix" ).withDescription(
-                "File prefix for saving the output" ).withLongOpt( "outFilePrefix" ).create( 'o' );
+                "File prefix for saving the output (short name will be appended)" ).withLongOpt( "outFilePrefix" )
+                .create( 'o' );
         addOption( outputFileOption );
-    }
-
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-        outFileName = getOptionValue( 'o' );
     }
 
     @SuppressWarnings("unchecked")
@@ -68,7 +75,8 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
 
             try {
                 MatrixWriter out = new MatrixWriter();
-                PrintWriter writer = new PrintWriter( outFileName );
+                PrintWriter writer = new PrintWriter( outFileName + "_" + ee.getShortName().replaceAll( "\\s", "" )
+                        + ".txt" );
                 /*
                  * FIXME output the gene information too.
                  */
@@ -81,12 +89,9 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
         return null;
     }
 
-    public static void main( String[] args ) {
-        ExpressionDataMatrixWriterCLI cli = new ExpressionDataMatrixWriterCLI();
-        Exception exc = cli.doWork( args );
-        if ( exc != null ) {
-            log.error( exc.getMessage() );
-        }
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+        outFileName = getOptionValue( 'o' );
     }
-
 }

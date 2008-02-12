@@ -33,12 +33,12 @@ import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.commons.lang.time.DateFormatUtils;
-import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 
 import ubic.basecode.util.FileTools;
+import ubic.basecode.util.benchmark.Timed;
 import ubic.gemma.grid.javaspaces.SpacesCommand;
 import ubic.gemma.grid.javaspaces.SpacesResult;
 import ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask;
@@ -159,10 +159,8 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
      * @return the filled out value objects
      */
     @SuppressWarnings("unchecked")
+    @Timed(minimumTimeToReport = 1000)
     public void fillEventInformation( Collection<ExpressionExperimentValueObject> vos ) {
-
-        StopWatch watch = new StopWatch();
-        watch.start();
 
         Collection<Long> ids = new ArrayList<Long>();
         for ( Object object : vos ) {
@@ -173,12 +171,6 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         // do this ahead to avoid round trips.
         Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( ids );
 
-        watch.split();
-        if ( watch.getSplitTime() > 1000 ) {
-            log.info( "Load ees in " + watch.getSplitTime() + "ms (wall time)" );
-        }
-        watch.unsplit();
-
         // This is substantially faster than expressionExperimentService.getLastLinkAnalysis( ids ).
         Map<Long, AuditEvent> linkAnalysisEvents = getEvents( ees, LinkAnalysisEvent.Factory.newInstance() );
         Map<Long, AuditEvent> missingValueAnalysisEvents = getEvents( ees, MissingValueAnalysisEvent.Factory
@@ -187,12 +179,6 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         Map<Long, AuditEvent> troubleEvents = getEvents( ees, TroubleStatusFlagEvent.Factory.newInstance() );
         Map<Long, AuditEvent> validationEvents = getEvents( ees, ValidatedFlagEvent.Factory.newInstance() );
         Map<Long, AuditEvent> arrayDesignEvents = getEvents( ees, ArrayDesignGeneMappingEvent.Factory.newInstance() );
-
-        watch.split();
-        if ( watch.getSplitTime() > 1000 ) {
-            log.info( "Retrieval of event information done after " + watch.getSplitTime() + "ms (wall time)" );
-        }
-        watch.unsplit();
 
         // add in the last events of interest for all eeVos
         for ( ExpressionExperimentValueObject eeVo : vos ) {
@@ -377,9 +363,8 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
     }
 
     @SuppressWarnings("unchecked")
+    @Timed(minimumTimeToReport = 200)
     private Map<Long, AuditEvent> getEvents( Collection<ExpressionExperiment> ees, AuditEventType type ) {
-        StopWatch watch = new StopWatch();
-        watch.start();
         Map<Long, AuditEvent> result = new HashMap<Long, AuditEvent>();
         Map<Auditable, AuditEvent> events = null;
         if ( type instanceof ArrayDesignAnalysisEvent ) {
@@ -390,11 +375,6 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
 
         for ( Auditable a : events.keySet() ) {
             result.put( ( ( ExpressionExperiment ) a ).getId(), events.get( a ) );
-        }
-        watch.split();
-        if ( watch.getSplitTime() > 1000 ) {
-            log.info( "Retrieval of events of type " + type.getClass().getSimpleName() + " done after "
-                    + watch.getSplitTime() + "ms (wall time)" );
         }
         return result;
     }

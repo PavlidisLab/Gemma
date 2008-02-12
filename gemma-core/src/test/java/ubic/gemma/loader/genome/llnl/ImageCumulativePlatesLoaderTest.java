@@ -41,6 +41,7 @@ public class ImageCumulativePlatesLoaderTest extends BaseSpringContextTest {
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
+        endTransaction();
         is = this.getClass().getResourceAsStream( "/data/loader/genome/cumulative.plates.test.txt" );
         ImageCumulativePlatesParser parser = new ImageCumulativePlatesParser();
         assertTrue( is.available() > 0 );

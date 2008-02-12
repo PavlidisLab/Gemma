@@ -27,12 +27,10 @@ import java.util.HashSet;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.exception.ExceptionUtils;
 
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.model.common.auditAndSecurity.eventType.FailedMissingValueAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
@@ -56,10 +54,42 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
      * 
      */
     private static final double DEFAULT_SIGNAL_TO_NOISE_THRESHOLD = 2.0;
+
+    /**
+     * @param args
+     */
+    public static void main( String[] args ) {
+        TwoChannelMissingValueCLI p = new TwoChannelMissingValueCLI();
+        try {
+            Exception ex = p.doWork( args );
+            if ( ex != null ) {
+                ex.printStackTrace();
+            }
+        } catch ( Exception e ) {
+            log.error( e, e );
+        }
+    }
+
+    private AuditTrailService auditTrailService;
+
+    private TwoChannelMissingValues tcmv;
+
+    private DesignElementDataVectorService dedvs;
+
+    private ExpressionExperimentService eeService;
+
     private double s2n = DEFAULT_SIGNAL_TO_NOISE_THRESHOLD;
-    private boolean doAll = false;
+
     private boolean force = false;
+
     private Collection<Double> extraMissingValueIndicators = new HashSet<Double>();
+
+    private QuantitationTypeService quantitationTypeService;
+
+    @Override
+    public String getShortDesc() {
+        return "Computes missing value information on two-channel microarray experiments";
+    }
 
     /*
      * (non-Javadoc)
@@ -77,15 +107,6 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
         addOption( signal2noiseOption );
 
-        Option doAllOption = OptionBuilder.withDescription( "Process all two-color experiments" ).create( "all" );
-
-        addOption( doAllOption );
-
-        Option force = OptionBuilder.withDescription(
-                "Replace existing missing value data (two-color experiments only)" ).create( "force" );
-
-        addOption( force );
-
         Option extraMissingIndicators = OptionBuilder.hasArg().withArgName( "mv indicators" ).withDescription(
                 "Additional numeric values (comma delimited) to be considered missing values." ).create(
                 MISSING_VALUE_OPTION );
@@ -94,8 +115,6 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
         addDateOption();
     }
-
-    AuditTrailService auditTrailService;
 
     /*
      * (non-Javadoc)
@@ -108,46 +127,41 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
         Exception err = processCommandLine( "Two-channel missing values", args );
         if ( err != null ) return err;
-
-        if ( doAll ) {
-
-            Collection<ExpressionExperiment> ees = eeService.loadAll();
-            for ( ExpressionExperiment ee : ees ) {
-                try {
-                    processExperiment( ee );
-                } catch ( Exception e ) {
-                    errorObjects.add( ee + ": " + e.getMessage() );
-
-                    AuditEventType type = FailedMissingValueAnalysisEvent.Factory.newInstance();
-                    auditTrailService.addUpdateEvent( ee, type, ExceptionUtils.getFullStackTrace( e ) );
-                    log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********", e );
-                }
-            }
-
-            summarizeProcessing();
-
-        } else {
-
-            String name = this.getExperimentShortName();
-            if ( StringUtils.isBlank( name ) ) {
-                bail( ErrorCode.INVALID_OPTION );
-            }
-            String[] shortNames = name.split( "," );
-
-            for ( String shortName : shortNames ) {
-                ExpressionExperiment ee = locateExpressionExperiment( shortName );
-
-                if ( ee == null ) {
-                    errorObjects.add( "No expression experiment with name " + shortName );
-                    continue;
-                }
-
-                processExperiment( ee );
-            }
-            summarizeProcessing();
+        for ( ExpressionExperiment ee : expressionExperiments ) {
+            processExperiment( ee );
         }
 
+        summarizeProcessing();
         return null;
+    }
+
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+        if ( this.hasOption( 's' ) ) {
+            this.s2n = this.getDoubleOptionValue( 's' );
+        }
+
+        if ( hasOption( "force" ) ) {
+            this.force = true;
+        }
+        if ( hasOption( MISSING_VALUE_OPTION ) ) {
+            String o = this.getOptionValue( MISSING_VALUE_OPTION );
+            String[] vals = StringUtils.split( o, ',' );
+            try {
+                for ( String string : vals ) {
+                    this.extraMissingValueIndicators.add( new Double( string ) );
+                }
+            } catch ( NumberFormatException e ) {
+                log.error( "Arguments to mvind must be numbers" );
+                this.bail( ErrorCode.INVALID_OPTION );
+            }
+        }
+        auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
+        tcmv = ( TwoChannelMissingValues ) this.getBean( "twoChannelMissingValues" );
+        dedvs = ( DesignElementDataVectorService ) this.getBean( "designElementDataVectorService" );
+        eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
+        quantitationTypeService = ( QuantitationTypeService ) this.getBean( "quantitationTypeService" );
     }
 
     /**
@@ -222,56 +236,5 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
         tcmv.computeMissingValues( ee, ad, s2n, this.extraMissingValueIndicators );
 
-    }
-
-    /**
-     * @param args
-     */
-    public static void main( String[] args ) {
-        TwoChannelMissingValueCLI p = new TwoChannelMissingValueCLI();
-        try {
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-        } catch ( Exception e ) {
-            log.error( e, e );
-        }
-    }
-
-    TwoChannelMissingValues tcmv;
-    DesignElementDataVectorService dedvs;
-    ExpressionExperimentService eeService;
-    private QuantitationTypeService quantitationTypeService;
-
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-        if ( this.hasOption( 's' ) ) {
-            this.s2n = this.getDoubleOptionValue( 's' );
-        }
-        if ( this.hasOption( "all" ) ) {
-            this.doAll = true;
-        }
-        if ( hasOption( "force" ) ) {
-            this.force = true;
-        }
-        if ( hasOption( MISSING_VALUE_OPTION ) ) {
-            String o = this.getOptionValue( MISSING_VALUE_OPTION );
-            String[] vals = StringUtils.split( o, ',' );
-            try {
-                for ( String string : vals ) {
-                    this.extraMissingValueIndicators.add( new Double( string ) );
-                }
-            } catch ( NumberFormatException e ) {
-                log.error( "Arguments to mvind must be numbers" );
-                this.bail( ErrorCode.INVALID_OPTION );
-            }
-        }
-        auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
-        tcmv = ( TwoChannelMissingValues ) this.getBean( "twoChannelMissingValues" );
-        dedvs = ( DesignElementDataVectorService ) this.getBean( "designElementDataVectorService" );
-        eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-        quantitationTypeService = ( QuantitationTypeService ) this.getBean( "quantitationTypeService" );
     }
 }

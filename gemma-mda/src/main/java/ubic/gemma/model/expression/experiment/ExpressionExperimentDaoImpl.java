@@ -1029,12 +1029,16 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      */
     @Override
     protected Map<Taxon, Long> handleGetPerTaxonCount() throws Exception {
-        final String queryString = "select t, count(distinct EE.id) from ExpressionExperimentImpl as EE "
-                + "inner join EE.bioAssays as BA inner join BA.samplesUsed as SU "
-                + "inner join SU.sourceTaxon t group by t.scientificName";
+
         Map<Taxon, Long> taxonCount = new HashMap<Taxon, Long>();
+        final String queryString = "select t, count(distinct ee) from ExpressionExperimentImpl "
+                + "ee inner join ee.bioAssays as ba inner join ba.samplesUsed su inner join su.sourceTaxon t group by t";
+
         try {
+            // it is important to cache this, as it gets called on the home page.
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setCacheable( true );
+            queryObject.setCacheRegion( "countsCache" );
             ScrollableResults list = queryObject.scroll();
             while ( list.next() ) {
                 taxonCount.put( ( Taxon ) list.get( 0 ), list.getLong( 1 ) );
@@ -1103,11 +1107,13 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     protected Collection<ExpressionExperiment> handleLoad( Collection ids ) throws Exception {
         Collection<ExpressionExperiment> ees = null;
         final String queryString = "select ee from ExpressionExperimentImpl as ee " + " where ee.id in (:ids) ";
-
+        StopWatch timer = new StopWatch();
+        timer.start();
         List idList = new ArrayList( ids );
         Collections.sort( idList );
 
         try {
+
             Session session = this.getSession( false );
             org.hibernate.Query queryObject = session.createQuery( queryString );
             queryObject.setCacheable( true );
@@ -1115,6 +1121,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             queryObject.setParameterList( "ids", idList );
             ees = queryObject.list();
             session.clear();
+            timer.stop();
+            if ( timer.getTime() > 100 ) {
+                log.info( "Load " + ids.size() + " ees in  " + timer.getTime() + "ms" );
+            }
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
@@ -1191,7 +1201,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleLoadValueObjects(java.util.Collection)
      */
     @Override
-    protected Collection handleLoadValueObjects( Collection ids ) throws Exception {
+    protected Collection handleLoadValueObjects( Collection /* <Long> */ids ) throws Exception {
         Map<Long, ExpressionExperimentValueObject> vo = new HashMap<Long, ExpressionExperimentValueObject>();
         // sanity check
         if ( ids == null || ids.size() == 0 ) {
@@ -1215,9 +1225,13 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 + " where eventCreated.action='C' and ee.id in (:ids) " + " group by ee order by ee.name";
 
         try {
+            StopWatch watch = new StopWatch();
+            watch.start();
+            List<Long> idl = new ArrayList<Long>( ids );
+            Collections.sort( idl );
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameterList( "ids", ids );
-            Map<Long, Collection<QuantitationType>> qtMap = getQuantitationTypeMap( ids );
+            queryObject.setParameterList( "ids", idl );
+            Map<Long, Collection<QuantitationType>> qtMap = getQuantitationTypeMap( idl );
             queryObject.setCacheable( true );
             queryObject.setCacheRegion( "eeValueObjects" );
 
@@ -1248,6 +1262,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                     fillQuantitationTypeInfo( qtMap, v, eeId, type );
                 }
                 vo.put( eeId, v );
+            }
+            watch.stop();
+            if ( watch.getTime() > 1000 ) {
+                log.info( "Loaded " + vo.size() + " EE value objs in " + watch.getTime() + "ms" );
             }
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );

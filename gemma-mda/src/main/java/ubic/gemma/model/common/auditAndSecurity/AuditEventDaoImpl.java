@@ -18,12 +18,12 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
-import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashSet;
 
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.springframework.orm.hibernate3.HibernateCallback;
 
@@ -99,7 +99,8 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
     @Override
     protected void handleThaw( final AuditEvent auditEvent ) throws Exception {
         this.getHibernateTemplate().execute( new HibernateCallback() {
-            public Object doInHibernate( Session session ) throws HibernateException, SQLException {
+            public Object doInHibernate( Session session ) throws HibernateException {
+                session.lock( auditEvent, LockMode.NONE );
                 Hibernate.initialize( auditEvent );
                 Hibernate.initialize( auditEvent.getPerformer() );
                 return null;

@@ -13,243 +13,231 @@
              
              #003366 - blue
              #CC6633 - orange
-*/
+*/ /* TYPOGRAPHY */
+body {
+	text-align: left;
+	font: normal 0.9em arial,sans-serif;
+	color: #000000;
+	text-decoration: none;
+}
 
-/* TYPOGRAPHY */
-    body {
-        text-align: left;
-   		font:normal 12px tahoma, arial, helvetica, sans-serif;
-        color: #000000;
-        text-decoration: none;
-    }
+div {
+	font-size: 1em;
+}
 
-    div {
-        font-size: 1em;
-    }
+img {
+	border: 0;
+}
 
-    img {
-        border: 0;
-    }
-
-    /* LINKS */
-        a,a:link
+/* LINKS */
+a,a:link
             a:active {
-            color: #1465B7;
-            text-decoration: none;
-        }
+	color: #1465B7;
+	text-decoration: none;
+}
 
-        a:visited {
-           color: #1465B7;
-            background-color: transparent;
-        }
+a:visited {
+	color: #1465B7;
+	background-color: transparent;
+}
 
-        a:hover {
-            color: #CC6633; 
-            text-decoration: none;
-        }
-        
-        a.annotationLink {
-        	text-decoration: underline;
-        }
-        
-    /* END LINKS */
+a:hover {
+	color: #CC6633;
+	text-decoration: none;
+}
 
-    /* HEADINGS */
-        h1, h2, h3, h4, h5, h6 {
-            font-weight: normal;
-        }
+a.annotationLink {
+	text-decoration: underline;
+}
 
-        h1 {
-            font-size: 2.2em;
-            letter-spacing: -1px;
-            line-height: 1.3em;
-            margin: 0 0 0.5em 0;
-            padding: 0;
-        }
+/* END LINKS */ /* HEADINGS */
+h1,h2,h3,h4,h5,h6 {
+	font-weight: bold;
+}
 
-        div#branding h1 {
-            font-size: 2.6em;
-            letter-spacing: -1px;
+h1 {
+	font-size: 2.2em;
+	letter-spacing: -1px;
+	line-height: 1.3em;
+	margin: 0 0 0.5em 0;
+	padding: 0;
+}
 
-            margin: 0;
-            line-height: 1.5em;
-            color: #3e9ade;
-        }
+div#branding h1 {
+	font-size: 2.6em;
+	letter-spacing: -1px;
+	margin: 0;
+	line-height: 1.5em;
+	color: #3e9ade;
+}
 
-        div#branding p {
-            margin: 0;
-            line-height: 1em;
-        }
+div#branding p {
+	margin: 0;
+	line-height: 1em;
+}
 
-        h2 {
-            font-size: 1.4em;
-            line-height: 1.5em;
-            margin: 0 0 0.5em 0;
-            padding:  0;
-        }
+h2 {
+	font-size: 1.4em;
+	line-height: 1.5em;
+	margin: 0 0 0.5em 0;
+	padding: 0;
+}
 
-        h3 {
-            font-size: 1.3em;
-            line-height: 1.3em;
-            margin: 0 0 0.5em 0;
-            padding: 10px 0px 0px 0 ;
-            color: black;
-        }
+h3 {
+	font-size: 1.3em;
+	line-height: 1.3em;
+	margin: 0 0 0.5em 0;
+	padding: 10px 0px 0px 0;
+	color: black;
+}
 
-        h4 {
-            font-size: 1.2em;
-            line-height: 1.3em;
-            margin: 0 0 0.25em 0;
-            padding: 0;
-            color: black;
-        }
+h4 {
+	font-size: 1.2em;
+	line-height: 1.3em;
+	margin: 0 0 0.25em 0;
+	padding: 0;
+	color: black;
+}
 
-        h5 {
-            font-size: 1.1em;
-            line-height: 1.3em;
-            margin: 0 0 0.25em 0;
-            padding: 0;
-            color: black;
-        }
+h5 {
+	font-size: 1.1em;
+	line-height: 1.3em;
+	margin: 0 0 0.25em 0;
+	padding: 0;
+	color: black;
+}
 
-        h6 {
-            font-size: 1em;
-            line-height: 1.3em;
-            margin: 0 0 0.25em 0;
-            padding: 0;
-            color: black;
-        }
-    /* END HEADINGS */
+h6 {
+	font-size: 1em;
+	line-height: 1.3em;
+	margin: 0 0 0.25em 0;
+	padding: 0;
+	color: black;
+}
 
-    /* TEXT */
-        p {
-            font-size: 1em;
-            margin: 0 0 1.5em 0;
-            padding: 0px 20px 0px 20px;
-            line-height: 1.4em;
-        }
+/* END HEADINGS */ /* TEXT */
+p {
+	font-size: 1em;
+	margin: 0 0 1.5em 0;
+	padding: 0px 20px 0px 20px;
+	line-height: 1.4em;
+}
 
-        blockquote {
-            border-left: 10px solid #ddd;
-            margin-left: 10px;
-        }
+blockquote {
+	border-left: 10px solid #ddd;
+	margin-left: 10px;
+}
 
-        pre {
-            font-family: monospace;
-            font-size: 1em;
-        }
+pre {
+	font-family: monospace;
+	font-size: 1em;
+}
 
-        strong,b {
-            font-weight: bold;
-        }
+strong,b {
+	font-weight: bold;
+}
 
-        em,i {
-            font-style: italic;
-        }
+em,i {
+	font-style: italic;
+}
 
-        code {
-            font-family: "courier new", courier, monospace;
-            font-size: 12px;
-            white-space: pre;
-        }
-        
-        textarea {
-          font-family: verdana, arial, helvetica, sans-serif;
-          font-size: 1em;
-        }
-        
-        .clob,.stacktrace {
-          border-style:solid;
-          padding: 4px 6px 4px 6px;
-          border-width:1px;
-          border-color:#DDDDDD; 
-          font-size: 1em;
-          line-height: 1.3em;
-          height:100px;
-          overflow:auto;
-        }
-        
-        .stacktrace {
-          font-size: 10px;
-          font-family: "courier new", courier, monospace;
-          height:400px;
-        }
-        
-                
-    /* END TEXT */
+code {
+	font-family: "courier new", courier, monospace;
+	font-size: 12px;
+	white-space: pre;
+}
 
-    /* LISTS */
-        ul.glassList {
-            list-style: url(../../images/aquadot.jpg) disc outside;
-            vertical-align: top;
-            line-height: 1.5em;
-        }
-        dl {
-            margin: 0 0 1.5em 0;
-            padding: 0;
-            line-height: 1.4em;
-        }
+textarea {
+	font-family: verdana, arial, helvetica, sans-serif;
+	font-size: 1em;
+}
 
-        dl dt {
-            font-weight: bold;
-            margin: 0.25em 0 0.25em 0;
-            padding: 0;
-        }
+.clob,.stacktrace {
+	border-style: solid;
+	padding: 4px 6px 4px 6px;
+	border-width: 1px;
+	border-color: #DDDDDD;
+	font-size: 1em;
+	line-height: 1.3em;
+	height: 100px;
+	overflow: auto;
+}
 
-        dl dd {
-            margin: 0 0 0 30px;
-            padding: 0;
-        }
-		/* END LISTS */
-		
-    	
+.stacktrace {
+	font-size: 10px;
+	font-family: "courier new", courier, monospace;
+	height: 400px;
+}
 
-    	/* TABLE */
-		td {
-			font:normal 11px arial, tahoma, helvetica, sans-serif;
-		}
+/* END TEXT */ /* LISTS */
+ul.glassList {
+	list-style: url(../../images/aquadot.jpg) disc outside;
+	vertical-align: top;
+	line-height: 1.5em;
+}
 
-	/* this can interfere with EXT.js tables. */
-        table {
-        	/*border-style:solid;
+dl {
+	margin: 0 0 1.5em 0;
+	padding: 0;
+	line-height: 1.4em;
+}
+
+dl dt {
+	font-weight: bold;
+	margin: 0.25em 0 0.25em 0;
+	padding: 0;
+}
+
+dl dd {
+	margin: 0 0 0 30px;
+	padding: 0;
+}
+
+/* END LISTS */ /* TABLE */
+td {
+	font: normal 11px arial, tahoma, helvetica, sans-serif;
+}
+
+/* this can interfere with EXT.js tables. */
+table { /*border-style:solid;
 			border-width:1px;
 			border-color:#BBBBBB; 
             margin: 0 0 0 0;
             padding: 6px;*/
-        }
+	
+}
 
-	     td.label {
-        	  font-weight: bold;
-        	  text-align: right;
-        	  vertical-align: top;
-        	  padding-right:8px;
-        	  padding-top:4px;
-        } 
-		
-		th {
-			border-bottom:solid #555555 1px;
-			font:bold 11px arial, tahoma, helvetica, sans-serif;
-		}
+td.label {
+	font-weight: bold;
+	text-align: right;
+	vertical-align: top;
+	padding-right: 8px;
+	padding-top: 4px;
+}
 
-    hr {
-        display: none;
-    }
+th {
+	border-bottom: solid #555555 1px;
+	font: bold 11px arial, tahoma, helvetica, sans-serif;
+}
 
-    div.hr {
-        height: 1px;
-        margin: 1.5em 10px;
-        border-bottom: 1px dotted black;
-    }
-    
-    .datasummary td {
-    	font-size: 0.9em;
-    	margin: 0 0 0 0;
-    	padding: 1px;
-    }
-    
-    .error {
-    	background:#fff url(../../images/default/grid/invalid_line.gif) repeat-x bottom;
-    }
-    
-    
+hr {
+	display: none;
+}
+
+div.hr {
+	height: 1px;
+	margin: 1.5em 10px;
+	border-bottom: 1px dotted black;
+}
+
+.datasummary td {
+	font-size: 0.9em;
+	margin: 0 0 0 0;
+	padding: 1px;
+}
+
+.error {
+	background: #fff url(../../images/default/grid/invalid_line.gif)
+		repeat-x bottom;
+}
 /* END TYPOGRAPHY */

@@ -98,6 +98,10 @@ abstract public class ArrayDesignPersister extends GenomePersister {
     }
 
     /**
+     * Cache array design design elements.
+     * <p>
+     * Note that reporters are ignored, as we are not persisting them.
+     * 
      * @param designElementCache
      * @param arrayDesign To add to the cache.
      */
@@ -115,15 +119,6 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         for ( DesignElement element : compositeSequences ) {
             assert element.getId() != null;
             designElementCache.put( element.getName() + adName, element );
-
-            // We do not persist the reporters, so we don't want to even look here.
-            // Collection<Reporter> reporters = ( ( CompositeSequence ) element ).getComponentReporters();
-            // for ( DesignElement de : reporters ) {
-            // assert de.getId() != null;
-            // designElementCache.put( de.getName() + adName, de );
-            //
-            // }
-
         }
 
         int endCacheSize = designElementCache.keySet().size();
@@ -216,7 +211,8 @@ abstract public class ArrayDesignPersister extends GenomePersister {
      */
     @SuppressWarnings("unchecked")
     private ArrayDesign persistArrayDesignCompositeSequenceAssociations( ArrayDesign arrayDesign ) {
-        if ( arrayDesign.getCompositeSequences().size() == 0 ) return arrayDesign;
+        int numElements = arrayDesign.getCompositeSequences().size();
+        if ( numElements == 0 ) return arrayDesign;
         log.info( "Filling in or updating sequences in composite seqences for " + arrayDesign );
 
         int persistedBioSequences = 0;
@@ -230,8 +226,9 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             compositeSequence.setBiologicalCharacteristic( persistBioSequence( compositeSequence
                     .getBiologicalCharacteristic() ) );
 
-            if ( ++persistedBioSequences % numElementsPerUpdate == 0 ) {
-                log.info( persistedBioSequences + " compositeSequence sequences examined for " + arrayDesign );
+            if ( ++persistedBioSequences % numElementsPerUpdate == 0 && numElements > 1000 ) {
+                log.info( persistedBioSequences + "/" + numElements + " compositeSequence sequences examined for "
+                        + arrayDesign );
             }
 
             if ( persistedBioSequences % SESSION_BATCH_SIZE == 0 ) {
@@ -248,10 +245,10 @@ abstract public class ArrayDesignPersister extends GenomePersister {
     }
 
     /**
-     * Persist an entirely new array design.
+     * Persist an entirely new array design, including composite sequences and any associated new sequences. Reporters
+     * are not persisted.
      * 
      * @param arrayDesign
-     * @param existing
      * @return
      */
     protected ArrayDesign persistNewArrayDesign( ArrayDesign arrayDesign ) {
@@ -281,7 +278,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         int numElementsPerUpdate = numElementsPerUpdate( c );
         for ( CompositeSequence sequence : c ) {
             sequence.setBiologicalCharacteristic( persistBioSequence( sequence.getBiologicalCharacteristic() ) );
-            if ( ++count % numElementsPerUpdate == 0 && log.isInfoEnabled() ) {
+            if ( ++count % numElementsPerUpdate == 0 && log.isInfoEnabled() && c.size() > 10000 ) {
                 log.info( count + " compositeSequence biologicalCharacteristics checked for " + arrayDesign
                         + "( elapsed time=" + elapsedMinutes( startTime ) + " minutes)" );
 
@@ -291,11 +288,12 @@ abstract public class ArrayDesignPersister extends GenomePersister {
                 this.getHibernateTemplate().clear();
                 if ( Thread.currentThread().isInterrupted() ) {
                     log.info( "Cancelled" );
-                    // we should clean up after ourselves (nedd to remove all the sequences that were all ready
-                    // persisted
-                    // todo: this will try to remove the entire collection but only some are in the DB.
-                    // Not sure how the collection delete will handle deletion of transtive objects not in db.
-                    // might need to fix.
+                    /*
+                     * TODO after cancelling, we should clean up after ourselves (need to remove all the sequences that
+                     * were all ready persisted this will try to remove the entire collection but only some are in the
+                     * DB. Not sure how the collection delete will handle deletion of transtive objects not in db. might
+                     * need to fix.
+                     */
                     compositeSequenceService.remove( c ); // etc
                     throw new CancellationException( "Thread was terminated during persisting the arraydesign. "
                             + this.getClass() );
@@ -314,36 +312,15 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
         arrayDesign.setCompositeSequences( c );
 
-        // Note: we don't persist the reporters, so this isn't needed.
-        // Map<String, Collection<Reporter>> csNameReporterMap = new HashMap<String, Collection<Reporter>>();
-        // for ( CompositeSequence sequence : arrayDesign.getCompositeSequences() ) {
-        // if ( csNameReporterMap.containsKey( sequence.getName() ) ) {
-        // throw new IllegalStateException( "Two composite sequences share a name " + sequence.getName() );
-        // }
-        // csNameReporterMap.put( sequence.getName(), sequence.getComponentReporters() );
-        // sequence.setComponentReporters( null );
-        // }
-
         arrayDesign = persistArrayDesignCompositeSequenceAssociations( arrayDesign );
 
         log.info( "Persisting " + arrayDesign );
 
         arrayDesignService.update( arrayDesign );
 
-        // Note: we don't persist the reporters, so this isn't needed.
-        // // now have persistent CS
-        // for ( CompositeSequence sequence : arrayDesign.getCompositeSequences() ) {
-        // sequence.setComponentReporters( csNameReporterMap.get( sequence.getName() ) );
-        // for ( Reporter reporter : sequence.getComponentReporters() ) {
-        // reporter.setCompositeSequence( sequence );
-        // }
-        // }
-
-        // arrayDesignService.update( arrayDesign );
-
         if ( Thread.currentThread().isInterrupted() ) {
             log.info( "Cancelled" );
-            // we should clean up after ourselves.
+            // TODO after cancelling, we should clean up after ourselves.
             arrayDesignService.remove( arrayDesign ); // etc
             throw new CancellationException(
                     "Thread was terminated during the final stage of persisting the arraydesign. " + this.getClass() );

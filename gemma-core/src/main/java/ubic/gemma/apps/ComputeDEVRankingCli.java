@@ -18,15 +18,8 @@
  */
 package ubic.gemma.apps;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.Collection;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -51,7 +44,37 @@ public class ComputeDEVRankingCli extends ExpressionExperimentManipulatingCLI {
 
     private static Log log = LogFactory.getLog( ComputeDEVRankingCli.class.getName() );
 
+    /**
+     * @param args
+     */
+    public static void main( String[] args ) {
+        ComputeDEVRankingCli computing = new ComputeDEVRankingCli();
+        StopWatch watch = new StopWatch();
+        watch.start();
+        try {
+            Exception ex = computing.doWork( args );
+            if ( ex != null ) {
+                ex.printStackTrace();
+            }
+            watch.stop();
+            log.info( "Elapsed time: " + watch.getTime() / 1000 + " seconds" );
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    private DedvRankService dedvRankservice;
+
+    private ExpressionExperimentService eeService;
+
     private Method method = Method.MAX;
+
+    private AuditTrailService auditTrailService;
+
+    @Override
+    public String getShortDesc() {
+        return "Computes and stores an expression level ranking for each DesignElementDataVector of the preferred quantitation type.";
+    }
 
     /**
      * 
@@ -70,16 +93,22 @@ public class ComputeDEVRankingCli extends ExpressionExperimentManipulatingCLI {
         addDateOption();
     }
 
-    DedvRankService dedvRankservice;
-
-    private AuditTrailService auditTrailService;
-
     /**
-     * @param arrayDesign
+     * 
      */
-    private void audit( ExpressionExperiment ee, String note ) {
-        AuditEventType eventType = RankComputationEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( ee, eventType, note );
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Exception doWork( String[] args ) {
+        Exception err = processCommandLine( "DEV Ranking Calculator ", args );
+        if ( err != null ) {
+            return err;
+        }
+
+        for ( ExpressionExperiment ee : expressionExperiments ) {
+            processExperiment( ee );
+        }
+        summarizeProcessing();
+        return null;
     }
 
     /**
@@ -97,47 +126,12 @@ public class ComputeDEVRankingCli extends ExpressionExperimentManipulatingCLI {
         eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
     }
 
-    ExpressionExperimentService eeService;
-
     /**
-     * 
+     * @param arrayDesign
      */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine( "DEV Ranking Calculator ", args );
-        if ( err != null ) {
-            return err;
-        }
-
-        if ( this.getExperimentShortName() == null ) {
-
-            if ( this.expressionExperiments == null ) {
-                Collection<ExpressionExperiment> expressionExperiments = eeService.loadAll();
-                log.info( "Processing all experiments " + expressionExperiments.size() );
-            }
-
-            for ( ExpressionExperiment ee : expressionExperiments ) {
-                processExperiment( ee );
-            }
-            summarizeProcessing();
-        } else {
-            String[] shortNames = this.getExperimentShortName().split( "," );
-
-            for ( String shortName : shortNames ) {
-                ExpressionExperiment ee = locateExpressionExperiment( shortName );
-
-                if ( ee == null ) {
-                    continue;
-                }
-
-                processExperiment( ee );
-            }
-            summarizeProcessing();
-
-        }
-
-        return null;
+    private void audit( ExpressionExperiment ee, String note ) {
+        AuditEventType eventType = RankComputationEvent.Factory.newInstance();
+        auditTrailService.addUpdateEvent( ee, eventType, note );
     }
 
     /**
@@ -146,6 +140,10 @@ public class ComputeDEVRankingCli extends ExpressionExperimentManipulatingCLI {
      * @param ee
      */
     private void processExperiment( ExpressionExperiment ee ) {
+        if ( isTroubled( ee ) ) {
+            log.info( "Skipping troubled experiment " + ee.getShortName() );
+            return;
+        }
         try {
             eeService.thawLite( ee );
             boolean needToRun = needToRun( ee, RankComputationEvent.class );
@@ -157,25 +155,6 @@ public class ComputeDEVRankingCli extends ExpressionExperimentManipulatingCLI {
         } catch ( Exception e ) {
             errorObjects.add( ee + ": " + e.getMessage() );
             log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********", e );
-        }
-    }
-
-    /**
-     * @param args
-     */
-    public static void main( String[] args ) {
-        ComputeDEVRankingCli computing = new ComputeDEVRankingCli();
-        StopWatch watch = new StopWatch();
-        watch.start();
-        try {
-            Exception ex = computing.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-            watch.stop();
-            log.info( "Elapsed time: " + watch.getTime() / 1000 + " seconds" );
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
         }
     }
 

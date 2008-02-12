@@ -19,11 +19,9 @@
 package ubic.gemma.web.controller.common;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +30,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.time.DateUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
@@ -53,6 +51,8 @@ import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
 import ubic.gemma.web.util.ConfigurationCookie;
 
 /**
+ * Responsible for display of the Gemma home page.
+ * 
  * @author joseph
  * @version $Id$
  * @spring.bean id="mainMenuController"
@@ -77,29 +77,11 @@ public class MainMenuController extends BaseFormController {
     private TaxonService taxonService;
     private WhatsNewService whatsNewService;
 
-    public void setWhatsNewService( WhatsNewService whatsNewService ) {
-        this.whatsNewService = whatsNewService;
-    }
-
-    /**
-     * @param taxonService the taxonService to set
-     */
-    public void setTaxonService( TaxonService taxonService ) {
-        this.taxonService = taxonService;
-    }
-
     /**
      * @return the arrayDesignService
      */
     public ArrayDesignService getArrayDesignService() {
         return arrayDesignService;
-    }
-
-    /**
-     * @param arrayDesignService the arrayDesignService to set
-     */
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
     }
 
     /**
@@ -110,24 +92,10 @@ public class MainMenuController extends BaseFormController {
     }
 
     /**
-     * @param bioAssayService the bioAssayService to set
-     */
-    public void setBioAssayService( BioAssayService bioAssayService ) {
-        this.bioAssayService = bioAssayService;
-    }
-
-    /**
      * @return the expressionExperimentService
      */
     public ExpressionExperimentService getExpressionExperimentService() {
         return expressionExperimentService;
-    }
-
-    /**
-     * @param expressionExperimentService the expressionExperimentService to set
-     */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
     }
 
     @Override
@@ -138,6 +106,38 @@ public class MainMenuController extends BaseFormController {
         ModelAndView mav = new ModelAndView( getFormView() );
 
         return mav;
+    }
+
+    /**
+     * @param arrayDesignService the arrayDesignService to set
+     */
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
+
+    /**
+     * @param bioAssayService the bioAssayService to set
+     */
+    public void setBioAssayService( BioAssayService bioAssayService ) {
+        this.bioAssayService = bioAssayService;
+    }
+
+    /**
+     * @param expressionExperimentService the expressionExperimentService to set
+     */
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    /**
+     * @param taxonService the taxonService to set
+     */
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
+    }
+
+    public void setWhatsNewService( WhatsNewService whatsNewService ) {
+        this.whatsNewService = whatsNewService;
     }
 
     /**
@@ -153,53 +153,10 @@ public class MainMenuController extends BaseFormController {
         return csc;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.mvc.SimpleFormController#showForm(javax.servlet.http.HttpServletRequest,
-     *      javax.servlet.http.HttpServletResponse, org.springframework.validation.BindException)
-     */
-    @SuppressWarnings("unchecked")
     @Override
-    protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors )
-            throws Exception {
-        ModelAndView mav = super.showForm( request, response, errors );
-
-        Map<String, Long> stats = new HashMap<String, Long>();
-        long bioAssayCount = bioAssayService.countAll();
-        stats.put( "bioAssayCount", bioAssayCount );
-        long arrayDesignCount = arrayDesignService.countAll();
-        stats.put( "arrayDesignCount", arrayDesignCount );
-        Map<String, Long> taxonCount = expressionExperimentService.getPerTaxonCount();
-        long expressionExperimentCount = 0;
-        Collection<Long> values = taxonCount.values();
-        for ( Long count : values ) {
-            expressionExperimentCount += count;
-        }
-        mav.addObject( "stats", stats );
-        mav.addObject( "taxonCount", taxonCount );
-        mav.addObject( "expressionExperimentCount", expressionExperimentCount );
-
-        WhatsNew wn = getWhatsNewReport();
-        if ( wn != null && wn.getDate() != null ) {
-            mav.addObject( "whatsNew", wn );
-        }
-        mav.addObject( "timeSpan", "In the past day" );
-
-        // load taxon from cookie (if it exists)
-        Taxon previousTaxon = loadTaxonFromCookie( request );
-        if ( previousTaxon != null ) mav.addObject( "previousTaxonName", previousTaxon.getScientificName() );
-
-        // load stringency from cookie (if it exists)
-        Long previousStringency = loadStringencyFromCookie( request );
-        if ( previousStringency != null ) mav.addObject( "previousStringency", previousStringency );
-
-        return mav;
-    }
-
-    private WhatsNew getWhatsNewReport() {
-        WhatsNew wn = whatsNewService.retrieveReport();
-        return wn;
+    protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
+        super.initBinder( request, binder );
+        binder.registerCustomEditor( Taxon.class, new TaxonPropertyEditor( this.taxonService ) );
     }
 
     /**
@@ -217,30 +174,95 @@ public class MainMenuController extends BaseFormController {
         return mapping;
     }
 
-    /**
-     * @param mapping
+    /*
+     * This is the main method to display the home page.
+     * 
+     * @see org.springframework.web.servlet.mvc.SimpleFormController#showForm(javax.servlet.http.HttpServletRequest,
+     *      javax.servlet.http.HttpServletResponse, org.springframework.validation.BindException)
      */
-    @SuppressWarnings("unchecked")
-    private void populateTaxonReferenceData( Map mapping ) {
-        List<Taxon> taxa = new ArrayList<Taxon>();
-        for ( Taxon taxon : ( Collection<Taxon> ) taxonService.loadAll() ) {
-            if ( !SupportedTaxa.contains( taxon ) ) {
-                continue;
-            }
-            taxa.add( taxon );
+    @Override
+    protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors )
+            throws Exception {
+        StopWatch timer = new StopWatch();
+        timer.start();
+        ModelAndView mav = super.showForm( request, response, errors );
+        Map<String, Long> stats = new HashMap<String, Long>();
+
+        long bioAssayCount = bioAssayService.countAll();
+        stats.put( "bioAssayCount", bioAssayCount );
+
+        long arrayDesignCount = arrayDesignService.countAll();
+        stats.put( "arrayDesignCount", arrayDesignCount );
+
+        getTaxonEECounts( mav, stats );
+
+        WhatsNew wn = getWhatsNewReport();
+        if ( wn != null && wn.getDate() != null ) {
+            mav.addObject( "whatsNew", wn );
         }
-        Collections.sort( taxa, new Comparator<Taxon>() {
-            public int compare( Taxon o1, Taxon o2 ) {
-                return ( o1 ).getScientificName().compareTo( ( o2 ).getScientificName() );
-            }
-        } );
-        mapping.put( "taxa", taxa );
+
+        // load taxon from cookie (if it exists)
+        Taxon previousTaxon = loadTaxonFromCookie( request );
+        if ( previousTaxon != null ) mav.addObject( "previousTaxonName", previousTaxon.getScientificName() );
+
+        // load stringency from cookie (if it exists)
+        Long previousStringency = loadStringencyFromCookie( request );
+        if ( previousStringency != null ) mav.addObject( "previousStringency", previousStringency );
+
+        // I like to time things.F
+        timer.stop();
+        log.info( "Home page processing: " + timer.getTime() + "ms" );
+        return mav;
     }
 
-    @Override
-    protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
-        super.initBinder( request, binder );
-        binder.registerCustomEditor( Taxon.class, new TaxonPropertyEditor( this.taxonService ) );
+    /**
+     * @param mav
+     * @param stats
+     */
+    @SuppressWarnings("unchecked")
+    private void getTaxonEECounts( ModelAndView mav, Map<String, Long> stats ) {
+        Map<String, Long> taxonCount = expressionExperimentService.getPerTaxonCount();
+        long expressionExperimentCount = 0;
+        Collection<Long> values = taxonCount.values();
+        for ( Long count : values ) {
+            expressionExperimentCount += count;
+        }
+        mav.addObject( "stats", stats );
+        mav.addObject( "taxonCount", taxonCount );
+        mav.addObject( "expressionExperimentCount", expressionExperimentCount );
+    }
+
+    /**
+     * @return
+     */
+    private WhatsNew getWhatsNewReport() {
+        WhatsNew wn = whatsNewService.retrieveReport();
+        return wn;
+    }
+
+    /**
+     * @param request
+     * @param csc
+     */
+    private Long loadStringencyFromCookie( HttpServletRequest request ) {
+
+        // cookies aren't all that important, if they're missing we just go on.
+        if ( request == null || request.getCookies() == null ) return null;
+
+        Long stringency = new Long( 3 );
+
+        for ( Cookie cook : request.getCookies() ) {
+            if ( cook.getName().equals( COEXPRESSION_COOKIE_NAME ) ) {
+                try {
+                    ConfigurationCookie cookie = new ConfigurationCookie( cook );
+                    stringency = Long.parseLong( cookie.getString( "stringency" ) );
+                } catch ( Exception e ) {
+                    log.warn( "Cookie could not be loaded: " + e.getMessage() );
+                    // that's okay, we just don't get a cookie.
+                }
+            }
+        }
+        return stringency;
     }
 
     /**
@@ -269,28 +291,23 @@ public class MainMenuController extends BaseFormController {
     }
 
     /**
-     * @param request
-     * @param csc
+     * @param mapping
      */
-    private Long loadStringencyFromCookie( HttpServletRequest request ) {
-
-        // cookies aren't all that important, if they're missing we just go on.
-        if ( request == null || request.getCookies() == null ) return null;
-
-        Long stringency = new Long( 3 );
-
-        for ( Cookie cook : request.getCookies() ) {
-            if ( cook.getName().equals( COEXPRESSION_COOKIE_NAME ) ) {
-                try {
-                    ConfigurationCookie cookie = new ConfigurationCookie( cook );
-                    stringency = Long.parseLong( cookie.getString( "stringency" ) );
-                } catch ( Exception e ) {
-                    log.warn( "Cookie could not be loaded: " + e.getMessage() );
-                    // that's okay, we just don't get a cookie.
-                }
+    @SuppressWarnings("unchecked")
+    private void populateTaxonReferenceData( Map mapping ) {
+        List<Taxon> taxa = new ArrayList<Taxon>();
+        for ( Taxon taxon : ( Collection<Taxon> ) taxonService.loadAll() ) {
+            if ( !SupportedTaxa.contains( taxon ) ) {
+                continue;
             }
+            taxa.add( taxon );
         }
-        return stringency;
+        Collections.sort( taxa, new Comparator<Taxon>() {
+            public int compare( Taxon o1, Taxon o2 ) {
+                return ( o1 ).getScientificName().compareTo( ( o2 ).getScientificName() );
+            }
+        } );
+        mapping.put( "taxa", taxa );
     }
 
 }

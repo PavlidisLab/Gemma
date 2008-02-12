@@ -52,7 +52,6 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.AbstractSpringAwareCLI;
-import ubic.gemma.util.TaxonUtility;
 
 /**
  * Given a blat result set for an array design, annotate and find the 3' locations for all the really good hits. This
@@ -62,8 +61,14 @@ import ubic.gemma.util.TaxonUtility;
  * 
  * @author pavlidis
  * @version $Id$
+ * @see ArrayDesignProbeMapperCli for the tool we use day-to-day
  */
 public class ProbeMapperCli extends AbstractSpringAwareCLI {
+
+    @Override
+    public String getShortDesc() {
+        return "Not really used much any more; look at ArrayDesignProbeMapperCli";
+    }
 
     ProbeMapper probeMapper;
 

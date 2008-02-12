@@ -301,7 +301,7 @@ public class DatasetCombiner {
         assert sampleAccs.size() > 0;
 
         if ( numDatasetsOrPlatforms <= 1 || !this.doSampleMatching ) {
-            log.info( "Each bioassay will get a distinct biomaterial" );
+            log.debug( "Each bioassay will get a distinct biomaterial" );
             for ( String sample : sampleAccs ) {
                 result.addCorrespondence( sample, null );
             }
@@ -310,12 +310,12 @@ public class DatasetCombiner {
 
         String commonPrefix = StringUtil.commonPrefix( accToTitle.values() );
         if ( commonPrefix != null ) {
-            log.info( "Common prefix = " + commonPrefix );
+            log.debug( "Common prefix = " + commonPrefix );
             commonPrefix = commonPrefix.toLowerCase();
         }
         String commonSuffix = StringUtil.commonSuffix( accToTitle.values() );
         if ( commonSuffix != null ) {
-            log.info( "Common suffix = " + commonSuffix );
+            log.debug( "Common suffix = " + commonSuffix );
             commonSuffix = commonSuffix.toLowerCase();
         }
 
@@ -343,13 +343,13 @@ public class DatasetCombiner {
             sortDataSets( sampleAccs, valuesToUse );
             accToDatasetOrPlatform = accToDataset;
             result.setAccToDatasetOrPlatformMap( accToDataset );
-            log.info( dataSets.size() + " datasets" );
+            log.debug( dataSets.size() + " datasets" );
         } else {
             valuesToUse = platforms;
             sortPlatforms( sampleAccs, valuesToUse );
             accToDatasetOrPlatform = accToPlatform;
             result.setAccToDatasetOrPlatformMap( accToPlatform );
-            log.info( platforms.size() + " platforms" );
+            log.debug( platforms.size() + " platforms" );
         }
 
         // we start with the smallest dataset/platform.

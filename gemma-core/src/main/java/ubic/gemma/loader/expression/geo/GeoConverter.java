@@ -556,7 +556,7 @@ public class GeoConverter implements Converter {
 
         for ( GeoPlatform platform : platformSamples.keySet() ) {
             List<GeoSample> samples = platformSamples.get( platform );
-            log.info( samples.size() + " samples on " + platform );
+            log.debug( samples.size() + " samples on " + platform );
             convertVectorsForPlatform( geoSeries.getValues(), expExp, samples, platform );
             geoSeries.getValues().clear( platform );
         }
@@ -621,17 +621,17 @@ public class GeoConverter implements Converter {
             int columnAccordingToSample = quantitationTypes.indexOf( quantitationType );
 
             int quantitationTypeIndex = values.getQuantitationTypeIndex( geoPlatform, quantitationType );
-            log.info( "Processing " + quantitationType + " (column=" + quantitationTypeIndex
+            log.debug( "Processing " + quantitationType + " (column=" + quantitationTypeIndex
                     + " - according to sample, it's " + columnAccordingToSample + ")" );
 
             Map<String, List<Object>> dataVectors = makeDataVectors( values, datasetSamples, quantitationTypeIndex );
 
             if ( dataVectors == null ) {
-                // log.info( "No data for " + quantitationType + " (column=" + quantitationTypeIndex + ")" );
+                log.debug( "No data for " + quantitationType + " (column=" + quantitationTypeIndex + ")" );
                 continue;
             }
-            // log.info( "Got " + dataVectors.size() + " data vectors for " + quantitationType + " (column="
-            // + quantitationTypeIndex + ")" );
+            log.debug( "Got " + dataVectors.size() + " data vectors for " + quantitationType + " (column="
+                    + quantitationTypeIndex + ")" );
 
             QuantitationType qt = QuantitationType.Factory.newInstance();
             qt.setName( quantitationType );
@@ -667,16 +667,16 @@ public class GeoConverter implements Converter {
 
             if ( count > 0 ) {
                 expExp.getQuantitationTypes().add( qt );
-                if ( log.isInfoEnabled() ) {
-                    log.info( count + " Data vectors added for '" + quantitationType + "'" );
+                if ( log.isDebugEnabled() && count > 1000 ) {
+                    log.debug( count + " Data vectors added for '" + quantitationType + "'" );
                 }
             } else {
-                log.info( "No vectors were retained for " + quantitationType
+                log.debug( "No vectors were retained for " + quantitationType
                         + " -- usually this is due to all values being missing." );
             }
 
         }
-        log.info( "Total of " + expExp.getDesignElementDataVectors().size() + " vectors so far..."
+        log.info( "Total of " + expExp.getDesignElementDataVectors().size() + " vectors on platform " + geoPlatform
                 + expExp.getQuantitationTypes().size() + " quantitation types." );
     }
 
@@ -773,7 +773,7 @@ public class GeoConverter implements Converter {
                 log.warn( "No bioassay match for " + sampleAcc );
             }
         }
-        log.info( resultBioAssayDimension.getBioAssays().size() + " Bioassays in biodimension" );
+        log.debug( resultBioAssayDimension.getBioAssays().size() + " Bioassays in biodimension" );
         resultBioAssayDimension.setName( formatName( bioAssayDimName ) );
         resultBioAssayDimension.setDescription( bioAssayDimName.toString() );
         return resultBioAssayDimension;
@@ -1321,7 +1321,7 @@ public class GeoConverter implements Converter {
         Map<String, Collection<GeoData>> organismDatasetMap = getOrganismDatasetMap( series );
 
         if ( organismDatasetMap.size() > 1 ) {
-            log.warn( "**** Multiple-species dataset! ****" );
+            log.warn( "**** Multiple-species dataset! This data set will be split into one data set per species. ****" );
             int i = 1;
             for ( String organism : organismDatasetMap.keySet() ) {
                 convertSpeciesSpecific( series, converted, organismDatasetMap, i, organism );
@@ -1979,8 +1979,8 @@ public class GeoConverter implements Converter {
         int index = 0;
         for ( String string : columnNames ) {
             if ( GeoConstants.likelyProbeDescription( string ) ) {
-                log.info( string + " appears to indicate the  probe descriptions in column " + index + " for platform "
-                        + platform );
+                log.debug( string + " appears to indicate the  probe descriptions in column " + index
+                        + " for platform " + platform );
                 return string;
             }
             index++;
@@ -1998,8 +1998,8 @@ public class GeoConverter implements Converter {
         int index = 0;
         for ( String string : columnNames ) {
             if ( GeoConstants.likelySequence( string ) ) {
-                log.info( string + " appears to indicate the  probe descriptions in column " + index + " for platform "
-                        + platform );
+                log.debug( string + " appears to indicate the  probe descriptions in column " + index
+                        + " for platform " + platform );
                 return string;
             }
             index++;

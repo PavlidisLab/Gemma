@@ -18,20 +18,19 @@
  */
 package ubic.gemma.util;
 
-import org.apache.commons.lang.StringEscapeUtils;
-
 /**
  * Used to generate hyperlinks to various things in Gemma.\
  * 
  * @author luke
+ * @version $Id$
  */
 public class GemmaLinkUtils {
-    
+
     public static String getLink( String url, String link, String hover ) {
         StringBuffer buf = new StringBuffer();
         buf.append( "<a href=\"" );
         buf.append( url );
-        buf.append( "\"");
+        buf.append( "\"" );
         if ( hover != null ) {
             buf.append( " class=\"tooltip\"" );
         }
@@ -45,35 +44,36 @@ public class GemmaLinkUtils {
         buf.append( "</a>" );
         return buf.toString();
     }
-    
+
     public static String getExpressionExperimentUrl( long eeId ) {
         return String.format( "/Gemma/expressionExperiment/showExpressionExperiment.html?id=%d", eeId );
     }
-    
+
     public static String getExpressionExperimentLink( Long eeId, String link ) {
         return getExpressionExperimentLink( eeId, link, null );
     }
-    
+
     public static String getExpressionExperimentLink( Long eeId, String link, String hover ) {
         return getLink( getExpressionExperimentUrl( eeId ), link, hover );
     }
-    
+
     public static String getExperimentalDesignLink( Long edId, String link ) {
         return getExperimentalDesignLink( edId, link, null );
     }
-    
+
     public static String getExperimentalDesignLink( Long edId, String link, String hover ) {
-        return getLink( String.format( "/Gemma/expressionExperiment/showExperimnetalDesign.html?id=%d", edId ), link, hover );
+        return getLink( String.format( "/Gemma/expressionExperiment/showExperimnetalDesign.html?id=%d", edId ), link,
+                hover );
     }
-    
+
     public static String getArrayDesignLink( Long adId, String link ) {
         return getArrayDesignLink( adId, link, null );
     }
-    
+
     public static String getArrayDesignLink( Long adId, String link, String hover ) {
         return getLink( String.format( "Gemma/arrays/showArrayDesign.html?id=%d", adId ), link, hover );
     }
-    
+
     public static String getBioMaterialLink( Long bmId, String link ) {
         return getBioMaterialLink( bmId, link, null );
     }

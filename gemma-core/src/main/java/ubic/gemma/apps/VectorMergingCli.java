@@ -22,18 +22,35 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.analysis.preprocess.VectorMergingService;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
+ * For experiments that used multiple array designs, merge the expression profiles
+ * 
  * @author pavlidis
  * @version $Id$
  */
 public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
 
-    DesignElementDataVectorService vectorService;
+    /**
+     * @param args
+     */
+    public static void main( String[] args ) {
+        VectorMergingCli v = new VectorMergingCli();
+        Exception e = v.doWork( args );
+        if ( e != null ) {
+            log.fatal( e );
+        }
+    }
 
-    Long dimId = null;
+    private Long dimId = null;
+
+    private VectorMergingService mergingService;
+
+    @Override
+    public String getShortDesc() {
+        return "For experiments that used multiple array designs, merge the expression profiles";
+    }
 
     @SuppressWarnings("static-access")
     @Override
@@ -55,33 +72,15 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
             return e;
         }
 
-        ExpressionExperiment expressionExperiment = locateExpressionExperiment( this.getExperimentShortName() );
-        eeService.thawLite( expressionExperiment );
+        mergingService = ( VectorMergingService ) this.getBean( "vectorMergingService" );
 
-        vectorService = ( DesignElementDataVectorService ) this.getBean( "designElementDataVectorService" );
-
-        VectorMergingService mergingService = ( VectorMergingService ) this.getBean( "vectorMergingService" );
-
-        if ( this.dimId != null ) {
-            mergingService.mergeVectors( expressionExperiment, dimId );
-        } else {
-            mergingService.mergeVectors( expressionExperiment );
+        for ( ExpressionExperiment ee : expressionExperiments ) {
+            processExperiment( ee );
         }
 
-        log.info( "Finished processing " + expressionExperiment );
-
+        summarizeProcessing();
         return null;
-    }
 
-    /**
-     * @param args
-     */
-    public static void main( String[] args ) {
-        VectorMergingCli v = new VectorMergingCli();
-        Exception e = v.doWork( args );
-        if ( e != null ) {
-            log.fatal( e );
-        }
     }
 
     @Override
@@ -92,8 +91,17 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
         }
     }
 
-    @Override
-    public String getShortDesc() {
-        return "For experiments that used multiple array designs, merge the expression profiles";
+    /**
+     * @param expressionExperiment
+     */
+    private void processExperiment( ExpressionExperiment expressionExperiment ) {
+        eeService.thawLite( expressionExperiment );
+        if ( this.dimId != null ) {
+            mergingService.mergeVectors( expressionExperiment, dimId );
+        } else {
+            mergingService.mergeVectors( expressionExperiment );
+        }
+
+        log.info( "Finished processing " + expressionExperiment );
     }
 }

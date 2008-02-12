@@ -96,108 +96,31 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         this.expressionExperimentReportService = ( ExpressionExperimentReportService ) this
                 .getBean( "expressionExperimentReportService" );
 
-        if ( this.getExperimentShortName() == null ) {
-            /* no experiments from the command line */
-            if ( this.experimentListFile == null ) {
-                /* no file, so run on all experiments */
-                Collection<ExpressionExperiment> all = eeService.loadAll();
-                log.info( "Total ExpressionExperiment: " + all.size() );
-                for ( ExpressionExperiment ee : all ) {
-                    eeService.thaw( ee );
-                    if ( !needToRun( ee, DifferentialExpressionAnalysisEvent.class ) ) {
-                        continue;
-                    }
-
-                    this.delete( ee );
-
-                    try {
-                        Collection<DifferentialExpressionAnalysis> expressionAnalyses = this.differentialExpressionAnalyzerService
-                                .getDifferentialExpressionAnalyses( ee, forceAnalysis );
-
-                        logProcessing( expressionAnalyses );
-
-                        successObjects.add( ee.toString() );
-
-                        audit( ee, "Part of run on all EEs", DifferentialExpressionAnalysisEvent.Factory.newInstance() );
-                    } catch ( Exception e ) {
-                        errorObjects.add( ee + ": " + e.getMessage() );
-                        continue;
-                    }
-                }
-            } else {
-                /* read short names from specified experiment list file */
-                try {
-                    InputStream is = new FileInputStream( this.experimentListFile );
-                    BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-                    String shortName = null;
-                    while ( ( shortName = br.readLine() ) != null ) {
-                        if ( StringUtils.isBlank( shortName ) ) continue;
-                        ExpressionExperiment expressionExperiment = eeService.findByShortName( shortName );
-
-                        if ( expressionExperiment == null ) {
-                            errorObjects.add( shortName + " is not found in the database! " );
-                            continue;
-                        }
-
-                        eeService.thaw( expressionExperiment );
-
-                        if ( !needToRun( expressionExperiment, DifferentialExpressionAnalysisEvent.class ) ) {
-                            continue;
-                        }
-
-                        this.delete( expressionExperiment );
-
-                        try {
-                            Collection<DifferentialExpressionAnalysis> expressionAnalyses = this.differentialExpressionAnalyzerService
-                                    .getDifferentialExpressionAnalyses( expressionExperiment, forceAnalysis );
-
-                            logProcessing( expressionAnalyses );
-                            successObjects.add( expressionExperiment.toString() );
-
-                            audit( expressionExperiment, "Differential expression run on EE " + shortName,
-                                    DifferentialExpressionAnalysisEvent.Factory.newInstance() );
-                        } catch ( Exception e ) {
-                            errorObjects.add( expressionExperiment + ": " + e.getMessage() );
-                            continue;
-                        }
-                    }
-                } catch ( Exception e ) {
-                    return e;
-                }
-            }
-        } else {
-            /* read short names from the command line */
-            String[] shortNames = this.getExperimentShortName().split( "," );
-
-            for ( String shortName : shortNames ) {
-                ExpressionExperiment expressionExperiment = locateExpressionExperiment( shortName );
-
-                if ( expressionExperiment == null ) continue;
-
-                eeService.thaw( expressionExperiment );
-
-                this.delete( expressionExperiment );
-
-                try {
-                    Collection<DifferentialExpressionAnalysis> expressionAnalyses = this.differentialExpressionAnalyzerService
-                            .getDifferentialExpressionAnalyses( expressionExperiment, forceAnalysis );
-
-                    logProcessing( expressionAnalyses );
-
-                    successObjects.add( expressionExperiment.toString() );
-
-                    audit( expressionExperiment, "Differential expression run on EE " + shortName,
-                            DifferentialExpressionAnalysisEvent.Factory.newInstance() );
-                } catch ( Exception e ) {
-                    errorObjects.add( expressionExperiment + ": " + e.getMessage() );
-                    continue;
-                }
-            }
+        for ( ExpressionExperiment ee : expressionExperiments ) {
+            processExperiment( ee );
         }
-
-        super.summarizeProcessing();
+        summarizeProcessing();
 
         return null;
+    }
+
+    /**
+     * @param ee
+     */
+    private void processExperiment( ExpressionExperiment ee ) {
+        try {
+            this.deleteExistingAnalysis( ee );
+            Collection<DifferentialExpressionAnalysis> expressionAnalyses = this.differentialExpressionAnalyzerService
+                    .getDifferentialExpressionAnalyses( ee, forceAnalysis );
+
+            logProcessing( expressionAnalyses );
+
+            successObjects.add( ee.toString() );
+
+            audit( ee, "", DifferentialExpressionAnalysisEvent.Factory.newInstance() );
+        } catch ( Exception e ) {
+            errorObjects.add( ee + ": " + e.getMessage() );
+        }
     }
 
     /*
@@ -287,7 +210,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     /**
      * @param expressionExperiment
      */
-    private void delete( ExpressionExperiment expressionExperiment ) {
+    private void deleteExistingAnalysis( ExpressionExperiment expressionExperiment ) {
         differentialExpressionAnalyzerService.delete( expressionExperiment );
     }
 

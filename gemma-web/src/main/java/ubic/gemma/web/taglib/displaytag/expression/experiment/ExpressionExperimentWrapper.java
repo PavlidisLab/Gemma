@@ -237,15 +237,6 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         String style = "";
         if ( dateObject != null ) {
             boolean mostRecent = determineIfMostRecent( dateObject, object );
-
-            // AuditEventType type = object.getDifferentialAnalysisEventType();
-            // if ( type instanceof FailedDifferentialAnalysisEvent ) {
-            // style = "style=\"color:#F33;\" title='There was an error during analysis'";
-            // } else if ( type instanceof TooSmallDatasetLinkAnalysisEvent ) {
-            // style = "style=\"font-style:italic;\" title='This dataset may be too small to analyze'";
-            // return "<span " + style + "'>small</span>";
-            // }
-
             String fullDate = dateObject.toString();
             String shortDate = StringUtils.left( fullDate, 10 );
             shortDate = formatIfRecent( mostRecent, shortDate );
@@ -324,7 +315,8 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         long count = object.getBioAssayCount();
 
-        return count + " <a href=\"/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id="
+        return count
+                + " <a title=\"Bioassay details\" href=\"/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id="
                 + object.getId() + "\">" + "<img src=\"/Gemma/images/magnifier.png\" height=10 width=10/></a>";
     }
 
@@ -403,31 +395,6 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         if ( object != null ) {
             return GemmaLinkUtils.getExpressionExperimentLink( object.getId(), StringUtils.abbreviate(
                     object.getName(), 75 ), object.getName() );
-            // // return "<a title=\"" + object.getName()
-            // // + "\" href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + object.getId()
-            // // + "\">" + StringUtils.abbreviate( object.getName(), 75 ) + "</a>";
-            // StringBuffer buf = new StringBuffer();
-            // buf.append( "<a title=\"" );
-            // buf.append( object.getName() );
-            // buf.append( "\" href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id=" );
-            // buf.append( object.getId() );
-            // buf.append( "\">" );
-            // buf.append( StringUtils.abbreviate( object.getName(), 75 ) );
-            // buf.append( "</a>" );
-            // // if ( object.getTroubleFlag() != null ) {
-            // // buf.append( "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt='trouble'
-            // // title='" );
-            // // buf.append( StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getTroubleFlag() ) ) );
-            // // buf.append( "' />" );
-            // // }
-            // // if ( object.getValidatedFlag() != null ) {
-            // // buf.append( "&nbsp;<img src='/Gemma/images/icons/ok.png' height='16' width='16' alt='validated'
-            // title='"
-            // // );
-            // // buf.append( StringEscapeUtils.escapeHtml( ToStringUtil.toString( object.getValidatedFlag() ) ) );
-            // // buf.append( "' />" );
-            // // }
-            // return buf.toString();
         }
         return "No design";
     }

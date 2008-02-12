@@ -39,6 +39,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
 
     ArrayDesignService arrayDesignService;
     String arrayDesignName = null;
+    ExpressionExperimentPlatformSwitchService serv;
 
     @Override
     protected Exception doWork( String[] args ) {
@@ -48,15 +49,28 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
             return exp;
         }
 
-        ExpressionExperimentPlatformSwitchService serv = ( ExpressionExperimentPlatformSwitchService ) this
-                .getBean( "expressionExperimentPlatformSwitchService" );
+        serv = ( ExpressionExperimentPlatformSwitchService ) this.getBean( "expressionExperimentPlatformSwitchService" );
 
-        ExpressionExperiment ee = this.locateExpressionExperiment( this.getExperimentShortName() );
-
-        if ( ee == null ) {
-            log.error( "Missing or unknown expression experiment" );
-            bail( ErrorCode.INVALID_OPTION );
+        for ( ExpressionExperiment ee : expressionExperiments ) {
+            processExperiment( ee );
         }
+        summarizeProcessing();
+        return null;
+
+    }
+
+    @Override
+    @SuppressWarnings("static-access")
+    protected void buildOptions() {
+        super.buildOptions();
+        Option arrayDesignOption = OptionBuilder.hasArg().withArgName( "Array design" ).withDescription(
+                "Array design name (or short name) - no need to specifiy if the platforms used by the EE are merged" )
+                .withLongOpt( "array" ).create( 'a' );
+
+        addOption( arrayDesignOption );
+    }
+
+    private void processExperiment( ExpressionExperiment ee ) {
 
         this.eeService.thawLite( ee );
 
@@ -76,19 +90,6 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
             serv.switchExperimentToMergedPlatform( ee );
             auditEventService.addUpdateEvent( ee, type, "Switched to use merged array Design " );
         }
-        log.info( "Processing done!" );
-        return null;
-    }
-
-    @Override
-    @SuppressWarnings("static-access")
-    protected void buildOptions() {
-        super.buildOptions();
-        Option arrayDesignOption = OptionBuilder.hasArg().withArgName( "Array design" ).withDescription(
-                "Array design name (or short name) - no need to specifiy if the platforms used by the EE are merged" )
-                .withLongOpt( "array" ).create( 'a' );
-
-        addOption( arrayDesignOption );
     }
 
     /**
@@ -131,7 +132,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
         }
         return arrayDesign;
     }
-    
+
     @Override
     public String getShortDesc() {
         return "Switch an experiment to a different array design (usually a merged one)";

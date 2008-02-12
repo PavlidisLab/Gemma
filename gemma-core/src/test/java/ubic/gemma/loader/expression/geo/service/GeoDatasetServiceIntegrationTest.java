@@ -37,12 +37,14 @@ import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.testing.AbstractGeoServiceTest;
 import ubic.gemma.util.ConfigUtils;
 
 /**
- * This is an integration test
+ * This is an integration test.
+ * <p>
+ * We don't recommend running this frequently, as it is slow. It can also fail due to database-state issues having
+ * nothing to do with the test itself.
  * 
  * @author pavlidis
  * @version $Id$
