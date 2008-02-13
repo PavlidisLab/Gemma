@@ -226,6 +226,11 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
         }
 
         if ( expressionExperiments != null && expressionExperiments.size() > 0 && !force ) {
+
+            for ( ExpressionExperiment ee : expressionExperiments ) {
+                eeService.thawLite( ee );
+            }
+
             removeTroubledEes( expressionExperiments );
         }
 
