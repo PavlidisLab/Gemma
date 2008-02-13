@@ -66,6 +66,8 @@ public class ConfigUtils {
 
         // the order matters - first come, first serve.
 
+        
+        
         try {
             config.addConfiguration( new PropertiesConfiguration( USER_CONFIGURATION ) );
         } catch ( ConfigurationException e ) {
@@ -96,6 +98,18 @@ public class ConfigUtils {
         } catch ( ConfigurationException e ) {
             // that's okay too.
             log.warn( "version.properties not found" );
+        }
+        
+        // step through the result and do a final round of variable substitution
+        for ( Iterator<String> it = config.getKeys() ; it.hasNext(); ) {
+            String key = it.next();
+            String property = config.getString( key );
+            if ( property != null && property.startsWith( "${" ) && property.endsWith( "}" ) ) {
+                String keyToSubstitute = property.substring( 2, property.length() - 1 );
+                String valueToSubstitute = config.getString( keyToSubstitute );
+                log.debug( key + "=" + property + " -> " + valueToSubstitute );
+                config.setProperty( key, valueToSubstitute );
+            }
         }
 
         if ( log.isDebugEnabled() ) {
