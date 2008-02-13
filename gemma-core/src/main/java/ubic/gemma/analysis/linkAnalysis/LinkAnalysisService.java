@@ -114,7 +114,7 @@ public class LinkAnalysisService {
 
         log.info( "Fetching expression data ... " + ee );
         eeService.thawLite( ee );
-        Collection<DesignElementDataVector> dataVectors = analysisHelperService.getVectors( ee );
+        Collection<DesignElementDataVector> dataVectors = analysisHelperService.getPreferredAndMissingValueVectors( ee );
 
         checkVectors( ee, dataVectors );
 

@@ -18,7 +18,7 @@
  */
 package ubic.gemma.analysis.service;
 
-import java.util.Collection; 
+import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -79,7 +79,7 @@ public class AnalysisHelperService {
      */
     @SuppressWarnings("unchecked")
     public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig ) {
-        Collection<DesignElementDataVector> dataVectors = this.getVectors( ee );
+        Collection<DesignElementDataVector> dataVectors = this.getUsefulVectors( ee );
         ExpressionExperimentFilter filter = new ExpressionExperimentFilter( ee, expressionExperimentService
                 .getArrayDesignsUsed( ee ), filterConfig );
         ExpressionDataDoubleMatrix eeDoubleMatrix = filter.getFilteredMatrix( dataVectors );
@@ -116,10 +116,38 @@ public class AnalysisHelperService {
 
     /**
      * @param ee
-     * @return
+     * @return matrix of preferred data, with all missing values masked.
+     */
+    public ExpressionDataDoubleMatrix getMaskedPreferredDataMatrix( ExpressionExperiment ee ) {
+        Collection<DesignElementDataVector> dataVectors = getPreferredAndMissingValueVectors( ee );
+        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( dataVectors );
+        return builder.getMaskedPreferredData( null );
+    }
+
+    /**
+     * @param ee
+     * @return all data vectors that are "preferred" or "absent/present" types for the given ee.
      */
     @SuppressWarnings("unchecked")
-    public Collection<DesignElementDataVector> getVectors( ExpressionExperiment ee ) {
+    public Collection<DesignElementDataVector> getPreferredAndMissingValueVectors( ExpressionExperiment ee ) {
+        Collection<QuantitationType> qts = ExpressionDataMatrixBuilder.getPreferredQuantitationTypes( ee );
+        qts.addAll( ExpressionDataMatrixBuilder.getMissingValueQuantitationTypes( ee ) );
+        Collection<DesignElementDataVector> dataVectors = expressionExperimentService.getDesignElementDataVectors( qts );
+        vectorService.thaw( dataVectors );
+        return dataVectors;
+    }
+
+    /**
+     * If you are preprocessing a data set, you might want to use this (e.g., computing missing values). If you are
+     * analyzing a data set (links, etc), you should use getPreferredAndMissingValueVectors.
+     * 
+     * @param ee
+     * @return vectors for the experiment that are needed for analysis, in general. This includes background and raw
+     *         channel data needed to compute missing values.
+     * @see getPreferredAndMissingValueVectors
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<DesignElementDataVector> getUsefulVectors( ExpressionExperiment ee ) {
 
         checkForMixedTechnologies( ee );
         Collection<QuantitationType> qts = ExpressionDataMatrixBuilder.getUsefulQuantitationTypes( ee );

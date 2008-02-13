@@ -472,7 +472,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
         analysisHelperService = ( AnalysisHelperService ) control.getMock();
 
-        analysisHelperService.getVectors( expressionExperiment );
+        analysisHelperService.getUsefulVectors( expressionExperiment );
 
         Collection<DesignElementDataVector> vectorsToReturn = expressionExperiment.getDesignElementDataVectors();
         control.setReturnValue( vectorsToReturn, numMethodCalls );

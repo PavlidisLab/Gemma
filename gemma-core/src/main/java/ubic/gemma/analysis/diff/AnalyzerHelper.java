@@ -77,7 +77,7 @@ public class AnalyzerHelper {
      */
     protected boolean checkBlockDesign( ExpressionExperiment expressionExperiment ) {
 
-        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
+        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getUsefulVectors( expressionExperiment );
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
         ExpressionDataDoubleMatrix matrix = builder.getMaskedPreferredData( null );
 
@@ -136,7 +136,7 @@ public class AnalyzerHelper {
      */
     protected boolean checkBiologicalReplicates( ExpressionExperiment expressionExperiment ) {
 
-        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( expressionExperiment );
+        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getUsefulVectors( expressionExperiment );
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
         ExpressionDataDoubleMatrix matrix = builder.getMaskedPreferredData( null );
 

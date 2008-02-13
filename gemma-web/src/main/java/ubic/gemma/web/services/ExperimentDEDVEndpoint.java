@@ -19,8 +19,6 @@
 
 package ubic.gemma.web.services;
 
-import java.util.Collection;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -30,31 +28,30 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 /**
+ * TODO DOCUMENT ME
  * 
  * @author klc
- * 
+ * @version $Id$
  */
-
 public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
 
 	private static Log log = LogFactory.getLog(ExperimentDEDVEndpoint.class);
 
 	private ExpressionExperimentService expressionExperimentService;
+
 	private AnalysisHelperService analysisHelperService;
 
 	/**
 	 * The local name of the expected request/response.
 	 */
 	private static final String EXPERIMENT_LOCAL_NAME = "experimentDEDV";
+
 	private static final String DELIMITER = " ";
 
 	/**
@@ -63,8 +60,9 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
 	public void setExpressionExperimentService(ExpressionExperimentService ees) {
 		this.expressionExperimentService = ees;
 	}
-	
-	public void setAnalysisHelperService(AnalysisHelperService analysisHelperService){
+
+	public void setAnalysisHelperService(
+			AnalysisHelperService analysisHelperService) {
 		this.analysisHelperService = analysisHelperService;
 	}
 
@@ -119,12 +117,11 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
 					"Could not find request text node");
 		}
 
-		//Build the matrix
-		ExpressionExperiment ee = expressionExperimentService.load(Long.parseLong(nodeValue));	
-		Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getVectors( ee );
-	    QuantitationType quantitationType = vectorsToUse.iterator().next().getQuantitationType();
-	    ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
-	    ExpressionDataDoubleMatrix dmatrix = builder.getPreferredData();
+		// Build the matrix
+		ExpressionExperiment ee = expressionExperimentService.load(Long
+				.parseLong(nodeValue));
+		ExpressionDataDoubleMatrix dmatrix = analysisHelperService
+				.getMaskedPreferredDataMatrix(ee);
 
 		Element responseWrapper = document.createElementNS(NAMESPACE_URI,
 				EXPERIMENT_LOCAL_NAME);
@@ -132,40 +129,41 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
 				EXPERIMENT_LOCAL_NAME + RESPONSE);
 		responseWrapper.appendChild(responseElement);
 
-
 		if (ee == null)
-					responseElement.appendChild(document.createTextNode("No expression experiment with id: " + nodeValue));
+			responseElement.appendChild(document
+					.createTextNode("No expression experiment with id: "
+							+ nodeValue));
 		else {
-			
+
 			for (int rowNum = 0; rowNum < dmatrix.rows(); rowNum++) {
 				Element e = document.createElement("rowData");
-				e.appendChild(document.createTextNode(encode(dmatrix.getRow(rowNum))));
+				e.appendChild(document.createTextNode(encode(dmatrix
+						.getRow(rowNum))));
 				responseElement.appendChild(e);
 
-				}
-				
 			}
-			
+
+		}
+
 		log.info("Finished generating matrix. Sending response to client.");
 		return responseWrapper;
 	}
-	
-	
+
 	/**
 	 * @param data
-	 * @return a string delimited representation of the double array passed in. 
+	 * @return a string delimited representation of the double array passed in.
 	 */
-	private String encode(Double[] data){
-		
+	private String encode(Double[] data) {
+
 		StringBuffer result = new StringBuffer();
-		
+
 		for (int i = 0; i < data.length; i++) {
 			if (i == 0)
 				result.append(data[i]);
-			else 
+			else
 				result.append(DELIMITER + data[i]);
 		}
-		
+
 		return result.toString();
 	}
 
