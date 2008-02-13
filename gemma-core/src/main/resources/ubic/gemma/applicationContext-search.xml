@@ -232,6 +232,8 @@
 				</prop>
 				<prop key="compass.engine.indexManagerScheduleInterval"> -1
 				</prop>
+				<prop key="compass.engine.mergeFactor">50</prop>
+				<prop key="compass.engine.maxBufferedDocs">50</prop>
 			</props>
 		</property>
 		<property name="transactionManager">
@@ -266,8 +268,8 @@
 				</prop>
 				<prop key="compass.engine.indexManagerScheduleInterval">-1
 				</prop>
-				<prop key="compass.engine.mergeFactor">1000</prop>
-				<prop key="compass.engine.maxBufferedDocs">1000</prop>
+				<prop key="compass.engine.mergeFactor">500</prop>
+				<prop key="compass.engine.maxBufferedDocs">100</prop>
 				
 			</props>
 		</property>
@@ -339,7 +341,7 @@
 				<prop key="compass.engine.indexManagerScheduleInterval">-1
 				</prop>
 				<prop key="compass.engine.mergeFactor">500</prop>
-				<prop key="compass.engine.maxBufferedDocs">500</prop>
+				<prop key="compass.engine.maxBufferedDocs">100</prop>
 				
 			</props>
 		</property>
@@ -375,7 +377,7 @@
 				<prop key="compass.engine.indexManagerScheduleInterval">-1
 				</prop>
 				<prop key="compass.engine.mergeFactor">500</prop>
-				<prop key="compass.engine.maxBufferedDocs">500</prop>
+				<prop key="compass.engine.maxBufferedDocs">100</prop>
 				
 			</props>
 		</property>
