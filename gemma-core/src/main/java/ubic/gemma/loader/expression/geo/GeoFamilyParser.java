@@ -472,9 +472,8 @@ public class GeoFamilyParser implements Parser {
 
         timer.stop();
         if ( timer.getTime() > 10000 ) { // 10 s
-            log
-                    .info( "Parsed total of " + parsedLines + " lines in "
-                            + String.format( "%.2fs", timer.getTime() / 1000 ) );
+            log.info( "Parsed total of " + parsedLines + " lines in "
+                    + String.format( "%.2gs", timer.getTime() / 1000.0 ) );
         }
         log.debug( this.platformLines + " platform  lines" );
         log.debug( this.seriesDataLines + " series data lines" );
