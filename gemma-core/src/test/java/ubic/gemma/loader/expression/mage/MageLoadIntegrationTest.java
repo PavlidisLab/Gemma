@@ -64,11 +64,12 @@ public class MageLoadIntegrationTest extends AbstractMageTest {
     @Override
     protected void onTearDownInTransaction() throws Exception {
         super.onTearDownInTransaction();
+        ExpressionExperimentService service = ( ExpressionExperimentService ) this
+                .getBean( "expressionExperimentService" );
         if ( ee != null && ee.getId() != null ) {
-            ExpressionExperimentService service = ( ExpressionExperimentService ) this
-                    .getBean( "expressionExperimentService" );
             service.delete( ee );
         }
+
     }
 
     /**
@@ -76,53 +77,7 @@ public class MageLoadIntegrationTest extends AbstractMageTest {
      * 
      * @throws Exception
      */
-    public void testCreateCollectionRealA() throws Exception {
-        log.info( "Parsing MAGE from ArrayExpress (AFMX)" );
-
-        MageMLParser mlp = new MageMLParser();
-
-        xslSetup( mlp, MAGE_DATA_RESOURCE_PATH + "E-AFMX-13/E-AFMX-13.xml" );
-
-        mageMLConverter.addLocalExternalDataPath( ConfigUtils.getString( "gemma.home" ) + File.separatorChar
-                + "gemma-core/src/test/resources" + MAGE_DATA_RESOURCE_PATH + "E-AFMX-13" );
-
-        InputStream istMageExamples = MageMLParserTest.class.getResourceAsStream( MAGE_DATA_RESOURCE_PATH
-                + "E-AFMX-13/E-AFMX-13.xml" );
-        mlp.parse( istMageExamples );
-        Collection<Object> parseResult = mlp.getResults();
-        // getMageMLConverter().setSimplifiedXml( mlp.getSimplifiedXml() );
-        Collection<Object> result = getMageMLConverter().convert( parseResult );
-
-        log.info( result.size() + " Objects parsed from the MAGE file." );
-        if ( log.isDebugEnabled() ) log.debug( "Tally:\n" + mlp );
-        istMageExamples.close();
-
-        for ( Object object : result ) {
-            if ( object instanceof ExpressionExperiment ) {
-                ee = ( ExpressionExperiment ) object;
-                ee.setName( RandomStringUtils.randomAlphabetic( 20 ) + "expressionExperiment" );
-                ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
-                assertNotNull( ee.getId() );
-                assertEquals( 12, ee.getBioAssays().size() );
-
-                for ( BioAssay bioAssay : ee.getBioAssays() ) {
-                    assertNotNull( bioAssay.getId() );
-                    for ( BioMaterial bioMaterial : bioAssay.getSamplesUsed() ) {
-                        assertNotNull( bioMaterial.getId() );
-                    }
-                }
-
-                break;
-            }
-        }
-    }
-
-    /**
-     * A real example of an experimental package.
-     * 
-     * @throws Exception
-     */
-    public void testCreateCollectionRealB() throws Exception {
+    public void testCreateCollectionReal() throws Exception {
         log.info( "Parsing MAGE from ArrayExpress (WMIT)" );
 
         MageMLParser mlp = new MageMLParser();

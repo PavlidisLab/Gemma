@@ -59,8 +59,8 @@ public class SimpleBackgroundSubtraction implements BackgroundAdjuster {
 
         for ( int i = 0; i < rows; i++ ) {
             for ( int j = 0; j < rows; j++ ) {
-                result.setQuick( i, j, Math
-                        .max( this.lowerLimit, signal.getQuick( i, j ) - background.getQuick( i, j ) ) );
+                result.setByKeys( i, j, Math
+                        .max( this.lowerLimit, signal.get( i, j ) - background.get( i, j ) ) );
             }
         }
         return result;

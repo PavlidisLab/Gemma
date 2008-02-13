@@ -57,7 +57,10 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
         if ( rc == null ) {
             connectToR();
         }
-        rc.loadLibrary( "qvalue" );
+        boolean hasQValue = rc.loadLibrary( "qvalue" );
+        if ( !hasQValue ) {
+            throw new IllegalStateException( "qvalue does not seem to be available" );
+        }
 
         StringBuffer qvalueCommand = new StringBuffer();
         String pvalsName = "pvals";
@@ -66,14 +69,12 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
         double[] qvalues = rc.doubleArrayEval( qvalueCommand.toString() );
 
         if ( qvalues == null ) {
-            log.error( "Null qvalues.  Check the R side." );
-            return null;
+            throw new IllegalStateException( "Null qvalues.  Check the R side." );
         }
 
         if ( qvalues.length != pvalues.length ) {
-            log.error( "Number of q values and p values must match.  Qvalues - " + qvalues.length + ": Pvalues - "
-                    + pvalues.length );
-            return null;
+            throw new IllegalStateException( "Number of q values and p values must match.  Qvalues - " + qvalues.length
+                    + ": Pvalues - " + pvalues.length );
         }
 
         return qvalues;

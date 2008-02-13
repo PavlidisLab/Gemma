@@ -79,7 +79,7 @@ public class ArrayDesignMapResultService {
      * @return
      */
     public Collection<CompositeSequenceMapSummary> summarizeMapResults( ArrayDesign arrayDesign ) {
-        arrayDesignService.thaw( arrayDesign );
+        arrayDesignService.thawLite( arrayDesign );
         return this.summarizeMapResults( arrayDesign.getCompositeSequences() );
 
     }

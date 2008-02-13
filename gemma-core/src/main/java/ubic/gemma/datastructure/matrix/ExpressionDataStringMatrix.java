@@ -38,7 +38,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author pavlidis
  * @version $Id$
  */
-public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix {
+public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String> {
 
     private static final long serialVersionUID = 1L;
 
@@ -172,7 +172,7 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix {
         // initialize the matrix to "";
         for ( int i = 0; i < matrix.rows(); i++ ) {
             for ( int j = 0; j < matrix.columns(); j++ ) {
-                matrix.setQuick( i, j, "" );
+                matrix.set( i, j, "" );
             }
         }
 
@@ -203,7 +203,7 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix {
 
                 assert column != null;
 
-                matrix.setQuick( rowIndex, column, vals[j] );
+                matrix.setByKeys( rowIndex, column, vals[j] );
             }
 
         }
@@ -220,15 +220,15 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix {
         return matrix.rows();
     }
 
-    public void set( int row, int column, Object value ) {
-        matrix.setQuick( row, column, value );
+    public void set( int row, int column, String value ) {
+        matrix.set( row, column, value );
     }
 
-    public Object get( int row, int column ) {
+    public String get( int row, int column ) {
         return matrix.get( row, column );
     }
 
-    public Object[] getRow( Integer index ) {
+    public String[] getRow( Integer index ) {
         return matrix.getRow( index );
     }
 

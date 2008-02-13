@@ -47,7 +47,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * @author keshav
  * @version $Id$
  */
-public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
+public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double> {
 
     private static final long serialVersionUID = 1L;
     private static final int MAX_ROWS_TO_STRING = 100;
@@ -196,7 +196,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
 
         Double[][] dMatrix = new Double[matrix.rows()][matrix.columns()];
         for ( int i = 0; i < matrix.rows(); i++ ) {
-            Double[] row = ( Double[] ) matrix.getRowObj( i );
+            Double[] row = matrix.getRowObj( i );
             dMatrix[i] = row;
         }
 
@@ -260,11 +260,10 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
      * @param bioAssay
      * @param value
      */
-    public void set( DesignElement designElement, BioAssay bioAssay, Object value ) {
-        assert value instanceof Double;
+    public void set( DesignElement designElement, BioAssay bioAssay, Double value ) {
         int row = this.getRowIndex( designElement );
         int column = this.getColumnIndex( bioAssay );
-        matrix.setQuick( row, column, ( ( Double ) value ).doubleValue() );
+        matrix.set( row, column, value );
     }
 
     /*
@@ -272,11 +271,11 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#set(int, int, java.lang.Object)
      */
-    public void set( int row, int column, Object value ) {
+    public void set( int row, int column, Double value ) {
         if ( value == null ) {
-            matrix.setQuick( row, column, Double.NaN );
+            matrix.set( row, column, Double.NaN );
         } else {
-            matrix.setQuick( row, column, ( ( Double ) value ).doubleValue() );
+            matrix.set( row, column, value );
         }
     }
 
@@ -382,7 +381,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         // initialize the matrix to -Infinity; this marks values that are not yet initialized.
         for ( int i = 0; i < matrix.rows(); i++ ) {
             for ( int j = 0; j < matrix.columns(); j++ ) {
-                matrix.setQuick( i, j, Double.NEGATIVE_INFINITY );
+                matrix.set( i, j, Double.NEGATIVE_INFINITY );
             }
         }
 
@@ -421,7 +420,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
                     throw new IllegalArgumentException(
                             "Whoops, negative infinity is a special value, we can't have it in the data" );
                 }
-                matrix.setQuick( rowIndex, column, vals[j] );
+                matrix.set( rowIndex, column, vals[j] );
             }
 
         }
@@ -429,9 +428,9 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix {
         // fill in remaining missing values.
         for ( int i = 0; i < matrix.rows(); i++ ) {
             for ( int j = 0; j < matrix.columns(); j++ ) {
-                if ( matrix.getQuick( i, j ) == Double.NEGATIVE_INFINITY ) {
+                if ( matrix.get( i, j ) == Double.NEGATIVE_INFINITY ) {
                     // log.debug( "Missing value at " + i + " " + j );
-                    matrix.setQuick( i, j, Double.NaN );
+                    matrix.set( i, j, Double.NaN );
                 }
             }
         }

@@ -154,13 +154,13 @@ public class SummaryStatistics extends AbstractSpringAwareCLI {
     public void genesPerProbe( Taxon taxon ) {
         ArrayDesignService adService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
         Collection<ArrayDesign> ads = adService.loadAll();
-     
+
         Map<Integer, Integer> counts = new HashMap<Integer, Integer>();
         int i = 0;
         Collection<BioSequence> seenSeqs = new HashSet<BioSequence>();
         for ( ArrayDesign design : ads ) {
             log.info( design );
-            adService.thaw( design );
+            adService.thawLite( design );
 
             for ( CompositeSequence cs : design.getCompositeSequences() ) {
 
@@ -207,7 +207,8 @@ public class SummaryStatistics extends AbstractSpringAwareCLI {
 
         Collection<ExpressionExperiment> eeColl = expressionExperimentService.loadAll();
 
-        CompressedSparseDoubleMatrix2DNamed mat = new CompressedSparseDoubleMatrix2DNamed( MAX_GENES, MAX_GENES );
+        CompressedSparseDoubleMatrix2DNamed<Long, Long> mat = new CompressedSparseDoubleMatrix2DNamed<Long, Long>(
+                MAX_GENES, MAX_GENES );
 
         int numEEs = 0;
         for ( ExpressionExperiment experiment : eeColl ) {
@@ -253,11 +254,11 @@ public class SummaryStatistics extends AbstractSpringAwareCLI {
                         if ( !mat.containsColumnName( geneBid ) ) {
                             mat.addColumnName( geneBid );
                             innerIndex = mat.getColIndexByName( geneBid );
-                            mat.setQuick( outerIndex, innerIndex, 0 ); // initialize
+                            mat.set( outerIndex, innerIndex, 0.0 ); // initialize
                         }
 
                         innerIndex = mat.getColIndexByName( geneBid );
-                        mat.setQuick( outerIndex, innerIndex, mat.getQuick( outerIndex, innerIndex ) + 1 );
+                        mat.set( outerIndex, innerIndex, mat.get( outerIndex, innerIndex ) + 1 );
 
                         if ( mat.columns() > MAX_GENES ) {
                             log.warn( "Too many genes!" );

@@ -65,6 +65,7 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
     /**
      * Tests the OneWayAnova method.
      */
+    @SuppressWarnings("unchecked")
     public void testOneWayAnova() throws Exception {
 
         if ( !connected ) {

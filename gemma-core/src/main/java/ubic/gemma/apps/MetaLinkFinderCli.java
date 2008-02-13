@@ -233,7 +233,7 @@ public class MetaLinkFinderCli extends AbstractSpringAwareCLI {
             ObjectArrayList leafNodes = new ObjectArrayList();
             // for(int i = 0; i < savedClusters.size(); i++){
             // //if(i < 3) continue;
-            // TreeNode clusterRoot = (TreeNode) savedClusters.getQuick(i);
+            // TreeNode clusterRoot = (TreeNode) savedClusters.get(i);
             // leafNodes.clear();
             // LinkGraphClustering.collectTreeNodes(leafNodes, new ObjectArrayList(), clusterRoot);
             // System.err.println("Cluster"+(i+1)+"_" + leafNodes.size() +" :");

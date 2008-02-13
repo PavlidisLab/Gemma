@@ -129,8 +129,8 @@ public class EffectSizeCalculationCli extends AbstractGeneCoexpressionManipulati
                 expressionExperiments, queryGenes, targetGenes, filterConfig, null );
         DenseDoubleMatrix3DNamed<Gene, Gene, ExpressionExperiment> correlationMatrix = matrices.getCorrelationMatrix();
         DenseDoubleMatrix3DNamed<Gene, Gene, ExpressionExperiment> sampleSizeMatrix = matrices.getSampleSizeMatrix();
-        DoubleMatrixNamed effectSizeMatrix = coexpressionAnalysisService.calculateEffectSizeMatrix( correlationMatrix,
-                sampleSizeMatrix );
+        DoubleMatrixNamed<Gene, Gene> effectSizeMatrix = coexpressionAnalysisService.calculateEffectSizeMatrix(
+                correlationMatrix, sampleSizeMatrix );
 
         // create 2D correlation heat map
         // ColorMatrix dataColorMatrix = new ColorMatrix( correlationMatrix2D );
@@ -152,13 +152,11 @@ public class EffectSizeCalculationCli extends AbstractGeneCoexpressionManipulati
             out.setColNameMap( eeNameMap );
             out.setTopLeft( topLeft );
             out.writeMatrix( correlationMatrix, true );
-            out.close();
 
             out = new MatrixWriter( outFilePrefix + ".effect_size.txt", formatter );
             out.setColNameMap( eeNameMap );
             out.setTopLeft( topLeft );
             out.writeMatrix( effectSizeMatrix, true );
-            out.close();
 
             // dataMatrixDisplay.saveImage( figureFileName, true );
             // log.info( "Saved correlation image to " + figureFileName );

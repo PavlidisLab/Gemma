@@ -123,6 +123,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
 
         // removes NA row
         double[] filteredPvalues = new double[( pvalues.length / NUM_RESULTS_FROM_R ) * ACTUAL_NUM_RESULTS];
+        if ( filteredPvalues == null ) throw new IllegalStateException( "No pvalues returned" );
 
         for ( int i = 0, j = 0; j < filteredPvalues.length; i++ ) {
             if ( i % NUM_RESULTS_FROM_R < ACTUAL_NUM_RESULTS ) {

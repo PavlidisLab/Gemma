@@ -54,7 +54,7 @@ public class MageMLConverterTest extends AbstractMageTest {
         log.info( "***** PARSING *****  " );
 
         /* invoke mageMLParser */
-        InputStream istMageExamples = MageMLPreprocessorIntegrationTest.class
+        InputStream istMageExamples = MageMLConverterTest.class
                 .getResourceAsStream( MAGE_DATA_RESOURCE_PATH + "E-MEXP-955.xml" );
 
         assert mageMLParser != null;

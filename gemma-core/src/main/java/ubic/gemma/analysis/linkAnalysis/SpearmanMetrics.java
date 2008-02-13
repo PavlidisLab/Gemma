@@ -20,6 +20,7 @@ package ubic.gemma.analysis.linkAnalysis;
 
 import java.util.Collection;
 
+import ubic.basecode.dataStructure.matrix.CompressedSparseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Rank;
@@ -64,7 +65,8 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
      */
     protected SpearmanMetrics( int size ) {
         if ( size > 0 ) {
-            results = DoubleMatrix2DNamedFactory.compressedsparse( size, size );
+            results = new CompressedSparseDoubleMatrix2DNamed<ExpressionDataMatrixRowElement, ExpressionDataMatrixRowElement>(
+                    size, size );
         }
         keepers = new ObjectArrayList();
     }
@@ -176,8 +178,8 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
                 if ( !this.hasGene( itemB ) ) continue;
 
                 // second pass over matrix? Don't calculate it if we already have it. Just do the requisite checks.
-                if ( !doCalcs || results.getQuick( i, j ) != 0.0 ) {
-                    keepCorrel( i, j, results.getQuick( i, j ), numcols );
+                if ( !doCalcs || results.get( i, j ) != 0.0 ) {
+                    keepCorrel( i, j, results.get( i, j ), numcols );
                     continue;
                 }
 
@@ -241,7 +243,7 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
             DoubleArrayList ranksIA = Rank.rankTransform( new DoubleArrayList( r ) );
             double ri[] = new double[ranksIA.size()];
             for ( int n = 0, w = ranksIA.size(); n < w; n++ ) {
-                ri[n] = ranksIA.getQuick( n );
+                ri[n] = ranksIA.get( n );
             }
 
             rankTransformedData[i] = ri;
@@ -307,10 +309,10 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
             for ( int j = i + 1; j < numrows; j++ ) {
                 itemB = this.dataMatrix.getRowElement( j );
                 if ( !this.hasGene( itemB ) ) continue;
-                if ( !docalcs || results.getQuick( i, j ) != 0.0 ) { // second pass over matrix. Don't calculate it
+                if ( !docalcs || results.get( i, j ) != 0.0 ) { // second pass over matrix. Don't calculate it
                     // if we
                     // already have it. Just do the requisite checks.
-                    keepCorrel( i, j, results.getQuick( i, j ), numcols );
+                    keepCorrel( i, j, results.get( i, j ), numcols );
                     continue;
                 }
 

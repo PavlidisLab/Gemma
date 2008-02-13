@@ -62,7 +62,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
 
     SimpleExpressionExperimentMetaData metaData = null;
 
-    DoubleMatrixNamed matrix = null;
+    DoubleMatrixNamed<String, String> matrix = null;
 
     ExpressionExperiment ee = null;
     ExpressionExperiment newee = null;
@@ -133,91 +133,10 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
 
     }
 
-    /**
-     * For bug 553. This uses three platforms.
-     * 
-     * @throws Exception
-     */
-    @SuppressWarnings("unchecked")
-    public void testMatrixConversionGSE611() throws Exception {
-        endTransaction();
-        ExpressionExperiment newee;
-
-        newee = this.expressionExperimentService.findByShortName( "GSE611" );
-        if ( newee != null ) {
-            expressionExperimentService.delete( newee );
-        }
-        String path = ConfigUtils.getString( "gemma.home" );
-        assert path != null;
-        try {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
-                    + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE611Short" ) );
-            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                    "GSE611", false, true, false );
-            newee = results.iterator().next();
-        } catch ( Exception e ) {
-            if ( e.getCause() instanceof IOException && e.getCause().getMessage().contains( "502" ) ) {
-                log.warn( "Error 502 from NCBI, skipping test" );
-                return;
-            } else if ( e.getCause() instanceof IOException && e.getCause().getMessage().contains( "503" ) ) {
-                log.warn( "Error 503 from NCBI, skipping test" );
-                return;
-            }
-            throw ( e );
-        }
-        expressionExperimentService.thaw( newee );
-        // make sure we really thaw them, so we can get the design element sequences.
-
-        Collection<DesignElementDataVector> designElementDataVectors = newee.getDesignElementDataVectors();
-        designElementDataVectorService.thaw( designElementDataVectors );
-
-        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( designElementDataVectors );
-        ExpressionDataDoubleMatrix matrix = builder.getPreferredData();
-        assertEquals( 30, matrix.rows() );
-        assertEquals( 4, matrix.columns() );
-    }
-
-    // /**
-    // * This came up as a 'problem' data set, uses about 6 platforms.
-    // *
-    // * @throws Exception
-    // */
-    // @SuppressWarnings("unchecked")
-    // public void testMatrixConversionGSE483() throws Exception {
-    // endTransaction();
-    // try {
-    // String path = ConfigUtils.getString( "gemma.home" );
-    // assert path != null;
-    // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
-    // + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE483Short" ) );
-    // Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-    // "GSE483", false, true );
-    // newee = results.iterator().next();
-    // } catch ( AlreadyExistsInSystemException e ) {
-    // newee = ( ExpressionExperiment ) e.getData();
-    // }
-    //
-    // expressionExperimentService.thaw( newee );
-    // // make sure we really thaw them, so we can get the design element sequences.
-    // designElementDataVectorService.thaw( newee.getDesignElementDataVectors() );
-    //
-    // Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( newee );
-    // QuantitationType qt = null;
-    // for ( QuantitationType qts : quantitationTypes ) {
-    // if ( qts.getIsPreferred() ) {
-    // qt = qts;
-    // break;
-    // }
-    // }
-    // assert qt != null;
-    // ExpressionDataMatrix matrix = new ExpressionDataDoubleMatrix( newee.getDesignElementDataVectors(), qt );
-    // assertEquals( 161, matrix.rows() );
-    // assertEquals( 8, matrix.columns() );
-    // }
-
     @SuppressWarnings("unchecked")
     public void testMatrixConversionGSE432() throws Exception {
         endTransaction();
+        flushAndClearSession();
         try {
             String path = ConfigUtils.getString( "gemma.home" );
             assert path != null;

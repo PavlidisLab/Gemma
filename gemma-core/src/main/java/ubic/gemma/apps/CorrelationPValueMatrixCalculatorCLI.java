@@ -60,12 +60,11 @@ public class CorrelationPValueMatrixCalculatorCLI extends ExpressionExperimentMa
 
         DoubleMatrixReader in = new DoubleMatrixReader();
         try {
-            DoubleMatrixNamed matrix = ( DoubleMatrixNamed ) in.read( inFile );
-            DoubleMatrixNamed pMatrix = coexpService.calculateMaxCorrelationPValueMatrix( matrix, 0,
+            DoubleMatrixNamed<String, String> matrix = in.read( inFile );
+            DoubleMatrixNamed<String, String> pMatrix = coexpService.calculateMaxCorrelationPValueMatrix( matrix, 0,
                     expressionExperiments );
             MatrixWriter out = new MatrixWriter( outFile, formatter );
             out.writeMatrix( pMatrix, true );
-            out.close();
         } catch ( IOException e ) {
             return e;
         }

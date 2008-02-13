@@ -23,6 +23,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -137,7 +138,7 @@ public class GoldenPath {
         log.info( "Connecting to " + databaseName );
         log.debug( "Connecting to Golden Path : " + url + " as " + user );
 
-        dataSource.setDriverClassName( ConfigUtils.getString( "gemma.goldenpath.db.driver" ) );
+        dataSource.setDriverClassName( getDriver() );
         dataSource.setUrl( url );
         dataSource.setUsername( user );
         dataSource.setPassword( password );
@@ -159,13 +160,25 @@ public class GoldenPath {
         qr = new QueryRunner();
     }
 
+    /**
+     * @return
+     */
+    private String getDriver() {
+        String driver = ConfigUtils.getString( "gemma.goldenpath.db.driver" );
+        if ( StringUtils.isBlank( driver ) ) {
+            driver = ConfigUtils.getString( "gemma.db.driver" );
+            log.warn( "No DB driver configured for GoldenPath, falling back on gemma.db.driver=" + driver );
+        }
+        return driver;
+    }
+
     private void init() throws SQLException {
         if ( taxon == null ) throw new IllegalStateException( "Taxon cannot be null" );
         String commonName = taxon.getCommonName();
         if ( commonName.equals( "mouse" ) ) {
             databaseName = ConfigUtils.getString( "gemma.goldenpath.db.mouse" ); // FIXME get these names from an
-                                                                                    // external source - e.g., the taxon
-                                                                                    // service.
+            // external source - e.g., the taxon
+            // service.
         } else if ( commonName.equals( "human" ) ) {
             databaseName = ConfigUtils.getString( "gemma.goldenpath.db.human" );
         } else if ( commonName.equals( "rat" ) ) {
@@ -175,7 +188,13 @@ public class GoldenPath {
         }
 
         String databaseHost = ConfigUtils.getString( "gemma.goldenpath.db.host" );
-        int databasePort = Integer.valueOf( ConfigUtils.getString( "gemma.goldenpath.db.port" ) );
+        int databasePort;
+        try {
+            databasePort = Integer.valueOf( ConfigUtils.getString( "gemma.goldenpath.db.port" ) );
+        } catch ( NumberFormatException e ) {
+            throw new RuntimeException( "Could not get configuration of port for goldenpath database" );
+        }
+
         String databaseUser = ConfigUtils.getString( "gemma.goldenpath.db.user" );
         String databasePassword = ConfigUtils.getString( "gemma.goldenpath.db.password" );
 

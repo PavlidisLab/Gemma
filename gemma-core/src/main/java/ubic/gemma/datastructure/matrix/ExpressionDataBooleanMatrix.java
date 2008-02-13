@@ -41,10 +41,10 @@ import cern.colt.matrix.ObjectMatrix1D;
  * @author pavlidis
  * @version $Id$
  */
-public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
+public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolean> {
 
     private static final long serialVersionUID = 1L;
-    private ObjectMatrix2DNamed<DesignElement, Integer> matrix;
+    private ObjectMatrix2DNamed<DesignElement, Integer, Boolean> matrix;
 
     /**
      * @param expressionExperiment
@@ -90,15 +90,15 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
      * @param maxSize
      * @return
      */
-    private ObjectMatrix2DNamed<DesignElement, Integer> createMatrix( Collection<DesignElementDataVector> vectors,
-            int maxSize ) {
-        ObjectMatrix2DNamed<DesignElement, Integer> matrix = new ObjectMatrix2DNamed<DesignElement, Integer>( vectors
-                .size(), maxSize );
+    private ObjectMatrix2DNamed<DesignElement, Integer, Boolean> createMatrix(
+            Collection<DesignElementDataVector> vectors, int maxSize ) {
+        ObjectMatrix2DNamed<DesignElement, Integer, Boolean> matrix = new ObjectMatrix2DNamed<DesignElement, Integer, Boolean>(
+                vectors.size(), maxSize );
 
         // initialize the matrix to false
         for ( int i = 0; i < matrix.rows(); i++ ) {
             for ( int j = 0; j < matrix.columns(); j++ ) {
-                matrix.setQuick( i, j, Boolean.FALSE );
+                matrix.set( i, j, Boolean.FALSE );
             }
         }
         for ( int j = 0; j < matrix.columns(); j++ ) {
@@ -125,7 +125,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
                 BioAssay bioAssay = it.next();
                 Integer column = this.columnAssayMap.get( bioAssay );
                 assert column != null;
-                matrix.setQuick( rowIndex, column, vals[j] );
+                matrix.set( rowIndex, column, vals[j] );
             }
 
             rowNum++;
@@ -192,7 +192,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
      *      ubic.gemma.model.expression.bioAssay.BioAssay)
      */
     public Boolean get( DesignElement designElement, BioAssay bioAssay ) {
-        return ( Boolean ) this.matrix.get( matrix.getRowIndexByName( designElement ), matrix
+        return this.matrix.get( matrix.getRowIndexByName( designElement ), matrix
                 .getColIndexByName( this.columnAssayMap.get( bioAssay ) ) );
     }
 
@@ -306,16 +306,16 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix {
 
     }
 
-    public void set( int row, int column, Object value ) {
+    public void set( int row, int column, Boolean value ) {
         throw new UnsupportedOperationException();
     }
 
-    public Object get( int row, int column ) {
+    public Boolean get( int row, int column ) {
         return matrix.get( row, column );
     }
 
     public Boolean[] getRow( Integer index ) {
-        return ( Boolean[] ) matrix.getRow( index );
+        return matrix.getRow( index );
     }
 
 }

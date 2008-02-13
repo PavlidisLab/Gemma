@@ -161,7 +161,7 @@ public class ArrayExpressLoadService {
      */
     private void processArrayDesignInfo( Collection<BioAssay> bioAssays, ArrayDesign ad ) {
 
-        arrayDesignService.thaw( ad );
+        arrayDesignService.thawLite( ad );
 
         Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
 

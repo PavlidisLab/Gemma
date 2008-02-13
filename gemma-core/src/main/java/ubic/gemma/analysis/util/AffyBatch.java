@@ -31,7 +31,10 @@ public class AffyBatch extends RCommander {
 
     public AffyBatch() {
         super();
-        rc.voidEval( "library(affy)" );
+        boolean ok = rc.loadLibrary( "affy" );
+        if ( !ok ) {
+            throw new IllegalStateException( "Could not locate 'affy' library" );
+        }
     }
 
     /**
@@ -39,11 +42,11 @@ public class AffyBatch extends RCommander {
      */
     public enum normalizeMethod {
         CONSTANT, CONTRASTS, INVARIANTSET, LOESS, QSPLINE, QUANTILES, QUANTILES_ROBUST
-    };
+    }
 
     public enum backgroundMethod {
         MAS, RMA, NONE
-    };
+    }
 
     public enum expressSummaryStatMethod {
         AVEDIFF, LIWONG, MAS, MEDIANPOLISH, PLAYEROUT

@@ -182,7 +182,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
                     log.info( "============== Start processing: " + design + " ==================" );
                     try {
-                        arrayDesignService.thaw( design );
+                        arrayDesignService.thawLite( design );
                         arrayDesignSequenceAlignmentService.processArrayDesign( design );
                         successObjects.add( design.getName() );
                         audit( design, "Part of a batch job; BLAT score threshold was " + this.blatScoreThreshold );

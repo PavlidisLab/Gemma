@@ -135,7 +135,6 @@ public class RankAnalysisCLI extends ExpressionExperimentManipulatingCLI {
         try {
             MatrixWriter out = new MatrixWriter( outFilePrefix + ".txt", formatter );
             out.writeMatrix( rankMatrix, false );
-            out.close();
         } catch ( IOException e ) {
             return e;
         }

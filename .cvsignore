@@ -17,3 +17,4 @@ velocity.log.*
 .myhibernatedata
 TempFatjarBuildDir_erase_me
 release.properties
+.deployment

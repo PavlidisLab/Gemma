@@ -54,7 +54,7 @@ public abstract class RCommander {
             return;
         }
         rc.voidEval( " rm(list=ls())" ); // attempt to release all memory used by this connection.
-        log.debug( "Disconnecting from RServer..." );
+        log.debug( "Disconnecting from R..." );
         rc.disconnect();
         log.debug( "...disconnected" );
     }

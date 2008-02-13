@@ -50,10 +50,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author pavlidis
  * @version $Id$
  */
-abstract public class BaseExpressionDataMatrix implements ExpressionDataMatrix, Serializable {
+abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatrix<T>, Serializable {
 
     private Log log = LogFactory.getLog( ExpressionDataDoubleMatrix.class );
-    
+
     // protected LinkedHashSet<DesignElement> rowElements;
 
     protected Collection<BioAssayDimension> bioAssayDimensions;

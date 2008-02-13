@@ -23,7 +23,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author pavlidis
  * @version $Id$
  */
-public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix {
+public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Integer> {
 
     private static final long serialVersionUID = 1L;
 
@@ -37,12 +37,12 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix {
 
     public ExpressionDataIntegerMatrix( ExpressionExperiment expressionExperiment,
             Collection<DesignElement> designElements, QuantitationType quantitationType ) {
-
+        throw new UnsupportedOperationException( "Not implemented" );
     }
 
     public ExpressionDataIntegerMatrix( Collection<DesignElementDataVector> dataVectors,
             QuantitationType quantitationType ) {
-
+        throw new UnsupportedOperationException( "Not implemented" );
     }
 
     public ExpressionDataIntegerMatrix( Collection<DesignElementDataVector> vectors ) {
@@ -178,15 +178,15 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix {
         return matrix.rows();
     }
 
-    public void set( int row, int column, Object value ) {
-        this.matrix.set( row, column, value );
+    public void set( int row, int column, Integer value ) {
+        this.matrix.setObj( row, column, value );
     }
 
-    public Object get( int row, int column ) {
+    public Integer get( int row, int column ) {
         return matrix.get( row, column );
     }
 
-    public Object[] getRow( Integer index ) {
+    public Integer[] getRow( Integer index ) {
         return this.matrix.getRow( index );
     }
 
@@ -212,7 +212,7 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix {
         // initialize the matrix to 0
         for ( int i = 0; i < matrix.rows(); i++ ) {
             for ( int j = 0; j < matrix.columns(); j++ ) {
-                matrix.setQuick( i, j, 0 );
+                matrix.set( i, j, 0 );
             }
         }
 
@@ -243,7 +243,7 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix {
 
                 assert column != null;
 
-                matrix.setQuick( rowIndex, column, vals[j] );
+                matrix.set( rowIndex, column, vals[j] );
             }
 
         }

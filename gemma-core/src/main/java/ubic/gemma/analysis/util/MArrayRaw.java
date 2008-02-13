@@ -53,8 +53,8 @@ public class MArrayRaw extends RCommander {
     /**
      * @param red Matrix of red channel intensities
      * @param green Matrix of green channel intensities
-     * @param redBg Matrix of red background intensities
-     * @param greenBg Matrix of green background intensities
+     * @param redBg Matrix of red background intensities, can be null
+     * @param greenBg Matrix of green background intensities, can be null
      * @param weights Optional matrix of weights
      * @return The name of the variable in the R context.
      */
@@ -81,6 +81,12 @@ public class MArrayRaw extends RCommander {
         String rowNameVar = makeMArrayInfo( red.getRowNames() );
         String colNameVar = makeMArrayInfo( red.getColNames() );
 
+        /* Check everything is okay */
+        List<String> sanityRed = rc.stringListEval( rowNameVar + "@maLabels" );
+        assert sanityRed != null && sanityRed.size() == red.getRowNames().size();
+        List<String> sanityGreen = rc.stringListEval( colNameVar + "@maLabels" );
+        assert sanityGreen != null && sanityGreen.size() == red.getColNames().size();
+
         String weightsName = null;
         if ( weights != null ) weightsName = rc.assignMatrix( weights );
 
@@ -95,9 +101,9 @@ public class MArrayRaw extends RCommander {
         // sanity check.
         double[] c = rc.doubleArrayEval( "maGf(" + rawObjectName + ")[1,]" );
         if ( c == null || c.length == 0 ) {
-            throw new RuntimeException(
-                    "marrayRaw value was not propertly set: " + rc.getLastError() == null ? "(no error message)" : rc
-                            .getLastError() );
+            throw new RuntimeException( "marrayRaw value was not propertly set while running command: ' " + makeRawCmd
+                    + "' - Error message was: "
+                    + ( rc.getLastError() == null ? "(no error message)" : rc.getLastError() ) );
         }
 
         return rawObjectName;
@@ -135,8 +141,8 @@ public class MArrayRaw extends RCommander {
         log.debug( "Making layout" );
 
         String arrayLayoutName = "layout." + RServeClient.variableIdentityNumber( this );
-        String makeLayoutCmd = arrayLayoutName + "<-new(\"marrayLayout\", maNgr=" + 1 + ", maNgc=" + 1 + ", maNsr=" + 1
-                + ", maNsc=" + numSpots + ", maNspots=" + numSpots + ", maSub=TRUE)";
+        String makeLayoutCmd = arrayLayoutName + "<-new(\"marrayLayout\", maNgr=1 , maNgc=1, maNsr=1, maNsc="
+                + numSpots + ", maNspots=" + numSpots + ", maSub=TRUE)";
 
         rc.voidEval( makeLayoutCmd );
         this.layoutName = arrayLayoutName;

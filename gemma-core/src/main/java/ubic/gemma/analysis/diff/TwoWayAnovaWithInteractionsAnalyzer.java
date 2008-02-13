@@ -121,6 +121,7 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
         log.debug( pvalueCommand.toString() );
 
         double[] pvalues = rc.doubleArrayEval( pvalueCommand.toString() );
+        if ( pvalues == null ) throw new IllegalStateException( "No pvalues returned" );
 
         // removes NA row
         double[] filteredPvalues = new double[( pvalues.length / NUM_RESULTS_FROM_R ) * ACTUAL_NUM_RESULTS];

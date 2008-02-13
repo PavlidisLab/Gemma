@@ -19,12 +19,9 @@
 package ubic.gemma.loader.genome.llnl;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
 
 import ubic.gemma.loader.genome.llnl.ImageCumulativePlatesLoader;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
-import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -36,20 +33,15 @@ public class ImageCumulativePlatesLoaderTest extends BaseSpringContextTest {
 
     InputStream is;
     ImageCumulativePlatesLoader loader;
-    private Collection<BioSequence> biosequences = new ArrayList<BioSequence>();
 
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
         endTransaction();
         is = this.getClass().getResourceAsStream( "/data/loader/genome/cumulative.plates.test.txt" );
-        ImageCumulativePlatesParser parser = new ImageCumulativePlatesParser();
+
         assertTrue( is.available() > 0 );
-        parser.parse( is );
-        is.close();
-        this.biosequences = parser.getResults();
-        // reopen.
-        is = this.getClass().getResourceAsStream( "/data/loader/genome/cumulative.plates.test.txt" );
+
     }
 
     public void testLoadInputStream() throws Exception {
@@ -61,18 +53,6 @@ public class ImageCumulativePlatesLoaderTest extends BaseSpringContextTest {
         int actualValue = loader.load( is );
         is.close();
         assertEquals( 418, actualValue );
-    }
-
-    @Override
-    protected void onTearDownInTransaction() throws Exception {
-        is.close();
-        BioSequenceService bss = ( BioSequenceService ) this.getBean( "bioSequenceService" );
-        for ( BioSequence bs : biosequences ) {
-            BioSequence found = bss.find( bs );
-            if ( found == null ) continue;
-            log.debug( "Deleting " + found );
-            bss.remove( found );
-        }
     }
 
 }

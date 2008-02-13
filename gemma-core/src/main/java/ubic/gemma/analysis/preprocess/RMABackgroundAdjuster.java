@@ -55,6 +55,7 @@ public class RMABackgroundAdjuster extends RCommander implements BackgroundAdjus
 
         if ( arrayDesign == null ) throw new IllegalStateException( "Must set arrayDesign first" );
         String abName = ab.makeAffyBatch( signal, arrayDesign );
+
         rc.voidEval( "m<-exprs(bg.correct.rma(" + abName + " ))" );
 
         log.info( "Done with background correction" );

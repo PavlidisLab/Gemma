@@ -108,7 +108,7 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
                 .getAuthentication().getName(), "Processing " + arrayDesign );
 
         log.info( "thawing " + arrayDesign );
-        arrayDesignService.thaw( arrayDesign );
+        arrayDesignService.thawLite( arrayDesign );
         log.info( "done thawing" );
 
         // validate a file was entered

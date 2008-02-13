@@ -20,6 +20,7 @@ package ubic.gemma.analysis.linkAnalysis;
 
 import java.util.Collection;
 
+import ubic.basecode.dataStructure.matrix.CompressedSparseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
 import ubic.basecode.math.CorrelationStats;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -77,7 +78,8 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
      */
     private MatrixRowPairPearsonAnalysis( int size ) {
         if ( size > 0 ) {
-            results = DoubleMatrix2DNamedFactory.compressedsparse( size, size );
+            results = new CompressedSparseDoubleMatrix2DNamed<ExpressionDataMatrixRowElement, ExpressionDataMatrixRowElement>(
+                    size, size );
         }
         keepers = new ObjectArrayList();
     }
@@ -134,8 +136,8 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
                 if ( !this.hasGene( itemB ) ) continue;
 
                 // second pass over matrix? Don't calculate it if we already have it. Just do the requisite checks.
-                if ( !docalcs || results.getQuick( i, j ) != 0.0 ) {
-                    keepCorrel( i, j, results.getQuick( i, j ), numcols );
+                if ( !docalcs || results.get( i, j ) != 0.0 ) {
+                    keepCorrel( i, j, results.get( i, j ), numcols );
                     continue;
                 }
 
@@ -256,10 +258,10 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
             for ( int j = i + 1; j < numrows; j++ ) {
                 itemB = this.dataMatrix.getRowElement( j );
                 if ( !this.hasGene( itemB ) ) continue;
-                if ( !docalcs || results.getQuick( i, j ) != 0.0 ) { // second pass over matrix. Don't calculate it
+                if ( !docalcs || results.get( i, j ) != 0.0 ) { // second pass over matrix. Don't calculate it
                     // if we
                     // already have it. Just do the requisite checks.
-                    keepCorrel( i, j, results.getQuick( i, j ), numcols );
+                    keepCorrel( i, j, results.get( i, j ), numcols );
                     continue;
                 }
 

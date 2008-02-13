@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2008 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package ubic.gemma.analysis.linkAnalysis;
 
 import hep.aida.ref.Histogram1D;
@@ -44,6 +62,8 @@ import cern.colt.list.DoubleArrayList;
 
 /**
  * Coexpression analysis
+ * <p>
+ * TODO DOCUMENT ME
  * 
  * @spring.bean id="coexpressionAnalysisService"
  * @spring.property name="eeService" ref="expressionExperimentService"
@@ -51,6 +71,7 @@ import cern.colt.list.DoubleArrayList;
  * @spring.property name="geneService" ref="geneService"
  * @spring.property name="adService" ref="arrayDesignService"
  * @author Raymond
+ * @version $Id$
  */
 public class CoexpressionAnalysisService {
     protected static final int MIN_NUM_USED = 5;
@@ -149,7 +170,7 @@ public class CoexpressionAnalysisService {
      * @param sampleSizeMatrix
      * @return
      */
-    public DoubleMatrixNamed calculateEffectSizeMatrix(
+    public DoubleMatrixNamed<Gene, Gene> calculateEffectSizeMatrix(
             DenseDoubleMatrix3DNamed<Gene, Gene, ExpressionExperiment> correlationMatrix,
             DenseDoubleMatrix3DNamed sampleSizeMatrix ) {
         DenseDoubleMatrix2DNamed<Gene, Gene> matrix = new DenseDoubleMatrix2DNamed<Gene, Gene>( correlationMatrix
@@ -186,13 +207,13 @@ public class CoexpressionAnalysisService {
      * @param ees expression experiments to sample from the gemmaData dir
      * @return p-value matrix
      */
-    public DoubleMatrixNamed<Gene, Gene> calculateMaxCorrelationPValueMatrix(
-            DoubleMatrixNamed<Gene, Gene> maxCorrelationMatrix, int n, Collection<ExpressionExperiment> ees ) {
+    public DoubleMatrixNamed<String, String> calculateMaxCorrelationPValueMatrix(
+            DoubleMatrixNamed<String, String> maxCorrelationMatrix, int n, Collection<ExpressionExperiment> ees ) {
         log.info( "Calculating " + n + "-max p-value matrix" );
         StopWatch watch = new StopWatch();
         watch.start();
-        DoubleMatrixNamed<Gene, Gene> pMatrix = new DenseDoubleMatrix2DNamed<Gene, Gene>( maxCorrelationMatrix.rows(),
-                maxCorrelationMatrix.columns() );
+        DoubleMatrixNamed<String, String> pMatrix = new DenseDoubleMatrix2DNamed<String, String>( maxCorrelationMatrix
+                .rows(), maxCorrelationMatrix.columns() );
         pMatrix.setRowNames( maxCorrelationMatrix.getRowNames() );
         pMatrix.setColumnNames( maxCorrelationMatrix.getColNames() );
 
@@ -509,10 +530,9 @@ public class CoexpressionAnalysisService {
         for ( int i = 0; i <= bin; i++ ) {
             sum += histogram.binHeight( i );
         }
-        if ( sum == 0d )
-            return 0d;
-        else
-            return sum / NUM_HISTOGRAM_SAMPLES;
+        if ( sum == 0d ) return 0d;
+
+        return sum / NUM_HISTOGRAM_SAMPLES;
     }
 
     /**
@@ -523,7 +543,7 @@ public class CoexpressionAnalysisService {
      * @throws IOException
      */
     private HistogramSampler readHistogramFile( String fileName ) throws IOException {
-        HistogramReader in = new HistogramReader( fileName, "Correlation Histogram" );
+        HistogramReader in = new HistogramReader( fileName );
         Histogram1D hist = in.read1D();
         HistogramSampler sampler = new HistogramSampler( hist );
         return sampler;

@@ -253,13 +253,14 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     public void remove( ExpressionExperiment expressionExperiment ) {
         final ExpressionExperiment toDelete = expressionExperiment;
 
-        this.thawBioAssays( expressionExperiment );
+        // this.thawBioAssays( expressionExperiment );
 
         this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( Session session ) throws HibernateException {
 
                 log.info( "Loading data for deletion..." );
-                session.update( toDelete );
+
+                session.lock( toDelete, LockMode.UPGRADE );
                 toDelete.getBioAssayDataVectors().size();
                 Set<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
                 Set<QuantitationType> qts = new HashSet<QuantitationType>();

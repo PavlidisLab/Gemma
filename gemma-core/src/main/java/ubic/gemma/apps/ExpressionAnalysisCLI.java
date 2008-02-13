@@ -217,7 +217,7 @@ public class ExpressionAnalysisCLI extends AbstractGeneCoexpressionManipulatingC
                 int fCol = fMatrix.getColIndexByName( colName );
                 int col = matrix.getColIndexByName( colName );
                 double val = matrix.get( row, col );
-                fMatrix.set( fRow, fCol, val );
+                fMatrix.setByKeys( fRow, fCol, val );
             }
         }
 
@@ -276,7 +276,6 @@ public class ExpressionAnalysisCLI extends AbstractGeneCoexpressionManipulatingC
         try {
             MatrixWriter out = new MatrixWriter( outFilePrefix + ".txt", formatter );
             out.writeMatrix( rankMatrix, false );
-            out.close();
         } catch ( IOException exc ) {
             return exc;
         }

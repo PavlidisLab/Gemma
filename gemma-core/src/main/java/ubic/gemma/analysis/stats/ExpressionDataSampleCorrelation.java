@@ -231,13 +231,13 @@ public class ExpressionDataSampleCorrelation {
         // clip the copy and return it.
         for ( int i = 0; i < copy.rows(); i++ ) {
             for ( int j = 0; j < copy.columns(); j++ ) {
-                double val = copy.getQuick( i, j );
+                double val = copy.get( i, j );
                 if ( val > highThresh ) {
                     val = highThresh;
                 } else if ( val < lowThresh ) {
                     val = lowThresh;
                 }
-                copy.setQuick( i, j, val );
+                copy.set( i, j, val );
             }
         }
         return copy;

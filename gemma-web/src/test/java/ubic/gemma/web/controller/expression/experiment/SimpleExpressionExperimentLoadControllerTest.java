@@ -49,7 +49,7 @@ public class SimpleExpressionExperimentLoadControllerTest extends BaseSpringWebT
     }
 
     public final void testSubmit() throws Exception {
-        MockHttpServletResponse response = new MockHttpServletResponse();
+        // MockHttpServletResponse response = new MockHttpServletResponse();
         MockHttpServletRequest request = newPost( "/loadSimpleExpressionExperiment.html" );
         request.setRemoteUser( ConfigUtils.getString( "gemma.admin.user" ) );
 

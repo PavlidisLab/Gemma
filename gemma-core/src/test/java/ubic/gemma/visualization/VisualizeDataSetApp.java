@@ -210,7 +210,7 @@ public class VisualizeDataSetApp {
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/" + filePath );
         if ( is == null ) throw new RuntimeException( "could not load data" );
         DoubleMatrixReader reader = new DoubleMatrixReader();
-        return ( DoubleMatrixNamed ) reader.read( is );
+        return reader.read( is );
     }
 
     /**

@@ -31,8 +31,7 @@ public class AllExpressionMatrixTests {
         TestSuite suite = new TestSuite( "Test for ubic.gemma.datastructure.matrix" );
         // $JUnit-BEGIN$
         suite.addTestSuite( ExpressionDataDoubleMatrixTest.class );
-        suite.addTestSuite( MatrixConversionTest.class );
-        suite.addTestSuite( ExpressionDataMatrixVectorMergingIntegrationTest.class );
+        suite.addTestSuite( MatrixConversionTest.class ); 
         // $JUnit-END$
         return suite;
     }

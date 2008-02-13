@@ -49,7 +49,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     protected static final int NUM_BINS = 2048;
     protected static final int HALF_BIN = NUM_BINS / 2;
     protected static final Log log = LogFactory.getLog( MatrixRowPairPearsonAnalysis.class );
-    protected CompressedSparseDoubleMatrix2DNamed results = null;
+    protected CompressedSparseDoubleMatrix2DNamed<ExpressionDataMatrixRowElement, ExpressionDataMatrixRowElement> results = null;
     protected int minSamplesToKeepCorrelation = 0;
     protected double storageThresholdValue;
     protected ObjectArrayList keepers = null;
@@ -138,8 +138,8 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
         for ( int i = 0, n = results.rows(); i < n; i++ ) {
             for ( int j = i + 1, m = results.columns(); j < m; j++ ) {
                 double r;
-                if ( results.getQuick( i, j ) != 0 ) {
-                    r = results.getQuick( i, j );
+                if ( results.get( i, j ) != 0 ) {
+                    r = results.get( i, j );
                 } else {
                     r = 0;
                     /** @todo calculate the value */
@@ -424,7 +424,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
         }
 
         if ( acorrel > storageThresholdValue && results != null ) {
-            results.setQuick( i, j, correl );
+            results.set( i, j, correl );
         }
 
         keepCorrel( i, j, correl, numused );

@@ -32,7 +32,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.matrix.AbstractNamedMatrix;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
-import ubic.basecode.dataStructure.matrix.NamedMatrix;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.Rank;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -73,7 +73,7 @@ public class DedvRankService {
      */
     public enum Method {
         MAX, MIN, MEAN, MEDIAN, VARIANCE
-    };
+    }
 
     public void setDevService( DesignElementDataVectorService devService ) {
         this.devService = devService;
@@ -196,7 +196,7 @@ public class DedvRankService {
         matrix.setColumnNames( new ArrayList<ExpressionExperiment>( ees ) );
         for ( int i = 0; i < matrix.rows(); i++ ) {
             for ( int j = 0; j < matrix.columns(); j++ ) {
-                matrix.set( i, j, Double.NaN );
+                matrix.setByKeys( i, j, Double.NaN );
             }
         }
 
@@ -300,7 +300,7 @@ public class DedvRankService {
      * @param intensities
      * @return
      */
-    protected NamedMatrix<ExpressionDataMatrixRowElement, Object> computeSampleRanks(
+    protected DoubleMatrixNamed<ExpressionDataMatrixRowElement, Object> computeSampleRanks(
             ExpressionDataDoubleMatrix intensities ) {
         DenseDoubleMatrix2DNamed<ExpressionDataMatrixRowElement, Object> rankMatrix = new DenseDoubleMatrix2DNamed<ExpressionDataMatrixRowElement, Object>(
                 intensities.rows(), intensities.columns() );

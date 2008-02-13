@@ -123,8 +123,8 @@ public class ProbeAlignedRegionAnalysisCLI extends AbstractSpringAwareCLI {
         }
         parIds = parId2eeRankMap.keySet();
 
-        CompressedNamedBitMatrix linkMatrix = getLinkCountMatrix( EEs, parIds, knownGeneIds );
-        CompressedNamedBitMatrix negativeLinkMatrix = getLinkCountMatrix( EEs, parIds, knownGeneIds );
+        CompressedNamedBitMatrix<Long, Long> linkMatrix = getLinkCountMatrix( EEs, parIds, knownGeneIds );
+        CompressedNamedBitMatrix<Long, Long> negativeLinkMatrix = getLinkCountMatrix( EEs, parIds, knownGeneIds );
 
         for ( ExpressionExperiment EE : EEs ) {
             int eeIndex = eeId2IndexMap.get( EE.getId() );

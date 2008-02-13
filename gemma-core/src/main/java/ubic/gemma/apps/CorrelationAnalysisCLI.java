@@ -134,7 +134,6 @@ public class CorrelationAnalysisCLI extends AbstractGeneCoexpressionManipulating
             matrixOut.setRowNameMap( geneNameMap );
             matrixOut.setColNameMap( geneNameMap );
             matrixOut.writeMatrix( correlationMatrix, false );
-            matrixOut.close();
 
             PrintWriter out = new PrintWriter( new FileWriter( outFilePrefix + ".corr.row_names.txt" ) );
             List rows = correlationMatrix.getRowNames();

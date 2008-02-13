@@ -159,17 +159,16 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         if ( ee == null ) {
             log.error( "Cannot find experiment " + expName + " in database.  Skipping test." );
             return;
-        } else {
-            SecurityService securityService = new SecurityService();
-
-            securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
-            securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
-            securityService.setPermissions( ee, SecurityService.PRIVATE_MASK, new HashSet<Object>() );
-            /*
-             * uncomment so you can see the acl permission has been changed in the database.
-             */
-            // this.setComplete();
         }
+        SecurityService securityService = new SecurityService();
+
+        securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
+        securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
+        securityService.setPermissions( ee, SecurityService.PRIVATE_MASK, new HashSet<Object>() );
+        /*
+         * uncomment so you can see the acl permission has been changed in the database.
+         */
+        // this.setComplete();
     }
 
 }

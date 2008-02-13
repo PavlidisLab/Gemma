@@ -465,7 +465,7 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         StringMatrixReader mReader = new StringMatrixReader();
 
         String CDTMatrixFile = baseName;
-        StringMatrix2DNamed cdtMatrix = ( StringMatrix2DNamed ) mReader.read( CDTMatrixFile + ".cdt" );
+        StringMatrix2DNamed cdtMatrix = mReader.read( CDTMatrixFile + ".cdt" );
 
         // Read String Matrix and convert into DenseDoubleMatrix
         int extra_rows = 2, extra_cols = 3;
@@ -491,7 +491,7 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
                 }
             rowIndex++;
         }
-        DoubleMatrixNamed dataMatrix = new DenseDoubleMatrix2DNamed( data );
+        DoubleMatrixNamed<String, String> dataMatrix = new DenseDoubleMatrix2DNamed<String, String>( data );
         dataMatrix.setRowNames( rowLabels );
         dataMatrix.setColumnNames( colLabels );
         return dataMatrix;

@@ -974,10 +974,11 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
                 if ( arrayDesign.getCompositeSequences() == null ) return null;
 
-                log.info( "Loading CS proxies for " + arrayDesign + " ..." );
+                log.debug( "Loading CS proxies for " + arrayDesign + " ..." );
                 int numToDo = arrayDesign.getCompositeSequences().size();
-                log.info( "Must thaw " + ( deep ? " (deep) " : " (lite) " ) + numToDo
-                        + " composite sequence associations ..." );
+                if ( numToDo > LOGGING_UPDATE_EVENT_COUNT )
+                    log.info( "Must thaw " + ( deep ? " (deep) " : " (lite) " ) + numToDo
+                            + " composite sequence associations ..." );
 
                 org.hibernate.Query queryObject = session.createQuery( deepQuery );
                 queryObject.setReadOnly( true );
@@ -1009,7 +1010,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                         }
 
                         if ( deep ) {
-
+                            throw new UnsupportedOperationException(
+                                    "Are you sure you need to deeply thaw that ArrayDesign" );
                             /*
                              * for ( BioSequence2GeneProduct bs2gp : bs.getBioSequence2GeneProduct() ) { GeneProduct
                              * geneProduct = bs2gp.getGeneProduct(); Gene g = geneProduct.getGene(); if ( g != null ) {

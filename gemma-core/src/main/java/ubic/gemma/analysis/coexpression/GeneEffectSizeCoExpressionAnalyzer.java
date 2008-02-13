@@ -46,6 +46,7 @@ import ubic.gemma.model.genome.Gene;
 
 /**
  * Compute the pairwise correlations for a bunch of dedvs for a bunch of genes. This uses the 'effect-size' approach.
+ * TODO BROKEN
  * 
  * @author xwan
  * @version $Id$
@@ -78,12 +79,12 @@ public class GeneEffectSizeCoExpressionAnalyzer {
     // The reason for using ExpressedData object is that there are many DEDVs for each gene and different correlation
     // calculation
     // may use different DEDV.
-    private Map<Long, ObjectMatrix2DNamed<Long, Long>> queryGene2coExpressedData = new HashMap<Long, ObjectMatrix2DNamed<Long, Long>>();
+    private Map<Long, ObjectMatrix2DNamed<Long, Long, DesignElementDataVector>> queryGene2coExpressedData = new HashMap<Long, ObjectMatrix2DNamed<Long, Long, DesignElementDataVector>>();
 
     // The next NamedMatrix: queryGenes X expression_experiments
     // Each object is a designElementVector which is specifically associated with the query gene in a expression
     // experiment
-    private ObjectMatrix2DNamed<Long, Long> queryGenesData = null;
+    private ObjectMatrix2DNamed<Long, Long, DesignElementDataVector> queryGenesData = null;
 
     // The following two maps are only used for the output.
     private Map<Long, String> geneNames = new HashMap<Long, String>();
@@ -96,7 +97,7 @@ public class GeneEffectSizeCoExpressionAnalyzer {
 
     public GeneEffectSizeCoExpressionAnalyzer( Collection<Gene> queryGenes, Collection<Gene> coExpressedGenes,
             Collection<ExpressionExperiment> ees ) {
-        queryGenesData = new ObjectMatrix2DNamed<Long, Long>( queryGenes.size(), ees.size() );
+        queryGenesData = new ObjectMatrix2DNamed<Long, Long, DesignElementDataVector>( queryGenes.size(), ees.size() );
         for ( Gene queryGene : queryGenes ) {
             queryGenesData.addRowName( queryGene.getId() );
         }
@@ -105,19 +106,19 @@ public class GeneEffectSizeCoExpressionAnalyzer {
         }
         for ( int i = 0; i < queryGenesData.rows(); i++ ) {
             for ( int j = 0; j < queryGenesData.columns(); j++ ) {
-                queryGenesData.setQuick( i, j, null );
+                queryGenesData.set( i, j, null );
             }
         }
 
         for ( Gene queryGene : queryGenes ) {
             DenseDoubleMatrix2DNamed<Long, Long> correlationData = new DenseDoubleMatrix2DNamed<Long, Long>(
                     coExpressedGenes.size(), ees.size() );
-            ObjectMatrix2DNamed<Long, Long> coExpressedData = new ObjectMatrix2DNamed<Long, Long>( coExpressedGenes
-                    .size(), ees.size() );
+            ObjectMatrix2DNamed<Long, Long, DesignElementDataVector> coExpressedData = new ObjectMatrix2DNamed<Long, Long, DesignElementDataVector>(
+                    coExpressedGenes.size(), ees.size() );
             for ( int i = 0; i < correlationData.rows(); i++ ) {
                 for ( int j = 0; j < correlationData.columns(); j++ ) {
-                    correlationData.setQuick( i, j, Double.NaN );
-                    coExpressedData.setQuick( i, j, null );
+                    correlationData.set( i, j, Double.NaN );
+                    coExpressedData.set( i, j, null );
                 }
             }
             for ( Gene coExpressedGene : coExpressedGenes ) {
@@ -352,7 +353,8 @@ public class GeneEffectSizeCoExpressionAnalyzer {
                 Object[] dedvI = gene2dedvs.get( queryGeneId ).toArray();
                 DenseDoubleMatrix2DNamed<Long, Long> correlationDataMatrix = queryGene2correlationData
                         .get( queryGeneId );
-                ObjectMatrix2DNamed<Long, Long> coExpressedData = queryGene2coExpressedData.get( queryGeneId );
+                ObjectMatrix2DNamed<Long, Long, DesignElementDataVector> coExpressedData = queryGene2coExpressedData
+                        .get( queryGeneId );
 
                 for ( Long coExpressedGeneId : correlationDataMatrix.getRowNames() ) {
                     if ( coExpressedGeneId.equals( queryGeneId ) ) continue;
@@ -372,15 +374,16 @@ public class GeneEffectSizeCoExpressionAnalyzer {
                         Double medianCorr = ( Double ) corrArray[corrArray.length / 2];
                         int rowIndex = correlationDataMatrix.getRowIndexByName( coExpressedGeneId );
                         int colIndex = correlationDataMatrix.getColIndexByName( eeId );
-                        correlationDataMatrix.setQuick( rowIndex, colIndex, medianCorr ); // choose median value
+                        correlationDataMatrix.set( rowIndex, colIndex, medianCorr ); // choose median value
 
                         Integer combinedIndex = sortedData.get( medianCorr );
                         int dedvIndexI = combinedIndex.intValue() / shift;
                         int dedvIndexJ = combinedIndex.intValue() % shift;
 
-                        coExpressedData.setQuick( rowIndex, colIndex, new ExpressedData(
-                                ( DesignElementDataVector ) dedvI[dedvIndexI],
-                                ( DesignElementDataVector ) dedvJ[dedvIndexJ] ) );
+                        // coExpressedData.set( rowIndex, colIndex, new ExpressedData(
+                        // ( DesignElementDataVector ) dedvI[dedvIndexI],
+                        // ( DesignElementDataVector ) dedvJ[dedvIndexJ] ) );
+                        throw new UnsupportedOperationException( "This method is messed up. Please fix me." );
                     }
                 }
             }
@@ -405,7 +408,7 @@ public class GeneEffectSizeCoExpressionAnalyzer {
                 for ( Long eeId : eeSampleSizes.keySet() ) {
                     Integer eeSampleSize = eeSampleSizes.get( eeId );
                     int colIndex = correlationDataMatrix.getColIndexByName( eeId );
-                    double correlation = correlationDataMatrix.getQuick( rowIndex, colIndex );
+                    double correlation = correlationDataMatrix.get( rowIndex, colIndex );
                     if ( !Double.isNaN( correlation ) && eeSampleSize > 3 ) {
                         correlations.add( correlation );
                         sampleSizes.add( eeSampleSize );
@@ -473,7 +476,7 @@ public class GeneEffectSizeCoExpressionAnalyzer {
                 for ( Long coExpressedGeneId : correlationDataMatrix.getRowNames() ) {
                     if ( coExpressedGeneId.equals( queryGeneId ) ) continue;
                     int rowIndex = correlationDataMatrix.getRowIndexByName( coExpressedGeneId );
-                    if ( Double.isNaN( correlationDataMatrix.getQuick( rowIndex, colIndex ) ) ) missing++;
+                    if ( Double.isNaN( correlationDataMatrix.get( rowIndex, colIndex ) ) ) missing++;
                 }
             }
             if ( ( totalExpressionValuesInOneExperssionExperiment - missing )
@@ -488,10 +491,10 @@ public class GeneEffectSizeCoExpressionAnalyzer {
                 for ( Long coExpressedGeneId : correlationDataMatrix.getRowNames() ) {
                     if ( coExpressedGeneId.equals( queryGeneId ) ) continue;
                     int rowIndex = correlationDataMatrix.getRowIndexByName( coExpressedGeneId );
-                    if ( Double.isNaN( correlationDataMatrix.getQuick( rowIndex, colIndex ) ) )
+                    if ( Double.isNaN( correlationDataMatrix.get( rowIndex, colIndex ) ) )
                         output.print( "\t" );
                     else
-                        output.print( "\t" + df.format( correlationDataMatrix.getQuick( rowIndex, colIndex ) ) );
+                        output.print( "\t" + df.format( correlationDataMatrix.get( rowIndex, colIndex ) ) );
                 }
             }
             output.println();
@@ -548,11 +551,11 @@ public class GeneEffectSizeCoExpressionAnalyzer {
                     try {
                         int col = dataMatrix.getColIndexByName( colName );
 
-                        if ( Double.isNaN( correlationDataMatrix.getQuick( rowIndex, colIndex ) ) )
+                        if ( Double.isNaN( correlationDataMatrix.get( rowIndex, colIndex ) ) )
                             rankMatrix.set( row, col, Double.NaN );
                         else
-                            rankMatrix.set( row, col, getExpressionRank( ( ExpressedData ) coExpressedDataMatrix
-                                    .getQuick( rowIndex, colIndex ) ) );
+                            rankMatrix.set( row, col, getExpressionRank( ( ExpressedData ) coExpressedDataMatrix.get(
+                                    rowIndex, colIndex ) ) );
                     } catch ( IllegalArgumentException e ) {
                         continue;
                     }

@@ -52,8 +52,8 @@ public class LinkAnalysisDataLoader extends ExpressionDataLoader {
     }
 
     private void filter() {
-        Filter<String, String> x = new AffymetrixProbeNameFilter<String, String>();
-        DoubleMatrixNamed<String, String> r = ( DoubleMatrixNamed<String, String> ) x.filter( this.dataMatrix );
+        Filter<DoubleMatrixNamed<String, String>, String, String, Double> x = new AffymetrixProbeNameFilter<DoubleMatrixNamed<String, String>, String, String, Double>();
+        DoubleMatrixNamed<String, String> r = x.filter( this.dataMatrix );
         this.dataMatrix = r;
         System.err.println( this.dataMatrix );
         this.uniqueItems = this.dataMatrix.rows();
@@ -121,7 +121,7 @@ public class LinkAnalysisDataLoader extends ExpressionDataLoader {
             assert vals.length == bioAssays.size() : "Number of values in vector (" + vals.length
                     + ") don't match number of Bioassays (" + bioAssays.size() + ")";
             for ( int i = 0; i < vals.length; i++ ) {
-                matrix.setQuick( rowNum, i, vals[i] );
+                matrix.set( rowNum, i, vals[i] );
             }
             rowNum++;
         }

@@ -115,7 +115,7 @@ public class ArrayDesignDaoImplTest extends BaseSpringContextTest {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
         flushSession(); // fails without this.
         ad = arrayDesignDao.find( ad );
-        arrayDesignDao.thaw( ad );
+        arrayDesignDao.thawLite( ad );
         CompositeSequence cs = ad.getCompositeSequences().iterator().next();
 
         assertNotNull( cs.getId() );

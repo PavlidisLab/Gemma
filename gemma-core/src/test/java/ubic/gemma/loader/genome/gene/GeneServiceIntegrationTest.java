@@ -106,7 +106,7 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
 
             ArrayDesignService arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
 
-            arrayDesignService.thaw( ad );
+            arrayDesignService.thawLite( ad );
 
             Taxon taxon = ( ( TaxonService ) getBean( "taxonService" ) ).findByScientificName( "Homo sapiens" );
 

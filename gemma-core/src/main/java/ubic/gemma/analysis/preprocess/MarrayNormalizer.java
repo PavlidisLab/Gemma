@@ -32,7 +32,10 @@ public abstract class MarrayNormalizer extends RCommander implements TwoChannelN
 
     public MarrayNormalizer() {
         super();
-        rc.voidEval( "library(marray)" );
+        boolean ok = rc.loadLibrary( "marray" );
+        if ( !ok ) {
+            throw new IllegalStateException( "Could not locate 'marray' library" );
+        }
     }
 
     /**

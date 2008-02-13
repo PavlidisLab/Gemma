@@ -60,7 +60,7 @@ public class RMABackgroundAdjusterTest extends TestCase {
         DoubleMatrixReader reader = new DoubleMatrixReader();
         is = new GZIPInputStream( this.getClass().getResourceAsStream( "/data/testShortCel.txt.gz" ) );
         if ( is == null ) throw new IOException();
-        celmatrix = ( DoubleMatrixNamed ) reader.read( is );
+        celmatrix = reader.read( is );
         is.close();
         arrayDesign = ArrayDesign.Factory.newInstance();
         arrayDesign.setName( "cdfenv.example" );

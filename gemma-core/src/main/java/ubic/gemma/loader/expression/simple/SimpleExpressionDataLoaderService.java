@@ -80,9 +80,9 @@ public class SimpleExpressionDataLoaderService {
      * @return DoubleMatrixNamed
      * @throws IOException
      */
-    public DoubleMatrixNamed parse( InputStream data ) throws IOException {
+    public DoubleMatrixNamed<String, String> parse( InputStream data ) throws IOException {
         DoubleMatrixReader reader = new DoubleMatrixReader();
-        return ( DoubleMatrixNamed ) reader.read( data );
+        return reader.read( data );
     }
 
     /**
@@ -90,15 +90,16 @@ public class SimpleExpressionDataLoaderService {
      * @param matrix
      * @return ExpressionExperiment
      */
-    public ExpressionExperiment convert( SimpleExpressionExperimentMetaData metaData, DoubleMatrixNamed matrix ) {
+    public ExpressionExperiment convert( SimpleExpressionExperimentMetaData metaData,
+            DoubleMatrixNamed<String, String> matrix ) {
         if ( matrix == null || metaData == null ) {
             throw new IllegalArgumentException( "One or all of method arguments was null" );
         }
-        
+
         ExpressionExperiment experiment = ExpressionExperiment.Factory.newInstance();
-        
+
         Taxon taxon = convertTaxon( metaData.getTaxon() );
-      
+
         experiment.setName( metaData.getName() );
         experiment.setShortName( metaData.getShortName() );
         experiment.setDescription( metaData.getDescription() );
@@ -158,10 +159,10 @@ public class SimpleExpressionDataLoaderService {
      * @param design
      * @return
      */
-    private DoubleMatrixNamed getSubMatrixForArrayDesign( DoubleMatrixNamed matrix,
+    private DoubleMatrixNamed getSubMatrixForArrayDesign( DoubleMatrixNamed<String, String> matrix,
             Collection<Object> usedDesignElements, ArrayDesign design ) {
-        List<Object> designElements = new ArrayList<Object>();
-        List<Object> columnNames = new ArrayList<Object>();
+        List<String> designElements = new ArrayList<String>();
+        List<String> columnNames = new ArrayList<String>();
 
         for ( Object originalColumnName : matrix.getColNames() ) {
             columnNames.add( originalColumnName + " on " + design.getName() );
@@ -174,7 +175,7 @@ public class SimpleExpressionDataLoaderService {
             arrayDesignElementNames.add( cs.getName() );
         }
 
-        for ( Object object : matrix.getRowNames() ) {
+        for ( String object : matrix.getRowNames() ) {
             /*
              * disallow using design elements more than once; if two array designs match a given row name, we just end
              * up arbitrarily assigning it to one of the array designs.
@@ -196,7 +197,7 @@ public class SimpleExpressionDataLoaderService {
         double[][] allSubMatrixRows = new double[rows.size()][rows.iterator().next().length];
         rows.toArray( allSubMatrixRows );
 
-        DoubleMatrixNamed subMatrix = DoubleMatrix2DNamedFactory.fastrow( allSubMatrixRows );
+        DoubleMatrixNamed<String, String> subMatrix = DoubleMatrix2DNamedFactory.fastrow( allSubMatrixRows );
         subMatrix.setRowNames( designElements );
         subMatrix.setColumnNames( columnNames );
         return subMatrix;
@@ -214,7 +215,7 @@ public class SimpleExpressionDataLoaderService {
     public ExpressionExperiment load( SimpleExpressionExperimentMetaData metaData, InputStream data )
             throws IOException {
 
-        DoubleMatrixNamed matrix = parse( data );
+        DoubleMatrixNamed<String, String> matrix = parse( data );
 
         ExpressionExperiment experiment = convert( metaData, matrix );
 
@@ -236,18 +237,18 @@ public class SimpleExpressionDataLoaderService {
      * @return
      */
     private Collection<ArrayDesign> convertArrayDesigns( SimpleExpressionExperimentMetaData metaData,
-            DoubleMatrixNamed matrix ) {
+            DoubleMatrixNamed<String, String> matrix ) {
         Collection<ArrayDesign> arrayDesigns = metaData.getArrayDesigns();
 
         Collection<ArrayDesign> existingDesigns = new HashSet<ArrayDesign>();
         ArrayDesign newDesign = null;
 
         for ( ArrayDesign design : arrayDesigns ) {
-            if ( design != null ) arrayDesignService.thaw( design );
+            if ( design != null ) arrayDesignService.thawLite( design );
             ArrayDesign existing = arrayDesignService.find( design );
             if ( existing != null ) {
                 log.info( "Array Design exists" );
-                arrayDesignService.thaw( existing );
+                arrayDesignService.thawLite( existing );
                 existingDesigns.add( existing );
             } else {
                 if ( newDesign != null ) {
@@ -272,13 +273,13 @@ public class SimpleExpressionDataLoaderService {
      * @param matrix
      * @param newDesign
      */
-    private void newArrayDesign( DoubleMatrixNamed matrix, ArrayDesign newDesign, boolean probeNamesAreImageClones,
-            Taxon taxon ) {
+    private void newArrayDesign( DoubleMatrixNamed<String, String> matrix, ArrayDesign newDesign,
+            boolean probeNamesAreImageClones, Taxon taxon ) {
         log.info( "Creating new ArrayDesign " + newDesign );
 
         for ( int i = 0; i < matrix.rows(); i++ ) {
             CompositeSequence cs = CompositeSequence.Factory.newInstance();
-            cs.setName( matrix.getRowName( i ).toString() );
+            cs.setName( matrix.getRowName( i ) );
             cs.setArrayDesign( newDesign );
 
             if ( probeNamesAreImageClones ) {

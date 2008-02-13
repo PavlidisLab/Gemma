@@ -970,12 +970,12 @@ public class GeoFamilyParser implements Parser {
         } else if ( startsWithIgnoreCase( line, "!Platform_table_end" ) ) {
             inPlatformTable = false;
         } else if ( startsWithIgnoreCase( line, "!Platform_contributor" ) ) {
-            ;// noop. This is the name of the person who submitted the platform.
+            // noop. This is the name of the person who submitted the platform.
         } else if ( startsWithIgnoreCase( line, "!Platform_series_id" ) ) {
             // no-op. This identifies which series were run on this platform. We don't care to get this
             // information this way.
         } else if ( startsWithIgnoreCase( line, "!Platform_data_row_count" ) ) {
-            ; // nothing.
+            // nothing.
         } else if ( startsWithIgnoreCase( line, "!Platform_catalog_number" ) ) {
             // do nothing TODO we might want this.
         } else if ( startsWithIgnoreCase( line, "!Platform_last_update_date" ) ) {

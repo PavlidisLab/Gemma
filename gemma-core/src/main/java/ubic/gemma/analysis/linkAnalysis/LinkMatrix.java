@@ -229,11 +229,7 @@ public class LinkMatrix {
                 double values[] = new double[subItems.length - 2];
                 for ( i = 2; i < subItems.length; i++ )
                     values[i - 2] = Double.longBitsToDouble( Long.parseLong( subItems[i], 16 ) );
-                if ( !linkCountMatrix.set( rowIndex, colIndex, values ) ) {
-                    String mesg = "Data File Format Error for Data " + row;
-                    log.info( mesg );
-                    throw new IOException( mesg );
-                }
+                linkCountMatrix.set( rowIndex, colIndex, values );
             }
         }
         in.close();
@@ -606,9 +602,9 @@ public class LinkMatrix {
                 }
             }
             for ( int rowIndex = 0; rowIndex < nodes.size(); rowIndex++ ) {
-                TreeNode rowNode = ( TreeNode ) nodes.getQuick( rowIndex );
+                TreeNode rowNode = ( TreeNode ) nodes.get( rowIndex );
                 for ( int colIndex = rowIndex + 1; colIndex < nodes.size(); colIndex++ ) {
-                    TreeNode colNode = ( TreeNode ) nodes.getQuick( colIndex );
+                    TreeNode colNode = ( TreeNode ) nodes.get( colIndex );
                     int commonBits = overlapBits( rowNode.getMask(), colNode.getMask() );
                     if ( commonBits >= stringency ) {
                         out.write( rowIndex + "\t" + colIndex + "\t" + commonBits + "\n" );
