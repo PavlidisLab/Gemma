@@ -53,6 +53,11 @@ public class ConfigUtils {
     private static final String USER_CONFIGURATION = "Gemma.properties";
 
     /**
+     * Name of the resource containing defaults that the user can override (classpath)
+     */
+    private static final String DEFAULT_CONFIGURATION = "default.properties";
+
+    /**
      * Name of the resource that is used to configure Gemma internally.
      */
     private static final String BUILTIN_CONFIGURATION = "project.properties";
@@ -65,9 +70,14 @@ public class ConfigUtils {
         config.addConfiguration( new SystemConfiguration() );
 
         // the order matters - first come, first serve.
+        try {
+            // Default comes first.
+            config.addConfiguration( new PropertiesConfiguration( DEFAULT_CONFIGURATION ) );
+        } catch ( ConfigurationException e ) {
+            // hmm, this is pretty much required.
+            log.warn( DEFAULT_CONFIGURATION + " not found" );
+        }
 
-        
-        
         try {
             config.addConfiguration( new PropertiesConfiguration( USER_CONFIGURATION ) );
         } catch ( ConfigurationException e ) {
@@ -99,9 +109,9 @@ public class ConfigUtils {
             // that's okay too.
             log.warn( "version.properties not found" );
         }
-        
+
         // step through the result and do a final round of variable substitution
-        for ( Iterator<String> it = config.getKeys() ; it.hasNext(); ) {
+        for ( Iterator<String> it = config.getKeys(); it.hasNext(); ) {
             String key = it.next();
             String property = config.getString( key );
             if ( property != null && property.startsWith( "${" ) && property.endsWith( "}" ) ) {
