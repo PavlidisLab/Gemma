@@ -63,7 +63,7 @@
 	<property name="locations">
 		<list>
 			<value>classpath:mail.properties</value>
-			<value>classpath:db.properties</value>
+			<value>classpath:default.properties</value>
 		</list>
 	</property>
 	<property name="ignoreUnresolvablePlaceholders" value="false" />
