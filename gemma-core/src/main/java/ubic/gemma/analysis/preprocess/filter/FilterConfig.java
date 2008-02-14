@@ -90,11 +90,11 @@ public class FilterConfig {
     }
 
     public double getLowExpressionCut() {
-        this.lowExpressionCutIsSet = true;
         return lowExpressionCut;
     }
 
     public void setLowExpressionCut( double lowExpressionCut ) {
+        this.lowExpressionCutIsSet = true;
         this.lowExpressionCut = lowExpressionCut;
     }
 

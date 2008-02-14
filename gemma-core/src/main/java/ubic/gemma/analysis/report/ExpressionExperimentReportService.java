@@ -180,6 +180,8 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         Map<Long, AuditEvent> validationEvents = getEvents( ees, ValidatedFlagEvent.Factory.newInstance() );
         Map<Long, AuditEvent> arrayDesignEvents = getEvents( ees, ArrayDesignGeneMappingEvent.Factory.newInstance() );
 
+        Map<Long, Collection<AuditEvent>> sampleRemovalEvents = getSampleRemovalEvents( ees );
+
         // add in the last events of interest for all eeVos
         for ( ExpressionExperimentValueObject eeVo : vos ) {
             Long id = eeVo.getId();
@@ -212,6 +214,12 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                 if ( event != null ) {
                     eeVo.setDateArrayDesignLastUpdated( event.getDate() );
                 }
+            }
+
+            if ( sampleRemovalEvents.containsKey( id ) ) {
+                Collection<AuditEvent> e = sampleRemovalEvents.get( id );
+                // we find we are getting lazy-load exceptions from this guy.
+                eeVo.setSampleRemovedFlags( e );
             }
 
             if ( troubleEvents.containsKey( id ) ) {
@@ -375,6 +383,18 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
 
         for ( Auditable a : events.keySet() ) {
             result.put( ( ( ExpressionExperiment ) a ).getId(), events.get( a ) );
+        }
+        return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Timed(minimumTimeToReport = 200)
+    private Map<Long, Collection<AuditEvent>> getSampleRemovalEvents( Collection<ExpressionExperiment> ees ) {
+        Map<Long, Collection<AuditEvent>> result = new HashMap<Long, Collection<AuditEvent>>();
+        Map<ExpressionExperiment, Collection<AuditEvent>> rawr = expressionExperimentService
+                .getSampleRemovalEvents( ees );
+        for ( ExpressionExperiment e : rawr.keySet() ) {
+            result.put( e.getId(), rawr.get( e ) );
         }
         return result;
     }

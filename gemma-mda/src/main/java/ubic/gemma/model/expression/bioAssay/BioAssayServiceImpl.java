@@ -69,7 +69,7 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
     }
 
     /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#remove(edu.columbia.gemma.expression.bioAssay.BioAssay)
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#markAsMissing(edu.columbia.gemma.expression.bioAssay.BioAssay)
      */
     @Override
     protected void handleRemove( BioAssay bioAssay ) throws Exception {

@@ -168,7 +168,7 @@ public class BioAssayController extends BackgroundProcessingMultiActionControlle
             ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
                     .getName(), "Marking BioAssay: " + bioAssay.getName() + " as missing data" );
 
-            sampleRemoveService.remove( this.bioAssay );
+            sampleRemoveService.markAsMissing( this.bioAssay );
             saveMessage( "BioAssay  " + bioAssay.getName() + " marked as missing data." );
             bioAssay = null;
 

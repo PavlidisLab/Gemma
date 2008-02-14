@@ -158,6 +158,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             errorObjects.add( ee + ": " + e.getMessage() );
             logFailure( ee, e );
             log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********" );
+            log.error( e, e );
         }
     }
 

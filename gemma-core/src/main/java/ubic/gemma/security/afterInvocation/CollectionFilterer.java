@@ -99,7 +99,7 @@ public class CollectionFilterer implements Filterer {
     }
 
     /**
-     * @see org.acegisecurity.afterinvocation.Filterer#remove(java.lang.Object)
+     * @see org.acegisecurity.afterinvocation.Filterer#markAsMissing(java.lang.Object)
      */
     @SuppressWarnings("unused")
     public void remove( Object object ) {

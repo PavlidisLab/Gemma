@@ -43,7 +43,14 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 /**
  * Service for removing sample(s) from an expression experiment. This can be done in the interest of quality control.
- * NOTE currently this does not actually remove the samples. It just replaces the data with "missing values".
+ * <p>
+ * NOTE currently this does not actually remove the samples. It just replaces the data with "missing values". This means
+ * the data are not recoverable. The reason we don't simply mark it as missing in the "absent-present" data (and leave
+ * the regular data alone) is that for many data sets we either 1) don't already have an absent-present data type or 2)
+ * the absent-present data is not used in analysis. We will probably change this behavior to preserve the data in
+ * question.
+ * <p>
+ * In the meantime, this should be used very judiciously!
  * 
  * @spring.bean id="sampleRemoveService"
  * @spring.property ref="expressionExperimentService" name="expressionExperimentService"
@@ -74,35 +81,41 @@ public class SampleRemoveService extends ExpressionExperimentVectorManipulatingS
     }
 
     /**
+     * This does not actually remove the sample; rather, it sets all values to "missing".
+     * 
      * @param expExp
      * @param bioAssay
      */
-    public void remove( ExpressionExperiment expExp, BioAssay bioAssay ) {
+    public void markAsMissing( ExpressionExperiment expExp, BioAssay bioAssay ) {
         Collection<BioAssay> bms = new HashSet<BioAssay>();
         bms.add( bioAssay );
-        this.remove( expExp, bms );
+        this.markAsMissing( expExp, bms );
     }
 
     /**
+     * This does not actually remove the sample; rather, it sets all values to "missing".
+     * 
      * @param expExp
      * @param bioAssay
      */
-    public void remove( BioAssay bioAssay ) {
+    public void markAsMissing( BioAssay bioAssay ) {
         Collection<BioAssay> bms = new HashSet<BioAssay>();
         bms.add( bioAssay );
         bioAssayService.thaw( bioAssay );
         ExpressionExperiment expExp = expressionExperimentService.findByBioMaterial( bioAssay.getSamplesUsed()
                 .iterator().next() );
         assert expExp != null;
-        this.remove( expExp, bms );
+        this.markAsMissing( expExp, bms );
     }
 
     /**
+     * This does not actually remove the sample; rather, it sets all values to "missing".
+     * 
      * @param expExp
      * @param assaysToRemove
      */
     @SuppressWarnings("unchecked")
-    public void remove( ExpressionExperiment expExp, Collection<BioAssay> assaysToRemove ) {
+    public void markAsMissing( ExpressionExperiment expExp, Collection<BioAssay> assaysToRemove ) {
 
         if ( assaysToRemove == null || assaysToRemove.size() == 0 ) return;
 
@@ -167,10 +180,10 @@ public class SampleRemoveService extends ExpressionExperimentVectorManipulatingS
             log.info( "Committing changes to " + oldVectors.size() + " vectors" );
             designElementDataVectorService.update( oldVectors );
         }
-        
+
         log.info( "Logging event." );
         for ( BioAssay ba : assaysToRemove ) {
-            audit( ba, "" );
+            audit( ba, "Sample " + ba.getName() + " marked as missing data." );
         }
     }
 

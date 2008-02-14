@@ -124,6 +124,8 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
         // how to determine subclasses? There is no way to do this but the hibernate way.
         SingleTableEntityPersister classMetadata = ( SingleTableEntityPersister ) this.getSessionFactory()
                 .getClassMetadata( type );
+        if ( classMetadata == null ) return classes;
+
         if ( classMetadata.hasSubclasses() ) {
             String[] subclasses = classMetadata.getSubclassClosure(); // this includes the superclass, fully qualified
             // names.

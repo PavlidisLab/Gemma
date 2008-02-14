@@ -4,9 +4,9 @@
 	class="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" />
 <head>
 	<title>Expression experiment <%
-	if ( expressionExperiment.getName() != null ) {
+	    if ( expressionExperiment.getName() != null ) {
 	%>: <jsp:getProperty name="expressionExperiment" property="name" /> <%
- }
+     }
  %>
 	</title>
 
@@ -17,14 +17,14 @@
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentController.js'></script>
-		<script type='text/javascript' src="<c:url value='/scripts/ajax/util/GemmaGridPanel.js'/>"></script>
+	<script type='text/javascript' src="<c:url value='/scripts/ajax/util/GemmaGridPanel.js'/>"></script>
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/AnnotationGrid.js'/>"></script>
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/ExpressionExperimentGrid.js'/>"></script>
-	
+
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/eeDesignMatrix.js'/>"></script>
-	
+
 	<script type="text/javascript" src="<c:url value='/scripts/scriptaculous/effects.js'/>"></script>
-	
+
 	<authz:authorize ifAnyGranted="admin">
 		<script type="text/javascript" src='/Gemma/dwr/interface/OntologyService.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/MgedOntologyService.js'></script>
@@ -33,18 +33,18 @@
 		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/MGEDCombo.js'/>"></script>
 		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/AnnotationToolBar.js'/>"></script>
 		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/ExpressionExperimentToolBar.js'/>"></script>
-		
+
 		<script type='text/javascript' src='/Gemma/dwr/interface/AuditController.js'></script>
 		<script type="text/javascript" src="<c:url value='/scripts/ajax/auditTrail.js'/>" type="text/javascript"></script>
 	</authz:authorize>
-	
+
 </head>
 
 <authz:authorize ifAnyGranted="admin">
-<input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
+	<input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
 </authz:authorize>
 <authz:authorize ifNotGranted="admin">
-<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
+	<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
 </authz:authorize>
 
 <form style="float: right;" name="ExpresssionExperimentFilter" action="filterExpressionExperiments.html" method="POST">
@@ -57,13 +57,13 @@
 <content tag="heading">
 Experiment detail view for
 <%
-if ( expressionExperiment.getName() != null ) {
+    if ( expressionExperiment.getName() != null ) {
 %>
 :
 <jsp:getProperty name="expressionExperiment" property="name" />
 -
 <%
-}
+    }
 %>
 <jsp:getProperty name="expressionExperiment" property="shortName" />
 &nbsp;
@@ -79,6 +79,11 @@ if ( expressionExperiment.getName() != null ) {
 &nbsp;
 <img src='<c:url value="/images/icons/ok.png"/>' height='16' width='16' alt='validated'
 		title='${ validatedEventDescription }' />
+</c:if>
+<c:if test="${ samplesRemoved != null}">
+&nbsp;
+<img src='<c:url value="/images/icons/exclamation.png"/>' height='16' width='16' alt='samplesRemoved'
+		title='${ samplesRemovedDescription }' />
 </c:if>
 </content>
 
@@ -107,13 +112,13 @@ if ( expressionExperiment.getName() != null ) {
 		</td>
 		<td>
 			<%
-			if ( expressionExperiment.getName() != null ) {
+			    if ( expressionExperiment.getName() != null ) {
 			%>
 			<jsp:getProperty name="expressionExperiment" property="name" />
 			<%
-			                } else {
-			                out.print( "No name available" );
-			            }
+			    } else {
+			        out.print( "No name available" );
+			    }
 			%>
 		</td>
 	</tr>
@@ -124,16 +129,16 @@ if ( expressionExperiment.getName() != null ) {
 		</td>
 		<td>
 			<%
-			if ( expressionExperiment.getDescription() != null ) {
+			    if ( expressionExperiment.getDescription() != null ) {
 			%>
 			<div class="clob" style="width: 40%;">
 				<jsp:getProperty name="expressionExperiment" property="description" />
 			</div>
 
 			<%
-			                } else {
-			                out.print( "Description unavailable" );
-			            }
+			    } else {
+			        out.print( "Description unavailable" );
+			    }
 			%>
 		</td>
 	</tr>
@@ -143,13 +148,13 @@ if ( expressionExperiment.getName() != null ) {
 		</td>
 		<td>
 			<%
-			if ( expressionExperiment.getSource() != null ) {
+			    if ( expressionExperiment.getSource() != null ) {
 			%>
 			<jsp:getProperty name="expressionExperiment" property="source" />
 			<%
-			                } else {
-			                out.print( "Source unavailable" );
-			            }
+			    } else {
+			        out.print( "Source unavailable" );
+			    }
 			%>
 		</td>
 	</tr>
@@ -159,13 +164,13 @@ if ( expressionExperiment.getName() != null ) {
 		</td>
 		<td>
 			<%
-			if ( expressionExperiment.getOwner() != null ) {
+			    if ( expressionExperiment.getOwner() != null ) {
 			%>
 			<jsp:getProperty name="expressionExperiment" property="owner" />
 			<%
-			                } else {
-			                out.print( "Public" );
-			            }
+			    } else {
+			        out.print( "Public" );
+			    }
 			%>
 		</td>
 	</tr>
@@ -175,19 +180,19 @@ if ( expressionExperiment.getName() != null ) {
 		</td>
 		<td>
 			<%
-			                    if ( ( expressionExperiment.getInvestigators() ) != null
-			                    && ( expressionExperiment.getInvestigators().size() > 0 ) ) {
+			    if ( ( expressionExperiment.getInvestigators() ) != null
+			            && ( expressionExperiment.getInvestigators().size() > 0 ) ) {
 			%>
 			<c:forEach end="0" var="investigator" items="${ expressionExperiment.investigators }">
 				<c:out value="${ investigator.name}" />
 			</c:forEach>
 			<%
-			                    if ( expressionExperiment.getInvestigators().size() > 1 ) {
-			                    out.print( ", et al. " );
-			                }
-			            } else {
-			                out.print( "No investigators known" );
-			            }
+			    if ( expressionExperiment.getInvestigators().size() > 1 ) {
+			            out.print( ", et al. " );
+			        }
+			    } else {
+			        out.print( "No investigators known" );
+			    }
 			%>
 		</td>
 	</tr>
@@ -206,13 +211,13 @@ if ( expressionExperiment.getName() != null ) {
 		</td>
 		<td>
 			<%
-			if ( expressionExperiment.getPrimaryPublication() != null ) {
+			    if ( expressionExperiment.getPrimaryPublication() != null ) {
 			%>
 			<Gemma:citation citation="${expressionExperiment.primaryPublication }" />
 			<%
-			                } else {
-			                out.print( "Primary publication unavailable" );
-			            }
+			    } else {
+			        out.print( "Primary publication unavailable" );
+			    }
 			%>
 		</td>
 	</tr>
@@ -223,11 +228,11 @@ if ( expressionExperiment.getName() != null ) {
 			</td>
 			<td>
 				<%
-				                if ( expressionExperiment.getAuditTrail() != null ) {
-				                out.print( expressionExperiment.getAuditTrail().getCreationEvent().getDate() );
-				            } else {
-				                out.print( "Create date unavailable" );
-				            }
+				    if ( expressionExperiment.getAuditTrail() != null ) {
+				        out.print( expressionExperiment.getAuditTrail().getCreationEvent().getDate() );
+				    } else {
+				        out.print( "Create date unavailable" );
+				    }
 				%>
 			</td>
 		</tr>
@@ -249,7 +254,7 @@ if ( expressionExperiment.getName() != null ) {
 			<fmt:message key="bioAssays.title" />
 		<td>
 			<%
-			out.print( expressionExperiment.getBioAssays().size() );
+			    out.print( expressionExperiment.getBioAssays().size() );
 			%>
 			<a
 				href="/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id=<%out.print(expressionExperiment.getId());%>">
@@ -294,14 +299,13 @@ if ( expressionExperiment.getName() != null ) {
 	<br />
 </div>
 <div id="annots">
-	<div id="eeAnnotations" class="x-grid-mso"
-		style="border: 1px solid #c3daf9; overflow: hidden;"></div>
+	<div id="eeAnnotations" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden;"></div>
 	<input type="hidden" name="eeId" id="eeId" value="${expressionExperiment.id}" />
 	<input type="hidden" name="eeClass" id="eeClass" value="${expressionExperiment.class.name}" />
 </div>
 
 <%
-if ( expressionExperiment.getExperimentalDesign() != null ) {
+    if ( expressionExperiment.getExperimentalDesign() != null ) {
 %>
 <h3>
 	<fmt:message key="experimentalDesign.title" />
@@ -309,9 +313,9 @@ if ( expressionExperiment.getExperimentalDesign() != null ) {
 	<a
 		href="/Gemma/experimentalDesign/showExperimentalDesign.html?id=<%out.print(expressionExperiment.getExperimentalDesign().getId());%> ">
 		<%
-		                    if ( expressionExperiment.getExperimentalDesign().getName() != null ) {
-		                    out.print( expressionExperiment.getExperimentalDesign().getName() );
-		                }
+		    if ( expressionExperiment.getExperimentalDesign().getName() != null ) {
+		            out.print( expressionExperiment.getExperimentalDesign().getName() );
+		        }
 		%> <img src="/Gemma/images/magnifier.png" /> </a>
 </h3>
 <div style="padding: 2px;" onclick="Effect.toggle('design', 'blind', {duration:0.1})">
@@ -321,11 +325,10 @@ if ( expressionExperiment.getExperimentalDesign() != null ) {
 <div id="design">
 	<Gemma:eeDesign experimentalDesign="${expressionExperiment.experimentalDesign}"></Gemma:eeDesign>
 
-	<div id="eeDesignMatrix" class="x-grid-mso"
-		style="border: 1px solid #c3daf9; overflow: hidden;"></div>
+	<div id="eeDesignMatrix" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden;"></div>
 </div>
 <%
-}
+    }
 %>
 
 <h3>
@@ -333,7 +336,7 @@ if ( expressionExperiment.getExperimentalDesign() != null ) {
 	<a class="helpLink" href="?"
 		onclick="showHelpTip(event, 
 				'Quantitation types are the different measurements available for this experiment.'); return false">
-		<img src="/Gemma/images/help.png" /> </a>  (${qtCount} items)
+		<img src="/Gemma/images/help.png" /> </a> (${qtCount} items)
 </h3>
 <div style="padding: 2px;" onclick="Effect.toggle('qts', 'blind', {duration:0.1})">
 	<img src="/Gemma/images/plus.gif" />
@@ -405,8 +408,7 @@ if ( expressionExperiment.getExperimentalDesign() != null ) {
 	<h3>
 		History
 	</h3>
-	<div id="auditTrail" class="x-grid-mso"
-		style="border: 1px solid #c3daf9; overflow: hidden; width: 650px;"></div>
+	<div id="auditTrail" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width: 650px;"></div>
 	<input type="hidden" name="auditableId" id="auditableId" value="${expressionExperiment.id}" />
 	<input type="hidden" name="auditableClass" id="auditableClass" value="${expressionExperiment.class.name}" />
 	<c:if test="${ lastArrayDesignUpdate != null}">

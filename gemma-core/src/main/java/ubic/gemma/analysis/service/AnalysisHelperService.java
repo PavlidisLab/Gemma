@@ -63,7 +63,8 @@ public class AnalysisHelperService {
     @SuppressWarnings("unchecked")
     public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig,
             Collection<DesignElementDataVector> dataVectors ) {
-        ExpressionExperimentFilter filter = new ExpressionExperimentFilter( ee, filterConfig );
+        Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
+        ExpressionExperimentFilter filter = new ExpressionExperimentFilter( ee, arrayDesignsUsed, filterConfig );
         ExpressionDataDoubleMatrix eeDoubleMatrix = filter.getFilteredMatrix( dataVectors );
         return eeDoubleMatrix;
     }
@@ -79,7 +80,8 @@ public class AnalysisHelperService {
     @SuppressWarnings("unchecked")
     public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig ) {
         Collection<DesignElementDataVector> dataVectors = this.getUsefulVectors( ee );
-        ExpressionExperimentFilter filter = new ExpressionExperimentFilter( ee, filterConfig );
+        Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
+        ExpressionExperimentFilter filter = new ExpressionExperimentFilter( ee, arrayDesignsUsed, filterConfig );
         ExpressionDataDoubleMatrix eeDoubleMatrix = filter.getFilteredMatrix( dataVectors );
         return eeDoubleMatrix;
     }

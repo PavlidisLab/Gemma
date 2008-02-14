@@ -91,11 +91,13 @@ public class ExpressionExperimentFilter {
 
     /**
      * @param ee
-     * @param config configuration used for all filtering. This must be defined at constructio and cannot be changed
+     * @param config configuration used for all filtering. This must be defined at construction and cannot be changed
      *        afterwards.
      */
-    public ExpressionExperimentFilter( ExpressionExperiment ee, FilterConfig config ) {
+    public ExpressionExperimentFilter( ExpressionExperiment ee, Collection<ArrayDesign> arrayDesignsUsed,
+            FilterConfig config ) {
         this.ee = ee;
+        this.arrayDesignsUsed = arrayDesignsUsed;
         this.config = config;
     }
 
@@ -180,7 +182,7 @@ public class ExpressionExperimentFilter {
             }
 
             if ( config.isLowExpressionCutIsSet() ) {
-                log.info( "Filtering for low expression" );
+                log.info( "Filtering for low or too high expression" );
                 filteredMatrix = lowExpressionFilter( filteredMatrix );
             }
 

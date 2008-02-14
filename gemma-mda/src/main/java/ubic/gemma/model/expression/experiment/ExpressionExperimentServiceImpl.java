@@ -91,6 +91,7 @@ public class ExpressionExperimentServiceImpl extends
      */
     @Override
     protected void handleDelete( ExpressionExperiment ee ) throws Exception {
+        this.getProbe2ProbeCoexpressionDao().deleteLinks(ee);
         this.getExpressionExperimentDao().remove( ee );
     }
 
@@ -530,6 +531,12 @@ public class ExpressionExperimentServiceImpl extends
     @Override
     protected Map handleGetPopulatedFactorCounts( Collection ids ) throws Exception {
         return this.getExpressionExperimentDao().getPopulatedFactorCounts( ids );
+    }
+
+    @Override
+    protected Map /* <ExpressionExperiment, Collection<AuditEvent>> */handleGetSampleRemovalEvents(
+            Collection expressionExperiments ) throws Exception {
+        return this.getExpressionExperimentDao().getSampleRemovalEvents( expressionExperiments );
     }
 
 }

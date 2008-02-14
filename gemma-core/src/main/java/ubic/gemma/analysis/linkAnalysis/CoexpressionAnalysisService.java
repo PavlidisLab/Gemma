@@ -314,7 +314,6 @@ public class CoexpressionAnalysisService {
         StopWatch watch = new StopWatch();
         watch.start();
         log.info( ee.getShortName() + ": Getting expression data matrix" );
-        Collection<ArrayDesign> ads = eeService.getArrayDesignsUsed( ee );
 
         // get quantitation types
         Collection<QuantitationType> qts;
@@ -329,7 +328,8 @@ public class CoexpressionAnalysisService {
         dedvService.thaw( dedvs );
 
         // build and filter expression data matrix
-        ExpressionExperimentFilter filter = new ExpressionExperimentFilter( ee, filterConfig );
+        Collection<ArrayDesign> arrayDesignsUsed = eeService.getArrayDesignsUsed( ee );
+        ExpressionExperimentFilter filter = new ExpressionExperimentFilter( ee, arrayDesignsUsed, filterConfig );
         ExpressionDataDoubleMatrix eeDoubleMatrix;
         try {
             eeDoubleMatrix = filter.getFilteredMatrix( dedvs );

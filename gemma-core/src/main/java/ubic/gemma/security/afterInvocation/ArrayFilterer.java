@@ -95,7 +95,7 @@ class ArrayFilterer implements Filterer {
     }
 
     /**
-     * @see org.acegisecurity.afterinvocation.Filterer#remove(java.lang.Object)
+     * @see org.acegisecurity.afterinvocation.Filterer#markAsMissing(java.lang.Object)
      */
     public void remove( Object object ) {
         removeList.add( object );

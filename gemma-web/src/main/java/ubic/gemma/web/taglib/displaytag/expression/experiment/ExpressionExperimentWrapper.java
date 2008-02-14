@@ -400,7 +400,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     }
 
     public String getStatus() {
-        return getTroubleFlag().concat( getValidatedFlag() );
+        return getTroubleFlag().concat( getValidatedFlag() ).concat( getSampleRemovalFlag() );
     }
 
     public String getTroubleFlag() {
@@ -415,6 +415,17 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         return buf.toString();
     }
 
+    public String getSampleRemovalFlag() {
+        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
+        StringBuffer buf = new StringBuffer();
+        if ( object.getSampleRemovedFlags() != null && object.getSampleRemovedFlags().size() > 0 ) {
+            buf.append( "&nbsp;<img src='/Gemma/images/icons/exclamation.png' height='16' width='16' alt='validated' title='" );
+            buf.append( StringEscapeUtils.escapeHtml( object.getSampleRemovedFlags().iterator().next().toString() ) ); // todo: support multiple.
+            buf.append( "' />" );
+        }
+        return buf.toString();
+    }
+    
     public String getValidatedFlag() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         StringBuffer buf = new StringBuffer();

@@ -30,13 +30,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.StringUtils; 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -319,6 +320,22 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         return null;
     }
 
+    /**
+     * @param ee
+     * @return
+     */
+    private Collection<AuditEvent> getSampleRemovalEvents( ExpressionExperiment ee ) {
+        Collection<AuditEvent> result = new HashSet<AuditEvent>();
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            for ( AuditEvent e : ba.getAuditTrail().getEvents() ) {
+                if ( e.getEventType() != null && e.getEventType() instanceof SampleRemovalEvent ) {
+                    result.add( e );
+                }
+            }
+        }
+        return result;
+    }
+
     private AuditEvent getLastValidationEvent( ExpressionExperiment ee ) {
         return auditTrailService.getLastValidationEvent( ee );
     }
@@ -345,10 +362,13 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         }
 
         ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
-        expressionExperimentService.thawLite( expressionExperiment );
+
         if ( expressionExperiment == null ) {
             return redirectToList( request );
         }
+
+        expressionExperimentService.thawLite( expressionExperiment );
+
         request.setAttribute( "id", id );
 
         ModelAndView mav = new ModelAndView( "expressionExperiment.detail" ).addObject( "expressionExperiment",
@@ -363,6 +383,14 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         if ( validatedEvent != null ) {
             mav.addObject( "validatedEvent", validatedEvent );
             mav.addObject( "validatedEventDescription", StringEscapeUtils.escapeHtml( validatedEvent.toString() ) );
+        }
+
+        Collection<AuditEvent> sampleRemovalEvents = this.getSampleRemovalEvents( expressionExperiment );
+        if ( sampleRemovalEvents.size() > 0 ) {
+            mav.addObject( "samplesRemoved", sampleRemovalEvents.iterator().next() ); // todo: handle multiple
+            mav.addObject( "samplesRemovedDescription", StringEscapeUtils.escapeHtml( sampleRemovalEvents.iterator()
+                    .next().toString()
+                    + " (possibly other removals, not shown)" ) );
         }
 
         Collection characteristics = expressionExperiment.getCharacteristics();
@@ -472,7 +500,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         }
 
         Long numExpressionExperiments = new Long( expressionExperiments.size() );
- 
+
         mav.addObject( "expressionExperiments", expressionExperiments );
         mav.addObject( "numExpressionExperiments", numExpressionExperiments );
         return mav;

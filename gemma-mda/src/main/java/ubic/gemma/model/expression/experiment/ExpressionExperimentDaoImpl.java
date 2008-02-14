@@ -48,6 +48,7 @@ import org.hibernate.type.LongType;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
@@ -253,7 +254,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     public void remove( ExpressionExperiment expressionExperiment ) {
         final ExpressionExperiment toDelete = expressionExperiment;
 
-        // this.thawBioAssays( expressionExperiment );
+        // Note that links are deleted separately - see the ExpressionExperimentService.
 
         this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( Session session ) throws HibernateException {
@@ -1020,7 +1021,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     protected ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastAuditEvent(
             final ubic.gemma.model.common.Auditable auditable,
             final ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType type ) throws java.lang.Exception {
-        return this.handleGetLastAuditEvent( auditable, type );
+        return super.handleGetLastAuditEvent( auditable, type );
     }
 
     /*
@@ -1130,6 +1131,34 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             throw super.convertHibernateAccessException( ex );
         }
         return ees;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetSampleRemovalEvents(java.util.Collection)
+     */
+    @Override
+    protected Map<ExpressionExperiment, Collection<AuditEvent>> handleGetSampleRemovalEvents(
+            Collection /* <ExpressionExxperiment? */expressionExperiments ) {
+        List<String> classes = getClassHierarchy( SampleRemovalEvent.class );
+        final String queryString = "select ee, ae from ExpressionExperimentImpl ee inner join ee.bioAssays ba "
+                + "inner join ba.auditTrail trail inner join at.events event inner join event.eventType et "
+                + "inner join fetch event.performer where ee in (:ees) and et.class in ("
+                + StringUtils.join( classes, "," ) + ")";
+
+        Map<ExpressionExperiment, Collection<AuditEvent>> result = new HashMap<ExpressionExperiment, Collection<AuditEvent>>();
+        List r = this.getHibernateTemplate().findByNamedParam( queryString, "ees", expressionExperiments );
+        for ( Object o : r ) {
+            Object[] ol = ( Object[] ) o;
+            ExpressionExperiment e = ( ExpressionExperiment ) ol[0];
+            if ( !result.containsKey( e ) ) {
+                result.put( e, new HashSet<AuditEvent>() );
+            }
+            AuditEvent ae = ( AuditEvent ) ol[1];
+            result.get( e ).add( ae );
+        }
+        return result;
     }
 
     /*
@@ -1316,6 +1345,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     // thaw lite.
     @Override
     protected void handleThawBioAssays( final ExpressionExperiment ee ) {
+        if ( ee == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
 
