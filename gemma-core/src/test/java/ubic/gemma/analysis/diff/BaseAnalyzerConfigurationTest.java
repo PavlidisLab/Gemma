@@ -468,7 +468,8 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         // TODO replace with non-deprecated metods
 
         MockClassControl control = MockClassControl.createControl( AnalysisHelperService.class,
-                new Method[] { AnalysisHelperService.class.getMethod( "getVectors", ExpressionExperiment.class ) } );
+                new Method[] { AnalysisHelperService.class.getMethod( "getPreferredAndMissingValueVectors",
+                        ExpressionExperiment.class ) } );
 
         analysisHelperService = ( AnalysisHelperService ) control.getMock();
 

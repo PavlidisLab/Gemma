@@ -189,9 +189,14 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         if ( hasOption( "text" ) ) {
             this.linkAnalysisConfig.setTextOut( true );
         }
+
+        if ( hasOption( "knownGenesOnly" ) ) {
+            linkAnalysisConfig.setKnownGenesOnly( true );
+        }
         if ( hasOption( "force" ) ) {
             this.force = true;
         }
+
         this.expressionExperimentReportService = ( ExpressionExperimentReportService ) this
                 .getBean( "expressionExperimentReportService" );
         this.auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
@@ -223,6 +228,11 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 "Fraction of expression vectors to reject based on low variance (or coefficient of variation), default="
                         + FilterConfig.DEFAULT_LOWVARIANCECUT ).withLongOpt( "lowvarcut" ).create( "lv" );
         addOption( lowVarianceCut );
+
+        Option knownGenesOnlyOption = OptionBuilder.withDescription(
+                "Only save results for links between 'known genes'" ).create( "knownGenesOnly" );
+        addOption( knownGenesOnlyOption );
+
     }
 
     private void getFilterConfigOptions() {
@@ -235,6 +245,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         if ( hasOption( "lv" ) ) {
             filterConfig.setLowVarianceCut( Double.parseDouble( getOptionValue( "lv" ) ) );
         }
+
     }
 
     /**

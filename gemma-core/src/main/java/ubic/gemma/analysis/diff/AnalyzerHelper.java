@@ -39,7 +39,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
- * A helper class for the analyzers. This class contains helper methods commonly needed when performing an analysis.
+ * A helper class for the differential expression analyzers. This class contains helper methods commonly needed when performing an analysis.
  * 
  * @spring.bean id="analyzerHelper"
  * @spring.property name="analysisHelperService" ref="analysisHelperService"

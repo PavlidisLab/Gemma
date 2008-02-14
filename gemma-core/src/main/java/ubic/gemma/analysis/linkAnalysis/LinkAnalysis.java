@@ -65,6 +65,8 @@ public class LinkAnalysis {
 
     private NumberFormat form;
 
+    private boolean useKnownGenesOnly = false;
+
     private LinkAnalysisConfig config;
     private ExpressionExperiment expressionExperiment;
 
@@ -338,6 +340,20 @@ public class LinkAnalysis {
      */
     public ProbeCoexpressionAnalysis getAnalysisObj() {
         return analysis;
+    }
+
+    /**
+     * @return true if we should retain links only for known genes with other known genes.
+     */
+    public boolean useKnownGenesOnly() {
+        return useKnownGenesOnly;
+    }
+
+    /**
+     * @param useKnownGenesOnly
+     */
+    public void setUseKnownGenesOnly( boolean useKnownGenesOnly ) {
+        this.useKnownGenesOnly = useKnownGenesOnly;
     }
 
 }

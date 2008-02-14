@@ -329,7 +329,7 @@ public class CoexpressionAnalysisService {
         dedvService.thaw( dedvs );
 
         // build and filter expression data matrix
-        ExpressionExperimentFilter filter = new ExpressionExperimentFilter( ee, ads, filterConfig );
+        ExpressionExperimentFilter filter = new ExpressionExperimentFilter( ee, filterConfig );
         ExpressionDataDoubleMatrix eeDoubleMatrix;
         try {
             eeDoubleMatrix = filter.getFilteredMatrix( dedvs );

@@ -42,6 +42,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.math.CorrelationStats;
 import ubic.gemma.analysis.preprocess.InsufficientProbesException;
+import ubic.gemma.analysis.preprocess.filter.ExpressionExperimentFilter;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
@@ -64,6 +65,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
+import ubic.gemma.model.genome.PredictedGene;
+import ubic.gemma.model.genome.ProbeAlignedRegion;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.persistence.PersisterHelper;
@@ -131,7 +134,7 @@ public class LinkAnalysisService {
         }
 
         /*
-         * Might as well while we have the data handy.
+         * Might as well while we have the data handy. (FIXME: be able to suppress this)
          */
         log.info( "Creating sample correlation matrix ..." );
         ExpressionDataSampleCorrelation.process( eeDoubleMatrix, ee );
@@ -140,7 +143,7 @@ public class LinkAnalysisService {
          * Link analysis section.
          */
         log.info( "Starting link analysis... " + ee );
-        setUpAnalysisObject( ee, la, dataVectors, eeDoubleMatrix );
+        setUpForAnalysis( ee, la, dataVectors, eeDoubleMatrix );
         addAnalysisObj( ee, eeDoubleMatrix, filterConfig, linkAnalysisConfig, la );
         Map<CompositeSequence, DesignElementDataVector> p2v = getProbe2VectorMap( dataVectors );
         la.analyze();
@@ -276,6 +279,12 @@ public class LinkAnalysisService {
             }
         }
 
+        if ( la.getConfig().useKnownGenesOnly() ) {
+            log.info( "Removing probes that assay non 'known genes'" );
+            Collection<DesignElement> els = ExpressionExperimentFilter.getProbesForKnownGenes( probeToGeneMap );
+            probeToGeneMap.keySet().removeAll( els );
+        }
+
         la.setProbeToGeneMap( probeToGeneMap );
     }
 
@@ -342,6 +351,10 @@ public class LinkAnalysisService {
 
     /**
      * Persist the links to the database. This takes care of saving a 'flipped' version of the links.
+     * <p>
+     * Note that if "known genes only" is set, then links between probes that _only_ target other types of genes will
+     * not be stored. However, because the links are stored at the probe level, the links saved will potentially
+     * includes links between any type of gene (but always at least between two known genes).
      * 
      * @param p2v
      * @param la
@@ -426,8 +439,10 @@ public class LinkAnalysisService {
     }
 
     /**
-     * @param c
+     * @param p2v
+     * @param la
      * @param links
+     * @boolean flip
      */
     private void saveLinks( Map<CompositeSequence, DesignElementDataVector> p2v, LinkAnalysis la,
             ObjectArrayList links, boolean flip ) {
@@ -482,28 +497,31 @@ public class LinkAnalysisService {
     }
 
     /**
+     * Initializes the LinkAnalysis object; populates the probe2gene map.
+     * 
      * @param ee
      * @param la
      * @param dataVectors
      * @param eeDoubleMatrix
      */
-    private void setUpAnalysisObject( ExpressionExperiment ee, LinkAnalysis la,
+    private void setUpForAnalysis( ExpressionExperiment ee, LinkAnalysis la,
             Collection<DesignElementDataVector> dataVectors, ExpressionDataDoubleMatrix eeDoubleMatrix ) {
+
         la.setDataMatrix( eeDoubleMatrix );
         la.setTaxon( eeService.getTaxon( ee.getId() ) );
-
         la.setExpressionExperiment( ee );
 
         getProbe2GeneMap( la, dataVectors );
     }
 
     /**
-     * Write links as text
+     * Write links as text. If "known genes only", only known genes will be displayed, even if the probe in question
+     * targets other "types" of genes.
      * 
      * @param la
      * @param wr
      */
-    private void writeLinks( LinkAnalysis la, Writer wr ) throws IOException {
+    private void writeLinks( final LinkAnalysis la, Writer wr ) throws IOException {
         wr.write( la.getConfig().toString() );
         Map<CompositeSequence, Collection<Collection<Gene>>> probeToGeneMap = la.getProbeToGeneMap();
         ObjectArrayList links = la.getKeep();
@@ -512,7 +530,12 @@ public class LinkAnalysisService {
 
         Transformer officialSymbolExtractor = new Transformer() {
             public Object transform( Object input ) {
-                return ( ( Gene ) input ).getOfficialSymbol();
+                Gene g = ( Gene ) input;
+                if ( la.getConfig().useKnownGenesOnly()
+                        && ( g instanceof PredictedGene || g instanceof ProbeAlignedRegion ) ) {
+                    return "";
+                }
+                return g.getOfficialSymbol();
             }
         };
 
@@ -533,14 +556,20 @@ public class LinkAnalysisService {
 
             List<String> genes1 = new ArrayList<String>();
             for ( Collection<Gene> cluster : g1 ) {
-                genes1.add( StringUtils
-                        .join( new TransformIterator( cluster.iterator(), officialSymbolExtractor ), "," ) );
+                String t = StringUtils.join( new TransformIterator( cluster.iterator(), officialSymbolExtractor ), "," );
+                if ( StringUtils.isBlank( t ) ) {
+                    continue;
+                }
+                genes1.add( t );
             }
 
             List<String> genes2 = new ArrayList<String>();
             for ( Collection<Gene> cluster : g2 ) {
-                genes2.add( StringUtils
-                        .join( new TransformIterator( cluster.iterator(), officialSymbolExtractor ), "," ) );
+                String t = StringUtils.join( new TransformIterator( cluster.iterator(), officialSymbolExtractor ), "," );
+                if ( StringUtils.isBlank( t ) ) {
+                    continue;
+                }
+                genes2.add( t );
             }
 
             wr.write( p1.getId() + "\t" + p2.getId() + "\t" + StringUtils.join( genes1.iterator(), "|" ) + "\t"

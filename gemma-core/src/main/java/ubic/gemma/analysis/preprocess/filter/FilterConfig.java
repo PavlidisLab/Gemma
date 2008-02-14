@@ -33,6 +33,7 @@ public class FilterConfig {
         buf.append( "# lowExpressionCut " + this.getLowExpressionCut() + "\n" );
         buf.append( "# minPresentFraction " + this.getMinPresentFraction() + "\n" );
         buf.append( "# lowVarianceCut " + this.getLowVarianceCut() + "\n" );
+        buf.append( "# knownGenesOnly " + this.isKnownGenesOnly() + "\n" );
         return buf.toString();
     }
 
@@ -65,6 +66,16 @@ public class FilterConfig {
     private double lowExpressionCut = DEFAULT_LOWEXPRESSIONCUT;
     private double highExpressionCut = DEFAULT_HIGHEXPRESSION_CUT;
     private double lowVarianceCut = DEFAULT_LOWVARIANCECUT;
+
+    private boolean knownGenesOnly = false;
+
+    public boolean isKnownGenesOnly() {
+        return knownGenesOnly;
+    }
+
+    public void setKnownGenesOnly( boolean knownGenesOnly ) {
+        this.knownGenesOnly = knownGenesOnly;
+    }
 
     public double getHighExpressionCut() {
         return highExpressionCut;

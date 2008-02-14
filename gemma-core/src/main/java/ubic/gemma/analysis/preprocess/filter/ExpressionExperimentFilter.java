@@ -19,6 +19,8 @@
 package ubic.gemma.analysis.preprocess.filter;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -33,7 +35,12 @@ import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.PredictedGene;
+import ubic.gemma.model.genome.ProbeAlignedRegion;
 
 /**
  * Methods to handle filtering expression experiments for analysis.
@@ -54,17 +61,85 @@ public class ExpressionExperimentFilter {
     public static final int MIN_NUMBER_OF_SAMPLES_PRESENT = 7;
 
     private static Log log = LogFactory.getLog( ExpressionExperimentFilter.class.getName() );
+
+    /**
+     * @param probesToGenesMap Map of "clusters"
+     * @return
+     */
+    public static Collection<DesignElement> getProbesForKnownGenes(
+            Map<CompositeSequence, Collection<Collection<Gene>>> probesToGenesMap ) {
+        Collection<DesignElement> keepers = new HashSet<DesignElement>();
+        for ( CompositeSequence cs : probesToGenesMap.keySet() ) {
+            cluster: for ( Collection<Gene> cluster : probesToGenesMap.get( cs ) ) {
+                for ( Gene g : cluster ) {
+                    if ( g instanceof PredictedGene || g instanceof ProbeAlignedRegion ) {
+                        continue;
+                    }
+                    keepers.add( cs );
+                    break cluster;
+                }
+            }
+        }
+        return keepers;
+    }
+
+    Collection<ArrayDesign> arrayDesignsUsed;
+
+    ExpressionExperiment ee;
+
     private final FilterConfig config;
 
     /**
      * @param ee
-     * @param arrayDesignsUsed
+     * @param config configuration used for all filtering. This must be defined at constructio and cannot be changed
+     *        afterwards.
      */
-    public ExpressionExperimentFilter( ExpressionExperiment ee, Collection<ArrayDesign> arrayDesignsUsed,
-            FilterConfig config ) {
+    public ExpressionExperimentFilter( ExpressionExperiment ee, FilterConfig config ) {
         this.ee = ee;
-        this.arrayDesignsUsed = arrayDesignsUsed;
         this.config = config;
+    }
+
+    /**
+     * @param ee
+     * @param dataVectors
+     * @return
+     */
+    public ExpressionDataDoubleMatrix getFilteredMatrix( Collection<DesignElementDataVector> dataVectors ) {
+        log.info( "Getting expression data..." );
+        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( dataVectors );
+
+        ExpressionDataDoubleMatrix eeDoubleMatrix = builder.getPreferredData();
+
+        eeDoubleMatrix = filter( builder, eeDoubleMatrix );
+        return eeDoubleMatrix;
+    }
+
+    /**
+     * Remove probes which to not map to at least one "known gene" (that is, not just probe-aligned regions or predicted
+     * genes).
+     * 
+     * @param matrix
+     * @param probesToGenesMap Map of probes to collection of gene 'clusters'. The gene information associated with each
+     *        probe is used to determine if it is filtered; it's up to the caller to populate this properly. Probes that
+     *        are not represented in the map will not be retained!
+     * @return filtered matrix
+     */
+    public ExpressionDataDoubleMatrix knownGenesOnlyFilter( ExpressionDataDoubleMatrix matrix,
+            Map<CompositeSequence, Collection<Collection<Gene>>> probesToGenesMap ) {
+        Collection<DesignElement> keepers = getProbesForKnownGenes( probesToGenesMap );
+        RowNameFilter rowNameFilter = new RowNameFilter( keepers );
+        return rowNameFilter.filter( matrix );
+    }
+
+    /**
+     * @param ee
+     * @param filteredMatrix
+     * @param arrayDesign
+     * @return
+     */
+    private ExpressionDataDoubleMatrix affyControlProbeFilter( ExpressionDataDoubleMatrix matrix ) {
+        AffyProbeNameFilter affyProbeNameFilter = new AffyProbeNameFilter( new Pattern[] { Pattern.AFFX } );
+        return affyProbeNameFilter.filter( matrix );
     }
 
     /**
@@ -122,40 +197,6 @@ public class ExpressionExperimentFilter {
         return filteredMatrix;
     }
 
-    Collection<ArrayDesign> arrayDesignsUsed;
-    ExpressionExperiment ee;
-
-    /**
-     * Determine if the expression experiment uses two-color arrays. This is not guaranteed to give the right answer if
-     * the experiment uses both types of technologies.
-     * 
-     * @param ee
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private boolean isTwoColor() {
-        ArrayDesign arrayDesign = arrayDesignsUsed.iterator().next();
-        TechnologyType techType = arrayDesign.getTechnologyType();
-        return techType.equals( TechnologyType.TWOCOLOR ) || techType.equals( TechnologyType.DUALMODE );
-    }
-
-    @SuppressWarnings("unchecked")
-    private boolean usesAffymetrix() {
-        ArrayDesign arrayDesign = arrayDesignsUsed.iterator().next();
-        return arrayDesign.getName().toUpperCase().contains( "AFFYMETRIX" );
-    }
-
-    /**
-     * @param ee
-     * @param filteredMatrix
-     * @param arrayDesign
-     * @return
-     */
-    private ExpressionDataDoubleMatrix affyControlProbeFilter( ExpressionDataDoubleMatrix matrix ) {
-        AffyProbeNameFilter affyProbeNameFilter = new AffyProbeNameFilter( new Pattern[] { Pattern.AFFX } );
-        return affyProbeNameFilter.filter( matrix );
-    }
-
     /**
      * @param ee
      * @param builder
@@ -198,18 +239,30 @@ public class ExpressionExperimentFilter {
     }
 
     /**
+     * Determine if the expression experiment uses two-color arrays. This is not guaranteed to give the right answer if
+     * the experiment uses both types of technologies.
+     * 
      * @param ee
-     * @param dataVectors
      * @return
      */
-    public ExpressionDataDoubleMatrix getFilteredMatrix( Collection<DesignElementDataVector> dataVectors ) {
-        log.info( "Getting expression data..." );
-        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( dataVectors );
+    @SuppressWarnings("unchecked")
+    private boolean isTwoColor() {
+        ArrayDesign arrayDesign = arrayDesignsUsed.iterator().next();
+        TechnologyType techType = arrayDesign.getTechnologyType();
+        return techType.equals( TechnologyType.TWOCOLOR ) || techType.equals( TechnologyType.DUALMODE );
+    }
 
-        ExpressionDataDoubleMatrix eeDoubleMatrix = builder.getPreferredData();
-
-        eeDoubleMatrix = filter( builder, eeDoubleMatrix );
-        return eeDoubleMatrix;
+    /**
+     * @param matrix
+     * @return filtered matrix
+     */
+    private ExpressionDataDoubleMatrix lowCVFilter( ExpressionDataDoubleMatrix matrix ) {
+        RowLevelFilter rowLevelFilter = new RowLevelFilter();
+        rowLevelFilter.setMethod( Method.CV );
+        rowLevelFilter.setLowCut( config.getLowVarianceCut() );
+        rowLevelFilter.setRemoveAllNegative( false );
+        rowLevelFilter.setUseAsFraction( true );
+        return rowLevelFilter.filter( matrix );
     }
 
     /**
@@ -239,21 +292,11 @@ public class ExpressionExperimentFilter {
     }
 
     /**
+     * Remove rows that have too many missing values. Note that we normally only apply this to ratiometric arrays, not
+     * one color (e.g., affymetrix) data.
+     * 
      * @param matrix
-     * @return
-     */
-    private ExpressionDataDoubleMatrix lowCVFilter( ExpressionDataDoubleMatrix matrix ) {
-        RowLevelFilter rowLevelFilter = new RowLevelFilter();
-        rowLevelFilter.setMethod( Method.CV );
-        rowLevelFilter.setLowCut( config.getLowVarianceCut() );
-        rowLevelFilter.setRemoveAllNegative( false );
-        rowLevelFilter.setUseAsFraction( true );
-        return rowLevelFilter.filter( matrix );
-    }
-
-    /**
-     * @param matrix
-     * @return
+     * @return filtered matrix
      */
     private ExpressionDataDoubleMatrix minPresentFilter( ExpressionDataDoubleMatrix matrix,
             ExpressionDataBooleanMatrix absentPresent ) {
@@ -280,6 +323,12 @@ public class ExpressionExperimentFilter {
         rowMissingFilter.setMinPresentCount( MIN_NUMBER_OF_SAMPLES_PRESENT );
 
         return rowMissingFilter.filter( matrix );
+    }
+
+    @SuppressWarnings("unchecked")
+    private boolean usesAffymetrix() {
+        ArrayDesign arrayDesign = arrayDesignsUsed.iterator().next();
+        return arrayDesign.getName().toUpperCase().contains( "AFFYMETRIX" );
     }
 
 }

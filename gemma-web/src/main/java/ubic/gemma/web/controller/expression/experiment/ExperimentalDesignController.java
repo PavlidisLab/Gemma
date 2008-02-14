@@ -212,6 +212,13 @@ public class ExperimentalDesignController extends BaseMultiActionController {
              * have to...
              */
             VocabCharacteristic vc = ( VocabCharacteristic ) ef.getCategory();
+            
+            // VC can be null if this was imported from GEO etc.
+            if (vc == null) {
+                vc = VocabCharacteristic.Factory.newInstance();
+                ef.setCategory( vc );
+            }
+            
             vc.setCategory( efvo.getCategory() );
             vc.setCategoryUri( efvo.getCategoryUri() );
             vc.setValue( efvo.getCategory() );

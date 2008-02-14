@@ -37,69 +37,74 @@ public class LinkAnalysisConfig {
     private double fwe = 0.01;
     private double cdfCut = 0.01; // 1.0 means, keep everything.
 
+    private boolean knownGenesOnly = false;
     private boolean useDb = true;
 
     private double correlationCacheThreshold = 0.8;
     private boolean textOut;
 
-    public double getCorrelationCacheThreshold() {
-        return correlationCacheThreshold;
-    }
-
-    public void setCorrelationCacheThreshold( double correlationCacheThreshold ) {
-        this.correlationCacheThreshold = correlationCacheThreshold;
-    }
-
-    public boolean isUseDb() {
-        return useDb;
-    }
-
-    public void setUseDb( boolean useDb ) {
-        this.useDb = useDb;
-    }
-
-    public double getLowerTailCut() {
-        return lowerTailCut;
-    }
-
-    public void setLowerTailCut( double lowerTailCut ) {
-        this.lowerTailCut = lowerTailCut;
-    }
-
-    public double getUpperTailCut() {
-        return upperTailCut;
-    }
-
-    public void setUpperTailCut( double upperTailCut ) {
-        this.upperTailCut = upperTailCut;
-    }
-
-    public boolean isAbsoluteValue() {
-        return absoluteValue;
-    }
-
-    public void setAbsoluteValue( boolean absoluteValue ) {
-        this.absoluteValue = absoluteValue;
-    }
-
     public double getCdfCut() {
         return cdfCut;
     }
 
-    public void setCdfCut( double cdfCut ) {
-        this.cdfCut = cdfCut;
+    public double getCorrelationCacheThreshold() {
+        return correlationCacheThreshold;
     }
 
     public double getFwe() {
         return fwe;
     }
 
-    public void setFwe( double fwe ) {
-        this.fwe = fwe;
+    public double getLowerTailCut() {
+        return lowerTailCut;
     }
 
     public String getMetric() {
         return metric;
+    }
+
+    public double getUpperTailCut() {
+        return upperTailCut;
+    }
+
+    public boolean isAbsoluteValue() {
+        return absoluteValue;
+    }
+
+    public boolean isKnownGenesOnly() {
+        return knownGenesOnly;
+    }
+
+    public boolean isTextOut() {
+        return textOut;
+    }
+
+    public boolean isUseDb() {
+        return useDb;
+    }
+
+    public void setAbsoluteValue( boolean absoluteValue ) {
+        this.absoluteValue = absoluteValue;
+    }
+
+    public void setCdfCut( double cdfCut ) {
+        this.cdfCut = cdfCut;
+    }
+
+    public void setCorrelationCacheThreshold( double correlationCacheThreshold ) {
+        this.correlationCacheThreshold = correlationCacheThreshold;
+    }
+
+    public void setFwe( double fwe ) {
+        this.fwe = fwe;
+    }
+
+    public void setKnownGenesOnly( boolean knownGenesOnly ) {
+        this.knownGenesOnly = knownGenesOnly;
+    }
+
+    public void setLowerTailCut( double lowerTailCut ) {
+        this.lowerTailCut = lowerTailCut;
     }
 
     public void setMetric( String metric ) {
@@ -107,19 +112,16 @@ public class LinkAnalysisConfig {
         this.metric = metric;
     }
 
-    private void checkValidMetric( String m ) {
-        if ( m.equalsIgnoreCase( "pearson" ) ) return;
-        if ( m.equalsIgnoreCase( "spearman" ) ) return;
-        throw new IllegalArgumentException( "Unrecognized metric: " + m
-                + ", valid options are 'pearson' and 'spearman'" );
-    }
-
     public void setTextOut( boolean b ) {
         this.textOut = b;
     }
 
-    public boolean isTextOut() {
-        return textOut;
+    public void setUpperTailCut( double upperTailCut ) {
+        this.upperTailCut = upperTailCut;
+    }
+
+    public void setUseDb( boolean useDb ) {
+        this.useDb = useDb;
     }
 
     /**
@@ -146,5 +148,19 @@ public class LinkAnalysisConfig {
         buf.append( "# lowercut:" + this.getLowerTailCut() + "\n" );
         buf.append( "# useDB:" + this.isUseDb() + "\n" );
         return buf.toString();
+    }
+
+    /**
+     * @return
+     */
+    public boolean useKnownGenesOnly() {
+        return knownGenesOnly;
+    }
+
+    private void checkValidMetric( String m ) {
+        if ( m.equalsIgnoreCase( "pearson" ) ) return;
+        if ( m.equalsIgnoreCase( "spearman" ) ) return;
+        throw new IllegalArgumentException( "Unrecognized metric: " + m
+                + ", valid options are 'pearson' and 'spearman'" );
     }
 }
