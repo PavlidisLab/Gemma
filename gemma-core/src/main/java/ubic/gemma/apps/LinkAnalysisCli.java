@@ -230,7 +230,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         addOption( lowVarianceCut );
 
         Option knownGenesOnlyOption = OptionBuilder.withDescription(
-                "Only save results for links between 'known genes'" ).create( "knownGenesOnly" );
+                "Only save (or print) results for links between 'known genes'" ).create( "knownGenesOnly" );
         addOption( knownGenesOnlyOption );
 
     }
