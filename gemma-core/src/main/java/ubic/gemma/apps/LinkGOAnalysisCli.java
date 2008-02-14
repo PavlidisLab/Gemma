@@ -1,4 +1,3 @@
-
 /*
  * The Gemma project
  * 
@@ -208,7 +207,7 @@ public class LinkGOAnalysisCli extends AbstractSpringAwareCLI {
             }
             dataIndex++;
         }
-        DoubleMatrixNamed dataMatrix = new DenseDoubleMatrix2DNamed( data );
+        DoubleMatrixNamed<String, String> dataMatrix = new DenseDoubleMatrix2DNamed<String, String>( data );
         dataMatrix.setRowNames( rowLabels );
         dataMatrix.setColumnNames( colLabels );
 

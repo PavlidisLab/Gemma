@@ -943,7 +943,7 @@ public class MageMLConverterHelper {
 
         if ( associationName.equals( "CompoundIndices" ) ) {
             assert associatedObject instanceof List;
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, "compoundIndices", Characteristic.class );
+            simpleFillIn( associatedObject, gemmaObj, getter, "compoundIndices", Characteristic.class );
         } else if ( associationName.equals( "ExternalLIMS" ) ) {
             // noop
         } else {
