@@ -19,6 +19,9 @@
 
 package ubic.gemma.web.services;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -28,30 +31,40 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceService;
+import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneService;
 
 /**
- * TODO DOCUMENT ME
+ * Given an Expression Experiment ID, will return a collection of Design Element Data Vectors and the corresponding 
+ * composite gene sequences.  
  * 
- * @author klc
- * @version $Id$
+ * @author klc, gavin
+ * 
  */
+
 public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
 
 	private static Log log = LogFactory.getLog(ExperimentDEDVEndpoint.class);
 
 	private ExpressionExperimentService expressionExperimentService;
-
 	private AnalysisHelperService analysisHelperService;
+	private CompositeSequenceService compositeSequenceService;
+	//private GeneService geneService;
 
 	/**
 	 * The local name of the expected request/response.
 	 */
 	private static final String EXPERIMENT_LOCAL_NAME = "experimentDEDV";
-
 	private static final String DELIMITER = " ";
 
 	/**
@@ -60,10 +73,18 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
 	public void setExpressionExperimentService(ExpressionExperimentService ees) {
 		this.expressionExperimentService = ees;
 	}
-
-	public void setAnalysisHelperService(
-			AnalysisHelperService analysisHelperService) {
+	
+	public void setAnalysisHelperService(AnalysisHelperService analysisHelperService){
 		this.analysisHelperService = analysisHelperService;
+	}
+	
+//	public void setGeneService(GeneService geneService){
+//		this.geneService = geneService;
+//	}
+	
+	
+	public void setCompositeSequenceService(CompositeSequenceService compositeSequenceService){
+		this.compositeSequenceService = compositeSequenceService;
 	}
 
 	/**
@@ -78,92 +99,86 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
 	 */
 	protected Element invokeInternal(Element requestElement, Document document)
 			throws Exception {
-		Assert.isTrue(NAMESPACE_URI.equals(requestElement.getNamespaceURI()),
-				"Invalid namespace");
-		Assert.isTrue(EXPERIMENT_LOCAL_NAME.equals(requestElement
-				.getLocalName()), "Invalid local name");
+		setLocalName(EXPERIMENT_LOCAL_NAME);
+		String eeid ="";
 
-		authenticate();
-		// Tried to use a generic way to extract just the node with the data but
-		// no luck getting this to work... perhaps the namespace is invalid...
-		// NodeIterator nodeList = org.apache.xpath.XPathAPI.selectNodeIterator(
-		// requestElement, "experimentNameRequest" );
+		Collection<String> eeResults  = getNodeValues(requestElement, "ee_id");
+		
 
-		// The ExperimentNameRequest Element is going to be wrapped inside the
-		// ExperimentName Element as specifided by the wsdl
-
-		// NodeList children = requestElement.getChildNodes();
-
-		NodeList children = requestElement.getElementsByTagName(
-				EXPERIMENT_LOCAL_NAME + REQUEST).item(0).getChildNodes();
-		String nodeValue = null;
-
-		// We unwrapped the node, now get the 1st value that is a number (should
-		// only be one)
-		for (int i = 0; i < children.getLength(); i++) {
-
-			if (children.item(i).getNodeType() == Node.TEXT_NODE) {
-				nodeValue = children.item(i).getNodeValue();
-				if (StringUtils.isNotEmpty(nodeValue)
-						&& StringUtils.isNumeric(nodeValue)) {
-					break;
-				}
-			}
-			nodeValue = null;
+		for (String id: eeResults){
+			eeid = id;
 		}
+		
+		//Build the matrix
+		ExpressionExperiment ee = expressionExperimentService.load(Long.parseLong(eeid));
+		expressionExperimentService.thawLite(ee);
+		
+	    ExpressionDataDoubleMatrix dmatrix = analysisHelperService.getMaskedPreferredDataMatrix( ee );
 
-		if (nodeValue == null) {
-			throw new IllegalArgumentException(
-					"Could not find request text node");
-		}
-
-		// Build the matrix
-		ExpressionExperiment ee = expressionExperimentService.load(Long
-				.parseLong(nodeValue));
-		ExpressionDataDoubleMatrix dmatrix = analysisHelperService
-				.getMaskedPreferredDataMatrix(ee);
-
+	  //start building the wrapper
+	    //build xml manually rather than use buildWrapper inherited from AbstractGemmeEndpoint
+		String elementName1 = "dedv";
+		String elementName2 = "geneIdist";
+		
+		
 		Element responseWrapper = document.createElementNS(NAMESPACE_URI,
 				EXPERIMENT_LOCAL_NAME);
 		Element responseElement = document.createElementNS(NAMESPACE_URI,
 				EXPERIMENT_LOCAL_NAME + RESPONSE);
 		responseWrapper.appendChild(responseElement);
 
-		if (ee == null)
+		if (dmatrix == null || (dmatrix.rows()==0))
 			responseElement.appendChild(document
-					.createTextNode("No expression experiment with id: "
-							+ nodeValue));
+					.createTextNode("No "+elementName1 +" result"));
 		else {
-
+			
 			for (int rowNum = 0; rowNum < dmatrix.rows(); rowNum++) {
-				Element e = document.createElement("rowData");
-				e.appendChild(document.createTextNode(encode(dmatrix
-						.getRow(rowNum))));
-				responseElement.appendChild(e);
-
+				String elementString1 = encode(dmatrix.getRow(rowNum)); //data vector string for output
+				String elementString2 = "";
+				
+				
+				CompositeSequence de = (CompositeSequence)dmatrix.getDesignElementForRow(rowNum);
+				Collection<Gene> geneCol = compositeSequenceService.getGenes(de);
+				for (Gene gene:geneCol){
+					if (elementString2.equals(""))
+						elementString2 = elementString2.concat(gene.getId().toString());
+					else 
+						elementString2 = elementString2.concat(DELIMITER + gene.getId().toString());
+				}
+				
+				
+				Element e1 = document.createElement(elementName1);
+				e1.appendChild(document.createTextNode(elementString1));
+				responseElement.appendChild(e1);
+				
+				Element e2 = document.createElement(elementName2);
+				e2.appendChild(document.createTextNode(elementString2));
+				responseElement.appendChild(e2);
 			}
-
 		}
-
+			
+			
 		log.info("Finished generating matrix. Sending response to client.");
 		return responseWrapper;
 	}
-
+	
+	
 	/**
+	 * Helper method that returns an array of data as a single string of the array elements, space delimited 
 	 * @param data
-	 * @return a string delimited representation of the double array passed in.
+	 * @return a string delimited representation of the double array passed in. 
 	 */
-	private String encode(Double[] data) {
-
+	private String encode(Object[] data){
+		
 		StringBuffer result = new StringBuffer();
-
+		
 		for (int i = 0; i < data.length; i++) {
 			if (i == 0)
 				result.append(data[i]);
-			else
+			else 
 				result.append(DELIMITER + data[i]);
 		}
-
+		
 		return result.toString();
 	}
 

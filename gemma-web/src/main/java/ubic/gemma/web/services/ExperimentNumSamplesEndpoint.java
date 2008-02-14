@@ -19,6 +19,9 @@
 
 package ubic.gemma.web.services;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -33,8 +36,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 /**
- * 
- * @author klc
+ * Given an Expression Experiment ID, will return the number of samples (biomaterials) associated for that experiment 
+ * @author klc, gavin
  *
  */
 
@@ -69,43 +72,23 @@ public class ExperimentNumSamplesEndpoint extends AbstractGemmaEndpoint {
      * @return the response element
      */
     protected Element invokeInternal(Element requestElement, Document document) throws Exception {
-        Assert.isTrue(NAMESPACE_URI.equals(requestElement.getNamespaceURI()), "Invalid namespace");
-        Assert.isTrue(EXPERIMENT_LOCAL_NAME.equals(requestElement
-				.getLocalName()), "Invalid local name");
+       setLocalName(EXPERIMENT_LOCAL_NAME);
+    	String eeId = "";
+    	
+    	Collection<String> eeResult = getNodeValues(requestElement, "ee_id");
+    	//expect only one element in the collection since only one input value
+    	for (String id: eeResult)
+    		eeId = id;
         
-
-        authenticate();
-        String nodeValue = null;
-        NodeList children =   requestElement.getElementsByTagName(EXPERIMENT_LOCAL_NAME + REQUEST).item(0).getChildNodes();
-        //We unwrapped the node, now get the 1st value that is a number (should only be one)
-        for (int i = 0; i < children.getLength(); i++) {
-        	
-        	if (children.item(i).getNodeType() == Node.TEXT_NODE) {
-                nodeValue = children.item(i).getNodeValue();
-                if (StringUtils.isNotEmpty(nodeValue) && StringUtils.isNumeric(nodeValue)){               	
-                    break;
-                }
-             }
-            nodeValue = null;
-        }
-        
-        ExpressionExperiment ee = expressionExperimentService.load(Long.parseLong(nodeValue));
+        ExpressionExperiment ee = expressionExperimentService.load(Long.parseLong(eeId));
         Long bmCount=  expressionExperimentService.getBioMaterialCount(ee);
 
-        Element responseWrapper = document.createElementNS(NAMESPACE_URI, EXPERIMENT_LOCAL_NAME);        
-        Element responseElement = document.createElementNS(NAMESPACE_URI, EXPERIMENT_LOCAL_NAME + RESPONSE);        
-
-        Text responseText;
+       //build collection to pass to wrapper
+        Collection<String> values = new HashSet<String>();
+        values.add(bmCount.toString());
         
-        if (ee == null)
-        	responseText = document.createTextNode("No expression experiment with that id");        
-        else
-                 responseText = document.createTextNode(bmCount.toString());
-
-        responseElement.appendChild(responseText);
-        responseWrapper.appendChild(responseElement);
         
-        return responseWrapper;
+        return buildWrapper(document, values, "eeNumSample_id");
     }
 	
 	

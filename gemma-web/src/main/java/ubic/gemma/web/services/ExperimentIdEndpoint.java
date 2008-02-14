@@ -19,6 +19,9 @@
 
 package ubic.gemma.web.services;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
@@ -32,8 +35,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 /**
- * 
- * @author klc
+ * Given the short name of an Expression Experiment, will return the matching Expression Experiment ID
+ * @author klc, gavin
  * 
  */
 
@@ -67,47 +70,27 @@ public class ExperimentIdEndpoint extends AbstractGemmaEndpoint {
 	 */
 	protected Element invokeInternal(Element requestElement, Document document)
 			throws Exception {
-		Assert.isTrue(NAMESPACE_URI.equals(requestElement.getNamespaceURI()),
-				"Invalid namespace");
-		Assert.isTrue(EXPERIMENT_LOCAL_NAME.equals(requestElement
-				.getLocalName()), "Invalid local name");
-
-		authenticate();
-		NodeList children = requestElement.getElementsByTagName(
-				EXPERIMENT_LOCAL_NAME+REQUEST).item(0).getChildNodes();
-
-		Text requestText = null;
-		for (int i = 0; i < children.getLength(); i++) {
-			if (children.item(i).getNodeType() == Node.TEXT_NODE) {
-				requestText = (Text) children.item(i);
-				break;
-			}
-		}
-		if (requestText == null) {
-			throw new IllegalArgumentException(
-					"Could not find request text node");
+		setLocalName(EXPERIMENT_LOCAL_NAME);
+		String eeName ="";
+		
+		Collection<String> eeResults = getNodeValues(requestElement, "ee_short_name");
+		
+		for (String id: eeResults){
+			eeName = id;
 		}
 
 		ExpressionExperiment ee = expressionExperimentService
-				.findByShortName(requestText.getNodeValue());
+				.findByShortName(eeName);
 
-		Element responseWrapper = document.createElementNS(NAMESPACE_URI,
-				EXPERIMENT_LOCAL_NAME);
-		Element responseElement = document.createElementNS(NAMESPACE_URI,
-				EXPERIMENT_LOCAL_NAME + RESPONSE);
+	
+		//get Array Design ID and build results in the form of a collection
+		Collection<String> eeId = new HashSet<String>();
+		eeId.add(ee.getId().toString());
+		
+		
 
-		Text responseText;
+		return buildWrapper(document, eeId, "ee_id");
 
-		if (ee == null)
-			responseText = document
-					.createTextNode("No expression experiment with that short name");
-		else
-			responseText = document.createTextNode(ee.getId().toString());
-
-		responseElement.appendChild(responseText);
-		responseWrapper.appendChild(responseElement);
-
-		return responseWrapper;
 	}
 
 }

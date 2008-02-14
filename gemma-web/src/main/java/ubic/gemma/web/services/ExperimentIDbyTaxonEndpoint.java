@@ -1,3 +1,6 @@
+package ubic.gemma.web.services;
+
+
 /*
  * The Gemma project
  * 
@@ -17,7 +20,6 @@
  *
  */
 
-package ubic.gemma.web.services;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -30,27 +32,37 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.Text;
 
+import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 
 /**
- * 
+ * Given a Taxon (eg. "1" for Homo Sapien), will return all the Expression Experiment IDs that match the Taxon.
  * @author klc, gavin
  * 
  */
 
-public class ArrayDesignUsedEndpoint extends AbstractGemmaEndpoint {
+public class ExperimentIDbyTaxonEndpoint extends AbstractGemmaEndpoint {
 
-	private static Log log = LogFactory.getLog(ArrayDesignUsedEndpoint.class);
+	private static Log log = LogFactory.getLog(ExperimentIDbyTaxonEndpoint.class);
 
 	private ExpressionExperimentService expressionExperimentService;
+	private TaxonService taxonService;
 
 	/**
-	 * The local name of the expected request.
+	 * The local name of the expected request/response.
 	 */
-	public static final String ARRAY_LOCAL_NAME = "arrayDesignUsed";
+	private static final String EXPERIMENT_LOCAL_NAME = "experimentIDbyTaxon";
+	
 
 	/**
 	 * Sets the "business service" to delegate to.
@@ -58,9 +70,13 @@ public class ArrayDesignUsedEndpoint extends AbstractGemmaEndpoint {
 	public void setExpressionExperimentService(ExpressionExperimentService ees) {
 		this.expressionExperimentService = ees;
 	}
+	
+	public void setTaxonService(TaxonService taxonService){
+		this.taxonService = taxonService;
+	}
 
 	/**
-	 * Reads the given <code>requestElement</code>, and sends a the response
+	 * Reads the given <code>requestElement</code>, and sends the response
 	 * back.
 	 * 
 	 * @param requestElement
@@ -71,24 +87,37 @@ public class ArrayDesignUsedEndpoint extends AbstractGemmaEndpoint {
 	 */
 	protected Element invokeInternal(Element requestElement, Document document)
 			throws Exception {
+		setLocalName(EXPERIMENT_LOCAL_NAME);
+		Collection<String> taxonResults = getNodeValues(requestElement, "taxon_id");
+		String taxonId = "";
 		
-		setLocalName(ARRAY_LOCAL_NAME);
-		String eeId = "";
-		Collection<String> eeResult = getNodeValues(requestElement, "ee_id");
-		//expect only one element since only one input value (ee id)
-		for (String id:eeResult)
-			eeId = id;
+		for (String id: taxonResults){
+			taxonId = id;
+		}
+		//Get EE matched with Taxon
+		Taxon tax = taxonService.load(Long.parseLong(taxonId));
+		Collection<ExpressionExperiment> eeCollection = expressionExperimentService.findByTaxon(tax);	
+	   
+
 		
-		ExpressionExperiment ee = expressionExperimentService.load(Long.parseLong(eeId));
-		Collection<ArrayDesign> ads = expressionExperimentService.getArrayDesignsUsed(ee);
-		
-		//build collection to pass to wrapper
-		Collection<String> values = new HashSet<String>();
-		for (ArrayDesign ad : ads){
-			values.add(ad.getName());
+
+		log.info("Finished. Sending response to client.");
+			
+		//build results in the form of a collection
+		Collection<String> eeIds = new HashSet<String>();
+		for (ExpressionExperiment ee : eeCollection) {	
+			eeIds.add(ee.getId().toString());
 		}
 		
-		return buildWrapper(document, values, "arrayDesign_names");
+		
+
+		return buildWrapper(document, eeIds, "ee_ids");
 	}
+	
+	
+	
 
 }
+
+
+

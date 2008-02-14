@@ -20,6 +20,7 @@
 package ubic.gemma.web.services;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -31,14 +32,15 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.ontology.OntologyTerm;
 
 /**
- * 
- * @author klc
+ * Given a Gene ID, will return a collection of Gene Ontology URIs that matching the gene.
+ * @author klc, gavin
  * 
  */
 
@@ -78,69 +80,25 @@ public class Gene2GoTermEndpoint extends AbstractGemmaEndpoint {
 	 */
 	protected Element invokeInternal(Element requestElement, Document document)
 			throws Exception {
-		Assert.isTrue(NAMESPACE_URI.equals(requestElement.getNamespaceURI()),
-				"Invalid namespace");
-		Assert.isTrue(GENE2GO_LOCAL_NAME.equals(requestElement.getLocalName()),
-				"Invalid local name");
-
-		authenticate();
-		// Tried to use a generic way to extract just the node with the data but
-		// no luck getting this to work... perhaps the namespace is invalid...
-		// NodeIterator nodeList = org.apache.xpath.XPathAPI.selectNodeIterator(
-		// requestElement, "experimentNameRequest" );
-
-		// The ExperimentNameRequest Element is going to be wrapped inside the
-		// ExperimentName Element as specifided by the wsdl
-
-		// NodeList children = requestElement.getChildNodes();
-
-		NodeList children = requestElement.getElementsByTagName(
-				GENE2GO_LOCAL_NAME + REQUEST).item(0).getChildNodes();
-		String nodeValue = null;
-
-		// We unwrapped the node, now get the 1st value that is a number (should
-		// only be one)
-		for (int i = 0; i < children.getLength(); i++) {
-
-			if (children.item(i).getNodeType() == Node.TEXT_NODE) {
-				nodeValue = children.item(i).getNodeValue();
-				if (StringUtils.isNotEmpty(nodeValue)
-						&& StringUtils.isNumeric(nodeValue)) {
-					break;
-				}
-			}
-			nodeValue = null;
-		}
-
-		if (nodeValue == null) {
-			throw new IllegalArgumentException(
-					"Could not find request text node");
-		}
-
-		Long geneId = Long.parseLong(nodeValue);
+	
+		setLocalName(GENE2GO_LOCAL_NAME);
+		String gid ="";
+		
+		Collection<String> geneResult = getNodeValues(requestElement, "gene_id");
+		for (String id: geneResult)
+			gid = id;
+		
+		Long geneId = Long.parseLong(gid);
 		Gene gene = geneService.load(geneId);
 		Collection<OntologyTerm> terms = geneOntologyService.getGOTerms(gene);
 
-		Element responseWrapper = document.createElementNS(NAMESPACE_URI,
-				GENE2GO_LOCAL_NAME);
-		Element responseElement = document.createElementNS(NAMESPACE_URI,
-				GENE2GO_LOCAL_NAME + RESPONSE);
-		responseWrapper.appendChild(responseElement);
-
-		if (terms == null || terms.isEmpty())
-			responseElement.appendChild(document
-					.createTextNode("No go terms found for given gene:  "
-							+ geneId));
-		else {
-			// Need to create a list (array) of the geneIds
-			for (OntologyTerm term : terms) {
-				Element e = document.createElement("goId");
-				e.appendChild(document.createTextNode(term.getUri()));
-				responseElement.appendChild(e);
-			}
+		//build Collection to send to wrapper
+		Collection<String> goTerms = new HashSet<String>();
+		for (OntologyTerm ot : terms) {	
+			goTerms.add(ot.getUri());
 		}
-
-		return responseWrapper;
+		
+		return buildWrapper(document, goTerms, "go_uris");
 	}
-
+	
 }

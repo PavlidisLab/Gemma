@@ -20,6 +20,7 @@
 package ubic.gemma.web.services;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -34,8 +35,8 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 
 /**
- * 
- * @author klc
+ * Given the official symbolic of a gene, will return the matching gene ID.
+ * @author klc, gavin
  * 
  */
 
@@ -69,53 +70,29 @@ public class GeneIdEndpoint extends AbstractGemmaEndpoint {
 	 */
 	protected Element invokeInternal(Element requestElement, Document document)
 			throws Exception {
-
-		// TODO: might be wise to not assert this and just send back an error
-		// code or something 
-		Assert.isTrue(NAMESPACE_URI.equals(requestElement.getNamespaceURI()),
-				"Invalid namespace");
-		Assert.isTrue(GENE_LOCAL_NAME.equals(requestElement.getLocalName()),
-				"Invalid local name");
-
-		authenticate();
+		setLocalName(GENE_LOCAL_NAME);
+		String geneName ="";
 		
-		NodeList children = requestElement.getElementsByTagName(
-				GENE_LOCAL_NAME + REQUEST).item(0).getChildNodes();
-
-		Text requestText = null;
-		for (int i = 0; i < children.getLength(); i++) {
-			if (children.item(i).getNodeType() == Node.TEXT_NODE) {
-				requestText = (Text) children.item(i);
-				break;
-			}
-		}
-		if (requestText == null) {
-			throw new IllegalArgumentException(
-					"Could not find request text node");
-		}
-
-		Collection<Gene> genes = geneService
-				.findByOfficialSymbolInexact(requestText.getNodeValue());
-
-		Element responseWrapper = document.createElementNS(NAMESPACE_URI,
-				GENE_LOCAL_NAME);
-		Element responseElement = document.createElementNS(NAMESPACE_URI,
-				GENE_LOCAL_NAME + RESPONSE);
-		responseWrapper.appendChild(responseElement);
-
+		Collection<String> geneResults = getNodeValues(requestElement, "gene_official_symbol");
 		
-		if (genes == null || genes.isEmpty())
-					responseElement.appendChild(document.createTextNode("No genes with that common name"));
-		else {
-			//Need to create a list (array) of the geneIds
-			for (Gene gene : genes) {
-				Element e = document.createElement("geneIds");
-				e.appendChild(document.createTextNode(gene.getId().toString()));
-				responseElement.appendChild(e);
-			}
+		for (String name: geneResults){
+			geneName = name;
 		}
 
-		return responseWrapper;
+		Collection<Gene> genes = geneService.findByOfficialSymbolInexact(geneName);
+
+				
+		
+		
+
+		//get Array Design ID and build results in the form of a collection
+		Collection<String> gIDs = new HashSet<String>();
+		for (Gene gene: genes)
+		gIDs.add(gene.getId().toString());
+		
+		
+
+		return buildWrapper(document, gIDs, "gene_name");
 	}
 
 }

@@ -19,6 +19,9 @@
 
 package ubic.gemma.web.services;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,8 +35,9 @@ import org.w3c.dom.Text;
 import ubic.gemma.model.genome.gene.GeneService;
 
 /**
- * 
- * @author klc
+ * Given a gene ID, will return the matching gene name.
+ * Note: this is not the short name
+ * @author klc, gavin
  * 
  */
 
@@ -67,55 +71,25 @@ public class GeneNameEndpoint extends AbstractGemmaEndpoint {
 	 */
 	protected Element invokeInternal(Element requestElement, Document document)
 			throws Exception {
-		Assert.isTrue(NAMESPACE_URI.equals(requestElement.getNamespaceURI()),
-				"Invalid namespace");
-		Assert.isTrue(GENE_LOCAL_NAME.equals(requestElement.getLocalName()),
-				"Invalid local name");
-
-		// Tried to use a generic way to extract just the node with the data but
-		// no luck getting this to work... perhaps the namespace is invalid...
-		// NodeIterator nodeList = org.apache.xpath.XPathAPI.selectNodeIterator(
-		// requestElement, "experimentNameRequest" );
-
-		// The ExperimentNameRequest Element is going to be wrapped inside the
-		// ExperimentName Element as specifided by the wsdl
-
-		NodeList children = requestElement.getElementsByTagName(
-				GENE_LOCAL_NAME + REQUEST).item(0).getChildNodes();
-
-		authenticate();
-		String nodeValue = null;
-
-		// We unwrapped the node, now get the 1st value that is a number (should
-		// only be one)
-		for (int i = 0; i < children.getLength(); i++) {
-
-			if (children.item(i).getNodeType() == Node.TEXT_NODE) {
-				nodeValue = children.item(i).getNodeValue();
-				if (StringUtils.isNotEmpty(nodeValue)
-						&& StringUtils.isNumeric(nodeValue)) {
-					break;
-				}
-			}
-			nodeValue = null;
+		
+		setLocalName(GENE_LOCAL_NAME);
+		String geneId ="";
+		
+		Collection<String> geneResults = getNodeValues(requestElement, "gene_id");
+		
+		for (String id: geneResults){
+			geneId = id;
 		}
 
-		if (nodeValue == null) {
-			throw new IllegalArgumentException(
-					"Could not find request text node");
-		}
+		String geneName = geneService.load(Long.parseLong(geneId)).getName();
 
-		String geneName = geneService.load(Long.parseLong(nodeValue)).getName();
+		//get Array Design ID and build results in the form of a collection
+		Collection<String> gName = new HashSet<String>();
+		gName.add(geneName);
+		
+		
 
-		Element responseWrapper = document.createElementNS(NAMESPACE_URI,
-				GENE_LOCAL_NAME);
-		Element responseElement = document.createElementNS(NAMESPACE_URI,
-				GENE_LOCAL_NAME + RESPONSE);
-		Text responseText = document.createTextNode(geneName);
-		responseElement.appendChild(responseText);
-		responseWrapper.appendChild(responseElement);
-
-		return responseWrapper;
+		return buildWrapper(document, gName, "gene_name");
 	}
 
 }
