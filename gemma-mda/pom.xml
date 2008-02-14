@@ -437,7 +437,7 @@
 							</execution>
 							<execution>
 								<id>load-db-schema</id>
-								<phase>package</phase>
+								<phase>process-resources</phase>
 								<goals>
 									<goal>execute</goal>
 								</goals>
@@ -455,12 +455,12 @@
 							</execution>
 							<execution>
 								<id>install-triggers</id>
-								<phase>process-test-resources</phase>
+								<phase>process-resources</phase>
 								<goals>
 									<goal>execute</goal>
 								</goals>
 								<configuration>
-									<url>${gemma.testdb.build.url}</url>
+									<url>${gemma.db.build.url}</url>
 									<delimiter>|</delimiter>
 									<srcFiles>
 										<srcFile>src/main/resources/sql/init-triggers.sql</srcFile>
