@@ -1142,7 +1142,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     protected Map<ExpressionExperiment, Collection<AuditEvent>> handleGetSampleRemovalEvents(
             Collection /* <ExpressionExxperiment? */expressionExperiments ) {
         List<String> classes = getClassHierarchy( SampleRemovalEvent.class );
-        final String queryString = "select ee, ae from ExpressionExperimentImpl ee inner join ee.bioAssays ba "
+        final String queryString = "select ee,event from ExpressionExperimentImpl ee inner join ee.bioAssays ba "
                 + "inner join ba.auditTrail trail inner join at.events event inner join event.eventType et "
                 + "inner join fetch event.performer where ee in (:ees) and et.class in ("
                 + StringUtils.join( classes, "," ) + ")";
