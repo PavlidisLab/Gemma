@@ -136,7 +136,7 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
 	
 	/**
 	 * A method written for array input from MATLAB clients.  The more generic method to use is getNodeValues().
-	 * This seems to work for both horizontal arrays and column arrays in MATLAB
+	 * Column Arrays and Horizontal Arrays from MATLAB both work, but it must be passed in directly (i.e. EEArray.ee_ids)
 	 * @param requestElement
 	 * @param document
 	 * @param tagName
@@ -154,13 +154,19 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
 		String node = "";
 		
 		//get the Element with name = tagName
-		NodeList children = requestElement.getElementsByTagName(
-				tagName).item(0).getChildNodes();
+		//NodeList children = requestElement.getElementsByTagName(tagName).item(0).getChildNodes().item(1).getChildNodes();
+		
+		
+		NodeList children = requestElement.getElementsByTagName(tagName).item(0).getChildNodes();
+		
+		
 		// iterate over the child nodes
-		//but it appears that MATLAB encodes it so that every odd (ie. 1, 3, 5, 7, etc) grandchild holds the array value
+		//but it appears that MATLAB encodes it so that every odd (ie. 1, 3, 5, 7, etc) great-grandchild holds the array value
 		for (int i = 1; i < children.getLength(); i+=2) {
 			
-			Node child = children.item(i).getChildNodes().item(0); //need to go one more level down into the grandchildren
+		  //need to go one more level down into the great-grandchildren
+		    Node child = children.item(i).getChildNodes().item(0);
+		 // Node child = children.item(i).getFirstChild(); 
 			
 			if (child.getNodeType() == Node.TEXT_NODE) {
 				node = child.getNodeValue();
