@@ -125,12 +125,13 @@
 				class="org.compass.gps.device.hibernate.indexer.ScrollableHibernateIndexEntitiesIndexer"/>
 		</property>
 		<property name="fetchCount">
-			<value>100</value>
+			<value>50</value>
 		</property>
 		<property name="mirrorDataChanges">
 			<!-- This is critical. If true, then objects are indexed as they are persisted, which is not working for us -->
 			<value>false</value>
 		</property>
+		
 	</bean>
 	<bean id="expressionGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
 		<property name="compass">

@@ -33,16 +33,22 @@
       <meta-data>expression experiment short name</meta-data>
     </property>
        
+    
+      
     <component name="bioAssays" ref-alias="bioAssay" />
     
+<component name="experimentalDesign" ref-alias="experimentalDesign" />  
+
     <component name="primaryPublication" ref-alias="primaryPublication" />
-       
-    <component name="otherRelevantPublications" ref-alias="otherRelevantPublications" />
-    <!--
-    <component name="owner" ref-alias="contact" />
-    -->
+
+<component name="otherRelevantPublications" ref-alias="otherRelevantPublications" />
     
-    <component name="experimentalDesign" ref-alias="experimentalDesign" />  
+   <!--    
+   
+    <component name="owner" ref-alias="contact" />
+       
+      -->
+
 
    
 </class>    
@@ -68,8 +74,9 @@
 	
 	 <id name="id" />
 	 
-    <component name="experimentalFactors" ref-alias="experimentalFactor" />
-	
+	  <component name="experimentalFactors" ref-alias="experimentalFactor" />
+	  
+    
 </class>
 
 <class name="expression.experiment.ExperimentalFactorImpl" alias="experimentalFactor" root="false">
@@ -92,7 +99,7 @@
 	 <id name="id" />
 	 
 	 <property name="authorList">
-       <meta-data>autor List</meta-data> 
+       <meta-data>author List</meta-data> 
      </property>
      
      <property name="title">
@@ -140,7 +147,7 @@
 	 <id name="id" />
 	 
 	 <property name="authorList">
-       <meta-data>autor List</meta-data> 
+       <meta-data>author List</meta-data> 
      </property>
      
      <property name="title">
