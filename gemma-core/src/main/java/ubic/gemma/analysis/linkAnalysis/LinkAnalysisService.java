@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -42,7 +43,6 @@ import org.apache.commons.logging.LogFactory;
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.math.CorrelationStats;
 import ubic.gemma.analysis.preprocess.InsufficientProbesException;
-import ubic.gemma.analysis.preprocess.filter.ExpressionExperimentFilter;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
@@ -279,11 +279,11 @@ public class LinkAnalysisService {
             }
         }
 
-        if ( la.getConfig().useKnownGenesOnly() ) {
-            log.info( "Removing probes that assay non 'known genes'" );
-            Collection<DesignElement> els = ExpressionExperimentFilter.getProbesForKnownGenes( probeToGeneMap );
-            probeToGeneMap.keySet().removeAll( els );
-        }
+        // if ( la.getConfig().useKnownGenesOnly() ) {
+        // log.info( "Removing probes that assay non 'known genes'" );
+        // Collection<DesignElement> els = ExpressionExperimentFilter.getProbesForKnownGenes( probeToGeneMap );
+        // probeToGeneMap.keySet().removeAll( els );
+        // }
 
         la.setProbeToGeneMap( probeToGeneMap );
     }
@@ -346,6 +346,15 @@ public class LinkAnalysisService {
         if ( i % LINK_BATCH_SIZE == 0 ) {
             this.ppService.create( p2plinks );
             p2plinks.clear();
+        }
+    }
+
+    private void removeNonKnownGenes( Collection<Gene> cluster ) {
+        for ( Iterator<Gene> iterator = cluster.iterator(); iterator.hasNext(); ) {
+            Gene gene = iterator.next();
+            if ( gene instanceof PredictedGene || gene instanceof ProbeAlignedRegion ) {
+                iterator.remove();
+            }
         }
     }
 
@@ -531,10 +540,7 @@ public class LinkAnalysisService {
         Transformer officialSymbolExtractor = new Transformer() {
             public Object transform( Object input ) {
                 Gene g = ( Gene ) input;
-                if ( la.getConfig().useKnownGenesOnly()
-                        && ( g instanceof PredictedGene || g instanceof ProbeAlignedRegion ) ) {
-                    return "";
-                }
+
                 return g.getOfficialSymbol();
             }
         };
@@ -556,6 +562,9 @@ public class LinkAnalysisService {
 
             List<String> genes1 = new ArrayList<String>();
             for ( Collection<Gene> cluster : g1 ) {
+                if ( la.getConfig().useKnownGenesOnly() ) {
+                    removeNonKnownGenes( cluster );
+                }
                 String t = StringUtils.join( new TransformIterator( cluster.iterator(), officialSymbolExtractor ), "," );
                 if ( StringUtils.isBlank( t ) ) {
                     continue;
@@ -565,11 +574,18 @@ public class LinkAnalysisService {
 
             List<String> genes2 = new ArrayList<String>();
             for ( Collection<Gene> cluster : g2 ) {
+                if ( la.getConfig().useKnownGenesOnly() ) {
+                    removeNonKnownGenes( cluster );
+                }
                 String t = StringUtils.join( new TransformIterator( cluster.iterator(), officialSymbolExtractor ), "," );
                 if ( StringUtils.isBlank( t ) ) {
                     continue;
                 }
                 genes2.add( t );
+            }
+
+            if ( genes2.size() == 0 || genes1.size() == 0 ) {
+                continue;
             }
 
             wr.write( p1.getId() + "\t" + p2.getId() + "\t" + StringUtils.join( genes1.iterator(), "|" ) + "\t"
