@@ -44,7 +44,7 @@ import cern.colt.list.DoubleArrayList;
 import cern.colt.list.ObjectArrayList;
 
 /**
- * Handles running a linkAnalysis. Results are made available at the end.
+ * Handles running a linkAnalysis. Results are made available at the end. See LinkAnalysisCli for more instructions.
  * 
  * @author xiangwan
  * @author paul (refactoring)
@@ -84,9 +84,8 @@ public class LinkAnalysis {
     /**
      * @return
      */
-    public void analyze() throws Exception {
+    public void analyze() {
         assert this.dataMatrix != null;
-
         assert this.taxon != null;
         assert this.probeToGeneMap != null;
 
@@ -125,7 +124,7 @@ public class LinkAnalysis {
      * 
      * @throws IOException
      */
-    public void writeDistribution() throws IOException {
+    public void writeDistribution() {
 
         File outputDir = new File( ConfigUtils.getAnalysisStoragePath() );
         if ( !outputDir.canWrite() ) {
@@ -141,25 +140,27 @@ public class LinkAnalysis {
         }
 
         DoubleArrayList histogramArrayList = this.metricMatrix.getHistogramArrayList();
+        try {
+            FileWriter out = new FileWriter( outputFile );
 
-        FileWriter out = new FileWriter( outputFile );
+            double d = -1.0;
+            double step = 2.0 / histogramArrayList.size();
 
-        double d = -1.0;
-        double step = 2.0 / histogramArrayList.size();
+            out.write( "# Correlation distribution\n" );
+            out.write( "# date=" + ( new Date() ) + "\n" );
+            out.write( "# exp=" + expressionExperiment + " " + expressionExperiment.getShortName() + "\n" );
+            out.write( "Bin\tCount\n" );
 
-        out.write( "# Correlation distribution\n" );
-        out.write( "# date=" + ( new Date() ) + "\n" );
-        out.write( "# exp=" + expressionExperiment + " " + expressionExperiment.getShortName() + "\n" );
-        out.write( "Bin\tCount\n" );
+            for ( int i = 0; i < histogramArrayList.size(); i++ ) {
+                double v = histogramArrayList.get( i );
+                out.write( form.format( d ) + "\t" + ( int ) v + "\n" );
+                d += step;
+            }
 
-        for ( int i = 0; i < histogramArrayList.size(); i++ ) {
-            double v = histogramArrayList.get( i );
-            out.write( form.format( d ) + "\t" + ( int ) v + "\n" );
-            d += step;
+            out.close();
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
         }
-
-        out.close();
-
     }
 
     /**

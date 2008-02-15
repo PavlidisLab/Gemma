@@ -90,14 +90,16 @@ public class AffyProbeNameFilter implements Filter<ExpressionDataDoubleMatrix> {
         for ( int i = 0; i < numRows; i++ ) {
 
             DesignElement d = data.getDesignElementForRow( i );
-
             assert d != null;
 
             BioSequence sequence = ( ( CompositeSequence ) d ).getBiologicalCharacteristic();
 
-            if ( sequence == null ) continue;
-
-            String name = sequence.getName();
+            String name = null;
+            if ( sequence != null ) {
+                name = sequence.getName();
+            } else {
+                name = d.getName();
+            }
 
             // apply the rules.
             if ( skip_ST && name.contains( "_st" ) ) { // 'st' means sense strand.
@@ -121,7 +123,7 @@ public class AffyProbeNameFilter implements Filter<ExpressionDataDoubleMatrix> {
                 continue;
             }
 
-            kept.add( data.getDesignElementForRow( i ) );
+            kept.add( d );
         }
 
         log.info( "There are " + kept.size() + " rows left after filtering." );

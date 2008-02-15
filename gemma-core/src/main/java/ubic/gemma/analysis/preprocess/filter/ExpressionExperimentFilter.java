@@ -134,6 +134,8 @@ public class ExpressionExperimentFilter {
     }
 
     /**
+     * Remove probes that are on the array as hybridization or RNA quality controls (AFFX*)
+     * 
      * @param ee
      * @param filteredMatrix
      * @param arrayDesign

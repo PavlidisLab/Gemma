@@ -74,7 +74,8 @@ import ubic.gemma.util.TaxonUtility;
 import cern.colt.list.ObjectArrayList;
 
 /**
- * Running link analyses through the spring context; will persist the results if the configuration says so.
+ * Running link analyses through the spring context; will persist the results if the configuration says so. See
+ * LinkAnalysisCli for more instructions.
  * 
  * @spring.bean id="linkAnalysisService"
  * @spring.property name="eeService" ref="expressionExperimentService"
@@ -134,10 +135,12 @@ public class LinkAnalysisService {
         }
 
         /*
-         * Might as well while we have the data handy. (FIXME: be able to suppress this)
+         * Might as well while we have the data handy
          */
-        log.info( "Creating sample correlation matrix ..." );
-        ExpressionDataSampleCorrelation.process( eeDoubleMatrix, ee );
+        if ( linkAnalysisConfig.isMakeSampleCorrMatImages() ) {
+            log.info( "Creating sample correlation matrix ..." );
+            ExpressionDataSampleCorrelation.process( eeDoubleMatrix, ee );
+        }
 
         /*
          * Link analysis section.
@@ -546,6 +549,7 @@ public class LinkAnalysisService {
         };
 
         int i = 0;
+        int numPrinted = 0;
         for ( int n = links.size(); i < n; i++ ) {
             Object val = links.getQuick( i );
             if ( val == null ) continue;
@@ -588,16 +592,23 @@ public class LinkAnalysisService {
                 continue;
             }
 
-            wr.write( p1.getId() + "\t" + p2.getId() + "\t" + StringUtils.join( genes1.iterator(), "|" ) + "\t"
-                    + StringUtils.join( genes2.iterator(), "|" ) + "\t" + nf.format( w ) + "\n" );
+            String gene1String = StringUtils.join( genes1.iterator(), "|" );
+            String gene2String = StringUtils.join( genes2.iterator(), "|" );
 
-            if ( i > 0 && i % 50000 == 0 ) {
-                log.info( i + " links printed" );
+            if ( gene1String.equals( gene2String ) ) {
+                continue;
+            }
+
+            wr.write( p1.getId() + "\t" + p2.getId() + "\t" + gene1String + "\t" + gene2String + "\t" + nf.format( w )
+                    + "\n" );
+
+            if ( ++numPrinted > 0 && numPrinted % 50000 == 0 ) {
+                log.info( numPrinted + " links printed" );
             }
 
         }
         wr.flush();
-        log.info( "Done, " + i + " links printed" );
+        log.info( "Done, " + numPrinted + "/" + links.size() + " links printed (some may have been filtered)" );
     }
 
     // a closure would be just the thing here.

@@ -39,6 +39,7 @@ public class LinkAnalysisConfig {
 
     private boolean knownGenesOnly = false;
     private boolean useDb = true;
+    private boolean makeSampleCorrMatImages = true;
 
     private double correlationCacheThreshold = 0.8;
     private boolean textOut;
@@ -162,5 +163,13 @@ public class LinkAnalysisConfig {
         if ( m.equalsIgnoreCase( "spearman" ) ) return;
         throw new IllegalArgumentException( "Unrecognized metric: " + m
                 + ", valid options are 'pearson' and 'spearman'" );
+    }
+
+    public boolean isMakeSampleCorrMatImages() {
+        return makeSampleCorrMatImages;
+    }
+
+    public void setMakeSampleCorrMatImages( boolean makeSampleCorrMatImages ) {
+        this.makeSampleCorrMatImages = makeSampleCorrMatImages;
     }
 }

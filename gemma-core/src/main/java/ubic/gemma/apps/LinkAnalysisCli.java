@@ -116,8 +116,12 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
         Option metricOption = OptionBuilder.hasArg().withArgName( "metric" ).withDescription(
                 "Similarity metric {pearson|spearman}, default is pearson" ).create( "metric" );
-
         addOption( metricOption );
+
+        Option imagesOption = OptionBuilder.withDescription( "Suppress the generation of correlation matrix images" )
+                .create( "noimages" );
+        addOption( imagesOption );
+
         addForceOption();
         addAutoOption();
     }
@@ -198,6 +202,9 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         }
         if ( hasOption( "force" ) ) {
             this.force = true;
+        }
+        if ( hasOption( "noimages" ) ) {
+            linkAnalysisConfig.setMakeSampleCorrMatImages( false );
         }
 
         this.expressionExperimentReportService = ( ExpressionExperimentReportService ) this
