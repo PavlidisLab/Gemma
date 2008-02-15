@@ -362,7 +362,7 @@ public class ArrayDesignSequenceProcessingService {
             Taxon taxon ) throws IOException {
 
         log.info( "Processing Affymetrix design" );
-        //arrayDesignService.thaw( arrayDesign );
+        // arrayDesignService.thaw( arrayDesign );
         boolean wasOriginallyLackingCompositeSequences = arrayDesign.getCompositeSequences().size() == 0;
 
         Collection<BioSequence> bioSequences = new HashSet<BioSequence>();
@@ -655,6 +655,8 @@ public class ArrayDesignSequenceProcessingService {
                 percent = updateProgress( total, done, percent );
             }
         }
+
+        log.info( "Sequences done, updating composite sequences" );
 
         int numWithNoSequence = 0;
         int numMatchedByAccession = 0;
@@ -1002,10 +1004,10 @@ public class ArrayDesignSequenceProcessingService {
         int newPercent = ( int ) Math.ceil( ( 100.00 * howManyAreDone / totalThingsToDo ) );
         if ( newPercent > percentDoneLastTimeWeChecked ) {
             ProgressManager.updateCurrentThreadsProgressJob( new ProgressData( newPercent, howManyAreDone
-                    + " items of " + totalThingsToDo + " processed." ) );
+                    + " sequence+probes of " + totalThingsToDo + " processed." ) );
         }
 
-        log.info( howManyAreDone + " items of " + totalThingsToDo + " processed." );
+        log.info( howManyAreDone + " sequence+probes of " + totalThingsToDo + " processed." );
 
         return newPercent;
     }
