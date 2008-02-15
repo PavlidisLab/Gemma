@@ -53,7 +53,7 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
 
 	private static final String USER = "administrator";
 
-	private static final String PASSWORD = "testing";
+	private static final String PASSWORD = "gemmatoast";
 
 	protected static final String REQUEST = "Request";
 
