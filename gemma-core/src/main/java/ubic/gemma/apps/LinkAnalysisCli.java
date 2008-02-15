@@ -153,7 +153,9 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         try {
             linkAnalysisService.process( ee, filterConfig, linkAnalysisConfig );
             successObjects.add( ee.toString() );
-            audit( ee, "Part of run on all EEs from " + taxon.getCommonName(), LinkAnalysisEvent.Factory.newInstance() );
+            if ( !linkAnalysisConfig.isTextOut() && linkAnalysisConfig.isUseDb() ) {
+                audit( ee, "", LinkAnalysisEvent.Factory.newInstance() );
+            }
         } catch ( Exception e ) {
             errorObjects.add( ee + ": " + e.getMessage() );
             logFailure( ee, e );
