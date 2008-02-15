@@ -331,13 +331,37 @@ public class ExtCoexpressionSearchController extends BaseFormController {
         }
         return analyses;
     }
-
-    public Collection<Long> findExpressionExperiments( String query ) {
+    
+    public Collection<Long> findExpressionExperiments( String query, Long taxonId ) {
+        /* TODO think about caching EEs by taxon, since we're calling it every time here...
+         */
+        Taxon taxon = taxonService.load( taxonId );
         Collection<Long> eeIds = new HashSet<Long>();
-        List<SearchResult> results = searchService.search( SearchSettings.ExpressionExperimentSearch( query ), false )
+        if ( query.length() > 0 ) {
+            List<SearchResult> results = searchService.search( SearchSettings.ExpressionExperimentSearch( query ), false )
                 .get( ExpressionExperiment.class );
-        for ( SearchResult result : results ) {
-            eeIds.add( result.getId() );
+            for ( SearchResult result : results ) {
+                eeIds.add( result.getId() );
+            }
+            if ( taxon != null ) {
+                Collection<Long> eeIdsToKeep = new HashSet<Long>();
+                Collection<ExpressionExperiment> ees = expressionExperimentService.findByTaxon( taxon );
+                for ( ExpressionExperiment ee : ees ) {
+                    if ( eeIds.contains( ee.getId() ) )
+                        eeIdsToKeep.add( ee.getId() );
+                }
+                eeIds.retainAll( eeIdsToKeep );
+            }
+        } else {
+            /* TODO this might be too slow, given that we just need the ids, but I don't want
+             * to add a service method until that's proven to be the case...
+             */
+            Collection<ExpressionExperiment> ees = ( taxon != null ) ?
+                    expressionExperimentService.findByTaxon( taxon ) :
+                    expressionExperimentService.loadAll();
+            for ( ExpressionExperiment ee : ees ) {
+                eeIds.add( ee.getId() );
+            }
         }
         return eeIds;
     }

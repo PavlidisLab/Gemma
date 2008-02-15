@@ -86,6 +86,9 @@ Ext.Gemma.CoexpressionSearchPanel = function ( config ) {
 		showTaxon : true
 	} );
 	this.geneChooserPanel = geneChooserPanel;
+	this.geneChooserPanel.taxonCombo.on( "taxonchanged", function ( combo, taxon ) {
+		this.taxonChanged( taxon );
+	}, this );
 	
 	var queryFs = new Ext.form.FieldSet( {
 		title : 'Query gene(s)',
@@ -99,14 +102,23 @@ Ext.Gemma.CoexpressionSearchPanel = function ( config ) {
 		showCustomOption : true
 	} );
 	this.analysisCombo = analysisCombo;
-	analysisCombo.on( "select", function ( combo, record, index ) {
-		if ( record.data.id < 0 ) {
-			customFs.show();
-			thisPanel.updateDatasetsToBeSearched( 0 );
+	analysisCombo.on( "analysisChanged", function ( combo, analysis ) {
+		if ( analysis ) {
+			if ( analysis.id < 0 ) { // custom analysis
+				thisPanel.customAnalysis = true;
+				customFs.show();
+				thisPanel.updateDatasetsToBeSearched( eeSearchField.getEeIds() );
+				eeSearchField.findDatasets();
+			} else {
+				thisPanel.customAnalysis = false;
+				customFs.hide();
+				thisPanel.taxonChanged( analysis.taxon );
+				thisPanel.updateDatasetsToBeSearched( analysis.numDatasets );
+			}
 		} else {
+			thisPanel.customAnalysis = false;
 			customFs.hide();
-			geneChooserPanel.setTaxon( record.data.taxon );
-			thisPanel.updateDatasetsToBeSearched( record.data.numDatasets );
+			thisPanel.analysisFs.setTitle( "" );
 		}
 	} );
 	
@@ -121,10 +133,14 @@ Ext.Gemma.CoexpressionSearchPanel = function ( config ) {
 	this.stringencyField = stringencyField;
 	
 	var eeSearchField = new Ext.Gemma.DatasetSearchField( {
-		fieldLabel : "Experiment keywords",
-		callback : this.updateDatasetsToBeSearched.bind( this )
+		fieldLabel : "Experiment keywords"
 	} );
 	this.eeSearchField = eeSearchField;
+	this.eeSearchField.on( 'aftersearch', function ( field, results ) {
+		if ( thisPanel.customAnalysis ) {
+			thisPanel.updateDatasetsToBeSearched( results );
+		}
+	} );
 	
 	var customFs = new Ext.form.FieldSet( {
 		title : 'Custom analysis options',
@@ -162,6 +178,15 @@ Ext.Gemma.CoexpressionSearchPanel = function ( config ) {
 /* other public methods...
  */
 Ext.extend( Ext.Gemma.CoexpressionSearchPanel, Ext.FormPanel, {
+
+	initComponent : function() {
+        Ext.Gemma.CoexpressionSearchPanel.superclass.initComponent.call(this);
+        
+        this.addEvents(
+            'beforesearch',
+            'aftersearch'
+        );
+    },
 
 	onRender : function ( ct, position ) {
 		Ext.Gemma.CoexpressionSearchPanel.superclass.onRender.apply(this, arguments);
@@ -210,6 +235,12 @@ Ext.extend( Ext.Gemma.CoexpressionSearchPanel, Ext.FormPanel, {
 	updateDatasetsToBeSearched : function ( datasets ) {
 		var numDatasets = datasets instanceof Array ? datasets.length : datasets;
 		this.analysisFs.setTitle( String.format( "Analysis options ({0} dataset{1} will be analyzed)", numDatasets, numDatasets != 1 ? "s" : "" ) );
+	},
+	
+	taxonChanged : function ( taxon ) {
+		this.analysisCombo.taxonChanged( taxon );
+		this.eeSearchField.taxonChanged( taxon );
+		this.geneChooserPanel.taxonChanged( taxon );
 	}
 	
 } );
@@ -218,52 +249,66 @@ Ext.extend( Ext.Gemma.CoexpressionSearchPanel, Ext.FormPanel, {
  */
 Ext.Gemma.DatasetSearchField = function ( config ) {
 
-	this.callback = config.callback; delete config.callback;
 	this.loadMask = config.loadMask; delete config.loadMask;
 	this.eeIds = [];
 
 	Ext.Gemma.DatasetSearchField.superclass.constructor.call( this, config );
+	
+	this.on( 'beforesearch', function( field, query ) {
+		if ( this.loadMask ) {
+			this.loadMask.show();
+		}
+	} );
+	this.on( 'aftersearch', function( field, results ) {
+		if ( this.loadMask ) {
+			this.loadMask.hide();
+		}
+	} );
 };
 
 /* other public methods...
  */
 Ext.extend( Ext.Gemma.DatasetSearchField, Ext.form.TextField, {
 
+	initComponent : function() {
+        Ext.Gemma.DatasetSearchField.superclass.initComponent.call(this);
+        
+        this.addEvents(
+            'beforesearch',
+            'aftersearch'
+        );
+    },
+
 	initEvents : function() {
 		Ext.Gemma.DatasetSearchField.superclass.initEvents.call(this);
+		
 		var queryTask = new Ext.util.DelayedTask( this.findDatasets, this );
 		this.el.on( "keyup", function( e ) { queryTask.delay( 500 ) } );
 	},
 	
 	findDatasets : function () {
-		var query = this.getValue();
-		if ( query == this.lastQuery ) {
+		var params = [ this.getValue(), this.taxon ? this.taxon.id : -1 ];
+		if ( params == this.lastParams ) {
 			return;
-		} else if ( query == "" ) {
-			this.foundDatasets( [] );
-		} else {
-			this.lastQuery = query;
-			if ( this.loadMask ) {
-//				this.loadMask.enable();
-				this.loadMask.show();
-			}
-			ExtCoexpressionSearchController.findExpressionExperiments( query, this.foundDatasets.bind( this ) );
 		}
+		if ( this.fireEvent('beforesearch', this, params ) !== false ) {
+			this.lastParams = params;
+			ExtCoexpressionSearchController.findExpressionExperiments( params[0], params[1], this.foundDatasets.bind( this ) );
+        }
 	},
 	
 	foundDatasets : function ( results ) {
 		this.eeIds = results;
-		if ( this.callback instanceof Function ) {
-			this.callback( results );
-		}
-		if ( this.loadMask ) {
-			this.loadMask.hide();
-//			this.loadMask.disable();
-		}
+		this.fireEvent( 'aftersearch', this, results );
 	},
 	
 	getEeIds : function () {
 		return this.eeIds;
+	},
+	
+	taxonChanged : function ( taxon ) {
+		this.taxon = taxon;
+		this.findDatasets();
 	}
 	
 } );
@@ -280,6 +325,7 @@ Ext.Gemma.AnalysisCombo = function ( config ) {
 		displayField : 'name',
 		valueField : 'id',
 		editable : false,
+		lazyInit : false,
 		mode : 'local',
 		selectOnFocus : true,
 		triggerAction : 'all',
@@ -338,6 +384,38 @@ Ext.Gemma.AnalysisCombo.getTemplate = function() {
 /* other public methods...
  */
 Ext.extend( Ext.Gemma.AnalysisCombo, Ext.form.ComboBox, {
+
+	initComponent : function() {
+        Ext.Gemma.AnalysisCombo.superclass.initComponent.call(this);
+        
+        this.addEvents(
+            'analysischanged'
+        );
+    },
+
+	onSelect : function ( record, index ) {
+		Ext.Gemma.AnalysisCombo.superclass.onSelect.call( this, record, index );
+		
+		if ( record.data != this.selectedAnalysis ) {
+			this.selectedAnalysis = record.data;
+			this.fireEvent( 'analysischanged', this, this.selectedAnalysis );
+		}
+	},
+	
+	reset : function() {
+		Ext.Gemma.AnalysisCombo.superclass.reset.call(this);
+		
+		if ( this.selectedAnalysis != null ) {
+			this.selectedAnalysis = null;
+			this.fireEvent( 'analysischanged', this, this.selectedAnalysis );
+		}
+	},
+
+	taxonChanged : function ( taxon ) {
+		if ( this.selectedAnalysis && this.selectedAnalysis.taxon.id != taxon.id ) {
+			this.reset();
+		}
+	}
 	
 } );
 

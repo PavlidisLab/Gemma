@@ -5,8 +5,6 @@ Ext.namespace('Ext.Gemma');
 Ext.Gemma.GeneCombo = function ( config ) {
 	Ext.QuickTips.init();
 	
-	this.taxonId = config.taxonId; delete config.taxonId;
-	
 	/* establish default config options...
 	 */
 	var superConfig = {
@@ -28,10 +26,6 @@ Ext.Gemma.GeneCombo = function ( config ) {
 		superConfig[property] = config[property];
 	}
 	Ext.Gemma.GeneCombo.superclass.constructor.call( this, superConfig );
-	
-	this.on( "select", function ( combo, record, index ) {
-		this.selectedGene = record.data;
-	} );
 };
 
 /* static methods
@@ -61,16 +55,28 @@ Ext.Gemma.GeneCombo.getTemplate = function() {
  */
 Ext.extend( Ext.Gemma.GeneCombo, Ext.form.ComboBox, {
 
+	onSelect : function ( record, index ) {
+		Ext.Gemma.GeneCombo.superclass.onSelect.call( this, record, index );
+		
+		if ( record.data != this.selectedGene ) {
+			this.selectedGene = record.data;
+		}
+	},
+	
 	getParams : function ( query ) {
-			return [ query, this.taxonId || -1 ];
+			return [ query, this.taxon ? this.taxon.id : -1 ];
 	},
 	
 	getGene : function () {
 		return this.selectedGene;
 	},
 	
-	setTaxonId : function ( id ) {
-		this.taxonId = id;
+	setTaxon : function ( taxon ) {
+		this.taxon = taxon;
+		if ( this.selectedGene && this.selectedGene.taxon.scientificName != taxon.scientificName ) {
+			this.selectedGene = null;
+			this.reset();
+		}
 	}
 	
 } );

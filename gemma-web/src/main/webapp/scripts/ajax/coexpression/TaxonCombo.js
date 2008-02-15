@@ -10,9 +10,11 @@ Ext.Gemma.TaxonCombo = function ( config ) {
 	 */
 	var superConfig = {
 		displayField : 'commonName',
+		valueField : 'id',
 		editable : false,
+		lazyInit : false,
 		mode : 'local',
-		selectOnFocus : true,
+		selectOnFocus : false,
 		triggerAction : 'all',
 		store : new Ext.data.Store( {
 			proxy : new Ext.data.DWRProxy( GenePickerController.getTaxa ),
@@ -29,10 +31,6 @@ Ext.Gemma.TaxonCombo = function ( config ) {
 		superConfig[property] = config[property];
 	}
 	Ext.Gemma.TaxonCombo.superclass.constructor.call( this, superConfig );
-	
-	this.on( "select", function ( combo, record, index ) {
-		this.selectedGene = record.data;
-	} );
 };
 
 /* static methods
@@ -60,9 +58,30 @@ Ext.Gemma.TaxonCombo.getTemplate = function() {
 /* other public methods...
  */
 Ext.extend( Ext.Gemma.TaxonCombo, Ext.form.ComboBox, {
+
+	initComponent : function() {
+        Ext.Gemma.TaxonCombo.superclass.initComponent.call(this);
+        
+        this.addEvents(
+            'taxonchanged'
+        );
+    },
+	
+	onSelect : function ( record, index ) {
+		Ext.Gemma.TaxonCombo.superclass.onSelect.call( this, record, index );
+		
+		if ( record.data != this.selectedTaxon ) {
+			this.selectedTaxon = record.data;
+			this.fireEvent( 'taxonchanged', this, this.selectedTaxon );
+		}
+	}, 
 	
 	getTaxon : function () {
 		return this.selectedTaxon;
+	},
+	
+	setTaxon : function ( taxon ) {
+		this.setValue( taxon.id );
 	}
 	
 } );

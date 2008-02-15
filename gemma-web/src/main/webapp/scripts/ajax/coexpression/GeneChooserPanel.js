@@ -16,9 +16,9 @@ Ext.Gemma.GeneChooserPanel = function ( config ) {
 			emptyText : 'select a taxon',
 			width : 150
 		} );
-		taxonCombo.on( "Select", function( combo, record, index ) {
-			geneCombo.setTaxonId( record.data.id );
-		} );
+		taxonCombo.on( "taxonchanged", function( combo, taxon ) {
+			thisGrid.taxonChanged( taxon );
+		}, this );
 	}
 	this.taxonCombo = taxonCombo;
 	
@@ -39,6 +39,7 @@ Ext.Gemma.GeneChooserPanel = function ( config ) {
 			var constructor = Ext.Gemma.GeneCombo.getRecord();
 			var record = new constructor( gene );
 			thisGrid.getStore().add( [ record ] );
+			geneCombo.reset();
 			addButton.disable();
 		}
 	} );
@@ -164,16 +165,6 @@ Ext.extend( Ext.Gemma.GeneChooserPanel, Ext.grid.GridPanel, {
 		);
 	},
 	
-	setTaxon : function ( taxon ) {
-		var all = this.getStore().getRange();
-		for ( var i=0; i<all.length; ++i ) {
-			if ( all[i].data.taxon != taxon.scientificName ) {
-				this.getStore().remove( all[i] );
-			}
-		}
-		this.geneCombo.setTaxonId( taxon.id );
-	},
-	
 	getGeneIds : function () {
 		var ids = [];
 		var all = this.getStore().getRange();
@@ -190,6 +181,17 @@ Ext.extend( Ext.Gemma.GeneChooserPanel, Ext.grid.GridPanel, {
 			ids.push( gene.id );
 		}
 		return ids;
+	},
+	
+	taxonChanged : function ( taxon ) {
+		this.taxonCombo.setTaxon( taxon );
+		this.geneCombo.setTaxon( taxon );
+		var all = this.getStore().getRange();
+		for ( var i=0; i<all.length; ++i ) {
+			if ( all[i].data.taxon != taxon.scientificName ) {
+				this.getStore().remove( all[i] );
+			}
+		}
 	}
 	
 } );
