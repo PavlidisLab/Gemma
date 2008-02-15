@@ -29,6 +29,19 @@
 
 				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}gene2Go">gene2GoTermEndpoint</prop>
 
+				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}experimentIDbyTaxon">experimentIDbyTaxonEndpoint</prop>
+
+				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}geneIDbyTaxon">geneIDbyTaxonEndpoint</prop>
+				
+				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}goTerm2Gene">goTerm2GeneEndpoint</prop>
+				
+				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}physicalLoc">physicalLocationEndpoint</prop>
+				
+				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}arrayDesignIdentiferByName">arrayDesignIdentiferByNameEndpoint</prop>
+				
+				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}dEDVfromEEIDGeneID">dEDVfromEEIDGeneIDEndpoint</prop>
+				
+
           	</props>
          </property>
          
@@ -39,7 +52,11 @@
         </property>
     </bean>
 
+<bean id="gemma" class="org.springframework.ws.wsdl.wsdl11.SimpleWsdl11Definition">
+    <constructor-arg value="/WEB-INF/gemma-custom.wsdl"/>
+</bean>
 
+<!--  
     <bean id="gemma" class="org.springframework.ws.wsdl.wsdl11.DynamicWsdl11Definition">
         <property name="builder">
             <bean class="org.springframework.ws.wsdl.wsdl11.builder.XsdBasedSoap11Wsdl4jDefinitionBuilder">
@@ -49,7 +66,8 @@
             </bean>
         </property>
     </bean>
-    
+
+-->
     <bean id="validatingInterceptor"
           class="org.springframework.ws.soap.server.endpoint.interceptor.PayloadValidatingInterceptor">
         <description>
@@ -121,6 +139,7 @@
         <description>
                         returns a matrix of design element data vectors for the given Expression experiment
         </description>
+        <property name="compositeSequenceService" ref="compositeSequenceService"/>
         <property name="expressionExperimentService" ref="expressionExperimentService"/>
         <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
         <property name="analysisHelperService" ref="analysisHelperService"/>
@@ -134,8 +153,61 @@
         <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
         <property name="geneOntologyService" ref="geneOntologyService"/>
     </bean>
-
     
+    <bean id="goTerm2GeneEndpoint" class="ubic.gemma.web.services.GoTerm2GeneEndpoint">
+        <description>
+				returns a list of gene ids
+        </description>
+        <property name="geneService" ref="geneService"/>
+        <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
+        <property name="geneOntologyService" ref="geneOntologyService"/>
+        <property name="taxonService" ref="taxonService"/>
+    </bean>
+
+	<bean id="experimentIDbyTaxonEndpoint" class="ubic.gemma.web.services.ExperimentIDbyTaxonEndpoint">
+        <description>
+				returns a list of Expression Experiment ids
+        </description>
+        <property name="expressionExperimentService" ref="expressionExperimentService"/>
+        <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
+        <property name="taxonService" ref="taxonService"/>
+    </bean>
+    
+    <bean id="geneIDbyTaxonEndpoint" class="ubic.gemma.web.services.GeneIDbyTaxonEndpoint">
+        <description>
+				returns a list of Gene ids
+        </description>
+        <property name="geneService" ref="geneService"/>
+        <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
+        <property name="taxonService" ref="taxonService"/>
+    </bean>
+    
+    <bean id="physicalLocationEndpoint" class="ubic.gemma.web.services.PhysicalLocationEndpoint">
+        <description>
+				returns the physical location (chromosome id, lower bound nt, upper bound nt) of the gene
+        </description>
+        <property name="geneService" ref="geneService"/>
+        <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
+    </bean>
+    
+    <bean id="arrayDesignIdentiferByNameEndpoint" class="ubic.gemma.web.services.ArrayDesignIdentiferByNameEndpoint">
+        <description>
+				returns the Array Design ID given text
+        </description>
+        <property name="searchService" ref="searchService"/>
+        <property name="arrayDesignService" ref="arrayDesignService"/>
+        <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
+    </bean>
+    
+    <bean id="dEDVfromEEIDGeneIDEndpoint" class="ubic.gemma.web.services.DEDVfromEEIDGeneIDEndpoint">
+        <description>
+				
+        </description>
+        <property name="expressionExperimentService" ref="expressionExperimentService"/>
+        <property name="geneService" ref="geneService"/>
+        <property name="designElementDataVectorService" ref="designElementDataVectorService"/>
+        <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
+    </bean>
     
 
 </beans>
