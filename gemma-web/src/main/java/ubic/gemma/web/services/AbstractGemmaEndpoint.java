@@ -23,9 +23,11 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Vector;
 
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
+
 import org.springframework.ws.server.endpoint.AbstractDomPayloadEndpoint;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -63,6 +65,7 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
 
 	public AbstractGemmaEndpoint() {
 		super();
+		
 	}
 
 	public void setManualAuthenticationProcessing(
@@ -96,11 +99,14 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
 	 * @return a collection contain one string element
 	 */
 	protected Collection<String> getNodeValues(Element requestElement, String tagName){
-		Assert.isTrue(NAMESPACE_URI.equals(requestElement.getNamespaceURI()),
+	    StopWatch watch = new StopWatch();
+        watch.start();
+	    
+	    Assert.isTrue(NAMESPACE_URI.equals(requestElement.getNamespaceURI()),
 		"Invalid namespace");
 		Assert.isTrue(localName.equals(requestElement.getLocalName()),
 		"Invalid local name");
-
+		log.info( "Starting "+ localName +" endpoint" );
 		authenticate();
 		
 		Collection<String> value = new HashSet<String>();
@@ -129,7 +135,9 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
 			throw new IllegalArgumentException(
 					"Could not find request text node");
 		}
-		
+		watch.stop();
+        Long time = watch.getTime();
+        log.info( "XML request for "+ localName +" endpoint read in "+time+"ms." );
 		return value;
 	}
 	
@@ -143,11 +151,13 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
 	 * @return
 	 */
 	protected Collection<String> getArrayValues(Element requestElement, String tagName){
-		Assert.isTrue(NAMESPACE_URI.equals(requestElement.getNamespaceURI()),
+		StopWatch watch = new StopWatch();
+		watch.start();
+	    Assert.isTrue(NAMESPACE_URI.equals(requestElement.getNamespaceURI()),
 		"Invalid namespace");
 		Assert.isTrue(localName.equals(requestElement.getLocalName()),
 		"Invalid local name");
-
+		log.info( "Starting "+ localName +" endpoint" );
 		authenticate();
 		
 		Collection<String> value = new HashSet<String>();
@@ -184,7 +194,9 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
 			throw new IllegalArgumentException(
 					"Could not find request text node");
 		}
-		
+		watch.stop();
+		Long time = watch.getTime();
+		log.info( "XML request for "+ localName +" endpoint read in "+time+"ms." );
 		return value;
 	}
 	
@@ -196,7 +208,10 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
 	 * @return
 	 */
 	protected Element buildWrapper(Document document, Collection<String> values, String elementName){
-
+	    log.info( "Building "+ localName+ " XML response" );
+	    StopWatch watch = new StopWatch();
+	    watch.start();
+	   
 		Element responseWrapper = document.createElementNS(NAMESPACE_URI,
 				localName);
 		Element responseElement = document.createElementNS(NAMESPACE_URI,
@@ -214,6 +229,9 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
 				responseElement.appendChild(e);
 			}
 		}
+		watch.stop();
+		Long time = watch.getTime();
+		log.info( "XML response for "+ localName +" endpoint built in "+time+"ms." );
 		return responseWrapper;
 	}
 

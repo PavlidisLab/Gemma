@@ -51,7 +51,8 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 
 /**
- * list Experiment IDs, list gene IDs -> output data vectors satisfying both conditions (i.e., string array) 
+ * Given list Experiment IDs, list gene IDs, return data vectors satisfying both conditions (i.e., string array) 
+ *  and the corresponding composite gene sequences. 
  * 
  * Potential problem may be the thawing of design element data vector objects.  
  * For the mini-db, it appears to work.
@@ -142,6 +143,24 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
               
             Set<DesignElementDataVector> keys = dedvMap.keySet();
             designElementDataVectorService.thaw( keys );
+//            ArrayList<DesignElementDataVector> tempdv = new ArrayList<DesignElementDataVector>(50);
+//            Iterator<DesignElementDataVector> dviterator = keys.iterator();
+//            int index = 0;
+//            while (dviterator.hasNext()){
+//                if (tempdv.size()< 50)
+//                    tempdv.add(dviterator.next());
+//                else {
+//                    log.info( "thawing "+tempdv.size()+" data vectors" );
+//                    designElementDataVectorService.thaw( tempdv );
+//                    tempdv = new ArrayList<DesignElementDataVector>(50);
+//                }
+//              
+//            }
+//            if (tempdv.size() > 0){
+//                log.info( "thawing "+tempdv.size()+" data vectors" );
+//                designElementDataVectorService.thaw( tempdv );
+//            }
+            
             ByteArrayConverter converter = new ByteArrayConverter();
             // -build single-row Collections to use for ExpressionDataMatrixBuilder
             // -need to do this so that we can use the .getPrefferedData()
