@@ -44,34 +44,34 @@ import ubic.gemma.util.ConfigUtils;
  * This parses GO annotations from NCBI. See {@ink ftp://ftp.ncbi.nih.gov/gene/DATA/README}.
  * 
  * <pre>
- *                                    tax_id:
- *                                    the unique identifier provided by NCBI Taxonomy
- *                                    for the species or strain/isolate
- *                                   
- *                                    GeneID:
- *                                    the unique identifier for a gene
- *                                    --note:  for genomes previously available from LocusLink,
- *                                    the identifiers are equivalent
- *                                   
- *                                    GO ID:
- *                                    the GO ID, formatted as GO:0000000
- *                                   
- *                                    Evidence:
- *                                    the evidence code in the gene_association file
- *                                   
- *                                    Qualifier: 
- *                                    a qualifier for the relationship between the gene
- *                                    and the GO term
- *                                   
- *                                    GO term:
- *                                    the term indicated by the GO ID
- *                                   
- *                                    PubMed:
- *                                    pipe-delimited set of PubMed uids reported as evidence
- *                                    for the association
- *                                   
- *                                    Category:
- *                                    the GO category (Function, Process, or Component)
+ * tax_id:
+ * the unique identifier provided by NCBI Taxonomy
+ * for the species or strain/isolate
+ * 
+ * GeneID:
+ * the unique identifier for a gene
+ * --note:  for genomes previously available from LocusLink,
+ * the identifiers are equivalent
+ * 
+ * GO ID:
+ * the GO ID, formatted as GO:0000000
+ * 
+ * Evidence:
+ * the evidence code in the gene_association file
+ * 
+ * Qualifier: 
+ * a qualifier for the relationship between the gene
+ * and the GO term
+ * 
+ * GO term:
+ * the term indicated by the GO ID
+ * 
+ * PubMed:
+ * pipe-delimited set of PubMed uids reported as evidence
+ * for the association
+ * 
+ * Category:
+ * the GO category (Function, Process, or Component)
  * </pre>
  * 
  * @author keshav
@@ -79,7 +79,7 @@ import ubic.gemma.util.ConfigUtils;
  * @spring.bean id="gene2GOAssociationParser"
  * @version $Id$
  */
-public class NCBIGene2GOAssociationParser extends BasicLineParser implements QueuingParser {
+public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssociation> implements QueuingParser {
 
     private static final String COMMENT_INDICATOR = "#";
 
@@ -155,7 +155,7 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser implements Que
         oe.setValueUri( GeneOntologyService.BASE_GO_URI + value );
         oe.setValue( value );
 
-       // g2GOAss.setSource( ncbiGeneDb );
+        // g2GOAss.setSource( ncbiGeneDb );
 
         g2GOAss.setGene( gene );
         g2GOAss.setOntologyEntry( oe );
@@ -188,7 +188,7 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser implements Que
     }
 
     @Override
-    protected void addResult( Object obj ) {
+    protected void addResult( Gene2GOAssociation obj ) {
         count++;
     }
 

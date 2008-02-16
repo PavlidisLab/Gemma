@@ -87,12 +87,12 @@ public class BusinessKey {
             }
             externalRef.add( disjunction );
             return;
-        }
-
-        addNameRestriction( queryObject, arrayDesign );
-
-        if ( arrayDesign.getShortName() != null )
+        } else if ( arrayDesign.getShortName() != null ) {
+            // this might not be such a good idea, because we can edit the short name.
             queryObject.add( Restrictions.eq( "shortName", arrayDesign.getShortName() ) );
+        } else {
+            addNameRestriction( queryObject, arrayDesign );
+        }
 
         if ( arrayDesign.getDesignProvider() != null
                 && StringUtils.isNotBlank( arrayDesign.getDesignProvider().getName() ) ) {
@@ -113,6 +113,15 @@ public class BusinessKey {
     }
 
     /**
+     * Note: The finder has to do the additional checking for equality of sequence and/or database entry - we don't know
+     * until we get the sequences. Due to the following issues:
+     * <ul>
+     * <li>Sometimes the sequence in the database lacks the DatabaseEntry
+     * <li>Sometimes the old entry lacks the actual sequence (ATCG..)
+     * </ul>
+     * This means that we can't use those criteria up front. Instead we match by name and taxon. If those match, the
+     * caller has to sort through possible multiple results to find the correct one.
+     * 
      * @param innerQuery
      * @param bioSequence
      */
@@ -128,17 +137,6 @@ public class BusinessKey {
         }
 
         attachCriteria( queryObject, bioSequence.getTaxon(), "taxon" );
-
-        // The finder now has to do the additional checking for equality of sequence and/or database entry.
-
-        // if ( bioSequence.getSequenceDatabaseEntry() != null ) {
-        // // this is problematic - sometimes the old entry doesn't have the database entry.
-        // queryObject.createCriteria( "sequenceDatabaseEntry" ).add(
-        // Restrictions.eq( "accession", bioSequence.getSequenceDatabaseEntry().getAccession() ) );
-        // } else if ( StringUtils.isNotBlank( bioSequence.getSequence() ) ) {
-        // // this is also problematic - sometimes the old entry doesn't have the sequence.
-        // queryObject.add( Restrictions.eq( "sequence", bioSequence.getSequence() ) );
-        // }
 
     }
 

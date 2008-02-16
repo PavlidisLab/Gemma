@@ -29,7 +29,7 @@ import org.apache.commons.lang.StringUtils;
  * @author keshav
  * @version $Id$
  */
-public class TabDelimParser extends BasicLineParser {
+public class TabDelimParser extends BasicLineParser<String[]> {
 
     private String[] header = null;
 
@@ -52,7 +52,7 @@ public class TabDelimParser extends BasicLineParser {
      * 
      * @see ubic.gemma.loader.util.parser.LineParser#parseOneLine(java.lang.String)
      */
-    public Object parseOneLine( String line ) {
+    public String[] parseOneLine( String line ) {
         String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
         log.debug( "Got " + fields.length + " fields from line '" + line.substring( 0, Math.min( line.length(), 100 ) )
                 + "' ..." );
@@ -65,8 +65,8 @@ public class TabDelimParser extends BasicLineParser {
     }
 
     @Override
-    protected void addResult( Object obj ) {
-        results.add( ( String[] ) obj );
+    protected void addResult( String[] obj ) {
+        results.add( obj );
     }
 
 }

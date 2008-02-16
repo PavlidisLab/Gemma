@@ -45,7 +45,7 @@ import ubic.gemma.util.SequenceBinUtils;
  * @author pavlidis
  * @version $Id$
  */
-public class GffParser extends BasicLineParser {
+public class GffParser extends BasicLineParser<Gene> {
     private static Log log = LogFactory.getLog( GffParser.class.getName() );
     Collection<Gene> results = new HashSet<Gene>();
 
@@ -60,19 +60,19 @@ public class GffParser extends BasicLineParser {
     }
 
     @Override
-    protected void addResult( Object obj ) {
+    protected void addResult( Gene obj ) {
         if ( results.contains( obj ) ) {
             log.warn( "Already have " + obj );
         }
-        results.add( ( Gene ) obj );
+        results.add( obj );
     }
 
     @Override
-    public Collection getResults() {
+    public Collection<Gene> getResults() {
         return results;
     }
 
-    public Object parseOneLine( String line ) {
+    public Gene parseOneLine( String line ) {
 
         if ( this.taxon == null ) {
             throw new IllegalStateException( "You must set the taxon first" );
@@ -135,7 +135,8 @@ public class GffParser extends BasicLineParser {
         location.setChromosome( chromosome );
         location.setNucleotide( start );
         location.setNucleotideLength( length );
-        location.setBin( SequenceBinUtils.binFromRange( location.getNucleotide().intValue(), location.getNucleotide().intValue()
+        location.setBin( SequenceBinUtils.binFromRange( location.getNucleotide().intValue(), location.getNucleotide()
+                .intValue()
                 + location.getNucleotideLength().intValue() ) );
         location.setStrand( strand );
 

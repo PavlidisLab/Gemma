@@ -46,6 +46,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.biosequence.BioSequenceImpl;
 import ubic.gemma.util.BusinessKey;
 import ubic.gemma.util.NativeQueryUtils;
 
@@ -999,14 +1000,10 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                     if ( cs.getId() != null ) session.lock( cs, LockMode.NONE );
 
                     BioSequence bs = cs.getBiologicalCharacteristic();
-                    if ( bs != null && !seen.contains( bs ) ) {
-                        // session.lock( bs, LockMode.NONE );
-                        // session.update( bs ); // this really shouldn't be necessary. Lock is better.
-                        seen.add( bs );
-
+                    if ( bs != null && session.get( BioSequenceImpl.class, bs.getId() ) == null ) {
+                        session.lock( bs, LockMode.NONE );
                         if ( !Hibernate.isInitialized( bs ) ) {
                             Hibernate.initialize( bs );
-                            seen.add( bs );
                         }
 
                         if ( deep ) {

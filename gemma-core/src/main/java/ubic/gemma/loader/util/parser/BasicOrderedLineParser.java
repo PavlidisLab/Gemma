@@ -26,8 +26,8 @@ import java.util.List;
  * @author pavlidis
  * @version $Id$
  */
-public abstract class BasicOrderedLineParser extends BasicLineParser {
+public abstract class BasicOrderedLineParser<T> extends BasicLineParser<T> {
 
-    public abstract List getOrderedResults();
+    public abstract List<T> getOrderedResults();
 
 }

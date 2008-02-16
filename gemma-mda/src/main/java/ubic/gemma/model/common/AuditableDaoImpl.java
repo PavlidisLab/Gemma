@@ -29,8 +29,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -43,7 +41,6 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
  * @see ubic.gemma.model.common.Auditable
  */
 public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
-    private Log log = LogFactory.getLog( this.getClass() );
 
     /**
      * This is basically a thaw method.

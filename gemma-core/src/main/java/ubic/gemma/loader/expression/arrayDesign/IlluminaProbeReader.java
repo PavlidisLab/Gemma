@@ -47,7 +47,7 @@ public class IlluminaProbeReader extends BasicLineMapParser {
      * @see baseCode.io.reader.BasicLineMapParser#parseOneLine(java.lang.String)
      */
     @Override
-    public Object parseOneLine( String line ) {
+    public Reporter parseOneLine( String line ) {
         String[] sArray = line.split( "\t" );
         if ( sArray.length == 0 ) throw new IllegalArgumentException( "Line format is not valid" );
 

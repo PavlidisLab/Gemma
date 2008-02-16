@@ -183,7 +183,7 @@ public class GeoFamilyParser implements Parser {
 
         while ( !future.isDone() && !future.isCancelled() ) {
             try {
-                TimeUnit.SECONDS.sleep( 2L );
+                TimeUnit.SECONDS.sleep( 5L );
             } catch ( InterruptedException e ) {
                 // probably cancelled.
                 return;

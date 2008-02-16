@@ -45,12 +45,12 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
  * @author keshav
  * @version $Id$
  */
-public class ArrayDesignParser extends BasicLineParser {
+public class ArrayDesignParser extends BasicLineParser<ArrayDesign> {
     protected static final Log log = LogFactory.getLog( ArrayDesignParser.class );
 
     private Collection<ArrayDesign> results = new HashSet<ArrayDesign>();
 
-    public Object parseOneLine( String line ) {
+    public ArrayDesign parseOneLine( String line ) {
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
         ad.setName( fields[0] );
@@ -65,8 +65,8 @@ public class ArrayDesignParser extends BasicLineParser {
     }
 
     @Override
-    protected void addResult( Object obj ) {
-        results.add( ( ArrayDesign ) obj );
+    protected void addResult( ArrayDesign obj ) {
+        results.add( obj );
 
     }
 

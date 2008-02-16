@@ -21,6 +21,7 @@ package ubic.gemma.loader.expression.geo.service;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,8 +36,10 @@ import ubic.gemma.loader.expression.geo.model.GeoSubset;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
@@ -107,8 +110,12 @@ public class GeoDatasetService extends AbstractGeoService {
 
         confirmPlatformUniqueness( series, doSampleMatching );
 
+        matchToExistingPlatforms( series );
+
         checkSamplesAreNew( series );
 
+        geoConverter.clear();
+        
         Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) geoConverter.convert( series );
 
         series = null; // hopefully free memory...
@@ -124,6 +131,9 @@ public class GeoDatasetService extends AbstractGeoService {
         return persistedResult;
     }
 
+    /**
+     * @param bioAssayService
+     */
     public void setBioAssayService( BioAssayService bioAssayService ) {
         this.bioAssayService = bioAssayService;
     }
@@ -154,8 +164,8 @@ public class GeoDatasetService extends AbstractGeoService {
     }
 
     /**
-     * Another rare case, typified by samples in GSE3193. We must confirm that all samples included in the data set are
-     * not included in other data sets.
+     * Another common case, typified by samples in GSE3193. We must confirm that all samples included in the data set
+     * are not included in other data sets. In GEO this primarily occurs in 'superseries' that combine other series.
      * 
      * @param series
      */
@@ -256,10 +266,7 @@ public class GeoDatasetService extends AbstractGeoService {
      * datasets.
      */
     private void confirmPlatformUniqueness( GeoSeries series, boolean doSampleMatching ) {
-        Set<GeoPlatform> platforms = new HashSet<GeoPlatform>();
-        for ( GeoDataset dataset : series.getDatasets() ) {
-            platforms.add( dataset.getPlatform() );
-        }
+        Set<GeoPlatform> platforms = getPlatforms( series );
         if ( platforms.size() == series.getDatasets().size() ) {
             return;
         }
@@ -268,6 +275,39 @@ public class GeoDatasetService extends AbstractGeoService {
         DatasetCombiner combiner = new DatasetCombiner( doSampleMatching );
         GeoSampleCorrespondence corr = combiner.findGSECorrespondence( series );
         series.setSampleCorrespondence( corr );
+    }
+
+    /**
+     * Build the map between the existing probe names and the ones in gemma.
+     * 
+     * @param pl
+     * @param columnWithGemmaNames
+     * @param columnWithGeoNames
+     */
+    private void fillExistingProbeNameMap( GeoPlatform pl, String columnWithGemmaNames, String columnWithGeoNames ) {
+
+        List<String> gemmaNames = pl.getColumnData( columnWithGemmaNames );
+        List<String> geoNames = pl.getColumnData( columnWithGeoNames );
+        assert gemmaNames.size() == geoNames.size();
+        for ( int i = 0; i < gemmaNames.size(); i++ ) {
+            String gemmaName = gemmaNames.get( i );
+            String geoName = geoNames.get( i );
+            if ( log.isDebugEnabled() )
+                log.debug( "GEO name:" + geoName + "; name to be used for Gemma:" + gemmaName );
+            pl.getProbeNamesInGemma().put( geoName, gemmaName );
+        }
+    }
+
+    /**
+     * @param series
+     * @return
+     */
+    private Set<GeoPlatform> getPlatforms( GeoSeries series ) {
+        Set<GeoPlatform> platforms = new HashSet<GeoPlatform>();
+        for ( GeoDataset dataset : series.getDatasets() ) {
+            platforms.add( dataset.getPlatform() );
+        }
+        return platforms;
     }
 
     /**
@@ -287,6 +327,90 @@ public class GeoDatasetService extends AbstractGeoService {
             if ( pubmed == null ) continue;
             experiment.setPrimaryPublication( pubmed );
 
+        }
+    }
+
+    /**
+     * @param pl
+     */
+    private void matchToExistingPlatform( GeoPlatform pl ) {
+        // we have to populate this.
+        Map<String, String> probeNamesInGemma = pl.getProbeNamesInGemma();
+
+        // do a partial conversion. We will throw this away;
+        ArrayDesign rawad = ( ArrayDesign ) geoConverter.convert( pl );
+
+        // find in our system
+        ArrayDesign existing = arrayDesignService.find( rawad );
+
+        if ( existing == null ) {
+            log.info( pl + " looks new to Gemma" );
+            for ( CompositeSequence cs : rawad.getCompositeSequences() ) {
+                String geoProbeName = cs.getName();
+                probeNamesInGemma.put( geoProbeName, geoProbeName ); // no mapping needed.
+            }
+        } else {
+
+            log.info( "Platform " + pl + " exists in Gemma, aligning ..." );
+            arrayDesignService.thawLite( existing );
+
+            String columnWithGeoNames = null;
+            Set<String> geoProbeNames = new HashSet<String>();
+            for ( CompositeSequence cs : rawad.getCompositeSequences() ) {
+                String geoProbeName = cs.getName();
+                geoProbeNames.add( geoProbeName );
+                if ( columnWithGeoNames == null ) {
+                    for ( String colName : pl.getColumnNames() ) {
+                        if ( pl.getColumnData( colName ).contains( geoProbeName ) ) {
+                            columnWithGeoNames = colName;
+                            log.info( "GEO probe names were found in GEO column=" + columnWithGeoNames );
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if ( columnWithGeoNames == null ) {
+                throw new IllegalStateException( "Could not figure out which column the GEO probe names came from!" );
+            }
+
+            String columnWithGemmaNames = null;
+            allofit: for ( CompositeSequence cs : existing.getCompositeSequences() ) {
+                String gemmaProbeName = cs.getName();
+                if ( geoProbeNames.contains( gemmaProbeName ) ) {
+                    probeNamesInGemma.put( gemmaProbeName, gemmaProbeName ); // no mapping needed, really.
+                } else {
+                    // search the other columns
+                    for ( String colName : pl.getColumnNames() ) {
+                        if ( pl.getColumnData( colName ).contains( gemmaProbeName ) ) {
+                            columnWithGemmaNames = colName;
+                            log.info( "Gemma probe names were found in GEO column=" + columnWithGemmaNames );
+
+                            fillExistingProbeNameMap( pl, columnWithGemmaNames, columnWithGeoNames );
+                            break allofit;
+                        }
+                    }
+                }
+            }
+
+            if ( columnWithGemmaNames == null ) {
+                throw new IllegalStateException( "Could not figure out which column the Gemma probe names came from!" );
+            }
+
+        }
+    }
+
+    /**
+     * If platforms used exist in Gemma already, make sure the probe names match the ones in our system, and if not, try
+     * to figure out the correct mapping. This is necessary because we sometimes rename probes to match other data
+     * sources. Often GEO platforms just have integer ids.
+     * 
+     * @param series
+     */
+    private void matchToExistingPlatforms( GeoSeries series ) {
+        Set<GeoPlatform> platforms = getPlatforms( series );
+        for ( GeoPlatform pl : platforms ) {
+            matchToExistingPlatform( pl );
         }
     }
 

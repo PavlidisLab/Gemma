@@ -39,7 +39,7 @@ import ubic.gemma.util.progress.ProgressManager;
  * @author pavlidis
  * @version $Id$
  */
-public abstract class BasicLineParser implements LineParser {
+public abstract class BasicLineParser<T> implements LineParser<T> {
 
     protected static final String COMMENTMARK = "#";
 
@@ -74,7 +74,7 @@ public abstract class BasicLineParser implements LineParser {
                 continue;
             }
 
-            Object newItem = parseOneLine( line );
+            T newItem = parseOneLine( line );
 
             if ( newItem != null ) {
                 addResult( newItem );
@@ -133,11 +133,11 @@ public abstract class BasicLineParser implements LineParser {
      * 
      * @param obj
      */
-    protected abstract void addResult( Object obj );
+    protected abstract void addResult( T obj );
 
     /**
      * 
      */
-    public abstract Collection getResults();
+    public abstract Collection<T> getResults();
 
 }

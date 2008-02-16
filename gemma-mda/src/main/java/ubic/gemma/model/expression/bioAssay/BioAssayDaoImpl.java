@@ -21,6 +21,7 @@ package ubic.gemma.model.expression.bioAssay;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.criterion.Restrictions;
@@ -88,16 +89,15 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                try {
-                    session.lock( bioAssay, LockMode.READ );
-                } catch ( HibernateException e ) {
-                    return null;
-                }
+                if ( session.get( BioAssayImpl.class, bioAssay.getId() ) != null ) return null;
+                session.lock( bioAssay, LockMode.NONE );
+                Hibernate.initialize( bioAssay.getArrayDesignUsed() );
+                Hibernate.initialize( bioAssay.getDerivedDataFiles() );
                 for ( BioMaterial bm : bioAssay.getSamplesUsed() ) {
-                    bm.getName();
-                    bm.getBioAssaysUsedIn().size();
+                    Hibernate.initialize( bm );
+                    Hibernate.initialize( bm.getBioAssaysUsedIn() );
+                    Hibernate.initialize( bm.getFactorValues() );
                 }
-                bioAssay.getDerivedDataFiles().size();
                 session.evict( bioAssay );
                 return null;
             }

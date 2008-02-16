@@ -44,7 +44,7 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
  * @author pavlidis
  * @version $Id$
  */
-public class ImageCumulativePlatesParser extends BasicLineParser implements QueuingParser {
+public class ImageCumulativePlatesParser extends BasicLineParser<BioSequence> implements QueuingParser {
 
     BlockingQueue<BioSequence> results = new ArrayBlockingQueue<BioSequence>( 10000 );
     private ExternalDatabase genbank;
@@ -57,9 +57,9 @@ public class ImageCumulativePlatesParser extends BasicLineParser implements Queu
     }
 
     @Override
-    protected void addResult( Object obj ) {
+    protected void addResult( BioSequence obj ) {
         try {
-            results.put( ( BioSequence ) obj );
+            results.put( obj );
         } catch ( InterruptedException e ) {
             // ;
         }
@@ -80,7 +80,7 @@ public class ImageCumulativePlatesParser extends BasicLineParser implements Queu
         // }
     }
 
-    public Object parseOneLine( String line ) {
+    public BioSequence parseOneLine( String line ) {
         String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
 
         if ( StringUtils.isBlank( fields[7] ) ) {

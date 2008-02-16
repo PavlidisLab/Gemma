@@ -25,7 +25,7 @@ package ubic.gemma.loader.util.parser;
  * @author pavlidis
  * @version $Id$
  */
-public interface LineParser extends Parser {
+public interface LineParser<T> extends Parser<T> {
 
     public static final int MIN_PARSED_LINES_FOR_UPDATE = 100;
 
@@ -34,6 +34,6 @@ public interface LineParser extends Parser {
      * 
      * @param line
      */
-    abstract Object parseOneLine( String line );
+    abstract T parseOneLine( String line );
 
 }

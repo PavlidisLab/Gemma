@@ -268,15 +268,20 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 Collection<DesignElementDataVector> designElementDataVectors = toDelete.getDesignElementDataVectors();
 
                 int count = 0;
-                log.info( "Removing Design Element Data Vectors." );
+                log.info( "Removing Design Element Data Vectors ..." );
                 for ( DesignElementDataVector dv : designElementDataVectors ) {
                     dims.add( dv.getBioAssayDimension() );
                     qts.add( dv.getQuantitationType() );
                     session.delete( dv );
-                    if ( ++count % 20000 == 0 ) {
+                    if ( ++count % 1000 == 0 ) {
+                        session.flush();
+                    }
+                    if ( count % 20000 == 0 ) {
                         log.info( count + " design Element data vectors deleted" );
                     }
                 }
+                session.flush();
+
                 toDelete.getDesignElementDataVectors().clear();
 
                 log.info( "Removing BioAssay Dimensions." );
@@ -285,6 +290,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                     session.delete( dim );
                 }
 
+                log.info( "Removing Bioassays and biomaterials" );
                 Collection<BioMaterial> bioMaterialsToDelete = new HashSet<BioMaterial>();
                 for ( BioAssay ba : toDelete.getBioAssays() ) {
                     // delete references to files on disk
@@ -312,11 +318,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                         session.evict( bm );
                     }
                     biomaterials.clear();
-                    // session.update( ba ); // these cascade.
-                    // session.delete( ba );
-                    // log.info( "Removed BioAssay " + ba.getName() + " and its associations." );
                 }
 
+                log.info( "Last bits ..." );
                 for ( ExpressionExperimentSubSet subset : toDelete.getSubsets() ) {
                     session.delete( subset );
                 }
@@ -330,6 +334,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                     session.delete( qt );
                 }
 
+                log.info( "Finishing up ..." );
                 session.delete( toDelete );
                 session.flush();
                 session.clear();
@@ -1141,11 +1146,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     @Override
     protected Map<ExpressionExperiment, Collection<AuditEvent>> handleGetSampleRemovalEvents(
             Collection /* <ExpressionExperiment> */expressionExperiments ) {
-        List<String> classes = getClassHierarchy( SampleRemovalEvent.class );
+        // List<String> classes = getClassHierarchy( SampleRemovalEvent.class );
         final String queryString = "select ee,ev from ExpressionExperimentImpl ee inner join ee.bioAssays ba "
                 + "inner join ba.auditTrail trail inner join trail.events ev inner join ev.eventType et "
-                + "inner join fetch ev.performer where ee in (:ees) and et.class in ("
-                + StringUtils.join( classes, "," ) + ")";
+                + "inner join fetch ev.performer where ee in (:ees) and et.class = 'SampleRemovalEvent'";
 
         Map<ExpressionExperiment, Collection<AuditEvent>> result = new HashMap<ExpressionExperiment, Collection<AuditEvent>>();
         List r = this.getHibernateTemplate().findByNamedParam( queryString, "ees", expressionExperiments );

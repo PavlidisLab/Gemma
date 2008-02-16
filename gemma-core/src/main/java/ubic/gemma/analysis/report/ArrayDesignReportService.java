@@ -72,14 +72,20 @@ public class ArrayDesignReportService {
     @SuppressWarnings("unchecked")
     public void fillEventInformation( Collection<ArrayDesignValueObject> adVos ) {
 
+        if ( adVos == null || adVos.size() == 0 ) return;
+
         StopWatch watch = new StopWatch();
         watch.start();
-        
+
         Collection<Long> ids = new ArrayList<Long>();
         for ( Object object : adVos ) {
             ArrayDesignValueObject adVo = ( ArrayDesignValueObject ) object;
-            ids.add( adVo.getId() );
+            Long id = adVo.getId();
+            if ( id == null ) continue;
+            ids.add( id );
         }
+
+        if ( ids.size() == 0 ) return;
 
         Map<Long, AuditEvent> geneMappingEvents = arrayDesignService.getLastGeneMapping( ids );
         Map<Long, AuditEvent> sequenceUpdateEvents = arrayDesignService.getLastSequenceUpdate( ids );
@@ -87,7 +93,7 @@ public class ArrayDesignReportService {
         Map<Long, AuditEvent> repeatAnalysisEvents = arrayDesignService.getLastRepeatAnalysis( ids );
         Map<Long, AuditEvent> troubleEvents = arrayDesignService.getLastTroubleEvent( ids );
         Map<Long, AuditEvent> validationEvents = arrayDesignService.getLastValidationEvent( ids );
-        
+
         // fill in events for the value objects
         for ( ArrayDesignValueObject adVo : adVos ) {
             // preemptively fill in event dates with None
@@ -121,15 +127,15 @@ public class ArrayDesignReportService {
             }
             adVo.setTroubleEvent( troubleEvents.get( id ) );
             adVo.setValidationEvent( validationEvents.get( id ) );
-            
-//            ArrayDesign ad = arrayDesignService.load( id );
-//            adVo.setTroubleEvent( auditTrailService.getLastTroubleEvent( ad ) );
-//            adVo.setValidationEvent( auditTrailService.getLastValidationEvent( ad ) );
+
+            // ArrayDesign ad = arrayDesignService.load( id );
+            // adVo.setTroubleEvent( auditTrailService.getLastTroubleEvent( ad ) );
+            // adVo.setValidationEvent( auditTrailService.getLastValidationEvent( ad ) );
         }
 
         watch.stop();
         log.info( "Added event information in " + watch.getTime() + "ms (wall time)" );
-        
+
     }
 
     @SuppressWarnings("unchecked")
@@ -297,7 +303,7 @@ public class ArrayDesignReportService {
 
     /**
      * @param id
-     * @return 
+     * @return
      */
     @SuppressWarnings("unchecked")
     public ArrayDesignValueObject generateArrayDesignReport( Long id ) {
@@ -306,9 +312,9 @@ public class ArrayDesignReportService {
         Collection<ArrayDesignValueObject> adVo = arrayDesignService.loadValueObjects( ids );
         if ( adVo != null && adVo.size() > 0 ) {
             generateArrayDesignReport( adVo.iterator().next() );
-            return getSummaryObject(id);
+            return getSummaryObject( id );
         } else {
-            log.warn("No value objects return for requested array designs");
+            log.warn( "No value objects return for requested array designs" );
             return null;
         }
     }

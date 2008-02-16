@@ -32,13 +32,13 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
  * @author pavlidis
  * @version $Id$
  */
-public class ArrayDesignParser extends BasicLineParser {
+public class ArrayDesignParser extends BasicLineParser<CompositeSequence> {
 
     Collection<CompositeSequence> results = new HashSet<CompositeSequence>();
 
     @Override
-    protected void addResult( Object obj ) {
-        results.add( ( CompositeSequence ) obj );
+    protected void addResult( CompositeSequence obj ) {
+        results.add( obj );
     }
 
     @Override
@@ -46,7 +46,7 @@ public class ArrayDesignParser extends BasicLineParser {
         return results;
     }
 
-    public Object parseOneLine( String line ) {
+    public CompositeSequence parseOneLine( String line ) {
         String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
         if ( fields.length < 2 ) return null;
         CompositeSequence cs = CompositeSequence.Factory.newInstance();

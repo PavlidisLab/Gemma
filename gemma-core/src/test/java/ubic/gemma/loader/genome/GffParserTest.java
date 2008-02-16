@@ -58,7 +58,7 @@ public class GffParserTest extends TestCase {
         t.setScientificName( "Mus musculus" );
         parser.setTaxon( t );
         parser.parse( is );
-        Collection<Object> res = parser.getResults();
+        Collection<Gene> res = parser.getResults();
 
         for ( Object object : res ) {
             assertEquals( GeneImpl.class, object.getClass() );

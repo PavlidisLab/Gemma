@@ -49,7 +49,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
  * @author pavlidis
  * @version $Id$
  */
-public class BlatResultParser extends BasicLineParser {
+public class BlatResultParser extends BasicLineParser<BlatResult> {
     protected static final Log log = LogFactory.getLog( BlatResultParser.class );
     private static final int NUM_BLAT_FIELDS = 21;
 
@@ -102,7 +102,7 @@ public class BlatResultParser extends BasicLineParser {
      * 
      * @see baseCode.io.reader.BasicParser#parseOneLine(java.lang.String)
      */
-    public Object parseOneLine( String line ) {
+    public BlatResult parseOneLine( String line ) {
 
         if ( StringUtils.isBlank( line ) ) return null;
 
@@ -213,8 +213,8 @@ public class BlatResultParser extends BasicLineParser {
     }
 
     @Override
-    protected void addResult( Object obj ) {
-        results.add( ( BlatResult ) obj );
+    protected void addResult( BlatResult obj ) {
+        results.add( obj );
 
     }
 

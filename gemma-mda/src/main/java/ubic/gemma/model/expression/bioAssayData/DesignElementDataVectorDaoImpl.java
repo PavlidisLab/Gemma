@@ -45,11 +45,13 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayImpl;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.biosequence.BioSequenceImpl;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -503,13 +505,10 @@ public class DesignElementDataVectorDaoImpl extends
                     session.evict( v );
                 }
 
-                session.clear();
-
-                Collection<BioAssay> seen = new HashSet<BioAssay>();
                 for ( BioAssayDimension bad : dims ) {
                     for ( BioAssay ba : bad.getBioAssays() ) {
-                        if ( seen.contains( ba ) ) continue;
-                        session.update( ba );
+                        if ( session.get( BioAssayImpl.class, ba.getId() ) != null ) continue;
+                        session.lock( ba, LockMode.NONE );
                         Hibernate.initialize( ba.getArrayDesignUsed() );
                         Hibernate.initialize( ba.getDerivedDataFiles() );
                         for ( BioMaterial bm : ba.getSamplesUsed() ) {
@@ -518,17 +517,15 @@ public class DesignElementDataVectorDaoImpl extends
                             Hibernate.initialize( bm.getFactorValues() );
                         }
                         session.evict( ba );
-                        seen.add( ba );
                     }
                     session.clear();
                 }
 
                 for ( DesignElement de : cs ) {
                     BioSequence seq = ( ( CompositeSequence ) de ).getBiologicalCharacteristic();
-                    if ( seq != null ) {
+                    if ( seq != null && session.get( BioSequenceImpl.class, seq.getId() ) == null ) {
                         session.lock( seq, LockMode.NONE );
                         Hibernate.initialize( seq );
-                        // session.evict( seq );
                     }
 
                     ArrayDesign arrayDesign = ( ( CompositeSequence ) de ).getArrayDesign();
@@ -541,7 +538,6 @@ public class DesignElementDataVectorDaoImpl extends
                         }
                         timer.unsplit();
                     }
-                    // session.evict( de );
                 }
 
                 timer.stop();
@@ -550,7 +546,6 @@ public class DesignElementDataVectorDaoImpl extends
                             + "ms" );
                 session.setFlushMode( oldFlushMode );
                 session.setCacheMode( oldCacheMode );
-                // session.clear();
                 return null;
             }
 

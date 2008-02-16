@@ -33,24 +33,24 @@ import ubic.gemma.model.genome.Taxon;
  * @author pavlidis
  * @version $Id$
  */
-public class TaxonParser extends BasicLineMapParser {
+public class TaxonParser extends BasicLineMapParser<Integer,Taxon> {
 
     Map<Integer, Taxon> results = new HashMap<Integer, Taxon>();
 
     @Override
-    public boolean containsKey( Object key ) {
+    public boolean containsKey( Integer key ) {
         return results.containsKey( key );
     }
 
     @Override
-    public Taxon get( Object key ) {
+    public Taxon get( Integer key ) {
         Taxon t = results.get( key );
         return t;
     }
 
     @Override
-    protected Object getKey( Object newItem ) {
-        return ( ( Taxon ) newItem ).getNcbiId();
+    protected Integer getKey( Taxon newItem ) {
+        return newItem.getNcbiId();
     }
 
     @Override
@@ -59,7 +59,7 @@ public class TaxonParser extends BasicLineMapParser {
     }
 
     @Override
-    public Object parseOneLine( String line ) {
+    public Taxon parseOneLine( String line ) {
         String[] fields = StringUtils.splitPreserveAllTokens( line, '|' );
 
         int ncbiid = Integer.parseInt( StringUtils.strip( fields[0] ) );
@@ -82,12 +82,12 @@ public class TaxonParser extends BasicLineMapParser {
     }
 
     @Override
-    protected void put( Object key, Object value ) {
-        results.put( ( Integer ) key, ( Taxon ) value );
+    protected void put( Integer key, Taxon value ) {
+        results.put( key, value );
     }
     
     @Override
-    public Collection getKeySet() {
+    public Collection<Integer> getKeySet() {
         return results.keySet();
     }
 

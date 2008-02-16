@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.basecode.util.CancellationException;
@@ -45,7 +46,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.biomaterial.Compound;
 import ubic.gemma.model.expression.biomaterial.CompoundService;
 import ubic.gemma.model.expression.biomaterial.Treatment;
-import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -57,8 +58,6 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
 
 /**
- * Expression experiment is a top-level persister. That is, it contains only outbound associations.
- * 
  * @spring.property name="factorValueService" ref="factorValueService"
  * @spring.property name="designElementDataVectorService" ref="designElementDataVectorService"
  * @spring.property name="bioAssayDimensionService" ref="bioAssayDimensionService"
@@ -155,7 +154,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      * @param vect
      */
     private BioAssayDimension fillInDesignElementDataVectorAssociations( DesignElementDataVector vect ) {
-        DesignElement designElement = vect.getDesignElement();
+        CompositeSequence designElement = ( CompositeSequence ) vect.getDesignElement();
 
         assert designElement != null;
 
@@ -165,16 +164,34 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         ad = cacheArrayDesign( ad );
 
         String key = designElement.getName() + DESIGN_ELEMENT_KEY_SEPARATOR + ad.getName();
+        String seqName = null;
 
-        if ( designElementCache.containsKey( key ) ) {
-            designElement = designElementCache.get( key );
+        if ( designElement.getBiologicalCharacteristic() != null ) {
+            seqName = designElement.getBiologicalCharacteristic().getName();
+        }
+
+        if ( log.isDebugEnabled() ) log.debug( "Seeking design element matching key=" + key );
+        if ( getDesignElementCache().containsKey( key ) ) {
+            designElement = getDesignElementCache().get( key );
+            if ( log.isDebugEnabled() ) log.debug( "Found " + designElement + " with key=" + key );
         } else {
-            // means the array design is lacking it.
-            designElement = addNewDesignElementToPersistentArrayDesign( ad, designElement );
+            /*
+             * because the names of design elements can change, we should try to go by the _sequence_.
+             */
+            if ( StringUtils.isNotBlank( seqName ) && getDesignElementSequenceCache().containsKey( seqName ) ) {
+                if ( log.isDebugEnabled() ) log.debug( "Using sequence name " + seqName + " to identify sequence" );
+                designElement = getDesignElementSequenceCache().get( seqName );
+                if ( log.isDebugEnabled() ) log.debug( "Found " + designElement + " with sequence key=" + seqName );
+            } else {
+                throw new UnsupportedOperationException(
+                        "Sorry, we're not adding new probes to existing array designs right now ... maybe later (for: "
+                                + designElement + " bioseq=" + designElement.getBiologicalCharacteristic() );
+                // designElement = addNewDesignElementToPersistentArrayDesign( ad, designElement );
+            }
         }
 
         assert designElement != null && designElement.getId() != null;
-        vect.setDesignElement( designElement ); // shouldn't have to do this. Some kind of hibernate weirdness.s
+        vect.setDesignElement( designElement ); // use the persistent one.
 
         BioAssayDimension baDim = checkBioAssayDimensionCache( vect );
 

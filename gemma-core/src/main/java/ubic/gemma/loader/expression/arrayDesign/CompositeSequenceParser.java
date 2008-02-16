@@ -38,15 +38,15 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * @author pavlidis
  * @version $Id$
  */
-public class CompositeSequenceParser extends BasicLineParser {
+public class CompositeSequenceParser extends BasicLineParser<CompositeSequence> {
 
     private Collection<CompositeSequence> results = new HashSet<CompositeSequence>();
 
     private Taxon taxon;
 
     @Override
-    protected void addResult( Object obj ) {
-        results.add( ( CompositeSequence ) obj );
+    protected void addResult( CompositeSequence obj ) {
+        results.add( obj );
     }
 
     @Override

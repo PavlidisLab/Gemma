@@ -65,11 +65,14 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
             Criteria queryObject = BusinessKey.createQueryObject( this.getSession( false ), bioSequence );
 
+            /*
+             * this initially matches on name and taxon only.
+             */
             java.util.List results = queryObject.list();
             Object result = null;
             if ( results != null ) {
                 if ( results.size() > 1 ) {
-                    debug( results );
+                    debug( bioSequence, results );
 
                     // Try to find the best match. See BusinessKey for more
                     // explanation of why this is needed.
@@ -119,7 +122,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
         }
 
         if ( results.size() > 1 ) {
-            debug( results );
+            debug( null, results );
             log.warn( "More than one instance of '" + BioSequence.class.getName()
                     + "' was found when executing query for accession=" + databaseEntry.getAccession() );
 
@@ -314,21 +317,29 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
     /**
      * @param results
      */
-    private void debug( List results ) {
+    private void debug( BioSequence query, List results ) {
         StringBuilder sb = new StringBuilder();
         sb.append( "\nMultiple BioSequences found matching query:\n" );
+
+        if ( query != null ) {
+            sb.append( "\tQuery: ID=" + query.getId() + " Name=" + query.getName() );
+            if ( StringUtils.isNotBlank( query.getSequence() ) )
+                sb.append( " Sequence=" + StringUtils.abbreviate( query.getSequence(), 10 ) );
+            if ( query.getSequenceDatabaseEntry() != null )
+                sb.append( " acc=" + query.getSequenceDatabaseEntry().getAccession() );
+            sb.append( "\n" );
+        }
+
         for ( Object object : results ) {
             BioSequence entity = ( BioSequence ) object;
-            sb.append( "\tID=" + entity.getId() + " Name=" + entity.getName() );
+            sb.append( "\tMatch: ID=" + entity.getId() + " Name=" + entity.getName() );
             if ( StringUtils.isNotBlank( entity.getSequence() ) )
-                sb.append( " Sequence="
-                        + entity.getSequence().substring( 0, Math.min( 10, entity.getSequence().length() - 1 ) )
-                        + " ..." );
+                sb.append( " Sequence=" + StringUtils.abbreviate( entity.getSequence(), 10 ) );
             if ( entity.getSequenceDatabaseEntry() != null )
                 sb.append( " acc=" + entity.getSequenceDatabaseEntry().getAccession() );
             sb.append( "\n" );
         }
-        log.info( sb.toString() );
+        if ( log.isDebugEnabled() ) log.debug( sb.toString() );
     }
 
     /**

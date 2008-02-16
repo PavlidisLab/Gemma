@@ -46,6 +46,13 @@ public class GeoPlatform extends GeoData {
      */
     private Map<String, List<String>> platformInformation = new HashMap<String, List<String>>();
 
+    /**
+     * Map of original probe names provided by GEO to the names in Gemma (if this platform is already there). This is
+     * needed because probe names are sometimes changed after import. This map must be popoulated prior to import of the
+     * data.
+     */
+    private Map<String, String> probeNamesInGemma = new HashMap<String, String>();
+
     private Collection<String> catalogNumbers = new HashSet<String>();
 
     private String coating = "";
@@ -150,6 +157,7 @@ public class GeoPlatform extends GeoData {
 
     /**
      * Get the name of the column that has the 'ids' for the design elements on this platform. Usually this is "ID".
+     * 
      * @param platform
      * @return
      */
@@ -396,5 +404,9 @@ public class GeoPlatform extends GeoData {
      */
     public void setSupplementaryFile( String supplementaryFile ) {
         this.supplementaryFile = supplementaryFile;
+    }
+
+    public Map<String, String> getProbeNamesInGemma() {
+        return probeNamesInGemma;
     }
 }

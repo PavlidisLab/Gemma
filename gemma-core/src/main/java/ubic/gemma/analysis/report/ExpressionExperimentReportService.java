@@ -477,10 +477,10 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                 fis.close();
             }
         } catch ( IOException e ) {
-            log.warn( "Unable to read report object for id =" + id, e );
+            log.warn( "Unable to read report object for id =" + id + ": " + e.getMessage() );
             return null;
         } catch ( ClassNotFoundException e ) {
-            log.warn( "Unable to read report object for id =" + id, e );
+            log.warn( "Unable to read report object for id =" + id + ": " + e.getMessage() );
             return null;
         }
         return eeVo;
@@ -508,10 +508,10 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                 ois.close();
                 fis.close();
             } catch ( IOException e ) {
-                log.warn( "Unable to read report object from " + objectFile, e );
+                log.warn( "Unable to read report object from " + objectFile + ": " + e.getMessage() );
                 continue;
             } catch ( ClassNotFoundException e ) {
-                log.warn( "Unable to read report object from " + objectFile, e );
+                log.warn( "Unable to read report object from " + objectFile + ": " + e.getMessage() );
                 continue;
             }
         }
@@ -540,10 +540,10 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                     continue;
                 }
             } catch ( IOException e ) {
-                log.warn( "Unable to read report object for id =" + id, e );
+                log.warn( "Unable to read report object for id =" + id + ": " + e.getMessage() );
                 continue;
             } catch ( ClassNotFoundException e ) {
-                log.warn( "Unable to read report object for id =" + id, e );
+                log.warn( "Unable to read report object for id =" + id + ": " + e.getMessage() );
                 continue;
             }
         }

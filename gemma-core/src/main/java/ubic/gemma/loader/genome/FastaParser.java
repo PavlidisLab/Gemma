@@ -38,7 +38,7 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
  * @author pavlidis
  * @version $Id$
  */
-public class FastaParser extends RecordParser {
+public class FastaParser extends RecordParser<BioSequence> {
 
     private static final String NIA_HEADER_REGEX = ">?H\\d{4}\\w\\d{2}-\\d.*";
 
@@ -158,7 +158,7 @@ public class FastaParser extends RecordParser {
             // split[1] = array name or probe name
             // split[2] = probe name
             if ( split.length > 2 ) {
-                bioSequence.setName(  split[2] );
+                bioSequence.setName( split[2] );
             } else {
                 bioSequence.setName( split[1] );
             }

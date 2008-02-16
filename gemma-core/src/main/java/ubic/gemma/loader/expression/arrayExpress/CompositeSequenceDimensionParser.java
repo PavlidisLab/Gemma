@@ -33,7 +33,7 @@ import ubic.gemma.loader.util.parser.BasicOrderedLineParser;
  * @author pavlidis
  * @version $Id$
  */
-public class CompositeSequenceDimensionParser extends BasicOrderedLineParser {
+public class CompositeSequenceDimensionParser extends BasicOrderedLineParser<CompositeSequence> {
 
     List<CompositeSequence> results = new ArrayList<CompositeSequence>();
 
@@ -43,8 +43,8 @@ public class CompositeSequenceDimensionParser extends BasicOrderedLineParser {
      * @see ubic.gemma.loader.util.parser.BasicLineParser#addResult(java.lang.Object)
      */
     @Override
-    protected void addResult( Object obj ) {
-        results.add( ( CompositeSequence ) obj );
+    protected void addResult( CompositeSequence obj ) {
+        results.add( obj );
     }
 
     /*
@@ -52,7 +52,6 @@ public class CompositeSequenceDimensionParser extends BasicOrderedLineParser {
      * 
      * @see ubic.gemma.loader.util.parser.BasicLineParser#getResults()
      */
-    @Override
     public Collection<CompositeSequence> getResults() {
         return results;
     }

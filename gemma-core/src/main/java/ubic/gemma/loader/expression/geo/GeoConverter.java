@@ -731,7 +731,9 @@ public class GeoConverter implements Converter {
         Map<String, CompositeSequence> designMap = platformDesignElementMap.get( p.getShortName() );
         assert designMap != null;
 
-        CompositeSequence compositeSequence = designMap.get( designElementName );
+        // replace name with the one we're using in the array design after conversion.
+        String mappedName = geoPlatform.getProbeNamesInGemma().get( designElementName );
+        CompositeSequence compositeSequence = designMap.get( mappedName );
 
         assert compositeSequence != null : "No composite sequence " + designElementName;
 
@@ -741,6 +743,7 @@ public class GeoConverter implements Converter {
                     .getName() != null;
         }
 
+        if ( log.isDebugEnabled() ) log.debug( "Associating " + compositeSequence + " with dedv" );
         DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
         vector.setDesignElement( compositeSequence );
         vector.setExpressionExperiment( expExp );
@@ -793,9 +796,9 @@ public class GeoConverter implements Converter {
             throw new UnsupportedOperationException( "This data set uses SAGE, it cannot be handled yet" );
         }
 
-        log.info( "Converting platform: " + platform.getGeoAccession() );
         ArrayDesign arrayDesign = createMinimalArrayDesign( platform );
 
+        log.info( "Converting platform: " + platform.getGeoAccession() );
         platformDesignElementMap.put( arrayDesign.getShortName(), new HashMap<String, CompositeSequence>() );
 
         Taxon taxon = convertPlatformOrganism( platform );
@@ -868,7 +871,15 @@ public class GeoConverter implements Converter {
             if ( descIter != null ) description = description + " " + descIter.next();
 
             CompositeSequence cs = CompositeSequence.Factory.newInstance();
-            cs.setName( id );
+            String probeName = platform.getProbeNamesInGemma().get( id );
+            if ( probeName == null ) {
+                probeName = id;
+                if ( log.isDebugEnabled() ) log.debug( "Probe retaining original name: " + probeName );
+            } else {
+                if ( log.isDebugEnabled() ) log.debug( "Found probe: " + probeName );
+            }
+
+            cs.setName( probeName );
             cs.setDescription( description );
             cs.setArrayDesign( arrayDesign );
 
@@ -897,7 +908,7 @@ public class GeoConverter implements Converter {
                 bs.setIsApproximateLength( false );
                 bs.setLength( new Long( bs.getSequence().length() ) );
                 bs.setType( SequenceType.DNA );
-                bs.setName( id + "_sequence" );
+                bs.setName( platform.getGeoAccession() + "_" + id );
                 bs.setDescription( "Sequence provided by manufacturer. "
                         + ( externalAccession != null ? "Used in leiu of " + externalAccession
                                 : "No external accession provided" ) );
@@ -928,8 +939,8 @@ public class GeoConverter implements Converter {
             }
 
             compositeSequences.add( cs );
+            platformDesignElementMap.get( arrayDesign.getShortName() ).put( probeName, cs );
 
-            platformDesignElementMap.get( arrayDesign.getShortName() ).put( id, cs );
             i++;
         }
         arrayDesign.setCompositeSequences( new HashSet( compositeSequences ) );

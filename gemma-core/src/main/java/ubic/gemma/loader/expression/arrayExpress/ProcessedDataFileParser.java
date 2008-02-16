@@ -48,7 +48,7 @@ import ubic.gemma.loader.util.parser.LineMapParser;
  * @author pavlidis
  * @version $Id$
  */
-public class ProcessedDataFileParser extends LineMapParser {
+public class ProcessedDataFileParser extends LineMapParser<String, Map<String, List<String>>> {
 
     // CS -> QTs -> Values
     private Map<String, Map<String, List<String>>> results;
@@ -65,22 +65,22 @@ public class ProcessedDataFileParser extends LineMapParser {
     }
 
     @Override
-    public boolean containsKey( Object key ) {
+    public boolean containsKey( String key ) {
         return results.containsKey( key );
     }
 
     @Override
-    public Object get( Object key ) {
+    public Map<String, List<String>> get( String key ) {
         return results.get( key );
     }
 
     @Override
-    public Collection getResults() {
+    public Collection<Map<String, List<String>>> getResults() {
         return results.values();
     }
 
     @Override
-    public Object parseOneLine( String line ) {
+    public Map<String, List<String>> parseOneLine( String line ) {
         String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
         if ( fields.length == 0 ) return null;
         if ( fields[0].equals( "CompositeSequence identifier" ) ) {
@@ -172,7 +172,7 @@ public class ProcessedDataFileParser extends LineMapParser {
     }
 
     @Override
-    public Collection getKeySet() {
+    public Collection<String> getKeySet() {
         return results.keySet();
     }
 

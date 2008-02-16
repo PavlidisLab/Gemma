@@ -21,7 +21,7 @@ import ubic.gemma.util.progress.ProgressManager;
  * @author pavlidis
  * @version $Id$
  */
-public abstract class RecordParser implements Parser {
+public abstract class RecordParser<T> implements Parser<T> {
 
     private String recordSeparator = ">";
 
@@ -123,11 +123,11 @@ public abstract class RecordParser implements Parser {
     }
 
     /**
-     * Handle the parsing of a single line from the input.
+     * Handle the parsing of a single record from the input.
      * 
      * @param line
      */
     public abstract Object parseOneRecord( String record );
 
-    public abstract Collection getResults();
+    public abstract Collection<T> getResults();
 }

@@ -44,7 +44,7 @@ import ubic.gemma.model.genome.gene.GeneProductType;
  * @author anshu
  * @version $Id$
  */
-public class ProteinFileParser extends BasicLineParser {
+public class ProteinFileParser extends BasicLineParser<GeneProduct> {
 
     private static Log log = LogFactory.getLog( ProteinFileParser.class.getName() );
 
@@ -66,7 +66,7 @@ public class ProteinFileParser extends BasicLineParser {
      * @see ubic.gemma.loader.loaderutils.LineParser#parseOneLine(java.lang.String)
      */
     @SuppressWarnings("unchecked")
-    public Object parseOneLine( String line ) {
+    public GeneProduct parseOneLine( String line ) {
         log.debug( line );
         String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
 
@@ -108,8 +108,8 @@ public class ProteinFileParser extends BasicLineParser {
     }
 
     @Override
-    protected void addResult( Object obj ) {
-        results.add( ( GeneProduct ) obj );
+    protected void addResult( GeneProduct obj ) {
+        results.add( obj );
 
     }
 

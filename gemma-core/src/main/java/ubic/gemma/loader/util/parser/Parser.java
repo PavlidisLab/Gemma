@@ -29,7 +29,7 @@ import java.util.Collection;
  * @author pavlidis
  * @version $Id$
  */
-public interface Parser {
+public interface Parser<T> {
 
     public static final int PARSE_ALERT_FREQUENCY = 10000;
 
@@ -60,6 +60,6 @@ public interface Parser {
     /**
      * @return the results of the parse.
      */
-    public Collection getResults();
+    public Collection<T> getResults();
 
 }

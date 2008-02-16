@@ -41,7 +41,7 @@ import ubic.gemma.util.progress.ProgressManager;
  * @author pavlidis
  * @version $Id$
  */
-public abstract class BasicLineMapParser implements LineParser {
+public abstract class BasicLineMapParser<K, T> implements LineParser<T> {
 
     /**
      * Lines starting with this will be ignored.
@@ -54,20 +54,20 @@ public abstract class BasicLineMapParser implements LineParser {
      * @param key
      * @param value
      */
-    protected abstract void put( Object key, Object value );
+    protected abstract void put( K key, T value );
 
     /**
-     * @param probeSetId
-     * @see Map
+     * @param key
+     * @return value
      */
-    public abstract Object get( Object key );
+    public abstract T get( K key );
 
     /**
      * @param key
      * @return
      * @see Map
      */
-    public abstract boolean containsKey( Object key );
+    public abstract boolean containsKey( K key );
 
     /*
      * (non-Javadoc)
@@ -87,14 +87,14 @@ public abstract class BasicLineMapParser implements LineParser {
             if ( line.startsWith( COMMENTMARK ) ) {
                 continue;
             }
-            Object newItem = parseOneLine( line );
+            T newItem = parseOneLine( line );
 
             if ( newItem == null ) {
                 nullLines++;
                 continue;
             }
 
-            Object key = getKey( newItem );
+            K key = getKey( newItem );
             if ( key == null ) {
                 throw new IllegalStateException( "Got null key for item " + linesParsed );
             }
@@ -150,19 +150,19 @@ public abstract class BasicLineMapParser implements LineParser {
      * 
      * @see baseCode.io.reader.BasicLineParser#parseOneLine(java.lang.String)
      */
-    public abstract Object parseOneLine( String line );
+    public abstract T parseOneLine( String line );
 
     /**
      * @param newItem
      * @return
      */
-    protected abstract Object getKey( Object newItem );
+    protected abstract K getKey( T newItem );
 
-    public abstract Collection getKeySet();
+    public abstract Collection<K> getKeySet();
 
     /**
      * 
      */
-    public abstract Collection getResults();
+    public abstract Collection<T> getResults();
 
 }

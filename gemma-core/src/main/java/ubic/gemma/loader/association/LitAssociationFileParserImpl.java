@@ -41,7 +41,7 @@ import ubic.gemma.model.genome.GeneDao;
  * @author anshu
  * @version $Id$
  */
-public class LitAssociationFileParserImpl extends BasicLineParser /* implements Persister */{
+public class LitAssociationFileParserImpl extends BasicLineParser {
 
     public static final int LIT_ASSOCIATION_FIELDS_PER_ROW = 9;
     public static final int PERSIST_CONCURRENTLY = 1;
@@ -100,11 +100,11 @@ public class LitAssociationFileParserImpl extends BasicLineParser /* implements 
         assoc.setSecondGene( g2 );
         assoc.setAction( fields[6] );
         assoc.setNumberOfMentions( new Integer( Integer.parseInt( fields[7] ) ) );
-//        db = ExternalDatabase.Factory.newInstance();
-//        db.setName( fields[8] );
-//        db = dbDao.findOrCreate( db );
-//        // db=dbDao.findByName(fields[8]); //calls fior external db to be pre-loaded
-//        assoc.setSource( db );
+        // db = ExternalDatabase.Factory.newInstance();
+        // db.setName( fields[8] );
+        // db = dbDao.findOrCreate( db );
+        // // db=dbDao.findByName(fields[8]); //calls fior external db to be pre-loaded
+        // assoc.setSource( db );
 
         // if ( mPersist == PERSIST_CONCURRENTLY ) {
         // laDao.create( fields[6], g1, fields[7] , g2 ); // FIXME parser should not create.

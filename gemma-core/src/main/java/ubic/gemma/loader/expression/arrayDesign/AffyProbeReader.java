@@ -47,7 +47,7 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
  * @author pavlidis
  * @version $Id$
  */
-public class AffyProbeReader extends BasicLineMapParser {
+public class AffyProbeReader extends BasicLineMapParser<String, CompositeSequence> {
 
     protected static final Log log = LogFactory.getLog( AffyProbeReader.class );
 
@@ -62,7 +62,7 @@ public class AffyProbeReader extends BasicLineMapParser {
      */
     @Override
     @SuppressWarnings("unchecked")
-    public Object parseOneLine( String line ) {
+    public CompositeSequence parseOneLine( String line ) {
         String[] sArray = line.split( "\t" );
         if ( sArray.length == 0 )
             throw new IllegalArgumentException( "Line format is not valid (not tab-delimited or no fields found)" );
@@ -126,9 +126,8 @@ public class AffyProbeReader extends BasicLineMapParser {
      * @see baseCode.io.reader.BasicLineMapParser#getKey(java.lang.Object)
      */
     @Override
-    protected Object getKey( Object newItem ) {
-        assert newItem instanceof CompositeSequence;
-        return ( ( CompositeSequence ) newItem ).getName();
+    protected String getKey( CompositeSequence newItem ) {
+        return newItem.getName();
     }
 
     /**
@@ -142,7 +141,7 @@ public class AffyProbeReader extends BasicLineMapParser {
     }
 
     @Override
-    public CompositeSequence get( Object key ) {
+    public CompositeSequence get( String key ) {
         return results.get( key );
     }
 
@@ -152,17 +151,17 @@ public class AffyProbeReader extends BasicLineMapParser {
     }
 
     @Override
-    protected void put( Object key, Object value ) {
-        results.put( ( String ) key, ( CompositeSequence ) value );
+    protected void put( String key, CompositeSequence value ) {
+        results.put( key, value );
     }
 
     @Override
-    public boolean containsKey( Object key ) {
+    public boolean containsKey( String key ) {
         return results.containsKey( key );
     }
 
     @Override
-    public Collection getKeySet() {
+    public Collection<String> getKeySet() {
         return results.keySet();
     }
 

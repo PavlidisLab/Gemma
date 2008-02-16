@@ -42,7 +42,7 @@ import ubic.gemma.model.genome.Taxon;
  * @author pavlidis
  * @version $Id$
  */
-public class NcbiGeneInfoParser extends BasicLineMapParser implements QueuingParser {
+public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo> implements QueuingParser {
 
     /**
      * 
@@ -65,7 +65,7 @@ public class NcbiGeneInfoParser extends BasicLineMapParser implements QueuingPar
      * @see ubic.gemma.loader.loaderutils.LineParser#parseOneLine(java.lang.String)
      */
     @Override
-    public Object parseOneLine( String line ) {
+    public NCBIGeneInfo parseOneLine( String line ) {
         String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
 
         if ( fields.length != NCBI_GENEINFO_FIELDS_PER_ROW ) {
@@ -133,9 +133,8 @@ public class NcbiGeneInfoParser extends BasicLineMapParser implements QueuingPar
      * 
      * @see ubic.gemma.loader.loaderutils.BasicLineMapParser#getKey(java.lang.Object)
      */
-    @Override
-    protected Object getKey( Object newItem ) {
-        return ( ( NCBIGeneInfo ) newItem ).getGeneId();
+    public String getKey( NCBIGeneInfo newItem ) {
+        return newItem.getGeneId();
     }
 
     @Override
@@ -144,17 +143,17 @@ public class NcbiGeneInfoParser extends BasicLineMapParser implements QueuingPar
     }
 
     @Override
-    public NCBIGeneInfo get( Object key ) {
+    public NCBIGeneInfo get( String key ) {
         return results.get( key );
     }
 
     @Override
-    protected void put( Object key, Object value ) {
+    protected void put( String key, NCBIGeneInfo value ) {
         try {
             if ( resultsKeys != null ) {
-                resultsKeys.put( ( String ) key );
+                resultsKeys.put( key );
             }
-            results.put( ( String ) key, ( NCBIGeneInfo ) value );
+            results.put( key, value );
         } catch ( InterruptedException e ) {
             log.error( e );
             throw new RuntimeException( e );
@@ -162,7 +161,7 @@ public class NcbiGeneInfoParser extends BasicLineMapParser implements QueuingPar
     }
 
     @Override
-    public boolean containsKey( Object key ) {
+    public boolean containsKey( String key ) {
         return results.containsKey( key );
     }
 
@@ -173,7 +172,7 @@ public class NcbiGeneInfoParser extends BasicLineMapParser implements QueuingPar
     }
 
     @Override
-    public Collection getKeySet() {
+    public Collection<String> getKeySet() {
         return results.keySet();
     }
 
