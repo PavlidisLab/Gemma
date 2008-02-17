@@ -189,7 +189,7 @@ public class WhatsNewService implements InitializingBean {
                 for ( AuditableObject object : aos ) {
                     Auditable auditable = fetch( wn, object );
 
-                    if ( auditable != null ) wn.addNewObjects( auditable );
+                    if ( auditable != null ) wn.addUpdatedObjects( auditable );
                     updateDate( wn, object );
                 }
             }
