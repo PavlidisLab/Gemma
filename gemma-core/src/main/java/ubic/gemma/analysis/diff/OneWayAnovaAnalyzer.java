@@ -138,10 +138,10 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         double[] pvalues = rc.doubleArrayEval( pvalueCommand.toString() );
 
+        if ( pvalues == null ) throw new IllegalStateException( "No pvalues returned" );
+
         // removes NA row
         double[] filteredPvalues = new double[pvalues.length / NUM_RESULTS_FROM_R];
-
-        if ( filteredPvalues == null ) throw new IllegalStateException( "No pvalues returned" );
 
         for ( int i = 0, j = 0; j < filteredPvalues.length; i++ ) {
             if ( i % NUM_RESULTS_FROM_R == 0 ) {
