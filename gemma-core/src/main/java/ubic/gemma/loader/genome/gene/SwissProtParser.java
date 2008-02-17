@@ -69,11 +69,11 @@ public class SwissProtParser extends RecordParser {
 
             if ( tag.equals( "ID" ) ) {
                 String id = StringUtils.split( value, null, 2 )[0];
-                log.info( id );
+                log.debug( id );
             } else if ( tag.equals( "AC" ) ) {
                 // swissprot accessions
                 String[] accessions = StringUtils.split( value, " ;" );
-                log.info( StringUtils.join( accessions, " " ) );
+                log.debug( StringUtils.join( accessions, " " ) );
             } else if ( tag.equals( "OX" ) ) {
                 // taxon
                 String[] nf = StringUtils.split( value, "=", 2 );
@@ -85,7 +85,7 @@ public class SwissProtParser extends RecordParser {
                 String[] nf = StringUtils.split( value, "=", 2 );
                 String name = nf[1];
                 name = name.replaceFirst( ";.*$", "" );
-                log.info( name );
+                log.debug( name );
             } else if ( tag.equals( "CC" ) ) {
 
             } else if ( tag.equals( "DE" ) ) {
@@ -108,10 +108,10 @@ public class SwissProtParser extends RecordParser {
                         protein = null;
                     }
 
-                    log.info( nucleotide + " --> " + protein );
+                    log.debug( nucleotide + " --> " + protein );
 
                 } else {
-                    continue; 
+                    continue;
                 }
 
             } else if ( tag.equals( "DT" ) ) {
