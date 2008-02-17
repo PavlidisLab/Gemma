@@ -108,9 +108,6 @@ public class DesignElementDataVectorDaoImplTest extends BaseSpringContextTest {
 
     }
 
-    /**
-     * FIXME This test fails because is uses the gene2cs table, which isn't populated in tests yet.
-     */
     @SuppressWarnings("unchecked")
     public void testGetGeneCoexpressionPattern() {
 

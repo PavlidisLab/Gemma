@@ -89,7 +89,6 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                if ( session.get( BioAssayImpl.class, bioAssay.getId() ) != null ) return null;
                 session.lock( bioAssay, LockMode.NONE );
                 Hibernate.initialize( bioAssay.getArrayDesignUsed() );
                 Hibernate.initialize( bioAssay.getDerivedDataFiles() );

@@ -78,26 +78,46 @@ public class GeoFamilyParser implements Parser {
      */
     private static final char FIELD_DELIM = '\t';
     private static Log log = LogFactory.getLog( GeoFamilyParser.class.getName() );
+    Integer previousNumTokens = null;
+    /**
+     * For each platform, the map of column names to column numbers in the data.
+     */
+    Map<GeoPlatform, Map<String, Integer>> quantitationTypeKey = new HashMap<GeoPlatform, Map<String, Integer>>();
+
+    /**
+     * This is used to put the data in the right place later. We know the actual column is where it is NOW, for this
+     * sample, but in our data structure we put it where we EXPECT it to be (where it was the first time we saw it).
+     * This is our attempt to fix problems with columns moving around from sample to sample.
+     */
+    Map<GeoPlatform, Map<Integer, Integer>> quantitationTypeTargetColumn = new HashMap<GeoPlatform, Map<Integer, Integer>>();
+
+    boolean alreadyWarnedAboutClobbering = false;
+    boolean alreadyWarnedAboutInconsistentColumnOrder = false;
+    boolean alreadyWarnedAboutDuplicateColumnName = false;
+
     private String currentDatasetAccession;
     private String currentPlatformAccession;
 
     private String currentSampleAccession;
-
     private String currentSeriesAccession;
     private String currentSubsetAccession;
+
     private int dataSetDataLines = 0;
 
     private boolean haveReadPlatformHeader = false;
     private boolean haveReadSampleDataHeader = false;
-
     private boolean inDatabase = false;
+
     private boolean inDataset = false;
+
     private boolean inDatasetTable = false;
 
     private boolean inPlatform = false;
 
     private boolean inPlatformTable = false;
+
     private boolean inSample = false;
+
     private boolean inSampleTable = false;
 
     private boolean inSeries = false;
@@ -122,6 +142,16 @@ public class GeoFamilyParser implements Parser {
      * Elements seen for the 'current sample'.
      */
     private Collection<String> processedDesignElements = new HashSet<String>();
+
+    /**
+     * 
+     */
+    private Collection<Integer> wantedQuantitationTypes = new HashSet<Integer>();
+
+    /**
+     * 
+     */
+    private boolean aggressiveQuantitationTypeRemoval;
 
     /*
      * (non-Javadoc)
@@ -254,6 +284,11 @@ public class GeoFamilyParser implements Parser {
         }
     }
 
+    public void setAgressiveQtRemoval( boolean aggressiveQuantitationTypeRemoval ) {
+        this.aggressiveQuantitationTypeRemoval = aggressiveQuantitationTypeRemoval;
+
+    }
+
     /**
      * @param b
      */
@@ -362,6 +397,19 @@ public class GeoFamilyParser implements Parser {
         }
     }
 
+    private void checkDataCompleteness() {
+        if ( currentSampleAccession != null ) {
+            GeoSample currentSample = this.results.getSampleMap().get( currentSampleAccession );
+            assert currentSample != null;
+            if ( currentSample.getPlatforms().size() > 1 ) {
+                log.warn( "Can't check for data completeness when sample uses more than one platform." );
+            } else {
+                addMissingData( currentSample );
+            }
+            validate();
+        }
+    }
+
     /**
      * @param contact
      * @param property
@@ -445,6 +493,9 @@ public class GeoFamilyParser implements Parser {
     private Exception doParse( BufferedReader dis ) {
         haveReadPlatformHeader = false;
         haveReadSampleDataHeader = false;
+        alreadyWarnedAboutClobbering = false;
+        alreadyWarnedAboutInconsistentColumnOrder = false;
+        alreadyWarnedAboutDuplicateColumnName = false;
         String line = "";
         parsedLines = 0;
         processedDesignElements.clear();
@@ -480,19 +531,6 @@ public class GeoFamilyParser implements Parser {
         log.debug( this.dataSetDataLines + " data set data lines" );
         log.debug( this.sampleDataLines + " sample data lines" );
         return null;
-    }
-
-    private void checkDataCompleteness() {
-        if ( currentSampleAccession != null ) {
-            GeoSample currentSample = this.results.getSampleMap().get( currentSampleAccession );
-            assert currentSample != null;
-            if ( currentSample.getPlatforms().size() > 1 ) {
-                log.warn( "Can't check for data completeness when sample uses more than one platform." );
-            } else {
-                addMissingData( currentSample );
-            }
-            validate();
-        }
     }
 
     /**
@@ -588,6 +626,174 @@ public class GeoFamilyParser implements Parser {
             }
         }
         throw new IllegalArgumentException( "Wrong kind of string: " + line );
+    }
+
+    /**
+     * This is run once for each sample, to try to figure out where the data are for each quantitation type (because it
+     * can vary from sample to sample). Each platform in the series gets its own reference.
+     * <p>
+     * Note that the first column is the "ID_REF"; the first 'real' quantitation type gets column number 0. This
+     * initialization is run for each sample.
+     */
+    private void initializeQuantitationTypes() {
+        wantedQuantitationTypes.clear();
+        quantitationTypeTargetColumn.clear();
+        GeoSeries geoSeries = results.getSeriesMap().get( currentSeriesAccession );
+        if ( geoSeries == null ) {
+            throw new IllegalStateException( "No series is being parsed" );
+        }
+        GeoValues values = geoSeries.getValues();
+        Map<GeoPlatform, Integer> currentIndex = new HashMap<GeoPlatform, Integer>();
+        Collection<String> seenColumnNames = new HashSet<String>();
+
+        /*
+         * In some data sets, the quantitation types are not in the same columns in different samples. ARRRGH!
+         */
+        GeoPlatform platformForSample = this.currentSample().getPlatforms().iterator().next();
+        log.debug( "Initializing quantitation types for " + currentSample() + ", Platform=" + platformForSample );
+
+        for ( String columnName : currentSample().getColumnNames() ) {
+            boolean isWanted = values.isWantedQuantitationType( columnName, this.aggressiveQuantitationTypeRemoval );
+
+            if ( !isWanted ) log.debug( columnName + " will not be included in final data" );
+
+            if ( !currentIndex.containsKey( platformForSample ) ) {
+                currentIndex.put( platformForSample, 0 );
+            }
+
+            int actualColumnNumber = currentIndex.get( platformForSample ) - 1;
+
+            /*
+             * In some datasets (e.g. GSE432) the column names are not distinct. ARRRGH. We try to salvage the situation
+             * by adding a suffix to the name.
+             */
+            if ( seenColumnNames.contains( columnName ) ) {
+
+                if ( !alreadyWarnedAboutDuplicateColumnName ) {
+                    log
+                            .warn( "\n---------- WARNING ------------\n"
+                                    + columnName
+                                    + " appears more than once for sample "
+                                    + currentSample()
+                                    + ", it will be mangled to make it unique.\nThis usually indicates a problem with the GEO file format! (future similar warnings for this data set suppressed)\n" );
+                    alreadyWarnedAboutDuplicateColumnName = true;
+                }
+                /*
+                 * This method of mangling the name means that the repeated name had better show up in the same column
+                 * each time. If it doesn't, then things are REALLY confused.
+                 */
+                columnName = columnName + "___" + actualColumnNumber;
+            }
+
+            initMaps( platformForSample );
+
+            /*
+             * Stores the column index for the column name.
+             */
+            Map<String, Integer> qtMapForPlatform = quantitationTypeKey.get( platformForSample );
+
+            /*
+             * Once we've seen a column, we check to see if it is in the same place as before.
+             */
+            Integer desiredColumnNumber = actualColumnNumber;
+            if ( qtMapForPlatform.containsKey( columnName ) ) {
+                desiredColumnNumber = qtMapForPlatform.get( columnName );
+                if ( desiredColumnNumber != actualColumnNumber ) {
+                    if ( !alreadyWarnedAboutInconsistentColumnOrder ) {
+                        log
+                                .warn( "\n---------- POSSIBLE GEO FILE FORMAT PROBLEM WARNING! ------------\n"
+                                        + columnName
+                                        + " is not in previous column "
+                                        + desiredColumnNumber
+                                        + ":\nFor sample "
+                                        + currentSample()
+                                        + ", it is in column "
+                                        + actualColumnNumber
+                                        + ". This usually isn't a problem but it's worth checking to make sure data isn't misaligned"
+                                        + " (future warnings for this data set suppressed)\n" );
+                        alreadyWarnedAboutInconsistentColumnOrder = true;
+                    }
+                    /*
+                     * This is used to put the data in the right place later. We know the actual column is where it is
+                     * NOW, for this sample, but in our data structure we put it where we EXPECT it to be (where it was
+                     * the first time we saw it). This is our attempt to fix problems with columns moving around.
+                     */
+                    quantitationTypeTargetColumn.get( platformForSample ).put( actualColumnNumber, desiredColumnNumber );
+                }
+                values.addQuantitationType( platformForSample, columnName, desiredColumnNumber );
+            } else {
+                /*
+                 * First time we see this column name (for the platform for the current sample). Normally we assume it
+                 * just goes at the column index we're at. However, make sure that there isn't another column name in
+                 * this sample that should be at the same index. We have to 'look ahead'. This isn't the usual case, but
+                 * it isn't rare either. (Example: GSE3500)
+                 */
+                boolean clobbers = willClobberOtherQuantitationType( columnName, actualColumnNumber, qtMapForPlatform );
+
+                if ( clobbers ) {
+                    // we need to put it at the end - at the highest index we know about.
+                    Collection<Integer> allIndexes = qtMapForPlatform.values();
+                    int max = -1;
+                    for ( Integer v : allIndexes ) {
+                        if ( v > max ) {
+                            max = v;
+                        }
+                    }
+                    desiredColumnNumber = max + 1;
+                    quantitationTypeTargetColumn.get( platformForSample ).put( actualColumnNumber, desiredColumnNumber );
+                    if ( !alreadyWarnedAboutClobbering ) {
+                        log
+                                .warn( "\n---------- POSSIBLE GEO FILE FORMAT PROBLEM WARNING! ------------\n"
+                                        + "Current column name "
+                                        + columnName
+                                        + " reassigned to index "
+                                        + desiredColumnNumber
+                                        + " to avoid clobbering. This usually isn't a problem but it's worth checking to make sure data isn't misaligned "
+                                        + "(future similar warnings for this data set suppressed)\n" );
+                        alreadyWarnedAboutClobbering = true;
+                    }
+                }
+                log.debug( columnName + " ---> " + desiredColumnNumber );
+                qtMapForPlatform.put( columnName, desiredColumnNumber );
+                values.addQuantitationType( platformForSample, columnName, desiredColumnNumber );
+            }
+
+            /*
+             * Some quantitation types are skipped to save space.
+             */
+            if ( !isWanted ) {
+                if ( log.isDebugEnabled() )
+                    log.debug( "Data column " + columnName + " will be skipped for " + currentSample()
+                            + " - it is an 'unwanted' quantitation type (column number "
+                            + currentIndex.get( platformForSample ) + ", " + desiredColumnNumber
+                            + "the quantitation type.)" );
+            } else {
+                wantedQuantitationTypes.add( desiredColumnNumber );
+            }
+
+            seenColumnNames.add( columnName );
+
+            // update the current index, note that it is platform-specific.
+            currentIndex.put( platformForSample, currentIndex.get( platformForSample ) + 1 );
+        }
+
+    }
+
+    /**
+     * @param platformForSample
+     */
+    private void initMaps( GeoPlatform platformForSample ) {
+        if ( !quantitationTypeKey.containsKey( platformForSample ) ) {
+            quantitationTypeKey.put( platformForSample, new HashMap<String, Integer>() );
+
+        }
+        if ( !quantitationTypeTargetColumn.containsKey( platformForSample ) ) {
+            quantitationTypeTargetColumn.put( platformForSample, new HashMap<Integer, Integer>() );
+        }
+    }
+
+    private boolean isWantedQuantitationType( int index ) {
+        return wantedQuantitationTypes.contains( index );
     }
 
     /**
@@ -766,7 +972,6 @@ public class GeoFamilyParser implements Parser {
             log.error( "Unknown flag in dataset: " + line );
         }
     }
-
     /**
      * @param line
      */
@@ -862,12 +1067,6 @@ public class GeoFamilyParser implements Parser {
             parseRegularLine( line );
         }
     }
-
-    private void validate() {
-        GeoValues values = results.getSeriesMap().get( currentSeriesAccession ).getValues();
-        values.validate();
-    }
-
     /**
      * If a line does not have the same number of fields as the column headings, it is skipped.
      * 
@@ -899,7 +1098,6 @@ public class GeoFamilyParser implements Parser {
         }
         platformLines++;
     }
-
     /**
      * Parse a line in a 'platform' section of a GSE file. This deals with meta-data about the platform.
      * 
@@ -1039,8 +1237,6 @@ public class GeoFamilyParser implements Parser {
 
     }
 
-    Integer previousNumTokens = null;
-
     /**
      * The data for one sample is all the values for each quantitation type.
      * <p>
@@ -1119,222 +1315,6 @@ public class GeoFamilyParser implements Parser {
         }
 
         sampleDataLines++;
-    }
-
-    private boolean isWantedQuantitationType( int index ) {
-        return wantedQuantitationTypes.contains( index );
-    }
-
-    /**
-     * 
-     */
-    private Collection<Integer> wantedQuantitationTypes = new HashSet<Integer>();
-
-    /**
-     * For each platform, the map of column names to column numbers in the data.
-     */
-    Map<GeoPlatform, Map<String, Integer>> quantitationTypeKey = new HashMap<GeoPlatform, Map<String, Integer>>();
-
-    /**
-     * This is used to put the data in the right place later. We know the actual column is where it is NOW, for this
-     * sample, but in our data structure we put it where we EXPECT it to be (where it was the first time we saw it).
-     * This is our attempt to fix problems with columns moving around from sample to sample.
-     */
-    Map<GeoPlatform, Map<Integer, Integer>> quantitationTypeTargetColumn = new HashMap<GeoPlatform, Map<Integer, Integer>>();
-
-    /**
-     * 
-     */
-    private boolean aggressiveQuantitationTypeRemoval;
-
-    /**
-     * This is run once for each sample, to try to figure out where the data are for each quantitation type (because it
-     * can vary from sample to sample). Each platform in the series gets its own reference.
-     * <p>
-     * Note that the first column is the "ID_REF"; the first 'real' quantitation type gets column number 0. This
-     * initialization is run for each sample.
-     */
-    private void initializeQuantitationTypes() {
-        wantedQuantitationTypes.clear();
-        quantitationTypeTargetColumn.clear();
-        GeoSeries geoSeries = results.getSeriesMap().get( currentSeriesAccession );
-        if ( geoSeries == null ) {
-            throw new IllegalStateException( "No series is being parsed" );
-        }
-        GeoValues values = geoSeries.getValues();
-        Map<GeoPlatform, Integer> currentIndex = new HashMap<GeoPlatform, Integer>();
-        Collection<String> seenColumnNames = new HashSet<String>();
-
-        /*
-         * In some data sets, the quantitation types are not in the same columns in different samples. ARRRGH!
-         */
-        GeoPlatform platformForSample = this.currentSample().getPlatforms().iterator().next();
-        log.debug( "Initializing quantitation types for " + currentSample() + ", Platform=" + platformForSample );
-        boolean alreadyWarnedAboutClobbering = false;
-        boolean alreadyWarnedAboutInconsistentColumnOrder = false;
-        boolean alreadyWarnedAboutDuplicateColumnName = false;
-        for ( String columnName : currentSample().getColumnNames() ) {
-            boolean isWanted = values.isWantedQuantitationType( columnName, this.aggressiveQuantitationTypeRemoval );
-
-            if ( !isWanted ) log.debug( columnName + " will not be included in final data" );
-
-            if ( !currentIndex.containsKey( platformForSample ) ) {
-                currentIndex.put( platformForSample, 0 );
-            }
-
-            int actualColumnNumber = currentIndex.get( platformForSample ) - 1;
-
-            /*
-             * In some datasets (e.g. GSE432) the column names are not distinct. ARRRGH. We try to salvage the situation
-             * by adding a suffix to the name.
-             */
-            if ( seenColumnNames.contains( columnName ) ) {
-
-                if ( !alreadyWarnedAboutDuplicateColumnName ) {
-                    log
-                            .warn( "\n---------- WARNING ------------\n"
-                                    + columnName
-                                    + " appears more than once for sample "
-                                    + currentSample()
-                                    + ", it will be mangled to make it unique.\nThis usually indicates a problem with the GEO file format! (future similar warnings for this data set suppressed)\n" );
-                    alreadyWarnedAboutDuplicateColumnName = true;
-                }
-                /*
-                 * This method of mangling the name means that the repeated name had better show up in the same column
-                 * each time. If it doesn't, then things are REALLY confused.
-                 */
-                columnName = columnName + "___" + actualColumnNumber;
-            }
-
-            initMaps( platformForSample );
-
-            /*
-             * Stores the column index for the column name.
-             */
-            Map<String, Integer> qtMapForPlatform = quantitationTypeKey.get( platformForSample );
-
-            /*
-             * Once we've seen a column, we check to see if it is in the same place as before.
-             */
-            Integer desiredColumnNumber = actualColumnNumber;
-            if ( qtMapForPlatform.containsKey( columnName ) ) {
-                desiredColumnNumber = qtMapForPlatform.get( columnName );
-                if ( desiredColumnNumber != actualColumnNumber ) {
-                    if ( !alreadyWarnedAboutInconsistentColumnOrder ) {
-                        log
-                                .warn( "\n---------- POSSIBLE GEO FILE FORMAT PROBLEM WARNING! ------------\n"
-                                        + columnName
-                                        + " is not in previous column "
-                                        + desiredColumnNumber
-                                        + ":\nFor sample "
-                                        + currentSample()
-                                        + ", it is in column "
-                                        + actualColumnNumber
-                                        + ". This usually isn't a problem but it's worth checking to make sure data isn't misaligned"
-                                        + " (future warnings for this data set suppressed)\n" );
-                        alreadyWarnedAboutInconsistentColumnOrder = true;
-                    }
-                    /*
-                     * This is used to put the data in the right place later. We know the actual column is where it is
-                     * NOW, for this sample, but in our data structure we put it where we EXPECT it to be (where it was
-                     * the first time we saw it). This is our attempt to fix problems with columns moving around.
-                     */
-                    quantitationTypeTargetColumn.get( platformForSample ).put( actualColumnNumber, desiredColumnNumber );
-                }
-                values.addQuantitationType( platformForSample, columnName, desiredColumnNumber );
-            } else {
-                /*
-                 * First time we see this column name (for the platform for the current sample). Normally we assume it
-                 * just goes at the column index we're at. However, make sure that there isn't another column name in
-                 * this sample that should be at the same index. We have to 'look ahead'. This isn't the usual case, but
-                 * it isn't rare either. (Example: GSE3500)
-                 */
-                boolean clobbers = willClobberOtherQuantitationType( columnName, actualColumnNumber, qtMapForPlatform );
-
-                if ( clobbers ) {
-                    // we need to put it at the end - at the highest index we know about.
-                    Collection<Integer> allIndexes = qtMapForPlatform.values();
-                    int max = -1;
-                    for ( Integer v : allIndexes ) {
-                        if ( v > max ) {
-                            max = v;
-                        }
-                    }
-                    desiredColumnNumber = max + 1;
-                    quantitationTypeTargetColumn.get( platformForSample ).put( actualColumnNumber, desiredColumnNumber );
-                    if ( !alreadyWarnedAboutClobbering ) {
-                        log
-                                .warn( "\n---------- POSSIBLE GEO FILE FORMAT PROBLEM WARNING! ------------\n"
-                                        + "Current column name "
-                                        + columnName
-                                        + " reassigned to index "
-                                        + desiredColumnNumber
-                                        + " to avoid clobbering. This usually isn't a problem but it's worth checking to make sure data isn't misaligned "
-                                        + "(future similar warnings for this data set suppressed)\n" );
-                        alreadyWarnedAboutClobbering = true;
-                    }
-                }
-                log.debug( columnName + " ---> " + desiredColumnNumber );
-                qtMapForPlatform.put( columnName, desiredColumnNumber );
-                values.addQuantitationType( platformForSample, columnName, desiredColumnNumber );
-            }
-
-            /*
-             * Some quantitation types are skipped to save space.
-             */
-            if ( !isWanted ) {
-                if ( log.isDebugEnabled() )
-                    log.debug( "Data column " + columnName + " will be skipped for " + currentSample()
-                            + " - it is an 'unwanted' quantitation type (column number "
-                            + currentIndex.get( platformForSample ) + ", " + desiredColumnNumber
-                            + "the quantitation type.)" );
-            } else {
-                wantedQuantitationTypes.add( desiredColumnNumber );
-            }
-
-            seenColumnNames.add( columnName );
-
-            // update the current index, note that it is platform-specific.
-            currentIndex.put( platformForSample, currentIndex.get( platformForSample ) + 1 );
-        }
-
-    }
-
-    /**
-     * @param columnName
-     * @param actualColumnNumber
-     * @param qtMapForPlatform The map of
-     * @return
-     */
-    private boolean willClobberOtherQuantitationType( String columnName, int actualColumnNumber,
-            Map<String, Integer> qtMapForPlatform ) {
-        boolean clobbers = false;
-        for ( String name : currentSample().getColumnNames() ) {
-            if ( name.equals( columnName ) ) continue;
-            if ( !qtMapForPlatform.containsKey( name ) ) continue;
-            Integer checkColInd = qtMapForPlatform.get( name );
-            if ( checkColInd == actualColumnNumber ) {
-                // log.warn( "Current column name " + columnName
-                // + " is new for the current platform, would be going in the index previously occupied by "
-                // + name );
-                clobbers = true;
-                break;
-            }
-        }
-        return clobbers;
-    }
-
-    /**
-     * @param platformForSample
-     */
-    private void initMaps( GeoPlatform platformForSample ) {
-        if ( !quantitationTypeKey.containsKey( platformForSample ) ) {
-            quantitationTypeKey.put( platformForSample, new HashMap<String, Integer>() );
-
-        }
-        if ( !quantitationTypeTargetColumn.containsKey( platformForSample ) ) {
-            quantitationTypeTargetColumn.put( platformForSample, new HashMap<Integer, Integer>() );
-        }
     }
 
     /**
@@ -1911,9 +1891,33 @@ public class GeoFamilyParser implements Parser {
 
     }
 
-    public void setAgressiveQtRemoval( boolean aggressiveQuantitationTypeRemoval ) {
-        this.aggressiveQuantitationTypeRemoval = aggressiveQuantitationTypeRemoval;
+    private void validate() {
+        GeoValues values = results.getSeriesMap().get( currentSeriesAccession ).getValues();
+        values.validate();
+    }
 
+    /**
+     * @param columnName
+     * @param actualColumnNumber
+     * @param qtMapForPlatform The map of
+     * @return
+     */
+    private boolean willClobberOtherQuantitationType( String columnName, int actualColumnNumber,
+            Map<String, Integer> qtMapForPlatform ) {
+        boolean clobbers = false;
+        for ( String name : currentSample().getColumnNames() ) {
+            if ( name.equals( columnName ) ) continue;
+            if ( !qtMapForPlatform.containsKey( name ) ) continue;
+            Integer checkColInd = qtMapForPlatform.get( name );
+            if ( checkColInd == actualColumnNumber ) {
+                // log.warn( "Current column name " + columnName
+                // + " is new for the current platform, would be going in the index previously occupied by "
+                // + name );
+                clobbers = true;
+                break;
+            }
+        }
+        return clobbers;
     }
 
 }

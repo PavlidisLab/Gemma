@@ -145,7 +145,8 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
     @Override
     protected Map<Auditable, AuditEvent> handleGetLastAuditEvent( Collection auditables, AuditEventType type )
             throws Exception {
-
+        Map<Auditable, AuditEvent> result = new HashMap<Auditable, AuditEvent>();
+        if ( auditables.size() == 0 ) return result;
         Map<AuditTrail, Auditable> atmap = new HashMap<AuditTrail, Auditable>();
         for ( Auditable a : ( Collection<Auditable> ) auditables ) {
             atmap.put( a.getAuditTrail(), a );
@@ -157,7 +158,6 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
                 + "inner join trail.events event inner join event.eventType et inner join fetch event.performer where trail in (:trails) "
                 + "and et.class in (" + StringUtils.join( classes, "," ) + ") order by event.date desc ";
 
-        Map<Auditable, AuditEvent> result = new HashMap<Auditable, AuditEvent>();
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setCacheable( true );

@@ -18,13 +18,12 @@
  */
 package ubic.gemma.analysis.diff;
 
-import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashSet;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.math.RandomUtils;
-import org.easymock.classextension.MockClassControl;
+import org.easymock.classextension.EasyMock;
 
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.util.RClient;
@@ -139,7 +138,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         arrayDesign.setName( "MG-U74Test_" + RandomStringUtils.randomAlphanumeric( 12 ) );
 
         expressionExperiment = ExpressionExperiment.Factory.newInstance();
-        expressionExperiment.setName( "a test expression experiment" );
+        expressionExperiment.setName( "analysistest_" + RandomStringUtils.randomAlphanumeric( 12 ) );
         expressionExperiment.setShortName( RandomStringUtils.randomAlphanumeric( 12 ) );
 
         /* experimental factor "area" */
@@ -347,6 +346,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         quantitationType.setIsNormalized( false );
         quantitationType.setIsBackgroundSubtracted( false );
         quantitationType.setIsRatio( false );
+        expressionExperiment.getQuantitationTypes().add( quantitationType );
 
         bioAssayDimension = BioAssayDimension.Factory.newInstance();
         bioAssayDimension.setName( "test bioassay dimension" );
@@ -465,21 +465,12 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
      * @throws Exception
      */
     protected void configureMockAnalysisServiceHelper( int numMethodCalls ) throws Exception {
-        // TODO replace with non-deprecated metods
-
-        MockClassControl control = MockClassControl.createControl( AnalysisHelperService.class,
-                new Method[] { AnalysisHelperService.class.getMethod( "getPreferredAndMissingValueVectors",
-                        ExpressionExperiment.class ) } );
-
-        analysisHelperService = ( AnalysisHelperService ) control.getMock();
-
-        analysisHelperService.getUsefulVectors( expressionExperiment );
-
+        this.analysisHelperService = EasyMock.createMock( AnalysisHelperService.class );
         Collection<DesignElementDataVector> vectorsToReturn = expressionExperiment.getDesignElementDataVectors();
-        control.setReturnValue( vectorsToReturn, numMethodCalls );
 
-        control.replay();
-
+        EasyMock.expect( analysisHelperService.getUsefulVectors( expressionExperiment ) ).andReturn( vectorsToReturn )
+                .times( numMethodCalls );
+        EasyMock.replay( analysisHelperService );
     }
 
     /**

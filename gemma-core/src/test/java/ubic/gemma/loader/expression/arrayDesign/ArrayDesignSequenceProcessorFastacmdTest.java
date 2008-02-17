@@ -63,7 +63,7 @@ public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesig
             if ( res == null ) {
                 // data already filled in by some other test.
             } else {
-                assertEquals( 243, res.size() );
+                assertEquals( 243, res.size() ); // sometimes end up with 242...
             }
         } catch ( IllegalStateException e ) {
             if ( e.getMessage().startsWith( "No fastacmd executable:" ) ) {

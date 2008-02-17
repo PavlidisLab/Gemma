@@ -875,6 +875,7 @@ public class GeoConverter implements Converter {
             if ( probeName == null ) {
                 probeName = id;
                 if ( log.isDebugEnabled() ) log.debug( "Probe retaining original name: " + probeName );
+                platform.getProbeNamesInGemma().put( id, id ); // must make sure this is populated.
             } else {
                 if ( log.isDebugEnabled() ) log.debug( "Found probe: " + probeName );
             }

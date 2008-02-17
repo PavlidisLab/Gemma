@@ -148,12 +148,8 @@ public class AnalysisHelperService {
      */
     @SuppressWarnings("unchecked")
     public Collection<DesignElementDataVector> getUsefulVectors( ExpressionExperiment ee ) {
-
-        checkForMixedTechnologies( ee );
         Collection<QuantitationType> qts = ExpressionDataMatrixBuilder.getUsefulQuantitationTypes( ee );
         if ( qts.size() == 0 ) throw new IllegalArgumentException( "No usable quantitation type in " + ee );
-
-        log.info( "Loading vectors..." );
         Collection<DesignElementDataVector> dataVectors = expressionExperimentService.getDesignElementDataVectors( qts );
         vectorService.thaw( dataVectors );
         return dataVectors;

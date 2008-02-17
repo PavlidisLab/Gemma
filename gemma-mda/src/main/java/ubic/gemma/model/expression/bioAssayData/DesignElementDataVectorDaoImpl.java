@@ -45,13 +45,11 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssay.BioAssayImpl;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.model.genome.biosequence.BioSequenceImpl;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -493,41 +491,45 @@ public class DesignElementDataVectorDaoImpl extends
                 int count = 0;
                 StopWatch timer = new StopWatch();
                 timer.start();
-
                 Collection<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
                 Collection<DesignElement> cs = new HashSet<DesignElement>();
                 for ( Object object : designElementDataVectors ) {
                     DesignElementDataVector v = ( DesignElementDataVector ) object;
                     dims.add( v.getBioAssayDimension() );
                     cs.add( v.getDesignElement() );
-
                     session.evict( v.getQuantitationType() );
                     session.evict( v );
                 }
 
+                // thaw the bioassaydimensions we saw
                 for ( BioAssayDimension bad : dims ) {
+                    Hibernate.initialize( bad );
                     for ( BioAssay ba : bad.getBioAssays() ) {
-                        if ( session.get( BioAssayImpl.class, ba.getId() ) != null ) continue;
                         session.lock( ba, LockMode.NONE );
+                        Hibernate.initialize( ba );
                         Hibernate.initialize( ba.getArrayDesignUsed() );
                         Hibernate.initialize( ba.getDerivedDataFiles() );
+                        Hibernate.initialize( ba.getSamplesUsed() );
+
                         for ( BioMaterial bm : ba.getSamplesUsed() ) {
                             Hibernate.initialize( bm );
                             Hibernate.initialize( bm.getBioAssaysUsedIn() );
                             Hibernate.initialize( bm.getFactorValues() );
+                            session.evict( bm );
                         }
-                        session.evict( ba );
+                        session.clear(); // this is necessary to avoid session errors (due to multiple bioassays per
+                                            // biomaterial?)
                     }
-                    session.clear();
                 }
 
+                // thaw the designelements we saw.
                 for ( DesignElement de : cs ) {
                     BioSequence seq = ( ( CompositeSequence ) de ).getBiologicalCharacteristic();
-                    if ( seq != null && session.get( BioSequenceImpl.class, seq.getId() ) == null ) {
-                        session.lock( seq, LockMode.NONE );
-                        Hibernate.initialize( seq );
-                    }
-
+                    if ( seq == null ) continue;
+                    session.lock( seq, LockMode.NONE );
+                    // Note that these steps are not done in arrayDesign.thawLite; we're assuming this information is
+                    // needed if you are thawing dedvs. That might not be true in all cases.
+                    Hibernate.initialize( seq );
                     ArrayDesign arrayDesign = ( ( CompositeSequence ) de ).getArrayDesign();
                     Hibernate.initialize( arrayDesign );
 
@@ -549,7 +551,7 @@ public class DesignElementDataVectorDaoImpl extends
                 return null;
             }
 
-        }, true );
+        }, false );
 
     }
 

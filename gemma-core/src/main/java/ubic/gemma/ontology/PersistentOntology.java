@@ -6,10 +6,12 @@ package ubic.gemma.ontology;
 /***********************************************************************************************************************
  * Originally based on: Source code information ----------------------- Original author Ian Dickinson, HP Labs Bristol
  * Author email ian.dickinson@hp.com Package Jena 2 Web http://sourceforge.net/projects/jena/ Created 25-Jul-2003
- * Filename $RCSfile$ Revision $Revision$ Release status $State$ Last
- * modified on $Date$ by $Author$ (c) Copyright 2002, 2003, 2004, 2005, 2006, 2007
- * Hewlett-Packard Development Company, LP (see footer for full conditions)
+ * Filename $RCSfile$ Revision $Revision$ Release status $State$ Last modified
+ * on $Date$ by $Author$ (c) Copyright 2002, 2003, 2004, 2005, 2006, 2007 Hewlett-Packard
+ * Development Company, LP (see footer for full conditions)
  **********************************************************************************************************************/
+
+import org.apache.commons.lang.StringUtils;
 
 import com.hp.hpl.jena.db.DBConnection;
 import com.hp.hpl.jena.db.IDBConnection;
@@ -54,6 +56,7 @@ public class PersistentOntology {
      * @return
      */
     public ModelMaker getRDBMaker( String dbURL, String dbUser, String dbPw, String dbType, boolean clean ) {
+        if ( StringUtils.isBlank( dbURL ) ) throw new IllegalArgumentException( "Database URL must be provided" );
         try {
             // Create database connection
             IDBConnection conn = new DBConnection( dbURL, dbUser, dbPw, dbType );

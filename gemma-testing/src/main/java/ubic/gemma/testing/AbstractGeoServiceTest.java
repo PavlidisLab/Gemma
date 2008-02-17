@@ -39,7 +39,7 @@ public abstract class AbstractGeoServiceTest extends BaseSpringContextTest {
     protected String getTestFileBasePath() throws IOException {
         String path = ConfigUtils.getString( "gemma.home" );
         if ( path == null ) {
-            throw new IOException( "You must define the 'gemma.home' variable in your build.properties file" );
+            throw new IOException( "You must define the 'gemma.home' variable in your Gemma.properties file" );
         }
         return path;
     }

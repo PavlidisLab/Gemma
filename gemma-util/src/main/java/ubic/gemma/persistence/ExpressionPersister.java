@@ -183,10 +183,9 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                 designElement = getDesignElementSequenceCache().get( seqName );
                 if ( log.isDebugEnabled() ) log.debug( "Found " + designElement + " with sequence key=" + seqName );
             } else {
-                throw new UnsupportedOperationException(
-                        "Sorry, we're not adding new probes to existing array designs right now ... maybe later (for: "
-                                + designElement + " bioseq=" + designElement.getBiologicalCharacteristic() );
-                // designElement = addNewDesignElementToPersistentArrayDesign( ad, designElement );
+                log.warn( "Adding new probe to existing array design " + ad.getShortName() + ": " + designElement
+                        + " bioseq=" + designElement.getBiologicalCharacteristic() );
+                designElement = addNewDesignElementToPersistentArrayDesign( ad, designElement );
             }
         }
 

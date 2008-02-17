@@ -252,7 +252,7 @@ public class OntologyLoader {
         try {
             Class.forName( driver );
         } catch ( Exception e ) {
-            log.error("Failed to load driver: " + driver);
+            log.error( "Failed to load driver: " + driver );
             throw new RuntimeException( e );
         }
 
@@ -354,7 +354,9 @@ public class OntologyLoader {
      * @return
      */
     private static OntModel getRDBModel( String url ) {
-
+        if ( StringUtils.isBlank( url ) ) {
+            throw new IllegalArgumentException( "OWL URL must not be blank" );
+        }
         OntModelSpec spec = new OntModelSpec( OntModelSpec.OWL_DL_MEM_TRANS_INF );
         ModelMaker maker = getRDBMaker();
         spec.setImportModelMaker( maker );

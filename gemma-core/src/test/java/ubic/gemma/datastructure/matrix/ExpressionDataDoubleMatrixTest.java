@@ -27,7 +27,7 @@ import java.util.LinkedHashSet;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
-import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
+import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal; 
 import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
 import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;

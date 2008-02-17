@@ -106,8 +106,7 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
         for ( int i = 0; i < 2; i++ ) {
             designElements.add( it.next().getDesignElement() );
         }
-
-        assert ( designElements.size() == 2 );
+ 
 
         Collection<DesignElementDataVector> vectors = expressionExperimentDao.getDesignElementDataVectors(
                 designElements, quantitationType );

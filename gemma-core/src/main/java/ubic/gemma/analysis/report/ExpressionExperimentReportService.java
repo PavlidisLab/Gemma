@@ -38,7 +38,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 
 import ubic.basecode.util.FileTools;
-import ubic.basecode.util.benchmark.Timed;
 import ubic.gemma.grid.javaspaces.SpacesCommand;
 import ubic.gemma.grid.javaspaces.SpacesResult;
 import ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask;
@@ -159,7 +158,6 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
      * @return the filled out value objects
      */
     @SuppressWarnings("unchecked")
-    @Timed(minimumTimeToReport = 1000)
     public void fillEventInformation( Collection<ExpressionExperimentValueObject> vos ) {
 
         Collection<Long> ids = new ArrayList<Long>();
@@ -170,6 +168,10 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
 
         // do this ahead to avoid round trips.
         Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( ids );
+
+        if ( ees.size() == 0 ) {
+            return;
+        }
 
         // This is substantially faster than expressionExperimentService.getLastLinkAnalysis( ids ).
         Map<Long, AuditEvent> linkAnalysisEvents = getEvents( ees, LinkAnalysisEvent.Factory.newInstance() );
@@ -370,8 +372,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         this.probe2ProbeCoexpressionService = probe2ProbeCoexpressionService;
     }
 
-    @SuppressWarnings("unchecked")
-    @Timed(minimumTimeToReport = 200)
+    @SuppressWarnings("unchecked") 
     private Map<Long, AuditEvent> getEvents( Collection<ExpressionExperiment> ees, AuditEventType type ) {
         Map<Long, AuditEvent> result = new HashMap<Long, AuditEvent>();
         Map<Auditable, AuditEvent> events = null;
@@ -387,8 +388,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         return result;
     }
 
-    @SuppressWarnings("unchecked")
-    @Timed(minimumTimeToReport = 200)
+    @SuppressWarnings("unchecked") 
     private Map<Long, Collection<AuditEvent>> getSampleRemovalEvents( Collection<ExpressionExperiment> ees ) {
         Map<Long, Collection<AuditEvent>> result = new HashMap<Long, Collection<AuditEvent>>();
         Map<ExpressionExperiment, Collection<AuditEvent>> rawr = expressionExperimentService

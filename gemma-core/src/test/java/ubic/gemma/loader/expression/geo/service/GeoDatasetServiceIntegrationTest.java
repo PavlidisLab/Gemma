@@ -33,6 +33,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -52,6 +53,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     ExpressionExperiment ee;
     ArrayDesignService adService;
     Collection<ArrayDesign> ads;
+    private DesignElementDataVectorService designElementDataVectorService;
 
     /**
      * problem case GDS22 - has lots of missing values and number format issues.
@@ -102,11 +104,16 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     @SuppressWarnings("unchecked")
     public void testFetchAndLoadGSE5949() throws Exception {
         String path = ConfigUtils.getString( "gemma.home" );
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
-                + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE5949short" ) );
-        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                "GSE5949", false, true, false );
-        ee = results.iterator().next();
+        try {
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
+                    + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE5949short" ) );
+            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
+                    "GSE5949", false, true, false );
+            ee = results.iterator().next();
+        } catch ( AlreadyExistsInSystemException e ) {
+            log.info( "Test skipped because GSE5949 was already loaded - clean the DB before running the test" );
+            return;
+        }
         eeService.thawLite( ee );
         Collection qts = eeService.getQuantitationTypes( ee );
         assertEquals( 3, qts.size() );
@@ -147,7 +154,10 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         ExperimentalFactor factor = newee.getExperimentalDesign().getExperimentalFactors().iterator().next();
         assertEquals( 2, factor.getFactorValues().size() ); // otherwise get 4.
 
-        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( newee.getDesignElementDataVectors() );
+        Collection vectors = newee.getDesignElementDataVectors();
+        designElementDataVectorService.thaw( vectors );
+
+        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectors );
 
         ExpressionDataMatrix matrix = builder.getPreferredData();
 
@@ -184,7 +194,8 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
         eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
         adService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
-
+        designElementDataVectorService = ( DesignElementDataVectorService ) this
+                .getBean( "designElementDataVectorService" );
         init();
         endTransaction();
     }

@@ -48,7 +48,6 @@ import org.hibernate.type.LongType;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
@@ -260,12 +259,13 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             public Object doInHibernate( Session session ) throws HibernateException {
 
                 log.info( "Loading data for deletion..." );
-
                 session.lock( toDelete, LockMode.UPGRADE );
                 toDelete.getBioAssayDataVectors().size();
                 Set<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
                 Set<QuantitationType> qts = new HashSet<QuantitationType>();
                 Collection<DesignElementDataVector> designElementDataVectors = toDelete.getDesignElementDataVectors();
+                toDelete.setDesignElementDataVectors( null );
+                session.update( toDelete );
 
                 int count = 0;
                 log.info( "Removing Design Element Data Vectors ..." );
@@ -275,14 +275,13 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                     session.delete( dv );
                     if ( ++count % 1000 == 0 ) {
                         session.flush();
+                        // session.clear();
                     }
                     if ( count % 20000 == 0 ) {
                         log.info( count + " design Element data vectors deleted" );
                     }
                 }
                 session.flush();
-
-                toDelete.getDesignElementDataVectors().clear();
 
                 log.info( "Removing BioAssay Dimensions." );
                 for ( BioAssayDimension dim : dims ) {
@@ -300,6 +299,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                         }
                         lf.getSourceFiles().clear();
                         session.delete( lf );
+
                     }
                     // Delete raw data files
                     if ( ba.getRawDataFile() != null ) session.delete( ba.getRawDataFile() );
@@ -335,6 +335,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 }
 
                 log.info( "Finishing up ..." );
+                session.flush();
+                session.clear();
+                session.update( toDelete );
                 session.delete( toDelete );
                 session.flush();
                 session.clear();
@@ -468,28 +471,6 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 || name.toUpperCase().matches( "\\w{2}\\d{3}_CY5" ) || name.toUpperCase().matches( "NORM(.*)CH2" )
                 || name.equals( "CH2Mean" ) || name.equals( "CH2_SIGNAL" ) || name.equals( "\"log2(635), gN\"" )
                 || name.equals( "rProcessedSignal" );
-    }
-
-    /**
-     * Thaws the analyses.
-     * 
-     * @param expressionExperiment
-     * @param session
-     */
-    @SuppressWarnings("unchecked")
-    private void thawAnalyses( final ExpressionExperiment expressionExperiment, org.hibernate.Session session ) {
-        // Not doing anything with the session but passing it in just in case. ????
-
-        // Collection<ExpressionAnalysis> eas = expressionExperiment.getExpressionAnalyses();
-
-        // for ( ExpressionAnalysis ea : eas ) {
-        // Collection<ExpressionAnalysisResultSet> resultSets = ea.getResultSets();
-        // resultSets.size();
-        // for ( ExpressionAnalysisResultSet rs : resultSets ) {
-        // rs.getResults().size();
-        // }
-        // }
-
     }
 
     /**
@@ -1129,8 +1110,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             ees = queryObject.list();
             session.clear();
             timer.stop();
-            if ( timer.getTime() > 100 ) {
-                log.info( "Load " + ids.size() + " ees in  " + timer.getTime() + "ms" );
+            if ( timer.getTime() > 1000 ) {
+                log.info( "Load " + ees.size() + " ees in  " + timer.getTime() + "ms" );
             }
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
@@ -1315,35 +1296,14 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      */
     @Override
     protected void handleThaw( final ExpressionExperiment expressionExperiment ) throws Exception {
-        HibernateTemplate templ = this.getHibernateTemplate();
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+        thawBioAssays( expressionExperiment );
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.update( expressionExperiment );
-                expressionExperiment.getDesignElementDataVectors().size();
-                expressionExperiment.getQuantitationTypes().size();
-                expressionExperiment.getBioAssays().size();
-                expressionExperiment.getSubsets().size();
-
-                expressionExperiment.getExperimentalDesign().getExperimentalFactors().size();
-                for ( ExperimentalFactor ef : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
-                    ef.getFactorValues().size();
-                }
-
-                if ( expressionExperiment.getAccession() != null )
-                    expressionExperiment.getAccession().getExternalDatabase();
-                thawReferences( expressionExperiment, session );
-
-                for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
-                    ba.getSamplesUsed().size();
-                    ba.getDerivedDataFiles().size();
-                }
-
-                thawAnalyses( expressionExperiment, session );
-
+                session.lock( expressionExperiment, LockMode.NONE );
+                Hibernate.initialize( expressionExperiment.getDesignElementDataVectors() );
                 return null;
             }
-
-        }, true );
+        }, false );
     }
 
     // thaw lite.
@@ -1354,20 +1314,20 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
 
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( ee, LockMode.READ );
+                session.lock( ee, LockMode.NONE );
 
                 for ( QuantitationType type : ee.getQuantitationTypes() ) {
-                    session.update( type );
+                    session.lock( type, LockMode.NONE );
+                    Hibernate.initialize( type );
                     session.evict( type );
                 }
-                ee.getAuditTrail().getEvents().size();
-
+                Hibernate.initialize( ee.getAuditTrail().getEvents() );
                 thawReferences( ee, session );
 
                 ExperimentalDesign experimentalDesign = ee.getExperimentalDesign();
                 if ( experimentalDesign != null ) {
-                    session.update( experimentalDesign );
-                    experimentalDesign.getExperimentalFactors().size();
+                    session.lock( experimentalDesign, LockMode.NONE );
+                    Hibernate.initialize( experimentalDesign.getExperimentalFactors() );
                 }
 
                 if ( ee.getAccession() != null ) ee.getAccession().getExternalDatabase();
@@ -1379,16 +1339,14 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                         Hibernate.initialize( bm.getFactorValues() );
                         session.evict( bm );
                     }
-                    ba.getDerivedDataFiles().size();
+                    Hibernate.initialize( ba.getDerivedDataFiles() );
                     Hibernate.initialize( ba.getArrayDesignUsed() );
                     session.evict( ba );
                 }
 
-                ee.getInvestigators().size();
+                Hibernate.initialize( ee.getInvestigators() );
 
-                thawAnalyses( ee, session );
-
-                session.evict( ee );
+                session.clear();
 
                 return null;
             }

@@ -28,6 +28,7 @@ import java.util.Set;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.loader.expression.geo.DatasetCombiner;
 import ubic.gemma.loader.expression.geo.GeoSampleCorrespondence;
+import ubic.gemma.loader.expression.geo.model.GeoData;
 import ubic.gemma.loader.expression.geo.model.GeoDataset;
 import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.loader.expression.geo.model.GeoSample;
@@ -83,7 +84,7 @@ public class GeoDatasetService extends AbstractGeoService {
         checkForExisting( projectedAccessions );
 
         if ( loadPlatformOnly ) {
-            Collection<?> platforms = geoDomainObjectGenerator.generate( geoAccession );
+            Collection<? extends GeoData> platforms = geoDomainObjectGenerator.generate( geoAccession );
             if ( platforms.size() == 0 ) {
                 log.warn( "Got no results" );
                 return null;
@@ -92,7 +93,7 @@ public class GeoDatasetService extends AbstractGeoService {
             return persisterHelper.persist( arrayDesigns );
         }
 
-        Collection<?> parseResult = geoDomainObjectGenerator.generate( geoAccession );
+        Collection<? extends GeoData> parseResult = geoDomainObjectGenerator.generate( geoAccession );
         if ( parseResult.size() == 0 ) {
             log.warn( "Got no results" );
             return null;
@@ -115,7 +116,7 @@ public class GeoDatasetService extends AbstractGeoService {
         checkSamplesAreNew( series );
 
         geoConverter.clear();
-        
+
         Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) geoConverter.convert( series );
 
         series = null; // hopefully free memory...
@@ -347,10 +348,11 @@ public class GeoDatasetService extends AbstractGeoService {
             log.info( pl + " looks new to Gemma" );
             for ( CompositeSequence cs : rawad.getCompositeSequences() ) {
                 String geoProbeName = cs.getName();
-                probeNamesInGemma.put( geoProbeName, geoProbeName ); // no mapping needed.
+                probeNamesInGemma.put( geoProbeName, geoProbeName ); // no mapping needed. NB the converter fills
+                // this in already, we're just being defensive
+                // here.
             }
         } else {
-
             log.info( "Platform " + pl + " exists in Gemma, aligning ..." );
             arrayDesignService.thawLite( existing );
 
@@ -377,24 +379,21 @@ public class GeoDatasetService extends AbstractGeoService {
             String columnWithGemmaNames = null;
             allofit: for ( CompositeSequence cs : existing.getCompositeSequences() ) {
                 String gemmaProbeName = cs.getName();
-                if ( geoProbeNames.contains( gemmaProbeName ) ) {
-                    probeNamesInGemma.put( gemmaProbeName, gemmaProbeName ); // no mapping needed, really.
-                } else {
-                    // search the other columns
-                    for ( String colName : pl.getColumnNames() ) {
-                        if ( pl.getColumnData( colName ).contains( gemmaProbeName ) ) {
-                            columnWithGemmaNames = colName;
-                            log.info( "Gemma probe names were found in GEO column=" + columnWithGemmaNames );
+                // search the other columns
+                for ( String colName : pl.getColumnNames() ) {
+                    if ( pl.getColumnData( colName ).contains( gemmaProbeName ) ) {
+                        columnWithGemmaNames = colName;
+                        log.info( "Gemma probe names were found in GEO column=" + columnWithGemmaNames );
 
-                            fillExistingProbeNameMap( pl, columnWithGemmaNames, columnWithGeoNames );
-                            break allofit;
-                        }
+                        fillExistingProbeNameMap( pl, columnWithGemmaNames, columnWithGeoNames );
+                        break allofit;
                     }
                 }
             }
 
             if ( columnWithGemmaNames == null ) {
-                throw new IllegalStateException( "Could not figure out which column the Gemma probe names came from!" );
+                throw new IllegalStateException(
+                        "Could not figure out which column the Gemma probe names came from for platform=" + pl );
             }
 
         }

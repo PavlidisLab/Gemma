@@ -31,6 +31,7 @@ import ubic.gemma.loader.expression.geo.fetcher.DatasetFetcher;
 import ubic.gemma.loader.expression.geo.fetcher.PlatformFetcher;
 import ubic.gemma.loader.expression.geo.fetcher.RawDataFetcher;
 import ubic.gemma.loader.expression.geo.fetcher.SeriesFetcher;
+import ubic.gemma.loader.expression.geo.model.GeoData;
 import ubic.gemma.loader.expression.geo.model.GeoDataset;
 import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
@@ -124,9 +125,9 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
      * @return If processPlatformsOnly is true, a collection of GeoPlatforms. Otherwise a Collection of series (just
      *         one). If the accession is a GPL then processPlatformsOnly is set to true and any sample data is ignored.
      */
-    public Collection<?> generate( String geoAccession ) {
+    public Collection<? extends GeoData> generate( String geoAccession ) {
         log.info( "Generating objects for " + geoAccession + " using " + this.getClass().getSimpleName() );
-        Collection<Object> result = new HashSet<Object>();
+        Collection<GeoData> result = new HashSet<GeoData>();
         if ( geoAccession.startsWith( "GPL" ) ) {
             GeoPlatform platform = processPlatform( geoAccession );
             result.add( platform );
@@ -256,7 +257,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
      * 
      * @param seriesAccession
      */
-    private Collection<?> processSeriesPlatforms( Collection<String> seriesAccessions ) {
+    private Collection<GeoPlatform> processSeriesPlatforms( Collection<String> seriesAccessions ) {
         for ( String seriesAccession : seriesAccessions ) {
             processSeriesPlatforms( seriesAccession );
         }
@@ -267,7 +268,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
     /**
      * @param seriesAccession
      */
-    private Collection<?> processSeriesPlatforms( String seriesAccession ) {
+    private Collection<GeoPlatform> processSeriesPlatforms( String seriesAccession ) {
         Collection<LocalFile> fullSeries = seriesFetcher.fetch( seriesAccession );
         if ( fullSeries == null ) {
             throw new RuntimeException( "No series file found for " + seriesAccession );
