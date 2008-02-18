@@ -73,7 +73,7 @@ Ext.extend( Ext.Gemma.GeneCombo, Ext.form.ComboBox, {
 	
 	setTaxon : function ( taxon ) {
 		this.taxon = taxon;
-		if ( this.selectedGene && this.selectedGene.taxon.scientificName != taxon.scientificName ) {
+		if ( this.selectedGene && this.selectedGene.taxon != taxon.scientificName ) {
 			this.selectedGene = null;
 			this.reset();
 		}
