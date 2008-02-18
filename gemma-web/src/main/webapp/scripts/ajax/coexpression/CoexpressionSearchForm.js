@@ -239,7 +239,7 @@ Ext.extend( Ext.Gemma.CoexpressionSearchPanel, Ext.FormPanel, {
 	
 	taxonChanged : function ( taxon ) {
 		this.analysisCombo.taxonChanged( taxon );
-		this.eeSearchField.taxonChanged( taxon );
+		this.eeSearchField.taxonChanged( taxon, this.analysisCombo.selectedIndex >= 0 );
 		this.geneChooserPanel.taxonChanged( taxon );
 	}
 	
@@ -306,9 +306,11 @@ Ext.extend( Ext.Gemma.DatasetSearchField, Ext.form.TextField, {
 		return this.eeIds;
 	},
 	
-	taxonChanged : function ( taxon ) {
+	taxonChanged : function ( taxon, doSearch ) {
 		this.taxon = taxon;
-		this.findDatasets();
+		if ( doSearch ) {
+			this.findDatasets();
+		}
 	}
 	
 } );
@@ -326,6 +328,7 @@ Ext.Gemma.AnalysisCombo = function ( config ) {
 		valueField : 'id',
 		editable : false,
 		lazyInit : false,
+		lazyRender : false,
 		mode : 'local',
 		selectOnFocus : true,
 		triggerAction : 'all',
@@ -355,6 +358,9 @@ Ext.Gemma.AnalysisCombo = function ( config ) {
 		superConfig[property] = config[property];
 	}
 	Ext.Gemma.AnalysisCombo.superclass.constructor.call( this, superConfig );
+	
+	// call doQuery or the record filtering done in taxonChanged() below doesn't work...
+	this.doQuery();
 };
 
 /* static methods
@@ -415,6 +421,13 @@ Ext.extend( Ext.Gemma.AnalysisCombo, Ext.form.ComboBox, {
 		if ( this.selectedAnalysis && this.selectedAnalysis.taxon.id != taxon.id ) {
 			this.reset();
 		}
+		this.store.filterBy( function( record, id ) {
+			if ( ! record.data.taxon ) {
+				return true; 
+			} else if ( record.data.taxon.id == taxon.id ) {
+				return true;
+			}
+		} );
 	}
 	
 } );
