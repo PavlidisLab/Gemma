@@ -517,7 +517,7 @@ public class GeneEffectSizeCoExpressionAnalyzer {
      * @param dataMatrix
      * @return
      */
-    public DoubleMatrixNamed getRankMatrix( DoubleMatrixNamed<String, String> dataMatrix ) {
+    public DoubleMatrixNamed<String, String> getRankMatrix( DoubleMatrixNamed<String, String> dataMatrix ) {
         double[][] rank = new double[dataMatrix.rows()][dataMatrix.columns()];
         DoubleMatrixNamed<String, String> rankMatrix = new DenseDoubleMatrix2DNamed<String, String>( rank );
         rankMatrix.setRowNames( dataMatrix.getRowNames() );
