@@ -20,23 +20,19 @@ package ubic.gemma.analysis.service;
 
 import java.util.Collection;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.analysis.preprocess.filter.ExpressionExperimentFilter;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 /**
- * Some helper methods for the spring loaded analysis services.
+ * Tools for easily getting data matrices for analysis in a consistent way.
  * 
  * @spring.bean id="analysisHelperService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
@@ -45,8 +41,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * @version $Id$
  */
 public class AnalysisHelperService {
-
-    private static Log log = LogFactory.getLog( AnalysisHelperService.class.getName() );
 
     ExpressionExperimentService expressionExperimentService;
 
@@ -74,44 +68,12 @@ public class AnalysisHelperService {
      * 
      * @param ee
      * @param filterConfig
-     * @param dataVectors
      * @return
      */
     @SuppressWarnings("unchecked")
     public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig ) {
-        Collection<DesignElementDataVector> dataVectors = this.getUsefulVectors( ee );
-        Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
-        ExpressionExperimentFilter filter = new ExpressionExperimentFilter( ee, arrayDesignsUsed, filterConfig );
-        ExpressionDataDoubleMatrix eeDoubleMatrix = filter.getFilteredMatrix( dataVectors );
-        return eeDoubleMatrix;
-    }
-
-    /**
-     * @param ee
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private Collection<ArrayDesign> checkForMixedTechnologies( ExpressionExperiment ee ) {
-
-        Collection<ArrayDesign> arrayDesignsUsed = this.expressionExperimentService.getArrayDesignsUsed( ee );
-        if ( arrayDesignsUsed.size() > 1 ) {
-            boolean containsTwoColor = false;
-            boolean containsOneColor = false;
-            for ( ArrayDesign arrayDesign : arrayDesignsUsed ) {
-                if ( arrayDesign.getTechnologyType().equals( TechnologyType.ONECOLOR ) ) {
-                    containsOneColor = true;
-                }
-                if ( !arrayDesign.getTechnologyType().equals( TechnologyType.ONECOLOR ) ) {
-                    containsTwoColor = true;
-                }
-            }
-
-            if ( containsTwoColor && containsOneColor ) {
-                throw new UnsupportedOperationException(
-                        "Can't correctly handle expression experiments that combine different array technologies." );
-            }
-        }
-        return arrayDesignsUsed;
+        Collection<DesignElementDataVector> dataVectors = this.getPreferredAndMissingValueVectors( ee );
+        return this.getFilteredMatrix( ee, filterConfig, dataVectors );
     }
 
     /**
