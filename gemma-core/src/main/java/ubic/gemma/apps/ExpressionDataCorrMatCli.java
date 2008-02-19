@@ -66,7 +66,13 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
         this.processCommandLine( "corrMat", args );
 
         for ( ExpressionExperiment ee : expressionExperiments ) {
-            processExperiment( ee );
+            try {
+                processExperiment( ee );
+                successObjects.add( ee );
+            } catch ( Exception e ) {
+                errorObjects.add( ee );
+            }
+
         }
         if ( expressionExperiments.size() > 1 ) summarizeProcessing();
         return null;
