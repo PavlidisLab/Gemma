@@ -225,7 +225,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      */
     @Override
     protected Collection handleGetAllAssociatedBioAssays( Long id ) throws Exception {
-        final String queryString = "select bioAssay from BioAssayImpl as b inner join b.arrayDesignUsed a where a.id = :id";
+        final String queryString = "select b from BioAssayImpl as b inner join b.arrayDesignUsed a where a.id = :id";
         return getHibernateTemplate().findByNamedParam( queryString, "id", id );
     }
 
