@@ -75,7 +75,7 @@ public abstract class AbstractCLI {
     private static final String HEADER = "Options:";
     public static final String FOOTER = "The Gemma project, Copyright (c) 2007-2008 University of British Columbia.";
     private static final int DEFAULT_PORT = 3306;
-    private static int DEFAULT_VERBOSITY = 2;
+    private static int DEFAULT_VERBOSITY = 4; // info.
     protected static Log log = LogFactory.getLog( AbstractCLI.class );
 
     protected Options options = new Options();
@@ -262,16 +262,16 @@ public abstract class AbstractCLI {
                 log4jLogger.setLevel( Level.ERROR );
                 break;
             case 3:
-                log4jLogger.setLevel( Level.INFO );
+                log4jLogger.setLevel( Level.WARN );
                 break;
             case 4:
-                log4jLogger.setLevel( Level.DEBUG );
+                log4jLogger.setLevel( Level.INFO );
                 break;
             case 5:
-                log4jLogger.setLevel( Level.ALL );
+                log4jLogger.setLevel( Level.DEBUG );
                 break;
             default:
-                throw new RuntimeException( "Verbosity must be from 1 to 5" );
+                throw new RuntimeException( "Verbosity must be from 0 to 5" );
 
         }
 

@@ -300,13 +300,13 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                         lf.getSourceFiles().clear();
                         session.delete( lf );
                     }
-		    ba.getDerivedDataFiles().clear();
+                    ba.getDerivedDataFiles().clear();
 
                     // Delete raw data files
                     if ( ba.getRawDataFile() != null ) {
                         session.delete( ba.getRawDataFile() );
-			ba.setRawDataFile(null);
-			session.flush();
+                        ba.setRawDataFile( null );
+                        session.flush();
                     }
                     session.saveOrUpdate( ba );
                     Collection<BioMaterial> biomaterials = ba.getSamplesUsed();
@@ -1318,8 +1318,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
 
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                if ( session.get( ExpressionExperimentImpl.class, ee.getId() ) == null )
-                    session.lock( ee, LockMode.NONE );
+                session.lock( ee, LockMode.NONE );
+                Hibernate.initialize( ee );
+                Hibernate.initialize( ee.getQuantitationTypes() );
 
                 for ( QuantitationType type : ee.getQuantitationTypes() ) {
                     session.lock( type, LockMode.NONE );

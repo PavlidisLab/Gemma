@@ -165,10 +165,6 @@
 			<a href="<c:url value="/arrayDesign/associateSequences.html"/>"> <fmt:message key="menu.arrayDesignSequenceAdd" />
 			</a>
 		</li>
-		<li>
-			<a href="<c:url value="/genome/goldenPathSequenceLoad.html"/>"> <fmt:message key="menu.goldenPathSequenceLoad" />
-			</a>
-		</li>
 	</ul>
 	<h2>
 		Inactive, deprecated, or not ready for prime time

@@ -988,7 +988,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 timer.start();
                 int i = 0;
 
-                Collection<BioSequence> seen = new HashSet<BioSequence>();
                 for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
 
                     if ( ++i % LOGGING_UPDATE_EVENT_COUNT == 0 && timer.getTime() > 5000 ) {
@@ -1016,7 +1015,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                              * Hibernate.initialize( bs.getSequenceDatabaseEntry() ); }
                              */
                         }
-                        // session.evict( bs );
                     }
                     session.evict( cs );
 

@@ -36,11 +36,11 @@ public class QuartzUtils {
      */
     public static void disableQuartzScheduler( StdScheduler stdScheduler ) {
 
-        log.debug( "shutting down quartz" );
+        log.debug( "Shutting down quartz" );
         try {
             stdScheduler.shutdown( true );
             if ( stdScheduler.isShutdown() ) {
-                log.info( "Scheduler shutdown successful" );
+                log.debug( "Scheduler shutdown successful" );
             } else {
                 log.warn( "Scheduler could not be shutdown for some reason" );
             }

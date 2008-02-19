@@ -84,7 +84,7 @@ public class QuantitationTypeParameterGuesser {
                 config.addConfiguration( new PropertiesConfiguration( gemmaAppDataHome + File.separatorChar
                         + "quantitationType.properties" ) );
             } catch ( ConfigurationException e ) {
-                log.warn( "No custom quantitation type descriptors found" );
+                log.info( "No custom quantitation type descriptors found" );
             }
         }
 

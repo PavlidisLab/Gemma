@@ -677,7 +677,7 @@ public class GeoConverter implements Converter {
 
         }
         log.info( "Total of " + expExp.getDesignElementDataVectors().size() + " vectors on platform " + geoPlatform
-                + expExp.getQuantitationTypes().size() + " quantitation types." );
+                + ", " + expExp.getQuantitationTypes().size() + " quantitation types." );
     }
 
     /**
