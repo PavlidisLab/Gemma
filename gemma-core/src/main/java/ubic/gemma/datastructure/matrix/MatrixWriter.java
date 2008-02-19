@@ -24,6 +24,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -107,8 +108,12 @@ public class MatrixWriter<T> {
         }
         for ( int i = 0; i < columns; i++ ) {
             buf.append( "\t" + matrix.getBioMaterialForColumn( i ).getName() + ":" );
-            for ( Object ba : matrix.getBioAssaysForColumn( i ) ) {
-                buf.append( ( ( BioAssay ) ba ).getName() + "," );
+            for ( Iterator<BioAssay> it = matrix.getBioAssaysForColumn( i ).iterator(); it.hasNext(); ) {
+                BioAssay ba = it.next();
+                buf.append( ba.getName() );
+                if ( it.hasNext() ) {
+                    buf.append( "," );
+                }
             }
         }
         buf.append( "\n" );
