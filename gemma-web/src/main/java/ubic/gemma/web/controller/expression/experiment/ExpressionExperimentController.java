@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
@@ -515,6 +516,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     @SuppressWarnings( { "unused", "unchecked" })
     public ModelAndView showAllLinkSummaries( HttpServletRequest request, HttpServletResponse response ) {
 
+        StopWatch timer = new StopWatch();
+        timer.start();
         String sId = request.getParameter( "id" );
         Collection<ExpressionExperimentValueObject> expressionExperiments = new ArrayList<ExpressionExperimentValueObject>();
 
@@ -524,11 +527,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             Collection<ExpressionExperimentValueObject> eeValObjectCol = this
                     .getFilteredExpressionExperimentValueObjects( null );
             expressionExperiments.addAll( eeValObjectCol );
-            // expressionExperiments.addAll( expressionExperimentService.loadAllValueObjects() );
-        }
-
-        // if ids are specified, then display only those expressionExperiments
-        else {
+        } else { // if ids are specified, then display only those expressionExperiments
             Collection<Long> ids = new ArrayList<Long>();
 
             String[] idList = StringUtils.split( sId, ',' );
@@ -540,20 +539,29 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             Collection<ExpressionExperimentValueObject> eeValObjectCol = this
                     .getFilteredExpressionExperimentValueObjects( ids );
             expressionExperiments.addAll( eeValObjectCol );
-            // expressionExperiments.addAll( expressionExperimentService.loadValueObjects( ids ) );
         }
+
+        timer.stop();
+        log.info( "Got ees in " + timer.getTime() + "ms" );
+        timer.reset();
+        timer.start();
 
         // load cached data
         expressionExperimentReportService.fillLinkStatsFromCache( expressionExperiments );
-
+        timer.stop();
+        log.info( "Got link stats in " + timer.getTime() + "ms" );
+        timer.reset();
         // load event data
         expressionExperimentReportService.fillEventInformation( expressionExperiments );
 
         // load annotation information
-        expressionExperimentReportService.fillAnnotationInformation( expressionExperiments );
 
-        // load differential information
-        expressionExperimentReportService.fillDifferentialInformation( expressionExperiments );
+        timer.start();
+        expressionExperimentReportService.fillAnnotationInformation( expressionExperiments );
+        timer.stop();
+        log.info( "Got annotation info in " + timer.getTime() + "ms" );
+        timer.reset();
+        timer.stop();
 
         // sort expression experiments by name first
         Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments, new Comparator() {
@@ -568,6 +576,10 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         ModelAndView mav = new ModelAndView( "expressionExperimentLinkSummary" );
         mav.addObject( "expressionExperiments", expressionExperiments );
         mav.addObject( "numExpressionExperiments", numExpressionExperiments );
+
+        timer.stop();
+        log.info( "Ready with link reports in " + timer.getTime() + "ms" );
+
         return mav;
 
     }
