@@ -41,6 +41,7 @@ import ubic.gemma.model.genome.Gene;
  * @author raylim
  * @version $Id$
  * @see ComputeDEVRankingCli
+ * @deprecated
  */
 public class RankAnalysisCLI extends ExpressionExperimentManipulatingCLI {
 
