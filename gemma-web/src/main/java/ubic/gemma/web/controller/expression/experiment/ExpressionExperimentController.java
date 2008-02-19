@@ -561,7 +561,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         timer.stop();
         log.info( "Got annotation info in " + timer.getTime() + "ms" );
         timer.reset();
-        timer.stop();
+        timer.start();
 
         // sort expression experiments by name first
         Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments, new Comparator() {
