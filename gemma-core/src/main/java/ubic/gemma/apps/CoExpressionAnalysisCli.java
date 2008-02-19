@@ -76,7 +76,6 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
     private GeneService geneService;
     private String geneList = null;
     private String taxonName = null;
-    private String outputFile = null;
     private int stringency = 3;
     private static String DIVIDOR = "-----";
     private String experimentListFile;
@@ -91,9 +90,7 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         Option taxonOption = OptionBuilder.hasArg().isRequired().withArgName( "Taxon" ).withDescription(
                 "the taxon of the genes to analyze" ).withLongOpt( "Taxon" ).create( 't' );
         addOption( taxonOption );
-        Option outputFileOption = OptionBuilder.hasArg().isRequired().withArgName( "outFile" ).withDescription(
-                "File for saving the correlation data" ).withLongOpt( "outFile" ).create( 'o' );
-        addOption( outputFileOption );
+
         Option stringencyFileOption = OptionBuilder.hasArg().withArgName( "stringency" ).withDescription(
                 "The minimum support for links to be selected (Default 3)" ).withLongOpt( "stringency" ).create( 's' );
         addOption( stringencyFileOption );
@@ -121,9 +118,7 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         if ( hasOption( 't' ) ) {
             this.taxonName = getOptionValue( 't' );
         }
-        if ( hasOption( 'o' ) ) {
-            this.outputFile = getOptionValue( 'o' );
-        }
+
         if ( hasOption( 's' ) ) {
             this.stringency = Integer.parseInt( getOptionValue( 's' ) );
         }
@@ -438,10 +433,10 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         Process cluster = rt.exec( cmdToRun );
         cluster.waitFor();
 
-        DoubleMatrixNamed dataMatrix = getClusteredMatrix( filebaseName );
+        DoubleMatrixNamed<String, String> dataMatrix = getClusteredMatrix( filebaseName );
 
         // Get the rank Matrix
-        DoubleMatrixNamed rankMatrix = coExpression.getRankMatrix( dataMatrix );
+        DoubleMatrixNamed<String, String> rankMatrix = coExpression.getRankMatrix( dataMatrix );
 
         // generate the png figures
         ColorMatrix dataColorMatrix = new ColorMatrix( dataMatrix );
@@ -460,12 +455,12 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
      * @return
      * @throws IOException
      */
-    private DoubleMatrixNamed getClusteredMatrix( String baseName ) throws IOException {
+    private DoubleMatrixNamed<String, String> getClusteredMatrix( String baseName ) throws IOException {
         // Read the generated file into a String Matrix
         StringMatrixReader mReader = new StringMatrixReader();
 
         String CDTMatrixFile = baseName;
-        StringMatrix2DNamed cdtMatrix = mReader.read( CDTMatrixFile + ".cdt" );
+        StringMatrix2DNamed<String, String> cdtMatrix = mReader.read( CDTMatrixFile + ".cdt" );
 
         // Read String Matrix and convert into DenseDoubleMatrix
         int extra_rows = 2, extra_cols = 3;

@@ -44,6 +44,7 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
      */
     private void audit( ExpressionExperiment ee, String note, AuditEventType eventType ) {
         auditTrailService.addUpdateEvent( ee, eventType, "Generated correlation matrix images" );
+        successObjects.add( ee.toString() );
     }
 
     /**
@@ -54,6 +55,7 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
             return;
         }
         ExpressionDataDoubleMatrix matrix = analysisHelperService.getFilteredMatrix( ee, filterConfig );
+        log.info( filterConfig );
         ExpressionDataSampleCorrelation.process( matrix, ee );
         audit( ee, "", null );
 
@@ -66,7 +68,7 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
         for ( ExpressionExperiment ee : expressionExperiments ) {
             processExperiment( ee );
         }
-        summarizeProcessing();
+        if ( expressionExperiments.size() > 1 ) summarizeProcessing();
         return null;
     }
 
