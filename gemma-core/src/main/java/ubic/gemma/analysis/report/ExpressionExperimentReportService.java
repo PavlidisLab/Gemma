@@ -33,6 +33,7 @@ import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.commons.lang.time.DateFormatUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -126,33 +127,6 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
     }
 
     /**
-     * @param vos
-     */
-    @SuppressWarnings("unchecked")
-    public void fillDifferentialInformation( Collection<ExpressionExperimentValueObject> vos ) {
-        Collection<Long> ids = new HashSet<Long>();
-        for ( ExpressionExperimentValueObject eeVo : vos ) {
-            Long id = eeVo.getId();
-            ids.add( id );
-        }
-
-        Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( ids );
-        Map<Long, AuditEvent> differentialAnalysisEvents = getEvents( ees, DifferentialExpressionAnalysisEvent.Factory
-                .newInstance() );
-
-        for ( ExpressionExperimentValueObject eeVo : vos ) {
-            Long id = eeVo.getId();
-            if ( differentialAnalysisEvents.containsKey( id ) ) {
-                AuditEvent event = differentialAnalysisEvents.get( id );
-                if ( event != null ) {
-                    eeVo.setDataDifferentialAnalysis( event.getDate() );
-                    eeVo.setDifferentialAnalysisEventType( event.getEventType() );
-                }
-            }
-        }
-    }
-
-    /**
      * fills in event information from the database. This will only retrieve the latest event (if any).
      * 
      * @return the filled out value objects
@@ -181,6 +155,8 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         Map<Long, AuditEvent> troubleEvents = getEvents( ees, TroubleStatusFlagEvent.Factory.newInstance() );
         Map<Long, AuditEvent> validationEvents = getEvents( ees, ValidatedFlagEvent.Factory.newInstance() );
         Map<Long, AuditEvent> arrayDesignEvents = getEvents( ees, ArrayDesignGeneMappingEvent.Factory.newInstance() );
+        Map<Long, AuditEvent> differentialAnalysisEvents = getEvents( ees, DifferentialExpressionAnalysisEvent.Factory
+                .newInstance() );
 
         Map<Long, Collection<AuditEvent>> sampleRemovalEvents = getSampleRemovalEvents( ees );
 
@@ -215,6 +191,14 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                 AuditEvent event = arrayDesignEvents.get( id );
                 if ( event != null ) {
                     eeVo.setDateArrayDesignLastUpdated( event.getDate() );
+                }
+            }
+
+            if ( differentialAnalysisEvents.containsKey( id ) ) {
+                AuditEvent event = differentialAnalysisEvents.get( id );
+                if ( event != null ) {
+                    eeVo.setDataDifferentialAnalysis( event.getDate() );
+                    eeVo.setDifferentialAnalysisEventType( event.getEventType() );
                 }
             }
 
@@ -372,8 +356,10 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         this.probe2ProbeCoexpressionService = probe2ProbeCoexpressionService;
     }
 
-    @SuppressWarnings("unchecked") 
+    @SuppressWarnings("unchecked")
     private Map<Long, AuditEvent> getEvents( Collection<ExpressionExperiment> ees, AuditEventType type ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
         Map<Long, AuditEvent> result = new HashMap<Long, AuditEvent>();
         Map<Auditable, AuditEvent> events = null;
         if ( type instanceof ArrayDesignAnalysisEvent ) {
@@ -385,10 +371,14 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         for ( Auditable a : events.keySet() ) {
             result.put( ( ( ExpressionExperiment ) a ).getId(), events.get( a ) );
         }
+        timer.stop();
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Retrieved " + type.getClass().getSimpleName() + " in " + timer.getTime() + "ms" );
+        }
         return result;
     }
 
-    @SuppressWarnings("unchecked") 
+    @SuppressWarnings("unchecked")
     private Map<Long, Collection<AuditEvent>> getSampleRemovalEvents( Collection<ExpressionExperiment> ees ) {
         Map<Long, Collection<AuditEvent>> result = new HashMap<Long, Collection<AuditEvent>>();
         Map<ExpressionExperiment, Collection<AuditEvent>> rawr = expressionExperimentService
