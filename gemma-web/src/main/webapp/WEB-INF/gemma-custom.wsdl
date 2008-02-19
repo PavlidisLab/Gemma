@@ -390,7 +390,7 @@
   </wsdl:binding>
   <wsdl:service name="gemmaService">
     <wsdl:port binding="schema:gemmaBinding" name="gemmaPort">
-      <soap:address location="http://localhost:8080/Gemma/ws"/>
+      <soap:address location="http://bioinformatics.ubc.ca/Gemma/ws"/>
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
