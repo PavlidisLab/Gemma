@@ -72,6 +72,7 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
         String id = request.getParameter( "id" );
         String size = request.getParameter( "size" ); // okay if null
         String contrast = request.getParameter( "contr" ); // okay if null, default is 'hi'
+        String text = request.getParameter( "text" );
 
         if ( id == null ) {
             log.warn( "No id!" );
@@ -98,7 +99,11 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
             return null;
         }
 
-        writeCorrMatImage( response, ee, size, contrVal );
+        if ( StringUtils.isNotBlank( text ) ) {
+            writeCorrData( response, ee );
+        } else {
+            writeCorrMatImage( response, ee, size, contrVal );
+        }
 
         return null; // nothing to return;
     }
@@ -132,6 +137,41 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
 
         writeProbeCorrHistImage( response, ee );
         return null; // nothing to return;
+    }
+
+    /**
+     * @param ee
+     * @return JFreeChart XYSeries representing the histogram.
+     * @throws FileNotFoundException
+     * @throws IOException
+     */
+    private XYSeries getCorrelHist( ExpressionExperiment ee ) throws FileNotFoundException, IOException {
+        File f = this.locateProbeCorrFile( ee );
+
+        XYSeries series = new XYSeries( ee.getId(), true, true );
+        BufferedReader in = new BufferedReader( new FileReader( f ) );
+        while ( in.ready() ) {
+            String line = in.readLine().trim();
+            if ( line.startsWith( "#" ) ) continue;
+            String[] split = StringUtils.split( line );
+            if ( split.length < 2 ) continue;
+            try {
+                double x = Double.parseDouble( split[0] );
+                double y = Double.parseDouble( split[1] );
+                series.add( x, y );
+            } catch ( NumberFormatException e ) {
+                // line wasn't useable.. no big deal. Heading is included.
+            }
+        }
+        return series;
+    }
+
+    private File locateCorrMatDataFile( ExpressionExperiment ee ) {
+        String shortName = ee.getShortName();
+        String analysisStoragePath = ConfigUtils.getAnalysisStoragePath() + File.separatorChar
+                + ExpressionDataSampleCorrelation.CORRMAT_DIR_NAME;
+        File f = new File( analysisStoragePath + File.separatorChar + shortName + "_corrmat" + ".txt" );
+        return f;
     }
 
     /**
@@ -179,6 +219,11 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
         return f;
     }
 
+    private void writeCorrData( HttpServletResponse response, ExpressionExperiment ee ) {
+        File f = locateCorrMatDataFile( ee );
+        writeFile( response, f );
+    }
+
     /**
      * @param response
      * @param ee
@@ -191,6 +236,18 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
     }
 
     /**
+     * @param response
+     * @param f
+     */
+    private void writeFile( HttpServletResponse response, File f ) {
+        if ( !f.canRead() ) {
+            log.warn( "Could not locate the file" );
+            return;
+        }
+        writeToClient( response, f, "text/plain" );
+    }
+
+    /**
      * Write an image from a file to the user's browser FIXME move this.
      * 
      * @param response
@@ -198,33 +255,11 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
      */
     private void writeImage( HttpServletResponse response, File f ) {
         if ( !f.canRead() ) {
-            log.warn( "Could not locate the correlation matrix image" );
+            log.warn( "Could not locate the image file" );
             return;
         }
-
-        InputStream in = null;
-        OutputStream out = null;
-        try {
-            in = new FileInputStream( f );
-            out = response.getOutputStream();
-            response.setContentType( "image/png" );
-            byte[] buf = new byte[1024];
-            int len;
-            while ( ( len = in.read( buf ) ) > 0 ) {
-                out.write( buf, 0, len );
-            }
-            in.close();
-        } catch ( IOException e ) {
-            log.error( "While writing image", e );
-        } finally {
-            if ( out != null ) {
-                try {
-                    out.close();
-                } catch ( IOException e ) {
-                    log.warn( "Problems closing output stream.  Issues were: " + e.toString() );
-                }
-            }
-        }
+        String contentType = "image/png";
+        writeToClient( response, f, contentType );
     }
 
     /**
@@ -260,29 +295,34 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
     }
 
     /**
-     * @param ee
-     * @return JFreeChart XYSeries representing the histogram.
-     * @throws FileNotFoundException
-     * @throws IOException
+     * @param response
+     * @param f
+     * @param contentType
      */
-    private XYSeries getCorrelHist( ExpressionExperiment ee ) throws FileNotFoundException, IOException {
-        File f = this.locateProbeCorrFile( ee );
+    private void writeToClient( HttpServletResponse response, File f, String contentType ) {
+        InputStream in = null;
+        OutputStream out = null;
+        try {
+            in = new FileInputStream( f );
+            out = response.getOutputStream();
 
-        XYSeries series = new XYSeries( ee.getId(), true, true );
-        BufferedReader in = new BufferedReader( new FileReader( f ) );
-        while ( in.ready() ) {
-            String line = in.readLine().trim();
-            if ( line.startsWith( "#" ) ) continue;
-            String[] split = StringUtils.split( line );
-            if ( split.length < 2 ) continue;
-            try {
-                double x = Double.parseDouble( split[0] );
-                double y = Double.parseDouble( split[1] );
-                series.add( x, y );
-            } catch ( NumberFormatException e ) {
-                // line wasn't useable.. no big deal. Heading is included.
+            response.setContentType( contentType );
+            byte[] buf = new byte[1024];
+            int len;
+            while ( ( len = in.read( buf ) ) > 0 ) {
+                out.write( buf, 0, len );
+            }
+            in.close();
+        } catch ( IOException e ) {
+            log.error( "While writing image", e );
+        } finally {
+            if ( out != null ) {
+                try {
+                    out.close();
+                } catch ( IOException e ) {
+                    log.warn( "Problems closing output stream.  Issues were: " + e.toString() );
+                }
             }
         }
-        return series;
     }
 }

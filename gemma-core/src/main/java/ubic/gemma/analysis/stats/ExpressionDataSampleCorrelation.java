@@ -54,6 +54,10 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class ExpressionDataSampleCorrelation {
 
+    public static final double LO_CONTRAST_COR_THRESH = 0.2;
+
+    public static final double HI_CONTRAST_COR_THRESH = 0.8;
+
     private static final String FILE_SUFFIX = "_corrmat";
 
     private static final int LARGE_CELL_SIZE = 10;
@@ -164,9 +168,9 @@ public class ExpressionDataSampleCorrelation {
 
         int numRows = matrix.rows();
 
-        DoubleMatrixNamed clippedHard = clipData( matrix, 0.8, 1.0 );
+        DoubleMatrixNamed clippedHard = clipData( matrix, HI_CONTRAST_COR_THRESH, 1.0 );
 
-        DoubleMatrixNamed clippedSoft = clipData( matrix, 0.4, 1.0 );
+        DoubleMatrixNamed clippedSoft = clipData( matrix, LO_CONTRAST_COR_THRESH, 1.0 );
 
         ColorMatrix hard = new ColorMatrix( clippedHard );
         ColorMatrix soft = new ColorMatrix( clippedSoft );

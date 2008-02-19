@@ -20,6 +20,7 @@ package ubic.gemma.web.taglib.expression.experiment;
 
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
+import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
 
 /**
  * @jsp.tag name="expressionQC" body-content="empty"
@@ -63,21 +64,27 @@ public class ExperimentQCTag extends TagSupport {
         StringBuilder buf = new StringBuilder();
         buf.append( "<div class=\"eeqc\" id=\"eeqc\">" );
         buf
-                .append( "<table border=\"0\"  ><tr><td valign=\"top\" align=\"center\" style=\"padding-right:20px;\"><strong>Sample correlation</strong><br />" );
+                .append( "<table border=\"0\"  ><tr><td valign=\"top\" align=\"left\" style=\"padding-right:30px;\"><strong>Sample correlation (black &le; "
+                        + ExpressionDataSampleCorrelation.HI_CONTRAST_COR_THRESH + ")</strong><br />" );
         buf
                 .append( "<a target=\"_blank\" title=\"Click for larger version (opens in new window)\" href=\"visualizeCorrMat.html?id="
                         + this.eeid
                         + "&size=large\"><img src=\"visualizeCorrMat.html?id="
                         + this.eeid
                         + "&size="
-                        + this.size + "\" /></a><br>" );
+                        + this.size + "\" /></a>" );
 
         // link to lower contrast version
         buf
-                .append( "<a target=\"_blank\" title=\"Click for larger lower contrast version (opens in new window)\" href=\"visualizeCorrMat.html?id="
-                        + this.eeid + "&size=large&contr=lo\">lower contrast version</a>" );
+                .append( "<ul class='glassList'><li><a target=\"_blank\" title=\"Click for larger lower contrast version (opens in new window)\" href=\"visualizeCorrMat.html?id="
+                        + this.eeid
+                        + "&size=large&contr=lo\">lower contrast version (black &le;"
+                        + ExpressionDataSampleCorrelation.LO_CONTRAST_COR_THRESH + ")</a></li>" );
+        buf
+                .append( "<li><a title=\"Download a file containing the raw correlation matrix data\" href=\"visualizeCorrMat.html?id="
+                        + this.eeid + "&text=1\">Data</a></li>" );
 
-        buf.append( "</td>" );
+        buf.append( "</ul></td>" );
 
         buf.append( "<td valign=\"top\" align=\"center\"><strong>Probe correlation</strong><br />" );
         buf.append( " <img src=\"visualizeProbeCorrDist.html?id=" + this.eeid + "\" /></td>" );
