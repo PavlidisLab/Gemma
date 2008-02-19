@@ -119,8 +119,13 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
             boolean[] vals = getVals( bac, vector, bytes );
 
             Collection<BioAssay> bioAssays = dimension.getBioAssays();
+
+            if ( bioAssays.size() != vals.length ) {
+                throw new IllegalStateException( "Expected " + vals.length + " bioassays at design element "
+                        + vector.getDesignElement() + ", got " + bioAssays.size() );
+            }
+
             Iterator<BioAssay> it = bioAssays.iterator();
-            assert bioAssays.size() == vals.length : "Expected " + vals.length + " got " + bioAssays.size();
             for ( int j = 0; j < bioAssays.size(); j++ ) {
                 BioAssay bioAssay = it.next();
                 Integer column = this.columnAssayMap.get( bioAssay );
