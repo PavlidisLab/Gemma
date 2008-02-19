@@ -104,7 +104,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
      */
     private void processExperiment( ExpressionExperiment ee ) {
         try {
-            this.deleteExistingAnalysis( ee );
+            // this.deleteExistingAnalysis( ee );
             Collection<DifferentialExpressionAnalysis> expressionAnalyses = this.differentialExpressionAnalyzerService
                     .getDifferentialExpressionAnalyses( ee, forceAnalysis );
 
@@ -114,6 +114,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
             audit( ee, "", DifferentialExpressionAnalysisEvent.Factory.newInstance() );
         } catch ( Exception e ) {
+            e.printStackTrace();
             errorObjects.add( ee + ": " + e.getMessage() );
         }
     }
