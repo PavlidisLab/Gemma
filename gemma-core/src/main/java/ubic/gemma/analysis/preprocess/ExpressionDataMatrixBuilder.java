@@ -42,6 +42,7 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -755,7 +756,7 @@ public class ExpressionDataMatrixBuilder {
      * @param vectors raw vectors
      * @return matrix of appropriate type.
      */
-    public static ExpressionDataMatrix getMatrix( PrimitiveType representation,
+    public static ExpressionDataMatrix<?> getMatrix( PrimitiveType representation,
             Collection<DesignElementDataVector> vectors ) {
         ExpressionDataMatrix expressionDataMatrix = null;
         if ( representation.equals( PrimitiveType.DOUBLE ) ) {
@@ -786,6 +787,19 @@ public class ExpressionDataMatrixBuilder {
 
     public ExpressionExperiment getExpressionExperiment() {
         return expressionExperiment;
+    }
+
+    public Map<DesignElement, Double> getRanks() {
+        Collection<QuantitationType> qtypes = this.getPreferredQTypes( null );
+        Map<DesignElement, Double> ranks = new HashMap<DesignElement, Double>();
+
+        for ( DesignElementDataVector v : this.vectors ) {
+            if ( qtypes.contains( v.getQuantitationType() ) ) {
+                ranks.put( v.getDesignElement(), v.getRank() );
+            }
+        }
+
+        return ranks;
     }
 
 }
