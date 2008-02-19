@@ -299,12 +299,14 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                         }
                         lf.getSourceFiles().clear();
                         session.delete( lf );
-
                     }
+		    ba.getDerivedDataFiles().clear();
 
                     // Delete raw data files
                     if ( ba.getRawDataFile() != null ) {
                         session.delete( ba.getRawDataFile() );
+			ba.setRawDataFile(null);
+			session.flush();
                     }
                     session.saveOrUpdate( ba );
                     Collection<BioMaterial> biomaterials = ba.getSamplesUsed();
