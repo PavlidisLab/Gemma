@@ -102,16 +102,23 @@ public class ExpressionExperimentFilter {
     }
 
     /**
+     * Provides a ready-to-use expression data matrix. The filters that are applied, in this order:
+     * <ol>
+     * <li>Remove rows that don't have biosequences (always applied)
+     * <li>Remove Affymetrix control probes (Affymetrix only)
+     * <li>Remove rows that have too many missing values (as configured)
+     * <li>Remove rows with low variance (ratiometric) or CV (one-color) (as configured)
+     * <li>Remove rows with very high or low expression (as configured)
+     * </ol>
+     * 
      * @param ee
      * @param dataVectors
      * @return
      */
     public ExpressionDataDoubleMatrix getFilteredMatrix( Collection<DesignElementDataVector> dataVectors ) {
-        log.info( "Getting expression data..." );
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( dataVectors );
-
         ExpressionDataDoubleMatrix eeDoubleMatrix = builder.getPreferredData();
-
+        builder.maskMissingValues( eeDoubleMatrix, null );
         eeDoubleMatrix = filter( builder, eeDoubleMatrix );
         return eeDoubleMatrix;
     }
@@ -147,7 +154,8 @@ public class ExpressionExperimentFilter {
     }
 
     /**
-     * Apply filters as configured by the command line parameters and technology type.
+     * Apply filters as configured by the command line parameters and technology type. See getFilteredMatrix for the
+     * details of what filters are applied and the ordering.
      * 
      * @param dataMatrix
      * @param eeDoubleMatrix
@@ -160,51 +168,63 @@ public class ExpressionExperimentFilter {
 
         ExpressionDataDoubleMatrix filteredMatrix = eeDoubleMatrix;
 
+        filteredMatrix = noSequencesFilter( eeDoubleMatrix );
+
         boolean twoColor = isTwoColor();
-        if ( config.isMinPresentFractionIsSet() && twoColor ) {
-            /* Apply two color missing value filter */
-            builder.maskMissingValues( filteredMatrix, null );
-            ExpressionDataBooleanMatrix missingValues = builder.getMissingValueData( null );
 
-            log.info( "Filtering for missing data" );
-            filteredMatrix = minPresentFilter( filteredMatrix, missingValues );
-
-            if ( config.isLowVarianceCutIsSet() ) {
-                log.info( "Filtering for low variance" );
-                filteredMatrix = lowVarianceFilter( filteredMatrix );
-            }
+        if ( usesAffymetrix() ) {
+            log.info( "Filtering Affymetrix controls" );
+            filteredMatrix = affyControlProbeFilter( filteredMatrix );
         }
 
-        if ( !twoColor ) {
+        if ( config.isMinPresentFractionIsSet() ) {
+            log.info( "Filtering for missing data" );
 
-            // NOTE we do not use the PresentAbsent values here. Only filtering on the basis of the data itself.
-            if ( config.isMinPresentFractionIsSet() ) {
-                log.info( "Filtering for missing data" );
+            if ( twoColor ) {
+                /* Apply two color missing value filter */
+                ExpressionDataBooleanMatrix missingValues = builder.getMissingValueData( null );
+                filteredMatrix = minPresentFilter( filteredMatrix, missingValues );
+            } else { // NOTE we do not use the PresentAbsent values here. Only filtering on the basis of the data
+                // itself.
                 filteredMatrix = minPresentFilter( filteredMatrix, null );
             }
+        }
 
-            if ( config.isLowExpressionCutIsSet() ) {
-                log.info( "Filtering for low or too high expression" );
-                filteredMatrix = lowExpressionFilter( filteredMatrix );
-            }
-
-            if ( config.isLowVarianceCutIsSet() ) {
-                log.info( "Filtering for low variance" );
+        if ( config.isLowVarianceCutIsSet() ) {
+            if ( twoColor ) {
+                log.info( "Filtering for low variance (ratiometric)" );
+                filteredMatrix = lowVarianceFilter( filteredMatrix );
+            } else {
+                log.info( "Filtering for low CV (signals)" );
                 filteredMatrix = lowCVFilter( filteredMatrix );
             }
-
-            if ( usesAffymetrix() ) {
-                log.info( "Filtering Affymetrix controls" );
-                filteredMatrix = affyControlProbeFilter( filteredMatrix );
-            }
         }
+
+        if ( config.isLowExpressionCutIsSet() ) {
+            log.info( "Filtering for low or too high expression" );
+            Map<DesignElement, Double> ranks = builder.getRanks();
+            filteredMatrix = lowExpressionFilter( filteredMatrix, ranks );
+        }
+
         return filteredMatrix;
+    }
+
+    /**
+     * Filter rows that lack BioSequences associated with the probes.
+     * 
+     * @param eeDoubleMatrix
+     * @return
+     */
+    private ExpressionDataDoubleMatrix noSequencesFilter( ExpressionDataDoubleMatrix eeDoubleMatrix ) {
+        RowsWithSequencesFilter f = new RowsWithSequencesFilter();
+        return f.filter( eeDoubleMatrix );
     }
 
     /**
      * @param ee
      * @param builder
      * @param eeDoubleMatrix
+     * @param ranks
      * @param arrayDesignsUsed
      * @return
      */
@@ -271,14 +291,23 @@ public class ExpressionExperimentFilter {
 
     /**
      * @param matrix
+     * @param ranks
      * @return
      */
-    private ExpressionDataDoubleMatrix lowExpressionFilter( ExpressionDataDoubleMatrix matrix ) {
-        RowLevelFilter rowLevelFilter = new RowLevelFilter();
+    private ExpressionDataDoubleMatrix lowExpressionFilter( ExpressionDataDoubleMatrix matrix,
+            Map<DesignElement, Double> ranks ) {
+        // check for null ranks, in which case we can't use this.
+        for ( Double d : ranks.values() ) {
+            if ( d == null ) {
+                log.info( "Ranks are null -- skipping expression level"
+                        + " filtering (This is okay if ranks cannot be computed)" );
+                return matrix;
+            }
+        }
+
+        RowLevelFilter rowLevelFilter = new RowLevelFilter( ranks );
         rowLevelFilter.setLowCut( config.getLowExpressionCut() );
         rowLevelFilter.setHighCut( config.getHighExpressionCut() );
-        rowLevelFilter.setRemoveAllNegative( true );
-        rowLevelFilter.setUseAsFraction( true );
         return rowLevelFilter.filter( matrix );
     }
 

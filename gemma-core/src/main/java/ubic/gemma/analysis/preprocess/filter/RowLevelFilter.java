@@ -21,6 +21,7 @@ package ubic.gemma.analysis.preprocess.filter;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -47,6 +48,20 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
     protected boolean useLowAsFraction = false;
 
     protected boolean useHighAsFraction = false;
+    private Map<DesignElement, Double> ranks = null;
+
+    /**
+     * @param ranks Map of rank values in range 0...1
+     */
+    public RowLevelFilter( Map<DesignElement, Double> ranks ) {
+        this.ranks = ranks;
+        this.setUseLowCutAsFraction( true );
+        this.setUseHighCutAsFraction( true );
+        this.setMethod( Method.RANK );
+    }
+
+    public RowLevelFilter() {
+    }
 
     /**
      * @param data
@@ -154,7 +169,7 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
      */
     public void setRemoveAllNegative( boolean t ) {
         if ( t ) {
-            log.info( "Rows with all negative values will be " + "removed PRIOR TO applying fraction-based criteria." );
+            log.info( "Rows with all negative values will be " + "removed PRIOR TO applying fraction-based criteria" );
         }
         removeAllNegative = t;
     }
@@ -175,9 +190,7 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
      */
     public void setUseHighCutAsFraction( boolean setting ) {
         if ( setting == true && !Stats.isValidFraction( highCut ) ) {
-            highCut = 0.0;
-            // throw new IllegalArgumentException( "Value for cut(s) are invalid for using "
-            // + "as fractions, must be >0.0 and <1.0," );
+            highCut = 0.0; // temporary, use sets this later, we hope.
         }
         useHighAsFraction = setting;
     }
@@ -187,8 +200,7 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
      */
     public void setUseLowCutAsFraction( boolean setting ) {
         if ( setting == true && !Stats.isValidFraction( lowCut ) ) {
-            throw new IllegalArgumentException( "Value for cut(s) are invalid for using "
-                    + "as fractions, must be >0.0 and <1.0," );
+            lowCut = 1.0; // temporary, use sets this later, we hope.
         }
         useLowAsFraction = setting;
     }
@@ -196,10 +208,16 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
     /**
      * @param criteria
      * @param rowAsList
+     * @param designElement
      * @param i
      */
-    private void addCriterion( DoubleArrayList criteria, DoubleArrayList rowAsList, int i ) {
+    private void addCriterion( DoubleArrayList criteria, DoubleArrayList rowAsList, DesignElement designElement, int i ) {
         switch ( method ) {
+            case RANK: {
+                assert ranks != null;
+                criteria.set( i, ranks.get( designElement ) );
+                break;
+            }
             case MIN: {
                 criteria.set( i, Descriptive.min( rowAsList ) );
                 break;
@@ -266,7 +284,7 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
                 numAllNeg++;
             }
 
-            addCriterion( criteria, rowAsList, i );
+            addCriterion( criteria, rowAsList, data.getDesignElementForRow( i ), i );
         }
         return numAllNeg;
     }
@@ -336,6 +354,6 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
     }
 
     public enum Method {
-        MIN, MAX, MEDIAN, MEAN, RANGE, CV, VAR
+        RANK, MIN, MAX, MEDIAN, MEAN, RANGE, CV, VAR
     }
 }
