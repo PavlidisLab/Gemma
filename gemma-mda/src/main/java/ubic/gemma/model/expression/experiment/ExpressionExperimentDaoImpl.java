@@ -301,10 +301,12 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                         session.delete( lf );
 
                     }
+
                     // Delete raw data files
                     if ( ba.getRawDataFile() != null ) {
                         session.delete( ba.getRawDataFile() );
                     }
+                    session.saveOrUpdate( ba );
                     Collection<BioMaterial> biomaterials = ba.getSamplesUsed();
                     bioMaterialsToDelete.addAll( biomaterials );
                     for ( BioMaterial bm : biomaterials ) {
