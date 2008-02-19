@@ -305,8 +305,14 @@ public class GeoDatasetService extends AbstractGeoService {
      */
     private Set<GeoPlatform> getPlatforms( GeoSeries series ) {
         Set<GeoPlatform> platforms = new HashSet<GeoPlatform>();
-        for ( GeoDataset dataset : series.getDatasets() ) {
-            platforms.add( dataset.getPlatform() );
+        if ( series.getDatasets().size() > 0 ) {
+            for ( GeoDataset dataset : series.getDatasets() ) {
+                platforms.add( dataset.getPlatform() );
+            }
+        } else {
+            for ( GeoSample sample : series.getSamples() ) {
+                platforms.addAll( sample.getPlatforms() );
+            }
         }
         return platforms;
     }
@@ -408,6 +414,7 @@ public class GeoDatasetService extends AbstractGeoService {
      */
     private void matchToExistingPlatforms( GeoSeries series ) {
         Set<GeoPlatform> platforms = getPlatforms( series );
+        if ( platforms.size() == 0 ) throw new IllegalStateException( "Series has no platforms" );
         for ( GeoPlatform pl : platforms ) {
             matchToExistingPlatform( pl );
         }
