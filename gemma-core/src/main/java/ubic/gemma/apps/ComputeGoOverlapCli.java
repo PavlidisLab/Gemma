@@ -40,15 +40,17 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
-import org.springframework.scripting.groovy.GroovyObjectCustomizer;
+
+import cern.jet.stat.Descriptive;
+import cern.colt.list.DoubleArrayList;
 
 import ubic.basecode.math.RandomChooser;
-import ubic.gemma.analysis.coexpression.ProbeLinkCoexpressionAnalyzer;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -66,6 +68,10 @@ import ubic.gemma.util.ConfigUtils;
  * @version $Id$
  */
 public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
+
+    private int firstGeneColumn = 0;
+    private int secondGeneColumn = 1;
+    private Taxon taxon;
 
     /*
      * (non-Javadoc)
@@ -85,14 +91,21 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         addOption( maxOption );
 
         Option dataOption = OptionBuilder.hasArg().withArgName(
-                "Choice of generating random gene pairs OR Input data file" ).withDescription( "dataType" ).isRequired()
-                .create( 'd' );
+                "Choice of generating random gene pairs OR Input data file" ).withDescription( "dataType" )
+                .isRequired().create( 'd' );
         addOption( dataOption );
 
         Option taxonOption = OptionBuilder.hasArg().withArgName( "Choice of taxon" ).withDescription(
                 "human, rat, mouse" ).isRequired().create( 't' );
         addOption( taxonOption );
 
+        Option firstGeneOption = OptionBuilder.hasArg().withArgName( "colindex" ).withDescription(
+                "Column index with gene1 (starting from 0; default=0)" ).create( "g1col" );
+        Option secondGeneOption = OptionBuilder.hasArg().withArgName( "colindex" ).withDescription(
+                "Column index with gene1 (starting from 0; default=1)" ).create( "g2col" );
+
+        addOption( firstGeneOption );
+        addOption( secondGeneOption );
     }
 
     @Override
@@ -101,16 +114,19 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
 
         if ( hasOption( 't' ) ) {
             this.commonName = getOptionValue( 't' );
-            if ( StringUtils.isEmpty( commonName ) ) {
+            if ( StringUtils.isBlank( commonName ) ) {
                 System.out.println( "MUST enter a valid taxon!" );
                 System.exit( 0 );
             }
             if ( !StringUtils.equalsIgnoreCase( "mouse", commonName )
                     && !StringUtils.equalsIgnoreCase( "rat", commonName )
-                    && !StringUtils.equalsIgnoreCase( "human", commonName ) ){
+                    && !StringUtils.equalsIgnoreCase( "human", commonName ) ) {
                 System.out.println( "MUST enter a valid taxon!" );
                 System.exit( 0 );
             }
+
+
+
         }
 
         if ( hasOption( 'd' ) ) {
@@ -126,10 +142,11 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
                 if ( f.canRead() ) {
                     this.file_path = input;
                     this.random = false;
-                } else
+                } else {
                     System.out.println( input
                             + "is NOT a valid filename! You MUST enter a valid filename OR size of dataset" );
-                System.exit( 0 );
+                    System.exit( 0 );
+                }
             }
 
         }
@@ -158,6 +175,14 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
             }
         }
 
+        if ( this.hasOption( "g1col" ) ) {
+            this.firstGeneColumn = getIntegerOptionValue( "g1col" );
+        }
+
+        if ( this.hasOption( "g2col" ) ) {
+            this.secondGeneColumn = getIntegerOptionValue( "g2col" );
+        }
+
     }
 
     // A list of service beans
@@ -167,7 +192,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
     private TaxonService taxonService;
     private GoMetric goMetric;
 
-    private Map<Long, Collection<String>> mouseGeneGOMap = new HashMap<Long, Collection<String>>();
+    private Map<Long, Collection<String>> geneGoMap = new HashMap<Long, Collection<String>>();
     private Map<String, Gene> geneCache = new HashMap<String, Gene>();
 
     private Map<String, Integer> rootMap = new HashMap<String, Integer>();
@@ -181,11 +206,11 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
     private static final String GENE_CACHE = "geneCache";
     private static Integer SET_SIZE = 0;
     private String file_path = "";
+    private String commonName = "";
 
     private Metric metric = GoMetric.Metric.simple;
     private boolean max = false;
     private boolean random = false;
-    private String commonName = "";
     private String OUT_FILE = "1K_percent";
 
     // INCLUDE PARTOF OR CHANGE STRINGENCY
@@ -204,7 +229,6 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         gene2GOAssociationService = ( Gene2GOAssociationService ) getBean( "gene2GOAssociationService" );
         ontologyEntryService = ( GeneOntologyService ) getBean( "geneOntologyService" );
         goMetric = ( GoMetric ) getBean( "goMetric" );
-
 
         /*
          * Initialize the Gene Ontology.
@@ -233,124 +257,122 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         if ( err != null ) return err;
 
         initBeans();
-        Taxon taxon = taxonService.findByCommonName( commonName );
+        
+        this.taxon = taxonService.findByCommonName( commonName );
+        if ( taxon == null ) {
+            System.out.println( "Taxon " + commonName + " not found." );
+            System.exit( 0 );
+        }
 
         log.info( "Checking for Gene2GO Map file..." );
         File f = new File( HOME_DIR + File.separatorChar + HASH_MAP_RETURN );
         if ( f.exists() ) {
-            mouseGeneGOMap = ( Map<Long, Collection<String>> ) getCacheFromDisk( f );
+            geneGoMap = ( Map<Long, Collection<String>> ) getCacheFromDisk( f );
             log.info( "Found file!" );
         }
 
         else {
-            Collection<Gene> mouseGenes = geneService.loadKnownGenes( taxon );
-
-            for ( Gene gene : mouseGenes ) {
-                Collection<OntologyTerm> GOTerms = ontologyEntryService.getGOTerms( gene, partOf );
-                if ( GOTerms == null || GOTerms.isEmpty() ) continue;
-                log.info( "Got go terms for " + gene.getName() );
-
-                Collection<String> termString = new HashSet<String>();
-                for ( OntologyTerm oe : GOTerms ) {
-                    termString.add( oe.getUri() );
-                }
-                mouseGeneGOMap.put( gene.getId(), termString );
-            }
-            saveCacheToDisk( ( HashMap ) mouseGeneGOMap, HASH_MAP_RETURN );
+            cacheGeneGoInformationToDisk( taxon );
         }
 
         if ( !metric.equals( GoMetric.Metric.simple ) && !metric.equals( GoMetric.Metric.percent ) ) {
-            File f2 = new File( HOME_DIR + File.separatorChar + GO_PROB_MAP );
-            if ( f2.exists() ) {
-                GOProbMap = ( HashMap<String, Double> ) getCacheFromDisk( f2 );
-                log.info( "Found probability file!" );
-            }
-
-            else {
-                log.info( "Calculating probabilities... " );
-
-                GOcountMap = goMetric.getTermOccurrence( mouseGeneGOMap );
-                makeRootMap( GOcountMap.keySet() );
-                GOProbMap = makeProbMap( GOcountMap );
-
-                this.saveCacheToDisk( ( HashMap ) GOProbMap, GO_PROB_MAP );
-            }
+            computeTermProbabilities();
         }
 
-        Map<Collection<Gene>, Double> scoreMap = new HashMap<Collection<Gene>, Double>();
-        Collection<List<Gene>> subsetPairs = new HashSet<List<Gene>>();
+        // results go here
+        Map<GenePair, Double> scoreMap = new HashMap<GenePair, Double>();
+
+        Collection<GenePair> genePairs = new HashSet<GenePair>();
 
         if ( random ) {
-            File f3 = new File( HOME_DIR + File.separatorChar + RANDOM_SUBSET );
-            if ( f3.exists() ) {
-                subsetPairs = ( HashSet<List<Gene>> ) getCacheFromDisk( f3 );
-                log.info( "Found cached subset file!" );
-            } else {
-                Collection<Gene> allGenes = new HashSet<Gene>();
-                for ( Long g : mouseGeneGOMap.keySet() ) {
-                    allGenes.add( geneService.load( g ) );
-                }
-
-                subsetPairs = getRandomPairs( SET_SIZE, allGenes );
-                this.saveCacheToDisk( ( HashSet ) subsetPairs, RANDOM_SUBSET );
-            }
-
-        } else if ( !random ) {
+            genePairs = loadRandomPairs();
+        } else if ( StringUtils.isNotBlank( file_path ) ) {
             try {
-                subsetPairs = loadLinks( file_path, taxon );
+                File links = new File( file_path );
+                genePairs = loadLinks( links, taxon );
                 log.info( "Done loading data..." );
             } catch ( IOException e ) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
 
+        } else {
+            log.error( "What should I do?" );
+            bail( ErrorCode.INVALID_OPTION );
         }
 
         StopWatch overallWatch = new StopWatch();
         overallWatch.start();
 
-        for ( List<Gene> pair : subsetPairs ) {
+        for ( GenePair pair : genePairs ) {
 
-            Iterator<Gene> genePair = pair.iterator();
-            Gene masterGene = genePair.next();
-            Gene coExpGene = genePair.next();
+            List<Gene> genes1 = pair.getFirstGenes();
+            List<Gene> genes2 = pair.getSecondGenes();
 
-            double score = 0.0;
+            List<Double> scores = new ArrayList<Double>();
 
-            if ( max ) {
-                log.info( "getting MAX scores for " + metric );
-                score = goMetric.computeMaxSimilarity( masterGene, coExpGene, GOProbMap, metric );
-            } else
-                score = goMetric.computeSimilarity( masterGene, coExpGene, GOProbMap, metric );
+            for ( Gene g1 : genes1 ) {
+                for ( Gene g2 : genes2 ) {
+                    if ( g1.equals( g2 ) ) continue;
+                    double score = 0.0;
 
-            scoreMap.put( pair, score );
+                    if ( max ) {
+                        log.info( "getting MAX scores for " + metric );
+                        score = goMetric.computeMaxSimilarity( g1, g2, GOProbMap, metric );
+                    } else {
+                        score = goMetric.computeSimilarity( g1, g2, GOProbMap, metric );
+                    }
+                    scores.add( score );
+                }
+            }
+            DoubleArrayList dlist = new DoubleArrayList();
+            dlist.addAllOf( scores );
+            
+            scoreMap.put( pair, Descriptive.median( dlist ) );
         }
 
+        writeGoSimilarityResults( scoreMap, overallWatch );
+        return null;
+
+    }
+
+    /**
+     * @param scoreMap
+     * @param overallWatch
+     */
+    private void writeGoSimilarityResults( Map<GenePair, Double> scoreMap, StopWatch overallWatch ) {
         try {
             Writer write = initOutputFile( OUT_FILE );
+            
+            for ( GenePair pair : scoreMap.keySet() ) {
+                List<Gene> firstGenes = pair.getFirstGenes();
+                List<Gene> secondGenes = pair.getSecondGenes();
 
-            for ( Collection<Gene> pair : scoreMap.keySet() ) {
-                Iterator<Gene> genePair = pair.iterator();
-                Gene mGene = genePair.next();
-                Gene cGene = genePair.next();
-                double overlap = scoreMap.get( pair );
+                String pairString = pair.toString();
+                double score = scoreMap.get( pair );
+                //---------------------NOT WRITING TO FILE--------------------------------
+                if ( firstGenes.size() == 1 && secondGenes.size() == 1 ) {
+                    Gene mGene = firstGenes.iterator().next();
+                    Gene cGene = secondGenes.iterator().next();
+                    int masterGOTerms;
+                    int coExpGOTerms;
 
-                int masterGOTerms;
-                int coExpGOTerms;
+                    if ( !geneGoMap.containsKey( mGene.getId() ) )
+                        masterGOTerms = 0;
+                    else
+                        masterGOTerms = ( geneGoMap.get( mGene.getId() ) ).size();
 
-                if ( !mouseGeneGOMap.containsKey( mGene.getId() ) )
-                    masterGOTerms = 0;
-                else
-                    masterGOTerms = ( mouseGeneGOMap.get( mGene.getId() ) ).size();
+                    if ( !geneGoMap.containsKey( cGene.getId() ) )
+                        coExpGOTerms = 0;
+                    else
+                        coExpGOTerms = ( geneGoMap.get( cGene.getId() ) ).size();
 
-                if ( !mouseGeneGOMap.containsKey( cGene.getId() ) )
-                    coExpGOTerms = 0;
-                else
-                    coExpGOTerms = ( mouseGeneGOMap.get( cGene.getId() ) ).size();
+                    Collection<OntologyTerm> goTerms = getTermOverlap( mGene, cGene );
+                    writeOverlapLine( write, pairString, score, goTerms, masterGOTerms, coExpGOTerms );
+                } else {
+                    writeOverlapLine( write, pairString, score, null, 0, 0 );
+                }
 
-                Collection<OntologyTerm> goTerms = getTermOverlap( mGene, cGene );
-                writeOverlapLine( write, mGene.getOfficialSymbol(), cGene.getOfficialSymbol(), overlap, goTerms,
-                        masterGOTerms, coExpGOTerms );
             }
             overallWatch.stop();
             log.info( "Compute GoOverlap takes " + overallWatch.getTime() + "ms" );
@@ -360,8 +382,75 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
             log.error( "Couldn't write to file: " + ioe );
 
         }
-        return null;
+    }
 
+    /**
+     * @return
+     */
+    private Collection<GenePair> loadRandomPairs() {
+        Collection<GenePair> randomPairs;
+        try {
+            File f3 = new File( HOME_DIR + File.separatorChar + RANDOM_SUBSET );
+            if ( f3.exists() ) {
+                randomPairs = ( HashSet<GenePair> ) loadLinks( f3, this.taxon );
+                log.info( "Found cached subset file!" );
+            } else {
+                Collection<Gene> allGenes = new HashSet<Gene>();
+                for ( Long g : geneGoMap.keySet() ) {
+                    allGenes.add( geneService.load( g ) );
+                }
+
+                randomPairs = getRandomPairs( SET_SIZE, allGenes );
+
+                Writer w = new FileWriter( f3 );
+                this.writeLinks( randomPairs, w );
+
+            }
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+        return randomPairs;
+    }
+
+    /**
+     * 
+     */
+    private void computeTermProbabilities() {
+        File f2 = new File( HOME_DIR + File.separatorChar + GO_PROB_MAP );
+        if ( f2.exists() ) {
+            GOProbMap = ( HashMap<String, Double> ) getCacheFromDisk( f2 );
+            log.info( "Found probability file!" );
+        }
+
+        else {
+            log.info( "Calculating probabilities... " );
+
+            GOcountMap = goMetric.getTermOccurrence( geneGoMap );
+            makeRootMap( GOcountMap.keySet() );
+            GOProbMap = makeProbMap( GOcountMap );
+
+            this.saveCacheToDisk( ( HashMap ) GOProbMap, GO_PROB_MAP );
+        }
+    }
+
+    /**
+     * @param taxon
+     */
+    private void cacheGeneGoInformationToDisk( Taxon taxon ) {
+        Collection<Gene> mouseGenes = geneService.loadKnownGenes( taxon );
+
+        for ( Gene gene : mouseGenes ) {
+            Collection<OntologyTerm> GOTerms = ontologyEntryService.getGOTerms( gene, partOf );
+            if ( GOTerms == null || GOTerms.isEmpty() ) continue;
+            log.info( "Got go terms for " + gene.getName() );
+
+            Collection<String> termString = new HashSet<String>();
+            for ( OntologyTerm oe : GOTerms ) {
+                termString.add( oe.getUri() );
+            }
+            geneGoMap.put( gene.getId(), termString );
+        }
+        saveCacheToDisk( ( HashMap ) geneGoMap, HASH_MAP_RETURN );
     }
 
     class GeneComparator implements Comparator {
@@ -399,8 +488,8 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
 
     private Collection<OntologyTerm> getTermOverlap( Gene g, Gene coexpG ) {
 
-        Collection<String> masterGO = mouseGeneGOMap.get( g.getId() );
-        Collection<String> coExpGO = mouseGeneGOMap.get( coexpG.getId() );
+        Collection<String> masterGO = geneGoMap.get( g.getId() );
+        Collection<String> coExpGO = geneGoMap.get( coexpG.getId() );
         Collection<OntologyTerm> overlapTerms = new HashSet<OntologyTerm>();
 
         if ( ( coExpGO == null ) || coExpGO.isEmpty() ) return null;
@@ -467,23 +556,35 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
      * @param take a collection of genes and size of susbset
      * @return a collection of random gene pairs that have GO annotations
      */
-    private Collection<List<Gene>> getRandomPairs( int size, Collection<Gene> genes ) {
+    private Collection<GenePair> getRandomPairs( int size, Collection<Gene> genes ) {
 
-        Collection<List<Gene>> subsetPairs = new HashSet<List<Gene>>();
+        Collection<GenePair> subsetPairs = new HashSet<GenePair>();
         int i = 0;
 
         while ( i < size ) {
-            List<Gene> genePair = new ArrayList( RandomChooser.chooseRandomSubset( 2, genes ) );
-            if ( genePair.size() != 2 ) {
+            List<Gene> twoGenes = new ArrayList( RandomChooser.chooseRandomSubset( 2, genes ) );
+
+            if ( twoGenes.size() != 2 ) {
                 log.warn( "A pair consists of two objects. More than two is unacceptable. Fix it!!" );
             }
-            Collections.sort( genePair, new GeneComparator() );
+            Collections.sort( twoGenes, new GeneComparator() );
+
+            GenePair genePair = new GenePair();
+
+            Gene g1 = twoGenes.get( 0 );
+            Gene g2 = twoGenes.get( 1 );
+
+            genePair.addFirstGene( g1 );
+            genePair.addFirstGene( g2 );
+
+            // Collections.sort( genePair );
+
             if ( subsetPairs.contains( genePair ) ) continue;
 
-            Iterator<Gene> iterator = genePair.iterator();
+            Iterator<Gene> iterator = twoGenes.iterator();
             boolean noGoTerms = false;
             while ( iterator.hasNext() ) {
-                if ( !mouseGeneGOMap.containsKey( iterator.next().getId() ) ) {
+                if ( !geneGoMap.containsKey( iterator.next().getId() ) ) {
                     noGoTerms = true;
                     break;
                 }
@@ -498,71 +599,215 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         return subsetPairs;
     }
 
-    private HashSet<List<Gene>> loadLinks( String filepath, Taxon taxon ) throws IOException {
+    private void writeLinks( Collection<GenePair> pairs, Writer writer ) {
+        /*
+         * print the pairs out in the same format that we can read in.
+         */
+    }
 
-        File f = new File( filepath );
+    private Set<GenePair> loadLinks( File f, Taxon taxon ) throws IOException {
 
-        log.info( "Loading data from " + filepath );
+        log.info( "Loading data from " + f );
         BufferedReader in = new BufferedReader( new FileReader( f ) );
 
-        HashSet<List<Gene>> geneMap = new HashSet<List<Gene>>();
-        List<Gene> genePair = new ArrayList<Gene>();
+        Set<GenePair> geneMap = new HashSet<GenePair>();
 
         String line;
+        boolean alreadyWarned = false;
         while ( ( line = in.readLine() ) != null ) {
             line = line.trim();
             if ( line.startsWith( "#" ) ) {
                 continue;
             }
 
-            String[] strings = StringUtils.split( line );
-            String g1 = strings[0];
-            String g2 = strings[1];
+            String[] fields = StringUtils.split( line );
 
+            if ( fields.length < 2 ) {
+                if ( !alreadyWarned ) {
+                    log.warn( "Bad field on line: " + line + " (subsequent errors suppressed)" );
+                    alreadyWarned = true;
+                }
+                continue;
+            }
+
+            String g1 = fields[firstGeneColumn];
+            String g2 = fields[secondGeneColumn];
             // skip any self links.
-            if ( g1.equals( g2 ) ) continue;
+            // if ( g1.equals( g2 ) ) continue;
 
-            Gene gene1 = null;
-            Gene gene2 = null;
+            String[] gene1Strings = StringUtils.split( g1, "," );
+            String[] gene2Strings = StringUtils.split( g2, "," );
 
-            if ( geneCache.containsKey( g1 ) ) {
-                gene1 = geneCache.get( g1 );
-            } else {
-                Collection<Gene> genes = geneService.findByOfficialSymbol( g1 );
-                for ( Gene gene : genes ) {
-                    if ( gene.getTaxon().equals( taxon ) ) {
-                        geneCache.put( g1, gene );
-                        gene1 = gene;
-                        break;
+            GenePair genePair = new GenePair();
+
+            for ( String gene1string : gene1Strings ) {
+
+                Gene gene1 = null;
+                if ( geneCache.containsKey( gene1string ) ) {
+                    gene1 = geneCache.get( gene1string );
+                } else {
+                    Collection<Gene> genes = geneService.findByOfficialSymbol( gene1string );
+                    for ( Gene gene : genes ) {
+                        if ( gene.getTaxon().equals( taxon ) ) {
+                            geneCache.put( gene1string, gene );
+                            gene1 = gene;
+                            break;
+                        }
                     }
+                }
+                
+                if ( !geneGoMap.containsKey( gene1.getId() ) ) continue;
+                genePair.addFirstGene( gene1 );
+
+                for ( String gene2string : gene2Strings ) {
+                    if ( gene1string.equals( gene2string ) ) {
+                        continue;
+                    }
+
+                    Gene gene2 = null;
+
+                    if ( geneCache.containsKey( g2 ) ) {
+                        gene2 = geneCache.get( g2 );
+                    } else {
+                        Collection<Gene> genes = geneService.findByOfficialSymbol( g2 );
+                        for ( Gene gene : genes ) {
+                            if ( gene.getTaxon().equals( taxon ) ) {
+                                geneCache.put( g2, gene );
+                                gene2 = gene;
+                                break;
+                            }
+                        }
+                    }
+
+                    if ( !geneGoMap.containsKey( gene2.getId() ) ) continue;
+                    genePair.addSecondGene( gene2 );
+
+                    // Collections.sort( genePair, new GeneComparator() );
+                    geneMap.add( genePair );
+
                 }
             }
 
-            if ( !mouseGeneGOMap.containsKey( gene1.getId() ) ) continue;
-            genePair.add( gene1 );
+            // compute the median of gooverlaps and do something with the result.
 
-            if ( geneCache.containsKey( g2 ) ) {
-                gene2 = geneCache.get( g2 );
-            } else {
-                Collection<Gene> genes = geneService.findByOfficialSymbol( g2 );
-                for ( Gene gene : genes ) {
-                    if ( gene.getTaxon().equals( taxon ) ) {
-                        geneCache.put( g2, gene );
-                        gene2 = gene;
-                        break;
-                    }
-                }
-            }
-
-            if ( !mouseGeneGOMap.containsKey( gene2.getId() ) ) continue;
-            genePair.add( gene2 );
-
-            Collections.sort( genePair, new GeneComparator() );
-            geneMap.add( genePair );
         }
 
         saveCacheToDisk( ( HashMap ) geneCache, GENE_CACHE );
         return geneMap;
+    }
+
+    class GenePair extends ArrayList<List<Gene>> implements Comparable<GenePair> {
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.lang.Object#hashCode()
+         */
+        @Override
+        public int hashCode() {
+            final int PRIME = 31;
+            int result = 1;
+            for ( Gene g : getFirstGenes() ) {
+                result = PRIME * result + ( ( g == null ) ? 0 : g.hashCode() );
+            }
+            for ( Gene g : getSecondGenes() ) {
+                result = PRIME * result + ( ( g == null ) ? 0 : g.hashCode() );
+            }
+            return result;
+        }
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.lang.Object#equals(java.lang.Object)
+         */
+        @Override
+        public boolean equals( Object obj ) {
+            if ( this == obj ) return true;
+            if ( obj == null ) return false;
+            if ( getClass() != obj.getClass() ) return false;
+            final GenePair other = ( GenePair ) obj;
+
+            for ( Gene g : other.getFirstGenes() ) {
+                if ( !this.getFirstGenes().contains( g ) ) return false;
+            }
+            for ( Gene g : other.getSecondGenes() ) {
+                if ( !this.getSecondGenes().contains( g ) ) return false;
+            }
+            return true;
+        }
+
+        public GenePair() {
+            super(0);
+            this.add(new ArrayList<Gene>() );
+            this.add(new ArrayList<Gene>() );
+        }
+
+        public void addFirstGene( Gene g ) {
+            if ( this.get( 0 ).contains( g ) ) return;
+            this.get( 0 ).add( g );
+        }
+
+        public void addSecondGene( Gene g ) {
+            if ( this.get( 1 ).contains( g ) ) return;
+            this.get( 1 ).add( g );
+        }
+
+        /**
+         * @return the firstGenes
+         */
+        public List<Gene> getFirstGenes() {
+            return this.get( 0 );
+        }
+
+        /**
+         * @param firstGenes the firstGenes to set
+         */
+        public void setFirstGenes( List<Gene> firstGenes ) {
+            this.set( 0, firstGenes );
+        }
+
+        /**
+         * @return the secondGenes
+         */
+        public List<Gene> getSecondGenes() {
+            return this.get( 1 );
+        }
+
+        /**
+         * @param secondGenes the secondGenes to set
+         */
+        public void setSecondGenes( List<Gene> secondGenes ) {
+            this.set( 1, secondGenes );
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder buf = new StringBuilder();
+            Collections.sort( this.get( 0 ), new GeneComparator() );
+            Collections.sort( this.get( 1 ), new GeneComparator() );
+            for ( Iterator<Gene> it = this.get( 0 ).iterator(); it.hasNext(); ) {
+                buf.append( it.next().getName() );
+                if ( it.hasNext() ) buf.append( "," );
+            }
+            buf.append( "\t" );
+            for ( Iterator<Gene> it = this.get( 1 ).iterator(); it.hasNext(); ) {
+                buf.append( it.next().getName() );
+                if ( it.hasNext() ) buf.append( "," );
+            }
+            return buf.toString();
+        }
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.lang.Comparable#compareTo(java.lang.Object)
+         */
+        public int compareTo( GenePair o2 ) {
+            return this.getFirstGenes().iterator().next().getName().compareTo(
+                    o2.getFirstGenes().iterator().next().getName() );
+        }
+
     }
 
     public static void main( String[] args ) {
@@ -605,22 +850,28 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
             writer = new FileWriter( f );
         }
 
-        writer.write( "Master Gene \t GO Terms \t Coexpressed Gene \t GO Terms \t Term Overlap \t GO Terms\n" );
+        writer.write( "Gene1\tGene2\tScore\tG1GOTerms\tG2GOTerms\tTermOverlap\tGOTerms\n" );
 
         return writer;
     }
 
-    protected void writeOverlapLine( Writer writer, String masterGene, String geneCoexpressed, double overlap,
-            Collection<OntologyTerm> goTerms, int masterGOTerms, int coExpGOTerms ) throws IOException {
+    /**
+     * @param writer
+     * @param pairString
+     * @param overlap
+     * @param goTerms
+     * @param masterGOTerms
+     * @param coExpGOTerms
+     * @throws IOException
+     */
+    protected void writeOverlapLine( Writer writer, String pairString, double score, Collection<OntologyTerm> goTerms,
+            int masterGOTerms, int coExpGOTerms ) throws IOException {
 
         if ( log.isDebugEnabled() ) log.debug( "Generating line for annotation file \n" );
 
-        if ( masterGene == null ) masterGene = "";
-        if ( geneCoexpressed == null ) geneCoexpressed = "";
-        writer.write( masterGene + "\t" + masterGOTerms + "\t" + geneCoexpressed + "\t" + coExpGOTerms + "\t" + overlap
-                + "\t" );
+        writer.write( pairString + "\t" + score + "\t" + masterGOTerms + "\t" + coExpGOTerms  + "\t");
 
-        if ( ( goTerms == null ) || goTerms.isEmpty() ) {
+        if ( goTerms == null || goTerms.isEmpty() ) {
             writer.write( "\n" );
             writer.flush();
             return;
