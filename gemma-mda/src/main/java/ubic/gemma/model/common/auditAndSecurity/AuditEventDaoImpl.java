@@ -100,7 +100,9 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
     protected void handleThaw( final AuditEvent auditEvent ) throws Exception {
         this.getHibernateTemplate().execute( new HibernateCallback() {
             public Object doInHibernate( Session session ) throws HibernateException {
-                session.lock( auditEvent, LockMode.NONE );
+                if ( session.get( AuditEventImpl.class, auditEvent.getId() ) == null ) {
+                    session.lock( auditEvent, LockMode.NONE );
+                }
                 Hibernate.initialize( auditEvent );
                 Hibernate.initialize( auditEvent.getPerformer() );
                 return null;

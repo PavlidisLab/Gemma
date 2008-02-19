@@ -302,8 +302,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
                     }
                     // Delete raw data files
-                    if ( ba.getRawDataFile() != null ) session.delete( ba.getRawDataFile() );
-
+                    if ( ba.getRawDataFile() != null ) {
+                        session.delete( ba.getRawDataFile() );
+                    }
                     Collection<BioMaterial> biomaterials = ba.getSamplesUsed();
                     bioMaterialsToDelete.addAll( biomaterials );
                     for ( BioMaterial bm : biomaterials ) {
@@ -1127,7 +1128,6 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     @Override
     protected Map<ExpressionExperiment, Collection<AuditEvent>> handleGetSampleRemovalEvents(
             Collection /* <ExpressionExperiment> */expressionExperiments ) {
-        // List<String> classes = getClassHierarchy( SampleRemovalEvent.class );
         final String queryString = "select ee,ev from ExpressionExperimentImpl ee inner join ee.bioAssays ba "
                 + "inner join ba.auditTrail trail inner join trail.events ev inner join ev.eventType et "
                 + "inner join fetch ev.performer where ee in (:ees) and et.class = 'SampleRemovalEvent'";
@@ -1314,7 +1314,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
 
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( ee, LockMode.NONE );
+                if ( session.get( ExpressionExperimentImpl.class, ee.getId() ) == null )
+                    session.lock( ee, LockMode.NONE );
 
                 for ( QuantitationType type : ee.getQuantitationTypes() ) {
                     session.lock( type, LockMode.NONE );
