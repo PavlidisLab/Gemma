@@ -397,7 +397,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
             if ( size == 0 && theOnlyOne != null ) {
                 log.info( theOnlyOne.getShortName() + " has an active trouble flag" );
             } else {
-                log.info( "Removed " + ( size - newSize ) + " experiments with 'trouble' flags, leaving " + size );
+                log.info( "Removed " + ( size - newSize ) + " experiments with 'trouble' flags, leaving " + newSize );
             }
         }
     }
