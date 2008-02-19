@@ -122,14 +122,14 @@ public class LinkAnalysisService {
 
         checkVectors( ee, dataVectors );
 
-        ExpressionDataDoubleMatrix eeDoubleMatrix = analysisHelperService.getFilteredMatrix( ee, filterConfig,
+        ExpressionDataDoubleMatrix datamatrix = analysisHelperService.getFilteredMatrix( ee, filterConfig,
                 dataVectors );
 
-        if ( eeDoubleMatrix.rows() == 0 ) {
+        if ( datamatrix.rows() == 0 ) {
             log.info( "No rows left after filtering" );
             throw new InsufficientProbesException( "No rows left after filtering" );
-        } else if ( eeDoubleMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
-            throw new InsufficientProbesException( "To few rows (" + eeDoubleMatrix.rows()
+        } else if ( datamatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
+            throw new InsufficientProbesException( "To few rows (" + datamatrix.rows()
                     + "), data sets are not analyzed unless they have at least " + FilterConfig.MINIMUM_ROWS_TO_BOTHER
                     + " rows" );
         }
@@ -139,15 +139,15 @@ public class LinkAnalysisService {
          */
         if ( linkAnalysisConfig.isMakeSampleCorrMatImages() ) {
             log.info( "Creating sample correlation matrix ..." );
-            ExpressionDataSampleCorrelation.process( eeDoubleMatrix, ee );
+            ExpressionDataSampleCorrelation.process( datamatrix, ee );
         }
 
         /*
          * Link analysis section.
          */
         log.info( "Starting link analysis... " + ee );
-        setUpForAnalysis( ee, la, dataVectors, eeDoubleMatrix );
-        addAnalysisObj( ee, eeDoubleMatrix, filterConfig, linkAnalysisConfig, la );
+        setUpForAnalysis( ee, la, dataVectors, datamatrix );
+        addAnalysisObj( ee, datamatrix, filterConfig, linkAnalysisConfig, la );
         Map<CompositeSequence, DesignElementDataVector> p2v = getProbe2VectorMap( dataVectors );
         la.analyze();
 
