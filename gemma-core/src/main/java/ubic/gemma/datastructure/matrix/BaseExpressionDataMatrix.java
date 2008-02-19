@@ -314,7 +314,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
                 }
             }
         }
-        log.info( "Selected " + vectorsOfInterest.size() + " vectors" );
+        log.debug( "Selected " + vectorsOfInterest.size() + " vectors" );
         return vectorsOfInterest;
     }
 
