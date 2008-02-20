@@ -527,6 +527,10 @@ public class GeneOntologyService {
         return ready.get();
     }
 
+    public boolean isRunning() {
+        return running.get();
+    }
+
     public Collection<OntologyTerm> listTerms() {
         return terms.values();
     }
@@ -570,6 +574,7 @@ public class GeneOntologyService {
             enabled = false;
             return;
         }
+
         initilizeGoOntology();
     }
 
@@ -720,7 +725,6 @@ public class GeneOntologyService {
 
         Thread loadThread = new Thread( new Runnable() {
             public void run() {
-
                 running.set( true );
                 terms = new HashMap<String, OntologyTerm>();
                 log.info( "Loading Gene Ontology..." );
@@ -745,7 +749,7 @@ public class GeneOntologyService {
 
                     log.info( "Done loading GO" );
                     loadTime.stop();
-                } catch ( Exception e ) {
+                } catch ( Throwable e ) {
                     log.error( e, e );
                     ready.set( false );
                     running.set( false );

@@ -125,8 +125,6 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
                 System.exit( 0 );
             }
 
-
-
         }
 
         if ( hasOption( 'd' ) ) {
@@ -238,9 +236,15 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         while ( !ontologyEntryService.isReady() ) {
             log.info( "waiting for ontology load.." );
             try {
-                Thread.sleep( 1000 );
+                Thread.sleep( 10000 );
+                if ( !ontologyEntryService.isRunning() ) break;
             } catch ( InterruptedException e ) {
+                throw new RuntimeException( e );
             }
+        }
+
+        if ( !ontologyEntryService.isReady() ) {
+            throw new RuntimeException( "Gene Ontology was not loaded successfully." );
         }
     }
 
@@ -255,9 +259,8 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
 
         Exception err = processCommandLine( "Computer Go Overlap ", args );
         if ( err != null ) return err;
-
         initBeans();
-        
+
         this.taxon = taxonService.findByCommonName( commonName );
         if ( taxon == null ) {
             System.out.println( "Taxon " + commonName + " not found." );
@@ -327,7 +330,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
             }
             DoubleArrayList dlist = new DoubleArrayList();
             dlist.addAllOf( scores );
-            
+
             scoreMap.put( pair, Descriptive.median( dlist ) );
         }
 
@@ -343,14 +346,14 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
     private void writeGoSimilarityResults( Map<GenePair, Double> scoreMap, StopWatch overallWatch ) {
         try {
             Writer write = initOutputFile( OUT_FILE );
-            
+
             for ( GenePair pair : scoreMap.keySet() ) {
                 List<Gene> firstGenes = pair.getFirstGenes();
                 List<Gene> secondGenes = pair.getSecondGenes();
 
                 String pairString = pair.toString();
                 double score = scoreMap.get( pair );
-                //---------------------NOT WRITING TO FILE--------------------------------
+                // ---------------------NOT WRITING TO FILE--------------------------------
                 if ( firstGenes.size() == 1 && secondGenes.size() == 1 ) {
                     Gene mGene = firstGenes.iterator().next();
                     Gene cGene = secondGenes.iterator().next();
@@ -655,7 +658,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
                         }
                     }
                 }
-                
+
                 if ( !geneGoMap.containsKey( gene1.getId() ) ) continue;
                 genePair.addFirstGene( gene1 );
 
@@ -738,9 +741,9 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
         }
 
         public GenePair() {
-            super(0);
-            this.add(new ArrayList<Gene>() );
-            this.add(new ArrayList<Gene>() );
+            super( 0 );
+            this.add( new ArrayList<Gene>() );
+            this.add( new ArrayList<Gene>() );
         }
 
         public void addFirstGene( Gene g ) {
@@ -869,7 +872,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
 
         if ( log.isDebugEnabled() ) log.debug( "Generating line for annotation file \n" );
 
-        writer.write( pairString + "\t" + score + "\t" + masterGOTerms + "\t" + coExpGOTerms  + "\t");
+        writer.write( pairString + "\t" + score + "\t" + masterGOTerms + "\t" + coExpGOTerms + "\t" );
 
         if ( goTerms == null || goTerms.isEmpty() ) {
             writer.write( "\n" );
