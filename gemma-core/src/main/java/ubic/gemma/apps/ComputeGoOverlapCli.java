@@ -659,7 +659,7 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
                     }
                 }
 
-                if ( !geneGoMap.containsKey( gene1.getId() ) ) continue;
+                if ( gene1 == null || !geneGoMap.containsKey( gene1.getId() ) ) continue;
                 genePair.addFirstGene( gene1 );
 
                 for ( String gene2string : gene2Strings ) {
@@ -669,20 +669,20 @@ public class ComputeGoOverlapCli extends AbstractSpringAwareCLI {
 
                     Gene gene2 = null;
 
-                    if ( geneCache.containsKey( g2 ) ) {
-                        gene2 = geneCache.get( g2 );
+                    if ( geneCache.containsKey( gene2string ) ) {
+                        gene2 = geneCache.get( gene2string );
                     } else {
-                        Collection<Gene> genes = geneService.findByOfficialSymbol( g2 );
+                        Collection<Gene> genes = geneService.findByOfficialSymbol( gene2string );
                         for ( Gene gene : genes ) {
                             if ( gene.getTaxon().equals( taxon ) ) {
-                                geneCache.put( g2, gene );
+                                geneCache.put( gene2string, gene );
                                 gene2 = gene;
                                 break;
                             }
                         }
                     }
 
-                    if ( !geneGoMap.containsKey( gene2.getId() ) ) continue;
+                    if ( gene2 == null || !geneGoMap.containsKey( gene2.getId() ) ) continue;
                     genePair.addSecondGene( gene2 );
 
                     // Collections.sort( genePair, new GeneComparator() );
