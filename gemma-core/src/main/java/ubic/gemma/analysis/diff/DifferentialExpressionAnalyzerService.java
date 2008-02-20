@@ -116,7 +116,7 @@ public class DifferentialExpressionAnalyzerService {
 
     /**
      * Run differential expression on the {@link ExpressionExperiment} if analyses do not already exist. If forceRun =
-     * true, run even if analyses exist.
+     * true, runs even if analyses exist but first deletes the old differential expression analysis.
      * 
      * @param expressionExperiment
      * @param forceRun
@@ -135,6 +135,7 @@ public class DifferentialExpressionAnalyzerService {
             String message = "Analyze " + expressionExperiment.getShortName() + ".  ";
 
             if ( forceRun ) {
+                delete( expressionExperiment );
                 message = message + "Force analysis (re-analyze even if analysis was previously run)? " + forceRun
                         + ".  ";
             }
@@ -459,6 +460,9 @@ public class DifferentialExpressionAnalyzerService {
 
         for ( DifferentialExpressionAnalysis de : diffAnalysis ) {
             Long toDelete = de.getId();
+
+            log.info( "Deleting existing differential expression analysis for experiment "
+                    + expressionExperiment.getShortName() );
             differentialExpressionAnalysisService.delete( toDelete );
         }
     }
