@@ -9,7 +9,45 @@ Ext.onReady( function() {
 	/* TODO make sure we've got an edId and display a prominent error message if we don't...
 	 */
 
-/*
+	var experimentalFactorGrid = new Ext.Gemma.ExperimentalFactorGrid( {
+		title : "Experimental Factors",
+		renderTo : "experimentalFactorPanel",
+		edId : edId,
+		editable : admin ? true : false
+	} );
+	experimentalFactorGrid.render();
+	experimentalFactorGrid.on( "experimentalfactorchange", function( efgrid, efs ) {
+		factorValueGrid.reloadExperimentalFactors();
+		bioMaterialEditor.init();
+	} );
+	
+	var factorValueGrid = new Ext.Gemma.FactorValueGrid( {
+		title : "Factor Values",
+		renderTo : "factorValuePanel",
+		form : "factorValueForm",
+		edId : edId,
+		editable : admin ? true : false
+	} );
+	factorValueGrid.render();
+	factorValueGrid.on( "factorvaluecreate", function( fvgrid, fvs ) {
+		bioMaterialEditor.grid.reloadFactorValues();
+	} );
+	factorValueGrid.on( "factorvaluechange", function( fvgrid, fvs ) {
+		bioMaterialEditor.grid.reloadFactorValues();
+	} );
+	factorValueGrid.on( "factorvaluedelete", function( fvgrid, fvs ) {
+		bioMaterialEditor.grid.reloadFactorValues();
+	} );
+	
+	var bioMaterialEditor = new Ext.Gemma.BioMaterialEditor( {
+		title : "BioMaterials",
+		renderTo : "bioMaterialsPanel",
+		eeId : eeId,
+		editable : admin ? true : false
+	} );
+	bioMaterialEditor.init();
+
+/* tabPanel doesn't work with the grids in 2.0; try it in the next version...
 	var tabPanel = new Ext.TabPanel( {
 		renderTo : "tabPanel",
 		activeTab : 0,
@@ -23,42 +61,9 @@ Ext.onReady( function() {
 			{ title: "Factor Values", contentEl: "factorValuePanel" }
 		]
 	} );
-*/
-
-	var experimentalFactorGrid = new Ext.Gemma.ExperimentalFactorGrid( {
-		title : "Experimental Factors",
-		renderTo : "experimentalFactorPanel",
-		edId : edId
-	} );
-	experimentalFactorGrid.render();
-	
-	var factorValueGrid = new Ext.Gemma.FactorValueGrid( {
-		title : "Factor Values",
-		renderTo : "factorValuePanel",
-		form : "factorValueForm",
-		edId : edId
-	} );
-	factorValueGrid.render();
-/*
 	factorValueGrid.getStore().on( "load", function() {
 		tabPanel.doLayout()
 	} );
 */
-	
-	var bioMaterialEditor = new Ext.Gemma.BioMaterialEditor( {
-		title : "BioMaterials",
-		renderTo : "bioMaterialsPanel",
-		eeId : eeId
-	} );
-	bioMaterialEditor.init();
-	
-	experimentalFactorGrid.onRefresh = function() {
-		factorValueGrid.reloadExperimentalFactors();
-		bioMaterialEditor.init();
-	};
-	
-	factorValueGrid.onRefresh = function() {
-		bioMaterialEditor.grid.reloadFactorValues();
-	};
 	
 } );

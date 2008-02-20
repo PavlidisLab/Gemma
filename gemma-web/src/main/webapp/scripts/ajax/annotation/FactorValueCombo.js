@@ -43,9 +43,13 @@ Ext.Gemma.FactorValueCombo = function ( config ) {
  */
 Ext.extend( Ext.Gemma.FactorValueCombo, Ext.form.ComboBox, {
 
-	setExperimentalFactor : function ( efId ) {
+	setExperimentalFactor : function ( efId, callback ) {
 		this.experimentalFactor.id = efId;
-		this.store.load( { params: [ this.experimentalFactor ] } );
+		var options = { params: [ this.experimentalFactor ] };
+		if ( callback ) {
+			options.callback = callback;
+		}
+		this.store.load( options );
 	},
 	
 	getFactorValue : function () {

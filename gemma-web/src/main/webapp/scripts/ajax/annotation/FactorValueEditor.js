@@ -149,6 +149,39 @@ Ext.Gemma.FactorValueGrid.flattenCharacteristics = function ( chars ) {
  */
 Ext.extend( Ext.Gemma.FactorValueGrid, Ext.Gemma.GemmaGridPanel, {
 
+	initComponent : function() {
+        Ext.Gemma.FactorValueGrid.superclass.initComponent.call(this);
+        
+        this.addEvents(
+            'factorvaluecreate',
+        	'factorvaluechange',
+            'factorvaluedelete'
+        );
+    },
+	
+//	refresh : function( ct, p ) {
+//		Ext.Gemma.FactorValueGrid.superclass.refresh.call( this, ct, p );
+//		if ( this.onRefresh ) {
+//			this.onRefresh();
+//		}
+//	},
+    
+    factorValueCreated : function( ef ) {
+    	this.refresh();
+    	var fvs = [];
+    	this.fireEvent( 'factorvaluecreate', this, fvs );
+    },
+    
+    factorValuesChanged : function( fvs ) {
+    	this.refresh();
+    	this.fireEvent( 'factorvaluechange', this, fvs );
+    },
+    
+    factorValuesDeleted : function( fvs ) {
+    	this.refresh();
+    	this.fireEvent( 'factorvaluedelete', this, fvs );
+    },
+
 	setExperimentalFactor : function ( efId ) {
 		this.experimentalFactor.id = efId;
 		this.refresh( [ this.experimentalFactor ] );
@@ -157,6 +190,9 @@ Ext.extend( Ext.Gemma.FactorValueGrid, Ext.Gemma.GemmaGridPanel, {
 	getSelectedFactorValues : function () {
 		var form = document.forms[ this.form ];
 		var checkboxes = form.selectedFactorValues;
+		if ( ! checkboxes.length ) {
+			checkboxes = [ checkboxes ];
+		}
 		var values = [];
 		for ( var i=0; i<checkboxes.length; ++i) {
 			if ( checkboxes[i].checked ) {
@@ -168,13 +204,6 @@ Ext.extend( Ext.Gemma.FactorValueGrid, Ext.Gemma.GemmaGridPanel, {
 	
 	reloadExperimentalFactors : function() {
 		this.factorValueToolbar.reloadExperimentalFactors();
-	},
-	
-	refresh : function( ct, p ) {
-		Ext.Gemma.FactorValueGrid.superclass.refresh.call( this, ct, p );
-		if ( this.onRefresh ) {
-			this.onRefresh();
-		}
 	}
 	
 } );
@@ -212,13 +241,13 @@ Ext.Gemma.FactorValueToolbar = function ( config ) {
 		tooltip : "Create a new factor value",
 		disabled : true,
 		handler : function() {
-			ExperimentalDesignController.createFactorValue(
-				thisToolbar.grid.experimentalFactor,
-				function() {
-					thisToolbar.grid.refresh.call( thisToolbar.grid ); 
-					characteristicToolbar.setExperimentalFactor( thisToolbar.grid.experimentalFactor.id );
-				}
-			);
+			var ef = thisToolbar.grid.experimentalFactor;
+			var callback = function() {
+				thisToolbar.grid.factorValueCreated.call( thisToolbar.grid, ef );
+				characteristicToolbar.setExperimentalFactor( ef.id );
+			};
+			ExperimentalDesignController.createFactorValue(	thisToolbar.grid.experimentalFactor,
+				callback );
 		}
 	} );
 	
@@ -227,11 +256,12 @@ Ext.Gemma.FactorValueToolbar = function ( config ) {
 		tooltip : "Delete selected factor values",
 		disabled : false,
 		handler : function() {
-			ExperimentalDesignController.deleteFactorValues(
-				thisToolbar.grid.experimentalFactor,
-				thisToolbar.grid.getSelectedFactorValues(),
-				thisToolbar.grid.refresh.bind( thisToolbar.grid )
-			);
+			var ef = thisToolbar.grid.experimentalFactor;
+			var selected = thisToolbar.grid.getSelectedFactorValues();
+			var callback = function() {
+				thisToolbar.grid.factorValuesDeleted.call( thisToolbar.grid, selected );
+			};
+			ExperimentalDesignController.deleteFactorValues( ef, selected, callback );
 		}
 	} );
 	
@@ -318,17 +348,16 @@ Ext.Gemma.FactorValueCharacteristicToolbar = function ( config ) {
 		tooltip : "Create the new characteristic",
 		disabled : true,
 		handler : function() {
-			ExperimentalDesignController.createFactorValueCharacteristic(
-				thisToolbar.factorValue,
-				charCombo.getCharacteristic(),
-				function() {
-					thisToolbar.grid.refresh.call( thisToolbar.grid );
-					thisToolbar.factorValueCombo.store.reload();
-				}
-			);
-			// removed in response to bug 1016 mgedCombo.reset();
-			charCombo.reset();			
+			var c = charCombo.getCharacteristic();
 			createButton.disable();
+			// removed in response to bug 1016 mgedCombo.reset();
+			charCombo.reset();
+			var callback = function() {
+				thisToolbar.grid.factorValuesChanged.call( thisToolbar.grid, [] );
+				thisToolbar.factorValueCombo.store.reload();
+				// TODO do something to reset the text of the selected item, in case it changed...
+			};
+			ExperimentalDesignController.createFactorValueCharacteristic( thisToolbar.factorValue, c, callback );
 		}
 	} );
 	
@@ -337,10 +366,12 @@ Ext.Gemma.FactorValueCharacteristicToolbar = function ( config ) {
 		tooltip : "Delete selected characteristics",
 		disabled : true,
 		handler : function() {
-			ExperimentalDesignController.deleteFactorValueCharacteristics(
-				thisToolbar.grid.getSelectedRecords(),
-				thisToolbar.grid.refresh.bind( thisToolbar.grid )
-			);
+			deleteButton.disable();
+			var selected = thisToolbar.grid.getSelectedRecords();
+			var callback = function() {
+				thisToolbar.grid.factorValuesChanged.call( thisToolbar.grid, selected );
+			};
+			ExperimentalDesignController.deleteFactorValueCharacteristics( selected, callback );
 		}
 	} );
 	this.grid.getSelectionModel().on( "selectionchange", function( model ) {
@@ -356,10 +387,15 @@ Ext.Gemma.FactorValueCharacteristicToolbar = function ( config ) {
 		tooltip : "Save changed characteristics",
 		disabled : true,
 		handler : function() {
-			var edited = thisToolbar.grid.getEditedRecords();
-			var callback = thisToolbar.grid.refresh.bind( thisToolbar.grid );
-			ExperimentalDesignController.updateFactorValueCharacteristics( edited, callback );
 			saveButton.disable();
+			var edited = thisToolbar.grid.getEditedRecords();
+			var seen = {}, fvids = [];
+			for ( var i=0; i<edited.length; ++i ) {
+			}
+			var callback = function() {
+				thisToolbar.grid.factorValuesChanged.call( thisToolbar.grid, edited );
+			};
+			ExperimentalDesignController.updateFactorValueCharacteristics( edited, callback );
 		}
 	} );
 	this.grid.on( "afteredit", function( model ) {
@@ -383,6 +419,8 @@ Ext.Gemma.FactorValueCharacteristicToolbar = function ( config ) {
 			}
 		}
 	} );
+	
+	// TODO when factor values are added or deleted, refresh the factor value combo as appropriate...
 	
 	var items = [
 		new Ext.Toolbar.TextItem( "Add a Characteristic to:" ),

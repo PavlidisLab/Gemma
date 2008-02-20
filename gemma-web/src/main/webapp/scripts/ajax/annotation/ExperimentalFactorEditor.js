@@ -98,12 +98,44 @@ Ext.Gemma.ExperimentalFactorGrid.getCategoryStyler = function() {
 /* instance methods...
  */
 Ext.extend( Ext.Gemma.ExperimentalFactorGrid, Ext.Gemma.GemmaGridPanel, {
+
+	initComponent : function() {
+        Ext.Gemma.ExperimentalFactorGrid.superclass.initComponent.call(this);
+        
+        this.addEvents(
+            'experimentalfactorchange'
+        );
+    },
 	
-	refresh : function( ct, p ) {
-		Ext.Gemma.ExperimentalFactorGrid.superclass.refresh.call( this, ct, p );
-		if ( this.onRefresh ) {
-			this.onRefresh();
+//	refresh : function( ct, p ) {
+//		Ext.Gemma.ExperimentalFactorGrid.superclass.refresh.call( this, ct, p );
+//		if ( this.onRefresh ) {
+//			this.onRefresh();
+//		}
+//	},
+    
+    factorCreated : function( factor ) {
+    	this.refresh();
+    	var efs = [ factor ];
+    	this.fireEvent( 'experimentalfactorchange', this, efs );
+    },
+	
+	recordsChanged : function( records ) {
+		this.refresh();
+    	var efs = [];
+    	for ( var i=0; i<records.length; ++i ) {
+    		efs.push( records[i].data );
+    	}
+    	this.fireEvent( 'experimentalfactorchange', this, efs );
+	},
+	
+	idsDeleted : function( ids ) {
+		this.refresh();
+		var efs = [];
+		for ( var i=0; i<ids.length; ++i ) {
+			efs.push( this.store.getById( ids[i] ).data );
 		}
+		this.fireEvent( 'experimentalfactorchange', this, efs );
 	}
 	
 } );
@@ -137,15 +169,16 @@ Ext.Gemma.ExperimentalFactorToolbar = function ( config ) {
 		text : "create",
 		tooltip : "Create the new experimental factor",
 		disabled : true,
-		handler : function() {
-			ExperimentalDesignController.createExperimentalFactor(
-				thisToolbar.experimentalDesign,
-				thisToolbar.getExperimentalFactorValueObject(),
-				thisToolbar.grid.refresh.bind( thisToolbar.grid )
-			);
-			thisToolbar.categoryCombo.reset();
-			thisToolbar.descriptionField.reset();			
+		handler : function() {	
+			var created = thisToolbar.getExperimentalFactorValueObject();		
 			createButton.disable();
+			thisToolbar.categoryCombo.reset();
+			thisToolbar.descriptionField.reset();
+			var callback = function() {
+				thisToolbar.grid.factorCreated.call( thisToolbar.grid, created );
+			};
+			ExperimentalDesignController.createExperimentalFactor( thisToolbar.experimentalDesign,
+				created, callback );
 		}
 	} );
 	var deleteButton = new Ext.Toolbar.Button( {
@@ -153,12 +186,13 @@ Ext.Gemma.ExperimentalFactorToolbar = function ( config ) {
 		tooltip : "Delete selected experimental factors",
 		disabled : true,
 		handler : function() {
-			ExperimentalDesignController.deleteExperimentalFactors(
-				thisToolbar.experimentalDesign,
-				thisToolbar.grid.getSelectedIds(),
-				thisToolbar.grid.refresh.bind( thisToolbar.grid )
-			);
 			deleteButton.disable();
+			var selected = thisToolbar.grid.getSelectedIds();
+			var callback = function() {
+				thisToolbar.grid.idsDeleted.call( thisToolbar.grid, selected );
+			};
+			ExperimentalDesignController.deleteExperimentalFactors(	thisToolbar.experimentalDesign,
+				selected, callback );
 		}
 	} );
 	this.grid.getSelectionModel().on( "selectionchange", function( model ) {
@@ -177,7 +211,9 @@ Ext.Gemma.ExperimentalFactorToolbar = function ( config ) {
 		handler : function() {
 			saveButton.disable();
 			var edited = thisToolbar.grid.getEditedRecords();
-			var callback = thisToolbar.grid.refresh.bind( thisToolbar.grid );
+			var callback = function() {
+				thisToolbar.grid.recordsChanged.call( thisToolbar.grid, edited );
+			};
 			ExperimentalDesignController.updateExperimentalFactors( edited, callback );
 		}
 	} );

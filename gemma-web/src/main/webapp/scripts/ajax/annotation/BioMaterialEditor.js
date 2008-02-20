@@ -116,12 +116,13 @@ Ext.Gemma.BioMaterialGrid.createColumnModel = function( row ) {
 		{ id: "bm", header:"BioMaterial", dataIndex:"bmName" },
 		{ id: "ba", header:"BioAssay", dataIndex:"baName" }
 	];
-	var renderer = Ext.Gemma.BioMaterialGrid.createValueRenderer( row.factorValues );
+	this.fvIdToDescription = row.factorValues;
+	this.columnRenderer = Ext.Gemma.BioMaterialGrid.createValueRenderer( row.factorValues );
 	this.factorValueCombo = [];
 	for ( factorId in row.factors ) {
 		var efId = factorId.substring(6); // strip "factor" from the id...
 		this.factorValueCombo[factorId] = new Ext.Gemma.FactorValueCombo( { efId: efId } );
-		columns.push( { id: factorId, header:row.factors[factorId], dataIndex:factorId, renderer:renderer, editor:this.factorValueCombo[factorId] } );
+		columns.push( { id: factorId, header:row.factors[factorId], dataIndex:factorId, renderer:this.columnRenderer, editor:this.factorValueCombo[factorId] } );
 	}
 	return new Ext.grid.ColumnModel( columns );
 };
@@ -140,7 +141,7 @@ Ext.Gemma.BioMaterialGrid.getRowExpander = function() {
 
 Ext.Gemma.BioMaterialGrid.createValueRenderer = function( factorValues ) {
 	return function ( value, metadata, record, row, col, ds ) {
-		return factorValues[value];
+		return factorValues[value] ? factorValues[value] : value;
 	};
 };
 
@@ -148,13 +149,30 @@ Ext.Gemma.BioMaterialGrid.createValueRenderer = function( factorValues ) {
  */
 Ext.extend( Ext.Gemma.BioMaterialGrid, Ext.Gemma.GemmaGridPanel, {
 
-	reloadFactorValues : function ( ) {
-		for ( factorId in this.factorValueCombo ) {
+	reloadFactorValues : function() {
+		for ( var factorId in this.factorValueCombo ) {
 			if ( factorId.substring(0, 6) == "factor" ) {
 				var combo = this.factorValueCombo[factorId];
-				combo.setExperimentalFactor( combo.experimentalFactor.id );
+				var column = this.getColumnModel().getColumnById( factorId );
+				combo.setExperimentalFactor( combo.experimentalFactor.id, function( r, options, success ) {
+					var fvs = {};
+					for ( var i=0; i<r.length; ++i ) {
+						fvs[ "fv" + r[i].data.factorValueId ] = r[i].data.factorValueString;
+					}
+					var renderer = Ext.Gemma.BioMaterialGrid.createValueRenderer( fvs );
+					column.renderer = renderer;
+					this.getView().refresh();
+				} );
 			}
 		}
+		/* TODO update the renderer so it catches new factor values...
+		 * but to to do this we need the factor values here...
+		this.columnRenderer = Ext.Gemma.BioMaterialGrid.createValueRenderer( factorValues );
+		 */
+	},
+	
+	reloadFactorValue : function( fvId ) {
+		
 	}
 	
 } );
