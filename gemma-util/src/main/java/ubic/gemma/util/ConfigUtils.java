@@ -69,20 +69,24 @@ public class ConfigUtils {
         config = new CompositeConfiguration();
         config.addConfiguration( new SystemConfiguration() );
 
-        // the order matters - first come, first serve.
-        try {
-            // Default comes first.
-            config.addConfiguration( new PropertiesConfiguration( DEFAULT_CONFIGURATION ) );
-        } catch ( ConfigurationException e ) {
-            // hmm, this is pretty much required.
-            log.warn( DEFAULT_CONFIGURATION + " not found" );
-        }
+        /*
+         * the order matters - first come, first serve. Items added later do not overwrite items defined earlier. Thus
+         * the user configuration has to be listed first.
+         */
 
         try {
             config.addConfiguration( new PropertiesConfiguration( USER_CONFIGURATION ) );
         } catch ( ConfigurationException e ) {
             // hmm, this is pretty much required.
             log.warn( USER_CONFIGURATION + " not found" );
+        }
+
+        try {
+            // Default comes first.
+            config.addConfiguration( new PropertiesConfiguration( DEFAULT_CONFIGURATION ) );
+        } catch ( ConfigurationException e ) {
+            // hmm, this is pretty much required.
+            log.warn( DEFAULT_CONFIGURATION + " not found" );
         }
 
         try {
