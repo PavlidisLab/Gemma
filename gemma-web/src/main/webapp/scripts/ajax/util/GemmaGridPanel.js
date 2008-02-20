@@ -13,8 +13,17 @@ Ext.Gemma.GemmaGridPanel = function ( config ) {
 		autoHeight : true,
 		autoScroll : true,
 		bbar : [],
-		tbar : []
+		tbar : [],
+		stripeRows : true
 	};
+	
+	if ( config.height ) {
+		delete superConfig.autoHeight;
+	}
+	
+	if ( Ext.isIE ) {
+		superConfig.width = 800;
+	}
 
 	/* if the toolbars weren't passed in, destroy the default elements that were created...
 	 * (defaults were created so that we can have the option of adding toolbars later)
