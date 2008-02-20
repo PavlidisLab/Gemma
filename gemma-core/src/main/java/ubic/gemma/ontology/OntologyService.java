@@ -325,7 +325,7 @@ public class OntologyService {
         if ( results != null ) searchResults.addAll( filter( results, search ) );
 
         // Sort the individual results.
-        Collection<Characteristic> sortedResults = sort( individualResults, alreadyUsedResults, searchResults, search );
+        Collection<Characteristic> sortedResults = sort( individualResults, alreadyUsedResults, searchResults, search, foundValues );
         log.debug( "sorted " + sortedResults.size() + " in " + watch.getTime() + " ms" );
 
         return sortedResults;
@@ -339,7 +339,8 @@ public class OntologyService {
     }
 
     private Collection<Characteristic> sort( List<Characteristic> individualResults,
-            List<Characteristic> alreadyUsedResults, List<Characteristic> searchResults, String searchTerm ) {
+            List<Characteristic> alreadyUsedResults, List<Characteristic> searchResults,
+            String searchTerm, Collection<String> foundValues ) {
 
         // Comparator compare = new TermComparator( searchTerm );
         // Collections.sort( individualResults, compare );
@@ -366,6 +367,10 @@ public class OntologyService {
         }
 
         for ( Characteristic characteristic : individualResults ) {
+            String key = foundValueKey( characteristic );
+            if ( foundValues.contains( key ) )
+                continue;
+            foundValues.add( key );
             if ( characteristic.getValue().equalsIgnoreCase( searchTerm ) )
                 sortedResultsExact.add( characteristic );
             else if ( characteristic.getValue().startsWith( searchTerm ) )
@@ -375,6 +380,10 @@ public class OntologyService {
         }
 
         for ( Characteristic characteristic : searchResults ) {
+            String key = foundValueKey( characteristic );
+            if ( foundValues.contains( key ) )
+                continue;
+            foundValues.add( key );
             if ( characteristic.getValue().equalsIgnoreCase( searchTerm ) )
                 sortedResultsExact.add( characteristic );
             else if ( characteristic.getValue().startsWith( searchTerm ) )
@@ -386,7 +395,7 @@ public class OntologyService {
         // Collections.sort( sortedResultsExact, compare );
         // Collections.reverse( sortedResultsExact );
 
-        Collection<Characteristic> sortedTerms = new ArrayList<Characteristic>();
+        Collection<Characteristic> sortedTerms = new ArrayList<Characteristic>( foundValues.size() );
         sortedTerms.addAll( sortedResultsExact );
         sortedTerms.addAll( sortedResultsStartsWith );
         sortedTerms.addAll( sortedResultsBottem );
