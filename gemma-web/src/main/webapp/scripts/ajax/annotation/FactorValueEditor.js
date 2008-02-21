@@ -44,10 +44,13 @@ Ext.Gemma.FactorValueGrid = function ( config ) {
 	if ( this.experimentalFactor.id ) {
 		superConfig.ds.load( { params: [ this.experimentalFactor ] } );
 	}
+	var groupTextTpl = this.editable ?
+		'<input type="checkbox" name="selectedFactorValues" value="{[ values.rs[0].data.factorValueId ]}" /> ' : ''
+	groupTextTpl = groupTextTpl + '{[ values.rs[0].data.factorValueString ]}'
 	superConfig.view = new Ext.grid.GroupingView( {
 		enableGroupingMenu : false,
 		enableNoGroups : false,
-		groupTextTpl : '<input type="checkbox" name="selectedFactorValues" value="{[ values.rs[0].data.factorValueId ]}" /> {[ values.rs[0].data.factorValueString ]}',
+		groupTextTpl : groupTextTpl,
 		hideGroupedColumn : true,
 		showGroupName : true
 	} );
@@ -237,7 +240,9 @@ Ext.Gemma.FactorValueToolbar = function ( config ) {
 	factorCombo.on( "select", function ( combo, record, index ) {
 		thisToolbar.grid.setExperimentalFactor( record.id );
 		createFactorValueButton.enable();
-		characteristicToolbar.setExperimentalFactor( record.id );
+		if ( thisToolbar.characteristicToolbar ) {
+			thisToolbar.characteristicToolbar.setExperimentalFactor( record.id );
+		}
 	} );
 	
 	var createFactorValueButton = new Ext.Toolbar.Button( {
@@ -290,7 +295,7 @@ Ext.Gemma.FactorValueToolbar = function ( config ) {
 	Ext.Gemma.FactorValueToolbar.superclass.constructor.call( this, superConfig );
 	
 	if ( this.editable ) {
-		var characteristicToolbar = new Ext.Gemma.FactorValueCharacteristicToolbar( { grid : thisToolbar.grid, renderTo : thisToolbar.getEl().createChild() } );
+		this.characteristicToolbar = new Ext.Gemma.FactorValueCharacteristicToolbar( { grid : thisToolbar.grid, renderTo : thisToolbar.getEl().createChild() } );
 	}
 };
 
