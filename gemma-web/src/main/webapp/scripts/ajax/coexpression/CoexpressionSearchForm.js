@@ -45,15 +45,15 @@ Ext.onReady( function() {
 		}
 		
 		Ext.Gemma.CoexpressionDatasetGrid.updateDatasetInfo( result.knownGeneDatasets, eeMap );
-		knownGeneDatasetGrid.loadData( result.knownGeneDatasets ) ;
+		knownGeneDatasetGrid.loadData( result.isCannedAnalysis, result.queryGenes.length, result.knownGeneDatasets ) ;
 		knownGeneGrid.loadData( result.knownGeneResults );
 		
 		if ( admin ) {
 			Ext.Gemma.CoexpressionDatasetGrid.updateDatasetInfo( result.predictedGeneDatasets, eeMap );
-			//predictedGeneDatasetGrid.loadData( result.knownGeneDatasets ) ;
+			//predictedGeneDatasetGrid.loadData( result.isCannedAnalysis, result.queryGenes.length, result.knownGeneDatasets ) ;
 			predictedGeneGrid.loadData( result.predictedGeneResults );
 			Ext.Gemma.CoexpressionDatasetGrid.updateDatasetInfo( result.probeAlignedRegionDatasets, eeMap );
-			//probeAlignedDatasetGrid.loadData( result.knownGeneDatasets ) ;
+			//probeAlignedDatasetGrid.loadData( result.isCannedAnalysis, result.queryGenes.length, result.knownGeneDatasets ) ;
 			probeAlignedGrid.loadData( result.probeAlignedRegionResults );
 		}
 	};
@@ -127,6 +127,8 @@ Ext.Gemma.CoexpressionSearchPanel = function ( config ) {
 		allowDecimals : false,
 		allowNegative : false,
 		fieldLabel : 'Stringency',
+		validator : function ( value ) { return value >= Ext.Gemma.CoexpressionSearchPanel.MIN_STRINGENCY; },
+		invalidText : "Minimum stringency is " + Ext.Gemma.CoexpressionSearchPanel.MIN_STRINGENCY,
 		value : 2,
 		width : 25
 	} );
@@ -175,6 +177,8 @@ Ext.Gemma.CoexpressionSearchPanel = function ( config ) {
 
 };
 
+Ext.Gemma.CoexpressionSearchPanel.MIN_STRINGENCY = 2;
+
 /* other public methods...
  */
 Ext.extend( Ext.Gemma.CoexpressionSearchPanel, Ext.FormPanel, {
@@ -202,11 +206,30 @@ Ext.extend( Ext.Gemma.CoexpressionSearchPanel, Ext.FormPanel, {
 	},
 
 	doSearch : function () {
-		this.loadMask.show();
-		ExtCoexpressionSearchController.doSearch(
-			this.getCoexpressionSearchCommand(),
-			this.returnFromSearch.bind( this )
-		);
+		/* validate the search here */
+		var csc = this.getCoexpressionSearchCommand();
+		var msg = this.validateSearch( csc )
+		if ( msg.length == 0 ) {
+			this.loadMask.show();
+			ExtCoexpressionSearchController.doSearch( csc, this.returnFromSearch.bind( this ) );
+		} else {
+			Ext.MessageBox.show( {
+				msg: msg,
+				icon: Ext.MessageBox.ERROR
+			} );
+		}
+	},
+	
+	validateSearch : function ( csc ) {
+		if ( csc.geneIds.length < 1 ) {
+			return "Please select at least one query gene";
+		} else if ( csc.stringency < Ext.Gemma.CoexpressionSearchPanel.MIN_STRINGENCY ) {
+			return "Minimum stringency is " + Ext.Gemma.CoexpressionSearchPanel.MIN_STRINGENCY;
+		} else if ( csc.eeIds && csc.eeIds.length < 1 ) {
+			return "There are no datasets that match your search terms";
+		} else if ( ! csc.cannedAnalysisId ) {
+			return "Please select an analysis";
+		}
 	},
 
 	getCoexpressionSearchCommand : function () {
@@ -318,6 +341,7 @@ Ext.extend( Ext.Gemma.DatasetSearchField, Ext.form.TextField, {
 /* Ext.Gemma.AnalysisCombo constructor...
  */
 Ext.Gemma.AnalysisCombo = function ( config ) {
+	Ext.QuickTips.init();
 	
 	this.showCustomOption = config.showCustomOption; delete config.showCustomOption;
 	
@@ -336,7 +360,8 @@ Ext.Gemma.AnalysisCombo = function ( config ) {
 			proxy : new Ext.data.DWRProxy( ExtCoexpressionSearchController.getCannedAnalyses ),
 			reader : new Ext.data.ListRangeReader( {id:"id"}, Ext.Gemma.AnalysisCombo.getRecord() ),
 			remoteSort : true
-		} )
+		} ),
+		tpl : Ext.Gemma.AnalysisCombo.getTemplate()
 	};
 	var options = { params : [] };
 	if ( this.showCustomOption ) {
@@ -345,7 +370,7 @@ Ext.Gemma.AnalysisCombo = function ( config ) {
 			var record = new constructor( {
 				id : -1,
 				name : "Custom analysis",
-				description : ""
+				description : "Select specific datasets to search against"
 			} );
 			superConfig.store.add( record );
 		};
@@ -381,7 +406,7 @@ Ext.Gemma.AnalysisCombo.getRecord = function() {
 Ext.Gemma.AnalysisCombo.getTemplate = function() {
 	if ( Ext.Gemma.AnalysisCombo.template === undefined ) {
 		Ext.Gemma.AnalysisCombo.template = new Ext.XTemplate(
-			'<tpl for="."><div class="x-combo-list-item">{name}</div></tpl>'
+			'<tpl for="."><div ext:qtip="{description}" class="x-combo-list-item">{name}{[ values.taxon ? " (" + values.taxon.scientificName + ")" : "" ]}</tpl></div></tpl>'
 		);
 	}
 	return Ext.Gemma.AnalysisCombo.template;

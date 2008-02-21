@@ -94,7 +94,7 @@ Ext.extend(Ext.grid.RowExpander, Ext.util.Observable, {
     },
 
     beforeExpand : function(record, body, rowIndex){
-        if(this.fireEvent('beforeexpand', this, record, body, rowIndex) !== false){
+    	if(this.fireEvent('beforeexpand', this, record, body, rowIndex) !== false){
             if(this.tpl && this.lazyRender){
                 body.innerHTML = this.getBodyContent(record, rowIndex);
             }
@@ -114,6 +114,9 @@ Ext.extend(Ext.grid.RowExpander, Ext.util.Observable, {
     expandRow : function(row){
         if(typeof row == 'number'){
             row = this.grid.view.getRow(row);
+        }
+        if(Ext.fly(row).hasClass('x-grid3-row-expanded')){
+    		return;
         }
         var record = this.grid.store.getAt(row.rowIndex);
         var body = Ext.DomQuery.selectNode('tr:nth(2) div.x-grid3-row-body', row);

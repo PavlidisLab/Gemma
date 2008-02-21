@@ -104,16 +104,11 @@ Ext.Gemma.CoexpressionDatasetGrid.updateDatasetInfo = function( datasets, eeMap 
  */
 Ext.extend( Ext.Gemma.CoexpressionDatasetGrid, Ext.Gemma.GemmaGridPanel, {
 
-	loadData : function ( data ) {
+	loadData : function ( isCannedAnalysis, numQueryGenes, data ) {
 		/* TODO get this in metadata somehow...
 		 */
-		var queryGenes = {}, numQueryGenes = 0;
 		var datasets = {}, numDatasets = 0;
 		for ( var i=0; i<data.length; ++i ) {
-			if ( ! queryGenes[ data[i].queryGene ] ) {
-				queryGenes[ data[i].queryGene ] = 1;
-				++numQueryGenes;
-			}
 			if ( ! datasets[ data[i].id ] ) {
 				datasets[ data[i].id ] = 1;
 				++numDatasets;
