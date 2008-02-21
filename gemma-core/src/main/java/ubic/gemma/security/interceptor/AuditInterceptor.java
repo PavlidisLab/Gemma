@@ -97,7 +97,7 @@ public class AuditInterceptor implements MethodInterceptor {
     @SuppressWarnings("unused")
     public void before( Method method, Object[] args, Object target ) {
         Auditable d = null;
-
+        if ( log.isTraceEnabled() ) log.trace( "Before " + method );
         if ( args != null && args.length > 0 ) { // some don't take args, like 'loadAll' methods.
 
             Object object = args[0];
@@ -128,6 +128,7 @@ public class AuditInterceptor implements MethodInterceptor {
      */
     public Object invoke( MethodInvocation invocation ) throws Throwable {
         Method m = invocation.getMethod();
+        if ( log.isTraceEnabled() ) log.trace( "Invoke " + m );
         Object[] args = invocation.getArguments();
         Object target = invocation.getThis();
         this.before( m, args, target );
@@ -256,6 +257,7 @@ public class AuditInterceptor implements MethodInterceptor {
         if ( at.getId() != null ) {
             this.auditTrailDao.thaw( at );
         }
+        if ( log.isTraceEnabled() ) log.trace( "Update: " + d );
 
         if ( at.getEvents().size() == 0 ) {
             log.warn( "No create event for update method call on " + d + ", performing 'create'" );
@@ -274,7 +276,6 @@ public class AuditInterceptor implements MethodInterceptor {
     private void after( Method m, Object returnValue ) {
 
         if ( returnValue == null ) return;
-
         if ( log.isTraceEnabled() ) {
             if ( returnValue instanceof Collection && ( ( Collection ) returnValue ).size() > 0 ) {
                 log.trace( "After: " + m.getName() + " on Collection of "
