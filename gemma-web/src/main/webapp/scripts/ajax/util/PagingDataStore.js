@@ -59,7 +59,9 @@ Ext.extend( Ext.Gemma.PagingDataStore, Ext.data.Store, {
 				this.fireEvent( "load", this, records, options );
 			}
 		} else {
-			this.currentStartIndex = 0;
+			if ( options.resetPage ) {
+				this.currentStartIndex = 0;
+			}
 			Ext.Gemma.PagingDataStore.superclass.load.call( this, options );
 		}
     },
