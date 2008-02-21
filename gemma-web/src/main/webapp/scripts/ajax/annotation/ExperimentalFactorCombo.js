@@ -23,6 +23,7 @@ Ext.Gemma.ExperimentalFactorCombo = function ( config ) {
 	superConfig.store.load( { params: [ this.experimentalDesign ] } );
 	
 	superConfig.displayField = "name";
+	superConfig.valueField = "id";
 	superConfig.editable = "false";
 	superConfig.mode = "local";
 	superConfig.triggerAction = "all";

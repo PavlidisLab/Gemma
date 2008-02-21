@@ -44,6 +44,7 @@ Ext.onReady( function() {
 		title : "BioMaterials",
 		renderTo : "bioMaterialsPanel",
 		eeId : eeId,
+		edId : edId,
 		editable : editable
 	} );
 	bioMaterialEditor.init();

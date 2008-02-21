@@ -26,6 +26,7 @@ Ext.Gemma.FactorValueCombo = function ( config ) {
 	}
 	
 	superConfig.displayField = "factorValueString";
+	superConfig.valueField = "factorValueId";
 	superConfig.editable = false;
 	superConfig.mode = "local";
 	superConfig.triggerAction = "all";
