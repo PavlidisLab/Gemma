@@ -13,36 +13,6 @@
     elementFormDefault="qualified" 
     targetNamespace="http://bioinformatics.ubc.ca/Gemma/ws">
     <xsd:import namespace="http://schemas.xmlsoap.org/soap/encoding/"/>
-  
-    <element name="experimentDEDVResponse">
-        <complexType>
-        	<sequence>
-        		<element maxOccurs="unbounded" minOccurs="0" name="dedvData" type="string">
-        		  	<annotation>
-        		  		<documentation>
-        		  			   a tab delimted string of doubles
-        		  		</documentation>
-        		  	</annotation>
-        		</element>
-			</sequence>
-        </complexType>
-    </element>
-
-
-    <element name="dEDVfromEEIDGeneIDResponse">
-        <complexType>
-            <sequence>
-                <element maxOccurs="unbounded" minOccurs="0" name="dEDVArray" type="string">
-                      <annotation>
-                          <documentation>
-                                 Returns the design element data vectors given the Gene ids and Expression experiment ids 
-                          </documentation>
-                      </annotation>
-                </element>
-            </sequence>
-        </complexType>
-    </element> 
-    
     
     
     
@@ -61,15 +31,32 @@
           </restriction>
         </complexContent>
       </complexType>
-      
      
-     <complexType name="dedv2gene">
-     	 <sequence>
-      		 	<element name="dedv" type="xsd:string" />
+     <!--  
+     <complexType name="dedv2geneMap">
+     	<complexContent>
+          <restriction base="schema:dedv2gene">
+          </restriction>
+        </complexContent>
+      </complexType>
+      -->
+     	
+    	 <complexType name="dedv2gene">
+     		 <sequence>
+      	  	<element name="dedv" type="xsd:string" />
       			 <element name="geneIdList" type="xsd:string" />
+      			 <element name="eeIdList" type="xsd:string" />      			 
      		</sequence>
 	     </complexType>
-     
+	    
+      <complexType name="gene2goID">
+     		 <sequence>
+      	  		<element name="gene_id" type="xsd:string" />
+      			<element name="goIdList" type="xsd:string" />
+      			    			 
+     		</sequence>
+	     </complexType>
+	     
       <complexType name="ArrayOfDEDV2GeneIDs">
         <complexContent>
           <restriction base="soapenc:Array">
@@ -78,6 +65,13 @@
         </complexContent>
       </complexType>
       
+      <complexType name="geneLocation">
+     	 <sequence>
+      		 	<element name="chromId" type="xsd:string" />
+      			 <element name="minNT" type="xsd:string" />
+      			 <element name="maxNT" type="xsd:string" />
+     		</sequence>
+	     </complexType>
 </schema>
 
 
@@ -102,7 +96,7 @@
     <wsdl:part name="ee_ids" type="schema:ArrayOfIDs" />
     </wsdl:message>
   <wsdl:message name="gene2GoResponse">
-     <wsdl:part name="go_uris" type="schema:ArrayOfStrings" />
+     <wsdl:part name="gene2goids" type="schema:gene2goID" />     
   </wsdl:message>
   <wsdl:message name="arrayDesignUsedRequest">
      <wsdl:part name="ee_id" type="xsd:integer" />
@@ -113,7 +107,7 @@
   <wsdl:message name="experimentNameResponse">
     <wsdl:part name="ee_name" type="xsd:string" />    
   </wsdl:message>
-  <wsdl:message name="arrayDesignIdentiferByNameRequest">
+  <wsdl:message name="arrayDesignIdentifierByNameRequest">
      <wsdl:part name="ad_name" type="xsd:string" /> 
   </wsdl:message>
   <wsdl:message name="goTerm2GeneResponse">
@@ -126,7 +120,7 @@
      <wsdl:part name="ee_id" type="xsd:integer" />
   </wsdl:message>
   <wsdl:message name="dEDVfromEEIDGeneIDResponse">
-    <wsdl:part name="dedv2GeneMap" type="schema:ArrayOfDEDV2GeneIDs" />
+    <wsdl:part name="dedv2genemap" type="schema:dedv2gene" />
   </wsdl:message>
   <wsdl:message name="experimentDEDVResponse">
     <wsdl:part name="dedv2GeneMap" type="schema:ArrayOfDEDV2GeneIDs" />
@@ -134,8 +128,8 @@
   <wsdl:message name="geneIDbyTaxonRequest">
      <wsdl:part name="taxon_id" type="xsd:integer" />
   </wsdl:message>
-  <wsdl:message name="physicalLocResponse">
-    <wsdl:part name="chromID_minNT_maxNT" type="schema:ArrayOfStrings" />
+  <wsdl:message name="physicalLocationResponse">
+    <wsdl:part name="physical_location" type="schema:geneLocation" />
   </wsdl:message>
   <wsdl:message name="experimentNumSamplesResponse">
     <wsdl:part name="eeNumSample_id" type="xsd:string" />
@@ -152,7 +146,7 @@
   <wsdl:message name="experimentNumSamplesRequest">
    <wsdl:part name="ee_id" type="xsd:integer" />
   </wsdl:message>
-  <wsdl:message name="physicalLocRequest">
+  <wsdl:message name="physicalLocationRequest">
     <wsdl:part name="gene_id" type="xsd:integer" />
   </wsdl:message>
   <wsdl:message name="goTerm2GeneRequest">
@@ -164,9 +158,9 @@
    <wsdl:part name="gene_ids" type="schema:ArrayOfStrings" />
   </wsdl:message>
   <wsdl:message name="gene2GoRequest">
-    <wsdl:part name="gene_id" type="xsd:integer" />
+    <wsdl:part name="gene_ids" type="schema:ArrayOfIDs" />
   </wsdl:message>
-  <wsdl:message name="arrayDesignIdentiferByNameResponse">
+  <wsdl:message name="arrayDesignIdentifierByNameResponse">
     <wsdl:part name="arrayDesign_ids" type="schema:ArrayOfStrings" />
   </wsdl:message>
   
@@ -196,10 +190,10 @@
       <wsdl:output message="schema:experimentIdResponse" name="experimentIdResponse">
     </wsdl:output>
     </wsdl:operation>
-    <wsdl:operation name="arrayDesignIdentiferByName">
-      <wsdl:input message="schema:arrayDesignIdentiferByNameRequest" name="arrayDesignIdentiferByNameRequest">
+    <wsdl:operation name="arrayDesignIdentifierByName">
+      <wsdl:input message="schema:arrayDesignIdentifierByNameRequest" name="arrayDesignIdentifierByNameRequest">
     </wsdl:input>
-      <wsdl:output message="schema:arrayDesignIdentiferByNameResponse" name="arrayDesignIdentiferByNameResponse">
+      <wsdl:output message="schema:arrayDesignIdentifierByNameResponse" name="arrayDesignIdentifierByNameResponse">
     </wsdl:output>
     </wsdl:operation>
     <wsdl:operation name="experimentDEDV">
@@ -238,10 +232,10 @@
       <wsdl:output message="schema:experimentNumSamplesResponse" name="experimentNumSamplesResponse">
     </wsdl:output>
     </wsdl:operation>
-    <wsdl:operation name="physicalLoc">
-      <wsdl:input message="schema:physicalLocRequest" name="physicalLocRequest">
+    <wsdl:operation name="physicalLocation">
+      <wsdl:input message="schema:physicalLocationRequest" name="physicalLocationRequest">
     </wsdl:input>
-      <wsdl:output message="schema:physicalLocResponse" name="physicalLocResponse">
+      <wsdl:output message="schema:physicalLocationResponse" name="physicalLocationResponse">
     </wsdl:output>
     </wsdl:operation>
     <wsdl:operation name="goTerm2Gene">
@@ -295,12 +289,12 @@
            <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>
-    <wsdl:operation name="arrayDesignIdentiferByName">
+    <wsdl:operation name="arrayDesignIdentifierByName">
       <soap:operation soapAction=""/>
-      <wsdl:input name="arrayDesignIdentiferByNameRequest">
+      <wsdl:input name="arrayDesignIdentifierByNameRequest">
           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
-      <wsdl:output name="arrayDesignIdentiferByNameResponse">
+      <wsdl:output name="arrayDesignIdentifierByNameResponse">
            <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>
@@ -358,12 +352,12 @@
            <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>
-    <wsdl:operation name="physicalLoc">
+    <wsdl:operation name="physicalLocation">
       <soap:operation soapAction=""/>
-      <wsdl:input name="physicalLocRequest">
+      <wsdl:input name="physicalLocationRequest">
         <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
-      <wsdl:output name="physicalLocResponse">
+      <wsdl:output name="physicalLocationResponse">
         <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>
@@ -390,7 +384,15 @@
   </wsdl:binding>
   <wsdl:service name="gemmaService">
     <wsdl:port binding="schema:gemmaBinding" name="gemmaPort">
-      <soap:address location="http://bioinformatics.ubc.ca/Gemma/ws"/>
+    
+    <!-- for local machine, use localhost instead -->
+    <!-- 
+    <soap:address location="http://localhost:8080/Gemma/ws"/>
+   -->
+    <!-- for production, use http://bioinformatics.ubc.ca/Gemma/ws -->
+        
+     <soap:address location="http://bioinformatics.ubc.ca/Gemma/ws"/> 
+     
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
