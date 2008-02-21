@@ -21,11 +21,19 @@ Ext.onReady( function() {
 	var predictedGeneGrid;
 	var probeAlignedGrid;
 	if ( admin ) {
+		var predictedGeneDatasetGrid = new Ext.Gemma.CoexpressionDatasetGrid( {
+			renderTo : "coexpression-results",
+			adjective : "predicted gene"
+		} );
 		predictedGeneGrid = new Ext.Gemma.CoexpressionGrid( {
 			renderTo : "coexpression-results",
 			title : "Coexpressed predicted genes",
 			pageSize : 25,
 			collapsed : true
+		} );
+		var probeAlignedDatasetGrid = new Ext.Gemma.CoexpressionDatasetGrid( {
+			renderTo : "coexpression-results",
+			adjective : "probe-aligned region"
 		} );
 		probeAlignedGrid = new Ext.Gemma.CoexpressionGrid( {
 			renderTo : "coexpression-results",
@@ -50,10 +58,10 @@ Ext.onReady( function() {
 		
 		if ( admin ) {
 			Ext.Gemma.CoexpressionDatasetGrid.updateDatasetInfo( result.predictedGeneDatasets, eeMap );
-			//predictedGeneDatasetGrid.loadData( result.isCannedAnalysis, result.queryGenes.length, result.knownGeneDatasets ) ;
+			predictedGeneDatasetGrid.loadData( result.isCannedAnalysis, result.queryGenes.length, result.predictedGeneDatasets ) ;
 			predictedGeneGrid.loadData( result.predictedGeneResults );
 			Ext.Gemma.CoexpressionDatasetGrid.updateDatasetInfo( result.probeAlignedRegionDatasets, eeMap );
-			//probeAlignedDatasetGrid.loadData( result.isCannedAnalysis, result.queryGenes.length, result.knownGeneDatasets ) ;
+			probeAlignedDatasetGrid.loadData( result.isCannedAnalysis, result.queryGenes.length, result.probeAlignedRegionDatasets ) ;
 			probeAlignedGrid.loadData( result.probeAlignedRegionResults );
 		}
 	};
@@ -227,7 +235,7 @@ Ext.extend( Ext.Gemma.CoexpressionSearchPanel, Ext.FormPanel, {
 			return "Minimum stringency is " + Ext.Gemma.CoexpressionSearchPanel.MIN_STRINGENCY;
 		} else if ( csc.eeIds && csc.eeIds.length < 1 ) {
 			return "There are no datasets that match your search terms";
-		} else if ( ! csc.cannedAnalysisId ) {
+		} else if ( !csc.eeIds && !csc.cannedAnalysisId ) {
 			return "Please select an analysis";
 		} else {
 			return "";

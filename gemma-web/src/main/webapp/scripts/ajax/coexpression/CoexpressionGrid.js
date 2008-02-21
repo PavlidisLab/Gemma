@@ -71,6 +71,9 @@ Ext.Gemma.CoexpressionGrid.getRecord = function() {
 			{ name:"positiveLinks", type:"int" },
 			{ name:"negativeLinks", type:"int" },
 			{ name:"numDatasetsLinkTestedIn", type:"int" },
+			{ name:"nonSpecificPositiveLinks", type:"int" },
+			{ name:"nonSpecificNegativeLinks", type:"int" },
+			{ name:"hybridizesWithQueryGene", type:"boolean" },
 			{ name:"goOverlap", type:"int" },
 			{ name:"possibleOverlap", type:"int" },
 			{ name:"testedDatasetVector" },
@@ -97,12 +100,12 @@ Ext.Gemma.CoexpressionGrid.getSupportStyler = function() {
 			if ( row.positiveLinks || row.negativeLinks ) {
 				var s = "";
 				if ( row.positiveLinks ) {
-					s = s + String.format( "<span class='positiveLink'>{0}</span> ", row.positiveLinks );
+					s = s + String.format( "<span class='positiveLink'>{0}{1}</span> ", row.positiveLinks, Ext.Gemma.CoexpressionGrid.getSpecificLinkString( row.positiveLinks, row.nonSpecificPositiveLinks ) );
 				}
 				if ( row.negativeLinks ) {
-					s = s + String.format( "<span class='negativeLink'>{0}</span> ", row.negativeLinks );
+					s = s + String.format( "<span class='negativeLink'>{0}{1}</span> ", row.negativeLinks, Ext.Gemma.CoexpressionGrid.getSpecificLinkString( row.negativeLinks, row.nonSpecificNegativeLinks ) );
 				}
-				s = s + String.format( "/ {0}", row.numDatasetsLinkTestedIn );
+				s = s + String.format( "{0}/ {1}", row.hybridizesWithQueryGene ? " *" : "", row.numDatasetsLinkTestedIn );
 				return s;
 			} else {
 				return "-";
@@ -110,6 +113,10 @@ Ext.Gemma.CoexpressionGrid.getSupportStyler = function() {
 		};
 	}
 	return Ext.Gemma.CoexpressionGrid.supportStyler;
+};
+
+Ext.Gemma.CoexpressionGrid.getSpecificLinkString = function( total, nonSpecific ) {
+	return nonSpecific ? String.format( "<span class='specificLink'> ({0})</span>", total - nonSpecific ) : "";
 };
 
 Ext.Gemma.CoexpressionGrid.getGoStyler = function() {

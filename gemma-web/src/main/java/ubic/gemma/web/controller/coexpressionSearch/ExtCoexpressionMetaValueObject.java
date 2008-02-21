@@ -12,6 +12,7 @@ import ubic.gemma.model.genome.Gene;
 public class ExtCoexpressionMetaValueObject {
 
     boolean isCannedAnalysis;
+    boolean knownGenesOnly;
     Collection<Gene> queryGenes;
     List<ExpressionExperimentValueObject> datasets;
     Collection<ExtCoexpressionDatasetValueObject> knownGeneDatasets;
@@ -21,16 +22,20 @@ public class ExtCoexpressionMetaValueObject {
     Collection<ExtCoexpressionDatasetValueObject> probeAlignedRegionDatasets;
     Collection<ExtCoexpressionValueObject> probeAlignedRegionResults;
 
+    public void setIsCannedAnalysis( boolean isCannedAnalysis ) {
+        this.isCannedAnalysis = isCannedAnalysis;
+    }
+
+    public void setKnownGenesOnly( boolean knownGenesOnly ) {
+        this.knownGenesOnly = knownGenesOnly;
+    }
+
     public void setQueryGenes( Collection<Gene> queryGenes ) {
         this.queryGenes = queryGenes;
     }
 
     public List<ExpressionExperimentValueObject> getDatasets() {
         return datasets;
-    }
-
-    public void setIsCannedAnalysis( boolean isCannedAnalysis ) {
-        this.isCannedAnalysis = isCannedAnalysis;
     }
     
     public Collection<Gene> getQueryGenes() {

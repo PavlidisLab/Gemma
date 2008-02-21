@@ -279,21 +279,22 @@ public class ExtCoexpressionSearchController extends BaseFormController {
         result.setProbeAlignedRegionDatasets( new ArrayList<ExtCoexpressionDatasetValueObject>() );
         result.setProbeAlignedRegionResults( new ArrayList<ExtCoexpressionValueObject>() );
 
+        boolean knownGenesOnly = true; // !SecurityService.isUserAdmin();
+        result.setKnownGenesOnly( knownGenesOnly );
+        
         /*
          * TODO this is done just naively right now. allow the user to show only interactions among their genes of
          * interest and filter the results before the time-consuming analysis is done...
          */
         for ( Gene queryGene : genes ) {
             CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis( queryGene,
-                    ees, stringency, !SecurityService.isUserAdmin(), NUM_GENES_TO_DETAIL );
+                    ees, stringency, knownGenesOnly, NUM_GENES_TO_DETAIL );
             addExtCoexpressionValueObjects( queryGene, result.getDatasets(), coexpressions.getKnownGeneCoexpression(),
                     stringency, result.getKnownGeneResults(), result.getKnownGeneDatasets() );
-            addExtCoexpressionValueObjects( queryGene, result.getDatasets(), coexpressions
-                    .getPredictedCoexpressionType(), stringency, result.getPredictedGeneResults(), result
-                    .getPredictedGeneDatasets() );
-            addExtCoexpressionValueObjects( queryGene, result.getDatasets(), coexpressions
-                    .getProbeAlignedCoexpressionType(), stringency, result.getProbeAlignedRegionResults(), result
-                    .getProbeAlignedRegionDatasets() );
+            addExtCoexpressionValueObjects( queryGene, result.getDatasets(), coexpressions.getPredictedCoexpressionType(),
+                    stringency, result.getPredictedGeneResults(), result.getPredictedGeneDatasets() );
+            addExtCoexpressionValueObjects( queryGene, result.getDatasets(), coexpressions.getProbeAlignedCoexpressionType(),
+                    stringency, result.getProbeAlignedRegionResults(), result.getProbeAlignedRegionDatasets() );
         }
 
         return result;
@@ -310,6 +311,16 @@ public class ExtCoexpressionSearchController extends BaseFormController {
             ecvo.setPositiveLinks( cvo.getPositiveLinkSupport() );
             ecvo.setNegativeLinks( cvo.getNegativeLinkSupport() );
             ecvo.setSupportKey( ecvo.getPositiveLinks() - ecvo.getNegativeLinks() );
+            
+            /* this logic is taken from CoexpressionWrapper; I don't understand it, but
+             * that's where it comes from...
+             */
+            if ( ! cvo.getExpressionExperiments().isEmpty() ) {
+                ecvo.setNonSpecificPositiveLinks( getNonSpecificLinkCount( cvo.getEEContributing2PositiveLinks(), cvo.getNonspecificEE() ) );
+                ecvo.setNonSpecificNegativeLinks( getNonSpecificLinkCount( cvo.getEEContributing2NegativeLinks(), cvo.getNonspecificEE() ) );
+                ecvo.setHybridizesWithQueryGene( cvo.isHybridizesWithQueryGene() );
+            }
+            
             ecvo.setNumDatasetsLinkTestedIn( cvo.getNumDatasetsTestedIn() );
 
             ecvo.setGoOverlap( cvo.getGoOverlap() != null ? cvo.getGoOverlap().size() : 0 );
@@ -332,9 +343,14 @@ public class ExtCoexpressionSearchController extends BaseFormController {
             results.add( ecvo );
         }
 
+        results.size(); // for breakpoint
+        
         for ( ExpressionExperimentValueObject eevo : eevos ) {
+            if ( ! coexp.getExpressionExperimentIds().contains( eevo.getId() ) )
+                continue;
             ExpressionExperimentValueObject coexpEevo = coexp.getExpressionExperiment( eevo.getId() );
-            if ( coexpEevo == null ) continue;
+            if ( coexpEevo == null )
+                continue;
             ExtCoexpressionDatasetValueObject ecdvo = new ExtCoexpressionDatasetValueObject();
             ecdvo.setId( eevo.getId() );
             ecdvo.setQueryGene( queryGene.getOfficialSymbol() );
@@ -345,6 +361,15 @@ public class ExtCoexpressionSearchController extends BaseFormController {
             ecdvo.setBioAssayCount( eevo.getBioAssayCount() );
             datasetResults.add( ecdvo );
         }
+    }
+
+    private int getNonSpecificLinkCount( Collection<Long> contributingEEs, Collection<Long> nonSpecificEEs ) {
+        int n=0;
+        for ( Long id : contributingEEs ) {
+            if ( nonSpecificEEs.contains( id ) )
+                ++n;
+        }
+        return n;
     }
 
     /*

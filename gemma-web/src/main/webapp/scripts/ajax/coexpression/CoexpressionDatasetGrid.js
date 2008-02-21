@@ -4,6 +4,8 @@ Ext.namespace('Ext.Gemma');
  * 	config is a hash with the following options:
  */
 Ext.Gemma.CoexpressionDatasetGrid = function ( config ) {
+
+	this.adjective = config.adjective; delete config.adjective;
 	
 	/* keep a reference to ourselves to avoid convoluted scope issues below...
 	 */
@@ -116,7 +118,11 @@ Ext.extend( Ext.Gemma.CoexpressionDatasetGrid, Ext.Gemma.GemmaGridPanel, {
 		}
 		
 		this.show();
-		this.setTitle( String.format( "{0} dataset{1} relevant coexpression data", numDatasets, numDatasets == 1 ? " has" : "s have" ) );
+		this.setTitle( String.format( "{0} dataset{1} relevant{2} coexpression data",
+			numDatasets,
+			numDatasets == 1 ? " has" : "s have",
+			this.adjective ? " " + this.adjective : ""
+		) );
 		
 		var shortNameCol = this.getColumnModel().getColumnById( 'shortName' );
 		var nameCol = this.getColumnModel().getColumnById( 'name' );

@@ -30,6 +30,9 @@ public class ExtCoexpressionValueObject {
     private Integer supportKey;
     private Integer positiveLinks;
     private Integer negativeLinks;
+    private Integer nonSpecificPositiveLinks;
+    private Integer nonSpecificNegativeLinks;
+    private Boolean hybridizesWithQueryGene;
     private Integer numDatasetsLinkTestedIn;
     private Integer goOverlap;
     private Integer possibleOverlap;
@@ -74,6 +77,30 @@ public class ExtCoexpressionValueObject {
 
     public void setNegativeLinks( Integer negativeLinks ) {
         this.negativeLinks = negativeLinks;
+    }
+
+    public Integer getNonSpecificPositiveLinks() {
+        return nonSpecificPositiveLinks;
+    }
+
+    public void setNonSpecificPositiveLinks( Integer nonSpecificPositiveLinks ) {
+        this.nonSpecificPositiveLinks = nonSpecificPositiveLinks;
+    }
+
+    public Integer getNonSpecificNegativeLinks() {
+        return nonSpecificNegativeLinks;
+    }
+
+    public void setNonSpecificNegativeLinks( Integer nonSpecificNegativeLinks ) {
+        this.nonSpecificNegativeLinks = nonSpecificNegativeLinks;
+    }
+
+    public Boolean getHybridizesWithQueryGene() {
+        return hybridizesWithQueryGene;
+    }
+
+    public void setHybridizesWithQueryGene( Boolean hybridizesWithQueryGene ) {
+        this.hybridizesWithQueryGene = hybridizesWithQueryGene;
     }
 
     public Integer getNumDatasetsLinkTestedIn() {
