@@ -183,6 +183,8 @@
 				${service.fullyQualifiedName}.${operation.name}=${operation.transactionType},readOnly
 #elseif ($operation.name.startsWith("findBy"))
 				${service.fullyQualifiedName}.${operation.name}=${operation.transactionType},readOnly
+#elseif ($operation.name.startsWith("find") && !$operation.name.equals("findOrCreate"))
+				${service.fullyQualifiedName}.${operation.name}=${operation.transactionType},readOnly
 #elseif ($operation.name.equals("find"))
 				${service.fullyQualifiedName}.${operation.name}=${operation.transactionType},readOnly
 #elseif ($operation.name.startsWith("thaw"))
