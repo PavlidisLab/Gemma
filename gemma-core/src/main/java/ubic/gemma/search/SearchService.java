@@ -1232,11 +1232,12 @@ public class SearchService implements InitializingBean {
         CompassQuery compassQuery = session.queryBuilder().queryString( query.trim() ).toQuery();
         CompassHits hits = compassQuery.hits();
 
-        watch.split();
-        if ( watch.getSplitTime() > 1000 )
-            log.info( "===== Getting " + hits.getLength() + " hits for " + query + " took " + watch.getSplitTime()
+        watch.stop();
+        if ( watch.getTime() > 1000 )
+            log.info( "Getting " + hits.getLength() + " hits for " + query + " took " + watch.getTime()
                     + " ms" );
-        watch.unsplit();
+        watch.reset();
+        watch.start();
 
         cacheHighlightedText( hits );
 
@@ -1245,11 +1246,11 @@ public class SearchService implements InitializingBean {
 
         CompassDetachedHits detachedHits = hits.detach( 0, Math.min( hits.getLength(), MAX_COMPASS_HITS_TO_DETACH ) );
 
-        watch.split();
+        watch.stop();
 
-        if ( watch.getSplitTime() > 1000 )
-            log.info( "===== Detaching " + detachedHits.getLength() + " hits for " + query + " took "
-                    + watch.getSplitTime() + " ms" );
+        if ( watch.getTime() > 1000 )
+            log.info( "Detaching " + detachedHits.getLength() + " hits for " + query + " took "
+                    + watch.getTime() + " ms" );
 
         Collection<SearchResult> searchResults = getSearchResults( detachedHits.getHits() );
 
