@@ -41,12 +41,13 @@ import ubic.gemma.model.common.auditAndSecurity.UserRole;
 import ubic.gemma.util.UserConstants;
 
 /**
- * This helps ensure that users who are not administrators from modifying other users.
+ * This helps ensure that users who are not administrators do not modify other users.
  * <p>
  * Adapted from Appfuse 1.9
  * 
  * @author Raible
  * @author pavlidis
+ * @see UserSecurityPointcut
  * @version $Id$
  */
 public class UserSecurityAdvice implements MethodBeforeAdvice {

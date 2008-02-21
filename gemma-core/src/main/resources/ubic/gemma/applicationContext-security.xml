@@ -716,9 +716,9 @@
 
 	<!-- This interceptor insures that that users can only update themselves, not other users -->
 	<bean id="userSecurityInterceptor"
-		class="org.springframework.aop.support.RegexpMethodPointcutAdvisor">
+			class="org.springframework.aop.support.DefaultPointcutAdvisor">
 		<property name="advice" ref="userSecurityAdvice" />
-		<property name="patterns" value=".*saveUser" />
+		<property name="pointcut"><bean class="ubic.gemma.security.interceptor.UserSecurityPointcut" /></property> 
 	</bean>
 
 	<bean id="userSecurityAdvice"
