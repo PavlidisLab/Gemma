@@ -70,6 +70,7 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
                 processExperiment( ee );
                 successObjects.add( ee );
             } catch ( Exception e ) {
+                log.error( "Error while processing " + ee, e );
                 errorObjects.add( ee );
             }
 

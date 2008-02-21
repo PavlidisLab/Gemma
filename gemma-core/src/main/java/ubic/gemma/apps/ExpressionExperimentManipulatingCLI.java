@@ -296,10 +296,14 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
         for ( String shortName : shortNames ) {
             ExpressionExperiment expressionExperiment = locateExpressionExperiment( shortName );
             if ( expressionExperiment == null ) {
-                log.error( shortName + " not found" );
-                bail( ErrorCode.INVALID_OPTION );
+                log.warn( shortName + " not found" );
+                continue;
             }
             expressionExperiments.add( expressionExperiment );
+        }
+        if ( expressionExperiments.size() == 0 ) {
+            log.error( "There were no valid experimnents specified" );
+            bail( ErrorCode.INVALID_OPTION );
         }
     }
 
