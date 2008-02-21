@@ -64,9 +64,6 @@
 		</td>
 	</tr>
 </table>
-<div style="width: 165px; margin-top: 10px; clear: both; float: right;">
-	<%@ include file="/common/search.jsp"%>
-</div>
 
 <div class="separator"></div>
 
