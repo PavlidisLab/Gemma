@@ -165,10 +165,8 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
                 } else {
                     vals[j] = false;
                 }
-
                 j++;
             }
-
         } else if ( vector.getQuantitationType().getRepresentation().equals( PrimitiveType.STRING ) ) {
             String val = bac.byteArrayToAsciiString( bytes );
             String[] fields = StringUtils.split( val, '\t' );

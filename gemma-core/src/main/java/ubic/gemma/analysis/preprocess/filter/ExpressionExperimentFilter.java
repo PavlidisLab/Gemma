@@ -30,7 +30,6 @@ import ubic.gemma.analysis.preprocess.InsufficientProbesException;
 import ubic.gemma.analysis.preprocess.filter.AffyProbeNameFilter.Pattern;
 import ubic.gemma.analysis.preprocess.filter.RowLevelFilter.Method;
 import ubic.gemma.analysis.preprocess.filter.InsufficientSamplesException;
-import ubic.gemma.datastructure.matrix.ExpressionDataBooleanMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -104,6 +103,7 @@ public class ExpressionExperimentFilter {
     /**
      * Provides a ready-to-use expression data matrix. The filters that are applied, in this order:
      * <ol>
+     * <li>Use the missing value data to mask the preferred data (ratiometric data only)
      * <li>Remove rows that don't have biosequences (always applied)
      * <li>Remove Affymetrix control probes (Affymetrix only)
      * <li>Remove rows that have too many missing values (as configured)
@@ -118,7 +118,7 @@ public class ExpressionExperimentFilter {
     public ExpressionDataDoubleMatrix getFilteredMatrix( Collection<DesignElementDataVector> dataVectors ) {
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( dataVectors );
         ExpressionDataDoubleMatrix eeDoubleMatrix = builder.getPreferredData();
-        builder.maskMissingValues( eeDoubleMatrix, null );
+
         eeDoubleMatrix = filter( builder, eeDoubleMatrix );
         return eeDoubleMatrix;
     }
@@ -182,12 +182,9 @@ public class ExpressionExperimentFilter {
 
             if ( twoColor ) {
                 /* Apply two color missing value filter */
-                ExpressionDataBooleanMatrix missingValues = builder.getMissingValueData( null );
-                filteredMatrix = minPresentFilter( filteredMatrix, missingValues );
-            } else { // NOTE we do not use the PresentAbsent values here. Only filtering on the basis of the data
-                // itself.
-                filteredMatrix = minPresentFilter( filteredMatrix, null );
+                builder.maskMissingValues( filteredMatrix, null );
             }
+            filteredMatrix = minPresentFilter( filteredMatrix );
         }
 
         if ( config.isLowVarianceCutIsSet() ) {
@@ -263,17 +260,25 @@ public class ExpressionExperimentFilter {
     }
 
     /**
-     * Determine if the expression experiment uses two-color arrays. This is not guaranteed to give the right answer if
-     * the experiment uses both types of technologies.
+     * Determine if the expression experiment uses two-color arrays.
      * 
      * @param ee
      * @return
+     * @throws UnsupportedOperationException if the ee uses both two color and one-color technologies.
      */
     @SuppressWarnings("unchecked")
     private boolean isTwoColor() {
-        ArrayDesign arrayDesign = arrayDesignsUsed.iterator().next();
-        TechnologyType techType = arrayDesign.getTechnologyType();
-        return techType.equals( TechnologyType.TWOCOLOR ) || techType.equals( TechnologyType.DUALMODE );
+        Boolean answer = null;
+        for ( ArrayDesign arrayDesign : arrayDesignsUsed ) {
+            TechnologyType techType = arrayDesign.getTechnologyType();
+            boolean isTwoC = techType.equals( TechnologyType.TWOCOLOR ) || techType.equals( TechnologyType.DUALMODE );
+            if ( answer != null && !answer.equals( isTwoC ) ) {
+                throw new UnsupportedOperationException(
+                        "Gemma cannot handle experiments that mix one- and two-color arrays" );
+            }
+            answer = isTwoC;
+        }
+        return answer;
     }
 
     /**
@@ -325,29 +330,15 @@ public class ExpressionExperimentFilter {
     }
 
     /**
-     * Remove rows that have too many missing values. Note that we normally only apply this to ratiometric arrays, not
-     * one color (e.g., affymetrix) data.
+     * Remove rows that have too many missing values.
      * 
-     * @param matrix
+     * @param matrix with missing values masked already
      * @return filtered matrix
      */
-    private ExpressionDataDoubleMatrix minPresentFilter( ExpressionDataDoubleMatrix matrix,
-            ExpressionDataBooleanMatrix absentPresent ) {
+    private ExpressionDataDoubleMatrix minPresentFilter( ExpressionDataDoubleMatrix matrix ) {
         log.info( "Filtering out genes that are missing too many values" );
 
         RowMissingValueFilter rowMissingFilter = new RowMissingValueFilter();
-        if ( absentPresent != null ) {
-            if ( absentPresent.rows() != matrix.rows() ) {
-                log.warn( "Missing value matrix has " + absentPresent.rows() + " rows (!=" + matrix.rows() + ")" );
-            }
-
-            if ( absentPresent.columns() != matrix.columns() ) {
-                throw new IllegalArgumentException( "Missing value matrix has " + absentPresent.columns()
-                        + " columns (!=" + matrix.columns() + ")" );
-            }
-
-            rowMissingFilter.setAbsentPresentCalls( absentPresent );
-        }
         rowMissingFilter.setMinPresentFraction( config.getMinPresentFraction() );
 
         /*
@@ -360,8 +351,12 @@ public class ExpressionExperimentFilter {
 
     @SuppressWarnings("unchecked")
     private boolean usesAffymetrix() {
-        ArrayDesign arrayDesign = arrayDesignsUsed.iterator().next();
-        return arrayDesign.getName().toUpperCase().contains( "AFFYMETRIX" );
+        for ( ArrayDesign arrayDesign : arrayDesignsUsed ) {
+            if ( arrayDesign.getName().toUpperCase().contains( "AFFYMETRIX" ) ) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

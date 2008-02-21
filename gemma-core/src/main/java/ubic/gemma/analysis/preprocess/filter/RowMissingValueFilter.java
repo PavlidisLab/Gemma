@@ -24,13 +24,14 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.datastructure.matrix.ExpressionDataBooleanMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import cern.colt.list.IntArrayList;
 
 /**
- * Filter out rows that have "too many" missing values
+ * Filter out rows that have "too many" missing values.
  * 
  * @author pavlidis
  * @version $Id$
@@ -137,7 +138,7 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
             for ( int j = 0; j < numCols; j++ ) {
                 boolean callIsPresent = true;
                 if ( absentPresentRow >= 0 ) {
-                    callIsPresent = ( Boolean ) absentPresentCalls.get( absentPresentRow, j );
+                    callIsPresent = absentPresentCalls.get( absentPresentRow, j );
                 }
                 if ( !Double.isNaN( data.get( i, j ) ) && callIsPresent ) {
                     presentCount++;
@@ -181,6 +182,13 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
 
     }
 
+    /**
+     * Supply a separate matrix of booleans. This is not necessary if the input matrix is already 'masked' for missing
+     * values.
+     * 
+     * @param absentPresentCalls
+     * @see ExpressionDataMatrixBuilder.maskMissing
+     */
     public void setAbsentPresentCalls( ExpressionDataBooleanMatrix absentPresentCalls ) {
         this.absentPresentCalls = absentPresentCalls;
     }

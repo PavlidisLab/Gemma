@@ -26,6 +26,7 @@ import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -72,8 +73,36 @@ public class AnalysisHelperService {
      */
     @SuppressWarnings("unchecked")
     public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig ) {
-        Collection<DesignElementDataVector> dataVectors = this.getPreferredAndMissingValueVectors( ee );
+        Collection<DesignElementDataVector> dataVectors;
+        if ( isTwoColor( ee ) ) {
+            dataVectors = this.getPreferredAndMissingValueVectors( ee );
+        } else {
+            dataVectors = this.getPreferredVectors( ee );
+        }
         return this.getFilteredMatrix( ee, filterConfig, dataVectors );
+    }
+
+    /**
+     * Determine if the expression experiment uses two-color arrays. TODO: this duplicates code found elsewhere.
+     * 
+     * @param ee
+     * @return
+     * @throws UnsupportedOperationException if the ee uses both two color and one-color technologies.
+     */
+    @SuppressWarnings("unchecked")
+    private boolean isTwoColor( ExpressionExperiment ee ) {
+        Boolean answer = null;
+        Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
+        for ( ArrayDesign arrayDesign : arrayDesignsUsed ) {
+            TechnologyType techType = arrayDesign.getTechnologyType();
+            boolean isTwoC = techType.equals( TechnologyType.TWOCOLOR ) || techType.equals( TechnologyType.DUALMODE );
+            if ( answer != null && !answer.equals( isTwoC ) ) {
+                throw new UnsupportedOperationException(
+                        "Gemma cannot handle experiments that mix one- and two-color arrays" );
+            }
+            answer = isTwoC;
+        }
+        return answer;
     }
 
     /**
@@ -87,6 +116,9 @@ public class AnalysisHelperService {
     }
 
     /**
+     * NOTE that we don't normally use the 'absent/present' (missing value) data for one-color arrays (e.g. Affymetrix).
+     * Thus this method should typically be called only for two-channel (ratiometric) arrays.
+     * 
      * @param ee
      * @return all data vectors that are "preferred" or "absent/present" types for the given ee.
      */
@@ -94,6 +126,18 @@ public class AnalysisHelperService {
     public Collection<DesignElementDataVector> getPreferredAndMissingValueVectors( ExpressionExperiment ee ) {
         Collection<QuantitationType> qts = ExpressionDataMatrixBuilder.getPreferredQuantitationTypes( ee );
         qts.addAll( ExpressionDataMatrixBuilder.getMissingValueQuantitationTypes( ee ) );
+        Collection<DesignElementDataVector> dataVectors = expressionExperimentService.getDesignElementDataVectors( qts );
+        vectorService.thaw( dataVectors );
+        return dataVectors;
+    }
+
+    /**
+     * @param ee
+     * @return all data vectors that are "preferred" type for the given ee.
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<DesignElementDataVector> getPreferredVectors( ExpressionExperiment ee ) {
+        Collection<QuantitationType> qts = ExpressionDataMatrixBuilder.getPreferredQuantitationTypes( ee );
         Collection<DesignElementDataVector> dataVectors = expressionExperimentService.getDesignElementDataVectors( qts );
         vectorService.thaw( dataVectors );
         return dataVectors;
