@@ -75,6 +75,7 @@ Ext.Gemma.AnnotationToolBar = function ( annotationGrid, config ) {
 				if ( config.addDescription ) {
 					characteristic.description = descriptionField.getValue();
 				}
+				annotationGrid.loadMask.show();
 				createHandler( characteristic, annotationGrid.refresh.bind( annotationGrid ) );
 				//mgedCombo.reset(); 
 				charCombo.reset();
@@ -91,6 +92,7 @@ Ext.Gemma.AnnotationToolBar = function ( annotationGrid, config ) {
 			disabled : true,
 			handler : function() {
 				deleteButton.disable();
+				annotationGrid.loadMask.show();
 				deleteHandler( annotationGrid.getSelectedIds(), annotationGrid.refresh.bind( annotationGrid ) );
 			}
 		} );
@@ -109,6 +111,7 @@ Ext.Gemma.AnnotationToolBar = function ( annotationGrid, config ) {
 			tooltip : "Saves the updated annotations",
 			disabled : true,
 			handler : function() {
+				annotationGrid.loadMask.show();
 				saveHandler( annotationGrid.getEditedCharacteristics(), annotationGrid.refresh.bind( annotationGrid ) );
 				saveButton.disable();
 	}
