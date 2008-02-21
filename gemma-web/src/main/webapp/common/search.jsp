@@ -1,6 +1,5 @@
 <%@ include file="/common/taglibs.jsp"%>
-<form name="quickSearch" action="<c:url value="/searcher.html"/>" method="get">
-	Quick search Gemma
-	<input type="text" name="query" />
+<form id="search" name="quickSearch" action="<c:url value="/searcher.html"/>" method="GET">
+	<input id="searchfield" type="text" name="query" value="Search Gemma" size="20"  onClick="clear()" />
+	<input id="searchbutton" type="submit" name="submit" value="go" />
 </form>
-

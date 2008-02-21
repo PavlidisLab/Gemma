@@ -1,148 +1,150 @@
 /* Based on a CSS Framework by Mike Stenhouse of Content with Style */
+	/* SITE SPECIFIC LAYOUT */
+body {
+	margin: 0;
+	padding: 0;
+	background: white top left repeat-x;
+	text-align: center;
+}
 
-/* SITE SPECIFIC LAYOUT */
-    body {
-        margin: 0;
-        padding: 0;
-        background: white top left repeat-x;
-        text-align: center;
-    }
-    div#page {
-        width: 100%;
-        margin:  0 auto;
-        padding: 0;
-        text-align: center;
-    }
-    
-    /* HEADER */
-        div#header {
-            margin: 0 0 2em 0;
-            padding: 10px 0px 2px 20px;
-            text-align: left;
-            height: 80px; /* needed by IE 7 */
-        }
-        
-         div#homeheader {
-            margin: 0 0 2em 0;
-            padding: 10px 0px 2px 20px;
-            text-align: left;
-            height: 170px; /* needed by IE 7 */
-        }
+div#page {
+	width: 100%;
+	margin: 0 auto;
+	padding: 0;
+	text-align: center;
+}
 
-            div#switchLocale {
-                position: absolute;
-                right: 10px;
-            }
-        
-        div#branding {
-            background: white url(images/line.gif);
-            float: left;
-            margin: 0;
-            padding:  0px 0 0px 0px;
-            text-align: left;
-        }
-        
-        div#headerLeft {
-		      float: left;         
-        }
-        
-        div#headerRight {
-            float: right;
-        }
-        
-        div#search {
-            float: right;
-            width: 300px;
-            margin: 0;
-            padding: 5px 100px 3px 3px;
-            text-align: right;
-        }
-    /* END HEADER */
-    
-    
-    /* CONTENT */
-        div#content {
-        }
-            body#error #content {
-                margin-top: 40px;
-            }
-        /* MAIN */
-            div#main {
-                padding-left: 15px;
-            }
-            
-            div#main.home  {
-             border-left: 1px dotted #CCCCCC;
-            }
+/* HEADER */
+div#header {
+	margin: 0 0 2em 0;
+	padding: 10px 0px 2px 20px;
+	text-align: left;
+	height: 80px; /* needed by IE 7 */
+	background: white url(images/heatfade.inner.png) no-repeat ;
+	background-position:right;
+}
 
-                div#main form ul li {
-                    list-style-type: none;
-                    margin-left: 0;
-                }
-        /* END MAIN */
-        
-        /* SUB */
-          
-        
-            div#sub h2 {
-                margin-bottom: 5px;
-            }
+div#homeheader {
+	margin: 0 0 2em 0;
+	padding: 10px 0px 2px 20px;
+	text-align: left;
+	height: 180px; /* needed by IE 7 */
+    background: white url(images/heatfade.png) no-repeat ;
+    background-position: right;
+}
 
-            div#sub ul {
-                margin: 0;
-            }
+div#switchLocale {
+	position: absolute;
+	right: 10px;
+}
 
-            div#sub ul li {
-                list-style-type: none;
-                margin-left: 0px;
-                padding-bottom: 10px;
-            }
+div#branding {
+	float: left;
+	margin: 0;
+	padding: 0;
+	text-align: right;
+}
 
-                div#sub p.line {
-                    border-top: 1px dotted #ccc;
-                    margin: 2px 0;
-                }
-            
-        /* END SUB */
-        
-    /* END CONTENT */
-    
-    /* FOOTER */
-        div#footer {
-            color: #666666;
-            width: 95%;
-            margin: 10px 0px 0px;
-            padding: 20px 0px 0px 30px;
-            text-align: left;
-            font-size: 0.9em;
-        }
+div#headerLeft {
+	float: left;
+}
 
-            div#footer div#divider {
-                    margin: 0 0 4px 0;
-                    border-top: 1px solid #abc;
-            }
+div#headerRight {
+	float: right;
+	text-align: right;
+}
 
-            div#footer .left {
-                    float: left;
-            }
+div#search {
+	float: right;
+	margin: 0px;
+	padding: 2px 10px 10px 10px;
+}
 
-            div#footer .right {
-                    float: right;
-            }
-            
-            div#footer a:hover {
-              color: #003366;
-              text-decoration:none;
-            }
-    /* END FOOTER */
-/* END LAYOUT */
 
-/* custom layout for data summary */
+input#searchfield {
+	border:inset #333 1px 
+}
 
+input#searchbutton {
+	border: solid 1px black;
+}
+
+/* END HEADER */ /* CONTENT */
+div#content {
+	
+}
+
+body#error #content {
+	margin-top: 40px;
+}
+
+/* MAIN */
+div#main {
+	padding-left: 15px;
+}
+
+div#main.home {
+	border-left: 1px dotted #CCCCCC;
+}
+
+div#main form ul li {
+	list-style-type: none;
+	margin-left: 0;
+}
+
+/* END MAIN */ /* SUB */
+div#sub h2 {
+	margin-bottom: 5px;
+}
+
+div#sub ul {
+	margin: 0;
+}
+
+div#sub ul li {
+	list-style-type: none;
+	margin-left: 0px;
+	padding-bottom: 10px;
+}
+
+div#sub p.line {
+	border-top: 1px dotted #ccc;
+	margin: 2px 0;
+}
+
+/* END SUB */ /* END CONTENT */ /* FOOTER */
+div#footer {
+	color: #666666;
+	width: 95%;
+	margin: 10px 0px 0px;
+	padding: 20px 0px 0px 30px;
+	text-align: left;
+	font-size: 0.9em;
+}
+
+div#footer div#divider {
+	margin: 0 0 4px 0;
+	border-top: 1px solid #abc;
+}
+
+div#footer .left {
+	float: left;
+}
+
+div#footer .right {
+	float: right;
+}
+
+div#footer a:hover {
+	color: #003366;
+	text-decoration: none;
+}
+
+/* END FOOTER */ /* END LAYOUT */ /* custom layout for data summary */
 .datasummaryarea {
 	float: right;
 }
- 
+
 .datasummary {
 	border-width: 1px;
 	border-spacing: 2px;
@@ -151,7 +153,7 @@
 	border-collapse: separate;
 	background-color: white;
 	float: right;
-	font-size:0.9em;
+	font-size: 0.9em;
 }
 
 .datasummary th {
@@ -202,29 +204,29 @@ table.list {
 
 /* reduced font size elements */
 .small {
-	font-size: smaller;	
+	font-size: smaller;
 }
 
 /* css for scriptaculous hovering */
 .drophover {
-	background-color:#ff0;
+	background-color: #ff0;
 }
 
 .dragItem {
-	cursor: move;	
+	cursor: move;
 }
 
 /* styles for pure CSS tooltips */
-a.info{
-    position:relative; 
-    z-index:24; 
-    color:#000;
-    text-decoration:none;
+a.info {
+	position: relative;
+	z-index: 24;
+	color: #000;
+	text-decoration: none;
 }
 
 /* colours for positive and negative link counts*/
 .positiveLink {
-	color: darkgreen;	
+	color: darkgreen;
 }
 
 .negativeLink {
@@ -245,31 +247,38 @@ a.info{
 	background: lightgreen;
 	font-weight: bold;
 }
+
 .usedNoUri {
 	font-weight: bold;
 }
+
 .unusedWithUri {
 	background: lightgreen;
 }
+
 .unusedNoUri {
+	
 }
 
-a.info:hover{
-	z-index:25; 
-	background-color:#ff0;
+a.info:hover {
+	z-index: 25;
+	background-color: #ff0;
 }
 
-a.info span{
+a.info span {
 	display: none
 }
 
-a.info:hover span{ /*the span will display just on :hover state*/
-    display:block;
-    position:absolute;
-    top:2em; left:2em; width:45em;
-    border:1px solid #0cf;
-    background-color:#cff; color:#000;
-    text-align: center;
+a.info:hover span { /*the span will display just on :hover state*/
+	display: block;
+	position: absolute;
+	top: 2em;
+	left: 2em;
+	width: 45em;
+	border: 1px solid #0cf;
+	background-color: #cff;
+	color: #000;
+	text-align: center;
 }
 
 /* make sure link text is white when selected in Ext tables
@@ -284,12 +293,15 @@ a.tooltip {
 	position: relative;
 	z-index: 20001;
 }
+
 a.tooltip:hover {
 	z-index: 20002;
 }
+
 a.tooltip .tooltiptext {
 	display: none;
 }
+
 a.tooltip:hover .tooltiptext {
 	display: block;
 	position: absolute;
@@ -300,4 +312,7 @@ a.tooltip:hover .tooltiptext {
 	color: black;
 	background-color: lightgoldenrodyellow;
 }
-.wrap { white-space: normal; }
+
+.wrap {
+	white-space: normal;
+}

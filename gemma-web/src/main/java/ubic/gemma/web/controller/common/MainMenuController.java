@@ -71,6 +71,8 @@ public class MainMenuController extends BaseFormController {
 
     private static final String COEXPRESSION_COOKIE_NAME = "coexpressionSearchCookie";
 
+    private static final long MIN_TO_REPORT = 200;
+
     private ExpressionExperimentService expressionExperimentService;
     private BioAssayService bioAssayService;
     private ArrayDesignService arrayDesignService;
@@ -201,6 +203,7 @@ public class MainMenuController extends BaseFormController {
             mav.addObject( "whatsNew", wn );
         }
 
+        /// FIXME this is probably not relevant with new Ext control.
         // load taxon from cookie (if it exists)
         Taxon previousTaxon = loadTaxonFromCookie( request );
         if ( previousTaxon != null ) mav.addObject( "previousTaxonName", previousTaxon.getScientificName() );
@@ -211,7 +214,9 @@ public class MainMenuController extends BaseFormController {
 
         // I like to time things.F
         timer.stop();
-        log.info( "Home page processing: " + timer.getTime() + "ms" );
+        if ( timer.getTime() > MIN_TO_REPORT ) {
+            log.info( "Home page processing: " + timer.getTime() + "ms (only times over " + MIN_TO_REPORT + " given)" );
+        }
         return mav;
     }
 

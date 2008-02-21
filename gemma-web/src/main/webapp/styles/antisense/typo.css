@@ -1,6 +1,19 @@
 /* A CSS Framework by Mike Stenhouse of Content with Style
 
      Color palette:
+     		 #00718f - new dark blue (hue 193)
+     		 #338da5 - medium tint of 193.
+     		 #9cc8d4 - tint of dark blue 193.
+     		 #004f64 - shade of 193.
+     		 #f9f7db - logo background
+     		 ## Logo colors used in spots
+     		 #c84c27 - new dark orange
+     		 #b53825 - new brick red
+     		 #fddb5c - new bright yellow
+     		 #fcb536 - new light orange
+     		 #f47f20 - new medium orange
+     		 
+     		 Older items
              #444        - dark gray (text)
              #3e9ade - medium blue (title)
              #b4c24b - lime (header 1)
@@ -21,10 +34,10 @@ body {
 	text-decoration: none;
 }
 
-div {
-	font-size: 1em;
+.footer {
+	font-size:smaller;
 }
-
+ 
 img {
 	border: 0;
 }
@@ -32,17 +45,17 @@ img {
 /* LINKS */
 a,a:link
             a:active {
-	color: #1465B7;
+	color: #004f64;
 	text-decoration: none;
 }
 
 a:visited {
-	color: #1465B7;
+	color: #004f64;
 	background-color: transparent;
 }
 
 a:hover {
-	color: #CC6633;
+	color: #f47f20;
 	text-decoration: none;
 }
 
