@@ -31,6 +31,7 @@ Ext.Gemma.BioMaterialEditor = function ( config ) {
 Ext.Gemma.BioMaterialGrid = function ( config ) {
 
 	this.backingArray = config.data; delete config.data;
+	this.editable = config.editable;
 	
 	/* establish default config options...
 	 */
@@ -61,13 +62,15 @@ Ext.Gemma.BioMaterialGrid = function ( config ) {
 		this.doLayout();
 	}, this );
 	
-	this.on( "afteredit", function( e ) {
-		var factorId = this.getColumnModel().getColumnId( e.column );
-		var combo = this.factorValueCombo[factorId];
-		var fvvo = combo.getFactorValue.call( combo );
-		e.record.set( factorId, String.format( "fv{0}", fvvo.factorValueId ) );
-		this.getView().refresh();
-	} );
+	if ( this.editable ) {
+		this.on( "afteredit", function( e ) {
+			var factorId = this.getColumnModel().getColumnId( e.column );
+			var combo = this.factorValueCombo[factorId];
+			var fvvo = combo.getFactorValue.call( combo );
+			e.record.set( factorId, String.format( "fv{0}", fvvo.factorValueId ) );
+			this.getView().refresh();
+		} );
+	}
 	
 	var tbar = new Ext.Gemma.BioMaterialToolbar( { grid : this, renderTo : this.tbar } );
 };
@@ -176,6 +179,7 @@ Ext.extend( Ext.Gemma.BioMaterialGrid, Ext.Gemma.GemmaGridPanel, {
 Ext.Gemma.BioMaterialToolbar = function ( config ) {
 
 	this.grid = config.grid; delete config.grid;
+	this.editable = this.grid.editable;
 	
 	/* keep a reference to ourselves so we don't have to worry about scope in the
 	 * button handlers below...
@@ -247,15 +251,18 @@ Ext.Gemma.BioMaterialToolbar = function ( config ) {
 		}
 	} );
 	
-	var items = [
-		new Ext.Toolbar.TextItem( "Make changes in the grid below" ),
-		new Ext.Toolbar.Spacer(),
-		saveButton,
-		new Ext.Toolbar.Separator(),
-		revertButton,
-		new Ext.Toolbar.Separator(),
-		refreshButton
-	];
+	var items = [];
+	if ( this.editable ) {
+		items.push(
+			new Ext.Toolbar.TextItem( "Make changes in the grid below" ),
+			new Ext.Toolbar.Spacer(),
+			saveButton,
+			new Ext.Toolbar.Separator(),
+			revertButton,
+			new Ext.Toolbar.Separator()
+		);
+	}
+	items.push( refreshButton );
 	config.items = config.items ? items.concat( config.items ) : items;
 	
 	for ( property in config ) {

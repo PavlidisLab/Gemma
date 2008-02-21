@@ -12,7 +12,7 @@ Ext.Gemma.ExperimentalFactorGrid = function ( config ) {
 	};
 	delete config.edId;
 	
-	this.onRefresh = config.onRefresh; delete config.onRefresh;
+	this.editable = config.editable;
 	
 	this.nameField = new Ext.form.TextField( { } );
 	
@@ -56,17 +56,19 @@ Ext.Gemma.ExperimentalFactorGrid = function ( config ) {
 		this.doLayout();
 	}, this );
 	
-	this.on( "afteredit", function( e ) {
-		var col = this.getColumnModel().getColumnId( e.column );
-		if ( col == CATEGORY_COLUMN ) {
-			var f = this.categoryCombo.getTerm.bind( this.categoryCombo );
-			var term = f();
-			e.record.set( "category", term.term );
-			e.record.set( "categoryUri", term.uri );
-		}
-	} );
+	if ( this.editable ) {
+		this.on( "afteredit", function( e ) {
+			var col = this.getColumnModel().getColumnId( e.column );
+			if ( col == CATEGORY_COLUMN ) {
+				var f = this.categoryCombo.getTerm.bind( this.categoryCombo );
+				var term = f();
+				e.record.set( "category", term.term );
+				e.record.set( "categoryUri", term.uri );
+			}
+		} );
 	
-	var tbar = new Ext.Gemma.ExperimentalFactorToolbar( { grid : this, renderTo : this.tbar } );
+		var tbar = new Ext.Gemma.ExperimentalFactorToolbar( { grid : this, renderTo : this.tbar } );
+	}
 };
 
 /* static methods

@@ -5,6 +5,7 @@ Ext.onReady( function() {
 	var eeId = dwr.util.getValue("expressionExperimentID");
 	var edId = dwr.util.getValue("experimentalDesignID");
 	var admin = dwr.util.getValue("hasAdmin");
+	var editable = admin ? true : false;
 
 	/* TODO make sure we've got an edId and display a prominent error message if we don't...
 	 */
@@ -13,7 +14,7 @@ Ext.onReady( function() {
 		title : "Experimental Factors",
 		renderTo : "experimentalFactorPanel",
 		edId : edId,
-		editable : admin ? true : false
+		editable : editable
 	} );
 	experimentalFactorGrid.render();
 	experimentalFactorGrid.on( "experimentalfactorchange", function( efgrid, efs ) {
@@ -26,7 +27,7 @@ Ext.onReady( function() {
 		renderTo : "factorValuePanel",
 		form : "factorValueForm",
 		edId : edId,
-		editable : admin ? true : false
+		editable : editable
 	} );
 	factorValueGrid.render();
 	factorValueGrid.on( "factorvaluecreate", function( fvgrid, fvs ) {
@@ -43,7 +44,7 @@ Ext.onReady( function() {
 		title : "BioMaterials",
 		renderTo : "bioMaterialsPanel",
 		eeId : eeId,
-		editable : admin ? true : false
+		editable : editable
 	} );
 	bioMaterialEditor.init();
 

@@ -20,7 +20,8 @@ Ext.Gemma.FactorValueGrid = function ( config ) {
 	delete config.efId;
 	
 	this.form = config.form; delete config.form;
-	this.onRefresh = config.onRefresh; delete config.onRefresh;
+	
+	this.editable = config.editable;
 	
 	this.categoryCombo = new Ext.Gemma.MGEDCombo( { lazyRender : true, termKey : "factor" } );
 	var categoryEditor = new Ext.grid.GridEditor( this.categoryCombo );
@@ -75,19 +76,21 @@ Ext.Gemma.FactorValueGrid = function ( config ) {
 		this.doLayout();
 	}, this );
 	
-	this.on( "afteredit", function( e ) {
-		var col = this.getColumnModel().getColumnId( e.column );
-		if ( col == CATEGORY_COLUMN ) {
-			var term = this.categoryCombo.getTerm.call( this.categoryCombo );
-			e.record.set( "category", term.term );
-			e.record.set( "categoryUri", term.uri );
-		} else if ( col == VALUE_COLUMN ) {
-			var c = this.valueCombo.getCharacteristic.call( this.valueCombo );
-			e.record.set( "value", c.value );
-			e.record.set( "valueUri", c.valueUri );
-		}
-		this.getView().refresh();
-	} );
+	if ( this.editable ) {
+		this.on( "afteredit", function( e ) {
+			var col = this.getColumnModel().getColumnId( e.column );
+			if ( col == CATEGORY_COLUMN ) {
+				var term = this.categoryCombo.getTerm.call( this.categoryCombo );
+				e.record.set( "category", term.term );
+				e.record.set( "categoryUri", term.uri );
+			} else if ( col == VALUE_COLUMN ) {
+				var c = this.valueCombo.getCharacteristic.call( this.valueCombo );
+				e.record.set( "value", c.value );
+				e.record.set( "valueUri", c.valueUri );
+			}
+			this.getView().refresh();
+		} );
+	}
 	
 	this.factorValueToolbar = new Ext.Gemma.FactorValueToolbar( { grid : this, renderTo : this.tbar } );
 };
@@ -216,6 +219,7 @@ Ext.Gemma.FactorValueToolbar = function ( config ) {
 
 	this.grid = config.grid; delete config.grid;
 	this.experimentalDesign = this.grid.experimentalDesign;
+	this.editable = this.grid.editable;
 	
 	/* keep a reference to ourselves so we don't have to worry about scope in the
 	 * button handlers below...
@@ -268,12 +272,16 @@ Ext.Gemma.FactorValueToolbar = function ( config ) {
 	var items = [
 		new Ext.Toolbar.TextItem( "Show Factor Values for:" ),
 		new Ext.Toolbar.Spacer(),
-		factorCombo,
-		new Ext.Toolbar.Spacer(),
-		createFactorValueButton,
-		new Ext.Toolbar.Separator(),
-		deleteFactorValueButton
+		factorCombo
 	];
+	if ( this.editable ) {
+		items.push( 
+			new Ext.Toolbar.Spacer(),
+			createFactorValueButton,
+			new Ext.Toolbar.Separator(),
+			deleteFactorValueButton
+		);
+	}
 	config.items = config.items ? items.concat( config.items ) : items;
 	
 	for ( property in config ) {
@@ -281,7 +289,9 @@ Ext.Gemma.FactorValueToolbar = function ( config ) {
 	}
 	Ext.Gemma.FactorValueToolbar.superclass.constructor.call( this, superConfig );
 	
-	var characteristicToolbar = new Ext.Gemma.FactorValueCharacteristicToolbar( { grid : thisToolbar.grid, renderTo : thisToolbar.getEl().createChild() } );
+	if ( this.editable ) {
+		var characteristicToolbar = new Ext.Gemma.FactorValueCharacteristicToolbar( { grid : thisToolbar.grid, renderTo : thisToolbar.getEl().createChild() } );
+	}
 };
 
 /* instance methods...
