@@ -215,7 +215,7 @@
         <init-param>
             <!-- Transform the location attributes in WSDLs -->
             <param-name>transformWsdlLocations</param-name>
-            <param-value>true</param-value>
+            <param-value>false</param-value>
         </init-param>
     </servlet>
     
