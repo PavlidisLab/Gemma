@@ -78,15 +78,14 @@ public class AuditInterceptorTest extends BaseSpringContextTest {
         user.setDescription( "From test" );
         user.setName( "test" + RandomStringUtils.randomAlphabetic( 10 ) );
         user = userService.create( user );
-        int sizeAfterFirstUpdate = user.getAuditTrail().getEvents().size();
-        assertEquals( "Should have a 'create'", 1, sizeAfterFirstUpdate );
+        assertEquals( "Should have a 'create'", 1, user.getAuditTrail().getEvents().size() );
 
         assertNotNull( user.getAuditTrail() );
         assertNotNull( user.getAuditTrail().getCreationEvent().getId() );
 
         user.setFax( RandomStringUtils.randomNumeric( 10 ) ); // change something.
         userService.update( user );
-
+        int sizeAfterFirstUpdate = user.getAuditTrail().getEvents().size();
         // that should result in only a single update. FIXME for reasons unknown, this reuslts in _two_ updates audit
         // events. Or even _four_.
         // assertEquals( "Should have a 'create' and an 'update'", 3, user.getAuditTrail().getEvents().size() );
