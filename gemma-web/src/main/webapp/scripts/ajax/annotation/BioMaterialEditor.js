@@ -165,14 +165,6 @@ Ext.extend( Ext.Gemma.BioMaterialGrid, Ext.Gemma.GemmaGridPanel, {
 				} );
 			}
 		}
-		/* TODO update the renderer so it catches new factor values...
-		 * but to to do this we need the factor values here...
-		this.columnRenderer = Ext.Gemma.BioMaterialGrid.createValueRenderer( factorValues );
-		 */
-	},
-	
-	reloadFactorValue : function( fvId ) {
-		
 	}
 	
 } );
@@ -245,10 +237,13 @@ Ext.Gemma.BioMaterialToolbar = function ( config ) {
 	} );
 	
 	var refreshButton = new Ext.Toolbar.Button( {
-		text : "refresh",
-		tooltip : "Refresh the grid",
+		text : "expand all",
+		tooltip : "Show all biomaterial details",
 		handler : function() {
-			thisToolbar.grid.refresh();
+			var expander = Ext.Gemma.BioMaterialGrid.getRowExpander()
+			for ( var i=0; thisToolbar.grid.getView().getRow( i ); ++i ) {
+				expander.expandRow( i );
+			}
 		}
 	} );
 	
