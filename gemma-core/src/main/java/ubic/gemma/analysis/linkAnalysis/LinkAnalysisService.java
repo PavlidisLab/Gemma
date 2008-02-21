@@ -122,8 +122,7 @@ public class LinkAnalysisService {
 
         checkVectors( ee, dataVectors );
 
-        ExpressionDataDoubleMatrix datamatrix = analysisHelperService.getFilteredMatrix( ee, filterConfig,
-                dataVectors );
+        ExpressionDataDoubleMatrix datamatrix = analysisHelperService.getFilteredMatrix( ee, filterConfig, dataVectors );
 
         if ( datamatrix.rows() == 0 ) {
             log.info( "No rows left after filtering" );
@@ -246,19 +245,20 @@ public class LinkAnalysisService {
      * 
      * @param la
      * @param dataVectors
+     * @param eeDoubleMatrix
      * @return map of probes to vectors.
      */
     @SuppressWarnings("unchecked")
-    private void getProbe2GeneMap( LinkAnalysis la, Collection<DesignElementDataVector> dataVectors ) {
-        log.info( "Getting probe-to-gene map" );
+    private void getProbe2GeneMap( LinkAnalysis la, Collection<DesignElementDataVector> dataVectors,
+            ExpressionDataDoubleMatrix eeDoubleMatrix ) {
+        log.info( "Getting probe-to-gene map for retained probes." );
 
+        // This excludes probes that were filtered out
         Collection<CompositeSequence> probesForVectors = new HashSet<CompositeSequence>();
         for ( DesignElementDataVector v : dataVectors ) {
             CompositeSequence cs = ( CompositeSequence ) v.getDesignElement();
-            probesForVectors.add( cs );
+            if ( eeDoubleMatrix.getRow( cs ) != null ) probesForVectors.add( cs );
         }
-        // Map<CompositeSequence, Collection<Gene>> probeToGeneMap = csService.getGenes( probesForVectors );
-        // la.setProbeToGeneMap( probeToGeneMap );
 
         Map<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>> specificityData = csService
                 .getGenesWithSpecificity( probesForVectors );
@@ -281,12 +281,6 @@ public class LinkAnalysisService {
                 probeToGeneMap.get( cs ).add( cluster );
             }
         }
-
-        // if ( la.getConfig().useKnownGenesOnly() ) {
-        // log.info( "Removing probes that assay non 'known genes'" );
-        // Collection<DesignElement> els = ExpressionExperimentFilter.getProbesForKnownGenes( probeToGeneMap );
-        // probeToGeneMap.keySet().removeAll( els );
-        // }
 
         la.setProbeToGeneMap( probeToGeneMap );
     }
@@ -523,7 +517,7 @@ public class LinkAnalysisService {
         la.setTaxon( eeService.getTaxon( ee.getId() ) );
         la.setExpressionExperiment( ee );
 
-        getProbe2GeneMap( la, dataVectors );
+        getProbe2GeneMap( la, dataVectors, eeDoubleMatrix );
     }
 
     /**
