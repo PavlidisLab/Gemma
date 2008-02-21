@@ -159,11 +159,8 @@ public class GeneLinkCoexpressionAnalyzer {
      * @param experimentsAnalyzed
      * @return Map of location in the vector to EE ID.
      */
-    public Map<Integer, Long> getPositionToIdMap( Collection<ExpressionExperiment> experimentsAnalyzed ) {
-        List<Long> eeIds = new ArrayList<Long>();
-        for ( ExpressionExperiment ee : experimentsAnalyzed ) {
-            eeIds.add( ee.getId() );
-        }
+    public static Map<Integer, Long> getPositionToIdMap( Collection<Long> experimentIdsAnalyzed ) {
+        List<Long> eeIds = new ArrayList<Long>( experimentIdsAnalyzed );
         Collections.sort( eeIds );
         Map<Integer, Long> eeOrderId = new HashMap<Integer, Long>();
         int location = 0;
@@ -180,10 +177,28 @@ public class GeneLinkCoexpressionAnalyzer {
      * @return
      */
     @SuppressWarnings("unchecked")
-    public Collection<ExpressionExperiment> getSupportingExperiments( Gene2GeneCoexpression ggc,
+    public static Collection<Long> getTestedExperimentIds( Gene2GeneCoexpression ggc,
             Map<Integer, Long> eePositionToIdMap ) {
+        return convertBitVector( eePositionToIdMap, ggc.getDatasetsTestedVector() );
+    }
 
-        byte[] datasetsSupportingVector = ggc.getDatasetsSupportingVector();
+    /**
+     * @param ggc
+     * @param eePositionToIdMap
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public static Collection<Long> getSupportingExperimentIds( Gene2GeneCoexpression ggc,
+            Map<Integer, Long> eePositionToIdMap ) {
+        return convertBitVector( eePositionToIdMap, ggc.getDatasetsSupportingVector() );
+    }
+
+    /**
+     * @param eePositionToIdMap
+     * @param datasetsSupportingVector
+     * @return
+     */
+    private static Collection<Long> convertBitVector( Map<Integer, Long> eePositionToIdMap, byte[] datasetsSupportingVector ) {
         List<Long> ids = new ArrayList<Long>();
         for ( int i = 0; i < datasetsSupportingVector.length * Byte.SIZE; i++ ) {
             if ( BitUtil.get( datasetsSupportingVector, i ) ) {
@@ -191,10 +206,7 @@ public class GeneLinkCoexpressionAnalyzer {
                 ids.add( supportingEE );
             }
         }
-        /*
-         * This is rather inefficient.
-         */
-        return expressionExperimentService.loadMultiple( ids );
+        return ids;
     }
 
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
