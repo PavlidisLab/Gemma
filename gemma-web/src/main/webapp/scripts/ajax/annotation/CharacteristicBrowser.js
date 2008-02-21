@@ -56,7 +56,7 @@ Ext.onReady( function() {
 			 */
 			var selected = Ext.Gemma.CharacteristicBrowser.grid.getSelectionModel().getSelections();
 			for ( var i=0; i<selected.length; ++i ) {
-				Ext.Gemma.CharacteristicBrowser.grid.getDataSource().remove( selected[i] );
+				Ext.Gemma.CharacteristicBrowser.grid.getStore().remove( selected[i] );
 			}
 			Ext.Gemma.CharacteristicBrowser.grid.getView().refresh();
 			
