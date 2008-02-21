@@ -60,13 +60,50 @@ Ext.extend( Ext.Gemma.PagingDataStore, Ext.data.Store, {
 			}
 		} else {
 			// not resetting to the first page by default as per bug 1072
-			// this could have consequences if the last page is visible and a lot of records are deleted
-			// TODO check to make sure the currentStartIndex is valid after the load
 			if ( options.resetPage ) {
 				this.currentStartIndex = 0;
 			}
 			Ext.Gemma.PagingDataStore.superclass.load.call( this, options );
 		}
+    },
+    
+    loadRecords : function (o, options, success) {
+    	Ext.Gemma.PagingDataStore.superclass.loadRecords.call( this, o, options, success );
+    	
+    	this.checkStartIndex();
+    },
+    
+    remove : function (record) {
+    	Ext.Gemma.PagingDataStore.superclass.remove.call( this, record );
+    	
+    	// no idea why I should have to do this...
+    	this.totalLength = this.data.length;
+    	
+    	this.checkStartIndex();
+    },
+
+    
+    removeAll : function () {
+    	Ext.Gemma.PagingDataStore.superclass.removeAll.call( this );
+    	
+    	// no idea why I should have to do this...
+    	this.totalLength = this.data.length;
+    	
+    	this.checkStartIndex();
+    },
+    
+    checkStartIndex : function () {
+    	var previousIndex = this.currentStartIndex;
+    	while ( this.currentStartIndex >= this.totalLength ) {
+    		this.currentStartIndex -= this.pageSize;
+    	}
+    	if ( this.currentStartIndex < 0 ) {
+    		this.currentStartIndex = 0;
+    	}
+    	if ( this.currentStartIndex != previousIndex ) {
+    		// update the paging toolbar...
+    		this.fireEvent( "load", this, [], { params : { start : this.currentStartIndex } } );
+    	}
     },
     
     getVisibleRecords : function () {
