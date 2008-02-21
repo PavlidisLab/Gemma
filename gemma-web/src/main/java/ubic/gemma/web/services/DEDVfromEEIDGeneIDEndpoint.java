@@ -131,6 +131,8 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
         //xml is built manually here instead of using the buildWrapper method inherited from AbstractGemmaEndpoint
         String elementName1 = "dedv";
         String elementName2 = "geneIdList";
+        String elementName3 = "eeIdList";
+        
 
         Element responseWrapper = document.createElementNS( NAMESPACE_URI, EXPERIMENT_LOCAL_NAME );
         Element responseElement = document.createElementNS( NAMESPACE_URI, EXPERIMENT_LOCAL_NAME + RESPONSE );
@@ -143,23 +145,7 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
               
             Set<DesignElementDataVector> keys = dedvMap.keySet();
             designElementDataVectorService.thaw( keys );
-//            ArrayList<DesignElementDataVector> tempdv = new ArrayList<DesignElementDataVector>(50);
-//            Iterator<DesignElementDataVector> dviterator = keys.iterator();
-//            int index = 0;
-//            while (dviterator.hasNext()){
-//                if (tempdv.size()< 50)
-//                    tempdv.add(dviterator.next());
-//                else {
-//                    log.info( "thawing "+tempdv.size()+" data vectors" );
-//                    designElementDataVectorService.thaw( tempdv );
-//                    tempdv = new ArrayList<DesignElementDataVector>(50);
-//                }
-//              
-//            }
-//            if (tempdv.size() > 0){
-//                log.info( "thawing "+tempdv.size()+" data vectors" );
-//                designElementDataVectorService.thaw( tempdv );
-//            }
+
             
             ByteArrayConverter converter = new ByteArrayConverter();
             // -build single-row Collections to use for ExpressionDataMatrixBuilder
@@ -180,7 +166,11 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
                 
                 // gene ids, space delimited for output
                 String elementString2 = encode( geneidCol.toArray() ); 
+                
+                String elementString3 = dedv.getExpressionExperiment().getId().toString();
 
+                  
+                
                 Element e1 = document.createElement( elementName1 );
                 e1.appendChild( document.createTextNode( elementString1 ) );
                 responseElement.appendChild( e1 );
@@ -188,8 +178,15 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
                 Element e2 = document.createElement( elementName2 );
                 e2.appendChild( document.createTextNode( elementString2 ) );
                 responseElement.appendChild( e2 );
+                
+                
+                
+                Element e3 = document.createElement( elementName3 );
+                e3.appendChild( document.createTextNode( elementString3 ) );
+                responseElement.appendChild( e3 );
              
             }
+           
         }
 
         log.info( "Finished generating matrix. Sending response to client." );
@@ -238,29 +235,13 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
         return geneIds;
     }
 
+   
+
     /**
      * @param data
      * @return a string delimited representation of the double array passed in.
      */
     private String encode( double[] data ) {
-
-        StringBuffer result = new StringBuffer();
-
-        for ( int i = 0; i < data.length; i++ ) {
-            if ( i == 0 )
-                result.append( data[i] );
-            else
-                result.append( DELIMITER + data[i] );
-        }
-
-        return result.toString();
-    }
-
-    /**
-     * @param data
-     * @return a string delimited representation of the double array passed in.
-     */
-    private String encode( Object[] data ) {
 
         StringBuffer result = new StringBuffer();
 
