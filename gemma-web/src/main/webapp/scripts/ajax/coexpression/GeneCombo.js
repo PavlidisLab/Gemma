@@ -59,7 +59,7 @@ Ext.extend( Ext.Gemma.GeneCombo, Ext.form.ComboBox, {
 		Ext.Gemma.GeneCombo.superclass.onSelect.call( this, record, index );
 		
 		if ( record.data != this.selectedGene ) {
-			this.selectedGene = record.data;
+			this.setGene( record.data );
 		}
 	},
 	
@@ -69,6 +69,17 @@ Ext.extend( Ext.Gemma.GeneCombo, Ext.form.ComboBox, {
 	
 	getGene : function () {
 		return this.selectedGene;
+	},
+	
+	setGene : function ( gene ) {
+		this.selectedGene = gene;
+		if ( this.tooltip ) {
+			this.tooltip.destroy();
+		}
+		this.tooltip = new Ext.ToolTip( {
+			target: this.getEl(),
+			html: gene.officialName
+		} );
 	},
 	
 	setTaxon : function ( taxon ) {
