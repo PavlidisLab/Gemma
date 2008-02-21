@@ -59,6 +59,9 @@ Ext.extend( Ext.Gemma.PagingDataStore, Ext.data.Store, {
 				this.fireEvent( "load", this, records, options );
 			}
 		} else {
+			// not resetting to the first page by default as per bug 1072
+			// this could have consequences if the last page is visible and a lot of records are deleted
+			// TODO check to make sure the currentStartIndex is valid after the load
 			if ( options.resetPage ) {
 				this.currentStartIndex = 0;
 			}
