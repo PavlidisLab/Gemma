@@ -229,6 +229,8 @@ Ext.extend( Ext.Gemma.CoexpressionSearchPanel, Ext.FormPanel, {
 			return "There are no datasets that match your search terms";
 		} else if ( ! csc.cannedAnalysisId ) {
 			return "Please select an analysis";
+		} else {
+			return "";
 		}
 	},
 
