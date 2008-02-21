@@ -78,7 +78,7 @@ Ext.extend( Ext.Gemma.GeneCombo, Ext.form.ComboBox, {
 		}
 		this.tooltip = new Ext.ToolTip( {
 			target: this.getEl(),
-			html: gene.officialName
+			html: String.format( '{0} ({1})', gene.officialName, gene.taxon )
 		} );
 	},
 	
