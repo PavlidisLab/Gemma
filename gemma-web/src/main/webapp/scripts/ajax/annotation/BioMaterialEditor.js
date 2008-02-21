@@ -32,6 +32,7 @@ Ext.Gemma.BioMaterialGrid = function ( config ) {
 
 	this.backingArray = config.data; delete config.data;
 	this.editable = config.editable;
+	this.factorValueCombo = {};
 	
 	/* establish default config options...
 	 */
@@ -67,7 +68,7 @@ Ext.Gemma.BioMaterialGrid = function ( config ) {
 			var factorId = this.getColumnModel().getColumnId( e.column );
 			var combo = this.factorValueCombo[factorId];
 			var fvvo = combo.getFactorValue.call( combo );
-			e.record.set( factorId, String.format( "fv{0}", fvvo.factorValueId ) );
+			e.record.set( factorId, fvvo.factorValueId );
 			this.getView().refresh();
 		} );
 	}
@@ -113,7 +114,22 @@ Ext.Gemma.BioMaterialGrid.createRecord = function( row ) {
 	return record;
 };
 
-Ext.Gemma.BioMaterialGrid.createColumnModel = function( row ) {
+Ext.Gemma.BioMaterialGrid.getFactorValueRecord = function() {
+	if ( Ext.Gemma.BioMaterialGrid.fvRecord === undefined ) {
+		Ext.Gemma.BioMaterialGrid.fvRecord = Ext.data.Record.create( [
+			{ name:"charId", type:"int" },
+			{ name:"factorValueId", type:"string", convert: function( v ) { return "fv" + v; } },
+			{ name:"category", type:"string" },
+			{ name:"categoryUri", type:"string" },
+			{ name:"value", type:"string" },
+			{ name:"valueUri", type:"string" },
+			{ name:"factorValueString", type:"string" }
+		] );
+	}
+	return Ext.Gemma.BioMaterialGrid.fvRecord;
+};
+
+Ext.Gemma.BioMaterialGrid.createColumnModel = function( row, editable ) {
 	var columns = [
 		Ext.Gemma.BioMaterialGrid.getRowExpander(),
 		{ id: "bm", header:"BioMaterial", dataIndex:"bmName" },
@@ -124,8 +140,18 @@ Ext.Gemma.BioMaterialGrid.createColumnModel = function( row ) {
 	this.factorValueCombo = [];
 	for ( factorId in row.factors ) {
 		var efId = factorId.substring(6); // strip "factor" from the id...
-		this.factorValueCombo[factorId] = new Ext.Gemma.FactorValueCombo( { efId: efId } );
-		columns.push( { id: factorId, header:row.factors[factorId], dataIndex:factorId, renderer:this.columnRenderer, editor:this.factorValueCombo[factorId] } );
+		this.factorValueCombo[factorId] = new Ext.Gemma.FactorValueCombo( {
+			efId: efId,
+			lazyInit: false,
+			lazyRender: true,
+			record: Ext.Gemma.BioMaterialGrid.getFactorValueRecord(),
+			valueField: "factorValueId"
+		} );
+		var editor;
+		if ( this.editable ) {
+			editor = this.factorValueCombo[factorId];
+		}
+		columns.push( { id: factorId, header:row.factors[factorId], dataIndex:factorId, renderer:this.columnRenderer, editor: editor } );
 	}
 	return new Ext.grid.ColumnModel( columns );
 };

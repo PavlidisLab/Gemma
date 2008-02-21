@@ -60,11 +60,15 @@ Ext.Gemma.FactorValueGrid = function ( config ) {
 	var VALUE_COLUMN = 2;
 	superConfig.cm = new Ext.grid.ColumnModel( [
 		{ header: "FactorValue", dataIndex: "factorValueId" },
-		{ header: "Category", dataIndex: "category", renderer: Ext.Gemma.FactorValueGrid.getCategoryStyler(), editor: categoryEditor },
-		{ header: "Value", dataIndex: "value", renderer: Ext.Gemma.FactorValueGrid.getValueStyler(), editor: valueEditor }
+		{ header: "Category", dataIndex: "category", renderer: Ext.Gemma.FactorValueGrid.getCategoryStyler() },
+		{ header: "Value", dataIndex: "value", renderer: Ext.Gemma.FactorValueGrid.getValueStyler() }
 	] );
 	superConfig.cm.defaultSortable = true;
 	superConfig.autoExpandColumn = VALUE_COLUMN;
+	if ( this.editable ) {
+		superConfig.cm.setEditor( CATEGORY_COLUMN, categoryEditor );
+		superConfig.cm.setEditor( VALUE_COLUMN, valueEditor );
+	}
 	
 	for ( property in config ) {
 		superConfig[property] = config[property];
@@ -253,7 +257,7 @@ Ext.Gemma.FactorValueToolbar = function ( config ) {
 			var ef = thisToolbar.grid.experimentalFactor;
 			var callback = function() {
 				thisToolbar.grid.factorValueCreated.call( thisToolbar.grid, ef );
-				characteristicToolbar.setExperimentalFactor( ef.id );
+				thisToolbar.characteristicToolbar.setExperimentalFactor( ef.id );
 			};
 			ExperimentalDesignController.createFactorValue(	thisToolbar.grid.experimentalFactor,
 				callback );

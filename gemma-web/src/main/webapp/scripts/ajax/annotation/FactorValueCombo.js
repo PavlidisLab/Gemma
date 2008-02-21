@@ -14,9 +14,10 @@ Ext.Gemma.FactorValueCombo = function ( config ) {
 	 */
 	var superConfig = {};
 	
+	var record = config.record || Ext.Gemma.FactorValueGrid.getRecord(); delete config.record;
 	superConfig.store = new Ext.data.Store( {
 		proxy : new Ext.data.DWRProxy( ExperimentalDesignController.getFactorValues ),
-		reader : new Ext.data.ListRangeReader( {id:"factorValueId"}, Ext.Gemma.FactorValueGrid.getRecord() ),
+		reader : new Ext.data.ListRangeReader( {id:"factorValueId"}, record ),
 		remoteSort : false,
 		sortInfo : { field : "factorValueId" }
 	} );
@@ -25,7 +26,7 @@ Ext.Gemma.FactorValueCombo = function ( config ) {
 	}
 	
 	superConfig.displayField = "factorValueString";
-	superConfig.editable = "false";
+	superConfig.editable = false;
 	superConfig.mode = "local";
 	superConfig.triggerAction = "all";
 	

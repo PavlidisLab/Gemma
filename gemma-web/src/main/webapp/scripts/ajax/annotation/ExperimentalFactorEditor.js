@@ -15,12 +15,14 @@ Ext.Gemma.ExperimentalFactorGrid = function ( config ) {
 	this.editable = config.editable;
 	
 	this.nameField = new Ext.form.TextField( { } );
+	var nameEditor = new Ext.grid.GridEditor( this.nameField );
 	
 	this.categoryCombo = new Ext.Gemma.MGEDCombo( { lazyRender : true, termKey : "factor" } );
 	var categoryEditor = new Ext.grid.GridEditor( this.categoryCombo );
 	this.categoryCombo.on( "select", function ( combo, record, index ) { categoryEditor.completeEdit(); } );
 	
 	this.descriptionField = new Ext.form.TextField( { } );
+	var descriptionEditor = new Ext.grid.GridEditor( this.descriptionField );
 
 	/* establish default config options...
 	 */
@@ -36,12 +38,17 @@ Ext.Gemma.ExperimentalFactorGrid = function ( config ) {
 	var CATEGORY_COLUMN = 1;
 	var DESCRIPTION_COLUMN = 2;
 	superConfig.cm = new Ext.grid.ColumnModel( [
-		{ header: "Name", dataIndex: "name", editor: this.nameField },
-		{ header: "Category", dataIndex: "category", renderer: Ext.Gemma.ExperimentalFactorGrid.getCategoryStyler(), editor: categoryEditor },
-		{ header: "Description", dataIndex: "description", editor: this.descriptionField }
+		{ header: "Name", dataIndex: "name" },
+		{ header: "Category", dataIndex: "category", renderer: Ext.Gemma.ExperimentalFactorGrid.getCategoryStyler() },
+		{ header: "Description", dataIndex: "description" }
 	] );
 	superConfig.cm.defaultSortable = true;
 	superConfig.autoExpandColumn = DESCRIPTION_COLUMN;
+	if ( this.editable ) {
+		superConfig.cm.setEditor( NAME_COLUMN, nameEditor );
+		superConfig.cm.setEditor( CATEGORY_COLUMN, categoryEditor );
+		superConfig.cm.setEditor( DESCRIPTION_COLUMN, descriptionEditor );
+	}
 	
 	for ( property in config ) {
 		superConfig[property] = config[property];
@@ -221,6 +228,7 @@ Ext.Gemma.ExperimentalFactorToolbar = function ( config ) {
 	} );
 	this.grid.on( "afteredit", function( model ) {
 		saveButton.enable();
+		revertButton.enable();
 	} );
 	var revertButton = new Ext.Toolbar.Button( {
 		text : "revert",
