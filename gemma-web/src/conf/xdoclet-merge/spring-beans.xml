@@ -125,8 +125,10 @@ Mapping URLS to controllers
 			 <entry key="disconnectedTime" value="1000"></entry>
 		</map>
 	</property>
+	
 -->
-	<property name="debug" value="true"/>
+<!--  turn debug true on to get access to dwr debugging tools (very helpful) -->
+	<property name="debug" value="false"/>
 </bean>
 <!--  ============================================ -->
 <!--             DWR CONFIGURATION                 -->
