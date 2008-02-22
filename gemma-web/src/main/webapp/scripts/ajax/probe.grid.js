@@ -6,6 +6,7 @@
  * @author Paul
  * @version $Id$ 
  */
+Ext.namespace('Ext.Gemma');
 
 var start = 0; 
 var size = 50; // page size
@@ -30,12 +31,13 @@ var showprobes = function(id) {
 
 
 var showArrayDesignProbes = function(id) {
-	ds.load({params:{start:start, limit:size, sort:"arrayDesignName", dir:"ASC"},
-	callback: function(r, options, success, scope ) {  
+	
+	ds.load({params: [ { id:id, classDelegatingFor:"ExpressionExperimentImpl" } ],
+		callback: function(r, options, success, scope ) {  
 		if (!success) {
 			Ext.DomHelper.overwrite("messages", "There was an error." );  
 		} 
-	}});
+		}});
 };
 
 /**
@@ -81,23 +83,22 @@ var init = function(isArrayDesign, id) {
 			{name:"genes" , convert : convertgenes}]); //  map of gene ids to geneproductvalueobjects
 
 	var proxy;
-	var reader;
+	var reader = new Ext.data.ListRangeReader({id:"compositeSequenceId"}, recordType);
+	
 	if (isArrayDesign) {
-		proxy = new Ext.data.DWRProxy(ArrayDesignController.getCsSummaryRange, {pagingAndSort: true, baseParams:[{id:id}] });
-		reader = new Ext.data.ListRangeReader({id:"compositeSequenceId", totalProperty:"totalSize", root:"data"}, recordType);
+		proxy = new Ext.data.DWRProxy(ArrayDesignController.getCsSummaries);
+		
  	} else {
 		proxy = new Ext.data.DWRProxy(CompositeSequenceController.getCsSummaries);
-		reader = new Ext.data.ListRangeReader({id:"compositeSequenceId"}, recordType);
 	}
 	
 	proxy.on("loadexception", handleLoadError);
 	 
-	ds = new Ext.data.Store(
+	ds = new Ext.Gemma.PagingDataStore(
 	{
-		proxy:proxy,
-		reader:reader,
-		remoteSort:isArrayDesign,
-		sortInfo:{field:'arrayDesignName'}	
+		proxy :  proxy,
+		reader : reader,
+		pageSize : size
 	});
 	
 	ds.on("load", loadHandler); 
@@ -350,14 +351,14 @@ Ext.onReady(function() {
 	};
 	// add a paging toolbar to the grid's footer
 	if ( isArrayDesign ) {
-		paging = new Ext.PagingToolbar({
+		paging = new Ext.Gemma.PagingToolbar({
 			store: ds,
 	        pageSize: size
 	    });
 		gridConfig.bbar = paging;
 	}
 	grid = new Ext.grid.GridPanel( gridConfig );
-	
+			
 	    // make the grid resizable, do before render for better performance
     var rz = new Ext.Resizable("probe-grid", {
         wrap:true,
