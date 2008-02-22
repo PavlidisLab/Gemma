@@ -497,7 +497,12 @@ public class SearchService implements InitializingBean {
         Collection<String> characteristicUris = new HashSet<String>();
 
         Collection<OntologyIndividual> individuals = ontologyService.findIndividuals( settings.getQuery() );
-        log.info( "Found " + individuals.size() + " matching individuals in " + watch.getTime() + "ms" );
+        if ( individuals.size() > 0 || watch.getTime() > 1000 ) {
+            log.info( "Found " + individuals.size() + " matching individuals in " + watch.getTime() + "ms" );
+        }
+        watch.reset();
+        watch.start();
+
         for ( OntologyIndividual term : individuals ) {
             characteristicUris.add( term.getUri() );
         }
@@ -1234,8 +1239,7 @@ public class SearchService implements InitializingBean {
 
         watch.stop();
         if ( watch.getTime() > 1000 )
-            log.info( "Getting " + hits.getLength() + " hits for " + query + " took " + watch.getTime()
-                    + " ms" );
+            log.info( "Getting " + hits.getLength() + " hits for " + query + " took " + watch.getTime() + " ms" );
         watch.reset();
         watch.start();
 
@@ -1249,8 +1253,8 @@ public class SearchService implements InitializingBean {
         watch.stop();
 
         if ( watch.getTime() > 1000 )
-            log.info( "Detaching " + detachedHits.getLength() + " hits for " + query + " took "
-                    + watch.getTime() + " ms" );
+            log.info( "Detaching " + detachedHits.getLength() + " hits for " + query + " took " + watch.getTime()
+                    + " ms" );
 
         Collection<SearchResult> searchResults = getSearchResults( detachedHits.getHits() );
 
