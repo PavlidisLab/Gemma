@@ -6,9 +6,10 @@ Ext.onReady( function() {
 	var admin = dwr.util.getValue("hasAdmin");
 	
 	var searchPanel = new Ext.Gemma.CoexpressionSearchPanel( {
-		style : "margin-bottom: 1em;"
 	} );
 	searchPanel.render( "coexpression-form" );
+	
+	var summaryPanel;
 	
 	var knownGeneDatasetGrid = new Ext.Gemma.CoexpressionDatasetGrid( {
 		renderTo : "coexpression-results"
@@ -51,6 +52,18 @@ Ext.onReady( function() {
 				eeMap[ee.id] = ee;
 			}
 		}
+		
+		if ( summaryPanel ) {
+			// grid.destroy() seems to be broken...
+			try {
+				summaryPanel.destroy();
+			} catch (e) {}
+		}
+		summaryPanel = new Ext.Gemma.CoexpressionSummaryGrid( {
+			genes : result.queryGenes,
+			summary : result.summary
+		} );
+		summaryPanel.render( "coexpression-summary" );
 		
 		// create expression experiment image map
 		var imageMap = Ext.get( "eeMap" );
@@ -478,3 +491,88 @@ Ext.extend( Ext.Gemma.AnalysisCombo, Ext.form.ComboBox, {
 	
 } );
 
+/* Ext.Gemma.CoexpressionSummaryGrid constructor...
+ * 	config is a hash with the following options:
+ */
+Ext.Gemma.CoexpressionSummaryGrid = function ( config ) {
+	
+	var genes = config.genes; delete config.genes;
+	var summary = config.summary; delete config.summary;
+	
+	/* keep a reference to ourselves to avoid convoluted scope issues below...
+	 */
+	var thisGrid = this;
+	
+	/* establish default config options...
+	 */
+	var superConfig = {
+		editable : false,
+		title : 'Search Summary'
+	};
+	
+	var fields = [
+		{ name: 'sort', type: 'int' },
+		{ name: 'group', type: 'string' },
+		{ name: 'key', type: 'string' }
+	];
+	for ( var i=0; i<genes.length; ++i ) {
+		fields.push( { name: genes[i].officialSymbol, type: 'int' } );
+	}
+	superConfig.store = new Ext.data.GroupingStore( {
+		reader: new Ext.data.ArrayReader( {}, fields ),
+		groupField: 'group',
+		data: Ext.Gemma.CoexpressionSummaryGrid.transformData( genes, summary ),
+		sortInfo: { field: 'sort', direction: 'ASC' }
+	} );
+	
+	var columns = [
+		{ header: 'Group', dataIndex: 'group' },
+		{ id: 'key', header: '', dataIndex: 'key', align: 'right' }
+	];
+	for ( var i=0; i<genes.length; ++i ) {
+		columns.push( { header: genes[i].officialSymbol, dataIndex: genes[i].officialSymbol, align: 'right' } );
+	}
+	superConfig.cm = new Ext.grid.ColumnModel( columns );
+	superConfig.autoExpandColumn = 'key';
+	
+	superConfig.view = new Ext.grid.GroupingView( {
+		enableGroupingMenu : false,
+		enableNoGroups : false,
+		hideGroupedColumn : true,
+		showGroupName : false
+	} );
+	
+	for ( var property in config ) {
+		superConfig[property] = config[property];
+	}
+	Ext.Gemma.CoexpressionSummaryGrid.superclass.constructor.call( this, superConfig );
+	
+};
+
+/* static methods...
+ */
+Ext.Gemma.CoexpressionSummaryGrid.transformData = function ( genes, summary ) {
+	
+	var datasetsAvailable = [ 0, "Datasets", "Available" ];
+	var datasetsTested = [ 1, "Datasets", "Query gene testable" ];
+	var linksFound = [ 2, "Links", "Found" ];
+	var linksPositive = [ 3, "Links", "Met stringency (+)" ];
+	var linksNegative = [ 4, "Links", "Met stringency (-)" ];
+	
+	for ( var i=0; i<genes.length; ++i ) {
+		var thisSummary = summary[ genes[i].officialSymbol ] || {};
+		datasetsAvailable.push( thisSummary.datasetsAvailable );
+		datasetsTested.push( thisSummary.datasetsTested );
+		linksFound.push( thisSummary.linksFound );
+		linksPositive.push( thisSummary.linksMetPositiveStringency );
+		linksNegative.push( thisSummary.linksMetNegativeStringency );
+	}
+
+	return [ datasetsAvailable, datasetsTested, linksFound, linksPositive, linksNegative ];
+};
+
+
+/* instance methods...
+ */
+Ext.extend( Ext.Gemma.CoexpressionSummaryGrid, Ext.Gemma.GemmaGridPanel, {
+} );

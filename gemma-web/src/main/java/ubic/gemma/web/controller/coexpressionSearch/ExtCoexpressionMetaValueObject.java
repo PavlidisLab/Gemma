@@ -2,6 +2,7 @@ package ubic.gemma.web.controller.coexpressionSearch;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
@@ -13,7 +14,8 @@ public class ExtCoexpressionMetaValueObject {
 
     boolean isCannedAnalysis;
     boolean knownGenesOnly;
-    Collection<Gene> queryGenes;
+    List<Gene> queryGenes;
+    Map<String, ExtCoexpressionSummaryValueObject> summary;
     List<ExpressionExperimentValueObject> datasets;
     Collection<ExtCoexpressionDatasetValueObject> knownGeneDatasets;
     Collection<ExtCoexpressionValueObject> knownGeneResults;
@@ -30,7 +32,7 @@ public class ExtCoexpressionMetaValueObject {
         this.knownGenesOnly = knownGenesOnly;
     }
 
-    public void setQueryGenes( Collection<Gene> queryGenes ) {
+    public void setQueryGenes( List<Gene> queryGenes ) {
         this.queryGenes = queryGenes;
     }
 
@@ -92,6 +94,14 @@ public class ExtCoexpressionMetaValueObject {
 
     public void setProbeAlignedRegionDatasets( Collection<ExtCoexpressionDatasetValueObject> probeAlignedRegionDatasets ) {
         this.probeAlignedRegionDatasets = probeAlignedRegionDatasets;
+    }
+
+    public Map<String, ExtCoexpressionSummaryValueObject> getSummary() {
+        return summary;
+    }
+    
+    public void setSummary( Map<String, ExtCoexpressionSummaryValueObject> summary ) {
+        this.summary = summary;
     }
     
 }

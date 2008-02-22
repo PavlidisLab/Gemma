@@ -37,5 +37,6 @@
 <input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
 </authz:authorize>
 
-<div id='coexpression-form' style='width: 420px'></div>
+<div id='coexpression-summary' style='width: 250px; float: right; margin: 1em;'></div>
+<div id='coexpression-form' style='width: 420px; margin-bottom: 1em;'></div>
 <div id='coexpression-results' style=''></div>
