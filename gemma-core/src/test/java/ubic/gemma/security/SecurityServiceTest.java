@@ -23,6 +23,8 @@ import java.util.HashSet;
 
 import org.acegisecurity.acl.basic.BasicAclExtendedDao;
 
+import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.common.SecurableDao;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -47,6 +49,8 @@ public class SecurityServiceTest extends BaseSpringContextTest {
     String compositeSequenceName2 = "Design Element Bar2";
 
     private ExpressionExperimentService expressionExperimentService;
+
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     /*
      * (non-Javadoc)
@@ -169,6 +173,47 @@ public class SecurityServiceTest extends BaseSpringContextTest {
          * uncomment so you can see the acl permission has been changed in the database.
          */
         // this.setComplete();
+    }
+
+    /**
+     * 
+     */
+    @SuppressWarnings("unchecked")
+    public void testMakeAnalysisPrivate() throws Exception {
+        String expName = "GSE1077";
+
+        differentialExpressionAnalysisService = ( DifferentialExpressionAnalysisService ) this
+                .getBean( "differentialExpressionAnalysisService" );
+
+        expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
+        ExpressionExperiment investigation = expressionExperimentService.findByShortName( expName );
+
+        if ( investigation == null ) {
+            log.error( "Cannot find experiment " + expName + " in database.  Skipping test." );
+            return;
+        }
+
+        Collection<DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
+                .findByInvestigation( investigation );
+
+        if ( diffAnalyses == null || diffAnalyses.isEmpty() ) {
+            log.error( "Cannot find analyses for experiment " + expName + " in database.  Skipping test." );
+            return;
+        } else {
+
+            DifferentialExpressionAnalysis diffAnalysis = diffAnalyses.iterator().next();
+
+            SecurityService securityService = new SecurityService();
+
+            securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
+            securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
+            securityService.setPermissions( diffAnalysis, SecurityService.PRIVATE_MASK, new HashSet<Object>() );
+
+            /*
+             * uncomment so you can see the acl permission has been changed in the database.
+             */
+            // this.setComplete();
+        }
     }
 
 }
