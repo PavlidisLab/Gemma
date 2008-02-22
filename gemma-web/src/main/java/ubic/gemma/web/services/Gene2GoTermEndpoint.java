@@ -22,6 +22,9 @@ package ubic.gemma.web.services;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -39,7 +42,7 @@ import ubic.gemma.ontology.OntologyTerm;
 
 public class Gene2GoTermEndpoint extends AbstractGemmaEndpoint {
 
-    // private static Log log = LogFactory.getLog( Gene2GoTermEndpoint.class );
+    private static Log log = LogFactory.getLog( Gene2GoTermEndpoint.class );
 
     private GeneOntologyService geneOntologyService;
 
@@ -76,6 +79,10 @@ public class Gene2GoTermEndpoint extends AbstractGemmaEndpoint {
 
         // start building the wrapper
         // build xml manually for mapped result rather than use buildWrapper inherited from AbstractGemmeEndpoint
+        log.info( "Building " + GENE2GO_LOCAL_NAME + " XML response" );
+        StopWatch watch = new StopWatch();
+        watch.start();
+        
         String elementName1 = "gene_id";
         String elementName2 = "goIdList";
 
@@ -111,7 +118,10 @@ public class Gene2GoTermEndpoint extends AbstractGemmaEndpoint {
             e2.appendChild( document.createTextNode( elementString2 ) );
             responseElement.appendChild( e2 );
         }
-
+        watch.stop();
+        Long time = watch.getTime();
+        log.info( "Finished generating result. Sending response to client." );
+        log.info( "XML response for " + GENE2GO_LOCAL_NAME + " endpoint built in " + time + "ms." );
         return responseWrapper;
 
     }

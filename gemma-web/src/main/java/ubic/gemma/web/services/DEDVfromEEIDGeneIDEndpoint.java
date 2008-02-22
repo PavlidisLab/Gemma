@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
@@ -113,6 +114,10 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
 
         // start building the wrapper
         // xml is built manually here instead of using the buildWrapper method inherited from AbstractGemmaEndpoint
+        log.info( "Building " + EXPERIMENT_LOCAL_NAME + " XML response" );
+        StopWatch watch = new StopWatch();
+        watch.start();
+
         String elementName1 = "dedv";
         String elementName2 = "geneIdList";
         String elementName3 = "eeIdList";
@@ -165,6 +170,10 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
 
         }
 
+        watch.stop();
+        Long time = watch.getTime();
+        log.info( "Finished generating result. Sending response to client." );
+        log.info( "XML response for " + EXPERIMENT_LOCAL_NAME + " endpoint built in " + time + "ms." );
         log.info( "Finished generating matrix. Sending response to client." );
         return responseWrapper;
 
