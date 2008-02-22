@@ -18,6 +18,7 @@
  */
 package ubic.gemma.analysis.diff;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +46,7 @@ public class SimpleSAMAnalyzer extends RCommander {
     DenseDoubleMatrix2DNamed<DesignElement, Object> expressionLevelsMatrix = null;
     int[] columnLabels;
 
-    public SimpleSAMAnalyzer() {
+    public SimpleSAMAnalyzer() throws IOException {
         super();
         manager = new ExpressionDataManager();
     }
@@ -188,7 +189,13 @@ public class SimpleSAMAnalyzer extends RCommander {
     }
 
     public static void main( String[] args ) {
-        SimpleSAMAnalyzer analyzer = new SimpleSAMAnalyzer();
+        SimpleSAMAnalyzer analyzer;
+        try {
+            analyzer = new SimpleSAMAnalyzer();
+        } catch ( IOException e ) {
+            log.fatal( e );
+            return;
+        }
 
         // in order not to get OutOfMemoryError, I run these all three sections below seperately, one after another.
 

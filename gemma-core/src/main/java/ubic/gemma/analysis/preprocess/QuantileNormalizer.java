@@ -18,6 +18,8 @@
  */
 package ubic.gemma.analysis.preprocess;
 
+import java.io.IOException;
+
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.analysis.util.RCommander;
 
@@ -37,7 +39,7 @@ import ubic.gemma.analysis.util.RCommander;
  */
 public class QuantileNormalizer extends RCommander implements Normalizer {
 
-    public QuantileNormalizer() {
+    public QuantileNormalizer() throws IOException {
         super();
         rc.voidEval( "library(affy)" );
     }

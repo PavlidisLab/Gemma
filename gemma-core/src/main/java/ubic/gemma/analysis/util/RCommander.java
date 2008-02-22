@@ -18,6 +18,8 @@
  */
 package ubic.gemma.analysis.util;
 
+import java.io.IOException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -36,12 +38,16 @@ public abstract class RCommander {
 
     protected RClient rc;
 
-    public RCommander() {
+    public RCommander() throws IOException {
         this.init();
     }
 
-    protected void init() {
+    protected void init() throws IOException {
         rc = RConnectionFactory.getRConnection();
+        if ( rc == null || !rc.isConnected() ) {
+            throw new IOException( "Could not get an R connection" );
+        }
+        log.info( "Got R connection: " + rc.getClass() );
     }
 
     /**
@@ -49,8 +55,8 @@ public abstract class RCommander {
      * badness can occur.
      */
     public void cleanup() {
-        if ( rc == null ) {
-            log.warn( "Cleanup called, but no connection" );
+        if ( rc == null || !rc.isConnected() ) {
+            log.warn( "Cleanup called, but no valid R connection" );
             return;
         }
         rc.voidEval( " rm(list=ls())" ); // attempt to release all memory used by this connection.

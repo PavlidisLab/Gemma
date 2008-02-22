@@ -18,6 +18,8 @@
  */
 package ubic.gemma.analysis.preprocess;
 
+import java.io.IOException;
+
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.analysis.util.RCommander;
 
@@ -29,7 +31,7 @@ import ubic.gemma.analysis.util.RCommander;
  */
 public class PairwiseLoessNormalizer extends RCommander implements Normalizer {
 
-    public PairwiseLoessNormalizer() {
+    public PairwiseLoessNormalizer() throws IOException {
         super();
         rc.voidEval( "library(affy)" );
     }

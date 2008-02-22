@@ -18,6 +18,7 @@
  */
 package ubic.gemma.analysis.diff;
 
+import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
@@ -40,7 +41,7 @@ public class SimpleTTestAnalyzer extends RCommander {
 
     ExpressionDataManager manager;
 
-    public SimpleTTestAnalyzer() {
+    public SimpleTTestAnalyzer() throws IOException {
         super();
     }
 
@@ -175,7 +176,13 @@ public class SimpleTTestAnalyzer extends RCommander {
 
     public static void main( String[] args ) {
         // write two experiments' significant genes to files
-        SimpleTTestAnalyzer analyzer = new SimpleTTestAnalyzer();
+        SimpleTTestAnalyzer analyzer;
+        try {
+            analyzer = new SimpleTTestAnalyzer();
+        } catch ( IOException e ) {
+            log.fatal( e );
+            return;
+        }
         Hashtable<String, Double> sigGenes = analyzer.getSignificantGenes( "GDS1328", "saline", "OVA" );
         analyzer.writeSignificantGenesToFile( "GDS1328_siggenes.txt", sigGenes );
 

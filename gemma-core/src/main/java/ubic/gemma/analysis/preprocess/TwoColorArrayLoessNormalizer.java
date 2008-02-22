@@ -18,6 +18,8 @@
  */
 package ubic.gemma.analysis.preprocess;
 
+import java.io.IOException;
+
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 
 /**
@@ -26,7 +28,7 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
  */
 public class TwoColorArrayLoessNormalizer extends MarrayNormalizer implements TwoChannelNormalizer {
 
-    public TwoColorArrayLoessNormalizer() {
+    public TwoColorArrayLoessNormalizer() throws IOException {
         super();
     }
 

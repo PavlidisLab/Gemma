@@ -18,6 +18,7 @@
  */
 package ubic.gemma.analysis.util;
 
+import java.io.IOException;
 import java.util.List;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
@@ -34,7 +35,7 @@ public class MArrayRaw extends RCommander {
 
     private String layoutName = null;
 
-    public MArrayRaw() {
+    public MArrayRaw() throws IOException {
         super();
         rc.voidEval( "library(marray)" );
     }

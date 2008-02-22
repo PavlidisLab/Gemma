@@ -18,6 +18,7 @@
  */
 package ubic.gemma.analysis.diff;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -42,7 +43,7 @@ public class SimpleOneWayAnovaAnalyzer extends RCommander {
 
     ExpressionDataManager manager;
 
-    public SimpleOneWayAnovaAnalyzer() {
+    public SimpleOneWayAnovaAnalyzer() throws IOException {
         super();
     }
 
@@ -128,7 +129,13 @@ public class SimpleOneWayAnovaAnalyzer extends RCommander {
      * @param args
      */
     public static void main( String[] args ) {
-        SimpleOneWayAnovaAnalyzer analyzer = new SimpleOneWayAnovaAnalyzer();
+        SimpleOneWayAnovaAnalyzer analyzer;
+        try {
+            analyzer = new SimpleOneWayAnovaAnalyzer();
+        } catch ( IOException e ) {
+            log.fatal( e );
+            return;
+        }
         Hashtable<String, Double> sigGenes = analyzer.getSignificantGenes( "GDS1110" );
         analyzer.writeSignificantGenesToFile( "GDS1110", sigGenes );
 

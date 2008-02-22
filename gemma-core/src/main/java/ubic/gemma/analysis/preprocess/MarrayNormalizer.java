@@ -18,6 +18,8 @@
  */
 package ubic.gemma.analysis.preprocess;
 
+import java.io.IOException;
+
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.analysis.util.MArrayRaw;
 import ubic.gemma.analysis.util.RCommander;
@@ -30,7 +32,7 @@ import ubic.gemma.analysis.util.RCommander;
  */
 public abstract class MarrayNormalizer extends RCommander implements TwoChannelNormalizer {
 
-    public MarrayNormalizer() {
+    public MarrayNormalizer() throws IOException {
         super();
         boolean ok = rc.loadLibrary( "marray" );
         if ( !ok ) {
@@ -54,7 +56,12 @@ public abstract class MarrayNormalizer extends RCommander implements TwoChannelN
             DoubleMatrixNamed<String, String> channelTwoSignal, DoubleMatrixNamed<String, String> channelOneBackground,
             DoubleMatrixNamed<String, String> channelTwoBackground, DoubleMatrixNamed<String, String> weights,
             String method ) {
-        MArrayRaw mRaw = new MArrayRaw();
+        MArrayRaw mRaw;
+        try {
+            mRaw = new MArrayRaw();
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
         mRaw.makeMArrayLayout( channelOneSignal.rows() );
         String mRawVarName = mRaw.makeMArrayRaw( channelOneSignal, channelTwoSignal, channelOneBackground,
                 channelTwoBackground, weights );
@@ -84,7 +91,12 @@ public abstract class MarrayNormalizer extends RCommander implements TwoChannelN
      */
     protected DoubleMatrixNamed<String, String> normalize( DoubleMatrixNamed<String, String> channelOneSignal,
             DoubleMatrixNamed<String, String> channelTwoSignal, String method ) {
-        MArrayRaw mRaw = new MArrayRaw();
+        MArrayRaw mRaw;
+        try {
+            mRaw = new MArrayRaw();
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
         mRaw.makeMArrayLayout( channelOneSignal.rows() );
         String mRawVarName = mRaw.makeMArrayRaw( channelOneSignal, channelTwoSignal, null, null, null );
 

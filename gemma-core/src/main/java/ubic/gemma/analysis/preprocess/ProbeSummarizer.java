@@ -32,5 +32,5 @@ public interface ProbeSummarizer {
      * @param dataMatrix
      * @return
      */
-    public DoubleMatrixNamed summarize( DoubleMatrixNamed dataMatrix );
+    public DoubleMatrixNamed<String, String> summarize( DoubleMatrixNamed<String, String> dataMatrix );
 }

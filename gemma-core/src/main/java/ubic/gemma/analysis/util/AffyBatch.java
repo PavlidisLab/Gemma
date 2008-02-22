@@ -18,6 +18,8 @@
  */
 package ubic.gemma.analysis.util;
 
+import java.io.IOException;
+
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
@@ -29,7 +31,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
  */
 public class AffyBatch extends RCommander {
 
-    public AffyBatch() {
+    public AffyBatch() throws IOException {
         super();
         boolean ok = rc.loadLibrary( "affy" );
         if ( !ok ) {
@@ -58,12 +60,12 @@ public class AffyBatch extends RCommander {
      * @param affyBatchMatrix Rows represent probes, columns represent samples. The order of rows must be the same as in
      *        the native CEL file.
      * @param arrayDesign An arraydesign object which will be used to determine the CDF file to use, based on the array
-     *        name.
+     *        name. (FIXME This won't work out of the box - the names do not match the CDF in general)
+     * @return the name of the variable in R for the AffyBatch object.
      */
-    public String makeAffyBatch( DoubleMatrixNamed celMatrix, ArrayDesign arrayDesign ) {
+    public String makeAffyBatch( DoubleMatrixNamed<String, String> celMatrix, ArrayDesign arrayDesign ) {
 
         if ( celMatrix == null ) throw new IllegalArgumentException( "Null matrix" );
-
         String matrixName = rc.assignMatrix( celMatrix );
         String abName = "AffyBatch." + matrixName;
 
@@ -72,7 +74,7 @@ public class AffyBatch extends RCommander {
         String affyBatchRCmd = abName + "<-new(\"AffyBatch\", exprs=" + matrixName + ", cdfName=cdfName )";
 
         rc.voidEval( affyBatchRCmd );
-        rc.voidEval( "rm(" + matrixName + ")" ); // maybe saves memory...
+    //    rc.voidEval( "rm(" + matrixName + ")" ); // maybe saves memory...
 
         return abName;
     }

@@ -18,6 +18,8 @@
  */
 package ubic.gemma.analysis.preprocess;
 
+import java.io.IOException;
+
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.analysis.util.AffyBatch;
 import ubic.gemma.analysis.util.RCommander;
@@ -38,7 +40,7 @@ public class RMA extends RCommander implements ProbeSummarizer {
         MAS, PMONLY, SUBTRACTMM
     }
 
-    public RMA() {
+    public RMA() throws IOException {
         super();
         ab = new AffyBatch();
     }
@@ -54,9 +56,10 @@ public class RMA extends RCommander implements ProbeSummarizer {
      * <code>exprs(expresso(affybatch, bg.correct=FALSE, normalize=FALSE, pmcorrect.method="pmonly", summary.method="medianpolish"))</code>
      * 
      * @param dataMatrix The CEL value matrix
+     * @return RMA-processed matrix.
      * @see ubic.gemma.model.analysis.preprocess.ProbeSummarizer#summarize(baseCode.dataStructure.matrix.DoubleMatrixNamed)
      */
-    public DoubleMatrixNamed summarize( DoubleMatrixNamed dataMatrix ) {
+    public DoubleMatrixNamed<String, String> summarize( DoubleMatrixNamed<String, String> dataMatrix ) {
         log.debug( "Summarizing..." );
 
         if ( arrayDesign == null ) throw new IllegalStateException( "Must set arrayDesign first" );
@@ -66,7 +69,7 @@ public class RMA extends RCommander implements ProbeSummarizer {
 
         log.info( "Done with RMA" );
 
-        DoubleMatrixNamed resultObject = rc.retrieveMatrix( "m" );
+        DoubleMatrixNamed<String, String> resultObject = rc.retrieveMatrix( "m" );
 
         // clean up.
         rc.voidEval( "rm(m)" );

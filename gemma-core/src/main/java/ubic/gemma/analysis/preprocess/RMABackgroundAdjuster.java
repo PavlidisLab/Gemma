@@ -18,6 +18,8 @@
  */
 package ubic.gemma.analysis.preprocess;
 
+import java.io.IOException;
+
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.analysis.util.AffyBatch;
 import ubic.gemma.analysis.util.RCommander;
@@ -34,7 +36,7 @@ public class RMABackgroundAdjuster extends RCommander implements BackgroundAdjus
     private ArrayDesign arrayDesign = null;
     private AffyBatch ab = null;
 
-    public RMABackgroundAdjuster() {
+    public RMABackgroundAdjuster() throws IOException {
         super();
         ab = new AffyBatch();
     }

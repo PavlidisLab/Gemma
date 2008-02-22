@@ -39,11 +39,10 @@ public class RMATest extends TestCase {
 
     private static Log log = LogFactory.getLog( RMATest.class.getName() );
     RMA aa;
-    DoubleMatrixNamed celmatrix;
+    DoubleMatrixNamed<String, String> celmatrix;
     ArrayDesign arrayDesign;
-    InputStream is;
 
-    boolean connected = false;
+    static boolean connected = false;
 
     /*
      * @see TestCase#setUp()
@@ -53,18 +52,19 @@ public class RMATest extends TestCase {
         super.setUp();
         // test data are from the affybatch.example in the affy package.
         DoubleMatrixReader reader = new DoubleMatrixReader();
-        is = new GZIPInputStream( this.getClass().getResourceAsStream( "/data/testShortCel.txt.gz" ) );
-        if ( is == null ) throw new IOException();
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream( "/data/testShortCel.txt.gz" ) );
         celmatrix = reader.read( is );
         is.close();
         arrayDesign = ArrayDesign.Factory.newInstance();
         arrayDesign.setName( "cdfenv.example" );
 
-        try {
-            aa = new RMA();
-            connected = true;
-        } catch ( Exception e ) {
-            connected = false;
+        if ( !connected ) {
+            try {
+                aa = new RMA();
+                connected = true;
+            } catch ( IOException e ) {
+                connected = false;
+            }
         }
     }
 
@@ -73,18 +73,19 @@ public class RMATest extends TestCase {
      */
     public void testRma() {
         if ( !connected ) {
-            log.warn( "Could not connect to RServe, skipping test." );
+            log.warn( "Could not connect to R, skipping test." );
             return;
         }
         aa.setArrayDesign( arrayDesign );
-        DoubleMatrixNamed result = aa.summarize( celmatrix );
+        DoubleMatrixNamed<String, String> result = aa.summarize( celmatrix );
         assertTrue( result != null );
         assertEquals( 150, result.rows() );
         assertEquals( 3, result.columns() );
         assertEquals( "A28102_at", result.getRowName( 0 ) );
 
-        // values come from
-        // exprs(bg.correct.rma(affybatch.example))[11,3]
+        /*
+         * values come from exprs(bg.correct.rma(affybatch.example))[11,3]
+         */
 
         assertEquals( 7.000993, result.get( 10, 2 ), 0.0001 );
     }

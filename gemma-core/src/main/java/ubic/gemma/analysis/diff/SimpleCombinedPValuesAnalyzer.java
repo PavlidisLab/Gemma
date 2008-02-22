@@ -18,6 +18,7 @@
  */
 package ubic.gemma.analysis.diff;
 
+import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
@@ -36,7 +37,7 @@ public class SimpleCombinedPValuesAnalyzer extends SimpleOneWayAnovaAnalyzer {
 
     ExpressionDataManager[] managers = null;
 
-    public SimpleCombinedPValuesAnalyzer( int numberOfExperiments ) {
+    public SimpleCombinedPValuesAnalyzer( int numberOfExperiments ) throws IOException {
         super();
 
         managers = new ExpressionDataManager[numberOfExperiments];
@@ -126,7 +127,13 @@ public class SimpleCombinedPValuesAnalyzer extends SimpleOneWayAnovaAnalyzer {
     }
 
     public static void main( String[] args ) {
-        SimpleCombinedPValuesAnalyzer analyzer = new SimpleCombinedPValuesAnalyzer( 2 );
+        SimpleCombinedPValuesAnalyzer analyzer;
+        try {
+            analyzer = new SimpleCombinedPValuesAnalyzer( 2 );
+        } catch ( IOException e ) {
+            log.fatal( e );
+            return;
+        }
 
         // in order not to get OutOfMemoryError, I run these all three sections below seperately, one after another.
 
