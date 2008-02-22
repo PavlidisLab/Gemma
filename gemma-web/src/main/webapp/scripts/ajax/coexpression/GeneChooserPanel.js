@@ -149,7 +149,7 @@ Ext.extend( Ext.Gemma.GeneChooserPanel, Ext.grid.GridPanel, {
 	},
 	
 	loadGenes: function( geneIds ) {
-		GeneController.getGenes( geneIds,
+		GenePickerController.getGenes( geneIds,
 			function ( genes ) {
 				var geneData = [];
 				for ( var i=0; i<genes.length; ++i ) {
@@ -162,6 +162,21 @@ Ext.extend( Ext.Gemma.GeneChooserPanel, Ext.grid.GridPanel, {
 				}
 				this.getStore().loadData( geneData );
 			}
+		);
+	},
+	
+	setGene: function( geneId, callback ) {
+		GenePickerController.getGenes( [ geneId ],
+			function ( genes ) {
+				var g = genes[0];
+				g.taxon = g.taxon.scientificName;
+				this.geneCombo.setGene( g );
+				this.geneCombo.setValue( g.officialSymbol );
+				this.getStore().removeAll();
+				if ( callback ) {
+					callback();
+				}
+			}.bind( this )
 		);
 	},
 	

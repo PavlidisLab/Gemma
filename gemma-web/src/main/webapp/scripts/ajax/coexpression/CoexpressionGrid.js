@@ -4,6 +4,7 @@ Ext.namespace('Ext.Gemma');
  * 	config is a hash with the following options:
  */
 Ext.Gemma.CoexpressionGrid = function ( config ) {
+	Ext.QuickTips.init();
 	
 	this.pageSize = config.pageSize; delete config.pageSize;
 	
@@ -88,9 +89,17 @@ Ext.Gemma.CoexpressionGrid.getRecord = function() {
 
 Ext.Gemma.CoexpressionGrid.getFoundGeneStyler = function() {
 	if ( Ext.Gemma.CoexpressionGrid.foundGeneStyler === undefined ) {
+		Ext.Gemma.CoexpressionGrid.foundGeneTemplate = new Ext.Template(
+			"<a href='http://elmonline.ca' onClick='Ext.Gemma.CoexpressionSearchPanel.searchForGene({id}); return false;'>",
+				"<img src='/Gemma/images/logo/gemmaTiny.gif' ext:qtip='Make {officialSymbol} the query gene' />",
+			"</a>",
+			" &nbsp; ",
+			"<a href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}"
+		);
 		Ext.Gemma.CoexpressionGrid.foundGeneStyler = function ( value, metadata, record, row, col, ds ) {
 			var g = record.data.foundGene;
-			return String.format( "<a href='/Gemma/gene/showGene.html?id={0}'>{1}</a> {2}", g.id, g.officialSymbol, g.officialName || "" );
+			if ( g.officialName === null ) { g.officialName = "" }
+			return Ext.Gemma.CoexpressionGrid.foundGeneTemplate.apply( g );
 		};
 	}
 	return Ext.Gemma.CoexpressionGrid.foundGeneStyler;

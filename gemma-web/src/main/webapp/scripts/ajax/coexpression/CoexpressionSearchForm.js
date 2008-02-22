@@ -207,6 +207,10 @@ Ext.Gemma.CoexpressionSearchPanel = function ( config ) {
 	this.add( analysisFs );
 	this.addButton( submitButton );
 
+	Ext.Gemma.CoexpressionSearchPanel.searchForGene = function( geneId ) {
+		geneChooserPanel.setGene.call( geneChooserPanel, geneId, thisPanel.doSearch.bind( thisPanel ) );
+	};
+	
 };
 
 Ext.Gemma.CoexpressionSearchPanel.MIN_STRINGENCY = 2;
