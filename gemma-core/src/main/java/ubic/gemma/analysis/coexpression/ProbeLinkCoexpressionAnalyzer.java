@@ -99,7 +99,7 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
 
     /**
      * @param gene
-     * @param ees
+     * @param ees Collection of ExpressionExperiments that will be considered.
      * @param stringency A positive non-zero integer. If a value less than or equal to zero is entered, the value 1 will
      *        be silently used.
      * @param knownGenesOnly if false, 'predicted genes' and 'probe aligned regions' will be populated.
@@ -147,7 +147,7 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
             computeGoStats( coexpressions, stringency );
         }
 
-        computeEesTestedIn( gene, ees, coexpressions, eesQueryTestedIn, stringency, limit );
+        computeEesTestedIn( ees, coexpressions, eesQueryTestedIn, stringency, limit );
 
         log.debug( "Analysis completed" );
         return coexpressions;
@@ -254,7 +254,6 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
     /**
      * Fill in gene tested information for genes coexpressed with the query.
      * 
-     * @param gene the query gene
      * @param ees ExpressionExperiments, including all that were used at the start of the query (including those the
      *        query gene is NOT expressed in)
      * @param coexpressions
@@ -265,18 +264,18 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
      *        going to be looked at (as in the case of a bulk Gene2Gene analysis).
      */
     @SuppressWarnings("unchecked")
-    private void computeEesTestedIn( Gene gene, Collection<ExpressionExperiment> ees,
+    private void computeEesTestedIn( Collection<ExpressionExperiment> ees,
             CoexpressionCollectionValueObject coexpressions, Collection eesQueryTestedIn, int stringency, int limit ) {
 
         List<CoexpressionValueObject> coexpressionData = coexpressions.getKnownGeneCoexpressionData( stringency );
 
         if ( limit == 0 ) {
-            // when we expecte to be analyzing many query genes.
+            // when we expecte to be analyzing many query genes. Note that we pass in the full set of experiments, not
+            // just the ones in which the query gene was tested in.
             computeEesTestedInBatch( ees, coexpressionData );
         } else {
-            // for when we are looking at just one gene at a time (TODO: really we don't need to know the query gene at
-            // this point, but the probe2probe dao requires it.
-            computeEesTestedIn( gene, eesQueryTestedIn, coexpressionData );
+            // for when we are looking at just one gene at a time
+            computeEesTestedIn( eesQueryTestedIn, coexpressionData );
         }
 
         /*
@@ -289,10 +288,9 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
      * passed in (no limit). This method uses a cache to speed repeated calls, so it is very slow at first and then
      * faster.
      * 
-     * @param ees, limited to those that the query gene is coexpressed with.
-     * @param coexpressionData
-     * @param limit how many to populate. If <= 0, all will be done.
-     * @param coexpressionData
+     * @param ees, including ALL experiments that were intially started with, NOT just the ones that the query gene was
+     *        tested in.
+     * @param coexpressionData information on the genes needed to be examined.
      */
     @SuppressWarnings("unchecked")
     private void computeEesTestedInBatch( Collection<ExpressionExperiment> ees,
@@ -334,12 +332,11 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
      * For the genes that the query is coexpressed with. This is limited to the top MAX_GENES_TO_COMPUTE_EESTESTEDIN.
      * This is not very fast if MAX_GENES_TO_COMPUTE_EESTESTEDIN is large. We use this version for on-line requests.
      * 
-     * @param gene that is coexpressed with the query gene
      * @param ees, limited to the ees that the query gene is tested in.
      * @param coexpressionData
      */
     @SuppressWarnings("unchecked")
-    private void computeEesTestedIn( Gene gene, Collection<ExpressionExperiment> ees,
+    private void computeEesTestedIn( Collection<ExpressionExperiment> ees,
             List<CoexpressionValueObject> coexpressionData ) {
         Collection<Long> coexGeneIds = new HashSet<Long>();
 
@@ -356,9 +353,10 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
         log.info( "Computing EEs tested in for " + coexGeneIds.size() + " genes." );
 
         Map<Long, Collection<ExpressionExperiment>> eesTestedIn = probe2ProbeCoexpressionService
-                .getExpressionExperimentsLinkTestedIn( gene, coexGeneIds, ees, false );
+                .getExpressionExperimentsTestedIn( coexGeneIds, ees, false );
         for ( Long g : eesTestedIn.keySet() ) {
             CoexpressionValueObject o = gmap.get( g );
+            assert o != null;
             o.setDatasetsTestedIn( eesTestedIn.get( g ) );
         }
     }

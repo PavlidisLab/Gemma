@@ -31,6 +31,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.BitUtil;
+import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.GeneCoexpressionAnalysis;
 import ubic.gemma.model.analysis.GeneCoexpressionAnalysisService;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
@@ -88,6 +89,11 @@ public class GeneLinkCoexpressionAnalyzer {
             boolean knownGenesOnly, String toUseAnalysisName ) {
         Collection<Gene> processedGenes = new HashSet<Gene>();
 
+        Analysis existingAnalysis = geneCoexpressionAnalysisService.findByName( toUseAnalysisName );
+        if ( existingAnalysis != null ) {
+            throw new IllegalArgumentException( "Analysis with name '" + toUseAnalysisName + "' exists already" );
+        }
+
         if ( !knownGenesOnly ) {
             throw new UnsupportedOperationException(
                     "Sorry, using other than 'known genes' is not currently supported." );
@@ -102,6 +108,7 @@ public class GeneLinkCoexpressionAnalyzer {
             if ( taxon == null ) {
                 taxon = g.getTaxon();
             } else if ( !taxon.equals( g.getTaxon() ) ) {
+                // sanity check.
                 throw new IllegalArgumentException( "Cannot analyze genes from multiple taxa" );
             }
             genesToAnalyzeMap.put( g.getId(), g );
@@ -116,17 +123,17 @@ public class GeneLinkCoexpressionAnalyzer {
         Map<Long, Integer> eeIdOrder = getOrderingMap( expressionExperiments );
 
         try {
-            for ( Gene gene : toUseGenes ) {
-                CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis( gene,
-                        expressionExperiments, stringency, knownGenesOnly, 0 );
+            for ( Gene queryGene : toUseGenes ) {
+                CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis(
+                        queryGene, expressionExperiments, stringency, knownGenesOnly, 0 );
                 if ( knownGenesOnly && coexpressions.getNumKnownGenes() > 0 ) {
-                    Collection<Gene2GeneCoexpression> created = persistCoexpressions( eeIdOrder, gene, coexpressions,
-                            analysis, genesToAnalyzeMap, processedGenes, stringency );
+                    Collection<Gene2GeneCoexpression> created = persistCoexpressions( eeIdOrder, queryGene,
+                            coexpressions, analysis, genesToAnalyzeMap, processedGenes, stringency );
                     totalLinks += created.size();
                 }
                 // FIXME support using other than known genes (though we really don't do that now).
 
-                processedGenes.add( gene );
+                processedGenes.add( queryGene );
                 if ( processedGenes.size() % 100 == 0 ) {
                     log.info( "Processed " + processedGenes.size() + " genes..." );
                 }
@@ -258,7 +265,7 @@ public class GeneLinkCoexpressionAnalyzer {
         for ( Long id : idsToFlip ) {
             BitUtil.set( supportVector, eeIdOrder.get( id ) );
         }
-
+        assert BitUtil.count( supportVector ) == idsToFlip.size();
         return supportVector;
     }
 
@@ -278,6 +285,7 @@ public class GeneLinkCoexpressionAnalyzer {
             Long id = ee.getId();
             BitUtil.set( result, eeIdOrder.get( id ) );
         }
+        assert BitUtil.count( result ) == datasetsTestedIn.size();
         return result;
     }
 
@@ -370,6 +378,10 @@ public class GeneLinkCoexpressionAnalyzer {
 
             Gene secondGene = genesToAnalyze.get( co.getGeneId() );
             if ( alreadyPersisted.contains( secondGene ) ) continue; // only need to go in one direction
+
+            if ( log.isDebugEnabled() )
+                log.debug( firstGene.getName() + " link to " + secondGene.getName() + " tested in "
+                        + co.getDatasetsTestedIn().size() + " datasets" );
 
             byte[] testedInVector = computeTestedDatasetVector( co.getDatasetsTestedIn(), eeIdOrder );
 
