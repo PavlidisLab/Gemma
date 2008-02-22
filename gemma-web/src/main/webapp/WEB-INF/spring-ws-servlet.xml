@@ -35,9 +35,9 @@
 				
 				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}goTerm2Gene">goTerm2GeneEndpoint</prop>
 				
-				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}physicalLoc">physicalLocationEndpoint</prop>
+				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}physicalLocation">physicalLocationEndpoint</prop>
 				
-				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}arrayDesignIdentiferByName">arrayDesignIdentiferByNameEndpoint</prop>
+				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}arrayDesignIdentifierByName">arrayDesignIdentifierByNameEndpoint</prop>
 				
 				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}dEDVfromEEIDGeneID">dEDVfromEEIDGeneIDEndpoint</prop>
 				
@@ -158,7 +158,6 @@
         <description>
 				returns a list of gene ids
         </description>
-        <property name="geneService" ref="geneService"/>
         <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
         <property name="geneOntologyService" ref="geneOntologyService"/>
         <property name="taxonService" ref="taxonService"/>
@@ -190,7 +189,7 @@
         <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
     </bean>
     
-    <bean id="arrayDesignIdentiferByNameEndpoint" class="ubic.gemma.web.services.ArrayDesignIdentiferByNameEndpoint">
+    <bean id="arrayDesignIdentifierByNameEndpoint" class="ubic.gemma.web.services.ArrayDesignIdentifierByNameEndpoint">
         <description>
 				returns the Array Design ID given text
         </description>
