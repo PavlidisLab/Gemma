@@ -112,7 +112,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     /**
      * Instead of showing all the probes for the array, we might only fetch some of them.
      */
-    private static final int NUM_PROBES_TO_SHOW = 100;
+    private static final int NUM_PROBES_TO_SHOW = 500;
 
     private static boolean AJAX = true;
 
@@ -350,77 +350,6 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         return this.getDesignSummaries( arrayDesign );
     }
 
-    /**
-     * @param arrayDesign
-     * @param offset how many from start
-     * @param how many to return
-     * @param sortBy name of field to sort by.
-     * @param sortDirection DESC or ASC
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public ListRange getCsSummaryRange( EntityDelegator ed, int offset, int size, final String sortBy,
-            final String sortDirection ) {
-        ArrayDesign arrayDesign = arrayDesignService.load( ed.getId() );
-        Element element = cache.get( arrayDesign );
-        List res;
-        if ( element == null ) {
-            // Experimental; this returns the entire array design info, which is then cached. This is pretty memory
-            // intensive.
-            Collection rawSummaries = compositeSequenceService.getRawSummary( arrayDesign, -1 );
-            Collection<CompositeSequenceMapValueObject> summaries = arrayDesignMapResultService
-                    .getSmallerSummaryMapValueObjects( rawSummaries );
-            res = new ArrayList();
-            res.addAll( summaries );
-            cache.put( new Element( arrayDesign, res ) );
-        } else {
-            res = ( List ) element.getValue();
-        }
-
-        int dir = 1;
-        if ( sortDirection != null && sortDirection.equalsIgnoreCase( "DESC" ) ) {
-            dir = -1;
-        }
-
-        final int desc = dir;
-
-        // we need to lock res as it is potentially sorted in different directions by different users.
-        synchronized ( res ) {
-            Collections.sort( res, new Comparator<CompositeSequenceMapValueObject>() {
-                public int compare( CompositeSequenceMapValueObject o1, CompositeSequenceMapValueObject o2 ) {
-                    try {
-
-                        Object property = PropertyUtils.getProperty( o1, sortBy );
-                        Object property2 = PropertyUtils.getProperty( o2, sortBy );
-
-                        if ( property == null || property2 == null ) return 0;
-
-                        if ( property instanceof Comparable ) {
-                            return desc * ( ( Comparable ) property ).compareTo( property2 );
-                        } else if ( property instanceof Collection ) {
-                            // This is lame - sort by size. Should sort by members themselves.
-                            return desc * ( ( ( Collection ) property ).size() - ( ( Collection ) property2 ).size() );
-
-                        } else if ( property instanceof Map ) {
-                            return desc
-                                    * ( ( ( Map ) property ).values().size() - ( ( Map ) property2 ).values().size() );
-                        }
-                    } catch ( Exception e ) {
-                        return 0;
-                    }
-                    return 0;
-                }
-
-            } );
-
-            // return just the values.
-            offset = Math.max( 0, offset );
-            offset = Math.min( res.size() - 1, offset );
-            int endpoint = Math.min( res.size() - 1, offset + size );
-            ListRange result = new ListRange( res.subList( offset, endpoint ) );
-            return result;
-        }
-    }
 
     /**
      * @param arrayDesign
