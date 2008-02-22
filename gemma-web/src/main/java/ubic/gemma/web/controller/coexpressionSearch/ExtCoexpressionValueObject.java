@@ -27,6 +27,7 @@ public class ExtCoexpressionValueObject {
     
     private Gene queryGene;
     private Gene foundGene;
+    private String sortKey;
     private Integer supportKey;
     private Integer positiveLinks;
     private Integer negativeLinks;
@@ -53,6 +54,14 @@ public class ExtCoexpressionValueObject {
     
     public void setFoundGene( Gene foundGene ) {
         this.foundGene = foundGene;
+    }
+    
+    public String getSortKey() {
+        return sortKey;
+    }
+    
+    public void setSortKey() {
+        this.sortKey = String.format( "%06f%s", 1.0/getSupportKey(), getFoundGene().getOfficialSymbol() );
     }
 
     public Integer getSupportKey() {

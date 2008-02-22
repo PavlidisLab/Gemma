@@ -23,6 +23,7 @@ Ext.Gemma.CoexpressionGrid = function ( config ) {
 		superConfig.store = new Ext.Gemma.PagingDataStore( {
 			proxy : new Ext.data.MemoryProxy( [] ),
 			reader : new Ext.data.ListRangeReader( {id:"id"}, Ext.Gemma.CoexpressionGrid.getRecord() ),
+			sortInfo : { field: 'sortKey', direction: 'ASC' },
 			pageSize : this.pageSize
 		} );
 		superConfig.bbar = new Ext.Gemma.PagingToolbar( {
@@ -32,7 +33,8 @@ Ext.Gemma.CoexpressionGrid = function ( config ) {
 	} else {
 		superConfig.ds = new Ext.data.Store( {
 			proxy : new Ext.data.MemoryProxy( [] ),
-			reader : new Ext.data.ListRangeReader( {id:"id"}, Ext.Gemma.CoexpressionGrid.getRecord() )
+			reader : new Ext.data.ListRangeReader( {id:"id"}, Ext.Gemma.CoexpressionGrid.getRecord() ),
+			sortInfo : { field: 'sortKey', direction: 'ASC' }
 		} );
 	}
 	
@@ -41,7 +43,7 @@ Ext.Gemma.CoexpressionGrid = function ( config ) {
 		{ id: 'found', header: "Coexpressed Gene", dataIndex: "foundGene", renderer: Ext.Gemma.CoexpressionGrid.getFoundGeneStyler() },
 		{ id: 'support', header: "Support", dataIndex: "supportKey", renderer: Ext.Gemma.CoexpressionGrid.getSupportStyler() },
 		{ id: 'go', header: "GO Overlap", dataIndex: "goOverlap", renderer: Ext.Gemma.CoexpressionGrid.getGoStyler() },
-		{ id: 'datasets', header: "Datasets", dataIndex: "supportingDatasetVector", renderer: Ext.Gemma.CoexpressionGrid.getBitImageStyler() }
+		{ id: 'datasets', header: "Datasets", dataIndex: "supportingDatasetVector", renderer: Ext.Gemma.CoexpressionGrid.getBitImageStyler(), sortable: false }
 	] );
 	superConfig.cm.defaultSortable = true;
 	superConfig.plugins = Ext.Gemma.CoexpressionGrid.getRowExpander();
@@ -66,8 +68,9 @@ Ext.Gemma.CoexpressionGrid.getRecord = function() {
 	if ( Ext.Gemma.CoexpressionGrid.record === undefined ) {
 		Ext.Gemma.CoexpressionGrid.record = Ext.data.Record.create( [
 			{ name:"queryGene", type:"string", convert: function( g ) { return g.officialSymbol } },
-			{ name:"foundGene" },
-			{ name:"supportKey", type:"int" },
+			{ name:"foundGene", sortType: function( g ) { return g.officialSymbol } },
+			{ name:"sortKey", type:"string" },
+			{ name:"supportKey", type:"int", sortType:Ext.data.SortTypes.asInt, sortDir:"DESC" },
 			{ name:"positiveLinks", type:"int" },
 			{ name:"negativeLinks", type:"int" },
 			{ name:"numDatasetsLinkTestedIn", type:"int" },

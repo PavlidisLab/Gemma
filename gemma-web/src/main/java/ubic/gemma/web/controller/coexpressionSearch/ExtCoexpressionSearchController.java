@@ -193,6 +193,7 @@ public class ExtCoexpressionSearchController extends BaseFormController {
                 }
                 supportingExperimentIds.addAll( supportingDatasets );
                 
+                ecvo.setSortKey();
                 ecvos.add( ecvo );
             }
             
@@ -355,7 +356,7 @@ public class ExtCoexpressionSearchController extends BaseFormController {
 
             ecvo.setPositiveLinks( cvo.getPositiveLinkSupport() );
             ecvo.setNegativeLinks( cvo.getNegativeLinkSupport() );
-            ecvo.setSupportKey( ecvo.getPositiveLinks() - ecvo.getNegativeLinks() );
+            ecvo.setSupportKey( 10 * ( ecvo.getPositiveLinks() - ecvo.getNegativeLinks() ) );
             
             /* this logic is taken from CoexpressionWrapper; I don't understand it, but
              * that's where it comes from...
@@ -364,6 +365,7 @@ public class ExtCoexpressionSearchController extends BaseFormController {
                 ecvo.setNonSpecificPositiveLinks( getNonSpecificLinkCount( cvo.getEEContributing2PositiveLinks(), cvo.getNonspecificEE() ) );
                 ecvo.setNonSpecificNegativeLinks( getNonSpecificLinkCount( cvo.getEEContributing2NegativeLinks(), cvo.getNonspecificEE() ) );
                 ecvo.setHybridizesWithQueryGene( cvo.isHybridizesWithQueryGene() );
+                ecvo.setSupportKey( ecvo.getSupportKey() - ecvo.getNonSpecificPositiveLinks() + ecvo.getNonSpecificNegativeLinks() );
             }
             
             ecvo.setNumDatasetsLinkTestedIn( cvo.getNumDatasetsTestedIn() );
@@ -383,6 +385,7 @@ public class ExtCoexpressionSearchController extends BaseFormController {
             ecvo.setTestedDatasetVector( tested );
             ecvo.setSupportingDatasetVector( supported );
 
+            ecvo.setSortKey();
             results.add( ecvo );
         }
 
