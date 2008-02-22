@@ -66,7 +66,7 @@
 <div id="probe-grid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:350px;"></div>
 <c:if test="${arrayDesign.id != null}">
 	<div style="font-size:smaller;border-width:thin; border-style:dotted; border-color:#CCCCCC;padding:3px;margin-top:13px;width:40%">
-		Note that for many array designs, not all probes will be available above. Use the search function to find specific probes
+		Note that for array designs, only 500 probes will be available above. Use the search function to find specific probes
 	</div>
 </c:if>
 <c:if test="${gene != null}">
