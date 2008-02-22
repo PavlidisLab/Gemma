@@ -29,6 +29,7 @@ import net.sf.ehcache.CacheException;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -211,7 +212,7 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
      */
     @SuppressWarnings("unchecked")
     private void fillInGeneInfo( int stringency, CoexpressionCollectionValueObject coexpressions ) {
-        log.info( "Filling in Gene info" );
+        log.debug( "Filling in Gene info" );
         CoexpressedGenesDetails coexp = coexpressions.getKnownGeneCoexpression();
         fillInGeneInfo( stringency, coexpressions, coexp );
 
@@ -231,6 +232,8 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
     @SuppressWarnings("unchecked")
     private void fillInGeneInfo( int stringency, CoexpressionCollectionValueObject coexpressions,
             CoexpressedGenesDetails coexp ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
         List<CoexpressionValueObject> coexpressionData = coexp.getCoexpressionData( stringency );
         Collection<Long> geneIds = new HashSet<Long>();
         for ( CoexpressionValueObject cod : coexpressionData ) {
@@ -248,6 +251,10 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
             cod.setGeneOfficialName( g.getOfficialName() );
             cod.setGeneType( g.getClass().getSimpleName() );
             coexpressions.add( cod );
+        }
+        timer.stop();
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Filled in gene info: " + timer.getTime() + "ms" );
         }
     }
 
@@ -301,7 +308,7 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
             gmap.put( o.getGeneId(), o );
         }
 
-        log.info( "Computing EEs tested in for " + coexpressionData.size() + " genes coexpressed with query." );
+        log.debug( "Computing EEs tested in for " + coexpressionData.size() + " genes coexpressed with query." );
 
         for ( ExpressionExperiment ee : ees ) {
             Element element = this.eetestedGeneCache.get( ee.getId() );
@@ -350,7 +357,7 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
             if ( i >= MAX_GENES_TO_COMPUTE_EESTESTEDIN ) break;
         }
 
-        log.info( "Computing EEs tested in for " + coexGeneIds.size() + " genes." );
+        log.debug( "Computing EEs tested in for " + coexGeneIds.size() + " genes." );
 
         Map<Long, Collection<ExpressionExperiment>> eesTestedIn = probe2ProbeCoexpressionService
                 .getExpressionExperimentsTestedIn( coexGeneIds, ees, false );
@@ -415,7 +422,7 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
             return;
         }
 
-        log.info( "Computing GO stats" );
+        log.debug( "Computing GO stats" );
 
         Gene queryGene = coexpressions.getQueryGene();
         int numQueryGeneGOTerms = geneOntologyService.getGOTerms( queryGene ).size();

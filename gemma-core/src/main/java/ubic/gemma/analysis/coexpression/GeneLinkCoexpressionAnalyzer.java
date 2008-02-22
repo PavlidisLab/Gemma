@@ -99,8 +99,7 @@ public class GeneLinkCoexpressionAnalyzer {
                     "Sorry, using other than 'known genes' is not currently supported." );
         }
 
-        log.info( "Starting gene link analysis '" + toUseAnalysisName + " on " + toUseGenes.size() + " genes in "
-                + expressionExperiments.size() + " experiments with a stringency of " + stringency );
+        log.info( "Initializing gene link analysis ... " );
 
         Taxon taxon = null;
         Map<Long, Gene> genesToAnalyzeMap = new HashMap<Long, Gene>();
@@ -121,6 +120,9 @@ public class GeneLinkCoexpressionAnalyzer {
         int totalLinks = 0;
 
         Map<Long, Integer> eeIdOrder = getOrderingMap( expressionExperiments );
+
+        log.info( "Starting gene link analysis '" + toUseAnalysisName + " on " + toUseGenes.size() + " genes in "
+                + expressionExperiments.size() + " experiments with a stringency of " + stringency );
 
         try {
             for ( Gene queryGene : toUseGenes ) {
