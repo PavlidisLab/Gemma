@@ -622,6 +622,7 @@ Mapping URLS to controllers
 							<value>commonName</value>
 							<value>scientificName</value>
 							<value>ncbiId</value>
+							<value>externalDatabase</value>
 						</list>
 					</property>
 				</bean>
