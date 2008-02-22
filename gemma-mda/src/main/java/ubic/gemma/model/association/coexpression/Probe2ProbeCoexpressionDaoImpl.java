@@ -359,13 +359,12 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         StopWatch watch = new StopWatch();
         watch.start();
         for ( Collection<Long> csBatch : BatchIterator.batches( cs2genes.keySet(), 2000 ) ) {
-            // This is very rather slow.
+            // This is very rather slow, if doing this with big collections.
             eesre.addAll( this.getHibernateTemplate().findByNamedParam( queryString, "probes", csBatch ) );
-            watch.split();
-            log.info( "Batch completed in " + watch.getSplitTime() + "ms" );
-            watch.unsplit();
         }
-        log.info( "Done in " + watch.getTime() + "ms: " + eesre.size() + " records." );
+        if ( watch.getTime() > 1000 ) {
+            log.info( "Done in " + watch.getTime() + "ms: " + eesre.size() + " records." );
+        }
 
         for ( Object o : eesre ) {
             Object[] ol = ( Object[] ) o;
