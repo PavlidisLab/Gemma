@@ -346,7 +346,6 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         return this.getDesignSummaries( arrayDesign );
     }
 
-
     /**
      * @param arrayDesign
      * @return
