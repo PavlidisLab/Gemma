@@ -52,8 +52,6 @@ import ubic.gemma.security.authentication.ManualAuthenticationProcessing;
  */
 public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
-    private static final String COMPASS_ON = "compassOn";
-
     private static final String GIGASPACES_ON = "gigaspacesOn";
 
     protected BeanFactory ctx = null;
@@ -75,11 +73,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     }
 
     private void addSpecialServiceOptions() {
-        Option compassOnOpt = new Option( COMPASS_ON, false,
-                "Turn on compass indexing (Does not turn on index mirroring)" );
         Option gigaspacesOnOpt = new Option( GIGASPACES_ON, false, "Use the gigaspaces compute-server for large jobs." );
-
-        options.addOption( compassOnOpt );
         options.addOption( gigaspacesOnOpt );
     }
 
@@ -229,10 +223,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
      */
     void createSpringContext() {
 
-        ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), hasOption( COMPASS_ON ),
-                hasOption( GIGASPACES_ON ), false );
-
-        CompassUtils.deleteCompassLocks();
+        ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), true, hasOption( GIGASPACES_ON ), false );
 
         /* disable the scheduler */
         QuartzUtils.disableQuartzScheduler( ( StdScheduler ) this.getBean( "schedulerFactoryBean" ) );
