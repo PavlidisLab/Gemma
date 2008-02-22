@@ -4,7 +4,7 @@ Ext.onReady( function() {
 	Ext.QuickTips.init();
 	
 	var admin = dwr.util.getValue("hasAdmin");
-
+	
 	var searchPanel = new Ext.Gemma.CoexpressionSearchPanel( {
 		style : "margin-bottom: 1em;"
 	} );
@@ -51,6 +51,17 @@ Ext.onReady( function() {
 				eeMap[ee.id] = ee;
 			}
 		}
+		
+		// create expression experiment image map
+		var imageMap = Ext.get( "eeMap" );
+		if ( ! imageMap ) {
+			imageMap = Ext.getBody().createChild( {
+				tag: 'map',
+				id: 'eeMap',
+				name: 'eeMap'
+			} );
+		}
+		Ext.Gemma.CoexpressionGrid.getBitImageMapTemplate().overwrite( imageMap, result.datasets );
 		
 		Ext.Gemma.CoexpressionDatasetGrid.updateDatasetInfo( result.knownGeneDatasets, eeMap );
 		knownGeneDatasetGrid.loadData( result.isCannedAnalysis, result.queryGenes.length, result.knownGeneDatasets ) ;

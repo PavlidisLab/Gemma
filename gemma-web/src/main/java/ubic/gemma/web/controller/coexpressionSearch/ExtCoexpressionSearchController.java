@@ -21,6 +21,7 @@ package ubic.gemma.web.controller.coexpressionSearch;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +57,7 @@ import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.CountingMap;
+import ubic.gemma.util.GemmaLinkUtils;
 import ubic.gemma.web.controller.BaseFormController;
 
 /**
@@ -128,6 +130,11 @@ public class ExtCoexpressionSearchController extends BaseFormController {
         List<Long> eeIds = getSortedIdList( analysis.getExperimentsAnalyzed() );
         List<ExpressionExperimentValueObject> eevos = new ArrayList( expressionExperimentService
                 .loadValueObjects( eeIds ) );
+        Collections.sort( eevos, new Comparator<ExpressionExperimentValueObject>() {
+            public int compare( ExpressionExperimentValueObject eevo1, ExpressionExperimentValueObject eevo2 ) {
+                return eevo1.getId().compareTo( eevo2.getId() );
+            }
+        } );
 
         ExtCoexpressionMetaValueObject result = new ExtCoexpressionMetaValueObject();
         result.setQueryGenes( genes );
@@ -269,6 +276,18 @@ public class ExtCoexpressionSearchController extends BaseFormController {
         }
         List<ExpressionExperimentValueObject> eevos = new ArrayList( expressionExperimentService
                 .loadValueObjects( eeIds ) );
+        Collections.sort( eevos, new Comparator<ExpressionExperimentValueObject>() {
+            public int compare( ExpressionExperimentValueObject eevo1, ExpressionExperimentValueObject eevo2 ) {
+                return eevo1.getId().compareTo( eevo2.getId() );
+            }
+        } );
+        
+        /* I'm lazy and rushed, so I'm using an existing field for this info;
+         * probably better to add another field to the value object...
+         */
+        for ( ExpressionExperimentValueObject eevo : eevos ) {
+            eevo.setExternalUri( GemmaLinkUtils.getExpressionExperimentUrl( eevo.getId() ) );
+        }
 
         result.setQueryGenes( genes );
         result.setDatasets( eevos );

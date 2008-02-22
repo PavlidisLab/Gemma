@@ -995,6 +995,7 @@ Mapping URLS to controllers
 							<value>bioAssayCount</value>
 							<value>rawCoexpressionLinkCount</value>
 							<value>coexpressionLinkCount</value>
+							<value>externalUri</value>
 						</list>
 					</property>
 				</bean>

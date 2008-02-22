@@ -133,12 +133,30 @@ Ext.Gemma.CoexpressionGrid.getGoStyler = function() {
 	return Ext.Gemma.CoexpressionGrid.goStyler;
 };
 
+Ext.Gemma.CoexpressionGrid.bitImageBarWidth = 2;
+Ext.Gemma.CoexpressionGrid.bitImageBarHeight = 10;
+
+Ext.Gemma.CoexpressionGrid.getBitImageMapTemplate = function() {
+	if ( Ext.Gemma.CoexpressionGrid.bitImageMapTemplate === undefined ) {
+		Ext.Gemma.CoexpressionGrid.bitImageMapTemplate = new Ext.XTemplate(
+			'<tpl for=".">',
+			'<area shape="rect" coords="{[ (xindex - 1) * this.barx ]},0,{[ xindex * this.barx ]},{[ this.bary ]}" ext:qtip="{name}" href="{externalUri}" />',
+			'</tpl>',
+			{
+				barx : Ext.Gemma.CoexpressionGrid.bitImageBarWidth,
+				bary : Ext.Gemma.CoexpressionGrid.bitImageBarHeight - 1
+			}
+		);
+	}
+	return Ext.Gemma.CoexpressionGrid.bitImageMapTemplate;
+};
+
 Ext.Gemma.CoexpressionGrid.getBitImageStyler = function() {
 	if ( Ext.Gemma.CoexpressionGrid.bitImageStyler === undefined ) {
 		Ext.Gemma.CoexpressionGrid.bitImageStyler = function ( value, metadata, record, row, col, ds ) {
 			var bits = record.data.supportingDatasetVector;
-			var width = 2 * bits.length;
-			var height = 10;
+			var width = Ext.Gemma.CoexpressionGrid.bitImageBarWidth * bits.length;
+			var height = Ext.Gemma.CoexpressionGrid.bitImageBarHeight;
 			var s = '<span style="background-color:#DDDDDD;">' +
 				'<img src="/Gemma/spark?type=bar&width=' + width + '&height=' + height +
 				'&color=black&spacing=0&data=';
@@ -148,7 +166,7 @@ Ext.Gemma.CoexpressionGrid.getBitImageStyler = function() {
 				}
 				s = s + ( bits[i] > 0 ? "20" : "0" );
 			}
-			s = s + '" /></span>';
+			s = s + '" usemap="eeMap" /></span>';
 			return s;
 		};
 	}
