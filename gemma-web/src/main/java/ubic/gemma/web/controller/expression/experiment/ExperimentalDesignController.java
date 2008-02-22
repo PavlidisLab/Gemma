@@ -241,6 +241,7 @@ public class ExperimentalDesignController extends BaseMultiActionController {
 
         Collection<FactorValueValueObject> result = new HashSet<FactorValueValueObject>();
         for ( FactorValue value : ef.getFactorValues() ) {
+            //FIXME  getExperimentFactor can return null.... what to do?
             result.add( new FactorValueValueObject( value, value.getExperimentalFactor().getCategory() ) );
         }
         return result;
