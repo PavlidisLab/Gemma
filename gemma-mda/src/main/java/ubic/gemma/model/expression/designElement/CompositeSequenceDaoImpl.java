@@ -449,7 +449,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
         } else {
             // just a chunk.
-            final String queryString = "select cs from CompositeSequenceImpl as cs inner join cs.arrayDesign as ar where ar  :ar";
+            final String queryString = "select cs from CompositeSequenceImpl as cs inner join cs.arrayDesign as ar where ar = :ar";
             this.getHibernateTemplate().setMaxResults( numResults );
             List cs = this.getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign );
             this.getHibernateTemplate().setMaxResults( 0 );
