@@ -1,13 +1,40 @@
 /*
+ * The javascript search interface.  The web interface for our powerful search engine.
 * Version: $Id$
 */
+//Global Variable
 var ds;
 var form;
+var grid;
 
+//Contants
+var MAX_AUTO_EXPAND_SIZE = 15;
 
 var handleLoadSuccess = function(scope,b,arg) {
 	Ext.DomHelper.overwrite("messages", scope.getCount() + " found" ); 
  	form.findById('submit-button').setDisabled(false);
+ 	
+
+	//If possible to expand all and not scroll then expand
+ 	if (ds.getCount() < MAX_AUTO_EXPAND_SIZE){
+ 		grid.getView().expandAllGroups();
+ 		return; 		//no point in checking below
+ 	}
+
+
+ 	//If there is only 1 returned group then expand it regardless of its size.   	
+ 	var lastResultClass = ds.getAt(0).data.resultClass;
+ 	var expand = true;
+ 	
+ 	for(var i=1; i<ds.getCount(); i++) {
+ 		var record = ds.getAt(i).data;
+ 	 		 if  (record.resultClass !== lastResultClass)
+ 	 		 	expand = false;
+ 	}
+
+	if(expand)
+		grid.getView().expandAllGroups();
+	 	
 };
 
 var handleLoadError = function(scope,b,message,exception) {
@@ -125,6 +152,7 @@ var initGrid = function(id) {
 				{header: "Text", width: 180, dataIndex:"highlightedText" }
 	]);
 	cm.setHidden(0, true); // don't show the item class column by default.
+	cm.setHidden(2,true); // don't show the score by default (usefully for debugging)
 	cm.defaultSortable = true;
  
     var proxy = new Ext.data.DWRProxy(SearchService.search );
