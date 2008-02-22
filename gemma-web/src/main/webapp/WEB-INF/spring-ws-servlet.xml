@@ -193,7 +193,6 @@
         <description>
 				returns the Array Design ID given text
         </description>
-        <property name="searchService" ref="searchService"/>
         <property name="arrayDesignService" ref="arrayDesignService"/>
         <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
     </bean>
