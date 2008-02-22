@@ -149,7 +149,7 @@ var initGrid = function(id) {
 	 			{header: "Category", width: 150, dataIndex:"resultClass", renderer:renderEntityClass },
 				{header: "Item", width: 480, dataIndex:"resultObject", renderer:renderEntity },
 				{header: "Score", width: 60, dataIndex:"score" },
-				{header: "Text", width: 180, dataIndex:"highlightedText" }
+				{header: "Matching text", width: 180, dataIndex:"highlightedText" }
 	]);
 	cm.setHidden(0, true); // don't show the item class column by default.
 	cm.setHidden(2,true); // don't show the score by default (usefully for debugging)
@@ -211,7 +211,7 @@ var renderEntityClass = function(data, metadata, record, row, column, store  ) {
 		return "Probe";
 	} else if (clazz == "ArrayDesignValueObject") {
 		return "Array";
-	} else if (clazz == "BioSequence") {
+	} else if ( /^BioSequence.*/.exec(clazz)) { // because we get proxies.
 		return "Sequence";
 	} else if (clazz == "Gene") {
 		return "Gene";
@@ -229,7 +229,7 @@ var renderEntity = function( data, metadata, record, row, column, store  ) {
 		return "<a href=\"/Gemma/compositeSequence/show.html?id=" + data.id + "\">" + data.name  + "</a> - " + data.description + "; Array: " + data.arrayDesign.shortName;
 	} else if (clazz == "ArrayDesignValueObject") {
 		return "<a href=\"/Gemma/arrays/showArrayDesign.html?id=" + data.id + "\">" + data.shortName + "</a>  " + data.name;
-	}else if (clazz == "BioSequence") {
+	}else if ( /^BioSequence.*/.exec(clazz) ) {
 		return "<a href=\"/Gemma/genome/bioSequence/showBioSequence.html?id=" + data.id + "\">" + data.name + "</a> - " + data.taxon.commonName + " " + data.description ;
 	} else if (clazz == "Gene") {
 		return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">" + data.officialSymbol + "</a>  - Species: " + data.taxon.commonName + " Desc: " + data.officialName;
