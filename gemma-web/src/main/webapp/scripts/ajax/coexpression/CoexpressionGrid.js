@@ -56,6 +56,8 @@ Ext.Gemma.CoexpressionGrid = function ( config ) {
 	}
 	Ext.Gemma.CoexpressionGrid.superclass.constructor.call( this, superConfig );
 	
+	this.originalTitle = this.title;
+	
 	this.getStore().on( "load", function () {
 		this.autoSizeColumns();
 		this.doLayout();

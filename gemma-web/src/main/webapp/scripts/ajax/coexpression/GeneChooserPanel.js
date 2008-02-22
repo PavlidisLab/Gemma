@@ -148,7 +148,7 @@ Ext.extend( Ext.Gemma.GeneChooserPanel, Ext.grid.GridPanel, {
 		return w;
 	},
 	
-	loadGenes: function( geneIds ) {
+	loadGenes: function( geneIds, callback ) {
 		GenePickerController.getGenes( geneIds,
 			function ( genes ) {
 				var geneData = [];
@@ -161,6 +161,9 @@ Ext.extend( Ext.Gemma.GeneChooserPanel, Ext.grid.GridPanel, {
 					] );
 				}
 				this.getStore().loadData( geneData );
+				if ( callback ) {
+					callback();
+				}
 			}
 		);
 	},

@@ -80,6 +80,8 @@ Ext.onReady( function() {
 		knownGeneDatasetGrid.loadData( result.isCannedAnalysis, result.queryGenes.length, result.knownGeneDatasets ) ;
 		knownGeneGrid.loadData( result.knownGeneResults );
 		
+		knownGeneGrid.setTitle( String.format( "Coexpressed genes <a href='{0}'>(bookmarkable link)</a>", this.bookmarkableLink ) );
+		
 		if ( admin ) {
 			Ext.Gemma.CoexpressionDatasetGrid.updateDatasetInfo( result.predictedGeneDatasets, eeMap );
 			predictedGeneDatasetGrid.loadData( result.isCannedAnalysis, result.queryGenes.length, result.predictedGeneDatasets ) ;
@@ -180,6 +182,7 @@ Ext.Gemma.CoexpressionSearchPanel = function ( config ) {
 		title : 'Custom analysis options',
 		hidden : true
 	} );
+	this.customFs = customFs;
 	customFs.add( eeSearchField );
 	
 	var analysisFs = new Ext.form.FieldSet( {
@@ -227,23 +230,69 @@ Ext.extend( Ext.Gemma.CoexpressionSearchPanel, Ext.FormPanel, {
             'aftersearch'
         );
     },
-
-	onRender : function ( ct, position ) {
-		Ext.Gemma.CoexpressionSearchPanel.superclass.onRender.apply(this, arguments);
-		
-		if ( ! this.loadMask ) {
+    
+    render : function ( container, position ) {
+		Ext.Gemma.CoexpressionSearchPanel.superclass.render.apply(this, arguments);
+    	
+    	if ( ! this.loadMask ) {
 			this.createLoadMask();
 		}
-	},
+		
+		var queryStart = document.URL.indexOf( "?" );
+		if ( queryStart > -1 ) {
+			this.initializeFromQueryString( document.URL.substr( queryStart + 1 ) );
+		} 
+    },
 	
 	createLoadMask : function () {
 		this.loadMask = new Ext.LoadMask( this.getEl() );
 		this.eeSearchField.loadMask = this.loadMask;
 	},
+	
+	initializeFromQueryString : function ( query ) {
+		var param = Ext.urlDecode( query );
+		var g = param.g.split( ',' );
+		var stringency = param.s;
+		var analysis = param.a || -1;
+		var eeQuery = param.eeq || "";
+		var ees; if ( param.ees ) { ees = param.ees.split( ',' ) }
+		
+		/* make the form look like it has the right values;
+		 * this will happen asynchronously...
+		 */
+		if ( g.length > 1 ) {
+			this.geneChooserPanel.loadGenes( g );
+		} else {
+			this.geneChooserPanel.setGene( g[0] );
+		}
+		this.analysisCombo.setValue( analysis );
+		if ( analysis < 0 ) {
+			this.customFs.show();
+			this.eeSearchField.setValue( eeQuery );
+			this.updateDatasetsToBeSearched( ees );
+		} else {
+			// TODO update the number of datasets to be searched...
+		}
+		
+		/* perform the search with the specified values...
+		 */
+		var csc = {
+			geneIds : g instanceof Array ? g : [ g ],
+			stringency : stringency
+		};
+		if ( analysis < 0 ) {
+			csc.eeIds = ees;
+		} else {
+			csc.cannedAnalysisId = analysis;
+		}
+		this.doSearch( csc );
+	},
 
-	doSearch : function () {
-		/* validate the search here */
-		var csc = this.getCoexpressionSearchCommand();
+	doSearch : function ( csc ) {
+		if ( ! csc ) {
+			csc = this.getCoexpressionSearchCommand();
+		}
+		this.bookmarkableLink = this.getBookmarkableLink( csc );
 		var msg = this.validateSearch( csc )
 		if ( msg.length == 0 ) {
 			this.loadMask.show();
@@ -268,6 +317,18 @@ Ext.extend( Ext.Gemma.CoexpressionSearchPanel, Ext.FormPanel, {
 		} else {
 			return "";
 		}
+	},
+	
+	getBookmarkableLink : function ( csc ) {
+		var queryStart = document.URL.indexOf( "?" );
+		var url = queryStart > -1 ? document.URL.substr( 0, queryStart ) : document.URL
+		url += String.format( "?g={0}&s={1}", csc.geneIds.join( "," ), csc.stringency );
+		if ( csc.eeIds ) {
+			url += String.format( "&ees={0}", csc.eeIds.join( "," ) );
+		} else {
+			url += String.format( "&a={0}", csc.cannedAnalysisId );
+		}
+		return url;
 	},
 
 	getCoexpressionSearchCommand : function () {
@@ -411,7 +472,8 @@ Ext.Gemma.AnalysisCombo = function ( config ) {
 				description : "Select specific datasets to search against"
 			} );
 			superConfig.store.add( record );
-		};
+			this.setValue( this.getValue() );	// make sure the text of the selected item gets picked up
+		}.bind( this );
 	}
 	superConfig.store.load( options );
 	
@@ -550,7 +612,6 @@ Ext.Gemma.CoexpressionSummaryGrid = function ( config ) {
 		superConfig[property] = config[property];
 	}
 	Ext.Gemma.CoexpressionSummaryGrid.superclass.constructor.call( this, superConfig );
-	
 };
 
 /* static methods...
