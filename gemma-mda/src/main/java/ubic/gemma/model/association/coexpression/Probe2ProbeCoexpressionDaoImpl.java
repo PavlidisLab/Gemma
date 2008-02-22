@@ -263,12 +263,18 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
         if ( probes.size() == 0 ) return new HashSet<ExpressionExperiment>();
 
-        // Locate analyses which use that probe.
+        // Locate analyses which use these probes, return the expression experiments
         String queryString = "select distinct ees from ProbeCoexpressionAnalysisImpl pca inner join pca.experimentsAnalyzed ees inner join pca.probesUsed pu where ees in (:ees) and pu in (:probes)";
         return this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "ees", "probes" },
                 new Object[] { expressionExperiments, probes } );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetGenesTestedBy(ubic.gemma.model.expression.experiment.ExpressionExperiment,
+     *      boolean)
+     */
     @SuppressWarnings("unchecked")
     @Override
     protected Collection<Long> handleGetGenesTestedBy( ExpressionExperiment ee, boolean filterNonSpecific )
@@ -314,28 +320,46 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
         Map<Long, Collection<ExpressionExperiment>> result = new HashMap<Long, Collection<ExpressionExperiment>>();
 
-        // this is an upper bound.
+        // this is an upper bound - if it isn't in the query gene, it's not going to be a tested link
         Collection<ExpressionExperiment> eesA = getExpressionExperimentsLinkTestedIn( geneA, expressionExperiments,
                 filterNonSpecific );
         if ( eesA.size() == 0 ) {
             return result;
         }
 
+        return handleGetExpressionExperimentsTestedIn( genesB, expressionExperiments, filterNonSpecific );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetExpressionExperimentsTestedIn(java.util.Collection,
+     *      java.util.Collection, boolean)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Map<Long, Collection<ExpressionExperiment>> handleGetExpressionExperimentsTestedIn( Collection genes,
+            Collection expressionExperiments, boolean filterNonSpecific ) {
+        // FIXME implement filterNonSpecific.
+        if ( filterNonSpecific ) {
+            throw new UnsupportedOperationException( "Sorry, filterNonSpecific is not supported yet" );
+        }
+
         String queryString = "select distinct pu,ees from ProbeCoexpressionAnalysisImpl pca inner join pca.experimentsAnalyzed ees inner join pca.probesUsed pu where pu.id in (:probes)";
 
-        // this step is fast.
-        Map<Long, Collection<Long>> cs2genes = this.getCs2GenesMapFromGenes( genesB );
+        Map<Long, Collection<ExpressionExperiment>> result = new HashMap<Long, Collection<ExpressionExperiment>>();
 
-        log.info( cs2genes.size() + " probes for " + genesB.size() + " genes to examine in "
+        // this step is fast.
+        Map<Long, Collection<Long>> cs2genes = this.getCs2GenesMapFromGenes( genes );
+
+        log.info( cs2genes.size() + " probes for " + genes.size() + " genes to examine in "
                 + expressionExperiments.size() + " ees." );
         List eesre = new ArrayList();
         StopWatch watch = new StopWatch();
         watch.start();
         for ( Collection<Long> csBatch : BatchIterator.batches( cs2genes.keySet(), 2000 ) ) {
-            // This is very slow.
-            // eesre.addAll( this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "ees", "probes"
-            // },
-            // new Object[] { eesA, csBatch } ) );
+            // This is very rather slow.
             eesre.addAll( this.getHibernateTemplate().findByNamedParam( queryString, "probes", csBatch ) );
             watch.split();
             log.info( "Batch completed in " + watch.getSplitTime() + "ms" );
@@ -347,7 +371,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             Object[] ol = ( Object[] ) o;
             CompositeSequence c = ( CompositeSequence ) ol[0];
             ExpressionExperiment e = ( ExpressionExperiment ) ol[1];
-            if ( !eesA.contains( e ) ) continue;
             Collection<Long> geneIds = cs2genes.get( c.getId() );
             for ( Long id : geneIds ) {
                 if ( !result.containsKey( id ) ) {
@@ -356,9 +379,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
                 result.get( id ).add( e );
             }
         }
-
         return result;
-
     }
 
     /*

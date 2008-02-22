@@ -41,15 +41,7 @@ public class Gene2GeneCoexpressionDaoImpl extends
     protected java.util.Collection handleFindCoexpressionRelationships( Gene gene, Analysis analysis, int stringency ) {
         String g2gClassName;
 
-        if ( TaxonUtility.isHuman( gene.getTaxon() ) )
-            g2gClassName = "HumanGeneCoExpressionImpl";
-        else if ( TaxonUtility.isMouse( gene.getTaxon() ) )
-            g2gClassName = "MouseGeneCoExpressionImpl";
-        else if ( TaxonUtility.isRat( gene.getTaxon() ) )
-            g2gClassName = "RatGeneCoExpressionImpl";
-        else
-            // must be other
-            g2gClassName = "OtherGeneCoExpressionImpl";
+        g2gClassName = getClassName( gene );
 
         final String queryStringFirstVector = "select distinct g2g from "
                 + g2gClassName
@@ -67,6 +59,24 @@ public class Gene2GeneCoexpressionDaoImpl extends
                 new String[] { "analysis", "gene", "stringency" }, new Object[] { gene, analysis, stringency } ) );
 
         return results;
+    }
+
+    /**
+     * @param gene
+     * @return
+     */
+    private String getClassName( Gene gene ) {
+        String g2gClassName;
+        if ( TaxonUtility.isHuman( gene.getTaxon() ) )
+            g2gClassName = "HumanGeneCoExpressionImpl";
+        else if ( TaxonUtility.isMouse( gene.getTaxon() ) )
+            g2gClassName = "MouseGeneCoExpressionImpl";
+        else if ( TaxonUtility.isRat( gene.getTaxon() ) )
+            g2gClassName = "RatGeneCoExpressionImpl";
+        else
+            // must be other
+            g2gClassName = "OtherGeneCoExpressionImpl";
+        return g2gClassName;
     }
 
 }

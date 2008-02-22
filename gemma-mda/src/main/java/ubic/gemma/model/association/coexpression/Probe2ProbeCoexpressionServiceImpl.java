@@ -190,6 +190,13 @@ public class Probe2ProbeCoexpressionServiceImpl extends
     }
 
     @Override
+    protected Map handleGetExpressionExperimentsTestedIn( Collection genes, Collection expressionExperiments,
+            boolean filterNonSpecific ) throws Exception {
+        return this.getProbe2ProbeCoexpressionDao().getExpressionExperimentsTestedIn( genes, expressionExperiments,
+                filterNonSpecific );
+    }
+
+    @Override
     protected Collection handleGetExpressionExperimentsLinkTestedIn( Gene gene, Collection expressionExperiments,
             boolean filterNonSpecific ) throws Exception {
         return this.getProbe2ProbeCoexpressionDao().getExpressionExperimentsLinkTestedIn( gene, expressionExperiments,

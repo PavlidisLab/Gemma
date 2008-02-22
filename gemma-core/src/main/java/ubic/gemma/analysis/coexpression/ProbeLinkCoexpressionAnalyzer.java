@@ -153,6 +153,9 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
         return coexpressions;
     }
 
+    /**
+     * @param coexpressions
+     */
     private void fillInEEInfo( CoexpressionCollectionValueObject coexpressions ) {
         Collection<Long> eeIds = new HashSet<Long>();
         log.info( "Filling in EE info" );
@@ -251,8 +254,9 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
     /**
      * Fill in gene tested information for genes coexpressed with the query.
      * 
-     * @param gene
-     * @param ees
+     * @param gene the query gene
+     * @param ees ExpressionExperiments, including all that were used at the start of the query (including those the
+     *        query gene is NOT expressed in)
      * @param coexpressions
      * @param eesQueryTestedIn
      * @param stringency
@@ -267,9 +271,12 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
         List<CoexpressionValueObject> coexpressionData = coexpressions.getKnownGeneCoexpressionData( stringency );
 
         if ( limit == 0 ) {
-            computeEesTestedInBatch( gene, ees, coexpressionData );
+            // when we expecte to be analyzing many query genes.
+            computeEesTestedInBatch( ees, coexpressionData );
         } else {
-            computeEesTestedIn( gene, ees, coexpressionData );
+            // for when we are looking at just one gene at a time (TODO: really we don't need to know the query gene at
+            // this point, but the probe2probe dao requires it.
+            computeEesTestedIn( gene, eesQueryTestedIn, coexpressionData );
         }
 
         /*
@@ -282,14 +289,13 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
      * passed in (no limit). This method uses a cache to speed repeated calls, so it is very slow at first and then
      * faster.
      * 
-     * @param gene that is coexpressed with the query gene.
-     * @param ees
+     * @param ees, limited to those that the query gene is coexpressed with.
      * @param coexpressionData
      * @param limit how many to populate. If <= 0, all will be done.
      * @param coexpressionData
      */
     @SuppressWarnings("unchecked")
-    private void computeEesTestedInBatch( Gene gene, Collection<ExpressionExperiment> ees,
+    private void computeEesTestedInBatch( Collection<ExpressionExperiment> ees,
             List<CoexpressionValueObject> coexpressionData ) {
 
         Map<Long, CoexpressionValueObject> gmap = new HashMap<Long, CoexpressionValueObject>();
@@ -328,8 +334,8 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
      * For the genes that the query is coexpressed with. This is limited to the top MAX_GENES_TO_COMPUTE_EESTESTEDIN.
      * This is not very fast if MAX_GENES_TO_COMPUTE_EESTESTEDIN is large. We use this version for on-line requests.
      * 
-     * @param gene
-     * @param ees
+     * @param gene that is coexpressed with the query gene
+     * @param ees, limited to the ees that the query gene is tested in.
      * @param coexpressionData
      */
     @SuppressWarnings("unchecked")
