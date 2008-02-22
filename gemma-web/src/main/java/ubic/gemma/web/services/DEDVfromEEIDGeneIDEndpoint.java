@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
@@ -39,15 +38,14 @@ import ubic.gemma.model.genome.gene.GeneService;
 
 /**
  * Given list Experiment IDs, list gene IDs, return data vectors satisfying both conditions (i.e., string array) and the
- * corresponding composite gene sequences. Potential problem may be the thawing of design element data vector objects.
- * For the mini-db, it appears to work.
+ * corresponding composite gene sequences.
  * 
  * @author gavin, klc
- * @versio n$Id$
+ * @version$Id$
  */
 public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
 
-    private static Log log = LogFactory.getLog( ExperimentDEDVEndpoint.class );
+    private static Log log = LogFactory.getLog( DEDVfromEEIDGeneIDEndpoint.class );
 
     // private ExpressionExperimentService expressionExperimentService;
     // private AnalysisHelperService analysisHelperService;
@@ -92,6 +90,7 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
      * @param document a DOM document to be used for constructing <code>Node</code>s
      * @return the response element
      */
+    @SuppressWarnings("unchecked")
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
 
         setLocalName( EXPERIMENT_LOCAL_NAME );
@@ -146,7 +145,7 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
                 Collection<String> geneidCol = gene2ID( dedvMap.get( dedv ) ); //
 
                 // gene ids, space delimited for output
-                String elementString2 = encode( ArrayUtils.toPrimitive( geneidCol.toArray( new Double[] {} ) ) );
+                String elementString2 = encode( geneidCol.toArray() );
 
                 String elementString3 = dedv.getExpressionExperiment().getId().toString();
 

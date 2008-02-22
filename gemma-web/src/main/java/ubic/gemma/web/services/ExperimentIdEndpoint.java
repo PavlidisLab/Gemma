@@ -22,75 +22,67 @@ package ubic.gemma.web.services;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.util.Assert;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.w3c.dom.Text;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 /**
  * Given the short name of an Expression Experiment, will return the matching Expression Experiment ID
- * @author klc, gavin
  * 
+ * @author klc, gavin
+ * @version$Id$
  */
 
 public class ExperimentIdEndpoint extends AbstractGemmaEndpoint {
 
-	private static Log log = LogFactory.getLog(ExperimentIdEndpoint.class);
+    // private static Log log = LogFactory.getLog(ExperimentIdEndpoint.class);
 
-	private ExpressionExperimentService expressionExperimentService;
+    private ExpressionExperimentService expressionExperimentService;
 
-	/**
-	 * The local name of the request/response.
-	 */
-	public static final String EXPERIMENT_LOCAL_NAME = "experimentId";
+    /**
+     * The local name of the request/response.
+     */
+    public static final String EXPERIMENT_LOCAL_NAME = "experimentId";
 
-	/**
-	 * Sets the "business service" to delegate to.
-	 */
-	public void setExpressionExperimentService(ExpressionExperimentService ees) {
-		this.expressionExperimentService = ees;
-	}
+    /**
+     * Sets the "business service" to delegate to.
+     */
+    public void setExpressionExperimentService( ExpressionExperimentService ees ) {
+        this.expressionExperimentService = ees;
+    }
 
-	/**
-	 * Reads the given <code>requestElement</code>, and sends a the response
-	 * back.
-	 * 
-	 * @param requestElement
-	 *            the contents of the SOAP message as DOM elements
-	 * @param document
-	 *            a DOM document to be used for constructing <code>Node</code>s
-	 * @return the response element
-	 */
-	protected Element invokeInternal(Element requestElement, Document document)
-			throws Exception {
-		setLocalName(EXPERIMENT_LOCAL_NAME);
-		String eeName ="";
-		
-		Collection<String> eeResults = getNodeValues(requestElement, "ee_short_name");
-		
-		for (String id: eeResults){
-			eeName = id;
-		}
+    /**
+     * Reads the given <code>requestElement</code>, and sends a the response back.
+     * 
+     * @param requestElement the contents of the SOAP message as DOM elements
+     * @param document a DOM document to be used for constructing <code>Node</code>s
+     * @return the response element
+     */
+    protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
+        setLocalName( EXPERIMENT_LOCAL_NAME );
+        String eeName = "";
 
-		ExpressionExperiment ee = expressionExperimentService
-				.findByShortName(eeName);
+        Collection<String> eeResults = getNodeValues( requestElement, "ee_short_name" );
 
-	
-		//get Array Design ID and build results in the form of a collection
-		Collection<String> eeId = new HashSet<String>();
-		eeId.add(ee.getId().toString());
-		
-		
+        for ( String id : eeResults ) {
+            eeName = id;
+        }
 
-		return buildWrapper(document, eeId, "ee_id");
+        ExpressionExperiment ee = expressionExperimentService.findByShortName( eeName );
 
-	}
+        if ( ee == null ) {
+            String msg = "No Expression Experiment with short name, " + ee + " can be found.";
+            return buildBadResponse( document, msg );
+        }
+
+        // get Array Design ID and build results in the form of a collection
+        Collection<String> eeId = new HashSet<String>();
+        eeId.add( ee.getId().toString() );
+
+        return buildWrapper( document, eeId, "ee_id" );
+
+    }
 
 }

@@ -22,17 +22,9 @@ package ubic.gemma.web.services;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.util.Assert;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.w3c.dom.Text;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.GeneOntologyService;
@@ -40,65 +32,88 @@ import ubic.gemma.ontology.OntologyTerm;
 
 /**
  * Given a Gene ID, will return a collection of Gene Ontology URIs that matching the gene.
- * @author klc, gavin
  * 
+ * @author klc, gavin
+ * @version$Id$
  */
 
 public class Gene2GoTermEndpoint extends AbstractGemmaEndpoint {
 
-	private static Log log = LogFactory.getLog(Gene2GoTermEndpoint.class);
+    // private static Log log = LogFactory.getLog( Gene2GoTermEndpoint.class );
 
-	private GeneOntologyService geneOntologyService;
+    private GeneOntologyService geneOntologyService;
 
-	private GeneService geneService;
+    private GeneService geneService;
 
-	/**
-	 * The local name of the expected request/response.
-	 */
-	public static final String GENE2GO_LOCAL_NAME = "gene2Go";
+    /**
+     * The local name of the expected request/response.
+     */
+    public static final String GENE2GO_LOCAL_NAME = "gene2Go";
 
-	/**
-	 * Sets the "business service" to delegate to.
-	 */
-	public void setGeneOntologyService(GeneOntologyService goS) {
-		this.geneOntologyService = goS;
-	}
-	
-	public void setGeneService(GeneService geneS){
-		this.geneService = geneS;
-	}
+    /**
+     * Sets the "business service" to delegate to.
+     */
+    public void setGeneOntologyService( GeneOntologyService goS ) {
+        this.geneOntologyService = goS;
+    }
 
-	/**
-	 * Reads the given <code>requestElement</code>, and sends a the response
-	 * back.
-	 * 
-	 * @param requestElement
-	 *            the contents of the SOAP message as DOM elements
-	 * @param document
-	 *            a DOM document to be used for constructing <code>Node</code>s
-	 * @return the response element
-	 */
-	protected Element invokeInternal(Element requestElement, Document document)
-			throws Exception {
-	
-		setLocalName(GENE2GO_LOCAL_NAME);
-		String gid ="";
-		
-		Collection<String> geneResult = getNodeValues(requestElement, "gene_id");
-		for (String id: geneResult)
-			gid = id;
-		
-		Long geneId = Long.parseLong(gid);
-		Gene gene = geneService.load(geneId);
-		Collection<OntologyTerm> terms = geneOntologyService.getGOTerms(gene);
+    public void setGeneService( GeneService geneS ) {
+        this.geneService = geneS;
+    }
 
-		//build Collection to send to wrapper
-		Collection<String> goTerms = new HashSet<String>();
-		for (OntologyTerm ot : terms) {	
-			goTerms.add(ot.getUri());
-		}
-		
-		return buildWrapper(document, goTerms, "go_uris");
-	}
-	
+    /**
+     * Reads the given <code>requestElement</code>, and sends a the response back.
+     * 
+     * @param requestElement the contents of the SOAP message as DOM elements
+     * @param document a DOM document to be used for constructing <code>Node</code>s
+     * @return the response element
+     */
+    protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
+
+        setLocalName( GENE2GO_LOCAL_NAME );
+
+        Collection<String> geneResult = getArrayValues( requestElement, "gene_ids" );
+
+        // start building the wrapper
+        // build xml manually for mapped result rather than use buildWrapper inherited from AbstractGemmeEndpoint
+        String elementName1 = "gene_id";
+        String elementName2 = "goIdList";
+
+        Element responseWrapper = document.createElementNS( NAMESPACE_URI, GENE2GO_LOCAL_NAME );
+        Element responseElement = document.createElementNS( NAMESPACE_URI, GENE2GO_LOCAL_NAME + RESPONSE );
+        responseWrapper.appendChild( responseElement );
+
+        for ( String geneString : geneResult ) {
+
+            Long geneId = Long.parseLong( geneString );
+            Gene gene = geneService.load( geneId );
+            if ( gene == null ) {
+                String msg = "No gene with ids, " + geneId + " can be found.";
+                return buildBadResponse( document, msg );
+            }
+
+            Collection<OntologyTerm> terms = geneOntologyService.getGOTerms( gene );
+
+            // get the labels and store them
+            Collection<String> goTerms = new HashSet<String>();
+            for ( OntologyTerm ot : terms ) {
+                goTerms.add( ot.getLabel() );
+            }
+
+            String elementString1 = geneId.toString();
+            String elementString2 = encode( goTerms.toArray() );
+
+            Element e1 = document.createElement( elementName1 );
+            e1.appendChild( document.createTextNode( elementString1 ) );
+            responseElement.appendChild( e1 );
+
+            Element e2 = document.createElement( elementName2 );
+            e2.appendChild( document.createTextNode( elementString2 ) );
+            responseElement.appendChild( e2 );
+        }
+
+        return responseWrapper;
+
+    }
+
 }

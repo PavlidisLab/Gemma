@@ -22,73 +22,71 @@ package ubic.gemma.web.services;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.util.Assert;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 /**
- * 
+ * Given an expression experiment id, return the array design names used
  * @author klc, gavin
- * 
+ * @version$Id$
  */
 
 public class ArrayDesignUsedEndpoint extends AbstractGemmaEndpoint {
 
-	private static Log log = LogFactory.getLog(ArrayDesignUsedEndpoint.class);
+    //private static Log log = LogFactory.getLog( ArrayDesignUsedEndpoint.class );
 
-	private ExpressionExperimentService expressionExperimentService;
+    private ExpressionExperimentService expressionExperimentService;
 
-	/**
-	 * The local name of the expected request.
-	 */
-	public static final String ARRAY_LOCAL_NAME = "arrayDesignUsed";
+    /**
+     * The local name of the expected request.
+     */
+    public static final String ARRAY_LOCAL_NAME = "arrayDesignUsed";
 
-	/**
-	 * Sets the "business service" to delegate to.
-	 */
-	public void setExpressionExperimentService(ExpressionExperimentService ees) {
-		this.expressionExperimentService = ees;
-	}
+    /**
+     * Sets the "business service" to delegate to.
+     */
+    public void setExpressionExperimentService( ExpressionExperimentService ees ) {
+        this.expressionExperimentService = ees;
+    }
 
-	/**
-	 * Reads the given <code>requestElement</code>, and sends a the response
-	 * back.
-	 * 
-	 * @param requestElement
-	 *            the contents of the SOAP message as DOM elements
-	 * @param document
-	 *            a DOM document to be used for constructing <code>Node</code>s
-	 * @return the response element
-	 */
-	protected Element invokeInternal(Element requestElement, Document document)
-			throws Exception {
-		
-		setLocalName(ARRAY_LOCAL_NAME);
-		String eeId = "";
-		Collection<String> eeResult = getNodeValues(requestElement, "ee_id");
-		//expect only one element since only one input value (ee id)
-		for (String id:eeResult)
-			eeId = id;
-		
-		ExpressionExperiment ee = expressionExperimentService.load(Long.parseLong(eeId));
-		Collection<ArrayDesign> ads = expressionExperimentService.getArrayDesignsUsed(ee);
-		
-		//build collection to pass to wrapper
-		Collection<String> values = new HashSet<String>();
-		for (ArrayDesign ad : ads){
-			values.add(ad.getName());
-		}
-		
-		return buildWrapper(document, values, "arrayDesign_names");
-	}
+    /**
+     * Reads the given <code>requestElement</code>, and sends a the response back.
+     * 
+     * @param requestElement the contents of the SOAP message as DOM elements
+     * @param document a DOM document to be used for constructing <code>Node</code>s
+     * @return the response element
+     */
+    @SuppressWarnings("unchecked")
+    protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
+
+        setLocalName( ARRAY_LOCAL_NAME );
+        String eeId = "";
+        Collection<String> eeResult = getNodeValues( requestElement, "ee_id" );
+        // expect only one element since only one input value (ee id)
+        for ( String id : eeResult )
+            eeId = id;
+
+        ExpressionExperiment ee = expressionExperimentService.load( Long.parseLong( eeId ) );
+        if ( ee == null ) {
+            String msg = "No experiment with id, " + eeId + " can be found.";
+            return buildBadResponse( document, msg );
+        }
+
+        expressionExperimentService.thaw( ee );
+        Collection<ArrayDesign> ads = expressionExperimentService.getArrayDesignsUsed( ee );
+
+        // build collection to pass to wrapper
+        Collection<String> values = new HashSet<String>();
+        for ( ArrayDesign ad : ads ) {
+            values.add( ad.getName() );
+        }
+
+        return buildWrapper( document, values, "arrayDesign_names" );
+
+    }
 
 }

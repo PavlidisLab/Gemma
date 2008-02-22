@@ -22,74 +22,68 @@ package ubic.gemma.web.services;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.util.Assert;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.w3c.dom.Text;
 
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 
 /**
- * Given a gene ID, will return the matching gene name.
- * Note: this is not the short name
- * @author klc, gavin
+ * Given a gene ID, will return the matching gene name. Note: this is not the short name
  * 
+ * @author klc, gavin
+ * @version$Id$
  */
 
 public class GeneNameEndpoint extends AbstractGemmaEndpoint {
 
-	private static Log log = LogFactory.getLog(GeneNameEndpoint.class);
+    // private static Log log = LogFactory.getLog(GeneNameEndpoint.class);
 
-	private GeneService geneService;
+    private GeneService geneService;
 
-	/**
-	 * The local name of the expected Request/Response.
-	 */
-	public static final String GENE_LOCAL_NAME = "geneName";
+    /**
+     * The local name of the expected Request/Response.
+     */
+    public static final String GENE_LOCAL_NAME = "geneName";
 
-	/**
-	 * Sets the "business service" to delegate to.
-	 */
-	public void setGeneService(GeneService geneS) {
-		this.geneService = geneS;
-	}
+    /**
+     * Sets the "business service" to delegate to.
+     */
+    public void setGeneService( GeneService geneS ) {
+        this.geneService = geneS;
+    }
 
-	/**
-	 * Reads the given <code>requestElement</code>, and sends a the response
-	 * back.
-	 * 
-	 * @param requestElement
-	 *            the contents of the SOAP message as DOM elements
-	 * @param document
-	 *            a DOM document to be used for constructing <code>Node</code>s
-	 * @return the response element
-	 */
-	protected Element invokeInternal(Element requestElement, Document document)
-			throws Exception {
-		
-		setLocalName(GENE_LOCAL_NAME);
-		String geneId ="";
-		
-		Collection<String> geneResults = getNodeValues(requestElement, "gene_id");
-		
-		for (String id: geneResults){
-			geneId = id;
-		}
+    /**
+     * Reads the given <code>requestElement</code>, and sends a the response back.
+     * 
+     * @param requestElement the contents of the SOAP message as DOM elements
+     * @param document a DOM document to be used for constructing <code>Node</code>s
+     * @return the response element
+     */
+    protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
 
-		String geneName = geneService.load(Long.parseLong(geneId)).getName();
+        setLocalName( GENE_LOCAL_NAME );
+        String geneId = "";
 
-		//get Array Design ID and build results in the form of a collection
-		Collection<String> gName = new HashSet<String>();
-		gName.add(geneName);
-		
-		
+        Collection<String> geneResults = getNodeValues( requestElement, "gene_id" );
 
-		return buildWrapper(document, gName, "gene_name");
-	}
+        for ( String id : geneResults ) {
+            geneId = id;
+        }
+
+        Gene geneName = geneService.load( Long.parseLong( geneId ) );
+
+        if ( geneName == null ) {
+            String msg = "No gene with id, " + geneId + " can be found.";
+            return buildBadResponse( document, msg );
+        }
+
+        // get Array Design ID and build results in the form of a collection
+        Collection<String> gName = new HashSet<String>();
+        gName.add( geneName.getName() );
+
+        return buildWrapper( document, gName, "gene_name" );
+
+    }
 
 }
