@@ -92,7 +92,7 @@ Ext.Gemma.CoexpressionGrid.getRecord = function() {
 Ext.Gemma.CoexpressionGrid.getFoundGeneStyler = function() {
 	if ( Ext.Gemma.CoexpressionGrid.foundGeneStyler === undefined ) {
 		Ext.Gemma.CoexpressionGrid.foundGeneTemplate = new Ext.Template(
-			"<a href='http://elmonline.ca' onClick='Ext.Gemma.CoexpressionSearchPanel.searchForGene({id}); return false;'>",
+			"<a href='' onClick='Ext.Gemma.CoexpressionSearchPanel.searchForGene({id}); return false;'>",
 				"<img src='/Gemma/images/logo/gemmaTiny.gif' ext:qtip='Make {officialSymbol} the query gene' />",
 			"</a>",
 			" &nbsp; ",
