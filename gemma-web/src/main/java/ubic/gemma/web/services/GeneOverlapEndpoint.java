@@ -1,0 +1,148 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2008 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+package ubic.gemma.web.services;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+
+import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.ontology.GeneOntologyService;
+import ubic.gemma.ontology.OntologyTerm;
+
+/**
+ * query gene id & collection of gene ids --> map of gene ids to overlapping GO terms
+ * 
+ * @author gavin, klc 
+ * @version$Id$
+ */
+
+public class GeneOverlapEndpoint extends AbstractGemmaEndpoint {
+
+    private static Log log = LogFactory.getLog( GeneOverlapEndpoint.class );
+
+    private GeneOntologyService geneOntologyService;
+
+    private GeneService geneService;
+
+    /**
+     * The local name of the expected request/response.
+     */
+    public static final String LOCAL_NAME = "geneOverlap";
+
+    /**
+     * Sets the "business service" to delegate to.
+     */
+    public void setGeneOntologyService( GeneOntologyService goS ) {
+        this.geneOntologyService = goS;
+    }
+
+    public void setGeneService( GeneService geneS ) {
+        this.geneService = geneS;
+    }
+
+    /**
+     * Reads the given <code>requestElement</code>, and sends a the response back.
+     * 
+     * @param requestElement the contents of the SOAP message as DOM elements
+     * @param document a DOM document to be used for constructing <code>Node</code>s
+     * @return the response element
+     */
+    protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
+
+        setLocalName( LOCAL_NAME );
+
+        String queryInput = "";
+        Collection<String> query = getNodeValues( requestElement, "query_gene_id" );
+        for ( String gene_id : query ) {
+            queryInput = gene_id;
+        }
+
+        Collection<String> geneResult = getArrayValues( requestElement, "gene_ids" );
+        Collection<Long> geneIdLongs = new ArrayList<Long>();
+        for ( String gene_id : geneResult ) {
+            geneIdLongs.add( Long.parseLong( gene_id ) );
+        }
+
+        // start building the wrapper
+        // build xml manually for mapped result rather than use buildWrapper inherited from AbstractGemmeEndpoint
+        // start building the wrapper
+        // build xml manually for mapped result rather than use buildWrapper inherited from AbstractGemmeEndpoint
+        log.info( "Building " + LOCAL_NAME + " XML response" );
+        StopWatch watch = new StopWatch();
+        watch.start();
+
+        String elementName1 = "gene";
+        String elementName2 = "overlap_GO_terms";
+
+        Element responseWrapper = document.createElementNS( NAMESPACE_URI, LOCAL_NAME );
+        Element responseElement = document.createElementNS( NAMESPACE_URI, LOCAL_NAME + RESPONSE );
+        responseWrapper.appendChild( responseElement );
+
+        //get query gene object from query gene id
+        Long queryId = Long.parseLong( queryInput );
+        Gene queryGene = geneService.load( queryId );
+        if ( queryGene == null ) {
+            String msg = "No gene with ids, " + queryId + " can be found.";
+            return buildBadResponse( document, msg );
+        }
+
+        Map<Long, Collection<OntologyTerm>> gene2Ot = geneOntologyService.calculateGoTermOverlap( queryGene,
+                geneIdLongs );
+
+        Collection<Long> geneCol = gene2Ot.keySet();
+
+        //for each gene
+        for ( Long geneId : geneCol ) {
+
+            // get the labels and store them
+            Collection<String> goTerms = new HashSet<String>();
+            for ( OntologyTerm ot : gene2Ot.get( geneId ) ) {
+                goTerms.add( GeneOntologyService.asRegularGoId( ot ) );
+            }
+
+            String elementString1 = geneId.toString();
+            String elementString2 = encode( goTerms.toArray() );
+
+            Element e1 = document.createElement( elementName1 );
+            e1.appendChild( document.createTextNode( elementString1 ) );
+            responseElement.appendChild( e1 );
+
+            Element e2 = document.createElement( elementName2 );
+            e2.appendChild( document.createTextNode( elementString2 ) );
+            responseElement.appendChild( e2 );
+        }
+        watch.stop();
+        Long time = watch.getTime();
+        log.info( "Finished generating result. Sending response to client." );
+        log.info( "XML response for " + LOCAL_NAME + " endpoint built in " + time + "ms." );
+        return responseWrapper;
+
+    }
+
+}
