@@ -138,6 +138,7 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
                 Element e2 = document.createElement( elementName2 );
                 e2.appendChild( document.createTextNode( elementString2 ) );
                 responseElement.appendChild( e2 );
+
             }
         }
 
