@@ -13,6 +13,8 @@
 	<script type="text/javascript" src="<c:url value='/scripts/ajax/util/PagingDataStore.js'/>"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/ajax/util/PagingToolbar.js'/>"></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/SearchService.js'></script>
+	<script type="text/javascript" src="<c:url value='/scripts/ajax/util/GemmaGridPanel.js'/>"></script>
+	
 
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>

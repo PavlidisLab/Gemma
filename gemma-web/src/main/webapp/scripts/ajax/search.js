@@ -173,17 +173,13 @@ var initGrid = function(id) {
 
 	ds.on("load", handleLoadSuccess.createDelegate(this, [], true) );
 
-	grid = new Ext.grid.GridPanel( {
+	grid = new Ext.Gemma.GemmaGridPanel( {
 		el : 'search-results-grid',
 		width : 800,
 		height : 500,
 		store:ds, cm:cm, 
 		loadMask: true, 
 		view : new Ext.grid.GroupingView({startCollapsed: true, forceFit : true, groupTextTpl : '{text}s ({[values.rs.length]} {[values.rs.length > 1 ? "Items" : "Item"]})'}),
-		viewConfig : {
-			forceFit : true,
-			enableRowBody : true
-		},
 		collapsible : true
 	 });
 
@@ -240,6 +236,7 @@ var renderEntity = function( data, metadata, record, row, column, store  ) {
 
 
 Ext.onReady(function() {
+	
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider({expires:new Date(new Date().getTime()+(1000*60*60*24*30))}));
 	searchForm();
 	initGrid(); 
