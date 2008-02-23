@@ -201,6 +201,12 @@ Ext.extend( Ext.Gemma.GeneChooserPanel, Ext.grid.GridPanel, {
 		return ids;
 	},
 	
+	getTaxonId : function () {
+		if ( this.taxonCombo ) {
+			return this.taxonCombo.getValue();
+		}
+	},
+	
 	taxonChanged : function ( taxon ) {
 		this.taxonCombo.setTaxon( taxon );
 		this.geneCombo.setTaxon( taxon );

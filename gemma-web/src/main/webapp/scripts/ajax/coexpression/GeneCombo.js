@@ -9,6 +9,7 @@ Ext.Gemma.GeneCombo = function ( config ) {
 	 */
 	var superConfig = {
 		displayField : 'officialSymbol',
+		valueField : 'id',
 		loadingText : 'Searching...',
 		minChars : 2,
 		selectOnFocus : true,

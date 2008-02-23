@@ -32,6 +32,17 @@ public class ExtCoexpressionSearchCommand {
     private Long cannedAnalysisId;
 
     private Integer stringency;
+    
+    /* we're storing the actual ee ids in the command object; the query string
+     * is only here so we can use this object to store the state of the search
+     * form between visits...
+     */
+    private String eeQuery;
+    
+    /* as eeQuery above, the taxon is only here so we can use this object to
+     * store the entire state of the form...
+     */
+    private Long taxonId;
 
     public Collection<Long> getGeneIds() {
         return geneIds;
@@ -64,4 +75,21 @@ public class ExtCoexpressionSearchCommand {
     public void setStringency( Integer stringency ) {
         this.stringency = stringency;
     }
+
+    public String getEeQuery() {
+        return eeQuery;
+    }
+
+    public void setEeQuery( String eeQuery ) {
+        this.eeQuery = eeQuery;
+    }
+    
+    public Long getTaxonId() {
+        return taxonId;
+    }
+
+    public void setTaxonId( Long taxonId ) {
+        this.taxonId = taxonId;
+    }
+    
 }

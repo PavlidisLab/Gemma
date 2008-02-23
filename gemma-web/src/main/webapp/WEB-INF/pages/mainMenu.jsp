@@ -67,7 +67,29 @@
 
 <div class="separator"></div>
 
+<div id="coexpression-form" style="width: 200px">
+	<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
+	<script src="<c:url value='/scripts/ext/ext-all-debug.js'/>" type="text/javascript"></script>
+	<script src="<c:url value='/scripts/ext/RowExpander.js'/>" type="text/javascript"></script>
+	<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
+	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
+	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/GenePickerController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/ExtCoexpressionSearchController.js'></script>
+	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/GeneCombo.js'></script>
+	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/TaxonCombo.js'></script>
+	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/GeneChooserPanel.js'></script>
+	<script type='text/javascript' src='/Gemma/scripts/ajax/util/GemmaGridPanel.js'></script>
+	<script type='text/javascript' src='/Gemma/scripts/ajax/util/PagingDataStore.js'></script>
+	<script type='text/javascript' src='/Gemma/scripts/ajax/util/PagingToolbar.js'></script>
+	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionGrid.js'></script>
+	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionDatasetGrid.js'></script>
+	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionSearchForm.js'></script>
+	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionSearchLite.js'></script>
+</div>
 
+<!-- 
 <form method="post" name="coexpressionSearch" action="<c:url value="/searchCoexpression.html"/>">
 
 	<table>
@@ -99,7 +121,6 @@
 			<td valign="top">
 				<b> <fmt:message key="label.species" /> </b>
 			</td>
-			<!--  problem here is this does not use the cookie. -->
 
 			<td>
 				<spring:bind path="coexpressionSearchCommand.taxon">
@@ -135,6 +156,7 @@
 	</spring:bind>
 
 </form>
+-->
 
 <authz:authorize ifAnyGranted="admin">
 	<hr />

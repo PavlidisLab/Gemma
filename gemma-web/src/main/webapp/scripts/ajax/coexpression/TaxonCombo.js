@@ -23,7 +23,9 @@ Ext.Gemma.TaxonCombo = function ( config ) {
 		} ),
 		tpl : Ext.Gemma.TaxonCombo.getTemplate()
 	};
-	superConfig.store.load( { params: [] } );
+	superConfig.store.load( { params: [], callback: function() {
+		this.setValue( this.getValue() );	// make sure the text of the selected item gets picked up
+	}.bind( this ) } );
 	
 	/* apply user-defined config options and call the superclass constructor...
 	 */

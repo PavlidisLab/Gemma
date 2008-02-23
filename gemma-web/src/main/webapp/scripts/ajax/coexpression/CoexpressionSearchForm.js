@@ -1,102 +1,6 @@
-Ext.namespace('Ext.Gemma');
-
-Ext.onReady( function() {
-	Ext.QuickTips.init();
-	
-	var admin = dwr.util.getValue("hasAdmin");
-	
-	var searchPanel = new Ext.Gemma.CoexpressionSearchPanel( {
-	} );
-	searchPanel.render( "coexpression-form" );
-	
-	var summaryPanel;
-	
-	var knownGeneDatasetGrid = new Ext.Gemma.CoexpressionDatasetGrid( {
-		renderTo : "coexpression-results"
-	} );
-	var knownGeneGrid = new Ext.Gemma.CoexpressionGrid( {
-		renderTo : "coexpression-results",
-		title : "Coexpressed genes",
-		pageSize : 25
-	} );
-	var predictedGeneGrid;
-	var probeAlignedGrid;
-	if ( admin ) {
-		var predictedGeneDatasetGrid = new Ext.Gemma.CoexpressionDatasetGrid( {
-			renderTo : "coexpression-results",
-			adjective : "predicted gene"
-		} );
-		predictedGeneGrid = new Ext.Gemma.CoexpressionGrid( {
-			renderTo : "coexpression-results",
-			title : "Coexpressed predicted genes",
-			pageSize : 25,
-			collapsed : true
-		} );
-		var probeAlignedDatasetGrid = new Ext.Gemma.CoexpressionDatasetGrid( {
-			renderTo : "coexpression-results",
-			adjective : "probe-aligned region"
-		} );
-		probeAlignedGrid = new Ext.Gemma.CoexpressionGrid( {
-			renderTo : "coexpression-results",
-			title : "Coexpressed probe-aligned regions",
-			pageSize : 25,
-			collapsed : true
-		} );
-	}
-	
-	searchPanel.processSearchResults = function ( result ) {
-		var eeMap = {};
-		if ( result.datasets ) {
-			for ( var i=0; i<result.datasets.length; ++i ) {
-				var ee = result.datasets[i];
-				eeMap[ee.id] = ee;
-			}
-		}
-		
-		if ( summaryPanel ) {
-			// grid.destroy() seems to be broken...
-			try {
-				summaryPanel.destroy();
-			} catch (e) {}
-		}
-		summaryPanel = new Ext.Gemma.CoexpressionSummaryGrid( {
-			genes : result.queryGenes,
-			summary : result.summary
-		} );
-		summaryPanel.render( "coexpression-summary" );
-		
-		// create expression experiment image map
-		var imageMap = Ext.get( "eeMap" );
-		if ( ! imageMap ) {
-			imageMap = Ext.getBody().createChild( {
-				tag: 'map',
-				id: 'eeMap',
-				name: 'eeMap'
-			} );
-		}
-		Ext.Gemma.CoexpressionGrid.getBitImageMapTemplate().overwrite( imageMap, result.datasets );
-		
-		Ext.Gemma.CoexpressionDatasetGrid.updateDatasetInfo( result.knownGeneDatasets, eeMap );
-		knownGeneDatasetGrid.loadData( result.isCannedAnalysis, result.queryGenes.length, result.knownGeneDatasets ) ;
-		knownGeneGrid.loadData( result.knownGeneResults );
-		
-		knownGeneGrid.setTitle( String.format( "Coexpressed genes <a href='{0}'>(bookmarkable link)</a>", this.bookmarkableLink ) );
-		
-		if ( admin ) {
-			Ext.Gemma.CoexpressionDatasetGrid.updateDatasetInfo( result.predictedGeneDatasets, eeMap );
-			predictedGeneDatasetGrid.loadData( result.isCannedAnalysis, result.queryGenes.length, result.predictedGeneDatasets ) ;
-			predictedGeneGrid.loadData( result.predictedGeneResults );
-			Ext.Gemma.CoexpressionDatasetGrid.updateDatasetInfo( result.probeAlignedRegionDatasets, eeMap );
-			probeAlignedDatasetGrid.loadData( result.isCannedAnalysis, result.queryGenes.length, result.probeAlignedRegionDatasets ) ;
-			probeAlignedGrid.loadData( result.probeAlignedRegionResults );
-		}
-	};
-	
-} );
-
-/* Ext.Gemma.CoexpressionSearchPanel constructor...
+/* Ext.Gemma.CoexpressionSearchForm constructor...
  */
-Ext.Gemma.CoexpressionSearchPanel = function ( config ) {
+Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 
 	var thisPanel = this;
 	
@@ -106,6 +10,9 @@ Ext.Gemma.CoexpressionSearchPanel = function ( config ) {
 		autoWidth : true,
 		autoHeight : true,
 		frame : true,
+		stateful : true,
+		stateEvents : [ "beforesearch" ],
+		stateId : "Ext.Gemma.CoexpressionSearch", // share state with main page...
 		defaults : { }
 	};
 	
@@ -114,7 +21,7 @@ Ext.Gemma.CoexpressionSearchPanel = function ( config ) {
 	for ( property in config ) {
 		superConfig[property] = config[property];
 	}
-	Ext.Gemma.CoexpressionSearchPanel.superclass.constructor.call( this, superConfig );
+	Ext.Gemma.CoexpressionSearchForm.superclass.constructor.call( this, superConfig );
 	
 	var geneChooserPanel = new Ext.Gemma.GeneChooserPanel( {
 		showTaxon : true
@@ -161,8 +68,8 @@ Ext.Gemma.CoexpressionSearchPanel = function ( config ) {
 		allowDecimals : false,
 		allowNegative : false,
 		fieldLabel : 'Stringency',
-		validator : function ( value ) { return value >= Ext.Gemma.CoexpressionSearchPanel.MIN_STRINGENCY; },
-		invalidText : "Minimum stringency is " + Ext.Gemma.CoexpressionSearchPanel.MIN_STRINGENCY,
+		validator : function ( value ) { return value >= Ext.Gemma.CoexpressionSearchForm.MIN_STRINGENCY; },
+		invalidText : "Minimum stringency is " + Ext.Gemma.CoexpressionSearchForm.MIN_STRINGENCY,
 		value : 2,
 		width : 25
 	} );
@@ -210,20 +117,30 @@ Ext.Gemma.CoexpressionSearchPanel = function ( config ) {
 	this.add( analysisFs );
 	this.addButton( submitButton );
 
-	Ext.Gemma.CoexpressionSearchPanel.searchForGene = function( geneId ) {
+	Ext.Gemma.CoexpressionSearchForm.searchForGene = function( geneId ) {
 		geneChooserPanel.setGene.call( geneChooserPanel, geneId, thisPanel.doSearch.bind( thisPanel ) );
 	};
 	
 };
 
-Ext.Gemma.CoexpressionSearchPanel.MIN_STRINGENCY = 2;
+Ext.Gemma.CoexpressionSearchForm.MIN_STRINGENCY = 2;
 
 /* other public methods...
  */
-Ext.extend( Ext.Gemma.CoexpressionSearchPanel, Ext.FormPanel, {
+Ext.extend( Ext.Gemma.CoexpressionSearchForm, Ext.FormPanel, {
+
+	applyState : function( state, config ) {
+		if ( state ) {
+			this.csc = state;
+		}
+	},
+
+	getState : function() {
+		return this.getCoexpressionSearchCommand();
+	},
 
 	initComponent : function() {
-        Ext.Gemma.CoexpressionSearchPanel.superclass.initComponent.call(this);
+        Ext.Gemma.CoexpressionSearchForm.superclass.initComponent.call(this);
         
         this.addEvents(
             'beforesearch',
@@ -232,94 +149,101 @@ Ext.extend( Ext.Gemma.CoexpressionSearchPanel, Ext.FormPanel, {
     },
     
     render : function ( container, position ) {
-		Ext.Gemma.CoexpressionSearchPanel.superclass.render.apply(this, arguments);
+		Ext.Gemma.CoexpressionSearchForm.superclass.render.apply(this, arguments);
     	
     	if ( ! this.loadMask ) {
 			this.createLoadMask();
 		}
 		
+		// initialize from state
+		if ( this.csc ) {
+			this.initializeFromCoexpressionSearchCommand( this.csc );
+		}
+		
+		// intialize from URL (overrides state)
 		var queryStart = document.URL.indexOf( "?" );
 		if ( queryStart > -1 ) {
 			this.initializeFromQueryString( document.URL.substr( queryStart + 1 ) );
-		} 
+		}
     },
 	
 	createLoadMask : function () {
 		this.loadMask = new Ext.LoadMask( this.getEl() );
 		this.eeSearchField.loadMask = this.loadMask;
 	},
+
+	getCoexpressionSearchCommand : function () {
+		var csc = {
+			geneIds : this.geneChooserPanel.getGeneIds(),
+			stringency : this.stringencyField.getValue(),
+			taxonId : this.geneChooserPanel.getTaxonId()
+		};
+		var analysisId = this.analysisCombo.getValue();
+		if ( analysisId < 0 ) {
+			csc.eeIds = this.eeSearchField.getEeIds();
+		} else {
+			csc.cannedAnalysisId = analysisId;
+		}
+		return csc;
+	},
 	
-	initializeFromQueryString : function ( query ) {
+	getCoexpressionSearchCommandFromQuery : function ( query ) {
 		var param = Ext.urlDecode( query );
-		var g = param.g.split( ',' );
-		var stringency = param.s;
-		var analysis = param.a || -1;
 		var eeQuery = param.eeq || "";
 		var ees; if ( param.ees ) { ees = param.ees.split( ',' ) }
 		
+		var csc = {
+			geneIds : param.g.split( ',' ),
+			stringency : param.s || Ext.Gemma.CoexpressionSearchForm.MIN_STRINGENCY,
+			eeQuery : param.eeq
+		};
+		if ( param.ees ) {
+			csc.eeIds = param.ees.split( ',' );
+			csc.cannedAnalysisId = -1;
+		} else {
+			csc.cannedAnalysisId = param.a;
+		}
+		return csc;
+	},
+	
+	initializeFromQueryString : function ( query ) {
+		this.initializeFromCoexpressionSearchCommand(
+			this.getCoexpressionSearchCommandFromQuery( query ), true
+		);
+	},
+	
+	initializeFromCoexpressionSearchCommand : function ( csc, doSearch ) {
 		/* make the form look like it has the right values;
 		 * this will happen asynchronously...
 		 */
-		if ( g.length > 1 ) {
-			this.geneChooserPanel.loadGenes( g );
-		} else {
-			this.geneChooserPanel.setGene( g[0] );
+		if ( csc.taxonId ) {
+			this.geneChooserPanel.taxonCombo.setValue( csc.taxonId );
 		}
-		this.analysisCombo.setValue( analysis );
-		if ( analysis < 0 ) {
+		if ( csc.geneIds.length > 1 ) {
+			this.geneChooserPanel.loadGenes( csc.geneIds );
+		} else {
+			this.geneChooserPanel.setGene( csc.geneIds[0] );
+		}
+		this.analysisCombo.setValue( csc.cannedAnalysisId );
+		if ( csc.cannedAnalysisId < 0 ) {
 			this.customFs.show();
-			this.eeSearchField.setValue( eeQuery );
-			this.updateDatasetsToBeSearched( ees );
+			this.eeSearchField.setValue( csc.eeQuery );
+			this.updateDatasetsToBeSearched( csc.eeIds );
 		} else {
 			// TODO update the number of datasets to be searched...
 		}
 		
 		/* perform the search with the specified values...
 		 */
-		var csc = {
-			geneIds : g instanceof Array ? g : [ g ],
-			stringency : stringency
-		};
-		if ( analysis < 0 ) {
-			csc.eeIds = ees;
-		} else {
-			csc.cannedAnalysisId = analysis;
-		}
-		this.doSearch( csc );
-	},
-
-	doSearch : function ( csc ) {
-		if ( ! csc ) {
-			csc = this.getCoexpressionSearchCommand();
-		}
-		this.bookmarkableLink = this.getBookmarkableLink( csc );
-		var msg = this.validateSearch( csc )
-		if ( msg.length == 0 ) {
-			this.loadMask.show();
-			ExtCoexpressionSearchController.doSearch( csc, this.returnFromSearch.bind( this ) );
-		} else {
-			Ext.MessageBox.show( {
-				msg: msg,
-				icon: Ext.MessageBox.ERROR
-			} );
-		}
-	},
-	
-	validateSearch : function ( csc ) {
-		if ( csc.geneIds.length < 1 ) {
-			return "Please select at least one query gene";
-		} else if ( csc.stringency < Ext.Gemma.CoexpressionSearchPanel.MIN_STRINGENCY ) {
-			return "Minimum stringency is " + Ext.Gemma.CoexpressionSearchPanel.MIN_STRINGENCY;
-		} else if ( csc.eeIds && csc.eeIds.length < 1 ) {
-			return "There are no datasets that match your search terms";
-		} else if ( !csc.eeIds && !csc.cannedAnalysisId ) {
-			return "Please select an analysis";
-		} else {
-			return "";
+		if ( doSearch ) {
+			this.doSearch( csc );
 		}
 	},
 	
 	getBookmarkableLink : function ( csc ) {
+		if ( ! csc ) {
+			csc = this.getCoexpressionSearchCommand();
+		}
 		var queryStart = document.URL.indexOf( "?" );
 		var url = queryStart > -1 ? document.URL.substr( 0, queryStart ) : document.URL
 		url += String.format( "?g={0}&s={1}", csc.geneIds.join( "," ), csc.stringency );
@@ -331,27 +255,41 @@ Ext.extend( Ext.Gemma.CoexpressionSearchPanel, Ext.FormPanel, {
 		return url;
 	},
 
-	getCoexpressionSearchCommand : function () {
-		var csc = {
-			geneIds : this.geneChooserPanel.getGeneIds(),
-			stringency : this.stringencyField.getValue()
-		};
-		var analysisId = this.analysisCombo.getValue();
-		if ( analysisId < 0 ) {
-			csc.eeIds = this.eeSearchField.getEeIds();
-		} else {
-			csc.cannedAnalysisId = analysisId;
+	doSearch : function ( csc ) {
+		if ( ! csc ) {
+			csc = this.getCoexpressionSearchCommand();
 		}
-		return csc;
+		var msg = this.validateSearch( csc )
+		if ( msg.length == 0 ) {
+			if ( this.fireEvent('beforesearch', this, csc ) !== false ) {
+				this.loadMask.show();
+				ExtCoexpressionSearchController.doSearch( csc, this.returnFromSearch.bind( this ) );
+			}
+		} else {
+			Ext.MessageBox.show( {
+				msg: msg,
+				icon: Ext.MessageBox.ERROR
+			} );
+		}
+	},
+	
+	validateSearch : function ( csc ) {
+		if ( csc.geneIds.length < 1 ) {
+			return "Please select at least one query gene";
+		} else if ( csc.stringency < Ext.Gemma.CoexpressionSearchForm.MIN_STRINGENCY ) {
+			return "Minimum stringency is " + Ext.Gemma.CoexpressionSearchForm.MIN_STRINGENCY;
+		} else if ( csc.eeIds && csc.eeIds.length < 1 ) {
+			return "There are no datasets that match your search terms";
+		} else if ( !csc.eeIds && !csc.cannedAnalysisId ) {
+			return "Please select an analysis";
+		} else {
+			return "";
+		}
 	},
 	
 	returnFromSearch : function ( result ) {
-		this.processSearchResults( result );
 		this.loadMask.hide();
-	},
-
-	processSearchResults : function ( result ) {
-		// this is going to be overridden in the main method above; this should be cleaned up...
+		this.fireEvent( 'aftersearch', this, result );
 	},
 	
 	updateDatasetsToBeSearched : function ( datasets ) {
@@ -361,7 +299,7 @@ Ext.extend( Ext.Gemma.CoexpressionSearchPanel, Ext.FormPanel, {
 	
 	taxonChanged : function ( taxon ) {
 		this.analysisCombo.taxonChanged( taxon );
-		this.eeSearchField.taxonChanged( taxon, this.analysisCombo.selectedIndex >= 0 );
+		this.eeSearchField.taxonChanged( taxon, this.customFs.hidden ? false : true );
 		this.geneChooserPanel.taxonChanged( taxon );
 	}
 	
@@ -450,6 +388,7 @@ Ext.Gemma.AnalysisCombo = function ( config ) {
 		displayField : 'name',
 		valueField : 'id',
 		editable : false,
+		forceSelection : true,
 		lazyInit : false,
 		lazyRender : false,
 		mode : 'local',
@@ -472,6 +411,10 @@ Ext.Gemma.AnalysisCombo = function ( config ) {
 				description : "Select specific datasets to search against"
 			} );
 			superConfig.store.add( record );
+			this.setValue( this.getValue() );	// make sure the text of the selected item gets picked up
+		}.bind( this );
+	} else {
+		options.callback = function () {
 			this.setValue( this.getValue() );	// make sure the text of the selected item gets picked up
 		}.bind( this );
 	}
@@ -640,4 +583,91 @@ Ext.Gemma.CoexpressionSummaryGrid.transformData = function ( genes, summary ) {
 /* instance methods...
  */
 Ext.extend( Ext.Gemma.CoexpressionSummaryGrid, Ext.Gemma.GemmaGridPanel, {
+} );
+
+/* Ext.Gemma.CoexpressionSearchFormLite constructor...
+ */
+Ext.Gemma.CoexpressionSearchFormLite = function ( config ) {
+
+	/* establish default config options...
+	 */
+	var superConfig = {
+		autoHeight : true,
+		frame : true,
+		stateful : true,
+		stateEvents : [ "beforesearch" ],
+		stateId : "Ext.Gemma.CoexpressionSearch", // share state with complex form...
+		labelAlign : "top",
+		defaults : { width: 185 }
+	};
+	
+	/* apply user-defined config options and call the superclass constructor...
+	 */
+	for ( property in config ) {
+		superConfig[property] = config[property];
+	}
+	Ext.Gemma.CoexpressionSearchFormLite.superclass.constructor.call( this, superConfig );
+	
+	this.geneCombo = new Ext.Gemma.GeneCombo( {
+		hiddenName : 'g',
+		fieldLabel : 'Select a query gene'
+	} );
+	
+	this.analysisCombo = new Ext.Gemma.AnalysisCombo( {
+		hiddenName : 'a',
+		fieldLabel : 'Select search scope',
+		showCustomOption : false
+	} );
+	
+	var submitButton = new Ext.Button( {
+		text : "Find coexpressed genes",
+		handler : function() {
+			document.location.href =
+				String.format( "/Gemma/searchCoexpressionExt.html?g={0}&a={1}",
+					this.geneCombo.getValue(), this.analysisCombo.getValue() );
+		}.bind( this )
+	} );
+
+	this.add( this.geneCombo );
+	this.add( this.analysisCombo );
+	this.addButton( submitButton );
+};
+
+/* instance methods...
+ */
+Ext.extend( Ext.Gemma.CoexpressionSearchFormLite, Ext.FormPanel, {
+
+	applyState : function( state, config ) {
+		if ( state ) {
+			this.csc = state;
+		}
+	},
+
+	getState : function() {
+		return this.getCoexpressionSearchCommand();
+	},
+    
+    render : function ( container, position ) {
+		Ext.Gemma.CoexpressionSearchFormLite.superclass.render.apply(this, arguments);
+    	
+    	// initialize from state
+		if ( this.csc ) {
+			this.initializeFromCoexpressionSearchCommand( this.csc );
+		}
+    },
+
+	getCoexpressionSearchCommand : function () {
+		var csc = {
+			geneIds : [ this.geneCombo.getValue() ],
+			analysisId : this.analysisCombo.getValue()
+		};
+		return csc;
+	},
+	
+	initializeFromCoexpressionSearchCommand : function ( csc ) {
+		if ( csc.cannedAnalysisId > -1 ) {
+			this.analysisCombo.setValue( csc.cannedAnalysisId );
+		}
+	}
+	
 } );
