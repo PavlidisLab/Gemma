@@ -415,7 +415,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             queryObject.setParameterList( "eeids", idList );
         }
         queryObject.setCacheable( true );
-        queryObject.setCacheRegion( "quantitationTypesForEes" );
+        queryObject.setCacheRegion( null );
 
         Map<Long, Collection<QuantitationType>> results = new HashMap<Long, Collection<QuantitationType>>();
         StopWatch watch = new StopWatch();
@@ -950,7 +950,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             Session session = super.getSession( false );
             org.hibernate.Query queryObject = session.createQuery( queryString );
             queryObject.setCacheable( true );
-            queryObject.setCacheRegion( "auditEvents" );
+            queryObject.setCacheRegion( null );
             queryObject.setParameterList( "ee", eeList );
             List qr = queryObject.list();
             if ( qr == null || qr.isEmpty() ) return result;
@@ -994,7 +994,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             Session session = super.getSession( false );
             org.hibernate.Query queryObject = session.createQuery( queryString );
             queryObject.setCacheable( true );
-            queryObject.setCacheRegion( "auditEvents" );
+            queryObject.setCacheRegion( null );
             queryObject.setMaxResults( 1 );
             queryObject.setParameter( "ee", ee );
 
@@ -1031,7 +1031,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             // it is important to cache this, as it gets called on the home page.
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setCacheable( true );
-            queryObject.setCacheRegion( "countsCache" );
+            queryObject.setCacheRegion( null );
             ScrollableResults list = queryObject.scroll();
             while ( list.next() ) {
                 taxonCount.put( ( Taxon ) list.get( 0 ), list.getLong( 1 ) );
@@ -1110,7 +1110,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             Session session = this.getSession( false );
             org.hibernate.Query queryObject = session.createQuery( queryString );
             queryObject.setCacheable( true );
-            queryObject.setCacheRegion( "ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" );
+            queryObject.setCacheRegion( null );
             queryObject.setParameterList( "ids", idList );
             ees = queryObject.list();
             session.clear();
@@ -1183,7 +1183,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
 
             queryObject.setCacheable( true );
-            queryObject.setCacheRegion( "eeValueObjects" );
+            queryObject.setCacheRegion( null );
             Map<Long, Collection<QuantitationType>> qtMap = getQuantitationTypeMap( null );
             ScrollableResults list = queryObject.scroll( ScrollMode.FORWARD_ONLY );
             while ( list.next() ) {
@@ -1252,7 +1252,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             queryObject.setParameterList( "ids", idl );
             Map<Long, Collection<QuantitationType>> qtMap = getQuantitationTypeMap( idl );
             queryObject.setCacheable( true );
-            queryObject.setCacheRegion( "eeValueObjects" );
+            queryObject.setCacheRegion( null );
 
             List list = queryObject.list();
             for ( Object object : list ) {

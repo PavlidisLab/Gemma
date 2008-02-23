@@ -451,7 +451,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             csQueryObject.setCacheable( true );
             csQueryObject.setMaxResults( 1 );
             // the name of the cache region is configured in ehcache.xml.vsl
-            csQueryObject.setCacheRegion( "arrayDesignListing" );
+            csQueryObject.setCacheRegion( null );
 
             List csList = csQueryObject.list();
 
