@@ -104,7 +104,7 @@ public class Gene2GoTermEndpoint extends AbstractGemmaEndpoint {
             // get the labels and store them
             Collection<String> goTerms = new HashSet<String>();
             for ( OntologyTerm ot : terms ) {
-                goTerms.add( ot.getLabel() );
+                goTerms.add( GeneOntologyService.asRegularGoId( ot ) );
             }
 
             String elementString1 = geneId.toString();
