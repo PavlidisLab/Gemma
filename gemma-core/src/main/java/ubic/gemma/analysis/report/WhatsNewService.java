@@ -84,7 +84,8 @@ public class WhatsNewService implements InitializingBean {
                 return;
             }
 
-            whatsNewCache = new Cache( WHATS_NEW_CACHE, 500, false, false, 10000, 10000 );
+            // last two values are timetolive and timetoidle.
+            whatsNewCache = new Cache( WHATS_NEW_CACHE, 1500, false, false, 100000, 100000 );
 
             manager.addCache( whatsNewCache );
             whatsNewCache = manager.getCache( WHATS_NEW_CACHE );
