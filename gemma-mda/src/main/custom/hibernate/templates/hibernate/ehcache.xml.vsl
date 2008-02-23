@@ -45,7 +45,7 @@
     maxElementsInMemory="5000"
     eternal="false"
     timeToLiveSeconds="60000"
-    timeToLiveSeconds="6000"
+    timeToIdleSeconds="0"
     overflowToDisk="false"/>
  
 <cache
