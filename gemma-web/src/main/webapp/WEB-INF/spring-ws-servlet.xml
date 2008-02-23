@@ -41,6 +41,8 @@
 				
 				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}dEDVfromEEIDGeneID">dEDVfromEEIDGeneIDEndpoint</prop>
 				
+				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}geneOverlap">geneOverlapEndpoint</prop>
+				
 
           	</props>
          </property>
@@ -148,6 +150,15 @@
     <bean id="gene2GoTermEndpoint" class="ubic.gemma.web.services.Gene2GoTermEndpoint">
         <description>
 				returns a list of go ids
+        </description>
+        <property name="geneService" ref="geneService"/>
+        <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
+        <property name="geneOntologyService" ref="geneOntologyService"/>
+    </bean>
+    
+    <bean id="geneOverlapEndpoint" class="ubic.gemma.web.services.GeneOverlapEndpoint">
+        <description>
+				returns a map of gene to overlapping GO terms
         </description>
         <property name="geneService" ref="geneService"/>
         <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
