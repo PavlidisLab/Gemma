@@ -242,14 +242,12 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
     }
 
     /**
-     * generates a collection of value objects that contain summary information about links, biomaterials, and
-     * datavectors
+     * Generate a value object that contain summary information about links, biomaterials, and datavectors
      */
     @SuppressWarnings("unchecked")
     public void generateSummaryObject( Long id ) {
         Collection ids = new ArrayList<Long>();
         ids.add( id );
-
         generateSummaryObjects( ids );
     }
 
@@ -257,37 +255,22 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
      * generates a collection of value objects that contain summary information about links, biomaterials, and
      * datavectors
      */
+    @SuppressWarnings("unchecked")
     public void generateSummaryObjects() {
         initDirectories( false );
-        // first, load all expression experiment value objects
-        // this will have no stats filled in
-
-        // for each expression experiment, load in stats
-        Collection vos = expressionExperimentService.loadAllValueObjects();
+        Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadAllValueObjects();
         getStats( vos );
-
-        // save the collection
-        saveValueObjects( vos );
-        log.info( "Stats completed." );
     }
 
     /**
      * generates a collection of value objects that contain summary information about links, biomaterials, and
      * datavectors
      */
-    public void generateSummaryObjects( Collection ids ) {
+    @SuppressWarnings("unchecked")
+    public void generateSummaryObjects( Collection<Long> ids ) {
         initDirectories( false );
-        // first, load all expression experiment value objects
-        // this will have no stats filled in
-
-        // for each expression experiment, load in stats
-        Collection vos = expressionExperimentService.loadValueObjects( ids );
+        Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjects( ids );
         getStats( vos );
-
-        // save the collection
-
-        saveValueObjects( vos );
-        log.info( "Stats completed." );
     }
 
     /**
@@ -398,33 +381,43 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
     }
 
     /**
+     * Compute statistics for EEs and serialize them to disk for later retrieval.
+     * 
      * @param vos
      */
-    private void getStats( Collection vos ) {
+    private void getStats( Collection<ExpressionExperimentValueObject> vos ) {
         log.info( "Getting stats for " + vos.size() + " value objects." );
-        String timestamp = DateFormatUtils.format( new Date( System.currentTimeMillis() ), "yyyy.MM.dd HH:mm" );
-        for ( Object object : vos ) {
-            ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) object;
-            ExpressionExperiment tempEe = expressionExperimentService.load( eeVo.getId() );
-
-            eeVo.setBioMaterialCount( expressionExperimentService.getBioMaterialCount( tempEe ) );
-            eeVo.setPreferredDesignElementDataVectorCount( expressionExperimentService
-                    .getPreferredDesignElementDataVectorCount( tempEe ) );
-
-            long numLinks = probe2ProbeCoexpressionService.countLinks( tempEe ).longValue();
-            log.info( numLinks + " links." );
-            eeVo.setCoexpressionLinkCount( numLinks );
-
-            eeVo.setDateCached( timestamp );
-
-            auditTrailService.thaw( tempEe.getAuditTrail() );
-            if ( tempEe.getAuditTrail() != null ) {
-                eeVo.setDateCreated( tempEe.getAuditTrail().getCreationEvent().getDate().toString() );
-            }
-            eeVo.setDateLastUpdated( tempEe.getAuditTrail().getLast().getDate() );
-            log.info( "Generated report for " + eeVo.getShortName() );
-
+        for ( ExpressionExperimentValueObject object : vos ) {
+            getStats( object );
         }
+    }
+
+    /**
+     * @param object
+     */
+    private void getStats( ExpressionExperimentValueObject eeVo ) {
+        ExpressionExperiment tempEe = expressionExperimentService.load( eeVo.getId() );
+
+        eeVo.setBioMaterialCount( expressionExperimentService.getBioMaterialCount( tempEe ) );
+        eeVo.setPreferredDesignElementDataVectorCount( expressionExperimentService
+                .getPreferredDesignElementDataVectorCount( tempEe ) );
+
+        long numLinks = probe2ProbeCoexpressionService.countLinks( tempEe ).longValue();
+        log.info( numLinks + " links." );
+        eeVo.setCoexpressionLinkCount( numLinks );
+
+        String timestamp = DateFormatUtils.format( new Date( System.currentTimeMillis() ), "yyyy.MM.dd HH:mm" );
+        eeVo.setDateCached( timestamp );
+
+        auditTrailService.thaw( tempEe.getAuditTrail() );
+        if ( tempEe.getAuditTrail() != null ) {
+            eeVo.setDateCreated( tempEe.getAuditTrail().getCreationEvent().getDate().toString() );
+        }
+        eeVo.setDateLastUpdated( tempEe.getAuditTrail().getLast().getDate() );
+
+        saveValueObject( eeVo );
+
+        log.info( "Generated report for " + eeVo.getShortName() );
     }
 
     /**
@@ -541,29 +534,23 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
     }
 
     /**
-     * @param eeValueObjects the collection of Expression Experiment value objects to serialize
-     * @return true if successful, false otherwise serialize value objects
+     * @param eeVo Expression Experiment value objects to serialize
      */
-    private boolean saveValueObjects( Collection eeValueObjects ) {
-        for ( Object object : eeValueObjects ) {
-            ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) object;
-
-            try {
-                // remove file first
-                File f = new File( getReportPath( eeVo.getId() ) );
-                if ( f.exists() ) {
-                    f.delete();
-                }
-                FileOutputStream fos = new FileOutputStream( getReportPath( eeVo.getId() ) );
-                ObjectOutputStream oos = new ObjectOutputStream( fos );
-                oos.writeObject( eeVo );
-                oos.flush();
-                oos.close();
-            } catch ( Throwable e ) {
-                return false;
+    private void saveValueObject( ExpressionExperimentValueObject eeVo ) {
+        try {
+            // remove file first
+            File f = new File( getReportPath( eeVo.getId() ) );
+            if ( f.exists() ) {
+                f.delete();
             }
+            FileOutputStream fos = new FileOutputStream( getReportPath( eeVo.getId() ) );
+            ObjectOutputStream oos = new ObjectOutputStream( fos );
+            oos.writeObject( eeVo );
+            oos.flush();
+            oos.close();
+        } catch ( Throwable e ) {
+            log.warn( e );
         }
-        return true;
     }
 
 }
