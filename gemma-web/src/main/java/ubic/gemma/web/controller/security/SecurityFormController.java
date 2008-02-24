@@ -148,6 +148,11 @@ public class SecurityFormController extends BaseFormController {
         SecurityCommand sc = ( SecurityCommand ) command;
         String shortName = sc.getShortName();
 
+        if ( StringUtils.isEmpty( shortName ) ) {
+            return processErrors( request, response, command, errors,
+                    "Must enter the short name of either the experiment or array design. " );
+        }
+
         String type = sc.getSecurableType();
 
         Object target = null;
