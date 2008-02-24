@@ -42,6 +42,7 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.stat.Statistics;
 import org.hibernate.type.BlobType;
 import org.hibernate.type.DoubleType;
 import org.hibernate.type.LongType;
@@ -415,14 +416,16 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             queryObject.setParameterList( "eeids", idList );
         }
         queryObject.setCacheable( true );
-        queryObject.setCacheRegion( null );
 
         Map<Long, Collection<QuantitationType>> results = new HashMap<Long, Collection<QuantitationType>>();
         StopWatch watch = new StopWatch();
         watch.start();
+        Statistics stats = this.getSessionFactory().getStatistics();
+        long queryCacheHitCount = stats.getQueryCacheHitCount();
         List resultsList = queryObject.list();
+        boolean hit = stats.getQueryCacheHitCount() > queryCacheHitCount;
         watch.split();
-        log.debug( "QT query took " + watch.getTime() + "ms" );
+        log.debug( "QT query took " + watch.getTime() + "ms; hit cache=" + hit );
         watch.unsplit();
         for ( Object object : resultsList ) {
             Object[] ar = ( Object[] ) object;
@@ -929,15 +932,6 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     @Override
     protected Map<ExpressionExperiment, AuditEvent> handleGetLastArrayDesignUpdate( Collection expressionExperiments,
             Class type ) throws Exception {
-
-        List<String> classes = getClassHierarchy( type );
-        final String queryString = "select ee,event from ExpressionExperimentImpl as ee inner join "
-                + "ee.bioAssays b inner join b.arrayDesignUsed a inner join a.auditTrail trail inner join trail.events event inner join event.eventType et "
-                + " where ee in (:ee) and et.class in (" + StringUtils.join( classes, "," )
-                + ") order by event.date desc ";
-
-        Map<ExpressionExperiment, AuditEvent> result = new HashMap<ExpressionExperiment, AuditEvent>();
-
         // helps make sure we use the query cache.
         List<ExpressionExperiment> eeList = new ArrayList<ExpressionExperiment>( expressionExperiments );
         Collections.sort( eeList, new Comparator<ExpressionExperiment>() {
@@ -946,30 +940,91 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             }
         } );
 
+        Map<ArrayDesign, Collection<ExpressionExperiment>> eeAdMap = getArrayDesignsUsed( eeList );
+
+        List<String> classes = getClassHierarchy( type );
+        List<ArrayDesign> ads = new ArrayList<ArrayDesign>( eeAdMap.keySet() );
+        final String queryString = "select ad,event from ArrayDesignImpl ad inner join ad.auditTrail trail inner join trail.events event inner join event.eventType et "
+                + " where ad in (:ads) and et.class in ("
+                + StringUtils.join( classes, "," )
+                + ") order by event.date desc ";
+
+        Map<ExpressionExperiment, AuditEvent> result = new HashMap<ExpressionExperiment, AuditEvent>();
+
         try {
             Session session = super.getSession( false );
             org.hibernate.Query queryObject = session.createQuery( queryString );
             queryObject.setCacheable( true );
-            queryObject.setCacheRegion( null );
-            queryObject.setParameterList( "ee", eeList );
+            queryObject.setParameterList( "ads", ads );
+            Statistics stats = this.getSessionFactory().getStatistics();
+            long queryCacheHitCount = stats.getQueryCacheHitCount();
+            StopWatch timer = new StopWatch();
+            timer.start();
             List qr = queryObject.list();
-            if ( qr == null || qr.isEmpty() ) return result;
+            timer.stop();
+            boolean hit = stats.getQueryCacheHitCount() > queryCacheHitCount;
+
+            if ( qr.isEmpty() ) return result;
 
             for ( Object o : qr ) {
                 Object[] ar = ( Object[] ) o;
-                ExpressionExperiment ee = ( ExpressionExperiment ) ar[0];
+                ArrayDesign ad = ( ArrayDesign ) ar[0];
                 AuditEvent e = ( AuditEvent ) ar[1];
 
-                // only one event per object, please - the most recent.
-                if ( result.containsKey( ee ) ) continue;
+                Collection<ExpressionExperiment> eesForAd = eeAdMap.get( ad );
 
-                result.put( ee, e );
+                // only one event per object, please - the most recent.
+                for ( ExpressionExperiment ee : eesForAd ) {
+                    if ( result.containsKey( ee ) ) continue;
+                    result.put( ee, e );
+                }
             }
-            session.clear();
+            if ( timer.getTime() > 1000 )
+                log.info( "Retrieve " + qr.size() + " in " + timer.getTime() + "ms. From cache=" + hit );
+            // session.clear();
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
         return result;
+    }
+
+    /**
+     * @param eeList
+     * @return map of array designs to the experiments they were used in.
+     */
+    private Map<ArrayDesign, Collection<ExpressionExperiment>> getArrayDesignsUsed( List<ExpressionExperiment> eeList ) {
+        Map<ArrayDesign, Collection<ExpressionExperiment>> eeAdMap = new HashMap<ArrayDesign, Collection<ExpressionExperiment>>();
+        final String eeAdQuery = "select distinct ee,b.arrayDesignUsed from ExpressionExperimentImpl as ee inner join "
+                + "ee.bioAssays b where ee in (:ees)";
+        try {
+            Session session = super.getSession( false );
+            org.hibernate.Query queryObject = session.createQuery( eeAdQuery );
+            queryObject.setCacheable( true );
+            queryObject.setParameterList( "ees", eeList );
+            Statistics stats = this.getSessionFactory().getStatistics();
+            long queryCacheHitCount = stats.getQueryCacheHitCount();
+            StopWatch timer = new StopWatch();
+            timer.start();
+            List qr = queryObject.list();
+            timer.stop();
+            boolean hit = stats.getQueryCacheHitCount() > queryCacheHitCount;
+
+            for ( Object o : qr ) {
+                Object[] ar = ( Object[] ) o;
+                ExpressionExperiment ee = ( ExpressionExperiment ) ar[0];
+                ArrayDesign ad = ( ArrayDesign ) ar[1];
+                if ( !eeAdMap.containsKey( ad ) ) {
+                    eeAdMap.put( ad, new HashSet<ExpressionExperiment>() );
+                }
+                eeAdMap.get( ad ).add( ee );
+            }
+            if ( timer.getTime() > 1000 )
+                log.info( "Retrieved " + qr.size() + " ad->ee in " + timer.getTime() + "ms. From cache=" + hit );
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+
+        return eeAdMap;
     }
 
     /*
@@ -994,11 +1049,12 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             Session session = super.getSession( false );
             org.hibernate.Query queryObject = session.createQuery( queryString );
             queryObject.setCacheable( true );
-            queryObject.setCacheRegion( null );
             queryObject.setMaxResults( 1 );
             queryObject.setParameter( "ee", ee );
-
+            Statistics stats = this.getSessionFactory().getStatistics();
+            long queryCacheHitCount = stats.getQueryCacheHitCount();
             Collection results = queryObject.list();
+            boolean hit = stats.getQueryCacheHitCount() > queryCacheHitCount;
             session.clear();
             if ( results.size() == 0 ) return null;
             return ( AuditEvent ) results.iterator().next();
@@ -1031,8 +1087,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             // it is important to cache this, as it gets called on the home page.
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setCacheable( true );
-            queryObject.setCacheRegion( null );
+            Statistics stats = this.getSessionFactory().getStatistics();
+            long queryCacheHitCount = stats.getQueryCacheHitCount();
             ScrollableResults list = queryObject.scroll();
+            boolean hit = stats.getQueryCacheHitCount() > queryCacheHitCount;
             while ( list.next() ) {
                 taxonCount.put( ( Taxon ) list.get( 0 ), list.getLong( 1 ) );
             }
@@ -1091,6 +1149,38 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     }
 
     /*
+     * Override to take advantage of query cache. (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#loadAll()
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Collection<ExpressionExperiment> loadAll() {
+        Collection<ExpressionExperiment> ees = null;
+        final String queryString = "from ExpressionExperimentImpl";
+        try {
+            Session session = this.getSession( false );
+            org.hibernate.Query queryObject = session.createQuery( queryString );
+            queryObject.setReadOnly( true );
+            queryObject.setCacheable( true );
+
+            Statistics stats = this.getSessionFactory().getStatistics();
+            long queryCacheHitCount = stats.getQueryCacheHitCount();
+            StopWatch timer = new StopWatch();
+            timer.start();
+            ees = queryObject.list();
+            boolean hit = stats.getQueryCacheHitCount() > queryCacheHitCount;
+            timer.stop();
+            if ( timer.getTime() > 1000 ) {
+                log.info( "Load " + ees.size() + " ees in  " + timer.getTime() + "ms, hit cache=" + hit );
+            }
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        return ees;
+    }
+
+    /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleLoad(java.util.Collection)
@@ -1099,7 +1189,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     @Override
     protected Collection<ExpressionExperiment> handleLoad( Collection ids ) throws Exception {
         Collection<ExpressionExperiment> ees = null;
-        final String queryString = "select ee from ExpressionExperimentImpl as ee " + " where ee.id in (:ids) ";
+        final String queryString = "from ExpressionExperimentImpl ee where ee.id in (:ids) ";
         StopWatch timer = new StopWatch();
         timer.start();
         List idList = new ArrayList( ids );
@@ -1110,14 +1200,18 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             Session session = this.getSession( false );
             org.hibernate.Query queryObject = session.createQuery( queryString );
             queryObject.setCacheable( true );
-            queryObject.setCacheRegion( null );
             queryObject.setParameterList( "ids", idList );
+            Statistics stats = this.getSessionFactory().getStatistics();
+            long queryCacheHitCount = stats.getQueryCacheHitCount();
             ees = queryObject.list();
+            boolean hit = stats.getQueryCacheHitCount() > queryCacheHitCount;
             session.clear();
             timer.stop();
+            
             if ( timer.getTime() > 1000 ) {
-                log.info( "Load " + ees.size() + " ees in  " + timer.getTime() + "ms" );
+                log.info( "Load multiple: " + ees.size() + " ees in  " + timer.getTime() + "ms; hit cache=" + hit );
             }
+           
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
@@ -1183,9 +1277,11 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
 
             queryObject.setCacheable( true );
-            queryObject.setCacheRegion( null );
             Map<Long, Collection<QuantitationType>> qtMap = getQuantitationTypeMap( null );
+            Statistics stats = this.getSessionFactory().getStatistics();
+            long queryCacheHitCount = stats.getQueryCacheHitCount();
             ScrollableResults list = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+            boolean hit = stats.getQueryCacheHitCount() > queryCacheHitCount;
             while ( list.next() ) {
                 ExpressionExperimentValueObject v = new ExpressionExperimentValueObject();
                 Long eeId = list.getLong( 0 );
@@ -1252,9 +1348,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             queryObject.setParameterList( "ids", idl );
             Map<Long, Collection<QuantitationType>> qtMap = getQuantitationTypeMap( idl );
             queryObject.setCacheable( true );
-            queryObject.setCacheRegion( null );
-
+            Statistics stats = this.getSessionFactory().getStatistics();
+            long queryCacheHitCount = stats.getQueryCacheHitCount();
             List list = queryObject.list();
+            boolean hit = stats.getQueryCacheHitCount() > queryCacheHitCount;
             for ( Object object : list ) {
 
                 Object[] res = ( Object[] ) object;
@@ -1284,7 +1381,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             }
             watch.stop();
             if ( watch.getTime() > 1000 ) {
-                log.info( "Loaded " + vo.size() + " EE value objs in " + watch.getTime() + "ms" );
+                log.info( "Loaded " + vo.size() + " EE value objs in " + watch.getTime() + "ms; hit cache=" + hit );
             }
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );

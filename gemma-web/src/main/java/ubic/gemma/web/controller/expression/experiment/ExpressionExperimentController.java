@@ -515,7 +515,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      */
     @SuppressWarnings( { "unused", "unchecked" })
     public ModelAndView showAllLinkSummaries( HttpServletRequest request, HttpServletResponse response ) {
-
+        log.info( "Processing link summary request" );
         StopWatch timer = new StopWatch();
         timer.start();
         String sId = request.getParameter( "id" );
@@ -541,29 +541,13 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             expressionExperiments.addAll( eeValObjectCol );
         }
 
-        timer.stop();
-        log.info( "Got ees in " + timer.getTime() + "ms" );
-        timer.reset();
-        timer.start();
-
-        // load cached data
+        log.info("got experiments");
+        
         expressionExperimentReportService.fillLinkStatsFromCache( expressionExperiments );
-        timer.stop();
-        log.info( "Got link stats in " + timer.getTime() + "ms" );
-        timer.reset();
-        // load event data
         expressionExperimentReportService.fillEventInformation( expressionExperiments );
-
-        // load annotation information
-
-        timer.start();
         expressionExperimentReportService.fillAnnotationInformation( expressionExperiments );
-        timer.stop();
-        log.info( "Got annotation info in " + timer.getTime() + "ms" );
-        timer.reset();
-        timer.start();
-
-        // sort expression experiments by name first
+        log.info("got annotations, events and link stats");
+        
         Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments, new Comparator() {
             public int compare( Object o1, Object o2 ) {
                 String s1 = ( ( ExpressionExperimentValueObject ) o1 ).getName();

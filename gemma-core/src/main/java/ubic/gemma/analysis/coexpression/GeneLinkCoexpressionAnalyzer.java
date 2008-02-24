@@ -83,15 +83,15 @@ public class GeneLinkCoexpressionAnalyzer {
      * @param stringency The minimum support before a gene2gene link will be stored
      * @param knownGenesOnly if true, only 'known genes' (not predicted/PARs) will be used. Usually we set this to be
      *        true. (in fact 'false' is currently not supported)
-     * @param toUseAnalysisName Name of the analysis as it will appear in the system
+     * @param analysisName Name of the analysis as it will appear in the system
      */
     public void analyze( Set<ExpressionExperiment> expressionExperiments, Collection<Gene> toUseGenes, int stringency,
-            boolean knownGenesOnly, String toUseAnalysisName ) {
+            boolean knownGenesOnly, String analysisName ) {
         Collection<Gene> processedGenes = new HashSet<Gene>();
 
-        Analysis existingAnalysis = geneCoexpressionAnalysisService.findByName( toUseAnalysisName );
+        Analysis existingAnalysis = geneCoexpressionAnalysisService.findByName( analysisName );
         if ( existingAnalysis != null ) {
-            throw new IllegalArgumentException( "Analysis with name '" + toUseAnalysisName + "' exists already" );
+            throw new IllegalArgumentException( "Analysis with name '" + analysisName + "' exists already" );
         }
 
         if ( !knownGenesOnly ) {
@@ -113,15 +113,15 @@ public class GeneLinkCoexpressionAnalyzer {
             genesToAnalyzeMap.put( g.getId(), g );
         }
 
-        GeneCoexpressionAnalysis analysis = intializeAnalysis( expressionExperiments, taxon, toUseGenes,
-                toUseAnalysisName, stringency );
+        GeneCoexpressionAnalysis analysis = intializeAnalysis( expressionExperiments, taxon, toUseGenes, analysisName,
+                stringency );
         assert analysis != null;
 
         int totalLinks = 0;
 
         Map<Long, Integer> eeIdOrder = getOrderingMap( expressionExperiments );
 
-        log.info( "Starting gene link analysis '" + toUseAnalysisName + " on " + toUseGenes.size() + " genes in "
+        log.info( "Starting gene link analysis '" + analysisName + " on " + toUseGenes.size() + " genes in "
                 + expressionExperiments.size() + " experiments with a stringency of " + stringency );
 
         try {
@@ -297,6 +297,7 @@ public class GeneLinkCoexpressionAnalyzer {
      * @return
      */
     private Protocol createProtocol( Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> toUseGenes ) {
+        log.info( "Creating protocol object ... " );
         Protocol protocol = Protocol.Factory.newInstance();
         protocol.setName( "Stored Gene2GeneCoexpressions" );
         protocol.setDescription( "Using: " + expressionExperiments.size() + " Expression Experiments,  "
@@ -332,7 +333,6 @@ public class GeneLinkCoexpressionAnalyzer {
      */
     private GeneCoexpressionAnalysis intializeAnalysis( Collection<ExpressionExperiment> expressionExperiments,
             Taxon taxon, Collection<Gene> toUseGenes, String analysisName, int stringency ) {
-
         GeneCoexpressionAnalysis analysis = GeneCoexpressionAnalysis.Factory.newInstance();
 
         analysis.setDescription( "Coexpression analysis for " + taxon.getCommonName() + " using "
@@ -345,10 +345,11 @@ public class GeneLinkCoexpressionAnalyzer {
         analysis.setName( analysisName );
         analysis.setProtocol( protocol );
         analysis.setExperimentsAnalyzed( expressionExperiments );
+
         analysis = ( GeneCoexpressionAnalysis ) persisterHelper.persist( analysis );
 
         // TODO set this analysis to be 'private' until it is done.
-
+        log.info( "Done" );
         return analysis;
     }
 

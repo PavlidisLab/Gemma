@@ -87,6 +87,7 @@ public class CorrelationDistCli extends ExpressionExperimentManipulatingCLI {
      * @param ee
      * @return
      */
+    @SuppressWarnings("unchecked")
     private QuantitationType getPreferredQT( ExpressionExperiment ee ) {
         Collection<QuantitationType> qts = eeService.getQuantitationTypes( ee );
         for ( QuantitationType qt : qts ) {
@@ -251,7 +252,7 @@ public class CorrelationDistCli extends ExpressionExperimentManipulatingCLI {
                 log.info( ee.getShortName() + "---->" + culmulatives[eeIndex] );
                 dataIndex++;
             }
-            DoubleMatrixNamed dataMatrix = new DenseDoubleMatrix2DNamed( data );
+            DoubleMatrixNamed<String, String> dataMatrix = new DenseDoubleMatrix2DNamed<String, String>( data );
             dataMatrix.setRowNames( rowLabels );
             dataMatrix.setColumnNames( colLabels );
 

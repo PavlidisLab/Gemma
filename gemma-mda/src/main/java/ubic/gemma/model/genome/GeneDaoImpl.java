@@ -192,7 +192,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         final CoexpressionCollectionValueObject coexpressions = new CoexpressionCollectionValueObject( gene, stringency );
 
         if ( ees.size() == 0 ) {
-            log.warn( "No experiments selected" );
+            log.debug( "No experiments selected" );
             return coexpressions;
         }
 

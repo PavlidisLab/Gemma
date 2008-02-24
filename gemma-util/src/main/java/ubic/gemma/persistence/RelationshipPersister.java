@@ -111,6 +111,7 @@ public class RelationshipPersister extends ExpressionPersister {
         if ( entity == null ) return null;
         if ( !isTransient( entity ) ) return entity;
         entity.setProtocol( persistProtocol( entity.getProtocol() ) );
+        log.info( "done with protocol, persisting analysis object" );
         return geneCoexpressionAnalysisService.create( entity );
     }
 

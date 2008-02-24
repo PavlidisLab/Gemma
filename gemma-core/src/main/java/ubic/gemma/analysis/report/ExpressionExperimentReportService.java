@@ -133,7 +133,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
      */
     @SuppressWarnings("unchecked")
     public void fillEventInformation( Collection<ExpressionExperimentValueObject> vos ) {
-
+log.info("Start getting events");
         Collection<Long> ids = new ArrayList<Long>();
         for ( Object object : vos ) {
             ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) object;
@@ -146,7 +146,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         if ( ees.size() == 0 ) {
             return;
         }
-
+log.info( "loaded EEs for events" );
         // This is substantially faster than expressionExperimentService.getLastLinkAnalysis( ids ).
         Map<Long, AuditEvent> linkAnalysisEvents = getEvents( ees, LinkAnalysisEvent.Factory.newInstance() );
         Map<Long, AuditEvent> missingValueAnalysisEvents = getEvents( ees, MissingValueAnalysisEvent.Factory
@@ -157,9 +157,9 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         Map<Long, AuditEvent> arrayDesignEvents = getEvents( ees, ArrayDesignGeneMappingEvent.Factory.newInstance() );
         Map<Long, AuditEvent> differentialAnalysisEvents = getEvents( ees, DifferentialExpressionAnalysisEvent.Factory
                 .newInstance() );
-
         Map<Long, Collection<AuditEvent>> sampleRemovalEvents = getSampleRemovalEvents( ees );
-
+        log.info( "loaded events" );
+        
         // add in the last events of interest for all eeVos
         for ( ExpressionExperimentValueObject eeVo : vos ) {
             Long id = eeVo.getId();
@@ -220,6 +220,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                 eeVo.setValidatedFlag( validated );
             }
         }
+        log.info( "processed events" );
     }
 
     /**
