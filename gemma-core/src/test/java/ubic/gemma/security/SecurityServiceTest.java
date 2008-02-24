@@ -50,7 +50,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
     private ExpressionExperimentService expressionExperimentService;
 
-    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+    private DifferentialExpressionAnalysisService diffAnalysisService;
 
     /*
      * (non-Javadoc)
@@ -161,7 +161,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         ExpressionExperiment ee = expressionExperimentService.findByShortName( expName );
 
         if ( ee == null ) {
-            log.error( "Cannot find experiment " + expName + " in database.  Skipping test." );
+            log.error( "Cannot find experiment " + expName + " in database. Skipping test." );
             return;
         }
         SecurityService securityService = new SecurityService();
@@ -182,7 +182,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
     public void testMakeAnalysisPrivate() throws Exception {
         String expName = "GSE1077";
 
-        differentialExpressionAnalysisService = ( DifferentialExpressionAnalysisService ) this
+        diffAnalysisService = ( DifferentialExpressionAnalysisService ) this
                 .getBean( "differentialExpressionAnalysisService" );
 
         expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
@@ -193,21 +193,18 @@ public class SecurityServiceTest extends BaseSpringContextTest {
             return;
         }
 
-        Collection<DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
-                .findByInvestigation( investigation );
+        Collection<DifferentialExpressionAnalysis> diffAnalyses = diffAnalysisService.findByInvestigation( investigation );
 
         if ( diffAnalyses == null || diffAnalyses.isEmpty() ) {
             log.error( "Cannot find analyses for experiment " + expName + " in database.  Skipping test." );
             return;
         } else {
 
-            DifferentialExpressionAnalysis diffAnalysis = diffAnalyses.iterator().next();
-
             SecurityService securityService = new SecurityService();
 
             securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
             securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
-            securityService.setPermissions( diffAnalysis, SecurityService.PRIVATE_MASK, new HashSet<Object>() );
+            securityService.setPermissions( diffAnalyses, SecurityService.PRIVATE_MASK, new HashSet<Object>() );
 
             /*
              * uncomment so you can see the acl permission has been changed in the database.

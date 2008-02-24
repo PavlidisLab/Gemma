@@ -32,6 +32,12 @@ import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.analysis.GeneCoexpressionAnalysis;
+import ubic.gemma.model.analysis.GeneCoexpressionAnalysisService;
+import ubic.gemma.model.analysis.ProbeCoexpressionAnalysis;
+import ubic.gemma.model.analysis.ProbeCoexpressionAnalysisService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -50,6 +56,9 @@ import ubic.gemma.web.controller.BaseFormController;
  * @spring.property name="securityService" ref="securityService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
+ * @spring.property name="probeCoexpressionAnalysisService" ref="probeCoexpressionAnalysisService"
+ * @spring.property name="geneCoexpressionAnalysisService" ref="geneCoexpressionAnalysisService"
+ * @spring.property name="differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
  * @spring.property name="formView" value="securityManager"
  * @spring.property name="successView" value="securityManager"
  */
@@ -58,9 +67,16 @@ public class SecurityFormController extends BaseFormController {
     private SecurityService securityService = null;
     private ExpressionExperimentService expressionExperimentService = null;
     private ArrayDesignService arrayDesignService = null;
+    private ProbeCoexpressionAnalysisService probeCoexpressionAnalysisService = null;
+    private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService = null;
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
 
     private final String expressionExperimentType = ExpressionExperiment.class.getSimpleName();
-    private final String arrayDesignType = ArrayDesign.class.getSimpleName();// TODO add other securables
+    private final String arrayDesignType = ArrayDesign.class.getSimpleName();
+    private final String probeCoexpressionAnalysisType = ProbeCoexpressionAnalysis.class.getSimpleName();
+    private final String geneCoexpressionAnalysisType = GeneCoexpressionAnalysis.class.getSimpleName();
+    private final String differentialExpressionAnalysisType = DifferentialExpressionAnalysis.class.getSimpleName();
+
     private final String PUBLIC = "Public";
     private final String PRIVATE = "Private";
 
@@ -86,6 +102,9 @@ public class SecurityFormController extends BaseFormController {
         List<String> securableTypes = new ArrayList<String>();
         securableTypes.add( expressionExperimentType );
         securableTypes.add( arrayDesignType );
+        securableTypes.add( probeCoexpressionAnalysisType );
+        securableTypes.add( geneCoexpressionAnalysisType );
+        securableTypes.add( differentialExpressionAnalysisType );
 
         dropDownMap.put( "securableTypes", securableTypes );
 
@@ -134,7 +153,18 @@ public class SecurityFormController extends BaseFormController {
         Object target = null;
         if ( StringUtils.equalsIgnoreCase( type, expressionExperimentType ) ) {
             target = this.expressionExperimentService.findByShortName( shortName );
-        } else if ( StringUtils.equalsIgnoreCase( type, arrayDesignType ) ) {
+        } else if ( StringUtils.equalsIgnoreCase( type, probeCoexpressionAnalysisType ) ) {
+            ExpressionExperiment investigation = this.expressionExperimentService.findByShortName( shortName );
+            target = this.probeCoexpressionAnalysisService.findByInvestigation( investigation );
+        } else if ( StringUtils.equalsIgnoreCase( type, geneCoexpressionAnalysisType ) ) {
+            ExpressionExperiment investigation = this.expressionExperimentService.findByShortName( shortName );
+            target = this.geneCoexpressionAnalysisService.findByInvestigation( investigation );
+        } else if ( StringUtils.equalsIgnoreCase( type, differentialExpressionAnalysisType ) ) {
+            ExpressionExperiment investigation = this.expressionExperimentService.findByShortName( shortName );
+            target = this.differentialExpressionAnalysisService.findByInvestigation( investigation );
+        }
+
+        else if ( StringUtils.equalsIgnoreCase( type, arrayDesignType ) ) {
             // target = this.arrayDesignService.findArrayDesignByName( name );//TODO no findById ... maybe use name
             return processErrors( request, response, command, errors,
                     "Cannot change permissions of array designs at this time." );
@@ -188,6 +218,28 @@ public class SecurityFormController extends BaseFormController {
      */
     public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
         this.arrayDesignService = arrayDesignService;
+    }
+
+    /**
+     * @param probeCoexpressionAnalysisService
+     */
+    public void setProbeCoexpressionAnalysisService( ProbeCoexpressionAnalysisService probeCoexpressionAnalysisService ) {
+        this.probeCoexpressionAnalysisService = probeCoexpressionAnalysisService;
+    }
+
+    /**
+     * @param geneCoexpressionAnalysisService
+     */
+    public void setGeneCoexpressionAnalysisService( GeneCoexpressionAnalysisService geneCoexpressionAnalysisService ) {
+        this.geneCoexpressionAnalysisService = geneCoexpressionAnalysisService;
+    }
+
+    /**
+     * @param differentialExpressionAnalysisService
+     */
+    public void setDifferentialExpressionAnalysisService(
+            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
+        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
     }
 
 }

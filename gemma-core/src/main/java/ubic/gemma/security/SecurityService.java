@@ -20,6 +20,7 @@ package ubic.gemma.security;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 
 import org.acegisecurity.Authentication;
@@ -87,9 +88,15 @@ public class SecurityService {
             } else {
                 log.debug( "Object " + object.getClass() + " already visited." );
             }
+        } else if ( object instanceof Collection ) {
+            Collection objects = ( Collection ) object;
+            for ( Object o : objects ) {
+                setPermissions( o, mask, new HashSet<Object>() );
+            }
         } else {
-            throw new RuntimeException( "Object not Securable.  Cannot change permissions for object of type "
+            log.error( "Object not Securable.  Cannot change permissions for object of type "
                     + object.getClass().getName() + "." );
+            return;
         }
 
     }
