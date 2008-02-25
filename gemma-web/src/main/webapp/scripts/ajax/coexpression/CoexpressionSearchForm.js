@@ -224,7 +224,9 @@ Ext.extend( Ext.Gemma.CoexpressionSearchForm, Ext.FormPanel, {
 		} else {
 			this.geneChooserPanel.setGene( csc.geneIds[0] );
 		}
-		this.analysisCombo.setValue( csc.cannedAnalysisId );
+		if ( csc.cannedAnalysisId ) {
+			this.analysisCombo.setValue( csc.cannedAnalysisId );
+		}
 		if ( csc.cannedAnalysisId < 0 ) {
 			this.customFs.show();
 			this.eeSearchField.setValue( csc.eeQuery );
@@ -389,7 +391,6 @@ Ext.Gemma.AnalysisCombo = function ( config ) {
 		displayField : 'name',
 		valueField : 'id',
 		disabled : true,
-		emptyText : "Loading...",
 		editable : false,
 		forceSelection : true,
 		lazyInit : false,
@@ -499,7 +500,7 @@ Ext.extend( Ext.Gemma.AnalysisCombo, Ext.form.ComboBox, {
 			Ext.Gemma.AnalysisCombo.superclass.setValue.call( this, v );
 			
 			var r = this.findRecord( this.valueField, v );
-			this.analysisChanged( r.data );
+			this.analysisChanged( r ? r.data : null );
 		} else {
 			this.delayedSetValue = v;
 		}
@@ -507,7 +508,7 @@ Ext.extend( Ext.Gemma.AnalysisCombo, Ext.form.ComboBox, {
 	
 	storeLoaded : function() {
 		this.isStoreLoaded = true;
-		if ( this.delayedSetValue !== undefined ) {
+		if ( this.delayedSetValue !== undefined && this.delayedSetValue != "" ) {
 			this.setValue( this.delayedSetValue );
 		} else {
 			this.reset(); // clear the loading message...
