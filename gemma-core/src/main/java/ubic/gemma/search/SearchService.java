@@ -853,9 +853,16 @@ public class SearchService implements InitializingBean {
         Set<Gene> geneSet = new HashSet<Gene>();
 
         String searchString = settings.getQuery();
+        ArrayDesign ad = settings.getArrayDesign();
 
         // search by exact composite sequence name
-        Collection<CompositeSequence> matchedCs = compositeSequenceService.findByName( searchString );
+        Collection<CompositeSequence> matchedCs = new HashSet<CompositeSequence>();
+        if ( ad != null ) {
+            CompositeSequence cs = compositeSequenceService.findByName( ad, searchString );
+            matchedCs.add( cs );
+        } else {
+            matchedCs = compositeSequenceService.findByName( searchString );
+        }
 
         // search by associated genes.
         for ( CompositeSequence sequence : matchedCs ) {
