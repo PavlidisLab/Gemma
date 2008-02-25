@@ -221,7 +221,7 @@
 		</p>
 
 		<%
-		if ( expressionExperiment.getAnalyses().size() > 0 ) {
+		if ( expressionExperiment.getAnalyses() != null && expressionExperiment.getAnalyses().size() > 0 ) {
 		%>
 		<h3>
 			<fmt:message key="analyses.title" />
@@ -239,7 +239,7 @@
 		}
 		%>
 		<%
-		if ( expressionExperiment.getSubsets().size() > 0 ) {
+		if ( expressionExperiment.getSubsets() != null && expressionExperiment.getSubsets().size() > 0 ) {
 		%>
 		<script type="text/javascript" src="<c:url value="/scripts/aa.js"/>"></script>
 		<h3>
