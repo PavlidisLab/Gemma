@@ -449,7 +449,7 @@ Ext.Gemma.AnalysisCombo.getRecord = function() {
 Ext.Gemma.AnalysisCombo.getTemplate = function() {
 	if ( Ext.Gemma.AnalysisCombo.template === undefined ) {
 		Ext.Gemma.AnalysisCombo.template = new Ext.XTemplate(
-			'<tpl for="."><div ext:qtip="{description}" class="x-combo-list-item">{name}{[ values.taxon ? " (" + values.taxon.scientificName + ")" : "" ]}</tpl></div></tpl>'
+			'<tpl for="."><div ext:qtip="{description}" class="x-combo-list-item">{name}{[ values.taxon ? " (" + values.taxon.scientificName + ")" : "" ]}</div></tpl>'
 		);
 	}
 	return Ext.Gemma.AnalysisCombo.template;

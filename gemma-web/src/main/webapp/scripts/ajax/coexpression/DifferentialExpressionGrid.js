@@ -19,7 +19,9 @@ Ext.Gemma.DifferentialExpressionGrid = function ( config ) {
 	var superConfig = {
 		collapsible : true,
 		editable : false,
-		style : "margin-bottom: 1em;"
+		viewConfig : {
+			emptyText : "no differential expression results available"
+		}
 	};
 	
 	if ( this.pageSize ) {
