@@ -65,7 +65,7 @@
 			</td>
 			<td>
 				<spring:bind path="securityCommand.mask">
-					<input type="radio" name="mask" value="public"
+					<input type="radio" name="mask" value="public" checked
 						<c:if test='${status.value == "public"}'>checked</c:if>> Public
               		<span class="error"><c:out
 							value="${status.errorMessage}" />
