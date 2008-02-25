@@ -77,17 +77,20 @@ Ext.extend( Ext.Gemma.GeneCombo, Ext.form.ComboBox, {
 		if ( this.tooltip ) {
 			this.tooltip.destroy();
 		}
-		this.tooltip = new Ext.ToolTip( {
-			target: this.getEl(),
-			html: String.format( '{0} ({1})', gene.officialName || "no description", gene.taxon )
-		} );
+		if ( gene ) {
+			this.tooltip = new Ext.ToolTip( {
+				target: this.getEl(),
+				html: String.format( '{0} ({1})', gene.officialName || "no description", gene.taxon )
+			} );
+		}
 	},
 	
 	setTaxon : function ( taxon ) {
 		this.taxon = taxon;
 		if ( this.selectedGene && this.selectedGene.taxon != taxon.scientificName ) {
-			this.selectedGene = null;
+			this.setGene( null );
 			this.reset();
+			this.lastQuery = ''; // force a reload with the new taxon...
 		}
 	}
 	

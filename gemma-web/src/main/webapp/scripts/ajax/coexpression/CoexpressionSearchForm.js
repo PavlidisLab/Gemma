@@ -381,12 +381,15 @@ Ext.Gemma.AnalysisCombo = function ( config ) {
 	Ext.QuickTips.init();
 	
 	this.showCustomOption = config.showCustomOption; delete config.showCustomOption;
+	this.isStoreLoaded = false;
 	
 	/* establish default config options...
 	 */
 	var superConfig = {
 		displayField : 'name',
 		valueField : 'id',
+		disabled : true,
+		emptyText : "Loading...",
 		editable : false,
 		forceSelection : true,
 		lazyInit : false,
@@ -411,11 +414,11 @@ Ext.Gemma.AnalysisCombo = function ( config ) {
 				description : "Select specific datasets to search against"
 			} );
 			superConfig.store.add( record );
-			this.setValue( this.getValue() );	// make sure the text of the selected item gets picked up
+			this.storeLoaded();
 		}.bind( this );
 	} else {
 		options.callback = function () {
-			this.setValue( this.getValue() );	// make sure the text of the selected item gets picked up
+			this.storeLoaded();
 		}.bind( this );
 	}
 	superConfig.store.load( options );
@@ -466,23 +469,55 @@ Ext.extend( Ext.Gemma.AnalysisCombo, Ext.form.ComboBox, {
             'analysischanged'
         );
     },
+    
+    render : function ( container, position ) {
+		Ext.Gemma.AnalysisCombo.superclass.render.apply(this, arguments);
+    	
+		if ( ! this.isStoreLoaded ) {
+			this.setRawValue( "Loading..." );
+		}
+	},
 
 	onSelect : function ( record, index ) {
 		Ext.Gemma.AnalysisCombo.superclass.onSelect.call( this, record, index );
 		
 		if ( record.data != this.selectedAnalysis ) {
-			this.selectedAnalysis = record.data;
-			this.fireEvent( 'analysischanged', this, this.selectedAnalysis );
+			this.analysisChanged( record.data );
 		}
 	},
 	
 	reset : function() {
 		Ext.Gemma.AnalysisCombo.superclass.reset.call(this);
 		
-		if ( this.selectedAnalysis != null ) {
-			this.selectedAnalysis = null;
-			this.fireEvent( 'analysischanged', this, this.selectedAnalysis );
+		if ( this.selectedAnalysis !== null ) {
+			this.analysisChanged( null );
 		}
+	},
+	
+	setValue : function( v ) {
+		if ( this.isStoreLoaded ) {
+			Ext.Gemma.AnalysisCombo.superclass.setValue.call( this, v );
+			
+			var r = this.findRecord( this.valueField, v );
+			this.analysisChanged( r.data );
+		} else {
+			this.delayedSetValue = v;
+		}
+	},
+	
+	storeLoaded : function() {
+		this.isStoreLoaded = true;
+		if ( this.delayedSetValue !== undefined ) {
+			this.setValue( this.delayedSetValue );
+		} else {
+			this.reset(); // clear the loading message...
+		}
+		this.enable();
+	},
+	
+	analysisChanged : function ( analysis ) {
+		this.selectedAnalysis = analysis;
+		this.fireEvent( 'analysischanged', this, this.selectedAnalysis );
 	},
 
 	taxonChanged : function ( taxon ) {
@@ -618,6 +653,11 @@ Ext.Gemma.CoexpressionSearchFormLite = function ( config ) {
 		fieldLabel : 'Select search scope',
 		showCustomOption : false
 	} );
+	this.analysisCombo.on( "analysischanged", function ( combo, analysis ) {
+		if ( analysis && analysis.taxon ) {
+			this.taxonChanged( analysis.taxon );
+		}
+	}, this );
 	
 	var submitButton = new Ext.Button( {
 		text : "Find coexpressed genes",
@@ -668,6 +708,9 @@ Ext.extend( Ext.Gemma.CoexpressionSearchFormLite, Ext.FormPanel, {
 		if ( csc.cannedAnalysisId > -1 ) {
 			this.analysisCombo.setValue( csc.cannedAnalysisId );
 		}
+	},
+	taxonChanged : function ( taxon ) {
+		this.geneCombo.setTaxon( taxon );
 	}
 	
 } );
