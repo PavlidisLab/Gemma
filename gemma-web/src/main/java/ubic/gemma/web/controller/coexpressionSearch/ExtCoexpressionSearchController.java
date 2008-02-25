@@ -242,7 +242,8 @@ public class ExtCoexpressionSearchController extends BaseFormController {
                     geneOntologyService.calculateGoTermOverlap( queryGene, overlapIds );
                 for ( ExtCoexpressionValueObject ecvo : ecvos ) {
                     ecvo.setPossibleOverlap( numQueryGeneGoTerms );
-                    ecvo.setGoOverlap( goOverlap.get( ecvo.getFoundGene().getId() ).size() );
+                    Collection<OntologyTerm> overlap = goOverlap.get( ecvo.getFoundGene().getId() );
+                    ecvo.setGoOverlap( overlap == null ? 0 : overlap.size() );
                 }
             }
 
