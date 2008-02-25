@@ -20,7 +20,7 @@ package ubic.gemma.util.progress.grid.javaspaces;
 
 import net.jini.core.lease.Lease;
 
-import org.apache.log4j.Priority;
+import org.apache.log4j.Level;
 import org.apache.log4j.spi.LoggingEvent;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
@@ -57,8 +57,7 @@ public class SpacesProgressAppender extends ProgressAppender {
             throw new RuntimeException( "Cannot log tasks executing on the compute server.  GigaSpacesTemplate "
                     + "has not been added to the application context." );
 
-        if ( event.getLevel().isGreaterOrEqual( Priority.INFO ) && event.getMessage() != null ) {
-            // ProgressManager.updateCurrentThreadsProgressJob( event.getMessage().toString() );
+        if ( event.getLevel().isGreaterOrEqual( Level.INFO ) && event.getMessage() != null ) {
             if ( entry == null ) {
                 entry = new SpacesProgressEntry();
                 entry.message = "Logging Server Task";

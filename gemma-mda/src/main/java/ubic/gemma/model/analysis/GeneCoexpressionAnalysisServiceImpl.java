@@ -107,4 +107,9 @@ public class GeneCoexpressionAnalysisServiceImpl extends ubic.gemma.model.analys
         this.getGeneCoexpressionAnalysisDao().update( geneCoExpressionAnalysis );
     }
 
+    @Override
+    protected int handleGetNumDatasetsAnalyzed( GeneCoexpressionAnalysis analysis ) throws Exception {
+        return this.getGeneCoexpressionAnalysisDao().getNumDatasetsAnalyzed( analysis );
+    }
+
 }

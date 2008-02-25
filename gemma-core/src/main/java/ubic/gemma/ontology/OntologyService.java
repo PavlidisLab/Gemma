@@ -325,7 +325,8 @@ public class OntologyService {
         if ( results != null ) searchResults.addAll( filter( results, search ) );
 
         // Sort the individual results.
-        Collection<Characteristic> sortedResults = sort( individualResults, alreadyUsedResults, searchResults, search, foundValues );
+        Collection<Characteristic> sortedResults = sort( individualResults, alreadyUsedResults, searchResults, search,
+                foundValues );
         log.debug( "sorted " + sortedResults.size() + " in " + watch.getTime() + " ms" );
 
         return sortedResults;
@@ -339,8 +340,8 @@ public class OntologyService {
     }
 
     private Collection<Characteristic> sort( List<Characteristic> individualResults,
-            List<Characteristic> alreadyUsedResults, List<Characteristic> searchResults,
-            String searchTerm, Collection<String> foundValues ) {
+            List<Characteristic> alreadyUsedResults, List<Characteristic> searchResults, String searchTerm,
+            Collection<String> foundValues ) {
 
         // Comparator compare = new TermComparator( searchTerm );
         // Collections.sort( individualResults, compare );
@@ -368,8 +369,7 @@ public class OntologyService {
 
         for ( Characteristic characteristic : individualResults ) {
             String key = foundValueKey( characteristic );
-            if ( foundValues.contains( key ) )
-                continue;
+            if ( foundValues.contains( key ) ) continue;
             foundValues.add( key );
             if ( characteristic.getValue().equalsIgnoreCase( searchTerm ) )
                 sortedResultsExact.add( characteristic );
@@ -381,8 +381,7 @@ public class OntologyService {
 
         for ( Characteristic characteristic : searchResults ) {
             String key = foundValueKey( characteristic );
-            if ( foundValues.contains( key ) )
-                continue;
+            if ( foundValues.contains( key ) ) continue;
             foundValues.add( key );
             if ( characteristic.getValue().equalsIgnoreCase( searchTerm ) )
                 sortedResultsExact.add( characteristic );
@@ -480,14 +479,14 @@ public class OntologyService {
 
         log.debug( "Vocab Characteristic: " + vc );
         log.debug( "Expression Experiment ID List: " + bmIdList );
-        
+
         vc.setEvidenceCode( GOEvidenceCode.IC ); // manually added characteristic
         Set<Characteristic> chars = new HashSet<Characteristic>();
         chars.add( vc );
         Collection<ExpressionExperiment> ees = eeService.loadMultiple( bmIdList );
 
         for ( ExpressionExperiment ee : ees ) {
-
+            eeService.thawLite( ee );
             Collection<Characteristic> current = ee.getCharacteristics();
             if ( current == null )
                 current = new HashSet<Characteristic>( chars );
@@ -515,7 +514,7 @@ public class OntologyService {
         Collection<ExpressionExperiment> ees = eeService.loadMultiple( eeIdList );
 
         for ( ExpressionExperiment ee : ees ) {
-
+            eeService.thawLite( ee );
             Collection<Characteristic> current = ee.getCharacteristics();
             if ( current == null ) continue;
 

@@ -31,8 +31,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * Date Utility Class This is used to convert Strings to Dates and Timestamps
+ * Date Utility Class This is used to convert Strings to Dates and Timestamps. In part adapted from Appfuse
  * 
+ * @author pavlidis
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a> Modified by <a href="mailto:dan@getrolling.com">Dan
  *         Kibler </a> to correct time pattern. Minutes should be mm not MM (MM is month).
  * @version $Revision$ $Date$
@@ -45,33 +46,6 @@ public class DateUtil {
     private static String timePattern = "HH:mm";
 
     // ~ Methods ================================================================
-
-    /**
-     * Return default datePattern (MM/dd/yyyy)
-     * 
-     * @return a string representing the date pattern on the UI
-     */
-    public static String getDatePattern() {
-        return datePattern;
-    }
-
-    /**
-     * This method attempts to convert an Oracle-formatted date in the form dd-MMM-yyyy to mm/dd/yyyy.
-     * 
-     * @param aDate date from database as a string
-     * @return formatted string for the ui
-     */
-    public static final String getDate( Date aDate ) {
-        SimpleDateFormat df = null;
-        String returnValue = "";
-
-        if ( aDate != null ) {
-            df = new SimpleDateFormat( datePattern );
-            returnValue = df.format( aDate );
-        }
-
-        return ( returnValue );
-    }
 
     /**
      * This method generates a string representation of a date/time in the format you specify on input
@@ -94,7 +68,6 @@ public class DateUtil {
         try {
             date = df.parse( strDate );
         } catch ( ParseException pe ) {
-            // log.error("ParseException: " + pe);
             throw new ParseException( pe.getMessage(), pe.getErrorOffset() );
         }
 

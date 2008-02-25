@@ -67,10 +67,9 @@ public class CharacteristicBrowserController extends BaseFormController {
         for ( Object o : chars ) {
             Characteristic c = ( Characteristic ) o;
             Object parent = charToParent.get( c );
-            if ( ( searchEEs && parent instanceof ExpressionExperiment ) ||
-                 ( searchBMs && parent instanceof BioMaterial ) ||
-                 ( searchFVs && parent instanceof FactorValue ) ||
-                 ( searchNos && parent == null ) ) {
+            if ( ( searchEEs && parent instanceof ExpressionExperiment )
+                    || ( searchBMs && parent instanceof BioMaterial ) || ( searchFVs && parent instanceof FactorValue )
+                    || ( searchNos && parent == null ) ) {
                 AnnotationValueObject avo = new AnnotationValueObject();
                 avo.setId( c.getId() );
                 avo.setClassName( c.getCategory() );
@@ -103,56 +102,51 @@ public class CharacteristicBrowserController extends BaseFormController {
         Map charToParent = characteristicService.getParents( chars );
         for ( Characteristic cFromClient : chars ) {
             Characteristic cFromDatabase = characteristicService.load( cFromClient.getId() );
-            VocabCharacteristic vcFromClient =
-                ( cFromClient instanceof VocabCharacteristic ) ? (VocabCharacteristic)cFromClient : null;
-            VocabCharacteristic vcFromDatabase =
-                ( cFromDatabase instanceof VocabCharacteristic ) ? (VocabCharacteristic)cFromDatabase : null;
-            
-            /* if one of the characteristics is a VocabCharacteristic and the other is not, we have
-             * to change the characteristic in the database so that it matches the one from the client;
-             * since we can't change the class of the object, we have to delete the old characteristic
-             * and make a new one of the appropriate class.
+            VocabCharacteristic vcFromClient = ( cFromClient instanceof VocabCharacteristic ) ? ( VocabCharacteristic ) cFromClient
+                    : null;
+            VocabCharacteristic vcFromDatabase = ( cFromDatabase instanceof VocabCharacteristic ) ? ( VocabCharacteristic ) cFromDatabase
+                    : null;
+
+            /*
+             * if one of the characteristics is a VocabCharacteristic and the other is not, we have to change the
+             * characteristic in the database so that it matches the one from the client; since we can't change the
+             * class of the object, we have to delete the old characteristic and make a new one of the appropriate
+             * class.
              */
             if ( vcFromClient != null && vcFromDatabase == null ) {
-                vcFromDatabase = (VocabCharacteristic)characteristicService.create(
-                    VocabCharacteristic.Factory.newInstance(
-                        null,
-                        null,
-                        cFromDatabase.getValue(),
-                        cFromDatabase.getCategory(),
-                        cFromDatabase.getEvidenceCode(),
-                        cFromDatabase.getName(),
-                        cFromDatabase.getDescription(),
-                        null,
-                        null // don't copy AuditTrail to avoid cascade error... cFromDatabase.getAuditTrail()
-                    ) );
+                vcFromDatabase = ( VocabCharacteristic ) characteristicService.create( VocabCharacteristic.Factory
+                        .newInstance( null, null, cFromDatabase.getValue(), cFromDatabase.getCategory(), cFromDatabase
+                                .getEvidenceCode(), cFromDatabase.getName(), cFromDatabase.getDescription(), null, null // don't
+                                                                                                                        // copy
+                                                                                                                        // AuditTrail
+                                                                                                                        // to
+                                                                                                                        // avoid
+                                                                                                                        // cascade
+                                                                                                                        // error...
+                                                                                                                        // cFromDatabase.getAuditTrail()
+                        ) );
                 Object parent = charToParent.get( cFromDatabase );
                 removeFromParent( cFromDatabase, parent );
                 characteristicService.delete( cFromDatabase );
                 addToParent( vcFromDatabase, parent );
                 cFromDatabase = vcFromDatabase;
             } else if ( vcFromClient == null && vcFromDatabase != null ) {
-                cFromDatabase = characteristicService.create(
-                    Characteristic.Factory.newInstance(
-                        vcFromDatabase.getValue(),
-                        vcFromDatabase.getCategory(),
-                        vcFromDatabase.getEvidenceCode(),
-                        vcFromDatabase.getName(),
-                        vcFromDatabase.getDescription(),
-                        null // don't copy AuditTrail to avoid cascade error... vcFromDatabase.getAuditTrail()
-                    )
-                );
+                cFromDatabase = characteristicService.create( Characteristic.Factory.newInstance( vcFromDatabase
+                        .getValue(), vcFromDatabase.getCategory(), vcFromDatabase.getEvidenceCode(), vcFromDatabase
+                        .getName(), vcFromDatabase.getDescription(), null // don't copy AuditTrail to avoid cascade
+                                                                            // error... vcFromDatabase.getAuditTrail()
+                        ) );
                 Object parent = charToParent.get( vcFromDatabase );
                 removeFromParent( vcFromDatabase, parent );
                 characteristicService.delete( vcFromDatabase );
                 addToParent( cFromDatabase, parent );
             }
-            
-            /* at this point, cFromDatabase points to the class-corrected characteristic in the
-             * database that must be updated with the information coming from the client; at the
-             * moment, the only things that the client can change are the category, value and
-             * associated URIs.  Updated the evidence code to reflect that the characteristic has
-             * been manually curated.
+
+            /*
+             * at this point, cFromDatabase points to the class-corrected characteristic in the database that must be
+             * updated with the information coming from the client; at the moment, the only things that the client can
+             * change are the category, value and associated URIs. Updated the evidence code to reflect that the
+             * characteristic has been manually curated.
              */
             cFromDatabase.setValue( cFromClient.getValue() );
             cFromDatabase.setCategory( cFromClient.getCategory() );
@@ -169,6 +163,7 @@ public class CharacteristicBrowserController extends BaseFormController {
     private void removeFromParent( Characteristic c, Object parent ) {
         if ( parent instanceof ExpressionExperiment ) {
             ExpressionExperiment ee = ( ExpressionExperiment ) parent;
+            expressionExperimentService.thawLite( ee );
             ee.getCharacteristics().remove( c );
             expressionExperimentService.update( ee );
         } else if ( parent instanceof BioMaterial ) {
@@ -185,6 +180,7 @@ public class CharacteristicBrowserController extends BaseFormController {
     private void addToParent( Characteristic c, Object parent ) {
         if ( parent instanceof ExpressionExperiment ) {
             ExpressionExperiment ee = ( ExpressionExperiment ) parent;
+            expressionExperimentService.thawLite( ee );
             ee.getCharacteristics().add( c );
             expressionExperimentService.update( ee );
         } else if ( parent instanceof BioMaterial ) {
@@ -200,7 +196,7 @@ public class CharacteristicBrowserController extends BaseFormController {
 
     private void populateParentInformation( AnnotationValueObject avo, Object parent ) {
         if ( parent == null ) {
-        	return;
+            return;
         } else if ( parent instanceof ExpressionExperiment ) {
             ExpressionExperiment ee = ( ExpressionExperiment ) parent;
             avo.setParentName( String.format( "ExpressionExperiment: %s", ee.getName() ) );
@@ -214,15 +210,20 @@ public class CharacteristicBrowserController extends BaseFormController {
             ExpressionExperiment ee = expressionExperimentService.findByBioMaterial( bm );
             avo.setParentOfParentName( String.format( "ExpressionExperiment: %s", ee.getName() ) );
             avo.setParentOfParentDescription( ee.getDescription() );
-            avo.setParentOfParentLink( GemmaLinkUtils.getExpressionExperimentLink( ee.getId(), avo.getParentOfParentName() ) );
+            avo.setParentOfParentLink( GemmaLinkUtils.getExpressionExperimentLink( ee.getId(), avo
+                    .getParentOfParentName() ) );
         } else if ( parent instanceof FactorValue ) {
-            FactorValue fv = (FactorValue)parent;
-            avo.setParentDescription( String.format( "FactorValue: %s : %s", fv.getExperimentalFactor().getName(), fv.getValue() ) );
-            avo.setParentLink( GemmaLinkUtils.getExperimentalDesignLink( fv.getExperimentalFactor().getExperimentalDesign().getId(), avo.getParentName() ) );
-            ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( fv.getExperimentalFactor().getExperimentalDesign() );
+            FactorValue fv = ( FactorValue ) parent;
+            avo.setParentDescription( String.format( "FactorValue: %s : %s", fv.getExperimentalFactor().getName(), fv
+                    .getValue() ) );
+            avo.setParentLink( GemmaLinkUtils.getExperimentalDesignLink( fv.getExperimentalFactor()
+                    .getExperimentalDesign().getId(), avo.getParentName() ) );
+            ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( fv.getExperimentalFactor()
+                    .getExperimentalDesign() );
             avo.setParentOfParentName( String.format( "ExpressionExperiment: %s", ee.getName() ) );
             avo.setParentOfParentDescription( ee.getDescription() );
-            avo.setParentOfParentLink( GemmaLinkUtils.getExpressionExperimentLink( ee.getId(), avo.getParentOfParentName() ) );
+            avo.setParentOfParentLink( GemmaLinkUtils.getExpressionExperimentLink( ee.getId(), avo
+                    .getParentOfParentName() ) );
         }
     }
 

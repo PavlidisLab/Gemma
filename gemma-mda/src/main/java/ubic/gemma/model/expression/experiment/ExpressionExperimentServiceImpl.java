@@ -39,6 +39,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.util.monitor.Monitored;
 
 /**
  * @author pavlidis
@@ -469,6 +470,7 @@ public class ExpressionExperimentServiceImpl extends
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoadAll()
      */
     @Override
+    @Monitored
     protected Collection handleLoadAll() throws Exception {
         return this.getExpressionExperimentDao().loadAll();
     }
