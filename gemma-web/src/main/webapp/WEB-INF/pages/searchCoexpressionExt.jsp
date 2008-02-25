@@ -15,12 +15,14 @@
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/GenePickerController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/ExtCoexpressionSearchController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/DifferentialExpressionSearchController.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/GeneCombo.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/TaxonCombo.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/GeneChooserPanel.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/util/GemmaGridPanel.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/util/PagingDataStore.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/util/PagingToolbar.js'></script>
+	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/DifferentialExpressionGrid.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionGrid.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionDatasetGrid.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionSearchForm.js'></script>

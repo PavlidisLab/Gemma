@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.diff;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,11 +38,17 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.model.analysis.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.util.GemmaLinkUtils;
 import ubic.gemma.web.controller.BaseFormController;
+import ubic.gemma.web.controller.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.web.util.ConfigurationCookie;
 
 /**
@@ -245,6 +252,46 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         return mav;
 
+    }
+    
+    public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Long geneId, double threshold ) {
+        Collection<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
+        Gene g = geneService.load( geneId );
+        if ( g == null )
+            return devos;
+        Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService.find( g );
+        for ( ExpressionExperiment ee : experimentsAnalyzed ) {
+            ExpressionExperimentValueObject eevo = new ExpressionExperimentValueObject();
+            eevo.setId( ee.getId() );
+            eevo.setShortName( ee.getShortName() );
+            eevo.setName( ee.getName() );
+            eevo.setExternalUri( GemmaLinkUtils.getExpressionExperimentUrl( eevo.getId() ) );
+            Collection<ProbeAnalysisResult> results = differentialExpressionAnalysisService.find( g, ee );
+            for ( ProbeAnalysisResult r : results ) {
+                if ( r.getCorrectedPvalue() < threshold ) {
+                    DifferentialExpressionValueObject devo = new DifferentialExpressionValueObject();
+                    devo.setExpressionExperiment( eevo );
+                    devo.setExperimentalFactors( new ArrayList<ExperimentalFactorValueObject>() );
+                    Collection<ExperimentalFactor> efs = ee.getExperimentalDesign().getExperimentalFactors();
+                    for ( ExperimentalFactor ef : efs ) {
+                        ExperimentalFactorValueObject efvo = new ExperimentalFactorValueObject();
+                        efvo.setId( ef.getId() );
+                        efvo.setName( ef.getName() );
+                        efvo.setDescription( ef.getDescription() );
+                        Characteristic category = ef.getCategory();
+                        if ( category != null ) {
+                            efvo.setCategory( category.getCategory() );
+                            if ( category instanceof VocabCharacteristic )
+                                efvo.setCategoryUri( ( (VocabCharacteristic)category ).getCategoryUri() );
+                        }
+                        devo.getExperimentalFactors().add( efvo );
+                    }
+                    devo.setP( r.getCorrectedPvalue() );
+                    devos.add( devo );
+                }
+            }
+        }
+        return devos;
     }
 
     /**

@@ -506,6 +506,21 @@ Mapping URLS to controllers
 					</property>
 				</bean>
 			</entry>
+			<entry key="DifferentialExpressionSearchController">
+				<bean class="org.directwebremoting.spring.CreatorConfig">
+					<property name="creator">
+						<bean class="org.directwebremoting.spring.BeanCreator">
+							<property name="bean"
+								ref="differentialExpressionSearchController"/>
+						</bean>
+					</property>
+					<property name="includes">
+						<list>
+							<value>getDifferentialExpression</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
 			<entry key="GeoBrowserService">
 				<bean class="org.directwebremoting.spring.CreatorConfig">
 					<property name="creator">

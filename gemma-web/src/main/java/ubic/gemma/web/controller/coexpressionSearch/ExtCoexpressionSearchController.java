@@ -135,6 +135,13 @@ public class ExtCoexpressionSearchController extends BaseFormController {
                 return eevo1.getId().compareTo( eevo2.getId() );
             }
         } );
+        
+        /* I'm lazy and rushed, so I'm using an existing field for this info;
+         * probably better to add another field to the value object...
+         */
+        for ( ExpressionExperimentValueObject eevo : eevos ) {
+            eevo.setExternalUri( GemmaLinkUtils.getExpressionExperimentUrl( eevo.getId() ) );
+        }
 
         ExtCoexpressionMetaValueObject result = new ExtCoexpressionMetaValueObject();
         result.setQueryGenes( new ArrayList( genes ) );

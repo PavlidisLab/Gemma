@@ -40,6 +40,7 @@ Ext.Gemma.CoexpressionGrid = function ( config ) {
 	}
 	
 	superConfig.cm = new Ext.grid.ColumnModel( [
+		Ext.Gemma.CoexpressionGrid.getRowExpander(),
 		{ id: 'query', header: "Query Gene", dataIndex: "queryGene" },
 		{ id: 'found', header: "Coexpressed Gene", dataIndex: "foundGene", renderer: Ext.Gemma.CoexpressionGrid.getFoundGeneStyler() },
 		{ id: 'support', header: "Support", dataIndex: "supportKey", renderer: Ext.Gemma.CoexpressionGrid.getSupportStyler() },
@@ -189,8 +190,14 @@ Ext.Gemma.CoexpressionGrid.getBitImageStyler = function() {
 
 Ext.Gemma.CoexpressionGrid.getRowExpander = function() {
 	if ( Ext.Gemma.CoexpressionGrid.rowExpander === undefined ) {
-		Ext.Gemma.CoexpressionGrid.rowExpander = new Ext.grid.RowExpander( {
-			
+//		Ext.Gemma.CoexpressionGrid.rowExpander = new Ext.grid.RowExpander( {
+//			tpl : new Ext.Template(
+//				"<dl style='margin-left: 1em; margin-bottom: 2px;'><dt>BioMaterial bmName</dt><dd>bmDesc<br>bmChars</dd>",
+//				"<dt>BioAssay baName</dt><dd>baDesc</dd></dl>"
+//			)
+//		} );
+		Ext.Gemma.CoexpressionGrid.rowExpander = new Ext.Gemma.CoexpressionGridRowExpander( {
+			tpl : ""
 		} );
 	}
 	return Ext.Gemma.CoexpressionGrid.rowExpander;
@@ -216,8 +223,8 @@ Ext.extend( Ext.Gemma.CoexpressionGrid, Ext.Gemma.GemmaGridPanel, {
 			queryCol.hidden = true;
 		}
 		this.getStore().proxy.data = data;
-		this.refresh();
-		this.getView().refresh( true );
+		this.refresh(); // reloads the data store
+		this.getView().refresh( true ); // refresh doesn't refresh the headers
 	}
 	
 } );
@@ -225,14 +232,36 @@ Ext.extend( Ext.Gemma.CoexpressionGrid, Ext.Gemma.GemmaGridPanel, {
 /* Ext.Gemma.CoexpressionGridRowExpander constructor...
  */
 Ext.Gemma.CoexpressionGridRowExpander = function ( config ) {
+	
+	this.childGrid = [];
+	
+	var superConfig = {
+	};
+	
+	for ( property in config ) {
+		superConfig[property] = config[property];
+	}
+	Ext.Gemma.CoexpressionGridRowExpander.superclass.constructor.call( this, superConfig );
+	
 };
 
 /* instance methods...
  */
 Ext.extend( Ext.Gemma.CoexpressionGridRowExpander, Ext.grid.RowExpander, {
 	
-	generateBodyContent : function (record, rowIndex) {
-    	
+	beforeExpand : function (record, body, rowIndex) {
+		if(this.fireEvent('beforeexpand', this, record, body, rowIndex) !== false){
+	    	if ( ! this.childGrid[rowIndex] ) {
+	    		this.childGrid[rowIndex] = new Ext.Gemma.DifferentialExpressionGrid( {
+	    			geneId : record.data.foundGene.id,
+	    			threshold : 0.05,
+	    			renderTo : body
+	    		} );
+	    	}
+            return true;
+        }else{
+            return false;
+        }
     }
 	
 } );
