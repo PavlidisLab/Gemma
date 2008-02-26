@@ -148,6 +148,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         factorValuesA = new HashSet<FactorValue>();
 
         FactorValue factorValueA1 = FactorValue.Factory.newInstance();
+        factorValueA1.setId( 1001L );
         factorValueA1.setValue( "cerebellum" );
         Characteristic characteristicA1 = Characteristic.Factory.newInstance();
         characteristicA1.setValue( factorValueA1.getValue() );
@@ -158,6 +159,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
         FactorValue factorValueA2 = FactorValue.Factory.newInstance();
         factorValueA2.setValue( "amygdala" );
+        factorValueA2.setId( 1002L );
         Characteristic characteristicA2 = Characteristic.Factory.newInstance();
         characteristicA2.setValue( factorValueA2.getValue() );
         Collection<Characteristic> characteristicsA2 = new HashSet<Characteristic>();
@@ -178,6 +180,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
         FactorValue factorValueB1 = FactorValue.Factory.newInstance();
         factorValueB1.setValue( "no pcp" );
+        factorValueB1.setId( 1003L );
         Characteristic characteristicB1 = Characteristic.Factory.newInstance();
         characteristicB1.setValue( factorValueB1.getValue() );
         Collection<Characteristic> characteristicsB1 = new HashSet<Characteristic>();
@@ -187,6 +190,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
         FactorValue factorValueB2 = FactorValue.Factory.newInstance();
         factorValueB2.setValue( "pcp" );
+        factorValueB2.setId( 1004L );
         Characteristic characteristicB2 = Characteristic.Factory.newInstance();
         characteristicB2.setValue( factorValueB2.getValue() );
         Collection<Characteristic> characteristicsB2 = new HashSet<Characteristic>();

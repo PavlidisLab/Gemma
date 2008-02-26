@@ -25,7 +25,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
-import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -85,18 +84,21 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
                             + " or experimental factor " + experimentalFactorB.getName() + "." );
         }
 
-        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getUsefulVectors( expressionExperiment );
+        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService
+                .getUsefulVectors( expressionExperiment );
 
         ExpressionDataDoubleMatrix dmatrix = this.createMaskedMatrix( vectorsToUse );
 
         QuantitationType quantitationType = getPreferredQuantitationType( vectorsToUse );
 
-        Collection<BioMaterial> samplesUsed = AnalyzerHelper.getBioMaterialsForBioAssays( dmatrix );
+        List<BioMaterial> samplesUsed = AnalyzerHelper.getBioMaterialsForBioAssays( dmatrix );
 
         DoubleMatrixNamed namedMatrix = dmatrix.getNamedMatrix();
 
-        List<String> rFactorsA = AnalyzerHelper.getRFactorsFromFactorValuesForTwoWayAnova( factorValuesA, samplesUsed );
-        List<String> rFactorsB = AnalyzerHelper.getRFactorsFromFactorValuesForTwoWayAnova( factorValuesB, samplesUsed );
+        List<String> rFactorsA = AnalyzerHelper.getRFactorsFromFactorValuesForTwoWayAnova( experimentalFactorA,
+                samplesUsed );
+        List<String> rFactorsB = AnalyzerHelper.getRFactorsFromFactorValuesForTwoWayAnova( experimentalFactorB,
+                samplesUsed );
 
         String factsA = rc.assignStringList( rFactorsA );
         String factsB = rc.assignStringList( rFactorsB );
@@ -120,10 +122,10 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
         log.debug( command.toString() );
 
         double[] pvalues = rc.doubleArrayEval( command.toString() );
+        if ( pvalues == null ) throw new IllegalStateException( "No pvalues returned" );
 
         // removes NA row
         double[] filteredPvalues = new double[( pvalues.length / NUM_RESULTS_FROM_R ) * ACTUAL_NUM_RESULTS];
-        if ( filteredPvalues == null ) throw new IllegalStateException( "No pvalues returned" );
 
         for ( int i = 0, j = 0; j < filteredPvalues.length; i++ ) {
             if ( i % NUM_RESULTS_FROM_R < ACTUAL_NUM_RESULTS ) {

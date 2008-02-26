@@ -86,17 +86,20 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
                             + " or experimental factor " + experimentalFactorB.getName() + "." );
         }
 
-        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getUsefulVectors( expressionExperiment );
+        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService
+                .getUsefulVectors( expressionExperiment );
         QuantitationType quantitationType = getPreferredQuantitationType( vectorsToUse );
 
         ExpressionDataDoubleMatrix dmatrix = this.createMaskedMatrix( vectorsToUse );
 
-        Collection<BioMaterial> samplesUsed = AnalyzerHelper.getBioMaterialsForBioAssays( dmatrix );
+        List<BioMaterial> samplesUsed = AnalyzerHelper.getBioMaterialsForBioAssays( dmatrix );
 
         DoubleMatrixNamed namedMatrix = dmatrix.getNamedMatrix();
 
-        List<String> rFactorsA = AnalyzerHelper.getRFactorsFromFactorValuesForTwoWayAnova( factorValuesA, samplesUsed );
-        List<String> rFactorsB = AnalyzerHelper.getRFactorsFromFactorValuesForTwoWayAnova( factorValuesB, samplesUsed );
+        List<String> rFactorsA = AnalyzerHelper.getRFactorsFromFactorValuesForTwoWayAnova( experimentalFactorA,
+                samplesUsed );
+        List<String> rFactorsB = AnalyzerHelper.getRFactorsFromFactorValuesForTwoWayAnova( experimentalFactorB,
+                samplesUsed );
 
         String factsA = rc.assignStringList( rFactorsA );
         String factsB = rc.assignStringList( rFactorsB );

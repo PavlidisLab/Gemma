@@ -114,11 +114,12 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
         connectToR();
 
-        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getUsefulVectors( expressionExperiment );
+        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService
+                .getUsefulVectors( expressionExperiment );
 
         ExpressionDataDoubleMatrix dmatrix = this.createMaskedMatrix( vectorsToUse );
 
-        Collection<BioMaterial> samplesUsed = AnalyzerHelper.getBioMaterialsForBioAssays( dmatrix );
+        List<BioMaterial> samplesUsed = AnalyzerHelper.getBioMaterialsForBioAssays( dmatrix );
 
         Collection<FactorValue> factorValues = new ArrayList<FactorValue>();
         factorValues.add( factorValueA );

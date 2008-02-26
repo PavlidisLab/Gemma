@@ -30,7 +30,6 @@ import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -39,7 +38,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
- * A helper class for the differential expression analyzers. This class contains helper methods commonly needed when performing an analysis.
+ * A helper class for the differential expression analyzers. This class contains helper methods commonly needed when
+ * performing an analysis.
  * 
  * @spring.bean id="analyzerHelper"
  * @spring.property name="analysisHelperService" ref="analysisHelperService"
@@ -77,12 +77,13 @@ public class AnalyzerHelper {
      */
     protected boolean checkBlockDesign( ExpressionExperiment expressionExperiment ) {
 
-        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getUsefulVectors( expressionExperiment );
+        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService
+                .getUsefulVectors( expressionExperiment );
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
         ExpressionDataDoubleMatrix matrix = builder.getMaskedPreferredData( null );
 
         /* first, get all the biomaterials */
-        Collection<BioMaterial> biomaterials = getBioMaterialsForAssays( matrix );
+        Collection<BioMaterial> biomaterials = getBioMaterialsForBioAssays( matrix );
 
         /*
          * second, make sure each biomaterial has factor values from one experimental factor paired with factor values
@@ -136,12 +137,13 @@ public class AnalyzerHelper {
      */
     protected boolean checkBiologicalReplicates( ExpressionExperiment expressionExperiment ) {
 
-        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService.getUsefulVectors( expressionExperiment );
+        Collection<DesignElementDataVector> vectorsToUse = analysisHelperService
+                .getUsefulVectors( expressionExperiment );
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
         ExpressionDataDoubleMatrix matrix = builder.getMaskedPreferredData( null );
 
         /* first, get all the biomaterials */
-        Collection<BioMaterial> biomaterials = getBioMaterialsForAssays( matrix );
+        Collection<BioMaterial> biomaterials = getBioMaterialsForBioAssays( matrix );
 
         Collection<BioMaterial> copyOfBiomaterials = biomaterials;
 
@@ -209,32 +211,12 @@ public class AnalyzerHelper {
      * is more than one biomaterial per bioassay, a {@link RuntimeException} is thrown.
      * 
      * @param expressionExperiment
-     * @return Collection<BioMaterial>
-     */
-    public static Collection<BioMaterial> getBioMaterialsForBioAssays( ExpressionDataMatrix matrix ) {
-
-        Collection<BioMaterial> biomaterials = null;
-
-        Exception ex = null;
-        try {
-            biomaterials = getBioMaterialsForAssays( matrix );
-        } catch ( Exception e ) {
-            ex = e;
-        } finally {
-            if ( ex != null ) throw new RuntimeException( ex );
-        }
-
-        return biomaterials;
-    }
-
-    /**
-     * @param expressionExperiment
      * @return
      * @throws Exception
      */
-    protected static Collection<BioMaterial> getBioMaterialsForAssays( ExpressionDataMatrix matrix ) {
+    public static List<BioMaterial> getBioMaterialsForBioAssays( ExpressionDataMatrix matrix ) {
 
-        Collection<BioMaterial> biomaterials = new ArrayList<BioMaterial>();
+        List<BioMaterial> biomaterials = new ArrayList<BioMaterial>();
 
         /* look for 1 bioassay/matrix column and 1 biomaterial/bioassay */
         Collection<BioAssay> assays = new ArrayList<BioAssay>();
@@ -243,7 +225,6 @@ public class AnalyzerHelper {
             if ( bioassays.size() != 1 ) {
                 throw new RuntimeException( "Invalid number of bioassays for column " + i
                         + " of the matrix.  Expecting 1, got " + bioassays.size() + "." );
-
             }
             assays.add( bioassays.iterator().next() );
         }
@@ -264,62 +245,32 @@ public class AnalyzerHelper {
 
     /**
      * Returns the factors that can be used by R for a two way anova. Each sample must have a factor value equal to one
-     * of the supplied factor values.
+     * of the supplied factor values. This assumes that "equals" works correctly on the factor values.
      * 
-     * @param factorValues
-     * @param samplesUsed
-     * @return
+     * @param experimentalFactor
+     * @param samplesUsed the samples we want to assign to the various factors
+     * @return R factor representation, in the same order as the given samplesUsed.
      */
-    public static List<String> getRFactorsFromFactorValuesForTwoWayAnova( Collection<FactorValue> factorValues,
-            Collection<BioMaterial> samplesUsed ) {
+    public static List<String> getRFactorsFromFactorValuesForTwoWayAnova( ExperimentalFactor experimentalFactor,
+            List<BioMaterial> samplesUsed ) {
 
         List<String> rFactors = new ArrayList<String>();
 
         for ( BioMaterial sampleUsed : samplesUsed ) {
-
             Collection<FactorValue> factorValuesFromBioMaterial = sampleUsed.getFactorValues();
-
             boolean match = false;
 
-            for ( FactorValue factorValueFromBioMaterial : factorValuesFromBioMaterial ) {
-
-                Collection<Characteristic> chs = factorValueFromBioMaterial.getCharacteristics();
-
-                Characteristic ch = chs.iterator().next();
-
-                for ( FactorValue f : factorValues ) {
-
-                    if ( factorValueFromBioMaterial.getValue() == null && f.getValue() == null ) {
-                        log.debug( "null factor value values.  Using characteristic value for the factor value check." );
-
-                        Collection<Characteristic> cs = f.getCharacteristics();
-
-                        if ( chs.size() != 1 || cs.size() != 1 )
-                            throw new RuntimeException( "Only supports 1 characteristic per factor value." );
-
-                        Characteristic c = cs.iterator().next();
-
-                        if ( ch.getValue().equals( c.getValue() ) ) {
-                            rFactors.add( ch.getValue() );
-                            match = true;
-                            break;
-                        }
-
-                    }
-
-                    else if ( !factorValueFromBioMaterial.getValue().equals( f.getValue() ) ) {
-                        continue;
-                    }
-
-                    else if ( factorValueFromBioMaterial.getValue().equals( f.getValue() ) ) {
-                        rFactors.add( factorValueFromBioMaterial.getValue() );
+            for ( FactorValue factorValue : factorValuesFromBioMaterial ) {
+                for ( FactorValue candidateMatch : experimentalFactor.getFactorValues() ) {
+                    if ( candidateMatch.equals( factorValue ) ) {
+                        rFactors.add( factorValue.getId().toString() );
                         match = true;
                         break;
                     }
                 }
             }
             if ( !match )
-                throw new RuntimeException(
+                throw new IllegalStateException(
                         "None of the Factor values of the biomaterial match the supplied factor values." );
         }
 
@@ -330,16 +281,15 @@ public class AnalyzerHelper {
      * Returns the factors that can be used by R for a one way anova. This can also be used for t-tests. There
      * requirement here is that there is only one factor value per biomaterial, and all factor values are from the same
      * experimental factor.
+     * <p>
+     * FIXME use the ExperimentalFactor as the input, not the FactorValues.
      * 
      * @param factorValues
      * @param samplesUsed
-     * @return
+     * @return list of strings representing the factor, in the same order as the supplied samplesUsed.
      */
     public static List<String> getRFactorsFromFactorValuesForOneWayAnova( Collection<FactorValue> factorValues,
-            Collection<BioMaterial> samplesUsed ) {
-
-        // TODO Use the experimental factor as input as this will assure all factor values are from the same
-        // experimental factor.
+            List<BioMaterial> samplesUsed ) {
 
         List<String> rFactors = new ArrayList<String>();
 
@@ -352,34 +302,11 @@ public class AnalyzerHelper {
 
             FactorValue fv = factorValuesFromBioMaterial.iterator().next();
 
-            Collection<Characteristic> chs = fv.getCharacteristics();
-
-            Characteristic ch = chs.iterator().next();
-
             for ( FactorValue f : factorValues ) {
-
-                if ( fv.getValue() == null && f.getValue() == null ) {
-                    log.debug( "null factor value values.  Using characteristic value for the factor value check." );
-
-                    Collection<Characteristic> cs = f.getCharacteristics();
-
-                    if ( chs.size() != 1 || cs.size() != 1 )
-                        throw new RuntimeException( "Only supports 1 characteristic per factor value." );
-
-                    Characteristic c = cs.iterator().next();
-
-                    if ( ch.getValue().equals( c.getValue() ) ) {
-                        rFactors.add( ch.getValue() );
-                        break;
-                    }
-
-                }
-
-                else if ( fv.getValue().equals( f.getValue() ) ) {
-                    rFactors.add( fv.getValue() );
+                if ( f.equals( fv ) ) {
+                    rFactors.add( fv.getId().toString() );
                     break;
                 }
-
             }
         }
         return rFactors;

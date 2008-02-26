@@ -114,7 +114,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         ExpressionDataDoubleMatrix dmatrix = this.createMaskedMatrix( vectorsToUse );
 
-        DoubleMatrixNamed filteredNamedMatrix = this.filterMatrix( dmatrix, factorValues );
+        DoubleMatrixNamed filteredNamedMatrix = this.filterMatrix( dmatrix, experimentalFactor );
 
         QuantitationType quantitationType = getPreferredQuantitationType( vectorsToUse );
 
@@ -221,14 +221,15 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * based on the R interpretation of too many missing values.
      * 
      * @param matrix
-     * @param factorValues
+     * @param experimentalFactor
      * @return
      */
-    private DoubleMatrixNamed filterMatrix( ExpressionDataDoubleMatrix matrix, Collection<FactorValue> factorValues ) {
+    private DoubleMatrixNamed filterMatrix( ExpressionDataDoubleMatrix matrix, ExperimentalFactor experimentalFactor ) {
         // TODO make this a requirement in the abstract analyzer.
-        Collection<BioMaterial> samplesUsed = AnalyzerHelper.getBioMaterialsForBioAssays( matrix );
+        List<BioMaterial> samplesUsed = AnalyzerHelper.getBioMaterialsForBioAssays( matrix );
 
-        rFactors = AnalyzerHelper.getRFactorsFromFactorValuesForOneWayAnova( factorValues, samplesUsed );
+        rFactors = AnalyzerHelper.getRFactorsFromFactorValuesForOneWayAnova( experimentalFactor.getFactorValues(),
+                samplesUsed );
 
         return filterDoubleMatrixNamedForValidRows( matrix, rFactors );
     }
