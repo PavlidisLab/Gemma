@@ -23,6 +23,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -43,6 +45,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.web.controller.BaseFormController;
+import ubic.gemma.web.util.ConfigurationCookie;
 
 /**
  * Manages data-level security (ie. can make data private).
@@ -79,11 +82,81 @@ public class SecurityFormController extends BaseFormController {
     private final String PUBLIC = "Public";
     private final String PRIVATE = "Private";
 
+    private static final String COOKIE_NAME = "securityCookie";
+
     public SecurityFormController() {
         /*
          * if true, reuses the same command object across the get-submit-process (get-post-process).
          */
         setSessionForm( true );
+    }
+
+    /**
+     * @param request
+     * @return Object
+     * @throws ServletException
+     */
+    @Override
+    protected Object formBackingObject( HttpServletRequest request ) {
+        /* enter on a GET */
+
+        SecurityCommand securityCommand = new SecurityCommand();
+
+        SecurityCommand securityCommandFromCookie = loadCookie( request, securityCommand );
+        if ( securityCommandFromCookie != null ) {
+            securityCommand = securityCommandFromCookie;
+        }
+
+        return securityCommand;
+
+    }
+
+    /**
+     * @param request
+     * @param securityCommand
+     * @return
+     */
+    private SecurityCommand loadCookie( HttpServletRequest request, SecurityCommand securityCommand ) {
+
+        /*
+         * If we don't have any cookies, just return. We probably won't get this situation as we'll always have at least
+         * one cookie (the one with the JSESSION ID).
+         */
+        if ( request == null || request.getCookies() == null ) {
+            return null;
+        }
+
+        for ( Cookie cook : request.getCookies() ) {
+            if ( cook.getName().equals( COOKIE_NAME ) ) {
+                try {
+                    ConfigurationCookie cookie = new ConfigurationCookie( cook );
+                    String shortName = cookie.getString( "shortName" );
+                    if ( StringUtils.isBlank( shortName ) ) {
+                        throw new Exception( "Invalid short name.  Cannot be blank." );
+                    }
+                    securityCommand.setShortName( shortName );
+
+                    String mask = cookie.getString( "mask" );
+                    if ( StringUtils.isBlank( mask ) ) {
+                        throw new Exception( "Invalid threshold.  Cannot be blank." );
+                    }
+                    securityCommand.setMask( mask );
+
+                    return securityCommand;
+
+                } catch ( Exception e ) {
+                    log.warn( "Cookie could not be loaded: " + e.getMessage() );
+                    break;
+                    // fine, just don't get a cookie.
+                }
+            }
+        }
+
+        /* If we've come this far, we have a cookie but not one that matches COOKIE_NAME. Provide friendly defaults. */
+        securityCommand.setShortName( "<exp name>" );
+        securityCommand.setMask( PUBLIC );
+
+        return securityCommand;
     }
 
     /**
@@ -151,6 +224,10 @@ public class SecurityFormController extends BaseFormController {
             return processErrors( request, response, command, errors,
                     "Must enter the short name of either the experiment or array design. " );
         }
+
+        /* create cookie */
+        Cookie cookie = new SecurityCookie( sc );
+        response.addCookie( cookie );
 
         String type = sc.getSecurableType();
 
@@ -241,6 +318,30 @@ public class SecurityFormController extends BaseFormController {
     public void setDifferentialExpressionAnalysisService(
             DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
         this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
+    }
+
+    /**
+     * @author keshav
+     */
+    class SecurityCookie extends ConfigurationCookie {
+
+        public SecurityCookie( SecurityCommand command ) {
+
+            super( COOKIE_NAME );
+
+            log.debug( "creating cookie" );
+
+            String shortName = command.getShortName();
+            this.setProperty( "shortName", shortName );
+
+            String mask = command.getMask();
+            this.setProperty( "mask", mask );
+
+            /* set cookie to expire after 2 days. */
+            this.setMaxAge( 172800 );
+            this.setComment( "User selections for differential expression search form." );
+        }
+
     }
 
 }
