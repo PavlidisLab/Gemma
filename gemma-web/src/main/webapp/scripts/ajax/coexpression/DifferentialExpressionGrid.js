@@ -101,7 +101,7 @@ Ext.Gemma.DifferentialExpressionGrid.getEFStyler = function() {
 			var efs = record.data.experimentalFactors;
 			var names = [];
 			for ( var i=0; i<efs; ++i ) {
-				names.push( ef.name || "unnamed factor" );
+				names.push( efs[i].name || "unnamed factor" );
 			}
 			return names.join( "," );
 //			return Ext.Gemma.DifferentialExpressionGrid.efTemplate.apply( ef );

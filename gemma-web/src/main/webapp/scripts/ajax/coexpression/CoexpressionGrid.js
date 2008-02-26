@@ -39,8 +39,12 @@ Ext.Gemma.CoexpressionGrid = function ( config ) {
 		} );
 	}
 	
+	var rowExpander = new Ext.Gemma.CoexpressionGridRowExpander( {
+		tpl : ""
+	} );
+	
 	superConfig.cm = new Ext.grid.ColumnModel( [
-		Ext.Gemma.CoexpressionGrid.getRowExpander(),
+		rowExpander,
 		{ id: 'query', header: "Query Gene", dataIndex: "queryGene" },
 		{ id: 'found', header: "Coexpressed Gene", dataIndex: "foundGene", renderer: Ext.Gemma.CoexpressionGrid.getFoundGeneStyler() },
 		{ id: 'support', header: "Support", dataIndex: "supportKey", renderer: Ext.Gemma.CoexpressionGrid.getSupportStyler() },
@@ -48,7 +52,7 @@ Ext.Gemma.CoexpressionGrid = function ( config ) {
 		{ id: 'datasets', header: "Datasets", dataIndex: "supportingDatasetVector", renderer: Ext.Gemma.CoexpressionGrid.getBitImageStyler(), sortable: false }
 	] );
 	superConfig.cm.defaultSortable = true;
-	superConfig.plugins = Ext.Gemma.CoexpressionGrid.getRowExpander();
+	superConfig.plugins = rowExpander;
 	
 	superConfig.autoExpandColumn = 'found';
 
@@ -206,15 +210,7 @@ Ext.Gemma.CoexpressionGrid.searchForGene = function( geneId ) {
  */
 Ext.extend( Ext.Gemma.CoexpressionGrid, Ext.Gemma.GemmaGridPanel, {
 
-	loadData : function ( data ) {
-		var queryGenes = {}, numQueryGenes = 0;
-		for ( var i=0; i<data.length; ++i ) {
-			var g = data[i].queryGene;
-			if ( queryGenes[g.id] === undefined ) {
-				queryGenes[g.id] = 1;
-				++numQueryGenes;
-			}
-		}
+	loadData : function ( isCannedAnalysis, numQueryGenes, data ) {
 		var queryCol = this.getColumnModel().getColumnById( 'query' );
 		if ( numQueryGenes > 1 ) {
 			queryCol.hidden = false;

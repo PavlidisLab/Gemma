@@ -78,18 +78,18 @@ Ext.onReady( function() {
 		Ext.Gemma.CoexpressionGrid.getBitImageMapTemplate().overwrite( imageMap, result.datasets );
 		
 		Ext.Gemma.CoexpressionDatasetGrid.updateDatasetInfo( result.knownGeneDatasets, eeMap );
-		knownGeneDatasetGrid.loadData( result.isCannedAnalysis, result.queryGenes.length, result.knownGeneDatasets ) ;
-		knownGeneGrid.loadData( result.knownGeneResults );
+		knownGeneDatasetGrid.loadData( result.isCannedAnalysis, result.datasets.length, result.queryGenes.length, result.knownGeneDatasets ) ;
+		knownGeneGrid.loadData( result.isCannedAnalysis, result.queryGenes.length, result.knownGeneResults );
 		
 		knownGeneGrid.setTitle( String.format( "Coexpressed genes <a href='{0}'>(bookmarkable link)</a>", panel.getBookmarkableLink() ) );
 		
 		if ( admin ) {
 			Ext.Gemma.CoexpressionDatasetGrid.updateDatasetInfo( result.predictedGeneDatasets, eeMap );
-			predictedGeneDatasetGrid.loadData( result.isCannedAnalysis, result.queryGenes.length, result.predictedGeneDatasets ) ;
-			predictedGeneGrid.loadData( result.predictedGeneResults );
+			predictedGeneDatasetGrid.loadData( result.isCannedAnalysis, result.datasets.length, result.queryGenes.length, result.predictedGeneDatasets ) ;
+			predictedGeneGrid.loadData( result.isCannedAnalysis, result.queryGenes.length, result.predictedGeneResults );
 			Ext.Gemma.CoexpressionDatasetGrid.updateDatasetInfo( result.probeAlignedRegionDatasets, eeMap );
-			probeAlignedDatasetGrid.loadData( result.isCannedAnalysis, result.queryGenes.length, result.probeAlignedRegionDatasets ) ;
-			probeAlignedGrid.loadData( result.probeAlignedRegionResults );
+			probeAlignedDatasetGrid.loadData( result.isCannedAnalysis, result.datasets.length, result.queryGenes.length, result.probeAlignedRegionDatasets ) ;
+			probeAlignedGrid.loadData( result.isCannedAnalysis, result.queryGenes.length, result.probeAlignedRegionResults );
 		}
 	} );
 	
