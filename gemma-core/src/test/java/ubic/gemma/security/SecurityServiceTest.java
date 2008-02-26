@@ -104,11 +104,11 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
         securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
         securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
-        securityService.setPermissions( ad, 0, new HashSet<Object>() );
+        securityService.makePrivate( ad );
         /*
          * uncomment so you can see the acl permission has been changed in the database.
          */
-        this.setComplete();
+        // this.setComplete();
     }
 
     /**
@@ -128,7 +128,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
 
         try {
-            securityService.setPermissions( ad, 0, new HashSet<Object>() );
+            securityService.makePrivate( ad );
             fail( "Should have gotten a unauthorized user exception" );
         } catch ( Exception e ) {
             // ok.
@@ -145,7 +145,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         SecurityService securityService = new SecurityService();
         securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
         securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
-        securityService.setPermissions( ee, SecurityService.PRIVATE_MASK, new HashSet<Object>() );
+        securityService.makePrivate( ee );
         /*
          * uncomment so you can see the acl permission has been changed in the database.
          */
@@ -168,7 +168,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
         securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
         securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
-        securityService.setPermissions( ee, SecurityService.PRIVATE_MASK, new HashSet<Object>() );
+        securityService.makePrivate( ee );
         /*
          * uncomment so you can see the acl permission has been changed in the database.
          */
@@ -193,7 +193,8 @@ public class SecurityServiceTest extends BaseSpringContextTest {
             return;
         }
 
-        Collection<DifferentialExpressionAnalysis> diffAnalyses = diffAnalysisService.findByInvestigation( investigation );
+        Collection<DifferentialExpressionAnalysis> diffAnalyses = diffAnalysisService
+                .findByInvestigation( investigation );
 
         if ( diffAnalyses == null || diffAnalyses.isEmpty() ) {
             log.error( "Cannot find analyses for experiment " + expName + " in database.  Skipping test." );
@@ -204,7 +205,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
             securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
             securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
-            securityService.setPermissions( diffAnalyses, SecurityService.PRIVATE_MASK, new HashSet<Object>() );
+            securityService.makePrivate( diffAnalyses );
 
             /*
              * uncomment so you can see the acl permission has been changed in the database.

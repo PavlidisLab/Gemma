@@ -20,7 +20,6 @@ package ubic.gemma.web.controller.security;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -181,20 +180,17 @@ public class SecurityFormController extends BaseFormController {
         }
 
         String mask = sc.getMask();
-        int aclMask;
-        if ( StringUtils.equalsIgnoreCase( mask, PUBLIC ) )
-            aclMask = 6;
+        if ( StringUtils.equalsIgnoreCase( mask, PUBLIC ) ) {
+            securityService.makePublic( target );
+        }
 
-        else if ( StringUtils.equalsIgnoreCase( mask, PRIVATE ) )
-            aclMask = 0;
+        else if ( StringUtils.equalsIgnoreCase( mask, PRIVATE ) ) {
+            securityService.makePrivate( target );
+        }
 
         else
             return processErrors( request, response, command, errors,
                     "Supported masks are 0 (private) and 6 (public), not " + mask );
-
-        // ProgressJob job = ProgressManager.createProgressJob( null, request.getRemoteUser(), "Making data private." );
-        securityService.setPermissions( target, aclMask, new HashSet<Object>() );
-        // ProgressManager.destroyProgressJob( job );
 
         saveMessage( request, target + " made " + mask + "." );
         String url = "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath()

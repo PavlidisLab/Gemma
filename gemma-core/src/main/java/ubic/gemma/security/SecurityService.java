@@ -60,22 +60,39 @@ public class SecurityService {
     public static final int PUBLIC_MASK = SimpleAclEntry.READ_WRITE;
     public static final int PRIVATE_MASK = SimpleAclEntry.NOTHING;
 
+    private Collection visited = null;
+
+    /**
+     * Makes the object private. If the object is a {@link Collection}, makes the all the objects private.
+     * 
+     * @param object
+     */
+    @SuppressWarnings("unchecked")
+    public void makePrivate( Object object ) {
+        visited = new HashSet();
+        makePrivateOrPublic( object, PRIVATE_MASK );
+    }
+
+    /**
+     * Makes the object public. If the object is a {@link Collection}, makes the all the objects public.
+     * 
+     * @param object
+     */
+    @SuppressWarnings("unchecked")
+    public void makePublic( Object object ) {
+        visited = new HashSet();
+        makePrivateOrPublic( object, PUBLIC_MASK );
+    }
+
     /**
      * Changes the acl_permission of the object to either administrator/PRIVATE (mask=0), or read-write/PUBLIC (mask=6).
      * 
      * @param object
      * @param mask
-     * @param visited A Collection of objects already visited. This is need so objects in a bi-directional relationship
-     *        are not processed twice.
      */
-    public void setPermissions( Object object, int mask, Collection<Object> visited ) {
-
+    @SuppressWarnings("unchecked")
+    private void makePrivateOrPublic( Object object, int mask ) {
         log.debug( "Changing acl of object " + object + "." );
-
-        if ( mask != PUBLIC_MASK && mask != PRIVATE_MASK ) {
-            throw new RuntimeException( "Supported masks are " + PRIVATE_MASK + " (PRIVATE) and " + PUBLIC_MASK
-                    + " (PUBLIC)." );
-        }
 
         SecurityContext securityCtx = SecurityContextHolder.getContext();
         Authentication authentication = securityCtx.getAuthentication();
@@ -84,21 +101,20 @@ public class SecurityService {
         if ( object instanceof Securable ) {
             if ( !visited.contains( object ) ) {
                 visited.add( object );
-                processAssociations( object, mask, authentication, principal, visited );
+                processAssociations( object, mask, authentication, principal );
             } else {
                 log.debug( "Object " + object.getClass() + " already visited." );
             }
         } else if ( object instanceof Collection ) {
             Collection objects = ( Collection ) object;
             for ( Object o : objects ) {
-                setPermissions( o, mask, new HashSet<Object>() );
+                makePrivateOrPublic( o, mask );
             }
         } else {
             log.error( "Object not Securable.  Cannot change permissions for object of type "
                     + object.getClass().getName() + "." );
             return;
         }
-
     }
 
     /**
@@ -106,11 +122,8 @@ public class SecurityService {
      * @param mask
      * @param authentication
      * @param principal
-     * @param visited A Collection of objects already visited. This is need so objects in a bi-directional relationship
-     *        are not processed twice.
      */
-    private void processAssociations( Object targetObject, int mask, Authentication authentication, Object principal,
-            Collection<Object> visited ) {
+    private void processAssociations( Object targetObject, int mask, Authentication authentication, Object principal ) {
 
         Class clazz = targetObject.getClass();
         Method[] methods = clazz.getMethods();
@@ -143,7 +156,7 @@ public class SecurityService {
                             while ( iter.hasNext() ) {
                                 Object ob = iter.next();
                                 log.debug( "process " + ob );
-                                setPermissions( ob, mask, visited );// recursive
+                                makePrivateOrPublic( ob, mask );// recursive
                             }
                         }
                     } else {
@@ -156,7 +169,7 @@ public class SecurityService {
                                 || ( ( Securable ) ob ).getId() == null ) {
                             continue;
                         }
-                        setPermissions( ob, mask, visited );// recursive
+                        makePrivateOrPublic( ob, mask );// recursive
                     }
                 } catch ( Exception e ) {
                     throw new RuntimeException( e );
