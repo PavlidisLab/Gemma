@@ -101,7 +101,7 @@ public class GeneCoexpressionAnalysisDaoImpl extends ubic.gemma.model.analysis.G
 
     @Override
     protected int handleGetNumDatasetsAnalyzed( GeneCoexpressionAnalysis analysis ) throws Exception {
-        final String queryString = "select count(g.experimentsAnalyzed) from GeneCoexpressionAnalysisImpl g where g=:g";
+        final String queryString = "select count(e) from GeneCoexpressionAnalysisImpl g inner join g.experimentsAnalyzed e where g=:g";
         List list = getHibernateTemplate().findByNamedParam( queryString, "g", analysis );
         return ( ( Long ) list.iterator().next() ).intValue();
     }
