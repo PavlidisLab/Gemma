@@ -285,6 +285,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      * @param threshold
      * @return
      */
+    @SuppressWarnings("unchecked")
     public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Long geneId, double threshold ) {
         Collection<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
         Gene g = geneService.load( geneId );
