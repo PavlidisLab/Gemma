@@ -51,6 +51,25 @@ version: $Id$
 		</tr>
 		<tr>
 			<td valign="top">
+				<b> <fmt:message key="gene.taxon" /> </b>
+			</td>
+			<td>
+
+				<spring:bind path="diffExpressionSearchCommand.taxonName">
+					<select name="${status.expression}">
+						<c:forEach items="${taxa}" var="taxon">
+							<option value="${taxon}"
+								<c:if test="${status.value == securableType}">selected="selected" </c:if>>
+								${taxon}
+							</option>
+						</c:forEach>
+					</select>
+					<span class="fieldError">${status.errorMessage}</span>
+				</spring:bind>
+			</td>
+		</tr>
+		<tr>
+			<td valign="top">
 				<b> <fmt:message key="diff.threshold" /> <br /> </b>
 			</td>
 			<td>

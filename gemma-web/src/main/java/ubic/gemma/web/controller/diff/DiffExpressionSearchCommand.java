@@ -32,6 +32,8 @@ public class DiffExpressionSearchCommand implements Serializable {
 
     private double threshold;
 
+    private String taxonName = null;
+
     /**
      * @return
      */
@@ -58,6 +60,20 @@ public class DiffExpressionSearchCommand implements Serializable {
      */
     public void setThreshold( double threshold ) {
         this.threshold = threshold;
+    }
+
+    /**
+     * @return
+     */
+    public String getTaxonName() {
+        return taxonName;
+    }
+
+    /**
+     * @param taxonName
+     */
+    public void setTaxonName( String taxonName ) {
+        this.taxonName = taxonName;
     }
 
 }
