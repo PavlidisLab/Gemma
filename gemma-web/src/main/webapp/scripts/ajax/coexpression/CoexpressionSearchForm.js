@@ -193,7 +193,7 @@ Ext.extend( Ext.Gemma.CoexpressionSearchForm, Ext.FormPanel, {
 		var ees; if ( param.ees ) { ees = param.ees.split( ',' ) }
 		
 		var csc = {
-			geneIds : param.g.split( ',' ),
+			geneIds : param.g ? param.g.split( ',' ) : [],
 			stringency : param.s || Ext.Gemma.CoexpressionSearchForm.MIN_STRINGENCY,
 			eeQuery : param.eeq
 		};

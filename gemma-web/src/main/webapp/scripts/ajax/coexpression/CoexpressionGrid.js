@@ -93,7 +93,7 @@ Ext.Gemma.CoexpressionGrid.getRecord = function() {
 Ext.Gemma.CoexpressionGrid.getFoundGeneStyler = function() {
 	if ( Ext.Gemma.CoexpressionGrid.foundGeneStyler === undefined ) {
 		Ext.Gemma.CoexpressionGrid.foundGeneTemplate = new Ext.Template(
-			"<a href='' onClick='Ext.Gemma.CoexpressionSearchPanel.searchForGene({id}); return false;'>",
+			"<a href='' onClick='Ext.Gemma.CoexpressionGrid.searchForGene({id}); return false;'>",
 				"<img src='/Gemma/images/logo/gemmaTiny.gif' ext:qtip='Make {officialSymbol} the query gene' />",
 			"</a>",
 			" &nbsp; ",
@@ -190,17 +190,16 @@ Ext.Gemma.CoexpressionGrid.getBitImageStyler = function() {
 
 Ext.Gemma.CoexpressionGrid.getRowExpander = function() {
 	if ( Ext.Gemma.CoexpressionGrid.rowExpander === undefined ) {
-//		Ext.Gemma.CoexpressionGrid.rowExpander = new Ext.grid.RowExpander( {
-//			tpl : new Ext.Template(
-//				"<dl style='margin-left: 1em; margin-bottom: 2px;'><dt>BioMaterial bmName</dt><dd>bmDesc<br>bmChars</dd>",
-//				"<dt>BioAssay baName</dt><dd>baDesc</dd></dl>"
-//			)
-//		} );
 		Ext.Gemma.CoexpressionGrid.rowExpander = new Ext.Gemma.CoexpressionGridRowExpander( {
 			tpl : ""
 		} );
 	}
 	return Ext.Gemma.CoexpressionGrid.rowExpander;
+};
+
+Ext.Gemma.CoexpressionGrid.searchForGene = function( geneId ) {
+	var f = Ext.Gemma.CoexpressionSearchForm.searchForGene;
+	f( geneId );
 };
 
 /* instance methods...

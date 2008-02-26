@@ -92,14 +92,19 @@ Ext.Gemma.DifferentialExpressionGrid.getEEStyler = function() {
 
 Ext.Gemma.DifferentialExpressionGrid.getEFStyler = function() {
 	if ( Ext.Gemma.DifferentialExpressionGrid.efStyler === undefined ) {
-		Ext.Gemma.DifferentialExpressionGrid.efTemplate = new Ext.XTemplate(
-			"<tpl for='.'>",
-				"{name} ({category})",
-			"</tpl>"
-		);
+//		Ext.Gemma.DifferentialExpressionGrid.efTemplate = new Ext.XTemplate(
+//			"<tpl for='.'>",
+//				"{name} ({category})",
+//			"</tpl>"
+//		);
 		Ext.Gemma.DifferentialExpressionGrid.efStyler = function ( value, metadata, record, row, col, ds ) {
 			var efs = record.data.experimentalFactors;
-			return Ext.Gemma.DifferentialExpressionGrid.efTemplate.apply( ef );
+			var names = [];
+			for ( var i=0; i<efs; ++i ) {
+				names.push( ef.name || "unnamed factor" );
+			}
+			return names.join( "," );
+//			return Ext.Gemma.DifferentialExpressionGrid.efTemplate.apply( ef );
 		};
 	}
 	return Ext.Gemma.DifferentialExpressionGrid.efStyler;

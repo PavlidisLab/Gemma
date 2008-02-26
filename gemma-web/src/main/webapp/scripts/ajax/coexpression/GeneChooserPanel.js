@@ -172,10 +172,12 @@ Ext.extend( Ext.Gemma.GeneChooserPanel, Ext.grid.GridPanel, {
 		GenePickerController.getGenes( [ geneId ],
 			function ( genes ) {
 				var g = genes[0];
-				g.taxon = g.taxon.scientificName;
-				this.geneCombo.setGene( g );
-				this.geneCombo.setValue( g.officialSymbol );
-				this.getStore().removeAll();
+				if ( g ) {
+					g.taxon = g.taxon.scientificName;
+					this.geneCombo.setGene( g );
+					this.geneCombo.setValue( g.officialSymbol );
+					this.getStore().removeAll();
+				}
 				if ( callback ) {
 					callback();
 				}
