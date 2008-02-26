@@ -1,28 +1,27 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<name>Gemma testing</name>
 	<description>Utility classes used in testing Gemma</description>
 	<groupId>gemma</groupId>
 	<artifactId>gemma-testing</artifactId>
-	<version>1.0RC2-SNAPSHOT</version>
+	<version>1.0RC2</version>
 	<packaging>jar</packaging>
 	<parent>
 		<groupId>gemma</groupId>
 		<artifactId>gemma</artifactId>
-		<version>1.0RC2-SNAPSHOT</version>
+		<version>1.0RC2</version>
 	</parent>
 	<dependencies>
 		<dependency>
 			<groupId>gemma</groupId>
 			<artifactId>gemma-util</artifactId>
-			<version>1.0RC2-SNAPSHOT</version>
+			<version>1.0RC2</version>
 			<type>jar</type>
 		</dependency>
 		<dependency>
 			<groupId>gemma</groupId>
 			<artifactId>gemma-mda</artifactId>
-			<version>1.0RC2-SNAPSHOT</version>
+			<version>1.0RC2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.easymock</groupId>

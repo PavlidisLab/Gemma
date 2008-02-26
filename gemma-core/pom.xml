@@ -1,15 +1,14 @@
-<?xml version="1.0"?>
-<project>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<parent>
 		<artifactId>gemma</artifactId>
 		<groupId>gemma</groupId>
-		<version>1.0RC2-SNAPSHOT</version>
+		<version>1.0RC2</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>gemma</groupId>
 	<artifactId>gemma-core</artifactId>
 	<name>Gemma Core</name>
-	<version>1.0RC2-SNAPSHOT</version>
+	<version>1.0RC2</version>
 	<description>Module containing core gemma functionality.</description>
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
@@ -78,12 +77,9 @@
 						</goals>
 						<configuration>
 							<tasks>
-								<springdoclet
-									destdir="${project.build.directory}/generated-sources/resources/ubic/gemma" force="false" validating="false">
+								<springdoclet destdir="${project.build.directory}/generated-sources/resources/ubic/gemma" force="false" validating="false">
 									<fileset includes="**/*.java" dir="${basedir}/src/main/java" />
-									<springxml mergeDir="${basedir}/src/conf/xdoclet-merge" useIds="true"
-										destDir="${project.build.directory}/generated-sources/resources/ubic/gemma"
-										destinationFile="applicationContext-serviceBeans.xml" />
+									<springxml mergeDir="${basedir}/src/conf/xdoclet-merge" useIds="true" destDir="${project.build.directory}/generated-sources/resources/ubic/gemma" destinationFile="applicationContext-serviceBeans.xml" />
 								</springdoclet>
 							</tasks>
 						</configuration>
@@ -145,17 +141,17 @@
 		<dependency>
 			<groupId>gemma</groupId>
 			<artifactId>gemma-util</artifactId>
-			<version>1.0RC2-SNAPSHOT</version>
+			<version>1.0RC2</version>
 		</dependency>
 		<dependency>
 			<groupId>gemma</groupId>
 			<artifactId>gemma-mda</artifactId>
-			<version>1.0RC2-SNAPSHOT</version>
+			<version>1.0RC2</version>
 		</dependency>
 		<dependency>
 			<groupId>gemma</groupId>
 			<artifactId>gemma-testing</artifactId>
-			<version>1.0RC2-SNAPSHOT</version>
+			<version>1.0RC2</version>
 		</dependency>
 		<dependency>
 			<groupId>com.ibm.icu</groupId>
