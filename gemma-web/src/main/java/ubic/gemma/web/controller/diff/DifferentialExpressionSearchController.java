@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.ServletException;
@@ -37,6 +38,7 @@ import org.springframework.validation.ObjectError;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.loader.genome.taxon.SupportedTaxa;
 import ubic.gemma.model.analysis.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -45,6 +47,8 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.util.GemmaLinkUtils;
 import ubic.gemma.web.controller.BaseFormController;
@@ -61,6 +65,7 @@ import ubic.gemma.web.util.ConfigurationCookie;
  * @spring.property name = "successView" value="diffExpressionResultsByExperiment"
  * @spring.property name = "differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
  * @spring.property name = "geneService" ref="geneService"
+ * @spring.property name = "taxonService" ref="taxonService"
  */
 public class DifferentialExpressionSearchController extends BaseFormController {
 
@@ -69,6 +74,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
 
     private GeneService geneService = null;
+
+    private TaxonService taxonService = null;
 
     private static final String COOKIE_NAME = "diffExpressionSearchCookie";
 
@@ -80,6 +87,33 @@ public class DifferentialExpressionSearchController extends BaseFormController {
          * if true, reuses the same command object across the edit-submit-process (get-post-process).
          */
         setSessionForm( true );
+    }
+
+    /**
+     * Populates drop downs.
+     * 
+     * @param request
+     * @return Map
+     */
+    @Override
+    protected Map referenceData( HttpServletRequest request ) {
+        log.debug( "referenceData" );
+
+        Map<String, List<? extends Object>> dropDownMap = new HashMap<String, List<? extends Object>>();
+
+        Collection<Taxon> taxa = taxonService.loadAll();
+
+        List<String> validTaxaNames = new ArrayList<String>();
+
+        for ( Taxon t : taxa ) {
+            if ( SupportedTaxa.contains( t ) ) {
+                validTaxaNames.add( t.getScientificName() );
+            }
+        }
+
+        dropDownMap.put( "taxa", validTaxaNames );
+
+        return dropDownMap;
     }
 
     /**
@@ -191,27 +225,20 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         double threshold = diffCommand.getThreshold();
 
-        /* multiple genes can have the same symbol */
-        Collection<Gene> genes = geneService.findByOfficialSymbol( officialSymbol );
+        String taxonScientificName = diffCommand.getTaxonName();
+        Taxon t = taxonService.findByScientificName( taxonScientificName );
+        Gene gene = geneService.findByOfficialSymbol( officialSymbol, t );
 
         String message = null;
-        if ( genes == null || genes.isEmpty() ) {
-            message = "Gene(s) could not be found for symbol: " + officialSymbol;
+        if ( gene == null ) {
+            message = "Gene could not be found for symbol: " + officialSymbol;
             errors.addError( new ObjectError( command.toString(), null, null, message ) );
             return processErrors( request, response, command, errors, null );
         }
 
-        if ( genes.size() > 1 ) {
-            message = "More than one gene maps to the symbol: " + officialSymbol
-                    + ".  Not sure what to gene you are referring to at this time.";
-            errors.addError( new ObjectError( command.toString(), null, null, message ) );
-            return processErrors( request, response, command, errors, null );
-        }
-
-        Gene g = genes.iterator().next();
         Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> resultsByExperiment = new HashMap<ExpressionExperiment, Collection<ProbeAnalysisResult>>();
 
-        Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService.find( g );
+        Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService.find( gene );
         if ( experimentsAnalyzed == null || experimentsAnalyzed.isEmpty() ) {
             message = "No experiments analyzed with differential evidence for gene: " + officialSymbol;
             errors.addError( new ObjectError( command.toString(), null, null, message ) );
@@ -219,12 +246,12 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         }
 
         for ( ExpressionExperiment e : experimentsAnalyzed ) {
-            Collection<ProbeAnalysisResult> results = differentialExpressionAnalysisService.find( g, e );
+            Collection<ProbeAnalysisResult> results = differentialExpressionAnalysisService.find( gene, e );
 
             Collection<ProbeAnalysisResult> validResults = new HashSet<ProbeAnalysisResult>();
             for ( ProbeAnalysisResult r : results ) {
                 double qval = r.getCorrectedPvalue();
-                log.info( qval );
+                log.debug( qval );
                 if ( qval < threshold ) {
                     validResults.add( r );
                 }
@@ -242,7 +269,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         ModelAndView mav = new ModelAndView( this.getSuccessView() );
 
-        mav.addObject( "gene", g );
+        mav.addObject( "gene", gene );
 
         mav.addObject( "threshold", threshold );
 
@@ -251,14 +278,17 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         mav.addObject( "numDiffResults", resultsByExperiment.size() );
 
         return mav;
-
     }
-    
+
+    /**
+     * @param geneId
+     * @param threshold
+     * @return
+     */
     public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Long geneId, double threshold ) {
         Collection<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
         Gene g = geneService.load( geneId );
-        if ( g == null )
-            return devos;
+        if ( g == null ) return devos;
         Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService.find( g );
         for ( ExpressionExperiment ee : experimentsAnalyzed ) {
             ExpressionExperimentValueObject eevo = new ExpressionExperimentValueObject();
@@ -282,7 +312,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                         if ( category != null ) {
                             efvo.setCategory( category.getCategory() );
                             if ( category instanceof VocabCharacteristic )
-                                efvo.setCategoryUri( ( (VocabCharacteristic)category ).getCategoryUri() );
+                                efvo.setCategoryUri( ( ( VocabCharacteristic ) category ).getCategoryUri() );
                         }
                         devo.getExperimentalFactors().add( efvo );
                     }
@@ -307,6 +337,13 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      */
     public void setGeneService( GeneService geneService ) {
         this.geneService = geneService;
+    }
+
+    /**
+     * @param taxonService
+     */
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
     }
 
     /**

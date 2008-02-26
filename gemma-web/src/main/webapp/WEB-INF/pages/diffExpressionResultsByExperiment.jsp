@@ -1,7 +1,8 @@
 <%@ include file="/common/taglibs.jsp"%>
 
 
-<title><fmt:message key="expressionExperiments.title" /></title>
+<title><fmt:message key="expressionExperiments.title" />
+</title>
 
 <h3>
 	Displaying
@@ -16,21 +17,21 @@
 </h3>
 
 <table border="1">
+	<tr>
+		<td valign="middle" align="center">
+			<b>Experiment</b>
+		</td>
+		<td valign="middle" align="center">
+			<b>Description</b>
+		</td>
+		<td valign="middle" align="center">
+			<b>q-value</b>
+		</td>
+	</tr>
 	<c:forEach items="${diffResults}" var="diffResultsMap">
 		<c:set var="e" value="${diffResultsMap.key}" />
 		<c:set var="results" value="${diffResultsMap.value}" />
 
-		<tr>
-			<td valign="middle" align="center">
-				<b>Experiment</b>
-			</td>
-			<td valign="middle" align="center">
-				<b>Description</b>
-			</td>
-			<td valign="middle" align="center">
-				<b>p-value</b>
-			</td>
-		</tr>
 		<tr>
 			<td>
 				${e.shortName}
