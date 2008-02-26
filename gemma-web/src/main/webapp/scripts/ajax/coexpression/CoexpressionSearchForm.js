@@ -227,6 +227,9 @@ Ext.extend( Ext.Gemma.CoexpressionSearchForm, Ext.FormPanel, {
 		if ( csc.cannedAnalysisId ) {
 			this.analysisCombo.setValue( csc.cannedAnalysisId );
 		}
+		if ( csc.stringency ) {
+			this.stringencyField.setValue( csc.stringency );
+		}
 		if ( csc.cannedAnalysisId < 0 ) {
 			this.customFs.show();
 			this.eeSearchField.setValue( csc.eeQuery );

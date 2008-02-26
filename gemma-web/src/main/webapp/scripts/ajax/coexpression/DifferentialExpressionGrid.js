@@ -80,7 +80,7 @@ Ext.Gemma.DifferentialExpressionGrid.getRecord = function() {
 Ext.Gemma.DifferentialExpressionGrid.getEEStyler = function() {
 	if ( Ext.Gemma.DifferentialExpressionGrid.eeStyler === undefined ) {
 		Ext.Gemma.DifferentialExpressionGrid.eeTemplate = new Ext.Template(
-			"<a href='{externalUri}'>{shortName}</a><br>{name}"
+			"<a href='{externalUri}'>{shortName}</a> {name}"
 		);
 		Ext.Gemma.DifferentialExpressionGrid.eeStyler = function ( value, metadata, record, row, col, ds ) {
 			var ee = record.data.expressionExperiment;
@@ -100,7 +100,7 @@ Ext.Gemma.DifferentialExpressionGrid.getEFStyler = function() {
 		Ext.Gemma.DifferentialExpressionGrid.efStyler = function ( value, metadata, record, row, col, ds ) {
 			var efs = record.data.experimentalFactors;
 			var names = [];
-			for ( var i=0; i<efs; ++i ) {
+			for ( var i=0; i<efs.length; ++i ) {
 				names.push( efs[i].name || "unnamed factor" );
 			}
 			return names.join( "," );
