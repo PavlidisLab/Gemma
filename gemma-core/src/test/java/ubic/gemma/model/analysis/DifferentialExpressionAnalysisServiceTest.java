@@ -34,11 +34,13 @@ import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author klc
+ * @author keshav
  * @version $Id$
  */
 public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContextTest {
 
     private DifferentialExpressionAnalysisService analysisService;
+    private DifferentialExpressionAnalysisResultService analysisResultService;
     private ExpressionExperimentService expressionExperimentService;
 
     // Test Data
@@ -55,6 +57,8 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         super.onSetUpInTransaction();
 
         this.analysisService = ( DifferentialExpressionAnalysisService ) getBean( "differentialExpressionAnalysisService" );
+
+        this.analysisResultService = ( DifferentialExpressionAnalysisResultService ) getBean( "differentialExpressionAnalysisResultService" );
 
         e1 = ExpressionExperiment.Factory.newInstance();
         e1.setName( "test e1" );
@@ -169,19 +173,19 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
     }
 
     /**
-     * 
+     * Tests getting the collection of factor values for the result.
      */
     @SuppressWarnings("unchecked")
     public void testGetFactorValues() {
         String shortName = "GSE2018";
         ExpressionExperiment ee = expressionExperimentService.findByShortName( shortName );
         if ( ee == null ) {
-            log.error( "Could not find experiment for " + shortName + ".  Skipping test ..." );
+            log.error( "Could not find experiment for " + shortName + ". Skipping test ..." );
             return;
         }
         Collection<DifferentialExpressionAnalysis> analyses = analysisService.findByInvestigation( ee );
         if ( analyses == null || !( analyses.iterator().hasNext() ) ) {
-            log.error( "Could not find analyses for " + shortName + ".  Skipping test ..." );
+            log.error( "Could not find analyses for " + shortName + ". Skipping test ..." );
             return;
         }
 
@@ -196,14 +200,14 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
 
         DifferentialExpressionAnalysisResult r = results.iterator().next();
 
-        Collection<FactorValue> fvs = analysisService.getFactorValues( r );
+        Collection<FactorValue> fvs = analysisResultService.getFactorValues( r );
         log.debug( "Num factor values: " + fvs.size() );
         assertEquals( 2, fvs.size() );
 
     }
 
     /**
-     * 
+     * Tests getting the map of factors keyed by results
      */
     @SuppressWarnings("unchecked")
     public void testGetMapOfFactorValues() {
@@ -236,7 +240,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
             testResults.add( iter.next() );
         }
 
-        Map<DifferentialExpressionAnalysisResult, Collection<FactorValue>> fvs = analysisService
+        Map<DifferentialExpressionAnalysisResult, Collection<FactorValue>> fvs = analysisResultService
                 .getFactorValues( testResults );
         log.debug( "Num factor values: " + fvs.keySet().size() );
         assertEquals( testResultsSize, fvs.size() );

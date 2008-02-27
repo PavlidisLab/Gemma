@@ -24,9 +24,7 @@ package ubic.gemma.model.analysis;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -40,7 +38,6 @@ import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
@@ -154,69 +151,5 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         Object[] objectValues = { gene, experimentAnalyzed };
 
         return this.getHibernateTemplate().findByNamedParam( queryString, paramNames, objectValues );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisDaoBase#handleGetFactorValues(ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult)
-     */
-    @Override
-    protected Collection handleGetFactorValues(
-            DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult ) throws Exception {
-
-        final String queryString = "select f from ExpressionAnalysisResultSetImpl rs"
-                + " inner join rs.results r inner join rs.experimentalFactor ef inner join ef.factorValues f where r=:differentialExpressionAnalysisResult";
-
-        String[] paramNames = { "differentialExpressionAnalysisResult" };
-        Object[] objectValues = { differentialExpressionAnalysisResult };
-
-        return this.getHibernateTemplate().findByNamedParam( queryString, paramNames, objectValues );
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisDaoBase#handleGetFactorValues(java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings("unchecked")
-    protected Map handleGetFactorValues( Collection differentialExpressionAnalysisResults ) throws Exception {
-
-        Map<DifferentialExpressionAnalysisResult, Collection<FactorValue>> factorValuesByResult = new HashMap<DifferentialExpressionAnalysisResult, Collection<FactorValue>>();
-
-        final String queryString = "select f, r from ExpressionAnalysisResultSetImpl rs"
-                + " inner join rs.results r inner join rs.experimentalFactor ef inner join ef.factorValues f where r in (:differentialExpressionAnalysisResults)";
-
-        String[] paramNames = { "differentialExpressionAnalysisResults" };
-        Object[] objectValues = { differentialExpressionAnalysisResults };
-
-        List qr = this.getHibernateTemplate().findByNamedParam( queryString, paramNames, objectValues );
-
-        if ( qr == null || qr.isEmpty() ) return factorValuesByResult;
-
-        for ( Object o : qr ) {
-            Object[] ar = ( Object[] ) o;
-            FactorValue f = ( FactorValue ) ar[0];
-            DifferentialExpressionAnalysisResult e = ( DifferentialExpressionAnalysisResult ) ar[1];
-
-            Collection<FactorValue> fvs = null;
-            Collection<DifferentialExpressionAnalysisResult> keys = factorValuesByResult.keySet();
-            if ( keys.contains( e ) ) {
-                fvs = factorValuesByResult.get( e );
-                fvs.add( f );
-                factorValuesByResult.put( e, fvs );
-            } else {
-                fvs = new HashSet<FactorValue>();
-                fvs.add( f );
-                factorValuesByResult.put( e, fvs );
-            }
-
-            log.info( e );
-        }
-
-        return factorValuesByResult;
-
     }
 }
