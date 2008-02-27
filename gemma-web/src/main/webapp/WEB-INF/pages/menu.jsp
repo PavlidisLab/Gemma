@@ -6,6 +6,7 @@
 			&nbsp;
 		</li>
 		<menu:displayMenu name="MainMenu" />
+		<menu:displayMenu name="ResourcesMenu" />
 		<menu:displayMenu name="UserMenu" />
 		<menu:displayMenu name="AdminMenu" />
 	</ul>

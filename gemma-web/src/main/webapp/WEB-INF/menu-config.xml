@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- 
 	
-	Configuration for menus appearing on all web pages.
+	Configuration for menus appearing on all web pages. This file is part of the struts-menu configuration. For more details see:
+	http://struts-menu.sourceforge.net/userguide.html
+	http://struts-menu.sourceforge.net/apidocs/net/sf/navigator/menu/MenuBase.html
 	
 	$Id$
 -->
@@ -21,7 +23,13 @@
 			<Item name="Experiments" title="menu.experiments"
 				page="/expressionExperiment/showAllExpressionExperiments.html" />
 			<Item name="Array Designs" title="menu.arrays" page="/arrays/showAllArrayDesigns.html" />
-			<Item name="Help" title="menu.help" page="/static/about.html" />
+		</Menu>
+		<Menu name="ResourcesMenu" title="resourcesMenu.title">
+			<Item name="Overview" description="Site overview and general help" title="resourcesMenu.generalhelp" page = "/static/about.html" /> 
+			<Item name="Help for this page" description="Context-specific help" title="resourcesMenu.pagehelp" page="/help.html" />
+			<Item name="Downloads" description="Download Gemma software and data" title="resourcesMenu.downloads" location="http://bioinformatics.ubc.ca/Gemma/resources/downloads.html" />
+			<Item name="For developers" description="About the Gemma framework" title="resourcesMenu.software" location="http://bioinformatics.ubc.ca/Gemma/resources/" />
+			<Item name="Credits" description="Credits and more" title="resourcesMenu.about" page="/static/credits.html" />
 		</Menu>
 		<Menu name="UserMenu" title="menu.user" description="User Menu" page="/editProfile.html" roles="admin,user" />
 		<Menu name="AdminMenu" title="menu.admin" description="Admin Menu" roles="admin">
