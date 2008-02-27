@@ -146,10 +146,10 @@ var initGrid = function(id) {
 	
 	
 	var cm = new Ext.grid.ColumnModel([
-	 			{header: "Category", width: 150, dataIndex:"resultClass", renderer:renderEntityClass },
-				{header: "Item", width: 480, dataIndex:"resultObject", renderer:renderEntity },
-				{header: "Score", width: 60, dataIndex:"score" },
-				{header: "Matching text", width: 180, dataIndex:"highlightedText" }
+	 			{header: "Category", width: 150, dataIndex:"resultClass", renderer:renderEntityClass, tooltip:"Type of search result" },
+				{header: "Item", width: 480, dataIndex:"resultObject", renderer:renderEntity, tooltip:"a link to search result" },
+				{header: "Score", width: 60, dataIndex:"score", tooltip:"How good of a match" },
+				{header: "Matching text", width: 180, dataIndex:"highlightedText", tooltip:"The text that matched the search" }
 	]);
 	cm.setHidden(0, true); // don't show the item class column by default.
 	cm.setHidden(2,true); // don't show the score by default (usefully for debugging)
@@ -236,8 +236,8 @@ var renderEntity = function( data, metadata, record, row, column, store  ) {
 
 
 Ext.onReady(function() {
-	
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider({expires:new Date(new Date().getTime()+(1000*60*60*24*30))}));
 	searchForm();
 	initGrid(); 
+	Ext.QuickTips.init();
 });

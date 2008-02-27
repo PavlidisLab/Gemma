@@ -162,7 +162,6 @@ var initDetails = function() {
  * @param {Object} id
  */
 var showDetails = function(event, id) {
- 	Ext.QuickTips.init();
 	var record = ds.getById(id);
 	
 	detailsDataSource.load({params:[{id:id}]});
@@ -371,6 +370,8 @@ Ext.onReady(function() {
 	grid.render();
 	
 	reset();
+	
+	 	Ext.QuickTips.init();
 
 });
 
