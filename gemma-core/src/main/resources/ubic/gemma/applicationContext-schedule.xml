@@ -34,6 +34,7 @@
 	Day-of-Week 	  	1-7 or SUN-SAT 	  	, - * ? / L #
 	Year (Optional) 	  	empty, 1970-2099 	  	, - * /
 	
+	
 	See http://www.opensymphony.com/quartz/api/org/quartz/CronExpression.html for details, http://www.opensymphony.com/quartz/api/org/quartz/CronTrigger.html for examples.
 	
 	If you want a schedule that fire frequently for testing, try <value>0 0/2 * ? * *</value>.
@@ -43,7 +44,7 @@
 			<ref bean="indexJobDetail"/>
 		</property>
 		<property name="cronExpression">
-			<value>0 15 1 ? * 2</value><!-- tuesday after 1:15 am -->
+			<value>0 15 1 ? * WED</value><!-- Wednesday at 1:15 am -->
 		</property>
 	</bean>
 	<bean id="arrayDesignReportTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
