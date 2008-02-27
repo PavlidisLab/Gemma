@@ -181,7 +181,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         }
         Collection<DifferentialExpressionAnalysis> analyses = analysisService.findByInvestigation( ee );
         if ( analyses == null || !( analyses.iterator().hasNext() ) ) {
-            log.error( "Could not find analyses for " + shortName + ".  Skipping test." );
+            log.error( "Could not find analyses for " + shortName + ".  Skipping test ..." );
             return;
         }
 
@@ -215,7 +215,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         }
         Collection<DifferentialExpressionAnalysis> analyses = analysisService.findByInvestigation( ee );
         if ( analyses == null || !( analyses.iterator().hasNext() ) ) {
-            log.error( "Could not find analyses for " + shortName + ".  Skipping test." );
+            log.error( "Could not find analyses for " + shortName + ".  Skipping test ..." );
             return;
         }
 

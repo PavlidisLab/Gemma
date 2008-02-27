@@ -25,6 +25,7 @@ package ubic.gemma.model.analysis;
 import java.util.Collection;
 import java.util.Map;
 
+import ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -130,6 +131,25 @@ public class DifferentialExpressionAnalysisServiceImpl extends
     @Override
     protected void handleDelete( Long idToDelete ) throws Exception {
         this.getDifferentialExpressionAnalysisDao().remove( idToDelete );
+    }
+    
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisServiceBase#handleGetFactorValues(ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult)
+     */
+    @Override
+    protected Collection handleGetFactorValues(
+            DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult ) throws Exception {
+        return this.getDifferentialExpressionAnalysisDao().getFactorValues( differentialExpressionAnalysisResult );
+    }
+    
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisServiceBase#handleGetFactorValues(java.util.Collection)
+     */
+    @Override
+    protected Map handleGetFactorValues( Collection differentialExpressionAnalysisResults ) throws Exception {
+        return this.getDifferentialExpressionAnalysisDao().getFactorValues( differentialExpressionAnalysisResults );
     }
 
 }
