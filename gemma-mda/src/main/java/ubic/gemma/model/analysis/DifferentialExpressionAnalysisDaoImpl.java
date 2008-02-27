@@ -24,9 +24,13 @@ package ubic.gemma.model.analysis;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
@@ -47,6 +51,8 @@ import ubic.gemma.model.genome.Taxon;
  */
 public class DifferentialExpressionAnalysisDaoImpl extends
         ubic.gemma.model.analysis.DifferentialExpressionAnalysisDaoBase {
+
+    private Log log = LogFactory.getLog( this.getClass() );
 
     @Override
     protected Collection handleFindByTaxon( Taxon taxon ) {
@@ -180,10 +186,37 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
         Map<DifferentialExpressionAnalysisResult, Collection<FactorValue>> factorValuesByResult = new HashMap<DifferentialExpressionAnalysisResult, Collection<FactorValue>>();
 
-        for ( DifferentialExpressionAnalysisResult r : ( Collection<DifferentialExpressionAnalysisResult> ) differentialExpressionAnalysisResults ) {
-            Collection<FactorValue> fvs = getFactorValues( r );
-            factorValuesByResult.put( r, fvs );
+        final String queryString = "select f, r from ExpressionAnalysisResultSetImpl rs"
+                + " inner join rs.results r inner join rs.experimentalFactor ef inner join ef.factorValues f where r in (:differentialExpressionAnalysisResults)";
+
+        String[] paramNames = { "differentialExpressionAnalysisResults" };
+        Object[] objectValues = { differentialExpressionAnalysisResults };
+
+        List qr = this.getHibernateTemplate().findByNamedParam( queryString, paramNames, objectValues );
+
+        if ( qr == null || qr.isEmpty() ) return factorValuesByResult;
+
+        for ( Object o : qr ) {
+            Object[] ar = ( Object[] ) o;
+            FactorValue f = ( FactorValue ) ar[0];
+            DifferentialExpressionAnalysisResult e = ( DifferentialExpressionAnalysisResult ) ar[1];
+
+            Collection<FactorValue> fvs = null;
+            Collection<DifferentialExpressionAnalysisResult> keys = factorValuesByResult.keySet();
+            if ( keys.contains( e ) ) {
+                fvs = factorValuesByResult.get( e );
+                fvs.add( f );
+                factorValuesByResult.put( e, fvs );
+            } else {
+                fvs = new HashSet<FactorValue>();
+                fvs.add( f );
+                factorValuesByResult.put( e, fvs );
+            }
+
+            log.info( e );
         }
+
         return factorValuesByResult;
+
     }
 }
