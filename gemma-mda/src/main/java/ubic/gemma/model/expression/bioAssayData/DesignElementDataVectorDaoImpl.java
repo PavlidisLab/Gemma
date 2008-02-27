@@ -350,13 +350,13 @@ public class DesignElementDataVectorDaoImpl extends
         final String queryString;
         if ( ees == null || ees.size() == 0 ) {
             queryString = "select distinct dedv, dedv.designElement from DesignElementDataVectorImpl dedv "
-                    + " inner join fetch dev.bioAssayDimension bd "
-                    + " inner join fetch dev.designElement de inner join fetch dev.quantitationType "
+                    + " inner join fetch dedv.bioAssayDimension bd "
+                    + " inner join fetch dedv.designElement de inner join fetch dedv.quantitationType "
                     + " where dedv.designElement in ( :cs ) and dedv.quantitationType.isPreferred = true";
         } else {
             queryString = "select distinct dedv, dedv.designElement from DesignElementDataVectorImpl dedv"
-                    + " inner join fetch dev.bioAssayDimension bd "
-                    + " inner join fetch dev.designElement de inner join fetch dev.quantitationType "
+                    + " inner join fetch dedv.bioAssayDimension bd "
+                    + " inner join fetch dedv.designElement de inner join fetch dedv.quantitationType "
                     + " where dedv.designElement in (:cs ) and dedv.quantitationType.isPreferred = true"
                     + " and dedv.expressionExperiment in ( :ees )";
         }
