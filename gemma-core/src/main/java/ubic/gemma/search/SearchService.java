@@ -72,6 +72,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.PredictedGene;
+import ubic.gemma.model.genome.ProbeAlignedRegion;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
@@ -1171,6 +1173,8 @@ public class SearchService implements InitializingBean {
         results.put( CompositeSequence.class, new ArrayList<SearchResult>() );
         results.put( ExpressionExperiment.class, new ArrayList<SearchResult>() );
         results.put( Gene.class, new ArrayList<SearchResult>() );
+        results.put( PredictedGene.class, new ArrayList<SearchResult>() );
+        results.put( ProbeAlignedRegion.class, new ArrayList<SearchResult>() );
 
         /*
          * Get the top N results, overall (NOT within each class - experimental.)

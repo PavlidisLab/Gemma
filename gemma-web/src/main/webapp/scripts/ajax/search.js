@@ -227,7 +227,7 @@ var renderEntity = function( data, metadata, record, row, column, store  ) {
 		return "<a href=\"/Gemma/arrays/showArrayDesign.html?id=" + data.id + "\">" + data.shortName + "</a>  " + data.name;
 	}else if ( /^BioSequence.*/.exec(clazz) ) {
 		return "<a href=\"/Gemma/genome/bioSequence/showBioSequence.html?id=" + data.id + "\">" + data.name + "</a> - " + data.taxon.commonName + " " + data.description ;
-	} else if (clazz == "Gene") {
+	} else if (clazz == "Gene" || clazz== "PredictedGene" || clazz== "ProbeAlignedRegion") {
 		return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">" + data.officialSymbol + "</a>  - Species: " + data.taxon.commonName + " Desc: " + data.officialName;
 	}else if (clazz == "Bibliographicreference") {
 		return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">" + data.title + "</a> [" + data.pubmedId + "]";
