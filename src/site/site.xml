@@ -3,9 +3,11 @@
 <project name="Gemma">
 	<bannerLeft>
 		<name>Gemma</name>
+		<src>images/logo/gemma-sm50x195.png</src>
+		<href>/Gemma</href>
 	</bannerLeft>
 	<bannerRight>
-		<src>http://www.bioinformatics.ubc.ca/pavlidis/lab/graphics/gemmalogo64.gif</src>
+		<src>images/logo/heatfade.inner.png</src>
 	</bannerRight>
 	<body>
 		<links>

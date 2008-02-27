@@ -7,13 +7,13 @@
 		<section name="Gemma 1.0">
 			<p>
 				For details see the
-				<a href="http://www.bioinformatics.ubc.ca/gemma-dev/dist/RELEASE-NOTES-1.0.txt">release notes</a>
+				<a href="http://www.bioinformatics.ubc.ca/Gemma/resources/dist/RELEASE-NOTES-1.0.txt">release notes</a>
 				.
 			</p>
 			<subsection name="Binaries">
 				<ul>
 					<li>
-						<a href="http://www.bioinformatics.ubc.ca/gemma-dev/dist/gemma-1.0-jar-with-dependencies.jar">
+						<a href="http://www.bioinformatics.ubc.ca/Gemma/resources/dist/gemma-1.0-jar-with-dependencies.jar">
 							gemma-1.0-jar-with-dependencies.jar
 						</a>
 					</li>
@@ -22,10 +22,10 @@
 			<subsection name="Source Code"></subsection>
 			<ul>
 				<li>
-					<a href="http://www.bioinformatics.ubc.ca/gemma-dev/dist/gemma-1.0-src.zip">gemma-1.0-src.zip</a>
+					<a href="http://www.bioinformatics.ubc.ca/Gemma/resources/dist/gemma-1.0-src.zip">gemma-1.0-src.zip</a>
 				</li>
 				<li>
-					<a href="http://www.bioinformatics.ubc.ca/basecode-dev/dist/basecode-0.9-src.zip">gemma-1.0-src.zip</a>
+					<a href="http://www.bioinformatics.ubc.ca/basecode/dist/basecode-0.9-src.zip">basecode-0.9-src.zip</a>
 				</li>
 			</ul>
 		</section>

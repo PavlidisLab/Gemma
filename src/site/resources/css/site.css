@@ -1,0 +1,256 @@
+/* A CSS Framework by Mike Stenhouse of Content with Style
+
+     Color palette:
+     		 #00718f - new dark blue (hue 193)
+     		 #338da5 - medium tint of 193.
+     		 #9cc8d4 - tint of dark blue 193.
+     		 #004f64 - shade of 193.
+     		 #f9f7db - logo background
+     		 ## Logo colors used in spots
+     		 #c84c27 - new dark orange
+     		 #b53825 - new brick red
+     		 #fddb5c - new bright yellow
+     		 #fcb536 - new light orange
+     		 #f47f20 - new medium orange
+     		 
+     		 Older items
+             #444        - dark gray (text)
+             #3e9ade - medium blue (title)
+             #b4c24b - lime (header 1)
+             #ebf5fc - light cyan (hover text, footer)
+             #d7e9f5    - medium cyan (tab)
+             #1465b7 - dark blue (tab text, hyperlink)
+             #ccc         - medium gray (line)
+             #f7f7f7 - light gray (form background)
+             #f90        - orange (required *)
+             
+             #003366 - blue
+             #CC6633 - orange
+*/ /* TYPOGRAPHY */
+body {
+	text-align: left;
+	font: normal 0.9em arial,sans-serif;
+	color: #000000;
+	text-decoration: none;
+}
+
+.footer {
+	font-size:smaller;
+}
+ 
+img {
+	border: 0;
+}
+
+/* LINKS */
+a,a:link
+            a:active {
+	color: #004f64;
+	text-decoration: none;
+}
+
+a:visited {
+	color: #004f64;
+	background-color: transparent;
+}
+
+a:hover {
+	color: #f47f20;
+	text-decoration: none;
+}
+
+a.annotationLink {
+	text-decoration: underline;
+}
+
+/* END LINKS */ /* HEADINGS */
+h1,h2,h3,h4,h5,h6 {
+	font-weight: bold;
+}
+
+h1 {
+	font-size: 2.2em;
+	letter-spacing: -1px;
+	line-height: 1.3em;
+	margin: 0 0 0.5em 0;
+	padding: 0;
+}
+
+div#branding h1 {
+	font-size: 2.6em;
+	letter-spacing: -1px;
+	margin: 0;
+	line-height: 1.5em;
+	color: #3e9ade;
+}
+
+div#branding p {
+	margin: 0;
+	line-height: 1em;
+}
+
+h2 {
+	font-size: 1.4em;
+	line-height: 1.5em;
+	margin: 0 0 0.5em 0;
+	padding: 0;
+}
+
+h3 {
+	font-size: 1.3em;
+	line-height: 1.3em;
+	margin: 0 0 0.5em 0;
+	padding: 10px 0px 0px 0;
+	color: black;
+}
+
+h4 {
+	font-size: 1.2em;
+	line-height: 1.3em;
+	margin: 0 0 0.25em 0;
+	padding: 0;
+	color: black;
+}
+
+h5 {
+	font-size: 1.1em;
+	line-height: 1.3em;
+	margin: 0 0 0.25em 0;
+	padding: 0;
+	color: black;
+}
+
+h6 {
+	font-size: 1em;
+	line-height: 1.3em;
+	margin: 0 0 0.25em 0;
+	padding: 0;
+	color: black;
+}
+
+/* END HEADINGS */ /* TEXT */
+p {
+	font-size: 1em;
+	margin: 0 0 1.5em 0;
+	padding: 0px 20px 0px 20px;
+	line-height: 1.4em;
+}
+
+blockquote {
+	border-left: 10px solid #ddd;
+	margin-left: 10px;
+}
+
+pre {
+	font-family: monospace;
+	font-size: 1em;
+}
+
+strong,b {
+	font-weight: bold;
+}
+
+em,i {
+	font-style: italic;
+}
+
+code {
+	font-family: "courier new", courier, monospace;
+	font-size: 12px;
+	white-space: pre;
+}
+
+textarea {
+	font-family: verdana, arial, helvetica, sans-serif;
+	font-size: 1em;
+}
+
+.clob,.stacktrace {
+	border-style: solid;
+	padding: 4px 6px 4px 6px;
+	border-width: 1px;
+	border-color: #DDDDDD;
+	font-size: 1em;
+	line-height: 1.3em;
+	height: 100px;
+	overflow: auto;
+}
+
+.stacktrace {
+	font-size: 10px;
+	font-family: "courier new", courier, monospace;
+	height: 400px;
+}
+
+/* END TEXT */ /* LISTS */
+ul.glassList {
+	list-style: url(../../images/aquadot.jpg) disc outside;
+	vertical-align: top;
+	line-height: 1.5em;
+}
+
+dl {
+	margin: 0 0 1.5em 0;
+	padding: 0;
+	line-height: 1.4em;
+}
+
+dl dt {
+	font-weight: bold;
+	margin: 0.25em 0 0.25em 0;
+	padding: 0;
+}
+
+dl dd {
+	margin: 0 0 0 30px;
+	padding: 0;
+}
+
+/* END LISTS */ /* TABLE */
+td {
+	font: normal 11px arial, tahoma, helvetica, sans-serif;
+}
+
+/* this can interfere with EXT.js tables. */
+table { /*border-style:solid;
+			border-width:1px;
+			border-color:#BBBBBB; 
+            margin: 0 0 0 0;
+            padding: 6px;*/
+	
+}
+
+td.label {
+	font-weight: bold;
+	text-align: right;
+	vertical-align: top;
+	padding-right: 8px;
+	padding-top: 4px;
+}
+
+th {
+	border-bottom: solid #555555 1px;
+	font: bold 11px arial, tahoma, helvetica, sans-serif;
+}
+
+hr {
+	display: none;
+}
+
+div.hr {
+	height: 1px;
+	margin: 1.5em 10px;
+	border-bottom: 1px dotted black;
+}
+
+.datasummary td {
+	font-size: 0.9em;
+	margin: 0 0 0 0;
+	padding: 1px;
+}
+
+.error {
+	background: #fff url(../../images/default/grid/invalid_line.gif)
+		repeat-x bottom;
+}
+/* END TYPOGRAPHY */

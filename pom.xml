@@ -8,7 +8,7 @@
 	<description>The Gemma Project for meta-analysis of genomics data</description>
 	<url>http://www.bioinformatics.ubc.ca/Gemma</url>
 	<organization>
-		<name>UBC Bioinformatics Centre</name>
+		<name>UBC Centre for High-throughput Biology</name>
 		<url>http://bioinformatics.ubc.ca/</url>
 	</organization>
 	<modules>
@@ -189,16 +189,16 @@
 				<reportSets>
 					<reportSet>
 						<reports>
-							<report>index</report>
+						<!--	<report>index</report>
 							<report>dependencies</report>
 							<report>project-team</report>
-							<!-- <report>mailing-list</report> -->
+							
 							<report>cim</report>
 							<report>issue-tracking</report>
 							<report>license</report>
 							<report>scm</report>
 							<report>summary</report>
-							<report>dependency-convergence</report>
+							<report>dependency-convergence</report> <report>mailing-list</report> -->
 						</reports>
 					</reportSet>
 				</reportSets>
