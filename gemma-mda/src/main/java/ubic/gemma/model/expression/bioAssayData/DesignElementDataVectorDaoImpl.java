@@ -349,10 +349,14 @@ public class DesignElementDataVectorDaoImpl extends
         watch.start();
         final String queryString;
         if ( ees == null || ees.size() == 0 ) {
-            queryString = "select distinct dedv, dedv.designElement from DesignElementDataVectorImpl dedv"
+            queryString = "select distinct dedv, dedv.designElement from DesignElementDataVectorImpl dedv "
+                    + " inner join fetch dev.bioAssayDimension bd "
+                    + " inner join fetch dev.designElement de inner join fetch dev.quantitationType "
                     + " where dedv.designElement in ( :cs ) and dedv.quantitationType.isPreferred = true";
         } else {
             queryString = "select distinct dedv, dedv.designElement from DesignElementDataVectorImpl dedv"
+                    + " inner join fetch dev.bioAssayDimension bd "
+                    + " inner join fetch dev.designElement de inner join fetch dev.quantitationType "
                     + " where dedv.designElement in (:cs ) and dedv.quantitationType.isPreferred = true"
                     + " and dedv.expressionExperiment in ( :ees )";
         }
@@ -518,7 +522,7 @@ public class DesignElementDataVectorDaoImpl extends
                             session.evict( bm );
                         }
                         session.clear(); // this is necessary to avoid session errors (due to multiple bioassays per
-                                            // biomaterial?)
+                        // biomaterial?)
                     }
                 }
 

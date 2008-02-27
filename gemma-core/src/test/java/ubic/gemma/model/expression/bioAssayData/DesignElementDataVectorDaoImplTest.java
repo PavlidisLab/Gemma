@@ -86,7 +86,7 @@ public class DesignElementDataVectorDaoImplTest extends BaseSpringContextTest {
     public void testGetGenes() {
         designElementDataVectorDao = ( DesignElementDataVectorDao ) this.getBean( "designElementDataVectorDao" );
         DesignElementDataVector dedv = DesignElementDataVector.Factory.newInstance();
-        dedv.setId( ( long ) 1 );
+        dedv.setId( 1L );
         Collection objects = designElementDataVectorDao.getGenes( dedv );
         assertNotNull( objects );
     }
@@ -94,8 +94,8 @@ public class DesignElementDataVectorDaoImplTest extends BaseSpringContextTest {
     public void testGetGenesById() {
         designElementDataVectorDao = ( DesignElementDataVectorDao ) this.getBean( "designElementDataVectorDao" );
         DesignElementDataVector dedv = DesignElementDataVector.Factory.newInstance();
-        dedv.setId( ( long ) 1 );
-        Collection objects = designElementDataVectorDao.getGenesById( ( long ) 1 );
+        dedv.setId( 1L );
+        Collection objects = designElementDataVectorDao.getGenesById( 1 );
         assertNotNull( objects );
     }
 
