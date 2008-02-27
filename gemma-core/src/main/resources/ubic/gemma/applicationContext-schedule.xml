@@ -14,7 +14,8 @@
 	<!-- Quartz Configuration. The schedulerFactorBean is the main entry point. See also QuartzUtils for how this can be turned off. -->
 	<bean id="schedulerFactoryBean" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
 		<property name="triggers">
-			<list>
+			<list>		
+				<ref local="indexTrigger"/>
 				<ref local="arrayDesignReportTrigger"/>
 				<ref local="expressionExperimentReportTrigger"/>
 				<ref local="whatsNewTrigger"/>
@@ -44,7 +45,7 @@
 			<ref bean="indexJobDetail"/>
 		</property>
 		<property name="cronExpression">
-			<value>0 15 1 ? * WED</value><!-- Wednesday at 1:15 am -->
+			<value>0 15 1 ? * THU</value><!-- Thruday at 1:15 am -->
 		</property>
 	</bean>
 	<bean id="arrayDesignReportTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
