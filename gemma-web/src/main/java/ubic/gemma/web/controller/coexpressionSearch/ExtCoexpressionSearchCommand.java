@@ -33,6 +33,8 @@ public class ExtCoexpressionSearchCommand {
 
     private Integer stringency;
     
+    private boolean queryGenesOnly;
+    
     /* we're storing the actual ee ids in the command object; the query string
      * is only here so we can use this object to store the state of the search
      * form between visits...
@@ -90,6 +92,14 @@ public class ExtCoexpressionSearchCommand {
 
     public void setTaxonId( Long taxonId ) {
         this.taxonId = taxonId;
+    }
+
+    public boolean getQueryGenesOnly() {
+        return queryGenesOnly;
+    }
+
+    public void setQueryGenesOnly( boolean queryGenesOnly ) {
+        this.queryGenesOnly = queryGenesOnly;
     }
     
 }

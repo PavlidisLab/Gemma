@@ -63,11 +63,6 @@ Ext.Gemma.CoexpressionGrid = function ( config ) {
 	
 	this.originalTitle = this.title;
 	
-	this.getStore().on( "load", function () {
-		this.autoSizeColumns();
-		this.doLayout();
-	}, this );
-	
 };
 
 /* static methods
@@ -152,7 +147,7 @@ Ext.Gemma.CoexpressionGrid.getGoStyler = function() {
 	return Ext.Gemma.CoexpressionGrid.goStyler;
 };
 
-Ext.Gemma.CoexpressionGrid.bitImageBarWidth = 2;
+Ext.Gemma.CoexpressionGrid.bitImageBarWidth = 1;
 Ext.Gemma.CoexpressionGrid.bitImageBarHeight = 10;
 
 Ext.Gemma.CoexpressionGrid.getBitImageMapTemplate = function() {
@@ -174,6 +169,7 @@ Ext.Gemma.CoexpressionGrid.getBitImageStyler = function() {
 	if ( Ext.Gemma.CoexpressionGrid.bitImageStyler === undefined ) {
 		Ext.Gemma.CoexpressionGrid.bitImageStyler = function ( value, metadata, record, row, col, ds ) {
 			var bits = record.data.supportingDatasetVector;
+			var tbits = record.data.testedDatasetVector
 			var width = Ext.Gemma.CoexpressionGrid.bitImageBarWidth * bits.length;
 			var height = Ext.Gemma.CoexpressionGrid.bitImageBarHeight;
 			var s = '<span style="background-color:#DDDDDD;">' +
@@ -183,7 +179,9 @@ Ext.Gemma.CoexpressionGrid.getBitImageStyler = function() {
 				if ( i>0 ) {
 					s = s + ",";
 				}
-				s = s + ( bits[i] > 0 ? "20" : "0" );
+				var b = tbits[i] > 0 ? "4" : "0";
+				b = bits[i] > 0 ? "20" : b;
+				s = s + b;
 			}
 			s = s + '" usemap="eeMap" /></span>';
 			return s;
@@ -218,8 +216,20 @@ Ext.extend( Ext.Gemma.CoexpressionGrid, Ext.Gemma.GemmaGridPanel, {
 			queryCol.hidden = true;
 		}
 		this.getStore().proxy.data = data;
-		this.refresh(); // reloads the data store
-		this.getView().refresh( true ); // refresh doesn't refresh the headers
+		this.getStore().reload( { resetPage : true } );
+		this.getView().refresh( true ); // refresh column headers
+		this.resizeDatasetColumn();
+	},
+	
+	resizeDatasetColumn : function() {
+		var first = this.getStore().getAt( 0 );
+		if ( first ) {
+			var cm = this.getColumnModel();
+			var c = cm.getIndexById( 'datasets' )
+			var headerWidth = this.view.getHeaderCell( c ).firstChild.scrollWidth;
+			var imageWidth = Ext.Gemma.CoexpressionGrid.bitImageBarWidth * first.data.supportingDatasetVector.length;
+			cm.setColumnWidth( c, imageWidth < headerWidth ? headerWidth : imageWidth );
+		}
 	}
 	
 } );
@@ -247,11 +257,19 @@ Ext.extend( Ext.Gemma.CoexpressionGridRowExpander, Ext.grid.RowExpander, {
 	beforeExpand : function (record, body, rowIndex) {
 		if(this.fireEvent('beforeexpand', this, record, body, rowIndex) !== false){
 	    	if ( ! this.childGrid[rowIndex] ) {
-	    		this.childGrid[rowIndex] = new Ext.Gemma.DifferentialExpressionGrid( {
+	    		var grid = new Ext.Gemma.DifferentialExpressionGrid( {
 	    			geneId : record.data.foundGene.id,
 	    			threshold : 0.05,
 	    			renderTo : body
 	    		} );
+	    		grid.on( "render", function() {
+		    		var loadMask = new Ext.LoadMask( body, {
+		    			removeMask : true,
+	    				store : grid.getStore()
+		    		} );
+		    		loadMask.show();
+		    	} );
+	    		this.childGrid[rowIndex] = grid;
 	    	}
             return true;
         }else{

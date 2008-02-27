@@ -23,8 +23,14 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 	}
 	Ext.Gemma.CoexpressionSearchForm.superclass.constructor.call( this, superConfig );
 	
+	var queryGenesOnly = new Ext.form.Checkbox( {
+		fieldLabel: 'Search among query genes only'
+	} );
+	this.queryGenesOnly = queryGenesOnly;
+	
 	var geneChooserPanel = new Ext.Gemma.GeneChooserPanel( {
-		showTaxon : true
+		showTaxon : true,
+		bbar : [ queryGenesOnly, new Ext.Toolbar.Spacer(), new Ext.Toolbar.TextItem( queryGenesOnly.fieldLabel ) ]
 	} );
 	this.geneChooserPanel = geneChooserPanel;
 	this.geneChooserPanel.taxonCombo.on( "taxonchanged", function ( combo, taxon ) {
@@ -67,8 +73,9 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 		allowBlank : false,
 		allowDecimals : false,
 		allowNegative : false,
+		minValue : Ext.Gemma.CoexpressionSearchForm.MIN_STRINGENCY,
+		maxValue : 999,
 		fieldLabel : 'Stringency',
-		validator : function ( value ) { return value >= Ext.Gemma.CoexpressionSearchForm.MIN_STRINGENCY; },
 		invalidText : "Minimum stringency is " + Ext.Gemma.CoexpressionSearchForm.MIN_STRINGENCY,
 		value : 2,
 		width : 25
@@ -176,7 +183,8 @@ Ext.extend( Ext.Gemma.CoexpressionSearchForm, Ext.FormPanel, {
 		var csc = {
 			geneIds : this.geneChooserPanel.getGeneIds(),
 			stringency : this.stringencyField.getValue(),
-			taxonId : this.geneChooserPanel.getTaxonId()
+			taxonId : this.geneChooserPanel.getTaxonId(),
+			queryGenesOnly : this.queryGenesOnly.getValue()
 		};
 		var analysisId = this.analysisCombo.getValue();
 		if ( analysisId < 0 ) {
@@ -299,6 +307,7 @@ Ext.extend( Ext.Gemma.CoexpressionSearchForm, Ext.FormPanel, {
 	
 	updateDatasetsToBeSearched : function ( datasets ) {
 		var numDatasets = datasets instanceof Array ? datasets.length : datasets;
+		this.stringencyField.maxValue = numDatasets;
 		this.analysisFs.setTitle( String.format( "Analysis options ({0} dataset{1} will be analyzed)", numDatasets, numDatasets != 1 ? "s" : "" ) );
 	},
 	

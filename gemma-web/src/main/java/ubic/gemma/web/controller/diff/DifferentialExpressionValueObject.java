@@ -26,6 +26,7 @@ import ubic.gemma.web.controller.expression.experiment.ExperimentalFactorValueOb
 public class DifferentialExpressionValueObject {
     
     private ExpressionExperimentValueObject expressionExperiment;
+    private String probe;
     private Collection<ExperimentalFactorValueObject> experimentalFactors;
     private Double p;
     
@@ -34,6 +35,13 @@ public class DifferentialExpressionValueObject {
     }
     public void setExpressionExperiment( ExpressionExperimentValueObject expressionExperiment ) {
         this.expressionExperiment = expressionExperiment;
+    }
+    
+    public String getProbe() {
+        return probe;
+    }
+    public void setProbe( String probe ) {
+        this.probe = probe;
     }
     
     public Collection<ExperimentalFactorValueObject> getExperimentalFactors() {

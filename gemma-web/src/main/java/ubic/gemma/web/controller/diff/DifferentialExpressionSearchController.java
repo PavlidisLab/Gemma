@@ -39,9 +39,12 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.loader.genome.taxon.SupportedTaxa;
+import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -300,27 +303,47 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             Collection<ProbeAnalysisResult> results = differentialExpressionAnalysisService.find( g, ee );
             for ( ProbeAnalysisResult r : results ) {
                 if ( r.getCorrectedPvalue() < threshold ) {
-                    DifferentialExpressionValueObject devo = new DifferentialExpressionValueObject();
-                    devo.setExpressionExperiment( eevo );
-                    devo.setExperimentalFactors( new ArrayList<ExperimentalFactorValueObject>() );
-                    Collection<ExperimentalFactor> efs = ee.getExperimentalDesign().getExperimentalFactors();
-                    for ( ExperimentalFactor ef : efs ) {
-                        ExperimentalFactorValueObject efvo = new ExperimentalFactorValueObject();
-                        efvo.setId( ef.getId() );
-                        efvo.setName( ef.getName() );
-                        efvo.setDescription( ef.getDescription() );
-                        Characteristic category = ef.getCategory();
-                        if ( category != null ) {
-                            efvo.setCategory( category.getCategory() );
-                            if ( category instanceof VocabCharacteristic )
-                                efvo.setCategoryUri( ( ( VocabCharacteristic ) category ).getCategoryUri() );
-                        }
-                        devo.getExperimentalFactors().add( efvo );
-                    }
-                    devo.setP( r.getCorrectedPvalue() );
-                    devos.add( devo );
+                DifferentialExpressionValueObject devo = new DifferentialExpressionValueObject();
+                  devo.setExpressionExperiment( eevo );
+                  devo.setProbe( ( (ProbeAnalysisResult) r).getProbe().getName() );
+                  devo.setExperimentalFactors( new ArrayList<ExperimentalFactorValueObject>() );
+                  devo.setP( r.getCorrectedPvalue() );
+                  devos.add( devo );
                 }
             }
+//            Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalysisService.findByInvestigation( ee );
+//            for ( DifferentialExpressionAnalysis analysis : analyses ) {
+//                for ( ExpressionAnalysisResultSet set : analysis.getResultSets() ) {
+//                    Collection<ExperimentalFactorValueObject> efvos = new ArrayList<ExperimentalFactorValueObject>();
+//                    Collection<ExperimentalFactor> efs = ee.getExperimentalDesign().getExperimentalFactors();
+//                    for ( ExperimentalFactor ef : set.getExperimentalFactor() ) {
+//                        ExperimentalFactorValueObject efvo = new ExperimentalFactorValueObject();
+//                        efvo.setId( ef.getId() );
+//                        efvo.setName( ef.getName() );
+//                        efvo.setDescription( ef.getDescription() );
+//                        Characteristic category = ef.getCategory();
+//                        if ( category != null ) {
+//                            efvo.setCategory( category.getCategory() );
+//                            if ( category instanceof VocabCharacteristic )
+//                                efvo.setCategoryUri( ( (VocabCharacteristic)category ).getCategoryUri() );
+//                        }
+//                        efvos.add( efvo );
+//                    }
+//                    Collection<DifferentialExpressionAnalysisResult> setResults = set.getResults();
+//                    for ( DifferentialExpressionAnalysisResult r : setResults ) {
+//                        if ( results.contains( r ) && r.getCorrectedPvalue() < threshold ) {
+//                            DifferentialExpressionValueObject devo = new DifferentialExpressionValueObject();
+//                            devo.setExpressionExperiment( eevo );
+//                            if ( r instanceof ProbeAnalysisResult ) {
+//                                devo.setProbe( ( (ProbeAnalysisResult) r).getProbe().getName() );
+//                            }
+//                            devo.setExperimentalFactors( efvos );
+//                            devo.setP( r.getCorrectedPvalue() );
+//                            devos.add( devo );
+//                        }
+//                    }
+//                }
+//            }
         }
         return devos;
     }
