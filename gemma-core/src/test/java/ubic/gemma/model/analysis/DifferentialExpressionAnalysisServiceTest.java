@@ -22,14 +22,14 @@ package ubic.gemma.model.analysis;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 
-import ubic.gemma.model.analysis.Analysis;
-import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.DifferentialExpressionAnalysisService;
-import ubic.gemma.model.analysis.Investigation;
+import ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -111,7 +111,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
     }
 
     /**
-     * 
+     *
      */
     @SuppressWarnings("unchecked")
     public void testFindByInvestigations() {
@@ -128,7 +128,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
     }
 
     /**
-     * 
+     *
      */
     public void testFindByInvestigation() {
 
@@ -144,7 +144,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
     }
 
     /**
-     * 
+     *
      */
     public void testFindByUniqueInvestigations() {
         Collection<Investigation> investigations = new ArrayList<Investigation>();
@@ -166,6 +166,80 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
 
         Analysis result = analysisService.findByName( "TestA" );
         assertEquals( "TestAnalysis3", result.getName() );
+    }
+
+    /**
+     * 
+     */
+    @SuppressWarnings("unchecked")
+    public void testGetFactorValues() {
+        String shortName = "GSE2018";
+        ExpressionExperiment ee = expressionExperimentService.findByShortName( shortName );
+        if ( ee == null ) {
+            log.error( "Could not find experiment for " + shortName + ".  Skipping test ..." );
+            return;
+        }
+        Collection<DifferentialExpressionAnalysis> analyses = analysisService.findByInvestigation( ee );
+        if ( analyses == null || !( analyses.iterator().hasNext() ) ) {
+            log.error( "Could not find analyses for " + shortName + ".  Skipping test." );
+            return;
+        }
+
+        DifferentialExpressionAnalysis a = analyses.iterator().next();
+        Collection<ExpressionAnalysisResultSet> resultSets = a.getResultSets();
+
+        assertEquals( 1, resultSets.size() );
+
+        ExpressionAnalysisResultSet rs = resultSets.iterator().next();
+
+        Collection<DifferentialExpressionAnalysisResult> results = rs.getResults();
+
+        DifferentialExpressionAnalysisResult r = results.iterator().next();
+
+        Collection<FactorValue> fvs = analysisService.getFactorValues( r );
+        log.debug( "Num factor values: " + fvs.size() );
+        assertEquals( 2, fvs.size() );
+
+    }
+
+    /**
+     * 
+     */
+    @SuppressWarnings("unchecked")
+    public void testGetMapOfFactorValues() {
+        String shortName = "GSE2018";
+        ExpressionExperiment ee = expressionExperimentService.findByShortName( shortName );
+        if ( ee == null ) {
+            log.error( "Could not find experiment for " + shortName + ".  Skipping test ..." );
+            return;
+        }
+        Collection<DifferentialExpressionAnalysis> analyses = analysisService.findByInvestigation( ee );
+        if ( analyses == null || !( analyses.iterator().hasNext() ) ) {
+            log.error( "Could not find analyses for " + shortName + ".  Skipping test." );
+            return;
+        }
+
+        DifferentialExpressionAnalysis a = analyses.iterator().next();
+        Collection<ExpressionAnalysisResultSet> resultSets = a.getResultSets();
+
+        assertEquals( 1, resultSets.size() );
+
+        ExpressionAnalysisResultSet rs = resultSets.iterator().next();
+
+        Collection<DifferentialExpressionAnalysisResult> results = rs.getResults();
+        Iterator<DifferentialExpressionAnalysisResult> iter = results.iterator();
+
+        Collection<DifferentialExpressionAnalysisResult> testResults = new HashSet<DifferentialExpressionAnalysisResult>();
+        int testResultsSize = 3;
+
+        for ( int i = 0; i < testResultsSize; i++ ) {
+            testResults.add( iter.next() );
+        }
+
+        Map<DifferentialExpressionAnalysisResult, Collection<FactorValue>> fvs = analysisService
+                .getFactorValues( testResults );
+        log.debug( "Num factor values: " + fvs.keySet().size() );
+        assertEquals( testResultsSize, fvs.size() );
     }
 
     /**
