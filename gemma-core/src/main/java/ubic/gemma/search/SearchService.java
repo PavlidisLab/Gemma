@@ -933,21 +933,40 @@ public class SearchService implements InitializingBean {
         String searchString = settings.getQuery();
         if ( StringUtils.isBlank( searchString ) ) return new HashSet<SearchResult>();
 
-        // replace * with % for inexact symbol search
+        // replace * at end with % for inexact symbol search
         String inexactString = searchString;
-        Pattern pattern = Pattern.compile( "\\*" );
+        Pattern pattern = Pattern.compile( "\\*$" );
         Matcher match = pattern.matcher( inexactString );
         inexactString = match.replaceAll( "%" );
+        // note that at this point, the inexactString might not have a wildcard.
+
+        // version that definitely has no wildcards
+        String exactString = inexactString.replaceAll( "%", "" );
+
+        // if the query is short, always do a wild card search. This gives better behavior in 'live search' situations.
+        if ( searchString.length() < 6 && !inexactString.endsWith( "%" ) ) {
+            inexactString = inexactString + "%";
+        }
 
         Collection<Gene> geneSet = new HashSet<Gene>();
-        geneSet.addAll( geneService.findByOfficialSymbolInexact( inexactString ) );
-        geneSet.addAll( geneService.findByAlias( inexactString ) );
+        if ( inexactString.endsWith( "%" ) ) {
+            geneSet.addAll( geneService.findByOfficialSymbolInexact( inexactString ) );
+        } else {
+            geneSet.addAll( geneService.findByOfficialSymbol( exactString ) );
+        }
 
-        geneSet.addAll( geneProductService.getGenesByName( inexactString ) );
-        geneSet.addAll( geneProductService.getGenesByNcbiId( inexactString ) );
+        /*
+         * TODO The rest we are doing by exact matches only. For aliases it would probably be good to do it like
+         * official symbols. For the other searches I think exact matches are the only thing that makes sense.
+         */
 
-        geneSet.addAll( bioSequenceService.getGenesByAccession( inexactString ) );
-        geneSet.addAll( bioSequenceService.getGenesByName( inexactString ) );
+        geneSet.addAll( geneService.findByAlias( exactString ) );
+
+        geneSet.addAll( geneProductService.getGenesByName( exactString ) );
+        geneSet.addAll( geneProductService.getGenesByNcbiId( exactString ) );
+
+        geneSet.addAll( bioSequenceService.getGenesByAccession( exactString ) );
+        geneSet.addAll( bioSequenceService.getGenesByName( exactString ) );
 
         watch.stop();
         if ( watch.getTime() > 1000 )
