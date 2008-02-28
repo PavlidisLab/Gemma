@@ -24,23 +24,19 @@ Ext.Gemma.CoexpressionDatasetGrid = function ( config ) {
 	
 	superConfig.ds = new Ext.data.GroupingStore( {
 		proxy : new Ext.data.MemoryProxy( [] ),
-		reader : new Ext.data.ListRangeReader( {id:"id"}, Ext.Gemma.CoexpressionDatasetGrid.getRecord() ),
-		groupField : 'id',
+		reader : new Ext.data.ListRangeReader( {}, Ext.Gemma.CoexpressionDatasetGrid.getRecord() ),
+		groupField : 'queryGene',
 		sortInfo : { field : 'coexpressionLinkCount', dir : 'DESC' }
 	} );
 	
 	superConfig.view = new Ext.grid.GroupingView( {
-		forceFit : true,
-		groupTextTpl : [ '<dt>{[ values.rs[0].shortName ]} {[ values.rs[0].name ]}</dt>',
-			'<dd>{[ values.rs[0].arrayDesignCount }] arrays; {[ values.rs[0].bioAssayCount }] assays ',
-			'<a href="/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id={text}"><img src="/Gemma/images/magnifier.png" height=10 width=10/></a>'
-		]
+		hideGroupedColumn : true
 	} );
 	
 	superConfig.cm = new Ext.grid.ColumnModel( [
 		{ id: 'shortName', header: "Dataset", dataIndex: "shortName" },
 		{ id: 'name', header: "Name", dataIndex: "name" },
-		{ id: 'queryGene', header: "Query Gene", dataIndex: "queryGene" },
+		{ id: 'queryGene', header: "Query Gene", dataIndex: "queryGene", hidden: true },
 		{ header: "Raw Links", dataIndex: "rawCoexpressionLinkCount" },
 		{ header: "Contributing Links", dataIndex: "coexpressionLinkCount" },
 		{ header: "Specific Probe", dataIndex: "probeSpecificForQueryGene" },
@@ -49,7 +45,7 @@ Ext.Gemma.CoexpressionDatasetGrid = function ( config ) {
 	] );
 	superConfig.cm.defaultSortable = true;
 	
-	superConfig.autoExpandColumn = 'queryGene';
+	superConfig.autoExpandColumn = 'name';
 
 	for ( property in config ) {
 		superConfig[property] = config[property];
@@ -123,19 +119,20 @@ Ext.extend( Ext.Gemma.CoexpressionDatasetGrid, Ext.Gemma.GemmaGridPanel, {
 			numDatasets == 1 ? " has" : "s have",
 			this.adjective ? " " + this.adjective : ""
 		) );
-		
+
+/*		
 		var shortNameCol = this.getColumnModel().getColumnById( 'shortName' );
 		var nameCol = this.getColumnModel().getColumnById( 'name' );
 		var queryCol = this.getColumnModel().getColumnById( 'queryGene' );
 		var arrayCol = this.getColumnModel().getColumnById( 'arrays' );
 		var assayCol = this.getColumnModel().getColumnById( 'assays' );
 		if ( numQueryGenes > 1 ) {
-			shortNameCol.hidden = true;
-			nameCol.hidden = true;
-			queryCol.hidden = false;
-			arrayCol.hidden = true;
-			assayCol.hidden = true;
-			this.getStore().groupField = "id";
+			shortNameCol.hidden = false;
+			nameCol.hidden = false;
+			queryCol.hidden = true;
+			arrayCol.hidden = false;
+			arrayCol.hidden = false;
+			this.getStore().groupField = "queryGene";
 		} else {
 			shortNameCol.hidden = false;
 			nameCol.hidden = false;
@@ -144,9 +141,10 @@ Ext.extend( Ext.Gemma.CoexpressionDatasetGrid, Ext.Gemma.GemmaGridPanel, {
 			arrayCol.hidden = false;
 			this.getStore().groupField = "";
 		}
+*/
 		
 		this.getStore().proxy.data = data;
-		this.refresh();
+		this.getStore().reload();
 		this.getView().refresh( true );
 	}
 	

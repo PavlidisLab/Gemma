@@ -89,7 +89,7 @@ Ext.Gemma.GeneChooserPanel = function ( config ) {
 				{ name: 'officialSymbol', type: 'string' },
 				{ name: 'officialName', type: 'string' }
 			],
-			sortInfo : { field: 'symbol', direction: 'ASC' }
+			sortInfo : { field: 'officialSymbol', direction: 'ASC' }
 		} ),
 		columns : [
 			{ header: 'Gene', dataIndex: 'officialSymbol', sortable: true },
@@ -123,7 +123,7 @@ Ext.Gemma.GeneChooserPanel = function ( config ) {
 		this.loadGenes( genes );
 	}
 	
-	this.getStore().on( "datachanged", function () {
+	this.getStore().on( "load", function () {
 		this.autoSizeColumns();
 		this.doLayout();
 	}, this );
@@ -155,7 +155,7 @@ Ext.extend( Ext.Gemma.GeneChooserPanel, Ext.grid.GridPanel, {
 				for ( var i=0; i<genes.length; ++i ) {
 					geneData.push( [
 						genes[i].id,
-						genes[i].taxon,
+						genes[i].taxon.scientificName,
 						genes[i].officialSymbol,
 						genes[i].officialName
 					] );
@@ -164,7 +164,7 @@ Ext.extend( Ext.Gemma.GeneChooserPanel, Ext.grid.GridPanel, {
 				if ( callback ) {
 					callback();
 				}
-			}
+			}.bind( this )
 		);
 	},
 	
