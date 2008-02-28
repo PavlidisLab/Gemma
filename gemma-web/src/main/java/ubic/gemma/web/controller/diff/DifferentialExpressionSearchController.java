@@ -39,16 +39,16 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.loader.genome.taxon.SupportedTaxa;
-import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.DifferentialExpressionAnalysisResultService;
 import ubic.gemma.model.analysis.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.analysis.ProbeAnalysisResult;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
@@ -67,6 +67,7 @@ import ubic.gemma.web.util.ConfigurationCookie;
  * @spring.property name = "formView" value="diffExpressionSearchForm"
  * @spring.property name = "successView" value="diffExpressionResultsByExperiment"
  * @spring.property name = "differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
+ * @spring.property name = "differentialExpressionAnalysisResultService" ref="differentialExpressionAnalysisResultService"
  * @spring.property name = "geneService" ref="geneService"
  * @spring.property name = "taxonService" ref="taxonService"
  */
@@ -75,6 +76,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     private Log log = LogFactory.getLog( this.getClass() );
 
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
+    
+    private DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService = null;
 
     private GeneService geneService = null;
 
@@ -300,13 +303,40 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             eevo.setShortName( ee.getShortName() );
             eevo.setName( ee.getName() );
             eevo.setExternalUri( GemmaLinkUtils.getExpressionExperimentUrl( eevo.getId() ) );
-            Collection<ProbeAnalysisResult> results = differentialExpressionAnalysisService.find( g, ee );
+
+            Collection<ProbeAnalysisResult> results = differentialExpressionAnalysisService.find( g, ee );            
+            Map <DifferentialExpressionAnalysisResult, Collection<FactorValue>> dearToFv = differentialExpressionAnalysisResultService.getFactorValues( results );
+            Map <DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> dearToEf = new HashMap<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>>();
+            for ( DifferentialExpressionAnalysisResult r : results ) {
+                dearToEf.put( r, new HashSet<ExperimentalFactor>() );
+                Collection<FactorValue> fvs = dearToFv.get( r );
+                if ( fvs != null ) {
+                    for ( FactorValue fv : fvs ) {
+                        dearToEf.get( r ).add( fv.getExperimentalFactor() );
+                    }
+                }
+            }
+
             for ( ProbeAnalysisResult r : results ) {
                 if ( r.getCorrectedPvalue() < threshold ) {
                 DifferentialExpressionValueObject devo = new DifferentialExpressionValueObject();
                   devo.setExpressionExperiment( eevo );
                   devo.setProbe( ( (ProbeAnalysisResult) r).getProbe().getName() );
-                  devo.setExperimentalFactors( new ArrayList<ExperimentalFactorValueObject>() );
+                  devo.setExperimentalFactors( new HashSet<ExperimentalFactorValueObject>() );
+                  Collection<ExperimentalFactor> efs = dearToEf.get( r );
+                  for ( ExperimentalFactor ef : dearToEf.get( r ) ) {
+                      ExperimentalFactorValueObject efvo = new ExperimentalFactorValueObject();
+                      efvo.setId( ef.getId() );
+                      efvo.setName( ef.getName() );
+                      efvo.setDescription( ef.getDescription() );
+                      Characteristic category = ef.getCategory();
+                      if ( category != null ) {
+                          efvo.setCategory( category.getCategory() );
+                          if ( category instanceof VocabCharacteristic )
+                              efvo.setCategoryUri( ( (VocabCharacteristic)category ).getCategoryUri() );
+                      }
+                      devo.getExperimentalFactors().add( efvo );
+                  }
                   devo.setP( r.getCorrectedPvalue() );
                   devos.add( devo );
                 }
@@ -354,6 +384,14 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     public void setDifferentialExpressionAnalysisService(
             DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
         this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
+    }
+
+    /**
+     * @param differentialExpressionAnalysisResultService
+     */
+    public void setDifferentialExpressionAnalysisResultService(
+            DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService ) {
+        this.differentialExpressionAnalysisResultService = differentialExpressionAnalysisResultService;
     }
 
     /**
