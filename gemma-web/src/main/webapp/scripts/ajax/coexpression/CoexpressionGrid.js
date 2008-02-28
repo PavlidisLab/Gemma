@@ -185,7 +185,7 @@ Ext.Gemma.CoexpressionGrid.getBitImageStyler = function() {
 				b = bits[i] > 0 ? "20" : b;
 				s = s + b;
 			}
-			s = s + '" usemap="eeMap" /></span>';
+			s = s + '" usemap="#eeMap" /></span>';
 			return s;
 		};
 	}

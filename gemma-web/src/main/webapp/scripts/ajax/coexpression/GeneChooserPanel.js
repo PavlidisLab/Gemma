@@ -131,7 +131,7 @@ Ext.Gemma.GeneChooserPanel = function ( config ) {
 
 /* instance methods...
  */
-Ext.extend( Ext.Gemma.GeneChooserPanel, Ext.grid.GridPanel, {
+Ext.extend( Ext.Gemma.GeneChooserPanel, Ext.Gemma.GemmaGridPanel, {
 
 	autoSizeColumns: function() {
 	    for (var i = 0; i < this.colModel.getColumnCount(); i++) {

@@ -7,7 +7,7 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 	/* establish default config options...
 	 */
 	var superConfig = {
-		autoWidth : true,
+		width : 420,
 		autoHeight : true,
 		frame : true,
 		stateful : true,
@@ -29,6 +29,7 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 	this.queryGenesOnly = queryGenesOnly;
 	
 	var geneChooserPanel = new Ext.Gemma.GeneChooserPanel( {
+		width : 400,
 		showTaxon : true,
 		bbar : [ queryGenesOnly, new Ext.Toolbar.Spacer(), new Ext.Toolbar.TextItem( queryGenesOnly.fieldLabel ) ]
 	} );

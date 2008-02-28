@@ -111,7 +111,8 @@ Ext.Gemma.CoexpressionSummaryGrid = function ( config ) {
 	 */
 	var superConfig = {
 		editable : false,
-		title : 'Search Summary'
+		title : 'Search Summary',
+		width : 250
 	};
 	
 	var fields = [
