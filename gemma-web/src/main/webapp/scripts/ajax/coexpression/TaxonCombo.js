@@ -64,9 +64,7 @@ Ext.extend( Ext.Gemma.TaxonCombo, Ext.form.ComboBox, {
 	initComponent : function() {
         Ext.Gemma.TaxonCombo.superclass.initComponent.call(this);
         
-        this.addEvents(
-            'taxonchanged'
-        );
+        this.addEvents( 'taxonchanged' );
     },
 	
 	onSelect : function ( record, index ) {

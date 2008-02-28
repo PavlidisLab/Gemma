@@ -36,8 +36,8 @@ Ext.Gemma.GeneChooserPanel = function ( config ) {
 		disabled : true,
 		handler : function() {
 			var gene = geneCombo.getGene();
-			var constructor = Ext.Gemma.GeneCombo.getRecord();
-			var record = new constructor( gene );
+			var Constructor = Ext.Gemma.GeneCombo.getRecord();
+			var record = new Constructor( gene );
 			thisGrid.getStore().add( [ record ] );
 			geneCombo.reset();
 			addButton.disable();

@@ -47,7 +47,7 @@ Ext.Gemma.DifferentialExpressionGrid = function ( config ) {
 		{ id: 'ee', header: "Expression Experiment", dataIndex: "expressionExperiment", renderer: Ext.Gemma.DifferentialExpressionGrid.getEEStyler() },
 		{ id: 'probe', header: "Probe", dataIndex: "probe" },
 		{ id: 'efs', header: "Experimental Factors", dataIndex: "experimentalFactors", renderer: Ext.Gemma.DifferentialExpressionGrid.getEFStyler(), sortable: false },
-		{ id: 'p', header: "Significance (FDR)", dataIndex: "p", renderer: function ( p ) { return p.toFixed(6); } },
+		{ id: 'p', header: "Significance (FDR)", dataIndex: "p", renderer: function ( p ) { return p.toFixed(6); } }
 	] );
 	superConfig.cm.defaultSortable = true;
 	
@@ -70,7 +70,7 @@ Ext.Gemma.DifferentialExpressionGrid = function ( config ) {
 Ext.Gemma.DifferentialExpressionGrid.getRecord = function() {
 	if ( Ext.Gemma.DifferentialExpressionGrid.record === undefined ) {
 		Ext.Gemma.DifferentialExpressionGrid.record = Ext.data.Record.create( [
-			{ name:"expressionExperiment", sortType: function( ee ) { return ee.shortName } },
+			{ name:"expressionExperiment", sortType: function( ee ) { return ee.shortName; } },
 			{ name:"probe", type:"string" },
 			{ name:"experimentalFactors" },
 			{ name:"p", type:"float" }

@@ -106,7 +106,7 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 		defaults : {
 			labelStyle : 'white-space: nowrap'
 		},
-		labelWidth : 150,
+		labelWidth : 150
 	} );
 	this.analysisFs = analysisFs;
 	analysisFs.add( stringencyField );
@@ -198,7 +198,7 @@ Ext.extend( Ext.Gemma.CoexpressionSearchForm, Ext.FormPanel, {
 	getCoexpressionSearchCommandFromQuery : function ( query ) {
 		var param = Ext.urlDecode( query );
 		var eeQuery = param.eeq || "";
-		var ees; if ( param.ees ) { ees = param.ees.split( ',' ) }
+		var ees; if ( param.ees ) { ees = param.ees.split( ',' ); }
 		
 		var csc = {
 			geneIds : param.g ? param.g.split( ',' ) : [],
@@ -261,7 +261,7 @@ Ext.extend( Ext.Gemma.CoexpressionSearchForm, Ext.FormPanel, {
 			csc = this.getCoexpressionSearchCommand();
 		}
 		var queryStart = document.URL.indexOf( "?" );
-		var url = queryStart > -1 ? document.URL.substr( 0, queryStart ) : document.URL
+		var url = queryStart > -1 ? document.URL.substr( 0, queryStart ) : document.URL;
 		url += String.format( "?g={0}&s={1}", csc.geneIds.join( "," ), csc.stringency );
 		if ( csc.eeIds ) {
 			url += String.format( "&ees={0}", csc.eeIds.join( "," ) );
@@ -275,8 +275,8 @@ Ext.extend( Ext.Gemma.CoexpressionSearchForm, Ext.FormPanel, {
 		if ( ! csc ) {
 			csc = this.getCoexpressionSearchCommand();
 		}
-		var msg = this.validateSearch( csc )
-		if ( msg.length == 0 ) {
+		var msg = this.validateSearch( csc );
+		if ( msg.length === 0 ) {
 			if ( this.fireEvent('beforesearch', this, csc ) !== false ) {
 				this.loadMask.show();
 				ExtCoexpressionSearchController.doSearch( csc, this.returnFromSearch.bind( this ) );
@@ -360,7 +360,7 @@ Ext.extend( Ext.Gemma.DatasetSearchField, Ext.form.TextField, {
 		Ext.Gemma.DatasetSearchField.superclass.initEvents.call(this);
 		
 		var queryTask = new Ext.util.DelayedTask( this.findDatasets, this );
-		this.el.on( "keyup", function( e ) { queryTask.delay( 500 ) } );
+		this.el.on( "keyup", function( e ) { queryTask.delay( 500 ); } );
 	},
 	
 	findDatasets : function () {
@@ -423,8 +423,8 @@ Ext.Gemma.AnalysisCombo = function ( config ) {
 	var options = { params : [] };
 	if ( this.showCustomOption ) {
 		options.callback = function () {
-			var constructor = Ext.Gemma.AnalysisCombo.getRecord();
-			var record = new constructor( {
+			var Constructor = Ext.Gemma.AnalysisCombo.getRecord();
+			var record = new Constructor( {
 				id : -1,
 				name : "Custom analysis",
 				description : "Select specific datasets to search against"
@@ -523,7 +523,7 @@ Ext.extend( Ext.Gemma.AnalysisCombo, Ext.form.ComboBox, {
 	
 	storeLoaded : function() {
 		this.isStoreLoaded = true;
-		if ( this.delayedSetValue !== undefined && this.delayedSetValue != "" ) {
+		if ( this.delayedSetValue !== undefined && this.delayedSetValue !== "" ) {
 			this.setValue( this.delayedSetValue );
 		} else {
 			this.reset(); // clear the loading message...
@@ -654,7 +654,7 @@ Ext.Gemma.CoexpressionSearchFormLite = function ( config ) {
 	
 	/* apply user-defined config options and call the superclass constructor...
 	 */
-	for ( property in config ) {
+	for ( var property in config ) {
 		superConfig[property] = config[property];
 	}
 	Ext.Gemma.CoexpressionSearchFormLite.superclass.constructor.call( this, superConfig );

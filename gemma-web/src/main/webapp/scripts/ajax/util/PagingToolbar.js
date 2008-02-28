@@ -19,7 +19,7 @@ Ext.Gemma.PagingToolbar = function ( config ) {
 
 	Ext.Gemma.PagingToolbar.superclass.constructor.call( this, config );
 
-}
+};
 
 Ext.extend( Ext.Gemma.PagingToolbar, Ext.PagingToolbar, {
 
@@ -38,8 +38,9 @@ Ext.extend( Ext.Gemma.PagingToolbar, Ext.PagingToolbar, {
 		/* if we defined options.parm.start above, undefine it so we don't
 		 * change behaviour elsewhere...
 		 */
-		if ( definedStartParameter )
+		if ( definedStartParameter ) {
 			delete o.params[this.paramNames.start];
+		}
 	}
 
 } );

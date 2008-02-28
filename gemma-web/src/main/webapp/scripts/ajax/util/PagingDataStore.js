@@ -30,8 +30,9 @@ Ext.extend( Ext.Gemma.PagingDataStore, Ext.data.Store, {
     getRange : function ( start, end ) {
 	   	var windowStart = this.currentStartIndex + start;
     	var windowEnd = this.currentStartIndex + end;
-		if ( windowEnd > this.currentStartIndex + this.pageSize - 1 )
+		if ( windowEnd > this.currentStartIndex + this.pageSize - 1 ) {
    			windowEnd = this.currentStartIndex + this.pageSize - 1;
+   		}
 		return Ext.Gemma.PagingDataStore.superclass.getRange.call( this, windowStart, windowEnd );
     },
     
@@ -49,10 +50,12 @@ Ext.extend( Ext.Gemma.PagingDataStore, Ext.data.Store, {
 		options = options || {};
 		if ( options.params !== undefined && ( options.params.start !== undefined || options.params.limit !== undefined ) ) {
 			if ( this.fireEvent( "beforeload", this, options ) !== false ) {
-				if ( options.params.start !== undefined ) 
+				if ( options.params.start !== undefined ) {
 					this.currentStartIndex = options.params.start;
-				if ( options.params.limit !== undefined )
+				}
+				if ( options.params.limit !== undefined ) {
 					this.pageSize = options.params.limit;
+				}
 				var total = this.getTotalCount();
 				var records = this.getVisibleRecords();
 				this.fireEvent( "datachanged", this );
