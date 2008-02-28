@@ -1,0 +1,4 @@
+Gemma 1.0 Release notes
+
+This is the initial "official" release of Gemma.
+

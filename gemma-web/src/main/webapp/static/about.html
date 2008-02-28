@@ -1,125 +1,139 @@
 <html>
 	<head>
-		<title>About Gemma</title>
-		<content tag="heading">
-		About Gemma
-		</content>
+		<title>Gemma overview</title>
 	</head>
 	<body>
+		<div style="width: 650px">
+			<h1>
+				Gemma overview
+			</h1>
 
-		<h2>
-			Downloads
-		</h2>
-		<p>
-			Please visit the
-			<a href="downloads.html">download page</a>.
-		</p>
-		<h2>
-			Credits
-		</h2>
-
-
-		<h3>
-			Project lead
-		</h3>
-		<p>
-			Paul Pavlidis, Ph.d. (
-			<a style="font-size: 0.9em;" href="http://www.bioinformatics.ubc.ca/pavlidis">www</a>). Visit the
-			<a href="http://www.bioinformatics.ubc.ca/pavlidis/lab">group home page</a> to read more about the lab's interests.
-		</p>
+			<p class="emphasized">
+				Gemma is an open-source database and software system for the meta-analysis of gene expression data. Gemma contains
+				data from hundreds of
+				<a href="/Gemma/expressionExperiment/showAllExpressionExperiments.html">public microarray data sets</a>, referencing
+				hundreds of
+				<a href="/Gemma/bibRef/showAllEeBibRefs.html">published papers</a>.
+			</p>
 
 
-		<h3>
-			Developers
-		</h3>
+			<p class="emphasized">
+				The goals of Gemma are to:
+			</p>
 
-		<ul class="glassList">
+			<ul class="plainList">
+				<li>
+					Aggregate public gene expression studies for the purposes of reanalysis. Our current focus is on human, mouse and
+					rat nervous system data.
+				</li>
+				<li>
+					Perform analyses on the expression data and store the results for rapid and easy access.
+				</li>
+				<li>
+					Reanalyze probe sequences to allow consistent cross-platform comparisons.
+				</li>
+				<li>
+					To serve as a framework for the development and evaluation of novel algorithms for expression analysis and
+					meta-analysis.
+				</li>
+				<li>
+					Support a range of analytical approaches including but not limited to coexpression and differential expression.
+				</li>
+				<li>
+					Support a variety of expression technologies, including Affymetrix, Illumina and other oligonucleotide arrays, one
+					channel and ratiometric cDNA arrays, and (planned) SAGE or other sequence-based techniques.
+				<li>
+					Provide consistent annotation/descriptions of data sets to enhance usability of the data.
+				</li>
+				<li>
+					Provide external sites with processed data, web services, software and other means of including Gemma tools and
+					data in other systems.
+				</li>
+				<li>
+					Allow users to upload expression data for inclusion in Gemma, either "privately" for their own analyses or to be
+					made public. (This is a feature under development!)
+				</li>
+				<li>
+					Provide a software system that can be installed and used by others.
+				</li>
+			</ul>
 
-			<li>
-				Kelsey Hamer - Lead programmer
-			</li>
-			<li>
-				Luke Mccarthy - Programmer
-			</li>
-			<li>
-				Suzanne Lane - Data curator
-			</li>
-			<li>
-				Kiran Keshav - Developer (2005) and consultant (current)
-			</li>
-		</ul>
+			<p class="emphasized">
+				To these ends, Gemma consists of:
+			</p>
 
-		<p>
-			With contributions from Meeta Mistry, Leon French, Xiang Wan, Jesse Gillis and other members of the Pavlidis lab.
-		</p>
+			<ul class="plainList">
+				<li>
+					A database and software framework for storing and accessing expression data with a focus on
+					<em>analysis</em>. The software is released under the Apache 2.0 license, which is liberal enough to allow
+					commercialization, modification, and reuse by anybody.
+				</li>
+				<li>
+					A set of administrative and curation tools for loading, tracking, processing, annotating, analysis and quality
+					control of expression data.
+				</li>
+				<li>
+					A sequence analysis pipeline for probe sequences.
+				</li>
+				<li>
+					Implementations of algorithms for analysis of expression data, in some cases using integration with "R"
+				</li>
+			</ul>
 
-		<h3>
-			Alumni
-		</h3>
-		<ul class="glassList">
-			<li>
-				Joseph "JR" Santos - Developer
-			</li>
-		</ul>
-		<p>
-			Other contributers to early stages of Gemma include David Quigley, Anshu Sinha, Gozde Cozen, Raymond Lim.
-		</p>
+			<h2>
+				The main functionality of Gemma
+			</h2>
 
-		<p>
-			Gemma's precursor is
-			<a href="/tmm">TMM</a>, which was developed by Homin Lee, Jon Sajdak, Jie Qin and Amy Hsu.
-		</p>
+			<p>
+				For users of the web site, Gemma has two main functions, which are supported by various searching and browsing
+				functionality.
+			</p>
 
-		<h3>
-			Funding
-		</h3>
+			<h3>
+				Coexpression meta-analysis
+			</h3>
+			<p>
+				The entry point for coexpression analyis is
+				<a href="/Gemma/searchCoexpressionExt.html">here</a>. The methods used for this "recurring coexpression" analysis
+				are essentially as described in
+				<a href="http://www.ncbi.nlm.nih.gov/pubmed/15173114">Lee et al, 2004</a>. Briefly, each data set is preprocessed
+				and analyzed to identify pairs of genes that are strongly coexpressed. The on-line analysis searches these results
+				for pairs of genes that are coexpressed in multiple data sets, starting from a gene you choose.
+			</p>
 
-		<p>
-			Development of Gemma is supported by a grant from the National Institutes of Health, the Michael Smith Foundation for
-			Health Research
-		</p>
+			<h3>
+				Differential expression analysis access
+			</h3>
+			<p>
+				We are performing differential expression analysis on most of the data sets in Gemma. Currently these results are
+				available from a
+				<a href="/Gemma/diff/diffExpressionSearch.html">search form</a> or integrated into the
+				<a href="/Gemma/searchCoexpressionExt.html" coexpression analysis</a> results.
+			</p>
+			<p>
+				Data sets are considered for differential expression analysis if they have a factorial design with up to two levels,
+				and appropriate replication and block-completeness to allow an anlysis to proceed. Data sets are analyzed using
+				t-tests, one-way ANOVA, or two-way ANOVA with or without interaction, as appropriate to the design.
+			</p>
+			<h2>
+				For more information
+			</h2>
 
-
-		<h3>
-			Design
-		</h3>
-
-		<p>
-			The Gemma logo and the overall graphic appearance of the site was created by
-			<a href="http://www.antisensestudios.com">Antisense Studios</a>.
-		</p>
-
-
-		<h2>
-			Terms of use
-		</h2>
-
-		<p>
-			While Gemma is in beta, use at your own risk!
-		</p>
-
-		<h2>
-			License
-		</h2>
-
-		<p>
-			Gemma source code is available under the open-source Apache 2.0 license
-		</p>
-
-		<h2>
-			For more information...
-		</h2>
-
-		<ul>
-			<li>
-				<a href="help.html">Help pages</a>
-			</li>
-			<li>
-				<a href="faq.html">FAQ</a>
-			</li>
-			<li>
-				<a href="tech.html">Technical documentation</a>
-			</li>
-		</ul>
+			<ul class="plainList">
+				<li>
+					<a href="credits.html">Credits</a>
+				</li>
+				<li>
+					<a href="help.html">Help pages</a>
+				</li>
+				<li>
+					<a href="http://bioinformatics.ubc.ca/Gemma/resources/downloads.html">Downloads</a> of software and data.
+				</li>
+				<li>
+					<a href="http://bioinformatics.ubc.ca/Gemma/resources">Resources for developers</a>, including technical
+					information about Gemma.
+				</li>
+			</ul>
+		</div>
 	</body>
 </html>

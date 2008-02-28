@@ -90,8 +90,8 @@ div#branding p {
 }
 
 h2 {
-	font-size: 1.4em;
-	line-height: 1.5em;
+	font-size: 1.6em;
+	line-height: 1.4em;
 	margin: 0 0 0.5em 0;
 	padding: 0;
 }
@@ -187,6 +187,17 @@ ul.glassList {
 	list-style: url(../../images/aquadot.jpg) disc outside;
 	vertical-align: top;
 	line-height: 1.5em;
+}
+
+p.emphasized {
+	padding:0;
+}
+
+ul.plainList {
+	margin-left:40px;
+	margin-bottom:15px;
+	list-style: disc;
+	line-height: 1.7em;
 }
 
 dl {

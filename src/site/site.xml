@@ -15,12 +15,12 @@
 			<item name="Pavlidis lab" href="http://bioinformatics.ubc.ca/pavlidis/lab" />
 		</links>
 		<menu name="Gemma" collapse="false">
-			<item name="Home" href="/" />
-			<item name="Web application" href="http://bioinformatics.ubc.ca/Gemma/" />			
+			<item name="Home" href="/Gemma" />
+			<item name="Resource home" href="http://bioinformatics.ubc.ca/Gemma/resources" />
 			<item name="Downloads" href="/downloads.html" />
 			<item name="baseCode" href="http://bioinformatics.ubc.ca/pavlidis/lab/basecode/" />
 			<item name="FAQ" href="/faq.html" />
-			<item name="Acknowledgements" href="/thanks.html" />
+			<item name="Credits" href="/thanks.html" />
 		</menu>
 		<menu name="Documentation" collapse="false">
 			<item name="Installing Gemma" href="/doc/installing.html" />

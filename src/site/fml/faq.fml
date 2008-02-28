@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<faqs title="Gemma FAQ">
+	<part id="about">
+		<faq>
+			<question>How do you pronounce 'Gemma'?</question>
+			<answer>The 'G' is soft, as in 'general'.</answer>
+			</faq>
+			<faq>
+			<question>Isn't expression data very noisy?</question>
+			<answer>
+				Yes, sometimes. This is a motivation for performing meta-analyses: to look for results that are in some
+				sense consistent across laboratories.
+			</answer>
+			</faq><faq>
+			<question>Isn't data quality a problem?</question>
+			<answer>
+				Yes; see the question about noisy data. We have been working hard to ensure that data sets we use for
+				analysis are of high quality, or to "clean up" those that have problems. The most common problem we have
+				observed is the presence of outlier samples.
+			</answer>
+		</faq>
+	</part>
+</faqs>
