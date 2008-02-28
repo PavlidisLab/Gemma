@@ -40,9 +40,7 @@ import ubic.gemma.model.expression.experiment.FactorValueImpl;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
- * Goes through the biosequences for array designs in the database and removes duplicates.
- * 
- * @author pavlidis
+ * @author luke
  * @version $Id$
  */
 public class InitializeCharacteristicEvidenceCodes extends AbstractSpringAwareCLI {
