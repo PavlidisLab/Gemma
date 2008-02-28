@@ -22,6 +22,9 @@
  */
 package ubic.gemma.model.association.coexpression;
 
+import java.util.Collection;
+import java.util.Map;
+
 import ubic.gemma.model.analysis.Analysis;
 
 /**
@@ -153,5 +156,29 @@ public class Gene2GeneCoexpressionServiceImpl extends
         }
 
         return true;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionServiceBase#handleFindCoexpressionRelationships(java.util.Collection,
+     *      ubic.gemma.model.analysis.Analysis, int)
+     */
+    @Override
+    protected Map handleFindCoexpressionRelationships( Collection genes, Analysis analysis, int stringency )
+            throws Exception {
+        return this.getGene2GeneCoexpressionDao().findCoexpressionRelationships( genes, analysis, stringency );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionServiceBase#handleFindInterCoexpressionRelationship(java.util.Collection,
+     *      ubic.gemma.model.analysis.Analysis, int)
+     */
+    @Override
+    protected Collection handleFindInterCoexpressionRelationship( Collection genes, Analysis analysis, int stringency )
+            throws Exception {
+        return this.getGene2GeneCoexpressionDao().findInterCoexpressionRelationships( genes, analysis, stringency );
     }
 }

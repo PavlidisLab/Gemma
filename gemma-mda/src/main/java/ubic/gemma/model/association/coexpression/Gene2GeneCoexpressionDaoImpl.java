@@ -19,7 +19,9 @@
 package ubic.gemma.model.association.coexpression;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.genome.Gene;
@@ -57,6 +59,69 @@ public class Gene2GeneCoexpressionDaoImpl extends
                 new String[] { "analysis", "gene", "stringency" }, new Object[] { analysis, gene, stringency } ) );
         results.addAll( this.getHibernateTemplate().findByNamedParam( queryStringSecondVector,
                 new String[] { "analysis", "gene", "stringency" }, new Object[] { analysis, gene, stringency } ) );
+
+        return results;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected java.util.Map /* <Gene, Collection<Gene2GeneCoexpression>> */handleFindCoexpressionRelationships(
+            Collection genes, Analysis analysis, int stringency ) {
+
+        if ( genes.size() == 0 ) return new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
+
+        String g2gClassName = getClassName( ( Gene ) genes.iterator().next() );
+
+        final String queryStringFirstVector = "select distinct g2g from "
+                + g2gClassName
+                + " as g2g where g2g.sourceAnalysis = :analysis and g2g.firstGene in (:genes) and g2g.numDataSets >= :stringency";
+
+        final String queryStringSecondVector = "select distinct g2g from "
+                + g2gClassName
+                + " as g2g where g2g.sourceAnalysis = :analysis and g2g.secondGene in (:genes) and g2g.numDataSets >= :stringency";
+
+        Collection<Gene2GeneCoexpression> r = new HashSet<Gene2GeneCoexpression>();
+
+        r.addAll( this.getHibernateTemplate().findByNamedParam( queryStringFirstVector,
+                new String[] { "analysis", "genes", "stringency" }, new Object[] { analysis, genes, stringency } ) );
+        r.addAll( this.getHibernateTemplate().findByNamedParam( queryStringSecondVector,
+                new String[] { "analysis", "genes", "stringency" }, new Object[] { analysis, genes, stringency } ) );
+
+        Map<Gene, Collection<Gene2GeneCoexpression>> result = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
+        for ( Gene g : ( Collection<Gene> ) genes ) {
+            result.put( g, new HashSet<Gene2GeneCoexpression>() );
+        }
+
+        for ( Gene2GeneCoexpression g2g : r ) {
+            Gene firstGene = g2g.getFirstGene();
+            Gene secondGene = g2g.getSecondGene();
+
+            if ( genes.contains( firstGene ) ) {
+                result.get( firstGene ).add( g2g );
+            } else if ( genes.contains( secondGene ) ) {
+                result.get( secondGene ).add( g2g );
+            }
+
+        }
+
+        return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected java.util.Collection handleFindInterCoexpressionRelationships( Collection genes, Analysis analysis,
+            int stringency ) {
+
+        if ( genes.size() == 0 ) return new HashSet<Gene2GeneCoexpression>();
+
+        String g2gClassName = getClassName( ( Gene ) genes.iterator().next() );
+
+        final String queryString = "select distinct g2g from "
+                + g2gClassName
+                + " as g2g where g2g.sourceAnalysis = :analysis and g2g.firstGene in (:genes) and g2g.secondGene in (:genes) and g2g.numDataSets >= :stringency";
+
+        Collection<Gene2GeneCoexpression> results = this.getHibernateTemplate().findByNamedParam( queryString,
+                new String[] { "analysis", "genes", "stringency" }, new Object[] { analysis, genes, stringency } );
 
         return results;
     }
