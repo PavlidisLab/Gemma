@@ -20,6 +20,7 @@
 			<item name="Downloads" href="/downloads.html" />
 			<item name="baseCode" href="http://bioinformatics.ubc.ca/pavlidis/lab/basecode/" />
 			<item name="FAQ" href="/faq.html" />
+		<!-- 	<item name="Wiki" href="/http://sites.google.com/a/bioinformatics.ubc.ca/gemma/Home" /> -->
 			<item name="Credits" href="/thanks.html" />
 		</menu>
 		<menu name="Documentation" collapse="false">

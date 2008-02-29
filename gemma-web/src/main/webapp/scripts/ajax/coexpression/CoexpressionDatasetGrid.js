@@ -26,7 +26,7 @@ Ext.Gemma.CoexpressionDatasetGrid = function ( config ) {
 		proxy : new Ext.data.MemoryProxy( [] ),
 		reader : new Ext.data.ListRangeReader( {}, Ext.Gemma.CoexpressionDatasetGrid.getRecord() ),
 		groupField : 'queryGene',
-		sortInfo : { field : 'coexpressionLinkCount', dir : 'DESC' }
+		sortInfo : { field : 'coexpressionLinkCount', dir : 'ASC' } /* note: DESC yields the wrong results. */
 	} );
 	
 	superConfig.view = new Ext.grid.GroupingView( {

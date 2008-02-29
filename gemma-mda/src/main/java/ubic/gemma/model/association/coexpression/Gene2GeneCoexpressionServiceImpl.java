@@ -177,7 +177,7 @@ public class Gene2GeneCoexpressionServiceImpl extends
      *      ubic.gemma.model.analysis.Analysis, int)
      */
     @Override
-    protected Collection handleFindInterCoexpressionRelationship( Collection genes, Analysis analysis, int stringency )
+    protected Map handleFindInterCoexpressionRelationship( Collection genes, Analysis analysis, int stringency )
             throws Exception {
         return this.getGene2GeneCoexpressionDao().findInterCoexpressionRelationships( genes, analysis, stringency );
     }

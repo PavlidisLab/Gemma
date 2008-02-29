@@ -63,6 +63,12 @@ public class Gene2GeneCoexpressionDaoImpl extends
         return results;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDaoBase#handleFindCoexpressionRelationships(java.util.Collection,
+     *      ubic.gemma.model.analysis.Analysis, int)
+     */
     @SuppressWarnings("unchecked")
     @Override
     protected java.util.Map /* <Gene, Collection<Gene2GeneCoexpression>> */handleFindCoexpressionRelationships(
@@ -70,13 +76,14 @@ public class Gene2GeneCoexpressionDaoImpl extends
 
         if ( genes.size() == 0 ) return new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
 
+        // we assume the genes are from the same taxon.
         String g2gClassName = getClassName( ( Gene ) genes.iterator().next() );
 
-        final String queryStringFirstVector = "select distinct g2g from "
+        final String queryStringFirstVector = "select g2g from "
                 + g2gClassName
                 + " as g2g where g2g.sourceAnalysis = :analysis and g2g.firstGene in (:genes) and g2g.numDataSets >= :stringency";
 
-        final String queryStringSecondVector = "select distinct g2g from "
+        final String queryStringSecondVector = "select g2g from "
                 + g2gClassName
                 + " as g2g where g2g.sourceAnalysis = :analysis and g2g.secondGene in (:genes) and g2g.numDataSets >= :stringency";
 
@@ -95,35 +102,50 @@ public class Gene2GeneCoexpressionDaoImpl extends
         for ( Gene2GeneCoexpression g2g : r ) {
             Gene firstGene = g2g.getFirstGene();
             Gene secondGene = g2g.getSecondGene();
-
             if ( genes.contains( firstGene ) ) {
                 result.get( firstGene ).add( g2g );
             } else if ( genes.contains( secondGene ) ) {
                 result.get( secondGene ).add( g2g );
             }
-
         }
-
         return result;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDaoBase#handleFindInterCoexpressionRelationships(java.util.Collection,
+     *      ubic.gemma.model.analysis.Analysis, int)
+     */
     @SuppressWarnings("unchecked")
     @Override
-    protected java.util.Collection handleFindInterCoexpressionRelationships( Collection genes, Analysis analysis,
-            int stringency ) {
+    protected java.util.Map /* <Gene, Collection<Gene2GeneCoexpression> */handleFindInterCoexpressionRelationships(
+            Collection genes, Analysis analysis, int stringency ) {
 
-        if ( genes.size() == 0 ) return new HashSet<Gene2GeneCoexpression>();
+        if ( genes.size() == 0 ) return new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
 
+        // we assume the genes are from the same taxon.
         String g2gClassName = getClassName( ( Gene ) genes.iterator().next() );
 
-        final String queryString = "select distinct g2g from "
+        final String queryString = "select g2g from "
                 + g2gClassName
                 + " as g2g where g2g.sourceAnalysis = :analysis and g2g.firstGene in (:genes) and g2g.secondGene in (:genes) and g2g.numDataSets >= :stringency";
 
-        Collection<Gene2GeneCoexpression> results = this.getHibernateTemplate().findByNamedParam( queryString,
+        Collection<Gene2GeneCoexpression> r = this.getHibernateTemplate().findByNamedParam( queryString,
                 new String[] { "analysis", "genes", "stringency" }, new Object[] { analysis, genes, stringency } );
 
-        return results;
+        Map<Gene, Collection<Gene2GeneCoexpression>> result = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
+        for ( Gene g : ( Collection<Gene> ) genes ) {
+            result.put( g, new HashSet<Gene2GeneCoexpression>() );
+        }
+        for ( Gene2GeneCoexpression g2g : r ) {
+            // all the genes are guaranteed to be in the query list. But we want them listed both ways so we count them
+            // up right later.
+            result.get( g2g.getFirstGene() ).add( g2g );
+            result.get( g2g.getSecondGene() ).add( g2g );
+        }
+        return result;
+
     }
 
     /**

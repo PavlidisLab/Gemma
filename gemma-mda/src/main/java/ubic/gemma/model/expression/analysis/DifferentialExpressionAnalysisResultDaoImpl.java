@@ -72,6 +72,9 @@ public class DifferentialExpressionAnalysisResultDaoImpl extends
     protected Map handleGetExperimentalFactors( Collection differentialExpressionAnalysisResults ) throws Exception {
 
         Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> factorsByResult = new HashMap<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>>();
+        if ( differentialExpressionAnalysisResults.size() == 0 ) {
+            return factorsByResult;
+        }
 
         final String queryString = "select ef, r from ExpressionAnalysisResultSetImpl rs"
                 + " inner join rs.results r inner join rs.experimentalFactor ef where r in (:differentialExpressionAnalysisResults)";
@@ -86,21 +89,15 @@ public class DifferentialExpressionAnalysisResultDaoImpl extends
         for ( Object o : qr ) {
             Object[] ar = ( Object[] ) o;
             ExperimentalFactor f = ( ExperimentalFactor ) ar[0];
-            DifferentialExpressionAnalysisResult e = ( DifferentialExpressionAnalysisResult ) ar[1];
+            DifferentialExpressionAnalysisResult res = ( DifferentialExpressionAnalysisResult ) ar[1];
 
-            Collection<ExperimentalFactor> factors = null;
-            Collection<DifferentialExpressionAnalysisResult> keys = factorsByResult.keySet();
-            if ( keys.contains( e ) ) {
-                factors = factorsByResult.get( e );
-                factors.add( f );
-                factorsByResult.put( e, factors );
-            } else {
-                factors = new HashSet<ExperimentalFactor>();
-                factors.add( f );
-                factorsByResult.put( e, factors );
+            if ( !factorsByResult.containsKey( res ) ) {
+                factorsByResult.put( res, new HashSet<ExperimentalFactor>() );
             }
 
-            log.info( e );
+            factorsByResult.get( res ).add( f );
+
+            if ( log.isDebugEnabled() ) log.debug( res );
         }
 
         return factorsByResult;

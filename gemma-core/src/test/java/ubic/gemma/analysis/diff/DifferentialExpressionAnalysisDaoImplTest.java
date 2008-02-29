@@ -56,7 +56,8 @@ public class DifferentialExpressionAnalysisDaoImplTest extends BaseSpringContext
         }
 
         for ( Gene g : genes ) {
-            Collection<ExpressionExperiment> experiments = differentialExpressionAnalysisDao.find( g );
+            Collection<ExpressionExperiment> experiments = differentialExpressionAnalysisDao
+                    .findExperimentsWithAnalyses( g );
             assertNotNull( experiments );
             log.info( experiments.size() );
         }
@@ -76,7 +77,8 @@ public class DifferentialExpressionAnalysisDaoImplTest extends BaseSpringContext
         }
 
         for ( Gene g : genes ) {
-            Collection<ExpressionExperiment> experiments = differentialExpressionAnalysisDao.find( g );
+            Collection<ExpressionExperiment> experiments = differentialExpressionAnalysisDao
+                    .findExperimentsWithAnalyses( g );
             log.info( "num experiments for " + g.getOfficialSymbol() + ": " + experiments.size() );
             for ( ExpressionExperiment e : experiments ) {
                 Collection<DifferentialExpressionAnalysisResult> results = differentialExpressionAnalysisDao

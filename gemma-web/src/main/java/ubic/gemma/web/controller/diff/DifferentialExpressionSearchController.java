@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2006-2008 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -101,6 +101,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      * @param request
      * @return Map
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Map referenceData( HttpServletRequest request ) {
         log.debug( "referenceData" );
@@ -244,7 +245,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> resultsByExperiment = new HashMap<ExpressionExperiment, Collection<ProbeAnalysisResult>>();
 
-        Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService.find( gene );
+        Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService
+                .findExperimentsWithAnalyses( gene );
         if ( experimentsAnalyzed == null || experimentsAnalyzed.isEmpty() ) {
             message = "No experiments analyzed with differential evidence for gene: " + officialSymbol;
             errors.addError( new ObjectError( command.toString(), null, null, message ) );
@@ -252,18 +254,9 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         }
 
         for ( ExpressionExperiment e : experimentsAnalyzed ) {
-            Collection<ProbeAnalysisResult> results = differentialExpressionAnalysisService.find( gene, e );
-
-            Collection<ProbeAnalysisResult> validResults = new HashSet<ProbeAnalysisResult>();
-            for ( ProbeAnalysisResult r : results ) {
-                double qval = r.getCorrectedPvalue();
-                log.debug( qval );
-                if ( qval < threshold ) {
-                    validResults.add( r );
-                }
-            }
-            if ( !validResults.isEmpty() ) {
-                resultsByExperiment.put( e, validResults );
+            Collection<ProbeAnalysisResult> results = differentialExpressionAnalysisService.find( gene, e, threshold );
+            if ( !results.isEmpty() ) {
+                resultsByExperiment.put( e, results );
             }
         }
 
@@ -296,7 +289,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         Collection<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
         Gene g = geneService.load( geneId );
         if ( g == null ) return devos;
-        Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService.find( g );
+        Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService
+                .findExperimentsWithAnalyses( g );
         for ( ExpressionExperiment ee : experimentsAnalyzed ) {
             ExpressionExperimentValueObject eevo = new ExpressionExperimentValueObject();
             eevo.setId( ee.getId() );
@@ -304,84 +298,40 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             eevo.setName( ee.getName() );
             eevo.setExternalUri( GemmaLinkUtils.getExpressionExperimentUrl( eevo.getId() ) );
 
-            Collection<ProbeAnalysisResult> results = differentialExpressionAnalysisService.find( g, ee );
-
-            // TODO remove me
-            // Map <DifferentialExpressionAnalysisResult, Collection<FactorValue>> dearToFv =
-            // differentialExpressionAnalysisResultService.getFactorValues( results );
-            // Map <DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> dearToEf = new
-            // HashMap<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>>();
-            // for ( DifferentialExpressionAnalysisResult r : results ) {
-            // dearToEf.put( r, new HashSet<ExperimentalFactor>() );
-            // Collection<FactorValue> fvs = dearToFv.get( r );
-            // if ( fvs != null ) {
-            // for ( FactorValue fv : fvs ) {
-            // dearToEf.get( r ).add( fv.getExperimentalFactor() );
-            // }
-            // }
-            // }
+            Collection<ProbeAnalysisResult> results = differentialExpressionAnalysisService.find( g, ee, threshold );
 
             Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> dearToEf = differentialExpressionAnalysisResultService
                     .getExperimentalFactors( results );
 
             for ( ProbeAnalysisResult r : results ) {
-                if ( r.getCorrectedPvalue() < threshold ) {
-                    DifferentialExpressionValueObject devo = new DifferentialExpressionValueObject();
-                    devo.setExpressionExperiment( eevo );
-                    devo.setProbe( ( ( ProbeAnalysisResult ) r ).getProbe().getName() );
-                    devo.setExperimentalFactors( new HashSet<ExperimentalFactorValueObject>() );
-                    Collection<ExperimentalFactor> efs = dearToEf.get( r );
-                    for ( ExperimentalFactor ef : dearToEf.get( r ) ) {
-                        ExperimentalFactorValueObject efvo = new ExperimentalFactorValueObject();
-                        efvo.setId( ef.getId() );
-                        efvo.setName( ef.getName() );
-                        efvo.setDescription( ef.getDescription() );
-                        Characteristic category = ef.getCategory();
-                        if ( category != null ) {
-                            efvo.setCategory( category.getCategory() );
-                            if ( category instanceof VocabCharacteristic )
-                                efvo.setCategoryUri( ( ( VocabCharacteristic ) category ).getCategoryUri() );
-                        }
-                        devo.getExperimentalFactors().add( efvo );
-                    }
-                    devo.setP( r.getCorrectedPvalue() );
-                    devos.add( devo );
+                DifferentialExpressionValueObject devo = new DifferentialExpressionValueObject();
+                devo.setExpressionExperiment( eevo );
+                devo.setProbe( r.getProbe().getName() );
+                devo.setExperimentalFactors( new HashSet<ExperimentalFactorValueObject>() );
+                Collection<ExperimentalFactor> efs = dearToEf.get( r );
+                if ( efs == null ) {
+                    // This should not happen any more, but just in case.
+                    log.warn( "No experimentalfactor(s) for ProbeAnalysisResult: " + r.getId() );
+                    continue;
                 }
+                for ( ExperimentalFactor ef : efs ) {
+                    ExperimentalFactorValueObject efvo = new ExperimentalFactorValueObject();
+                    efvo.setId( ef.getId() );
+                    efvo.setName( ef.getName() );
+                    efvo.setDescription( ef.getDescription() );
+                    Characteristic category = ef.getCategory();
+                    if ( category != null ) {
+                        efvo.setCategory( category.getCategory() );
+                        if ( category instanceof VocabCharacteristic )
+                            efvo.setCategoryUri( ( ( VocabCharacteristic ) category ).getCategoryUri() );
+                    }
+                    devo.getExperimentalFactors().add( efvo );
+                }
+                devo.setP( r.getCorrectedPvalue() );
+                devos.add( devo );
+
             }
-            // Collection<DifferentialExpressionAnalysis> analyses =
-            // differentialExpressionAnalysisService.findByInvestigation( ee );
-            // for ( DifferentialExpressionAnalysis analysis : analyses ) {
-            // for ( ExpressionAnalysisResultSet set : analysis.getResultSets() ) {
-            // Collection<ExperimentalFactorValueObject> efvos = new ArrayList<ExperimentalFactorValueObject>();
-            // Collection<ExperimentalFactor> efs = ee.getExperimentalDesign().getExperimentalFactors();
-            // for ( ExperimentalFactor ef : set.getExperimentalFactor() ) {
-            // ExperimentalFactorValueObject efvo = new ExperimentalFactorValueObject();
-            // efvo.setId( ef.getId() );
-            // efvo.setName( ef.getName() );
-            // efvo.setDescription( ef.getDescription() );
-            // Characteristic category = ef.getCategory();
-            // if ( category != null ) {
-            // efvo.setCategory( category.getCategory() );
-            // if ( category instanceof VocabCharacteristic )
-            // efvo.setCategoryUri( ( (VocabCharacteristic)category ).getCategoryUri() );
-            // }
-            // efvos.add( efvo );
-            // }
-            // Collection<DifferentialExpressionAnalysisResult> setResults = set.getResults();
-            // for ( DifferentialExpressionAnalysisResult r : setResults ) {
-            // if ( results.contains( r ) && r.getCorrectedPvalue() < threshold ) {
-            // DifferentialExpressionValueObject devo = new DifferentialExpressionValueObject();
-            // devo.setExpressionExperiment( eevo );
-            // if ( r instanceof ProbeAnalysisResult ) {
-            // devo.setProbe( ( (ProbeAnalysisResult) r).getProbe().getName() );
-            // }
-            // devo.setExperimentalFactors( efvos );
-            // devo.setP( r.getCorrectedPvalue() );
-            // devos.add( devo );
-            // }
-            // }
-            // }
-            // }
+
         }
         return devos;
     }

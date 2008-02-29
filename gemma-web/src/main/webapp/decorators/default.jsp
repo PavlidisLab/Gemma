@@ -38,7 +38,7 @@
 	String helpuri = request.getRequestURI();
 	if (!helpuri.contains("_help") ){
 	%>
-	<div id="help" style="font-size:smaller;float:right;">	<a href="
+	<div id="help" style="font-size:smaller;float:right;">	<a target="_blank" href="
 
 
 	<%
