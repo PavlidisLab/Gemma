@@ -36,7 +36,7 @@
 <% 
 	//Adds the page help link if not a help page already
 	String helpuri = request.getRequestURI();
-	if (!helpuri.contains("_help") ){
+	if ((!helpuri.toLowerCase().contains("_help")) && (!helpuri.toLowerCase().contains("static") )){
 	%>
 	<div id="help" style="font-size:smaller;float:right;">	<a target="_blank" href="
 
