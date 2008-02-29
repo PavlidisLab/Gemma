@@ -102,19 +102,20 @@ Ext.onReady( function() {
 	} );
 	
 	var savedCharacteristic;
+	var copyHandler = function() {
+		var selected = Ext.Gemma.CharacteristicBrowser.grid.getSelectionModel().getSelections();
+		for ( var i=0; i<selected.length; ++i ) {
+			var record = selected[i];
+			savedCharacteristic = record.data;
+			break;
+		}
+		pasteButton.enable();
+	};
 	var copyButton = new Ext.Toolbar.Button( {
 		text : "copy",
 		tooltip : "Copy values from the selected characteristic",
 		disabled : true,
-		handler : function() {
-			var selected = Ext.Gemma.CharacteristicBrowser.grid.getSelectionModel().getSelections();
-			for ( var i=0; i<selected.length; ++i ) {
-				var record = selected[i];
-				savedCharacteristic = record.data;
-				break;
-			}
-			pasteButton.enable();
-		}
+		handler : copyHandler
 	} );
 	Ext.Gemma.CharacteristicBrowser.grid.getSelectionModel().on( "selectionchange", function( model ) {
 		var selected = model.getSelections();
@@ -126,21 +127,32 @@ Ext.onReady( function() {
 		}
 	} );
 	
+	var pasteHandler = function() {
+		var selected = Ext.Gemma.CharacteristicBrowser.grid.getSelectionModel().getSelections();
+		for ( var i=0; i<selected.length; ++i ) {
+			var record = selected[i];
+			record.set( "classUri", savedCharacteristic.classUri );
+			record.set( "className", savedCharacteristic.className );
+			record.set( "termUri", savedCharacteristic.termUri );
+			record.set( "termName", savedCharacteristic.termName );
+		}
+		Ext.Gemma.CharacteristicBrowser.grid.getView().refresh();
+		saveButton.enable();
+	};
 	var pasteButton = new Ext.Toolbar.Button( {
 		text : "paste",
 		tooltip : "Paste copied values onto the selected characteristics",
 		disabled : true,
-		handler : function() {
-			var selected = Ext.Gemma.CharacteristicBrowser.grid.getSelectionModel().getSelections();
-			for ( var i=0; i<selected.length; ++i ) {
-				var record = selected[i];
-				record.set( "classUri", savedCharacteristic.classUri );
-				record.set( "className", savedCharacteristic.className );
-				record.set( "termUri", savedCharacteristic.termUri );
-				record.set( "termName", savedCharacteristic.termName );
+		handler : pasteHandler
+	} );
+	
+	Ext.Gemma.CharacteristicBrowser.grid.on( "keypress", function( e ) {
+		if ( e.ctrlKey ) {
+			if ( e.getCharCode() == 99 ) { // 'c'
+				copyHandler();
+			} else if ( e.getCharCode() == 118 ) { // 'v'
+				pasteHandler();
 			}
-			Ext.Gemma.CharacteristicBrowser.grid.getView().refresh();
-			saveButton.enable();
 		}
 	} );
 
