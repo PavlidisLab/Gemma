@@ -245,7 +245,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             return processErrors( request, response, command, errors, null );
         }
 
-        Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> resultsByExperiment = new HashMap<ExpressionExperiment, Collection<ProbeAnalysisResult>>();
+        Collection<DifferentialExpressionValueObject> devos = new HashSet<DifferentialExpressionValueObject>();
 
         Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService
                 .findExperimentsWithAnalyses( gene );
@@ -256,13 +256,31 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         }
 
         for ( ExpressionExperiment e : experimentsAnalyzed ) {
-            Collection<ProbeAnalysisResult> results = differentialExpressionAnalysisService.find( gene, e, threshold );
-            if ( !results.isEmpty() ) {
-                resultsByExperiment.put( e, results );
+            Collection<ProbeAnalysisResult> results = differentialExpressionAnalysisService.find( gene, e );
+
+            Collection<ProbeAnalysisResult> validResults = new HashSet<ProbeAnalysisResult>();
+            for ( ProbeAnalysisResult r : results ) {
+                double qval = r.getCorrectedPvalue();
+                log.debug( qval );
+                if ( qval < threshold ) {
+                    validResults.add( r );
+
+                    DifferentialExpressionValueObject devo = new DifferentialExpressionValueObject();
+
+                    ExpressionExperimentValueObject eevo = new ExpressionExperimentValueObject();
+                    eevo.setId( e.getId() );
+                    eevo.setName( e.getName() );
+                    eevo.setShortName( e.getShortName() );
+                    devo.setExpressionExperiment( eevo );
+
+                    devo.setP( r.getCorrectedPvalue() );
+                    devo.setProbe( r.getProbe().getName() );
+                }
             }
+
         }
 
-        if ( resultsByExperiment.isEmpty() ) {
+        if ( devos.isEmpty() ) {
             message = "No experiments found for gene " + officialSymbol + " that meet the threshold " + threshold;
             errors.addError( new ObjectError( command.toString(), null, null, message ) );
             return processErrors( request, response, command, errors, null );
@@ -270,13 +288,13 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         ModelAndView mav = new ModelAndView( this.getSuccessView() );
 
-        mav.addObject( "gene", gene );
+        mav.addObject( "differentialExpressionValueObjects", devos );
+
+        mav.addObject( "numDiffResults", devos.size() );
 
         mav.addObject( "threshold", threshold );
 
-        mav.addObject( "diffResults", resultsByExperiment );
-
-        mav.addObject( "numDiffResults", resultsByExperiment.size() );
+        mav.addObject( "geneOfficialSymbol", officialSymbol );
 
         return mav;
     }
