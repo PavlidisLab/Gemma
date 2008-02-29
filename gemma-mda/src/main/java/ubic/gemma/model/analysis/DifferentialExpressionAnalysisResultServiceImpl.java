@@ -38,23 +38,24 @@ public class DifferentialExpressionAnalysisResultServiceImpl extends
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisResultServiceBase#handleGetFactorValues(ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult)
+     * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisResultServiceBase#handleGetExperimentalFactors(ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult)
      */
     @Override
-    protected Collection handleGetFactorValues(
+    protected Collection handleGetExperimentalFactors(
             DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult ) throws Exception {
-        return this.getDifferentialExpressionAnalysisResultDao().getFactorValues( differentialExpressionAnalysisResult );
+        return this.getDifferentialExpressionAnalysisResultDao().getExperimentalFactors(
+                differentialExpressionAnalysisResult );
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisResultServiceBase#handleGetFactorValues(java.util.Collection)
+     * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisResultServiceBase#handleGetExperimentalFactors(java.util.Collection)
      */
     @Override
-    protected Map handleGetFactorValues( Collection differentialExpressionAnalysisResults ) throws Exception {
-        return this.getDifferentialExpressionAnalysisResultDao()
-                .getFactorValues( differentialExpressionAnalysisResults );
+    protected Map handleGetExperimentalFactors( Collection differentialExpressionAnalysisResults ) throws Exception {
+        return this.getDifferentialExpressionAnalysisResultDao().getExperimentalFactors(
+                differentialExpressionAnalysisResults );
     }
 
 }

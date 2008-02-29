@@ -25,9 +25,9 @@ import java.util.Map;
 
 import ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -59,10 +59,10 @@ public class DifferentialExpressionAnalysisResultServiceTest extends BaseSpringC
     }
 
     /**
-     * Tests getting the collection of factor values for the result.
+     * Tests getting the collection of factors for the result.
      */
     @SuppressWarnings("unchecked")
-    public void testGetFactorValues() {
+    public void testGetExperimentalFactors() {
         String shortName = "GSE2018";
         ExpressionExperiment ee = expressionExperimentService.findByShortName( shortName );
         if ( ee == null ) {
@@ -86,9 +86,9 @@ public class DifferentialExpressionAnalysisResultServiceTest extends BaseSpringC
 
         DifferentialExpressionAnalysisResult r = results.iterator().next();
 
-        Collection<FactorValue> fvs = analysisResultService.getFactorValues( r );
-        log.debug( "Num factor values: " + fvs.size() );
-        assertEquals( 2, fvs.size() );
+        Collection<ExperimentalFactor> factors = analysisResultService.getExperimentalFactors( r );
+        log.info( "Num factors: " + factors.size() );
+        assertEquals( 1, factors.size() );
 
     }
 
@@ -96,16 +96,16 @@ public class DifferentialExpressionAnalysisResultServiceTest extends BaseSpringC
      * Tests getting the map of factors keyed by results
      */
     @SuppressWarnings("unchecked")
-    public void testGetMapOfFactorValues() {
+    public void testGetMapOfExperimentalFactors() {
         String shortName = "GSE2018";
         ExpressionExperiment ee = expressionExperimentService.findByShortName( shortName );
         if ( ee == null ) {
-            log.error( "Could not find experiment for " + shortName + ".  Skipping test ..." );
+            log.error( "Could not find experiment for " + shortName + ". Skipping test ..." );
             return;
         }
         Collection<DifferentialExpressionAnalysis> analyses = analysisService.findByInvestigation( ee );
         if ( analyses == null || !( analyses.iterator().hasNext() ) ) {
-            log.error( "Could not find analyses for " + shortName + ".  Skipping test ..." );
+            log.error( "Could not find analyses for " + shortName + ". Skipping test ..." );
             return;
         }
 
@@ -126,22 +126,22 @@ public class DifferentialExpressionAnalysisResultServiceTest extends BaseSpringC
             testResults.add( iter.next() );
         }
 
-        Map<DifferentialExpressionAnalysisResult, Collection<FactorValue>> fvs = analysisResultService
-                .getFactorValues( testResults );
+        Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> factorsByResultMap = analysisResultService
+                .getExperimentalFactors( testResults );
 
-        Collection<DifferentialExpressionAnalysisResult> diffResultKeys = fvs.keySet();
+        Collection<DifferentialExpressionAnalysisResult> diffResultKeys = factorsByResultMap.keySet();
 
         for ( DifferentialExpressionAnalysisResult d : diffResultKeys ) {
 
-            Collection<FactorValue> factorValues = fvs.get( d );
+            Collection<ExperimentalFactor> factors = factorsByResultMap.get( d );
 
-            log.debug( "result key: " + d.getPvalue() + " has " + factorValues.size() );
+            log.info( "result key: " + d.getPvalue() + " has " + factors.size() );
 
-            for ( FactorValue f : factorValues ) {
-                log.debug( "value in map :" + f.getId() );
+            for ( ExperimentalFactor f : factors ) {
+                log.info( "value in map: " + f.getId() );
             }
         }
-        assertEquals( testResultsSize, fvs.size() );
+        assertEquals( testResultsSize, factorsByResultMap.size() );
     }
 
 }

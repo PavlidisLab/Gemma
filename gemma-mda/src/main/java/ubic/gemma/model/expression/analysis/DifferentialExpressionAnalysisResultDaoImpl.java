@@ -31,7 +31,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
 /**
  * @author keshav
@@ -46,14 +46,14 @@ public class DifferentialExpressionAnalysisResultDaoImpl extends
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResultDaoBase#handleGetFactorValues(ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult)
+     * @see ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResultDaoBase#handleGetExperimentalFactors(ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult)
      */
     @Override
-    protected Collection handleGetFactorValues(
+    protected Collection handleGetExperimentalFactors(
             DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult ) throws Exception {
 
-        final String queryString = "select f from ExpressionAnalysisResultSetImpl rs"
-                + " inner join rs.results r inner join rs.experimentalFactor ef inner join ef.factorValues f where r=:differentialExpressionAnalysisResult";
+        final String queryString = "select ef from ExpressionAnalysisResultSetImpl rs"
+                + " inner join rs.results r inner join rs.experimentalFactor ef where r=:differentialExpressionAnalysisResult";
 
         String[] paramNames = { "differentialExpressionAnalysisResult" };
         Object[] objectValues = { differentialExpressionAnalysisResult };
@@ -65,46 +65,45 @@ public class DifferentialExpressionAnalysisResultDaoImpl extends
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResultDaoBase#handleGetFactorValues(java.util.Collection)
+     * @see ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResultDaoBase#handleGetExperimentalFactors(java.util.Collection)
      */
     @Override
     @SuppressWarnings("unchecked")
-    protected Map handleGetFactorValues( Collection differentialExpressionAnalysisResults ) throws Exception {
+    protected Map handleGetExperimentalFactors( Collection differentialExpressionAnalysisResults ) throws Exception {
 
-        Map<DifferentialExpressionAnalysisResult, Collection<FactorValue>> factorValuesByResult = new HashMap<DifferentialExpressionAnalysisResult, Collection<FactorValue>>();
+        Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> factorsByResult = new HashMap<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>>();
 
-        final String queryString = "select f, r from ExpressionAnalysisResultSetImpl rs"
-                + " inner join rs.results r inner join rs.experimentalFactor ef inner join ef.factorValues f where r in (:differentialExpressionAnalysisResults)";
+        final String queryString = "select ef, r from ExpressionAnalysisResultSetImpl rs"
+                + " inner join rs.results r inner join rs.experimentalFactor ef where r in (:differentialExpressionAnalysisResults)";
 
         String[] paramNames = { "differentialExpressionAnalysisResults" };
         Object[] objectValues = { differentialExpressionAnalysisResults };
 
         List qr = this.getHibernateTemplate().findByNamedParam( queryString, paramNames, objectValues );
 
-        if ( qr == null || qr.isEmpty() ) return factorValuesByResult;
+        if ( qr == null || qr.isEmpty() ) return factorsByResult;
 
         for ( Object o : qr ) {
             Object[] ar = ( Object[] ) o;
-            FactorValue f = ( FactorValue ) ar[0];
+            ExperimentalFactor f = ( ExperimentalFactor ) ar[0];
             DifferentialExpressionAnalysisResult e = ( DifferentialExpressionAnalysisResult ) ar[1];
 
-            Collection<FactorValue> fvs = null;
-            Collection<DifferentialExpressionAnalysisResult> keys = factorValuesByResult.keySet();
+            Collection<ExperimentalFactor> factors = null;
+            Collection<DifferentialExpressionAnalysisResult> keys = factorsByResult.keySet();
             if ( keys.contains( e ) ) {
-                fvs = factorValuesByResult.get( e );
-                fvs.add( f );
-                factorValuesByResult.put( e, fvs );
+                factors = factorsByResult.get( e );
+                factors.add( f );
+                factorsByResult.put( e, factors );
             } else {
-                fvs = new HashSet<FactorValue>();
-                fvs.add( f );
-                factorValuesByResult.put( e, fvs );
+                factors = new HashSet<ExperimentalFactor>();
+                factors.add( f );
+                factorsByResult.put( e, factors );
             }
 
             log.info( e );
         }
 
-        return factorValuesByResult;
+        return factorsByResult;
 
     }
-
 }
