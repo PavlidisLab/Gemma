@@ -206,6 +206,9 @@ Ext.extend( Ext.Gemma.CoexpressionSearchForm, Ext.FormPanel, {
 			stringency : param.s || Ext.Gemma.CoexpressionSearchForm.MIN_STRINGENCY,
 			eeQuery : param.eeq
 		};
+		if ( param.q ) {
+			csc.queryGenesOnly = true;
+		}
 		if ( param.ees ) {
 			csc.eeIds = param.ees.split( ',' );
 			csc.cannedAnalysisId = -1;
@@ -264,6 +267,9 @@ Ext.extend( Ext.Gemma.CoexpressionSearchForm, Ext.FormPanel, {
 		var queryStart = document.URL.indexOf( "?" );
 		var url = queryStart > -1 ? document.URL.substr( 0, queryStart ) : document.URL;
 		url += String.format( "?g={0}&s={1}", csc.geneIds.join( "," ), csc.stringency );
+		if ( csc.queryGenesOnly ) {
+			url += "&q";
+		}
 		if ( csc.eeIds ) {
 			url += String.format( "&ees={0}", csc.eeIds.join( "," ) );
 		} else {

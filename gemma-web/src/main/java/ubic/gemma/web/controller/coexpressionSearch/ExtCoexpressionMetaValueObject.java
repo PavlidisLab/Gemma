@@ -104,4 +104,13 @@ public class ExtCoexpressionMetaValueObject {
         this.summary = summary;
     }
     
+    public String toString() {
+        StringBuilder buf = new StringBuilder();
+        for ( ExtCoexpressionValueObject ecvo : getKnownGeneResults() ) {
+            buf.append( ecvo.toString() );
+            buf.append( "\n" );
+        }
+        return buf.toString();
+    }
+    
 }

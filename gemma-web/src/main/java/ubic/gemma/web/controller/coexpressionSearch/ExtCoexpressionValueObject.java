@@ -18,6 +18,8 @@
  */
 package ubic.gemma.web.controller.coexpressionSearch;
 
+import org.apache.commons.lang.StringUtils;
+
 import ubic.gemma.model.genome.Gene;
 
 /**
@@ -152,4 +154,28 @@ public class ExtCoexpressionValueObject {
         this.supportingDatasetVector = supportingDatasetVector;
     }
     
+    public String toString() {
+        StringBuilder buf = new StringBuilder();
+        if ( getPositiveLinks() > 0 ) {
+            buf.append( getSupportRow( getPositiveLinks(), "+" ) );
+        }
+        if ( getNegativeLinks() > 0 ) {
+            if ( buf.length() > 0 )
+                buf.append( "\n" );
+            buf.append( getSupportRow( getNegativeLinks(), "-" ) );
+        }
+        return buf.toString();
+    }    
+    
+    private String getSupportRow( Integer links, String sign ) {
+        String[] fields = new String[] {
+            queryGene.getOfficialSymbol(),
+            foundGene.getOfficialSymbol(),
+            links.toString(),
+            sign
+        };
+        return StringUtils.join( fields, "\t" );
+    }
+    
 }
+ 

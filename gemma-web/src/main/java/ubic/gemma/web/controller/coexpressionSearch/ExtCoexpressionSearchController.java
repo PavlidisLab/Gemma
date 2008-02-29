@@ -59,6 +59,7 @@ import ubic.gemma.search.SearchSettings;
 import ubic.gemma.util.CountingMap;
 import ubic.gemma.util.GemmaLinkUtils;
 import ubic.gemma.web.controller.BaseFormController;
+import ubic.gemma.web.view.TextView;
 
 /**
  * @author luke
@@ -80,6 +81,8 @@ public class ExtCoexpressionSearchController extends BaseFormController {
      */
     private static final int NUM_GENES_TO_DETAIL = 100;
 
+    private static final int DEFAULT_STRINGENCY = 2;
+    
     private static Log log = LogFactory.getLog( ExtCoexpressionSearchController.class.getName() );
 
     private GeneService geneService = null;
@@ -94,7 +97,62 @@ public class ExtCoexpressionSearchController extends BaseFormController {
     @Override
     protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
             throws Exception {
-        return new ModelAndView( this.getFormView() );
+        
+        if ( request.getParameter( "export" ) != null ) {
+            
+            Collection<Long> geneIds = extractIds( request.getParameter( "g" ) );
+            Collection<Gene> genes = geneService.loadMultiple( geneIds );
+
+            boolean queryGenesOnly = request.getParameter( "q" ) != null;
+            int stringency = DEFAULT_STRINGENCY;
+            try {
+                stringency = Integer.parseInt( request.getParameter( "s" ) );
+            } catch ( Exception e ) {
+                log.warn( "invalid stringency; using default " + stringency );
+            }
+            
+            Long cannedAnalysisId = null;
+            String cannedAnalysisString = request.getParameter( "a" );
+            if ( cannedAnalysisString != null ) {
+                try {
+                    cannedAnalysisId = Long.parseLong( cannedAnalysisString );
+                } catch ( NumberFormatException e ) {
+                    log.warn( "invalid canned analysis id" );
+                }
+            }
+            
+            ExtCoexpressionMetaValueObject result;
+            if ( cannedAnalysisId != null ) {
+                result = getCannedAnalysisResults( cannedAnalysisId, genes, stringency, queryGenesOnly );
+            } else {
+                Collection<Long> eeIds = extractIds( request.getParameter( "ee" ) );
+                result = getCustomAnalysisResults( eeIds, genes, stringency, queryGenesOnly );
+            }
+            
+            ModelAndView mav = new ModelAndView( new TextView() );
+            String output = result.toString();
+            mav.addObject( "text", output.length() > 0 ? output : "no results" );
+            return mav;
+            
+        } else {
+            
+            return new ModelAndView( this.getFormView() );
+            
+        }
+    }
+    
+    private Collection<Long> extractIds( String idString ) {
+        Collection<Long> ids = new ArrayList<Long>();
+        if ( idString != null ) {
+            for ( String s : idString.split( "," ) ) {
+                try {
+                    ids.add( Long.parseLong( s ) );
+                } catch ( NumberFormatException e ) {
+                    log.warn( "invalid id " + s );
+                }
+            }
+        }
+        return ids;
     }
     
     public ExtCoexpressionMetaValueObject getEmptyResult() {
