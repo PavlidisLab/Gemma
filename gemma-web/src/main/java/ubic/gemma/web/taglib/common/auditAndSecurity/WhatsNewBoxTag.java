@@ -63,34 +63,42 @@ public class WhatsNewBoxTag extends TagSupport {
     }
 
     public int doStartTag() throws JspException {
-      
 
-        StringBuilder buf = new StringBuilder();
-        buf.append( "<h2>What's new in Gemma in the " );
-        Date date = whatsNew.getDate();
-        Date now = Calendar.getInstance().getTime();
-        long millis = now.getTime() - date.getTime();
-        double days = millis / ( double ) DateUtils.MILLIS_PER_DAY;
-        if ( days > 0.9 && days < 2.0 ) {
-            buf.append( " last day" );
-        } else if ( days < 8 ) {
-            buf.append( " last week" );
-        } else {
-            NumberFormat nf = NumberFormat.getIntegerInstance();
-            buf.append( " last " + nf.format( days ) + " days" );
-        }
-        buf.append( "</h2>" );
-        buf.append( "<p>" );
-        
-        int numNew = whatsNew.getNewObjects().size();
         Collection<ExpressionExperiment> newExpressionExperiments = whatsNew.getNewExpressionExperiments();
         Collection<ArrayDesign> newArrayDesigns = whatsNew.getNewArrayDesigns();
-        
-        if ( numNew > 0 ) {
-           
+        Collection<ExpressionExperiment> updatedExpressionExperiments = whatsNew.getUpdatedExpressionExperiments();
+        Collection<ArrayDesign> updatedArrayDesigns = whatsNew.getUpdatedArrayDesigns();
+        // don't show things that are "new" as "updated" too (if they were updated after being loaded)
+        updatedExpressionExperiments.removeAll( newExpressionExperiments );
+        updatedArrayDesigns.removeAll( newArrayDesigns );
+
+        StringBuilder buf = new StringBuilder();
+
+        if ( newArrayDesigns.size() == 0 && newExpressionExperiments.size() == 0
+                && updatedExpressionExperiments.size() == 0 && updatedArrayDesigns.size() == 0 ) {
+            buf.append( "<input type='hidden' name='nothing new' />" );
+        } else {
+            buf.append( "<h3>New or updated in Gemma in the" );
+            Date date = whatsNew.getDate();
+            Date now = Calendar.getInstance().getTime();
+            long millis = now.getTime() - date.getTime();
+            double days = millis / ( double ) DateUtils.MILLIS_PER_DAY;
+            if ( days > 0.9 && days < 2.0 ) {
+                buf.append( " last day" );
+            } else if ( days < 8 ) {
+                buf.append( " last week" );
+            } else {
+                NumberFormat nf = NumberFormat.getIntegerInstance();
+                buf.append( " last " + nf.format( days ) + " days" );
+            }
+            buf.append( "</h3>" );
+            buf.append( "<p>" );
+
             int numEEs = newExpressionExperiments.size();
-          
             int numADs = newArrayDesigns.size();
+            int updatedAds = updatedArrayDesigns.size();
+            int updatedEEs = updatedExpressionExperiments.size();
+
             if ( numEEs > 0 ) {
                 buf.append( "<a href=\"/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=" );
                 for ( ExpressionExperiment ee : newExpressionExperiments ) {
@@ -105,39 +113,31 @@ public class WhatsNewBoxTag extends TagSupport {
                 }
                 buf.append( "\">" + numADs + " new array design" + ( numADs > 1 ? "s" : "" ) + "</a>.<br />" );
             }
-        } else {
-            buf.append( "Nothing new<br />" );
-        }
 
-        Collection<ExpressionExperiment> updatedExpressionExperiments = whatsNew.getUpdatedExpressionExperiments();
-        Collection<ArrayDesign> updatedArrayDesigns = whatsNew.getUpdatedArrayDesigns();
-        // don't show things that are "new" as "updated" too.
-        updatedExpressionExperiments.removeAll( newExpressionExperiments );
-        updatedArrayDesigns.removeAll(newArrayDesigns);
-        if ( newArrayDesigns.size() + newExpressionExperiments.size() > 0 ) {
-            
-            int numEEs = updatedExpressionExperiments.size();
-            
-            int numADs = updatedArrayDesigns.size();
-            if ( numEEs > 0 ) {
+            if ( updatedEEs > 0 ) {
+
                 buf.append( "<a href=\"/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=" );
                 for ( ExpressionExperiment ee : updatedExpressionExperiments ) {
                     buf.append( ee.getId() + "," );
                 }
-                buf.append( "\">" + numEEs + " updated data set" + ( numEEs > 1 ? "s" : "" ) + "</a>.<br />" );
+                buf.append( "\">" + updatedEEs + " updated data set" + ( updatedEEs > 1 ? "s" : "" ) + "</a>.<br />" );
+
             }
-            if ( numADs > 0 ) {
+
+            if ( updatedAds > 0 ) {
+
                 buf.append( "<a href=\"/Gemma/arrays/showAllArrayDesigns.html?id=" );
                 for ( ArrayDesign ad : updatedArrayDesigns ) {
                     buf.append( ad.getId() + "," );
                 }
-                buf.append( "\">" + numADs + " updated array design" + ( numADs > 1 ? "s" : "" ) + "</a>.<br />" );
+                buf.append( "\">" + updatedAds + " updated array design" + ( updatedAds > 1 ? "s" : "" )
+                        + "</a>.<br />" );
+
             }
-        } else {
-            buf.append( "No updates<br />" );
+
+            buf.append( "</p>" );
         }
 
-        buf.append( "</p>" );
         try {
             pageContext.getOut().print( buf.toString() );
         } catch ( Exception ex ) {
