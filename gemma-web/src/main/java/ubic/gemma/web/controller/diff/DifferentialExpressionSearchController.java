@@ -258,12 +258,10 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         for ( ExpressionExperiment e : experimentsAnalyzed ) {
             Collection<ProbeAnalysisResult> results = differentialExpressionAnalysisService.find( gene, e );
 
-            Collection<ProbeAnalysisResult> validResults = new HashSet<ProbeAnalysisResult>();
             for ( ProbeAnalysisResult r : results ) {
                 double qval = r.getCorrectedPvalue();
                 log.debug( qval );
                 if ( qval < threshold ) {
-                    validResults.add( r );
 
                     DifferentialExpressionValueObject devo = new DifferentialExpressionValueObject();
 
@@ -275,6 +273,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
                     devo.setP( r.getCorrectedPvalue() );
                     devo.setProbe( r.getProbe().getName() );
+
+                    devos.add( devo );
                 }
             }
 

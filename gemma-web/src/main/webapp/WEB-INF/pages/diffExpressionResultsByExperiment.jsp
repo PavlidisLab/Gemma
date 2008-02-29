@@ -1,7 +1,8 @@
 <%@ include file="/common/taglibs.jsp"%>
 
 
-<title><fmt:message key="expressionExperiments.title" /></title>
+<title><fmt:message key="expressionExperiments.title" />
+</title>
 
 <h3>
 	Displaying
@@ -16,8 +17,8 @@
 </h3>
 
 <display:table name="differentialExpressionValueObjects">
-	<display:column property="expressionExperiment.shortName" />
-	<display:column property="expressionExperiment.name" />
+	<display:column property="expressionExperimentValueObject.shortName" />
+	<display:column property="expressionExperimentValueObject.name" />
 	<display:column property="p" />
 </display:table>
 
