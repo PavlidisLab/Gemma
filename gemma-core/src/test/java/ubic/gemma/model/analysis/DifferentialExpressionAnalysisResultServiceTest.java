@@ -138,7 +138,7 @@ public class DifferentialExpressionAnalysisResultServiceTest extends BaseSpringC
             log.info( "result key: " + d.getPvalue() + " has " + factors.size() );
 
             for ( ExperimentalFactor f : factors ) {
-                log.info( "value in map: " + f.getId() );
+                log.info( "factor in map (id): " + f.getId() );
             }
         }
         assertEquals( testResultsSize, factorsByResultMap.size() );
