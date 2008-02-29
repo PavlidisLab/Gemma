@@ -29,7 +29,7 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 	this.queryGenesOnly = queryGenesOnly;
 	
 	var geneChooserPanel = new Ext.Gemma.GeneChooserPanel( {
-		width : 400,
+		width : 390,
 		showTaxon : true,
 		bbar : [ queryGenesOnly, new Ext.Toolbar.Spacer(), new Ext.Toolbar.TextItem( queryGenesOnly.fieldLabel ) ]
 	} );
