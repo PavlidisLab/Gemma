@@ -18,10 +18,16 @@
  */
 package ubic.gemma.model.association.coexpression;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+
+import edu.emory.mathcs.backport.java.util.Collections;
 
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.genome.Gene;
@@ -34,6 +40,12 @@ import ubic.gemma.util.TaxonUtility;
  */
 public class Gene2GeneCoexpressionDaoImpl extends
         ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDaoBase {
+
+    /**
+     * How many gene2gene results to return, total (not per gene, if the query works that way).
+     */
+    private static final int MAX_RESULTS = 500;
+
     /**
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao#findCoexpressionRelationships(null,
      *      java.util.Collection)
@@ -59,6 +71,17 @@ public class Gene2GeneCoexpressionDaoImpl extends
                 new String[] { "analysis", "gene", "stringency" }, new Object[] { analysis, gene, stringency } ) );
         results.addAll( this.getHibernateTemplate().findByNamedParam( queryStringSecondVector,
                 new String[] { "analysis", "gene", "stringency" }, new Object[] { analysis, gene, stringency } ) );
+
+        List<Gene2GeneCoexpression> lr = new ArrayList<Gene2GeneCoexpression>( results );
+        Collections.sort( lr, new SupportComparator() );
+
+        int count = 0;
+        for ( Iterator<Gene2GeneCoexpression> it = lr.iterator(); it.hasNext(); ) {
+            if ( count > MAX_RESULTS ) {
+                it.remove();
+            }
+            count++;
+        }
 
         return results;
     }
@@ -99,7 +122,12 @@ public class Gene2GeneCoexpressionDaoImpl extends
             result.put( g, new HashSet<Gene2GeneCoexpression>() );
         }
 
+        List<Gene2GeneCoexpression> lr = new ArrayList<Gene2GeneCoexpression>( r );
+        Collections.sort( lr, new SupportComparator() );
+
+        int count = 0;
         for ( Gene2GeneCoexpression g2g : r ) {
+            if ( count == MAX_RESULTS ) break;
             Gene firstGene = g2g.getFirstGene();
             Gene secondGene = g2g.getSecondGene();
             if ( genes.contains( firstGene ) ) {
@@ -107,6 +135,7 @@ public class Gene2GeneCoexpressionDaoImpl extends
             } else if ( genes.contains( secondGene ) ) {
                 result.get( secondGene ).add( g2g );
             }
+            count++;
         }
         return result;
     }
@@ -134,18 +163,30 @@ public class Gene2GeneCoexpressionDaoImpl extends
         Collection<Gene2GeneCoexpression> r = this.getHibernateTemplate().findByNamedParam( queryString,
                 new String[] { "analysis", "genes", "stringency" }, new Object[] { analysis, genes, stringency } );
 
+        List<Gene2GeneCoexpression> lr = new ArrayList<Gene2GeneCoexpression>( r );
+        Collections.sort( lr, new SupportComparator() );
+
         Map<Gene, Collection<Gene2GeneCoexpression>> result = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
         for ( Gene g : ( Collection<Gene> ) genes ) {
             result.put( g, new HashSet<Gene2GeneCoexpression>() );
         }
+        int count = 0;
         for ( Gene2GeneCoexpression g2g : r ) {
+            if ( count == MAX_RESULTS ) break;
             // all the genes are guaranteed to be in the query list. But we want them listed both ways so we count them
             // up right later.
             result.get( g2g.getFirstGene() ).add( g2g );
             result.get( g2g.getSecondGene() ).add( g2g );
+            count++;
         }
         return result;
 
+    }
+
+    private class SupportComparator implements Comparator<Gene2GeneCoexpression> {
+        public int compare( Gene2GeneCoexpression o1, Gene2GeneCoexpression o2 ) {
+            return o1.getNumDataSets().compareTo( o2.getNumDataSets() );
+        }
     }
 
     /**
