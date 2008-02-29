@@ -329,7 +329,7 @@ Ext.extend( Ext.Gemma.CoexpressionSearchForm, Ext.FormPanel, {
 	updateDatasetsToBeSearched : function ( datasets ) {
 		var numDatasets = datasets instanceof Array ? datasets.length : datasets;
 		this.stringencyField.maxValue = numDatasets;
-		this.analysisFs.setTitle( String.format( "Analysis options ({0} dataset{1} will be analyzed)", numDatasets, numDatasets != 1 ? "s" : "" ) );
+		this.analysisFs.setTitle( String.format( "Analysis options (Up to {0} dataset{1} will be analyzed)", numDatasets, numDatasets != 1 ? "s" : "" ) );
 	},
 	
 	taxonChanged : function ( taxon ) {

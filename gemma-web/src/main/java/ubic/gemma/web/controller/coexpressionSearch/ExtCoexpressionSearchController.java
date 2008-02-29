@@ -30,6 +30,9 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Predicate;
+import org.apache.commons.collections.Transformer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
@@ -44,6 +47,7 @@ import ubic.gemma.model.coexpression.CoexpressedGenesDetails;
 import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.common.Securable;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -166,7 +170,12 @@ public class ExtCoexpressionSearchController extends BaseFormController {
                 cavo.setName( analysis.getName() );
                 cavo.setDescription( analysis.getDescription() );
                 cavo.setTaxon( taxon );
+
+                /*
+                 * FIXME this number isn't quite right if there are 'troubled' data sets we filter out.
+                 */
                 cavo.setNumDatasets( geneCoexpressionAnalysisService.getNumDatasetsAnalyzed( analysis ) );
+
                 analyses.add( cavo );
             }
         }
@@ -397,19 +406,17 @@ public class ExtCoexpressionSearchController extends BaseFormController {
         GeneCoexpressionAnalysis analysis = ( GeneCoexpressionAnalysis ) geneCoexpressionAnalysisService
                 .load( cannedAnalysisId );
 
-        // FIXME Is this sort necessary?
-        List<Long> eeIds = getSortedIdList( analysis.getExperimentsAnalyzed() ); // thaws, which can be a tiny bit
-        // slow, and requires
-        // session.
+        // FIXME I'm not sure this needs to be a list and also sorted.
+        List<Long> eeIds = getSortedFilteredIdList( analysis.getExperimentsAnalyzed() );
 
-        // This sort is necessary.
+        // This sort is necessary.(?)
         List<ExpressionExperimentValueObject> eevos = getSortedEEvos( eeIds );
 
         Map<Integer, Long> posToId = GeneLinkCoexpressionAnalyzer.getPositionToIdMap( eeIds );
 
         /*
-         * I'm lazy and rushed, so I'm using an existing field for this info; probably better to add another field to
-         * the value object...
+         * FIXME I'm lazy and rushed, so I'm using an existing field for this info; probably better to add another field
+         * to the value object...
          */
         for ( ExpressionExperimentValueObject eevo : eevos ) {
             eevo.setExternalUri( GemmaLinkUtils.getExpressionExperimentUrl( eevo.getId() ) );
@@ -448,14 +455,27 @@ public class ExtCoexpressionSearchController extends BaseFormController {
                 ecvo.setFoundGene( foundGene );
 
                 Collection<Long> testingDatasets = GeneLinkCoexpressionAnalyzer.getTestedExperimentIds( g2g, posToId );
+                testingDatasets.retainAll( eeIds ); // necesssary in case any were filtered out
                 Collection<Long> supportingDatasets = GeneLinkCoexpressionAnalyzer.getSupportingExperimentIds( g2g,
                         posToId );
+                supportingDatasets.retainAll( eeIds ); // necessary in case any were filtered out.
+
                 ecvo.setTestedDatasetVector( getDatasetVector( testingDatasets, eeIds ) );
                 ecvo.setSupportingDatasetVector( getDatasetVector( supportingDatasets, eeIds ) );
-                datasetsTested.addAll( testingDatasets );
 
                 int numTestingDatasets = testingDatasets.size();
                 int numSupportingDatasets = supportingDatasets.size();
+
+                /*
+                 * This check is necessary in case any data sets were filtered out. (i.e., we're not interested in the
+                 * full set of data sets that were used in the original analysis.
+                 */
+                if ( numSupportingDatasets < stringency ) {
+                    continue;
+                }
+
+                datasetsTested.addAll( testingDatasets );
+
                 if ( g2g.getEffect() < 0 ) {
                     ecvo.setPositiveLinks( 0 );
                     ecvo.setNegativeLinks( numSupportingDatasets );
@@ -665,13 +685,69 @@ public class ExtCoexpressionSearchController extends BaseFormController {
      * @param datasets
      * @return
      */
-    private List<Long> getSortedIdList( Collection<ExpressionExperiment> datasets ) {
+    @SuppressWarnings("unchecked")
+    private List<Long> getSortedFilteredIdList( Collection<ExpressionExperiment> datasets ) {
+
         List<Long> ids = new ArrayList<Long>( datasets.size() );
         for ( Securable dataset : datasets ) {
             ids.add( dataset.getId() );
         }
+
+        // filter out the data sets that are troubled.
+        removeTroubledEes( datasets );
+
+        /*
+         * FIXME this is also a good place to filter out data sets that are to be excluded for other reasons (e.g., so
+         * we can do just "brain" on a canned analysis)
+         */
+
+        // rebuild the id list.
+        ids = new ArrayList<Long>( datasets.size() );
+        for ( Securable dataset : datasets ) {
+            ids.add( dataset.getId() );
+        }
+
         Collections.sort( ids );
         return ids;
+    }
+
+    /**
+     * FIXME this duplicates code from ExpressionExperimentManipulatingCLI
+     * 
+     * @param ees
+     */
+    @SuppressWarnings("unchecked")
+    private void removeTroubledEes( Collection<ExpressionExperiment> ees ) {
+        if ( ees == null || ees.size() == 0 ) {
+            log.warn( "No experiments to remove troubled from" );
+            return;
+        }
+        ExpressionExperiment theOnlyOne = null;
+        if ( ees.size() == 1 ) {
+            theOnlyOne = ees.iterator().next();
+        }
+        int size = ees.size();
+        final Map<Long, AuditEvent> trouble = expressionExperimentService.getLastTroubleEvent( CollectionUtils.collect(
+                ees, new Transformer() {
+                    public Object transform( Object input ) {
+                        return ( ( ExpressionExperiment ) input ).getId();
+                    }
+                } ) );
+        CollectionUtils.filter( ees, new Predicate() {
+            public boolean evaluate( Object object ) {
+                boolean hasTrouble = trouble.containsKey( ( ( ExpressionExperiment ) object ).getId() );
+                return !hasTrouble;
+            }
+        } );
+        int newSize = ees.size();
+        if ( newSize != size ) {
+            assert newSize < size;
+            if ( size == 0 && theOnlyOne != null ) {
+                log.info( theOnlyOne.getShortName() + " has an active trouble flag" );
+            } else {
+                log.info( "Removed " + ( size - newSize ) + " experiments with 'trouble' flags, leaving " + newSize );
+            }
+        }
     }
 
     /**
