@@ -282,22 +282,33 @@ Ext.extend( Ext.Gemma.CoexpressionSearchForm, Ext.FormPanel, {
 		if ( ! csc ) {
 			csc = this.getCoexpressionSearchCommand();
 		}
+		this.clearError();
 		var msg = this.validateSearch( csc );
 		if ( msg.length === 0 ) {
 			if ( this.fireEvent('beforesearch', this, csc ) !== false ) {
 				this.loadMask.show();
-				ExtCoexpressionSearchController.doSearch( csc, this.returnFromSearch.bind( this ) );
+				var errorHandler = this.handleError.createDelegate(this, [], true);
+				ExtCoexpressionSearchController.doSearch( csc, {callback : this.returnFromSearch.bind( this ), errorHandler : errorHandler} );
 			}
 		} else {
-			Ext.MessageBox.show( {
-				msg: msg,
-				icon: Ext.MessageBox.ERROR
-			} );
+			this.handleError(msg);
 		}
 	},
 	
+	handleError : function( msg, e ) {
+		Ext.DomHelper.overwrite("coexpression-messages", {tag : 'img', src:'/Gemma/images/icons/warning.png' }); 
+		Ext.DomHelper.append("coexpression-messages", {tag : 'span', html : "&nbsp;&nbsp;"  + msg });  
+		this.loadMask.hide();
+	},
+	
+	clearError : function () {
+		Ext.DomHelper.overwrite("coexpression-messages", "");
+	},
+	
 	validateSearch : function ( csc ) {
-		if ( csc.geneIds.length < 1 ) {
+		if ( csc.queryGenesOnly && csc.geneIds.length < 2 ) { 
+			return "You must select more than one query gene to use 'search among query genes only'";
+		} else if ( csc.geneIds.length < 1 ) {
 			return "Please select at least one query gene";
 		} else if ( csc.stringency < Ext.Gemma.CoexpressionSearchForm.MIN_STRINGENCY ) {
 			return "Minimum stringency is " + Ext.Gemma.CoexpressionSearchForm.MIN_STRINGENCY;

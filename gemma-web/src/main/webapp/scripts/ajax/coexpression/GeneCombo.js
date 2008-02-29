@@ -64,6 +64,11 @@ Ext.extend( Ext.Gemma.GeneCombo, Ext.form.ComboBox, {
 		}
 	},
 	
+	reset : function() {
+		Ext.Gemma.GeneCombo.superclass.reset.call( this );
+		this.setGene( null );
+	},
+	
 	getParams : function ( query ) {
 			return [ query, this.taxon ? this.taxon.id : -1 ];
 	},

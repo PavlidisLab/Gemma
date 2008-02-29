@@ -36,13 +36,16 @@ Ext.Gemma.GeneChooserPanel = function ( config ) {
 		disabled : true,
 		handler : function() {
 			var gene = geneCombo.getGene();
-			var Constructor = Ext.Gemma.GeneCombo.getRecord();
-			var record = new Constructor( gene );
-			thisGrid.getStore().add( [ record ] );
+			if ( thisGrid.getStore().find( "id", gene.id ) < 0) {  
+				var Constructor = Ext.Gemma.GeneCombo.getRecord();
+				var record = new Constructor( gene );
+				thisGrid.getStore().add( [ record ] );
+			}
 			geneCombo.reset();
 			addButton.disable();
 		}
 	} );
+	this.addButton = addButton;
 	
 	var removeButton = new Ext.Toolbar.Button( {
 		text : "-",
@@ -177,6 +180,7 @@ Ext.extend( Ext.Gemma.GeneChooserPanel, Ext.Gemma.GemmaGridPanel, {
 					this.geneCombo.setGene( g );
 					this.geneCombo.setValue( g.officialSymbol );
 					this.getStore().removeAll();
+					this.addButton.enable();
 				}
 				if ( callback ) {
 					callback();
