@@ -45,6 +45,21 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 	} );
 	queryFs.add( geneChooserPanel );
 	
+	var stringencyField = new Ext.form.NumberField( {
+		allowBlank : false,
+		allowDecimals : false,
+		allowNegative : false,
+		minValue : Ext.Gemma.CoexpressionSearchForm.MIN_STRINGENCY,
+		maxValue : 999,
+		fieldLabel : 'Stringency',
+		invalidText : "Minimum stringency is " + Ext.Gemma.CoexpressionSearchForm.MIN_STRINGENCY,
+		value : 2,
+		width : 25
+	} );
+	this.stringencyField = stringencyField;
+	Ext.Gemma.CoexpressionSearchForm.addToolTip( stringencyField, 
+		"The minimum number of datasets that must show coexpression for a result to appear" );
+	
 	var analysisCombo = new Ext.Gemma.AnalysisCombo( {
 		fieldLabel : 'Limit search to',
 		showCustomOption : true
@@ -69,29 +84,20 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 			thisPanel.analysisFs.setTitle( "" );
 		}
 	} );
-	
-	var stringencyField = new Ext.form.NumberField( {
-		allowBlank : false,
-		allowDecimals : false,
-		allowNegative : false,
-		minValue : Ext.Gemma.CoexpressionSearchForm.MIN_STRINGENCY,
-		maxValue : 999,
-		fieldLabel : 'Stringency',
-		invalidText : "Minimum stringency is " + Ext.Gemma.CoexpressionSearchForm.MIN_STRINGENCY,
-		value : 2,
-		width : 25
-	} );
-	this.stringencyField = stringencyField;
+	Ext.Gemma.CoexpressionSearchForm.addToolTip( analysisCombo,
+		"Restrict the list of datasets that will be searched for coexpression" );
 	
 	var eeSearchField = new Ext.Gemma.DatasetSearchField( {
 		fieldLabel : "Experiment keywords"
 	} );
 	this.eeSearchField = eeSearchField;
-	this.eeSearchField.on( 'aftersearch', function ( field, results ) {
+	eeSearchField.on( 'aftersearch', function ( field, results ) {
 		if ( thisPanel.customAnalysis ) {
 			thisPanel.updateDatasetsToBeSearched( results );
 		}
 	} );
+	Ext.Gemma.CoexpressionSearchForm.addToolTip( eeSearchField,
+		"Search only datasets that match these keywords" );
 	
 	var customFs = new Ext.form.FieldSet( {
 		title : 'Custom analysis options',
@@ -132,6 +138,15 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 };
 
 Ext.Gemma.CoexpressionSearchForm.MIN_STRINGENCY = 2;
+
+Ext.Gemma.CoexpressionSearchForm.addToolTip = function( component, html ) {
+	component.on( "render", function() {
+		component.gemmaTooltip = new Ext.ToolTip( {
+			target : component.getEl(),
+			html : html
+		} );
+	} );
+};
 
 /* other public methods...
  */
