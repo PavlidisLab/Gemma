@@ -16,7 +16,7 @@
 	Feb 29, 2008 - Gemma 1.0 released!
 </h3>
 <p>
-	After a long incubation period a lot of hard work, we consider Gemma complete enough to give it the official 1.0! More
+	After a long incubation period and a lot of hard work, we consider Gemma complete enough to give it the official 1.0! More
 	information on the project
 	<a href="<c:url value="/static/about.html"/>">is available</a>. There is still a lot of work to do, and we value your
 	<a href="mailto:gemma@bioinformatics.ubc.ca">feedback</a> including feature requests and bug reports.
