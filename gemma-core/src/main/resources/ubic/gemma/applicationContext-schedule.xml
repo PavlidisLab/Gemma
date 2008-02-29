@@ -45,7 +45,7 @@
 			<ref bean="indexJobDetail"/>
 		</property>
 		<property name="cronExpression">
-			<value>0 15 1 ? * FRI</value><!-- Thruday at 1:15 am -->
+			<value>0 15 1 ? * SAT</value><!-- Every Saturday at 1:15 am -->
 		</property>
 	</bean>
 	<bean id="arrayDesignReportTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
