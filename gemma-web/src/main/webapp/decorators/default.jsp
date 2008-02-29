@@ -33,6 +33,23 @@
 
 			<div id="content" class="clearfix">
 
+<% 
+	//Adds the page help link if not a help page already
+	String helpuri = request.getRequestURI();
+	if (!helpuri.contains("_help") ){
+	%>
+	<div id="help" style="font-size:smaller;float:right;">	<a href="
+
+
+	<%
+	helpuri = helpuri.substring(0,helpuri.length() - 5) + "_help.html";
+	helpuri = helpuri.replace("Gemma/", "Gemma/static/");
+	out.print(helpuri );
+ %>
+	">page help</a>
+	</div>
+<%} %>
+
 				<div id="main">
 					<%@ include file="/common/messages.jsp"%>
 					<h2>

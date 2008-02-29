@@ -1,10 +1,11 @@
+<!--  Default header for any page but the main gemma home page -->
+
 <%@ include file="/common/taglibs.jsp"%>
 <c:if test="${pageContext.request.locale.language != 'en'}">
 	<div id="switchLocale">
 		<a href="<c:url value='/mainMenu.html?locale=en'/>"><fmt:message key="webapp.name" /> in English</a>
 	</div>
 </c:if>
-
 <c:if test="${appConfig['maintenanceMode']}">
 	<div style="font-weight: bold; color: #AA4444; font-size: 1.3em">
 		Gemma is undergoing maintenance! Some functions may not be available.
@@ -18,7 +19,8 @@
 	<div id="search">
 		<%@ include file="/common/search.jsp"%>
 	</div>
-
+	
+		
 </div>
 
 <%-- Put constants into request scope --%>

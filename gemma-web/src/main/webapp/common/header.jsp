@@ -1,3 +1,4 @@
+<!--  Default header for only the main gemma home page -->
 <%@ include file="/common/taglibs.jsp"%>
 <c:if test="${pageContext.request.locale.language != 'en'}">
 	<div id="switchLocale">
@@ -12,9 +13,11 @@
 </c:if>
 
 <div id="branding">
+	
 	<div id="headerLeft">
 		<a href="/Gemma"><img src="<c:url value='/images/logo/gemma-lg153x350.gif'/>" alt="gemma" /> </a>
 	</div>
+	
 	<div id="search"> 
 		<%@ include file="/common/search.jsp"%>
 	</div>
