@@ -407,7 +407,9 @@ public class ExtCoexpressionSearchController extends BaseFormController {
                 .load( cannedAnalysisId );
 
         // FIXME I'm not sure this needs to be a list and also sorted.
-        List<Long> eeIds = getSortedFilteredIdList( analysis.getExperimentsAnalyzed() );
+        Collection<ExpressionExperiment> datasetsAnalyzed = geneCoexpressionAnalysisService
+                .getDatasetsAnalyzed( analysis );
+        List<Long> eeIds = getSortedFilteredIdList( datasetsAnalyzed );
 
         // This sort is necessary.(?)
         List<ExpressionExperimentValueObject> eevos = getSortedEEvos( eeIds );
@@ -682,6 +684,8 @@ public class ExtCoexpressionSearchController extends BaseFormController {
     }
 
     /**
+     * Remove data sets that are 'troubled' and sort the list.
+     * 
      * @param datasets
      * @return
      */

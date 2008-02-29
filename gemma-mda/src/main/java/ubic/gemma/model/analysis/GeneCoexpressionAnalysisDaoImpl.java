@@ -37,7 +37,7 @@ import ubic.gemma.model.genome.Taxon;
  * @see ubic.gemma.model.analysis.GeneCoexpressionAnalysis
  * @$Id$
  */
-public class GeneCoexpressionAnalysisDaoImpl extends ubic.gemma.model.analysis.GeneCoexpressionAnalysisDaoBase {
+public class GeneCoexpressionAnalysisDaoImpl extends ubic.gemma.model.analysis.GeneCoexpressionAnalysisDaoBase { 
 
     private static Log log = LogFactory.getLog( GeneCoexpressionAnalysisDaoImpl.class.getName() );
 
@@ -104,6 +104,12 @@ public class GeneCoexpressionAnalysisDaoImpl extends ubic.gemma.model.analysis.G
         final String queryString = "select count(e) from GeneCoexpressionAnalysisImpl g inner join g.experimentsAnalyzed e where g=:g";
         List list = getHibernateTemplate().findByNamedParam( queryString, "g", analysis );
         return ( ( Long ) list.iterator().next() ).intValue();
+    }
+
+    @Override
+    protected Collection handleGetDatasetsAnalyzed( GeneCoexpressionAnalysis analysis ) throws Exception {
+        final String queryString = "select e from GeneCoexpressionAnalysisImpl g inner join g.experimentsAnalyzed e where g=:g";
+        return getHibernateTemplate().findByNamedParam( queryString, "g", analysis );
     }
 
 }

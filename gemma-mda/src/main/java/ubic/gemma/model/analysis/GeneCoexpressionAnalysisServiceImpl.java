@@ -33,7 +33,7 @@ import ubic.gemma.model.genome.Taxon;
  * @author paul
  * @version $Id$
  */
-public class GeneCoexpressionAnalysisServiceImpl extends ubic.gemma.model.analysis.GeneCoexpressionAnalysisServiceBase {
+public class GeneCoexpressionAnalysisServiceImpl extends ubic.gemma.model.analysis.GeneCoexpressionAnalysisServiceBase { 
 
     /*
      * @see ubic.gemma.model.analysis.GeneCoexpressionAnalysisService#create(ubic.gemma.model.analysis.GeneCoexpressionAnalysis)
@@ -110,6 +110,11 @@ public class GeneCoexpressionAnalysisServiceImpl extends ubic.gemma.model.analys
     @Override
     protected int handleGetNumDatasetsAnalyzed( GeneCoexpressionAnalysis analysis ) throws Exception {
         return this.getGeneCoexpressionAnalysisDao().getNumDatasetsAnalyzed( analysis );
+    }
+
+    @Override
+    protected Collection handleGetDatasetsAnalyzed( GeneCoexpressionAnalysis analysis ) throws Exception {
+        return this.getGeneCoexpressionAnalysisDao().getDatasetsAnalyzed( analysis );
     }
 
 }

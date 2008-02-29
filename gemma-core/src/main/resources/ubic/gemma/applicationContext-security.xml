@@ -460,6 +460,12 @@
                 ubic.gemma.model.genome.TaxonService.loadAll=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.genome.TaxonService.findByScientificName=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.genome.TaxonService.findByCommonName=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.analysis.GeneCoexpressionAnalysisService.create=admin
+                ubic.gemma.model.analysis.GeneCoexpressionAnalysisService.update=admin
+                ubic.gemma.model.analysis.GeneCoexpressionAnalysisService.getDatasetsAnalyzed=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.analysis.DifferentialExpressionAnalysisService.create=admin
+                ubic.gemma.model.analysis.DifferentialExpressionAnalysisService.delete=admin
+                ubic.gemma.model.analysis.AnalysisService.delete=admin
                 ubic.gemma.search.IndexService.runAll=admin
            ]]>
 			</value>
