@@ -30,6 +30,7 @@ import ubic.gemma.model.genome.Taxon;
  * 
  * @author joseph
  * @version $Id$
+ * @deprecated
  */
 public class CoexpressionSearchCommand implements Serializable {
 
