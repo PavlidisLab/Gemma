@@ -49,8 +49,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
-    protected Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
-
     private ExpressionExperiment ee = null;
 
     private final int mainEffectAIndex = 0;
@@ -75,6 +73,8 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
             ExperimentalFactor experimentalFactorA, ExperimentalFactor experimentalFactorB,
             QuantitationType quantitationType ) {
 
+        Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
+
         // TODO pass the DifferentialExpressionAnalysisConfig in (see LinkAnalysisService)
         /* Create the expression analysis and pack the results. */
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
@@ -98,9 +98,6 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
         int k = 0;
         for ( int i = 0; i < dmatrix.rows(); i++ ) {
 
-            /* Each probe has all results (ie. 2 - without interactions; 3 - with interactions) */
-            List<DifferentialExpressionAnalysisResult> analysisResultsPerProbe = new ArrayList<DifferentialExpressionAnalysisResult>();
-
             DesignElement de = dmatrix.getDesignElementForRow( i );
 
             CompositeSequence cs = ( CompositeSequence ) de;
@@ -116,8 +113,6 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
                 probeAnalysisResult.setCorrectedPvalue( qvalues[k] );
                 // probeAnalysisResult.setParameters( parameters );
 
-                analysisResultsPerProbe.add( probeAnalysisResult );
-
                 if ( j % numResultsFromR == mainEffectAIndex ) analysisResultsMainEffectA.add( probeAnalysisResult );
 
                 if ( j % numResultsFromR == mainEffectBIndex ) analysisResultsMainEffectB.add( probeAnalysisResult );
@@ -127,11 +122,6 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
 
                 k++;
             }
-
-            ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance(
-                    analysisResultsPerProbe, expressionAnalysis, null );
-
-            resultSets.add( resultSet );
         }
 
         /* main effects */
