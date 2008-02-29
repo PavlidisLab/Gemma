@@ -23,12 +23,10 @@ Ext.onReady( function() {
 	var knownGeneDatasetGrid = new Ext.Gemma.CoexpressionDatasetGrid( {
 		renderTo : "coexpression-results"
 	} );
-	var knownGeneFooterItem = new Ext.Toolbar.TextItem( "" );
 	var knownGeneGrid = new Ext.Gemma.CoexpressionGrid( {
 		renderTo : "coexpression-results",
 		title : "Coexpressed genes",
-		pageSize : 25,
-		bbar : [ knownGeneFooterItem ]
+		pageSize : 25
 	} );
 	var predictedGeneGrid;
 	var probeAlignedGrid;
@@ -87,9 +85,10 @@ Ext.onReady( function() {
 		}
 		Ext.Gemma.CoexpressionGrid.getBitImageMapTemplate().overwrite( imageMap, result.datasets );
 		
+		var link = panel.getBookmarkableLink();
+		knownGeneGrid.setTitle( String.format( "Coexpressed genes <a href='{0}'>(bookmarkable link)</a> <a href='{0}&export'>(export as text)</a>", panel.getBookmarkableLink() ) );
+		
 		Ext.Gemma.CoexpressionDatasetGrid.updateDatasetInfo( result.knownGeneDatasets, eeMap );
-		knownGeneGrid.setTitle( String.format( "Coexpressed genes <a href='{0}'>(bookmarkable link)</a>", panel.getBookmarkableLink() ) );
-		knownGeneFooterItem.getEl().innerHTML = String.format( " &nbsp; <a href='{0}&export'}>export as text</a>", panel.getBookmarkableLink() );
 		knownGeneDatasetGrid.loadData( result.isCannedAnalysis, result.queryGenes.length, result.knownGeneDatasets ) ;
 		knownGeneGrid.loadData( result.isCannedAnalysis, result.queryGenes.length, result.knownGeneResults );
 		
