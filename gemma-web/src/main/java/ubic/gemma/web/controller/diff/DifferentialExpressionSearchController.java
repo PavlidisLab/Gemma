@@ -73,6 +73,8 @@ import ubic.gemma.web.util.ConfigurationCookie;
  */
 public class DifferentialExpressionSearchController extends BaseFormController {
 
+    private static final double DEFAULT_QVALUE_THRESHOLD = 0.01;
+
     private Log log = LogFactory.getLog( this.getClass() );
 
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
@@ -188,7 +190,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         /* If we've come this far, we have a cookie but not one that matches COOKIE_NAME. Provide friendly defaults. */
         diffSearchCommand.setGeneOfficialSymbol( "<gene sym>" );
-        diffSearchCommand.setThreshold( 0.1 );
+        diffSearchCommand.setThreshold( DEFAULT_QVALUE_THRESHOLD );
 
         return diffSearchCommand;
     }

@@ -37,7 +37,7 @@
 				${e.shortName}
 			</td>
 			<td>
-				${e.description}
+				${e.name}
 			</td>
 			<td>
 				<c:forEach items="${results}" var="r">
