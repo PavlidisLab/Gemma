@@ -8,9 +8,20 @@ version: $Id$
 
 <jsp:useBean id="diffExpressionSearchCommand" scope="request"
 	class="ubic.gemma.web.controller.diff.DiffExpressionSearchCommand" />
-
+	
+	<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
+	<script src="<c:url value='/scripts/ext/ext-all-debug.js'/>" type="text/javascript"></script>
+	<script src="<c:url value='/scripts/ext/RowExpander.js'/>" type="text/javascript"></script>
+	<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
+	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
+	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/GenePickerController.js'></script>
+	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/GeneCombo.js'></script>
+	
 <title><fmt:message key="diffExpressionSearch.title" />
 </title>
+
 
 <spring:bind path="diffExpressionSearchCommand.*">
 	<c:if test="${not empty status.errorMessages}">
@@ -43,12 +54,23 @@ version: $Id$
 			</td>
 			<td>
 				<spring:bind path="diffExpressionSearchCommand.geneOfficialSymbol">
-					<input type="text" size=10
+					<input type="text" size=10 id="geneCombo"
 						name="<c:out value="${status.expression}"/>"
 						value="<c:out value="${status.value}"/>" />
 				</spring:bind>
 			</td>
 		</tr>
+
+<script language='javascript'>
+	Ext.onReady( function() {
+		var geneCombo = new Ext.Gemma.GeneCombo( {
+			emptyText : 'search for a gene',
+			transform : 'geneCombo'
+		} )
+	} );
+</script>
+
+<!-- 
 		<tr>
 			<td valign="top">
 				<b> <fmt:message key="gene.taxon" /> </b>
@@ -68,6 +90,7 @@ version: $Id$
 				</spring:bind>
 			</td>
 		</tr>
+-->
 		<tr>
 			<td valign="top">
 				<b> <fmt:message key="diff.threshold" /> <br /> </b>

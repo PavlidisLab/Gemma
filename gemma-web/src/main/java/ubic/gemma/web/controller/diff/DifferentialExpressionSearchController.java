@@ -229,18 +229,19 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         Cookie cookie = new DiffExpressionSearchCookie( diffCommand );
         response.addCookie( cookie );
-
-        String officialSymbol = diffCommand.getGeneOfficialSymbol();
+        
+        // hachked this for using the gene picker 
+        Long geneId = Long.parseLong( diffCommand.getGeneOfficialSymbol());
 
         double threshold = diffCommand.getThreshold();
 
         String taxonScientificName = diffCommand.getTaxonName();
         Taxon t = taxonService.findByScientificName( taxonScientificName );
-        Gene gene = geneService.findByOfficialSymbol( officialSymbol, t );
-
+        //Gene gene = geneService.findByOfficialSymbol( officialSymbol, t );
+        Gene gene = geneService.load( geneId );
         String message = null;
         if ( gene == null ) {
-            message = "Gene could not be found for symbol: " + officialSymbol;
+            message = "Gene could not be found for symbol: " + geneId;
             errors.addError( new ObjectError( command.toString(), null, null, message ) );
             return processErrors( request, response, command, errors, null );
         }
@@ -250,7 +251,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService
                 .findExperimentsWithAnalyses( gene );
         if ( experimentsAnalyzed == null || experimentsAnalyzed.isEmpty() ) {
-            message = "No experiments analyzed with differential evidence for gene: " + officialSymbol;
+            message = "No experiments analyzed with differential evidence for gene: " + gene.getOfficialSymbol();
             errors.addError( new ObjectError( command.toString(), null, null, message ) );
             return processErrors( request, response, command, errors, null );
         }
@@ -281,7 +282,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         }
 
         if ( devos.isEmpty() ) {
-            message = "No experiments found for gene " + officialSymbol + " that meet the threshold " + threshold;
+            message = "No experiments found for gene " + gene.getOfficialSymbol() + " that meet the threshold " + threshold;
             errors.addError( new ObjectError( command.toString(), null, null, message ) );
             return processErrors( request, response, command, errors, null );
         }
@@ -294,7 +295,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         mav.addObject( "threshold", threshold );
 
-        mav.addObject( "geneOfficialSymbol", officialSymbol );
+        mav.addObject( "geneOfficialSymbol", gene.getOfficialSymbol() );
 
         return mav;
     }
