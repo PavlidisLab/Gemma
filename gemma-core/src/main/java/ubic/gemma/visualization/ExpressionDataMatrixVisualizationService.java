@@ -39,8 +39,8 @@ import org.jfree.data.xy.XYSeriesCollection;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
-import ubic.basecode.gui.ColorMatrix;
-import ubic.basecode.gui.JMatrixDisplay;
+import ubic.basecode.graphics.ColorMatrix;
+import ubic.basecode.graphics.MatrixDisplay;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
@@ -74,14 +74,14 @@ public class ExpressionDataMatrixVisualizationService {
      * @param expressionDataMatrix
      * @return JMatrixDisplay
      */
-    public JMatrixDisplay createHeatMap( ExpressionDataMatrix expressionDataMatrix ) {
+    public MatrixDisplay createHeatMap( ExpressionDataMatrix expressionDataMatrix ) {
 
         if ( expressionDataMatrix == null )
             throw new RuntimeException( "Cannot create color matrix due to null ExpressionDataMatrix" );
 
         ColorMatrix colorMatrix = createColorMatrix( expressionDataMatrix );
 
-        JMatrixDisplay display = new JMatrixDisplay( colorMatrix );
+        MatrixDisplay display = new MatrixDisplay( colorMatrix );
         display.setMaxColumnLength( 20 );
 
         display.setCellSize( new Dimension( IMAGE_CELL_SIZE, 10 ) );

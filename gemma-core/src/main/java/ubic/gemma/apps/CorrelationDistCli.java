@@ -34,9 +34,9 @@ import org.apache.commons.lang.time.StopWatch;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
-import ubic.basecode.gui.ColorMap;
-import ubic.basecode.gui.ColorMatrix;
-import ubic.basecode.gui.JMatrixDisplay;
+import ubic.basecode.graphics.ColorMap;
+import ubic.basecode.graphics.ColorMatrix;
+import ubic.basecode.graphics.MatrixDisplay;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.CorrelationStats;
 import ubic.gemma.analysis.coexpression.GeneEffectSizeCoExpressionAnalyzer;
@@ -259,7 +259,7 @@ public class CorrelationDistCli extends ExpressionExperimentManipulatingCLI {
             ColorMatrix dataColorMatrix = new ColorMatrix( dataMatrix );
             // dataColorMatrix.setColorMap( ColorMap.GREENRED_COLORMAP );
             dataColorMatrix.setColorMap( ColorMap.BLACKBODY_COLORMAP );
-            JMatrixDisplay dataMatrixDisplay = new JMatrixDisplay( dataColorMatrix );
+            MatrixDisplay dataMatrixDisplay = new MatrixDisplay( dataColorMatrix );
             dataMatrixDisplay.saveImage( "correlationDist.png", true );
 
             out.write( "\n" );

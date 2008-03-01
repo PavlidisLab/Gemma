@@ -21,7 +21,7 @@ package ubic.gemma.visualization;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 
-import ubic.basecode.gui.JMatrixDisplay;
+import ubic.basecode.graphics.MatrixDisplay;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
@@ -175,7 +175,7 @@ public class ExpressionDataMatrixVisualizationServiceTest extends BaseSpringCont
         ExpressionDataMatrixVisualizationService expressionDataMatrixVisualizationService = ( ExpressionDataMatrixVisualizationService ) this
                 .getBean( "expressionDataMatrixVisualizationService" );
 
-        JMatrixDisplay display = expressionDataMatrixVisualizationService.createHeatMap( expressionDataMatrix );
+        MatrixDisplay display = expressionDataMatrixVisualizationService.createHeatMap( expressionDataMatrix );
 
         assertNotNull( display );
 

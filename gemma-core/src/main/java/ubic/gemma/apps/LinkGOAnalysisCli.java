@@ -39,9 +39,9 @@ import org.apache.commons.lang.time.StopWatch;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
-import ubic.basecode.gui.ColorMap;
-import ubic.basecode.gui.ColorMatrix;
-import ubic.basecode.gui.JMatrixDisplay;
+import ubic.basecode.graphics.ColorMap;
+import ubic.basecode.graphics.ColorMatrix;
+import ubic.basecode.graphics.MatrixDisplay;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImpl.ProbeLink;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -214,7 +214,7 @@ public class LinkGOAnalysisCli extends AbstractSpringAwareCLI {
         ColorMatrix dataColorMatrix = new ColorMatrix( dataMatrix );
         // dataColorMatrix.setColorMap( ColorMap.GREENRED_COLORMAP );
         dataColorMatrix.setColorMap( ColorMap.BLACKBODY_COLORMAP );
-        JMatrixDisplay dataMatrixDisplay = new JMatrixDisplay( dataColorMatrix );
+        MatrixDisplay dataMatrixDisplay = new MatrixDisplay( dataColorMatrix );
         dataMatrixDisplay.saveImage( imageName, true );
 
     }

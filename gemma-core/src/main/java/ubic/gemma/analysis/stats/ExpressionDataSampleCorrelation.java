@@ -34,8 +34,8 @@ import org.apache.commons.logging.LogFactory;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
-import ubic.basecode.gui.ColorMatrix;
-import ubic.basecode.gui.JMatrixDisplay;
+import ubic.basecode.graphics.ColorMatrix;
+import ubic.basecode.graphics.MatrixDisplay;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.basecode.io.writer.MatrixWriter;
 import ubic.basecode.math.MatrixStats;
@@ -217,7 +217,7 @@ public class ExpressionDataSampleCorrelation {
      */
     private static void writeImage( ColorMatrix matrix, File location, String fileName, int size, boolean addlabels )
             throws IOException {
-        JMatrixDisplay writer = new JMatrixDisplay( matrix );
+        MatrixDisplay writer = new MatrixDisplay( matrix );
         writer.setCellSize( new Dimension( size, size ) );
         File f = new File( location, fileName );
         writer.saveImage( matrix, f.getAbsolutePath(), addlabels, false );

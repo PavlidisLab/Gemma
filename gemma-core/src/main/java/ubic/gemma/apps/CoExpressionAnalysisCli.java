@@ -44,9 +44,9 @@ import org.apache.commons.lang.time.StopWatch;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.dataStructure.matrix.StringMatrix2DNamed;
-import ubic.basecode.gui.ColorMap;
-import ubic.basecode.gui.ColorMatrix;
-import ubic.basecode.gui.JMatrixDisplay;
+import ubic.basecode.graphics.ColorMap;
+import ubic.basecode.graphics.ColorMatrix;
+import ubic.basecode.graphics.MatrixDisplay;
 import ubic.basecode.io.reader.StringMatrixReader;
 import ubic.gemma.analysis.coexpression.GeneEffectSizeCoExpressionAnalyzer;
 import ubic.gemma.analysis.coexpression.ProbeLinkCoexpressionAnalyzer;
@@ -444,8 +444,8 @@ public class CoExpressionAnalysisCli extends AbstractSpringAwareCLI {
         ColorMatrix rankColorMatrix = new ColorMatrix( rankMatrix );
         rankColorMatrix.setColorMap( ColorMap.GREENRED_COLORMAP );
 
-        JMatrixDisplay dataMatrixDisplay = new JMatrixDisplay( dataColorMatrix );
-        JMatrixDisplay rankMatrixDisplay = new JMatrixDisplay( rankColorMatrix );
+        MatrixDisplay dataMatrixDisplay = new MatrixDisplay( dataColorMatrix );
+        MatrixDisplay rankMatrixDisplay = new MatrixDisplay( rankColorMatrix );
 
         dataMatrixDisplay.saveImage( filebaseName + ".png", true );
         rankMatrixDisplay.saveImage( filebaseName + ".ranks.png", true );

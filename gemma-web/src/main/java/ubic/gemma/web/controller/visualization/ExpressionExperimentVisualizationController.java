@@ -28,7 +28,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.basecode.gui.JMatrixDisplay;
+import ubic.basecode.graphics.MatrixDisplay;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.visualization.ExpressionDataMatrixVisualizationService;
 import ubic.gemma.web.controller.BaseMultiActionController;
@@ -86,7 +86,7 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
             OutputStream out = null;
             try {
                 out = response.getOutputStream();
-                JMatrixDisplay display = expressionDataMatrixVisualizationService.createHeatMap( expressionDataMatrix );
+                MatrixDisplay display = expressionDataMatrixVisualizationService.createHeatMap( expressionDataMatrix );
                 if ( display != null ) {
                     response.setContentType( DEFAULT_CONTENT_TYPE );
                     display.saveImageToPng( display.getColorMatrix(), out, true, true );

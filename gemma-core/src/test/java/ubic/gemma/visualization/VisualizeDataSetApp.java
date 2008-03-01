@@ -45,8 +45,8 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
-import ubic.basecode.gui.ColorMatrix;
-import ubic.basecode.gui.JMatrixDisplay;
+import ubic.basecode.graphics.ColorMatrix;
+import ubic.basecode.graphics.MatrixDisplay;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 
 /**
@@ -87,7 +87,7 @@ public class VisualizeDataSetApp {
      * @param title
      * @param matrixDisplay
      */
-    public void showDataMatrix( String title, JMatrixDisplay matrixDisplay ) {
+    public void showDataMatrix( String title, MatrixDisplay matrixDisplay ) {
 
         JFrame frame = createGui( title );
         frame.add( matrixDisplay );
@@ -228,7 +228,7 @@ public class VisualizeDataSetApp {
         }
 
         ColorMatrix colorMatrix = new ColorMatrix( matrix );
-        visualizeDataSet.showDataMatrix( "A heat map", new JMatrixDisplay( colorMatrix ) );
+        visualizeDataSet.showDataMatrix( "A heat map", new MatrixDisplay( colorMatrix ) );
 
         List<double[]> data = new ArrayList<double[]>();
 
