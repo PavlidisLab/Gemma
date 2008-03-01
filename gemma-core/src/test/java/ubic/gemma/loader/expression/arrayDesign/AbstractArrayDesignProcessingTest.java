@@ -18,6 +18,7 @@
  */
 package ubic.gemma.loader.expression.arrayDesign;
 
+import java.io.FileNotFoundException;
 import java.util.Collection;
 
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
@@ -34,7 +35,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContextTest {
 
-    ArrayDesign ad;
+    static ArrayDesign ad;
 
     final static String ACCESSION = "GPL140";
 
@@ -57,13 +58,20 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
             AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
 
-            final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( ACCESSION, true,
-                    true, false );
-            ad = ads.iterator().next();
+            try {
+                final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( ACCESSION,
+                        true, true, false );
 
+                ad = ads.iterator().next();
+                arrayDesignService.thawLite( ad );
+            } catch ( Exception e ) {
+                if ( e.getCause() instanceof FileNotFoundException ) {
+                    log.warn( "problem with initializing array design for test: " + e.getCause().getMessage() );
+                    return;
+                }
+                throw e;
+            }
         }
-
-        arrayDesignService.thawLite( ad );
 
     }
 

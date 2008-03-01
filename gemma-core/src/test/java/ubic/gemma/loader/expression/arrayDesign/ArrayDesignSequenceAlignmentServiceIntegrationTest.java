@@ -40,7 +40,7 @@ public class ArrayDesignSequenceAlignmentServiceIntegrationTest extends Abstract
      * {@link ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService#processArrayDesign(ubic.gemma.model.expression.arrayDesign.ArrayDesign, ubic.gemma.model.genome.Taxon)}.
      */
     public final void testProcessArrayDesign() throws Exception {
-
+        if (ad == null) return;
         String gfClientExe = ConfigUtils.getString( "gfClient.exe" );
 
         if ( gfClientExe == null ) {

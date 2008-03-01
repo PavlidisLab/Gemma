@@ -37,11 +37,6 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
 
     Blat blat;
 
-    @Override
-    protected void onTearDownInTransaction() throws Exception {
-        super.onTearDownInTransaction();
-    }
-
     private boolean fastaCmdExecutableExists() {
         String fastacmdExe = ConfigUtils.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
         if ( fastacmdExe == null ) {
@@ -63,6 +58,7 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
      */
     public final void testProcessArrayDesign() throws Exception {
         if ( !fastaCmdExecutableExists() ) return;
+        if (ad == null) return;
         ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
 
         try {
