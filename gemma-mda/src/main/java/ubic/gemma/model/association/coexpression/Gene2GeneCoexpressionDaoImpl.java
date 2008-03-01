@@ -76,6 +76,7 @@ public class Gene2GeneCoexpressionDaoImpl extends
 
         int count = 0;
         for ( Iterator<Gene2GeneCoexpression> it = lr.iterator(); it.hasNext(); ) {
+            it.next();
             if ( count > MAX_RESULTS ) {
                 it.remove();
             }
