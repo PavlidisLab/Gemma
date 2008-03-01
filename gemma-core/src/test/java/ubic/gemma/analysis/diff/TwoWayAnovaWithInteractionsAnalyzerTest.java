@@ -71,6 +71,7 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
      * 
      *
      */
+    @SuppressWarnings("unchecked")
     public void testTwoWayAnova() throws Exception {
 
         log.debug( "Testing TwoWayAnova method in " + TwoWayAnovaWithInteractionsAnalyzer.class.getName() );
