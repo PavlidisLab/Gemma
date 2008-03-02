@@ -91,13 +91,13 @@
 		<filter-class>org.displaytag.filter.ResponseOverrideFilter</filter-class>
 	</filter>
 	<!--
-		This caused big performance problems.
+		This caused big performance problems.	-->
 		<filter>
 		<filter-name>compressionFilter</filter-name>
 		<filter-class>ubic.gemma.web.filter.GZIPFilter</filter-class>
 		</filter>
 		
-	-->
+
 	<filter-mapping>
 		<filter-name>encodingFilter</filter-name>
 		<url-pattern>/j_security_check</url-pattern>

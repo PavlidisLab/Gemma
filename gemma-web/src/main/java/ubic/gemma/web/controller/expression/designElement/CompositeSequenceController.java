@@ -27,7 +27,6 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.ajaxanywhere.AAUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.servlet.ModelAndView;
@@ -202,14 +201,7 @@ public class CompositeSequenceController extends BaseMultiActionController {
 
         Map<BlatResult, BlatResultGeneSummary> blatResults = getBlatMappingSummary( cs );
 
-        ModelAndView mav;
-        if ( AAUtils.isAjaxRequest( request ) ) {
-            AAUtils.addZonesToRefresh( request, "csTable" );
-            // really this is no longer needed.
-            mav = new ModelAndView( "compositeSequence.detail.abbreviated" );
-        } else {
-            mav = new ModelAndView( "compositeSequence.detail" );
-        }
+        ModelAndView mav = new ModelAndView( "compositeSequence.detail" );
 
         mav.addObject( "compositeSequence", cs );
         mav.addObject( "blatResults", blatResults );

@@ -94,29 +94,6 @@ public class ArrayDesignMapResultWrapper extends TableDecorator {
 
     }
 
-    // private String generateGeneProductLink( GeneProductValueObject gpVo ) {
-    // StringBuffer gpStr = new StringBuffer();
-    // String fullName = gpVo.getName();
-    // String shortName = StringUtils.abbreviate( fullName, 20 );
-    //
-    // String ncbiLink = "";
-    // if ( gpVo.getType().equalsIgnoreCase( "RNA" ) ) {
-    // ncbiLink = "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=Nucleotide&cmd=search&term=";
-    // } else {
-    // // assume protein
-    // ncbiLink = "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=Protein&cmd=search&term=";
-    //
-    // }
-    // if ( gpVo.getNcbiId() != null ) {
-    // gpStr.append( "&nbsp;&nbsp;<span title='" + fullName + "'>" + shortName
-    // + "</span><a target='_blank' href='" + ncbiLink + gpVo.getNcbiId()
-    // + "'><img height=10 width=10 src='/Gemma/images/logo/ncbi.gif' /></a><BR>" );
-    // } else {
-    // gpStr.append( "&nbsp;&nbsp;<span title='" + fullName + "'>" + shortName + "</span><BR>" );
-    // }
-    // return gpStr.toString();
-    // }
-
     public String getCompositeSequenceNameLink() {
         if ( getCurrentRowObject() == null ) return "";
         CompositeSequenceMapValueObject object = ( CompositeSequenceMapValueObject ) getCurrentRowObject();

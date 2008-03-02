@@ -87,8 +87,6 @@ Mapping URLS to controllers
 			<prop key="/indexer.html">indexController</prop>
 			<prop key="/searcher.html">generalSearchController</prop>
 			<prop key="/searchCoexpression.html">coexpressionSearchController</prop>
-			<prop key="/searchCoexpressionMultiple.html">multipleCoexpressionSearchController</prop>
-			<prop key="/searchCoexpressionExt.html">extCoexpressionSearchController</prop>
 			<prop key="/securityManager.html">securityFormController</prop>
 			<prop key="/geoBrowser/*">geoRecordBrowserController</prop>
 			<prop key="/whatsnew/*">whatsNewController</prop>
@@ -494,7 +492,7 @@ Mapping URLS to controllers
 					<property name="creator">
 						<bean class="org.directwebremoting.spring.BeanCreator">
 							<property name="bean"
-								ref="extCoexpressionSearchController"/>
+								ref="coexpressionSearchController"/>
 						</bean>
 					</property>
 					<property name="includes">
@@ -1024,27 +1022,27 @@ Mapping URLS to controllers
 					</property>
 				</bean>
 			</entry>
-			<entry key="ubic.gemma.web.controller.coexpressionSearch.ExtCoexpressionSearchCommand">
+			<entry key="ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchCommand">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean"/>
 				</bean>
 			</entry>
-			<entry key="ubic.gemma.web.controller.coexpressionSearch.ExtCoexpressionValueObject">
+			<entry key="ubic.gemma.web.controller.coexpressionSearch.CoexpressionValueObjectExt">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean"/>
 				</bean>
 			</entry>
-			<entry key="ubic.gemma.web.controller.coexpressionSearch.ExtCoexpressionDatasetValueObject">
+			<entry key="ubic.gemma.web.controller.coexpressionSearch.CoexpressionDatasetValueObject">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean"/>
 				</bean>
 			</entry>
-			<entry key="ubic.gemma.web.controller.coexpressionSearch.ExtCoexpressionMetaValueObject">
+			<entry key="ubic.gemma.web.controller.coexpressionSearch.CoexpressionMetaValueObject">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean"/>
 				</bean>
 			</entry>
-			<entry key="ubic.gemma.web.controller.coexpressionSearch.ExtCoexpressionSummaryValueObject">
+			<entry key="ubic.gemma.web.controller.coexpressionSearch.CoexpressionSummaryValueObject">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean"/>
 				</bean>

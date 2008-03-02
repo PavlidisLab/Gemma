@@ -25,7 +25,7 @@ import ubic.gemma.model.genome.Gene;
 /**
  * @author luke
  */
-public class ExtCoexpressionValueObject {
+public class CoexpressionValueObjectExt {
     
     private Gene queryGene;
     private Gene foundGene;

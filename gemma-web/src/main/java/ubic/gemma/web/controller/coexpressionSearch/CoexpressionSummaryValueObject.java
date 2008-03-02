@@ -3,7 +3,7 @@ package ubic.gemma.web.controller.coexpressionSearch;
 /**
  * @author luke
  */
-public class ExtCoexpressionSummaryValueObject {
+public class CoexpressionSummaryValueObject {
 
     int datasetsAvailable;
     int datasetsTested;

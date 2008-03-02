@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2008 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package ubic.gemma.web.controller.common;
 
 import java.util.Collection;
@@ -117,13 +135,13 @@ public class CharacteristicBrowserController extends BaseFormController {
                 vcFromDatabase = ( VocabCharacteristic ) characteristicService.create( VocabCharacteristic.Factory
                         .newInstance( null, null, cFromDatabase.getValue(), cFromDatabase.getCategory(), cFromDatabase
                                 .getEvidenceCode(), cFromDatabase.getName(), cFromDatabase.getDescription(), null, null // don't
-                                                                                                                        // copy
-                                                                                                                        // AuditTrail
-                                                                                                                        // to
-                                                                                                                        // avoid
-                                                                                                                        // cascade
-                                                                                                                        // error...
-                                                                                                                        // cFromDatabase.getAuditTrail()
+                        // copy
+                        // AuditTrail
+                        // to
+                        // avoid
+                        // cascade
+                        // error...
+                        // cFromDatabase.getAuditTrail()
                         ) );
                 Object parent = charToParent.get( cFromDatabase );
                 removeFromParent( cFromDatabase, parent );
@@ -134,7 +152,7 @@ public class CharacteristicBrowserController extends BaseFormController {
                 cFromDatabase = characteristicService.create( Characteristic.Factory.newInstance( vcFromDatabase
                         .getValue(), vcFromDatabase.getCategory(), vcFromDatabase.getEvidenceCode(), vcFromDatabase
                         .getName(), vcFromDatabase.getDescription(), null // don't copy AuditTrail to avoid cascade
-                                                                            // error... vcFromDatabase.getAuditTrail()
+                        // error... vcFromDatabase.getAuditTrail()
                         ) );
                 Object parent = charToParent.get( vcFromDatabase );
                 removeFromParent( vcFromDatabase, parent );

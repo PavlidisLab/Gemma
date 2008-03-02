@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2006-2008 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,29 +27,26 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.acegisecurity.context.SecurityContext;
-import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
 import org.apache.commons.collections.Transformer;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.validation.BindException;
-import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.analysis.coexpression.GeneLinkCoexpressionAnalyzer;
 import ubic.gemma.analysis.coexpression.ProbeLinkCoexpressionAnalyzer;
-import ubic.gemma.loader.genome.taxon.SupportedTaxa;
-import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
+import ubic.gemma.model.analysis.GeneCoexpressionAnalysis;
+import ubic.gemma.model.analysis.GeneCoexpressionAnalysisService;
+import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
+import ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService;
 import ubic.gemma.model.coexpression.CoexpressedGenesDetails;
+import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.coexpression.CoexpressionValueObject;
+import ubic.gemma.model.common.Securable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -58,379 +55,682 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.ontology.GeneOntologyService;
+import ubic.gemma.ontology.OntologyTerm;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
-import ubic.gemma.util.progress.ProgressJob;
-import ubic.gemma.util.progress.ProgressManager;
-import ubic.gemma.web.controller.BackgroundControllerJob;
-import ubic.gemma.web.controller.BackgroundProcessingFormBindController;
-import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
-import ubic.gemma.web.taglib.displaytag.coexpressionSearch.CoexpressionWrapper;
-import ubic.gemma.web.util.ConfigurationCookie;
-import ubic.gemma.web.util.MessageUtil;
+import ubic.gemma.util.CountingMap;
+import ubic.gemma.util.GemmaLinkUtils;
+import ubic.gemma.web.controller.BaseFormController;
+import ubic.gemma.web.view.TextView;
 
 /**
- * A <link>SimpleFormController<link> providing search functionality of genes or design elements (probe sets). The
- * success view returns either a visual representation of the result set or a downloadable data file.
- * <p>
- * {@link stringency} sets the number of data sets the link must be seen in before it is listed in the results, and
- * {@link species} sets the type of species to search. {@link keywords} restrict the search.
- * 
- * @author keshav
+ * @author luke
  * @version $Id$
  * @spring.bean id="coexpressionSearchController"
- * @spring.property name = "commandName" value="coexpressionSearchCommand"
- * @spring.property name = "commandClass" value="ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchCommand"
- * @spring.property name = "formView" value="searchCoexpression"
- * @spring.property name = "successView" value="searchCoexpression"
  * @spring.property name = "geneService" ref="geneService"
  * @spring.property name = "taxonService" ref="taxonService"
  * @spring.property name = "searchService" ref="searchService"
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name = "probeLinkCoexpressionAnalyzer" ref="probeLinkCoexpressionAnalyzer"
- * @spring.property name = "validator" ref="genericBeanValidator"
+ * @spring.property name = "gene2GeneCoexpressionService" ref="gene2GeneCoexpressionService"
+ * @spring.property name = "geneCoexpressionAnalysisService" ref="geneCoexpressionAnalysisService"
+ * @spring.property name = "geneOntologyService" ref="geneOntologyService"
  */
-public class CoexpressionSearchController extends BackgroundProcessingFormBindController {
+public class CoexpressionSearchController extends BaseFormController {
+
+    /**
+     * How many genes to fill in the "expression experiments tested in" and "go overlap" info for.
+     */
+    private static final int NUM_GENES_TO_DETAIL = 100;
+
+    private static final int DEFAULT_STRINGENCY = 2;
+
     private static Log log = LogFactory.getLog( CoexpressionSearchController.class.getName() );
-
-    private int MAX_GENES_TO_RETURN = 50;
-    private int DEFAULT_STRINGENCY = 3;
-
-    private static final String COOKIE_NAME = "coexpressionSearchCookie";
 
     private GeneService geneService = null;
     private TaxonService taxonService = null;
     private SearchService searchService = null;
     private ExpressionExperimentService expressionExperimentService = null;
-    ProbeLinkCoexpressionAnalyzer probeLinkCoexpressionAnalyzer;
+    private ProbeLinkCoexpressionAnalyzer probeLinkCoexpressionAnalyzer = null;
+    private Gene2GeneCoexpressionService gene2GeneCoexpressionService = null;
+    private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService = null;
+    private GeneOntologyService geneOntologyService = null;
+
+    /**
+     * @param searchOptions
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public CoexpressionMetaValueObject doSearch( CoexpressionSearchCommand searchOptions ) {
+        Collection<Gene> genes = geneService.loadMultiple( searchOptions.getGeneIds() );
+        CoexpressionMetaValueObject result;
+        if ( genes == null || genes.isEmpty() )
+            return getEmptyResult();
+        else if ( searchOptions.getCannedAnalysisId() != null )
+            result = getCannedAnalysisResults( searchOptions.getCannedAnalysisId(), genes, searchOptions
+                    .getStringency(), searchOptions.getQueryGenesOnly() );
+        else
+            result = getCustomAnalysisResults( searchOptions.getEeIds(), genes, searchOptions.getStringency(),
+                    searchOptions.getQueryGenesOnly() );
+        return result;
+    }
+
+    /**
+     * @param query
+     * @param taxonId
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<Long> findExpressionExperiments( String query, Long taxonId ) {
+        /*
+         * TODO this might be too slow, given that we just need the ids, but I don't want to add a service method until
+         * that's proven to be the case... --- this is actually usually pretty fast, as there is a cache in the EE
+         * dao.-- PP
+         */
+        Taxon taxon = taxonService.load( taxonId );
+        Collection<Long> eeIds = new HashSet<Long>();
+        if ( query.length() > 0 ) {
+            List<SearchResult> results = searchService.search( SearchSettings.ExpressionExperimentSearch( query ),
+                    false ).get( ExpressionExperiment.class );
+            for ( SearchResult result : results ) {
+                eeIds.add( result.getId() );
+            }
+            if ( taxon != null ) {
+                Collection<Long> eeIdsToKeep = new HashSet<Long>();
+                Collection<ExpressionExperiment> ees = expressionExperimentService.findByTaxon( taxon );
+                for ( ExpressionExperiment ee : ees ) {
+                    if ( eeIds.contains( ee.getId() ) ) eeIdsToKeep.add( ee.getId() );
+                }
+                eeIds.retainAll( eeIdsToKeep );
+            }
+        } else {
+
+            Collection<ExpressionExperiment> ees = ( taxon != null ) ? expressionExperimentService.findByTaxon( taxon )
+                    : expressionExperimentService.loadAll();
+            for ( ExpressionExperiment ee : ees ) {
+                eeIds.add( ee.getId() );
+            }
+        }
+        return eeIds;
+    }
+
+    /**
+     * @return collection of the available caned analyses, for all taxa.
+     */
+    public Collection<CannedAnalysisValueObject> getCannedAnalyses() {
+        Collection<CannedAnalysisValueObject> analyses = new ArrayList<CannedAnalysisValueObject>();
+        for ( Object o : taxonService.loadAll() ) {
+            Taxon taxon = ( Taxon ) o;
+            for ( Object p : geneCoexpressionAnalysisService.findByTaxon( taxon ) ) {
+                GeneCoexpressionAnalysis analysis = ( GeneCoexpressionAnalysis ) p;
+                CannedAnalysisValueObject cavo = new CannedAnalysisValueObject();
+                cavo.setId( analysis.getId() );
+                cavo.setName( analysis.getName() );
+                cavo.setDescription( analysis.getDescription() );
+                cavo.setTaxon( taxon );
+
+                /*
+                 * FIXME this number isn't quite right if there are 'troubled' data sets we filter out.
+                 */
+                cavo.setNumDatasets( geneCoexpressionAnalysisService.getNumDatasetsAnalyzed( analysis ) );
+
+                analyses.add( cavo );
+            }
+        }
+        return analyses;
+    }
+
+    public CoexpressionMetaValueObject getEmptyResult() {
+        return new CoexpressionMetaValueObject();
+    }
+
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    public void setGene2GeneCoexpressionService( Gene2GeneCoexpressionService gene2GeneCoexpressionService ) {
+        this.gene2GeneCoexpressionService = gene2GeneCoexpressionService;
+    }
+
+    public void setGeneCoexpressionAnalysisService( GeneCoexpressionAnalysisService geneCoexpressionAnalysisService ) {
+        this.geneCoexpressionAnalysisService = geneCoexpressionAnalysisService;
+    }
+
+    public void setGeneOntologyService( GeneOntologyService geneOntologyService ) {
+        this.geneOntologyService = geneOntologyService;
+    }
+
+    public void setGeneService( GeneService geneService ) {
+        this.geneService = geneService;
+    }
 
     public void setProbeLinkCoexpressionAnalyzer( ProbeLinkCoexpressionAnalyzer probeLinkCoexpressionAnalyzer ) {
         this.probeLinkCoexpressionAnalyzer = probeLinkCoexpressionAnalyzer;
     }
 
-    public CoexpressionSearchController() {
-        /*
-         * if true, reuses the same command object across the edit-submit-process (get-post-process).
-         */
-        setSessionForm( true );
+    public void setSearchService( SearchService searchService ) {
+        this.searchService = searchService;
     }
 
-    /**
-     * @param request
-     * @return Object
-     * @throws ServletException
-     */
-    @Override
-    protected Object formBackingObject( HttpServletRequest request ) {
-
-        CoexpressionSearchCommand csc = new CoexpressionSearchCommand();
-
-        if ( request.getParameter( "id" ) != null ) {
-            loadGETParameters( request, csc );
-        } else if ( request.getParameter( "searchString" ) != null ) {
-            loadGETParameters( request, csc );
-        } else {
-            loadCookie( request, csc );
-        }
-        return csc;
-
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
     }
 
-    /**
-     * Mock function - do not use.
+    /*
+     * Handle case of text export of the results.
      * 
-     * @param request
-     * @param response
-     * @param command
-     * @param errors
-     * @return ModelAndView
-     * @throws Exception
+     * @see org.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.HttpServletRequest,
+     *      javax.servlet.http.HttpServletResponse)
      */
-    @SuppressWarnings( { "unused", "unchecked" })
+    @SuppressWarnings("unchecked")
     @Override
-    public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
-            BindException errors ) throws Exception {
+    protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
+            throws Exception {
 
-        CoexpressionSearchCommand commandObject = ( ( CoexpressionSearchCommand ) command );
+        if ( request.getParameter( "export" ) != null ) {
 
-        Collection<Gene> genesFound = new HashSet<Gene>();
+            Collection<Long> geneIds = extractIds( request.getParameter( "g" ) );
+            Collection<Gene> genes = geneService.loadMultiple( geneIds );
 
-        // find the genes specified by the search
-        // if an id is specified, find the identified gene
-        // if there is no exact search specified, do an inexact search
-        // if exact search is on, find only by official symbol
-        // if exact search is auto (usually from the front page), check if there is an exact search match. If there is
-        // none, do inexact search.
-        if ( commandObject.getId() != null && StringUtils.isEmpty( commandObject.getSearchString() ) ) {
-            Gene g = geneService.load( Long.parseLong( commandObject.getId() ) );
-            genesFound.add( g );
-        } else if ( commandObject.getExactSearch() == null ) {
-            List<SearchResult> geneSearchResults = searchService.search(
-                    SearchSettings.GeneSearch( commandObject.getSearchString(), null ) ).get( Gene.class );
-            for ( SearchResult sr : geneSearchResults ) {
-                genesFound.add( ( Gene ) sr.getResultObject() );
+            boolean queryGenesOnly = request.getParameter( "q" ) != null;
+            int stringency = DEFAULT_STRINGENCY;
+            try {
+                stringency = Integer.parseInt( request.getParameter( "s" ) );
+            } catch ( Exception e ) {
+                log.warn( "invalid stringency; using default " + stringency );
             }
-        } else if ( commandObject.getGeneIdSearch().equalsIgnoreCase( "true" ) ) {
-            String geneId = commandObject.getSearchString();
-            Long id = Long.parseLong( geneId );
-            Collection<Long> ids = new ArrayList<Long>();
-            ids.add( id );
-            genesFound.addAll( geneService.loadMultiple( ids ) );
-        } else if ( commandObject.getExactSearch().equalsIgnoreCase( "on" ) ) {
-            genesFound.addAll( geneService.findByOfficialSymbol( commandObject.getSearchString() ) );
-        } else {
-            genesFound.addAll( geneService.findByOfficialSymbol( commandObject.getSearchString() ) );
-            if ( genesFound.size() == 0 ) {
-                List<SearchResult> geneSearchResults = searchService.search(
-                        SearchSettings.GeneSearch( commandObject.getSearchString(), null ) ).get( Gene.class );
-                for ( SearchResult sr : geneSearchResults ) {
-                    genesFound.add( ( Gene ) sr.getResultObject() );
+
+            Long cannedAnalysisId = null;
+            String cannedAnalysisString = request.getParameter( "a" );
+            if ( cannedAnalysisString != null ) {
+                try {
+                    cannedAnalysisId = Long.parseLong( cannedAnalysisString );
+                } catch ( NumberFormatException e ) {
+                    log.warn( "invalid canned analysis id" );
                 }
             }
-        }
 
-        // filter genes by Taxon
-
-        Collection<Gene> genesToRemove = new ArrayList<Gene>();
-        Taxon taxon = commandObject.getTaxon();
-        if ( !( commandObject.getGeneIdSearch().equalsIgnoreCase( "true" ) ) && taxon != null && taxon.getId() != null ) {
-            for ( Gene gene : genesFound ) {
-                if ( gene.getTaxon().getId().longValue() != taxon.getId().longValue() ) {
-                    genesToRemove.add( gene );
-                }
-            }
-            genesFound.removeAll( genesToRemove );
-        }
-
-        // if no genes found
-        // return error
-        if ( genesFound.size() == 0 ) {
-            saveMessage( request, "No genes found based on criteria." );
-            return super.showForm( request, response, errors );
-        }
-
-        // check if more than 1 gene found
-        // if yes, then query user for gene to be used
-        if ( genesFound.size() > 1 ) {
-            // check if more than 50 genes have been found.
-            // if there are more, then warn the user and truncate list
-            if ( genesFound.size() > MAX_GENES_TO_RETURN ) {
-                genesToRemove = new ArrayList<Gene>();
-                int count = 0;
-                for ( Gene gene : genesFound ) {
-                    if ( count >= MAX_GENES_TO_RETURN ) {
-                        genesToRemove.add( gene );
-                    }
-                    count++;
-                }
-                genesFound.removeAll( genesToRemove );
-                saveMessage( request, "Found " + count + " genes. Truncating list to first " + MAX_GENES_TO_RETURN
-                        + "." );
+            CoexpressionMetaValueObject result;
+            if ( cannedAnalysisId != null ) {
+                result = getCannedAnalysisResults( cannedAnalysisId, genes, stringency, queryGenesOnly );
+            } else {
+                Collection<Long> eeIds = extractIds( request.getParameter( "ee" ) );
+                result = getCustomAnalysisResults( eeIds, genes, stringency, queryGenesOnly );
             }
 
-            saveMessage( request, "Multiple genes matched. Choose which gene to use." );
-
-            // set to exact search
-            commandObject.setExactSearch( "on" );
-            ModelAndView mav = super.showForm( request, errors, getFormView() );
-            mav.addObject( "genes", genesFound );
+            ModelAndView mav = new ModelAndView( new TextView() );
+            String output = result.toString();
+            mav.addObject( "text", output.length() > 0 ? output : "no results" );
             return mav;
-        }
-
-        // At this point, only one gene has been found
-
-        // find coexpressed genes
-
-        // find expressionExperiments via lucene if the query is eestring-constrained
-        /*
-         * FIXME this is probably a little broken now.
-         */
-        Collection<SearchResult> eeSearchResults;
-        if ( StringUtils.isNotBlank( commandObject.getEeSearchString() ) ) {
-            eeSearchResults = searchService.search(
-                    SearchSettings.ExpressionExperimentSearch( commandObject.getEeSearchString() ) ).get(
-                    ExpressionExperiment.class );
-            if ( eeSearchResults.size() == 0 ) {
-                saveMessage( request, "No datasets matched - defaulting to all datasets" );
-            }
-        } else {
-            eeSearchResults = new ArrayList<SearchResult>();
-        }
-
-        Gene sourceGene = ( Gene ) ( genesFound.toArray() )[0];
-        commandObject.setSourceGene( sourceGene );
-
-        ModelAndView mav = super.showForm( request, response, errors );
-        mav.addObject( "sourceGene", commandObject.getSourceGene() );
-
-        // set command object to reflect that only one gene has been found
-        commandObject.setSearchString( sourceGene.getOfficialSymbol() );
-        commandObject.setGeneIdSearch( "false" );
-        commandObject.setId( null );
-
-        Integer numExpressionExperiments = 0;
-        Collection<Long> possibleEEs = expressionExperimentService.findByGene( sourceGene );
-
-        if ( ( possibleEEs == null ) || ( possibleEEs.isEmpty() ) ) {
-            mav = super.showForm( request, errors, getFormView() );
-            saveMessage( request, "There are no " + taxon.getScientificName()
-                    + " arrays in the system that assay for the gene "
-                    + commandObject.getSourceGene().getOfficialSymbol() );
-            return mav;
-        }
-
-        Collection<ExpressionExperiment> ees = null;
-        if ( eeSearchResults.size() > 0 ) {
-            // if there are matches, filter the expression experiments first by taxon
-
-            Collection<SearchResult> eeToRemove = new HashSet<SearchResult>();
-            for ( SearchResult ee : eeSearchResults ) {
-                Taxon t = expressionExperimentService.getTaxon( ee.getId() );
-                if ( t.getId().longValue() != taxon.getId().longValue() ) eeToRemove.add( ee );
-
-                if ( !possibleEEs.contains( ee.getId() ) ) eeToRemove.add( ee );
-            }
-            eeSearchResults.removeAll( eeToRemove );
-
-            if ( eeSearchResults.isEmpty() ) {
-                mav = super.showForm( request, errors, getFormView() );
-                saveMessage( request, "There are no " + taxon.getScientificName()
-                        + " arrays in the system that assay for the gene "
-                        + commandObject.getSourceGene().getOfficialSymbol() + " matching search criteria "
-                        + commandObject.getEeSearchString() );
-                return mav;
-            }
 
         } else {
-            ees = expressionExperimentService.loadMultiple( possibleEEs );
+            return new ModelAndView( this.getFormView() );
         }
-
-        removeTroubledEes( ees );
-
-        commandObject.setToUseEE( ees );
-        numExpressionExperiments = ees.size();
-
-        // stringency. Cannot be less than 1; set to one if it is
-        Integer stringency = commandObject.getStringency();
-        if ( stringency == null ) {
-            stringency = DEFAULT_STRINGENCY;
-        } else if ( stringency < 1 ) {
-            stringency = DEFAULT_STRINGENCY;
-        }
-        commandObject.setStringency( stringency );
-
-        CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis( commandObject
-                .getSourceGene(), commandObject.getToUseEE(), commandObject.getStringency(), true, 100 ); // true = known
-        // genes only.
-
-        StopWatch watch = new StopWatch();
-
-        watch.start();
-
-        List<CoexpressionValueObject> coexpressedKnownGenes = coexpressions.getKnownGeneCoexpressionData( stringency );
-
-        List<CoexpressionValueObject> coexpressedPredictedGenes = coexpressions
-                .getPredictedCoexpressionData( stringency );
-
-        List<CoexpressionValueObject> coexpressedAlignedRegions = coexpressions
-                .getProbeAlignedCoexpressionData( stringency );
-
-        Collection<ExpressionExperimentValueObject> geneEEVos = retreiveEEFromDB( coexpressions
-                .getKnownGeneCoexpression().getExpressionExperimentIds(), coexpressions.getKnownGeneCoexpression() );
-        Collection<ExpressionExperimentValueObject> predictedEEVos = retreiveEEFromDB( coexpressions
-                .getPredictedCoexpressionType().getExpressionExperimentIds(), coexpressions
-                .getPredictedCoexpressionType() );
-        Collection<ExpressionExperimentValueObject> alignedEEVos = retreiveEEFromDB( coexpressions
-                .getProbeAlignedCoexpressionType().getExpressionExperimentIds(), coexpressions
-                .getProbeAlignedCoexpressionType() );
-
-        // Sort the Expression Experiments by contributing links.
-
-        Collection<ExpressionExperiment> eesQueryTestedIn = coexpressions.getEesQueryTestedIn();
-
-        if ( eesQueryTestedIn != null && eesQueryTestedIn.size() == 0 ) {
-            this.saveMessage( request, commandObject.getSourceGene().getName()
-                    + " was not tested in any available data set." );
-        } else if ( coexpressedKnownGenes.size() == 0 ) {
-            // this only makes sense if we are only returning known genes.
-            this.saveMessage( request, "No genes are coexpressed with " + commandObject.getSourceGene().getName()
-                    + " at the requested stringency." );
-        }
-
-        Cookie cookie = new CoexpressionSearchCookie( commandObject );
-        response.addCookie( cookie );
-
-        Long numPositiveCoexpressedGenes = new Long( coexpressions.getKnownGeneCoexpression()
-                .getPositiveStringencyLinkCount() );
-        Long numNegativeCoexpressedGenes = new Long( coexpressions.getKnownGeneCoexpression()
-                .getNegativeStringencyLinkCount() );
-        Long numKnownGenes = new Long( coexpressions.getNumKnownGenes() );
-        Long numPredictedGenes = new Long( coexpressions.getNumPredictedGenes() );
-        Long numProbeAlignedRegions = new Long( coexpressions.getNumProbeAlignedRegions() );
-        Long numStringencyGenes = new Long( coexpressions.getNumStringencyGenes() );
-        Long numStringencyPredictedGenes = new Long( coexpressions.getNumStringencyPredictedGenes() );
-        Long numStringencyProbeAlignedRegions = new Long( coexpressions.getNumStringencyProbeAlignedRegions() );
-
-        if ( eesQueryTestedIn != null ) {
-            mav.addObject( "queryTestedEes", eesQueryTestedIn.size() );
-        } else {
-            mav.addObject( "queryTestedEes", 0 );
-        }
-
-        mav.addObject( "coexpressedGenes", coexpressedKnownGenes );
-        mav.addObject( "coexpressedPredictedGenes", coexpressedPredictedGenes );
-        mav.addObject( "coexpressedAlignedRegions", coexpressedAlignedRegions );
-
-        mav.addObject( "expressionExperiments", geneEEVos );
-        mav.addObject( "predictedExpressionExperiments", predictedEEVos );
-        mav.addObject( "alignedExpressionExperiments", alignedEEVos );
-
-        mav.addObject( "numLinkedExpressionExperiments", new Integer( geneEEVos.size() ) );
-        mav.addObject( "numLinkedPredictedExpressionExperiments", new Integer( predictedEEVos.size() ) );
-        mav.addObject( "numLinkedAlignedExpressionExperiments", new Integer( alignedEEVos.size() ) );
-
-        mav.addObject( "numUsedExpressionExperiments", new Long( coexpressions.getKnownGeneCoexpression()
-                .getNumberOfUsedExpressonExperiments() ) );
-        mav.addObject( "numUsedPredictedExpressionExperiments", new Long( coexpressions.getPredictedCoexpressionType()
-                .getNumberOfUsedExpressonExperiments() ) );
-        mav.addObject( "numUsedAlignedExpressionExperiments", new Long( coexpressions.getProbeAlignedCoexpressionType()
-                .getNumberOfUsedExpressonExperiments() ) );
-
-        mav.addObject( "numPositiveCoexpressedGenes", numPositiveCoexpressedGenes );
-        mav.addObject( "numNegativeCoexpressedGenes", numNegativeCoexpressedGenes );
-        mav.addObject( "numSearchedExpressionExperiments", numExpressionExperiments );
-        mav.addObject( "numQuerySpecificEEs", coexpressions.getQueryGeneSpecificExpressionExperiments().size() );
-
-        mav.addObject( "numKnownGenes", numKnownGenes );
-        mav.addObject( "numPredictedGenes", numPredictedGenes );
-        mav.addObject( "numProbeAlignedRegions", numProbeAlignedRegions );
-
-        mav.addObject( "numStringencyGenes", numStringencyGenes );
-        mav.addObject( "numStringencyPredictedGenes", numStringencyPredictedGenes );
-        mav.addObject( "numStringencyProbeAlignedRegions", numStringencyProbeAlignedRegions );
-        mav.addObject( "numSourceGeneGoTerms", coexpressions.getQueryGeneGoTermCount() );
-
-        // binding objects
-        mav.addObject( "coexpressionSearchCommand", commandObject );
-        populateTaxonReferenceData( mav.getModel() );
-        mav.addAllObjects( errors.getModel() );
-
-        Long elapsed = watch.getTime();
-        watch.stop();
-        if ( elapsed > 1000 ) log.info( "Processing after DAO call (elapsed time): " + elapsed );
-
-        this.saveMessage( request, "Coexpression query took: " + coexpressions.getDbQuerySeconds() );
-
-        return mav;
-
     }
 
     /**
+     * @param queryGene
+     * @param eevos
+     * @param coexp
+     * @param stringency
+     * @param queryGenesOnly
+     * @param geneIds
+     * @param results
+     * @param datasetResults
+     */
+    private void addExtCoexpressionValueObjects( Gene queryGene, List<ExpressionExperimentValueObject> eevos,
+            CoexpressedGenesDetails coexp, int stringency, boolean queryGenesOnly, Collection<Long> geneIds,
+            Collection<CoexpressionValueObjectExt> results, Collection<CoexpressionDatasetValueObject> datasetResults ) {
+        for ( CoexpressionValueObject cvo : coexp.getCoexpressionData( stringency ) ) {
+            if ( queryGenesOnly && !geneIds.contains( cvo.getGeneId() ) ) continue;
+            CoexpressionValueObjectExt ecvo = new CoexpressionValueObjectExt();
+            ecvo.setQueryGene( queryGene );
+            ecvo.setFoundGene( new SimpleGene( cvo.getGeneId(), cvo.getGeneName(), cvo.getGeneOfficialName() ) );
+
+            ecvo.setPositiveLinks( cvo.getPositiveLinkSupport() );
+            ecvo.setNegativeLinks( cvo.getNegativeLinkSupport() );
+            ecvo.setSupportKey( 10 * ( ecvo.getPositiveLinks() - ecvo.getNegativeLinks() ) );
+
+            /*
+             * this logic is taken from CoexpressionWrapper; I don't understand it, but that's where it comes from...
+             */
+            if ( !cvo.getExpressionExperiments().isEmpty() ) {
+                ecvo.setNonSpecificPositiveLinks( getNonSpecificLinkCount( cvo.getEEContributing2PositiveLinks(), cvo
+                        .getNonspecificEE() ) );
+                ecvo.setNonSpecificNegativeLinks( getNonSpecificLinkCount( cvo.getEEContributing2NegativeLinks(), cvo
+                        .getNonspecificEE() ) );
+                ecvo.setHybridizesWithQueryGene( cvo.isHybridizesWithQueryGene() );
+                ecvo.setSupportKey( ecvo.getSupportKey() - ecvo.getNonSpecificPositiveLinks()
+                        + ecvo.getNonSpecificNegativeLinks() );
+            }
+
+            ecvo.setNumDatasetsLinkTestedIn( cvo.getNumDatasetsTestedIn() );
+
+            ecvo.setGoOverlap( cvo.getGoOverlap() != null ? cvo.getGoOverlap().size() : 0 );
+            ecvo.setPossibleOverlap( cvo.getPossibleOverlap() );
+
+            Long[] tested = new Long[eevos.size()];
+            Long[] supported = new Long[eevos.size()];
+            for ( int i = 0; i < eevos.size(); ++i ) {
+                ExpressionExperimentValueObject eevo = eevos.get( i );
+                tested[i] = ( cvo.getDatasetsTestedIn() != null && cvo.getDatasetsTestedIn().contains( eevo.getId() ) ) ? eevo
+                        .getId()
+                        : 0;
+                supported[i] = ( cvo.getExperimentBitIds() != null && cvo.getExperimentBitIds().contains( eevo.getId() ) ) ? eevo
+                        .getId()
+                        : 0;
+            }
+            ecvo.setTestedDatasetVector( tested );
+            ecvo.setSupportingDatasetVector( supported );
+
+            ecvo.setSortKey();
+            results.add( ecvo );
+        }
+
+        results.size(); // for breakpoint
+
+        for ( ExpressionExperimentValueObject eevo : eevos ) {
+            if ( !coexp.getExpressionExperimentIds().contains( eevo.getId() ) ) continue;
+            ExpressionExperimentValueObject coexpEevo = coexp.getExpressionExperiment( eevo.getId() );
+            if ( coexpEevo == null ) continue;
+            CoexpressionDatasetValueObject ecdvo = new CoexpressionDatasetValueObject();
+            ecdvo.setId( eevo.getId() );
+            ecdvo.setQueryGene( queryGene.getOfficialSymbol() );
+            ecdvo.setCoexpressionLinkCount( coexp.getLinkCountForEE( coexpEevo.getId() ) );
+            ecdvo.setRawCoexpressionLinkCount( coexp.getRawLinkCountForEE( coexpEevo.getId() ) );
+            ecdvo.setProbeSpecificForQueryGene( coexpEevo.isProbeSpecificForQueryGene() );
+            ecdvo.setArrayDesignCount( eevo.getArrayDesignCount() );
+            ecdvo.setBioAssayCount( eevo.getBioAssayCount() );
+            datasetResults.add( ecdvo );
+        }
+    }
+
+    /**
+     * @param idString
+     * @return
+     */
+    private Collection<Long> extractIds( String idString ) {
+        Collection<Long> ids = new ArrayList<Long>();
+        if ( idString != null ) {
+            for ( String s : idString.split( "," ) ) {
+                try {
+                    ids.add( Long.parseLong( s ) );
+                } catch ( NumberFormatException e ) {
+                    log.warn( "invalid id " + s );
+                }
+            }
+        }
+        return ids;
+    }
+
+    /**
+     * @param eevos
+     * @param result
+     * @param supportCount
+     * @param supportingExperimentIds
+     * @param queryGene
+     */
+    private void generateDatasetSummary( List<ExpressionExperimentValueObject> eevos,
+            CoexpressionMetaValueObject result, CountingMap<Long> supportCount,
+            Collection<Long> supportingExperimentIds, Gene queryGene ) {
+        /*
+         * generate dataset summary info for this query gene...
+         */
+        for ( ExpressionExperimentValueObject eevo : eevos ) {
+            if ( !supportingExperimentIds.contains( eevo.getId() ) ) continue;
+            CoexpressionDatasetValueObject ecdvo = new CoexpressionDatasetValueObject();
+            ecdvo.setId( eevo.getId() );
+            ecdvo.setQueryGene( queryGene.getOfficialSymbol() );
+            ecdvo.setCoexpressionLinkCount( supportCount.get( eevo.getId() ).longValue() );
+            ecdvo.setRawCoexpressionLinkCount( null ); // not available
+            ecdvo.setProbeSpecificForQueryGene( true ); // only specific probes in these results
+            ecdvo.setArrayDesignCount( eevo.getArrayDesignCount() );
+            ecdvo.setBioAssayCount( eevo.getBioAssayCount() );
+            result.getKnownGeneDatasets().add( ecdvo );
+        }
+    }
+
+    /**
+     * @param cannedAnalysisId
+     * @param queryGenes
+     * @param stringency
+     * @param queryGenesOnly
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private CoexpressionMetaValueObject getCannedAnalysisResults( Long cannedAnalysisId, Collection<Gene> queryGenes,
+            int stringency, boolean queryGenesOnly ) {
+
+        GeneCoexpressionAnalysis analysis = ( GeneCoexpressionAnalysis ) geneCoexpressionAnalysisService
+                .load( cannedAnalysisId );
+
+        // FIXME I'm not sure this needs to be a list and also sorted.
+        Collection<ExpressionExperiment> datasetsAnalyzed = geneCoexpressionAnalysisService
+                .getDatasetsAnalyzed( analysis );
+        List<Long> eeIds = getSortedFilteredIdList( datasetsAnalyzed );
+
+        // This sort is necessary.(?)
+        List<ExpressionExperimentValueObject> eevos = getSortedEEvos( eeIds );
+
+        Map<Integer, Long> posToId = GeneLinkCoexpressionAnalyzer.getPositionToIdMap( eeIds );
+
+        /*
+         * FIXME I'm lazy and rushed, so I'm using an existing field for this info; probably better to add another field
+         * to the value object...
+         */
+        for ( ExpressionExperimentValueObject eevo : eevos ) {
+            eevo.setExternalUri( GemmaLinkUtils.getExpressionExperimentUrl( eevo.getId() ) );
+        }
+
+        CoexpressionMetaValueObject result = initValueObject( queryGenes, eevos, true );
+
+        /*
+         * find coexpression data for the query genes.
+         */
+        Map<Gene, Collection<Gene2GeneCoexpression>> gg2gs = null;
+        if ( queryGenesOnly ) {
+            gg2gs = gene2GeneCoexpressionService.findInterCoexpressionRelationship( queryGenes, analysis, stringency );
+        } else {
+            gg2gs = gene2GeneCoexpressionService.findCoexpressionRelationships( queryGenes, analysis, stringency );
+        }
+
+        Collection<CoexpressionValueObjectExt> ecvos = new ArrayList<CoexpressionValueObjectExt>();
+
+        Collection<Gene2GeneCoexpression> seen = new HashSet<Gene2GeneCoexpression>();
+
+        // populate the value objects.
+        for ( Gene queryGene : gg2gs.keySet() ) {
+            CountingMap<Long> supportCount = new CountingMap<Long>();
+            Collection<Long> supportingExperimentIds = new HashSet<Long>();
+            Collection<Long> datasetsTested = new HashSet<Long>();
+            int linksMetPositiveStringency = 0;
+            int linksMetNegativeStringency = 0;
+
+            Collection<Gene2GeneCoexpression> g2gs = gg2gs.get( queryGene );
+
+            for ( Gene2GeneCoexpression g2g : g2gs ) {
+                Gene foundGene = g2g.getFirstGene().equals( queryGene ) ? g2g.getSecondGene() : g2g.getFirstGene();
+                CoexpressionValueObjectExt ecvo = new CoexpressionValueObjectExt();
+                ecvo.setQueryGene( queryGene );
+                ecvo.setFoundGene( foundGene );
+
+                Collection<Long> testingDatasets = GeneLinkCoexpressionAnalyzer.getTestedExperimentIds( g2g, posToId );
+                testingDatasets.retainAll( eeIds ); // necesssary in case any were filtered out
+                Collection<Long> supportingDatasets = GeneLinkCoexpressionAnalyzer.getSupportingExperimentIds( g2g,
+                        posToId );
+                supportingDatasets.retainAll( eeIds ); // necessary in case any were filtered out.
+
+                ecvo.setTestedDatasetVector( getDatasetVector( testingDatasets, eeIds ) );
+                ecvo.setSupportingDatasetVector( getDatasetVector( supportingDatasets, eeIds ) );
+
+                int numTestingDatasets = testingDatasets.size();
+                int numSupportingDatasets = supportingDatasets.size();
+
+                /*
+                 * This check is necessary in case any data sets were filtered out. (i.e., we're not interested in the
+                 * full set of data sets that were used in the original analysis.
+                 */
+                if ( numSupportingDatasets < stringency ) {
+                    continue;
+                }
+
+                datasetsTested.addAll( testingDatasets );
+
+                if ( g2g.getEffect() < 0 ) {
+                    ecvo.setPositiveLinks( 0 );
+                    ecvo.setNegativeLinks( numSupportingDatasets );
+                    ++linksMetNegativeStringency;
+                } else {
+                    ecvo.setPositiveLinks( numSupportingDatasets );
+                    ecvo.setNegativeLinks( 0 );
+                    ++linksMetPositiveStringency;
+                }
+                ecvo.setSupportKey( ecvo.getPositiveLinks() - ecvo.getNegativeLinks() );
+                ecvo.setNumDatasetsLinkTestedIn( numTestingDatasets );
+
+                for ( Long id : supportingDatasets ) {
+                    supportCount.increment( id );
+                }
+
+                ecvo.setSortKey();
+
+                /*
+                 * This check prevents links from being shown twice when we do "among query genes". We don't skip
+                 * entirely so we get the counts for the summary table populated correctly.
+                 */
+                if ( !seen.contains( g2g ) ) {
+                    ecvos.add( ecvo );
+                }
+
+                supportingExperimentIds.addAll( supportingDatasets );
+                seen.add( g2g );
+            }
+
+            CoexpressionSummaryValueObject summary = makeSummary( eevos, datasetsTested, linksMetPositiveStringency,
+                    linksMetNegativeStringency );
+            result.getSummary().put( queryGene.getOfficialSymbol(), summary );
+
+            generateDatasetSummary( eevos, result, supportCount, supportingExperimentIds, queryGene );
+
+            getGoOverlap( ecvos, queryGene );
+        }
+
+        result.getKnownGeneResults().addAll( ecvos );
+
+        return result;
+    }
+
+    /**
+     * @param eeIds
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private List<ExpressionExperimentValueObject> getSortedEEvos( Collection<Long> eeIds ) {
+        List<ExpressionExperimentValueObject> eevos = new ArrayList<ExpressionExperimentValueObject>(
+                expressionExperimentService.loadValueObjects( eeIds ) );
+        Collections.sort( eevos, new Comparator<ExpressionExperimentValueObject>() {
+            public int compare( ExpressionExperimentValueObject eevo1, ExpressionExperimentValueObject eevo2 ) {
+                return eevo1.getId().compareTo( eevo2.getId() );
+            }
+        } );
+        return eevos;
+    }
+
+    @SuppressWarnings("unchecked")
+    private CoexpressionMetaValueObject getCustomAnalysisResults( Collection<Long> eeIds, Collection<Gene> genes,
+            int stringency, boolean queryGenesOnly ) {
+
+        if ( true ) {
+            throw new RuntimeException(
+                    "We're sorry. Custom analysis is not available at this time. Please select one of the other analysis options." );
+        }
+
+        if ( eeIds == null ) eeIds = new HashSet<Long>();
+        Collection<ExpressionExperiment> ees = getPossibleExpressionExperiments( genes );
+
+        if ( !eeIds.isEmpty() ) {
+            // remove the expression experiments we're not interested in...
+            Collection<ExpressionExperiment> eesToRemove = new HashSet<ExpressionExperiment>();
+            for ( ExpressionExperiment ee : ees ) {
+                if ( !eeIds.contains( ee.getId() ) ) eesToRemove.add( ee );
+            }
+            ees.removeAll( eesToRemove );
+        }
+
+        /*
+         * repopulate eeIds with the actual eeIds we'll be searching through and load ExpressionExperimentValueObjects
+         * to get summary information about the datasets...
+         */
+        eeIds.clear();
+        for ( ExpressionExperiment ee : ees ) {
+            eeIds.add( ee.getId() );
+        }
+        List<ExpressionExperimentValueObject> eevos = getSortedEEvos( eeIds );
+
+        /*
+         * I'm lazy and rushed, so I'm using an existing field for this info; probably better to add another field to
+         * the value object...
+         */
+        for ( ExpressionExperimentValueObject eevo : eevos ) {
+            eevo.setExternalUri( GemmaLinkUtils.getExpressionExperimentUrl( eevo.getId() ) );
+        }
+
+        CoexpressionMetaValueObject result = initValueObject( genes, eevos, false );
+
+        boolean knownGenesOnly = true; // !SecurityService.isUserAdmin();
+        result.setKnownGenesOnly( knownGenesOnly );
+
+        /*
+         * TODO this is done just naively right now. allow the user to show only interactions among their genes of
+         * interest and filter the results before the time-consuming analysis is done...
+         */
+        Collection<Long> geneIds = new HashSet<Long>( genes.size() );
+        for ( Gene gene : genes ) {
+            geneIds.add( gene.getId() );
+        }
+        for ( Gene queryGene : genes ) {
+            CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis( queryGene,
+                    ees, stringency, knownGenesOnly, NUM_GENES_TO_DETAIL );
+
+            addExtCoexpressionValueObjects( queryGene, result.getDatasets(), coexpressions.getKnownGeneCoexpression(),
+                    stringency, queryGenesOnly, geneIds, result.getKnownGeneResults(), result.getKnownGeneDatasets() );
+            addExtCoexpressionValueObjects( queryGene, result.getDatasets(), coexpressions
+                    .getPredictedCoexpressionType(), stringency, queryGenesOnly, geneIds, result
+                    .getPredictedGeneResults(), result.getPredictedGeneDatasets() );
+            addExtCoexpressionValueObjects( queryGene, result.getDatasets(), coexpressions
+                    .getProbeAlignedCoexpressionType(), stringency, queryGenesOnly, geneIds, result
+                    .getProbeAlignedRegionResults(), result.getProbeAlignedRegionDatasets() );
+
+            CoexpressionSummaryValueObject summary = new CoexpressionSummaryValueObject();
+            summary.setDatasetsAvailable( eevos.size() );
+            summary.setDatasetsTested( coexpressions.getEesQueryTestedIn().size() );
+            summary.setLinksFound( coexpressions.getNumKnownGenes() );
+            summary.setLinksMetPositiveStringency( coexpressions.getKnownGeneCoexpression()
+                    .getPositiveStringencyLinkCount() );
+            summary.setLinksMetNegativeStringency( coexpressions.getKnownGeneCoexpression()
+                    .getNegativeStringencyLinkCount() );
+            result.getSummary().put( queryGene.getOfficialSymbol(), summary );
+        }
+
+        return result;
+    }
+
+    /**
+     * @param presentIds
+     * @param allIds
+     * @return
+     */
+    private Long[] getDatasetVector( Collection<Long> presentIds, List<Long> allIds ) {
+        Long[] result = new Long[allIds.size()];
+        int i = 0;
+        for ( Long id : allIds ) {
+            result[i++] = presentIds.contains( id ) ? id : 0;
+        }
+        return result;
+    }
+
+    /**
+     * @param ecvos
+     * @param queryGene
+     */
+    private void getGoOverlap( Collection<CoexpressionValueObjectExt> ecvos, Gene queryGene ) {
+        /*
+         * get GO overlap info for this query gene...
+         */
+        if ( geneOntologyService.isGeneOntologyLoaded() ) {
+            int numQueryGeneGoTerms = geneOntologyService.getGOTerms( queryGene ).size();
+            Collection<Long> overlapIds = new ArrayList<Long>();
+            int i = 0;
+            for ( CoexpressionValueObjectExt ecvo : ecvos ) {
+                overlapIds.add( ecvo.getFoundGene().getId() );
+                if ( i++ > NUM_GENES_TO_DETAIL ) break;
+            }
+            Map<Long, Collection<OntologyTerm>> goOverlap = geneOntologyService.calculateGoTermOverlap( queryGene,
+                    overlapIds );
+            for ( CoexpressionValueObjectExt ecvo : ecvos ) {
+                ecvo.setPossibleOverlap( numQueryGeneGoTerms );
+                Collection<OntologyTerm> overlap = goOverlap.get( ecvo.getFoundGene().getId() );
+                ecvo.setGoOverlap( overlap == null ? 0 : overlap.size() );
+            }
+        }
+    }
+
+    /**
+     * @param contributingEEs
+     * @param nonSpecificEEs
+     * @return
+     */
+    private int getNonSpecificLinkCount( Collection<Long> contributingEEs, Collection<Long> nonSpecificEEs ) {
+        int n = 0;
+        for ( Long id : contributingEEs ) {
+            if ( nonSpecificEEs.contains( id ) ) ++n;
+        }
+        return n;
+    }
+
+    /**
+     * @param genes
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<ExpressionExperiment> getPossibleExpressionExperiments( Collection<Gene> genes ) {
+        Collection<Long> eeIds = new HashSet<Long>();
+        for ( Gene g : genes ) {
+            eeIds.addAll( expressionExperimentService.findByGene( g ) );
+        }
+        return eeIds.isEmpty() ? new HashSet<ExpressionExperiment>() : expressionExperimentService.loadMultiple( eeIds );
+    }
+
+    /**
+     * Remove data sets that are 'troubled' and sort the list.
+     * 
+     * @param datasets
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private List<Long> getSortedFilteredIdList( Collection<ExpressionExperiment> datasets ) {
+
+        List<Long> ids = new ArrayList<Long>( datasets.size() );
+        for ( Securable dataset : datasets ) {
+            ids.add( dataset.getId() );
+        }
+
+        // filter out the data sets that are troubled.
+        removeTroubledEes( datasets );
+
+        /*
+         * FIXME this is also a good place to filter out data sets that are to be excluded for other reasons (e.g., so
+         * we can do just "brain" on a canned analysis)
+         */
+
+        // rebuild the id list.
+        ids = new ArrayList<Long>( datasets.size() );
+        for ( Securable dataset : datasets ) {
+            ids.add( dataset.getId() );
+        }
+
+        Collections.sort( ids );
+        return ids;
+    }
+
+    /**
+     * FIXME this duplicates code from ExpressionExperimentManipulatingCLI
+     * 
      * @param ees
      */
     @SuppressWarnings("unchecked")
     private void removeTroubledEes( Collection<ExpressionExperiment> ees ) {
+        if ( ees == null || ees.size() == 0 ) {
+            log.warn( "No experiments to remove troubled from" );
+            return;
+        }
+        ExpressionExperiment theOnlyOne = null;
+        if ( ees.size() == 1 ) {
+            theOnlyOne = ees.iterator().next();
+        }
+        int size = ees.size();
         final Map<Long, AuditEvent> trouble = expressionExperimentService.getLastTroubleEvent( CollectionUtils.collect(
                 ees, new Transformer() {
                     public Object transform( Object input ) {
@@ -439,378 +739,71 @@ public class CoexpressionSearchController extends BackgroundProcessingFormBindCo
                 } ) );
         CollectionUtils.filter( ees, new Predicate() {
             public boolean evaluate( Object object ) {
-                return !trouble.containsKey( ( ( ExpressionExperiment ) object ).getId() );
+                boolean hasTrouble = trouble.containsKey( ( ( ExpressionExperiment ) object ).getId() );
+                return !hasTrouble;
             }
         } );
+        int newSize = ees.size();
+        if ( newSize != size ) {
+            assert newSize < size;
+            if ( size == 0 && theOnlyOne != null ) {
+                log.info( theOnlyOne.getShortName() + " has an active trouble flag" );
+            } else {
+                log.info( "Removed " + ( size - newSize ) + " experiments with 'trouble' flags, leaving " + newSize );
+            }
+        }
     }
 
     /**
-     * @param eeIds
-     * @param coexpressions
+     * @param genes
+     * @param eevos
+     * @param isCannedF
      * @return
      */
-    @SuppressWarnings("unchecked")
-    private Collection<ExpressionExperimentValueObject> retreiveEEFromDB( Collection<Long> eeIds,
-            CoexpressedGenesDetails coexpressions ) {
-
-        // This is necessary for security filtering
-        Collection<ExpressionExperimentValueObject> eeVos = expressionExperimentService.loadValueObjects( eeIds );
-
-        for ( ExpressionExperimentValueObject eeVo : eeVos ) {
-            eeVo.setCoexpressionLinkCount( coexpressions.getLinkCountForEE( eeVo.getId() ) );
-            eeVo.setRawCoexpressionLinkCount( coexpressions.getRawLinkCountForEE( eeVo.getId() ) );
-            eeVo.setProbeSpecificForQueryGene( coexpressions.getExpressionExperiment( eeVo.getId() )
-                    .isProbeSpecificForQueryGene() );
-        }
-
-        List<ExpressionExperimentValueObject> eeList = new ArrayList<ExpressionExperimentValueObject>( eeVos );
-        Collections.sort( eeList, new ExpressionExperimentComparator() );
-        return eeList;
-
+    private CoexpressionMetaValueObject initValueObject( Collection<Gene> genes,
+            List<ExpressionExperimentValueObject> eevos, boolean isCanned ) {
+        CoexpressionMetaValueObject result = new CoexpressionMetaValueObject();
+        result.setQueryGenes( new ArrayList<Gene>( genes ) );
+        result.setDatasets( eevos );
+        result.setIsCannedAnalysis( isCanned );
+        result.setKnownGeneDatasets( new ArrayList<CoexpressionDatasetValueObject>() );
+        result.setKnownGeneResults( new ArrayList<CoexpressionValueObjectExt>() );
+        result.setPredictedGeneDatasets( new ArrayList<CoexpressionDatasetValueObject>() );
+        result.setPredictedGeneResults( new ArrayList<CoexpressionValueObjectExt>() );
+        result.setProbeAlignedRegionDatasets( new ArrayList<CoexpressionDatasetValueObject>() );
+        result.setProbeAlignedRegionResults( new ArrayList<CoexpressionValueObjectExt>() );
+        result.setSummary( new HashMap<String, CoexpressionSummaryValueObject>() );
+        return result;
     }
 
     /**
-     * @param request
-     * @return Map
+     * @param eevos
+     * @param datasetsTested
+     * @param linksMetPositiveStringency
+     * @param linksMetNegativeStringency
+     * @return
      */
-    @SuppressWarnings("unused")
-    @Override
-    protected Map referenceData( HttpServletRequest request ) {
-        Map<String, List<? extends Object>> mapping = new HashMap<String, List<? extends Object>>();
-
-        // add species
-        populateTaxonReferenceData( mapping );
-
-        return mapping;
-    }
-
-    /**
-     * @param mapping
-     */
-    @SuppressWarnings("unchecked")
-    private void populateTaxonReferenceData( Map mapping ) {
-        List<Taxon> taxa = new ArrayList<Taxon>();
-        for ( Taxon taxon : ( Collection<Taxon> ) taxonService.loadAll() ) {
-            if ( !SupportedTaxa.contains( taxon ) ) {
-                continue;
-            }
-            taxa.add( taxon );
-        }
-        Collections.sort( taxa, new Comparator<Taxon>() {
-            public int compare( Taxon o1, Taxon o2 ) {
-                return ( o1 ).getScientificName().compareTo( ( o2 ).getScientificName() );
-            }
-        } );
-        mapping.put( "taxa", taxa );
+    private CoexpressionSummaryValueObject makeSummary( List<ExpressionExperimentValueObject> eevos,
+            Collection<Long> datasetsTested, int linksMetPositiveStringency, int linksMetNegativeStringency ) {
+        CoexpressionSummaryValueObject summary = new CoexpressionSummaryValueObject();
+        summary.setDatasetsAvailable( eevos.size() );
+        summary.setDatasetsTested( datasetsTested.size() );
+        summary.setLinksFound( linksMetPositiveStringency + linksMetNegativeStringency );
+        summary.setLinksMetPositiveStringency( linksMetPositiveStringency );
+        summary.setLinksMetNegativeStringency( linksMetNegativeStringency );
+        return summary;
     }
 
     /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.BaseFormController#initBinder(javax.servlet.http.HttpServletRequest,
-     *      org.springframework.web.bind.ServletRequestDataBinder)
+     * I assume the reason Genes weren't being loaded before is that it was too time consuming, so we'll do this
+     * instead...
      */
-    @Override
-    protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
-        super.initBinder( request, binder );
-        binder.registerCustomEditor( Taxon.class, new TaxonPropertyEditor( this.taxonService ) );
-    }
-
-    /**
-     * @param request
-     * @param csc
-     */
-    private void loadCookie( HttpServletRequest request, CoexpressionSearchCommand csc ) {
-
-        // cookies aren't all that important, if they're missing we just go on.
-        if ( request == null || request.getCookies() == null ) return;
-
-        for ( Cookie cook : request.getCookies() ) {
-            if ( cook.getName().equals( COOKIE_NAME ) ) {
-                try {
-                    ConfigurationCookie cookie = new ConfigurationCookie( cook );
-                    csc.setEeSearchString( cookie.getString( "eeSearchString" ) );
-
-                    csc.setStringency( cookie.getInt( "stringency" ) );
-                    Taxon taxon = taxonService.load( Long.parseLong( cookie.getString( "taxonId" ) ) );
-                    csc.setTaxon( taxon );
-
-                    // save the gene name. If the gene id is on, then convert the ID to a gene first
-                    String searchString = cookie.getString( "searchString" );
-                    csc.setSearchString( searchString );
-
-                    String id = cookie.getString( "id" );
-                    csc.setId( id );
-
-                } catch ( Exception e ) {
-                    log.warn( "Cookie could not be loaded: " + e.getMessage() );
-                    // that's okay, we just don't get a cookie.
-                }
-            }
-        }
-    }
-
-    /**
-     * Fills in the command object in the case that GET parameters are passed in
-     * 
-     * @param request
-     * @param csc
-     * @see CoexpressionWrapper.extractParameters
-     */
-    private void loadGETParameters( HttpServletRequest request, CoexpressionSearchCommand csc ) {
-        if ( request == null ) {
-            return;
-        }
-        if ( ( request.getParameter( "searchString" ) == null ) && ( request.getParameter( "id" ) == null ) ) return;
-
-        Map params = request.getParameterMap();
-
-        if ( params.get( "eeSearchString" ) != null ) {
-            csc.setEeSearchString( ( ( String[] ) params.get( "eeSearchString" ) )[0] );
-        }
-        if ( params.get( "geneIdSearch" ) != null ) {
-            String[] geneIdSearch = ( String[] ) params.get( "geneIdSearch" );
-            csc.setGeneIdSearch( geneIdSearch[0] );
-        }
-        if ( params.get( "stringency" ) != null ) {
-            String[] stringency = ( String[] ) params.get( "stringency" );
-            Integer num = Integer.parseInt( stringency[0] );
-            csc.setStringency( num );
-        }
-        if ( params.get( "taxon" ) != null ) {
-            // can handle scientific name, common name, or id.
-            String text = ( ( String[] ) params.get( "taxon" ) )[0];
-            Taxon taxon = null;
-            try {
-                Long id = Long.parseLong( text );
-                taxon = taxonService.load( id );
-            } catch ( NumberFormatException e ) {
-                taxon = taxonService.findByScientificName( text );
-            }
-            if ( taxon == null ) {
-                taxon = taxonService.findByCommonName( text );
-            }
-
-            csc.setTaxon( taxon );
-        }
-        if ( params.get( "searchString" ) != null ) {
-
-            String searchString = ( ( String[] ) params.get( "searchString" ) )[0];
-
-            csc.setSearchString( searchString );
-        }
-        if ( params.get( "id" ) != null ) {
-            String id = ( ( String[] ) params.get( "id" ) )[0];
-            csc.setId( id );
-        }
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.mvc.SimpleFormController#showForm(javax.servlet.http.HttpServletRequest,
-     *      javax.servlet.http.HttpServletResponse, org.springframework.validation.BindException)
-     */
-    protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors )
-            throws Exception {
-        if ( request.getParameter( "searchString" ) != null || request.getParameter( "id" ) != null ) {
-            return this.onSubmit( request, response, this.formBackingObject( request ), errors );
-        }
-
-        return super.showForm( request, response, errors );
-    }
-
-    /**
-     * @param geneService
-     */
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
-    }
-
-    /**
-     * @param taxonService the taxonService to set
-     */
-    public void setTaxonService( TaxonService taxonService ) {
-        this.taxonService = taxonService;
-    }
-
-    /**
-     * @param searchService the searchService to set
-     */
-    public void setSearchService( SearchService searchService ) {
-        this.searchService = searchService;
-    }
-
-    /**
-     * @param expressionExperimentService the expressionExperimentService to set
-     */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    @Override
-    protected BackgroundControllerJob<ModelAndView> getRunner( String taskId, SecurityContext securityContext,
-            final Object command, final MessageUtil messenger, final BindException errors ) {
-
-        return new BackgroundControllerJob<ModelAndView>( taskId, securityContext, command, messenger, errors ) {
-
-            @SuppressWarnings("unchecked")
-            public ModelAndView call() throws Exception {
-
-                SecurityContextHolder.setContext( securityContext );
-                CoexpressionSearchCommand csc = ( CoexpressionSearchCommand ) command;
-
-                ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext
-                        .getAuthentication().getName(), "Coexpression analysis for "
-                        + csc.getSourceGene().getOfficialSymbol() );
-
-                job.updateProgress( "Analyzing coexpresson for " + csc.getSourceGene().getOfficialSymbol() );
-                CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis( csc
-                        .getSourceGene(), csc.getToUseEE(), csc.getStringency(), true, 100 ); // true = known genes only.
-
-                StopWatch watch = new StopWatch();
-
-                watch.start();
-
-                List<CoexpressionValueObject> coexpressedGenes = coexpressions.getAllGeneCoexpressionData( csc
-                        .getStringency() );
-
-                // load expression experiment value objects
-                Collection<Long> eeIds = new HashSet<Long>();
-                Collection<ExpressionExperimentValueObject> origEeVos = coexpressions.getExpressionExperiments();
-                for ( ExpressionExperimentValueObject eeVo : origEeVos ) {
-                    eeIds.add( eeVo.getId() );
-                }
-
-                Collection<ExpressionExperimentValueObject> eeVos = expressionExperimentService
-                        .loadValueObjects( eeIds );
-                // add link count information to ee value objects
-                // coexpressions.calculateLinkCounts();
-                // coexpressions.calculateRawLinkCounts();
-
-                for ( ExpressionExperimentValueObject eeVo : eeVos ) {
-                    eeVo.setCoexpressionLinkCount( coexpressions.getKnownGeneCoexpression().getLinkCountForEE(
-                            eeVo.getId() ) );
-                    eeVo.setRawCoexpressionLinkCount( coexpressions.getKnownGeneCoexpression().getRawLinkCountForEE(
-                            eeVo.getId() ) );
-                }
-
-                // new ModelAndView(getSuccessView());
-
-                // no genes are coexpressed
-                // return error
-                if ( coexpressedGenes.size() == 0 ) {
-                    this.saveMessage( "No genes are coexpressed with the given stringency." );
-                }
-
-                Long numUsedExpressionExperiments = new Long( coexpressions.getKnownGeneCoexpression()
-                        .getNumberOfUsedExpressonExperiments() );
-                Long numPositiveCoexpressedGenes = new Long( coexpressions.getKnownGeneCoexpression()
-                        .getPositiveStringencyLinkCount() );
-                Long numNegativeCoexpressedGenes = new Long( coexpressions.getKnownGeneCoexpression()
-                        .getNegativeStringencyLinkCount() );
-                Long numKnownGenes = new Long( coexpressions.getNumKnownGenes() );
-                Long numPredictedGenes = new Long( coexpressions.getNumPredictedGenes() );
-                Long numProbeAlignedRegions = new Long( coexpressions.getNumProbeAlignedRegions() );
-                Long numStringencyGenes = new Long( coexpressions.getNumStringencyGenes() );
-                Long numStringencyPredictedGenes = new Long( coexpressions.getNumStringencyPredictedGenes() );
-                Long numStringencyProbeAlignedRegions = new Long( coexpressions.getNumStringencyProbeAlignedRegions() );
-                // Integer numMatchedLinks = coexpressions.getGeneCoexpressionType().getLinkCount();
-
-                // addTimingInformation( request, coexpressions );
-                job.updateProgress( "ending...." );
-                ProgressManager.destroyProgressJob( job );
-
-                // request.getParameterMap().remove( "searchString" );
-                // request.setAttribute( "inner", "inner" );
-                ModelAndView mav = new ModelAndView( getSuccessView() );
-                // mav.setViewName( getSuccessView() );
-
-                mav.addObject( "coexpressedGenes", coexpressedGenes );
-
-                mav.addObject( "numPositiveCoexpressedGenes", numPositiveCoexpressedGenes );
-                mav.addObject( "numNegativeCoexpressedGenes", numNegativeCoexpressedGenes );
-                mav.addObject( "numSearchedExpressionExperiments", csc.getToUseEE().size() );
-                mav.addObject( "numUsedExpressionExperiments", numUsedExpressionExperiments );
-
-                mav.addObject( "numKnownGenes", numKnownGenes );
-                mav.addObject( "numPredictedGenes", numPredictedGenes );
-                mav.addObject( "numProbeAlignedRegions", numProbeAlignedRegions );
-
-                mav.addObject( "numStringencyGenes", numStringencyGenes );
-                mav.addObject( "numStringencyPredictedGenes", numStringencyPredictedGenes );
-                mav.addObject( "numStringencyProbeAlignedRegions", numStringencyProbeAlignedRegions );
-                // mav.addObject( "numSourceGeneGoTerms", numSourceGeneGoTerms );
-
-                // mav.addObject( "numMatchedLinks", numMatchedLinks );
-                mav.addObject( "sourceGene", csc.getSourceGene() );
-                mav.addObject( "expressionExperiments", eeVos );
-                mav.addObject( "numLinkedExpressionExperiments", new Integer( eeVos.size() ) );
-
-                // binding objects
-                mav.addObject( "coexpressionSearchCommand", csc );
-                populateTaxonReferenceData( mav.getModel() );
-                mav.addAllObjects( errors.getModel() );
-
-                Long elapsed = watch.getTime();
-                watch.stop();
-                log.info( "Processing after DAO call (elapsed time): " + elapsed );
-
-                this.saveMessage( "Coexpression query took: " + coexpressions.getDbQuerySeconds() );
-
-                return mav;
-
-            }
-
-        };
-    }
-
-    class CoexpressionSearchCookie extends ConfigurationCookie {
-
-        public CoexpressionSearchCookie( CoexpressionSearchCommand command ) {
-            super( COOKIE_NAME );
-
-            this.setProperty( "eeSearchString", command.getEeSearchString() );
-
-            // save the gene name. If the gene id is on, then convert the ID to a gene first
-            if ( !StringUtils.isBlank( command.getGeneIdSearch() ) ) {
-                String geneId = command.getSearchString();
-                Long id;
-                try {
-                    id = Long.parseLong( geneId );
-                    Gene g = geneService.load( id );
-                    this.setProperty( "searchString", g.getOfficialSymbol() );
-                } catch ( NumberFormatException e ) {
-                    this.setProperty( "searchString", command.getSearchString() );
-                }
-            } else {
-                this.setProperty( "searchString", command.getSearchString() );
-            }
-
-            this.setProperty( "stringency", command.getStringency() );
-            if ( command.getTaxon() != null ) this.setProperty( "taxonId", command.getTaxon().getId() );
-
-            this.setMaxAge( 100000 );
-            this.setComment( "Information for coexpression search form" );
-        }
-
-    }
-
-    class ExpressionExperimentComparator implements Comparator {
-
-        public int compare( Object o1, Object o2 ) {
-            ExpressionExperimentValueObject v1 = ( ( ExpressionExperimentValueObject ) o1 );
-            ExpressionExperimentValueObject v2 = ( ( ExpressionExperimentValueObject ) o2 );
-            Long o1Size = v1.getCoexpressionLinkCount();
-            Long o2Size = v2.getCoexpressionLinkCount();
-            if ( o1Size > o2Size ) {
-                return -1;
-            } else if ( o1Size < o2Size ) {
-                return 1;
-            } else {
-                return 0;
-            }
+    private static class SimpleGene extends Gene {
+        public SimpleGene( Long id, String name, String officialName ) {
+            super();
+            this.setId( id );
+            this.setOfficialSymbol( name );
+            this.setOfficialName( officialName );
         }
     }
 

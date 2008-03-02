@@ -18,185 +18,88 @@
  */
 package ubic.gemma.web.controller.coexpressionSearch;
 
-import java.io.Serializable;
 import java.util.Collection;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
-
 /**
- * Expression experiment command object that wraps expression experiment search preferences.
- * 
- * @author joseph
- * @version $Id$
- * @deprecated
+ * @author luke
  */
-public class CoexpressionSearchCommand implements Serializable {
-
-    private static final long serialVersionUID = 2166768356457316142L;
-
-    private int stringency;
+public class CoexpressionSearchCommand {
     
-    private String searchString = null;
+    private Collection<Long> geneIds;
     
-    private String eeSearchString = null;
-
-    private String id = null;
+    private Collection<Long> eeIds;
     
-    private boolean suppressVisualizations;
+    private Long cannedAnalysisId;
+
+    private Integer stringency;
     
-    private Taxon taxon;
+    private boolean queryGenesOnly;
     
-    private String exactSearch = "on";
+    /* we're storing the actual ee ids in the command object; the query string
+     * is only here so we can use this object to store the state of the search
+     * form between visits...
+     */
+    private String eeQuery;
     
-    private String geneIdSearch = "false";
-    
-    private Collection<ExpressionExperiment> toUseEE;
-    
-    private Gene sourceGene;
-    
-    /**
-     * @return the id
+    /* as eeQuery above, the taxon is only here so we can use this object to
+     * store the entire state of the form...
      */
-    public String getId() {
-        return id;
+    private Long taxonId;
+
+    public Collection<Long> getGeneIds() {
+        return geneIds;
     }
 
-    /**
-     * @param id the id to set
-     */
-    public void setId( String id ) {
-        this.id = id;
+    public void setGeneIds( Collection<Long> geneIds ) {
+        this.geneIds = geneIds;
     }
 
-    /**
-     * @return the sourceGene
-     */
-    public Gene getSourceGene() {
-        return sourceGene;
+    public Collection<Long> getEeIds() {
+        return eeIds;
     }
 
-    /**
-     * @param sourceGene the sourceGene to set
-     */
-    public void setSourceGene( Gene sourceGene ) {
-        this.sourceGene = sourceGene;
+    public void setEeIds( Collection<Long> eeIds ) {
+        this.eeIds = eeIds;
     }
 
-    /**
-     * @return the toUseEE
-     */
-    public Collection<ExpressionExperiment> getToUseEE() {
-        return toUseEE;
+    public Long getCannedAnalysisId() {
+        return cannedAnalysisId;
     }
 
-    /**
-     * @param toUseEE the toUseEE to set
-     */
-    public void setToUseEE( Collection<ExpressionExperiment> toUseEE ) {
-        this.toUseEE = toUseEE;
+    public void setCannedAnalysisId( Long cannedAnalysisId ) {
+        this.cannedAnalysisId = cannedAnalysisId;
     }
 
-    public CoexpressionSearchCommand() {
-        this.setTaxon( Taxon.Factory.newInstance() );
-    }
-
-    /**
-     * @return boolean
-     */
-    public boolean isSuppressVisualizations() {
-        return suppressVisualizations;
-    }
-
-    /**
-     * @param suppressVisualizations
-     */
-    public void setSuppressVisualizations( boolean suppressVisualizations ) {
-        this.suppressVisualizations = suppressVisualizations;
-    }
-
-    /**
-     * @return String
-     */
-    public String getSearchString() {
-        return searchString;
-    }
-
-    /**
-     * @param searchString
-     */
-    public void setSearchString( String searchString ) {
-        this.searchString = searchString;
-    }
-
-    /**
-     * @return int
-     */
-    public int getStringency() {
+    public Integer getStringency() {
         return stringency;
     }
 
-    /**
-     * @param stringency
-     */
-    public void setStringency( int stringency ) {
+    public void setStringency( Integer stringency ) {
         this.stringency = stringency;
     }
 
-    /**
-     * @return the eeSearchString
-     */
-    public String getEeSearchString() {
-        return eeSearchString;
+    public String getEeQuery() {
+        return eeQuery;
     }
 
-    /**
-     * @param eeSearchString the eeSearchString to set
-     */
-    public void setEeSearchString( String eeSearchString ) {
-        this.eeSearchString = eeSearchString;
+    public void setEeQuery( String eeQuery ) {
+        this.eeQuery = eeQuery;
+    }
+    
+    public Long getTaxonId() {
+        return taxonId;
     }
 
-    /**
-     * @return the taxon
-     */
-    public Taxon getTaxon() {
-        return taxon;
+    public void setTaxonId( Long taxonId ) {
+        this.taxonId = taxonId;
     }
 
-    /**
-     * @param taxon the taxon to set
-     */
-    public void setTaxon( Taxon taxon ) {
-        this.taxon = taxon;
+    public boolean getQueryGenesOnly() {
+        return queryGenesOnly;
     }
 
-    /**
-     * @return the exactSearch
-     */
-    public String getExactSearch() {
-        return exactSearch;
+    public void setQueryGenesOnly( boolean queryGenesOnly ) {
+        this.queryGenesOnly = queryGenesOnly;
     }
-
-    /**
-     * @param exactSearch the exactSearch to set
-     */
-    public void setExactSearch( String exactSearch ) {
-        this.exactSearch = exactSearch;
-    }
-
-    /**
-     * @return the geneIdSearch
-     */
-    public String getGeneIdSearch() {
-        return geneIdSearch;
-    }
-
-    /**
-     * @param geneIdSearch the geneIdSearch to set
-     */
-    public void setGeneIdSearch( String geneIdSearch ) {
-        this.geneIdSearch = geneIdSearch;
-    }
+    
 }

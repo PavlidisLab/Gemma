@@ -22,7 +22,7 @@ package ubic.gemma.web.controller.coexpressionSearch;
 /**
  * @author luke
  */
-public class ExtCoexpressionDatasetValueObject {
+public class CoexpressionDatasetValueObject {
     
     private Long id;
     private String queryGene;
