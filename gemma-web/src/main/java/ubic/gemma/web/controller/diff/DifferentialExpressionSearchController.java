@@ -181,7 +181,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                     return diffSearchCommand;
 
                 } catch ( Exception e ) {
-                    log.warn( "Cookie could not be loaded: " + e.getMessage() );
+                  //  log.warn( "Cookie could not be loaded: " + e.getMessage() );
                     break;
                     // fine, just don't get a cookie.
                 }
@@ -189,7 +189,6 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         }
 
         /* If we've come this far, we have a cookie but not one that matches COOKIE_NAME. Provide friendly defaults. */
-        diffSearchCommand.setGeneOfficialSymbol( "<gene sym>" );
         diffSearchCommand.setThreshold( DEFAULT_QVALUE_THRESHOLD );
 
         return diffSearchCommand;

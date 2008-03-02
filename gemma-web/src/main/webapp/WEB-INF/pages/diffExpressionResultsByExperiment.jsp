@@ -1,27 +1,24 @@
 <%@ include file="/common/taglibs.jsp"%>
 
 
-<title><fmt:message key="expressionExperiments.title" />
-</title>
+<title>Differential expression results for ${geneOfficialSymbol}</title>
 
 <h3>
 	Displaying
-	<b> <c:out value="${numDiffResults}" /> </b> dataset(s) where
-	differential expression results exist for gene
-	<b><c:out value="${geneOfficialSymbol}" /> </b>
+	<b> ${numDiffResults}</b> dataset(s) where differential expression of
+	<b> ${geneOfficialSymbol} </b> meet your threhsold
 	<br />
 	<br />
-	Threshold:
+	Threshold Q-value:
 	<b><c:out value="${threshold}" /> </b>
 	<br />
 </h3>
 
-<display:table name="differentialExpressionValueObjects">
-	<display:column property="expressionExperimentValueObject.shortName" />
-	<display:column property="expressionExperimentValueObject.name" />
-	<display:column property="p" />
+<display:table name="differentialExpressionValueObjects" pagesize="200" sort="list" defaultsort="3" class="list" >
+	<display:column property="expressionExperiment.shortName" sortable="true" />
+	<display:column property="expressionExperiment.name" sortable="true" />
+	<display:column property="FDR (q)" sortable="true" />
 </display:table>
 
 <br />
-<a href="/Gemma/diff/diffExpressionSearch.html"> Differential
-	Expression Search </a>
+<a href="/Gemma/diff/diffExpressionSearch.html"> Differential Expression Search </a>
