@@ -712,7 +712,7 @@ Ext.Gemma.CoexpressionSearchFormLite = function ( config ) {
 		text : "Find coexpressed genes",
 		handler : function() {
 			document.location.href =
-				String.format( "/Gemma/searchCoexpressionExt.html?g={0}&a={1}",
+				String.format( "/Gemma/searchCoexpression.html?g={0}&a={1}",
 					this.geneCombo.getValue(), this.analysisCombo.getValue() );
 		}.bind( this )
 	} );
