@@ -20,12 +20,9 @@ package ubic.gemma.web.controller.diff;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -38,7 +35,6 @@ import org.springframework.validation.ObjectError;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.loader.genome.taxon.SupportedTaxa;
 import ubic.gemma.model.analysis.DifferentialExpressionAnalysisResultService;
 import ubic.gemma.model.analysis.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.common.description.Characteristic;
@@ -49,8 +45,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.util.GemmaLinkUtils;
 import ubic.gemma.web.controller.BaseFormController;
@@ -69,7 +63,6 @@ import ubic.gemma.web.util.ConfigurationCookie;
  * @spring.property name = "differentialExpressionAnalysisResultService"
  *                  ref="differentialExpressionAnalysisResultService"
  * @spring.property name = "geneService" ref="geneService"
- * @spring.property name = "taxonService" ref="taxonService"
  */
 public class DifferentialExpressionSearchController extends BaseFormController {
 
@@ -83,8 +76,6 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
     private GeneService geneService = null;
 
-    private TaxonService taxonService = null;
-
     private static final String COOKIE_NAME = "diffExpressionSearchCookie";
 
     /**
@@ -97,43 +88,22 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         setSessionForm( true );
     }
 
-    /**
-     * Populates drop downs.
+    /*
+     * This is needed so GETs with parameters can also be used. (non-Javadoc)
      * 
-     * @param request
-     * @return Map
+     * @see org.springframework.web.servlet.mvc.AbstractFormController#isFormSubmission(javax.servlet.http.HttpServletRequest)
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected Map referenceData( HttpServletRequest request ) {
-        log.debug( "referenceData" );
-
-        Map<String, List<? extends Object>> dropDownMap = new HashMap<String, List<? extends Object>>();
-
-        Collection<Taxon> taxa = taxonService.loadAll();
-
-        List<String> validTaxaNames = new ArrayList<String>();
-
-        for ( Taxon t : taxa ) {
-            if ( SupportedTaxa.contains( t ) ) {
-                validTaxaNames.add( t.getScientificName() );
-            }
-        }
-
-        dropDownMap.put( "taxa", validTaxaNames );
-
-        return dropDownMap;
+    protected boolean isFormSubmission( HttpServletRequest request ) {
+        return request.getParameter( "submit" ) != null;
     }
 
     /**
      * @param request
      * @return Object
-     * @throws ServletException
      */
     @Override
     protected Object formBackingObject( HttpServletRequest request ) {
-        /* enter on a GET */
-
         DiffExpressionSearchCommand diffCommand = new DiffExpressionSearchCommand();
 
         DiffExpressionSearchCommand diffCommandFromCookie = loadCookie( request, diffCommand );
@@ -207,7 +177,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         if ( request.getParameter( "cancel" ) != null ) {
             log.info( "Cancelled" );
-            return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) );
+            return new ModelAndView( this.getFormView() );
         }
 
         return super.processFormSubmission( request, response, command, errors );
@@ -222,15 +192,34 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     @SuppressWarnings("unchecked")
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
-        /* enter on a POST */
 
-        DiffExpressionSearchCommand diffCommand = ( ( DiffExpressionSearchCommand ) command );
+        /*
+         * FIXME this is a bit thrown together, to handle both GET and POST situations.
+         */
+        DiffExpressionSearchCommand diffCommand;
+        if ( command == null ) {
+            diffCommand = new DiffExpressionSearchCommand();
+            try {
+                diffCommand.setThreshold( Double.parseDouble( request.getParameter( "threshold" ) ) );
+            } catch ( NumberFormatException e ) {
+                throw new RuntimeException( "Threshold must be a valid number" );
+            }
+            // num
+            diffCommand.setGeneOfficialSymbol( request.getParameter( "geneOfficialSymbol" ) );
+        } else {
+            diffCommand = ( ( DiffExpressionSearchCommand ) command );
+        }
 
         Cookie cookie = new DiffExpressionSearchCookie( diffCommand );
         response.addCookie( cookie );
 
         // hachked this for using the gene picker
-        Long geneId = Long.parseLong( diffCommand.getGeneOfficialSymbol() );
+        Long geneId = null;
+        try {
+            geneId = Long.parseLong( diffCommand.getGeneOfficialSymbol() );
+        } catch ( NumberFormatException e ) {
+            throw new RuntimeException( "Expected a valid long" );
+        }
 
         double threshold = diffCommand.getThreshold();
 
@@ -337,13 +326,6 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      */
     public void setGeneService( GeneService geneService ) {
         this.geneService = geneService;
-    }
-
-    /**
-     * @param taxonService
-     */
-    public void setTaxonService( TaxonService taxonService ) {
-        this.taxonService = taxonService;
     }
 
     /**
