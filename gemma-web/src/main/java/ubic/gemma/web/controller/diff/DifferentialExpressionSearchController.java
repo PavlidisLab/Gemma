@@ -181,7 +181,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                     return diffSearchCommand;
 
                 } catch ( Exception e ) {
-                  //  log.warn( "Cookie could not be loaded: " + e.getMessage() );
+                    // log.warn( "Cookie could not be loaded: " + e.getMessage() );
                     break;
                     // fine, just don't get a cookie.
                 }
@@ -228,15 +228,12 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         Cookie cookie = new DiffExpressionSearchCookie( diffCommand );
         response.addCookie( cookie );
-        
-        // hachked this for using the gene picker 
-        Long geneId = Long.parseLong( diffCommand.getGeneOfficialSymbol());
+
+        // hachked this for using the gene picker
+        Long geneId = Long.parseLong( diffCommand.getGeneOfficialSymbol() );
 
         double threshold = diffCommand.getThreshold();
 
-        String taxonScientificName = diffCommand.getTaxonName();
-        Taxon t = taxonService.findByScientificName( taxonScientificName );
-        //Gene gene = geneService.findByOfficialSymbol( officialSymbol, t );
         Gene gene = geneService.load( geneId );
         String message = null;
         if ( gene == null ) {
@@ -245,57 +242,19 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             return processErrors( request, response, command, errors, null );
         }
 
-        Collection<DifferentialExpressionValueObject> devos = new HashSet<DifferentialExpressionValueObject>();
-
-        Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService
-                .findExperimentsWithAnalyses( gene );
-        if ( experimentsAnalyzed == null || experimentsAnalyzed.isEmpty() ) {
-            message = "No experiments analyzed with differential evidence for gene: " + gene.getOfficialSymbol();
-            errors.addError( new ObjectError( command.toString(), null, null, message ) );
-            return processErrors( request, response, command, errors, null );
-        }
-
-        for ( ExpressionExperiment e : experimentsAnalyzed ) {
-            Collection<ProbeAnalysisResult> results = differentialExpressionAnalysisService.find( gene, e );
-
-            for ( ProbeAnalysisResult r : results ) {
-                double qval = r.getCorrectedPvalue();
-                log.debug( qval );
-                if ( qval < threshold ) {
-
-                    DifferentialExpressionValueObject devo = new DifferentialExpressionValueObject();
-
-                    ExpressionExperimentValueObject eevo = new ExpressionExperimentValueObject();
-                    eevo.setId( e.getId() );
-                    eevo.setName( e.getName() );
-                    eevo.setShortName( e.getShortName() );
-                    devo.setExpressionExperiment( eevo );
-
-                    devo.setP( r.getCorrectedPvalue() );
-                    devo.setProbe( r.getProbe().getName() );
-
-                    devos.add( devo );
-                }
-            }
-
-        }
+        Collection<DifferentialExpressionValueObject> devos = getDifferentialExpression( gene.getId(), threshold );
 
         if ( devos.isEmpty() ) {
-            message = "No experiments found for gene " + gene.getOfficialSymbol() + " that meet the threshold " + threshold;
+            message = "No results found for gene " + gene.getOfficialSymbol() + " that meet the threshold " + threshold;
             errors.addError( new ObjectError( command.toString(), null, null, message ) );
             return processErrors( request, response, command, errors, null );
         }
 
         ModelAndView mav = new ModelAndView( this.getSuccessView() );
-
         mav.addObject( "differentialExpressionValueObjects", devos );
-
         mav.addObject( "numDiffResults", devos.size() );
-
         mav.addObject( "threshold", threshold );
-
         mav.addObject( "geneOfficialSymbol", gene.getOfficialSymbol() );
-
         return mav;
     }
 
@@ -327,6 +286,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                 DifferentialExpressionValueObject devo = new DifferentialExpressionValueObject();
                 devo.setExpressionExperiment( eevo );
                 devo.setProbe( r.getProbe().getName() );
+                devo.setProbeId( r.getProbe().getId() );
                 devo.setExperimentalFactors( new HashSet<ExperimentalFactorValueObject>() );
                 Collection<ExperimentalFactor> efs = dearToEf.get( r );
                 if ( efs == null ) {

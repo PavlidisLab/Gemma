@@ -23,39 +23,56 @@ import java.util.Collection;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.web.controller.expression.experiment.ExperimentalFactorValueObject;
 
+/**
+ * @author keshav
+ * @version $Id$
+ */
 public class DifferentialExpressionValueObject {
-    
+
     private ExpressionExperimentValueObject expressionExperiment;
     private String probe;
+    private Long probeId;
     private Collection<ExperimentalFactorValueObject> experimentalFactors;
     private Double p;
-    
-    public ExpressionExperimentValueObject getExpressionExperiment() {
-        return expressionExperiment;
-    }
-    public void setExpressionExperiment( ExpressionExperimentValueObject expressionExperiment ) {
-        this.expressionExperiment = expressionExperiment;
-    }
-    
-    public String getProbe() {
-        return probe;
-    }
-    public void setProbe( String probe ) {
-        this.probe = probe;
-    }
-    
+
     public Collection<ExperimentalFactorValueObject> getExperimentalFactors() {
         return experimentalFactors;
     }
-    public void setExperimentalFactors( Collection<ExperimentalFactorValueObject> experimentalFactors ) {
-        this.experimentalFactors = experimentalFactors;
+
+    public ExpressionExperimentValueObject getExpressionExperiment() {
+        return expressionExperiment;
     }
-    
+
     public Double getP() {
         return p;
     }
+
+    public String getProbe() {
+        return probe;
+    }
+
+    public Long getProbeId() {
+        return probeId;
+    }
+
+    public void setExperimentalFactors( Collection<ExperimentalFactorValueObject> experimentalFactors ) {
+        this.experimentalFactors = experimentalFactors;
+    }
+
+    public void setExpressionExperiment( ExpressionExperimentValueObject expressionExperiment ) {
+        this.expressionExperiment = expressionExperiment;
+    }
+
     public void setP( Double p ) {
         this.p = p;
     }
-    
+
+    public void setProbe( String probe ) {
+        this.probe = probe;
+    }
+
+    public void setProbeId( Long probeId ) {
+        this.probeId = probeId;
+    }
+
 }

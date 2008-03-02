@@ -66,6 +66,11 @@ public class GemmaLinkUtils {
                 hover );
     }
 
+    public static String getProbeLink( Long probeId, String link ) {
+        // FIXME this isn't the greatest page - it's kind of old-style.
+        return getLink( String.format( "/Gemma/compositeSequence/show.html?id=%d", probeId ), link, "" );
+    }
+
     public static String getArrayDesignLink( Long adId, String link ) {
         return getArrayDesignLink( adId, link, null );
     }

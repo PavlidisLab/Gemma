@@ -14,10 +14,12 @@
 	<br />
 </h3>
 
-<display:table name="differentialExpressionValueObjects" pagesize="200" sort="list" defaultsort="3" class="list" >
-	<display:column property="expressionExperiment.shortName" title="Short name" sortable="true" />
-	<display:column property="expressionExperiment.name" title ="Experiment name" sortable="true" />
-	<display:column property="p" title="FDR (q)" sortable="true" />
+<display:table export="true" name="differentialExpressionValueObjects" decorator="ubic.gemma.web.taglib.displaytag.diff.DiffExResultDecorator"  pagesize="200" sort="list" defaultsort="5" class="list" >
+	<display:column property="shortName" title="Experiment" sortable="true" />
+	<display:column property="name" title ="Experiment name" sortable="true" />
+	<display:column property="experimentalFactors" title="Factors" sortable="false" />
+	<display:column property="probe" title="Probe" sortable="true" />
+	<display:column property="p" title="FDR (q)" sortable="true" comparator="ubic.gemma.web.taglib.displaytag.NumberComparator"/>
 </display:table>
 
 <br />
