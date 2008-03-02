@@ -15,9 +15,9 @@
 </h3>
 
 <display:table name="differentialExpressionValueObjects" pagesize="200" sort="list" defaultsort="3" class="list" >
-	<display:column property="expressionExperiment.shortName" sortable="true" />
-	<display:column property="expressionExperiment.name" sortable="true" />
-	<display:column property="FDR (q)" sortable="true" />
+	<display:column property="expressionExperiment.shortName" title="Short name" sortable="true" />
+	<display:column property="expressionExperiment.name" title ="Experiment name" sortable="true" />
+	<display:column property="p" title="FDR (q)" sortable="true" />
 </display:table>
 
 <br />
