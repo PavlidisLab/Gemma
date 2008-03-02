@@ -22,6 +22,8 @@
 	<display:column property="probe" title="Probe" sortable="true" />
 	<display:column property="p" title="FDR (q)" sortable="true"
 		comparator="ubic.gemma.web.taglib.displaytag.NumberComparator" />
+		<display:setProperty name="export.excel.label">Tabbed</display:setProperty>
+	<%-- <display:setProperty name="export.csv">true</display:setProperty> --%>
 </display:table>
 
 <br />
