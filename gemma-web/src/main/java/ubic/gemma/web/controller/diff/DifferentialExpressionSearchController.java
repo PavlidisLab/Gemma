@@ -33,7 +33,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.model.analysis.DifferentialExpressionAnalysisResultService;
 import ubic.gemma.model.analysis.DifferentialExpressionAnalysisService;
@@ -202,7 +201,10 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             try {
                 diffCommand.setThreshold( Double.parseDouble( request.getParameter( "threshold" ) ) );
             } catch ( NumberFormatException e ) {
-                throw new RuntimeException( "Threshold must be a valid number" );
+
+                String message = "Threshold must be a valid number";
+                errors.addError( new ObjectError( command.toString(), null, null, message ) );
+                return processErrors( request, response, command, errors, null );
             }
             // num
             diffCommand.setGeneOfficialSymbol( request.getParameter( "geneOfficialSymbol" ) );
@@ -218,7 +220,9 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         try {
             geneId = Long.parseLong( diffCommand.getGeneOfficialSymbol() );
         } catch ( NumberFormatException e ) {
-            throw new RuntimeException( "Expected a valid long" );
+            String message = "You must choose a gene from the search results";
+            errors.addError( new ObjectError( command.toString(), null, null, message ) );
+            return processErrors( request, response, command, errors, null );
         }
 
         double threshold = diffCommand.getThreshold();
