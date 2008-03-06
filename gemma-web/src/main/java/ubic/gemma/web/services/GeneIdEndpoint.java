@@ -26,6 +26,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 
 /**
@@ -40,6 +42,7 @@ public class GeneIdEndpoint extends AbstractGemmaEndpoint {
     // private static Log log = LogFactory.getLog(GeneIdEndpoint.class);
 
     private GeneService geneService;
+    private TaxonService taxonService;
 
     /**
      * The local name of the expected Request/Response.
@@ -51,6 +54,10 @@ public class GeneIdEndpoint extends AbstractGemmaEndpoint {
      */
     public void setGeneService( GeneService geneS ) {
         this.geneService = geneS;
+    }
+    
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
     }
 
     /**
@@ -64,24 +71,30 @@ public class GeneIdEndpoint extends AbstractGemmaEndpoint {
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         setLocalName( GENE_LOCAL_NAME );
         String geneName = "";
-
+        String taxString = "";
         Collection<String> geneResults = getNodeValues( requestElement, "gene_official_symbol" );
 
         for ( String name : geneResults ) {
             geneName = name;
         }
+        Collection<String> taxonResults = getNodeValues( requestElement, "taxon_id" );
 
-        Collection<Gene> genes = geneService.findByOfficialSymbolInexact( geneName );
+        for ( String tax : taxonResults ) {
+            taxString = tax;
+        }
+       
+        //Collection<Gene> genes = geneService.findByOfficialSymbolInexact( geneName );
+        Taxon taxon = taxonService.load( Long.parseLong( taxString ) );
+        Gene gene = geneService.findByOfficialSymbol( geneName, taxon );
 
-        if ( genes == null ) {
-            String msg = "No genes with official symbol, " + geneName + " can be found.";
+        if ( gene == null ) {
+            String msg = "No gene with official symbol, " + geneName + ", and taxon, "+taxString+", can be found.";
             return buildBadResponse( document, msg );
         }
 
-        // get Array Design ID and build results in the form of a collection
+        //build results in the form of a collection
         Collection<String> gIDs = new HashSet<String>();
-        for ( Gene gene : genes )
-            gIDs.add( gene.getId().toString() );
+        gIDs.add( gene.getId().toString() );
 
         return buildWrapper( document, gIDs, "gene_name" );
 
