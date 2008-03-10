@@ -19,7 +19,7 @@
 package ubic.gemma.util.progress;
 
 import org.apache.log4j.AppenderSkeleton;
-import org.apache.log4j.Priority;
+import org.apache.log4j.Level;
 import org.apache.log4j.spi.LoggingEvent;
 
 /**
@@ -37,7 +37,7 @@ public class ProgressAppender extends AppenderSkeleton {
      */
     @Override
     protected void append( LoggingEvent event ) {
-        if ( event.getLevel().isGreaterOrEqual( Priority.INFO ) && event.getMessage() != null ) {
+        if ( event.getLevel().isGreaterOrEqual( Level.INFO ) && event.getMessage() != null ) {
             ProgressManager.updateCurrentThreadsProgressJob( event.getMessage().toString() );
         }
     }

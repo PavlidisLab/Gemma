@@ -23,9 +23,9 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.GregorianCalendar;
 
-import ubic.gemma.model.analysis.GeneCoexpressionAnalysis;
-import ubic.gemma.model.analysis.GeneCoexpressionAnalysisService;
-import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
+import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
+import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
+import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.protocol.ProtocolService;
 import ubic.gemma.model.genome.Gene;
@@ -40,7 +40,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
 
     private Gene2GeneCoexpressionService g2gCoexpressionS;
-    private GeneCoexpressionAnalysisService analysisS;
+    private ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService analysisS;
     private ProtocolService protocolS;
     private GeneService geneS;
     private TaxonService taxonS;

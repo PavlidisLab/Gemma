@@ -20,7 +20,7 @@ package ubic.gemma.model;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
-import ubic.gemma.analysis.diff.DifferentialExpressionAnalysisDaoImplTest;
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisDaoImplTest;
 import ubic.gemma.model.analysis.DifferentialExpressionAnalysisServiceTest;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionServiceTest;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImplTest;

@@ -76,6 +76,9 @@
 		<property name="bioSequenceService">
 			<ref bean="bioSequenceService"/>
 		</property>
+		<property name="taxonService">
+			<ref bean="taxonService"/>
+		</property>
 		<property name="compositeSequenceService">
 			<ref bean="compositeSequenceService"/>
 		</property>
@@ -125,7 +128,7 @@
 				class="org.compass.gps.device.hibernate.indexer.ScrollableHibernateIndexEntitiesIndexer"/>
 		</property>
 		<property name="fetchCount">
-			<value>50</value>
+			<value>40</value>
 		</property>
 		<property name="mirrorDataChanges">
 			<!-- This is critical. If true, then objects are indexed as they are persisted, which is not working for us -->
@@ -378,7 +381,7 @@
 				<prop key="compass.engine.indexManagerScheduleInterval">-1
 				</prop>
 				<prop key="compass.engine.mergeFactor">500</prop>
-				<prop key="compass.engine.maxBufferedDocs">100</prop>
+				<prop key="compass.engine.maxBufferedDocs">50</prop>
 				
 			</props>
 		</property>

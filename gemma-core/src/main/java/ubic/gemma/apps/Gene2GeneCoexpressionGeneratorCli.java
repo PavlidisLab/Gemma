@@ -25,7 +25,7 @@ import java.util.Collection;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
-import ubic.gemma.analysis.coexpression.GeneLinkCoexpressionAnalyzer;
+import ubic.gemma.analysis.expression.coexpression.GeneLinkCoexpressionAnalyzer;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 

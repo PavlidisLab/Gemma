@@ -24,7 +24,7 @@ Ext.Gemma.CoexpressionGrid = function ( config ) {
 		superConfig.store = new Ext.Gemma.PagingDataStore( {
 			proxy : new Ext.data.MemoryProxy( [] ),
 			reader : new Ext.data.ListRangeReader( {id:"id"}, Ext.Gemma.CoexpressionGrid.getRecord() ),
-			sortInfo : { field: 'sortKey', direction: 'ASC' },
+			sortInfo : { field: 'sortKey', direction: 'DESC' },
 			pageSize : this.pageSize
 		} );
 		superConfig.bbar = new Ext.Gemma.PagingToolbar( {
@@ -35,7 +35,7 @@ Ext.Gemma.CoexpressionGrid = function ( config ) {
 		superConfig.ds = new Ext.data.Store( {
 			proxy : new Ext.data.MemoryProxy( [] ),
 			reader : new Ext.data.ListRangeReader( {id:"id"}, Ext.Gemma.CoexpressionGrid.getRecord() ),
-			sortInfo : { field: 'sortKey', direction: 'ASC' }
+			sortInfo : { field: 'sortKey', direction: 'DESC' }
 		} );
 	}
 	
@@ -74,8 +74,8 @@ Ext.Gemma.CoexpressionGrid.getRecord = function() {
 			{ name:"foundGene", sortType: function( g ) { return g.officialSymbol; } },
 			{ name:"sortKey", type:"string" },
 			{ name:"supportKey", type:"int", sortType:Ext.data.SortTypes.asInt, sortDir:"DESC" },
-			{ name:"positiveLinks", type:"int" },
-			{ name:"negativeLinks", type:"int" },
+			{ name:"positiveCorrelationSupport", type:"int" },
+			{ name:"negativeCorrelationSupport", type:"int" },
 			{ name:"numDatasetsLinkTestedIn", type:"int" },
 			{ name:"nonSpecificPositiveLinks", type:"int" },
 			{ name:"nonSpecificNegativeLinks", type:"int" },
@@ -113,13 +113,13 @@ Ext.Gemma.CoexpressionGrid.getSupportStyler = function() {
 	if ( Ext.Gemma.CoexpressionGrid.supportStyler === undefined ) {
 		Ext.Gemma.CoexpressionGrid.supportStyler = function ( value, metadata, record, row, col, ds ) {
 			var d = record.data;
-			if ( d.positiveLinks || d.negativeLinks ) {
+			if ( d.positiveCorrelationSupport || d.negativeCorrelationSupport ) {
 				var s = "";
-				if ( d.positiveLinks ) {
-					s = s + String.format( "<span class='positiveLink'>{0}{1}</span> ", d.positiveLinks, Ext.Gemma.CoexpressionGrid.getSpecificLinkString( d.positiveLinks, d.nonSpecificPositiveLinks ) );
+				if ( d.positiveCorrelationSupport ) {
+					s = s + String.format( "<span class='positiveLink'>{0}{1}</span> ", d.positiveCorrelationSupport, Ext.Gemma.CoexpressionGrid.getSpecificLinkString( d.positiveCorrelationSupport, d.nonSpecificPositiveLinks ) );
 				}
-				if ( d.negativeLinks ) {
-					s = s + String.format( "<span class='negativeLink'>{0}{1}</span> ", d.negativeLinks, Ext.Gemma.CoexpressionGrid.getSpecificLinkString( d.negativeLinks, d.nonSpecificNegativeLinks ) );
+				if ( d.negativeCorrelationSupport ) {
+					s = s + String.format( "<span class='negativeLink'>{0}{1}</span> ", d.negativeCorrelationSupport, Ext.Gemma.CoexpressionGrid.getSpecificLinkString( d.negativeCorrelationSupport, d.nonSpecificNegativeLinks ) );
 				}
 				s = s + String.format( "{0}/ {1}", d.hybridizesWithQueryGene ? " *" : "", d.numDatasetsLinkTestedIn );
 				return s;

@@ -45,9 +45,9 @@ import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
-import ubic.gemma.model.coexpression.CoexpressedGenesDetails;
-import ubic.gemma.model.coexpression.CoexpressionCollectionValueObject;
-import ubic.gemma.model.coexpression.CoexpressionValueObject;
+import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenesDetails;
+import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
+import ubic.gemma.model.analysis.expression.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -620,6 +620,19 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         String p2pClass = getP2PTableNameForClassName( p2pClassName );
 
+        /**
+         * Fields:
+         * 
+         * <pre>
+         * Geneid
+         * exper
+         * pvalue
+         * score
+         * csin
+         * csout
+         * genetype
+         * </pre>
+         */
         String query = "SELECT gcOut.GENE as id, coexp.EXPRESSION_EXPERIMENT_FK as exper, coexp.PVALUE as pvalue, coexp.SCORE as score, "
                 + "gcIn.CS as csIdIn, gcOut.CS as csIdOut, gcOut.GTYPE as geneType FROM GENE2CS gcIn INNER JOIN "
                 + p2pClass
@@ -733,14 +746,15 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param queryGene
      * @param geneMap
      * @param resultSet
+     * @see getFastNativeQueryString for the parameterization of the query output.
      */
     private void processCoexpQueryResult( Gene queryGene, ScrollableResults resultSet,
             CoexpressionCollectionValueObject coexpressions ) {
 
         Long geneId = resultSet.getLong( 0 );
         Long eeID = resultSet.getLong( 1 );
-        Double score = resultSet.getDouble( 2 );
-        Double pvalue = resultSet.getDouble( 3 );
+        Double pvalue = resultSet.getDouble( 2 );
+        Double score = resultSet.getDouble( 3 );
         Long queryGeneProbe = resultSet.getLong( 4 );
         Long outputProbeId = resultSet.getLong( 5 );
         String geneType = resultSet.getString( 6 );

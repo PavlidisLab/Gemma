@@ -22,7 +22,6 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import ubic.gemma.analysis.AllAnalysisTests;
 import ubic.gemma.analysis.report.ArrayDesignReportServiceTest;
-import ubic.gemma.apps.ProbeMapperCliTest;
 import ubic.gemma.datastructure.matrix.AllExpressionMatrixTests;
 import ubic.gemma.externalDb.GoldenPathQueryTest;
 import ubic.gemma.loader.AllLoaderTests;
@@ -59,9 +58,6 @@ public class AllCoreTests {
 
         // tests in externalDb
         suite.addTestSuite( GoldenPathQueryTest.class );
-
-        // tests in apps
-        suite.addTestSuite( ProbeMapperCliTest.class );
 
         // tests in scheduler
         suite.addTestSuite( SchedulerFactoryBeanTest.class );

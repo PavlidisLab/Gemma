@@ -24,9 +24,6 @@ import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
 /**
@@ -37,7 +34,6 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
  * @see ubic.gemma.model.expression.bioAssay.BioAssayService
  */
 public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.BioAssayServiceBase {
-    private static Log log = LogFactory.getLog( BioAssayServiceImpl.class.getName() );
 
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayService#saveBioAssay(edu.columbia.gemma.expression.bioAssay.BioAssay)
@@ -137,10 +133,7 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
             bioMaterial.setName( shortName );
         }
 
-        // TODO make this transactional
-        // update bioAssay
         this.update( bioAssay );
-        // update bioMaterial
         this.getBioMaterialService().update( bioMaterial );
     }
 
@@ -162,9 +155,6 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
         currentBioAssays.remove( bioAssay );
         bioMaterial.setBioAssaysUsedIn( currentBioAssays );
 
-        // TODO make this transactional
-
-        // update bioAssay
         this.update( bioAssay );
 
         // check to see if the bioMaterial is now orphaned.

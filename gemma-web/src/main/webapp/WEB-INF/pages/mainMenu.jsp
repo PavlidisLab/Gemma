@@ -67,6 +67,7 @@
 	<script type='text/javascript' src='/Gemma/scripts/ajax/util/GemmaGridPanel.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/util/PagingDataStore.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/util/PagingToolbar.js'></script>
+	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/DatasetSearchField.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionGrid.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionDatasetGrid.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionSearchForm.js'></script>
@@ -75,8 +76,8 @@
 
 <div id="sampleQueries" style="padding:4px;">
 	Examples: rat
-	<a href="<c:url value="/searchCoexpression.html?g=938103&a=571" />">Ddn</a>; mouse
-	<a href="<c:url value="/searchCoexpression.html?g=598735&s=3&a=616" />">Mapk3</a>
+	<a href="<c:url value="/searchCoexpression.html?g=938103&amp;a=571" />">Ddn</a>; mouse
+	<a href="<c:url value="/searchCoexpression.html?g=598735&amp;s=3&amp;a=616" />">Mapk3</a>
 </div>
 <authz:authorize ifAnyGranted="admin">
 	<hr />
@@ -90,6 +91,9 @@
 		</li>
 		<li>
 			<a href="<c:url value="/securityManager.html"/>"> <fmt:message key="menu.securityManager" /> </a>
+		</li>
+		<li>
+			<a href="<c:url value="/geneLinkAnalysisManager.html" />">Manage gene link analyses</a> ("Canned" analyses)
 		</li>
 		<li>
 			<a href="<c:url value="/maintenanceMode.html" />">Manage maintenance mode</a>

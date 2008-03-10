@@ -25,8 +25,8 @@ import java.util.HashSet;
 import java.util.Map;
 
 import ubic.gemma.model.analysis.Analysis;
-import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -157,15 +157,13 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
     }
 
     public void testFindByNameExact() {
-
-        Analysis result = analysisService.findByName( "Test" );
+        Analysis result = ( Analysis ) analysisService.findByName( "Test" ).iterator().next();
         assertEquals( "Test", result.getName() );
     }
 
     public void testFindByNameRecent() {
-
-        Analysis result = analysisService.findByName( "TestA" );
-        assertEquals( "TestAnalysis3", result.getName() );
+        Analysis result = analysisService.findMostRecentByName( "Test" );
+        assertEquals( "Test", result.getName() );
     }
 
     /**

@@ -1,0 +1,372 @@
+/*
+ * The linkAnalysis project
+ * 
+ * Copyright (c) 2006 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+package ubic.gemma.analysis.expression.coexpression.links;
+
+import java.util.Collection;
+
+import ubic.basecode.dataStructure.matrix.CompressedSparseDoubleMatrix2DNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
+import ubic.basecode.math.CorrelationStats;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
+import ubic.gemma.model.common.quantitationtype.GeneralType;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
+import ubic.gemma.model.genome.Gene;
+import cern.colt.list.ObjectArrayList;
+
+/**
+ * A correlation analysis for a given data set, designed for selection of values based on critera set by the user.
+ * <p>
+ * On the first pass over the data, a histogram is filled in to hold the distribution of the values found. You can set
+ * criteria to have the correlations actually stored in a (sparse) matrix. This can take a lot of memory if you store
+ * everything!
+ * <p>
+ * The correlation is only calculated if it isn't stored in the matrix, and values can be tested against a threshold.
+ * <p>
+ * This class is used in reality by one pass over the data to fill in the histogram. This is used to help select a
+ * threshold. A second pass over the data is used to select correlations that meet the criteria.
+ * <p>
+ * 
+ * @author Paul Pavlidis
+ * @version $Id$
+ */
+public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis {
+
+    protected double[] rowMeans = null;
+    protected double[] rowSumSquaresSqrt = null;
+
+    /**
+     * @param
+     */
+    public MatrixRowPairPearsonAnalysis( ExpressionDataDoubleMatrix dataMatrix ) {
+        this( dataMatrix.rows() );
+        this.dataMatrix = dataMatrix;
+        this.numMissing = this.fillUsed();
+    }
+
+    /**
+     * @param dataMatrix DenseDoubleMatrix2DNamed
+     * @param tmts Values of the correlation that are deemed too small to store in the matrix. Setting this as high as
+     *        possible can greatly reduce memory requirements, but can slow things down.
+     */
+    public MatrixRowPairPearsonAnalysis( ExpressionDataDoubleMatrix dataMatrix, double tmts ) {
+        this( dataMatrix );
+        this.setStorageThresholdValue( tmts );
+    }
+
+    /**
+     * @param size Dimensions of the required (square) matrix.
+     */
+    private MatrixRowPairPearsonAnalysis( int size ) {
+        if ( size > 0 ) {
+            results = new CompressedSparseDoubleMatrix2DNamed<ExpressionDataMatrixRowElement, ExpressionDataMatrixRowElement>(
+                    size, size );
+        }
+        keepers = new ObjectArrayList();
+    }
+
+    /**
+     * Calculate the linear correlation matrix of a matrix, allowing missing values. If there are no missing values,
+     * this calls PearsonFast.
+     */
+    public void calculateMetrics() {
+
+        if ( this.numMissing == 0 ) {
+            calculateMetricsFast();
+            return;
+        }
+
+        int numused;
+        int numrows = this.dataMatrix.rows();
+        int numcols = this.dataMatrix.columns();
+
+        boolean docalcs = this.needToCalculateMetrics();
+        boolean[][] usedB = null;
+        double[][] data = null;
+        if ( docalcs ) {
+            // Temporarily copy the data in this matrix, for performance.
+            usedB = new boolean[numrows][numcols];
+            data = new double[numrows][numcols];
+            for ( int i = 0; i < numrows; i++ ) { // first vector
+                for ( int j = 0; j < numcols; j++ ) { // second vector
+                    usedB[i][j] = used.get( i, j ); // this is only needed if we use it below, speeds things up
+                    // slightly.
+                    data[i][j] = this.dataMatrix.get( i, j );
+                }
+            }
+        }
+
+        /* for each vector, compare it to all other vectors */
+        ExpressionDataMatrixRowElement itemA = null;
+        double[] vectorA = null;
+        double syy, sxy, sxx, sx, sy, xj, yj;
+        int count = 0;
+        int numComputed = 0;
+        for ( int i = 0; i < numrows; i++ ) { // first vector
+            itemA = this.dataMatrix.getRowElement( i );
+            if ( !this.hasGene( itemA ) ) continue;
+            if ( docalcs ) {
+                rowStatistics();
+                vectorA = data[i];
+            }
+
+            boolean thisRowHasMissing = hasMissing[i];
+
+            for ( int j = i + 1; j < numrows; j++ ) { // second vector
+                ExpressionDataMatrixRowElement itemB = this.dataMatrix.getRowElement( j );
+                if ( !this.hasGene( itemB ) ) continue;
+
+                // second pass over matrix? Don't calculate it if we already have it. Just do the requisite checks.
+                if ( !docalcs || results.get( i, j ) != 0.0 ) {
+                    keepCorrel( i, j, results.get( i, j ), numcols );
+                    continue;
+                }
+
+                double[] vectorB = data[j];
+
+                /* if there are no missing values, use the faster method of calculation */
+                if ( !thisRowHasMissing && !hasMissing[j] ) {
+                    setCorrel( i, j, correlFast( vectorA, vectorB, i, j ), numcols );
+                    continue;
+                }
+
+                /* do it the old fashioned way */
+                numused = 0;
+                sxy = 0.0;
+                sxx = 0.0;
+                syy = 0.0;
+                sx = 0.0;
+                sy = 0.0;
+                for ( int k = 0; k < numcols; k++ ) {
+                    xj = vectorA[k];
+                    yj = vectorB[k];
+                    if ( usedB[i][k] && usedB[j][k] ) { /* this is a bit faster than calling Double.isNan */
+                        sx += xj;
+                        sy += yj;
+                        sxy += xj * yj;
+                        sxx += xj * xj;
+                        syy += yj * yj;
+                        numused++;
+                    }
+                }
+
+                // avoid -1 correlations or extremely noisy values (minNumUsed should be set high enough so that degrees
+                // of freedom isn't too low.
+                if ( numused < minNumUsed )
+                    setCorrel( i, j, Double.NaN, 0 );
+                else {
+                    double denom = correlationNorm( numused, sxx, sx, syy, sy );
+                    if ( denom <= 0.0 ) { // means variance is zero for one of the vectors.
+                        setCorrel( i, j, 0.0, numused );
+                    } else {
+                        double correl = ( sxy - sx * sy / numused ) / Math.sqrt( denom );
+                        setCorrel( i, j, correl, numused );
+                    }
+                }
+                ++numComputed;
+
+            }
+            if ( ++count % 2000 == 0 ) {
+                log.info( count + " rows done, " + numComputed + " correlations computed, last row was " + itemA + " "
+                        + ( keepers.size() > 0 ? keepers.size() + " scores retained" : "" ) );
+            }
+        }
+        finishMetrics();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.linkAnalysis.MatrixRowPairAnalysis#getMetricType()
+     */
+    public QuantitationType getMetricType() {
+        QuantitationType m = QuantitationType.Factory.newInstance();
+        m.setIsBackground( false );
+        m.setIsBackgroundSubtracted( false );
+        m.setIsNormalized( false );
+        m.setIsPreferred( false );
+        m.setIsRatio( false );
+        m.setType( StandardQuantitationType.CORRELATION );
+        m.setName( "Pearson correlation" );
+        m.setGeneralType( GeneralType.QUANTITATIVE );
+        m.setRepresentation( PrimitiveType.DOUBLE );
+        m.setScale( ScaleType.LINEAR );
+        return m;
+
+    }
+
+    /**
+     * Calculate a linear correlation matrix for a matrix. Use this if you know there are no missing values, or don't
+     * care about NaNs.
+     * 
+     * @param duplicates The map containing information about what items are the 'same' as other items; such are
+     *        skipped.
+     */
+    private void calculateMetricsFast() {
+        int numrows = this.dataMatrix.rows();
+        int numcols = this.dataMatrix.columns();
+        boolean docalcs = this.needToCalculateMetrics();
+
+        double[][] data = null;
+        if ( docalcs ) {
+            rowStatistics();
+
+            // Temporarily put the data in this matrix (performance)
+            data = new double[numrows][numcols];
+            for ( int i = 0; i < numrows; i++ ) { // first vector
+                for ( int j = 0; j < numcols; j++ ) { // second vector
+                    data[i][j] = this.dataMatrix.get( i, j );
+                }
+            }
+        }
+
+        /*
+         * For each vector, compare it to all other vectors, avoid repeating things; skip items that don't have genes
+         * mapped to them.
+         */
+        ExpressionDataMatrixRowElement itemA = null;
+        ExpressionDataMatrixRowElement itemB = null;
+        double[] vectorA = null;
+        int count = 0;
+        int numComputed = 0;
+        for ( int i = 0; i < numrows; i++ ) {
+            itemA = this.dataMatrix.getRowElement( i );
+            if ( !this.hasGene( itemA ) ) continue;
+            if ( docalcs ) {
+                vectorA = data[i];
+            }
+
+            for ( int j = i + 1; j < numrows; j++ ) {
+                itemB = this.dataMatrix.getRowElement( j );
+                if ( !this.hasGene( itemB ) ) continue;
+                if ( !docalcs || results.get( i, j ) != 0.0 ) { // second pass over matrix. Don't calculate it
+                    // if we
+                    // already have it. Just do the requisite checks.
+                    keepCorrel( i, j, results.get( i, j ), numcols );
+                    continue;
+                }
+
+                double[] vectorB = data[j];
+                setCorrel( i, j, correlFast( vectorA, vectorB, i, j ), numcols );
+                ++numComputed;
+            }
+            if ( ++count % 2000 == 0 ) {
+                log.info( count + " rows done, " + numComputed + " correlations computed, last row was " + itemA + " "
+                        + ( keepers.size() > 0 ? keepers.size() + " scores retained" : "" ) );
+            }
+        }
+
+        finishMetrics();
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.linkAnalysis.MatrixRowPairAnalysis#correctedPvalue(int, int, double, int)
+     */
+    public double correctedPvalue( int i, int j, double correl, int numused ) {
+
+        double p = CorrelationStats.pvalue( correl, numused );
+
+        double k = 1, m = 1;
+        Collection<Collection<Gene>> clusters = getGenesForRow( i );
+        if ( clusters != null ) {
+            for ( Collection<Gene> geneIdSet : clusters ) {
+                /*
+                 * Note we break on the first iteration because the number of probes per gene in the same cluster is
+                 * constant.
+                 */
+                for ( Gene geneId : geneIdSet ) {
+                    int tmpK = this.geneToProbeMap.get( geneId ).size() + 1;
+                    if ( k < tmpK ) k = tmpK;
+                    break;
+                }
+            }
+        }
+
+        clusters = getGenesForRow( j );
+        if ( clusters != null ) {
+            for ( Collection<Gene> geneIdSet : clusters ) {
+                for ( Gene geneId : geneIdSet ) {
+                    int tmpM = this.geneToProbeMap.get( geneId ).size() + 1;
+                    if ( m < tmpM ) m = tmpM;
+                    break;
+                }
+            }
+        }
+
+        return p * k * m;
+    }
+
+    /**
+     * @return double
+     * @param n int
+     * @param sxx double
+     * @param sx double
+     * @param syy double
+     * @param sy double
+     */
+    private double correlationNorm( int n, double sxx, double sx, double syy, double sy ) {
+        return ( sxx - sx * sx / n ) * ( syy - sy * sy / n );
+    }
+
+    /**
+     * @param ival double[]
+     * @param jval double[]
+     * @param i int
+     * @param j int
+     * @return double
+     */
+    private double correlFast( double[] ival, double[] jval, int i, int j ) {
+        if ( rowSumSquaresSqrt[i] == 0 || rowSumSquaresSqrt[j] == 0 ) return Double.NaN;
+        double sxy = 0.0;
+        for ( int k = 0, n = ival.length; k < n; k++ ) {
+            sxy += ( ival[k] - rowMeans[i] ) * ( jval[k] - rowMeans[j] );
+        }
+        return sxy / ( rowSumSquaresSqrt[i] * rowSumSquaresSqrt[j] );
+    }
+
+    /**
+     * Calculate mean and sumsqsqrt for each row
+     */
+    private void rowStatistics() {
+        int numrows = dataMatrix.rows();
+        this.rowMeans = new double[numrows];
+        this.rowSumSquaresSqrt = new double[numrows];
+        for ( int i = 0, numcols = dataMatrix.columns(); i < numrows; i++ ) {
+            double ax = 0.0;
+            double sxx = 0.0;
+            for ( int j = 0; j < numcols; j++ ) {
+                ax += this.dataMatrix.get( i, j );
+            }
+            rowMeans[i] = ( ax / numcols );
+
+            for ( int j = 0; j < numcols; j++ ) {
+                double xt = this.dataMatrix.get( i, j ) - rowMeans[i]; /* deviation from mean */
+                sxx += xt * xt; /* sum of squared error */
+            }
+            rowSumSquaresSqrt[i] = Math.sqrt( sxx );
+        }
+    }
+
+}

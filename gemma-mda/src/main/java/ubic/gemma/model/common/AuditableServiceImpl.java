@@ -56,6 +56,11 @@ public class AuditableServiceImpl extends ubic.gemma.model.common.AuditableServi
         return this.getAuditableDao().getLastAuditEvent( auditable, type );
     }
 
+    @Override
+    protected AuditEvent handleGetCreateEvent( final Auditable auditable ) {
+        return this.getAuditableDao().getCreateEvent( auditable );
+    }
+
     /**
      * @param events
      * @param lastEvent

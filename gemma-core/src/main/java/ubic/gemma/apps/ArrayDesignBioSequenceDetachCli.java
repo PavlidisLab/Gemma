@@ -39,9 +39,9 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
 
         Exception err = processCommandLine( "Array design sequence remover", args );
         if ( err != null ) return err;
-        ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
+        ArrayDesign arrayDesign = locateArrayDesign( getArrayDesignName() );
 
-        this.arrayDesignService.removeBiologicalCharacteristics( arrayDesign );
+        this.getArrayDesignService().removeBiologicalCharacteristics( arrayDesign );
         audit( arrayDesign, "Removed sequence associations with CLI" );
         return null;
     }
@@ -50,7 +50,7 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
      * @param arrayDesign
      */
     private void audit( ArrayDesign arrayDesign, String note ) {
-        super.arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+        super.getArrayDesignReportService().generateArrayDesignReport( arrayDesign.getId() );
         AuditEventType eventType = ArrayDesignSequenceRemoveEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }

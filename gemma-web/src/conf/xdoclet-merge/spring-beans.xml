@@ -87,6 +87,7 @@ Mapping URLS to controllers
 			<prop key="/indexer.html">indexController</prop>
 			<prop key="/searcher.html">generalSearchController</prop>
 			<prop key="/searchCoexpression.html">coexpressionSearchController</prop>
+			<prop key="/geneLinkAnalysisManager.html">geneLinkAnalysisManagerController</prop>
 			<prop key="/securityManager.html">securityFormController</prop>
 			<prop key="/geoBrowser/*">geoRecordBrowserController</prop>
 			<prop key="/whatsnew/*">whatsNewController</prop>
@@ -500,6 +501,27 @@ Mapping URLS to controllers
 							<value>doSearch</value>
 							<value>getCannedAnalyses</value>
 							<value>findExpressionExperiments</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="GeneLinkAnalysisManagerController">
+				<bean class="org.directwebremoting.spring.CreatorConfig">
+					<property name="creator">
+						<bean class="org.directwebremoting.spring.BeanCreator">
+							<property name="bean"
+								ref="geneLinkAnalysisManagerController"/>
+						</bean>
+					</property>
+					<property name="includes">
+						<list>
+							<value>create</value>
+							<value>update</value>
+							<value>getCannedAnalyses</value>
+							<value>loadExpressionExperiments</value>
+							<value>filterExpressionExperiments</value>
+							<value>updateExperimentsInAnalysis</value>
+							<value>getExperimentsInAnalysis</value>
 						</list>
 					</property>
 				</bean>
@@ -1027,27 +1049,27 @@ Mapping URLS to controllers
 					<property name="type" value="bean"/>
 				</bean>
 			</entry>
-			<entry key="ubic.gemma.web.controller.coexpressionSearch.CoexpressionValueObjectExt">
+			<entry key="ubic.gemma.analysis.expression.coexpression.CoexpressionValueObjectExt">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean"/>
 				</bean>
 			</entry>
-			<entry key="ubic.gemma.web.controller.coexpressionSearch.CoexpressionDatasetValueObject">
+			<entry key="ubic.gemma.analysis.expression.coexpression.CoexpressionDatasetValueObject">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean"/>
 				</bean>
 			</entry>
-			<entry key="ubic.gemma.web.controller.coexpressionSearch.CoexpressionMetaValueObject">
+			<entry key="ubic.gemma.analysis.expression.coexpression.CoexpressionMetaValueObject">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean"/>
 				</bean>
 			</entry>
-			<entry key="ubic.gemma.web.controller.coexpressionSearch.CoexpressionSummaryValueObject">
+			<entry key="ubic.gemma.analysis.expression.coexpression.CoexpressionSummaryValueObject">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean"/>
 				</bean>
 			</entry>
-			<entry key="ubic.gemma.web.controller.coexpressionSearch.CannedAnalysisValueObject">
+			<entry key="ubic.gemma.analysis.expression.coexpression.CannedAnalysisValueObject">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean"/>
 				</bean>

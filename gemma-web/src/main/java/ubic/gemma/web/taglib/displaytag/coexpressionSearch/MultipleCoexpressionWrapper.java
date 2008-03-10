@@ -29,8 +29,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
-import ubic.gemma.model.coexpression.CoexpressionValueObject;
-import ubic.gemma.model.coexpression.CommonCoexpressionValueObject;
+import ubic.gemma.model.analysis.expression.coexpression.CoexpressionValueObject;
+import ubic.gemma.model.analysis.expression.coexpression.CommonCoexpressionValueObject;
 import ubic.gemma.model.genome.Gene;
 
 /**

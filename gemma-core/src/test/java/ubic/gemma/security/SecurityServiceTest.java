@@ -23,8 +23,8 @@ import java.util.HashSet;
 
 import org.acegisecurity.acl.basic.BasicAclExtendedDao;
 
-import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.common.SecurableDao;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -135,22 +135,22 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         }
     }
 
-    /**
-     * @throws Exception
-     */
-    public void testMakeTestExpressionExperimentPrivate() throws Exception {
-        endTransaction();
-        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false ); // not readonly.
-
-        SecurityService securityService = new SecurityService();
-        securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
-        securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
-        securityService.makePrivate( ee );
-        /*
-         * uncomment so you can see the acl permission has been changed in the database.
-         */
-        // this.setComplete();
-    }
+//    /**
+//     * @throws Exception
+//     */
+//    public void testMakeTestExpressionExperimentPrivate() throws Exception {
+//        endTransaction();
+//        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false ); // not readonly.
+//
+//        SecurityService securityService = new SecurityService();
+//        securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
+//        securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
+//        securityService.makePrivate( ee );
+//        /*
+//         * uncomment so you can see the acl permission has been changed in the database.
+//         */
+//        // this.setComplete();
+//    }
 
     /**
      * @throws Exception

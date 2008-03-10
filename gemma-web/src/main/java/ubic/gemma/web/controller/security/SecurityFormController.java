@@ -33,12 +33,12 @@ import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.model.analysis.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.DifferentialExpressionAnalysisService;
-import ubic.gemma.model.analysis.GeneCoexpressionAnalysis;
-import ubic.gemma.model.analysis.GeneCoexpressionAnalysisService;
-import ubic.gemma.model.analysis.ProbeCoexpressionAnalysis;
-import ubic.gemma.model.analysis.ProbeCoexpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
+import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
+import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;

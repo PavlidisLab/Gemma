@@ -31,6 +31,7 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 
+import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -62,6 +63,15 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
     protected ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastAuditEvent( final Auditable auditable,
             AuditEventType type ) throws java.lang.Exception {
         return handleGetLastAuditEvent( auditable.getAuditTrail(), type );
+    }
+
+    @Override
+    protected AuditEvent handleGetCreateEvent( final Auditable auditable ) {
+        List<AuditEvent> events = ( List<AuditEvent> ) this.getAuditEvents( auditable );
+        if ( events.size() == 0 ) return null;
+        AuditEvent e = events.get( 0 );
+        assert e.getAction().equals( AuditAction.CREATE );
+        return e;
     }
 
     /**

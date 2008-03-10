@@ -44,8 +44,8 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  */
 public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringAwareCLI {
 
-    ArrayDesignService arrayDesignService;
-    String arrayDesignName = null;
+    protected ArrayDesignService arrayDesignService;
+    protected String arrayDesignName = null;
 
     protected ArrayDesignReportService arrayDesignReportService;
 
@@ -262,6 +262,18 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
             }
         }
         return events;
+    }
+
+    public ArrayDesignService getArrayDesignService() {
+        return arrayDesignService;
+    }
+
+    public String getArrayDesignName() {
+        return arrayDesignName;
+    }
+
+    public ArrayDesignReportService getArrayDesignReportService() {
+        return arrayDesignReportService;
     }
 
 }

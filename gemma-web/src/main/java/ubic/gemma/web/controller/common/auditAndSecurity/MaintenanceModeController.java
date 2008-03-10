@@ -20,13 +20,10 @@ package ubic.gemma.web.controller.common.auditAndSecurity;
 
 import java.util.Map;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.acegisecurity.GrantedAuthority;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.web.context.ServletContextAware;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
@@ -35,8 +32,11 @@ import ubic.gemma.security.SecurityService;
 import ubic.gemma.web.controller.BaseFormController;
 
 /**
+ * Performs actions required when we wish to indicate that the system is undergoing maintenance and many not behave
+ * normally.
+ * 
  * @spring.bean id="maintenanceModeController"
- * @spring.property name="formView" value="maintenanceMode" 
+ * @spring.property name="formView" value="maintenanceMode"
  * @author pavlidis
  * @version $Id$
  */
@@ -50,7 +50,7 @@ public class MaintenanceModeController extends BaseFormController {
             throws Exception {
 
         config = ( Map<String, Object> ) getServletContext().getAttribute( Constants.CONFIG );
-        
+
         /*
          * check that the user is admin!
          */
@@ -84,7 +84,5 @@ public class MaintenanceModeController extends BaseFormController {
         return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) );
 
     }
-
-    
 
 }

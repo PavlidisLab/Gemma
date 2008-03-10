@@ -317,7 +317,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
 
         return count
                 + " <a title=\"Bioassay details\" href=\"/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id="
-                + object.getId() + "\">" + "<img src=\"/Gemma/images/magnifier.png\" height=10 width=10/></a>";
+                + object.getId() + "\">" + "<img src=\"/Gemma/images/magnifier.png\" height='10' width='10'/></a>";
     }
 
     /**

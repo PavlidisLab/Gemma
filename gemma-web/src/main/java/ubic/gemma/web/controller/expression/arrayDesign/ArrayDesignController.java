@@ -522,15 +522,15 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         File fbp = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + arrayDesign.getShortName() + "_BioProcess"
                 + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
 
-        if ( ( subsumer == null ) && ( merger == null ) && ( fnp.exists() ) ) {
+        if ( fnp.exists() ) {
             mav.addObject( "noParentsAnnotationLink", "/Gemma/arrays/downloadAnnotationFile.html?id="
                     + arrayDesign.getId() + "&fileType=noParents" );
         }
-        if ( ( subsumer == null ) && ( merger == null ) && ( fap.exists() ) ) {
+        if ( fap.exists() ) {
             mav.addObject( "allParentsAnnotationLink", "/Gemma/arrays/downloadAnnotationFile.html?id="
                     + arrayDesign.getId() + "&fileType=allParents" );
         }
-        if ( ( subsumer == null ) && ( merger == null ) && ( fbp.exists() ) ) {
+        if ( fbp.exists() ) {
             mav.addObject( "bioProcessAnnotationLink", "/Gemma/arrays/downloadAnnotationFile.html?id="
                     + arrayDesign.getId() + "&fileType=bioProcess" );
         }

@@ -99,9 +99,10 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
 
     @SuppressWarnings("unchecked")
     public final void testGetDesignElementDataVectors() throws Exception {
+        ExpressionExperiment eel = this.getTestPersistentCompleteExpressionExperiment( true );
         Collection<DesignElement> designElements = new HashSet<DesignElement>();
-        QuantitationType quantitationType = ee.getDesignElementDataVectors().iterator().next().getQuantitationType();
-        Collection<DesignElementDataVector> allv = ee.getDesignElementDataVectors();
+        QuantitationType quantitationType = eel.getDesignElementDataVectors().iterator().next().getQuantitationType();
+        Collection<DesignElementDataVector> allv = eel.getDesignElementDataVectors();
         Iterator<DesignElementDataVector> it = allv.iterator();
         for ( int i = 0; i < 2; i++ ) {
             designElements.add( it.next().getDesignElement() );

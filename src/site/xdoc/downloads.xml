@@ -4,7 +4,7 @@
 		<title>Downloads</title>
 	</properties>
 	<body>
-		<section name="Gemma 1.0">
+		<section name="Gemma current version">
 			<p>
 				For details see the
 				<a href="http://www.bioinformatics.ubc.ca/Gemma/resources/dist/RELEASE-NOTES-1.0.txt">release notes</a>
@@ -13,21 +13,53 @@
 			<subsection name="Binaries">
 				<ul>
 					<li>
-						<a href="http://www.bioinformatics.ubc.ca/Gemma/resources/dist/gemma-1.0-jar-with-dependencies.jar">
-							gemma-1.0-jar-with-dependencies.jar
+						<a href="http://www.bioinformatics.ubc.ca/Gemma/resources/dist/Gemma-1.0.jar">Gemma-1.0.jar</a>
+						- The Gemma web application (this is a 'web archive' file).
+					</li>
+					<li>
+						<a href="http://www.bioinformatics.ubc.ca/Gemma/resources/dist/gemmaCli-1.0.jar">
+							gemmaCli-1.0.jar
 						</a>
+						- The Gemma command line tool package.
+					</li>
+				</ul>
+				<p>
+					Note that these files are not likely to be of immediate use, as most functionality requires a
+					correctly configured system with a Gemma database. If you are interested in establishing your own
+					Gemma installation, please contact us for assistance.
+				</p>
+			</subsection>
+			<subsection name="Source Code">
+				<ul>
+					<li>
+						<a href="http://www.bioinformatics.ubc.ca/Gemma/resources/dist/gemma-1.0-src.zip">
+							gemma-1.0-src.zip
+						</a>
+					</li>
+					<li>
+						<a href="http://www.bioinformatics.ubc.ca/Gemma/resources/dist/basecode-1.0-src.zip">
+							basecode-1.0-src.zip
+						</a>
+						- Basecode is a set of code used by multiple projects in our lab. More details about basecode
+						are
+						<a href="http://www.bioinformatics.ubc.ca/basecode/">here</a>
+						.
 					</li>
 				</ul>
 			</subsection>
-			<subsection name="Source Code"></subsection>
-			<ul>
-				<li>
-					<a href="http://www.bioinformatics.ubc.ca/Gemma/resources/dist/gemma-1.0-src.zip">gemma-1.0-src.zip</a>
-				</li>
-				<li>
-					<a href="http://www.bioinformatics.ubc.ca/basecode/dist/basecode-0.9-src.zip">basecode-0.9-src.zip</a>
-				</li>
-			</ul>
+			<subsection name="Data">
+				<p>
+					Data downloads are currently available through the various pages within the Gemma webapp. Bulk
+					downloads of data from Gemma will be available soon.
+				</p>
+			</subsection>
+			<subsection name="Older versions">
+				<p>
+					Older versions will be available in the
+					<a href="http://www.bioinformatics.ubc.ca/Gemma/resources/dist/">archives</a>
+					.
+				</p>
+			</subsection>
 		</section>
 	</body>
 </document>

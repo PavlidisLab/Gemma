@@ -20,7 +20,7 @@ package ubic.gemma.util;
 
 import java.util.Comparator;
 
-import ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 
 /**
  * A {@link Comparator} to compare {@link ExpressionAnalysisResult} by p value.

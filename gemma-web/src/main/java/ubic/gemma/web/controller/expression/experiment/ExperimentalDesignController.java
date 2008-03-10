@@ -70,7 +70,6 @@ public class ExperimentalDesignController extends BaseMultiActionController {
     private FactorValueService factorValueService = null;
     private CharacteristicService characteristicService = null;
 
-    private final String messagePrefix = "ExperimenalDesign with id ";
     private final String identifierNotFound = "Must provide a valid ExperimentalDesign identifier";
 
     /**
@@ -212,13 +211,13 @@ public class ExperimentalDesignController extends BaseMultiActionController {
              * have to...
              */
             VocabCharacteristic vc = ( VocabCharacteristic ) ef.getCategory();
-            
+
             // VC can be null if this was imported from GEO etc.
-            if (vc == null) {
+            if ( vc == null ) {
                 vc = VocabCharacteristic.Factory.newInstance();
                 ef.setCategory( vc );
             }
-            
+
             vc.setCategory( efvo.getCategory() );
             vc.setCategoryUri( efvo.getCategoryUri() );
             vc.setValue( efvo.getCategory() );
@@ -241,8 +240,12 @@ public class ExperimentalDesignController extends BaseMultiActionController {
 
         Collection<FactorValueValueObject> result = new HashSet<FactorValueValueObject>();
         for ( FactorValue value : ef.getFactorValues() ) {
-            //FIXME  getExperimentFactor can return null.... what to do?
-            result.add( new FactorValueValueObject( value, value.getExperimentalFactor().getCategory() ) );
+            Characteristic category = value.getExperimentalFactor().getCategory();
+            if ( category == null ) {
+                category = Characteristic.Factory.newInstance();
+                category.setValue( value.getExperimentalFactor().getName() );
+            }
+            result.add( new FactorValueValueObject( value, category ) );
         }
         return result;
     }
@@ -266,7 +269,12 @@ public class ExperimentalDesignController extends BaseMultiActionController {
             }
         }
         if ( chars.isEmpty() ) {
-            chars.add( createTemplateCharacteristic( ef.getCategory() ) );
+            if ( ef.getCategory() == null ) {
+                throw new IllegalArgumentException(
+                        "You cannot create new factor values on a experimental factor that is not defined by a formal Category" );
+            } else {
+                chars.add( createTemplateCharacteristic( ef.getCategory() ) );
+            }
         }
 
         FactorValue fv = FactorValue.Factory.newInstance();
@@ -439,10 +447,18 @@ public class ExperimentalDesignController extends BaseMultiActionController {
         }
     }
 
+    /**
+     * @param factor
+     * @return
+     */
     private String getExperimentalFactorString( ExperimentalFactor factor ) {
         return factor.getName();
     }
 
+    /**
+     * @param value
+     * @return
+     */
     private String getFactorValueString( FactorValue value ) {
         StringBuffer buf = new StringBuffer();
         for ( Iterator<Characteristic> iter = value.getCharacteristics().iterator(); iter.hasNext(); ) {
@@ -452,7 +468,7 @@ public class ExperimentalDesignController extends BaseMultiActionController {
             buf.append( c.getValue() == null ? "no value" : c.getValue() );
             if ( iter.hasNext() ) buf.append( ", " );
         }
-        return buf.length() > 0 ? buf.toString() : "no characteristics";
+        return buf.length() > 0 ? buf.toString() : value.getValue() + " [Non-CSC]";
     }
 
     /**

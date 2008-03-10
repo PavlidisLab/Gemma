@@ -22,7 +22,9 @@
 		</property>
 		<component name="bioSequence2GeneProduct" ref-alias="bioSequence2GeneProduct"/>
 	</class>
-	<class name="association.BioSequence2GeneProductImpl" alias="bioSequence2GeneProduct" root="false">
+	<!--  Little woried about this as bioSequence2GeneProduct is an abstract class.  There are 3 concrete subclasses...
+	currently using BlatAssociationImpl... if bioSequence2GeneProduct is used bombs when unmarsheling.  -->
+	<class name="genome.sequenceAnalysis.BlatAssociationImpl" alias="bioSequence2GeneProduct" root="false">
 		<id name="id"/>
 	</class>
 </compass-core-mapping>

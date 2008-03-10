@@ -43,6 +43,13 @@
 				
 				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}geneOverlap">geneOverlapEndpoint</prop>
 				
+				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}geneCoexpression">geneCoexpressionEndpoint</prop>
+				
+				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}experimentAnnotation">experimentAnnotationEndpoint</prop>
+
+				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}probe2Gene">probe2GeneEndpoint</prop>
+
+				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}gene2Probe">gene2ProbenEndpoint</prop>
 
           	</props>
          </property>
@@ -116,6 +123,7 @@
             This endpoint given the short name returns the id of all the genes that match
         </description>
         <property name="geneService" ref="geneService"/>
+        <property name="taxonService" ref="taxonService"/>
         <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
     </bean>
 
@@ -215,6 +223,42 @@
         <property name="expressionExperimentService" ref="expressionExperimentService"/>
         <property name="geneService" ref="geneService"/>
         <property name="designElementDataVectorService" ref="designElementDataVectorService"/>
+        <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
+    </bean>
+    
+     <bean id="geneCoexpressionEndpoint" class="ubic.gemma.web.services.GeneCoexpressionEndpoint">
+        <description>
+				returns gene coexpression (using the'canned' analyses; default would be the 'all' analysis for the taxon)
+        </description>
+        <property name="taxonService" ref="taxonService"/>
+        <property name="geneService" ref="geneService"/>
+        <property name="gene2GeneCoexpressionService" ref="gene2GeneCoexpressionService"/>
+        <property name="geneCoexpressionAnalysisService" ref="geneCoexpressionAnalysisService"/>
+        <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
+    </bean>
+    
+    <bean id="experimentAnnotationEndpoint" class="ubic.gemma.web.services.ExperimentAnnotationEndpoint">
+        <description>
+				returns mapping of experiment to its characteristics
+        </description>
+        <property name="expressionExperimentService" ref="expressionExperimentService"/>
+        <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
+    </bean>
+    
+    <bean id="gene2ProbeEndpoint" class="ubic.gemma.web.services.Gene2ProbeEndpoint">
+        <description>
+				returns mapping of experiment to its characteristics
+        </description>
+        <property name="expressionExperimentService" ref="expressionExperimentService"/>
+        <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
+    </bean>
+    
+    <bean id="probe2GeneEndpoint" class="ubic.gemma.web.services.Probe2GeneEndpoint">
+        <description>
+				returns mapping of experiment to its characteristics
+        </description>
+        <property name="compositeSequenceService" ref="compositeSequenceService"/>
+        <property name="arrayDesignService" ref="arrayDesignService"/>
         <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
     </bean>
     

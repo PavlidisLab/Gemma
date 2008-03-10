@@ -23,8 +23,8 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang.time.StopWatch;
 
-import ubic.gemma.analysis.linkAnalysis.LinkAnalysisConfig;
-import ubic.gemma.analysis.linkAnalysis.LinkAnalysisService;
+import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig;
+import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisService;
 import ubic.gemma.analysis.preprocess.InsufficientProbesException;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.analysis.preprocess.filter.InsufficientSamplesException;

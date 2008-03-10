@@ -18,7 +18,7 @@
  */
 package ubic.gemma.analysis;
 
-import ubic.gemma.analysis.diff.AllDifferentialExpressionTests;
+import ubic.gemma.analysis.expression.diff.AllDifferentialExpressionTests;
 import ubic.gemma.analysis.preprocess.AllPreProcessTests;
 import ubic.gemma.analysis.report.ArrayDesignReportServiceTest;
 import ubic.gemma.analysis.sequence.AllSequenceTests;

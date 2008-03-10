@@ -45,8 +45,8 @@ import org.springframework.orm.hibernate3.HibernateCallback;
 
 import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.analysis.Analysis;
-import ubic.gemma.model.analysis.ProbeCoexpressionAnalysisImpl;
-import ubic.gemma.model.coexpression.Link;
+import ubic.gemma.model.analysis.expression.coexpression.Link;
+import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisImpl;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;

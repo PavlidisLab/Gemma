@@ -75,6 +75,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PredictedGene;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.gene.GeneProductService;
@@ -92,7 +93,7 @@ import ubic.gemma.util.ReflectionUtil;
  * Internally, there are generally two kinds of searches performed, percise database searches looking for exact matches
  * in the database and compass/lucene searches which look for matches in the stored index.
  * <p>
- * To add more dependencies to this Service edit the applicationContext-compass.xml
+ * To add more dependencies to this Service edit the applicationContext-search.xml
  * 
  * @author klc
  * @author paul
@@ -127,6 +128,8 @@ public class SearchService implements InitializingBean {
      */
     private static final int ONTOLOGY_INFO_CACHE_SIZE = 500;
 
+    private static final int MINIMUM_EE_QUERY_LENGTH = 3;
+
     private static Log log = LogFactory.getLog( SearchService.class.getName() );
 
     private Gene2GOAssociationService gene2GOAssociationService;
@@ -148,6 +151,8 @@ public class SearchService implements InitializingBean {
     private CharacteristicService characteristicService;
 
     private OntologyService ontologyService;
+
+    private TaxonService taxonService;
 
     private Compass geneBean;
 
@@ -269,6 +274,42 @@ public class SearchService implements InitializingBean {
 
         return getSortedLimitedResults( settings, rawResults, fillObjects );
 
+    }
+
+    /**
+     * @param query if empty, all experiments for the taxon are returned; otherwise, we use the search facility.
+     * @param taxonId required.
+     * @return Collection of ids.
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<Long> searchExpressionExperiments( String query, Long taxonId ) {
+        Taxon taxon = taxonService.load( taxonId );
+        Collection<Long> eeIds = new HashSet<Long>();
+        if ( StringUtils.isNotBlank( query ) ) {
+            
+            if (query.length() < MINIMUM_EE_QUERY_LENGTH) return eeIds;
+            
+            List<SearchResult> results = this.search( SearchSettings.ExpressionExperimentSearch( query ), false ).get(
+                    ExpressionExperiment.class );
+            for ( SearchResult result : results ) {
+                eeIds.add( result.getId() );
+            }
+            if ( taxon != null ) {
+                Collection<Long> eeIdsToKeep = new HashSet<Long>();
+                Collection<ExpressionExperiment> ees = expressionExperimentService.findByTaxon( taxon );
+                for ( ExpressionExperiment ee : ees ) {
+                    if ( eeIds.contains( ee.getId() ) ) eeIdsToKeep.add( ee.getId() );
+                }
+                eeIds.retainAll( eeIdsToKeep );
+            }
+        } else {
+            Collection<ExpressionExperiment> ees = ( taxon != null ) ? expressionExperimentService.findByTaxon( taxon )
+                    : expressionExperimentService.loadAll();
+            for ( ExpressionExperiment ee : ees ) {
+                eeIds.add( ee.getId() );
+            }
+        }
+        return eeIds;
     }
 
     /**
@@ -941,19 +982,22 @@ public class SearchService implements InitializingBean {
         Matcher match = pattern.matcher( inexactString );
         inexactString = match.replaceAll( "%" );
         // note that at this point, the inexactString might not have a wildcard.
-
-        // version that definitely has no wildcards
         String exactString = inexactString.replaceAll( "%", "" );
 
-        // if the query is short, always do a wild card search. This gives better behavior in 'live search' situations.
-        if ( searchString.length() < 6 && !inexactString.endsWith( "%" ) ) {
-            inexactString = inexactString + "%";
-        }
-
+        // if the query is shortish, always do a wild card search. This gives better behavior in 'live
+        // search' situations. If we do wildcards on very short queries we get too many results.
         Collection<Gene> geneSet = new HashSet<Gene>();
-        if ( inexactString.endsWith( "%" ) ) {
+        if ( searchString.length() > 2 && inexactString.endsWith( "%" ) ) {
+            // case 1: user asked for wildcard. We allow this on strings of length 3 or more.
+            geneSet.addAll( geneService.findByOfficialSymbolInexact( inexactString ) );
+        } else if ( searchString.length() > 3 && searchString.length() < 6 ) {
+            // case 2: user did not ask for a wildcard, but we add it anyway, if the string is 4 or 5 characters.
+            if ( !inexactString.endsWith( "%" ) ) {
+                inexactString = inexactString + "%";
+            }
             geneSet.addAll( geneService.findByOfficialSymbolInexact( inexactString ) );
         } else {
+            // case 3: string is long enough, and user did not ask for wildcard.
             geneSet.addAll( geneService.findByOfficialSymbol( exactString ) );
         }
 
@@ -963,10 +1007,8 @@ public class SearchService implements InitializingBean {
          */
 
         geneSet.addAll( geneService.findByAlias( exactString ) );
-
         geneSet.addAll( geneProductService.getGenesByName( exactString ) );
         geneSet.addAll( geneProductService.getGenesByNcbiId( exactString ) );
-
         geneSet.addAll( bioSequenceService.getGenesByAccession( exactString ) );
         geneSet.addAll( bioSequenceService.getGenesByName( exactString ) );
 
@@ -1360,6 +1402,10 @@ public class SearchService implements InitializingBean {
         StopWatch watch = new StopWatch();
         watch.start();
         return watch;
+    }
+
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
     }
 
 }

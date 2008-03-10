@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <project name="gemma-testing">
 	<bannerLeft>
-		<name>Gemma testing module</name>
+		<name>Gemma</name>
+		<src>images/logo/gemma-sm50x195.png</src>
+		<href>/Gemma</href>
 	</bannerLeft>
 	<bannerRight>
-		<src>http://www.bioinformatics.ubc.ca/pavlidis/lab/graphics/logo_gemma.gif</src>
+		<src>images/logo/heatfade.inner.png</src>
 	</bannerRight>
 	<body>
 		<links>
