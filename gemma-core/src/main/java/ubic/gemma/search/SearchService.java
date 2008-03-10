@@ -130,6 +130,8 @@ public class SearchService implements InitializingBean {
 
     private static final int MINIMUM_EE_QUERY_LENGTH = 3;
 
+    private static final int MINIMUM_STRING_LENGTH_FOR_FREE_TEXT_SEARCH = 3;
+
     private static Log log = LogFactory.getLog( SearchService.class.getName() );
 
     private Gene2GOAssociationService gene2GOAssociationService;
@@ -981,13 +983,17 @@ public class SearchService implements InitializingBean {
         Pattern pattern = Pattern.compile( "\\*$" );
         Matcher match = pattern.matcher( inexactString );
         inexactString = match.replaceAll( "%" );
-        // note that at this point, the inexactString might not have a wildcard.
+        // note that at this point, the inexactString might not have a wildcard - only if the user asked for it.
+
         String exactString = inexactString.replaceAll( "%", "" );
 
         // if the query is shortish, always do a wild card search. This gives better behavior in 'live
         // search' situations. If we do wildcards on very short queries we get too many results.
         Collection<Gene> geneSet = new HashSet<Gene>();
-        if ( searchString.length() > 2 && inexactString.endsWith( "%" ) ) {
+        if ( searchString.length() <= 2 ) {
+            // case 0: user entered a very short string. We search only for exact matches.
+            geneSet.addAll( geneService.findByOfficialSymbolInexact( exactString ) );
+        } else if ( searchString.length() > 2 && inexactString.endsWith( "%" ) ) {
             // case 1: user asked for wildcard. We allow this on strings of length 3 or more.
             geneSet.addAll( geneService.findByOfficialSymbolInexact( inexactString ) );
         } else if ( searchString.length() > 3 && searchString.length() < 6 ) {
@@ -1304,7 +1310,8 @@ public class SearchService implements InitializingBean {
         StopWatch watch = startTiming();
 
         String query = settings.getQuery();
-        if ( StringUtils.isBlank( query ) || query.equals( "*" ) ) return new ArrayList<SearchResult>();
+        if ( StringUtils.isBlank( query ) || query.length() < MINIMUM_STRING_LENGTH_FOR_FREE_TEXT_SEARCH
+                || query.equals( "*" ) ) return new ArrayList<SearchResult>();
 
         CompassQuery compassQuery = session.queryBuilder().queryString( query.trim() ).toQuery();
         CompassHits hits = compassQuery.hits();

@@ -1,3 +1,8 @@
+/*
+* Widget that allows user to search for and select one or more genes from the database. The selected genes are kept in a table which can be edited.
+* Version : $Id$
+* Author : luke
+*/
 Ext.namespace('Ext.Gemma');
 
 /* Ext.Gemma.GeneChooserPanel constructor...

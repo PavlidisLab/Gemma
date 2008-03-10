@@ -1,3 +1,8 @@
+/*
+* Live search field for genes. 
+* Version : $Id$
+* Author : luke
+*/
 Ext.namespace('Ext.Gemma');
 
 /* Ext.Gemma.GeneCombo constructor...
@@ -11,7 +16,7 @@ Ext.Gemma.GeneCombo = function ( config ) {
 		displayField : 'officialSymbol',
 		valueField : 'id',
 		loadingText : 'Searching...',
-		minChars : 2,
+		minChars : 1,
 		selectOnFocus : true,
 		store : new Ext.data.Store( {
 			proxy : new Ext.data.DWRProxy( GenePickerController.searchGenes ),
@@ -27,9 +32,16 @@ Ext.Gemma.GeneCombo = function ( config ) {
 		superConfig[property] = config[property];
 	}
 	Ext.Gemma.GeneCombo.superclass.constructor.call( this, superConfig );
+	
+	this.store.on("datachanged", function() {
+			if ( this.store.getCount() == 0) {
+				this.fireEvent("invalid", "No matching genes");
+				this.setRawValue("No matching genes");
+			}
+		},this);
 };
 
-/* static methods
+/* Static methods. Record representing a gene.
  */
 Ext.Gemma.GeneCombo.getRecord = function() {
 	if ( Ext.Gemma.GeneCombo.record === undefined ) {
@@ -43,6 +55,8 @@ Ext.Gemma.GeneCombo.getRecord = function() {
 	return Ext.Gemma.GeneCombo.record;
 };
 
+/* Control display of search results.
+*/
 Ext.Gemma.GeneCombo.getTemplate = function() {
 	if ( Ext.Gemma.GeneCombo.template === undefined ) {
 		Ext.Gemma.GeneCombo.template = new Ext.XTemplate(

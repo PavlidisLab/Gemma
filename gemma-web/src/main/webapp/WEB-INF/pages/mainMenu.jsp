@@ -50,7 +50,7 @@
 
 <div class="separator"></div>
 
-<h3>Coexpression query</h3>
+<div id="coexpression-messages" ><h3>Coexpression query</h3></div>
 <div id="coexpression-form" style="width: 200px">
 	<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
 	<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>

@@ -535,13 +535,18 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 Hibernate.initialize( gene );
                 session.lock( gene, LockMode.NONE );
-                gene.getProducts().size();
+                Hibernate.initialize( gene.getProducts() );
                 for ( ubic.gemma.model.genome.gene.GeneProduct gp : gene.getProducts() ) {
-                    gp.getAccessions().size();
+                    Hibernate.initialize( gp.getAccessions() );
                     if ( gp.getPhysicalLocation() != null ) gp.getPhysicalLocation().getChromosome().getName();
                 }
-                gene.getAliases().size();
-                gene.getAccessions().size();
+                Hibernate.initialize( gene.getAliases() );
+                Hibernate.initialize( gene.getAccessions() );
+                session.lock( gene.getTaxon(), LockMode.NONE );
+                Hibernate.initialize( gene.getTaxon() );
+                if ( gene.getTaxon().getExternalDatabase() != null ) {
+                    Hibernate.initialize( gene.getTaxon().getExternalDatabase() );
+                }
                 return null;
             }
         } );

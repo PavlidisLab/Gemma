@@ -1,105 +1,240 @@
+<head>
+	<title>Help for coexpression searches</title>
+</head>
 <body>
-<br/>
+	<h2>
+		Overview
+	</h2>
+	<p>
+		Gemma stores millions of coexpression "links", which are pairs of genes found to be significantly correlated in an
+		expression study. For any given expression experiment, only the strongest correlations are stored, but the number of
+		"links" each data set contributes to the database varies enormously. The coexpression search function of Gemma allows
+		you to identify coexpression patterns that are not only strong in a single data set, but which show up in multiple
+		data sets collected by multiple laboratories. Links that are reproduced in multiple labs are much less likely to be
+		false positives. The number of data sets a link appears in is the
+		<strong>support</strong> for that link.
+	</p>
+	<p>
+		To search the coexpression database, you choose one or more genes to start with, and the range of data sets you wish
+		to query. Gemma returns the most reproducibly coexpressed genes.
+	<h2>
+		Step by step
+	</h2>
+	<h3 class="helpstep">
+		Step 1: Choose Gene(s)
+	</h3>
+	<p>
+		To select genes for your search:
+	</p>
+	<ol class="plainList">
 
-<p>
-	The
-	<strong>GO Overlap %</strong> for a pair of co-expressed genes is a
-	measure of similarity of the genes, based on prior knowledge. Here it
-	is computed as the percentage of overlap between the Gene Ontology
-	terms (including all parents) for that Gene pair (queried and
-	co-expressed gene).
-</p>
-<p>
-	The percentage is calculated by dividing the number of common GO terms
-	by the total number of unique GO terms (including parents) that the
-	queried gene has. Values might not be computed for all (or any) of your
-	results, in which case a "-" is shown.
-</p>
+		<li>
+			Select the desired taxon (optional; this makes the searches a little easier to work with)
+		</li>
+		<li>
+			Type symbol or name of the query gene. Gemma will search for the term and show the results in a dropdown list. Select
+			the gene from the dropdown.
+		</li>
+		<li>
+			Click '+' to add the gene to your working list; if you only want to search one gene, this is not necessary. To remove
+			previously selected genes from your working list, click '-'.
+		</li>
+		<li>
+			Repeat steps 2 and 3 to add/remove additional query genes.
+		</li>
+		<li>
+			Decide whether you need to check "Search among query genes only". If checked, Gemma will only display results for
+			coexpression
+			<em>among</em> the query genes. This will obviously only work if you select more than one query gene. That is, the
+			the result genes must also be query genes. If left unchecked, you will get coexpression results for each query gene
+			considered independently. That is, leaving the box unchecked is like running multiple single-gene queries in
+			succession, except you get the results all at once.
+		</li>
+	</ol>
 
-<br/>
+	<h3>
+		Step 2: Set Stringency
+	</h3>
 
-<p>
-	The <strong>support</strong> for a pair of coexpressed genes is the number of distinct 
-	datasets that the gene pair is coexpressed in.
-</p>
-<ul>
-	<li>
-		<strong>Positive Correlation</strong> A green number indicates a positive correlation
-		between the two genes.
-	</li>
-	<li>
-		<strong>Negative Correlation: </strong> A red number indicates a negative correlation 
-		between the two genes.
-	</li>
-	<li>
-		<strong> Adjusted  support</strong> The italicized  number in brackets  is the adjusted  support.
-		As probes on an array are non-specific (can hybridize to multiple genes), the adjusted  support 
-		only counts datasets that contain at least one specific probe (1-1 mapping between probe and gene)
-		for the coexpressed gene in question.  Therefore the adjusted  support helps rule out possible false 
-		positives.
-	</li>
-	
-</ul>
+	<p>
+		Genes that are co-expressed with the query gene(s) must be co-expressed in at least this number of datasets if they
+		are to be displayed in the results. That is, the stringency is the minimum support.
+	</p>
 
-<br/>
+	<h3 class="helpstep">
+		Step 3: Select Scope
+	</h3>
 
-<p>
-	The images shown in this column are a visual representation of all the
-	data sets supporting the coexpression results. Each experiment that was
-	queried is representd by either a black line or a gap. A black line is
-	shown if that experiment contributes to the support for the
-	coexpression for the gene pair. A gap is shown if it does not.
-</p>
-<p>
-	The graphic for each gene is shown in the same expression experiment
-	ordering, so you can look along vertical 'tracks' to see which
-	experiments contribute to many of the links.
-</p>
+	<p>
+		Scope refers to the data sets (expression experiments or studies) that will be included in the search. Gemma supports
+		two types of scopes.
+	</p>
+	<ul class="plainList">
+		<li>
+			"Preset" groups of data sets. For example, you can choose to search "all rat" datasets. The "preset" method is the
+			fastest, but has the disadvantage of being a snapshot of the database at a fixed point in time. Data added or
+			modified after the snapshot will not be reflected in the results of a preset search. We sometimes refer to these as
+			"canned" analyses because they represent stored results for a specific batch of data sets.
+		</li>
+		<li>
+			"Custom" groups of data sets you select based on keywords you enter. This method is slower than the "preset" method
+			because Gemma (currently) cannot take advantage of some preprocessing that is done for the presets.
+		</li>
+	</ul>
+	<p>
+		More preset data sets and other performance boosts will be introduced into Gemma in the near future.
+	</p>
 
-<br />
+	<h3 class="helpstep">
+		Step 4: Submit
+	</h3>
 
-<p>
-	The <strong> sequence analysis report </strong> summarizes our gene assignment analysis
-	for the current platform. This summary is broken down into categories
-	described below. Details of the analysis procedure are given elsewhere.
-</p>
-<ul>
-	<li>
-		<strong>Probes:</strong>The number of elements on the array that form
-		the primary analytical unit. This number aggregates features that
-		belong to so-called "composite sequences", so on Affymetrix array
-		designs this corresponds to "probe sets".
-	</li>
-	<li>
-		<strong> Probes with sequences: </strong> The number of probes that
-		have a provided sequence. For some array designs, sequences are
-		missing for some or all of its probes. Probes without sequences are
-		excluded from further analysis.
-	</li>
-	<li>
-		<strong> Probes with genome alignments: </strong> The number of probes
-		whose sequences provide an alignment to the genome. Some probe-genome
-		alignments do not necessarily meet stringency requirements and are not
-		included in the database.
-	</li>
-	<li>
-		<strong> Probes mapping to genes: </strong> Of probes with alignments,
-		how many are mapped to known genes, predicted genes, and probe-aligned
-		regions (a breakdown is provided). "Known genes" include RefSeq or
-		other annotated genes. "Predicted gene" based on computational
-		analyses. A "probe-aligned region" (PAR) is an 'anonymous' genomic
-		region that does not fall into the other categories. Given a
-		particular alignment, a predicted gene or PAR is only assigned to a
-		probe if it does not map to a known or predicted gene. However, a
-		probe can be assigned "genes" from all categories when there are
-		multiple good alignments to the genome.
-	</li>
-	<li>
-		<strong> Unique genes represented </strong> The number of distinct
-		known genes, predicted genes, and probe-aligned regions represented on
-		the array. This number can be higher or lower than the number of
-		probes mapping because some probes can map to multiple genes, and some
-		genes have more than one probe mapping.
-	</li>
-</ul>
+	<p>
+		Click
+		<i>Find coexpressed genes</i> to submit the co-expression search. You will see text that reads
+		<i>Loading ...</i>. Queries can take several seconds, and will be slower if you used a "custom" search criteria.
+	</p>
+
+	<h3 class="helpstep">
+		Step 5: Interpret Results
+	</h3>
+	<p>
+		The results of the co-expression search will yield 3 tables, a
+		<i>Search Summary</i> table, a (minimized)
+		<i>Datasets table with relevant co-expression data, </i> and a
+		<i>Coexpressed genes </i> table:
+	</p>
+	<h4>
+		Search Summary
+	</h4>
+
+	<p>
+		This table summarizes the datasets used and the links for each query gene:
+	</p>
+
+	<ul class="plainList">
+
+		<li>
+			Data sets available - The upper bound of datasets that could have participated in the co-expression search, based on
+			the "scope" you chose.
+		</li>
+		<li>
+			Data sets in which the query gene was testable - This is the initial upper bound for the "support" values that can be
+			found for links with the query gene: confirmation cannot come from more data sets than the query gene was testable
+			in. The query gene is 'testable' and a data set if 1) It is represented on the array design(s) used in the study and
+			2) The data passed the Gemma preprocessing filters, which attempt to remove unreliable data.
+		</li>
+
+		<li>
+			Links found - Total number of links found for this query gene. For 'preset' searches, this number will always equal
+			the sum of the following two numbers. For custom searches, the number of links found includes those which did not
+			meet your stringency criteria.
+		</li>
+		<li>
+			Links that Met stringency (+) - Number of positive correlation links that met your stringency threshold.
+		</li>
+		<li>
+			Links that Met stringency (-) - Number of negative correlation links that met your stringency threshold.
+		</li>
+
+	</ul>
+
+	<h4>
+		'X datasets have relevant coexpression data'
+	</h4>
+	<p>
+		This table is initially minimized to save screen space. It holds information about the data sets which yielded
+		results. To display the contents, click on the downward arrow at the far right of the table. The table has 7 columns
+		and is grouped by query gene.
+	</p>
+	<ul class="plainList">
+
+		<li>
+			Dataset - The short name of the dataset participating in the co-expression search.
+		</li>
+		<li>
+			Name - The longer name of the dataset participating in the co-expression search.
+		</li>
+		<li>
+			Raw Links - The number of links available in the dataset for the query gene.
+		</li>
+		<li>
+			Contributing Links - The number of links in the dataset contributing co-expression support.
+		</li>
+		<li>
+			Specific Probe - True if the dataset contains a probe that uniquely tests for the query gene. Otherwise, the data set
+			only has probes that Gemma considers as possibly detecting multiple genes.
+		</li>
+		<li>
+			Arrays - The number of different array platforms used. For example, if a data set used both HG-U133A and HG-U133B,
+			this will be shown as '2'.
+		</li>
+		<li>
+			Assays - The number of assays (samples) in the dataset.
+		</li>
+	</ul>
+
+
+	<h4>
+		Coexpressed genes
+	</h4>
+	<p>
+		The co-expressed gene table columns show:
+	</p>
+	<ul class="plainList">
+
+
+		<li>
+			Query Gene - The gene for which the tool is searching for co-expression. This is only displayed by default if you
+			searched for more than one query gene.
+		</li>
+		<li>
+			Coexpressed Gene - The gene that is co-expressed with the query gene. Each gene has a icon which can be used to make
+			it the query gene. The symbol for the gene is a link to the Gemma details page for the gene.
+		</li>
+		<li>
+			Support - The number before the slash is the number of distinct datasets the gene pair is co-expressed in. If the
+			value is
+			<span style="color: red">red</span>, the gene pair have a negative correlation. If the value is in
+			<span style="color: green">green</span>, the gene pair has a positive correlation. The number after the slash is the
+			number of distinct datasets in which the pair was tested. Note that this value varies for each pair, because not all
+			data sets provide data about every gene. If you ran a custom search, you may see support numbers like
+			<span style="color: green">6 (4)</span>. The number in parentheses is the
+			<em>adjusted support</em>, after a conservative adjustment to remove the influence of potentially cross-hybridizing
+			probes is made.
+		</li>
+		<li>
+			GO Overlap - The Gene Ontology term overlap for a pair of co-expressed genes is a measure of similarity of the genes,
+			based on prior knowledge. The number before the slash is the number of common GO terms between the query and
+			coexpressed gene. The denominator is the number of unique GO terms (including parents) of the coexpressed gene.
+
+		</li>
+
+		<span style="float: left">
+			<li>
+				Datasets - The images shown (blown-up example below) are a visual representation of all the data sets supporting the
+				coexpression results. A short black line indicates the experiment was tested but does not support the co-expression
+				(blue arrow below), a spike indicates the experiment was tested and supports the co-expression (green arrow below),
+				and a gap indicates the experimentwas not tested (red arrows in image). The ordering of experiments is the same
+				across all genes, so you can look along vertical tracks to see which experiments contribute to many of the links.
+
+				Thus, the number of spikes equals the support; the number of non-gaps is the number of tested data sets; the the
+				total width indicates all the data sets which were tested.
+
+			</li> </span>
+		<img src="images/ee-spark.gif" alt="experiment sparks" />
+
+		<li>
+			An additional column containing a '+' is displayed (on the left by default). Clicking on the '+' will show the
+			differential expression results for the gene, if available. In later versions of Gemma, other details about the
+			results will be displayed in this "expanded" area.
+		</li>
+
+	</ul>
+	<p>
+		The results table also includes a permanent link to the search, and a link to download a textual version of the
+		results.
+	</p>
+
+
 </body>

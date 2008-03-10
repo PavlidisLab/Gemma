@@ -9,25 +9,33 @@ version: $Id$
 <jsp:useBean id="diffExpressionSearchCommand" scope="request"
 	class="ubic.gemma.web.controller.diff.DiffExpressionSearchCommand" />
 
-<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
-<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
-<script src="<c:url value='/scripts/ext/RowExpander.js'/>" type="text/javascript"></script>
-<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
-<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
+<script
+	src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>"
+	type="text/javascript"></script>
+<script src="<c:url value='/scripts/ext/ext-all.js'/>"
+	type="text/javascript"></script>
+<script src="<c:url value='/scripts/ext/RowExpander.js'/>"
+	type="text/javascript"></script>
+<script type="text/javascript"
+	src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
+<script type="text/javascript"
+	src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
 <script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 <script type='text/javascript' src='/Gemma/dwr/util.js'></script>
-<script type='text/javascript' src='/Gemma/dwr/interface/GenePickerController.js'></script>
-<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/GeneCombo.js'></script>
+<script type='text/javascript'
+	src='/Gemma/dwr/interface/GenePickerController.js'></script>
+<script type='text/javascript'
+	src='/Gemma/scripts/ajax/coexpression/GeneCombo.js'></script>
 
-<title><fmt:message key="diffExpressionSearch.title" />
-</title>
+<title><fmt:message key="diffExpressionSearch.title" /></title>
 
 
 <spring:bind path="diffExpressionSearchCommand.*">
 	<c:if test="${not empty status.errorMessages}">
 		<div class="error">
 			<c:forEach var="error" items="${status.errorMessages}">
-				<img src="<c:url value="/images/iconWarning.gif"/>" alt="<fmt:message key="icon.warning"/>" class="icon" />
+				<img src="<c:url value="/images/iconWarning.gif"/>"
+					alt="<fmt:message key="icon.warning"/>" class="icon" />
 				<c:out value="${error}" escapeXml="false" />
 				<br />
 			</c:forEach>
@@ -36,7 +44,8 @@ version: $Id$
 </spring:bind>
 
 
-<form method="post" action="<c:url value="/diff/diffExpressionSearch.html"/>">
+<form method="post"
+	action="<c:url value="/diff/diffExpressionSearch.html"/>">
 
 	<h2>
 		<fmt:message key="diffExpressionSearch.title" />
@@ -48,11 +57,12 @@ version: $Id$
 
 		<tr>
 			<td valign="top">
-				<b> <fmt:message key="gene.officialSymbol" /> <br /> </b>
+				<b> <fmt:message key="gene.query" /> <br /> </b>
 			</td>
 			<td>
 				<spring:bind path="diffExpressionSearchCommand.geneOfficialSymbol">
-					<input type="text" size=10 id="geneCombo" name="<c:out value="${status.expression}"/>"
+					<input type="text" size=10 id="geneCombo"
+						name="<c:out value="${status.expression}"/>"
 						value="<c:out value="${status.value}"/>" />
 				</spring:bind>
 			</td>
@@ -73,7 +83,9 @@ version: $Id$
 			</td>
 			<td>
 				<spring:bind path="diffExpressionSearchCommand.threshold">
-					<input type="text" size=5 name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>" />
+					<input type="text" size=5
+						name="<c:out value="${status.expression}"/>"
+						value="<c:out value="${status.value}"/>" />
 				</spring:bind>
 			</td>
 		</tr>
@@ -84,7 +96,8 @@ version: $Id$
 	<table>
 		<tr>
 			<td>
-				<input type="submit" class="button" name="submit" value="<fmt:message key="button.submit"/>" />
+				<input type="submit" class="button" name="submit"
+					value="<fmt:message key="button.submit"/>" />
 			</td>
 		</tr>
 	</table>

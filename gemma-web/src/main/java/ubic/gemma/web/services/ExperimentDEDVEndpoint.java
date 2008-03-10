@@ -19,6 +19,11 @@
 
 package ubic.gemma.web.services;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Collection;
 
 import org.apache.commons.lang.time.StopWatch;
@@ -34,6 +39,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * Given an Expression Experiment ID, will return a collection of Design Element Data Vectors and the corresponding
@@ -50,7 +56,7 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
     private ExpressionExperimentService expressionExperimentService;
     private AnalysisHelperService analysisHelperService;
     private CompositeSequenceService compositeSequenceService;
-    // private GeneService geneService;
+   
 
     /**
      * The local name of the expected request/response.
@@ -138,7 +144,6 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
                 Element e2 = document.createElement( elementName2 );
                 e2.appendChild( document.createTextNode( elementString2 ) );
                 responseElement.appendChild( e2 );
-
             }
         }
 
@@ -146,6 +151,7 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
         Long time = watch.getTime();
         log.info( "Finished generating result. Sending response to client." );
         log.info( "XML response for " + EXPERIMENT_LOCAL_NAME + " endpoint built in " + time + "ms." );
+        writeReport( responseWrapper, document, eeid );
         return responseWrapper;
     }
 

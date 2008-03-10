@@ -29,15 +29,15 @@
 */ /* TYPOGRAPHY */
 body {
 	text-align: left;
-	font: normal 0.9em arial,sans-serif;
+	font: normal 0.9em arial, sans-serif;
 	color: #000000;
 	text-decoration: none;
 }
 
 .footer {
-	font-size:smaller;
+	font-size: smaller;
 }
- 
+
 img {
 	border: 0;
 }
@@ -190,14 +190,19 @@ ul.glassList {
 }
 
 p.emphasized {
-	padding:0;
+	padding: 0;
 }
 
 ul.plainList {
-	margin-left:40px;
-	margin-bottom:15px;
+	margin-left: 40px;
+	margin-bottom: 15px;
 	list-style: disc;
 	line-height: 1.7em;
+}
+
+ol.plainList {
+	margin-left: 40px;
+	list-style: decimal;
 }
 
 dl {
@@ -263,5 +268,14 @@ div.hr {
 .error {
 	background: #fff url(../../images/default/grid/invalid_line.gif)
 		repeat-x bottom;
+}
+
+/* Help pages */
+h2.helpstep,h3.helpstep {
+	left-margin: 0px;
+	padding: 0px;
+	line-height: 1em;
+	font-size: 1.3em;
+	margin: 0 0 2 0px;
 }
 /* END TYPOGRAPHY */

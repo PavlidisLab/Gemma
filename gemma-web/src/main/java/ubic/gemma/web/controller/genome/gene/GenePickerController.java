@@ -25,9 +25,6 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import ubic.gemma.loader.genome.taxon.SupportedTaxa;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -39,19 +36,21 @@ import ubic.gemma.search.SearchSettings;
 import ubic.gemma.web.controller.BaseMultiActionController;
 
 /**
+ * For 'live searches' from the web interface.
+ * 
  * @author luke
+ * @version $Id$
  * @spring.bean id="genePickerController"
  * @spring.property name="geneService" ref="geneService"
  * @spring.property name="taxonService" ref="taxonService"
  * @spring.property name="searchService" ref="searchService"
  */
 public class GenePickerController extends BaseMultiActionController {
-    private static Log log = LogFactory.getLog( GenePickerController.class.getName() );
 
     private GeneService geneService = null;
     private TaxonService taxonService = null;
     private SearchService searchService = null;
-    
+
     private static Comparator<Taxon> TAXON_COMPARATOR = new Comparator<Taxon>() {
         public int compare( Taxon o1, Taxon o2 ) {
             return ( o1 ).getScientificName().compareTo( ( o2 ).getScientificName() );
@@ -62,22 +61,30 @@ public class GenePickerController extends BaseMultiActionController {
     public Collection<Taxon> getTaxa() {
         SortedSet<Taxon> taxa = new TreeSet<Taxon>( TAXON_COMPARATOR );
         for ( Taxon taxon : ( Collection<Taxon> ) taxonService.loadAll() ) {
-            if ( SupportedTaxa.contains( taxon ) )
-                taxa.add( taxon );
+            if ( SupportedTaxa.contains( taxon ) ) taxa.add( taxon );
         }
         return taxa;
     }
 
+    /**
+     * @param geneIds
+     * @return
+     */
     @SuppressWarnings("unchecked")
     public Collection<Gene> getGenes( Collection<Long> geneIds ) {
         return geneService.loadMultiple( geneIds );
     }
 
+    /**
+     * @param query
+     * @param taxonId
+     * @return
+     */
     public Collection<Gene> searchGenes( String query, Long taxonId ) {
         Taxon taxon = taxonService.load( taxonId );
         SearchSettings settings = SearchSettings.GeneSearch( query, taxon );
         List<SearchResult> geneSearchResults = searchService.search( settings ).get( Gene.class );
-        
+
         Collection<Gene> genes = new HashSet<Gene>();
         for ( SearchResult sr : geneSearchResults ) {
             genes.add( ( Gene ) sr.getResultObject() );

@@ -1,0 +1,58 @@
+<body>
+	The differential expression of genes in Gemma is determined by
+	statistical tests run on datasets based on the experiment's design.
+	That is, datasets containing 1 factor and 2 factor values will have
+	differential evidence based on a
+	<b>t-test</b>. Datasets with 1 factor and more than 2 factor values
+	will have differential evidence based on a
+	<b>one way anova</b>. Datasets with 2 factors and an incomplete block
+	design will have differential evidence based on a
+	<b>two way anova without interactions</b>, and those with a complete
+	block design will have evidence based on a
+	<b>2 way anova with interactions</b>.
+
+	<h2>
+		Inputs:
+	</h2>
+
+	<ul>
+		<li>
+			<i>Query Gene:</i> The search will look for and return experiments
+			for which the input query gene has differential evidence.
+		</li>
+
+		<li>
+			<i>Threshold:</i> Only genes with a q-value less than the input
+			threshold are returned from the search.
+		</li>
+	</ul>
+
+	<h2>
+		Results:
+	</h2>
+
+	<ul>
+		<li>
+			<i>Experiment:</i> The experiment containing the queried gene.
+		</li>
+
+		<li>
+			<i>Factors:</i> The factors for which the queried gene has
+			differential expression evidence. For example, genes that belong to
+			experiments analyzed with one way anova will have 1 factor.
+		</li>
+
+		<li>
+			<i>Probe:</i> The probes that align with the queried gene in the
+			given experiment.
+		</li>
+
+		<li>
+			<i>FDR (q):</i> The criteria used to determine whether the
+			differential test (t-test, one way anova, two way anova) for the gene
+			is significant or not. The q value is the minimum false discovery
+			rate at which this test can be called significant.
+		</li>
+	</ul>
+
+</body>

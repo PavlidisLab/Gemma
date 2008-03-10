@@ -632,6 +632,8 @@ Ext.Gemma.CoexpressionSearchFormLite = function ( config ) {
 		fieldLabel : 'Select a query gene'
 	} );
 	
+	this.geneCombo.on("focus", this.clearMessages, this );
+	
 	this.analysisCombo = new Ext.Gemma.AnalysisCombo( {
 		hiddenName : 'a',
 		fieldLabel : 'Select search scope',
@@ -639,6 +641,7 @@ Ext.Gemma.CoexpressionSearchFormLite = function ( config ) {
 	} );
 	
 	this.analysisCombo.on( "analysischanged", function ( combo, analysis ) {
+		this.clearMessages();
 		if ( analysis && analysis.taxon ) {
 			this.taxonChanged( analysis.taxon );
 		}
@@ -647,9 +650,14 @@ Ext.Gemma.CoexpressionSearchFormLite = function ( config ) {
 	var submitButton = new Ext.Button( {
 		text : "Find coexpressed genes",
 		handler : function() {
-			document.location.href =
+			var msg = this.validateSearch( this.geneCombo.getValue(), this.analysisCombo.getValue() );
+			if ( msg.length === 0 ) {
+				document.location.href =
 				String.format( "/Gemma/searchCoexpression.html?g={0}&a={1}&s={2}",
 					this.geneCombo.getValue(), this.analysisCombo.getValue(), this.stringencyField.getValue());
+			} else {
+				this.handleError(msg);
+			}
 		}.bind( this )
 	} );
 
@@ -699,6 +707,25 @@ Ext.extend( Ext.Gemma.CoexpressionSearchFormLite, Ext.FormPanel, {
 			this.stringencyField.setValue(csc.stringency);
 		}
 	},
+	
+	validateSearch : function ( gene, analysis ) {
+		if ( !gene || gene.length == 0 ) {
+			return "Please select a valid query gene";
+		} else if ( !analysis ) {
+			return "Please select an analysis";
+		} else {
+			return "";
+		}
+	},
+	
+	handleError : function( msg, e ) {
+		Ext.DomHelper.overwrite("coexpression-messages", {tag : 'img', src:'/Gemma/images/icons/warning.png' }); 
+		Ext.DomHelper.append("coexpression-messages", {tag : 'span', html : "&nbsp;&nbsp;"  + msg });  
+		this.loadMask.hide();
+	},
+	
+	clearMessages : function() {Ext.DomHelper.overwrite("coexpression-messages", {tag : 'h3', html : "Coexpression query"  })},
+	
 	taxonChanged : function ( taxon ) {
 		this.geneCombo.setTaxon( taxon );
 	}

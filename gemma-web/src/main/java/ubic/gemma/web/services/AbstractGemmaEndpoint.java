@@ -41,11 +41,10 @@ import ubic.gemma.security.authentication.ManualAuthenticationProcessing;
 import ubic.gemma.util.ConfigUtils;
 
 /**
- * Abstracts out the security and a few constants.
- * 
- * @author gavin, klc
+ * @author gavin, klc Abstracts out the security and a few constants.
  * @version$Id$
  */
+
 public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
 
     protected ManualAuthenticationProcessing manualAuthenticationProcessing;
@@ -68,6 +67,7 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
     private String localName;
 
     private String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
+    
 
     public AbstractGemmaEndpoint() {
         super();
@@ -77,7 +77,7 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
     public void setManualAuthenticationProcessing( ManualAuthenticationProcessing map ) {
         this.manualAuthenticationProcessing = map;
 
-        // authenticate();
+        //authenticate();
 
     }
 
@@ -96,9 +96,7 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
     /**
      * Function that handles the retrieval of xml input. Use this method if there is only one value in the input but
      * generically, this method can also store multiple input values as well. This will depend on how the xml is parsed
-     * by the client.
-     * <p>
-     * TODO Still need to test on different types of client requests.
+     * by the client. TODO Still need to test on different types of client requests.
      * 
      * @param requestElement - xml request in node hierarchy
      * @param document -
@@ -112,7 +110,7 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
         Assert.isTrue( NAMESPACE_URI.equals( requestElement.getNamespaceURI() ), "Invalid namespace" );
         Assert.isTrue( localName.equals( requestElement.getLocalName() ), "Invalid local name" );
         log.info( "Starting " + localName + " endpoint" );
-        // authenticate();
+       // authenticate();
 
         Collection<String> value = new HashSet<String>();
         String node = "";
@@ -134,7 +132,7 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
             node = null;
         }
 
-        if ( value.isEmpty() ) {
+        if ( value == null ) {
             throw new IllegalArgumentException( "Could not find request text node" );
         }
         watch.stop();
@@ -158,7 +156,7 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
         Assert.isTrue( NAMESPACE_URI.equals( requestElement.getNamespaceURI() ), "Invalid namespace" );
         Assert.isTrue( localName.equals( requestElement.getLocalName() ), "Invalid local name" );
         log.info( "Starting " + localName + " endpoint" );
-        // authenticate();
+        //authenticate();
 
         Collection<String> value = new HashSet<String>();
         String node = "";
@@ -190,7 +188,7 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
             node = "";
         }
 
-        if ( value.isEmpty() ) {
+        if ( value == null ) {
             throw new IllegalArgumentException( "Could not find request text node" );
         }
         watch.stop();
@@ -278,35 +276,36 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
     }
 
     /**
-     * This method should/can only be used when the wrapper is manually built in the specific endpoints (ie. not using
-     * the buildWrapper() in AbstractGemmaEndpoint).
-     * 
+     * This method should/can only be used when the wrapper is manually built in the specific endpoints 
+     * (ie. not using the buildWrapper() in AbstractGemmaEndpoint).
      * @param responseWrapper - Manually built wrapper
      * @param reportType - directory of the report to store; the dir must exist for report to be written
      * @param filename - no xml extension is required
      */
     protected void writeReport( Element responseWrapper, Document document, String filename ) {
-        String fullFileName = filename + ".xml";
-        String path = HOME_DIR + File.separatorChar + "dataFiles" + File.separatorChar + "xml" + File.separatorChar;
+        String fullFileName = filename+".xml";
+        String path = HOME_DIR + File.separatorChar + "dataFiles" +File.separatorChar +"xml" + File.separatorChar;
         try {
             File file = new File( path, fullFileName );
-
+           
             if ( !file.exists() ) {
-                FileOutputStream out = new FileOutputStream( new File( path + fullFileName ) );
-                OutputFormat format = new OutputFormat( document );
-                format.setIndenting( true );
-                // to generate a file output use fileoutputstream
-                XMLSerializer serializer = new XMLSerializer( out, null );
-                serializer.serialize( responseWrapper );
-
+                FileOutputStream out = new FileOutputStream( new File( path + fullFileName ) ) ;
+                OutputFormat format = new OutputFormat(document);
+                format.setIndenting(true);
+                //to generate a file output use fileoutputstream 
+                XMLSerializer serializer = new XMLSerializer(out, null);
+                serializer.serialize(responseWrapper);
+                
                 log.info( "A report with the filename, " + fullFileName + ", has been created in path, " + path );
             } else
                 log.info( "A report with the filename, " + fullFileName
                         + ", already exists.  A new report was not created." );
 
         } catch ( IOException e ) {
-            throw new RuntimeException( e );
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
 
     }
 }
+

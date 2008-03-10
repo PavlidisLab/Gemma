@@ -76,9 +76,6 @@
 		<property name="bioSequenceService">
 			<ref bean="bioSequenceService"/>
 		</property>
-		<property name="taxonService">
-			<ref bean="taxonService"/>
-		</property>
 		<property name="compositeSequenceService">
 			<ref bean="compositeSequenceService"/>
 		</property>
