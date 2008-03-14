@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.Hibernate;
+import org.hibernate.LockMode;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.analysis.Investigation;
@@ -101,40 +102,11 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      */
     @Override
     public void handleThaw( final Collection expressionAnalyses ) throws Exception {
-        HibernateTemplate templ = this.getHibernateTemplate();
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                Iterator iter = expressionAnalyses.iterator();
-                while ( iter.hasNext() ) {
-                    ExpressionAnalysis ea = ( ExpressionAnalysis ) iter.next();
-                    if ( ea instanceof DifferentialExpressionAnalysis ) {
-                        DifferentialExpressionAnalysis dea = ( DifferentialExpressionAnalysis ) ea;
-                        session.update( dea );
-                        Hibernate.initialize( dea );
-                        Collection<ExpressionAnalysisResultSet> ears = dea.getResultSets();
-                        Hibernate.initialize( ears );
-                        for ( ExpressionAnalysisResultSet ear : ears ) {
-                            session.update( ear );
-                            Hibernate.initialize( ear );
-                            Collection<DifferentialExpressionAnalysisResult> ders = ear.getResults();
-                            Hibernate.initialize( ders );
-                            for ( DifferentialExpressionAnalysisResult der : ders ) {
-                                session.update( der );
-                                Hibernate.initialize( der );
-                                if ( der instanceof ProbeAnalysisResult ) {
-                                    ProbeAnalysisResult par = ( ProbeAnalysisResult ) der;
-                                    CompositeSequence cs = par.getProbe();
-                                    // session.update( cs );
-                                    Hibernate.initialize( cs );
-                                }
-                            }
-                        }
+        for ( DifferentialExpressionAnalysis ea : ( Collection<DifferentialExpressionAnalysis> ) expressionAnalyses ) {
+            DifferentialExpressionAnalysis dea = ea;
+            thaw( dea );
+        }
 
-                    }
-                }
-                return null;
-            }
-        }, true );
     }
 
     /*
@@ -180,5 +152,37 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         Object[] objectValues = { gene, expressionExperiment, threshold };
 
         return this.getHibernateTemplate().findByNamedParam( queryString, paramNames, objectValues );
+    }
+
+    @Override
+    protected void handleThaw( final DifferentialExpressionAnalysis differentialExpressionAnalysis ) throws Exception {
+        HibernateTemplate templ = this.getHibernateTemplate();
+
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                session.lock( differentialExpressionAnalysis, LockMode.NONE );
+                Hibernate.initialize( differentialExpressionAnalysis );
+                Collection<ExpressionAnalysisResultSet> ears = differentialExpressionAnalysis.getResultSets();
+                Hibernate.initialize( ears );
+                for ( ExpressionAnalysisResultSet ear : ears ) {
+                    session.update( ear );
+                    Hibernate.initialize( ear );
+                    Collection<DifferentialExpressionAnalysisResult> ders = ear.getResults();
+                    Hibernate.initialize( ders );
+                    for ( DifferentialExpressionAnalysisResult der : ders ) {
+                        session.update( der );
+                        Hibernate.initialize( der );
+                        if ( der instanceof ProbeAnalysisResult ) {
+                            ProbeAnalysisResult par = ( ProbeAnalysisResult ) der;
+                            CompositeSequence cs = par.getProbe();
+                            // session.update( cs );
+                            Hibernate.initialize( cs );
+                        }
+                    }
+                }
+                return null;
+            }
+        } );
     }
 }

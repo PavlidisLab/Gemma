@@ -145,4 +145,9 @@ public class DifferentialExpressionAnalysisServiceImpl extends
         return ( DifferentialExpressionAnalysis ) this.getDifferentialExpressionAnalysisDao().findMostRecentWithName(
                 name );
     }
+
+    @Override
+    protected void handleThaw( DifferentialExpressionAnalysis differentialExpressionAnalysis ) throws Exception {
+        this.getDifferentialExpressionAnalysisDao().thaw( differentialExpressionAnalysis );
+    }
 }

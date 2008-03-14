@@ -30,6 +30,9 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Hibernate;
+import org.hibernate.LockMode;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -89,6 +92,19 @@ public class GeneCoexpressionAnalysisDaoImpl extends
 
         this.remove( geneCoexpressionAnalysis );
 
+    }
+
+    @Override
+    protected void handleThaw( final GeneCoexpressionAnalysis geneCoexpressionAnalysis ) {
+        HibernateTemplate templ = this.getHibernateTemplate();
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                session.lock( geneCoexpressionAnalysis, LockMode.NONE );
+                Hibernate.initialize( geneCoexpressionAnalysis );
+                Hibernate.initialize( geneCoexpressionAnalysis.getExperimentsAnalyzed() );
+                return null;
+            }
+        } );
     }
 
     /*

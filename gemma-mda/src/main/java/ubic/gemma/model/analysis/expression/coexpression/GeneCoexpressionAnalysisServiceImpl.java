@@ -125,4 +125,10 @@ public class GeneCoexpressionAnalysisServiceImpl extends
         return ( GeneCoexpressionAnalysis ) this.getGeneCoexpressionAnalysisDao().findMostRecentWithName( name );
     }
 
+    @Override
+    protected void handleThaw( GeneCoexpressionAnalysis geneCoexpressionAnalysis ) throws Exception {
+        this.getGeneCoexpressionAnalysisDao().thaw( geneCoexpressionAnalysis );
+
+    }
+
 }

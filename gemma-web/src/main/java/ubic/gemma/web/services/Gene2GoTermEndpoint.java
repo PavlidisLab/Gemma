@@ -29,7 +29,6 @@ import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import sun.text.CompactShortArray.Iterator;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.GeneOntologyService;
@@ -110,11 +109,10 @@ public class Gene2GoTermEndpoint extends AbstractGemmaEndpoint {
                 for ( OntologyTerm ot : terms ) {
                     goTerms.add( GeneOntologyService.asRegularGoId( ot ) );
                 }
-            }
-            else 
+            } else
                 goTerms.add( "NaN" );
             String elementString1 = geneId.toString();
-            String elementString2 = encode( retainNumericIds(goTerms).toArray() );
+            String elementString2 = encode( retainNumericIds( goTerms ).toArray() );
 
             Element e1 = document.createElement( elementName1 );
             e1.appendChild( document.createTextNode( elementString1 ) );
@@ -128,23 +126,22 @@ public class Gene2GoTermEndpoint extends AbstractGemmaEndpoint {
         Long time = watch.getTime();
         log.info( "Finished generating result. Sending response to client." );
         log.info( "XML response for " + GENE2GO_LOCAL_NAME + " endpoint built in " + time + "ms." );
-        
+
         return responseWrapper;
 
     }
-    
+
     /**
-     * 
      * @param regularIds - input collection will be unchanged
-     * @return - collection of GO ids, without the "GO:" infront, only the numeric portion of the id is returned 
+     * @return - collection of GO ids, without the "GO:" infront, only the numeric portion of the id is returned
      */
-    private Collection<String> retainNumericIds(Collection<String> regularIds){
+    private Collection<String> retainNumericIds( Collection<String> regularIds ) {
         Collection<String> numericIds = new ArrayList<String>();
-        for (String id : regularIds){
-            numericIds.add( StringUtils.substring( id, 3 ));            
+        for ( String id : regularIds ) {
+            numericIds.add( StringUtils.substring( id, 3 ) );
         }
-        return numericIds;        
- 
+        return numericIds;
+
     }
 
 }
