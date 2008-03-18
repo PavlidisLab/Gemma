@@ -533,8 +533,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                Hibernate.initialize( gene );
                 session.lock( gene, LockMode.NONE );
+                Hibernate.initialize( gene );                
                 Hibernate.initialize( gene.getProducts() );
                 for ( ubic.gemma.model.genome.gene.GeneProduct gp : gene.getProducts() ) {
                     Hibernate.initialize( gp.getAccessions() );
