@@ -48,6 +48,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
+import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.ontology.OntologyTerm;
 import ubic.gemma.util.CountingMap;
@@ -61,6 +62,7 @@ import ubic.gemma.util.GemmaLinkUtils;
  * @version $Id$
  * @spring.bean id="geneCoexpressionService"
  * @spring.property name="taxonService" ref="taxonService"
+ * @spring.property name="geneService" ref="geneService"
  * @spring.property name="gene2GeneCoexpressionService" ref="gene2GeneCoexpressionService"
  * @spring.property name="geneCoexpressionAnalysisService" ref="geneCoexpressionAnalysisService"
  * @spring.property name = "geneOntologyService" ref="geneOntologyService"
@@ -82,6 +84,7 @@ public class GeneCoexpressionService {
     private GeneOntologyService geneOntologyService;
     private ExpressionExperimentService expressionExperimentService;
     private ProbeLinkCoexpressionAnalyzer probeLinkCoexpressionAnalyzer;
+    private GeneService geneService;
 
     /**
      * @return collection of the available canned analyses, for all taxa.
@@ -179,6 +182,9 @@ public class GeneCoexpressionService {
             for ( Gene2GeneCoexpression g2g : g2gs ) {
                 Gene foundGene = g2g.getFirstGene().equals( queryGene ) ? g2g.getSecondGene() : g2g.getFirstGene();
                 CoexpressionValueObjectExt ecvo = new CoexpressionValueObjectExt();
+                
+                geneService.thaw(foundGene);
+                
                 ecvo.setQueryGene( queryGene );
                 ecvo.setFoundGene( foundGene );
 
@@ -415,6 +421,10 @@ public class GeneCoexpressionService {
 
     public void setTaxonService( TaxonService taxonService ) {
         this.taxonService = taxonService;
+    }
+    
+    public void setGeneService( GeneService geneService ) {
+        this.geneService = geneService;
     }
 
     /**
