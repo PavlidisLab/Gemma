@@ -68,7 +68,6 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
 
     private String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
     
-
     public AbstractGemmaEndpoint() {
         super();
 
@@ -77,16 +76,11 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
     public void setManualAuthenticationProcessing( ManualAuthenticationProcessing map ) {
         this.manualAuthenticationProcessing = map;
 
-        //authenticate();
-
     }
 
     protected boolean authenticate() {
-
-        boolean result = this.manualAuthenticationProcessing.validateRequest( USER, PASSWORD );
-        if ( !result ) log.error( "Failed to authenticate" );
-
-        return result;
+        this.manualAuthenticationProcessing.anonymousAuthentication();
+        return true;
     }
 
     protected void setLocalName( String localName ) {
@@ -110,7 +104,7 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
         Assert.isTrue( NAMESPACE_URI.equals( requestElement.getNamespaceURI() ), "Invalid namespace" );
         Assert.isTrue( localName.equals( requestElement.getLocalName() ), "Invalid local name" );
         log.info( "Starting " + localName + " endpoint" );
-       // authenticate();
+        authenticate();
 
         Collection<String> value = new HashSet<String>();
         String node = "";
@@ -156,7 +150,7 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
         Assert.isTrue( NAMESPACE_URI.equals( requestElement.getNamespaceURI() ), "Invalid namespace" );
         Assert.isTrue( localName.equals( requestElement.getLocalName() ), "Invalid local name" );
         log.info( "Starting " + localName + " endpoint" );
-        //authenticate();
+        authenticate();
 
         Collection<String> value = new HashSet<String>();
         String node = "";
@@ -275,27 +269,29 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
         return result.toString();
     }
 
+
     /**
-     * This method should/can only be used when the wrapper is manually built in the specific endpoints 
-     * (ie. not using the buildWrapper() in AbstractGemmaEndpoint).
+     * This method should/can only be used when the wrapper is manually built in the specific endpoints (ie. not using
+     * the buildWrapper() in AbstractGemmaEndpoint).
+     * 
      * @param responseWrapper - Manually built wrapper
      * @param reportType - directory of the report to store; the dir must exist for report to be written
      * @param filename - no xml extension is required
      */
     protected void writeReport( Element responseWrapper, Document document, String filename ) {
-        String fullFileName = filename+".xml";
-        String path = HOME_DIR + File.separatorChar + "dataFiles" +File.separatorChar +"xml" + File.separatorChar;
+        String fullFileName = filename + ".xml";
+        String path = HOME_DIR + File.separatorChar + "dataFiles" + File.separatorChar + "xml" +File.separatorChar;
         try {
             File file = new File( path, fullFileName );
-           
+
             if ( !file.exists() ) {
-                FileOutputStream out = new FileOutputStream( new File( path + fullFileName ) ) ;
-                OutputFormat format = new OutputFormat(document);
-                format.setIndenting(true);
-                //to generate a file output use fileoutputstream 
-                XMLSerializer serializer = new XMLSerializer(out, null);
-                serializer.serialize(responseWrapper);
-                
+                FileOutputStream out = new FileOutputStream( new File( path + fullFileName ) );
+                OutputFormat format = new OutputFormat( document );
+                format.setIndenting( true );
+                // to generate a file output use fileoutputstream
+                XMLSerializer serializer = new XMLSerializer( out, null );
+                serializer.serialize( responseWrapper );
+
                 log.info( "A report with the filename, " + fullFileName + ", has been created in path, " + path );
             } else
                 log.info( "A report with the filename, " + fullFileName
