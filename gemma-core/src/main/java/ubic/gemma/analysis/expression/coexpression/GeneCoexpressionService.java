@@ -133,7 +133,7 @@ public class GeneCoexpressionService {
         GeneCoexpressionAnalysis analysisToUse = getAnalysis( analysis );
         Map<Gene, Collection<Gene2GeneCoexpression>> gg2gs = getRawCoexpression( queryGenes, stringency, maxResults,
                 queryGenesOnly, analysisToUse );
-
+        geneCoexpressionAnalysisService.thaw( analysisToUse );
         Collection<Long> eeIdsFromAnalysis = getIds( analysisToUse.getExperimentsAnalyzed() );
         /*
          * We get this prior to filtering so it matches the vectors stored with the analysis.
