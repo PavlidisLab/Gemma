@@ -175,6 +175,18 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
         log.info( "Finished generating result. Sending response to client." );
         log.info( "XML response for " + EXPERIMENT_LOCAL_NAME + " endpoint built in " + time + "ms." );
         log.info( "Finished generating matrix. Sending response to client." );
+
+        // naming convention for the xml file report
+        String filename = "dedv-";
+        if ( geneResult.size() > 10 )
+            filename = filename.concat( geneResult.size() + "-" + eeIdResult.size() );
+        else {
+            for ( String id : geneIdResult )
+                filename = filename.concat( id + "-" );
+            filename = filename.concat( "" + eeIdResult.size() );
+        }
+
+        writeReport( responseWrapper, document, filename );
         return responseWrapper;
 
     }
