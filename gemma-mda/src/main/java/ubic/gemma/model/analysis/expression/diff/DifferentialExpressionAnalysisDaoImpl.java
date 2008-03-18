@@ -74,22 +74,6 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public DifferentialExpressionAnalysis handleFindMostRecentWithName( String name ) {
-        Collection<DifferentialExpressionAnalysis> candidates = this.findByName( name );
-        DifferentialExpressionAnalysis mostRecent = null;
-        Date earliest = null;
-        for ( DifferentialExpressionAnalysis c : candidates ) {
-            Date d = this.getCreateEvent( c ).getDate();
-            if ( earliest == null || d.before( earliest ) ) {
-                earliest = d;
-                mostRecent = c;
-            }
-        }
-        return mostRecent;
-    }
-
     protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
         final String queryString = "select distinct a from DifferentialExpressionAnalysisImpl a where :e in elements (a.experimentsAnalyzed)";
         return this.getHibernateTemplate().findByNamedParam( queryString, "e", investigation );
@@ -100,6 +84,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      * 
      * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisDaoBase#handleThaw(java.util.Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     public void handleThaw( final Collection expressionAnalyses ) throws Exception {
         for ( DifferentialExpressionAnalysis ea : ( Collection<DifferentialExpressionAnalysis> ) expressionAnalyses ) {

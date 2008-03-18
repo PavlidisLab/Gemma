@@ -127,13 +127,13 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
         Collection<ExperimentalFactor> mainA = new HashSet<ExperimentalFactor>();
         mainA.add( experimentalFactorA );
         ExpressionAnalysisResultSet mainEffectResultSetA = ExpressionAnalysisResultSet.Factory.newInstance(
-                analysisResultsMainEffectA, expressionAnalysis, mainA );
+                expressionAnalysis, analysisResultsMainEffectA, mainA );
         resultSets.add( mainEffectResultSetA );
 
         Collection<ExperimentalFactor> mainB = new HashSet<ExperimentalFactor>();
         mainB.add( experimentalFactorB );
         ExpressionAnalysisResultSet mainEffectResultSetB = ExpressionAnalysisResultSet.Factory.newInstance(
-                analysisResultsMainEffectB, expressionAnalysis, mainB );
+                expressionAnalysis, analysisResultsMainEffectB, mainB );
         resultSets.add( mainEffectResultSetB );
 
         if ( numResultsFromR == maxResults ) {
@@ -141,7 +141,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
             interAB.add( experimentalFactorA );
             interAB.add( experimentalFactorB );
             ExpressionAnalysisResultSet interactionEffectResultSet = ExpressionAnalysisResultSet.Factory.newInstance(
-                    analysisResultsInteractionEffect, expressionAnalysis, interAB );
+                    expressionAnalysis, analysisResultsInteractionEffect, interAB );
             resultSets.add( interactionEffectResultSet );
         }
 

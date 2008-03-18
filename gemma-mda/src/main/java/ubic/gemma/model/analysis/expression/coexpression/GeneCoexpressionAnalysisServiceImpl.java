@@ -121,11 +121,6 @@ public class GeneCoexpressionAnalysisServiceImpl extends
     }
 
     @Override
-    protected GeneCoexpressionAnalysis handleFindMostRecentByName( String name ) throws Exception {
-        return ( GeneCoexpressionAnalysis ) this.getGeneCoexpressionAnalysisDao().findMostRecentWithName( name );
-    }
-
-    @Override
     protected void handleThaw( GeneCoexpressionAnalysis geneCoexpressionAnalysis ) throws Exception {
         this.getGeneCoexpressionAnalysisDao().thaw( geneCoexpressionAnalysis );
 

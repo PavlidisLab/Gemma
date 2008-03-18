@@ -46,7 +46,6 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.association.Gene2GOAssociationService;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -89,6 +88,15 @@ public class ArrayDesignAnnotationService {
 
     public static final String ANNOTATION_FILE_SUFFIX = ".an.txt.gz";
 
+    public static final String BIO_PROCESS_FILE_SUFFIX = "_bioProcess";
+
+    public static final String NO_PARENTS_FILE_SUFFIX = "_noParents";
+
+    /**
+     * String included in file names for standard (default) annotation files. These include GO terms and all parents.
+     */
+    public static final String STANDARD_FILE_SUFFIX = "";
+
     public static final String ANNOT_DATA_DIR = ConfigUtils.getString( "gemma.appdata.home" ) + File.separatorChar
             + "microAnnots" + File.separatorChar;
 
@@ -102,7 +110,7 @@ public class ArrayDesignAnnotationService {
      */
     public static Map<Long, Collection<Gene>> readAnnotationFile( ArrayDesign arrayDesign ) {
         Map<Long, Collection<Gene>> results = new HashMap<Long, Collection<Gene>>();
-        File f = new File( ANNOT_DATA_DIR + arrayDesign.getShortName() + ANNOTATION_FILE_SUFFIX );
+        File f = new File( ANNOT_DATA_DIR + arrayDesign.getShortName() + STANDARD_FILE_SUFFIX + ANNOTATION_FILE_SUFFIX );
         if ( !f.canRead() ) {
             log.info( "Gene annotations are not available from " + f );
             return results;

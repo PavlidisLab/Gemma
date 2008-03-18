@@ -56,22 +56,6 @@ public class GeneCoexpressionAnalysisDaoImpl extends
                 "select a from GeneCoexpressionAnalysisImpl as a where a.name = :name", "name", name );
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    protected GeneCoexpressionAnalysis handleFindMostRecentWithName( String name ) {
-        Collection<GeneCoexpressionAnalysis> candidates = this.findByName( name );
-        GeneCoexpressionAnalysis mostRecent = null;
-        Date earliest = null;
-        for ( GeneCoexpressionAnalysis c : candidates ) {
-            Date d = this.getCreateEvent( c ).getDate();
-            if ( earliest == null || d.before( earliest ) ) {
-                earliest = d;
-                mostRecent = c;
-            }
-        }
-        return mostRecent;
-    }
-
     /*
      * (non-Javadoc)
      * 

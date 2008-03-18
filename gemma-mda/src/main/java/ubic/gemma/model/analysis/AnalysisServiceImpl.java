@@ -38,8 +38,31 @@ public class AnalysisServiceImpl extends ubic.gemma.model.analysis.AnalysisServi
      * @see ubic.gemma.model.analysis.AnalysisServiceBase#handleFindByName(java.lang.String)
      */
     @Override
-    protected Collection handleFindByName( String name ) throws Exception {
-        return this.getAnalysisDao().findByName( name );
+    protected Analysis handleFindByName( String name ) throws Exception {
+        Collection results = this.getAnalysisDao().findByName( name + "%" );
+
+        Analysis mostRecent = null;
+
+        // find the most recent one that matches. Perhaps the best way is to use the audit trail but would have to thaw
+        // them.
+        // Instead of thawing the audit trail just use the analysis with the largest ID as we don't update analysis
+        // currently so
+        // the same resutls should be returned.
+
+        for ( Object obj : results ) {
+            Analysis ana = ( Analysis ) obj;
+
+            if ( ana.getName().equalsIgnoreCase( name ) ) return ana;
+
+            if ( mostRecent == null ) {
+                mostRecent = ana;
+                continue;
+            }
+
+            if ( ana.getId() > mostRecent.getId() ) mostRecent = ana;
+        }
+
+        return mostRecent;
     }
 
     /**

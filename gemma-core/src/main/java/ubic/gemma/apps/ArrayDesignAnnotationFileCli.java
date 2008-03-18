@@ -59,7 +59,7 @@ import ubic.gemma.ontology.GeneOntologyService;
  * @author klc
  * @versio $Id$
  */
-public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceManipulatingCli {
+public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatingCli {
 
     private static final String GENENAME_LISTFILE_OPTION = "genefile";
 
@@ -122,7 +122,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
                 .withArgName( "Batch Generating of annotation files" )
                 .withDescription(
                         "Use specified file for batch generating annotation files.  "
-                                + "specified File format (per line): GPL,outputFileName,[short|long|biologicalprocess] Note:  Overrides -a,-t,-f command line options " )
+                                + "specified File format (per line): shortName,outputFileName,[short|long|biologicalprocess] Note:  Overrides -a,-t,-f command line options " )
                 .withLongOpt( "load" ).create( 'l' );
 
         Option batchLoading = OptionBuilder
@@ -155,7 +155,7 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
     }
 
     public static void main( String[] args ) {
-        ArrayDesignGOAnnotationGeneratorCli p = new ArrayDesignGOAnnotationGeneratorCli();
+        ArrayDesignAnnotationFileCli p = new ArrayDesignAnnotationFileCli();
         try {
 
             Exception ex = p.doWork( args );
@@ -257,11 +257,11 @@ public class ArrayDesignGOAnnotationGeneratorCli extends ArrayDesignSequenceMani
     private void processOneAD( ArrayDesign ad ) throws IOException {
         log.info( "Processing AD: " + ad.getName() );
 
-        String shortFileBaseName = ad.getShortName() + "_NoParents";
+        String shortFileBaseName = ad.getShortName() + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX;
         File sf = ArrayDesignAnnotationService.getFileName( shortFileBaseName );
-        String biocFileBaseName = ad.getShortName() + "_bioProcess";
+        String biocFileBaseName = ad.getShortName() + ArrayDesignAnnotationService.BIO_PROCESS_FILE_SUFFIX;
         File bf = ArrayDesignAnnotationService.getFileName( biocFileBaseName );
-        String allparFileBaseName = ad.getShortName() + "_allParents";
+        String allparFileBaseName = ad.getShortName() + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX;
         File af = ArrayDesignAnnotationService.getFileName( allparFileBaseName );
 
         if ( !overWrite && sf.exists() && bf.exists() && af.exists() ) {

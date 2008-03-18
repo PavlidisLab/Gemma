@@ -20,13 +20,13 @@
  * This is only generated once! It will never be overwritten.
  * You can (and have to!) safely modify it by hand.
  */
-package ubic.gemma.model.analysis;
+package ubic.gemma.model.analysis.expression;
 
 /**
- * @see ubic.gemma.model.analysis.FactorAssociatedAnalysisResultSet
+ * @see ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet
  */
 public abstract class FactorAssociatedAnalysisResultSetImpl
-    extends ubic.gemma.model.analysis.FactorAssociatedAnalysisResultSet
+    extends ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet
 {
     /**
      * The serial version UID of this class. Needed for serialization.

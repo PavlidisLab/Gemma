@@ -49,9 +49,4 @@ public class AnalysisDaoImpl extends ubic.gemma.model.analysis.AnalysisDaoBase {
         throw new UnsupportedOperationException( "Please call this method on a subclass" );
     }
 
-    @Override
-    protected Analysis handleFindMostRecentWithName( String name ) throws Exception {
-        throw new UnsupportedOperationException( "Please call this method on a subclass" );
-    }
-
 }

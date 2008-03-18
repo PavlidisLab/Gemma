@@ -106,7 +106,7 @@ public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
 
     public void testFindCoexpressionRelationships() {
 
-        Collection results = g2gCoexpressionS.findCoexpressionRelationships( firstGene, analysis, 3 );
+        Collection results = g2gCoexpressionS.findCoexpressionRelationships( firstGene, analysis, 3, 100 );
         assertEquals( 1, results.size() );
 
     }

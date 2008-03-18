@@ -89,7 +89,7 @@ public class GeneLinkCoexpressionAnalyzer {
             boolean knownGenesOnly, String analysisName ) {
         Collection<Gene> processedGenes = new HashSet<Gene>();
 
-        Analysis existingAnalysis = geneCoexpressionAnalysisService.findMostRecentByName( analysisName );
+        Analysis existingAnalysis = geneCoexpressionAnalysisService.findByName( analysisName );
         if ( existingAnalysis != null ) {
             throw new IllegalArgumentException( "Analysis with name '" + analysisName + "' exists already (id="
                     + existingAnalysis.getId() + ")" );

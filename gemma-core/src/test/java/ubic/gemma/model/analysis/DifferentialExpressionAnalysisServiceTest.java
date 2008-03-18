@@ -157,13 +157,15 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
     }
 
     public void testFindByNameExact() {
-        Analysis result = ( Analysis ) analysisService.findByName( "Test" ).iterator().next();
+
+        Analysis result = analysisService.findByName( "Test" );
         assertEquals( "Test", result.getName() );
     }
 
     public void testFindByNameRecent() {
-        Analysis result = analysisService.findMostRecentByName( "Test" );
-        assertEquals( "Test", result.getName() );
+
+        Analysis result = analysisService.findByName( "TestA" );
+        assertEquals( "TestAnalysis3", result.getName() );
     }
 
     /**

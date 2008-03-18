@@ -141,12 +141,6 @@ public class DifferentialExpressionAnalysisServiceImpl extends
     }
 
     @Override
-    protected DifferentialExpressionAnalysis handleFindMostRecentByName( String name ) throws Exception {
-        return ( DifferentialExpressionAnalysis ) this.getDifferentialExpressionAnalysisDao().findMostRecentWithName(
-                name );
-    }
-
-    @Override
     protected void handleThaw( DifferentialExpressionAnalysis differentialExpressionAnalysis ) throws Exception {
         this.getDifferentialExpressionAnalysisDao().thaw( differentialExpressionAnalysis );
     }

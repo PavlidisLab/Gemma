@@ -35,7 +35,7 @@ public class GemmaCLI {
     private static final String[] apps = new String[] { "ubic.gemma.apps.ArrayDesignProbeMapperCli",
             "ubic.gemma.apps.ArrayDesignSequenceAssociationCli", "ubic.gemma.apps.ArrayDesignRepeatScanCli",
             "ubic.gemma.apps.LoadExpressionDataCli", "ubic.gemma.apps.LoadSimpleExpressionDataCli",
-            "ubic.gemma.apps.ArrayDesignBlatCli", "ubic.gemma.apps.ArrayDesignGOAnnotationGeneratorCli",
+            "ubic.gemma.apps.ArrayDesignBlatCli", "ubic.gemma.apps.ArrayDesignAnnotationFileCli",
             "ubic.gemma.apps.ComputeDEVRankingCli", "ubic.gemma.apps.TwoChannelMissingValueCLI",
             "ubic.gemma.apps.VectorMergingCli", "ubic.gemma.apps.ArrayDesignProbeRenamerCli",
             "ubic.gemma.apps.ArrayDesignMergeCli", "ubic.gemma.apps.LinkAnalysisCli",

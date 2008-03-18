@@ -48,6 +48,8 @@ import ubic.gemma.web.view.TextView;
  */
 public class CoexpressionSearchController extends BaseFormController {
 
+    private static final int MAX_RESULTS = 500;
+
     private static final int DEFAULT_STRINGENCY = 2;
 
     private static Log log = LogFactory.getLog( CoexpressionSearchController.class.getName() );
@@ -70,7 +72,7 @@ public class CoexpressionSearchController extends BaseFormController {
             return getEmptyResult();
         } else if ( searchOptions.getCannedAnalysisId() != null ) {
             return geneCoexpressionService.getCannedAnalysisResults( searchOptions.getCannedAnalysisId(), genes,
-                    searchOptions.getStringency(), searchOptions.getQueryGenesOnly() );
+                    searchOptions.getStringency(), MAX_RESULTS, searchOptions.getQueryGenesOnly() );
         } else {
             return geneCoexpressionService.getCustomAnalysisResults( searchOptions.getEeIds(), genes, searchOptions
                     .getStringency(), searchOptions.getQueryGenesOnly() );
@@ -149,7 +151,7 @@ public class CoexpressionSearchController extends BaseFormController {
 
             CoexpressionMetaValueObject result;
             if ( cannedAnalysisId != null ) {
-                result = geneCoexpressionService.getCannedAnalysisResults( cannedAnalysisId, genes, stringency,
+                result = geneCoexpressionService.getCannedAnalysisResults( cannedAnalysisId, genes, stringency, 500,
                         queryGenesOnly );
             } else {
                 Collection<Long> eeIds = extractIds( request.getParameter( "ee" ) );

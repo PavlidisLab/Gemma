@@ -41,17 +41,13 @@ public class Gene2GeneCoexpressionDaoImpl extends
         ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDaoBase {
 
     /**
-     * How many gene2gene results to return, total (not per gene, if the query works that way).
-     */
-    private static final int MAX_RESULTS = 500;
-
-    /**
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao#findCoexpressionRelationships(null,
      *      java.util.Collection)
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected java.util.Collection handleFindCoexpressionRelationships( Gene gene, Analysis analysis, int stringency ) {
+    protected java.util.Collection handleFindCoexpressionRelationships( Gene gene, Analysis analysis, int stringency,
+            int maxResults ) {
         String g2gClassName;
 
         g2gClassName = getClassName( gene );
@@ -77,7 +73,7 @@ public class Gene2GeneCoexpressionDaoImpl extends
         int count = 0;
         for ( Iterator<Gene2GeneCoexpression> it = lr.iterator(); it.hasNext(); ) {
             it.next();
-            if ( count > MAX_RESULTS ) {
+            if ( maxResults > 0 && count > maxResults ) {
                 it.remove();
             }
             count++;
@@ -95,7 +91,7 @@ public class Gene2GeneCoexpressionDaoImpl extends
     @SuppressWarnings("unchecked")
     @Override
     protected java.util.Map /* <Gene, Collection<Gene2GeneCoexpression>> */handleFindCoexpressionRelationships(
-            Collection genes, Analysis analysis, int stringency ) {
+            Collection genes, Analysis analysis, int stringency, int maxResults ) {
 
         if ( genes.size() == 0 ) return new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
 
@@ -127,7 +123,7 @@ public class Gene2GeneCoexpressionDaoImpl extends
 
         int count = 0;
         for ( Gene2GeneCoexpression g2g : r ) {
-            if ( count == MAX_RESULTS ) break;
+            if ( maxResults > 0 && count == maxResults ) break;
             Gene firstGene = g2g.getFirstGene();
             Gene secondGene = g2g.getSecondGene();
             if ( genes.contains( firstGene ) ) {
@@ -172,7 +168,6 @@ public class Gene2GeneCoexpressionDaoImpl extends
         }
         int count = 0;
         for ( Gene2GeneCoexpression g2g : r ) {
-            if ( count == MAX_RESULTS ) break;
             // all the genes are guaranteed to be in the query list. But we want them listed both ways so we count them
             // up right later.
             result.get( g2g.getFirstGene() ).add( g2g );

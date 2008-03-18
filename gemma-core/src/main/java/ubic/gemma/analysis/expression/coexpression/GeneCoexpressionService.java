@@ -117,17 +117,18 @@ public class GeneCoexpressionService {
      * @param eeIds Experiments to limit the results to
      * @param queryGenes
      * @param stringency
+     * @param maxResults
      * @param queryGenesOnly return links among the query genes only.
      * @return
      */
     public CoexpressionMetaValueObject getFilteredCannedAnalysisResults( Long cannedAnalysisId, Collection<Long> eeIds,
-            Collection<Gene> queryGenes, int stringency, boolean queryGenesOnly ) {
+            Collection<Gene> queryGenes, int stringency, int maxResults, boolean queryGenesOnly ) {
 
         GeneCoexpressionAnalysis analysis = ( GeneCoexpressionAnalysis ) geneCoexpressionAnalysisService
                 .load( cannedAnalysisId );
 
         GeneCoexpressionAnalysis analysisToUse = getAnalysis( analysis );
-        Map<Gene, Collection<Gene2GeneCoexpression>> gg2gs = getRawCoexpression( queryGenes, stringency,
+        Map<Gene, Collection<Gene2GeneCoexpression>> gg2gs = getRawCoexpression( queryGenes, stringency, maxResults,
                 queryGenesOnly, analysisToUse );
 
         Collection<Long> eeIdsFromAnalysis = getIds( analysisToUse.getExperimentsAnalyzed() );
@@ -252,19 +253,21 @@ public class GeneCoexpressionService {
     /**
      * @param queryGenes
      * @param stringency
+     * @param maxResults
      * @param queryGenesOnly
      * @param analysisToUse
      * @return
      */
     @SuppressWarnings("unchecked")
     private Map<Gene, Collection<Gene2GeneCoexpression>> getRawCoexpression( Collection<Gene> queryGenes,
-            int stringency, boolean queryGenesOnly, GeneCoexpressionAnalysis analysisToUse ) {
+            int stringency, int maxResults, boolean queryGenesOnly, GeneCoexpressionAnalysis analysisToUse ) {
         Map<Gene, Collection<Gene2GeneCoexpression>> gg2gs = null;
         if ( queryGenesOnly ) {
             gg2gs = gene2GeneCoexpressionService.findInterCoexpressionRelationship( queryGenes, analysisToUse,
                     stringency );
         } else {
-            gg2gs = gene2GeneCoexpressionService.findCoexpressionRelationships( queryGenes, analysisToUse, stringency );
+            gg2gs = gene2GeneCoexpressionService.findCoexpressionRelationships( queryGenes, analysisToUse, stringency,
+                    maxResults );
         }
         return gg2gs;
     }
@@ -287,13 +290,15 @@ public class GeneCoexpressionService {
      * @param cannedAnalysisId
      * @param queryGenes
      * @param stringency
+     * @param maxResults
      * @param queryGenesOnly
      * @return
      */
     @SuppressWarnings("unchecked")
     public CoexpressionMetaValueObject getCannedAnalysisResults( Long cannedAnalysisId, Collection<Gene> queryGenes,
-            int stringency, boolean queryGenesOnly ) {
-        return getFilteredCannedAnalysisResults( cannedAnalysisId, null, queryGenes, stringency, queryGenesOnly );
+            int stringency, int maxResults, boolean queryGenesOnly ) {
+        return getFilteredCannedAnalysisResults( cannedAnalysisId, null, queryGenes, stringency, maxResults,
+                queryGenesOnly );
     }
 
     /**

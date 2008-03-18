@@ -132,8 +132,9 @@ public class Gene2GeneCoexpressionServiceImpl extends
      */
     @Override
     protected java.util.Collection handleFindCoexpressionRelationships( ubic.gemma.model.genome.Gene gene,
-            Analysis analysis, int stringency ) throws java.lang.Exception {
-        return this.getGene2GeneCoexpressionDao().findCoexpressionRelationships( gene, analysis, stringency );
+            Analysis analysis, int stringency, int maxResults ) throws java.lang.Exception {
+        return this.getGene2GeneCoexpressionDao()
+                .findCoexpressionRelationships( gene, analysis, stringency, maxResults );
     }
 
     private Boolean validCollection( java.util.Collection g2gExpressions ) throws IllegalArgumentException {
@@ -165,9 +166,10 @@ public class Gene2GeneCoexpressionServiceImpl extends
      *      ubic.gemma.model.analysis.Analysis, int)
      */
     @Override
-    protected Map handleFindCoexpressionRelationships( Collection genes, Analysis analysis, int stringency )
-            throws Exception {
-        return this.getGene2GeneCoexpressionDao().findCoexpressionRelationships( genes, analysis, stringency );
+    protected Map handleFindCoexpressionRelationships( Collection genes, Analysis analysis, int stringency,
+            int maxResults ) throws Exception {
+        return this.getGene2GeneCoexpressionDao().findCoexpressionRelationships( genes, analysis, stringency,
+                maxResults );
     }
 
     /*

@@ -131,7 +131,7 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
 
         // get Gene2GeneCoexpressio objects canned analysis
         Collection<Gene2GeneCoexpression> coexpressedGenes = gene2GeneCoexpressionService
-                .findCoexpressionRelationships( gene, analysis, stringency );
+                .findCoexpressionRelationships( gene, analysis, stringency, 0 );
 
         if ( coexpressedGenes == null || coexpressedGenes.isEmpty() ) {
             String msg = "No coexpressed genes can be found.";

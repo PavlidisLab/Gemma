@@ -192,8 +192,8 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
         Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
         Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
         factors.add( factorValueA.getExperimentalFactor() );
-        ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance( analysisResults,
-                expressionAnalysis, factors );
+        ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance( expressionAnalysis,
+                analysisResults, factors );
         resultSets.add( resultSet );
 
         expressionAnalysis.setResultSets( resultSets );
