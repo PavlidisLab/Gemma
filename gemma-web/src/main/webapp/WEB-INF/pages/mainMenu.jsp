@@ -76,8 +76,8 @@
 
 <div id="sampleQueries" style="padding:4px;">
 	Examples: rat
-	<a href="<c:url value="/searchCoexpression.html?g=938103&amp;a=571" />">Ddn</a>; mouse
-	<a href="<c:url value="/searchCoexpression.html?g=598735&amp;s=3&amp;a=616" />">Mapk3</a>
+	<a href="<c:url value="/searchCoexpression.html?g=938103&amp;a=706" />">Ddn</a>; mouse
+	<a href="<c:url value="/searchCoexpression.html?g=598735&amp;s=3&amp;a=708" />">Mapk3</a>
 </div>
 <authz:authorize ifAnyGranted="admin">
 	<hr />

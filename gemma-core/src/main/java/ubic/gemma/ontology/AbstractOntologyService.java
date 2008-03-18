@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -107,22 +108,6 @@ public abstract class AbstractOntologyService {
     }
 
     /**
-     * Looks for a OntologyIndividual that has the matcing URI given
-     * 
-     * @param uri
-     * @return
-     * @deprecated Never used.
-     */
-    public OntologyIndividual getIndividual( String uri ) {
-
-        if ( ( uri == null ) || ( !ready.get() ) ) return null;
-
-        OntologyIndividual indi = individuals.get( uri );
-
-        return indi;
-    }
-
-    /**
      * Looks through both Terms and Individuls for a OntologyResource that has a uri matching the uri given If no
      * OntologyTerm is found only then will ontologyIndividuals be searched. returns null if nothing is found.
      * 
@@ -138,25 +123,6 @@ public abstract class AbstractOntologyService {
         if ( resource == null ) resource = individuals.get( uri );
 
         return resource;
-    }
-
-    /**
-     * @param uri
-     * @return
-     * @deprecated
-     */
-    public Collection<OntologyRestriction> getTermRestrictions( String uri ) {
-
-        OntologyTerm term = terms.get( uri );
-        if ( term == null ) {
-            /*
-             * Either the onology hasn't been loaded, or the id was not valid.
-             */
-            throw new IllegalArgumentException( "No term for URI=" + uri + " in " + this.getOntologyName()
-                    + "; make sure ontology is loaded and uri is valid" );
-        }
-        return term.getRestrictions();
-
     }
 
     /**
@@ -197,11 +163,11 @@ public abstract class AbstractOntologyService {
      * Looks for any OntologyIndividuals or ontologyTerms that match the given search string
      * 
      * @param search
-     * @return
+     * @return results, or an empty collection if the results are empty OR the ontology is not available to be searched.
      */
     public Collection<OntologyResource> findResources( String search ) {
 
-        if ( !isOntologyLoaded() ) return null;
+        if ( !isOntologyLoaded() ) return new HashSet<OntologyResource>();
 
         assert index != null : "attempt to search " + this.getOntologyName() + " when index is null";
 

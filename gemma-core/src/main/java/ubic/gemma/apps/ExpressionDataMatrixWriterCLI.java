@@ -20,15 +20,20 @@ package ubic.gemma.apps;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
+import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.datastructure.matrix.ExpressionDataMatrixService;
 import ubic.gemma.datastructure.matrix.MatrixWriter;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 
 /**
  * Prints preferred data matrix to a file.
@@ -68,19 +73,29 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
     protected Exception doWork( String[] args ) {
         processCommandLine( "expressionDataMatrixWriterCLI", args );
 
-        ExpressionDataMatrixService eeds = ( ExpressionDataMatrixService ) this.getBean( "expressionDataMatrixService" );
+        AnalysisHelperService ahs = ( AnalysisHelperService ) this.getBean( "analysisHelperService" );
+
+        CompositeSequenceService css = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
+
         for ( ExpressionExperiment ee : expressionExperiments ) {
 
-            ExpressionDataDoubleMatrix dataMatrix = eeds.getPreferredDataMatrix( ee, true );
+            ExpressionDataDoubleMatrix dataMatrix = ahs.getMaskedPreferredDataMatrix( ee );
+
+            Map<Long, Collection<Gene>> genesByProbeId = new HashMap<Long, Collection<Gene>>();
+
+            int rows = dataMatrix.rows();
+            for ( int j = 0; j < rows; j++ ) {
+                CompositeSequence probeForRow = ( CompositeSequence ) dataMatrix.getDesignElementForRow( j );
+                Collection<Gene> genes = css.getGenes( probeForRow );
+                genesByProbeId.put( probeForRow.getId(), genes );
+            }
 
             try {
                 MatrixWriter out = new MatrixWriter();
                 PrintWriter writer = new PrintWriter( outFileName + "_" + ee.getShortName().replaceAll( "\\s", "" )
                         + ".txt" );
-                /*
-                 * FIXME output the gene information too.
-                 */
-                out.write( writer, dataMatrix, new HashMap(), true, false );
+
+                out.write( writer, dataMatrix, genesByProbeId, true, false );
             } catch ( IOException e ) {
                 return e;
             }

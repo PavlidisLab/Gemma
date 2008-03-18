@@ -111,6 +111,9 @@ public class MgedOntologyService extends AbstractOntologyService {
         // A bunch of terms not in the biomaterial package that we need. (special cases)
         OntologyTerm term = terms.get( MGED_ONTO_BASE_URL + "#ExperimentPackage" );
         results.addAll( getAllTerms( term ) );
+        
+        term = terms.get( MGED_ONTO_BASE_URL + "#MeasurementPackage" );
+        results.addAll( getAllTerms( term ) );
 
         // trim some terms out:
         Collection<OntologyTerm> trimmed = Collections.synchronizedSet( new HashSet<OntologyTerm>() );
@@ -130,6 +133,7 @@ public class MgedOntologyService extends AbstractOntologyService {
         keyToTermListUrl.put( "design", MgedOntologyService.class.getResource( "MO.design.categories.txt" ) );
         keyToTermListUrl.put( "experiment", MgedOntologyService.class.getResource( "MO.experiment.categories.txt" ) );
         keyToTermListUrl.put( "factor", MgedOntologyService.class.getResource( "MO.factor.categories.txt" ) );
+        keyToTermListUrl.put( "factorvalue", MgedOntologyService.class.getResource( "MO.factorvalue.categories.txt" ) );
     }
     private static Map<String, Collection<OntologyTerm>> keyToTermListCache = new HashMap<String, Collection<OntologyTerm>>();
 

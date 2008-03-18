@@ -238,6 +238,49 @@ public class TestPersistentObjectHelper {
     }
 
     /**
+     * @return A lighter-weight EE, with no data, and the ADs have no sequences.
+     */
+    public ExpressionExperiment getTestPersistentBasicExpressionExperiment() {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setName( "Expression Experiment " + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
+        ee.setDescription( "A test expression experiment" );
+        ee.setSource( "http://www.ncbi.nlm.nih.gov/geo/" );
+        DatabaseEntry de1 = this.getTestPersistentDatabaseEntry( geo );
+        ee.setAccession( de1 );
+
+        ArrayDesign adA = this.getTestPersistentArrayDesign( 0, false, false );
+        ArrayDesign adB = this.getTestPersistentArrayDesign( 0, false, false );
+
+        ExperimentalDesign ed = getExperimentalDesign();
+        ee.setExperimentalDesign( ed );
+        ee.setOwner( this.getTestPersistentContact() );
+
+        Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
+        Collection<BioMaterial> bioMaterials = getBioMaterials();
+        Collection<BioAssay> bioAssaysA = getBioAssays( bioMaterials, adA );
+        Collection<BioAssay> bioAssaysB = getBioAssays( bioMaterials, adB );
+        bioAssays.addAll( bioAssaysA );
+        bioAssays.addAll( bioAssaysB );
+        ee.setBioAssays( bioAssays );
+
+        log.debug( "expression experiment => design element data vectors" );
+
+        Collection<QuantitationType> quantitationTypes = new HashSet<QuantitationType>();
+        for ( int quantitationTypeNum = 0; quantitationTypeNum < NUM_QUANTITATION_TYPES; quantitationTypeNum++ ) {
+            QuantitationType q = getTestNonPersistentQuantitationType();
+            if ( quantitationTypes.size() == 0 ) {
+                q.setIsPreferred( true );
+            }
+            quantitationTypes.add( q );
+        }
+
+        assert quantitationTypes.size() > 0;
+        ee.setQuantitationTypes( quantitationTypes );
+
+        return ( ExpressionExperiment ) persisterHelper.persist( ee );
+    }
+
+    /**
      * Add an expressionExperiment to the database for testing purposes. Includes associations
      * 
      * @param dosequence Should the array design get all the sequence information filled in? (true = slower)

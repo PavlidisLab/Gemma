@@ -381,17 +381,29 @@ public abstract class AbstractCLI {
     }
 
     /**
-     * Convenience method to add a standard pair of (required) options to intake a user name and password.
+     * Convenience method to add a standard pair of (required) options to intake a user name and password, optionally
+     * required
      */
     @SuppressWarnings("static-access")
-    protected void addUserNameAndPasswordOptions() {
-        Option usernameOpt = OptionBuilder.withArgName( "user" ).isRequired().withLongOpt( "user" ).hasArg()
-                .withDescription( "User name for accessing the system" ).create( USERNAME_OPTION );
+    protected void addUserNameAndPasswordOptions( boolean required ) {
+        Option usernameOpt = OptionBuilder.withArgName( "user" ).withLongOpt( "user" ).hasArg().withDescription(
+                "User name for accessing the system" ).create( USERNAME_OPTION );
 
-        Option passwordOpt = OptionBuilder.withArgName( "passwd" ).isRequired().withLongOpt( "password" ).hasArg()
-                .withDescription( "Password for accessing the system" ).create( PASSWORD_CONSTANT );
+        usernameOpt.setRequired( required );
+
+        Option passwordOpt = OptionBuilder.withArgName( "passwd" ).withLongOpt( "password" ).hasArg().withDescription(
+                "Password for accessing the system" ).create( PASSWORD_CONSTANT );
+        passwordOpt.setRequired( required );
+
         options.addOption( usernameOpt );
         options.addOption( passwordOpt );
+    }
+
+    /**
+     * Add required user name and password options.
+     */
+    protected void addUserNameAndPasswordOptions() {
+        this.addUserNameAndPasswordOptions( true );
     }
 
     /**

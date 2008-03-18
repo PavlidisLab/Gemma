@@ -26,33 +26,42 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * @author luke
+ * @version $Id$
  */
 public class FactorValueValueObject {
 
-    private long   charId;
-    private long   factorValueId;
+    private long charId;
+    private long factorValueId;
     private String factorValueString;
     private String category;
     private String categoryUri;
     private String value;
     private String valueUri;
-    
+
     public FactorValueValueObject() {
     }
 
+    /**
+     * @param value
+     * @param c
+     */
     public FactorValueValueObject( FactorValue value, Characteristic c ) {
-        this.setCharId( c.getId() );
+        if ( c.getId() != null ) this.setCharId( c.getId() );
         this.setFactorValueId( value.getId() );
         this.setFactorValueString( getSummaryString( value ) );
         this.setCategory( c.getCategory() );
         this.setValue( c.getValue() );
         if ( c instanceof VocabCharacteristic ) {
-            VocabCharacteristic vc = (VocabCharacteristic)c;
+            VocabCharacteristic vc = ( VocabCharacteristic ) c;
             this.setCategoryUri( vc.getCategoryUri() );
             this.setValueUri( vc.getValueUri() );
         }
     }
 
+    /**
+     * @param value
+     * @return
+     */
     private String getSummaryString( FactorValue value ) {
         StringBuffer buf = new StringBuffer();
         for ( Iterator<Characteristic> iter = value.getCharacteristics().iterator(); iter.hasNext(); ) {
@@ -60,8 +69,7 @@ public class FactorValueValueObject {
             buf.append( c.getCategory() );
             buf.append( ": " );
             buf.append( c.getValue() == null ? "no value" : c.getValue() );
-            if ( iter.hasNext() )
-                buf.append( ", " );
+            if ( iter.hasNext() ) buf.append( ", " );
         }
         return buf.length() > 0 ? buf.toString() : "no characteristics";
     }
@@ -73,11 +81,11 @@ public class FactorValueValueObject {
     public void setCharId( long charId ) {
         this.charId = charId;
     }
-    
+
     public long getFactorValueId() {
         return factorValueId;
     }
-    
+
     public void setFactorValueId( long factorValueId ) {
         this.factorValueId = factorValueId;
     }
@@ -89,37 +97,37 @@ public class FactorValueValueObject {
     public void setFactorValueString( String factorValueString ) {
         this.factorValueString = factorValueString;
     }
-    
+
     public String getCategory() {
         return category;
     }
-    
+
     public void setCategory( String category ) {
         this.category = category;
     }
-    
+
     public String getCategoryUri() {
         return categoryUri;
     }
-    
+
     public void setCategoryUri( String categoryUri ) {
         this.categoryUri = categoryUri;
     }
-    
+
     public String getValue() {
         return value;
     }
-    
+
     public void setValue( String value ) {
         this.value = value;
     }
-    
+
     public String getValueUri() {
         return valueUri;
     }
-    
+
     public void setValueUri( String valueUri ) {
         this.valueUri = valueUri;
     }
-    
+
 }

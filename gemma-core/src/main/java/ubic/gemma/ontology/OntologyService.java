@@ -228,7 +228,7 @@ public class OntologyService {
         String caseInsensitiveFilter = filter.toLowerCase();
 
         for ( OntologyResource res : terms ) {
-            if ( StringUtils.isNotEmpty( res.getUri() )
+            if ( StringUtils.isNotEmpty( res.getLabel() )
                     && res.getLabel().toLowerCase().startsWith( caseInsensitiveFilter ) ) {
                 VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
                 if ( res instanceof OntologyTerm ) {
@@ -257,17 +257,17 @@ public class OntologyService {
      * returned list also. Then will search the birnlex, obo Disease Ontology and FMA Ontology for OntologyResources
      * (Terms and Individuals) that match the search term exactly
      * 
-     * @param search
+     * @param queryString
      * @return
      */
     @SuppressWarnings("unchecked")
-    public Collection<Characteristic> findExactTerm( String search, String categoryUri ) {
+    public Collection<Characteristic> findExactTerm( String queryString, String categoryUri ) {
 
         StopWatch watch = new StopWatch();
         watch.start();
-        log.debug( "starting findExactTerm for " + search + ". Timining information begins from here" );
+        log.debug( "starting findExactTerm for " + queryString + ". Timining information begins from here" );
 
-        if ( search == null ) return null;
+        if ( queryString == null ) return null;
 
         // TODO: this is poorly named. changed to findExactResource, add findExactIndividual Factor out common code
 
@@ -275,15 +275,15 @@ public class OntologyService {
 
         // Add the matching individuals
         List<Characteristic> individualResults = new ArrayList<Characteristic>();
-        if ( categoryUri != null && !categoryUri.equals( "" ) && !categoryUri.equals( "{}" ) ) {
+        if ( StringUtils.isNotBlank( categoryUri ) && !categoryUri.equals( "{}" ) ) {
             results = new HashSet<OntologyResource>( mgedOntologyService.getTermIndividuals( categoryUri ) );
-            if ( results.size() > 0 ) individualResults.addAll( filter( results, search ) );
+            if ( results.size() > 0 ) individualResults.addAll( filter( results, queryString ) );
         }
         log.debug( "found " + individualResults.size() + " individuals from ontology term " + categoryUri + " in "
                 + watch.getTime() + " ms" );
 
         List<Characteristic> alreadyUsedResults = new ArrayList<Characteristic>();
-        Collection<Characteristic> foundChars = characteristicService.findByValue( search );
+        Collection<Characteristic> foundChars = characteristicService.findByValue( queryString );
 
         // remove duplicates, don't want to redefine == operator for Characteristics
         // for this use consider if the value = then its a duplicate.
@@ -304,29 +304,30 @@ public class OntologyService {
 
         List<Characteristic> searchResults = new ArrayList<Characteristic>();
 
-        results = birnLexOntologyService.findResources( search );
-        log.debug( "found " + ( results == null ? "null" : results.size() ) + " terms from birnLex in "
-                + watch.getTime() + " ms" );
-        if ( results != null ) searchResults.addAll( filter( results, search ) );
+        // FIXME hard-coding of ontologies to search
+        results = mgedOntologyService.findResources( queryString );
+        log.debug( "found " + results.size() + " terms from mged in " + watch.getTime() + " ms" );
+        searchResults.addAll( filter( results, queryString ) );
 
-        results = diseaseOntologyService.findResources( search );
-        log.debug( "found " + ( results == null ? "null" : results.size() ) + " terms from obo in " + watch.getTime()
-                + " ms" );
-        if ( results != null ) searchResults.addAll( filter( results, search ) );
+        results = birnLexOntologyService.findResources( queryString );
+        log.debug( "found " + results.size() + " terms from birnLex in " + watch.getTime() + " ms" );
+        searchResults.addAll( filter( results, queryString ) );
 
-        results = fmaOntologyService.findResources( search );
-        log.debug( "found " + ( results == null ? "null" : results.size() ) + " terms from fma in " + watch.getTime()
-                + " ms" );
-        if ( results != null ) searchResults.addAll( filter( results, search ) );
+        results = diseaseOntologyService.findResources( queryString );
+        log.debug( "found " + results.size() + " terms from obo in " + watch.getTime() + " ms" );
+        searchResults.addAll( filter( results, queryString ) );
 
-        results = chebiOntologyService.findResources( search );
-        log.debug( "found " + ( results == null ? "null" : results.size() ) + " terms from chebi in " + watch.getTime()
-                + " ms" );
-        if ( results != null ) searchResults.addAll( filter( results, search ) );
+        results = fmaOntologyService.findResources( queryString );
+        log.debug( "found " + results.size() + " terms from fma in " + watch.getTime() + " ms" );
+        searchResults.addAll( filter( results, queryString ) );
+
+        results = chebiOntologyService.findResources( queryString );
+        log.debug( "found " + results.size() + " terms from chebi in " + watch.getTime() + " ms" );
+        searchResults.addAll( filter( results, queryString ) );
 
         // Sort the individual results.
-        Collection<Characteristic> sortedResults = sort( individualResults, alreadyUsedResults, searchResults, search,
-                foundValues );
+        Collection<Characteristic> sortedResults = sort( individualResults, alreadyUsedResults, searchResults,
+                queryString, foundValues );
         log.debug( "sorted " + sortedResults.size() + " in " + watch.getTime() + " ms" );
 
         return sortedResults;
@@ -342,11 +343,6 @@ public class OntologyService {
     private Collection<Characteristic> sort( List<Characteristic> individualResults,
             List<Characteristic> alreadyUsedResults, List<Characteristic> searchResults, String searchTerm,
             Collection<String> foundValues ) {
-
-        // Comparator compare = new TermComparator( searchTerm );
-        // Collections.sort( individualResults, compare );
-        // Collections.sort( alreadyUsedResults, compare );
-        // Collections.sort( searchResults, compare );
 
         // Organize the list into 3 parts.
         // Want to get the exact match showing up on top

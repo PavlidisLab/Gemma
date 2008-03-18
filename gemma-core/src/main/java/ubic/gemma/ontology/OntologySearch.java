@@ -28,13 +28,8 @@ import org.apache.commons.logging.LogFactory;
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntClass;
 import com.hp.hpl.jena.ontology.OntModel;
-import com.hp.hpl.jena.query.Query;
-import com.hp.hpl.jena.query.QueryExecution;
-import com.hp.hpl.jena.query.QueryExecutionFactory;
-import com.hp.hpl.jena.query.QueryFactory;
-import com.hp.hpl.jena.query.ResultSetFormatter;
+import com.hp.hpl.jena.query.larq.ARQLuceneException;
 import com.hp.hpl.jena.query.larq.IndexLARQ;
-import com.hp.hpl.jena.query.larq.LARQ;
 import com.hp.hpl.jena.rdf.model.NodeIterator;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 
@@ -45,26 +40,6 @@ import com.hp.hpl.jena.rdf.model.RDFNode;
 public class OntologySearch {
 
     private static Log log = LogFactory.getLog( OntologySearch.class.getName() );
-
-    /**
-     * @param model
-     * @param index
-     * @param queryString
-     * @deprecated never used.
-     */
-    public static void performQuery( OntModel model, IndexLARQ index, String queryString ) {
-        // Make globally available
-        LARQ.setDefaultIndex( index );
-
-        Query query = QueryFactory.create( queryString );
-        query.serialize( System.out );
-        System.out.println();
-
-        QueryExecution qExec = QueryExecutionFactory.create( query, model );
-        // LARQ.setDefaultIndex(qExec.getContext(), index) ;
-        ResultSetFormatter.out( System.out, qExec.execSelect(), query );
-        qExec.close();
-    }
 
     /**
      * Find classes that match the query string
@@ -97,6 +72,8 @@ public class OntologySearch {
                     OntologyTermImpl impl2 = new OntologyTermImpl( cl, null );
                     results.add( impl2 );
                     if ( log.isDebugEnabled() ) log.debug( impl2 );
+                } catch ( ARQLuceneException e ) {
+                    throw new RuntimeException( e.getCause() );
                 } catch ( Exception e ) {
                     log.error( e, e );
                 }
@@ -137,6 +114,8 @@ public class OntologySearch {
                     OntologyIndividual impl2 = new OntologyIndividualImpl( cl, null );
                     results.add( impl2 );
                     if ( log.isDebugEnabled() ) log.debug( impl2 );
+                } catch ( ARQLuceneException e ) {
+                    throw new RuntimeException( e.getCause() );
                 } catch ( Exception e ) {
                     log.error( e, e );
                 }
@@ -178,6 +157,8 @@ public class OntologySearch {
                     OntologyTermImpl impl2 = new OntologyTermImpl( cl, null );
                     results.add( impl2 );
                     if ( log.isDebugEnabled() ) log.debug( impl2 );
+                } catch ( ARQLuceneException e ) {
+                    throw new RuntimeException( e.getCause() );
                 } catch ( Exception e ) {
                     log.error( e, e );
                 }
@@ -195,6 +176,8 @@ public class OntologySearch {
                     OntologyIndividual impl2 = new OntologyIndividualImpl( cl, null );
                     results.add( impl2 );
                     if ( log.isDebugEnabled() ) log.debug( impl2 );
+                } catch ( ARQLuceneException e ) {
+                    throw new RuntimeException( e.getCause() );
                 } catch ( Exception e ) {
                     log.error( e, e );
                 }

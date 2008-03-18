@@ -67,7 +67,8 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     @Override
     protected void buildStandardOptions() {
         super.buildStandardOptions();
-        addUserNameAndPasswordOptions();
+        addUserNameAndPasswordOptions(); // FIXME this should be optional, for tools that don't need real
+                                            // authentication.
 
         addSpecialServiceOptions();
     }
@@ -182,7 +183,8 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     /** check username and password. */
     void authenticate() {
-
+        ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx
+                .getBean( "manualAuthenticationProcessing" );
         if ( hasOption( 'u' ) && hasOption( 'p' ) ) {
             username = getOptionValue( 'u' );
             password = getOptionValue( 'p' );
@@ -198,9 +200,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
                 bail( ErrorCode.AUTHENTICATION_ERROR );
             }
 
-            ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx
-                    .getBean( "manualAuthenticationProcessing" );
-
             boolean success = manAuthentication.validateRequest( username, password );
             if ( !success ) {
                 System.err.println( "Not authenticated. Make sure you entered a valid username (got '" + username
@@ -210,9 +209,8 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
                 log.info( "Logged in as " + username );
             }
         } else {
-
-            System.err.println( "Not authenticated. Make sure you entered a valid username (got " + username
-                    + ") and/or password" );
+            log.info( "Logging in as anonymous guest" );
+            manAuthentication.anonymousAuthentication();
             bail( ErrorCode.AUTHENTICATION_ERROR );
         }
 

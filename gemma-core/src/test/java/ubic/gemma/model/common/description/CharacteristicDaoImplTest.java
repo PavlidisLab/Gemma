@@ -71,7 +71,7 @@ public class CharacteristicDaoImplTest extends BaseSpringContextTest {
         super.onSetUpInTransaction();
 
         if ( !setupDone ) {
-            ee = this.getTestPersistentCompleteExpressionExperiment( false );
+            ee = this.getTestPersistentBasicExpressionExperiment();
             ee.setCharacteristics( getTestPersistentCharacteristics( 2 ) );
             Characteristic[] eeChars = ee.getCharacteristics().toArray( new Characteristic[0] );
             eeChar1 = eeChars[0];

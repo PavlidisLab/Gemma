@@ -284,6 +284,13 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
     }
 
     /**
+     * @return EE with no data; just bioassays, biomaterials, quantitation types and (minimal) array designs.
+     */
+    protected ExpressionExperiment getTestPersistentBasicExpressionExperiment() {
+        return testHelper.getTestPersistentBasicExpressionExperiment();
+    }
+
+    /**
      * Convenience method to get a (fairly) complete randomly generated persisted expression experiment.
      * 
      * @param doSequence Should the Arraydesign sequence information be filled in? (slower)
