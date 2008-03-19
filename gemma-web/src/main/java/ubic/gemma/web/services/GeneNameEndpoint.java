@@ -80,7 +80,7 @@ public class GeneNameEndpoint extends AbstractGemmaEndpoint {
 
         // get Array Design ID and build results in the form of a collection
         Collection<String> gName = new HashSet<String>();
-        gName.add( geneName.getName() );
+        gName.add( geneName.getOfficialSymbol());
 
         return buildWrapper( document, gName, "gene_name" );
 
