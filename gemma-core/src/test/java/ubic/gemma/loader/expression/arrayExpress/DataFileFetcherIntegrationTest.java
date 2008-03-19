@@ -21,7 +21,6 @@ package ubic.gemma.loader.expression.arrayExpress;
 import java.util.Collection;
 
 import junit.framework.TestCase;
-
 import ubic.gemma.loader.util.fetcher.FtpArchiveFetcher;
 import ubic.gemma.model.common.description.LocalFile;
 

@@ -20,7 +20,6 @@ package ubic.gemma.loader.genome.taxon;
 
 import java.io.InputStream;
 
-import ubic.gemma.loader.genome.taxon.TaxonLoader;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**

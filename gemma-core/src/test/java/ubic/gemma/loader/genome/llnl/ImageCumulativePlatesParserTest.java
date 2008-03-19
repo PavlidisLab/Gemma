@@ -21,10 +21,8 @@ package ubic.gemma.loader.genome.llnl;
 import java.io.InputStream;
 import java.util.Collection;
 
-import ubic.gemma.loader.genome.llnl.ImageCumulativePlatesParser;
-import ubic.gemma.model.genome.biosequence.BioSequence;
-
 import junit.framework.TestCase;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * @author pavlidis

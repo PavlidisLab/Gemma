@@ -18,8 +18,8 @@
  */
 package ubic.gemma.analysis.sequence;
 
-import ubic.gemma.model.genome.biosequence.BioSequence;
 import junit.framework.TestCase;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * @author pavlidis

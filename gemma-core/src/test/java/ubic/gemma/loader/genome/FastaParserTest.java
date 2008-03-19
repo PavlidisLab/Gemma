@@ -21,12 +21,12 @@ package ubic.gemma.loader.genome;
 import java.io.InputStream;
 import java.util.Collection;
 
+import junit.framework.TestCase;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.genome.biosequence.BioSequence;
-
-import junit.framework.TestCase;
 
 /**
  * @author pavlidis

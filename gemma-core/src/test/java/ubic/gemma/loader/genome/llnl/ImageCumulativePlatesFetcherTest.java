@@ -20,9 +20,8 @@ package ubic.gemma.loader.genome.llnl;
 
 import java.util.Collection;
 
-import ubic.gemma.loader.genome.llnl.ImageCumulativePlatesFetcher;
-import ubic.gemma.model.common.description.LocalFile;
 import junit.framework.TestCase;
+import ubic.gemma.model.common.description.LocalFile;
 
 /**
  * @author pavlidis

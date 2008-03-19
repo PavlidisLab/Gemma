@@ -18,12 +18,11 @@
  */
 package ubic.gemma.ontology.cache;
 
-import ubic.gemma.ontology.OntologyResource;
-
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheException;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
+import ubic.gemma.ontology.OntologyResource;
 
 /**
  * @author pavlidis

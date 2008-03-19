@@ -18,14 +18,14 @@
  */
 package ubic.gemma.ontology;
 
+import ubic.gemma.model.common.description.ExternalDatabase;
+
 import com.hp.hpl.jena.enhanced.EnhGraph;
 import com.hp.hpl.jena.enhanced.GraphPersonality;
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntClass;
 import com.hp.hpl.jena.ontology.impl.OntClassImpl;
 import com.hp.hpl.jena.rdf.model.Resource;
-
-import ubic.gemma.model.common.description.ExternalDatabase;
 
 /**
  * @author pavlidis

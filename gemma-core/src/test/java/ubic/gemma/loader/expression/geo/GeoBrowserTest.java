@@ -20,10 +20,9 @@ package ubic.gemma.loader.expression.geo;
 
 import java.util.Collection;
 
+import junit.framework.TestCase;
 import ubic.gemma.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.loader.expression.geo.service.GeoBrowser;
-
-import junit.framework.TestCase;
 
 /**
  * @author pavlidis

@@ -18,12 +18,12 @@
  */
 package ubic.gemma.security;
 
+import junit.framework.Test;
+import junit.framework.TestSuite;
 import ubic.gemma.security.authentication.ManualAuthenticationProcessingTest;
 import ubic.gemma.security.interceptor.AuditInterceptorTest;
 import ubic.gemma.security.interceptor.PersistAclInterceptorTest;
 import ubic.gemma.security.principal.PrincipalTest;
-import junit.framework.Test;
-import junit.framework.TestSuite;
 
 /**
  * Test for ubic.gemma.security

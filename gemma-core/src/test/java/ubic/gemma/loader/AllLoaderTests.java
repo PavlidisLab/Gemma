@@ -18,6 +18,8 @@
  */
 package ubic.gemma.loader;
 
+import junit.framework.Test;
+import junit.framework.TestSuite;
 import ubic.gemma.loader.association.NCBIGene2GOAssociationParserTest;
 import ubic.gemma.loader.entrez.EutilFetchTest;
 import ubic.gemma.loader.entrez.pubmed.AllPubMedTests;
@@ -25,8 +27,6 @@ import ubic.gemma.loader.expression.AllExpressionLoaderTests;
 import ubic.gemma.loader.genome.AllGenomeTests;
 import ubic.gemma.loader.util.HttpFetcherTest;
 import ubic.gemma.loader.util.fetcher.AbstractFetcherTest;
-import junit.framework.Test;
-import junit.framework.TestSuite;
 
 /**
  * @author paul

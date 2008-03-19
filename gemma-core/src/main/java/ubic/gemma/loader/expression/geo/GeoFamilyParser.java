@@ -49,7 +49,6 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.util.CancellationException;
 import ubic.basecode.util.FileTools;
-
 import ubic.gemma.loader.expression.geo.model.GeoChannel;
 import ubic.gemma.loader.expression.geo.model.GeoContact;
 import ubic.gemma.loader.expression.geo.model.GeoData;

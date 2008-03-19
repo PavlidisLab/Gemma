@@ -18,10 +18,9 @@
  */
 package ubic.gemma.analysis.expression.coexpression.links;
 
-import ubic.basecode.math.Rank;
-import ubic.gemma.analysis.expression.coexpression.links.SpearmanMetrics;
-import cern.colt.list.DoubleArrayList;
 import junit.framework.TestCase;
+import ubic.basecode.math.Rank;
+import cern.colt.list.DoubleArrayList;
 
 /**
  * @author paul

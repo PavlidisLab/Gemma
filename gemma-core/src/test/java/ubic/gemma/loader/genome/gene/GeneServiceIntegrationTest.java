@@ -21,6 +21,7 @@ package ubic.gemma.loader.genome.gene;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.zip.GZIPInputStream;
+
 import ubic.gemma.apps.Blat;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperServiceIntegrationTest;

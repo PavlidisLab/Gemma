@@ -21,7 +21,6 @@ package ubic.gemma.loader.genome.goldenpath;
 import java.io.InputStream;
 
 import ubic.gemma.externalDb.GoldenPathDumper;
-import ubic.gemma.loader.genome.goldenpath.GoldenPathBioSequenceLoader;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;

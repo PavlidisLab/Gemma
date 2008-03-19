@@ -21,8 +21,8 @@ package ubic.gemma.loader.genome.gene;
 import java.io.InputStream;
 import java.util.Collection;
 
-import ubic.gemma.loader.util.parser.Parser;
 import junit.framework.TestCase;
+import ubic.gemma.loader.util.parser.Parser;
 
 /**
  * @author pavlidis

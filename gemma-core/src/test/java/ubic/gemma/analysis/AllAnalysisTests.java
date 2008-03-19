@@ -18,13 +18,13 @@
  */
 package ubic.gemma.analysis;
 
+import junit.framework.Test;
+import junit.framework.TestSuite;
 import ubic.gemma.analysis.expression.diff.AllDifferentialExpressionTests;
 import ubic.gemma.analysis.preprocess.AllPreProcessTests;
 import ubic.gemma.analysis.report.ArrayDesignReportServiceTest;
 import ubic.gemma.analysis.sequence.AllSequenceTests;
 import ubic.gemma.analysis.service.CompositeSequenceGeneMapperServiceIntegrationTest;
-import junit.framework.Test;
-import junit.framework.TestSuite;
 
 /**
  * @author paul

@@ -21,9 +21,8 @@ package ubic.gemma.loader.expression.arrayDesign;
 import java.io.InputStream;
 import java.util.Collection;
 
-import ubic.gemma.model.expression.designElement.CompositeSequence;
-
 import junit.framework.TestCase;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 /**
  * @author pavlidis

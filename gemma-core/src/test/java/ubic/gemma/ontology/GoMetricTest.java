@@ -27,9 +27,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.ontology.GoMetric.Metric;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**

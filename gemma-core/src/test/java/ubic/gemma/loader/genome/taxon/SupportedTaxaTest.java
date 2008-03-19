@@ -18,8 +18,8 @@
  */
 package ubic.gemma.loader.genome.taxon;
 
-import ubic.gemma.model.genome.Taxon;
 import junit.framework.TestCase;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * @author pavlidis

@@ -21,9 +21,8 @@ package ubic.gemma.loader.genome;
 import java.io.InputStream;
 import java.util.Collection;
 
-import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-
 import junit.framework.TestCase;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
 /**
  * @author pavlidis

@@ -18,9 +18,9 @@
  */
 package ubic.gemma.loader.expression.arrayDesign;
 
-import ubic.gemma.analysis.service.CompositeSequenceGeneMapperServiceIntegrationTest;
 import junit.framework.Test;
 import junit.framework.TestSuite;
+import ubic.gemma.analysis.service.CompositeSequenceGeneMapperServiceIntegrationTest;
 
 /**
  * Test for ubic.gemma.loader.expression.arrayDesign

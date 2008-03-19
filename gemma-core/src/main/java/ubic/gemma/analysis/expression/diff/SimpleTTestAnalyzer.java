@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
+import org.rosuda.REngine.REXPMismatchException;
+
 import ubic.basecode.math.MultipleTestCorrection;
 import ubic.gemma.analysis.util.RCommander;
 import cern.colt.list.DoubleArrayList;

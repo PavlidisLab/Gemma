@@ -22,10 +22,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 
+import junit.framework.TestCase;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import junit.framework.TestCase;
 import ubic.gemma.loader.util.fetcher.HttpFetcher;
 import ubic.gemma.model.common.description.LocalFile;
 

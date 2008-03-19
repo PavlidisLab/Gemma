@@ -31,7 +31,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.apps.Blat;
 import ubic.gemma.externalDb.GoldenPathSequenceAnalysis;
 import ubic.gemma.model.genome.Chromosome;
-import ubic.gemma.model.genome.ChromosomeService; 
+import ubic.gemma.model.genome.ChromosomeService;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
 import ubic.gemma.model.genome.ProbeAlignedRegionService;

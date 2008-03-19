@@ -21,14 +21,14 @@ package ubic.gemma.loader.genome;
 import java.io.InputStream;
 import java.util.Collection;
 
+import junit.framework.TestCase;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneImpl;
 import ubic.gemma.model.genome.Taxon;
-
-import junit.framework.TestCase;
 
 /**
  * @author pavlidis

@@ -31,8 +31,6 @@ import java.util.TreeMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import cern.colt.list.DoubleArrayList;
-
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix2DNamed;
@@ -43,6 +41,7 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
+import cern.colt.list.DoubleArrayList;
 
 /**
  * Compute the pairwise correlations for a bunch of dedvs for a bunch of genes. This uses the 'effect-size' approach.

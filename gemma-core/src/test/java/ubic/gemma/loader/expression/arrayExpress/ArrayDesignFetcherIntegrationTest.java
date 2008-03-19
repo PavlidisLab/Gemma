@@ -20,9 +20,8 @@ package ubic.gemma.loader.expression.arrayExpress;
 
 import java.util.Collection;
 
-import ubic.gemma.model.common.description.LocalFile;
-
 import junit.framework.TestCase;
+import ubic.gemma.model.common.description.LocalFile;
 
 /**
  * @author pavlidis

@@ -18,8 +18,8 @@
  */
 package ubic.gemma.ontology;
 
-import ubic.gemma.model.common.description.DataProperty;
 import ubic.gemma.model.common.description.CharacteristicProperty;
+import ubic.gemma.model.common.description.DataProperty;
 
 /**
  * @author pavlidis

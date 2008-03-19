@@ -20,9 +20,8 @@ package ubic.gemma.grid.javaspaces;
 
 import java.io.Serializable;
 
-import ubic.gemma.grid.javaspaces.expression.experiment.SpacesExpressionExperimentLoadCommand;
-
 import net.jini.space.JavaSpace;
+import ubic.gemma.grid.javaspaces.expression.experiment.SpacesExpressionExperimentLoadCommand;
 
 /**
  * This command class is used to allow communication of parameters for a task between a client and a compute server in a

@@ -27,9 +27,9 @@ import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 /**
  * @author pavlidis

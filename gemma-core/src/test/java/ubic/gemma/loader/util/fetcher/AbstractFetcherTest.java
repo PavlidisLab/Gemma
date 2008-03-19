@@ -21,10 +21,11 @@ package ubic.gemma.loader.util.fetcher;
 import java.io.File;
 import java.util.Collection;
 
+import junit.framework.TestCase;
+
 import org.apache.commons.lang.RandomStringUtils;
 
 import ubic.gemma.model.common.description.LocalFile;
-import junit.framework.TestCase;
 
 /**
  * @author pavlidis

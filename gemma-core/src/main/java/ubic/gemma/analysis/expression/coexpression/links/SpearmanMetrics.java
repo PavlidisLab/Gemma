@@ -21,7 +21,6 @@ package ubic.gemma.analysis.expression.coexpression.links;
 import java.util.Collection;
 
 import ubic.basecode.dataStructure.matrix.CompressedSparseDoubleMatrix2DNamed;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Rank;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;

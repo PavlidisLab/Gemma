@@ -22,16 +22,16 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
 
+import net.sf.ehcache.CacheException;
+import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.ontology.cache.OntologyCache;
+
 import com.hp.hpl.jena.ontology.OntClass;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.Resource;
-
-import net.sf.ehcache.CacheException;
-import ubic.gemma.model.common.description.VocabCharacteristic;
-import ubic.gemma.ontology.cache.OntologyCache;
 
 /**
  * @author Paul

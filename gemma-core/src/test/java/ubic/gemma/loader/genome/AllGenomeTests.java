@@ -18,6 +18,8 @@
  */
 package ubic.gemma.loader.genome;
 
+import junit.framework.Test;
+import junit.framework.TestSuite;
 import ubic.gemma.loader.genome.gene.GeneServiceIntegrationTest;
 import ubic.gemma.loader.genome.gene.SwissProtParserTest;
 import ubic.gemma.loader.genome.gene.ncbi.NCBIGeneIntegrationTest;
@@ -30,8 +32,6 @@ import ubic.gemma.loader.genome.taxon.SupportedTaxaTest;
 import ubic.gemma.loader.genome.taxon.TaxonFetcherTest;
 import ubic.gemma.loader.genome.taxon.TaxonLoaderTest;
 import ubic.gemma.loader.genome.taxon.TaxonParserTest;
-import junit.framework.Test;
-import junit.framework.TestSuite;
 
 /**
  * Tests for the genome package.

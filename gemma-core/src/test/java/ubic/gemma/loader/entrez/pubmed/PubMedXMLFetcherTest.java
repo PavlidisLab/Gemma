@@ -21,10 +21,11 @@ package ubic.gemma.loader.entrez.pubmed;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 
+import junit.framework.TestCase;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import junit.framework.TestCase;
 import ubic.gemma.model.common.description.BibliographicReference;
 
 /**

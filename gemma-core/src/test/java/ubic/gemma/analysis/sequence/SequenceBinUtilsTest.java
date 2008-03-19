@@ -18,8 +18,8 @@
  */
 package ubic.gemma.analysis.sequence;
 
-import ubic.gemma.util.SequenceBinUtils;
 import junit.framework.TestCase;
+import ubic.gemma.util.SequenceBinUtils;
 
 /**
  * Test values are from hg18 all_est.

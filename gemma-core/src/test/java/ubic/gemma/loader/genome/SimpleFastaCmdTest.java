@@ -22,12 +22,13 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import junit.framework.TestCase;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.util.ConfigUtils;
-import junit.framework.TestCase;
 
 /**
  * @author pavlidis

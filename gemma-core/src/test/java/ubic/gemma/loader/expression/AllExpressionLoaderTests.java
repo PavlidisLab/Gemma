@@ -18,6 +18,8 @@
  */
 package ubic.gemma.loader.expression;
 
+import junit.framework.Test;
+import junit.framework.TestSuite;
 import ubic.gemma.loader.expression.arrayDesign.AllArrayDesignTests;
 import ubic.gemma.loader.expression.arrayExpress.ArrayDesignFetcherIntegrationTest;
 import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadServiceIntegrationTest;
@@ -26,8 +28,6 @@ import ubic.gemma.loader.expression.geo.AllGeoTests;
 import ubic.gemma.loader.expression.mage.AllMageTests;
 import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderServiceTest;
 import ubic.gemma.loader.expression.smd.AllSmdTests;
-import junit.framework.Test;
-import junit.framework.TestSuite;
 
 /**
  * @author paul

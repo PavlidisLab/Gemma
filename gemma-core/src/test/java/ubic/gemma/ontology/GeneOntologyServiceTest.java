@@ -21,10 +21,10 @@ package ubic.gemma.ontology;
 import java.io.InputStream;
 import java.util.Collection;
 
+import junit.framework.TestCase;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import junit.framework.TestCase;
 
 /**
  * @author Paul

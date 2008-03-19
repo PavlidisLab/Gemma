@@ -1,17 +1,5 @@
 package ubic.gemma.persistence;
 
-import java.util.List;
-
-import org.dom4j.Document;
-import org.dom4j.Element;
-import org.dom4j.dom.DOMDocument;
-import org.dom4j.io.OutputFormat;
-import org.dom4j.io.XMLWriter;
-import org.hibernate.EntityMode;
-import org.hibernate.Query;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 public class HibernateXmlTest extends BaseSpringContextTest {

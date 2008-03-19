@@ -20,12 +20,13 @@ package ubic.gemma.externalDb;
 
 import java.util.Collection;
 
+import junit.framework.TestCase;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import junit.framework.TestCase;
 
 /**
  * These tests require a populated Human database. Valid as of 1/2008.

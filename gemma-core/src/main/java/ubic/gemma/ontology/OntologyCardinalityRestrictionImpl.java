@@ -18,9 +18,9 @@
  */
 package ubic.gemma.ontology;
 
-import com.hp.hpl.jena.ontology.Restriction;
-
 import ubic.gemma.model.common.description.ExternalDatabase;
+
+import com.hp.hpl.jena.ontology.Restriction;
 
 /**
  * @author pavlidis
