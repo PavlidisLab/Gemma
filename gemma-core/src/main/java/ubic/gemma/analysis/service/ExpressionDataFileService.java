@@ -23,6 +23,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.Collection;
 import java.util.HashMap;
@@ -35,6 +36,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.datastructure.matrix.MatrixWriter;
@@ -81,22 +83,11 @@ public class ExpressionDataFileService {
     /**
      * @param type
      * @return
-     * @throws IOException
      */
     public File getOutputFile( QuantitationType type ) {
         String filename = type.getId() + "_" + type.getName().replaceAll( "\\s+", "_" ) + DATA_FILE_SUFFIX;
-        String fullFilePath = DATA_DIR + filename;
 
-        File f = new File( fullFilePath );
-
-        if ( f.exists() ) {
-            log.warn( "Will overwrite existing file " + f );
-            f.delete();
-        }
-
-        File parentDir = f.getParentFile();
-        if ( !parentDir.exists() ) parentDir.mkdirs();
-        return f;
+        return getOutputFile( filename );
     }
 
     /**
@@ -105,6 +96,16 @@ public class ExpressionDataFileService {
      */
     public File getOutputFile( ExpressionExperiment ee ) {
         String filename = ee.getId() + "_" + ee.getShortName().replaceAll( "\\s+", "_" ) + "_expmat" + DATA_FILE_SUFFIX;
+
+        return getOutputFile( filename );
+    }
+
+    /**
+     * @param filename
+     * @return
+     */
+    public File getOutputFile( String filename ) {
+
         String fullFilePath = DATA_DIR + filename;
 
         File f = new File( fullFilePath );
@@ -240,6 +241,36 @@ public class ExpressionDataFileService {
         }
     }
 
+    /**
+     * Locate or create an experimental design file for a given experiment.
+     * 
+     * @param ee
+     * @param forceWrite
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public File writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite ) {
+
+        expressionExperimentService.thawLite( ee );
+
+        String filename = ee.getId() + "_" + ee.getShortName().replaceAll( "\\s+", "_" ) + "_expdesign"
+                + DATA_FILE_SUFFIX;
+        try {
+            File f = getOutputFile( filename );
+            if ( !forceWrite && f.canRead() ) {
+                log.info( f + " exists, not regenerating" );
+                return f;
+            }
+
+            log.info( "Creating new data file: " + f );
+            writeDesignMatrix( f, ee );
+            return f;
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+
+    }
+
     private Collection<ArrayDesign> getArrayDesigns( Collection<DesignElementDataVector> vectors ) {
         Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
         for ( DesignElementDataVector v : vectors ) {
@@ -353,6 +384,28 @@ public class ExpressionDataFileService {
         matrixWriter.write( writer, expressionDataMatrix, geneAnnotations, true );
         writer.flush();
         writer.close();
+    }
+
+    /**
+     * Writes out the experimental design for the given experiment. The bioassays (col 0) matches match the header row
+     * of the data matrix printed out by the {@link MatrixWriter}.
+     * 
+     * @param file
+     * @param expressionExperiment
+     * @throws IOException
+     * @throws FileNotFoundException
+     */
+    private void writeDesignMatrix( File file, ExpressionExperiment expressionExperiment ) throws IOException,
+            FileNotFoundException {
+
+        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
+
+        PrintWriter writer = new PrintWriter( file );
+
+        ExpressionDataDoubleMatrix matrix = analysisHelperService.getMaskedPreferredDataMatrix( expressionExperiment );
+
+        edWriter.write( writer, expressionExperiment, matrix, true );
+
     }
 
     public void setAnalysisHelperService( AnalysisHelperService analysisHelperService ) {
