@@ -19,9 +19,7 @@
 
 package ubic.gemma.web.services;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -32,10 +30,6 @@ import org.w3c.dom.Element;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.ontology.GeneOntologyService;
-import ubic.gemma.ontology.OntologyTerm;
 
 /**
  * GCollection of experiments --> map of experiments to its characteristics 
@@ -98,12 +92,12 @@ public class ExperimentAnnotationEndpoint extends AbstractGemmaEndpoint {
 
             Long eeId = Long.parseLong( eeString );
             ExpressionExperiment ee = expressionExperimentService.load( eeId );
-            expressionExperimentService.thaw( ee );
+            
             if ( ee == null ) {
                 String msg = "No expression experiment with id, " + eeId + ", can be found.";
                 return buildBadResponse( document, msg );
             }
-
+            expressionExperimentService.thawLite( ee );
             Collection<Characteristic> characterCol = ee.getCharacteristics();            
                 
            
