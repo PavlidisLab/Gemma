@@ -27,6 +27,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author paul
+ * @version $Id$
  */
 public class OntologyServiceTest extends BaseSpringContextTest {
 
@@ -34,7 +35,7 @@ public class OntologyServiceTest extends BaseSpringContextTest {
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
         MgedOntologyService mgo = ( MgedOntologyService ) this.getBean( "mgedOntologyService" );
-        mgo.init( true );
+        if ( !mgo.isOntologyLoaded() ) mgo.init( true ); // force load.
         while ( !mgo.isOntologyLoaded() ) {
             Thread.sleep( 1000 );
             log.info( "Waiting for Ontology to load" );
@@ -42,7 +43,6 @@ public class OntologyServiceTest extends BaseSpringContextTest {
     }
 
     public void testListAvailableOntologies() throws Exception {
-
         Collection<Ontology> name = OntologyService.listAvailableOntologies();
         assertTrue( name.size() > 0 );
     }
