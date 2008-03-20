@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -52,7 +53,10 @@ public class OntologySearch {
     public static Collection<OntologyTerm> matchClasses( OntModel model, IndexLARQ index, String queryString ) {
 
         Set<OntologyTerm> results = new HashSet<OntologyTerm>();
-        NodeIterator iterator = index.searchModelByIndex( model, queryString );
+        
+        String strippedQuery = StringUtils.strip( queryString );
+        
+        NodeIterator iterator = index.searchModelByIndex( model, strippedQuery );
 
         while ( iterator.hasNext() ) {
             RDFNode r = ( RDFNode ) iterator.next();
@@ -94,7 +98,10 @@ public class OntologySearch {
     public static Collection<OntologyIndividual> matchIndividuals( OntModel model, IndexLARQ index, String queryString ) {
 
         Set<OntologyIndividual> results = new HashSet<OntologyIndividual>();
-        NodeIterator iterator = index.searchModelByIndex( model, queryString );
+        
+        String strippedQuery = StringUtils.strip( queryString );
+        
+        NodeIterator iterator = index.searchModelByIndex( model, strippedQuery );
 
         while ( iterator.hasNext() ) {
             RDFNode r = ( RDFNode ) iterator.next();
@@ -137,7 +144,10 @@ public class OntologySearch {
     public static Collection<OntologyResource> matchResources( OntModel model, IndexLARQ index, String queryString ) {
 
         Set<OntologyResource> results = new HashSet<OntologyResource>();
-        NodeIterator iterator = index.searchModelByIndex( model, queryString );
+        
+        String strippedQuery = StringUtils.strip( queryString );
+        
+        NodeIterator iterator = index.searchModelByIndex( model, strippedQuery );
 
         while ( iterator.hasNext() ) {
             RDFNode r = ( RDFNode ) iterator.next();
