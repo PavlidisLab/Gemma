@@ -26,7 +26,7 @@ Ext.Gemma.CoexpressionDatasetGrid = function ( config ) {
 		proxy : new Ext.data.MemoryProxy( [] ),
 		reader : new Ext.data.ListRangeReader( {}, Ext.Gemma.CoexpressionDatasetGrid.getRecord() ),
 		groupField : 'queryGene',
-		sortInfo : { field : 'coexpressionLinkCount', dir : 'ASC' } /* note: DESC yields the wrong results. */
+		sortInfo : { field : 'coexpressionLinkCount', dir : 'DESC' }  
 	} );
 	
 	superConfig.view = new Ext.grid.GroupingView( {
@@ -34,14 +34,14 @@ Ext.Gemma.CoexpressionDatasetGrid = function ( config ) {
 	} );
 	
 	superConfig.cm = new Ext.grid.ColumnModel( [
-		{ id: 'shortName', header: "Dataset", dataIndex: "shortName" },
+		{ id: 'shortName', header: "Dataset", dataIndex: "shortName" , renderer: Ext.Gemma.CoexpressionDatasetGrid.getEEStyler() },
 		{ id: 'name', header: "Name", dataIndex: "name" },
 		{ id: 'queryGene', header: "Query Gene", dataIndex: "queryGene", hidden: true },
 		{ header: "Raw Links", dataIndex: "rawCoexpressionLinkCount" },
 		{ header: "Contributing Links", dataIndex: "coexpressionLinkCount" },
-		{ header: "Specific Probe", dataIndex: "probeSpecificForQueryGene" },
+		{ header: "Specific Probe", dataIndex: "probeSpecificForQueryGene", type:"boolean", renderer: Ext.Gemma.CoexpressionDatasetGrid.getBooleanStyler()  },
 		{ id: 'arrays', header: "Arrays", dataIndex: "arrayDesignCount" },
-		{ id: 'assays', header: "Assays", dataIndex: "bioAssayCount" }
+		{ id: 'assays', header: "Assays", dataIndex: "bioAssayCount", renderer: Ext.Gemma.CoexpressionDatasetGrid.getAssayCountStyler()  }
 	] );
 	superConfig.cm.defaultSortable = true;
 	
@@ -65,28 +65,53 @@ Ext.Gemma.CoexpressionDatasetGrid = function ( config ) {
 	if ( Ext.Gemma.CoexpressionDatasetGrid.assayCountStyler === undefined ) {
 		Ext.Gemma.CoexpressionDatasetGrid.assayCountStyler = function ( value, metadata, record, row, col, ds ) {
 			return String.format(
-				"{0}<a href='/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id={1}'><img src='/Gemma/images/magnifier.png' height=10 width=10/></a>", record.data.bioAssayCount, record.data.id );
+				"{0}&nbsp;<a href='/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id={1}'><img src='/Gemma/images/icons/magnifier.png' height='10' width='10'/></a>", record.data.bioAssayCount, record.data.id );
 		};
 	}
-	return Ext.Gemma.CoexpressionDatasetGrid.foundGeneStyler;
+	return Ext.Gemma.CoexpressionDatasetGrid.assayCountStyler;
 };
 
 Ext.Gemma.CoexpressionDatasetGrid.getRecord = function() {
 	if ( Ext.Gemma.CoexpressionDatasetGrid.record === undefined ) {
 		Ext.Gemma.CoexpressionDatasetGrid.record = Ext.data.Record.create( [
 			{ name:"id", type:"int" },
-			{ name:"shortName", type:"string" },
+			{ name:"shortName", type:"string"},
 			{ name:"name", type:"string" },
 			{ name:"rawCoexpressionLinkCount", type:"int" },
 			{ name:"coexpressionLinkCount", type:"int" },
-			{ name:"probeSpecificForQueryGene", type:"boolean" },
+			{ name:"probeSpecificForQueryGene"},
 			{ name:"arrayDesignCount", type:"int" },
-			{ name:"bioAssayCount", type:"int", renderer: Ext.Gemma.CoexpressionDatasetGrid.getAssayCountStyler() },
+			{ name:"externalUri", type:"string" },
+			{ name:"bioAssayCount", type:"int"},
 			{ name:"queryGene", type:"string" }
 		] );
 	}
 	return Ext.Gemma.CoexpressionDatasetGrid.record;
 };
+
+Ext.Gemma.CoexpressionDatasetGrid.getEEStyler = function() {
+	if ( Ext.Gemma.CoexpressionDatasetGrid.eeStyler === undefined ) {
+		Ext.Gemma.CoexpressionDatasetGrid.eeTemplate = new Ext.Template(
+			"<a target='_blank' href='/Gemma/expressionExperiment/showExpressionExperiment.html?id={id}' ext:qtip='{name}'>{shortName}</a>"
+		);
+		Ext.Gemma.CoexpressionDatasetGrid.eeStyler = function ( value, metadata, record, row, col, ds ) {
+			return Ext.Gemma.CoexpressionDatasetGrid.eeTemplate.apply( record.data );
+		};
+	}
+	return Ext.Gemma.CoexpressionDatasetGrid.eeStyler;
+};
+
+Ext.Gemma.CoexpressionDatasetGrid.getBooleanStyler = function() {
+	if ( Ext.Gemma.CoexpressionDatasetGrid.booleanStyler === undefined ) {
+		Ext.Gemma.CoexpressionDatasetGrid.booleanStyler = function ( value, metadata, record, row, col, ds ) {
+			if ( value ) {
+				return "<img src='/Gemma/images/icons/ok.png' height='10' width='10' />";
+			} 
+			return "";
+		};
+	}
+	return Ext.Gemma.CoexpressionDatasetGrid.booleanStyler;
+}
 
 Ext.Gemma.CoexpressionDatasetGrid.updateDatasetInfo = function( datasets, eeMap ) {
 	for ( var i=0; i<datasets.length; ++i ) {

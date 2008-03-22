@@ -316,3 +316,7 @@ a.tooltip:hover .tooltiptext {
 .wrap {
 	white-space: normal;
 }
+
+.coexpressionGridRowExpanded {
+	background-color: #EEEEEE;
+}

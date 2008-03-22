@@ -12,6 +12,8 @@ Ext.Gemma.CoexpressionGrid = function ( config ) {
 	 */
 	var thisGrid = this;
 	
+	var dataSets; // The data sets that are 'relevant'. Updated during loaddata.
+	
 	/* establish default config options...
 	 */
 	var superConfig = {
@@ -24,7 +26,7 @@ Ext.Gemma.CoexpressionGrid = function ( config ) {
 		superConfig.store = new Ext.Gemma.PagingDataStore( {
 			proxy : new Ext.data.MemoryProxy( [] ),
 			reader : new Ext.data.ListRangeReader( {id:"id"}, Ext.Gemma.CoexpressionGrid.getRecord() ),
-			sortInfo : { field: 'sortKey', direction: 'DESC' },
+			sortInfo : { field: 'sortKey', direction: 'ASC' },
 			pageSize : this.pageSize
 		} );
 		superConfig.bbar = new Ext.Gemma.PagingToolbar( {
@@ -35,7 +37,7 @@ Ext.Gemma.CoexpressionGrid = function ( config ) {
 		superConfig.ds = new Ext.data.Store( {
 			proxy : new Ext.data.MemoryProxy( [] ),
 			reader : new Ext.data.ListRangeReader( {id:"id"}, Ext.Gemma.CoexpressionGrid.getRecord() ),
-			sortInfo : { field: 'sortKey', direction: 'DESC' }
+			sortInfo : { field: 'sortKey', direction: 'ASC' }
 		} );
 	}
 	
@@ -48,8 +50,8 @@ Ext.Gemma.CoexpressionGrid = function ( config ) {
 		{ id: 'query', header: "Query Gene", dataIndex: "queryGene" },
 		{ id: 'found', header: "Coexpressed Gene", dataIndex: "foundGene", renderer: Ext.Gemma.CoexpressionGrid.getFoundGeneStyler() },
 		{ id: 'support', header: "Support", dataIndex: "supportKey", renderer: Ext.Gemma.CoexpressionGrid.getSupportStyler() },
-		{ id: 'go', header: "GO Overlap", dataIndex: "goOverlap", renderer: Ext.Gemma.CoexpressionGrid.getGoStyler() },
-		{ id: 'datasets', header: "Datasets", dataIndex: "supportingDatasetVector", renderer: Ext.Gemma.CoexpressionGrid.getBitImageStyler(), sortable: false }
+		{ id: 'go', header: "GO Overlap", dataIndex: "goSim", renderer: Ext.Gemma.CoexpressionGrid.getGoStyler() },
+		{ id: 'datasets', header: "Datasets", dataIndex: "datasetVector", renderer: Ext.Gemma.CoexpressionGrid.getBitImageStyler(), sortable: false }
 	] );
 	superConfig.cm.defaultSortable = true;
 	superConfig.plugins = this.rowExpander;
@@ -74,21 +76,74 @@ Ext.Gemma.CoexpressionGrid.getRecord = function() {
 			{ name:"foundGene", sortType: function( g ) { return g.officialSymbol; } },
 			{ name:"sortKey", type:"string" },
 			{ name:"supportKey", type:"int", sortType:Ext.data.SortTypes.asInt, sortDir:"DESC" },
-			{ name:"positiveCorrelationSupport", type:"int" },
-			{ name:"negativeCorrelationSupport", type:"int" },
-			{ name:"numDatasetsLinkTestedIn", type:"int" },
-			{ name:"nonSpecificPositiveLinks", type:"int" },
-			{ name:"nonSpecificNegativeLinks", type:"int" },
-			{ name:"hybridizesWithQueryGene", type:"boolean" },
-			{ name:"goOverlap", type:"int" },
-			{ name:"possibleOverlap", type:"int" },
-			{ name:"testedDatasetVector" },
-			{ name:"supportingDatasetVector" }
+			{ name:"posLinks", type:"int" },
+			{ name:"negLinks", type:"int" },
+			{ name:"numTestedIn", type:"int" },
+			{ name:"nonSpecPosLinks", type:"int" },
+			{ name:"nonSpecNegLinks", type:"int" },
+			{ name:"hybWQuery", type:"boolean" },
+			{ name:"goSim", type:"int" },
+			{ name:"maxGoSim", type:"int" },
+			{ name:"datasetVector", type:"string" } ,
+			{ name:"supportingExperiments" }
 		] );
 	}
 	return Ext.Gemma.CoexpressionGrid.record;
 };
 
+
+Ext.Gemma.CoexpressionGrid.getRowExpander = function() {
+	if ( Ext.Gemma.CoexpressionGrid.rowExpander === undefined ) {
+		Ext.Gemma.CoexpressionGrid.rowExpander = new Ext.Gemma.CoexpressionGridRowExpander( {
+			tpl : "",
+			grid : this
+		} );
+	}
+	return Ext.Gemma.CoexpressionGrid.rowExpander;
+};
+
+Ext.Gemma.CoexpressionGrid.searchForGene = function( geneId ) {
+	var f = Ext.Gemma.CoexpressionSearchForm.searchForGene;
+	f( geneId );
+};
+
+/* instance methods...
+ */
+Ext.extend( Ext.Gemma.CoexpressionGrid, Ext.Gemma.GemmaGridPanel, {
+
+	loadData : function ( isCannedAnalysis, numQueryGenes, data, datasets ) {
+		var queryCol = this.getColumnModel().getColumnById( 'query' );
+		if ( numQueryGenes > 1 ) {
+			queryCol.hidden = false;
+		} else {
+			queryCol.hidden = true;
+		}
+		this.rowExpander.clearCache();
+		this.datasets = datasets; // the datasets that are 'relevant'.
+		this.getStore().proxy.data = data;
+		this.getStore().reload( { resetPage : true } );
+		this.getView().refresh( true ); // refresh column headers
+		this.resizeDatasetColumn();
+	},
+	
+	resizeDatasetColumn : function() {
+		var first = this.getStore().getAt( 0 );
+		if ( first ) {
+			var cm = this.getColumnModel();
+			var c = cm.getIndexById( 'datasets' );
+			var headerWidth = this.view.getHeaderCell( c ).firstChild.scrollWidth;
+			var imageWidth = Ext.Gemma.CoexpressionGrid.bitImageBarWidth * first.data.datasetVector.length;
+			cm.setColumnWidth( c, imageWidth < headerWidth ? headerWidth : imageWidth );
+		}
+	}
+	
+} );
+
+
+/*
+ * Stylers
+ *
+ */
 Ext.Gemma.CoexpressionGrid.getFoundGeneStyler = function() {
 	if ( Ext.Gemma.CoexpressionGrid.foundGeneStyler === undefined ) {
 		Ext.Gemma.CoexpressionGrid.foundGeneTemplate = new Ext.Template(
@@ -113,15 +168,15 @@ Ext.Gemma.CoexpressionGrid.getSupportStyler = function() {
 	if ( Ext.Gemma.CoexpressionGrid.supportStyler === undefined ) {
 		Ext.Gemma.CoexpressionGrid.supportStyler = function ( value, metadata, record, row, col, ds ) {
 			var d = record.data;
-			if ( d.positiveCorrelationSupport || d.negativeCorrelationSupport ) {
+			if ( d.posLinks || d.negLinks ) {
 				var s = "";
-				if ( d.positiveCorrelationSupport ) {
-					s = s + String.format( "<span class='positiveLink'>{0}{1}</span> ", d.positiveCorrelationSupport, Ext.Gemma.CoexpressionGrid.getSpecificLinkString( d.positiveCorrelationSupport, d.nonSpecificPositiveLinks ) );
+				if ( d.posLinks ) {
+					s = s + String.format( "<span class='positiveLink'>{0}{1}</span> ", d.posLinks, Ext.Gemma.CoexpressionGrid.getSpecificLinkString( d.posLinks, d.nonSpecPosLinks ) );
 				}
-				if ( d.negativeCorrelationSupport ) {
-					s = s + String.format( "<span class='negativeLink'>{0}{1}</span> ", d.negativeCorrelationSupport, Ext.Gemma.CoexpressionGrid.getSpecificLinkString( d.negativeCorrelationSupport, d.nonSpecificNegativeLinks ) );
+				if ( d.negLinks ) {
+					s = s + String.format( "<span class='negativeLink'>{0}{1}</span> ", d.negLinks, Ext.Gemma.CoexpressionGrid.getSpecificLinkString( d.negLinks, d.nonSpecNegLinks ) );
 				}
-				s = s + String.format( "{0}/ {1}", d.hybridizesWithQueryGene ? " *" : "", d.numDatasetsLinkTestedIn );
+				s = s + String.format( "{0}/ {1}", d.hybWQuery ? " *" : "", d.numTestedIn );
 				return s;
 			} else {
 				return "-";
@@ -139,8 +194,8 @@ Ext.Gemma.CoexpressionGrid.getGoStyler = function() {
 	if ( Ext.Gemma.CoexpressionGrid.goStyler === undefined ) {
 		Ext.Gemma.CoexpressionGrid.goStyler = function ( value, metadata, record, row, col, ds ) {
 			var d = record.data;
-			if ( d.goOverlap || d.possibleOverlap ) {
-				return String.format( "{0}/{1}", d.goOverlap, d.possibleOverlap );
+			if ( d.goSim || d.maxGoSim ) {
+				return String.format( "{0}/{1}", d.goSim, d.maxGoSim );
 			} else {
 				return "-";
 			}
@@ -148,6 +203,7 @@ Ext.Gemma.CoexpressionGrid.getGoStyler = function() {
 	}
 	return Ext.Gemma.CoexpressionGrid.goStyler;
 };
+
 
 Ext.Gemma.CoexpressionGrid.bitImageBarWidth = 1;
 Ext.Gemma.CoexpressionGrid.bitImageBarHeight = 10;
@@ -170,8 +226,7 @@ Ext.Gemma.CoexpressionGrid.getBitImageMapTemplate = function() {
 Ext.Gemma.CoexpressionGrid.getBitImageStyler = function() {
 	if ( Ext.Gemma.CoexpressionGrid.bitImageStyler === undefined ) {
 		Ext.Gemma.CoexpressionGrid.bitImageStyler = function ( value, metadata, record, row, col, ds ) {
-			var bits = record.data.supportingDatasetVector;
-			var tbits = record.data.testedDatasetVector;
+			var bits = record.data.datasetVector;
 			var width = Ext.Gemma.CoexpressionGrid.bitImageBarWidth * bits.length;
 			var height = Ext.Gemma.CoexpressionGrid.bitImageBarHeight;
 			var s = '<span style="background-color:#DDDDDD;">' +
@@ -181,135 +236,22 @@ Ext.Gemma.CoexpressionGrid.getBitImageStyler = function() {
 				if ( i>0 ) {
 					s = s + ",";
 				}
-				var b = tbits[i] > 0 ? "4" : "0";
-				b = bits[i] > 0 ? "20" : b;
+				var state = bits.charAt(i);
+				var b = "";
+				if (state === "0") {
+					b = "0";
+				} else if (state === "1") {
+					b = "4";
+				} else if (state === "2") {
+					b = "20";
+				}				
 				s = s + b;
 			}
+			// eeMap is created in CoexpressionSearch.js
 			s = s + '" usemap="#eeMap" /></span>';
 			return s;
 		};
 	}
 	return Ext.Gemma.CoexpressionGrid.bitImageStyler;
 };
-
-Ext.Gemma.CoexpressionGrid.getRowExpander = function() {
-	if ( Ext.Gemma.CoexpressionGrid.rowExpander === undefined ) {
-		Ext.Gemma.CoexpressionGrid.rowExpander = new Ext.Gemma.CoexpressionGridRowExpander( {
-			tpl : ""
-		} );
-	}
-	return Ext.Gemma.CoexpressionGrid.rowExpander;
-};
-
-Ext.Gemma.CoexpressionGrid.searchForGene = function( geneId ) {
-	var f = Ext.Gemma.CoexpressionSearchForm.searchForGene;
-	f( geneId );
-};
-
-/* instance methods...
- */
-Ext.extend( Ext.Gemma.CoexpressionGrid, Ext.Gemma.GemmaGridPanel, {
-
-	loadData : function ( isCannedAnalysis, numQueryGenes, data ) {
-		var queryCol = this.getColumnModel().getColumnById( 'query' );
-		if ( numQueryGenes > 1 ) {
-			queryCol.hidden = false;
-		} else {
-			queryCol.hidden = true;
-		}
-		this.rowExpander.clearCache();
-		this.getStore().proxy.data = data;
-		this.getStore().reload( { resetPage : true } );
-		this.getView().refresh( true ); // refresh column headers
-		this.resizeDatasetColumn();
-	},
-	
-	resizeDatasetColumn : function() {
-		var first = this.getStore().getAt( 0 );
-		if ( first ) {
-			var cm = this.getColumnModel();
-			var c = cm.getIndexById( 'datasets' );
-			var headerWidth = this.view.getHeaderCell( c ).firstChild.scrollWidth;
-			var imageWidth = Ext.Gemma.CoexpressionGrid.bitImageBarWidth * first.data.supportingDatasetVector.length;
-			cm.setColumnWidth( c, imageWidth < headerWidth ? headerWidth : imageWidth );
-		}
-	}
-	
-} );
-
-/* Ext.Gemma.CoexpressionGridRowExpander constructor...
- */
-Ext.Gemma.CoexpressionGridRowExpander = function ( config ) {
-	
-	this.expandedElements = [];
-	
-	var superConfig = {
-	};
-	
-	for ( property in config ) {
-		superConfig[property] = config[property];
-	}
-	Ext.Gemma.CoexpressionGridRowExpander.superclass.constructor.call( this, superConfig );
-	
-};
-
-/* static methods...
- */
-Ext.Gemma.CoexpressionGridRowExpander.getHeaderTemplate = function() {
-	if ( Ext.Gemma.CoexpressionGridRowExpander.headerTemplate === undefined ) {
-		Ext.Gemma.CoexpressionGridRowExpander.headerTemplate = new Ext.XTemplate(
-			'<tpl for="."><h3>Differential expression results</h3></tpl>'
-		);
-	}
-	return Ext.Gemma.CoexpressionGridRowExpander.headerTemplate;
-};
-
-/* instance methods...
- */
-Ext.extend( Ext.Gemma.CoexpressionGridRowExpander, Ext.grid.RowExpander, {
-	
-	beforeExpand : function (record, body, rowIndex) {
-		if(this.fireEvent('beforeexpand', this, record, body, rowIndex) !== false){
-			if ( ! this.expandedElements[ rowIndex ] ) {
-				this.expandedElements[ rowIndex ] = [];
-				
-				var bodyEl = new Ext.Element( body );
-				
-				var headerEl = bodyEl.createChild( {} );
-				this.expandedElements[ rowIndex ].push( headerEl );
-				Ext.Gemma.CoexpressionGridRowExpander.getHeaderTemplate().overwrite( headerEl, record.data );
-				
-				var gridEl = bodyEl.createChild( {} );
-				this.expandedElements[ rowIndex ].push( gridEl );
-				var grid = new Ext.Gemma.DifferentialExpressionGrid( {
-	    			geneId : record.data.foundGene.id,
-	    			threshold : 0.05,
-	    			renderTo : gridEl
-	    		} );
-				var loadMask = new Ext.LoadMask( gridEl, {
-					removeMask : true,
-					store : grid.getStore()
-				} );
-				loadMask.show();
-			}
-            return true;
-        }else{
-            return false;
-        }
-    },
-    
-    clearCache : function () {
-    	for ( var i=0; i<this.expandedElements.length; ++i ) {
-			if ( this.expandedElements[i] ) {
-				for ( var j=0; j<this.expandedElements[i].length; ++j ) {
-					// grid.destroy() seems to be broken...
-					try {
-						this.expandedElements[i][j].destroy();
-					} catch (e) {}
-				}
-				this.expandedElements[i] = null;
-			}
-    	}
-    }
-	
-} );
+ 
