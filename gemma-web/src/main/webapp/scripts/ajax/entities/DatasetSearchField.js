@@ -7,6 +7,7 @@ Ext.Gemma.DatasetSearchField = function ( config ) {
 
 	this.loadMask = config.loadMask; delete config.loadMask;
 	this.eeIds = [];
+	this.filterFrom = []; // starting set.
 
 	Ext.Gemma.DatasetSearchField.superclass.constructor.call( this, config );
 	
@@ -37,12 +38,11 @@ Ext.extend( Ext.Gemma.DatasetSearchField, Ext.form.TextField, {
 
 	initEvents : function() {
 		Ext.Gemma.DatasetSearchField.superclass.initEvents.call(this);
-		
 		var queryTask = new Ext.util.DelayedTask( this.findDatasets, this );
 		this.el.on( "keyup", function( e ) { queryTask.delay( 500 ); } );
 	},
 	
-	findDatasets : function () {
+	findDatasets : function ( ) {
 		var params = [ this.getValue(), this.taxon ? this.taxon.id : -1 ];
 		if ( params == this.lastParams ) {
 			return;

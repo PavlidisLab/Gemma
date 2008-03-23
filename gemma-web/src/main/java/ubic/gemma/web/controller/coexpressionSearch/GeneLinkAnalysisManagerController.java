@@ -92,7 +92,6 @@ public class GeneLinkAnalysisManagerController extends BaseFormController {
     public void create( CannedAnalysisValueObject obj ) {
         // TODO Auto-generated method stub
         // geneCoexpressionAnalysisService.create( analysis );
-
     }
 
     public void update( CannedAnalysisValueObject obj ) {

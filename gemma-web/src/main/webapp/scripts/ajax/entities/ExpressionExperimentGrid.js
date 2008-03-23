@@ -157,14 +157,17 @@ Ext.extend( Ext.Gemma.ExpressionExperimentGrid, Ext.Gemma.GemmaGridPanel, {
 });
 
 Ext.Gemma.DatasetSearchToolBar = function ( grid, config ) {
-
 	var bar = this;
 	var thisGrid = grid;
-	this.targetGrid = config.targetGrid;
+	var taxonSearch = true;
+	if (config.taxonSearch) {
+		this.taxonSearch = config.taxonSearch;
+	}
 	
 	var eeSearchField = new Ext.Gemma.DatasetSearchField( {
 		fieldLabel : "Experiment keywords"
 	} );
+	
 	this.eeSearchField = eeSearchField;
 	eeSearchField.on( 'aftersearch', function ( field, results ) {
 		this.getStore().load( { params : [results] });
@@ -183,18 +186,12 @@ Ext.Gemma.DatasetSearchToolBar = function ( grid, config ) {
 		autoHeight : true,
 		renderTo : thisGrid.tbar
 	} );		
-
-	var grabber = new Ext.Button({text : "Grab >>", handler : function( button, ev ) {
-		this.targetGrid.getStore().add( thisGrid.getSelectionModel().getSelections());
-		this.targetGrid.getView().refresh();
-	}, scope : this });
 	
-	this.addField( taxonCombo );
-	this.addSpacer();
+	if ( this.taxonSearch ) {
+		this.addField( taxonCombo );
+		this.addSpacer();
+	}
 	this.addField( eeSearchField );
-	this.addFill( );
-	this.addButton( grabber );
-
 
 };
 

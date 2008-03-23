@@ -112,7 +112,9 @@
 		<property name="characteristicService">
 			<ref bean="characteristicService"/>
 		</property>
-		
+		<property name="taxonService">
+			<ref bean="taxonService"/>
+		</property>
 	</bean>
 	<!-- Generic compass configuration beans  -->
 	

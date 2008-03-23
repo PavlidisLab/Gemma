@@ -291,11 +291,14 @@ public class SearchService implements InitializingBean {
             
             if (query.length() < MINIMUM_EE_QUERY_LENGTH) return eeIds;
             
+            // Initial list
             List<SearchResult> results = this.search( SearchSettings.ExpressionExperimentSearch( query ), false ).get(
                     ExpressionExperiment.class );
             for ( SearchResult result : results ) {
                 eeIds.add( result.getId() );
             }
+            
+            // Filter by taxon
             if ( taxon != null ) {
                 Collection<Long> eeIdsToKeep = new HashSet<Long>();
                 Collection<ExpressionExperiment> ees = expressionExperimentService.findByTaxon( taxon );
