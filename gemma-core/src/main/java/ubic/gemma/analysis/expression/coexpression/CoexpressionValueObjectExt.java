@@ -18,12 +18,18 @@
  */
 package ubic.gemma.analysis.expression.coexpression;
 
+import java.util.Collection;
+
 import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.model.genome.Gene;
 
 /**
+ * Implementation note: This has very abbreviated field names to reduce the size of strings sent to browsers. Some
+ * browsers have a problem.
+ * 
  * @author luke
+ * @version $Id$
  */
 public class CoexpressionValueObjectExt {
 
@@ -31,16 +37,16 @@ public class CoexpressionValueObjectExt {
     private Gene foundGene;
     private String sortKey;
     private Integer supportKey;
-    private Integer positiveCorrelationSupport;
-    private Integer negativeCorrelationSupport;
-    private Integer nonSpecificPositiveLinks;
-    private Integer nonSpecificNegativeLinks;
-    private Boolean hybridizesWithQueryGene;
-    private Integer numDatasetsLinkTestedIn;
-    private Integer goOverlap;
-    private Integer possibleOverlap;
-    private Long[] testedDatasetVector;
-    private Long[] supportingDatasetVector;
+    private Integer posLinks;
+    private Integer negLinks;
+    private Integer nonSpecPosLinks;
+    private Integer nonSpecNegLinks;
+    private Boolean hybWQuery;
+    private Integer numTestedIn;
+    private Integer goSim;
+    private Integer maxGoSim;
+    private String datasetVector;
+    private Collection<Long> supportingExperiments;
 
     public Gene getQueryGene() {
         return queryGene;
@@ -63,7 +69,7 @@ public class CoexpressionValueObjectExt {
     }
 
     public void setSortKey() {
-        this.sortKey = String.format( "%06f%s", 1.0 / getSupportKey(), getFoundGene().getOfficialSymbol() );
+        this.sortKey = String.format( "%06f%s", 1.0 / Math.abs( getSupportKey() ), getFoundGene().getOfficialSymbol() );
     }
 
     public Integer getSupportKey() {
@@ -74,94 +80,22 @@ public class CoexpressionValueObjectExt {
         this.supportKey = supportKey;
     }
 
-    public Integer getPositiveCorrelationSupport() {
-        return positiveCorrelationSupport;
+    public String getDatasetVector() {
+        return datasetVector;
     }
 
-    public void setPositiveCorrelationSupport( Integer positiveLinks ) {
-        this.positiveCorrelationSupport = positiveLinks;
-    }
-
-    public Integer getNegativeCorrelationSupport() {
-        return negativeCorrelationSupport;
-    }
-
-    public void setNegativeCorrelationSupport( Integer negativeLinks ) {
-        this.negativeCorrelationSupport = negativeLinks;
-    }
-
-    public Integer getNonSpecificPositiveLinks() {
-        return nonSpecificPositiveLinks;
-    }
-
-    public void setNonSpecificPositiveLinks( Integer nonSpecificPositiveLinks ) {
-        this.nonSpecificPositiveLinks = nonSpecificPositiveLinks;
-    }
-
-    public Integer getNonSpecificNegativeLinks() {
-        return nonSpecificNegativeLinks;
-    }
-
-    public void setNonSpecificNegativeLinks( Integer nonSpecificNegativeLinks ) {
-        this.nonSpecificNegativeLinks = nonSpecificNegativeLinks;
-    }
-
-    public Boolean getHybridizesWithQueryGene() {
-        return hybridizesWithQueryGene;
-    }
-
-    public void setHybridizesWithQueryGene( Boolean hybridizesWithQueryGene ) {
-        this.hybridizesWithQueryGene = hybridizesWithQueryGene;
-    }
-
-    public Integer getNumDatasetsLinkTestedIn() {
-        return numDatasetsLinkTestedIn;
-    }
-
-    public void setNumDatasetsLinkTestedIn( Integer numDatasetsLinkTestedIn ) {
-        this.numDatasetsLinkTestedIn = numDatasetsLinkTestedIn;
-    }
-
-    public Integer getGoOverlap() {
-        return goOverlap;
-    }
-
-    public void setGoOverlap( Integer goOverlap ) {
-        this.goOverlap = goOverlap;
-    }
-
-    public Integer getPossibleOverlap() {
-        return possibleOverlap;
-    }
-
-    public void setPossibleOverlap( Integer possibleOverlap ) {
-        this.possibleOverlap = possibleOverlap;
-    }
-
-    public Long[] getTestedDatasetVector() {
-        return testedDatasetVector;
-    }
-
-    public void setTestedDatasetVector( Long[] testedDatasetVector ) {
-        this.testedDatasetVector = testedDatasetVector;
-    }
-
-    public Long[] getSupportingDatasetVector() {
-        return supportingDatasetVector;
-    }
-
-    public void setSupportingDatasetVector( Long[] supportingDatasetVector ) {
-        this.supportingDatasetVector = supportingDatasetVector;
+    public void setDatasetVector( String datasetVector ) {
+        this.datasetVector = datasetVector;
     }
 
     public String toString() {
         StringBuilder buf = new StringBuilder();
-        if ( getPositiveCorrelationSupport() > 0 ) {
-            buf.append( getSupportRow( getPositiveCorrelationSupport(), "+" ) );
+        if ( getPosLinks() > 0 ) {
+            buf.append( getSupportRow( getPosLinks(), "+" ) );
         }
-        if ( getNegativeCorrelationSupport() > 0 ) {
+        if ( getNegLinks() > 0 ) {
             if ( buf.length() > 0 ) buf.append( "\n" );
-            buf.append( getSupportRow( getNegativeCorrelationSupport(), "-" ) );
+            buf.append( getSupportRow( getNegLinks(), "-" ) );
         }
         return buf.toString();
     }
@@ -170,6 +104,82 @@ public class CoexpressionValueObjectExt {
         String[] fields = new String[] { queryGene.getOfficialSymbol(), foundGene.getOfficialSymbol(),
                 links.toString(), sign };
         return StringUtils.join( fields, "\t" );
+    }
+
+    public Integer getPosLinks() {
+        return posLinks;
+    }
+
+    public void setPosLinks( Integer posLinks ) {
+        this.posLinks = posLinks;
+    }
+
+    public Integer getNegLinks() {
+        return negLinks;
+    }
+
+    public void setNegLinks( Integer negLinks ) {
+        this.negLinks = negLinks;
+    }
+
+    public Integer getNonSpecPosLinks() {
+        return nonSpecPosLinks;
+    }
+
+    public void setNonSpecPosLinks( Integer nonSpecPosLinks ) {
+        this.nonSpecPosLinks = nonSpecPosLinks;
+    }
+
+    public Integer getNonSpecNegLinks() {
+        return nonSpecNegLinks;
+    }
+
+    public void setNonSpecNegLinks( Integer nonSpecNegLinks ) {
+        this.nonSpecNegLinks = nonSpecNegLinks;
+    }
+
+    public Boolean getHybWQuery() {
+        return hybWQuery;
+    }
+
+    public void setHybWQuery( Boolean hybWQuery ) {
+        this.hybWQuery = hybWQuery;
+    }
+
+    public Integer getNumTestedIn() {
+        return numTestedIn;
+    }
+
+    public void setNumTestedIn( Integer numTestedIn ) {
+        this.numTestedIn = numTestedIn;
+    }
+
+    public Integer getGoSim() {
+        return goSim;
+    }
+
+    public void setGoSim( Integer goSim ) {
+        this.goSim = goSim;
+    }
+
+    public Integer getMaxGoSim() {
+        return maxGoSim;
+    }
+
+    public void setMaxGoSim( Integer maxGoSim ) {
+        this.maxGoSim = maxGoSim;
+    }
+
+    public void setSortKey( String sortKey ) {
+        this.sortKey = sortKey;
+    }
+
+    public Collection<Long> getSupportingExperiments() {
+        return supportingExperiments;
+    }
+
+    public void setSupportingExperiments( Collection<Long> supportingExperiments ) {
+        this.supportingExperiments = supportingExperiments;
     }
 
 }

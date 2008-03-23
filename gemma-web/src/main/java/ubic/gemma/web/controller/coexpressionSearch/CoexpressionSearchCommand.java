@@ -20,29 +20,31 @@ package ubic.gemma.web.controller.coexpressionSearch;
 
 import java.util.Collection;
 
+import org.apache.commons.lang.StringUtils;
+
 /**
  * @author luke
  */
 public class CoexpressionSearchCommand {
-    
+
     private Collection<Long> geneIds;
-    
+
     private Collection<Long> eeIds;
-    
+
     private Long cannedAnalysisId;
 
     private Integer stringency;
-    
+
     private boolean queryGenesOnly;
-    
-    /* we're storing the actual ee ids in the command object; the query string
-     * is only here so we can use this object to store the state of the search
-     * form between visits...
+
+    /*
+     * we're storing the actual ee ids in the command object; the query string is only here so we can use this object to
+     * store the state of the search form between visits...
      */
     private String eeQuery;
-    
-    /* as eeQuery above, the taxon is only here so we can use this object to
-     * store the entire state of the form...
+
+    /*
+     * as eeQuery above, the taxon is only here so we can use this object to store the entire state of the form...
      */
     private Long taxonId;
 
@@ -85,7 +87,7 @@ public class CoexpressionSearchCommand {
     public void setEeQuery( String eeQuery ) {
         this.eeQuery = eeQuery;
     }
-    
+
     public Long getTaxonId() {
         return taxonId;
     }
@@ -101,5 +103,12 @@ public class CoexpressionSearchCommand {
     public void setQueryGenesOnly( boolean queryGenesOnly ) {
         this.queryGenesOnly = queryGenesOnly;
     }
-    
+
+    @Override
+    public String toString() {
+        return "GeneIds=" + StringUtils.join( getGeneIds(), "," ) + " Analysis=" + this.getCannedAnalysisId()
+                + " QueryGenesOnly=" + this.getQueryGenesOnly() + " taxon=" + getTaxonId() + " eeQuery="
+                + getEeQuery() + " Stringency=" + stringency;
+    }
+
 }

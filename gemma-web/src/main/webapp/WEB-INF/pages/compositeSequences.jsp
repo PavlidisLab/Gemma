@@ -41,12 +41,12 @@
 	<fmt:message key="compositeSequences.title" />
 </h2>
 
-<div id="blatres-grid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:430px; height:250px;"></div>
+<div id="blatres-grid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:430px "></div>
 		<input type="hidden" name="cs" id="cs" value="${compositeSequence.id}" />
 
 <%-- fixme --%>
 <div id="probe-grid" class="x-grid-mso"
-						style="border: 1px solid #c3daf9; overflow: hidden; width:430px; height:250px;"></div>
+						style="border: 1px solid #c3daf9; overflow: hidden; width:430px "></div>
 					<input type="hidden" name="cs" id="cs"
 						value="${compositeSequenceIdList}" />
 

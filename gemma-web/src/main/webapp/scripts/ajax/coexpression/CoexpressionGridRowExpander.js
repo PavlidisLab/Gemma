@@ -29,9 +29,10 @@ Ext.extend( Ext.Gemma.CoexpressionGridRowExpander, Ext.grid.RowExpander, {
 			}
 			
 			this.expandedElements[ rowIndex ] = [];
-			var bodyEl = new Ext.Element( body );
 			
-			bodyEl.addClass('coexpressionGridRowExpanded');
+			var bodyEl = new Ext.Element( body );
+			 
+			bodyEl.addClass('coexpressionGridRowExpanded'); // layout.css
 			
 			this.expandedElements[ rowIndex ].push( bodyEl.createChild({tag : 'h3', html : "Supporting datasets"}) );
 			
@@ -45,7 +46,29 @@ Ext.extend( Ext.Gemma.CoexpressionGridRowExpander, Ext.grid.RowExpander, {
 			var gridEl = bodyEl.createChild( {} );
 			this.expandedElements[ rowIndex ].push( gridEl );
 			
-			var diffgrid = new Ext.Gemma.DifferentialExpressionGrid( {
+			/*var tabs = new Ext.TabPanel({
+					items: [ 
+						{
+						title: "Supporting datasets",
+						html: ""
+					}, {
+						title:  "Differential expression of " + record.data.foundGene.officialSymbol ,
+						html: ""
+					}
+					]
+			});*/
+				
+			var supporting = this.getSupportingDatasetRecords( record );
+			
+			var dsGrid = new Ext.Gemma.ExpressionExperimentGrid( gridEld, {
+				records : supporting,
+				pageSize : 10,
+    			width : 800
+			} );
+			 
+		 	dsGrid.getStore().load( { params : { start : 0, limit : 10 } });
+			
+			var supportingGrid = new Ext.Gemma.DifferentialExpressionGrid( {
     			geneId : record.data.foundGene.id,
     			threshold : 0.01,
     			renderTo : gridEl,
@@ -55,21 +78,13 @@ Ext.extend( Ext.Gemma.CoexpressionGridRowExpander, Ext.grid.RowExpander, {
     		
 			var loadMask = new Ext.LoadMask( gridEl, {
 				removeMask : true,
-				store : diffgrid.getStore()
+				store : supportingGrid.getStore()
 			} );
-			
-			var supporting = this.getSupportingDatasetRecords( record );
-			
-			var dsGrid = new Ext.Gemma.ExpressionExperimentGrid( gridEld, {
-				records : supporting,
-				pageSize : 10,
-    			width : 500
-			} );
-			 
-			dsGrid.getStore().reload();
-			dsGrid.getView().refresh( true );
- 
 			loadMask.show();
+			
+			// Keep mouse events from propogating to the parent grid. See ExtJS forums topic "nested grids problem" (242878).
+			dsGrid.getEl().swallowEvent(['mouseover','mousedown','click','dblclick']);
+			supportingGrid.getEl().swallowEvent(['mouseover','mousedown','click','dblclick']);
 			
             return true;
          }

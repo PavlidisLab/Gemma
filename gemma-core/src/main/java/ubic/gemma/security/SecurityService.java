@@ -218,7 +218,7 @@ public class SecurityService {
         recipient = securableDao.getRecipient( objectIdentityId );
 
         if ( recipient == null ) {
-            throw new IllegalStateException( "No recipient for object " + objectIdentityId );
+            throw new IllegalStateException( "No recipient for object " + objectIdentityId + " object=" + securedObject );
         }
 
         if ( isUserAdmin() ) {

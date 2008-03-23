@@ -1,7 +1,7 @@
 /*
  * The Gemma project.
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2006-2008 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,7 +56,7 @@ public class SecurableDaoImpl extends ubic.gemma.model.common.SecurableDaoBase {
 
         String objectIdentity = createObjectIdentityFromObject( target, id );
 
-        String queryString = "SELECT id FROM acl_object_identity WHERE object_identity=?";
+        String queryString = "SELECT id FROM acl_object_identity WHERE object_identity = ?";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createSQLQuery( queryString );

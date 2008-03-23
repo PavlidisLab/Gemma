@@ -29,6 +29,9 @@ Ext.Gemma.ExpressionExperimentGrid = function ( div, config ) {
 		collapsible : false,
 		header : true,
 		collapsed : false,
+		forceFit : true,
+		width : 'auto',
+		layout : 'fit',
 		hidden : false
 	};
 	

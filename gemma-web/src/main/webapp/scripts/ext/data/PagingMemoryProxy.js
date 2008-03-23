@@ -27,43 +27,6 @@
 Ext.namespace("Ext.ux");
 Ext.namespace("Ext.ux.data");
 
-/* Fixes for IE/Opera old javascript versions */
-if(!Array.prototype.map){
-    Array.prototype.map = function(fun){
-	var len = this.length;
-	if(typeof fun != "function"){
-	    throw new TypeError();
-	}
-	var res = new Array(len);
-	var thisp = arguments[1];
-	for(var i = 0; i < len; i++){
-	    if(i in this){
-		res[i] = fun.call(thisp, this[i], i, this);
-	    }
-	}
-        return res;
-     };
-}
-
-if (!Array.prototype.filter){
-  Array.prototype.filter = function(fun /*, thisp*/){
-    var len = this.length;
-    if (typeof fun != "function")
-      throw new TypeError();
-
-    var res = new Array();
-    var thisp = arguments[1];
-    for (var i = 0; i < len; i++){
-      if (i in this){
-        var val = this[i]; // in case fun mutates this
-        if (fun.call(thisp, val, i, this))
-          res.push(val);
-      }
-    }
-    return res;
-  };
-}
-
 /* Paging Memory Proxy, allows to use paging grid with in memory dataset */
 Ext.ux.data.PagingMemoryProxy = function(data, config) {
 	Ext.ux.data.PagingMemoryProxy.superclass.constructor.call(this);
@@ -132,3 +95,41 @@ Ext.extend(Ext.ux.data.PagingMemoryProxy, Ext.data.MemoryProxy, {
 		callback.call(scope, result, arg, true);
 	}
 });
+
+
+/* Fixes for IE/Opera old javascript versions */
+if(!Array.prototype.map){
+    Array.prototype.map = function(fun){
+	var len = this.length;
+	if(typeof fun != "function"){
+	    throw new TypeError();
+	}
+	var res = new Array(len);
+	var thisp = arguments[1];
+	for(var i = 0; i < len; i++){
+	    if(i in this){
+		res[i] = fun.call(thisp, this[i], i, this);
+	    }
+	}
+        return res;
+     };
+}
+
+if (!Array.prototype.filter){
+  Array.prototype.filter = function(fun /*, thisp*/){
+    var len = this.length;
+    if (typeof fun != "function")
+      throw new TypeError();
+
+    var res = new Array();
+    var thisp = arguments[1];
+    for (var i = 0; i < len; i++){
+      if (i in this){
+        var val = this[i]; // in case fun mutates this
+        if (fun.call(thisp, val, i, this))
+          res.push(val);
+      }
+    }
+    return res;
+  };
+}

@@ -132,27 +132,22 @@ var initDetails = function() {
 	detailsDataSource.on("load", updateSequenceInfo);
 	
 	var cm = new Ext.grid.ColumnModel([
-		{header: "Alignment",  width: 210, dataIndex:"blatResult", renderer:blatResRender}, 
+		{header: "Alignment",  width: 210, dataIndex:"blatResult", renderer:blatResRender }, 
 		{header: "Score", width: 60, dataIndex:"score", renderer:numberformat },
 		{header: "Identity", width: 60, dataIndex:"identity", renderer:numberformat },  
 		{header: "Genes", width: 150, dataIndex:"geneProductIdGeneMap", renderer:geneMapRender  },
-		{header: "Products", width: 150, dataIndex:"geneProductIdMap", renderer:gpMapRender  }
+		{header: "Transcripts", width: 150, dataIndex:"geneProductIdMap", renderer:gpMapRender  }
 		]);
 		
 	cm.defaultSortable = true;
-	cm.setColumnTooltip(0, "Alignment genomic location");
+	cm.setColumnTooltip(0, "Alignments to the genome");
 	cm.setColumnTooltip(1, "BLAT score");
 	cm.setColumnTooltip(2, "Sequence alignment identity");
+	cm.setColumnTooltip(3, "Genes at this genomic location");
+	cm.setColumnTooltip(4, "Transcripts at this genomic location");
 
 	var blgrid = new Ext.grid.GridPanel({renderTo: "probe-details", height: Ext.get("probe-details").getHeight(), store:detailsDataSource, cm:cm, loadMask: true });
-	
-    var rz = new Ext.Resizable("probe-details", {
-	    wrap:true,
-	    minHeight:100,
-	    pinned:true,
-	    handles: 's'
-    });
-    rz.on('resize', blgrid.doLayout, blgrid);
+ 
 	blgrid.render();
 };
  
@@ -298,6 +293,7 @@ var paging;
  */
 Ext.onReady(function() {
 
+	Ext.QuickTips.init();
 	var id = dwr.util.getValue("cslist");
 	var isArrayDesign = id === "";
 	if (isArrayDesign) {
@@ -324,6 +320,7 @@ Ext.onReady(function() {
 		cm.setColumnTooltip(0, "Name of probe (click for details)");
 		cm.setColumnTooltip(1, "Name of sequence");
 		cm.setColumnTooltip(2, "Number of high-quality BLAT alignments");
+		cm.setColumnTooltip(3, "Genes predicted to be detected");
 	} else {
 		cm = new Ext.grid.ColumnModel([
 				{header: "ArrayDesign", width: 100, dataIndex:"arrayDesignName", renderer: arraylink },
@@ -357,21 +354,12 @@ Ext.onReady(function() {
 		gridConfig.bbar = paging;
 	}
 	grid = new Ext.grid.GridPanel( gridConfig );
-			
-	    // make the grid resizable, do before render for better performance
-    var rz = new Ext.Resizable("probe-grid", {
-        wrap:true,
-        minHeight:100,
-        pinned:true,
-        handles: 's'
-    });
-    rz.on('resize', grid.doLayout, grid);
 	
 	grid.render();
 	
 	reset();
 	
-	 	Ext.QuickTips.init();
+	
 
 });
 

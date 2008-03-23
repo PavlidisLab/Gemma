@@ -182,9 +182,9 @@ public class GeneCoexpressionService {
             for ( Gene2GeneCoexpression g2g : g2gs ) {
                 Gene foundGene = g2g.getFirstGene().equals( queryGene ) ? g2g.getSecondGene() : g2g.getFirstGene();
                 CoexpressionValueObjectExt ecvo = new CoexpressionValueObjectExt();
-                
-                geneService.thaw(foundGene);
-                
+
+                geneService.thaw( foundGene );
+
                 ecvo.setQueryGene( queryGene );
                 ecvo.setFoundGene( foundGene );
 
@@ -196,8 +196,10 @@ public class GeneCoexpressionService {
                         posToId );
                 supportingDatasets.retainAll( filteredEeIds ); // necessary in case any were filtered out.
 
-                ecvo.setTestedDatasetVector( getDatasetVector( testingDatasets, filteredEeIds ) );
-                ecvo.setSupportingDatasetVector( getDatasetVector( supportingDatasets, filteredEeIds ) );
+                supportingExperimentIds.addAll( supportingDatasets );
+
+                ecvo.setSupportingExperiments( supportingDatasets );
+                ecvo.setDatasetVector( getDatasetVector( supportingDatasets, testingDatasets, filteredEeIds ) );
 
                 int numTestingDatasets = testingDatasets.size();
                 int numSupportingDatasets = supportingDatasets.size();
@@ -213,17 +215,16 @@ public class GeneCoexpressionService {
                 datasetsTested.addAll( testingDatasets );
 
                 if ( g2g.getEffect() < 0 ) {
-                    ecvo.setPositiveCorrelationSupport( 0 );
-                    ecvo.setNegativeCorrelationSupport( numSupportingDatasets );
+                    ecvo.setPosLinks( 0 );
+                    ecvo.setNegLinks( numSupportingDatasets );
                     ++linksMetNegativeStringency;
                 } else {
-                    ecvo.setPositiveCorrelationSupport( numSupportingDatasets );
-                    ecvo.setNegativeCorrelationSupport( 0 );
+                    ecvo.setPosLinks( numSupportingDatasets );
+                    ecvo.setNegLinks( 0 );
                     ++linksMetPositiveStringency;
                 }
-                ecvo.setSupportKey( Math.max( ecvo.getPositiveCorrelationSupport(), ecvo
-                        .getNegativeCorrelationSupport() ) );
-                ecvo.setNumDatasetsLinkTestedIn( numTestingDatasets );
+                ecvo.setSupportKey( Math.max( ecvo.getPosLinks(), ecvo.getNegLinks() ) );
+                ecvo.setNumTestedIn( numTestingDatasets );
 
                 for ( Long id : supportingDatasets ) {
                     supportCount.increment( id );
@@ -239,7 +240,6 @@ public class GeneCoexpressionService {
                     ecvos.add( ecvo );
                 }
 
-                supportingExperimentIds.addAll( supportingDatasets );
                 seen.add( g2g );
             }
 
@@ -422,7 +422,7 @@ public class GeneCoexpressionService {
     public void setTaxonService( TaxonService taxonService ) {
         this.taxonService = taxonService;
     }
-    
+
     public void setGeneService( GeneService geneService ) {
         this.geneService = geneService;
     }
@@ -446,42 +446,41 @@ public class GeneCoexpressionService {
             ecvo.setQueryGene( queryGene );
             ecvo.setFoundGene( new SimpleGene( cvo.getGeneId(), cvo.getGeneName(), cvo.getGeneOfficialName() ) );
 
-            ecvo.setPositiveCorrelationSupport( cvo.getPositiveLinkSupport() );
-            ecvo.setNegativeCorrelationSupport( cvo.getNegativeLinkSupport() );
-            ecvo.setSupportKey( 10 * Math.max( ecvo.getPositiveCorrelationSupport(), ecvo
-                    .getNegativeCorrelationSupport() ) );
+            ecvo.setPosLinks( cvo.getPositiveLinkSupport() );
+            ecvo.setNegLinks( cvo.getNegativeLinkSupport() );
+            ecvo.setSupportKey( 10 * Math.max( ecvo.getPosLinks(), ecvo.getNegLinks() ) );
 
             /*
              * this logic is taken from CoexpressionWrapper; I don't understand it, but that's where it comes from...
              */
             if ( !cvo.getExpressionExperiments().isEmpty() ) {
-                ecvo.setNonSpecificPositiveLinks( getNonSpecificLinkCount( cvo.getEEContributing2PositiveLinks(), cvo
+                ecvo.setNonSpecPosLinks( getNonSpecificLinkCount( cvo.getEEContributing2PositiveLinks(), cvo
                         .getNonspecificEE() ) );
-                ecvo.setNonSpecificNegativeLinks( getNonSpecificLinkCount( cvo.getEEContributing2NegativeLinks(), cvo
+                ecvo.setNonSpecNegLinks( getNonSpecificLinkCount( cvo.getEEContributing2NegativeLinks(), cvo
                         .getNonspecificEE() ) );
-                ecvo.setHybridizesWithQueryGene( cvo.isHybridizesWithQueryGene() );
-                ecvo.setSupportKey( ecvo.getSupportKey() - ecvo.getNonSpecificPositiveLinks()
-                        + ecvo.getNonSpecificNegativeLinks() );
+                ecvo.setHybWQuery( cvo.isHybridizesWithQueryGene() );
             }
 
-            ecvo.setNumDatasetsLinkTestedIn( cvo.getNumDatasetsTestedIn() );
+            ecvo.setNumTestedIn( cvo.getNumDatasetsTestedIn() );
 
-            ecvo.setGoOverlap( cvo.getGoOverlap() != null ? cvo.getGoOverlap().size() : 0 );
-            ecvo.setPossibleOverlap( cvo.getPossibleOverlap() );
+            ecvo.setGoSim( cvo.getGoOverlap() != null ? cvo.getGoOverlap().size() : 0 );
+            ecvo.setMaxGoSim( cvo.getPossibleOverlap() );
 
-            Long[] tested = new Long[eevos.size()];
-            Long[] supported = new Long[eevos.size()];
+            StringBuilder datasetVector = new StringBuilder();
             for ( int i = 0; i < eevos.size(); ++i ) {
                 ExpressionExperimentValueObject eevo = eevos.get( i );
-                tested[i] = ( cvo.getDatasetsTestedIn() != null && cvo.getDatasetsTestedIn().contains( eevo.getId() ) ) ? eevo
-                        .getId()
-                        : 0;
-                supported[i] = ( cvo.getExperimentBitIds() != null && cvo.getExperimentBitIds().contains( eevo.getId() ) ) ? eevo
-                        .getId()
-                        : 0;
+                boolean tested = cvo.getDatasetsTestedIn() != null && cvo.getDatasetsTestedIn().contains( eevo.getId() );
+                boolean supported = cvo.getExperimentBitIds() != null
+                        && cvo.getExperimentBitIds().contains( eevo.getId() );
+
+                if ( supported ) {
+                    datasetVector.append( "2" );
+                } else if ( tested ) {
+                    datasetVector.append( "1" );
+                } else {
+                    datasetVector.append( "0" );
+                }
             }
-            ecvo.setTestedDatasetVector( tested );
-            ecvo.setSupportingDatasetVector( supported );
 
             ecvo.setSortKey();
             results.add( ecvo );
@@ -533,17 +532,27 @@ public class GeneCoexpressionService {
     }
 
     /**
-     * @param presentIds
+     * @param supporting
+     * @param testing
      * @param allIds
-     * @return
+     * @return String representation of binary vector (might as well be a string, as it gets sent to the browser that
+     *         way). 0 = not tested; 1 = tested but not supporting; 2 = supporting.
      */
-    private Long[] getDatasetVector( Collection<Long> presentIds, List<Long> allIds ) {
-        Long[] result = new Long[allIds.size()];
-        int i = 0;
+    private String getDatasetVector( Collection<Long> supporting, Collection<Long> testing, List<Long> allIds ) {
+        StringBuilder datasetVector = new StringBuilder();
         for ( Long id : allIds ) {
-            result[i++] = presentIds.contains( id ) ? id : 0;
+            boolean tested = testing.contains( id );
+            boolean supported = supporting.contains( id );
+
+            if ( supported ) {
+                datasetVector.append( "2" );
+            } else if ( tested ) {
+                datasetVector.append( "1" );
+            } else {
+                datasetVector.append( "0" );
+            }
         }
-        return result;
+        return datasetVector.toString();
     }
 
     /**
@@ -565,9 +574,9 @@ public class GeneCoexpressionService {
             Map<Long, Collection<OntologyTerm>> goOverlap = geneOntologyService.calculateGoTermOverlap( queryGene,
                     overlapIds );
             for ( CoexpressionValueObjectExt ecvo : ecvos ) {
-                ecvo.setPossibleOverlap( numQueryGeneGoTerms );
+                ecvo.setMaxGoSim( numQueryGeneGoTerms );
                 Collection<OntologyTerm> overlap = goOverlap.get( ecvo.getFoundGene().getId() );
-                ecvo.setGoOverlap( overlap == null ? 0 : overlap.size() );
+                ecvo.setGoSim( overlap == null ? 0 : overlap.size() );
             }
         }
     }
@@ -644,7 +653,7 @@ public class GeneCoexpressionService {
     /**
      * @param genes
      * @param eevos
-     * @param isCannedF
+     * @param isCanned
      * @return
      */
     private CoexpressionMetaValueObject initValueObject( Collection<Gene> genes,

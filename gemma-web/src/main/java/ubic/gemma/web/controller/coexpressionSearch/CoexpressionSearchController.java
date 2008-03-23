@@ -68,6 +68,7 @@ public class CoexpressionSearchController extends BaseFormController {
     @SuppressWarnings("unchecked")
     public CoexpressionMetaValueObject doSearch( CoexpressionSearchCommand searchOptions ) {
         Collection<Gene> genes = geneService.loadMultiple( searchOptions.getGeneIds() );
+        log.info( "Coexpression search: " + searchOptions );
         if ( genes == null || genes.isEmpty() ) {
             return getEmptyResult();
         } else if ( searchOptions.getCannedAnalysisId() != null ) {
