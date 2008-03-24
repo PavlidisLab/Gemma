@@ -39,9 +39,16 @@ public class CannedAnalysisValueObject {
 
     private Taxon taxon;
 
+    // for when sending to server, to avoid upstream marshallingproblems with taxon.
+    private Long taxonId;
+
     private Integer numDatasets;
 
     private boolean isVirtual = false;
+
+    private int stringency;
+
+    private Long viewedAnalysisId;
 
     /*
      * Optional - only for 'heavyweight' version.
@@ -93,6 +100,30 @@ public class CannedAnalysisValueObject {
         this.description = description;
     }
 
+    public Integer getNumDatasets() {
+        return numDatasets;
+    }
+
+    public void setNumDatasets( Integer numDatasets ) {
+        this.numDatasets = numDatasets;
+    }
+
+    public Long getViewedAnalysisId() {
+        return viewedAnalysisId;
+    }
+
+    public void setViewedAnalysisId( Long viewedAnalysisId ) {
+        this.viewedAnalysisId = viewedAnalysisId;
+    }
+
+    public int getStringency() {
+        return stringency;
+    }
+
+    public void setStringency( int stringency ) {
+        this.stringency = stringency;
+    }
+
     public Taxon getTaxon() {
         return taxon;
     }
@@ -101,11 +132,11 @@ public class CannedAnalysisValueObject {
         this.taxon = taxon;
     }
 
-    public Integer getNumDatasets() {
-        return numDatasets;
+    public Long getTaxonId() {
+        return taxonId;
     }
 
-    public void setNumDatasets( Integer numDatasets ) {
-        this.numDatasets = numDatasets;
+    public void setTaxonId( Long taxonId ) {
+        this.taxonId = taxonId;
     }
 }

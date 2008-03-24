@@ -99,7 +99,9 @@ public class GeneCoexpressionService {
                 cavo.setId( analysis.getId() );
                 cavo.setName( analysis.getName() );
                 cavo.setDescription( analysis.getDescription() );
+                assert taxon.equals( analysis.getTaxon() );
                 cavo.setTaxon( taxon );
+                cavo.setStringency( analysis.getStringency() );
                 if ( analysis instanceof GeneCoexpressionVirtualAnalysis ) {
                     cavo.setVirtual( true );
                 }

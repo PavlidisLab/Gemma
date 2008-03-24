@@ -37,7 +37,8 @@
 <authz:authorize ifNotGranted="admin">
 	<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
 </authz:authorize>
-<div id='genelinkanalysis-messages' style='width: 600px; height: 1.2em; margin: 0.2em; padding-bottom: 0.4em;'></div>
+<div id='createAnalysisDialog' style='visibility:hidden' ></div>
+<div id='messages' style='width: 600px; height: 1.2em; margin: 0.2em; padding-bottom: 0.4em;'></div>
 <div id='genelinkanalysis-analysisgrid' style='width: 910px; margin-bottom: 1em;'></div>
 <div  style='width:1190px;height:600px;'>
 	<div id='genelinkanalysis-alldatasets' style='width:350px;position: absolute;'></div>

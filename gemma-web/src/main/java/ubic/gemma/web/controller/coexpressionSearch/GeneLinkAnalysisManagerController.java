@@ -24,6 +24,7 @@ import java.util.HashSet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.analysis.expression.coexpression.CannedAnalysisValueObject;
@@ -35,6 +36,7 @@ import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionVirtual
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.web.controller.BaseFormController;
 
@@ -45,6 +47,7 @@ import ubic.gemma.web.controller.BaseFormController;
  * @spring.property name="geneCoexpressionService" ref="geneCoexpressionService"
  * @spring.property name="geneCoexpressionAnalysisService" ref="geneCoexpressionAnalysisService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
+ * @spring.property name="taxonService" ref="taxonService"
  * @spring.property name = "searchService" ref="searchService"
  * @author paul
  * @version $Id$
@@ -53,6 +56,7 @@ public class GeneLinkAnalysisManagerController extends BaseFormController {
     private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
     private GeneCoexpressionService geneCoexpressionService;
     private ExpressionExperimentService expressionExperimentService;
+    private TaxonService taxonService;
     private SearchService searchService = null;
 
     /**
@@ -89,9 +93,50 @@ public class GeneLinkAnalysisManagerController extends BaseFormController {
         geneCoexpressionAnalysisService.update( analysis );
     }
 
+    @SuppressWarnings("unchecked")
     public void create( CannedAnalysisValueObject obj ) {
         // TODO Auto-generated method stub
         // geneCoexpressionAnalysisService.create( analysis );
+        log.info( obj );
+
+        if ( StringUtils.isBlank( obj.getName() ) ) {
+            throw new IllegalArgumentException( "You must provide a name" );
+        }
+
+        Analysis existing = geneCoexpressionAnalysisService.findByName( obj.getName() );
+        if ( existing != null ) {
+            throw new IllegalArgumentException( "There is already an analysis with the name '" + obj.getName() + "'" );
+        }
+
+        Long viewedAnalysisId = obj.getViewedAnalysisId();
+
+        if ( viewedAnalysisId == null ) {
+            throw new IllegalArgumentException(
+                    "Can only create views of existing analyses; provide the ID of an existing one" );
+        }
+
+        GeneCoexpressionAnalysis analysis = ( GeneCoexpressionAnalysis ) geneCoexpressionAnalysisService
+                .load( viewedAnalysisId );
+        Collection<ExpressionExperiment> datasetsInViewed = geneCoexpressionAnalysisService
+                .getDatasetsAnalyzed( analysis );
+
+        GeneCoexpressionVirtualAnalysis va = GeneCoexpressionVirtualAnalysis.Factory.newInstance();
+        va.setName( obj.getName() );
+        va.setDescription( obj.getDescription() );
+        va.setStringency( obj.getStringency() );
+        va.setViewedAnalysis( analysis );
+        va.setTaxon( taxonService.load( obj.getTaxonId() ) );
+        Collection<ExpressionExperiment> datasetsAnalyzed = expressionExperimentService
+                .loadMultiple( obj.getDatasets() );
+
+        if ( !datasetsInViewed.containsAll( datasetsAnalyzed ) ) {
+            throw new IllegalArgumentException(
+                    "Some of the datasets in the new virtual analysis aren't in the original" );
+        }
+
+        va.setExperimentsAnalyzed( datasetsAnalyzed );
+
+        geneCoexpressionAnalysisService.create( va );
     }
 
     public void update( CannedAnalysisValueObject obj ) {
@@ -154,6 +199,10 @@ public class GeneLinkAnalysisManagerController extends BaseFormController {
 
     public void setSearchService( SearchService searchService ) {
         this.searchService = searchService;
+    }
+
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
     }
 
 }

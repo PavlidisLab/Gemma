@@ -77,7 +77,7 @@ Ext.Gemma.ExpressionExperimentGrid = function ( div, config ) {
 	superConfig.cm = new Ext.grid.ColumnModel( fields );
 	superConfig.cm.defaultSortable = true;
 	
-	superConfig.autoExpandColumn = 'shortName';
+	superConfig.autoExpandColumn = 'name';
 
 	
 	for ( property in config ) {
@@ -152,7 +152,16 @@ Ext.Gemma.ExpressionExperimentGrid.getRecord = function() {
 Ext.extend( Ext.Gemma.ExpressionExperimentGrid, Ext.Gemma.GemmaGridPanel, {
 	getReadParams : function() {
 		return ( typeof this.readParams == "function" ) ? this.readParams() : this.readParams;
-	}  
+	},
+	
+	/**
+	 * Return all the ids of the experiments shown in this grid.
+	 */
+	getEEIds : function() {
+		var result = [];
+		this.store.each(function (rec) { result.push(rec.get("id")); });
+		return result;
+	}
     
 });
 
