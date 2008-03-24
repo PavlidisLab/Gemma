@@ -167,20 +167,24 @@ Ext.extend( Ext.Gemma.ExpressionExperimentGrid, Ext.Gemma.GemmaGridPanel, {
 
 Ext.Gemma.DatasetSearchToolBar = function ( grid, config ) {
 	var bar = this;
-	var thisGrid = grid;
+	this.thisGrid = grid;
 	var taxonSearch = true;
 	if (config.taxonSearch) {
 		this.taxonSearch = config.taxonSearch;
 	}
 	
 	var eeSearchField = new Ext.Gemma.DatasetSearchField( {
-		fieldLabel : "Experiment keywords"
+		fieldLabel : "Experiment keywords",
+		filtering : config.filtering
 	} );
 	
 	this.eeSearchField = eeSearchField;
 	eeSearchField.on( 'aftersearch', function ( field, results ) {
-		this.getStore().load( { params : [results] });
-	}, grid );
+		this.getStore().removeAll();	
+		if (results.length > 0) {
+			this.getStore().load( { params : [results] });
+		}
+	}, this.thisGrid );
 	
 	var taxonCombo = new Ext.Gemma.TaxonCombo( {
 			emptyText : 'select a taxon',
@@ -193,7 +197,7 @@ Ext.Gemma.DatasetSearchToolBar = function ( grid, config ) {
 
 	Ext.Gemma.DatasetSearchToolBar.superclass.constructor.call( this, {
 		autoHeight : true,
-		renderTo : thisGrid.tbar
+		renderTo : this.thisGrid.tbar
 	} );		
 	
 	if ( this.taxonSearch ) {
@@ -201,10 +205,49 @@ Ext.Gemma.DatasetSearchToolBar = function ( grid, config ) {
 		this.addSpacer();
 	}
 	this.addField( eeSearchField );
+	
+	if (config.filtering) {
+		this.reset = function() {
+			if ( this.owningGrid.analysisId ) {
+				var callback = function( d ) {
+					// load the data sets.
+					this.getStore().load( { params : [ d ] }); 
+				}
+				// Go back to the server to get the ids of the experiments the selected analysis' parent has.
+				GeneLinkAnalysisManagerController.getExperimentIdsInAnalysis( this.owningGrid.analysisId, {callback : callback.createDelegate(this.owningGrid, [], true) });
+				
+			} 
+		};
+		
+	 
+		this.resetButton = new Ext.Button( {
+			id : 'reset',
+			text : "Reset",
+			handler: this.reset, 
+			scope : this,
+			disabled : true,
+			tooltip : "Restore the display list of datasets for the analysis"
+			}
+		);
+		 
+		this.addFill(); 
+		this.add( this.resetButton );
+		
+		this.eeSearchField.on( 'aftersearch', function() {
+			this.resetButton.enable();
+		}, this);
+	}
 
 };
 
 Ext.extend(Ext.Gemma.DatasetSearchToolBar, Ext.Toolbar, {
+	
+	updateDatasets : function() {
+		if (this.eeSearchField.filtering) {
+			this.eeSearchField.setFilterFrom(this.thisGrid.getEEIds());
+		}
+	}
+	
 });
 
  

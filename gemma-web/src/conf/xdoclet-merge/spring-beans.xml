@@ -522,6 +522,7 @@ Mapping URLS to controllers
 							<value>filterExpressionExperiments</value>
 							<value>updateExperimentsInAnalysis</value>
 							<value>getExperimentsInAnalysis</value>
+							<value>getExperimentIdsInAnalysis</value>
 						</list>
 					</property>
 				</bean>

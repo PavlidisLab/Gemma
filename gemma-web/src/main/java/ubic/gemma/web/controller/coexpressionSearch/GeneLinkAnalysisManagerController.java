@@ -37,6 +37,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.TaxonService;
+import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.web.controller.BaseFormController;
 
@@ -49,6 +50,7 @@ import ubic.gemma.web.controller.BaseFormController;
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="taxonService" ref="taxonService"
  * @spring.property name = "searchService" ref="searchService"
+ * @spring.property name="persisterHelper" ref="persisterHelper"
  * @author paul
  * @version $Id$
  */
@@ -57,47 +59,18 @@ public class GeneLinkAnalysisManagerController extends BaseFormController {
     private GeneCoexpressionService geneCoexpressionService;
     private ExpressionExperimentService expressionExperimentService;
     private TaxonService taxonService;
+    private PersisterHelper persisterHelper;
     private SearchService searchService = null;
 
     /**
-     * Get the set of available canned analyses (for all taxa)
-     * 
-     * @return
+     * @param obj
      */
-    public Collection<CannedAnalysisValueObject> getCannedAnalyses() {
-        return geneCoexpressionService.getCannedAnalyses();
-    }
-
-    @SuppressWarnings("unchecked")
-    public Collection<ExpressionExperimentValueObject> getExperimentsInAnalysis( Long id ) {
-        GeneCoexpressionAnalysis analysis = ( GeneCoexpressionAnalysis ) geneCoexpressionAnalysisService.load( id );
-        Collection<ExpressionExperiment> datasetsAnalyzed = geneCoexpressionAnalysisService
-                .getDatasetsAnalyzed( analysis );
-        Collection<Long> eeids = new HashSet<Long>();
-        for ( ExpressionExperiment ee : datasetsAnalyzed ) {
-            eeids.add( ee.getId() );
-        }
-        return expressionExperimentService.loadValueObjects( eeids );
-    }
-
-    @SuppressWarnings("unchecked")
-    public void updateExperimentsInAnalysis( Long analysisId, Collection<Long> eeIds ) {
-        Analysis a = geneCoexpressionAnalysisService.load( analysisId );
-        if ( !( a instanceof GeneCoexpressionVirtualAnalysis ) ) {
-            throw new IllegalArgumentException( "'Real' analyses cannot be edited in this way." );
-        }
-        GeneCoexpressionVirtualAnalysis analysis = ( GeneCoexpressionVirtualAnalysis ) a;
-        Collection<ExpressionExperiment> datasetsAnalyzed = expressionExperimentService.loadMultiple( eeIds );
-        analysis.getExperimentsAnalyzed().retainAll( datasetsAnalyzed );
-        analysis.getExperimentsAnalyzed().addAll( datasetsAnalyzed );
-        geneCoexpressionAnalysisService.update( analysis );
-    }
-
     @SuppressWarnings("unchecked")
     public void create( CannedAnalysisValueObject obj ) {
-        // TODO Auto-generated method stub
-        // geneCoexpressionAnalysisService.create( analysis );
-        log.info( obj );
+
+        if ( obj.getId() == null ) {
+            throw new IllegalArgumentException( "Should not provide an id for 'create'" );
+        }
 
         if ( StringUtils.isBlank( obj.getName() ) ) {
             throw new IllegalArgumentException( "You must provide a name" );
@@ -134,27 +107,56 @@ public class GeneLinkAnalysisManagerController extends BaseFormController {
                     "Some of the datasets in the new virtual analysis aren't in the original" );
         }
 
-        va.setExperimentsAnalyzed( datasetsAnalyzed );
+        va.setExperimentsAnalyzed( new HashSet<ExpressionExperiment>( datasetsAnalyzed ) );
 
-        geneCoexpressionAnalysisService.create( va );
+        persisterHelper.persist( va );
     }
 
-    public void update( CannedAnalysisValueObject obj ) {
-        // TODO Auto-generated method stub
-        // geneCoexpressionAnalysisService.update( analysis );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.HttpServletRequest,
-     *      javax.servlet.http.HttpServletResponse)
+    /**
+     * @param obj
      */
     @SuppressWarnings("unchecked")
-    @Override
-    protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
-            throws Exception {
-        return new ModelAndView( this.getFormView() );
+    public void update( CannedAnalysisValueObject obj ) {
+
+        if ( obj.getId() == null ) {
+            throw new IllegalArgumentException( "Can only update an existing analysis (passed id=" + obj.getId() + ")" );
+        }
+
+        if ( StringUtils.isBlank( obj.getName() ) ) {
+            throw new IllegalArgumentException( "You must provide a name" );
+        }
+
+        Analysis existing = geneCoexpressionAnalysisService.findByName( obj.getName() );
+        if ( existing != null && !existing.getId().equals( obj.getId() ) ) {
+            throw new IllegalArgumentException( "There is already another analysis with the name '" + obj.getName()
+                    + "'" );
+        }
+
+        GeneCoexpressionAnalysis toUpdate = ( GeneCoexpressionAnalysis ) geneCoexpressionAnalysisService.load( obj
+                .getId() );
+
+        if ( !( toUpdate instanceof GeneCoexpressionVirtualAnalysis ) ) {
+            throw new IllegalArgumentException( "Can only edit 'virtual' analyses" );
+        }
+
+        GeneCoexpressionVirtualAnalysis toUpdateV = ( GeneCoexpressionVirtualAnalysis ) toUpdate;
+        geneCoexpressionAnalysisService.thaw( toUpdateV );
+        toUpdateV.setName( obj.getName() );
+        toUpdateV.setDescription( obj.getDescription() );
+
+        /*
+         * TODO:Ensure we aren't adding data sets which are not in the viewed.
+         */
+
+        Collection<ExpressionExperiment> datasetsAnalyzed = expressionExperimentService
+                .loadMultiple( obj.getDatasets() );
+        toUpdateV.getExperimentsAnalyzed().retainAll( datasetsAnalyzed );
+        toUpdateV.getExperimentsAnalyzed().addAll( datasetsAnalyzed );
+
+        geneCoexpressionAnalysisService.update( toUpdateV );
+
+        log.info( "Updated " + obj.getName() );
+
     }
 
     /**
@@ -173,6 +175,37 @@ public class GeneLinkAnalysisManagerController extends BaseFormController {
     }
 
     /**
+     * Get the set of available canned analyses (for all taxa)
+     * 
+     * @return
+     */
+    public Collection<CannedAnalysisValueObject> getCannedAnalyses() {
+        return geneCoexpressionService.getCannedAnalyses( true );
+    }
+
+    @SuppressWarnings("unchecked")
+    public Collection<ExpressionExperimentValueObject> getExperimentsInAnalysis( Long id ) {
+        Collection<Long> eeids = getExperimentIdsInAnalysis( id );
+        return expressionExperimentService.loadValueObjects( eeids );
+    }
+
+    /**
+     * @param id
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<Long> getExperimentIdsInAnalysis( Long id ) {
+        GeneCoexpressionAnalysis analysis = ( GeneCoexpressionAnalysis ) geneCoexpressionAnalysisService.load( id );
+        Collection<ExpressionExperiment> datasetsAnalyzed = geneCoexpressionAnalysisService
+                .getDatasetsAnalyzed( analysis );
+        Collection<Long> eeids = new HashSet<Long>();
+        for ( ExpressionExperiment ee : datasetsAnalyzed ) {
+            eeids.add( ee.getId() );
+        }
+        return eeids;
+    }
+
+    /**
      * @param query
      * @param taxonId
      * @return
@@ -185,6 +218,10 @@ public class GeneLinkAnalysisManagerController extends BaseFormController {
         return expressionExperimentService.loadValueObjects( ids );
     }
 
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
     public void setGeneCoexpressionAnalysisService( GeneCoexpressionAnalysisService geneCoexpressionAnalysisService ) {
         this.geneCoexpressionAnalysisService = geneCoexpressionAnalysisService;
     }
@@ -193,8 +230,8 @@ public class GeneLinkAnalysisManagerController extends BaseFormController {
         this.geneCoexpressionService = geneCoexpressionService;
     }
 
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
     }
 
     public void setSearchService( SearchService searchService ) {
@@ -203,6 +240,33 @@ public class GeneLinkAnalysisManagerController extends BaseFormController {
 
     public void setTaxonService( TaxonService taxonService ) {
         this.taxonService = taxonService;
+    }
+
+    @SuppressWarnings("unchecked")
+    public void updateExperimentsInAnalysis( Long analysisId, Collection<Long> eeIds ) {
+        Analysis a = geneCoexpressionAnalysisService.load( analysisId );
+        if ( !( a instanceof GeneCoexpressionVirtualAnalysis ) ) {
+            throw new IllegalArgumentException( "'Real' analyses cannot be edited in this way." );
+        }
+        GeneCoexpressionVirtualAnalysis analysis = ( GeneCoexpressionVirtualAnalysis ) a;
+        geneCoexpressionAnalysisService.thaw( analysis );
+        Collection<ExpressionExperiment> datasetsAnalyzed = expressionExperimentService.loadMultiple( eeIds );
+        analysis.getExperimentsAnalyzed().retainAll( datasetsAnalyzed );
+        analysis.getExperimentsAnalyzed().addAll( datasetsAnalyzed );
+        geneCoexpressionAnalysisService.update( analysis );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.HttpServletRequest,
+     *      javax.servlet.http.HttpServletResponse)
+     */
+    @SuppressWarnings( { "unchecked", "unused" })
+    @Override
+    protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
+            throws Exception {
+        return new ModelAndView( this.getFormView() );
     }
 
 }

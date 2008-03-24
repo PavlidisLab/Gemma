@@ -281,6 +281,7 @@ abstract public class CommonPersister extends AbstractPersister {
     }
 
     protected Protocol persistProtocol( Protocol protocol ) {
+        if ( protocol == null ) return protocol;
         fillInProtocol( protocol );
         return protocolService.findOrCreate( protocol );
     }

@@ -6,6 +6,7 @@ Ext.namespace('Ext.Gemma');
 Ext.Gemma.DatasetSearchField = function ( config ) {
 
 	this.loadMask = config.loadMask; delete config.loadMask;
+	this.filtering = config.filtering; delete config.filtering;
 	this.eeIds = [];
 	this.filterFrom = []; // starting set.
 
@@ -35,6 +36,10 @@ Ext.extend( Ext.Gemma.DatasetSearchField, Ext.form.TextField, {
             'aftersearch'
         );
     },
+    
+    setFilterFrom : function( filterFrom ) {
+    	this.filterFrom = filterFrom;
+    },
 
 	initEvents : function() {
 		Ext.Gemma.DatasetSearchField.superclass.initEvents.call(this);
@@ -42,15 +47,31 @@ Ext.extend( Ext.Gemma.DatasetSearchField, Ext.form.TextField, {
 		this.el.on( "keyup", function( e ) { queryTask.delay( 500 ); } );
 	},
 	
-	findDatasets : function ( ) {
+	filterDatasets : function (   ) {
 		var params = [ this.getValue(), this.taxon ? this.taxon.id : -1 ];
+		params.push( this.filterFrom );
 		if ( params == this.lastParams ) {
 			return;
 		}
 		if ( this.fireEvent('beforesearch', this, params ) !== false ) {
 			this.lastParams = params;
-			ExtCoexpressionSearchController.findExpressionExperiments( params[0], params[1], this.foundDatasets.bind( this ) );
+			GeneLinkAnalysisManagerController.filterExpressionExperiments( params[0], params[1], params[2], this.foundDatasets.bind( this ) );
         }
+	},
+	
+	findDatasets : function ( ) {
+		if ( this.filtering ) {
+			this.filterDatasets( );
+		} else {
+			var params = [ this.getValue(), this.taxon ? this.taxon.id : -1 ];
+			if ( params == this.lastParams ) {
+				return;
+			}
+			if ( this.fireEvent('beforesearch', this, params ) !== false ) {
+				this.lastParams = params;
+				ExtCoexpressionSearchController.findExpressionExperiments( params[0], params[1], this.foundDatasets.bind( this ) );
+        	}
+		}
 	},
 	
 	foundDatasets : function ( results ) {

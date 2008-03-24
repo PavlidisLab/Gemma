@@ -89,7 +89,7 @@ public class GeneCoexpressionService {
     /**
      * @return collection of the available canned analyses, for all taxa.
      */
-    public Collection<CannedAnalysisValueObject> getCannedAnalyses() {
+    public Collection<CannedAnalysisValueObject> getCannedAnalyses( boolean populateDatasets ) {
         Collection<CannedAnalysisValueObject> analyses = new ArrayList<CannedAnalysisValueObject>();
         for ( Object o : taxonService.loadAll() ) {
             Taxon taxon = ( Taxon ) o;
@@ -104,8 +104,15 @@ public class GeneCoexpressionService {
                 cavo.setStringency( analysis.getStringency() );
                 if ( analysis instanceof GeneCoexpressionVirtualAnalysis ) {
                     cavo.setVirtual( true );
+                    cavo.setViewedAnalysisId( ( ( GeneCoexpressionVirtualAnalysis ) analysis ).getViewedAnalysis()
+                            .getId() );
+                    
                 }
 
+                if (populateDatasets) {
+                    cavo.setDatasets( getIds( analysis.getExperimentsAnalyzed() ) ); // this saves a trip back...
+                }
+                
                 /*
                  * FIXME this number isn't right if there are 'troubled' data sets we filter out.
                  */
@@ -116,6 +123,12 @@ public class GeneCoexpressionService {
         }
         return analyses;
     }
+    
+    
+    public Collection<CannedAnalysisValueObject> getCannedAnalyses(  ) {
+        return this.getCannedAnalyses( false );
+    }
+    
 
     /**
      * @param cannedAnalysisId

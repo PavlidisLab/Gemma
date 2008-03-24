@@ -38,10 +38,9 @@
 	<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
 </authz:authorize>
 <div id='createAnalysisDialog' style='visibility:hidden' ></div>
-<div id='messages' style='width: 600px; height: 1.2em; margin: 0.2em; padding-bottom: 0.4em;'></div>
+<div id='messages' style='width: 600px; height: 1.6em; margin: 0.2em; padding-bottom: 0.4em;'></div>
 <div id='genelinkanalysis-analysisgrid' style='width: 910px; margin-bottom: 1em;'></div>
-<div  style='width:1190px;height:600px;'>
-	<div id='genelinkanalysis-alldatasets' style='width:350px;position: absolute;'></div>
-	<div id='genelinkanalysis-datasetgrid' style='width:350px;position: absolute; left : 370px;'></div>
-	<div id='genelinkanalysis-newanalysis' style='width:350px;position: absolute; left: 730px;'></div>
+<div  style='width:930px;height:600px;'> 
+	<div id='genelinkanalysis-datasetgrid' style='width:450px;position: absolute; '></div>
+	<div id='genelinkanalysis-newanalysis' style='width:450px;position: absolute; left: 470px;'></div>
 </div>
