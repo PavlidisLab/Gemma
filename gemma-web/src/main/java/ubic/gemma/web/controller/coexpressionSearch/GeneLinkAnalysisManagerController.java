@@ -64,12 +64,13 @@ public class GeneLinkAnalysisManagerController extends BaseFormController {
 
     /**
      * @param obj
+     * @return the id of the newwly created analysis object.
      */
     @SuppressWarnings("unchecked")
-    public void create( CannedAnalysisValueObject obj ) {
+    public Long create( CannedAnalysisValueObject obj ) {
 
-        if ( obj.getId() == null ) {
-            throw new IllegalArgumentException( "Should not provide an id for 'create'" );
+        if ( obj.getId() != null ) {
+            throw new IllegalArgumentException( "Should not provide an id for 'create': " + obj.getId() );
         }
 
         if ( StringUtils.isBlank( obj.getName() ) ) {
@@ -109,7 +110,8 @@ public class GeneLinkAnalysisManagerController extends BaseFormController {
 
         va.setExperimentsAnalyzed( new HashSet<ExpressionExperiment>( datasetsAnalyzed ) );
 
-        persisterHelper.persist( va );
+        GeneCoexpressionVirtualAnalysis newAnalysis = ( GeneCoexpressionVirtualAnalysis ) persisterHelper.persist( va );
+        return newAnalysis.getId();
     }
 
     /**

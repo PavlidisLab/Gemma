@@ -20,9 +20,10 @@ Ext.onReady( function() {
 	analysisGrid.render();  
 
  
-	var sourceAnalysisGrid = new Ext.Gemma.SourceAnalysisDatasetGrid( "genelinkanalysis-datasetgrid",  {
+	var sourceAnalysisGrid = new Ext.Gemma.ExpressionExperimentGrid( "genelinkanalysis-datasetgrid",  {
 		readMethod : GeneLinkAnalysisManagerController.loadExpressionExperiments.bind( this ),
 		editable : false,
+		admin : admin,
 		title : "Datasets in source analysis",
 		pageSize : 10, 
 		ddGroup : "analysisedit"
@@ -38,87 +39,98 @@ Ext.onReady( function() {
 	
 	var toolbar = new Ext.Gemma.SourceAnalysisToolBar(sourceAnalysisGrid, { taxonSearch : false, targetGrid : virtualAnalysisGrid } );	
 	
-	var newtoolbar = new Ext.Gemma.EditVirtualAnalysisToolBar(virtualAnalysisGrid, {  } );	
+	
+	var refresh = function( e ){ 
+					this.store.reload( { callback : function(r,options,ok) {
+						// focus on the newly loaded one.
+						var recind = this.store.find("id", e);
+						var rec = this.store.getAt(recind);
+						this.getSelectionModel().selectRecords([rec], false); 
+					}});
+					}
+	
+	if ( admin ) {
+		var newtoolbar = new Ext.Gemma.EditVirtualAnalysisToolBar(virtualAnalysisGrid, {  } );
+		newtoolbar.on("newAnalysisCreated", refresh,analysisGrid);
+		newtoolbar.on("analysisUpdated",refresh,analysisGrid);
+	}	
 	 
 	sourceAnalysisGrid.render();
 	virtualAnalysisGrid.render();
 	
-	analysisGrid.on("rowclick", 
-		function(grid, rowIndex, ev ) {
-			// Load the source analysis, or the selected one, if it is real.
-			Ext.DomHelper.overwrite("messages", "");
-			var row = grid.getStore().getAt(rowIndex);
-			var id = row.get("id") ;
-			
-			var virtual = row.get("virtual");
-			var ids = row.get("datasets");
+	var showSourceAnalysis = function(target, rowIndex, ev ) {
+		// Load the source analysis, or the selected one, if it is real.
+		Ext.DomHelper.overwrite("messages", "");
+		var row;
+		if (target.grid) { // selectionmodel
+			row = target.grid.getStore().getAt(rowIndex);
+		} else {
+			row = target.getStore().getAt(rowIndex);
+		}
+		var id = row.get("id") ;
+		
+		var virtual = row.get("virtual");
+		var ids = row.get("datasets");
+		this.taxon = row.get("taxon");
+		this.stringency = row.get("stringency");
+		
+		if ( virtual ) {
+			id = row.get("viewedAnalysisId");
+			var callback = function( d ) {
+				// load the data sets.
+				this.getStore().load( { params : [ d ] }); 
+				toolbar.updateDatasets();
+			}
+			// Go back to the server to get the ids of the experiments the selected analysis' parent has.
+			GeneLinkAnalysisManagerController.getExperimentIdsInAnalysis( id, {callback : callback.createDelegate(this, [], true) });
+			this.analysisId = id;
+		} else {		
+			this.analysisId = id;
+			this.getStore().load( { params : [ ids ] });
+			toolbar.updateDatasets();
+		} 
+	};
+	
+	var showVirtualAnalysis = function(target, rowIndex, ev ) {
+		// Show the selected virtual analysis members in the right-hand grid, or clear if it is not virtual.
+		Ext.DomHelper.overwrite("messages", "");
+		var row;
+		if (target.grid) { // selectionmodel
+			row = target.grid.getStore().getAt(rowIndex);
+		} else {
+			row = target.getStore().getAt(rowIndex);
+		}
+		var id = row.get("id") ;
+					
+		var virtual = row.get("virtual")
+		if ( virtual ) {
+			this.sourceAnalysisID = row.get("viewedAnalysisId");
+			this.analysisId = id;
+			this.analysisName = row.get("name");
+			this.analysisDescription = row.get("description");
+			this.virtual = true;
 			this.taxon = row.get("taxon");
 			this.stringency = row.get("stringency");
+			this.getStore().load( { params : [ row.get("datasets") ] }); 
+			this.setTitle("Virtual analysis : " + row.get("name"));
+		} else {
+			this.analysisId = null; 
+			this.analysisName = null;
+			this.analysisDescription = null;
+			this.setTitle("Virtual analysis (new)");
+			this.getStore().removeAll();
+		}
 			
-			if ( virtual ) {
-				id = row.get("viewedAnalysisId");
-				var callback = function( d ) {
-					// load the data sets.
-					this.getStore().load( { params : [ d ] }); 
-					toolbar.updateDatasets();
-				}
-				// Go back to the server to get the ids of the experiments the selected analysis' parent has.
-				GeneLinkAnalysisManagerController.getExperimentIdsInAnalysis( id, {callback : callback.createDelegate(this, [], true) });
-				this.analysisId = id;
-			} else {		
-				this.analysisId = id;
-				this.getStore().load( { params : [ ids ] });
-				toolbar.updateDatasets();
-			} 
-		}, sourceAnalysisGrid 
+	};
+	
+	analysisGrid.getSelectionModel().on("rowselect", 
+		showSourceAnalysis, sourceAnalysisGrid 
 	);
 	
-	analysisGrid.on("rowclick", 
-		function(grid, rowIndex, ev ) {
-			// Show the selected virtual analysis members in the right-hand grid, or clear if it is not virtual.
-			Ext.DomHelper.overwrite("messages", "");
-			var row = grid.getStore().getAt(rowIndex);
-			var id = row.get("id") ;
-						
-			var virtual = row.get("virtual")
-			if ( virtual ) {
-				this.sourceAnalysisID = row.get("viewedAnalysisId");
-				this.analysisId = id;
-				this.analysisName = row.get("name");
-				this.analysisDescription = row.get("description");
-				this.virtual = true;
-				this.taxon = row.get("taxon");
-				this.stringency = row.get("stringency");
-				this.getStore().load( { params : [ row.get("datasets") ] }); 
-				this.setTitle("Virtual analysis : " + row.get("name"));
-			} else {
-				this.analysisId = null; 
-				this.analysisName = null;
-				this.analysisDescription = null;
-				this.setTitle("Virtual analysis");
-				this.getStore().removeAll();
-			}
-			
-		}, virtualAnalysisGrid 
+	analysisGrid.getSelectionModel().on("rowselect", 
+		showVirtualAnalysis, virtualAnalysisGrid
 	);
-	
- 
-	virtualAnalysisGrid.on( "keypress", 
-		function( e ) {
-			if ( this.editable && this.virtual && e.getCharCode() == Ext.EventObject.DELETE) {  
-				var recs = this.getSelectionModel().getSelections();
-				for( var x = 0; x < recs.length; x ++ ) { // for r in recs does not work!
-					this.getStore().remove(recs[x]);
-					this.getView().refresh();
-				}
-			}
-			
-		}, virtualAnalysisGrid 
-	);
-	
-	newtoolbar.on("newAnalysisCreated", function(e){ this.store.reload() },analysisGrid);
-	newtoolbar.on("analysisUpdated", function(e){ this.store.reload() },analysisGrid);
-	
+  
  
 });
  
@@ -128,7 +140,6 @@ Ext.onReady( function() {
 Ext.Gemma.EditVirtualAnalysisToolBar = function ( grid, config ) {
 	var bar = this;
 	this.thisGrid = grid; 
-	
 	this.addEvents('newAnalysisCreated', 'createAnalysisError');
 	 
 	Ext.Gemma.EditVirtualAnalysisToolBar.superclass.constructor.call( this, {
@@ -145,9 +156,9 @@ Ext.Gemma.EditVirtualAnalysisToolBar = function ( grid, config ) {
 		}
 		 
 		
-		var callback = function() { 
+		var callback = function( newid ) { 
 			Ext.getCmp('newsave').enable();
-			this.fireEvent("newAnalysisCreated", this );
+			this.fireEvent("newAnalysisCreated", this, newid );
 		};
 		
 		var errorHandler = function( e ) { 
@@ -175,11 +186,9 @@ Ext.Gemma.EditVirtualAnalysisToolBar = function ( grid, config ) {
 	
 	this.updateAnalysis = function(analysisName, analysisDescription) {
 	 
-		
 		var callback = function() { 
-			Ext.getCmp('newsave').enable();
-			this.thisGrid.setTitle("should be th enew anem");
-			this.fireEvent("analysisUpdated", this );
+			Ext.getCmp('newsave').enable(); 
+			this.fireEvent("analysisUpdated", this, this.thisGrid.analysisId );
 		};
 		
 		var errorHandler = function( e ) { 
@@ -301,14 +310,6 @@ Ext.Gemma.EditVirtualAnalysisToolBar = function ( grid, config ) {
 	this.addButton( resetBut ); 
 };
 
-/*
- * Grid to display the datasets in an analysis; allows filtering (for creating new ones) and editing (if it is virtual).
- */
-Ext.Gemma.SourceAnalysisDatasetGrid = function( div, config ) {
-	Ext.Gemma.SourceAnalysisDatasetGrid.superclass.constructor.call( this, div, config );
-}; 
-
-
 
 Ext.Gemma.SourceAnalysisToolBar = function( grid, config ) {
 	var superconfig = config || {};
@@ -318,7 +319,7 @@ Ext.Gemma.SourceAnalysisToolBar = function( grid, config ) {
 	
 	Ext.Gemma.SourceAnalysisToolBar.superclass.constructor.call( this, grid, superconfig );
 	
-	if (this.targetGrid) {
+	if (this.targetGrid && this.targetGrid.editable ) {
 		var grabber = new Ext.Button({ id : 'grab', disabled: true, text : "Grab >>", handler : function( button, ev ) {
 			
 			var id = this.owningGrid.analysisId;
@@ -429,9 +430,6 @@ Ext.Gemma.GeneLinkAnalysisGrid.getRecord = function() {
  
 
 Ext.extend(Ext.Gemma.EditVirtualAnalysisToolBar, Ext.Toolbar, {
-});
-
-Ext.extend(Ext.Gemma.SourceAnalysisDatasetGrid, Ext.Gemma.ExpressionExperimentGrid, {
 });
 
 Ext.extend(Ext.Gemma.SourceAnalysisToolBar, Ext.Gemma.DatasetSearchToolBar, {

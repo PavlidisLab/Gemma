@@ -88,6 +88,21 @@ Ext.Gemma.ExpressionExperimentGrid = function ( div, config ) {
 	
 	Ext.Gemma.ExpressionExperimentGrid.superclass.constructor.call( this, superConfig );
 	
+	
+	this.on( "keypress", 
+		function( e ) {
+			if ( this.editable && e.getCharCode() == Ext.EventObject.DELETE) {  
+				var recs = this.getSelectionModel().getSelections();
+				for( var x = 0; x < recs.length; x ++ ) { // for r in recs does not work!
+					this.getStore().remove(recs[x]);
+					this.getView().refresh();
+				}
+			}
+			
+		}, this 
+	);
+	
+	
 	this.getStore().on( "load", function () {
 		this.autoSizeColumns();
 		this.doLayout();
