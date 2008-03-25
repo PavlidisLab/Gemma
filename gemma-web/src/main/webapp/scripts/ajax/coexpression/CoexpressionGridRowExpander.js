@@ -34,33 +34,32 @@ Ext.extend( Ext.Gemma.CoexpressionGridRowExpander, Ext.grid.RowExpander, {
 			 
 			bodyEl.addClass('coexpressionGridRowExpanded'); // layout.css
 			
-			this.expandedElements[ rowIndex ].push( bodyEl.createChild({tag : 'h3', html : "Supporting datasets"}) );
+	 		
+			// Tab: supporting data sets. x-hide-display hides the div until we need to show it.
+			var supportingDsGridEl = bodyEl.createChild( { } );
+	 		supportingDsGridEl.addClass("x-hide-display");
+			// Tab: differential expression  
 			
-			// Grid of data sets.
-			var gridEld = bodyEl.createChild( {} );
-			this.expandedElements[ rowIndex].push( gridEld );
+			var diffExGridEl = bodyEl.createChild( {  } );  
+			diffExGridEl.addClass("x-hide-display");
 			
-			// Grid of differential expression 
-			this.expandedElements[ rowIndex ].push( bodyEl.createChild({tag : 'h3', html : "Differential expression of " + record.data.foundGene.officialSymbol }) );
+			 var tabPanel = new Ext.TabPanel({
+			 	renderTo: bodyEl,
+    			activeTab: 0,
+    			items: [{
+        			title: "Supporting datasets",
+        			contentEl: supportingDsGridEl
+    			},{
+        			title:  "Differential expression of " + record.data.foundGene.officialSymbol,
+        			contentEl: diffExGridEl
+    			}]
+			 });
 			
-			var gridEl = bodyEl.createChild( {} );
-			this.expandedElements[ rowIndex ].push( gridEl );
-			
-			/*var tabs = new Ext.TabPanel({
-					items: [ 
-						{
-						title: "Supporting datasets",
-						html: ""
-					}, {
-						title:  "Differential expression of " + record.data.foundGene.officialSymbol ,
-						html: ""
-					}
-					]
-			});*/
+			this.expandedElements[ rowIndex ].push(tabPanel);
 				
 			var supporting = this.getSupportingDatasetRecords( record );
 			
-			var dsGrid = new Ext.Gemma.ExpressionExperimentGrid( gridEld, {
+			var dsGrid = new Ext.Gemma.ExpressionExperimentGrid( supportingDsGridEl, {
 				records : supporting,
 				pageSize : 10,
     			width : 800
@@ -68,23 +67,23 @@ Ext.extend( Ext.Gemma.CoexpressionGridRowExpander, Ext.grid.RowExpander, {
 			 
 		 	dsGrid.getStore().load( { params : { start : 0, limit : 10 } });
 			
-			var supportingGrid = new Ext.Gemma.DifferentialExpressionGrid( {
+			var diffExGrid = new Ext.Gemma.DifferentialExpressionGrid( {
     			geneId : record.data.foundGene.id,
     			threshold : 0.01,
-    			renderTo : gridEl,
+    			renderTo : diffExGridEl,
     			pageSize : 10,
     			width : 800
     		} );
     		
-			var loadMask = new Ext.LoadMask( gridEl, {
+			var loadMask = new Ext.LoadMask( diffExGridEl, {
 				removeMask : true,
-				store : supportingGrid.getStore()
+				store : diffExGrid.getStore()
 			} );
 			loadMask.show();
 			
 			// Keep mouse events from propogating to the parent grid. See ExtJS forums topic "nested grids problem" (242878).
 			dsGrid.getEl().swallowEvent(['mouseover','mousedown','click','dblclick']);
-			supportingGrid.getEl().swallowEvent(['mouseover','mousedown','click','dblclick']);
+			diffExGrid.getEl().swallowEvent(['mouseover','mousedown','click','dblclick']);
 			
             return true;
          }
