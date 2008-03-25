@@ -138,7 +138,7 @@ public class HttpFetcher extends AbstractFetcher {
                 try {
                     Thread.sleep( INFO_UPDATE_INTERVAL );
                 } catch ( InterruptedException ie ) {
-                    ;
+                    
                 }
                 log.info( ( new File( outputFileName ).length() + " bytes read" ) );
             }
