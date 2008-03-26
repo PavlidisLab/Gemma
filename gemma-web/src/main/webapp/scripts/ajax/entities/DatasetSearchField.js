@@ -1,8 +1,12 @@
-
-/* Ext.Gemma.DatasetSearchField constructor...
+/*
+ * A text field that searches Gemma for data sets. It supports two modes: filtering, in which a starting set of datasets are provided, 
+ * and finding, in which the Gemma database is simply searched and all results returned.
  */
+
 Ext.namespace('Ext.Gemma');
 
+/* Constructor...
+ */
 Ext.Gemma.DatasetSearchField = function ( config ) {
 
 	this.loadMask = config.loadMask; delete config.loadMask;
@@ -24,7 +28,8 @@ Ext.Gemma.DatasetSearchField = function ( config ) {
 	} );
 };
 
-/* other public methods...
+/*
+ * Type declaration
  */
 Ext.extend( Ext.Gemma.DatasetSearchField, Ext.form.TextField, {
 

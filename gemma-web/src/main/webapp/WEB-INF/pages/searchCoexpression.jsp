@@ -22,6 +22,7 @@
 	<script type='text/javascript' src='/Gemma/scripts/ajax/util/PagingToolbar.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/DatasetSearchField.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/ExpressionExperimentGrid.js'></script>
+	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/AnalysisCombo.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/GeneCombo.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/TaxonCombo.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/GeneChooserPanel.js'></script>
