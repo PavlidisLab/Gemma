@@ -98,6 +98,10 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 	Ext.Gemma.CoexpressionSearchForm.addToolTip( eeSearchField,
 		"Search only datasets that match these keywords" );
 	
+	// Pop up the experiments the search turnedup.
+	var eeDetailsButton = new Ext.Button();
+	
+	
 	var customFs = new Ext.form.FieldSet( {
 		title : 'Custom analysis options',
 		hidden : true,

@@ -182,7 +182,7 @@ public class GeneLinkAnalysisManagerController extends BaseFormController {
      * @return
      */
     public Collection<CannedAnalysisValueObject> getCannedAnalyses() {
-        return geneCoexpressionService.getCannedAnalyses( true );
+        return geneCoexpressionService.getCannedAnalyses( true, true );
     }
 
     @SuppressWarnings("unchecked")

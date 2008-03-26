@@ -76,7 +76,7 @@ public class CoexpressionSearchController extends BaseFormController {
                     searchOptions.getStringency(), MAX_RESULTS, searchOptions.getQueryGenesOnly() );
         } else {
             return geneCoexpressionService.getCustomAnalysisResults( searchOptions.getEeIds(), genes, searchOptions
-                    .getStringency(), searchOptions.getQueryGenesOnly() );
+                    .getStringency(), MAX_RESULTS, searchOptions.getQueryGenesOnly() );
         }
     }
 
@@ -121,7 +121,7 @@ public class CoexpressionSearchController extends BaseFormController {
      * @see org.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.HttpServletRequest,
      *      javax.servlet.http.HttpServletResponse)
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings( { "unchecked", "unused" })
     @Override
     protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
             throws Exception {
@@ -156,7 +156,8 @@ public class CoexpressionSearchController extends BaseFormController {
                         queryGenesOnly );
             } else {
                 Collection<Long> eeIds = extractIds( request.getParameter( "ee" ) );
-                result = geneCoexpressionService.getCustomAnalysisResults( eeIds, genes, stringency, queryGenesOnly );
+                result = geneCoexpressionService.getCustomAnalysisResults( eeIds, genes, stringency, MAX_RESULTS,
+                        queryGenesOnly );
             }
 
             ModelAndView mav = new ModelAndView( new TextView() );

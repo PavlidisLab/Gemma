@@ -55,7 +55,7 @@ Ext.extend( Ext.Gemma.DatasetSearchField, Ext.form.TextField, {
 	filterDatasets : function (   ) {
 		var params = [ this.getValue(), this.taxon ? this.taxon.id : -1 ];
 		params.push( this.filterFrom );
-		if ( params == this.lastParams ) {
+		if ( this.lastParams && (params[0] == this.lastParams[0]  &&  params[1] == this.lastParams[1]) ) {
 			return;
 		}
 		if ( this.fireEvent('beforesearch', this, params ) !== false ) {
@@ -69,7 +69,7 @@ Ext.extend( Ext.Gemma.DatasetSearchField, Ext.form.TextField, {
 			this.filterDatasets( );
 		} else {
 			var params = [ this.getValue(), this.taxon ? this.taxon.id : -1 ];
-			if ( params == this.lastParams ) {
+			if ( this.lastParams && (params[0] == this.lastParams[0]  &&  params[1] == this.lastParams[1]) ) {
 				return;
 			}
 			if ( this.fireEvent('beforesearch', this, params ) !== false ) {

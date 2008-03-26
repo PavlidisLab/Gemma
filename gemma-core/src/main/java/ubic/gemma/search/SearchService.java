@@ -288,16 +288,16 @@ public class SearchService implements InitializingBean {
         Taxon taxon = taxonService.load( taxonId );
         Collection<Long> eeIds = new HashSet<Long>();
         if ( StringUtils.isNotBlank( query ) ) {
-            
-            if (query.length() < MINIMUM_EE_QUERY_LENGTH) return eeIds;
-            
+
+            if ( query.length() < MINIMUM_EE_QUERY_LENGTH ) return eeIds;
+
             // Initial list
             List<SearchResult> results = this.search( SearchSettings.ExpressionExperimentSearch( query ), false ).get(
                     ExpressionExperiment.class );
             for ( SearchResult result : results ) {
                 eeIds.add( result.getId() );
             }
-            
+
             // Filter by taxon
             if ( taxon != null ) {
                 Collection<Long> eeIdsToKeep = new HashSet<Long>();
@@ -1312,11 +1312,11 @@ public class SearchService implements InitializingBean {
     private Collection<SearchResult> performSearch( SearchSettings settings, CompassSession session ) {
         StopWatch watch = startTiming();
 
-        String query = settings.getQuery();
+        String query = settings.getQuery().trim();
         if ( StringUtils.isBlank( query ) || query.length() < MINIMUM_STRING_LENGTH_FOR_FREE_TEXT_SEARCH
                 || query.equals( "*" ) ) return new ArrayList<SearchResult>();
 
-        CompassQuery compassQuery = session.queryBuilder().queryString( query.trim() ).toQuery();
+        CompassQuery compassQuery = session.queryBuilder().queryString( query ).toQuery();
         CompassHits hits = compassQuery.hits();
 
         watch.stop();

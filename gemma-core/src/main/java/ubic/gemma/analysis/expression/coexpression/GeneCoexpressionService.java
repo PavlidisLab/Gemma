@@ -89,7 +89,7 @@ public class GeneCoexpressionService {
     /**
      * @return collection of the available canned analyses, for all taxa.
      */
-    public Collection<CannedAnalysisValueObject> getCannedAnalyses( boolean populateDatasets ) {
+    public Collection<CannedAnalysisValueObject> getCannedAnalyses( boolean populateDatasets, boolean includeVirtual ) {
         Collection<CannedAnalysisValueObject> analyses = new ArrayList<CannedAnalysisValueObject>();
         for ( Object o : taxonService.loadAll() ) {
             Taxon taxon = ( Taxon ) o;
@@ -103,16 +103,17 @@ public class GeneCoexpressionService {
                 cavo.setTaxon( taxon );
                 cavo.setStringency( analysis.getStringency() );
                 if ( analysis instanceof GeneCoexpressionVirtualAnalysis ) {
+                    if ( !includeVirtual ) continue;
                     cavo.setVirtual( true );
                     cavo.setViewedAnalysisId( ( ( GeneCoexpressionVirtualAnalysis ) analysis ).getViewedAnalysis()
                             .getId() );
-                    
+
                 }
 
-                if (populateDatasets) {
+                if ( populateDatasets ) {
                     cavo.setDatasets( getIds( analysis.getExperimentsAnalyzed() ) ); // this saves a trip back...
                 }
-                
+
                 /*
                  * FIXME this number isn't right if there are 'troubled' data sets we filter out.
                  */
@@ -123,12 +124,10 @@ public class GeneCoexpressionService {
         }
         return analyses;
     }
-    
-    
-    public Collection<CannedAnalysisValueObject> getCannedAnalyses(  ) {
-        return this.getCannedAnalyses( false );
+
+    public Collection<CannedAnalysisValueObject> getCannedAnalyses() {
+        return this.getCannedAnalyses( false, true );
     }
-    
 
     /**
      * @param cannedAnalysisId
@@ -145,21 +144,32 @@ public class GeneCoexpressionService {
         GeneCoexpressionAnalysis analysis = ( GeneCoexpressionAnalysis ) geneCoexpressionAnalysisService
                 .load( cannedAnalysisId );
 
-        GeneCoexpressionAnalysis analysisToUse = getAnalysis( analysis );
+        boolean virtual = analysis instanceof GeneCoexpressionVirtualAnalysis;
+
+        GeneCoexpressionAnalysis viewedAnalysis = getAnalysis( analysis );
+
+        /*
+         * This set of links must be filtered to include those in the data sets being analyzed.
+         */
         Map<Gene, Collection<Gene2GeneCoexpression>> gg2gs = getRawCoexpression( queryGenes, stringency, maxResults,
-                queryGenesOnly, analysisToUse );
-        geneCoexpressionAnalysisService.thaw( analysisToUse );
-        Collection<Long> eeIdsFromAnalysis = getIds( analysisToUse.getExperimentsAnalyzed() );
+                queryGenesOnly, viewedAnalysis );
+
+        geneCoexpressionAnalysisService.thaw( viewedAnalysis );
+        Collection<Long> eeIdsFromAnalysis = getIds( viewedAnalysis.getExperimentsAnalyzed() );
+
         /*
          * We get this prior to filtering so it matches the vectors stored with the analysis.
          */
-        Map<Integer, Long> posToId = GeneLinkCoexpressionAnalyzer.getPositionToIdMap( eeIdsFromAnalysis );
+        Map<Integer, Long> positionToIDMap = GeneLinkCoexpressionAnalyzer.getPositionToIdMap( eeIdsFromAnalysis );
 
         /*
          * Now we get the data sets we area actually concerned with.
          */
         Collection<Long> eeIdsTouse = null;
-        if ( eeIds == null ) {
+        if ( virtual ) {
+            geneCoexpressionAnalysisService.thaw( analysis );
+            eeIdsTouse = getIds( analysis.getExperimentsAnalyzed() );
+        } else if ( eeIds == null ) {
             eeIdsTouse = eeIdsFromAnalysis;
         } else {
             eeIdsTouse = eeIds;
@@ -169,14 +179,6 @@ public class GeneCoexpressionService {
 
         // This sort is necessary.(?)
         List<ExpressionExperimentValueObject> eevos = getSortedEEvos( eeIdsTouse );
-
-        /*
-         * FIXME I'm lazy and rushed, so I'm using an existing field for this info; probably better to add another field
-         * to the value object...
-         */
-        for ( ExpressionExperimentValueObject eevo : eevos ) {
-            eevo.setExternalUri( GemmaLinkUtils.getExpressionExperimentUrl( eevo.getId() ) );
-        }
 
         CoexpressionMetaValueObject result = initValueObject( queryGenes, eevos, true );
 
@@ -203,13 +205,19 @@ public class GeneCoexpressionService {
                 ecvo.setQueryGene( queryGene );
                 ecvo.setFoundGene( foundGene );
 
-                Collection<Long> testingDatasets = GeneLinkCoexpressionAnalyzer.getTestedExperimentIds( g2g, posToId );
-                testingDatasets.retainAll( filteredEeIds ); // necesssary in case any were filtered out (for example, if
-                // this is
-                // a virtual analysis; or there were 'troubled' ees.
+                Collection<Long> testingDatasets = GeneLinkCoexpressionAnalyzer.getTestedExperimentIds( g2g,
+                        positionToIDMap );
+                testingDatasets.retainAll( filteredEeIds );
+
+                /*
+                 * necesssary in case any were filtered out (for example, if this is a virtual analysis; or there were
+                 * 'troubled' ees.
+                 */
                 Collection<Long> supportingDatasets = GeneLinkCoexpressionAnalyzer.getSupportingExperimentIds( g2g,
-                        posToId );
-                supportingDatasets.retainAll( filteredEeIds ); // necessary in case any were filtered out.
+                        positionToIDMap );
+
+                // necessary in case any were filtered out.
+                supportingDatasets.retainAll( filteredEeIds );
 
                 supportingExperimentIds.addAll( supportingDatasets );
 
@@ -264,6 +272,14 @@ public class GeneCoexpressionService {
 
             generateDatasetSummary( eevos, result, supportCount, supportingExperimentIds, queryGene );
 
+            /*
+             * FIXME I'm lazy and rushed, so I'm using an existing field for this info; probably better to add another
+             * field to the value object...
+             */
+            for ( ExpressionExperimentValueObject eevo : eevos ) {
+                eevo.setExternalUri( GemmaLinkUtils.getExpressionExperimentUrl( eevo.getId() ) );
+            }
+
             getGoOverlap( ecvos, queryGene );
         }
 
@@ -295,7 +311,7 @@ public class GeneCoexpressionService {
 
     /**
      * @param analysis
-     * @return
+     * @return the analysis viewed by the given analysis, if it is virtual; otherwise the analysis given is returned.
      */
     private GeneCoexpressionAnalysis getAnalysis( GeneCoexpressionAnalysis analysis ) {
         GeneCoexpressionAnalysis analysisToUse;
@@ -308,7 +324,7 @@ public class GeneCoexpressionService {
     }
 
     /**
-     * @param cannedAnalysisId
+     * @param cannedAnalysisId of either a virtual or real analysis
      * @param queryGenes
      * @param stringency
      * @param maxResults
@@ -333,12 +349,7 @@ public class GeneCoexpressionService {
      */
     @SuppressWarnings("unchecked")
     public CoexpressionMetaValueObject getCustomAnalysisResults( Collection<Long> eeIds, Collection<Gene> genes,
-            int stringency, boolean queryGenesOnly ) {
-
-        if ( true ) {
-            throw new RuntimeException(
-                    "We're sorry. Custom analysis is not available at this time. Please select one of the other analysis options." );
-        }
+            int stringency, int maxResults, boolean queryGenesOnly ) {
 
         if ( eeIds == null ) eeIds = new HashSet<Long>();
         Collection<ExpressionExperiment> ees = getPossibleExpressionExperiments( genes );
@@ -363,10 +374,19 @@ public class GeneCoexpressionService {
         List<ExpressionExperimentValueObject> eevos = getSortedEEvos( eeIds );
 
         /*
-         * I'm lazy and rushed, so I'm using an existing field for this info; probably better to add another field to
-         * the value object...
+         * If possible: instead of using the probeLinkCoexpressionAnalyzer, Use a canned analysis with a filter.
          */
+        Collection<CannedAnalysisValueObject> availableAnalyses = getCannedAnalyses( true, false );
+        for ( CannedAnalysisValueObject cannedAnalysisValueObject : availableAnalyses ) {
+            if ( cannedAnalysisValueObject.getDatasets().containsAll( eeIds ) ) {
+                log.info( "Using canned analysis to conduct customized analysis" );
+                return getFilteredCannedAnalysisResults( cannedAnalysisValueObject.getId(), eeIds, genes, stringency,
+                        maxResults, queryGenesOnly );
+            }
+        }
+
         for ( ExpressionExperimentValueObject eevo : eevos ) {
+            // FIXME don't reuse this field.
             eevo.setExternalUri( GemmaLinkUtils.getExpressionExperimentUrl( eevo.getId() ) );
         }
 
@@ -375,19 +395,18 @@ public class GeneCoexpressionService {
         boolean knownGenesOnly = true; // !SecurityService.isUserAdmin();
         result.setKnownGenesOnly( knownGenesOnly );
 
-        /*
-         * TODO this is done just naively right now. allow the user to show only interactions among their genes of
-         * interest and filter the results before the time-consuming analysis is done...
-         */
         Collection<Long> geneIds = new HashSet<Long>( genes.size() );
         for ( Gene gene : genes ) {
             geneIds.add( gene.getId() );
         }
+
+        /*
+         * FIXME implement maxresults here. FIXME this is done just naively (slow) right now. allow the user to show
+         * only interactions among their genes of interest and filter the results before the time-consuming analysis is
+         * done...
+         */
         for ( Gene queryGene : genes ) {
-            /*
-             * FIXME instead of using the probeLinkCoexpressionAnalyzer, provide an option to use a canned analysis with
-             * a filter.
-             */
+
             CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis( queryGene,
                     ees, stringency, knownGenesOnly, NUM_GENES_TO_DETAIL );
 
