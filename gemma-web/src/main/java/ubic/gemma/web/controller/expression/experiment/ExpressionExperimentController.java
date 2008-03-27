@@ -541,13 +541,13 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             expressionExperiments.addAll( eeValObjectCol );
         }
 
-        log.info("got experiments");
-        
+        log.info( "got experiments" );
+
         expressionExperimentReportService.fillLinkStatsFromCache( expressionExperiments );
         expressionExperimentReportService.fillEventInformation( expressionExperiments );
         expressionExperimentReportService.fillAnnotationInformation( expressionExperiments );
-        log.info("got annotations, events and link stats");
-        
+        log.info( "got annotations, events and link stats" );
+
         Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments, new Comparator() {
             public int compare( Object o1, Object o2 ) {
                 String s1 = ( ( ExpressionExperimentValueObject ) o1 ).getName();
