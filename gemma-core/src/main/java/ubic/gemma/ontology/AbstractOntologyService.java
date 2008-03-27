@@ -152,7 +152,7 @@ public abstract class AbstractOntologyService {
 
         if ( !isOntologyLoaded() ) return null;
 
-        log.info( "Searching " + this.getOntologyName() + " for '" + search + "'" );
+        log.debug( "Searching " + this.getOntologyName() + " for '" + search + "'" );
 
         assert index != null : "attempt to search " + this.getOntologyName() + " when index is null";
         Collection<OntologyTerm> matches = OntologySearch.matchClasses( model, index, search );
