@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
@@ -919,13 +920,21 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             Class type ) throws Exception {
         // helps make sure we use the query cache.
         List<ExpressionExperiment> eeList = new ArrayList<ExpressionExperiment>( expressionExperiments );
+
         Collections.sort( eeList, new Comparator<ExpressionExperiment>() {
             public int compare( ExpressionExperiment o1, ExpressionExperiment o2 ) {
                 return o1.getId().compareTo( o2.getId() );
             }
         } );
 
+        StopWatch timer = new StopWatch();
+        timer.start();
+
         Map<ArrayDesign, Collection<ExpressionExperiment>> eeAdMap = getArrayDesignsUsed( eeList );
+
+        timer.stop();
+        if ( timer.getTime() > 1000 ) log.info( "Get array designs used for EEs: " + timer.getTime() );
+        timer.reset();
 
         List<String> classes = getClassHierarchy( type );
         List<ArrayDesign> ads = new ArrayList<ArrayDesign>( eeAdMap.keySet() );
@@ -942,7 +951,11 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             queryObject.setCacheable( true );
             queryObject.setParameterList( "ads", ads );
 
+            timer.start();
             List qr = queryObject.list();
+            timer.stop();
+            if ( timer.getTime() > 1000 ) log.info( "Read events: " + timer.getTime() );
+
             if ( qr.isEmpty() ) return result;
 
             for ( Object o : qr ) {
