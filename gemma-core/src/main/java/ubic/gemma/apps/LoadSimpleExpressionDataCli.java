@@ -63,7 +63,8 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
 
     final static String SPLITCHAR = "\t{1}";
     final static int NAMEI = 0;
-    final static int DESCRIPTIONI = NAMEI + 1;
+    final static int SHORTNAMEI = NAMEI + 1;
+    final static int DESCRIPTIONI = SHORTNAMEI + 1;
     final static int ARRAYDESIGNI = DESCRIPTIONI + 1;
     final static int DATAFILEI = ARRAYDESIGNI + 1;
     final static int SPECIESI = DATAFILEI + 1;
@@ -125,6 +126,7 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
 
         metaData.setName( fields[NAMEI] );
+        metaData.setShortName( fields[SHORTNAMEI] );
         metaData.setDescription( fields[DESCRIPTIONI] );
 
         configureArrayDesigns( fields, metaData );
@@ -281,7 +283,7 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
                         successObjects.add( expName );
                     } catch ( Exception e ) {
                         errorObjects.add( expName + ": " + e.getMessage() );
-                        log.error( "Failure loading " + expName );
+                        log.error( "Failure loading " + expName, e );
                     }
                 }
                 summarizeProcessing();
@@ -307,6 +309,7 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
             watch.stop();
             log.info( watch.getTime() );
         } catch ( Exception e ) {
+            log.fatal( e, e );
             throw new RuntimeException( e );
         }
     }
