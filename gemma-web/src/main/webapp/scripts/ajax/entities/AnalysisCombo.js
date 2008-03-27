@@ -71,7 +71,8 @@ Ext.Gemma.AnalysisCombo.getRecord = function() {
 			{ name: "name", type: "string" },
 			{ name: "description", type: "string" },
 			{ name: "taxon" },
-			{ name: "numDatasets", type: "int" }
+			{ name: "numDatasets", type: "int" },
+			{ name: "datasets" }
 		] );
 	}
 	return Ext.Gemma.AnalysisCombo.record;

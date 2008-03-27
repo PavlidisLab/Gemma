@@ -23,6 +23,11 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 	}
 	Ext.Gemma.CoexpressionSearchForm.superclass.constructor.call( this, superConfig );
 	
+	
+	/*
+	 * Gene settings
+	 */
+	
 	var queryGenesOnly = new Ext.form.Checkbox( {
 		fieldLabel: 'Search among query genes only'
 	} );
@@ -58,6 +63,11 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 	this.stringencyField = stringencyField;
 	Ext.Gemma.CoexpressionSearchForm.addToolTip( stringencyField, 
 		"The minimum number of datasets that must show coexpression for a result to appear" );
+
+
+	/*
+	 * Analysis/datasets and stringency settings.
+	 */
 	
 	var analysisCombo = new Ext.Gemma.AnalysisCombo( {
 		fieldLabel : 'Limit search to',
@@ -75,19 +85,19 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 				thisPanel.customAnalysis = false;
 				customFs.hide();
 				thisPanel.taxonChanged( analysis.taxon );
-				thisPanel.updateDatasetsToBeSearched( analysis.numDatasets );
+				thisPanel.updateDatasetsToBeSearched( analysis.datasets );
 			}
 		} else {
 			thisPanel.customAnalysis = false;
 			customFs.hide();
-			thisPanel.analysisFs.setTitle( "" );
+			thisPanel.optionsPanel.setTitle( "Analysis options" );
 		}
 	} );
 	Ext.Gemma.CoexpressionSearchForm.addToolTip( analysisCombo,
 		"Restrict the list of datasets that will be searched for coexpression" );
-	
+	 	
 	var eeSearchField = new Ext.Gemma.DatasetSearchField( {
-		fieldLabel : "Experiment keywords"
+		fieldLabel : "Experiment keywords" 
 	} );
 	this.eeSearchField = eeSearchField;
 	eeSearchField.on( 'aftersearch', function ( field, results ) {
@@ -98,31 +108,74 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 	Ext.Gemma.CoexpressionSearchForm.addToolTip( eeSearchField,
 		"Search only datasets that match these keywords" );
 	
-	// Pop up the experiments the search turnedup.
-	var eeDetailsButton = new Ext.Button();
+	var activeDatasetsWindow = new Ext.Window({
+			el : 'coexpression-experiments',
+			title : "Active datasets",
+			modal : true,
+			layout : 'fit',
+			autoHeight : true,
+			width: 600,
+			closeAction:'hide',
+			easing : 3, 
+            buttons: [{ 
+               text: 'Close',
+               handler: function(){ 
+                   activeDatasetsWindow.hide();  
+               }
+            }]
+			
+		});
+		
+		
+	var activeDatasetsGrid = new Ext.Gemma.ExpressionExperimentGrid( activeDatasetsWindow.getEl(), {
+			readMethod : GeneLinkAnalysisManagerController.loadExpressionExperiments.bind( this ),
+			editable : false,
+			pageSize : 20 
+		});
 	
+	this.showSelectedDatasets = function( ) {
+
+		/// todo populate from the analysis or the custom settings.		
+		var eeids = this.getActiveEeIds();
+		activeDatasetsGrid.getStore().removeAll();	 
+		activeDatasetsGrid.getStore().load( { params : [ eeids ] }); 
+		activeDatasetsWindow.show();
+		 
+	};
+	
+	var eeDetailsButton = new Ext.Button({ fieldLabel : 'Selected dataset details', id : 'selected-ds-button', cls:"x-btn-icon", icon : "/Gemma/images/icons/information.png", handler : this.showSelectedDatasets, scope : this, disabled : false, tooltip : "Show selected datasets" });
 	
 	var customFs = new Ext.form.FieldSet( {
 		title : 'Custom analysis options',
-		hidden : true,
-		autoHeight: true
+		hidden : true, 
+		autoHeight: true,
+		items: [eeSearchField]
 	} );
 	this.customFs = customFs;
-	customFs.add( eeSearchField );
 	
 	var analysisFs = new Ext.form.FieldSet( {
-		title : 'Analysis options',
+		header : false,
+		border : false,
 		autoHeight : true, 
 		defaults : {
 			labelStyle : 'white-space: nowrap'
 		},
-		labelWidth : 150
+		labelWidth : 150,
+		items : [ stringencyField, analysisCombo, customFs ]
 	} );
-	this.analysisFs = analysisFs;
-	analysisFs.add( stringencyField );
-	analysisFs.add( analysisCombo );
-	analysisFs.add( customFs );
+	 
 
+	
+	analysisFs.columnWidth = 0.90;
+	eeDetailsButton.columnWidth = 0.10;
+	var optionsPanel = new Ext.Panel({
+		title : 'Analysis options',
+		border : true,	
+		frame : true,
+		items : [ analysisFs, eeDetailsButton ]
+	});
+	
+	this.optionsPanel = optionsPanel;
 	
 	var submitButton = new Ext.Button( {
 		text : "Find coexpressed genes",
@@ -131,8 +184,12 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 		}
 	} );
 	
+	
+	/*
+	 * Build the form
+	 */
 	this.add( queryFs );
-	this.add( analysisFs );
+	this.add( optionsPanel );
 	this.addButton( submitButton );
 
 	Ext.Gemma.CoexpressionSearchForm.searchForGene = function( geneId ) {
@@ -345,16 +402,24 @@ Ext.extend( Ext.Gemma.CoexpressionSearchForm, Ext.FormPanel, {
 		this.fireEvent( 'aftersearch', this, result );
 	},
 	
+	
 	updateDatasetsToBeSearched : function ( datasets ) {
 		var numDatasets = datasets instanceof Array ? datasets.length : datasets;
 		this.stringencyField.maxValue = numDatasets;
-		this.analysisFs.setTitle( String.format( "Analysis options (Up to {0} dataset{1} will be analyzed)", numDatasets, numDatasets != 1 ? "s" : "" ) );
+		if (datasets instanceof Array) {
+			 this.eeIds = datasets;
+		}
+		this.optionsPanel.setTitle( String.format( "Analysis options (Up to {0} dataset{1} will be analyzed)", numDatasets, numDatasets != 1 ? "s" : "" ) );
 	},
 	
 	taxonChanged : function ( taxon ) {
 		this.analysisCombo.taxonChanged( taxon );
 		this.eeSearchField.taxonChanged( taxon, this.customFs.hidden ? false : true );
 		this.geneChooserPanel.taxonChanged( taxon );
+	},
+	
+	getActiveEeIds : function() {
+		return this.eeIds;
 	}
 	
 } );
@@ -569,7 +634,7 @@ Ext.extend( Ext.Gemma.CoexpressionSearchFormLite, Ext.FormPanel, {
 		this.loadMask.hide();
 	},
 	
-	clearMessages : function() {Ext.DomHelper.overwrite("coexpression-messages", {tag : 'h3', html : "Coexpression query"  })},
+	clearMessages : function() {Ext.DomHelper.overwrite("coexpression-messages", {tag : 'h3', html : "Coexpression query"  });},
 	
 	taxonChanged : function ( taxon ) {
 		this.geneCombo.setTaxon( taxon );

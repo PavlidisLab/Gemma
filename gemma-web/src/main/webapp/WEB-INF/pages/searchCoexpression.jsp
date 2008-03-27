@@ -16,6 +16,7 @@
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/GenePickerController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/ExtCoexpressionSearchController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/GeneLinkAnalysisManagerController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/DifferentialExpressionSearchController.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/util/GemmaGridPanel.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/util/PagingDataStore.js'></script>
@@ -44,6 +45,7 @@
 <authz:authorize ifNotGranted="admin">
 <input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
 </authz:authorize>
+<div id='coexpression-experiments' class="x-hidden"></div>
 <div id='coexpression-messages' style='width:600px;height:1.2em;margin:0.2em;padding-bottom:1em;'></div>
 <div id='coexpression-summary' style='width: 350px; float: right; margin: 1em;'></div>
 <div id='coexpression-form' style='width: 420px; margin-bottom: 1em;'></div>

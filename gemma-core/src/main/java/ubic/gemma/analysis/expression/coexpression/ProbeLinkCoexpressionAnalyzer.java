@@ -64,11 +64,6 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
     private static final int MAX_GENES_TO_COMPUTE_GOOVERLAP = 100;
     private static final int MAX_GENES_TO_COMPUTE_EESTESTEDIN = 100;
 
-    /**
-     * We won't return more genes than this (per gene type category) TODO implement this.
-     */
-    private static final int MAX_GENES_TO_RETURN = 300;
-
     private static final int EETESTEDGENE_CACHE_SIZE = 500; // number of data sets.
 
     private GeneService geneService;
@@ -143,7 +138,7 @@ public class ProbeLinkCoexpressionAnalyzer implements InitializingBean {
 
         // don't fill in the gene info etc if we're in batch mode.
         if ( limit > 0 ) {
-            filter( coexpressions, MAX_GENES_TO_RETURN ); // remove excess
+            filter( coexpressions, limit ); // remove excess
             fillInEEInfo( coexpressions ); // do first...
             fillInGeneInfo( stringency, coexpressions );
             computeGoStats( coexpressions, stringency );

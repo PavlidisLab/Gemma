@@ -68,6 +68,7 @@
 	<script type='text/javascript' src='/Gemma/scripts/ajax/util/PagingDataStore.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/util/PagingToolbar.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/DatasetSearchField.js'></script>
+	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/AnalysisCombo.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionGrid.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionDatasetGrid.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionSearchForm.js'></script>

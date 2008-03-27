@@ -22,10 +22,9 @@ Ext.Gemma.ExpressionExperimentGrid = function ( div, config ) {
 	var thisGrid = this;
 	 
 	
-	/* establish default config options.
+	/* default config options.
 	 */
 	var superConfig = {
-		renderTo : div,
 		collapsible : false,
 		header : true,
 		collapsed : false,
@@ -34,6 +33,10 @@ Ext.Gemma.ExpressionExperimentGrid = function ( div, config ) {
 		layout : 'fit',
 		hidden : false
 	};
+	
+	if (div) {
+		superConfig.renderTo = div;
+	}
 	
 	var fields = [
 		{ id: 'shortName', header: "Dataset", dataIndex: "shortName", renderer: Ext.Gemma.ExpressionExperimentGrid.getEEStyler(), width : 80 },

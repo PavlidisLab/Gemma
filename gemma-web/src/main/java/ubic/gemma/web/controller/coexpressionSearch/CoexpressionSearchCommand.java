@@ -107,8 +107,8 @@ public class CoexpressionSearchCommand {
     @Override
     public String toString() {
         return "GeneIds=" + StringUtils.join( getGeneIds(), "," ) + " Analysis=" + this.getCannedAnalysisId()
-                + " QueryGenesOnly=" + this.getQueryGenesOnly() + " taxon=" + getTaxonId() + " eeQuery="
-                + getEeQuery() + " Stringency=" + stringency;
+                + " QueryGenesOnly=" + this.getQueryGenesOnly() + " taxon=" + getTaxonId() + " eeQuery=" + getEeQuery()
+                + " Stringency=" + stringency + " ees=" + StringUtils.join( getEeIds(), "," );
     }
 
 }

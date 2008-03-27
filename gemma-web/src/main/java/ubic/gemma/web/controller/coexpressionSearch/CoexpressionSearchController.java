@@ -87,6 +87,7 @@ public class CoexpressionSearchController extends BaseFormController {
      */
     @SuppressWarnings("unchecked")
     public Collection<Long> findExpressionExperiments( String query, Long taxonId ) {
+        log.info( "Search: " + query + " taxon=" + taxonId );
         return searchService.searchExpressionExperiments( query, taxonId );
     }
 
@@ -96,7 +97,7 @@ public class CoexpressionSearchController extends BaseFormController {
      * @return
      */
     public Collection<CannedAnalysisValueObject> getCannedAnalyses() {
-        return geneCoexpressionService.getCannedAnalyses();
+        return geneCoexpressionService.getCannedAnalyses( true, true );
     }
 
     public CoexpressionMetaValueObject getEmptyResult() {

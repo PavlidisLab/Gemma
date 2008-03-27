@@ -401,14 +401,13 @@ public class GeneCoexpressionService {
         }
 
         /*
-         * FIXME implement maxresults here. FIXME this is done just naively (slow) right now. allow the user to show
-         * only interactions among their genes of interest and filter the results before the time-consuming analysis is
-         * done...
+         * FIXME this is done just naively (slow) right now. allow the user to show only interactions among their genes
+         * of interest and filter the results before the time-consuming analysis is done...
          */
         for ( Gene queryGene : genes ) {
 
             CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis( queryGene,
-                    ees, stringency, knownGenesOnly, NUM_GENES_TO_DETAIL );
+                    ees, stringency, knownGenesOnly, maxResults );
 
             addExtCoexpressionValueObjects( queryGene, result.getDatasets(), coexpressions.getKnownGeneCoexpression(),
                     stringency, queryGenesOnly, geneIds, result.getKnownGeneResults(), result.getKnownGeneDatasets() );
