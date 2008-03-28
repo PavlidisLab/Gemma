@@ -12,7 +12,7 @@ Ext.onReady( function() {
 	var admin = dwr.util.getValue("hasAdmin");
 	
 	var analysisGrid = new Ext.Gemma.GeneLinkAnalysisGrid( "genelinkanalysis-analysisgrid", {
-		readMethod : GeneLinkAnalysisManagerController.getCannedAnalyses.bind( this ),
+		readMethod : ExpressionExperimentController.getCannedAnalyses.bind( this ),
 		editable : admin,
 		title : "Available analyses"
 	} );
@@ -21,7 +21,7 @@ Ext.onReady( function() {
 
  
 	var sourceAnalysisGrid = new Ext.Gemma.ExpressionExperimentGrid( "genelinkanalysis-datasetgrid",  {
-		readMethod : GeneLinkAnalysisManagerController.loadExpressionExperiments.bind( this ),
+		readMethod : ExpressionExperimentController.loadExpressionExperiments.bind( this ),
 		editable : false,
 		admin : admin,
 		title : "Datasets in source analysis",
@@ -30,7 +30,7 @@ Ext.onReady( function() {
 	} );
 	
 	var virtualAnalysisGrid = new Ext.Gemma.ExpressionExperimentGrid( "genelinkanalysis-newanalysis", {
-		readMethod : GeneLinkAnalysisManagerController.loadExpressionExperiments.bind( this ),
+		readMethod : ExpressionExperimentController.loadExpressionExperiments.bind( this ),
 		editable : admin,
 		title : "Virtual analysis",
 		pageSize : 10,

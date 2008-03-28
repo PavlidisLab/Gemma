@@ -128,19 +128,17 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 		
 		
 	var activeDatasetsGrid = new Ext.Gemma.ExpressionExperimentGrid( activeDatasetsWindow.getEl(), {
-			readMethod : GeneLinkAnalysisManagerController.loadExpressionExperiments.bind( this ),
+			readMethod : ExpressionExperimentController.loadExpressionExperiments.bind( this ),
 			editable : false,
 			pageSize : 20 
 		});
 	
 	this.showSelectedDatasets = function( ) {
-
-		/// todo populate from the analysis or the custom settings.		
 		var eeids = this.getActiveEeIds();
 		activeDatasetsGrid.getStore().removeAll();	 
+		activeDatasetsGrid.expandedElements = [];
 		activeDatasetsGrid.getStore().load( { params : [ eeids ] }); 
 		activeDatasetsWindow.show();
-		 
 	};
 	
 	var eeDetailsButton = new Ext.Button({ fieldLabel : 'Selected dataset details', id : 'selected-ds-button', cls:"x-btn-icon", icon : "/Gemma/images/icons/information.png", handler : this.showSelectedDatasets, scope : this, disabled : false, tooltip : "Show selected datasets" });

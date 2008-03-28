@@ -859,6 +859,16 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     }
 
     /**
+     * @param id
+     * @return
+     */
+    public String getDescription( Long id ) {
+        ExpressionExperiment ee = expressionExperimentService.load( id );
+        if ( ee == null ) return null;
+        return ee.getDescription();
+    }
+
+    /**
      * AJAX
      * 
      * @param id of an experimental factor
@@ -879,6 +889,20 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         }
 
         return result;
+    }
+
+    /**
+     * AJAX
+     * 
+     * @param ids of EEs to load
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<ExpressionExperimentValueObject> loadExpressionExperiments( Collection<Long> ids ) {
+        if ( ids == null || ids.isEmpty() ) {
+            return expressionExperimentService.loadAllValueObjects();
+        }
+        return expressionExperimentService.loadValueObjects( ids );
     }
 
     /**

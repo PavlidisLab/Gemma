@@ -207,19 +207,6 @@ public class GeneLinkAnalysisManagerController extends BaseFormController {
         return eeids;
     }
 
-    /**
-     * @param query
-     * @param taxonId
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public Collection<ExpressionExperimentValueObject> loadExpressionExperiments( Collection<Long> ids ) {
-        if ( ids == null || ids.isEmpty() ) {
-            return expressionExperimentService.loadAllValueObjects();
-        }
-        return expressionExperimentService.loadValueObjects( ids );
-    }
-
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
     }

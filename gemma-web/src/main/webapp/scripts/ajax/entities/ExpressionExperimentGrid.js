@@ -38,7 +38,12 @@ Ext.Gemma.ExpressionExperimentGrid = function ( div, config ) {
 		superConfig.renderTo = div;
 	}
 	
+	this.rowExpander = new Ext.Gemma.EEGridRowExpander( {
+		tpl : ""
+	} );
+	
 	var fields = [
+		this.rowExpander,
 		{ id: 'shortName', header: "Dataset", dataIndex: "shortName", renderer: Ext.Gemma.ExpressionExperimentGrid.getEEStyler(), width : 80 },
 		{ id: 'name', header: "Name", dataIndex: "name", width : 120 },
 		{ id: 'arrays', header: "Arrays", dataIndex: "arrayDesignCount", width : 50 },
@@ -79,6 +84,7 @@ Ext.Gemma.ExpressionExperimentGrid = function ( div, config ) {
 	
 	superConfig.cm = new Ext.grid.ColumnModel( fields );
 	superConfig.cm.defaultSortable = true;
+	superConfig.plugins = this.rowExpander;
 	
 	superConfig.autoExpandColumn = 'name';
 
@@ -158,7 +164,8 @@ Ext.Gemma.ExpressionExperimentGrid.getRecord = function() {
 			{ name:"name", type:"string" },
 			{ name:"arrayDesignCount", type:"int" },
 			{ name:"bioAssayCount", type:"int" },
-			{ name:"externalUri", type:"string" }
+			{ name:"externalUri", type:"string" },
+			{ name:"description", type:"string"}
 		] );
 	}
 	return Ext.Gemma.ExpressionExperimentGrid.record;
@@ -267,5 +274,40 @@ Ext.extend(Ext.Gemma.DatasetSearchToolBar, Ext.Toolbar, {
 	}
 	
 });
+
+
+Ext.Gemma.EEGridRowExpander = function ( config ) {
+ 
+	this.grid = config.grid;
+	var superConfig = {
+	};
+	
+	for ( property in config ) {
+		superConfig[property] = config[property];
+	}
+	Ext.Gemma.EEGridRowExpander.superclass.constructor.call( this, superConfig );
+	
+};
+
+Ext.extend( Ext.Gemma.EEGridRowExpander, Ext.grid.RowExpander, {
+	
+		fillExpander : function( data, body, rowIndex ) {
+			//var bodyEl = new Ext.Element( body );  
+			Ext.DomHelper.overwrite( body, { tag : 'p', html : data} );
+		},
+	
+		beforeExpand : function (record, body, rowIndex) {
+			if(this.fireEvent('beforeexpand', this, record, body, rowIndex) !== false){
+			 
+			 
+				ExpressionExperimentController.getDescription(record.id, { callback : this.fillExpander.createDelegate(this, [body, rowIndex], true) } );
+				return true;
+			}
+			
+			return false;
+		}
+	
+});
+
 
  
