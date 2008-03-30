@@ -9,12 +9,20 @@ Ext.namespace('Ext.Gemma');
  */
 Ext.Gemma.DatasetSearchField = function ( config ) {
 
-	this.loadMask = config.loadMask; delete config.loadMask;
-	this.filtering = config.filtering; delete config.filtering;
+	this.loadMask = config.loadMask; 
+	this.filtering = config.filtering; 
 	this.eeIds = [];
 	this.filterFrom = []; // starting set.
+	
+	var superConfig = { 
+		loadingText : 'Searching...',
+	};
+	
+	for ( property in config ) {
+		superConfig[property] = config[property];
+	}
 
-	Ext.Gemma.DatasetSearchField.superclass.constructor.call( this, config );
+	Ext.Gemma.DatasetSearchField.superclass.constructor.call( this, superConfig );
 	
 	this.on( 'beforesearch', function( field, query ) {
 		if ( this.loadMask ) {

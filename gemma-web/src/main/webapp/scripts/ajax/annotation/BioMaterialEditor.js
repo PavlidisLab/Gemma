@@ -269,13 +269,11 @@ Ext.Gemma.BioMaterialToolbar = function ( config ) {
 	} );
 	
 	var refreshButton = new Ext.Toolbar.Button( {
-		text : "expand all",
-		tooltip : "Show all biomaterial details",
+		text : "Expand/collapse all",
+		tooltip : "Show/hide all biomaterial details",
 		handler : function() {
 			var expander = Ext.Gemma.BioMaterialGrid.getRowExpander()
-			for ( var i=0; thisToolbar.grid.getView().getRow( i ); ++i ) {
-				expander.expandRow( i );
-			}
+			expander.toggleAll();
 		}
 	} );
 	

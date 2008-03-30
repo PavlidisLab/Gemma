@@ -38,17 +38,21 @@ Ext.Gemma.ExpressionExperimentGrid = function ( div, config ) {
 		superConfig.renderTo = div;
 	}
 	
-	this.rowExpander = new Ext.Gemma.EEGridRowExpander( {
-		tpl : ""
-	} );
-	
+		
 	var fields = [
-		this.rowExpander,
 		{ id: 'shortName', header: "Dataset", dataIndex: "shortName", renderer: Ext.Gemma.ExpressionExperimentGrid.getEEStyler(), width : 80 },
 		{ id: 'name', header: "Name", dataIndex: "name", width : 120 },
 		{ id: 'arrays', header: "Arrays", dataIndex: "arrayDesignCount", width : 50 },
 		{ id: 'assays', header: "Assays", dataIndex: "bioAssayCount", renderer: Ext.Gemma.ExpressionExperimentGrid.getAssayCountStyler() , width : 50 }
 	];
+	
+	if (config.rowExpander) {
+		this.rowExpander = new Ext.Gemma.EEGridRowExpander( {
+			tpl : ""
+		} );
+		fields.unshift(this.rowExpander);
+		superConfig.plugins = this.rowExpander;
+	}
 	
 	if ( this.pageSize ) {
 		if ( !this.records ) {
@@ -84,7 +88,7 @@ Ext.Gemma.ExpressionExperimentGrid = function ( div, config ) {
 	
 	superConfig.cm = new Ext.grid.ColumnModel( fields );
 	superConfig.cm.defaultSortable = true;
-	superConfig.plugins = this.rowExpander;
+	
 	
 	superConfig.autoExpandColumn = 'name';
 
@@ -110,7 +114,6 @@ Ext.Gemma.ExpressionExperimentGrid = function ( div, config ) {
 			
 		}, this 
 	);
-	
 	
 	this.getStore().on( "load", function () {
 		this.autoSizeColumns();
@@ -297,14 +300,12 @@ Ext.extend( Ext.Gemma.EEGridRowExpander, Ext.grid.RowExpander, {
 		},
 	
 		beforeExpand : function (record, body, rowIndex) {
-			if(this.fireEvent('beforeexpand', this, record, body, rowIndex) !== false){
-			 
-			 
+			//if( this.fireEvent('beforeexpand', this, record, body, rowIndex) !== false ){
 				ExpressionExperimentController.getDescription(record.id, { callback : this.fillExpander.createDelegate(this, [body, rowIndex], true) } );
 				return true;
-			}
+			//}
 			
-			return false;
+			//return false;
 		}
 	
 });

@@ -1,17 +1,16 @@
 <%@ include file="/common/taglibs.jsp"%>
-
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 <head>
 	<title><fmt:message key="searchCoexpression.title" /></title>
 	<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/${appConfig["theme"]}/theme.css'/>" />
+	<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/spinner.css'/>" />
 	<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
 	<script src="<c:url value='/scripts/ext/ext-all-debug.js'/>" type="text/javascript"></script>
 	<script src="<c:url value='/scripts/ext/RowExpander.js'/>" type="text/javascript"></script>
 	<script src="<c:url value='/scripts/ext/data/PagingMemoryProxy.js'/>" type="text/javascript"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
+	<script type="text/javascript" src="<c:url value='/scripts/ext/Spinner.js'/>"></script>
+	<script type="text/javascript" src="<c:url value='/scripts/ext/SpinnerStrategy.js'/>"></script>
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/GenePickerController.js'></script>
@@ -24,20 +23,20 @@
 	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/DatasetSearchField.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/ExpressionExperimentGrid.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/AnalysisCombo.js'></script>
-	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/GeneCombo.js'></script>
-	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/TaxonCombo.js'></script>
-	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/GeneChooserPanel.js'></script>
+	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/GeneCombo.js'></script>
+	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/GeneImportPanel.js'></script>
+	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/TaxonCombo.js'></script>
+	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/GeneChooserPanel.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/DifferentialExpressionGrid.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionGrid.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionGridRowExpander.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionDatasetGrid.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionSearchForm.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionSearch.js'></script>
+	
+	<content tag="heading"><fmt:message key="searchCoexpression.heading" /></content>
+	
 </head>
-
-<h1>
-	<fmt:message key="searchCoexpression.heading" />
-</h1>
 
 <authz:authorize ifAnyGranted="admin">
 <input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
@@ -45,8 +44,11 @@
 <authz:authorize ifNotGranted="admin">
 <input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
 </authz:authorize>
-<div id='coexpression-experiments' class="x-hidden"></div>
-<div id='coexpression-messages' style='width:600px;height:1.2em;margin:0.2em;padding-bottom:1em;'></div>
+
+<div id='coexpression-messages' style='width:100%;height:1.2em;margin:5px'></div>
 <div id='coexpression-summary' style='width: 350px; float: right; margin: 1em;'></div>
-<div id='coexpression-form' style='width: 420px; margin-bottom: 1em;'></div>
+<div id='coexpression-form' style='width: 650px; margin-bottom: 1em;'></div>
 <div id='coexpression-results' style=''></div>
+
+<div id='coexpression-experiments' class="x-hidden"  style='width:600px'></div>
+<div id='coexpression-genes' class="x-hidden"  style='width:600px'></div>

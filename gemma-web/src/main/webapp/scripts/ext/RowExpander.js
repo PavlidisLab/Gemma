@@ -27,6 +27,7 @@ Ext.grid.RowExpander = function(config){
 
     this.state = {};
     this.bodyContent = {};
+    		
 };
 
 Ext.extend(Ext.grid.RowExpander, Ext.util.Observable, {
@@ -99,9 +100,15 @@ Ext.extend(Ext.grid.RowExpander, Ext.util.Observable, {
                 body.innerHTML = this.getBodyContent(record, rowIndex);
             }
             return true;
-        }else{
+        }else {
             return false;
         }
+    },
+
+    toggleAll : function( ){
+        for ( var i=0; this.grid.getView().getRow( i ); ++i ) {
+			this.toggleRow(i);	 
+		}
     },
 
     toggleRow : function(row){

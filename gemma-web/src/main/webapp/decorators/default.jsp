@@ -7,7 +7,8 @@
 	<head>
 		<%-- Include common set of meta tags for each layout --%>
 		<%@ include file="/common/meta.jsp"%>
-		<title><decorator:title /> | <fmt:message key="webapp.name" /></title>
+		<title><decorator:title /> | <fmt:message key="webapp.name" />
+		</title>
 
 
 		<link href="<c:url value='/styles/ext-all.css'/>" media="screen" rel="stylesheet" type="text/css" />
@@ -33,28 +34,37 @@
 
 			<div id="content" class="clearfix">
 
-<% 
-	//Adds the page help link if not a help page already
-	String helpuri = request.getRequestURI();
-	if ((!helpuri.toLowerCase().contains("_help")) && (!helpuri.toLowerCase().contains("static") )){
-	%>
-	<div id="help" style="font-size:smaller;float:right;">	<a target="_blank" href="
 
-
-	<%
-	helpuri = helpuri.substring(0,helpuri.length() - 5) + "_help.html";
-	helpuri = helpuri.replace("Gemma/", "Gemma/static/");
-	out.print(helpuri );
- %>
-	">page help</a>
-	</div>
-<%} %>
 
 				<div id="main">
 					<%@ include file="/common/messages.jsp"%>
+
+					<%
+					            //Adds the page help link if not a help page already
+					            String helpuri = request.getRequestURI();
+					            if ( !helpuri.toLowerCase().contains( "_help" ) && !helpuri.toLowerCase().contains( "static" ) ) {
+					%>
+					<div id="help" style="font-size: smaller; float: right;">
+						<a target="_blank"
+							href="
+	<%
+		helpuri = helpuri.substring(0,helpuri.length() - 5) + "_help.html";
+		helpuri = helpuri.replace("Gemma/", "Gemma/static/");
+		out.print(helpuri );
+ 	%>
+		">page
+							help</a>
+					</div>
+					<%
+					}
+					%>
+
 					<h2>
 						<decorator:getProperty property="page.heading" />
 					</h2>
+
+
+
 					<decorator:body />
 				</div>
 

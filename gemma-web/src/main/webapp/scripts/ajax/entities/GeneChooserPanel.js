@@ -19,7 +19,7 @@ Ext.Gemma.GeneChooserPanel = function ( config ) {
 	if ( this.showTaxon ) {
 		taxonCombo = new Ext.Gemma.TaxonCombo( {
 			emptyText : 'select a taxon',
-			width : 150
+			width : 120
 		} );
 		taxonCombo.on( "taxonchanged", function( combo, taxon ) {
 			thisGrid.taxonChanged( taxon );
@@ -36,7 +36,8 @@ Ext.Gemma.GeneChooserPanel = function ( config ) {
 	this.geneCombo = geneCombo;
 	
 	var addButton = new Ext.Toolbar.Button( {
-		text : "+",
+		icon : "/Gemma/images/icons/add.png",
+		cls:"x-btn-icon",
 		tooltip : "Add a gene to the list",
 		disabled : true,
 		handler : function() {
@@ -47,13 +48,14 @@ Ext.Gemma.GeneChooserPanel = function ( config ) {
 				thisGrid.getStore().add( [ record ] );
 			}
 			geneCombo.reset();
-			addButton.disable();
+			addButton.disable(); 
 		}
 	} );
 	this.addButton = addButton;
 	
 	var removeButton = new Ext.Toolbar.Button( {
-		text : "-",
+		icon : "/Gemma/images/icons/subtract.png",
+		cls:"x-btn-icon",
 		tooltip : "Remove the selected gene from the list",
 		disabled : true,
 		handler : function() {
@@ -61,9 +63,27 @@ Ext.Gemma.GeneChooserPanel = function ( config ) {
 			for ( var i=0; i<selected.length; ++i ) {
 				thisGrid.getStore().remove( selected[i] );
 			}
-			removeButton.disable();
+			removeButton.disable(); 
 		}
 	} );
+	
+	var multiButton = new Ext.Toolbar.Button( {
+		icon : "/Gemma/images/icons/page_white_put.png",
+		cls:"x-btn-icon",
+		tooltip : "Import multiple genes",
+		disabled : false,
+		handler : function() {
+			
+			// show the multigene chooser
+			var chooser = new Ext.Gemma.GeneImportPanel({el : 'coexpression-genes'});
+			chooser.show();
+			
+			geneCombo.reset();
+			addButton.enable(); 
+		}
+	} );
+	this.multiButton = multiButton;
+	
 	
 	var tbarItems = this.showTaxon ? [ taxonCombo, new Ext.Toolbar.Spacer() ] : [];
 	tbarItems.push (
@@ -71,7 +91,9 @@ Ext.Gemma.GeneChooserPanel = function ( config ) {
 		new Ext.Toolbar.Spacer(),
 		addButton,
 		new Ext.Toolbar.Spacer(),
-		removeButton
+		removeButton,
+		new Ext.Toolbar.Spacer(),
+		multiButton
 	);
 	
 	var debugButton = new Ext.Toolbar.Button( {
@@ -87,7 +109,7 @@ Ext.Gemma.GeneChooserPanel = function ( config ) {
 	/* establish default config options...
 	 */
 	var superConfig = {
-		autoHeight : true,
+		autoHeight : true, 
 		autoScroll : true,
 		tbar : tbarItems,
 		store : new Ext.data.SimpleStore( {
@@ -132,7 +154,7 @@ Ext.Gemma.GeneChooserPanel = function ( config ) {
 	}
 	
 	this.getStore().on( "load", function () {
-		this.autoSizeColumns();
+		//this.autoSizeColumns();
 		this.doLayout();
 	}, this );
 };

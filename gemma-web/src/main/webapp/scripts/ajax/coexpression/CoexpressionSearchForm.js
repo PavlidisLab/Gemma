@@ -7,7 +7,7 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 	/* establish default config options...
 	 */
 	var superConfig = {
-		width : 420,
+		width : 470,
 		autoHeight : true,
 		frame : true,
 		stateful : true,
@@ -28,15 +28,10 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 	 * Gene settings
 	 */
 	
-	var queryGenesOnly = new Ext.form.Checkbox( {
-		fieldLabel: 'Search among query genes only'
-	} );
-	this.queryGenesOnly = queryGenesOnly;
 	
-	var geneChooserPanel = new Ext.Gemma.GeneChooserPanel( {
-		width : 390,
-		showTaxon : true,
-		bbar : [ queryGenesOnly, new Ext.Toolbar.Spacer(), new Ext.Toolbar.TextItem( queryGenesOnly.fieldLabel ) ]
+	
+	var geneChooserPanel = new Ext.Gemma.GeneChooserPanel( { 
+		showTaxon : true 
 	} );
 	this.geneChooserPanel = geneChooserPanel;
 	this.geneChooserPanel.taxonCombo.on( "taxonchanged", function ( combo, taxon ) {
@@ -48,6 +43,7 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 		autoHeight : true 
 	} );
 	queryFs.add( geneChooserPanel );
+	
 	
 	var stringencyField = new Ext.form.NumberField( {
 		allowBlank : false,
@@ -78,6 +74,7 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 		if ( analysis ) {
 			if ( analysis.id < 0 ) { // custom analysis
 				thisPanel.customAnalysis = true;
+				customFs.doLayout();
 				customFs.show();
 				thisPanel.updateDatasetsToBeSearched( eeSearchField.getEeIds() );
 				eeSearchField.findDatasets();
@@ -97,7 +94,8 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 		"Restrict the list of datasets that will be searched for coexpression" );
 	 	
 	var eeSearchField = new Ext.Gemma.DatasetSearchField( {
-		fieldLabel : "Experiment keywords" 
+		fieldLabel : "Experiment keywords" ,
+		width : 150
 	} );
 	this.eeSearchField = eeSearchField;
 	eeSearchField.on( 'aftersearch', function ( field, results ) {
@@ -108,13 +106,41 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 	Ext.Gemma.CoexpressionSearchForm.addToolTip( eeSearchField,
 		"Search only datasets that match these keywords" );
 	
+	
+	var customFs = new Ext.form.FieldSet( {
+		title : 'Custom analysis options',
+		hidden : true, 
+		autoHeight: true,
+		autoWidth:true,
+		items :  [eeSearchField] 
+	} );
+	
+	this.customFs = customFs;
+	
+	var queryGenesOnly = new Ext.form.Checkbox( {
+		fieldLabel: 'Search among query genes only'
+	} );
+	this.queryGenesOnly = queryGenesOnly;
+	
+	var analysisFs = new Ext.form.FieldSet( {
+		autoHeight : true, 
+		border : false,
+		defaults : {
+			labelStyle : 'white-space: nowrap'
+		},
+		labelWidth : 180,
+		items : [ stringencyField, queryGenesOnly, analysisCombo, customFs ]
+	} );
+	 
+
+
 	var activeDatasetsWindow = new Ext.Window({
 			el : 'coexpression-experiments',
 			title : "Active datasets",
 			modal : true,
 			layout : 'fit',
 			autoHeight : true,
-			width: 600,
+			width : 600,
 			closeAction:'hide',
 			easing : 3, 
             buttons: [{ 
@@ -130,6 +156,7 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 	var activeDatasetsGrid = new Ext.Gemma.ExpressionExperimentGrid( activeDatasetsWindow.getEl(), {
 			readMethod : ExpressionExperimentController.loadExpressionExperiments.bind( this ),
 			editable : false,
+			rowExpander : true,
 			pageSize : 20 
 		});
 	
@@ -141,34 +168,13 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 		activeDatasetsWindow.show();
 	};
 	
-	var eeDetailsButton = new Ext.Button({ fieldLabel : 'Selected dataset details', id : 'selected-ds-button', cls:"x-btn-icon", icon : "/Gemma/images/icons/information.png", handler : this.showSelectedDatasets, scope : this, disabled : false, tooltip : "Show selected datasets" });
-	
-	var customFs = new Ext.form.FieldSet( {
-		title : 'Custom analysis options',
-		hidden : true, 
-		autoHeight: true,
-		items: [eeSearchField]
-	} );
-	this.customFs = customFs;
-	
-	var analysisFs = new Ext.form.FieldSet( {
-		header : false,
-		border : false,
-		autoHeight : true, 
-		defaults : {
-			labelStyle : 'white-space: nowrap'
-		},
-		labelWidth : 150,
-		items : [ stringencyField, analysisCombo, customFs ]
-	} );
-	 
 
-	
-	analysisFs.columnWidth = 0.90;
-	eeDetailsButton.columnWidth = 0.10;
+	var eeDetailsButton = new Ext.Button({ fieldLabel : 'Selected dataset details', id : 'selected-ds-button', cls:"x-btn-icon", icon : "/Gemma/images/icons/information.png", handler : this.showSelectedDatasets, scope : this, disabled : false, tooltip : "Show selected datasets" });
+ 
 	var optionsPanel = new Ext.Panel({
 		title : 'Analysis options',
 		border : true,	
+		layout : 'anchor',
 		frame : true,
 		items : [ analysisFs, eeDetailsButton ]
 	});
@@ -189,6 +195,13 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 	this.add( queryFs );
 	this.add( optionsPanel );
 	this.addButton( submitButton );
+
+//	var stringencySpinner = new Ext.ux.form.Spinner({
+//		renderTo : this.stringencyField.getEl(),
+//		strategy: new Ext.ux.form.Spinner.NumberStrategy({
+//			allowDecimals : false, minValue:2, maxValue:100 })
+//	}); 
+//	this.stringencySpinner = stringencySpinner; 
 
 	Ext.Gemma.CoexpressionSearchForm.searchForGene = function( geneId ) {
 		geneChooserPanel.setGene.call( geneChooserPanel, geneId, thisPanel.doSearch.bind( thisPanel ) );

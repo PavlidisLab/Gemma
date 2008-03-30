@@ -895,14 +895,23 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      * AJAX
      * 
      * @param ids of EEs to load
-     * @return
+     * @return security-filtered set of value objects.
      */
     @SuppressWarnings("unchecked")
     public Collection<ExpressionExperimentValueObject> loadExpressionExperiments( Collection<Long> ids ) {
+
+        // required for security filtering.
+        Collection<ExpressionExperiment> ees;
+        Collection<Long> filteredIds = new HashSet<Long>();
         if ( ids == null || ids.isEmpty() ) {
-            return expressionExperimentService.loadAllValueObjects();
+            ees = expressionExperimentService.loadAll();
+        } else {
+            ees = expressionExperimentService.loadMultiple( ids );
         }
-        return expressionExperimentService.loadValueObjects( ids );
+        for ( ExpressionExperiment ee : ees ) {
+            filteredIds.add( ee.getId() );
+        }
+        return expressionExperimentService.loadValueObjects( filteredIds );
     }
 
     /**

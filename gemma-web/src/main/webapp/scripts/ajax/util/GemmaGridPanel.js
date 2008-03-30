@@ -9,8 +9,10 @@ Ext.Gemma.GemmaGridPanel = function ( config ) {
 	 */
 	var superConfig = {
 		loadMask : true,
+		forceFit : true,
 		selModel : new Ext.grid.RowSelectionModel(),
 		autoHeight : true,
+		frame:false,
 		autoScroll : true,
 		bbar : [],
 		tbar : [],
@@ -37,6 +39,8 @@ Ext.Gemma.GemmaGridPanel = function ( config ) {
 		superConfig[property] = config[property];
 	}
 	Ext.Gemma.GemmaGridPanel.superclass.constructor.call( this, superConfig );
+	
+	
 };
 
 /* static methods
@@ -53,7 +57,7 @@ Ext.extend( Ext.Gemma.GemmaGridPanel, Ext.grid.EditorGridPanel, {
 
 	autoSizeColumns: function() {
 	    for (var i = 0; i < this.colModel.getColumnCount(); i++) {
-    		this.autoSizeColumn(i);
+    	//	this.autoSizeColumn(i);
 	    }
 	},
 

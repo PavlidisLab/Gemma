@@ -1015,11 +1015,16 @@ public class SearchService implements InitializingBean {
          * official symbols. For the other searches I think exact matches are the only thing that makes sense.
          */
 
-        geneSet.addAll( geneService.findByAlias( exactString ) );
-        geneSet.addAll( geneProductService.getGenesByName( exactString ) );
-        geneSet.addAll( geneProductService.getGenesByNcbiId( exactString ) );
-        geneSet.addAll( bioSequenceService.getGenesByAccession( exactString ) );
-        geneSet.addAll( bioSequenceService.getGenesByName( exactString ) );
+        /*
+         * If we found a match using official symbol, don't bother with this
+         */
+        if ( geneSet.isEmpty() ) {
+            geneSet.addAll( geneService.findByAlias( exactString ) );
+            geneSet.addAll( geneProductService.getGenesByName( exactString ) );
+            geneSet.addAll( geneProductService.getGenesByNcbiId( exactString ) );
+            geneSet.addAll( bioSequenceService.getGenesByAccession( exactString ) );
+            geneSet.addAll( bioSequenceService.getGenesByName( exactString ) );
+        }
 
         watch.stop();
         if ( watch.getTime() > 1000 )
