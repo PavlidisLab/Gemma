@@ -306,6 +306,7 @@ Ext.extend( Ext.Gemma.CoexpressionSearchForm, Ext.FormPanel, {
 		var analysisId = this.analysisCombo.getValue();
 		if ( analysisId < 0 ) {
 			csc.eeIds = this.eeSearchField.getEeIds();
+			csc.eeQuery = this.eeSearchField.getValue();
 		} else {
 			csc.cannedAnalysisId = analysisId;
 		}
@@ -331,6 +332,7 @@ Ext.extend( Ext.Gemma.CoexpressionSearchForm, Ext.FormPanel, {
 		} else {
 			csc.cannedAnalysisId = param.a;
 		}
+		 
 		return csc;
 	},
 	
@@ -361,12 +363,12 @@ Ext.extend( Ext.Gemma.CoexpressionSearchForm, Ext.FormPanel, {
 		if ( csc.queryGenesOnly ) {
 			this.queryGenesOnly.setValue( true );
 		}
-		if ( csc.cannedAnalysisId < 0 ) {
+		if ( csc.cannedAnalysisId === null || csc.cannedAnalysisId < 0 ) {
 			this.customFs.show();
 			this.eeSearchField.setValue( csc.eeQuery );
 			this.updateDatasetsToBeSearched( csc.eeIds );
 		} else {
-			// TODO update the number of datasets to be searched...
+			
 		}
 		
 		/* perform the search with the specified values...
@@ -391,6 +393,11 @@ Ext.extend( Ext.Gemma.CoexpressionSearchForm, Ext.FormPanel, {
 		} else {
 			url += String.format( "&a={0}", csc.cannedAnalysisId );
 		}
+		
+		if (csc.eeQuery) {
+			url += "&eeq=" + csc.eeQuery;
+		}
+		
 		return url;
 	},
 
