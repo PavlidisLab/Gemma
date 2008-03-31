@@ -143,6 +143,10 @@ public class GeneCoexpressionService {
 
         GeneCoexpressionAnalysis analysis = ( GeneCoexpressionAnalysis ) geneCoexpressionAnalysisService
                 .load( cannedAnalysisId );
+        
+        if (analysis == null) {
+            throw new IllegalArgumentException("No such analysis with id=" + cannedAnalysisId);
+        }
 
         boolean virtual = analysis instanceof GeneCoexpressionVirtualAnalysis;
 
