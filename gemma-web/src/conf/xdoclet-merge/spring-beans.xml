@@ -486,6 +486,7 @@ Mapping URLS to controllers
 							<value>getTaxa</value>
 							<value>getGenes</value>
 							<value>searchGenes</value>
+							<value>searchMultipleGenes</value>
 						</list>
 					</property>
 				</bean>

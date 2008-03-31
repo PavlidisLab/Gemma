@@ -18,12 +18,17 @@
  */
 package ubic.gemma.web.controller.genome.gene;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
+
+import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.loader.genome.taxon.SupportedTaxa;
 import ubic.gemma.model.genome.Gene;
@@ -88,6 +93,37 @@ public class GenePickerController extends BaseMultiActionController {
         Collection<Gene> genes = new HashSet<Gene>();
         for ( SearchResult sr : geneSearchResults ) {
             genes.add( ( Gene ) sr.getResultObject() );
+        }
+        return genes;
+    }
+
+    /**
+     * Search for multiple genes at once. This attempts to limit the number of genes per query to only one.
+     * 
+     * @param query A list of gene names (symbols), one per line.
+     * @param taxonId
+     * @return
+     * @throws IOException
+     */
+    public Collection<Gene> searchMultipleGenes( String query, Long taxonId ) throws IOException {
+        Taxon taxon = taxonService.load( taxonId );
+
+        BufferedReader reader = new BufferedReader( new StringReader( query ) );
+        Collection<Gene> genes = new HashSet<Gene>();
+        String line = null;
+
+        while ( ( line = reader.readLine() ) != null ) {
+            if ( StringUtils.isBlank( line ) ) continue;
+            line = StringUtils.strip( line );
+            SearchSettings settings = SearchSettings.GeneSearch( line, taxon );
+            List<SearchResult> geneSearchResults = searchService.search( settings ).get( Gene.class );
+
+            // FIXME try not to add more than one gene per query.
+            
+            // FIXME try to inform the user if there are some that don't have results.
+            for ( SearchResult sr : geneSearchResults ) {
+                genes.add( ( Gene ) sr.getResultObject() );
+            }
         }
         return genes;
     }

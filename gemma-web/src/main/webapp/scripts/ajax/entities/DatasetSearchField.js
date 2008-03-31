@@ -15,7 +15,7 @@ Ext.Gemma.DatasetSearchField = function ( config ) {
 	this.filterFrom = []; // starting set.
 	
 	var superConfig = { 
-		loadingText : 'Searching...',
+		loadingText : 'Searching...'
 	};
 	
 	for ( property in config ) {
@@ -29,6 +29,7 @@ Ext.Gemma.DatasetSearchField = function ( config ) {
 			this.loadMask.show();
 		}
 	} );
+	
 	this.on( 'aftersearch', function( field, results ) {
 		if ( this.loadMask ) {
 			this.loadMask.hide();

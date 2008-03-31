@@ -1,4 +1,12 @@
-/* Ext.Gemma.CoexpressionSearchForm constructor...
+/*
+ * The input for coexpression searches. This form has two main parts: a GeneChooserPanel, and the coexpression search parameters.
+ * 
+ * Coexpression search has three main settings, plus an optional part that appears if the user is doing a 'custom' analysis: Stringency, "Among query genes" checkbox, and the "scope".
+ * 
+ * If scope=custom, a DatasetSearchField is shown.
+ * 
+ * @authors Luke, Paul
+ * @version $Id$
  */
 Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 
@@ -7,8 +15,7 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 	/* establish default config options...
 	 */
 	var superConfig = {
-		width : 470,
-		autoHeight : true,
+		width : 500,
 		frame : true,
 		stateful : true,
 		stateEvents : [ "beforesearch" ],
@@ -30,10 +37,9 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 	
 	
 	
-	var geneChooserPanel = new Ext.Gemma.GeneChooserPanel( { 
+	this.geneChooserPanel = new Ext.Gemma.GeneChooserPanel( { 
 		showTaxon : true 
 	} );
-	this.geneChooserPanel = geneChooserPanel;
 	this.geneChooserPanel.taxonCombo.on( "taxonchanged", function ( combo, taxon ) {
 		this.taxonChanged( taxon );
 	}, this );
@@ -42,42 +48,31 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 		title : 'Query gene(s)',
 		autoHeight : true 
 	} );
-	queryFs.add( geneChooserPanel );
+	queryFs.add( this.geneChooserPanel );
 	
 	
-	var stringencyField = new Ext.form.NumberField( {
-		allowBlank : false,
-		allowDecimals : false,
-		allowNegative : false,
-		minValue : Ext.Gemma.CoexpressionSearchForm.MIN_STRINGENCY,
-		maxValue : 999,
-		fieldLabel : 'Stringency',
-		invalidText : "Minimum stringency is " + Ext.Gemma.CoexpressionSearchForm.MIN_STRINGENCY,
-		value : 2,
-		width : 25
-	} );
-	this.stringencyField = stringencyField;
-	Ext.Gemma.CoexpressionSearchForm.addToolTip( stringencyField, 
-		"The minimum number of datasets that must show coexpression for a result to appear" );
 
 
 	/*
 	 * Analysis/datasets and stringency settings.
 	 */
-	
-	var analysisCombo = new Ext.Gemma.AnalysisCombo( {
-		fieldLabel : 'Limit search to',
+	 
+
+	/*
+	 * Combo to choose the 'scope' of the query. NOTE if this is not declared first, there are problems getting it to show up.
+	 */
+	this.analysisCombo = new Ext.Gemma.AnalysisCombo( {
+		fieldLabel : 'Search scope',
 		showCustomOption : true
-	} );
-	this.analysisCombo = analysisCombo;
-	analysisCombo.on( "analysisChanged", function ( combo, analysis ) {
+	} ); 
+	this.analysisCombo.on( "analysisChanged", function ( combo, analysis ) {
 		if ( analysis ) {
 			if ( analysis.id < 0 ) { // custom analysis
 				thisPanel.customAnalysis = true;
 				customFs.doLayout();
 				customFs.show();
-				thisPanel.updateDatasetsToBeSearched( eeSearchField.getEeIds() );
-				eeSearchField.findDatasets();
+ 				thisPanel.updateDatasetsToBeSearched( this.eeSearchField.getEeIds() );
+ 				this.eeSearchField.findDatasets();
 			} else {
 				thisPanel.customAnalysis = false;
 				customFs.hide();
@@ -89,51 +84,65 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 			customFs.hide();
 			thisPanel.optionsPanel.setTitle( "Analysis options" );
 		}
-	} );
-	Ext.Gemma.CoexpressionSearchForm.addToolTip( analysisCombo,
+	}, this );
+	Ext.Gemma.CoexpressionSearchForm.addToolTip( this.analysisCombo,
 		"Restrict the list of datasets that will be searched for coexpression" );
-	 	
-	var eeSearchField = new Ext.Gemma.DatasetSearchField( {
-		fieldLabel : "Experiment keywords" ,
-		width : 150
+		
+		
+	this.stringencyField = new Ext.form.NumberField( {
+		allowBlank : false,
+		allowDecimals : false,
+		allowNegative : false,
+		minValue : Ext.Gemma.CoexpressionSearchForm.MIN_STRINGENCY,
+		maxValue : 999,
+		fieldLabel : 'Stringency',
+		invalidText : "Minimum stringency is " + Ext.Gemma.CoexpressionSearchForm.MIN_STRINGENCY,
+		value : 2,
+		width : 60
+	} ); 
+	Ext.Gemma.CoexpressionSearchForm.addToolTip( this.stringencyField, 
+		"The minimum number of datasets that must show coexpression for a result to appear" );
+	 
+	 
+	/*
+	 * Custom data set search field, in a hidden (initially) fieldset.
+	 */	
+	this.eeSearchField = new Ext.Gemma.DatasetSearchField( {
+		fieldLabel : "Experiment keywords"  
 	} );
-	this.eeSearchField = eeSearchField;
-	eeSearchField.on( 'aftersearch', function ( field, results ) {
+	 
+	this.eeSearchField.on( 'aftersearch', function ( field, results ) {
 		if ( thisPanel.customAnalysis ) {
 			thisPanel.updateDatasetsToBeSearched( results );
 		}
 	} );
-	Ext.Gemma.CoexpressionSearchForm.addToolTip( eeSearchField,
+	Ext.Gemma.CoexpressionSearchForm.addToolTip( this.eeSearchField,
 		"Search only datasets that match these keywords" );
-	
 	
 	var customFs = new Ext.form.FieldSet( {
 		title : 'Custom analysis options',
-		hidden : true, 
-		autoHeight: true,
+		autoHeight : true,
+		hidden : true,  
 		autoWidth:true,
-		items :  [eeSearchField] 
+		items :  [this.eeSearchField ] 
 	} );
 	
 	this.customFs = customFs;
 	
+	
+	/*
+	 * Check box
+	 */
 	var queryGenesOnly = new Ext.form.Checkbox( {
-		fieldLabel: 'Search among query genes only'
+		fieldLabel: 'My genes only'
 	} );
+	Ext.Gemma.CoexpressionSearchForm.addToolTip( queryGenesOnly,
+		"Restrict the output to include only links among the listed query genes" );
 	this.queryGenesOnly = queryGenesOnly;
 	
-	var analysisFs = new Ext.form.FieldSet( {
-		autoHeight : true, 
-		border : false,
-		defaults : {
-			labelStyle : 'white-space: nowrap'
-		},
-		labelWidth : 180,
-		items : [ stringencyField, queryGenesOnly, analysisCombo, customFs ]
-	} );
-	 
+	
 
-
+	// Window shown when the user wants to see the experiments that are 'in play'.
 	var activeDatasetsWindow = new Ext.Window({
 			el : 'coexpression-experiments',
 			title : "Active datasets",
@@ -169,14 +178,30 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 	};
 	
 
-	var eeDetailsButton = new Ext.Button({ fieldLabel : 'Selected dataset details', id : 'selected-ds-button', cls:"x-btn-icon", icon : "/Gemma/images/icons/information.png", handler : this.showSelectedDatasets, scope : this, disabled : false, tooltip : "Show selected datasets" });
+	var eeDetailsButton = new Ext.Button({ 
+		fieldLabel : 'Selected dataset details',
+		 id : 'selected-ds-button', 
+		 cls:"x-btn-icon", 
+		 icon : "/Gemma/images/icons/information.png",
+		 handler : this.showSelectedDatasets, 
+		 scope : this, disabled : false, tooltip : "Show selected datasets" });
  
+ 
+	// Field set for the bottom part of the form
+ 
+	var analysisFs = new Ext.form.FieldSet( {  
+		autoHeight : true,
+	  	items : [ this.stringencyField, this.queryGenesOnly, this.analysisCombo, this.customFs ] //
+	} );
+	
+ 	
+ 
+ 
+ 	// Panel combining all of the above elements.
 	var optionsPanel = new Ext.Panel({
 		title : 'Analysis options',
-		border : true,	
-		layout : 'anchor',
-		frame : true,
-		items : [ analysisFs, eeDetailsButton ]
+		autoHeight : true,
+		items : [ analysisFs, eeDetailsButton  ]
 	});
 	
 	this.optionsPanel = optionsPanel;
@@ -193,8 +218,12 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 	 * Build the form
 	 */
 	this.add( queryFs );
-	this.add( optionsPanel );
+	this.add( optionsPanel ); 
 	this.addButton( submitButton );
+
+
+	this.stringencyField.setWidth(20);
+	this.stringencyField.setHeight(20);
 
 //	var stringencySpinner = new Ext.ux.form.Spinner({
 //		renderTo : this.stringencyField.getEl(),
@@ -264,7 +293,7 @@ Ext.extend( Ext.Gemma.CoexpressionSearchForm, Ext.FormPanel, {
 	
 	createLoadMask : function () {
 		this.loadMask = new Ext.LoadMask( this.getEl() );
-		this.eeSearchField.loadMask = this.loadMask;
+	//	this.eeSearchField.loadMask = this.loadMask;
 	},
 
 	getCoexpressionSearchCommand : function () {

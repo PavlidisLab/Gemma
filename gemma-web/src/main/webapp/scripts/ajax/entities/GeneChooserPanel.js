@@ -1,5 +1,8 @@
 /*
 * Widget that allows user to search for and select one or more genes from the database. The selected genes are kept in a table which can be edited.
+* This component is the top part of the coexpression interface, but should be reusable. 
+*
+* 
 * Version : $Id$
 * Author : luke
 */
@@ -67,6 +70,16 @@ Ext.Gemma.GeneChooserPanel = function ( config ) {
 		}
 	} );
 	
+	var chooser = new Ext.Gemma.GeneImportPanel({
+				el : 'coexpression-genes',
+				handler : function() {
+					this.chooser.hide();
+					this.getGenesFromList(  );
+				},
+				scope : this
+			});
+	this.chooser = chooser;
+	
 	var multiButton = new Ext.Toolbar.Button( {
 		icon : "/Gemma/images/icons/page_white_put.png",
 		cls:"x-btn-icon",
@@ -75,9 +88,7 @@ Ext.Gemma.GeneChooserPanel = function ( config ) {
 		handler : function() {
 			
 			// show the multigene chooser
-			var chooser = new Ext.Gemma.GeneImportPanel({el : 'coexpression-genes'});
 			chooser.show();
-			
 			geneCombo.reset();
 			addButton.enable(); 
 		}
@@ -109,8 +120,9 @@ Ext.Gemma.GeneChooserPanel = function ( config ) {
 	/* establish default config options...
 	 */
 	var superConfig = {
-		autoHeight : true, 
+		height : 200, 
 		autoScroll : true,
+		emptyText : "Genes will be listed here",
 		tbar : tbarItems,
 		store : new Ext.data.SimpleStore( {
 			fields : [
@@ -123,7 +135,7 @@ Ext.Gemma.GeneChooserPanel = function ( config ) {
 		} ),
 		columns : [
 			{ header: 'Gene', dataIndex: 'officialSymbol', sortable: true },
-			{ header: 'Taxon', dataIndex: 'taxon', sortable: true, hidden: this.showTaxon ? false : true },
+		//	{ header: 'Taxon', dataIndex: 'taxon', sortable: true, hidden: this.showTaxon ? false : true },
 			{ id: 'desc', header: 'Description', dataIndex: 'officialName' }
 		],
 		autoExpandColumn : 'desc'
@@ -134,6 +146,7 @@ Ext.Gemma.GeneChooserPanel = function ( config ) {
 	for ( var property in config ) {
 		superConfig[property] = config[property];
 	}
+ 
 	Ext.Gemma.GeneChooserPanel.superclass.constructor.call( this, superConfig );
 	
 	/* code down here has to be called after the super-constructor so that we
@@ -167,6 +180,30 @@ Ext.extend( Ext.Gemma.GeneChooserPanel, Ext.Gemma.GemmaGridPanel, {
 	    for (var i = 0; i < this.colModel.getColumnCount(); i++) {
     		this.autoSizeColumn(i);
 	    }
+	},
+	
+	getGenesFromList : function() {
+		if (!this.chooser) {
+			return;
+		}
+	 
+		var taxonId = this.getTaxonId();
+		var text = this.chooser.getGeneNames();
+		GenePickerController.searchMultipleGenes( text, taxonId,
+			function ( genes ) {
+				var geneData = [];
+				for ( var i=0; i<genes.length; ++i ) {
+					geneData.push( [
+						genes[i].id,
+						genes[i].taxon.scientificName,
+						genes[i].officialSymbol,
+						genes[i].officialName
+					] );
+				}
+				this.getStore().loadData( geneData, true );
+			}.bind( this )
+		);
+		
 	},
 
 	autoSizeColumn: function(c) {

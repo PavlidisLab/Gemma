@@ -1,5 +1,5 @@
 /*
- * Combo that shows lists of coexpression analyses. 
+ * Combo that shows lists of coexpression analyses.
  */
 
 /* Ext.Gemma.AnalysisCombo constructor...
@@ -14,12 +14,11 @@ Ext.Gemma.AnalysisCombo = function ( config ) {
 	 */
 	var superConfig = {
 		displayField : 'name',
-		valueField : 'id',
-		disabled : true,
+		valueField : 'id',  
 		editable : false,
-		forceSelection : true,
-		lazyInit : false,
-		lazyRender : false,
+		hideMode : 'offsets',
+		minListWidth : 100, 
+		forceSelection : true, 
 		mode : 'local',
 		selectOnFocus : true,
 		triggerAction : 'all',
@@ -30,7 +29,9 @@ Ext.Gemma.AnalysisCombo = function ( config ) {
 		} ),
 		tpl : Ext.Gemma.AnalysisCombo.getTemplate()
 	};
+	
 	var options = { params : [] };
+	
 	if ( this.showCustomOption ) {
 		options.callback = function () {
 			var Constructor = Ext.Gemma.AnalysisCombo.getRecord();
@@ -59,9 +60,7 @@ Ext.Gemma.AnalysisCombo = function ( config ) {
 	// call doQuery or the record filtering done in taxonChanged() below doesn't work...
 	this.doQuery();
 };
-
-
-
+ 
 /* static methods
  */
 Ext.Gemma.AnalysisCombo.getRecord = function() {
