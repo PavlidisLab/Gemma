@@ -291,6 +291,20 @@ Mapping URLS to controllers
 					</property>
 				</bean>
 			</entry>
+			<entry key="ExpressionExperimentDataFetchController">
+				<bean class="org.directwebremoting.spring.CreatorConfig">
+					<property name="creator">
+						<bean class="org.directwebremoting.spring.BeanCreator">
+							<property name="bean" ref="expressionExperimentDataFetchController" />
+						</bean>
+					</property>
+					<property name="includes">
+						<list>
+							<value>getDataFile</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
 			<entry key="userService">
 				<bean class="org.directwebremoting.spring.CreatorConfig">
 					<property name="creator">
@@ -1260,6 +1274,12 @@ Mapping URLS to controllers
 				</bean>
 			</entry>
 			<entry
+				key="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentDataFetchCommand">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean"/>
+				</bean>
+			</entry>
+			<entry
 				key="ubic.gemma.search.SearchSettings">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean"/>
@@ -1414,6 +1434,15 @@ Mapping urls to views. List views here that are just jsps and that don't need a 
 		<props>
 			<prop key="/expressionExperiment/visualizeDataMatrix.html">
 				show</prop>
+		</props>
+	</property>
+</bean>
+<bean id="expressionDataFileFetchActions"
+	class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
+	<property name="mappings">
+		<props>
+			<prop key="/getData.html">
+				downloadFile</prop>
 		</props>
 	</property>
 </bean>

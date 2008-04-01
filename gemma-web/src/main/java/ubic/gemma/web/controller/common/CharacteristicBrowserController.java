@@ -25,6 +25,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
@@ -73,13 +74,29 @@ public class CharacteristicBrowserController extends BaseFormController {
         return new ModelAndView( this.getFormView() );
     }
 
+    /**
+     * @param valuePrefix
+     * @return
+     */
     public Collection<AnnotationValueObject> findCharacteristics( String valuePrefix ) {
         return findCharacteristics( valuePrefix, true, true, true, true );
     }
 
+    /**
+     * @param valuePrefix
+     * @param searchNos
+     * @param searchEEs
+     * @param searchBMs
+     * @param searchFVs
+     * @return
+     */
     public Collection<AnnotationValueObject> findCharacteristics( String valuePrefix, boolean searchNos,
             boolean searchEEs, boolean searchBMs, boolean searchFVs ) {
+        log.info( "Characteristic search: " + valuePrefix );
         Collection<AnnotationValueObject> results = new HashSet<AnnotationValueObject>();
+        if ( StringUtils.isBlank( valuePrefix ) ) {
+            return results;
+        }
         Collection chars = characteristicService.findByValue( valuePrefix );
         Map charToParent = characteristicService.getParents( chars );
         for ( Object o : chars ) {
@@ -107,7 +124,11 @@ public class CharacteristicBrowserController extends BaseFormController {
         return results;
     }
 
+    /**
+     * @param chars
+     */
     public void removeCharacteristics( Collection<Characteristic> chars ) {
+        log.info( "Delete " + chars.size() + " characteristics..." );
         Map charToParent = characteristicService.getParents( chars );
         for ( Characteristic cFromClient : chars ) {
             Characteristic cFromDatabase = characteristicService.load( cFromClient.getId() );
@@ -116,7 +137,11 @@ public class CharacteristicBrowserController extends BaseFormController {
         }
     }
 
+    /**
+     * @param chars
+     */
     public void updateCharacteristics( Collection<Characteristic> chars ) {
+        log.info( "Update " + chars.size() + " characteristics..." );
         Map charToParent = characteristicService.getParents( chars );
         for ( Characteristic cFromClient : chars ) {
             Characteristic cFromDatabase = characteristicService.load( cFromClient.getId() );
@@ -134,13 +159,10 @@ public class CharacteristicBrowserController extends BaseFormController {
             if ( vcFromClient != null && vcFromDatabase == null ) {
                 vcFromDatabase = ( VocabCharacteristic ) characteristicService.create( VocabCharacteristic.Factory
                         .newInstance( null, null, cFromDatabase.getValue(), cFromDatabase.getCategory(), cFromDatabase
-                                .getEvidenceCode(), cFromDatabase.getName(), cFromDatabase.getDescription(), null, null // don't
-                        // copy
-                        // AuditTrail
-                        // to
-                        // avoid
-                        // cascade
-                        // error...
+                                .getEvidenceCode(), cFromDatabase.getName(), cFromDatabase.getDescription(), null, null
+                        /*
+                         * don'tcopy AuditTrail to avoid cascade error...
+                         */
                         // cFromDatabase.getAuditTrail()
                         ) );
                 Object parent = charToParent.get( cFromDatabase );
@@ -178,6 +200,10 @@ public class CharacteristicBrowserController extends BaseFormController {
         }
     }
 
+    /**
+     * @param c
+     * @param parent
+     */
     private void removeFromParent( Characteristic c, Object parent ) {
         if ( parent instanceof ExpressionExperiment ) {
             ExpressionExperiment ee = ( ExpressionExperiment ) parent;

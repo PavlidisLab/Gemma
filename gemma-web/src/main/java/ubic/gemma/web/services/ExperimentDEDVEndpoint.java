@@ -19,11 +19,6 @@
 
 package ubic.gemma.web.services;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.Collection;
 
 import org.apache.commons.lang.time.StopWatch;
@@ -39,7 +34,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.util.ConfigUtils;
 
 /**
  * Given an Expression Experiment ID, will return a collection of Design Element Data Vectors and the corresponding

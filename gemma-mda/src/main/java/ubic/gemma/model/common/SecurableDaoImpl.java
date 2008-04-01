@@ -35,7 +35,7 @@ public class SecurableDaoImpl extends ubic.gemma.model.common.SecurableDaoBase {
     @Override
     public String getRecipient( Long id ) {
 
-        String queryString = "SELECT recipient FROM acl_permission WHERE id = ?";
+        String queryString = "SELECT recipient FROM acl_permission WHERE acl_object_identity = ?";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createSQLQuery( queryString );

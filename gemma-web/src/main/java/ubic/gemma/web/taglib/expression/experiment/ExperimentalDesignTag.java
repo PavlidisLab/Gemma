@@ -1,5 +1,20 @@
-/**
+/*
+ * The Gemma project
  * 
+ * Copyright (c) 2008 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 package ubic.gemma.web.taglib.expression.experiment;
 
@@ -14,6 +29,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * Used to display the experimetnal design information for a EE.
@@ -31,6 +47,7 @@ public class ExperimentalDesignTag extends TagSupport {
      */
     private static final long serialVersionUID = 1478714878857705718L;
     private ExperimentalDesign experimentalDesign;
+    private ExpressionExperiment expressionExperiment;
 
     /**
      * @param design
@@ -38,6 +55,14 @@ public class ExperimentalDesignTag extends TagSupport {
      */
     public void setExperimentalDesign( ExperimentalDesign experimentalDesign ) {
         this.experimentalDesign = experimentalDesign;
+    }
+
+    /**
+     * @param design
+     * @jsp.attribute required="false" rtexprvalue="true"
+     */
+    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+        this.expressionExperiment = expressionExperiment;
     }
 
     @Override
@@ -54,12 +79,27 @@ public class ExperimentalDesignTag extends TagSupport {
 
         String name = experimentalDesign.getName();
         String description = experimentalDesign.getDescription();
-        buf.append( "<table>" );
-        if ( StringUtils.isNotBlank( name ) ) buf.append( "<tr><td>Name</td><td>" + name + "</td></tr>" );
-        buf.append( "<tr><td>Description</td><td>" + description + "</td></tr>" );
-        buf.append( "<tr><td>Factors</td><td>" + experimentalFactors.size() + "</td></tr>" );
-        buf.append( "<tr><td>Descriptors</td><td>" + experimentalDesign.getTypes().size() + "</td></tr>" );
-        buf.append( "</table>" );
+        buf.append( "<ul>" );
+        if ( StringUtils.isNotBlank( name ) ) buf.append( "<li>" + name + "</li>" );
+        if ( StringUtils.isNotBlank( description ) ) buf.append( "<li>Description:" + description + "</td></tr>" );
+        buf.append( "<li>Factors: " + experimentalFactors.size() + "</li>" );
+
+        if ( experimentalFactors.size() > 0 ) {
+            /*
+             * See eeDataFetch.js for this call.
+             */
+            buf
+                    .append( "<li>Design File: <a href=\"#\" onClick=\"fetchData(false,"
+                            + +expressionExperiment.getId()
+                            + ",\'text\', null,"
+                            + experimentalDesign.getId()
+                            + ")"
+                            + "\"> Download </a>"
+                            + "<a class=\"helpLink\" href=\"?\" onclick=\"showHelpTip(event, \'Tab-delimited design file for this experiment, if available.\'); return false\"><img src=\"/Gemma/images/help.png\"/> </a></td>"
+                            + "</li>" );
+        }
+
+        buf.append( "</ul>" );
 
         try {
             pageContext.getOut().print( buf.toString() );

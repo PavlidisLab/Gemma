@@ -53,10 +53,7 @@ public class OntologySearch {
     public static Collection<OntologyTerm> matchClasses( OntModel model, IndexLARQ index, String queryString ) {
 
         Set<OntologyTerm> results = new HashSet<OntologyTerm>();
-        
-        String strippedQuery = StringUtils.strip( queryString );
-        
-        NodeIterator iterator = index.searchModelByIndex( model, strippedQuery );
+        NodeIterator iterator = runSearch( model, index, queryString );
 
         while ( iterator.hasNext() ) {
             RDFNode r = ( RDFNode ) iterator.next();
@@ -88,6 +85,18 @@ public class OntologySearch {
     }
 
     /**
+     * @param model
+     * @param index
+     * @param queryString
+     * @return
+     */
+    private static NodeIterator runSearch( OntModel model, IndexLARQ index, String queryString ) {
+        String strippedQuery = StringUtils.strip( queryString );
+        NodeIterator iterator = index.searchModelByIndex( model, strippedQuery );
+        return iterator;
+    }
+
+    /**
      * Find individuals that match the query string
      * 
      * @param model that goes with the index
@@ -98,10 +107,7 @@ public class OntologySearch {
     public static Collection<OntologyIndividual> matchIndividuals( OntModel model, IndexLARQ index, String queryString ) {
 
         Set<OntologyIndividual> results = new HashSet<OntologyIndividual>();
-        
-        String strippedQuery = StringUtils.strip( queryString );
-        
-        NodeIterator iterator = index.searchModelByIndex( model, strippedQuery );
+        NodeIterator iterator = runSearch( model, index, queryString );
 
         while ( iterator.hasNext() ) {
             RDFNode r = ( RDFNode ) iterator.next();
@@ -144,10 +150,7 @@ public class OntologySearch {
     public static Collection<OntologyResource> matchResources( OntModel model, IndexLARQ index, String queryString ) {
 
         Set<OntologyResource> results = new HashSet<OntologyResource>();
-        
-        String strippedQuery = StringUtils.strip( queryString );
-        
-        NodeIterator iterator = index.searchModelByIndex( model, strippedQuery );
+        NodeIterator iterator = runSearch( model, index, queryString );
 
         while ( iterator.hasNext() ) {
             RDFNode r = ( RDFNode ) iterator.next();

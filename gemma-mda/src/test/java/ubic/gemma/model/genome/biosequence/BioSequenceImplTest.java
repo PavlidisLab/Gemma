@@ -3,8 +3,8 @@
  */
 package ubic.gemma.model.genome.biosequence;
 
-import ubic.gemma.model.genome.Taxon;
 import junit.framework.TestCase;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * @author Paul

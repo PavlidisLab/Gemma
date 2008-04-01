@@ -70,12 +70,6 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
                 if ( auditable.getAuditTrail() == null ) return null;
                 if ( auditable.getAuditTrail().getEvents() == null ) return null;
                 thaw( auditable.getAuditTrail() );
-                // auditable.getAuditTrail().getEvents().size();
-                // for ( AuditEvent event : auditable.getAuditTrail().getEvents() ) {
-                // if ( event == null ) continue;
-                // session.update( event );
-                // if ( event.getEventType() != null ) session.update( event.getEventType() );
-                // }
                 session.evict( auditable );
                 return null;
             }

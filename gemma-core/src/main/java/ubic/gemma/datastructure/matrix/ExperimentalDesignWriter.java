@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2008 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,12 +22,14 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
-import java.util.Iterator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.biomage.BioAssayData.BioAssayDimension;
 
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -35,7 +37,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.util.DateUtil;
 
 /**
  * @author keshav
@@ -45,19 +46,34 @@ public class ExperimentalDesignWriter {
 
     private Log log = LogFactory.getLog( this.getClass() );
 
-    private static final String WEBSITE_CITATION = "http://bioinformatics.ubc.ca/Gemma";
-
     /**
      * @param writer
-     * @param expressionExperiment
-     * @param dataMatrix
+     * @param ExpressionExperiment ee
      * @param writeHeader
      * @throws IOException
      */
-    public void write( Writer writer, ExpressionExperiment expressionExperiment, ExpressionDataDoubleMatrix dataMatrix,
-            boolean writeHeader ) throws IOException {
+    public void write( Writer writer, ExpressionExperiment ee, boolean writeHeader ) throws IOException {
 
-        ExperimentalDesign ed = expressionExperiment.getExperimentalDesign();
+        ExperimentalDesign ed = ee.getExperimentalDesign();
+
+        /*
+         * See BaseExpressionDataMatrix.setUpColumnElements() for how this is constructed for the DataMatrix, and for
+         * some notes about complications.
+         */
+        Collection<BioAssay> bioAssays = ee.getBioAssays();
+        Map<BioMaterial, Collection<BioAssay>> bioMaterials = new HashMap<BioMaterial, Collection<BioAssay>>();
+        for ( BioAssay bioAssay : bioAssays ) {
+            Collection<BioMaterial> biomaterials = bioAssay.getSamplesUsed();
+            BioMaterial bm = biomaterials.iterator().next();
+            if ( !bioMaterials.containsKey( bm ) ) {
+                bioMaterials.put( bm, new HashSet<BioAssay>() );
+            }
+            bioMaterials.get( bm ).add( bioAssay );
+        }
+
+        List<BioMaterial> orderedBioMaterials = ExpressionDataMatrixColumnSort
+                .orderByExperimentalDesign( new ArrayList<BioMaterial>( bioMaterials.keySet() ) );
+
         Collection<ExperimentalFactor> efs = ed.getExperimentalFactors();
 
         List<ExperimentalFactor> orderedFactors = new ArrayList<ExperimentalFactor>();
@@ -66,67 +82,58 @@ public class ExperimentalDesignWriter {
         StringBuffer buf = new StringBuffer();
 
         if ( writeHeader ) {
-            writeHeader( writer, efs, writeHeader, buf );
+            writeHeader( writer, ee, orderedFactors, writeHeader, buf );
         }
 
-        int expDesignRows = dataMatrix.columns();
+        for ( BioMaterial bioMaterial : orderedBioMaterials ) {
 
-        for ( int i = 0; i < expDesignRows; i++ ) {
+            /* column 0 of the design matrix */
+            String rowName = ExpressionDataWriterUtils.constructBioAssayName( bioMaterial, bioMaterials
+                    .get( bioMaterial ) );
+            buf.append( rowName );
 
-            BioMaterial biomaterial = dataMatrix.getBioMaterialForColumn( i );
-
-            buf.append( biomaterial.getName() + ":" );
-            for ( Iterator<BioAssay> it = dataMatrix.getBioAssaysForColumn( i ).iterator(); it.hasNext(); ) {
-                BioAssay ba = it.next();
-                buf.append( ba.getName() );
-                if ( it.hasNext() ) {
-                    buf.append( "," );
-                }
-            }
-            buf.append( "\t" );
-
-            int j = 0;
+            /* columns 1 ... n where n is the number of factors */
+            Collection<FactorValue> candidateFactorValues = bioMaterial.getFactorValues();
             for ( ExperimentalFactor ef : orderedFactors ) {
-                if ( j < efs.size() - 1 ) {
-                    buf.append( "\t" );
-                    Collection<FactorValue> fvs = biomaterial.getFactorValues();
-                    for ( FactorValue f : fvs ) {
-                        if ( f.getExperimentalFactor().equals( ef ) ) {
-                            buf.append( f.getValue() );
-                            break;
-                        }
+                buf.append( "\t" );
+                for ( FactorValue candidateFactorValue : candidateFactorValues ) {
+                    if ( candidateFactorValue.getExperimentalFactor().equals( ef ) ) {
+                        log.debug( candidateFactorValue.getExperimentalFactor() + " matched." );
+                        String matchedFactorValue = ExpressionDataWriterUtils.constructFactorValueName( ef,
+                                candidateFactorValue );
+                        buf.append( matchedFactorValue );
+                        break;
                     }
-
-                } else {
-                    buf.append( "\n" );
+                    log.debug( candidateFactorValue.getExperimentalFactor()
+                            + " didn't match ... trying the next factor." );
                 }
-                j++;
             }
+            buf.append( "\n" );
         }
 
-        log.info( buf.toString() );
+        if ( log.isDebugEnabled() ) log.debug( buf.toString() );
 
         writer.write( buf.toString() );
 
-        writer.close();
     }
 
     /**
      * @param writer
+     * @param expressionExperiment
      * @param factors
      * @param writeHeader
      * @param buf
      */
-    private void writeHeader( Writer writer, Collection<ExperimentalFactor> factors, boolean writeHeader,
-            StringBuffer buf ) {
-        buf.append( "# Experimental design file generated by Gemma\n" );
-        buf.append( "# Generated " + DateUtil.convertDateToString( new Date() ) + "\n" );
-        buf.append( "# If you use this file for your research, please cite the Gemma web site: " + WEBSITE_CITATION
-                + "\n" );
+    private void writeHeader( Writer writer, ExpressionExperiment expressionExperiment,
+            Collection<ExperimentalFactor> factors, boolean writeHeader, StringBuffer buf ) {
+
+        ExpressionDataWriterUtils.appendBaseHeader( expressionExperiment, true, buf );
         buf.append( "Bioassay" );
 
         for ( ExperimentalFactor ef : factors ) {
-            buf.append( "\t" + ef.getName() );
+            String efName = ef.getName();
+            efName = efName.replaceAll( "\\s", "_" );
+            buf.append( "\t" + efName );
         }
 
         buf.append( "\n" );

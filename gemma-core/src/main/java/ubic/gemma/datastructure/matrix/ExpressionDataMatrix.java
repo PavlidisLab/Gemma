@@ -26,6 +26,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * Represents a matrix of data from an expression experiment.
@@ -53,6 +54,13 @@ import ubic.gemma.model.expression.designElement.DesignElement;
  * @version $Id$
  */
 public interface ExpressionDataMatrix<T> {
+
+    /**
+     * Return the expression experiment this matrix is holding data for.
+     * 
+     * @return
+     */
+    public ExpressionExperiment getExpressionExperiment();
 
     /**
      * Return a row that 'came from' the given design element.

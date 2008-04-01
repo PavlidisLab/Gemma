@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2008 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import java.io.PrintWriter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -39,8 +38,6 @@ public class ExperimentalDesignWriterTest extends BaseSpringContextTest {
 
     ExpressionExperiment ee = null;
 
-    AnalysisHelperService ahs = null;
-
     String shortName = "GSE1997";
 
     /*
@@ -54,8 +51,6 @@ public class ExperimentalDesignWriterTest extends BaseSpringContextTest {
         super.onSetUpInTransaction();
 
         eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-
-        ahs = ( AnalysisHelperService ) this.getBean( "analysisHelperService" );
 
         ee = eeService.findByShortName( shortName );
     }
@@ -75,9 +70,7 @@ public class ExperimentalDesignWriterTest extends BaseSpringContextTest {
 
             PrintWriter writer = new PrintWriter( "test_writer_" + ee.getShortName().replaceAll( "\\s", "" ) + ".txt" );
 
-            ExpressionDataDoubleMatrix matrix = ahs.getMaskedPreferredDataMatrix( ee );
-
-            edWriter.write( writer, ee, matrix, true );
+            edWriter.write( writer, ee, true );
         } catch ( Exception e ) {
             e.printStackTrace();
             fail = true;

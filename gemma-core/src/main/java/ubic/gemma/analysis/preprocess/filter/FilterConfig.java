@@ -69,6 +69,8 @@ public class FilterConfig {
 
     private boolean knownGenesOnly = false;
 
+    private boolean ignoreMinimumSampleThreshold = false;
+
     public boolean isKnownGenesOnly() {
         return knownGenesOnly;
     }
@@ -122,6 +124,14 @@ public class FilterConfig {
     public void setLowVarianceCut( double lowVarianceCut ) {
         this.lowVarianceCutIsSet = true;
         this.lowVarianceCut = lowVarianceCut;
+    }
+
+    public boolean isIgnoreMinimumSampleThreshold() {
+        return ignoreMinimumSampleThreshold;
+    }
+
+    public void setIgnoreMinimumSampleThreshold( boolean ignoreMinimumSampleThreshold ) {
+        this.ignoreMinimumSampleThreshold = ignoreMinimumSampleThreshold;
     }
 
 }

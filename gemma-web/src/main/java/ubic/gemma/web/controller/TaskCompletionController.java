@@ -26,7 +26,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.view.AbstractUrlBasedView;
+import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.util.progress.TaskRunningService;
@@ -64,10 +64,11 @@ public class TaskCompletionController extends BaseFormController {
      * @return
      */
     public Object checkResult( String taskId ) throws Exception {
-        ModelAndView returnedView = ( ModelAndView ) taskRunningService.checkResult( taskId );
-        if (returnedView == null) return null;
-        if ( returnedView.getView() instanceof AbstractUrlBasedView ) {
-            return ( ( RedirectView ) returnedView.getView() ).getUrl();
+        ModelAndView result = ( ModelAndView ) taskRunningService.checkResult( taskId );
+        if ( result == null ) return null;
+        View view = result.getView();
+        if ( view instanceof RedirectView ) {
+            return ( ( RedirectView ) view ).getUrl();
         } else {
             return null;
         }

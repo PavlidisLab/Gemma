@@ -28,7 +28,6 @@ import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
 import ubic.gemma.util.BusinessKey;
-import ubic.gemma.util.NativeQueryUtils;
 
 /**
  * @author pavlidis

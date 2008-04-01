@@ -44,6 +44,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.genome.GeneDao;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.MailEngine;
 

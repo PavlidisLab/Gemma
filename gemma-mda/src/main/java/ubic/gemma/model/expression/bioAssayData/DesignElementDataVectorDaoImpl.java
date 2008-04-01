@@ -498,6 +498,8 @@ public class DesignElementDataVectorDaoImpl extends
                 Collection<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
                 Collection<DesignElement> cs = new HashSet<DesignElement>();
                 for ( Object object : designElementDataVectors ) {
+                    Hibernate.initialize( object );
+                    session.update( object );
                     DesignElementDataVector v = ( DesignElementDataVector ) object;
                     dims.add( v.getBioAssayDimension() );
                     cs.add( v.getDesignElement() );

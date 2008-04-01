@@ -41,6 +41,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -374,6 +375,11 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         ModelAndView mav = new ModelAndView( "expressionExperiment.detail" ).addObject( "expressionExperiment",
                 expressionExperiment );
+
+        QuantitationType prefQt = ( QuantitationType ) expressionExperimentService.getPreferredQuantitationType(
+                expressionExperiment ).iterator().next();
+
+        mav.addObject( "prefQt", prefQt.getId() );
 
         AuditEvent troubleEvent = getLastTroubleEvent( expressionExperiment );
         if ( troubleEvent != null ) {

@@ -176,7 +176,7 @@ Ext.extend(progressbar, Ext.util.Observable, {
 		
 		if (!document.getElementById("progressTextArea")) return;
 	
-	   if (this.previousMessage != messages) {
+	   if (this.previousMessage != messages && messages.length > 0 ) {
 			this.previousMessage = messages;
 			document.getElementById("progressTextArea").innerHTML +=   messages;	
 	   		document.getElementById("progressTextArea").scrollTop = document.getElementById("progressTextArea").scrollHeight;

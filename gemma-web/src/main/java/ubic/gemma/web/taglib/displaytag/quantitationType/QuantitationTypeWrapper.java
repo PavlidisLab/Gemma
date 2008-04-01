@@ -82,7 +82,10 @@ public class QuantitationTypeWrapper extends TableDecorator {
         if ( object == null ) {
             return "-";
         }
-        return "<a href=\"/Gemma/getData.html?qt=" + object.getId() + "\">Data</a>";
-    }
+        StringBuffer buf = new StringBuffer();
+        buf.append( "<a href=\"#\" onClick=\"fetchData(false," + null + ",\'text\'," + object.getId() + "," + null
+                + ")\">Data</a>" );
 
+        return buf.toString();
+    }
 }

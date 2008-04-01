@@ -39,7 +39,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactorImpl;
 public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.CharacteristicDaoBase {
 
     private static final int BATCH_SIZE = 1000;
-    
+
     /*
      * (non-Javadoc)
      * 
@@ -51,16 +51,15 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
         String field = "characteristics";
         if ( parentClass == ExperimentalFactorImpl.class )
             field = "category";
-        else if ( parentClass == Gene2GOAssociationImpl.class )
-            field = "ontologyEntry";
-        
+        else if ( parentClass == Gene2GOAssociationImpl.class ) field = "ontologyEntry";
+
         final String queryString = "select parent, char from " + parentClass.getSimpleName() + " as parent "
                 + "inner join parent." + field + " as char";
 
         Map charToParent = new HashMap<Characteristic, Object>();
         for ( Object o : getHibernateTemplate().find( queryString ) ) {
             Object[] row = ( Object[] ) o;
-            charToParent.put( ( Characteristic ) row[1], row[0] );
+            charToParent.put( row[1], row[0] );
         }
         return charToParent;
     }
@@ -125,7 +124,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
     protected Map handleGetParents( Class parentClass, Collection characteristics ) throws Exception {
         Collection<Characteristic> batch = new HashSet<Characteristic>();
         Map<Characteristic, Object> charToParent = new HashMap<Characteristic, Object>();
-        for ( Characteristic c : ( Collection<Characteristic> )characteristics ) {
+        for ( Characteristic c : ( Collection<Characteristic> ) characteristics ) {
             batch.add( c );
             if ( batch.size() == BATCH_SIZE ) {
                 batchGetParents( parentClass, batch, charToParent );
@@ -135,15 +134,20 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
         batchGetParents( parentClass, batch, charToParent );
         return charToParent;
     }
-    
-    private void batchGetParents( Class parentClass, Collection<Characteristic> characteristics, Map<Characteristic, Object> charToParent ) {
+
+    /**
+     * @param parentClass
+     * @param characteristics
+     * @param charToParent
+     */
+    private void batchGetParents( Class parentClass, Collection<Characteristic> characteristics,
+            Map<Characteristic, Object> charToParent ) {
         if ( characteristics.isEmpty() ) return;
-        
+
         String field = "characteristics";
         if ( parentClass == ExperimentalFactorImpl.class )
             field = "category";
-        else if ( parentClass == Gene2GOAssociationImpl.class )
-            field = "ontologyEntry";
+        else if ( parentClass == Gene2GOAssociationImpl.class ) field = "ontologyEntry";
 
         final String queryString = "select parent, char from " + parentClass.getSimpleName() + " as parent "
                 + "inner join parent." + field + " as char " + "where char in (:chars)";
@@ -153,5 +157,5 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
             charToParent.put( ( Characteristic ) row[1], row[0] );
         }
     }
-    
+
 }

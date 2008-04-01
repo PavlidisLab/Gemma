@@ -63,8 +63,4 @@ $Id$
 
 	<display:setProperty name="basic.empty.showtable" value="true" />
 </display:table>
-
-<p>
-	<a class="helpLink" href="?"
-		onclick="showHelpTip(event, 'Summarizes multiple expression experiments, click on link to see details; click on magnifier to see bioassay details'); return false">Help</a>
-</p>
+ 

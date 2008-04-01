@@ -229,13 +229,16 @@ public class ExpressionExperimentFilter {
         if ( eeDoubleMatrix == null || eeDoubleMatrix.rows() == 0 )
             throw new IllegalArgumentException( "No data found!" );
 
-        if ( eeDoubleMatrix.columns() < FilterConfig.MINIMUM_SAMPLE ) {
-            throw new InsufficientSamplesException( "Not enough samples " + ee.getShortName() + ", must have at least "
-                    + FilterConfig.MINIMUM_SAMPLE + " to be eligble for link analysis." );
-        } else if ( eeDoubleMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
-            throw new InsufficientProbesException( "To few rows in " + ee.getShortName() + " (" + eeDoubleMatrix.rows()
-                    + ") prior to filtering, data sets are not analyzed unless they have at least "
-                    + FilterConfig.MINIMUM_SAMPLE + " to be eligble for link analysis." );
+        if ( !config.isIgnoreMinimumSampleThreshold() ) {
+            if ( eeDoubleMatrix.columns() < FilterConfig.MINIMUM_SAMPLE ) {
+                throw new InsufficientSamplesException( "Not enough samples " + ee.getShortName()
+                        + ", must have at least " + FilterConfig.MINIMUM_SAMPLE + " to be eligble for link analysis." );
+            } else if ( eeDoubleMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
+                throw new InsufficientProbesException( "To few rows in " + ee.getShortName() + " ("
+                        + eeDoubleMatrix.rows()
+                        + ") prior to filtering, data sets are not analyzed unless they have at least "
+                        + FilterConfig.MINIMUM_SAMPLE + " to be eligble for link analysis." );
+            }
         }
 
         eeDoubleMatrix = this.filter( eeDoubleMatrix, builder );

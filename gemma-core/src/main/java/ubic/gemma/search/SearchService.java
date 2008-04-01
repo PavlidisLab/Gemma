@@ -612,12 +612,15 @@ public class SearchService implements InitializingBean {
         inSystem = filterCharacteristicOwnersByClass( classes, parentMap );
 
         if ( parentMap.size() > 0 ) {
-            log.info( "Found " + parentMap.size() + "  owners for characteristics:" );
+            if ( log.isDebugEnabled() ) log.debug( "Found " + parentMap.size() + "  owners for characteristics:" );
             for ( Object obj : parentMap.values() ) {
-                if ( obj instanceof Auditable )
-                    log.info( "==== Owner Id: " + ( ( Auditable ) obj ).getId() + " Owner Class: " + obj.getClass() );
-                else
-                    log.info( "==== Owner : " + obj.toString() + " Owner Class: " + obj.getClass() );
+                if ( obj instanceof Auditable ) {
+                    if ( log.isDebugEnabled() )
+                        log.debug( " Owner Id: " + ( ( Auditable ) obj ).getId() + " Owner Class: " + obj.getClass() );
+                } else {
+                    if ( log.isDebugEnabled() )
+                        log.debug( " Owner : " + obj.toString() + " Owner Class: " + obj.getClass() );
+                }
             }
         }
         if ( watch.getTime() > 1000 )
@@ -1321,7 +1324,7 @@ public class SearchService implements InitializingBean {
         if ( StringUtils.isBlank( query ) || query.length() < MINIMUM_STRING_LENGTH_FOR_FREE_TEXT_SEARCH
                 || query.equals( "*" ) ) return new ArrayList<SearchResult>();
 
-        CompassQuery compassQuery = session.queryBuilder().queryString( query ).toQuery();
+        CompassQuery compassQuery = session.queryBuilder().queryString( query.trim() ).toQuery();
         CompassHits hits = compassQuery.hits();
 
         watch.stop();

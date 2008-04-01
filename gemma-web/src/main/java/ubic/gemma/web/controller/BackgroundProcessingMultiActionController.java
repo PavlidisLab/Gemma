@@ -42,8 +42,6 @@ public abstract class BackgroundProcessingMultiActionController extends BaseMult
 
     TaskRunningService taskRunningService;
 
-    // private MessageUtil messageUtil;
-
     /**
      * @param taskRunningService the taskRunningService to set
      */
@@ -71,14 +69,8 @@ public abstract class BackgroundProcessingMultiActionController extends BaseMult
      * @return
      */
     protected String run( BackgroundControllerJob<ModelAndView> job ) {
-        /*
-         * all new threads need this to acccess protected resources (like services)
-         */
 
         String taskId = TaskRunningService.generateTaskId();
-
-        assert taskId != null;
-        // request.getSession().setAttribute( JOB_ATTRIBUTE, taskId );
         job.setTaskId( taskId );
 
         taskRunningService.submitTask( taskId, new FutureTask<ModelAndView>( job ) );

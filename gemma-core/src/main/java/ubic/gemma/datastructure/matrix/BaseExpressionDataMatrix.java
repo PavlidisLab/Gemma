@@ -58,6 +58,8 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
     protected Collection<BioAssayDimension> bioAssayDimensions;
 
+    protected ExpressionExperiment expressionExperiment;
+
     // maps for bioassays/biomaterials/columns
     protected Map<BioAssay, Integer> columnAssayMap;
     protected Map<BioMaterial, Integer> columnBioMaterialMap;
@@ -148,22 +150,37 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
         return this.getRowElements().get( index );
     }
 
-    // public BioSequence getBioSequenceForRow( int index ) {
-    // return this.rowBioSequencemapByInteger.get( index );
-    // }
-
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getDesignElementForRow(int)
+     */
     public DesignElement getDesignElementForRow( int index ) {
         return this.rowDesignElementMapByInteger.get( index );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumnIndex(ubic.gemma.model.expression.biomaterial.BioMaterial)
+     */
     public int getColumnIndex( BioMaterial bioMaterial ) {
         return columnBioMaterialMap.get( bioMaterial );
     }
 
+    /**
+     * @param bioAssay
+     * @return
+     */
     public int getColumnIndex( BioAssay bioAssay ) {
         return columnAssayMap.get( bioAssay );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRowIndex(ubic.gemma.model.expression.designElement.DesignElement)
+     */
     public int getRowIndex( DesignElement designElement ) {
         Integer index = rowElementMap.get( designElement );
         if ( index == null ) return -1;
@@ -210,6 +227,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
         int i = 0;
         for ( DesignElementDataVector vector : sorted ) {
             QuantitationType vectorQuantitationType = vector.getQuantitationType();
+            if ( this.expressionExperiment == null ) this.expressionExperiment = vector.getExpressionExperiment();
             if ( vectorQuantitationType.equals( quantitationType ) ) {
                 vectorsOfInterest.add( vector );
                 DesignElement designElement = vector.getDesignElement();
@@ -252,6 +270,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
             QuantitationType vectorQuantitationType = vector.getQuantitationType();
             BioAssayDimension cand = vector.getBioAssayDimension();
             if ( vectorQuantitationType.equals( quantitationType ) && cand.equals( bioAssayDimension ) ) {
+                if ( this.expressionExperiment == null ) this.expressionExperiment = vector.getExpressionExperiment();
                 vectorsOfInterest.add( vector );
                 DesignElement designElement = vector.getDesignElement();
                 this.bioAssayDimensions.add( vector.getBioAssayDimension() );
@@ -306,6 +325,8 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
                 QuantitationType vectorQuantitationType = vector.getQuantitationType();
                 BioAssayDimension cand = vector.getBioAssayDimension();
                 if ( vectorQuantitationType.equals( soughtType ) && cand.equals( soughtDim ) ) {
+                    if ( this.expressionExperiment == null )
+                        this.expressionExperiment = vector.getExpressionExperiment();
                     vectorsOfInterest.add( vector );
                     DesignElement designElement = vector.getDesignElement();
                     this.bioAssayDimensions.add( vector.getBioAssayDimension() );
@@ -348,6 +369,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
             QuantitationType vectorQuantitationType = vector.getQuantitationType();
             BioAssayDimension cand = vector.getBioAssayDimension();
             if ( vectorQuantitationType.equals( quantitationType ) && cand.equals( bioAssayDimension ) ) {
+                if ( this.expressionExperiment == null ) this.expressionExperiment = vector.getExpressionExperiment();
                 vectorsOfInterest.add( vector );
                 DesignElement designElement = vector.getDesignElement();
                 bioAssayDimensions.add( vector.getBioAssayDimension() );
@@ -369,6 +391,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
         int i = 0;
         List<DesignElementDataVector> sorted = sortVectorsByDesignElement( vectors );
         for ( DesignElementDataVector vector : sorted ) {
+            if ( this.expressionExperiment == null ) this.expressionExperiment = vector.getExpressionExperiment();
             QuantitationType vectorQuantitationType = vector.getQuantitationType();
             this.bioAssayDimensions.add( vector.getBioAssayDimension() );
             if ( quantitationType == null ) {
@@ -386,6 +409,12 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
     }
 
     /**
+     * <p>
+     * Note: In the current versions of Gemma, we require that there can be only a single bioassaydimension. Thus this
+     * code is overly complex. If an experiment has multiple bioassaydimensions (due to multiple arrays), we merge the
+     * vectors (e.g., needed in the last case shown below). However, the issue of having multiple "BioMaterials" per
+     * "BioAssay" still exists.
+     * <p>
      * Deals with the fact that the bioassay dimensions can vary in size, and don't even need to overlap in the
      * biomaterials used. In the case where there is a single bioassaydimension this reduces to simply associating each
      * column with a bioassay (though we are forced to use an integer under the hood).
@@ -459,27 +488,9 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
         Map<BioMaterial, Collection<BioAssay>> bioMaterialMap = new LinkedHashMap<BioMaterial, Collection<BioAssay>>();
         Collection<Collection<BioMaterial>> bioMaterialGroups = new LinkedHashSet<Collection<BioMaterial>>();
         for ( BioAssayDimension dimension : this.bioAssayDimensions ) {
-            log.debug( "Processing: " + dimension + " with " + dimension.getBioAssays().size() + " assays" );
-            for ( BioAssay ba : dimension.getBioAssays() ) {
-                log.debug( "      " + ba );
-                Collection<BioMaterial> bioMaterials = ba.getSamplesUsed();
-
-                // log.debug( " .... " + bioMaterials );
-                if ( !alreadySeenGroup( bioMaterialGroups, bioMaterials ) ) {
-                    // log.debug( "New group " + bioMaterials );
-                    bioMaterialGroups.add( bioMaterials );
-                } else {
-                    // log.debug( "Part of existing group" );
-                }
-
-                for ( BioMaterial material : bioMaterials ) {
-                    log.debug( "           " + material );
-                    if ( !bioMaterialMap.containsKey( material ) ) {
-                        bioMaterialMap.put( material, new HashSet<BioAssay>() );
-                    }
-                    bioMaterialMap.get( material ).add( ba );
-                }
-            }
+            Collection<BioAssay> bioAssays = dimension.getBioAssays(); // this should in fact be a list.
+            log.debug( "Processing: " + dimension + " with " + bioAssays.size() + " assays" );
+            getBioMaterialGroupsForAssays( bioMaterialMap, bioMaterialGroups, bioAssays );
         }
 
         log.debug( bioMaterialGroups.size() + " biomaterialGroups (correspond to columns)" );
@@ -506,17 +517,14 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
                             columnBioAssayMapByInteger.put( column, new HashSet<BioAssay>() );
                         }
 
-                        // FIXME This should be a collection of biomaterials. See bug 629.
+                        // FIXME This really should be a collection of biomaterials. See bug 629.
                         columnBioMaterialMapByInteger.put( column, bioMaterial );
                         columnBioAssayMapByInteger.get( column ).add( assay );
                     }
                 }
-
             }
             column++;
         }
-
-        // TODO: allow columns to be rearranged according to some other ordering (e.g., by factors)
 
         if ( log.isDebugEnabled() ) {
             for ( Object o : this.columnAssayMap.keySet() ) {
@@ -526,6 +534,32 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
         assert bioMaterialGroups.size() == columnBioMaterialMapByInteger.keySet().size();
         return columnBioMaterialMapByInteger.keySet().size();
+    }
+
+    /**
+     * @param bioMaterialMap
+     * @param bioMaterialGroups
+     * @param bioAssays
+     */
+    private void getBioMaterialGroupsForAssays( Map<BioMaterial, Collection<BioAssay>> bioMaterialMap,
+            Collection<Collection<BioMaterial>> bioMaterialGroups, Collection<BioAssay> bioAssays ) {
+        for ( BioAssay ba : bioAssays ) {
+            log.debug( "      " + ba );
+            Collection<BioMaterial> bioMaterials = ba.getSamplesUsed();
+
+            if ( !alreadySeenGroup( bioMaterialGroups, bioMaterials ) ) {
+                bioMaterialGroups.add( bioMaterials );
+            } else {
+            }
+
+            for ( BioMaterial material : bioMaterials ) {
+                log.debug( "           " + material );
+                if ( !bioMaterialMap.containsKey( material ) ) {
+                    bioMaterialMap.put( material, new HashSet<BioAssay>() );
+                }
+                bioMaterialMap.get( material ).add( ba );
+            }
+        }
     }
 
     /**
@@ -600,6 +634,10 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      */
     public Collection<QuantitationType> getQuantitationTypes() {
         return quantitationTypes;
+    }
+
+    public ExpressionExperiment getExpressionExperiment() {
+        return this.expressionExperiment;
     }
 
 }

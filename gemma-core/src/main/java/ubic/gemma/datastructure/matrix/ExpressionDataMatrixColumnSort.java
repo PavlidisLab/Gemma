@@ -51,6 +51,14 @@ public class ExpressionDataMatrixColumnSort {
      */
     public static List<BioMaterial> orderByName( ExpressionDataMatrix mat ) {
         List<BioMaterial> start = getBms( mat );
+        orderByName( start );
+        return start;
+    }
+
+    /**
+     * @param start
+     */
+    public static void orderByName( List<BioMaterial> start ) {
         Collections.sort( start, new Comparator<BioMaterial>() {
             public int compare( BioMaterial o1, BioMaterial o2 ) {
 
@@ -70,30 +78,16 @@ public class ExpressionDataMatrixColumnSort {
                 }
             }
         } );
-        return start;
     }
 
     /**
      * @param mat
-     * @return
+     * @return sorted by experimental design, if possible, or by name if no design exists.
      */
     public static List<BioMaterial> orderByExperimentalDesign( ExpressionDataMatrix mat ) {
-        Map<FactorValue, Collection<BioMaterial>> fv2bms = buildFv2BmMap( mat );
-
         List<BioMaterial> start = getBms( mat );
 
-        Collection<ExperimentalFactor> factors = getFactors( start );
-
-        if ( factors.size() == 0 ) {
-            log.warn( "No experimental design, sorting by sample name" );
-            return orderByName( mat );
-        }
-
-        // TODO Start with the factor with the fewest categories.
-        ExperimentalFactor ef = factors.iterator().next();
-
-        List<BioMaterial> ordered = orderByFactor( ef, fv2bms, start,
-                new HashMap<ExperimentalFactor, Collection<BioMaterial>>() );
+        List<BioMaterial> ordered = orderByExperimentalDesign( start );
 
         // log.info( "AFTER" );
         // assert ordered.size() == start.size();
@@ -109,6 +103,28 @@ public class ExpressionDataMatrixColumnSort {
 
         return ordered;
 
+    }
+
+    /**
+     * @param start
+     * @return
+     */
+    public static List<BioMaterial> orderByExperimentalDesign( List<BioMaterial> start ) {
+
+        Collection<ExperimentalFactor> factors = getFactors( start );
+        if ( factors.size() == 0 ) {
+            log.warn( "No experimental design, sorting by sample name" );
+            orderByName( start );
+            return start;
+        }
+        Map<FactorValue, Collection<BioMaterial>> fv2bms = buildFv2BmMap( start );
+
+        // TODO Start with the factor with the fewest categories.
+        ExperimentalFactor ef = factors.iterator().next();
+
+        List<BioMaterial> ordered = orderByFactor( ef, fv2bms, start,
+                new HashMap<ExperimentalFactor, Collection<BioMaterial>>() );
+        return ordered;
     }
 
     /**
@@ -280,10 +296,13 @@ public class ExpressionDataMatrixColumnSort {
         return result;
     }
 
-    private static Map<FactorValue, Collection<BioMaterial>> buildFv2BmMap( ExpressionDataMatrix mat ) {
+    /**
+     * @param bms
+     * @return
+     */
+    private static Map<FactorValue, Collection<BioMaterial>> buildFv2BmMap( Collection<BioMaterial> bms ) {
         Map<FactorValue, Collection<BioMaterial>> fv2bms = new HashMap<FactorValue, Collection<BioMaterial>>();
-        for ( int i = 0; i < mat.columns(); i++ ) {
-            BioMaterial bm = mat.getBioMaterialForColumn( i );
+        for ( BioMaterial bm : bms ) {
             Collection<FactorValue> factorValues = bm.getFactorValues();
             for ( FactorValue fv : factorValues ) {
                 if ( !fv2bms.containsKey( fv ) ) {
@@ -295,6 +314,10 @@ public class ExpressionDataMatrixColumnSort {
         return fv2bms;
     }
 
+    /**
+     * @param bms
+     * @return
+     */
     private static Collection<ExperimentalFactor> getFactors( Collection<BioMaterial> bms ) {
         Collection<ExperimentalFactor> efs = new HashSet<ExperimentalFactor>();
         for ( BioMaterial bm : bms ) {

@@ -13,13 +13,26 @@ Ext.onReady( function() {
 	} );
 	Ext.Gemma.CharacteristicBrowser.grid.render();
 	
+	Ext.Gemma.CharacteristicBrowser.handleError = function( msg, e ) {
+		Ext.DomHelper.overwrite("messages", {tag : 'img', src:'/Gemma/images/icons/warning.png' }); 
+		Ext.DomHelper.append("messages", {tag : 'span', html : "&nbsp;&nbsp;"  + msg });  
+		Ext.Gemma.CharacteristicBrowser.grid.loadMask.hide();
+		saveButton.enable();
+	};
+	
 	var charCombo = new Ext.Gemma.CharacteristicCombo( { } );
 	
 	var searchButton = new Ext.Toolbar.Button( {
 		text : "search",
 		tooltip : "Find matching characteristics in the database",
 		handler : function() {
+			Ext.DomHelper.overwrite("messages", ""); 
 			var query = charCombo.getCharacteristic().value;
+			if (! query ) {
+				Ext.DomHelper.overwrite("messages", "Please enter a query"); 
+				return;
+			}
+			Ext.Gemma.CharacteristicBrowser.grid.loadMask.msg = "Searching ...";
 			var searchEEs = eeCheckBox.getValue();
 			var searchBMs = bmCheckBox.getValue();
 			var searchFVs = fvCheckBox.getValue();
@@ -34,11 +47,16 @@ Ext.onReady( function() {
 		disabled : true,
 		handler : function() {
 			saveButton.disable();
+			Ext.Gemma.CharacteristicBrowser.grid.loadMask.msg = "Saving ...";
+			Ext.Gemma.CharacteristicBrowser.grid.loadMask.show();
+			Ext.DomHelper.overwrite("messages", ""); 
 			var chars = Ext.Gemma.CharacteristicBrowser.grid.getEditedCharacteristics();
 			var callback = Ext.Gemma.CharacteristicBrowser.grid.refresh.bind( Ext.Gemma.CharacteristicBrowser.grid );
-			CharacteristicBrowserController.updateCharacteristics( chars, callback );
+			var errorHandler =  Ext.Gemma.CharacteristicBrowser.handleError.createDelegate(this, [], true);
+			CharacteristicBrowserController.updateCharacteristics( chars, { callback:callback, errorHandler : errorHandler } );
 		}
 	} );
+	
 	Ext.Gemma.CharacteristicBrowser.grid.on( "afteredit", function( e ) {
 		saveButton.enable();
 	} );
@@ -48,6 +66,9 @@ Ext.onReady( function() {
 		tooltip : "Delete selected characteristics",
 		disabled : true,
 		handler : function() {
+			Ext.DomHelper.overwrite("messages", ""); 
+			Ext.Gemma.CharacteristicBrowser.grid.loadMask.msg = "Deleting ...";
+			Ext.Gemma.CharacteristicBrowser.grid.loadMask.show();
 			var chars = Ext.Gemma.CharacteristicBrowser.grid.getSelectedCharacteristics();
 			CharacteristicBrowserController.removeCharacteristics( chars );
 			
@@ -66,6 +87,7 @@ Ext.onReady( function() {
 	} );
 	Ext.Gemma.CharacteristicBrowser.grid.getSelectionModel().on( "selectionchange", function( model ) {
 		var selected = model.getSelections();
+		Ext.DomHelper.overwrite("messages", ""); 
 		if ( selected.length > 0 ) {
 			deleteButton.enable();
 		}
@@ -111,12 +133,14 @@ Ext.onReady( function() {
 		}
 		pasteButton.enable();
 	};
+	
 	var copyButton = new Ext.Toolbar.Button( {
 		text : "copy",
 		tooltip : "Copy values from the selected characteristic",
 		disabled : true,
 		handler : copyHandler
 	} );
+	
 	Ext.Gemma.CharacteristicBrowser.grid.getSelectionModel().on( "selectionchange", function( model ) {
 		var selected = model.getSelections();
 		if ( selected.length > 0 ) {
@@ -139,6 +163,7 @@ Ext.onReady( function() {
 		Ext.Gemma.CharacteristicBrowser.grid.getView().refresh();
 		saveButton.enable();
 	};
+	
 	var pasteButton = new Ext.Toolbar.Button( {
 		text : "paste",
 		tooltip : "Paste copied values onto the selected characteristics",
@@ -155,20 +180,6 @@ Ext.onReady( function() {
 			}
 		}
 	} );
-
-/*
-	var testButton = new Ext.Toolbar.Button( {
-		text : "test",
-		handler : function() {
-			var selected = Ext.Gemma.CharacteristicBrowser.grid.getSelectionModel().getSelections();
-			for ( var i=0; i<selected.length; ++i ) {
-				var record = selected[i]
-				record.data.parentLink = record.data.parentLink.concat( String.format( "<div style='white-space: normal; margin-left: 1em;'>{0}</div>", record.data.parentDescription ) );
-			}
-			Ext.Gemma.CharacteristicBrowser.grid.getView().refresh();
-		}
-	} );
-*/
 
 	var eeCheckBox = new Ext.form.Checkbox( {
 		boxLabel : 'Expression Experiments',

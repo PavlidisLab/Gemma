@@ -49,7 +49,7 @@
 
 				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}probe2Gene">probe2GeneEndpoint</prop>
 
-				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}gene2Probe">gene2ProbenEndpoint</prop>
+				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}gene2Probe">gene2ProbeEndpoint</prop>
 
           	</props>
          </property>
@@ -249,7 +249,9 @@
         <description>
 				returns mapping of experiment to its characteristics
         </description>
-        <property name="expressionExperimentService" ref="expressionExperimentService"/>
+        <property name="compositeSequenceService" ref="compositeSequenceService"/>
+        <property name="taxonService" ref="taxonService"/>
+        <property name="geneService" ref="geneService"/>
         <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
     </bean>
     

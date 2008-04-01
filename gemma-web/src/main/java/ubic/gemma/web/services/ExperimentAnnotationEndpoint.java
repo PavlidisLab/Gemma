@@ -81,16 +81,14 @@ public class ExperimentAnnotationEndpoint extends AbstractGemmaEndpoint {
         StopWatch watch = new StopWatch();
         watch.start();
 
-        String elementName1 = "ee_id";
-       
-
         Element responseWrapper = document.createElementNS( NAMESPACE_URI, LOCAL_NAME );
         Element responseElement = document.createElementNS( NAMESPACE_URI, LOCAL_NAME + RESPONSE );
         responseWrapper.appendChild( responseElement );
 
+        Long eeId = null;
         for ( String eeString : eeResult ) {
 
-            Long eeId = Long.parseLong( eeString );
+            eeId = Long.parseLong( eeString );
             ExpressionExperiment ee = expressionExperimentService.load( eeId );
             
             if ( ee == null ) {
@@ -105,26 +103,30 @@ public class ExperimentAnnotationEndpoint extends AbstractGemmaEndpoint {
                             
                 String elementString1 = eeId.toString();
                 String elementString2 = character.getValue();
-                String elementString3 = character.getEvidenceCode().getValue();
-                String category = character.getCategory();
+                String elementString4 = character.getEvidenceCode().getValue();
+                String elementString3 = character.getCategory();
     
-                Element e1 = document.createElement( elementName1 );
+                Element e1 = document.createElement( "ee_id" );
                 e1.appendChild( document.createTextNode( elementString1 ) );
                 responseElement.appendChild( e1 );
     
-                Element e2 = document.createElement( category );
-                e2.appendChild( document.createTextNode( elementString2 ) );
+                Element e2 = document.createElement( "Category" );
+                e2.appendChild( document.createTextNode( elementString3 ) );
                 responseElement.appendChild( e2 );
                 
-                Element e3 = document.createElement( "GOEvidenceCode");
-                e3.appendChild( document.createTextNode( elementString3 ) );
+                Element e3 = document.createElement( "Terms");
+                e3.appendChild( document.createTextNode( elementString2 ) );
                 responseElement.appendChild( e3 );
+                
+                Element e4 = document.createElement( "GOEvidenceCode" );
+                e4.appendChild( document.createTextNode( elementString4 ) );
+                responseElement.appendChild( e4 );
             }
         }
         watch.stop();
         Long time = watch.getTime();
         log.info( "Finished generating result. Sending response to client." );
-        log.info( "XML response for " + LOCAL_NAME + " endpoint built in " + time + "ms." );
+        log.info( "XML response for " + LOCAL_NAME + " endpoint built in " + time + "ms." );       
         return responseWrapper;
 
     }

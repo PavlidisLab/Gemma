@@ -1,4 +1,3 @@
-<jsp:directive.page import="org.apache.commons.lang.StringUtils" />
 <%@ include file="/common/taglibs.jsp"%>
 <jsp:useBean id="expressionExperiment" scope="request"
 	class="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" />
@@ -17,12 +16,15 @@
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/TaskCompletionController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentDataFetchController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/ProgressStatusService.js'></script>
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/util/GemmaGridPanel.js'/>"></script>
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/AnnotationGrid.js'/>"></script>
-	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/ExpressionExperimentGrid.js'/>"></script>
-
+	<script type="text/javascript" src="<c:url value='/scripts/progressbar.js'/>"></script>
+	<script type='text/javascript' src="<c:url value='/scripts/ajax/expressionExperimentAnnots.js'/>"></script>
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/eeDesignMatrix.js'/>"></script>
-
+	<script type="text/javascript" src="<c:url value='/scripts/ajax/eeDataFetch.js'/>"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/scriptaculous/effects.js'/>"></script>
 
 	<authz:authorize ifAnyGranted="admin">
@@ -38,6 +40,7 @@
 		<script type="text/javascript" src="<c:url value='/scripts/ajax/auditTrail.js'/>" type="text/javascript"></script>
 	</authz:authorize>
 
+	<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/progressbar.css'/>" />
 </head>
 
 <authz:authorize ifAnyGranted="admin">
@@ -46,6 +49,9 @@
 <authz:authorize ifNotGranted="admin">
 	<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
 </authz:authorize>
+<div id="messages" style="margin: 10px; width: 400px"></div>
+<div id="taskId" style="display: none;"></div>
+<div id="progress-area"></div>
 
 <form style="float: right;" name="ExpresssionExperimentFilter" action="filterExpressionExperiments.html" method="POST">
 	<a class="helpLink" href="?" onclick="showHelpTip(event, 'Search for another experiment'); return false"><img
@@ -87,25 +93,8 @@ Experiment detail view for
 </c:if>
 </content>
 
-<!--
-<div style='float:right; width:25em; margin:1em; clear:right;'>
-<c:if test="${ troubleEvent != null}">
-<form name='troubleEvent'>
-<input type='hidden' name='detail' value='<c:out value="${ troubleEvent.detail }" />' />
-</form>
-<p class='trouble'>This dataset was flagged as <a href="?"
-	onclick="showHelpTip(event, document.troubleEvent.detail.value); return false;">problematic</a>
-	on <c:out value="${ troubleEvent.date }" /> by <c:out value="${ troubleEvent.performer.name }" />.</p>
-</c:if>
 
-<c:if test="${ validatedEvent != null}">
-<p class='validated'>This dataset was validated
-	on <c:out value="${ validatedEvent.date }" /> by <c:out value="${ validatedEvent.performer.name }" />.</p>
-</c:if>
-</div>
--->
-
-<table width="100%" cellspacing="10">
+<table width="100%" cellspacing="3">
 	<tr>
 		<td class="label">
 			<fmt:message key="expressionExperiment.name" />
@@ -275,6 +264,20 @@ Experiment detail view for
 
 		</td>
 	</tr>
+
+	<tr>
+		<td class="label">
+			Data File
+		</td>
+		<td>
+			<a href="#" onClick="fetchData(true, ${expressionExperiment.id }, 'text', null, null)">Click to start download</a>
+
+			<a class="helpLink" href="?"
+				onclick="showHelpTip(event, 'Tab-delimited data file for this experiment, if available.'); return false"><img
+					src="/Gemma/images/help.png" /> </a>
+		</td>
+	</tr>
+
 	<authz:authorize ifAllGranted="admin">
 		<tr>
 			<td class="label">
@@ -289,10 +292,13 @@ Experiment detail view for
 			</td>
 		</tr>
 	</authz:authorize>
+
 </table>
 
 <h3>
-	Annotation
+	Annotations&nbsp;
+	<a class="helpLink" href="?" onclick="showHelpTip(event, 'Terms describing the experiment, if any'); return false"><img
+			src="/Gemma/images/help.png" /> </a>
 </h3>
 <div style="padding: 2px;" onclick="Effect.toggle('annots', 'blind', {duration:0.1})">
 	<img src="/Gemma/images/plus.gif" />
@@ -323,10 +329,12 @@ Experiment detail view for
 	<br />
 </div>
 <div id="design">
-	<Gemma:eeDesign experimentalDesign="${expressionExperiment.experimentalDesign}"></Gemma:eeDesign>
+	<Gemma:eeDesign experimentalDesign="${expressionExperiment.experimentalDesign}"
+		expressionExperiment="${expressionExperiment}"></Gemma:eeDesign>
 
 	<div id="eeDesignMatrix" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden;"></div>
 </div>
+
 <%
     }
 %>
@@ -380,10 +388,6 @@ Experiment detail view for
 			<Gemma:expressionQC ee="${expressionExperiment.id}" />
 		</div>
 	</div>
-	<br />
-</authz:authorize>
-
-<authz:authorize ifAnyGranted="admin">
 	<h3>
 		Biomaterials and Assays
 		<a
@@ -400,11 +404,7 @@ Experiment detail view for
 			<Gemma:assayView expressionExperiment="${expressionExperiment}" />
 		</div>
 	</div>
-	<br />
-</authz:authorize>
 
-
-<authz:authorize ifAnyGranted="admin">
 	<h3>
 		History
 	</h3>
@@ -420,45 +420,26 @@ Experiment detail view for
 
 <table>
 	<tr>
-		<td COLSPAN="2">
-			<div align="left">
-				<input type="button" onclick="location.href='showAllExpressionExperiments.html'" value="Back">
-			</div>
+		<td>
+			<input type="button"
+				onclick="location.href='expressionExperimentVisualization.html?id=<%=request.getAttribute( "id" )%>'"
+				value="Visualize">
 		</td>
-
-		<td COLSPAN="2">
-			<div align="left">
+		<authz:authorize ifAnyGranted="admin">
+			<td>
+				<input type="button" onclick="location.href='editExpressionExperiment.html?id=<%=request.getAttribute( "id" )%>'"
+					value="Edit">
+			</td>
+			<td>
 				<input type="button"
-					onclick="location.href='expressionExperimentVisualization.html?id=<%=request.getAttribute( "id" )%>'"
-					value="Visual">
-			</div>
-		</td>
-
-		<authz:authorize ifAnyGranted="admin">
-			<td COLSPAN="2">
-				<div align="left">
-					<input type="button" onclick="location.href='editExpressionExperiment.html?id=<%=request.getAttribute( "id" )%>'"
-						value="Edit">
-				</div>
+					onclick=" if (confirmDelete('Expression experiment'))  {location.href='deleteExpressionExperiment.html?id=<%=request.getAttribute( "id" )%>';} else{ return false;}"
+					value="Delete">
 			</td>
-		</authz:authorize>
+			<td>
 
-		<authz:authorize ifAnyGranted="admin">
-			<td COLSPAN="2">
-				<div align="left">
-					<input type="button"
-						onclick=" if (confirmDelete('Expression experiment'))  {location.href='deleteExpressionExperiment.html?id=<%=request.getAttribute( "id" )%>';} else{ return false;}"
-						value="Delete">
-				</div>
-
-
-			</td>
-			<td COLSPAN="2">
-				<div align="left">
-					<input type="button"
-						onclick="location.href='/Gemma/expressionExperiment/generateExpressionExperimentLinkSummary.html?id=<%=request.getAttribute( "id" )%>'"
-						value="Refresh Link Summary">
-				</div>
+				<input type="button"
+					onclick="location.href='/Gemma/expressionExperiment/generateExpressionExperimentLinkSummary.html?id=<%=request.getAttribute( "id" )%>'"
+					value="Refresh Link Summary">
 			</td>
 		</authz:authorize>
 	</tr>

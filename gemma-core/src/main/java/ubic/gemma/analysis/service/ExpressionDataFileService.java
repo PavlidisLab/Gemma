@@ -23,7 +23,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.Collection;
 import java.util.HashMap;
@@ -43,6 +42,7 @@ import ubic.gemma.datastructure.matrix.MatrixWriter;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -54,11 +54,13 @@ import ubic.gemma.util.ConfigUtils;
  * Supports the creation and location of 'flat file' versions of data in the system, for download by users. Files are
  * cached on the filesystem and reused if possible, rather than recreating them every time.
  * <p>
- * FIXME there is a possibility of having stale data.
+ * FIXME there is a possibility of having stale data, if the data have been updated since the last file was generated.
+ * This can be tested for.
  * 
  * @spring.bean id="expressionDataFileService"
  * @spring.property name = "designElementDataVectorService" ref="designElementDataVectorService"
  * @spring.property name="analysisHelperService" ref="analysisHelperService"
+ * @spring.property name = "arrayDesignService" ref="arrayDesignService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @author paul
  * @version $Id$
@@ -78,17 +80,9 @@ public class ExpressionDataFileService {
 
     private AnalysisHelperService analysisHelperService;
 
+    ArrayDesignService arrayDesignService;
+
     private ExpressionExperimentService expressionExperimentService;
-
-    /**
-     * @param type
-     * @return
-     */
-    public File getOutputFile( QuantitationType type ) {
-        String filename = type.getId() + "_" + type.getName().replaceAll( "\\s+", "_" ) + DATA_FILE_SUFFIX;
-
-        return getOutputFile( filename );
-    }
 
     /**
      * @param ee
@@ -96,7 +90,15 @@ public class ExpressionDataFileService {
      */
     public File getOutputFile( ExpressionExperiment ee ) {
         String filename = ee.getId() + "_" + ee.getShortName().replaceAll( "\\s+", "_" ) + "_expmat" + DATA_FILE_SUFFIX;
+        return getOutputFile( filename );
+    }
 
+    /**
+     * @param type
+     * @return
+     */
+    public File getOutputFile( QuantitationType type ) {
+        String filename = type.getId() + "_" + type.getName().replaceAll( "\\s+", "_" ) + DATA_FILE_SUFFIX;
         return getOutputFile( filename );
     }
 
@@ -105,14 +107,11 @@ public class ExpressionDataFileService {
      * @return
      */
     public File getOutputFile( String filename ) {
-
         String fullFilePath = DATA_DIR + filename;
-
         File f = new File( fullFilePath );
 
         if ( f.exists() ) {
-            log.warn( "Will overwrite existing file " + f );
-            f.delete();
+            return f;
         }
 
         File parentDir = f.getParentFile();
@@ -120,62 +119,16 @@ public class ExpressionDataFileService {
         return f;
     }
 
+    public void setAnalysisHelperService( AnalysisHelperService analysisHelperService ) {
+        this.analysisHelperService = analysisHelperService;
+    }
+
     public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
         this.designElementDataVectorService = designElementDataVectorService;
     }
 
-    /**
-     * Locate or create a data file containing the 'preferred and masked' expression data matrix, with filtering for low
-     * expression applied (currently supports default settings only).
-     * 
-     * @param ee
-     * @param forceWrite
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public File writeOrLocateFilteredDataFile( ExpressionExperiment ee, boolean forceWrite ) {
-        FilterConfig filterConfig = new FilterConfig();
-        expressionExperimentService.thawLite( ee );
-        ExpressionDataDoubleMatrix matrix = analysisHelperService.getFilteredMatrix( ee, filterConfig );
-
-        Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
-        Map<Long, Collection<Gene>> geneAnnotations = this.getGeneAnnotations( arrayDesigns );
-
-        try {
-            File f = getOutputFile( ee );
-            if ( !forceWrite && f.canRead() ) {
-                log.info( f + " exists, not regenerating" );
-                return f;
-            }
-
-            log.info( "Creating new data file: " + f );
-            writeMatrix( f, geneAnnotations, matrix );
-            return f;
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    public File writeOrLocateFilteredJSONDataFile( ExpressionExperiment ee, boolean forceWrite ) {
-        FilterConfig filterConfig = new FilterConfig();
-        ExpressionDataDoubleMatrix matrix = analysisHelperService.getFilteredMatrix( ee, filterConfig );
-
-        Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
-        Map<Long, Collection<Gene>> geneAnnotations = this.getGeneAnnotations( arrayDesigns );
-        try {
-            File f = getOutputFile( ee );
-            if ( !forceWrite && f.canRead() ) {
-                log.info( f + " exists, not regenerating" );
-                return f;
-            }
-
-            log.info( "Creating new data file: " + f );
-            writeJson( f, geneAnnotations, matrix );
-            return f;
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
     }
 
     /**
@@ -188,14 +141,6 @@ public class ExpressionDataFileService {
      */
     @SuppressWarnings("unchecked")
     public File writeOrLocateDataFile( QuantitationType type, boolean forceWrite ) {
-        Collection<DesignElementDataVector> vectors = designElementDataVectorService.find( type );
-        Collection<ArrayDesign> arrayDesigns = getArrayDesigns( vectors );
-        Map<Long, Collection<Gene>> geneAnnotations = this.getGeneAnnotations( arrayDesigns );
-
-        if ( vectors.size() == 0 ) {
-            log.warn( "No vectors for " + type );
-            return null;
-        }
 
         try {
             File f = getOutputFile( type );
@@ -204,37 +149,18 @@ public class ExpressionDataFileService {
                 return f;
             }
 
-            log.info( "Creating new data file: " + f );
-            writeVectors( f, type.getRepresentation(), vectors, geneAnnotations );
-            return f;
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-    }
+            log.info( "Creating new quantitation type expression data file: " + f );
 
-    /**
-     * @param type
-     * @param forceWrite
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public File writeOrLocateJSONDataFile( QuantitationType type, boolean forceWrite ) {
-        Collection<DesignElementDataVector> vectors = designElementDataVectorService.find( type );
+            Collection<DesignElementDataVector> vectors = designElementDataVectorService.find( type );
+            Collection<ArrayDesign> arrayDesigns = getArrayDesigns( vectors );
+            Map<Long, Collection<Gene>> geneAnnotations = this.getGeneAnnotations( arrayDesigns );
 
-        if ( vectors.size() == 0 ) {
-            log.warn( "No vectors for " + type );
-            return null;
-        }
-
-        try {
-            File f = getJSONOutputFile( type );
-            if ( !forceWrite && f.canRead() ) {
-                log.info( f + " exists, not regenerating" );
-                return f;
+            if ( vectors.size() == 0 ) {
+                log.warn( "No vectors for " + type );
+                return null;
             }
 
-            log.info( "Creating new JSON data file: " + f );
-            writeJson( f, type.getRepresentation(), vectors );
+            writeVectors( f, type.getRepresentation(), vectors, geneAnnotations );
             return f;
         } catch ( IOException e ) {
             throw new RuntimeException( e );
@@ -262,7 +188,7 @@ public class ExpressionDataFileService {
                 return f;
             }
 
-            log.info( "Creating new data file: " + f );
+            log.info( "Creating new experimental design file: " + f );
             writeDesignMatrix( f, ee );
             return f;
         } catch ( IOException e ) {
@@ -271,6 +197,98 @@ public class ExpressionDataFileService {
 
     }
 
+    /**
+     * Locate or create a data file containing the 'preferred and masked' expression data matrix, with filtering for low
+     * expression applied (currently supports default settings only).
+     * 
+     * @param ee
+     * @param forceWrite
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public File writeOrLocateFilteredDataFile( ExpressionExperiment ee, boolean forceWrite ) {
+
+        try {
+            File f = getOutputFile( ee );
+            if ( !forceWrite && f.canRead() ) {
+                log.info( f + " exists, not regenerating" );
+                return f;
+            }
+
+            log.info( "Creating new expression data file: " + f );
+            FilterConfig filterConfig = new FilterConfig();
+            filterConfig.setIgnoreMinimumSampleThreshold( true );
+            expressionExperimentService.thawLite( ee );
+            ExpressionDataDoubleMatrix matrix = analysisHelperService.getFilteredMatrix( ee, filterConfig );
+
+            Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
+            Map<Long, Collection<Gene>> geneAnnotations = this.getGeneAnnotations( arrayDesigns );
+            writeMatrix( f, geneAnnotations, matrix );
+            return f;
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public File writeOrLocateFilteredJSONDataFile( ExpressionExperiment ee, boolean forceWrite ) {
+
+        try {
+            File f = getOutputFile( ee );
+            if ( !forceWrite && f.canRead() ) {
+                log.info( f + " exists, not regenerating" );
+                return f;
+            }
+
+            log.info( "Creating new JSON expression data file: " + f );
+            FilterConfig filterConfig = new FilterConfig();
+            ExpressionDataDoubleMatrix matrix = analysisHelperService.getFilteredMatrix( ee, filterConfig );
+
+            Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
+            Map<Long, Collection<Gene>> geneAnnotations = this.getGeneAnnotations( arrayDesigns );
+
+            writeJson( f, geneAnnotations, matrix );
+            return f;
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
+     * @param type
+     * @param forceWrite
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public File writeOrLocateJSONDataFile( QuantitationType type, boolean forceWrite ) {
+
+        try {
+            File f = getJSONOutputFile( type );
+            if ( !forceWrite && f.canRead() ) {
+                log.info( f + " exists, not regenerating" );
+                return f;
+            }
+
+            log.info( "Creating new quantitation type  JSON data file: " + f );
+
+            Collection<DesignElementDataVector> vectors = designElementDataVectorService.find( type );
+
+            if ( vectors.size() == 0 ) {
+                log.warn( "No vectors for " + type );
+                return null;
+            }
+
+            writeJson( f, type.getRepresentation(), vectors );
+            return f;
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
+     * @param vectors
+     * @return
+     */
     private Collection<ArrayDesign> getArrayDesigns( Collection<DesignElementDataVector> vectors ) {
         Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
         for ( DesignElementDataVector v : vectors ) {
@@ -279,9 +297,14 @@ public class ExpressionDataFileService {
         return ads;
     }
 
+    /**
+     * @param ads
+     * @return
+     */
     private Map<Long, Collection<Gene>> getGeneAnnotations( Collection<ArrayDesign> ads ) {
         Map<Long, Collection<Gene>> annots = new HashMap<Long, Collection<Gene>>();
         for ( ArrayDesign arrayDesign : ads ) {
+            arrayDesignService.thawLite( arrayDesign );
             annots.putAll( ArrayDesignAnnotationService.readAnnotationFile( arrayDesign ) );
         }
         return annots;
@@ -310,6 +333,42 @@ public class ExpressionDataFileService {
     }
 
     /**
+     * Writes out the experimental design for the given experiment. The bioassays (col 0) matches match the header row
+     * of the data matrix printed out by the {@link MatrixWriter}.
+     * 
+     * @param file
+     * @param expressionExperiment
+     * @throws IOException
+     * @throws FileNotFoundException
+     */
+    private void writeDesignMatrix( File file, ExpressionExperiment expressionExperiment ) throws IOException,
+            FileNotFoundException {
+        expressionExperimentService.thawLite( expressionExperiment );
+        Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
+        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
+        edWriter.write( writer, expressionExperiment, true );
+        writer.flush();
+        writer.close();
+    }
+
+    /**
+     * @param file
+     * @param geneAnnotations
+     * @param expressionDataMatrix
+     * @throws IOException
+     * @throws FileNotFoundException
+     */
+    @SuppressWarnings("unchecked")
+    private void writeJson( File file, Map<Long, Collection<Gene>> geneAnnotations,
+            ExpressionDataMatrix expressionDataMatrix ) throws IOException, FileNotFoundException {
+        Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
+        MatrixWriter matrixWriter = new MatrixWriter();
+        matrixWriter.writeJSON( writer, expressionDataMatrix, true );
+        writer.flush();
+        writer.close();
+    }
+
+    /**
      * @param file
      * @param representation
      * @param vectors
@@ -325,50 +384,6 @@ public class ExpressionDataFileService {
         matrixWriter.writeJSON( writer, expressionDataMatrix, true );
     }
 
-    @SuppressWarnings("unchecked")
-    private void writeJson( File file, Map<Long, Collection<Gene>> geneAnnotations,
-            ExpressionDataMatrix expressionDataMatrix ) throws IOException, FileNotFoundException {
-        Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
-        MatrixWriter matrixWriter = new MatrixWriter();
-        matrixWriter.writeJSON( writer, expressionDataMatrix, true );
-        writer.flush();
-        writer.close();
-    }
-
-    // /**
-    // * @param matrix
-    // * @param columns
-    // */
-    // @SuppressWarnings("unchecked")
-    // private Map<CompositeSequence, Collection<Gene>> getGeneAnnotations( ExpressionDataMatrix matrix ) {
-    // int columns = matrix.columns();
-    // Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
-    // for ( int i = 0; i < columns; i++ ) {
-    // Collection<BioAssay> bas = matrix.getBioAssaysForColumn( i );
-    // for ( BioAssay ba : bas ) {
-    // ads.add( ba.getArrayDesignUsed() );
-    // }
-    // }
-    //
-    // return getGeneAnnotations( ads );
-    // }
-
-    /**
-     * @param response
-     * @param writer
-     * @param batch
-     * @param geneAnnotations map of composite sequence ids to genes.
-     * @param firstBatch
-     * @throws IOException
-     */
-    @SuppressWarnings("unchecked")
-    private void writeVectors( File file, PrimitiveType representation, Collection<DesignElementDataVector> vectors,
-            Map<Long, Collection<Gene>> geneAnnotations ) throws IOException {
-        designElementDataVectorService.thaw( vectors );
-        ExpressionDataMatrix expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( representation, vectors );
-        writeMatrix( file, geneAnnotations, expressionDataMatrix );
-    }
-
     /**
      * @param file
      * @param geneAnnotations
@@ -379,6 +394,9 @@ public class ExpressionDataFileService {
     @SuppressWarnings("unchecked")
     private void writeMatrix( File file, Map<Long, Collection<Gene>> geneAnnotations,
             ExpressionDataMatrix expressionDataMatrix ) throws IOException, FileNotFoundException {
+
+        expressionExperimentService.thawLite( expressionDataMatrix.getExpressionExperiment() );
+
         Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
         MatrixWriter matrixWriter = new MatrixWriter();
         matrixWriter.write( writer, expressionDataMatrix, geneAnnotations, true );
@@ -387,33 +405,24 @@ public class ExpressionDataFileService {
     }
 
     /**
-     * Writes out the experimental design for the given experiment. The bioassays (col 0) matches match the header row
-     * of the data matrix printed out by the {@link MatrixWriter}.
-     * 
      * @param file
-     * @param expressionExperiment
+     * @param representation
+     * @param vectors
+     * @param geneAnnotations
      * @throws IOException
-     * @throws FileNotFoundException
      */
-    private void writeDesignMatrix( File file, ExpressionExperiment expressionExperiment ) throws IOException,
-            FileNotFoundException {
+    @SuppressWarnings("unchecked")
+    private void writeVectors( File file, PrimitiveType representation, Collection<DesignElementDataVector> vectors,
+            Map<Long, Collection<Gene>> geneAnnotations ) throws IOException {
+        designElementDataVectorService.thaw( vectors );
 
-        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
+        ExpressionDataMatrix expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( representation, vectors );
 
-        PrintWriter writer = new PrintWriter( file );
-
-        ExpressionDataDoubleMatrix matrix = analysisHelperService.getMaskedPreferredDataMatrix( expressionExperiment );
-
-        edWriter.write( writer, expressionExperiment, matrix, true );
-
+        writeMatrix( file, geneAnnotations, expressionDataMatrix );
     }
 
-    public void setAnalysisHelperService( AnalysisHelperService analysisHelperService ) {
-        this.analysisHelperService = analysisHelperService;
-    }
-
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
     }
 
 }

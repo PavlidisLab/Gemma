@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2007 Columbia University
+ * Copyright (c) 2006 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ import ubic.gemma.datastructure.matrix.MatrixWriter;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 
 /**
@@ -53,6 +54,8 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
 
     private String outFileName;
 
+    private boolean addGeneInfo = false;
+
     @Override
     public String getShortDesc() {
         return "Prints preferred data matrix to a file.";
@@ -66,6 +69,11 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
                 "File prefix for saving the output (short name will be appended)" ).withLongOpt( "outFilePrefix" )
                 .create( 'o' );
         addOption( outputFileOption );
+
+        Option geneInfoOption = OptionBuilder.withDescription(
+                "Write the gene information.  If not set, the gene information will not be written." ).create( 'g' );
+        addOption( geneInfoOption );
+
     }
 
     @SuppressWarnings("unchecked")
@@ -77,9 +85,12 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
 
         CompositeSequenceService css = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
 
+        ExpressionExperimentService ees = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
+
         for ( ExpressionExperiment ee : expressionExperiments ) {
 
             ExpressionDataDoubleMatrix dataMatrix = ahs.getMaskedPreferredDataMatrix( ee );
+            ees.thawLite( dataMatrix.getExpressionExperiment() );// FIXME don't like this
 
             Map<Long, Collection<Gene>> genesByProbeId = new HashMap<Long, Collection<Gene>>();
 
@@ -95,7 +106,9 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
                 PrintWriter writer = new PrintWriter( outFileName + "_" + ee.getShortName().replaceAll( "\\s", "" )
                         + ".txt" );
 
-                out.write( writer, dataMatrix, genesByProbeId, true, false );
+                out.write( writer, dataMatrix, genesByProbeId, true, false, addGeneInfo );
+                writer.flush();
+                writer.close();
             } catch ( IOException e ) {
                 return e;
             }
@@ -108,5 +121,7 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
     protected void processOptions() {
         super.processOptions();
         outFileName = getOptionValue( 'o' );
+
+        addGeneInfo = hasOption( 'g' );
     }
 }

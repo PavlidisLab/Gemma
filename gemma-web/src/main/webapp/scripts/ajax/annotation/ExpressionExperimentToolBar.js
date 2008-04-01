@@ -4,7 +4,7 @@ Ext.onReady( function() {
 
 	/* here we reference the grid defined in ExpressionExperimentGrid.js.
 	 */
-	var toolbar = new Ext.Gemma.AnnotationToolBar( Ext.Gemma.ExpressionExperimentGrid.grid, {
+	var toolbar = new Ext.Gemma.AnnotationToolBar( Ext.Gemma.ExpressionExperimentAnnotGrid.grid, {
 		createHandler : function( characteristic, callback ) {
 			OntologyService.saveExpressionExperimentStatement( characteristic, [eeId], callback );
 		},

@@ -1,5 +1,5 @@
 /*
-g * The Gemma project
+ * The Gemma project
  * 
  * Copyright (c) 2006 University of British Columbia
  * 
@@ -314,16 +314,16 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
                 /*
                  * This block commented out because of lazy-load problems.
                  */
-                // Collection associatedObjects = ( Collection ) associatedObject;
-                // for ( Object object2 : associatedObjects ) {
-                // if ( Securable.class.isAssignableFrom( object2.getClass() ) ) {
-                // if ( log.isDebugEnabled() ) {
-                // log.debug( "Processing ACL for member " + object2 + " of collection " + propertyNames[j]
-                // + ", Cascade=" + cs );
-                // }
-                // processObject( m, object2 );
-                // }
-                // }
+                Collection associatedObjects = ( Collection ) associatedObject;
+                for ( Object object2 : associatedObjects ) {
+                    if ( Securable.class.isAssignableFrom( object2.getClass() ) ) {
+                        if ( log.isDebugEnabled() ) {
+                            log.debug( "Processing ACL for member " + object2 + " of collection " + propertyNames[j]
+                                    + ", Cascade=" + cs );
+                        }
+                        processObject( m, object2 );
+                    }
+                }
             }
         }
     }

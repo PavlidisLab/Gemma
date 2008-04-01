@@ -269,7 +269,6 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
         return result.toString();
     }
 
-
     /**
      * This method should/can only be used when the wrapper is manually built in the specific endpoints (ie. not using
      * the buildWrapper() in AbstractGemmaEndpoint).
@@ -304,4 +303,3 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
 
     }
 }
-
