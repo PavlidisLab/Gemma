@@ -60,7 +60,7 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
     private SimpleExpressionDataLoaderService eeLoaderService = null;
     private ArrayDesignService adService = null;
     private TaxonService taxonService = null;
-
+    ExpressionExperimentService eeService;
     final static String SPLITCHAR = "\t{1}";
     final static int NAMEI = 0;
     final static int SHORTNAMEI = NAMEI + 1;
@@ -125,8 +125,18 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
 
+        String shortName = fields[SHORTNAMEI];
+
+        ExpressionExperiment existing = eeService.findByShortName( shortName );
+
+        if ( existing != null ) {
+            throw new IllegalArgumentException( "There is already an experiment with short name " + shortName
+                    + "; please choose something unique." );
+        }
+
         metaData.setName( fields[NAMEI] );
-        metaData.setShortName( fields[SHORTNAMEI] );
+
+        metaData.setShortName( shortName );
         metaData.setDescription( fields[DESCRIPTIONI] );
 
         configureArrayDesigns( fields, metaData );
@@ -146,8 +156,6 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
 
         ExpressionExperiment ee = eeLoaderService.load( metaData, data );
 
-        ExpressionExperimentService eeService = ( ExpressionExperimentService ) this
-                .getBean( "expressionExperimentService" );
         eeService.thaw( ee );
 
     }
@@ -259,6 +267,7 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
         try {
             this.eeLoaderService = ( SimpleExpressionDataLoaderService ) this
                     .getBean( "simpleExpressionDataLoaderService" );
+            this.eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
             this.adService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
             this.taxonService = ( TaxonService ) this.getBean( "taxonService" );
             if ( this.fileName != null ) {

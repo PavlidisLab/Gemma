@@ -50,6 +50,7 @@ import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.util.progress.ProgressJob;
@@ -71,12 +72,14 @@ import ubic.gemma.web.util.upload.FileUploadUtil;
  * @version $Id$
  * @spring.bean id="simpleExpressionExperimentLoadController"
  * @spring.property name="commandName" value="simpleExpressionExperimentLoadCommand"
- * @spring.property name="commandClass" value="ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentLoadCommand"
+ * @spring.property name="commandClass"
+ *                  value="ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentLoadCommand"
  * @spring.property name="validator" ref="simpleExpressionExperimentLoadValidator"
  * @spring.property name="formView" value="simpleExpressionExperimentForm"
  * @spring.property name="successView" value="loadExpressionExperimentProgress.html"
  * @spring.property name="simpleExpressionDataLoaderService" ref="simpleExpressionDataLoaderService"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
+ * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="taxonService" ref="taxonService"
  */
 public class SimpleExpressionExperimentLoadController extends AbstractSpacesFormController {
@@ -88,6 +91,8 @@ public class SimpleExpressionExperimentLoadController extends AbstractSpacesForm
     ArrayDesignService arrayDesignService;
 
     SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
+
+    ExpressionExperimentService expressionExperimentService;
 
     /**
      * @param arrayDesignService the arrayDesignService to set
@@ -148,10 +153,10 @@ public class SimpleExpressionExperimentLoadController extends AbstractSpacesForm
     @SuppressWarnings("unchecked")
     private void populateArrayDesignReferenceData( Map<String, List<? extends Object>> mapping ) {
         // FIXME replicated code. also in ExpressionExperimentLoad controller.
-        // Need to factor out. Also need to remove AD's that are subsumed or merged into other AD's.
-
         List<ArrayDesign> arrayDesigns = new ArrayList<ArrayDesign>();
         for ( ArrayDesign arrayDesign : ( Collection<ArrayDesign> ) arrayDesignService.loadAll() ) {
+            if ( arrayDesign.getSubsumingArrayDesign() != null ) continue;
+            if ( arrayDesign.getMergedInto() != null ) continue;
             arrayDesigns.add( arrayDesign );
         }
         Collections.sort( arrayDesigns, new Comparator<ArrayDesign>() {
@@ -193,20 +198,6 @@ public class SimpleExpressionExperimentLoadController extends AbstractSpacesForm
         loadCookie( request, command );
         return command;
     }
-
-    // /*
-    // * (non-Javadoc)
-    // *
-    // * @see
-    // ubic.gemma.web.controller.BackgroundProcessingFormController#getRunner(org.acegisecurity.context.SecurityContext,
-    // * java.lang.Object, java.lang.String)
-    // */
-    // @Override
-    // protected BackgroundControllerJob<ModelAndView> getRunner( String taskId, SecurityContext securityContext,
-    // Object command, MessageUtil messenger ) {
-    // BackgroundControllerJob job = new SimpleEELoadJob( null, this.simpleExpressionDataLoaderService );
-    // job.setTaskId( taskId );
-    // }
 
     class SimpleEELoadJob extends BackgroundControllerJob<ModelAndView> {
         SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
@@ -300,6 +291,15 @@ public class SimpleExpressionExperimentLoadController extends AbstractSpacesForm
         log.info( "Upload task id : " + taskId );
 
         SimpleExpressionExperimentLoadCommand commandObject = ( SimpleExpressionExperimentLoadCommand ) command;
+
+        ExpressionExperiment existing = expressionExperimentService.findByShortName( commandObject.getShortName() );
+
+        if ( existing != null ) {
+            errors.rejectValue( "shortName", "errors.unique", new Object[] { commandObject.getShortName() },
+                    "Short name must be unique" );
+            return showForm( request, response, errors );
+        }
+
         Cookie cookie = new SimpleExpressionExperimentLoadCookie( commandObject );
         response.addCookie( cookie );
 
@@ -328,6 +328,13 @@ public class SimpleExpressionExperimentLoadController extends AbstractSpacesForm
      * @return the taskid
      */
     public String load( SimpleExpressionExperimentLoadCommand ed ) throws Exception {
+
+        ExpressionExperiment existing = expressionExperimentService.findByShortName( ed.getShortName() );
+
+        if ( existing != null ) {
+            throw new IllegalArgumentException( "There is already an experiment with short name " + ed.getShortName()
+                    + "; please choose something unique." );
+        }
 
         FileUpload fileUpload = ed.getDataFile();
 
@@ -424,6 +431,10 @@ public class SimpleExpressionExperimentLoadController extends AbstractSpacesForm
             Map controlModel ) throws Exception {
         request.getSession().setAttribute( "tmpTaskId", TaskRunningService.generateTaskId() );
         return super.showForm( request, response, errors, controlModel );
+    }
+
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
     }
 
 }
