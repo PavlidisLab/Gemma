@@ -39,6 +39,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.arrayDesign.AlternateName;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -84,6 +85,14 @@ public class BusinessKey {
             for ( DatabaseEntry databaseEntry : arrayDesign.getExternalReferences() ) {
                 disjunction.add( Restrictions.eq( "accession", databaseEntry.getAccession() ) );
                 // FIXME this should include the ExternalDatabase in the criteria.
+            }
+            externalRef.add( disjunction );
+            return;
+        } else if ( arrayDesign.getAlternateNames().size() != 0 ) {
+            Criteria externalRef = queryObject.createCriteria( "alternateNames" );
+            Disjunction disjunction = Restrictions.disjunction();
+            for ( AlternateName alternateName : arrayDesign.getAlternateNames() ) {
+                disjunction.add( Restrictions.eq( "name", alternateName.getName() ) );
             }
             externalRef.add( disjunction );
             return;

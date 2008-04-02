@@ -231,6 +231,7 @@ Mapping URLS to controllers
 							<value>getCsSummaries</value>							
 							<value>updateReport</value>
 							<value>getReportHtml</value>
+							<value>addAlternateName</value>
 							<value>remove</value>
 						</list>
 					</property>

@@ -42,55 +42,6 @@ import ubic.gemma.model.genome.Taxon;
  */
 public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase {
 
-    @SuppressWarnings("unchecked")
-    private void checkForMoreRecentMethod( Map<Long, AuditEvent> lastEventMap,
-            Class<ArrayDesignAnalysisEvent> eventclass, Long arrayDesignId, ArrayDesign subsumedInto ) {
-        Collection<AuditEvent> subsumerEvents = this.getEvents( subsumedInto );
-        AuditEvent lastSubsumerEvent = getLastEvent( subsumerEvents, eventclass );
-        if ( lastSubsumerEvent != null && lastEventMap.containsKey( arrayDesignId )
-                && lastEventMap.get( arrayDesignId ) != null
-                && lastEventMap.get( arrayDesignId ).getDate().before( lastSubsumerEvent.getDate() ) ) {
-            lastEventMap.put( arrayDesignId, lastSubsumerEvent );
-        }
-    }
-
-    /**
-     * @param eventMap
-     * @param lastEventMap
-     * @param aaIds
-     * @param eventclass
-     */
-    private void getMostRecentEvents( Map<Long, Collection<AuditEvent>> eventMap, Map<Long, AuditEvent> lastEventMap,
-            Set<Long> aaIds, Class<ArrayDesignAnalysisEvent> eventclass ) {
-        for ( Long arrayDesignId : aaIds ) {
-
-            Collection<AuditEvent> events = eventMap.get( arrayDesignId );
-            AuditEvent lastEvent = null;
-
-            if ( events == null ) {
-                lastEventMap.put( arrayDesignId, null );
-            } else {
-                lastEvent = getLastEvent( events, eventclass );
-                lastEventMap.put( arrayDesignId, lastEvent );
-            }
-
-            /*
-             * Check if the subsuming or merged array (if any) was updated more recently. To do this: 1) load the AA; 2)
-             * check for merged; check for subsumed; check events for those.
-             */
-            ArrayDesign arrayDesign = this.load( arrayDesignId );
-            if ( arrayDesign.getSubsumingArrayDesign() != null ) {
-                ArrayDesign subsumedInto = arrayDesign.getSubsumingArrayDesign();
-                checkForMoreRecentMethod( lastEventMap, eventclass, arrayDesignId, subsumedInto );
-            }
-            if ( arrayDesign.getMergedInto() != null ) {
-                ArrayDesign mergedInto = arrayDesign.getMergedInto();
-                checkForMoreRecentMethod( lastEventMap, eventclass, arrayDesignId, mergedInto );
-            }
-
-        }
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -152,6 +103,11 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     @Override
     protected ArrayDesign handleFind( ArrayDesign arrayDesign ) throws Exception {
         return this.getArrayDesignDao().find( arrayDesign );
+    }
+
+    @Override
+    protected Collection handleFindByAlternateName( String queryString ) throws Exception {
+        return this.getArrayDesignDao().findByAlternateName( queryString );
     }
 
     /**
@@ -239,6 +195,21 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Map handleGetLastRepeatAnalysis( Collection ids ) throws Exception {
+        Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
+        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
+        // remove all AuditEvents that are not SequenceAnalysis events
+        Set<Long> aaIds = eventMap.keySet();
+        Class eventclass = ArrayDesignRepeatAnalysisEvent.class;
+        getMostRecentEvents( eventMap, lastEventMap, aaIds, eventclass );
+        return lastEventMap;
+    }
+
+    /*
+     * (non-Javadoc)
      * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastSequenceAnalysis(java.util.Collection)
      */
@@ -250,21 +221,6 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         // remove all AuditEvents that are not SequenceAnalysis events
         Set<Long> aaIds = eventMap.keySet();
         Class eventclass = ArrayDesignSequenceAnalysisEvent.class;
-        getMostRecentEvents( eventMap, lastEventMap, aaIds, eventclass );
-        return lastEventMap;
-    }
-
-    /*
-     * (non-Javadoc)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Map handleGetLastRepeatAnalysis( Collection ids ) throws Exception {
-        Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
-        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
-        // remove all AuditEvents that are not SequenceAnalysis events
-        Set<Long> aaIds = eventMap.keySet();
-        Class eventclass = ArrayDesignRepeatAnalysisEvent.class;
         getMostRecentEvents( eventMap, lastEventMap, aaIds, eventclass );
         return lastEventMap;
     }
@@ -283,6 +239,72 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         Set<Long> aaIds = eventMap.keySet();
         Class eventclass = ArrayDesignSequenceUpdateEvent.class;
         getMostRecentEvents( eventMap, lastEventMap, aaIds, eventclass );
+        return lastEventMap;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastTroubleEvent(java.util.Collection)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected java.util.Map handleGetLastTroubleEvent( Collection ids ) throws Exception {
+        Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
+        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
+
+        Set<Long> aaIds = eventMap.keySet();
+        for ( Long arrayDesignId : aaIds ) {
+
+            Collection<AuditEvent> events = eventMap.get( arrayDesignId );
+            AuditEvent lastEvent = null;
+
+            if ( events == null ) {
+                lastEventMap.put( arrayDesignId, null );
+            } else {
+                lastEvent = getLastOutstandingTroubleEvent( events );
+                lastEventMap.put( arrayDesignId, lastEvent );
+
+                /*
+                 * TODO how to deal with merged/subsumed arrays in this case?
+                 */
+            }
+
+        }
+
+        return lastEventMap;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastValidationEvent(java.util.Collection)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Map handleGetLastValidationEvent( Collection ids ) throws Exception {
+        Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
+        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
+
+        Set<Long> aaIds = eventMap.keySet();
+        for ( Long arrayDesignId : aaIds ) {
+
+            Collection<AuditEvent> events = eventMap.get( arrayDesignId );
+            AuditEvent lastEvent = null;
+
+            if ( events == null ) {
+                lastEventMap.put( arrayDesignId, null );
+            } else {
+                lastEvent = getLastEvent( events, ValidatedFlagEvent.class );
+                lastEventMap.put( arrayDesignId, lastEvent );
+
+                /*
+                 * TODO how to deal with merged/subsumed arrays in this case?
+                 */
+            }
+
+        }
+
         return lastEventMap;
     }
 
@@ -373,6 +395,12 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     @Override
     protected ArrayDesign handleLoadFully( Long id ) throws Exception {
         return this.getArrayDesignDao().loadFully( id );
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection<ArrayDesign> handleLoadMultiple( Collection ids ) throws Exception {
+        return this.getArrayDesignDao().loadMultiple( ids );
     }
 
     /*
@@ -555,6 +583,12 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     }
 
     @Override
+    protected void handleRemoveBiologicalCharacteristics( ArrayDesign arrayDesign ) throws Exception {
+        this.getArrayDesignDao().removeBiologicalCharacteristics( arrayDesign );
+
+    }
+
+    @Override
     protected void handleThaw( ArrayDesign arrayDesign ) throws Exception {
         this.getArrayDesignDao().thaw( arrayDesign );
     }
@@ -562,12 +596,6 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     @Override
     protected void handleThawLite( ArrayDesign arrayDesign ) throws Exception {
         this.getArrayDesignDao().thawLite( arrayDesign );
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Collection<ArrayDesign> handleLoadMultiple( Collection ids ) throws Exception {
-        return this.getArrayDesignDao().loadMultiple( ids );
     }
 
     /**
@@ -590,24 +618,26 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().updateSubsumingStatus( candidateSubsumer, candidateSubsumee );
     }
 
-    @Override
-    protected void handleRemoveBiologicalCharacteristics( ArrayDesign arrayDesign ) throws Exception {
-        this.getArrayDesignDao().removeBiologicalCharacteristics( arrayDesign );
-
+    @SuppressWarnings("unchecked")
+    private void checkForMoreRecentMethod( Map<Long, AuditEvent> lastEventMap,
+            Class<ArrayDesignAnalysisEvent> eventclass, Long arrayDesignId, ArrayDesign subsumedInto ) {
+        Collection<AuditEvent> subsumerEvents = this.getEvents( subsumedInto );
+        AuditEvent lastSubsumerEvent = getLastEvent( subsumerEvents, eventclass );
+        if ( lastSubsumerEvent != null && lastEventMap.containsKey( arrayDesignId )
+                && lastEventMap.get( arrayDesignId ) != null
+                && lastEventMap.get( arrayDesignId ).getDate().before( lastSubsumerEvent.getDate() ) ) {
+            lastEventMap.put( arrayDesignId, lastSubsumerEvent );
+        }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastTroubleEvent(java.util.Collection)
+    /**
+     * @param eventMap
+     * @param lastEventMap
+     * @param aaIds
+     * @param eventclass
      */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected java.util.Map handleGetLastTroubleEvent( Collection ids ) throws Exception {
-        Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
-        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
-
-        Set<Long> aaIds = eventMap.keySet();
+    private void getMostRecentEvents( Map<Long, Collection<AuditEvent>> eventMap, Map<Long, AuditEvent> lastEventMap,
+            Set<Long> aaIds, Class<ArrayDesignAnalysisEvent> eventclass ) {
         for ( Long arrayDesignId : aaIds ) {
 
             Collection<AuditEvent> events = eventMap.get( arrayDesignId );
@@ -616,50 +646,25 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
             if ( events == null ) {
                 lastEventMap.put( arrayDesignId, null );
             } else {
-                lastEvent = getLastOutstandingTroubleEvent( events );
+                lastEvent = getLastEvent( events, eventclass );
                 lastEventMap.put( arrayDesignId, lastEvent );
+            }
 
-                /*
-                 * TODO how to deal with merged/subsumed arrays in this case?
-                 */
+            /*
+             * Check if the subsuming or merged array (if any) was updated more recently. To do this: 1) load the AA; 2)
+             * check for merged; check for subsumed; check events for those.
+             */
+            ArrayDesign arrayDesign = this.load( arrayDesignId );
+            if ( arrayDesign.getSubsumingArrayDesign() != null ) {
+                ArrayDesign subsumedInto = arrayDesign.getSubsumingArrayDesign();
+                checkForMoreRecentMethod( lastEventMap, eventclass, arrayDesignId, subsumedInto );
+            }
+            if ( arrayDesign.getMergedInto() != null ) {
+                ArrayDesign mergedInto = arrayDesign.getMergedInto();
+                checkForMoreRecentMethod( lastEventMap, eventclass, arrayDesignId, mergedInto );
             }
 
         }
-
-        return lastEventMap;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastValidationEvent(java.util.Collection)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Map handleGetLastValidationEvent( Collection ids ) throws Exception {
-        Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
-        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
-
-        Set<Long> aaIds = eventMap.keySet();
-        for ( Long arrayDesignId : aaIds ) {
-
-            Collection<AuditEvent> events = eventMap.get( arrayDesignId );
-            AuditEvent lastEvent = null;
-
-            if ( events == null ) {
-                lastEventMap.put( arrayDesignId, null );
-            } else {
-                lastEvent = getLastEvent( events, ValidatedFlagEvent.class );
-                lastEventMap.put( arrayDesignId, lastEvent );
-
-                /*
-                 * TODO how to deal with merged/subsumed arrays in this case?
-                 */
-            }
-
-        }
-
-        return lastEventMap;
     }
 
 }

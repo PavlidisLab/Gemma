@@ -22,7 +22,7 @@ function handleReportLoadSuccess(data) {
 }
 
 function handleDoneUpdateReport(data){
-	Ext.DomHelper.overwrite("messages", {tag : 'img', src:'/Gemma/images/default/tree/loading.gif' }); 
+	Ext.DomHelper.overwrite("messages", {tag : 'img', src:'/Gemma/images/icons/ok.png' }); 
 	var id = data.id;
 	var callParams = [];
 	var commandObj = {id : id};
@@ -34,6 +34,11 @@ function handleDoneUpdateReport(data){
 	ArrayDesignController.getReportHtml.apply( this, callParams);
 	
 	 
+}
+
+function handleNewAlternateName(data){
+	Ext.DomHelper.overwrite("messages", "");
+	Ext.DomHelper.overwrite("alternate-names", data); 
 }
 
 function handleReportUpdateSuccess(data) {
@@ -72,6 +77,62 @@ function updateReport(id) {
 	Ext.DomHelper.append("messages", "&nbsp;Submitting ...");  
 	
 	ArrayDesignController.updateReport.apply(this, callParams);
+
+}
+
+function getAlternateName(id) {
+	var dialog = new Ext.Window({
+		title : "Enter a new alternate name",
+		modal : true,
+		layout : 'fit',
+		autoHeight : true, 
+		width : 300,
+		closeAction:'hide',
+		easing : 3,
+		defaultType : 'textfield', 
+		items: [  
+			{
+				id : "alternate-name-textfield",
+				fieldLabel : 'Name',
+				name : 'name'
+			} ],
+
+        buttons: [{ 
+        	text: 'Cancel',
+        	handler: function(){ 
+            	dialog.hide();  
+        	} 
+       	},{ 
+        	text: 'Save',
+        	handler: function() {
+        		var name = Ext.get("alternate-name-textfield").getValue();
+				addAlternateName(id, name);
+				dialog.hide(); 
+        	}, 
+        	scope : dialog
+       	},]
+		
+		
+	});
+	
+	dialog.show();
+	 
+}
+
+function addAlternateName(id, newName) {
+
+	var callParams = [];
+	 
+	callParams.push( id, newName );
+	
+	var delegate = handleNewAlternateName.createDelegate(this, [], true);
+	var errorHandler = handleFailure.createDelegate(this, [], true);
+	
+	callParams.push({callback : delegate, errorHandler : errorHandler});
+	
+	Ext.DomHelper.overwrite("messages", {tag : 'img', src:'/Gemma/images/default/tree/loading.gif' });   
+	
+	ArrayDesignController.addAlternateName.apply(this, callParams);
 
 }
 

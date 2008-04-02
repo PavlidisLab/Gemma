@@ -1032,4 +1032,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     }
 
+    @Override
+    protected Collection handleFindByAlternateName( String queryString ) throws Exception {
+        return this.getHibernateTemplate().findByNamedParam(
+                "from ArrayDesignImpl ad inner join ad.alternateNames n where n.name = :q", "q", queryString );
+    }
 }

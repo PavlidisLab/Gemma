@@ -1,11 +1,13 @@
 <%@ include file="/common/taglibs.jsp"%>
 <%@ page import="java.util.*"%>
+<%@ page import="org.apache.commons.lang.StringUtils"%>
 <%@ page import="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl"%>
 <jsp:useBean id="arrayDesign" scope="request" class="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl" />
 
 <!DOCTYPE html PUBLIC "-//W3C//Dtd html 4.01 transitional//EN">
 <head>
-	<title><jsp:getProperty name="arrayDesign" property="shortName" /> - <jsp:getProperty name="arrayDesign" property="name" /></title>
+	<title><jsp:getProperty name="arrayDesign" property="shortName" /> - <jsp:getProperty name="arrayDesign"
+			property="name" /></title>
 
 	<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
 	<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
@@ -23,8 +25,7 @@
 </head>
 
 <h2>
-	Details for:
-	"<jsp:getProperty name="arrayDesign" property="name" />"
+	Details for: "<jsp:getProperty name="arrayDesign" property="name" />"
 	<c:if test="${ troubleEvent != null}">
 	&nbsp;
 	<img src='<c:url value="/images/icons/warning.png"/>' height='16' width='16' alt='trouble'
@@ -37,27 +38,9 @@
 	</c:if>
 </h2>
 
-<!--
-<div style='float:right; width:25em; margin:1em; clear:right;'>
-<c:if test="${ troubleEvent != null}">
-<form name='troubleEvent'>
-<input type='hidden' name='detail' value='<c:out value="${ troubleEvent.detail }" />' />
-</form>
-<p class='trouble'>This dataset was flagged as <a href="?"
-	onclick="showHelpTip(event, document.troubleEvent.detail.value); return false;">problematic</a>
-	on <c:out value="${ troubleEvent.date }" /> by <c:out value="${ troubleEvent.performer.name }" />.</p>
-</c:if>
-
-<c:if test="${ validatedEvent != null}">
-<p class='validated'>This dataset was validated
-	on <c:out value="${ validatedEvent.date }" /> by <c:out value="${ validatedEvent.performer.name }" />.</p>
-</c:if>
-</div>
--->
-
 <div id="messages" style="margin: 10px; width: 400px"></div>
 <div id="taskId" style="display: none;"></div>
-<div id="progress-area" ></div>
+<div id="progress-area"></div>
 
 <!--  Summary of array design associations -->
 <c:if test="${ summary != ''}">
@@ -171,37 +154,44 @@
 </c:if>
 
 <table style="width: 70%">
-<%-- 	<tr>
-		<td  style="width: 25%"  class="label">
-			Name
-		</td>
-		<td>
-			<jsp:getProperty name="arrayDesign" property="name" />
-		</td>
-	</tr> --%>
+
 	<tr>
-		<td  style="width: 25%"  class="label">
+		<td style="width: 25%" class="label">
 			Short name
 		</td>
 		<td>
 			<jsp:getProperty name="arrayDesign" property="shortName" />
 		</td>
 	</tr>
+
+	<tr>
+		<td style="width: 25%" class="label">
+			Alternate names
+		</td>
+		<td>
+			<span id="alternate-names">${alternateNames}</span>
+			<authz:authorize ifAnyGranted="admin">&nbsp;
+			<a href="#" title="Add a new alternate name for this design" onClick="getAlternateName(${arrayDesign.id })"><img
+						src="/Gemma/images/icons/add.png" /> </a>
+			</authz:authorize>
+		</td>
+	</tr>
+
 	<tr>
 		<td class="label">
 			Provider
 		</td>
 		<td>
 			<%
-			if ( arrayDesign.getDesignProvider() != null ) {
+			    if ( arrayDesign.getDesignProvider() != null ) {
 			%>
 			<%=arrayDesign.getDesignProvider().getName()%>
 			<%
-			} else {
+			    } else {
 			%>
 			(Not listed)
 			<%
-			}
+			    }
 			%>
 		</td>
 	</tr>
@@ -228,20 +218,21 @@
 	</tr>
 	<tr>
 		<td class="label">
-			External accessions&nbsp;<a class="helpLink" href="?"
+			External accessions&nbsp;
+			<a class="helpLink" href="?"
 				onclick="showHelpTip(event, 'References to this design in other databases'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
 		</td>
 		<td>
 			<%
-			if ( ( arrayDesign.getExternalReferences() ) != null && ( arrayDesign.getExternalReferences().size() > 0 ) ) {
+			    if ( ( arrayDesign.getExternalReferences() ) != null && ( arrayDesign.getExternalReferences().size() > 0 ) ) {
 			%>
 			<c:forEach var="accession" items="${ arrayDesign.externalReferences }">
 				<Gemma:databaseEntry databaseEntry="${accession}" />
 				<br />
 			</c:forEach>
 			<%
-			}
+			    }
 			%>
 		</td>
 	</tr>
@@ -258,7 +249,8 @@
 	</tr>
 	<tr>
 		<td class="label">
-			Type&nbsp;<a class="helpLink" href="?"
+			Type&nbsp;
+			<a class="helpLink" href="?"
 				onclick="showHelpTip(event, 'Our best guess about what type of data is produced using this array'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
 		</td>
@@ -276,17 +268,17 @@
 		</td>
 		<td>
 			<%
-			if ( arrayDesign.getDescription() != null && arrayDesign.getDescription().length() > 0 ) {
+			    if ( arrayDesign.getDescription() != null && arrayDesign.getDescription().length() > 0 ) {
 			%>
 			<div class="clob">
 				<jsp:getProperty name="arrayDesign" property="description" />
 			</div>
 			<%
-			} else {
+			    } else {
 			%>
 			(None provided)
 			<%
-			}
+			    }
 			%>
 		</td>
 	</tr>
@@ -370,8 +362,7 @@
 				<h3>
 					History
 				</h3>
-				<div id="auditTrail" class="x-grid-mso"
-					style="border: 1px solid #c3daf9; overflow: hidden; width: 630px;"></div>
+				<div id="auditTrail" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width: 630px;"></div>
 				<input type="hidden" name="auditableId" id="auditableId" value="${arrayDesign.id}" />
 				<input type="hidden" name="auditableClass" id="auditableClass" value="${arrayDesign.class.name}" />
 

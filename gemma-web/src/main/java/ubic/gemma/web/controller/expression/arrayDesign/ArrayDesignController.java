@@ -57,6 +57,7 @@ import ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject;
 import ubic.gemma.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.expression.arrayDesign.AlternateName;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -250,6 +251,36 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         }
 
         return null;
+    }
+
+    public String addAlternateName( Long arrayDesignId, String alternateName ) {
+        ArrayDesign ad = arrayDesignService.load( arrayDesignId );
+        if ( ad == null ) {
+            throw new IllegalArgumentException( "No such array design with id=" + arrayDesignId );
+        }
+
+        if ( StringUtils.isBlank( alternateName ) ) {
+            return formatAlternateNames( ad );
+        }
+
+        AlternateName newName = AlternateName.Factory.newInstance( alternateName );
+
+        ad.getAlternateNames().add( newName );
+
+        arrayDesignService.update( ad );
+        return formatAlternateNames( ad );
+    }
+
+    /**
+     * @param ad
+     * @return
+     */
+    private String formatAlternateNames( ArrayDesign ad ) {
+        Collection<String> names = new HashSet<String>();
+        for ( AlternateName an : ad.getAlternateNames() ) {
+            names.add( an.getName() );
+        }
+        return StringUtils.join( names, "; " );
     }
 
     /**
@@ -541,6 +572,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         mav.addObject( "mergees", mergees );
         mav.addObject( "taxon", taxon );
         mav.addObject( "arrayDesign", arrayDesign );
+        mav.addObject( "alternateNames", this.formatAlternateNames( arrayDesign ) );
         mav.addObject( "numCompositeSequences", numCompositeSequences );
         mav.addObject( "numExpressionExperiments", numExpressionExperiments );
 
