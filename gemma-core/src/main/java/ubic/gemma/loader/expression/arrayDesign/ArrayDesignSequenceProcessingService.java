@@ -1027,7 +1027,10 @@ public class ArrayDesignSequenceProcessingService {
         Map<String, BioSequence> found = new HashMap<String, BioSequence>();
         for ( BioSequence sequence : retrievedSequences ) {
             sequence.setTaxon( taxon );
-            assert sequence.getSequenceDatabaseEntry() != null : "No sequence database entry for " + sequence;
+            if ( sequence.getSequenceDatabaseEntry() == null ) {
+                log.warn( "Sequence from BLAST db lacks database entry: " + sequence + "; skipping" );
+                continue;
+            }
             sequence = createOrUpdateGenbankSequence( sequence, force );
             String accession = sequence.getSequenceDatabaseEntry().getAccession();
             found.put( accession, sequence );
