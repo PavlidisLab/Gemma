@@ -65,8 +65,8 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
     final static int NAMEI = 0;
     final static int SHORTNAMEI = NAMEI + 1;
     final static int DESCRIPTIONI = SHORTNAMEI + 1;
-    final static int ARRAYDESIGNI = DESCRIPTIONI + 1;
-    final static int DATAFILEI = ARRAYDESIGNI + 1;
+    final static int AD_SHORT_NAME_I = DESCRIPTIONI + 1; // The short name of the arrayDesign
+    final static int DATAFILEI = AD_SHORT_NAME_I + 1;
     final static int SPECIESI = DATAFILEI + 1;
     final static int QNAMEI = SPECIESI + 1;
     final static int QDESCRIPTIONI = QNAMEI + 1;
@@ -179,22 +179,23 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
      * @param fields
      * @param metaData
      */
+    @SuppressWarnings("unchecked")
     private void configureArrayDesigns( String[] fields, SimpleExpressionExperimentMetaData metaData ) {
         int i;
         TechnologyType techType = TechnologyType.fromString( fields[TECHNOLOGYTYPEI] );
         Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
-        if ( StringUtils.isBlank( fields[ARRAYDESIGNI] ) ) {
+        if ( StringUtils.isBlank( fields[AD_SHORT_NAME_I] ) ) {
             // that's okay, so long as we get an array design name
             ArrayDesign ad = getNewArrayDesignFromName( fields );
             ad.setTechnologyType( techType );
             ads.add( ad );
-        } else if ( fields[ARRAYDESIGNI].trim().equals( "IMAGE" ) ) {
+        } else if ( fields[AD_SHORT_NAME_I].trim().equals( "IMAGE" ) ) {
             ArrayDesign ad = getNewArrayDesignFromName( fields );
             ad.setTechnologyType( techType );
             ads.add( ad );
             metaData.setProbeIdsAreImageClones( true );
         } else {
-            String allADs[] = fields[ARRAYDESIGNI].split( "\\+" );
+            String allADs[] = fields[AD_SHORT_NAME_I].split( "\\+" );
 
             // allow for the case where there is an additional new array design to be added.
             if ( StringUtils.isNotBlank( fields[ARRAYDESIGNNAMEI] ) ) {
@@ -205,6 +206,17 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
 
             for ( i = 0; i < allADs.length; i++ ) {
                 ArrayDesign ad = adService.findByShortName( allADs[i] );
+
+                if ( ad == null ) {
+                    Collection<ArrayDesign> existingAds = adService.findByAlternateName( allADs[i] );
+                    if ( existingAds.size() == 1 ) {
+                        ad = existingAds.iterator().next();
+                    } else if ( existingAds.size() > 1 ) {
+                        throw new IllegalStateException( "Array Design " + allADs[i]
+                                + " is ambiguous, it is an alternate name of more than one array design" );
+                    }
+                }
+
                 if ( ad == null ) {
                     throw new IllegalStateException( "Array Design " + allADs[i]
                             + " is not loaded into the system yet; load it and try again." );
