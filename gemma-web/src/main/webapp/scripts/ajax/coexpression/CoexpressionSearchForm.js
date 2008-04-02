@@ -15,7 +15,7 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 	/* establish default config options...
 	 */
 	var superConfig = {
-		width : 500,
+		width : 550,
 		frame : true,
 		stateful : true,
 		stateEvents : [ "beforesearch" ],
