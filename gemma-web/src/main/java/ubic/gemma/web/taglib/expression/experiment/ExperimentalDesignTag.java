@@ -79,27 +79,28 @@ public class ExperimentalDesignTag extends TagSupport {
 
         String name = experimentalDesign.getName();
         String description = experimentalDesign.getDescription();
-        buf.append( "<ul>" );
-        if ( StringUtils.isNotBlank( name ) ) buf.append( "<li>" + name + "</li>" );
-        if ( StringUtils.isNotBlank( description ) ) buf.append( "<li>Description:" + description + "</td></tr>" );
-        buf.append( "<li>Factors: " + experimentalFactors.size() + "</li>" );
+        buf.append( "<table>" );
+        if ( StringUtils.isNotBlank( name ) ) buf.append( "<tr><td>" + name + "</td></tr>" );
+        if ( StringUtils.isNotBlank( description ) )
+            buf.append( "<tr><td>Description:</td><td>" + description + "</td></tr>" );
+        buf.append( "<tr><td>Factors:</td><td>" + experimentalFactors.size() + "</td></tr>" );
 
         if ( experimentalFactors.size() > 0 ) {
             /*
              * See eeDataFetch.js for this call.
              */
             buf
-                    .append( "<li>Design File: <a href=\"#\" onClick=\"fetchData(false,"
+                    .append( "<tr><td>Design File:</td><td><a href=\"#\" onClick=\"fetchData(false,"
                             + +expressionExperiment.getId()
                             + ",\'text\', null,"
                             + experimentalDesign.getId()
                             + ")"
                             + "\"> Download </a>"
                             + "<a class=\"helpLink\" href=\"?\" onclick=\"showHelpTip(event, \'Tab-delimited design file for this experiment, if available.\'); return false\"><img src=\"/Gemma/images/help.png\"/> </a></td>"
-                            + "</li>" );
+                            + "</tr>" );
         }
 
-        buf.append( "</ul>" );
+        buf.append( "</table>" );
 
         try {
             pageContext.getOut().print( buf.toString() );
