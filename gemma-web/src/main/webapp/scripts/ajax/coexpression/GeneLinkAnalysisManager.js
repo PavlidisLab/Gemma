@@ -12,7 +12,7 @@ Ext.onReady( function() {
 	var admin = dwr.util.getValue("hasAdmin");
 	
 	var analysisGrid = new Ext.Gemma.GeneLinkAnalysisGrid( "genelinkanalysis-analysisgrid", {
-		readMethod : ExpressionExperimentController.getCannedAnalyses.bind( this ),
+		readMethod : ExtCoexpressionSearchController.getCannedAnalyses.bind( this ),
 		editable : admin,
 		title : "Available analyses"
 	} );
