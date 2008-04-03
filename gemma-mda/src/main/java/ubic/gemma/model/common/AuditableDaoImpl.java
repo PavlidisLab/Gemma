@@ -29,7 +29,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
+import org.hibernate.Session;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
+import org.springframework.orm.hibernate3.HibernateCallback;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
@@ -143,14 +147,22 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Map<Auditable, AuditEvent> handleGetLastAuditEvent( Collection auditables, AuditEventType type )
+    protected Map<Auditable, AuditEvent> handleGetLastAuditEvent( final Collection auditables, AuditEventType type )
             throws Exception {
         Map<Auditable, AuditEvent> result = new HashMap<Auditable, AuditEvent>();
         if ( auditables.size() == 0 ) return result;
-        Map<AuditTrail, Auditable> atmap = new HashMap<AuditTrail, Auditable>();
-        for ( Auditable a : ( Collection<Auditable> ) auditables ) {
-            atmap.put( a.getAuditTrail(), a );
-        }
+        final Map<AuditTrail, Auditable> atmap = new HashMap<AuditTrail, Auditable>();
+
+        this.getHibernateTemplate().execute( new HibernateCallback() {
+
+            public Object doInHibernate( Session session ) throws HibernateException {
+                for ( Auditable a : ( Collection<Auditable> ) auditables ) {
+                    session.lock( a, LockMode.NONE );
+                    atmap.put( a.getAuditTrail(), a );
+                }
+                return null;
+            }
+        } );
 
         List<String> classes = getClassHierarchy( type.getClass() );
 

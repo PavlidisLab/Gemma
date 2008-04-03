@@ -143,9 +143,9 @@ public class GeneCoexpressionService {
 
         GeneCoexpressionAnalysis analysis = ( GeneCoexpressionAnalysis ) geneCoexpressionAnalysisService
                 .load( cannedAnalysisId );
-        
-        if (analysis == null) {
-            throw new IllegalArgumentException("No such analysis with id=" + cannedAnalysisId);
+
+        if ( analysis == null ) {
+            throw new IllegalArgumentException( "No such analysis with id=" + cannedAnalysisId );
         }
 
         boolean virtual = analysis instanceof GeneCoexpressionVirtualAnalysis;
@@ -200,11 +200,11 @@ public class GeneCoexpressionService {
 
             Collection<Gene2GeneCoexpression> g2gs = gg2gs.get( queryGene );
 
+            Collection<Gene> genesToThaw = new HashSet<Gene>();
             for ( Gene2GeneCoexpression g2g : g2gs ) {
                 Gene foundGene = g2g.getFirstGene().equals( queryGene ) ? g2g.getSecondGene() : g2g.getFirstGene();
                 CoexpressionValueObjectExt ecvo = new CoexpressionValueObjectExt();
-
-                geneService.thaw( foundGene );
+                genesToThaw.add( foundGene );
 
                 ecvo.setQueryGene( queryGene );
                 ecvo.setFoundGene( foundGene );
@@ -269,7 +269,7 @@ public class GeneCoexpressionService {
 
                 seen.add( g2g );
             }
-
+            geneService.thawLite( genesToThaw );
             CoexpressionSummaryValueObject summary = makeSummary( eevos, datasetsTested, linksMetPositiveStringency,
                     linksMetNegativeStringency );
             result.getSummary().put( queryGene.getOfficialSymbol(), summary );

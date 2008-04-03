@@ -534,7 +534,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.lock( gene, LockMode.NONE );
-                Hibernate.initialize( gene );                
+                Hibernate.initialize( gene );
                 Hibernate.initialize( gene.getProducts() );
                 for ( ubic.gemma.model.genome.gene.GeneProduct gp : gene.getProducts() ) {
                     Hibernate.initialize( gp.getAccessions() );
@@ -546,6 +546,22 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 Hibernate.initialize( gene.getTaxon() );
                 if ( gene.getTaxon().getExternalDatabase() != null ) {
                     Hibernate.initialize( gene.getTaxon().getExternalDatabase() );
+                }
+                return null;
+            }
+        } );
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    protected void handleThawLite( final Collection genes ) throws Exception {
+        HibernateTemplate templ = this.getHibernateTemplate();
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( Gene gene : ( Collection<Gene> ) genes ) {
+                    session.lock( gene, LockMode.NONE );
+                    Hibernate.initialize( gene );
+                    session.lock( gene.getTaxon(), LockMode.NONE );
                 }
                 return null;
             }
