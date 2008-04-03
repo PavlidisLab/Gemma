@@ -93,7 +93,11 @@
 			<attribute name="javadoc_location" value="file:/C:/java/jar.src/MAGEstk-2006-07-12-src-v1.x-compatible/javadocs/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/org/acegisecurity/acegi-security/1.0.3/acegi-security-1.0.3.jar" sourcepath="/JAR_SOURCE/acegi-security-1.0.3"/>
+	<classpathentry kind="var" path="M2_REPO/org/acegisecurity/acegi-security/1.0.6/acegi-security-1.0.6.jar" sourcepath="/JAR_SOURCE/acegi-security-1.0.6">
+		<attributes>
+			<attribute name="javadoc_location" value="http://www.acegisecurity.org/acegi-security/apidocs/"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/ant/ant/1.6.5/ant-1.6.5.jar" sourcepath="/JAR_SOURCE/apache-ant-1.6.5/src/main">
 		<attributes>
 			<attribute name="javadoc_location" value="http://www.jajakarta.org/ant/ant-1.6.1/docs/ja/manual/api/"/>
