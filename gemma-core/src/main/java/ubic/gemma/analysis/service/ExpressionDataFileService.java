@@ -242,6 +242,8 @@ public class ExpressionDataFileService {
 
             log.info( "Creating new JSON expression data file: " + f );
             FilterConfig filterConfig = new FilterConfig();
+            filterConfig.setIgnoreMinimumSampleThreshold( true );
+            expressionExperimentService.thawLite( ee );
             ExpressionDataDoubleMatrix matrix = analysisHelperService.getFilteredMatrix( ee, filterConfig );
 
             Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
@@ -343,7 +345,6 @@ public class ExpressionDataFileService {
      */
     private void writeDesignMatrix( File file, ExpressionExperiment expressionExperiment ) throws IOException,
             FileNotFoundException {
-        expressionExperimentService.thawLite( expressionExperiment );
         Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
         ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
         edWriter.write( writer, expressionExperiment, true );
@@ -394,8 +395,6 @@ public class ExpressionDataFileService {
     @SuppressWarnings("unchecked")
     private void writeMatrix( File file, Map<Long, Collection<Gene>> geneAnnotations,
             ExpressionDataMatrix expressionDataMatrix ) throws IOException, FileNotFoundException {
-
-        expressionExperimentService.thawLite( expressionDataMatrix.getExpressionExperiment() );
 
         Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
         MatrixWriter matrixWriter = new MatrixWriter();

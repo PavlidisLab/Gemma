@@ -90,7 +90,6 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
         for ( ExpressionExperiment ee : expressionExperiments ) {
 
             ExpressionDataDoubleMatrix dataMatrix = ahs.getMaskedPreferredDataMatrix( ee );
-            ees.thawLite( dataMatrix.getExpressionExperiment() );// FIXME don't like this
 
             Map<Long, Collection<Gene>> genesByProbeId = new HashMap<Long, Collection<Gene>>();
 

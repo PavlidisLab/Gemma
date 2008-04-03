@@ -501,6 +501,7 @@ public class DesignElementDataVectorDaoImpl extends
                     Hibernate.initialize( object );
                     session.update( object );
                     DesignElementDataVector v = ( DesignElementDataVector ) object;
+                    Hibernate.initialize( v.getExpressionExperiment() );
                     dims.add( v.getBioAssayDimension() );
                     cs.add( v.getDesignElement() );
                     session.evict( v.getQuantitationType() );

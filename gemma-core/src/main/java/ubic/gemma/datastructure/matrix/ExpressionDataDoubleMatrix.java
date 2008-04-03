@@ -85,6 +85,8 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     public ExpressionDataDoubleMatrix( Collection<DesignElementDataVector> dataVectors,
             List<BioAssayDimension> bioAssayDimensions, List<QuantitationType> quantitationTypes ) {
         init();
+        
+        this.expressionExperiment = dataVectors.iterator().next().getExpressionExperiment();
         this.bioAssayDimensions.addAll( bioAssayDimensions );
         Collection<DesignElementDataVector> selectedVectors = selectVectors( dataVectors, bioAssayDimensions,
                 quantitationTypes );
@@ -463,6 +465,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      */
     public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix, List<DesignElement> rowsToUse ) {
         init();
+        this.expressionExperiment = sourceMatrix.expressionExperiment;
         this.bioAssayDimensions = sourceMatrix.bioAssayDimensions;
         this.columnAssayMap = sourceMatrix.columnAssayMap;
         this.columnBioAssayMapByInteger = sourceMatrix.columnBioAssayMapByInteger;

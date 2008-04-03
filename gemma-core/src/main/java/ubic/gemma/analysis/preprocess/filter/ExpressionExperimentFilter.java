@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2007 Columbia University
+ * Copyright (c) 2008 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -183,7 +183,10 @@ public class ExpressionExperimentFilter {
                 /* Apply two color missing value filter */
                 builder.maskMissingValues( filteredMatrix, null );
             }
-            filteredMatrix = minPresentFilter( filteredMatrix );
+            
+            if ( !config.isIgnoreMinimumSampleThreshold() ) {
+                filteredMatrix = minPresentFilter( filteredMatrix );
+            }
         }
 
         if ( config.isLowVarianceCutIsSet() ) {
@@ -253,9 +256,9 @@ public class ExpressionExperimentFilter {
             throw new InsufficientProbesException( "To few rows in " + ee.getShortName() + " (" + eeDoubleMatrix.rows()
                     + ") after filtering, data sets are not analyzed unless they have at least "
                     + FilterConfig.MINIMUM_ROWS_TO_BOTHER + " rows" );
-        } else if ( eeDoubleMatrix.columns() < FilterConfig.MINIMUM_SAMPLE ) {
+        } else if ( !config.isIgnoreMinimumSampleThreshold() && eeDoubleMatrix.columns() < FilterConfig.MINIMUM_SAMPLE ) {
             throw new InsufficientSamplesException( "Not enough samples " + ee.getShortName() + ", must have at least "
-                    + FilterConfig.MINIMUM_SAMPLE + " to be eligble for link analysis." );
+                    + FilterConfig.MINIMUM_SAMPLE + " to be eligible for link analysis." );
         }
 
         return eeDoubleMatrix;
