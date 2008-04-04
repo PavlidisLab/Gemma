@@ -34,9 +34,6 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
 	/*
 	 * Gene settings
 	 */
-	
-	
-	
 	this.geneChooserPanel = new Ext.Gemma.GeneChooserPanel( { 
 		showTaxon : true 
 	} );
@@ -83,18 +80,11 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
 	this.add( queryFs );
 	this.addButton( submitButton );
 
-	/*
-	this.stringencyField.setWidth(20);
-	this.stringencyField.setHeight(20);
-	*/
-
 	Ext.Gemma.DiffExpressionSearchForm.searchForGene = function( geneId ) {
 		geneChooserPanel.setGene.call( geneChooserPanel, geneId, thisPanel.doSearch.bind( thisPanel ) );
 	};
 	
 };
-
-Ext.Gemma.DiffExpressionSearchForm.MIN_THRESHOLD = 0.0;
 
 Ext.Gemma.DiffExpressionSearchForm.addToolTip = function( component, html ) {
 	component.on( "render", function() {
@@ -105,13 +95,27 @@ Ext.Gemma.DiffExpressionSearchForm.addToolTip = function( component, html ) {
 	} );
 };
 
+this.thresholdField = new Ext.form.NumberField( {
+		allowBlank : false,
+		allowDecimals : false,
+		allowNegative : false,
+		minValue : Ext.Gemma.DiffExpressionSearchForm.MIN_THRESHOLD,
+		maxValue : 999,
+		fieldLabel : 'Threshold',
+		invalidText : "Minimum threshold is " + Ext.Gemma.DiffExpressionSearchForm.MIN_THRESHOLD,
+		value : 2,
+		width : 60
+	} ); 
+	Ext.Gemma.DiffExpressionSearchForm.addToolTip( this.thresholdField, 
+		"The minimum threshold that can be set for differential expression results to appear" );
+
 /* other public methods...
  */
 Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 
 	applyState : function( state, config ) {
 		if ( state ) {
-			this.csc = state;
+			this.dsc = state;
 		}
 	},
 
@@ -136,15 +140,10 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 		}
 		
 		// initialize from state
-		if ( this.csc ) {
-			this.initializeFromDiffExpressionSearchCommand( this.csc );
+		if ( this.dsc ) {
+			this.initializeFromDiffExpressionSearchCommand( this.dsc );
 		}
 		
-		// intialize from URL (overrides state)
-		var queryStart = document.URL.indexOf( "?" );
-		if ( queryStart > -1 ) {
-			this.initializeFromQueryString( document.URL.substr( queryStart + 1 ) );
-		}
     },
 	
 	createLoadMask : function () {
@@ -152,121 +151,72 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 	},
 
 	getDiffExpressionSearchCommand : function () {
-		var csc = {
+		var dsc = {
 			geneIds : this.geneChooserPanel.getGeneIds(),
-			stringency : this.stringencyField.getValue(),
+			threshold : this.threshold.getValue(),
 			taxonId : this.geneChooserPanel.getTaxonId(),
-			queryGenesOnly : this.queryGenesOnly.getValue()
 		};
-		var analysisId = this.analysisCombo.getValue();
-		if ( analysisId < 0 ) {
-			csc.eeIds = this.eeSearchField.getEeIds();
-			csc.eeQuery = this.eeSearchField.getValue();
-		} else {
-			csc.cannedAnalysisId = analysisId;
-		}
-		return csc;
-	},
-	
-	getDiffExpressionSearchCommandFromQuery : function ( query ) {
-		var param = Ext.urlDecode( query );
-		var eeQuery = param.eeq || "";
-		var ees; if ( param.ees ) { ees = param.ees.split( ',' ); }
 		
-		var csc = {
-			geneIds : param.g ? param.g.split( ',' ) : [],
-			stringency : param.s || Ext.Gemma.DiffExpressionSearchForm.MIN_THRESHOLD,
-			eeQuery : param.eeq
-		};
-		if ( param.q ) {
-			csc.queryGenesOnly = true;
-		}
-		if ( param.ees ) {
-			csc.eeIds = param.ees.split( ',' );
-			csc.cannedAnalysisId = -1;
-		} else {
-			csc.cannedAnalysisId = param.a;
-		}
-		 
-		return csc;
+		return dsc;
 	},
 	
-	initializeFromQueryString : function ( query ) {
-		this.initializeFromDiffExpressionSearchCommand(
-			this.getDiffExpressionSearchCommandFromQuery( query ), true
-		);
-	},
-	
-	initializeFromDiffExpressionSearchCommand : function ( csc, doSearch ) {
+	initializeFromDiffExpressionSearchCommand : function ( dsc, doSearch ) {
 		/* make the form look like it has the right values;
 		 * this will happen asynchronously...
 		 */
-		if ( csc.taxonId ) {
-			this.geneChooserPanel.taxonCombo.setValue( csc.taxonId );
+		if ( dsc.taxonId ) {
+			this.geneChooserPanel.taxonCombo.setValue( dsc.taxonId );
 		}
-		if ( csc.geneIds.length > 1 ) {
-			this.geneChooserPanel.loadGenes( csc.geneIds );
+		if ( dsc.geneIds.length > 1 ) {
+			this.geneChooserPanel.loadGenes( dsc.geneIds );
 		} else {
-			this.geneChooserPanel.setGene( csc.geneIds[0] );
+			this.geneChooserPanel.setGene( dsc.geneIds[0] );
 		}
-		if ( csc.cannedAnalysisId ) {
-			this.analysisCombo.setValue( csc.cannedAnalysisId );
-		}
-		if ( csc.stringency ) {
-			this.stringencyField.setValue( csc.stringency );
-		}
-		if ( csc.queryGenesOnly ) {
-			this.queryGenesOnly.setValue( true );
-		}
-		if ( csc.cannedAnalysisId === null || csc.cannedAnalysisId < 0 ) {
-			this.customFs.show();
-			this.eeSearchField.setValue( csc.eeQuery );
-			this.updateDatasetsToBeSearched( csc.eeIds );
-		} else {
-			
+		if ( dsc.threshold ) {
+			this.thresholdField.setValue( dsc.threshold );
 		}
 		
 		/* perform the search with the specified values...
 		 */
 		if ( doSearch ) {
-			this.doSearch( csc );
+			this.doSearch( dsc );
 		}
 	},
 	
-	getBookmarkableLink : function ( csc ) {
-		if ( ! csc ) {
-			csc = this.getDiffExpressionSearchCommand();
+	getBookmarkableLink : function ( dsc ) {
+		if ( ! dsc ) {
+			dsc = this.getDiffExpressionSearchCommand();
 		}
 		var queryStart = document.URL.indexOf( "?" );
 		var url = queryStart > -1 ? document.URL.substr( 0, queryStart ) : document.URL;
-		url += String.format( "?g={0}&s={1}", csc.geneIds.join( "," ), csc.stringency );
-		if ( csc.queryGenesOnly ) {
+		url += String.format( "?g={0}&s={1}", dsc.geneIds.join( "," ), dsc.stringency );
+		if ( dsc.queryGenesOnly ) {
 			url += "&q";
 		}
-		if ( csc.eeIds ) {
-			url += String.format( "&ees={0}", csc.eeIds.join( "," ) );
+		if ( dsc.eeIds ) {
+			url += String.format( "&ees={0}", dsc.eeIds.join( "," ) );
 		} else {
-			url += String.format( "&a={0}", csc.cannedAnalysisId );
+			url += String.format( "&a={0}", dsc.cannedAnalysisId );
 		}
 		
-		if (csc.eeQuery) {
-			url += "&eeq=" + csc.eeQuery;
+		if (dsc.eeQuery) {
+			url += "&eeq=" + dsc.eeQuery;
 		}
 		
 		return url;
 	},
 
-	doSearch : function ( csc ) {
-		if ( ! csc ) {
-			csc = this.getDiffExpressionSearchCommand();
+	doSearch : function ( dsc ) {
+		if ( ! dsc ) {
+			dsc = this.getDiffExpressionSearchCommand();
 		}
 		this.clearError();
-		var msg = this.validateSearch( csc );
+		var msg = this.validateSearch( dsc );
 		if ( msg.length === 0 ) {
-			if ( this.fireEvent('beforesearch', this, csc ) !== false ) {
+			if ( this.fireEvent('beforesearch', this, dsc ) !== false ) {
 				this.loadMask.show();
 				var errorHandler = this.handleError.createDelegate(this, [], true);
-				ExtDiffExpressionSearchController.doSearch( csc, {callback : this.returnFromSearch.bind( this ), errorHandler : errorHandler} );
+				ExtDiffExpressionSearchController.doSearch( dsc, {callback : this.returnFromSearch.bind( this ), errorHandler : errorHandler} );
 			}
 		} else {
 			this.handleError(msg);
@@ -283,16 +233,16 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 		Ext.DomHelper.overwrite("diffExpression-messages", "");
 	},
 	
-	validateSearch : function ( csc ) {
-		if ( csc.queryGenesOnly && csc.geneIds.length < 2 ) { 
+	validateSearch : function ( dsc ) {
+		if ( dsc.queryGenesOnly && dsc.geneIds.length < 2 ) { 
 			return "You must select more than one query gene to use 'search among query genes only'";
-		} else if ( csc.geneIds.length < 1 ) {
+		} else if ( dsc.geneIds.length < 1 ) {
 			return "We couldn't figure out which gene you want to query. Please use the search functionality to find genes.";
-		} else if ( csc.stringency < Ext.Gemma.DiffExpressionSearchForm.MIN_THRESHOLD ) {
+		} else if ( dsc.stringency < Ext.Gemma.DiffExpressionSearchForm.MIN_THRESHOLD ) {
 			return "Minimum threshold is " + Ext.Gemma.DiffExpressionSearchForm.MIN_THRESHOLD;
-		} else if ( csc.eeIds && csc.eeIds.length < 1 ) {
+		} else if ( dsc.eeIds && dsc.eeIds.length < 1 ) {
 			return "There are no datasets that match your search terms";
-		} else if ( !csc.eeIds && !csc.cannedAnalysisId ) {
+		} else if ( !dsc.eeIds && !dsc.cannedAnalysisId ) {
 			return "Please select an analysis";
 		} else {
 			return "";
@@ -323,6 +273,8 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 	}
 	
 } );
+
+Ext.Gemma.DiffExpressionSearchForm.MIN_STRINGENCY = 0.0;
 
 
 /* Ext.Gemma.DiffExpressionSummaryGrid constructor...
@@ -384,8 +336,9 @@ Ext.Gemma.DiffExpressionSummaryGrid = function ( config ) {
 
 /* static methods...
  */
+ 
 Ext.Gemma.DiffExpressionSummaryGrid.transformData = function ( genes, summary ) {
-	
+	/*
 	var datasetsAvailable = [ 0, "Datasets", "Available" ];
 	var datasetsTested = [ 1, "Datasets", "Query gene testable" ];
 	var linksFound = [ 2, "Links", "Found" ];
@@ -402,132 +355,10 @@ Ext.Gemma.DiffExpressionSummaryGrid.transformData = function ( genes, summary ) 
 	}
 
 	return [ datasetsAvailable, datasetsTested, linksFound, linksPositive, linksNegative ];
+	*/
 };
-
 
 /* instance methods...
  */
 Ext.extend( Ext.Gemma.DiffExpressionSummaryGrid, Ext.Gemma.GemmaGridPanel, {
-} );
-
-/* Ext.Gemma.DiffExpressionSearchFormLite constructor...
- */
-Ext.Gemma.DiffExpressionSearchFormLite = function ( config ) {
-
-	/* establish default config options...
-	 */
-	var superConfig = {
-		autoHeight : true,
-		frame : true,
-		stateful : true,
-		stateEvents : [ "beforesearch" ],
-		stateId : "Ext.Gemma.DiffExpressionSearch", // share state with complex form...
-		labelAlign : "top",
-		defaults : { width: 185 }
-	};
-	
-	/* apply user-defined config options and call the superclass constructor...
-	 */
-	for ( var property in config ) {
-		superConfig[property] = config[property];
-	}
-	Ext.Gemma.DiffExpressionSearchFormLite.superclass.constructor.call( this, superConfig );
- 
- 	this.stringencyField = new Ext.form.Hidden ( {
-		value : 3
- 	});
- 
-	this.geneCombo = new Ext.Gemma.GeneCombo( {
-		hiddenName : 'g',
-		fieldLabel : 'Select a query gene'
-	} );
-	
-	this.geneCombo.on("focus", this.clearMessages, this );
-	
-	var submitButton = new Ext.Button( {
-		text : "Find diff expressed genes",
-		handler : function() {
-			var msg = this.validateSearch( this.geneCombo.getValue(), this.analysisCombo.getValue() );
-			if ( msg.length === 0 ) {
-				document.location.href =
-				String.format( "/Gemma/diff/diffExpressionSearch.html?g={0}&a={1}&s={2}",
-					this.geneCombo.getValue(), this.analysisCombo.getValue(), this.stringencyField.getValue());
-			} else {
-				this.handleError(msg);
-			}
-		}.bind( this )
-	} );
-
-	this.add( this.geneCombo );
-	
-	/*
-	this.add( this.analysisCombo );
-	this.add( this.stringencyField );
-	*/
-	this.addButton( submitButton );
-};
-
-/* instance methods...
- */
-Ext.extend( Ext.Gemma.DiffExpressionSearchFormLite, Ext.FormPanel, {
-
-	applyState : function( state, config ) {
-		if ( state ) {
-			this.csc = state;
-		}
-	},
-
-	getState : function() {
-		return this.getDiffExpressionSearchCommand();
-	},
-    
-    render : function ( container, position ) {
-		Ext.Gemma.DiffExpressionSearchFormLite.superclass.render.apply(this, arguments);
-    	
-    	// initialize from state
-		if ( this.csc ) {
-			this.initializeFromDiffExpressionSearchCommand( this.csc );
-		}
-    },
-
-	getDiffExpressionSearchCommand : function () {
-		var csc = {
-			geneIds : [ this.geneCombo.getValue() ],
-			analysisId : this.analysisCombo.getValue(),
-			stringency : this.stringencyField.getValue()
-		};
-		return csc;
-	},
-	
-	initializeFromDiffExpressionSearchCommand : function ( csc ) {
-		if ( csc.cannedAnalysisId > -1 ) {
-			this.analysisCombo.setValue( csc.cannedAnalysisId );
-		}
-		if ( csc.stringency ) {
-			this.stringencyField.setValue(csc.stringency);
-		}
-	},
-	
-	validateSearch : function ( gene, analysis ) {
-		if ( !gene || gene.length == 0 ) {
-			return "Please select a valid query gene";
-		} else if ( !analysis ) {
-			return "Please select an analysis";
-		} else {
-			return "";
-		}
-	},
-	
-	handleError : function( msg, e ) {
-		Ext.DomHelper.overwrite("diffExpression-messages", {tag : 'img', src:'/Gemma/images/icons/warning.png' }); 
-		Ext.DomHelper.append("diffExpression-messages", {tag : 'span', html : "&nbsp;&nbsp;"  + msg });  
-		this.loadMask.hide();
-	},
-	
-	clearMessages : function() {Ext.DomHelper.overwrite("diffExpression-messages", {tag : 'h3', html : "DiffExpression query"  });},
-	
-	taxonChanged : function ( taxon ) {
-		this.geneCombo.setTaxon( taxon );
-	}
-	
 } );
