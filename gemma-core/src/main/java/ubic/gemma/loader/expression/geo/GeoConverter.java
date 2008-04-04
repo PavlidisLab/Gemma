@@ -86,14 +86,14 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.ontology.MgedOntologyService;
 
 /**
- * Convert GEO domain objects into Gemma objects. Usually we trigger this by passing in GeoDataset objects.
+ * Convert GEO domain objects into Gemma objects. Usually we trigger this by passing in GeoSeries objects.
  * <p>
  * GEO has four basic kinds of objects: Platforms (ArrayDesigns), Samples (BioAssays), Series (Experiments) and DataSets
  * (which are curated Experiments). Note that a sample can belong to more than one series. A series can include more
  * than one dataset. See http://www.ncbi.nlm.nih.gov/projects/geo/info/soft2.html.
  * <p>
- * For our purposes, a usable expression data set is at first represented by a GEO "GDS" number (a curated dataset),
- * which corresponds to a series. HOWEVER, multiple datasets may go together to form a series (GSE). This can happen
+ * A curated expression data set is at first represented by a GEO "GDS" number (a curated dataset),
+ * which maps to a series (GSE). HOWEVER, multiple datasets may go together to form a series (GSE). This can happen
  * when the "A" and "B" arrays were both run on the same samples. Thus we actually normally go by GSE.
  * <p>
  * This service can be used in database-aware or unaware states.

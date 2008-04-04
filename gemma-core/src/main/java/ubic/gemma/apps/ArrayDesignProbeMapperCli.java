@@ -175,6 +175,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         log.debug( "Re-Checking status of " + arrayDesign );
 
+        this.auditTrailService.thaw( arrayDesign );
         List<AuditEvent> allEvents = ( List<AuditEvent> ) arrayDesign.getAuditTrail().getEvents();
         AuditEvent lastSequenceAnalysis = null;
         AuditEvent lastRepeatMask = null;

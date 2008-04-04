@@ -68,7 +68,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     protected void buildStandardOptions() {
         super.buildStandardOptions();
         addUserNameAndPasswordOptions(); // FIXME this should be optional, for tools that don't need real
-                                            // authentication.
+        // authentication.
 
         addSpecialServiceOptions();
     }
@@ -121,10 +121,8 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         if ( ph != null ) {
             return ph;
         }
-
         assert ctx != null : "Spring context was not initialized";
         return ( PersisterHelper ) ctx.getBean( "persisterHelper" );
-
     }
 
     /**
@@ -135,7 +133,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     protected boolean needToRun( Auditable auditable, Class<? extends AuditEventType> eventClass ) {
         boolean needToRun = true;
         Date skipIfLastRunLaterThan = getLimitingDate();
-
+        this.auditTrailService.thaw( auditable );
         List<AuditEvent> events = ( List<AuditEvent> ) auditable.getAuditTrail().getEvents();
 
         boolean okToRun = true; // assume okay unless indicated otherwise

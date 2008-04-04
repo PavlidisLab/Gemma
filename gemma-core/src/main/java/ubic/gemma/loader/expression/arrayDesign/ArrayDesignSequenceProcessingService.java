@@ -39,6 +39,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.analysis.sequence.SequenceManipulation;
 import ubic.gemma.loader.genome.FastaCmd;
 import ubic.gemma.loader.genome.FastaParser;
+import ubic.gemma.loader.genome.ProbeSequenceParser;
 import ubic.gemma.loader.genome.SimpleFastaCmd;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -333,10 +334,11 @@ public class ArrayDesignSequenceProcessingService {
      */
     private void notifyAboutMissingSequences( int numWithNoSequence, CompositeSequence compositeSequence ) {
         if ( numWithNoSequence == MAX_NUM_WITH_NO_SEQUENCE_FOR_DETAILED_WARNINGS ) {
-            log.warn( "More than " + 20 + " compositeSequences do not have"
+            log.warn( "More than " + MAX_NUM_WITH_NO_SEQUENCE_FOR_DETAILED_WARNINGS + " compositeSequences do not have"
                     + " biologicalCharacteristics, skipping further details." );
-        } else if ( numWithNoSequence < 20 ) {
-            log.warn( "No sequence match for " + compositeSequence + "; it will not have a biologicalCharacteristic!" );
+        } else if ( numWithNoSequence < MAX_NUM_WITH_NO_SEQUENCE_FOR_DETAILED_WARNINGS ) {
+            log.warn( "No sequence match for " + compositeSequence + " (Description="
+                    + compositeSequence.getDescription() + "); it will not have a biologicalCharacteristic!" );
         }
     }
 
@@ -585,9 +587,14 @@ public class ArrayDesignSequenceProcessingService {
      * nulled.
      * <p>
      * If the SequenceType is AFFY_PROBE, the sequences will be treated as probes in probe sets, in Affymetrix 'tabbed'
-     * format. Otherwise the format of the file is assumed to be FASTA, with one CompositeSequence per FASTA element;
-     * there is further assumed to be just one Reporter per CompositeSequence (that is, they are the same thing). The
-     * FASTA file must use a standard defline format (as described at
+     * format.
+     * <p>
+     * If the SequenceType is OLIGO, the input is treated as a table (see ProbeSequenceParser; to retain semi-backwards
+     * compatibility, FASTA is detected but an exception will be thrown).
+     * <p>
+     * Otherwise the format of the file is assumed to be FASTA, with one CompositeSequence per FASTA element; there is
+     * further assumed to be just one Reporter per CompositeSequence (that is, they are the same thing). The FASTA file
+     * must use a standard defline format (as described at
      * {@link http://en.wikipedia.org/wiki/Fasta_format#Sequence_identifiers}.
      * <p>
      * For FASTA files, the match-up of the sequence with the design element is done using the following tests, until
@@ -616,11 +623,11 @@ public class ArrayDesignSequenceProcessingService {
     public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceFile,
             SequenceType sequenceType, Taxon taxon ) throws IOException {
 
-        if ( sequenceType == SequenceType.AFFY_PROBE ) {
+        if ( sequenceType.equals( SequenceType.AFFY_PROBE ) ) {
             return this.processAffymetrixDesign( arrayDesign, sequenceFile, taxon );
+        } else if ( sequenceType.equals( SequenceType.OLIGO ) ) {
+            return this.processOligoDesign( arrayDesign, sequenceFile, taxon );
         }
-
-        log.info( "Processing non-Affymetrix design" );
 
         checkForCompositeSequences( arrayDesign );
 
@@ -651,9 +658,6 @@ public class ArrayDesignSequenceProcessingService {
 
             addToMaps( gbIdMap, nameMap, sequence );
 
-            if ( ++done % 1000 == 0 ) {
-                percent = updateProgress( total, done, percent );
-            }
         }
 
         log.info( "Sequences done, updating composite sequences" );
@@ -721,6 +725,69 @@ public class ArrayDesignSequenceProcessingService {
 
         return bioSequences;
 
+    }
+
+    /**
+     * @param arrayDesign
+     * @param sequenceFile
+     * @param taxon
+     * @return
+     * @return
+     */
+    private Collection<BioSequence> processOligoDesign( ArrayDesign arrayDesign, InputStream sequenceFile, Taxon taxon )
+            throws IOException {
+        checkForCompositeSequences( arrayDesign );
+
+        ProbeSequenceParser parser = new ProbeSequenceParser();
+        parser.parse( sequenceFile );
+
+        int total = arrayDesign.getCompositeSequences().size();
+        int done = 0;
+        int percent = 0;
+        if ( taxon == null ) {
+            taxon = arrayDesignService.getTaxon( arrayDesign.getId() );
+        }
+        if ( taxon == null ) {
+            throw new IllegalStateException( "No taxon available for " + arrayDesign );
+        }
+
+        log.info( "Sequences done, updating composite sequences" );
+
+        int numWithNoSequence = 0;
+
+        Collection<BioSequence> res = new HashSet<BioSequence>();
+        for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
+
+            if ( log.isTraceEnabled() ) log.trace( "Looking for sequence for: " + compositeSequence.getName() );
+            BioSequence sequence = parser.get( compositeSequence.getName() );
+
+            if ( sequence != null ) {
+                // overwrite the existing characteristic if necessary.
+                assert sequence.getSequence() != null;
+                sequence.setType( SequenceType.OLIGO );
+                sequence.setPolymerType( PolymerType.DNA );
+                sequence.setTaxon( taxon );
+                sequence = persistSequence( sequence );
+                compositeSequence.setBiologicalCharacteristic( sequence );
+                compositeSequence.setArrayDesign( arrayDesign );
+                res.add( sequence );
+            } else {
+                numWithNoSequence++;
+                notifyAboutMissingSequences( numWithNoSequence, compositeSequence );
+            }
+
+            if ( ++done % 1000 == 0 ) {
+                percent = updateProgress( total, done, percent );
+            }
+        }
+
+        if ( numWithNoSequence > 0 )
+            log.info( "There were " + numWithNoSequence + "/" + arrayDesign.getCompositeSequences().size()
+                    + " composite sequences with no associated biological characteristic" );
+
+        log.info( "Updating sequences on arrayDesign" );
+        arrayDesignService.update( arrayDesign );
+        return res;
     }
 
     private void checkForCompositeSequences( ArrayDesign arrayDesign ) {
