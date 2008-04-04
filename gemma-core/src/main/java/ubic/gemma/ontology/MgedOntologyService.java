@@ -32,6 +32,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -111,7 +112,7 @@ public class MgedOntologyService extends AbstractOntologyService {
         // A bunch of terms not in the biomaterial package that we need. (special cases)
         OntologyTerm term = terms.get( MGED_ONTO_BASE_URL + "#ExperimentPackage" );
         results.addAll( getAllTerms( term ) );
-        
+
         term = terms.get( MGED_ONTO_BASE_URL + "#MeasurementPackage" );
         results.addAll( getAllTerms( term ) );
 
@@ -156,7 +157,7 @@ public class MgedOntologyService extends AbstractOntologyService {
                     String line;
                     while ( ( line = reader.readLine() ) != null ) {
                         if ( line.startsWith( "#" ) ) continue;
-                        wantedTerms.add( line );
+                        wantedTerms.add( StringUtils.strip( line ) );
                     }
                     reader.close();
 

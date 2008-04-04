@@ -19,7 +19,7 @@ ClinicalTreatment
 Compound
 Cultivar
 Ecotype 
-EnvironmentalHistory 
+EnvironmentalHistory
 GeneticModification
 Phenotype
 Sex

@@ -19,6 +19,7 @@
 package ubic.gemma.loader.expression.simple.model;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.biomage.AuditAndSecurity.Contact;
 
@@ -72,6 +73,11 @@ public class SimpleExpressionExperimentMetaData {
     private boolean probeIdsAreImageClones;
 
     private TechnologyType technologyType;
+
+    public SimpleExpressionExperimentMetaData() {
+        this.arrayDesigns = new HashSet<ArrayDesign>();
+        this.arrayDesignIds = new HashSet<Long>();
+    }
 
     /**
      * Publication reference.

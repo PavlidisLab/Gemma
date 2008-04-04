@@ -164,8 +164,8 @@ public class SimpleExpressionDataLoaderService {
         List<String> designElements = new ArrayList<String>();
         List<String> columnNames = new ArrayList<String>();
 
-        for ( Object originalColumnName : matrix.getColNames() ) {
-            columnNames.add( originalColumnName + " on " + design.getName() );
+        for ( String originalColumnName : matrix.getColNames() ) {
+            columnNames.add( originalColumnName );
         }
 
         List<double[]> rows = new ArrayList<double[]>();
