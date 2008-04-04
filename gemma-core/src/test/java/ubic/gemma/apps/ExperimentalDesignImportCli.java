@@ -41,6 +41,7 @@ public class ExperimentalDesignImportCli extends AbstractSpringAwareCLI {
 
     private ExpressionExperiment expressionExperiment;
     private InputStream inputStream;
+    private boolean dryRun = false;
 
     /*
      * (non-Javadoc)
@@ -80,7 +81,7 @@ public class ExperimentalDesignImportCli extends AbstractSpringAwareCLI {
         ExperimentalDesignImporter edimp = ( ExperimentalDesignImporter ) this.getBean( "experimentalDesignImporter" );
 
         try {
-            edimp.parse( expressionExperiment, inputStream );
+            edimp.importDesign( expressionExperiment, inputStream, dryRun );
         } catch ( IOException e1 ) {
             return e1;
         }
@@ -119,6 +120,10 @@ public class ExperimentalDesignImportCli extends AbstractSpringAwareCLI {
             inputStream = new FileInputStream( f );
         } catch ( FileNotFoundException e ) {
             throw new RuntimeException( e );
+        }
+
+        if ( this.hasOption( "testing" ) ) {
+            this.dryRun = true;
         }
 
     }

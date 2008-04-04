@@ -93,13 +93,21 @@ public class ExperimentalDesignImporter {
     private MgedOntologyService mgedOntologyService;
 
     /**
-     * Note that this only populates the experimental design - it does not persist it! The caller must update the
-     * ExpressionExperiment.
-     * 
+     * @param experiment
      * @param is
      * @throws IOException
      */
-    public void parse( ExpressionExperiment experiment, InputStream is ) throws IOException {
+    public void importDesign( ExpressionExperiment experiment, InputStream is ) throws IOException {
+        this.importDesign( experiment, is, false );
+    }
+
+    /**
+     * @param experiment
+     * @param is
+     * @param dryRun
+     * @throws IOException
+     */
+    public void importDesign( ExpressionExperiment experiment, InputStream is, boolean dryRun ) throws IOException {
 
         if ( mgedOntologyService == null ) {
             throw new IllegalStateException( "Please set the MGED OntologyService, thanks." );
@@ -123,7 +131,7 @@ public class ExperimentalDesignImporter {
         boolean readHeader = false;
         while ( ( line = r.readLine() ) != null ) {
             if ( line.startsWith( "#" ) ) {
-                buildExperimentalFactor( line, ed, column2Factor, factorTypes, terms );
+                buildExperimentalFactor( line, ed, column2Factor, factorTypes, terms, dryRun );
 
             } else if ( !readHeader ) {
                 String[] headerFields = StringUtils.splitPreserveAllTokens( line, "\t" );
@@ -142,9 +150,14 @@ public class ExperimentalDesignImporter {
                             + " columns based on EF descriptions (plus id column), got " + fields.length );
                 }
 
-                assignValuesToSamples( column2Factor, index2Column, fields, factorTypes, name2BioMaterial );
+                assignValuesToSamples( column2Factor, index2Column, fields, factorTypes, name2BioMaterial, dryRun );
 
             }
+        }
+
+        if ( dryRun ) {
+            log.info( "Seems like it should be okay" );
+            return;
         }
 
         experimentalDesignService.update( ed );
@@ -169,8 +182,7 @@ public class ExperimentalDesignImporter {
      * @param value
      * @param bm
      */
-    private void addNewMeasurement( ExperimentalFactor ef, String value, BioMaterial bm ) {
-        assert ef.getId() != null;
+    private void addNewMeasurement( ExperimentalFactor ef, String value, BioMaterial bm, boolean dryRun ) {
         FactorValue fv = FactorValue.Factory.newInstance( ef );
 
         fv.setValue( value );
@@ -188,7 +200,9 @@ public class ExperimentalDesignImporter {
         fv.setValue( value );
         fv.setMeasurement( m );
         fv.setExperimentalFactor( ef );
-        fv = factorValueService.create( fv );
+
+        if ( !dryRun ) fv = factorValueService.create( fv );
+
         ef.getFactorValues().add( fv );
         bm.getFactorValues().add( fv );
     }
@@ -200,7 +214,7 @@ public class ExperimentalDesignImporter {
      */
     private void assignValuesToSamples( Map<String, ExperimentalFactor> column2Factor,
             Map<Integer, String> index2Column, String[] fields, Map<String, FactorType> factorTypes,
-            Map<String, BioMaterial> name2BioMaterial ) {
+            Map<String, BioMaterial> name2BioMaterial, boolean dryRun ) {
         String sampleId = StringUtils.strip( fields[0] );
 
         BioMaterial bm = getBioMaterial( sampleId, name2BioMaterial );
@@ -218,7 +232,7 @@ public class ExperimentalDesignImporter {
             assert ft != null;
 
             if ( ft.equals( FactorType.MEASUREMENT ) ) {
-                addNewMeasurement( ef, value, bm );
+                addNewMeasurement( ef, value, bm, dryRun );
             } else {
 
                 VocabCharacteristic category = ( VocabCharacteristic ) ef.getCategory();
@@ -242,17 +256,20 @@ public class ExperimentalDesignImporter {
         for ( BioMaterial bm : bms ) {
             Collection<FactorValue> values = new HashSet<FactorValue>();
             for ( FactorValue temp : bm.getFactorValues() ) {
-                log.info( "Trying to find match for " + temp );
+                log.debug( "Trying to find match for " + temp );
                 boolean found = false;
                 for ( ExperimentalFactor factor : design.getExperimentalFactors() ) {
                     for ( FactorValue fv : factor.getFactorValues() ) {
-                        log.info( "Candidate: " + fv );
+                        log.debug( "Candidate: " + fv );
                         assert temp.getValue() != null;
                         assert fv.getValue() != null;
+                        /*
+                         * really should check the associated Meas or Charac. but should be ok.
+                         */
                         if ( temp.getValue().equals( fv.getValue() ) ) {
                             values.add( factorValueService.load( fv.getId() ) );
                             found = true;
-                            log.info( "Match found for " + temp );
+                            log.debug( "Match found for " + temp );
                             break;
                         }
                     }
@@ -274,7 +291,7 @@ public class ExperimentalDesignImporter {
         for ( BioAssay ba : experiment.getBioAssays() ) {
             String name = ba.getName();
             BioMaterial bm = ba.getSamplesUsed().iterator().next();// FIXME handle the case of a collection;
-            log.info( name + " " + bm );
+            log.debug( name + " " + bm );
             name2BioMaterial.put( name, bm );
         }
         return name2BioMaterial;
@@ -285,11 +302,12 @@ public class ExperimentalDesignImporter {
      * @param line
      * @param ed
      * @param column2Factor
+     * @param dryRun
      * @throws IOException
      */
     private void buildExperimentalFactor( String line, ExperimentalDesign ed,
             Map<String, ExperimentalFactor> column2Factor, Map<String, FactorType> factorTypes,
-            Collection<OntologyTerm> terms ) throws IOException {
+            Collection<OntologyTerm> terms, boolean dryRun ) throws IOException {
         String[] fields = line.split( ":" );
         if ( fields.length != 2 ) {
             throw new IOException( "EF description must have two fields with a single ':' in between (" + line + ")" );
@@ -322,9 +340,10 @@ public class ExperimentalDesignImporter {
         ef.setName( category );
         ed.getExperimentalFactors().add( ef );
 
-        experimentalDesignService.update( ed );
-
-        assert ef.getId() != null;
+        if ( !dryRun ) {
+            experimentalDesignService.update( ed );
+            assert ef.getId() != null;
+        }
 
         log.info( "Factor: " + columnHeader );
 

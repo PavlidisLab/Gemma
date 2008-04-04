@@ -201,6 +201,10 @@ public abstract class AbstractOntologyService {
             return;
         }
 
+        if ( this.isOntologyLoaded() ) {
+            return;
+        }
+
         String configParameter = "load." + ontologyName;
         boolean loadOntology = ConfigUtils.getBoolean( configParameter, true );
 

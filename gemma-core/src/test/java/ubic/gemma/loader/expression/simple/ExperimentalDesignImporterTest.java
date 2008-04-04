@@ -96,6 +96,38 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
         eeService.thawLite( ee );
     }
 
+    public final void testParseFailedDryRun() throws Exception {
+
+        ExperimentalDesignImporter parser = ( ExperimentalDesignImporter ) this.getBean( "experimentalDesignImporter" );
+        parser.setMgedOntologyService( mos );
+
+        InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/experimentalDesignTestBad.txt" );
+
+        try {
+            parser.importDesign( ee, is, true );
+            fail( "Should have gotten an Exception" );
+        } catch ( Exception e ) {
+            // ok
+        }
+
+    }
+
+    public final void testParseDryRun() throws Exception {
+
+        ExperimentalDesignImporter parser = ( ExperimentalDesignImporter ) this.getBean( "experimentalDesignImporter" );
+        parser.setMgedOntologyService( mos );
+
+        InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/experimentalDesignTest.txt" );
+
+        parser.importDesign( ee, is, true );
+
+        // / confirm we didn't save anything.
+        assertEquals( 4, ee.getExperimentalDesign().getExperimentalFactors().size() );
+        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+            assertNull( ef.getId() );
+        }
+    }
+
     /**
      * Test method for {@link ubic.gemma.loader.expression.simple.ExperimentalDesignImporter#parse(java.io.InputStream)}.
      */
@@ -106,7 +138,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
 
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/experimentalDesignTest.txt" );
 
-        parser.parse( ee, is );
+        parser.importDesign( ee, is, false );
 
         Collection<BioMaterial> bms = new HashSet<BioMaterial>();
         for ( BioAssay ba : ee.getBioAssays() ) {
