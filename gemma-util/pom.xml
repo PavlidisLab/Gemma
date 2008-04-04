@@ -92,11 +92,6 @@
 			<version>3.1</version>
 		</dependency>
 		<dependency>
-			<groupId>commons-logging</groupId>
-			<artifactId>commons-logging</artifactId>
-			<version>1.0.4</version>
-		</dependency>
-		<dependency>
 			<groupId>commons-beanutils</groupId>
 			<artifactId>commons-beanutils</artifactId>
 			<version>1.7.0</version>
@@ -168,9 +163,9 @@
 			<version>0.8</version>
 		</dependency>
 		<dependency>
-			<groupId>spring</groupId>
+			<groupId>org.springmodules</groupId>
 			<artifactId>spring-modules-javaspaces</artifactId>
-			<version>0.8</version>
+			<version>0.9</version>
 		</dependency>
 	</dependencies>
 </project>

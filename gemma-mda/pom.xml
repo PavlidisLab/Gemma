@@ -13,15 +13,6 @@
 		<version>1.1-SNAPSHOT</version>
 	</parent>
 	<packaging>jar</packaging>
-	<dependencies>
-		<dependency>
-			<groupId>org.easymock</groupId>
-			<artifactId>easymock</artifactId>
-			<version>2.2</version>
-			<scope>test</scope>
-			<type>jar</type>
-		</dependency>
-	</dependencies>
 	<build>
 		<resources>
 			<resource>
@@ -102,14 +93,6 @@
 						</goals>
 					</execution>
 				</executions>
-				<dependencies>
-					<dependency>
-						<groupId>org.hibernate</groupId>
-						<artifactId>hibernate</artifactId>
-						<version>3.2.5.ga</version>
-						<type>jar</type>
-					</dependency>
-				</dependencies>
 			</plugin>
 			<plugin>
 				<groupId>org.andromda.maven.plugins</groupId>
@@ -283,7 +266,7 @@
 					<plugin>
 						<groupId>org.codehaus.mojo</groupId>
 						<artifactId>sql-maven-plugin</artifactId>
-						<dependencies>
+						<dependencies><!--  yes, this needs to be here. -->
 							<dependency>
 								<groupId>mysql</groupId>
 								<artifactId>mysql-connector-java</artifactId>

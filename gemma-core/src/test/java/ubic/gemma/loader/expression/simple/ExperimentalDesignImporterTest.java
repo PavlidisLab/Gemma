@@ -61,11 +61,10 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
                 .getBean( "simpleExpressionDataLoaderService" );
 
         eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-
+        TaxonService taxonService = ( TaxonService ) this.getBean( "taxonService" );
+        
         InputStream data = this.getClass().getResourceAsStream(
                 "/data/loader/expression/experimentalDesignTestData.txt" );
-
-        TaxonService taxonService = ( TaxonService ) this.getBean( "taxonService" );
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
 

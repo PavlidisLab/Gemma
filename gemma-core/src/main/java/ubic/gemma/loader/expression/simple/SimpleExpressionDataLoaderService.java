@@ -343,17 +343,12 @@ public class SimpleExpressionDataLoaderService {
         BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
         bad.setName( "For " + ee.getName() );
         bad.setDescription( "Generated from flat file" );
-
-        // FactorValue factorValue = ee.getExperimentalDesign().getExperimentalFactors().iterator().next()
-        // .getFactorValues().iterator().next();
-
         for ( int i = 0; i < matrix.columns(); i++ ) {
             Object columnName = matrix.getColName( i );
 
             BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
             bioMaterial.setName( columnName.toString() );
             bioMaterial.setSourceTaxon( taxon );
-            // bioMaterial.getFactorValues().add( factorValue );
             Collection<BioMaterial> bioMaterials = new HashSet<BioMaterial>();
             bioMaterials.add( bioMaterial );
 

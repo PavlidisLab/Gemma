@@ -20,6 +20,7 @@ package ubic.gemma.model.expression.bioAssayData;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -58,14 +59,32 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
 
             queryObject.add( Restrictions.sizeEq( "bioAssays", bioAssayDimension.getBioAssays().size() ) );
 
-            // FIXME this isn't fail-safe, and also doesn't distinguish between dimensions that differ only in the
-            // ordering.
             Collection<String> names = new HashSet<String>();
             for ( BioAssay bioAssay : bioAssayDimension.getBioAssays() ) {
                 names.add( bioAssay.getName() );
             }
             queryObject.createCriteria( "bioAssays" ).add( Restrictions.in( "name", names ) );
-            return ( BioAssayDimension ) queryObject.uniqueResult();
+            BioAssayDimension candidate = ( BioAssayDimension ) queryObject.uniqueResult();
+
+            if ( candidate == null ) return null;
+
+            // Now check that the bioassays and order are exactly the same.
+            Collection<BioAssay> desiredBioAssays = bioAssayDimension.getBioAssays();
+            Collection<BioAssay> candidateBioAssays = candidate.getBioAssays();
+
+            assert desiredBioAssays.size() == candidateBioAssays.size();
+
+            Iterator<BioAssay> dit = desiredBioAssays.iterator();
+            Iterator<BioAssay> cit = candidateBioAssays.iterator();
+
+            while ( dit.hasNext() ) {
+                BioAssay d = dit.next();
+                BioAssay c = cit.next();
+                if ( !c.equals( d ) ) return null;
+            }
+
+            return candidate;
+
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }

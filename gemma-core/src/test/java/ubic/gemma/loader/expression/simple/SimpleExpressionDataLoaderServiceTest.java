@@ -18,6 +18,7 @@
  */
 package ubic.gemma.loader.expression.simple;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
@@ -35,6 +36,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -165,6 +167,52 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
 
         assertEquals( 173, ee.getDesignElementDataVectors().size() );
         assertEquals( 25, ee.getBioAssays().size() );
+    }
+
+    public final void testLoadSimilarDatasets() throws Exception {
+        ExpressionExperiment ee1 = load();
+        ExpressionExperiment ee2 = load();
+
+        assertEquals( 8, ee1.getBioAssays().size() );
+        assertEquals( ee1.getBioAssays().size(), ee2.getBioAssays().size() );
+    }
+
+    /**
+     * @return
+     * @throws IOException
+     */
+    private ExpressionExperiment load() throws IOException {
+        InputStream data = this.getClass().getResourceAsStream(
+                "/data/loader/expression/experimentalDesignTestData.txt" );
+
+        SimpleExpressionDataLoaderService s = ( SimpleExpressionDataLoaderService ) this
+                .getBean( "simpleExpressionDataLoaderService" );
+
+        ExpressionExperimentService eeService = ( ExpressionExperimentService ) this
+                .getBean( "expressionExperimentService" );
+        TaxonService taxonService = ( TaxonService ) this.getBean( "taxonService" );
+
+        SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
+
+        Taxon human = taxonService.findByCommonName( "human" );
+
+        metaData.setShortName( RandomStringUtils.randomAlphabetic( 10 ) );
+        metaData.setDescription( "bar" );
+        metaData.setIsRatio( false );
+        metaData.setTaxon( human );
+        metaData.setQuantitationTypeName( "rma" );
+        metaData.setScale( ScaleType.LOG2 );
+        metaData.setType( StandardQuantitationType.AMOUNT );
+
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        ad.setShortName( "foobly" );
+        ad.setName( "foobly foo" );
+
+        metaData.getArrayDesigns().add( ad );
+
+        ExpressionExperiment ee = s.load( metaData, data );
+        eeService.thawLite( ee );
+        return ee;
     }
 
 }

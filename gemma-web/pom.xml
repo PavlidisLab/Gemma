@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<parent>
 		<artifactId>gemma</artifactId>
 		<groupId>gemma</groupId>
@@ -79,13 +80,18 @@
 						</goals>
 						<configuration>
 							<tasks>
-								<springdoclet destdir="${project.build.directory}/Gemma/WEB-INF" mergeDir="${basedir}/src/conf/xdoclet-merge" force="false" validating="false">
+								<springdoclet destdir="${project.build.directory}/Gemma/WEB-INF"
+									mergeDir="${basedir}/src/conf/xdoclet-merge" force="false" validating="false">
 									<fileset includes="**/*.java" dir="${basedir}/src/main/java" />
-									<springxml mergeDir="${basedir}/src/conf/xdoclet-merge" useIds="true" destDir="${project.build.directory}/Gemma/WEB-INF" destinationFile="action-servlet.xml" />
+									<springxml mergeDir="${basedir}/src/conf/xdoclet-merge" useIds="true"
+										destDir="${project.build.directory}/Gemma/WEB-INF" destinationFile="action-servlet.xml" />
 								</springdoclet>
-								<webdoclet destdir="${project.build.directory}/Gemma/WEB-INF" mergeDir="${basedir}/src/conf/xdoclet-merge" force="false">
+								<webdoclet destdir="${project.build.directory}/Gemma/WEB-INF"
+									mergeDir="${basedir}/src/conf/xdoclet-merge" force="false">
 									<fileset includes="**/*.java" dir="${basedir}/src/main/java" />
-									<jsptaglib taglibversion="1.0" xmlencoding="UTF-8" Jspversion="2.0" description="Custom tag library for Gemma" shortname="Gemma" mergeDir="${basedir}/src/conf/xdoclet-merge" filename="Gemma.tld" validateXML="false" destDir="${project.build.directory}/Gemma/WEB-INF" />
+									<jsptaglib taglibversion="1.0" xmlencoding="UTF-8" Jspversion="2.0"
+										description="Custom tag library for Gemma" shortname="Gemma" mergeDir="${basedir}/src/conf/xdoclet-merge"
+										filename="Gemma.tld" validateXML="false" destDir="${project.build.directory}/Gemma/WEB-INF" />
 									<springvalidationxml />
 								</webdoclet>
 							</tasks>
@@ -228,11 +234,6 @@
 			<version>1.6</version>
 		</dependency>
 		<dependency>
-			<groupId>commons-logging</groupId>
-			<artifactId>commons-logging</artifactId>
-			<version>1.0.4</version>
-		</dependency>
-		<dependency>
 			<groupId>commons-net</groupId>
 			<artifactId>commons-net</artifactId>
 			<version>1.4.1</version>
@@ -295,12 +296,6 @@
 			<version>1.1</version>
 		</dependency>
 		<dependency>
-			<groupId>org.easymock</groupId>
-			<artifactId>easymock</artifactId>
-			<version>2.2</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>commons-collections</groupId>
 			<artifactId>commons-collections</artifactId>
 			<version>3.1</version>
@@ -326,33 +321,9 @@
 			<version>1.0.b2</version>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-mock</artifactId>
-			<version>2.0.7</version>
-		</dependency>
-		<dependency>
 			<groupId>org.springmodules</groupId>
 			<artifactId>spring-modules-validation</artifactId>
-			<version>0.8a</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-binding</artifactId>
-			<version>1.0.3</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.springframework</groupId>
-					<artifactId>spring-beans</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.springframework</groupId>
-					<artifactId>spring-core</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.springframework</groupId>
-					<artifactId>spring-context</artifactId>
-				</exclusion>
-			</exclusions>
+			<version>0.9</version>
 		</dependency>
 		<dependency>
 			<groupId>velocity</groupId>
