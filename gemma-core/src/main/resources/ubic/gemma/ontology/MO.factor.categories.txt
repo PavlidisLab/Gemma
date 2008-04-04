@@ -1,4 +1,4 @@
-# Lists MGED Ontology terms to be displayed for detailed annotation of experimental design factors and factorvalues.
+# Lists MGED Ontology terms to be displayed for detailed annotation of experimental design factors 
 # $Id$
 # Author: Paul
 Age
@@ -31,3 +31,6 @@ Light
 Ploidy
 PopulationDensity
 SamplingTimePoint
+BiologicalProperty
+HistoryFactor
+Preservation

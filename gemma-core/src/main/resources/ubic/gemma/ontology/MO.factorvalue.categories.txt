@@ -42,3 +42,6 @@ TimeUnit
 VolumeUnit
 DistanceUnit
 ComplexAction
+BiologicalProperty
+HistoryFactor
+
