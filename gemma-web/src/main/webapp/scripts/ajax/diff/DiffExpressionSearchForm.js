@@ -107,7 +107,7 @@ this.thresholdField = new Ext.form.NumberField( {
 		width : 60
 	} ); 
 	Ext.Gemma.DiffExpressionSearchForm.addToolTip( this.thresholdField, 
-		"The minimum threshold that can be set for differential expression results to appear" );
+		"Only genes with a qvalue less than this threshold are returned." );
 
 /* other public methods...
  */
@@ -252,16 +252,6 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 	returnFromSearch : function ( result ) {
 		this.loadMask.hide();
 		this.fireEvent( 'aftersearch', this, result );
-	},
-	
-	
-	updateDatasetsToBeSearched : function ( datasets ) {
-		var numDatasets = datasets instanceof Array ? datasets.length : datasets;
-		this.stringencyField.maxValue = numDatasets;
-		if (datasets instanceof Array) {
-			 this.eeIds = datasets;
-		}
-		this.optionsPanel.setTitle( String.format( "Analysis options (Up to {0} dataset{1} will be analyzed)", numDatasets, numDatasets != 1 ? "s" : "" ) );
 	},
 	
 	taxonChanged : function ( taxon ) {
