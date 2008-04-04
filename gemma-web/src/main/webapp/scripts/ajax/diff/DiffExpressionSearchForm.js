@@ -68,33 +68,7 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
             }]
 			
 		});
-		
-		
-	var activeDatasetsGrid = new Ext.Gemma.ExpressionExperimentGrid( activeDatasetsWindow.getEl(), {
-			readMethod : ExpressionExperimentController.loadExpressionExperiments.bind( this ),
-			editable : false,
-			rowExpander : true,
-			pageSize : 20 
-		});
-	
-	this.showSelectedDatasets = function( ) {
-		var eeids = this.getActiveEeIds();
-		activeDatasetsGrid.getStore().removeAll();	 
-		activeDatasetsGrid.expandedElements = [];
-		activeDatasetsGrid.getStore().load( { params : [ eeids ] }); 
-		activeDatasetsWindow.show();
-	};
-	
-
-	var eeDetailsButton = new Ext.Button({ 
-		fieldLabel : 'Selected dataset details',
-		 id : 'selected-ds-button', 
-		 cls:"x-btn-icon", 
-		 icon : "/Gemma/images/icons/information.png",
-		 handler : this.showSelectedDatasets, 
-		 scope : this, disabled : false, tooltip : "Show selected datasets" });
  
-	
 	var submitButton = new Ext.Button( {
 		text : "Find diff expressed genes",
 		handler : function() {
@@ -341,8 +315,6 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 	},
 	
 	taxonChanged : function ( taxon ) {
-		this.analysisCombo.taxonChanged( taxon );
-		this.eeSearchField.taxonChanged( taxon, this.customFs.hidden ? false : true );
 		this.geneChooserPanel.taxonChanged( taxon );
 	},
 	
