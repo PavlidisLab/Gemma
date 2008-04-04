@@ -50,98 +50,6 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
 	} );
 	queryFs.add( this.geneChooserPanel );
 	
-	
-
-
-	/*
-	 * Analysis/datasets and stringency settings.
-	 */
-	 
-
-	/*
-	 * Combo to choose the 'scope' of the query. NOTE if this is not declared first, there are problems getting it to show up.
-	 */
-	this.analysisCombo = new Ext.Gemma.AnalysisCombo( {
-		fieldLabel : 'Search scope',
-		showCustomOption : true
-	} ); 
-	this.analysisCombo.on( "analysisChanged", function ( combo, analysis ) {
-		if ( analysis ) {
-			if ( analysis.id < 0 ) { // custom analysis
-				thisPanel.customAnalysis = true;
-				customFs.doLayout();
-				customFs.show();
- 				thisPanel.updateDatasetsToBeSearched( this.eeSearchField.getEeIds() );
- 				this.eeSearchField.findDatasets();
-			} else {
-				thisPanel.customAnalysis = false;
-				customFs.hide();
-				thisPanel.taxonChanged( analysis.taxon );
-				thisPanel.updateDatasetsToBeSearched( analysis.datasets );
-			}
-		} else {
-			thisPanel.customAnalysis = false;
-			customFs.hide();
-			thisPanel.optionsPanel.setTitle( "Analysis options" );
-		}
-	}, this );
-	Ext.Gemma.DiffExpressionSearchForm.addToolTip( this.analysisCombo,
-		"Restrict the list of datasets that will be searched for DiffExpression" );
-		
-		
-	this.stringencyField = new Ext.form.NumberField( {
-		allowBlank : false,
-		allowDecimals : false,
-		allowNegative : false,
-		minValue : Ext.Gemma.DiffExpressionSearchForm.MIN_THRESHOLD,
-		maxValue : 999,
-		fieldLabel : 'Threshold',
-		invalidText : "Minimum threshold is " + Ext.Gemma.DiffExpressionSearchForm.MIN_THRESHOLD,
-		value : 0.01,
-		width : 60
-	} ); 
-	Ext.Gemma.DiffExpressionSearchForm.addToolTip( this.stringencyField, 
-		"The minimum threshold for a result to appear" );
-	 
-	 
-	/*
-	 * Custom data set search field, in a hidden (initially) fieldset.
-	 */	
-	this.eeSearchField = new Ext.Gemma.DatasetSearchField( {
-		fieldLabel : "Experiment keywords"  
-	} );
-	 
-	this.eeSearchField.on( 'aftersearch', function ( field, results ) {
-		if ( thisPanel.customAnalysis ) {
-			thisPanel.updateDatasetsToBeSearched( results );
-		}
-	} );
-	Ext.Gemma.DiffExpressionSearchForm.addToolTip( this.eeSearchField,
-		"Search only datasets that match these keywords" );
-	
-	var customFs = new Ext.form.FieldSet( {
-		title : 'Custom analysis options',
-		autoHeight : true,
-		hidden : true,  
-		autoWidth:true,
-		items :  [this.eeSearchField ] 
-	} );
-	
-	this.customFs = customFs;
-	
-	
-	/*
-	 * Check box
-	 */
-	var queryGenesOnly = new Ext.form.Checkbox( {
-		fieldLabel: 'My genes only'
-	} );
-	Ext.Gemma.DiffExpressionSearchForm.addToolTip( queryGenesOnly,
-		"Restrict the output to include only links among the listed query genes" );
-	this.queryGenesOnly = queryGenesOnly;
-	
-	
-
 	// Window shown when the user wants to see the experiments that are 'in play'.
 	var activeDatasetsWindow = new Ext.Window({
 			el : 'diffExpression-experiments',
@@ -186,25 +94,6 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
 		 handler : this.showSelectedDatasets, 
 		 scope : this, disabled : false, tooltip : "Show selected datasets" });
  
- 
-	// Field set for the bottom part of the form
- 
-	var analysisFs = new Ext.form.FieldSet( {  
-		autoHeight : true,
-	  	items : [ this.stringencyField, this.queryGenesOnly, this.analysisCombo, this.customFs ] //
-	} );
-	
- 	
- 
- 
- 	// Panel combining all of the above elements.
-	var optionsPanel = new Ext.Panel({
-		title : 'Analysis options',
-		autoHeight : true,
-		items : [ analysisFs, eeDetailsButton  ]
-	});
-	
-	this.optionsPanel = optionsPanel;
 	
 	var submitButton = new Ext.Button( {
 		text : "Find diff expressed genes",
@@ -218,19 +107,12 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
 	 * Build the form
 	 */
 	this.add( queryFs );
-	this.add( optionsPanel ); 
 	this.addButton( submitButton );
 
-
+	/*
 	this.stringencyField.setWidth(20);
 	this.stringencyField.setHeight(20);
-
-//	var stringencySpinner = new Ext.ux.form.Spinner({
-//		renderTo : this.stringencyField.getEl(),
-//		strategy: new Ext.ux.form.Spinner.NumberStrategy({
-//			allowDecimals : false, minValue:2, maxValue:100 })
-//	}); 
-//	this.stringencySpinner = stringencySpinner; 
+	*/
 
 	Ext.Gemma.DiffExpressionSearchForm.searchForGene = function( geneId ) {
 		geneChooserPanel.setGene.call( geneChooserPanel, geneId, thisPanel.doSearch.bind( thisPanel ) );
@@ -293,7 +175,6 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 	
 	createLoadMask : function () {
 		this.loadMask = new Ext.LoadMask( this.getEl() );
-	//	this.eeSearchField.loadMask = this.loadMask;
 	},
 
 	getDiffExpressionSearchCommand : function () {
@@ -591,21 +472,8 @@ Ext.Gemma.DiffExpressionSearchFormLite = function ( config ) {
 	
 	this.geneCombo.on("focus", this.clearMessages, this );
 	
-	this.analysisCombo = new Ext.Gemma.AnalysisCombo( {
-		hiddenName : 'a',
-		fieldLabel : 'Select search scope',
-		showCustomOption : false
-	} );
-	
-	this.analysisCombo.on( "analysischanged", function ( combo, analysis ) {
-		this.clearMessages();
-		if ( analysis && analysis.taxon ) {
-			this.taxonChanged( analysis.taxon );
-		}
-	}, this );
-	
 	var submitButton = new Ext.Button( {
-		text : "Find coexpressed genes",
+		text : "Find diff expressed genes",
 		handler : function() {
 			var msg = this.validateSearch( this.geneCombo.getValue(), this.analysisCombo.getValue() );
 			if ( msg.length === 0 ) {
@@ -619,8 +487,11 @@ Ext.Gemma.DiffExpressionSearchFormLite = function ( config ) {
 	} );
 
 	this.add( this.geneCombo );
+	
+	/*
 	this.add( this.analysisCombo );
 	this.add( this.stringencyField );
+	*/
 	this.addButton( submitButton );
 };
 
