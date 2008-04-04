@@ -77,7 +77,7 @@ public class ManualAuthenticationProcessing implements ApplicationContextAware {
      * Provide "anonymous" authentication.
      */
     public void anonymousAuthentication() {
-        AuthenticationUtils.anonymousAuthenticate( "guest", this.getAuthenticationManager() );
+        AuthenticationUtils.anonymousAuthenticate( "anonymous", this.getAuthenticationManager() );
     }
 
     /**
