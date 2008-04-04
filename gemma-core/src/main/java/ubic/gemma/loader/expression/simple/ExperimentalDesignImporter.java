@@ -404,6 +404,7 @@ public class ExperimentalDesignImporter {
         newVc.setCategoryUri( category.getCategoryUri() );
         newVc.setValue( value );
         newVc.setEvidenceCode( GOEvidenceCode.IC );
+        newFv.getCharacteristics().add( newVc );
         ef.getFactorValues().add( newFv );
         bm.getFactorValues().add( newFv );
         newFv.setExperimentalFactor( ef ); // this needs to be persisted first
@@ -421,9 +422,7 @@ public class ExperimentalDesignImporter {
             for ( Characteristic c : fv.getCharacteristics() ) {
                 if ( c.getValue().equals( value ) ) {
                     // add this factorvalue to the corresponding sample.
-
                     bm.getFactorValues().add( fv );
-
                     return true;
                 }
             }

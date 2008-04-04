@@ -206,7 +206,7 @@ public class BibliographicReferenceEditFormController extends BaseFormController
         String ids = request.getParameter( "id" );
         if ( ids != null ) {
             Long id = Long.parseLong( ids );
-            bibRef = ( BibliographicReference ) bibliographicReferenceService.load( id );
+            bibRef = bibliographicReferenceService.load( id );
             if ( bibRef == null ) {
                 bibRef = BibliographicReference.Factory.newInstance();
             }

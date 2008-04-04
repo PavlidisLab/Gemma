@@ -27,13 +27,16 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
+import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.ontology.MgedOntologyService;
@@ -115,8 +118,29 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
         // check.
         assertEquals( 4, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
+        Collection<Long> seenFactorValueIds = new HashSet<Long>();
+        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+            for ( FactorValue fv : ef.getFactorValues() ) {
+                if ( fv.getCharacteristics().size() > 0 ) {
+                    VocabCharacteristic c = ( VocabCharacteristic ) fv.getCharacteristics().iterator().next();
+                    assertNotNull( c.getValue() );
+                    assertNotNull( c.getCategoryUri() );
+                } else {
+                    assertNotNull( fv.getValue() + " should have a measurement or a characteristic", fv
+                            .getMeasurement() );
+                }
+                seenFactorValueIds.add( fv.getId() );
+            }
+        }
+
+        assertEquals( 23, seenFactorValueIds.size() );
+
         for ( BioMaterial bm : bms ) {
             assertEquals( 4, bm.getFactorValues().size() );
+            for ( FactorValue fv : bm.getFactorValues() ) {
+                assertTrue( seenFactorValueIds.contains( fv.getId() ) );
+            }
+
         }
     }
 

@@ -23,7 +23,6 @@
 package ubic.gemma.model.analysis.expression.coexpression;
 
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

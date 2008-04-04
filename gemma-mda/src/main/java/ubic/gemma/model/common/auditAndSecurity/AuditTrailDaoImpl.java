@@ -23,6 +23,7 @@ import java.util.Calendar;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.acegisecurity.userdetails.UserDetails;
 import org.hibernate.Hibernate;
+import org.hibernate.LockMode;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.common.Auditable;
@@ -42,6 +43,7 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                session.lock( auditTrail, LockMode.NONE );
                 Hibernate.initialize( auditTrail );
                 if ( auditTrail.getEvents() == null ) return null;
                 for ( AuditEvent ae : auditTrail.getEvents() ) {
