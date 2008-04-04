@@ -37,11 +37,11 @@ import org.acegisecurity.providers.ProviderManager;
 import org.acegisecurity.providers.rememberme.RememberMeAuthenticationProvider;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
-import org.springframework.util.StopWatch;
 import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
@@ -118,7 +118,7 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
 
         sw.stop();
 
-        double time = sw.getLastTaskTimeMillis() / 1000.00;
+        double time = sw.getTime() / 1000.00;
         log.info( "Startup of Gemma took " + time + " s " );
     }
 

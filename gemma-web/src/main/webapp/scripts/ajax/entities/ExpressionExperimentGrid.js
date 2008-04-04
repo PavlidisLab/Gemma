@@ -236,6 +236,7 @@ Ext.Gemma.DatasetSearchToolBar = function ( grid, config ) {
 	
 	if (config.filtering) {
 		this.reset = function() {
+			this.eeSearchField.reset();
 			if ( this.owningGrid.analysisId ) {
 				var callback = function( d ) {
 					// load the data sets.
@@ -274,6 +275,10 @@ Ext.extend(Ext.Gemma.DatasetSearchToolBar, Ext.Toolbar, {
 		if (this.eeSearchField.filtering) {
 			this.eeSearchField.setFilterFrom(this.thisGrid.getEEIds());
 		}
+	},
+	
+	reset : function() {
+		this.eeSearchField.reset();
 	}
 	
 });

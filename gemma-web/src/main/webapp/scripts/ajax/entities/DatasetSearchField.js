@@ -88,6 +88,11 @@ Ext.extend( Ext.Gemma.DatasetSearchField, Ext.form.TextField, {
 		}
 	},
 	
+	reset : function( ) {
+		this.lastParams = null;
+		this.value = "";
+	},
+	
 	foundDatasets : function ( results ) {
 		this.eeIds = results;
 		this.fireEvent( 'aftersearch', this, results );

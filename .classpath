@@ -46,7 +46,7 @@
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/commons-collections/commons-collections/3.1/commons-collections-3.1.jar" sourcepath="/JAR_SOURCE/commons-collections-3.1/src/java"/>
 	<classpathentry kind="var" path="M2_REPO/commons-validator/commons-validator/1.3.0/commons-validator-1.3.0.jar" sourcepath="/JAR_SOURCE/commons-validator-1.3.0-src/src/share"/>
-	<classpathentry kind="var" path="M2_REPO/org/springframework/spring/2.0.7/spring-2.0.7.jar" sourcepath="/JAR_SOURCE/spring-framework-2.0.5/dist/spring-src.zip"/>
+	<classpathentry kind="var" path="M2_REPO/org/springframework/spring/2.0.8/spring-2.0.8.jar" sourcepath="/JAR_SOURCE/spring-framework-2.0.5/dist/spring-src.zip"/>
 	<classpathentry kind="var" path="M2_REPO/velocity/velocity/1.4/velocity-1.4.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-lang/commons-lang/2.3/commons-lang-2.3.jar" sourcepath="/JAR_SOURCE/commons-lang-2.1/src/java">
 		<attributes>
@@ -155,11 +155,10 @@
 			<attribute name="javadoc_location" value="http://people.apache.org/~andyc/neko/doc/html/javadoc/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/compass/compass/2.0M1/compass-2.0M1.jar"/>
-	<classpathentry kind="var" path="M2_REPO/lucene/lucene-core/2.2.0/lucene-core-2.2.0.jar" sourcepath="/JAR_SOURCE/lucene-2.0.0/src/java"/>
-	<classpathentry kind="var" path="M2_REPO/lucene/lucene-analyzers/2.2.0/lucene-analyzers-2.2.0.jar"/>
-	<classpathentry kind="var" path="M2_REPO/lucene/lucene-highlighter/2.2.0/lucene-highlighter-2.2.0.jar"/>
-	<classpathentry kind="var" path="M2_REPO/lucene/lucene-snowball/2.2.0/lucene-snowball-2.2.0.jar"/>
+	<classpathentry kind="var" path="M2_REPO/compass/compass/2.0M3/compass-2.0M3.jar"/>
+	<classpathentry kind="var" path="M2_REPO/lucene/lucene-core/2.3.1/lucene-core-2.3.1.jar" sourcepath="/JAR_SOURCE/lucene-2.0.0/src/java"/>
+	<classpathentry kind="var" path="M2_REPO/lucene/lucene-analyzers/2.3.1/lucene-analyzers-2.3.1.jar"/>
+	<classpathentry kind="var" path="M2_REPO/lucene/lucene-highlighter/2.3.1/lucene-highlighter-2.3.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/dumbster/dumbster/1.6/dumbster-1.6.jar"/>
 	<classpathentry kind="var" path="M2_REPO/velocity-tools/velocity-tools-view/1.0/velocity-tools-view-1.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/jtidy/jtidy/4aug2000r7-dev/jtidy-4aug2000r7-dev.jar">
@@ -207,7 +206,7 @@
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/concurrent/concurrent/1.3.4/concurrent-1.3.4.jar"/>
 	<classpathentry kind="var" path="M2_REPO/net/sf/json-lib/json-lib/1.1/json-lib-1.1-jdk15.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/springframework/spring-hibernate3/2.0.7/spring-hibernate3-2.0.7.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/springframework/spring-hibernate3/2.0.8/spring-hibernate3-2.0.8.jar"/>
 	<classpathentry kind="var" path="M2_REPO/aopalliance/aopalliance/1.0/aopalliance-1.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/asm/asm/1.5.3/asm-1.5.3.jar"/>
 	<classpathentry kind="var" path="M2_REPO/javax/servlet/servlet-api/2.4/servlet-api-2.4.jar"/>
@@ -226,5 +225,6 @@
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/cglib/cglib-nodep/2.1_3/cglib-nodep-2.1_3.jar"/>
 	<classpathentry kind="con" path="GROOVY_SUPPORT"/>
+	<classpathentry kind="var" path="M2_REPO/lucene/lucene-snowball/2.3.1/lucene-snowball-2.3.1.jar"/>
 	<classpathentry kind="output" path="build/Gemma/WEB-INF/classes"/>
 </classpath>

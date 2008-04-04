@@ -61,6 +61,7 @@ Ext.onReady( function() {
 	var showSourceAnalysis = function(target, rowIndex, ev ) {
 		// Load the source analysis, or the selected one, if it is real.
 		Ext.DomHelper.overwrite("messages", "");
+		toolbar.reset();
 		var row;
 		if (target.grid) { // selectionmodel
 			row = target.grid.getStore().getAt(rowIndex);
