@@ -419,13 +419,16 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         StringBuffer buf = new StringBuffer();
         if ( object.getSampleRemovedFlags() != null && object.getSampleRemovedFlags().size() > 0 ) {
-            buf.append( "&nbsp;<img src='/Gemma/images/icons/exclamation.png' height='16' width='16' alt='validated' title='" );
-            buf.append( StringEscapeUtils.escapeHtml( object.getSampleRemovedFlags().iterator().next().toString() ) ); // todo: support multiple.
+            buf
+                    .append( "&nbsp;<img src='/Gemma/images/icons/exclamation.png' height='16' width='16' alt='validated' title='" );
+            buf.append( StringEscapeUtils.escapeHtml( object.getSampleRemovedFlags().iterator().next().toString() ) ); // todo:
+            // support
+            // multiple.
             buf.append( "' />" );
         }
         return buf.toString();
     }
-    
+
     public String getValidatedFlag() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         StringBuffer buf = new StringBuffer();
@@ -525,10 +528,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
             return "Expression Experiment unavailable";
         }
 
-        // TODO: replace with more generic javascript method call instead of form.,
-        return "<form action=\"deleteExpressionExperiment.html?id=" + object.getId()
-                + "\" onSubmit=\"return confirmDelete('Expression experiment " + object.getName()
-                + "')\" method=\"post\"><input type=\"submit\"  value=\"Delete\" /></form>";
+        return " <input type=\"button\" value=\"Delete\" onClick=\"return deleteExperiment(" + object.getId() + ")\"/>";
 
     }
 
@@ -538,10 +538,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         if ( object == null ) {
             return "Expression Experiment unavailable";
         }
-        // TODO: replace with more generic javascript method call instead of form.,
-        return "<form action=\"generateExpressionExperimentLinkSummary.html?id=" + object.getId()
-                + "\" onSubmit=\"return confirm('Refresh summary for experiment " + object.getName()
-                + "?')\" method=\"post\"><input type=\"submit\"  value=\"Refresh\" title='Refresh Report'/></form>";
+        return " <input type=\"button\" value=\"Refresh\" onClick=\"return refreshEEReport(" + object.getId() + ")\"/>";
 
     }
 

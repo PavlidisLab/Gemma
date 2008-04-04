@@ -416,6 +416,7 @@
 					<property name="includes">
 						<list>
 							<value>deleteById</value>
+							<value>updateReport</value>
 							<value>getAnnotation</value>
 							<value>getExperimentalFactors</value>
 							<value>getFactorValues</value>

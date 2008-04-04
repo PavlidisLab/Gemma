@@ -64,6 +64,21 @@ public class ProgressStatusService {
 
         if ( job == null ) {
             // we might just need to wait a little while for the job to register.
+            try {
+                Thread.sleep( 1000 );
+
+                job = progressManager.getJob( taskId );
+                if ( job == null ) {
+                    // We should assume it is dead.
+                    ProgressData data = new ProgressData();
+                    data.setTaskId( taskId );
+                    data.setFailed( true );
+                    result.add( data );
+                }
+            } catch ( InterruptedException e ) {
+
+            }
+
             return result;
         }
 

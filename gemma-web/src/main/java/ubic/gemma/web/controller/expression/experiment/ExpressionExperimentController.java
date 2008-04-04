@@ -142,6 +142,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      */
     public String deleteById( Long id ) {
         ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
+        if ( expressionExperiment == null ) return null;
         RemoveExpressionExperimentJob removeExpressionExperimentJob = new RemoveExpressionExperimentJob(
                 expressionExperiment, expressionExperimentService );
         return run( removeExpressionExperimentJob );
@@ -186,6 +187,16 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
                 + list ) );
     }
 
+    public String updateReport( Long id ) {
+        ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
+        if ( expressionExperiment == null ) return null;
+        Collection<Long> ids = new HashSet<Long>();
+        ids.add( id );
+        GenerateSummary runner = new GenerateSummary( expressionExperimentReportService, ids );
+        runner.setDoForward( false );
+        return ( String ) super.startJob( runner ).getModel().get( "taskId" );
+    }
+
     /**
      * @param request
      * @param response
@@ -212,7 +223,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         String idStr = StringUtils.join( ids.toArray(), "," );
         return new ModelAndView( new RedirectView(
                 "/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html" ) );
-
     }
 
     /**

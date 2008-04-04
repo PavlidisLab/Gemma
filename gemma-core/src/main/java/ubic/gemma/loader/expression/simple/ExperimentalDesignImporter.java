@@ -25,6 +25,7 @@ import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
@@ -218,6 +219,10 @@ public class ExperimentalDesignImporter {
         String sampleId = StringUtils.strip( fields[0] );
 
         BioMaterial bm = getBioMaterial( sampleId, name2BioMaterial );
+        if ( bm == null ) {
+            log.warn( "Data file has information about sample not used in this study: " + sampleId );
+            return;
+        }
 
         for ( int i = 1; i < fields.length; i++ ) {
 
@@ -253,6 +258,7 @@ public class ExperimentalDesignImporter {
      */
     private void updateBioMaterials( Collection<BioMaterial> bms, ExperimentalDesign design ) {
         assert design.getExperimentalFactors().size() > 0;
+        Collection<FactorValue> usedFactorValues = new HashSet<FactorValue>();
         for ( BioMaterial bm : bms ) {
             Collection<FactorValue> values = new HashSet<FactorValue>();
             for ( FactorValue temp : bm.getFactorValues() ) {
@@ -269,6 +275,7 @@ public class ExperimentalDesignImporter {
                         if ( temp.getValue().equals( fv.getValue() ) ) {
                             values.add( factorValueService.load( fv.getId() ) );
                             found = true;
+
                             log.debug( "Match found for " + temp );
                             break;
                         }
@@ -278,9 +285,25 @@ public class ExperimentalDesignImporter {
                     throw new IllegalStateException( "Could not find match for " + temp );
                 }
             }
+            usedFactorValues.addAll( values );
             bm.setFactorValues( values );
             bioMaterialService.update( bm );
         }
+
+        /*
+         * Remove factors that were never used. This is necessary because the design file could contain information
+         * about samples that aren't in the current data set.
+         */
+        for ( ExperimentalFactor factor : design.getExperimentalFactors() ) {
+            for ( Iterator<FactorValue> fvit = factor.getFactorValues().iterator(); fvit.hasNext(); ) {
+                if ( !usedFactorValues.contains( fvit.next() ) ) {
+                    fvit.remove();
+                }
+            }
+        }
+
+        this.experimentalDesignService.update( design );
+
     }
 
     /**
@@ -357,7 +380,8 @@ public class ExperimentalDesignImporter {
      */
     private BioMaterial getBioMaterial( String sampleId, Map<String, BioMaterial> name2BioMaterial ) {
         if ( !name2BioMaterial.containsKey( sampleId ) ) {
-            throw new IllegalArgumentException( "No Bioassay matching name '" + sampleId + "'" );
+            // throw new IllegalArgumentException( "No Bioassay matching name '" + sampleId + "'" );
+            return null;
         }
         return name2BioMaterial.get( sampleId );
 

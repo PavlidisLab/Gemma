@@ -11,4 +11,3 @@ A-5	40	Bipolar	70	Little or none
 A-6	30	Bipolar	62	Moderate present
 A-7	30	Schizophrenia 	33	Heavy in present
 A-8	45	Bipolar	19	Moderate in past
-A-9	45	Depression	44	Moderate in past
