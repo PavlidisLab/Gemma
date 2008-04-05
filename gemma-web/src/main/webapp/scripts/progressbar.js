@@ -9,7 +9,9 @@
 
 progressbar = function( config ){
 	
-	this.doForward = config.doForward;
+	if (config && config.doForward) {
+		this.doForward = config.doForward;
+	}
 	
     this.addEvents({
         finish : true,
