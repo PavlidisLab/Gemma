@@ -17,7 +17,7 @@
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/TaskCompletionController.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentDataFetchController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentDataFetchController.js'></script> 
 	<script type='text/javascript' src='/Gemma/dwr/interface/ProgressStatusService.js'></script>
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/util/GemmaGridPanel.js'/>"></script>
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/AnnotationGrid.js'/>"></script>
@@ -25,6 +25,7 @@
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/expressionExperimentAnnots.js'/>"></script>
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/eeDesignMatrix.js'/>"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/ajax/eeDataFetch.js'/>"></script>
+	<script type="text/javascript" src="<c:url value='/scripts/ajax/expressionExperiment.js'/>"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/scriptaculous/effects.js'/>"></script>
 
 	<authz:authorize ifAnyGranted="admin">
@@ -432,13 +433,13 @@ Experiment detail view for
 			</td>
 			<td>
 				<input type="button"
-					onclick=" if (confirmDelete('Expression experiment'))  {location.href='deleteExpressionExperiment.html?id=<%=request.getAttribute( "id" )%>';} else{ return false;}"
+					onclick="deleteExperiment(<%=request.getAttribute( "id" )%>);"
 					value="Delete">
 			</td>
 			<td>
 
 				<input type="button"
-					onclick="location.href='/Gemma/expressionExperiment/generateExpressionExperimentLinkSummary.html?id=<%=request.getAttribute( "id" )%>'"
+					onclick="updateEEReport(<%=request.getAttribute( "id" )%>);"
 					value="Refresh Link Summary">
 			</td>
 		</authz:authorize>

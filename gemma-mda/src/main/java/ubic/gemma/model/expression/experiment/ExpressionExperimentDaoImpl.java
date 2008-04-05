@@ -1155,6 +1155,11 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     @SuppressWarnings("unchecked")
     @Override
     protected Collection<ExpressionExperiment> handleLoad( Collection ids ) throws Exception {
+
+        if ( ids == null || ids.size() == 0 ) {
+            return new ArrayList<ExpressionExperiment>();
+        }
+
         Collection<ExpressionExperiment> ees = null;
         final String queryString = "from ExpressionExperimentImpl ee where ee.id in (:ids) ";
         List idList = new ArrayList( ids );

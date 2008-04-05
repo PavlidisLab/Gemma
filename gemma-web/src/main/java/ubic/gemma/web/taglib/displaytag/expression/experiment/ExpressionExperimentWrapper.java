@@ -538,7 +538,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         if ( object == null ) {
             return "Expression Experiment unavailable";
         }
-        return " <input type=\"button\" value=\"Refresh\" onClick=\"return refreshEEReport(" + object.getId() + ")\"/>";
+        return " <input type=\"button\" value=\"Refresh\" onClick=\"return updateEEReport(" + object.getId() + ")\"/>";
 
     }
 

@@ -9,12 +9,12 @@ function handleSuccess(data, e) {
 	Ext.DomHelper.append("messages", {tag : 'span', html : "Done" });  
 }
  
-function handleWait(data) {
+function handleWait(data, forward) {
 	try {
 		taskId = data;
 		Ext.DomHelper.overwrite("messages", "");  
 		Ext.DomHelper.overwrite("taskId", "<input type = 'hidden' name='taskId' id='taskId' value= '" + taskId + "'/> ");
-		var p = new progressbar();
+		var p = new progressbar( {doForward : forward });
 	 	p.createIndeterminateProgressBar();
 		p.on('fail', handleFailure); 
 		p.on('done', handleSuccess);
@@ -26,12 +26,12 @@ function handleWait(data) {
 	}
 }
 
-function updateReport(id) {
+function updateEEReport(id) {
 	var callParams = []; 
 	callParams.push(id);
 	var delegate = handleWait.createDelegate(this, [], true);
 	var errorHandler = handleFailure.createDelegate(this, [], true);
-	callParams.push({callback : delegate, errorHandler : errorHandler  });
+	callParams.push({callback : delegate, errorHandler : errorHandler   }); 
 	Ext.DomHelper.overwrite("messages", {tag : 'img', src:'/Gemma/images/default/tree/loading.gif' });  
 	Ext.DomHelper.append("messages", "&nbsp;Submitting ...");  
 	ExpressionExperimentController.updateReport.apply(this, callParams);
@@ -62,7 +62,7 @@ function deleteExperiment (id) {
 				callParams.push(id);
 				var delegate = handleWait.createDelegate(this, [], true);
 				var errorHandler = handleFailure.createDelegate(this, [], true);
-				callParams.push({callback : delegate, errorHandler : errorHandler  });
+				callParams.push({callback : delegate, errorHandler : errorHandler  }); 
 				Ext.DomHelper.overwrite("messages", {tag : 'img', src:'/Gemma/images/default/tree/loading.gif' });  
 				Ext.DomHelper.append("messages", "&nbsp;Submitting ...");  
 				ExpressionExperimentController.deleteById.apply(this, callParams);
