@@ -93,6 +93,14 @@
 						</goals>
 					</execution>
 				</executions>
+				<dependencies>
+					<dependency>
+						<groupId>org.hibernate</groupId>
+						<artifactId>hibernate</artifactId>
+						<version>3.2.6.ga</version>
+						<type>jar</type>
+					</dependency>
+				</dependencies>
 			</plugin>
 			<plugin>
 				<groupId>org.andromda.maven.plugins</groupId>
