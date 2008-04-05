@@ -54,6 +54,7 @@ import ubic.gemma.loader.expression.geo.model.GeoVariable.VariableType;
 import ubic.gemma.loader.expression.geo.util.GeoConstants;
 import ubic.gemma.loader.util.converter.Converter;
 import ubic.gemma.loader.util.parser.ExternalDatabaseUtils;
+import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.Person;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -92,9 +93,9 @@ import ubic.gemma.ontology.MgedOntologyService;
  * (which are curated Experiments). Note that a sample can belong to more than one series. A series can include more
  * than one dataset. See http://www.ncbi.nlm.nih.gov/projects/geo/info/soft2.html.
  * <p>
- * A curated expression data set is at first represented by a GEO "GDS" number (a curated dataset),
- * which maps to a series (GSE). HOWEVER, multiple datasets may go together to form a series (GSE). This can happen
- * when the "A" and "B" arrays were both run on the same samples. Thus we actually normally go by GSE.
+ * A curated expression data set is at first represented by a GEO "GDS" number (a curated dataset), which maps to a
+ * series (GSE). HOWEVER, multiple datasets may go together to form a series (GSE). This can happen when the "A" and "B"
+ * arrays were both run on the same samples. Thus we actually normally go by GSE.
  * <p>
  * This service can be used in database-aware or unaware states.
  * 
@@ -283,12 +284,14 @@ public class GeoConverter implements Converter {
                     VocabCharacteristic gemmaChar = convertVariableType( GeoVariable.convertStringToType( category ) );
                     gemmaChar.setDescription( defaultDescription );
                     gemmaChar.setValue( value );
+                    gemmaChar.setEvidenceCode( GOEvidenceCode.IEA );
                     bioMaterial.getCharacteristics().add( gemmaChar );
                 } catch ( Exception e ) {
                     // conversion didn't work, fall back.
                     Characteristic gemmaChar = Characteristic.Factory.newInstance();
                     gemmaChar.setValue( characteristic );
                     gemmaChar.setDescription( defaultDescription );
+                    gemmaChar.setEvidenceCode( GOEvidenceCode.IEA );
                     bioMaterial.getCharacteristics().add( gemmaChar );
                 }
 
@@ -297,6 +300,7 @@ public class GeoConverter implements Converter {
                 Characteristic gemmaChar = Characteristic.Factory.newInstance();
                 gemmaChar.setValue( characteristic );
                 gemmaChar.setDescription( defaultDescription );
+                gemmaChar.setEvidenceCode( GOEvidenceCode.IEA );
                 bioMaterial.getCharacteristics().add( gemmaChar );
             }
 
@@ -309,6 +313,7 @@ public class GeoConverter implements Converter {
             sourceChar.setCategory( "BioSource" );
             sourceChar.setCategoryUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#BioSource" );
             sourceChar.setValue( characteristic );
+            sourceChar.setEvidenceCode( GOEvidenceCode.IEA );
             bioMaterial.getCharacteristics().add( sourceChar );
         }
 
@@ -332,6 +337,7 @@ public class GeoConverter implements Converter {
             labelChar.setCategory( "LabelCompound" );
             labelChar.setCategoryUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#LabelCompound" );
             labelChar.setValue( characteristic );
+            labelChar.setEvidenceCode( GOEvidenceCode.IEA );
             bioMaterial.getCharacteristics().add( labelChar );
         }
 
@@ -1094,6 +1100,7 @@ public class GeoConverter implements Converter {
         VocabCharacteristic result = VocabCharacteristic.Factory.newInstance();
         result.setCategory( "ReplicateDescriptionType" );
         result.setCategoryUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#ReplicateDescriptionType" );
+        result.setEvidenceCode( GOEvidenceCode.IEA );
         ExternalDatabase mged = ExternalDatabase.Factory.newInstance();
 
         if ( !repType.equals( VariableType.other ) ) {
@@ -1489,6 +1496,7 @@ public class GeoConverter implements Converter {
                 Characteristic o = Characteristic.Factory.newInstance();
                 o.setDescription( "GEO Keyword" );
                 o.setValue( keyWord );
+                o.setEvidenceCode( GOEvidenceCode.IEA );
                 o.setDescription( "Keyword from GEO series definition file." );
             }
         }
@@ -1979,6 +1987,7 @@ public class GeoConverter implements Converter {
         VocabCharacteristic categoryTerm = VocabCharacteristic.Factory.newInstance();
         categoryTerm.setCategory( mgedTerm );
         categoryTerm.setCategoryUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#" + mgedTerm );
+        categoryTerm.setEvidenceCode( GOEvidenceCode.IEA );
         return categoryTerm;
     }
 
