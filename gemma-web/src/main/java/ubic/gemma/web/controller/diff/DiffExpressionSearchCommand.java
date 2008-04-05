@@ -19,6 +19,9 @@
 package ubic.gemma.web.controller.diff;
 
 import java.io.Serializable;
+import java.util.Collection;
+
+import org.apache.commons.lang.StringUtils;
 
 /**
  * @author keshav
@@ -28,52 +31,44 @@ public class DiffExpressionSearchCommand implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private String geneOfficialSymbol = null;
+    private Collection<Long> geneIds;
 
-    private double threshold;
+    private Double threshold;
 
-    private String taxonName = null;
+    private Long taxonId;
 
-    /**
-     * @return
-     */
-    public String getGeneOfficialSymbol() {
-        return geneOfficialSymbol;
+    public Collection<Long> getGeneIds() {
+        return geneIds;
     }
 
-    /**
-     * @param geneOfficialSymbol
-     */
-    public void setGeneOfficialSymbol( String geneOfficialSymbol ) {
-        this.geneOfficialSymbol = geneOfficialSymbol;
+    public void setGeneIds( Collection<Long> geneIds ) {
+        this.geneIds = geneIds;
     }
 
-    /**
-     * @return
-     */
-    public double getThreshold() {
+    public Long getTaxonId() {
+        return taxonId;
+    }
+
+    public void setTaxonId( Long taxonId ) {
+        this.taxonId = taxonId;
+    }
+
+    public Double getThreshold() {
         return threshold;
     }
 
-    /**
-     * @param threshold
-     */
-    public void setThreshold( double threshold ) {
+    public void setThreshold( Double threshold ) {
         this.threshold = threshold;
     }
 
-    /**
-     * @return
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#toString()
      */
-    public String getTaxonName() {
-        return taxonName;
+    @Override
+    public String toString() {
+        return "GeneIds=" + StringUtils.join( getGeneIds(), "," ) + " taxon=" + getTaxonId() + " Threshold="
+                + threshold;
     }
-
-    /**
-     * @param taxonName
-     */
-    public void setTaxonName( String taxonName ) {
-        this.taxonName = taxonName;
-    }
-
 }

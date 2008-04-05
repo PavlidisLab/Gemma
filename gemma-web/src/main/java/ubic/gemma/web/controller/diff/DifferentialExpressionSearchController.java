@@ -23,16 +23,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.validation.BindException;
-import org.springframework.validation.ObjectError;
-import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
@@ -48,7 +40,6 @@ import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.util.GemmaLinkUtils;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.controller.expression.experiment.ExperimentalFactorValueObject;
-import ubic.gemma.web.util.ConfigurationCookie;
 
 /**
  * @author keshav
@@ -65,8 +56,6 @@ import ubic.gemma.web.util.ConfigurationCookie;
  */
 public class DifferentialExpressionSearchController extends BaseFormController {
 
-    private static final double DEFAULT_QVALUE_THRESHOLD = 0.01;
-
     private Log log = LogFactory.getLog( this.getClass() );
 
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
@@ -74,8 +63,6 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     private DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService = null;
 
     private GeneService geneService = null;
-
-    private static final String COOKIE_NAME = "diffExpressionSearchCookie";
 
     /**
      * 
@@ -87,168 +74,26 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         setSessionForm( true );
     }
 
-    /*
-     * This is needed so GETs with parameters can also be used. (non-Javadoc)
+    /**
+     * Gets the differential expression results for the genes in {@link DiffExpressionSearchCommand}.
      * 
-     * @see org.springframework.web.servlet.mvc.AbstractFormController#isFormSubmission(javax.servlet.http.HttpServletRequest)
-     */
-    @Override
-    protected boolean isFormSubmission( HttpServletRequest request ) {
-        return request.getParameter( "submit" ) != null;
-    }
-
-    /**
-     * @param request
-     * @return Object
-     */
-    @Override
-    protected Object formBackingObject( HttpServletRequest request ) {
-        DiffExpressionSearchCommand diffCommand = new DiffExpressionSearchCommand();
-
-        DiffExpressionSearchCommand diffCommandFromCookie = loadCookie( request, diffCommand );
-        if ( diffCommandFromCookie != null ) {
-            diffCommand = diffCommandFromCookie;
-        }
-
-        return diffCommand;
-
-    }
-
-    /**
-     * @param request
-     * @param diffSearchCommand
+     * @param command
      * @return
      */
-    private DiffExpressionSearchCommand loadCookie( HttpServletRequest request,
-            DiffExpressionSearchCommand diffSearchCommand ) {
+    public Collection<DifferentialExpressionValueObject> getDiffExpressionForGenes( DiffExpressionSearchCommand command ) {
 
-        /*
-         * If we don't have any cookies, just return. We probably won't get this situation as we'll always have at least
-         * one cookie (the one with the JSESSION ID).
-         */
-        if ( request == null || request.getCookies() == null ) {
-            return null;
+        Collection<Long> geneIds = command.getGeneIds();
+
+        double threshold = command.getThreshold();
+
+        Collection<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
+        for ( long geneId : geneIds ) {
+            Collection<DifferentialExpressionValueObject> devosForGene = getDifferentialExpression( geneId, threshold );
+            devos.addAll( devosForGene );
         }
 
-        for ( Cookie cook : request.getCookies() ) {
-            if ( cook.getName().equals( COOKIE_NAME ) ) {
-                try {
-                    ConfigurationCookie cookie = new ConfigurationCookie( cook );
-                    String officialSymbol = cookie.getString( "geneOfficalSymbol" );
-                    if ( StringUtils.isBlank( officialSymbol ) ) {
-                        throw new Exception( "Invalid official symbol in cookie - " + officialSymbol );
-                    }
-                    diffSearchCommand.setGeneOfficialSymbol( officialSymbol );
+        return devos;
 
-                    String thresholdAsString = cookie.getString( "threshold" );
-                    if ( StringUtils.isBlank( thresholdAsString ) ) {
-                        throw new Exception( "Invalid threshold - " + thresholdAsString );
-                    }
-                    double threshold = Double.parseDouble( thresholdAsString );
-                    diffSearchCommand.setThreshold( threshold );
-
-                    return diffSearchCommand;
-
-                } catch ( Exception e ) {
-                    // log.warn( "Cookie could not be loaded: " + e.getMessage() );
-                    break;
-                    // fine, just don't get a cookie.
-                }
-            }
-        }
-
-        /* If we've come this far, we have a cookie but not one that matches COOKIE_NAME. Provide friendly defaults. */
-        diffSearchCommand.setThreshold( DEFAULT_QVALUE_THRESHOLD );
-
-        return diffSearchCommand;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.mvc.SimpleFormController#processFormSubmission(javax.servlet.http.HttpServletRequest,
-     *      javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
-            Object command, BindException errors ) throws Exception {
-
-        if ( request.getParameter( "cancel" ) != null ) {
-            log.info( "Cancelled" );
-            return new ModelAndView( this.getFormView() );
-        }
-
-        return super.processFormSubmission( request, response, command, errors );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.mvc.SimpleFormController#onSubmit(javax.servlet.http.HttpServletRequest,
-     *      javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)
-     */
-    @SuppressWarnings("unchecked")
-    public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
-            BindException errors ) throws Exception {
-
-        /*
-         * FIXME this is a bit thrown together, to handle both GET and POST situations.
-         */
-        DiffExpressionSearchCommand diffCommand;
-        if ( command == null ) {
-            diffCommand = new DiffExpressionSearchCommand();
-            try {
-                diffCommand.setThreshold( Double.parseDouble( request.getParameter( "threshold" ) ) );
-            } catch ( NumberFormatException e ) {
-
-                String message = "Threshold must be a valid number";
-                errors.addError( new ObjectError( command.toString(), null, null, message ) );
-                return processErrors( request, response, command, errors, null );
-            }
-            // num
-            diffCommand.setGeneOfficialSymbol( request.getParameter( "geneOfficialSymbol" ) );
-        } else {
-            diffCommand = ( ( DiffExpressionSearchCommand ) command );
-        }
-
-        Cookie cookie = new DiffExpressionSearchCookie( diffCommand );
-        response.addCookie( cookie );
-
-        // hachked this for using the gene picker
-        Long geneId = null;
-        try {
-            geneId = Long.parseLong( diffCommand.getGeneOfficialSymbol() );
-        } catch ( NumberFormatException e ) {
-            String message = "You must choose a gene from the search results";
-            errors.addError( new ObjectError( command.toString(), null, null, message ) );
-            return processErrors( request, response, command, errors, null );
-        }
-
-        double threshold = diffCommand.getThreshold();
-
-        Gene gene = geneService.load( geneId );
-        String message = null;
-        if ( gene == null ) {
-            message = "Gene could not be found for symbol: " + geneId;
-            errors.addError( new ObjectError( command.toString(), null, null, message ) );
-            return processErrors( request, response, command, errors, null );
-        }
-
-        Collection<DifferentialExpressionValueObject> devos = getDifferentialExpression( gene.getId(), threshold );
-
-        if ( devos.isEmpty() ) {
-            message = "No results found for gene " + gene.getOfficialSymbol() + " that meet the threshold " + threshold;
-            errors.addError( new ObjectError( command.toString(), null, null, message ) );
-            return processErrors( request, response, command, errors, null );
-        }
-
-        ModelAndView mav = new ModelAndView( this.getSuccessView() );
-        mav.addObject( "differentialExpressionValueObjects", devos );
-        mav.addObject( "numDiffResults", devos.size() );
-        mav.addObject( "threshold", threshold );
-        mav.addObject( "geneOfficialSymbol", gene.getOfficialSymbol() );
-        return mav;
     }
 
     /**
@@ -330,27 +175,5 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      */
     public void setGeneService( GeneService geneService ) {
         this.geneService = geneService;
-    }
-
-    /**
-     * @author keshav
-     */
-    class DiffExpressionSearchCookie extends ConfigurationCookie {
-
-        public DiffExpressionSearchCookie( DiffExpressionSearchCommand command ) {
-
-            super( COOKIE_NAME );
-
-            log.debug( "creating cookie" );
-
-            // this.setProperty( "geneId", command.getGeneId() );
-            String officialSymbol = command.getGeneOfficialSymbol();
-            this.setProperty( "geneOfficialSymbol", officialSymbol );
-
-            /* set cookie to expire after 2 days. */
-            this.setMaxAge( 172800 );
-            this.setComment( "User selections for differential expression search form." );
-        }
-
     }
 }

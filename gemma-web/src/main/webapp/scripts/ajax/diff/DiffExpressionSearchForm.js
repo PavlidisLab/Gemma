@@ -1,7 +1,7 @@
 /*
  * The input for differential expression searches. This form has two main parts: a GeneChooserPanel, and the differential expression search parameters.
  * 
- * Differential expression search has three main settings: Threshold, "My genes only" checkbox, and the "Search scope".
+ * Differential expression search has one main setting, the threshold.
  * 
  * If scope=custom, a DatasetSearchField is shown.
  * 
@@ -65,7 +65,36 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
             }]
 			
 		});
- 
+ 		
+ 	this.thresholdField = new Ext.form.NumberField( {
+		allowBlank : false,
+		allowDecimals : true,
+		allowNegative : false,
+		minValue : Ext.Gemma.DiffExpressionSearchForm.MIN_THRESHOLD,
+		maxValue : 1,
+		fieldLabel : 'Threshold',
+		invalidText : "Minimum threshold is " + Ext.Gemma.DiffExpressionSearchForm.MIN_THRESHOLD,
+		value : 0.01,
+		width : 60
+	} ); 
+	Ext.Gemma.DiffExpressionSearchForm.addToolTip( this.thresholdField, 
+		"Only genes with a qvalue less than this threshold are returned." );
+ 	
+	// Field set for the bottom part of the form
+	var analysisFs = new Ext.form.FieldSet( {  
+		autoHeight : true,
+	  	items : [ this.thresholdField] //
+	} );
+	
+ 	// Panel combining all of the above elements.
+	var optionsPanel = new Ext.Panel({
+		title : 'Analysis options',
+		autoHeight : true,
+		items : [ analysisFs]
+	});
+	
+	this.optionsPanel = optionsPanel;
+	
 	var submitButton = new Ext.Button( {
 		text : "Find diff expressed genes",
 		handler : function() {
@@ -78,12 +107,12 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
 	 * Build the form
 	 */
 	this.add( queryFs );
+	this.add( optionsPanel); 
 	this.addButton( submitButton );
 
 	Ext.Gemma.DiffExpressionSearchForm.searchForGene = function( geneId ) {
 		geneChooserPanel.setGene.call( geneChooserPanel, geneId, thisPanel.doSearch.bind( thisPanel ) );
 	};
-	
 };
 
 Ext.Gemma.DiffExpressionSearchForm.addToolTip = function( component, html ) {
@@ -94,20 +123,6 @@ Ext.Gemma.DiffExpressionSearchForm.addToolTip = function( component, html ) {
 		} );
 	} );
 };
-
-this.thresholdField = new Ext.form.NumberField( {
-		allowBlank : false,
-		allowDecimals : false,
-		allowNegative : false,
-		minValue : Ext.Gemma.DiffExpressionSearchForm.MIN_THRESHOLD,
-		maxValue : 999,
-		fieldLabel : 'Threshold',
-		invalidText : "Minimum threshold is " + Ext.Gemma.DiffExpressionSearchForm.MIN_THRESHOLD,
-		value : 2,
-		width : 60
-	} ); 
-	Ext.Gemma.DiffExpressionSearchForm.addToolTip( this.thresholdField, 
-		"Only genes with a qvalue less than this threshold are returned." );
 
 /* other public methods...
  */
