@@ -7,7 +7,10 @@
  * @version $Id$
  */
 
-progressbar = function(){
+progressbar = function( config ){
+	
+	this.doForward = config.doForward;
+	
     this.addEvents({
         finish : true,
         fail : true,
@@ -111,7 +114,7 @@ Ext.extend(progressbar, Ext.util.Observable, {
 				} else if (d.done) {
 					this.fireEvent('done', d.payload);
 					this.stopProgress();
-					if ((d.forwardingURL !== undefined) && (d.forwardingURL !== null)) {
+					if ( this.doFoward &&  d.forwardingURL !== undefined && d.forwardingURL !== null) {
 					  	window.location = d.forwardingURL + "?taskId=" + dwr.util.getValue("taskId");
 					}  else {
 						var callback = this.maybeDoForward.createDelegate(this, [], true) ;
@@ -136,7 +139,7 @@ Ext.extend(progressbar, Ext.util.Observable, {
 	},
 
 	maybeDoForward : function(url) {
-		if (url) {
+		if (this.doForward && url) {
 			window.location = url;
 		}	
 	},
@@ -154,7 +157,7 @@ Ext.extend(progressbar, Ext.util.Observable, {
 				} else if (d.done) {
 					this.fireEvent('done', d.payload);
 					this.stopProgress();
-					if ((d.forwardingURL !== undefined) && (d.forwardingURL !== null)) {
+					if ( this.doFoward &&   d.forwardingURL !== undefined &&  d.forwardingURL !== null ) {
 				  		window.location = d.forwardingURL + "?taskId=" + dwr.util.getValue("taskId");
 					}  else {
 						var callback = this.maybeDoForward.createDelegate(this, [], true) ;

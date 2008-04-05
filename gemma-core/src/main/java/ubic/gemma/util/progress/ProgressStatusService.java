@@ -66,7 +66,7 @@ public class ProgressStatusService {
             // we might just need to wait a little while for the job to register.
             try {
                 Thread.sleep( 1000 );
-
+                log.warn( "It looks like job " + taskId + " has gone missing; assuming it is dead" );
                 job = progressManager.getJob( taskId );
                 if ( job == null ) {
                     // We should assume it is dead.
