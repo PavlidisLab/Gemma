@@ -164,6 +164,14 @@
 			<exclusions>
 				<exclusion>
 					<groupId>org.springframework</groupId>
+					<artifactId>spring-core</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.springframework</groupId>
+					<artifactId>spring-mock</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.springframework</groupId>
 					<artifactId>spring-remoting</artifactId>
 				</exclusion>
 				<exclusion>
