@@ -24,8 +24,9 @@ Ext.onReady( function() {
 	
 	searchPanel.on( "aftersearch", function ( panel, result ){
 	
-		load(results);
+		load(result);
 		
+		/*
 		var diffExGrid = new Ext.Gemma.DifferentialExpressionGrid( {
     			experimentExperiment : record.data.expressionExperiment,
     			probe : record.data.probe,
@@ -37,6 +38,7 @@ Ext.onReady( function() {
     		} );
     		
     		diffExGrid.render("diffExpression-results");
+    	*/	
 	});
 		
 
