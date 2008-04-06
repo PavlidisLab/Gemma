@@ -20,6 +20,7 @@ version: $Id$
 	<script type='text/javascript' src='/Gemma/dwr/interface/GenePickerController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/DifferentialExpressionSearchController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/DiffExpressionSearchCommand.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/util/GemmaGridPanel.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/util/PagingDataStore.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/util/PagingToolbar.js'></script>

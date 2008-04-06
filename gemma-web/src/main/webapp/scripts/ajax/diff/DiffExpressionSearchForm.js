@@ -168,8 +168,8 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 	getDiffExpressionSearchCommand : function () {
 		var dsc = {
 			geneIds : this.geneChooserPanel.getGeneIds(),
-			threshold : this.threshold.getValue(),
 			taxonId : this.geneChooserPanel.getTaxonId(),
+			threshold : this.thresholdField.getValue()
 		};
 		
 		return dsc;
@@ -231,7 +231,7 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 			if ( this.fireEvent('beforesearch', this, dsc ) !== false ) {
 				this.loadMask.show();
 				var errorHandler = this.handleError.createDelegate(this, [], true);
-				ExtDiffExpressionSearchController.doSearch( dsc, {callback : this.returnFromSearch.bind( this ), errorHandler : errorHandler} );
+				DifferentialExpressionSearchController.getDiffExpressionForGenes( dsc, {callback : this.returnFromSearch.bind( this ), errorHandler : errorHandler} );
 			}
 		} else {
 			this.handleError(msg);
@@ -249,16 +249,12 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 	},
 	
 	validateSearch : function ( dsc ) {
-		if ( dsc.queryGenesOnly && dsc.geneIds.length < 2 ) { 
-			return "You must select more than one query gene to use 'search among query genes only'";
-		} else if ( dsc.geneIds.length < 1 ) {
+		if ( dsc.geneIds.length < 1 ) {
 			return "We couldn't figure out which gene you want to query. Please use the search functionality to find genes.";
-		} else if ( dsc.stringency < Ext.Gemma.DiffExpressionSearchForm.MIN_THRESHOLD ) {
+		} else if ( dsc.threshold < Ext.Gemma.DiffExpressionSearchForm.MIN_THRESHOLD ) {
 			return "Minimum threshold is " + Ext.Gemma.DiffExpressionSearchForm.MIN_THRESHOLD;
-		} else if ( dsc.eeIds && dsc.eeIds.length < 1 ) {
-			return "There are no datasets that match your search terms";
-		} else if ( !dsc.eeIds && !dsc.cannedAnalysisId ) {
-			return "Please select an analysis";
+		} else if ( dsc.threshold > Ext.Gemma.DiffExpressionSearchForm.MAX_THRESHOLD ) {
+			return "Maximum threshold is " + Ext.Gemma.DiffExpressionSearchForm.MAX_THRESHOLD;
 		} else {
 			return "";
 		}
@@ -280,6 +276,7 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 } );
 
 Ext.Gemma.DiffExpressionSearchForm.MIN_STRINGENCY = 0.0;
+Ext.Gemma.DiffExpressionSearchForm.MAX_STRINGENCY = 1.0;
 
 
 /* Ext.Gemma.DiffExpressionSummaryGrid constructor...

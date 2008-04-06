@@ -521,6 +521,7 @@
 					<property name="includes">
 						<list>
 							<value>getDifferentialExpression</value>
+							<value>getDiffExpressionForGenes</value>
 						</list>
 					</property>
 				</bean>
