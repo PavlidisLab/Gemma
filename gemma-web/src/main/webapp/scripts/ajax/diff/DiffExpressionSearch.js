@@ -22,51 +22,15 @@ Ext.onReady( function() {
 	} );
 	searchPanel.render( "diffExpression-form" );
 	
-	var knownGeneDatasetGrid = new Ext.Gemma.DiffExpressionDatasetGrid( {
-		renderTo : "diffExpression-results"
-	} );
-	var knownGeneGrid = new Ext.Gemma.DiffExpressionGrid( {
-		renderTo : "diffExpression-results",
-		title : "Differentially expressed genes",
-		pageSize : 25
-	} );
-	
 	searchPanel.on( "aftersearch", function ( panel, result ) {
-	var eeMap = {};
-		if ( result.datasets ) {
-			for ( var i=0; i<result.datasets.length; ++i ) {
-				var ee = result.datasets[i];
-				eeMap[ee.id] = ee;
-			}
-		}
-		
-		// create expression experiment image map
-		var imageMap = Ext.get( "eeMap" );
-		if ( ! imageMap ) {
-			imageMap = Ext.getBody().createChild( {
-				tag: 'map',
-				id: 'eeMap',
-				name: 'eeMap'
-			} );
-		}
-		Ext.Gemma.DiffExpressionGrid.getBitImageMapTemplate().overwrite( imageMap, result.datasets );
-		
-		var link = panel.getBookmarkableLink();
-		knownGeneGrid.setTitle( String.format( "Differentially Expressed genes <a href='{0}'>(bookmarkable link)</a> <a href='{0}&export'>(export as text)</a>", panel.getBookmarkableLink() ) );
-		
-		Ext.Gemma.DiffExpressionDatasetGrid.updateDatasetInfo( result.knownGeneDatasets, eeMap );
-		knownGeneDatasetGrid.loadData( result.isCannedAnalysis, result.queryGenes.length, result.knownGeneDatasets ) ;
-		knownGeneGrid.loadData( result.isCannedAnalysis, result.queryGenes.length, result.knownGeneResults, result.knownGeneDatasets );
-		
-		if ( admin ) {
-			Ext.Gemma.DiffExpressionDatasetGrid.updateDatasetInfo( result.predictedGeneDatasets, eeMap );
-			predictedGeneDatasetGrid.loadData( result.isCannedAnalysis, result.queryGenes.length, result.predictedGeneDatasets ) ;
-			predictedGeneGrid.loadData( result.isCannedAnalysis, result.queryGenes.length, result.predictedGeneResults, result.predictedGeneDatasets );
-			Ext.Gemma.DiffExpressionDatasetGrid.updateDatasetInfo( result.probeAlignedRegionDatasets, eeMap );
-			probeAlignedDatasetGrid.loadData( result.isCannedAnalysis, result.queryGenes.length, result.probeAlignedRegionDatasets ) ;
-			probeAlignedGrid.loadData( result.isCannedAnalysis, result.queryGenes.length, result.probeAlignedRegionResults, result.probeAlignedRegionDatasets );
-		}
-		
+	
+	var diffExGrid = new Ext.Gemma.DifferentialExpressionGrid( {
+    			geneId : record.data.foundGene.id,
+    			threshold : 0.01,
+    			renderTo : diffExGridEl,
+    			pageSize : 10,
+    			width : 800
+    		} );
 	} );
 	
 } );
