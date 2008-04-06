@@ -1,5 +1,6 @@
 <%-- Other notifications and...stuff --%>
 <%@ include file="/common/taglibs.jsp"%>
+
 <h2>
 	Welcome to Gemma
 </h2>
@@ -11,23 +12,35 @@
 	<a href="<c:url value="/bibRef/showAllEeBibRefs.html"/>">published papers</a>. More information about the project is
 	<a href="<c:url value="/static/about.html"/>">here</a>.
 </p>
-<div style="background: #FFF; padding: 10px">
-	<b class="rounded"><b class="rounded1"><b></b>
-	</b><b class="rounded2"><b></b>
-	</b><b class="rounded3"></b><b class="rounded4"></b><b class="rounded5"></b>
-	</b>
-	<div style="padding:10px;background: #EEEEEE;">
-		<h3>
-			April X, 2008 - Gemma 1.1
-		</h3>
-		<p  >
-			Gemma 1.1 introduces improved interfaces for coexpression and differential expression analysis. You should notice
-			some speed improvements. We have also included several new 'presets' for analyses of coexpression of data sets
-			relating to the nervous system.
-		</p>
-	</div>
-	<b class="rounded"><b class="rounded5"></b><b class="rounded4"></b><b class="rounded3"></b><b class="rounded2"><b></b>
-	</b><b class="rounded1"><b></b>
-	</b>
-	</b>
+
+<script type="text/JavaScript">
+  Ext.onReady( function() {
+      settings = {
+          tl: { radius: 10 },
+          tr: { radius: 10 },
+          bl: { radius: 10 },
+          br: { radius: 10 },
+          antiAlias: true,
+          autoPad: true,
+          validTags: ["div"]
+      }
+     var newsbox = new curvyCorners(settings, "latestNews");
+     newsbox.applyCornersToAll(); 
+  } );
+</script>
+<h3>
+	News
+</h3>
+<div class="latestNews" style="background: #FFF47E; padding-bottom: 0.8em">
+	<h4 style="margin-left: 10px">
+		April 7, 2008 - Gemma 1.1
+	</h4>
+	<p>
+		Gemma 1.1 introduces improved interfaces for coexpression and differential expression analysis. You should notice some
+		speed improvements. We have also included several new 'presets' for analyses of coexpression of data sets relating to the
+		nervous system. For a more complete list of changes, see the
+		<a href="<c:url value='/resources/dist/RELEASE-NOTES-1.1.txt' />">release notes</a>.
+	</p>
 </div>
+
+

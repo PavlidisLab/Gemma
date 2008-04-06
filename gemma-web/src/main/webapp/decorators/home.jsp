@@ -11,7 +11,7 @@
 		<%@ include file="/common/meta.jsp"%>
 		<title><decorator:title /> | <fmt:message key="webapp.name" />
 		</title>
-		
+
 		<link href="<c:url value='/styles/ext-all.css'/>" media="screen" rel="stylesheet" type="text/css" />
 		<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/${appConfig["theme"]}/theme.css'/>" />
 		<link rel="stylesheet" type="text/css" media="print" href="<c:url value='/styles/${appConfig["theme"]}/print.css'/>" />
@@ -44,25 +44,18 @@
 
 				<div id="sub" class="home">
 					<%@ include file="/common/subarea.jsp"%>
-					<c:if test="${whatsNew != null}" >
-						<Gemma:whatsNew whatsNew="${whatsNew}"  />
-					</c:if>
 				</div>
+
 
 				<c:set var="currentMenu" scope="request">
 					<decorator:getProperty property="meta.menu" />
 				</c:set>
 				<c:if test="${currentMenu == 'AdminMenu'}">
-					<div id="sub">
-						<menu:useMenuDisplayer name="Velocity" config="WEB-INF/classes/cssVerticalMenu.vm" permissions="rolesAdapter">
-							<menu:displayMenu name="AdminMenu" />
-						</menu:useMenuDisplayer>
-					</div>
+					<menu:useMenuDisplayer name="Velocity" config="WEB-INF/classes/cssVerticalMenu.vm" permissions="rolesAdapter">
+						<menu:displayMenu name="AdminMenu" />
+					</menu:useMenuDisplayer>
 				</c:if>
-
-
 				<div id="nav">
-
 					<div class="wrapper">
 						<h2 class="accessibility">
 							Navigation
@@ -71,6 +64,8 @@
 					</div>
 					<hr />
 				</div>
+
+
 				<%-- end nav --%>
 
 

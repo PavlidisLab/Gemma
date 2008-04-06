@@ -43,34 +43,10 @@
 			</authz:authorize>
 			<tr>
 				<td>
-					Probes mapping to gene(s)
+					Probes with mapping
 				</td>
 				<td>
 					${summary.numProbesToGenes}
-				</td>
-			</tr>
-			<tr>
-				<td>
-					&nbsp;&nbsp;Probes mapping to probe-aligned region(s)
-				</td>
-				<td>
-					${summary.numProbesToProbeAlignedRegions}
-				</td>
-			</tr>
-			<tr>
-				<td>
-					&nbsp;&nbsp;Probes mapping to predicted genes
-				</td>
-				<td>
-					${summary.numProbesToPredictedGenes}
-				</td>
-			</tr>
-			<tr>
-				<td>
-					&nbsp;&nbsp;Probes mapping to known genes
-				</td>
-				<td>
-					${summary.numProbesToKnownGenes }
 				</td>
 			</tr>
 			<tr>

@@ -78,7 +78,7 @@ public class WhatsNewBoxTag extends TagSupport {
                 && updatedExpressionExperiments.size() == 0 && updatedArrayDesigns.size() == 0 ) {
             buf.append( "<input type='hidden' name='nothing new' />" );
         } else {
-            buf.append( "<h3>New or updated in Gemma in the" );
+            buf.append( " <strong>Changes in the" );
             Date date = whatsNew.getDate();
             Date now = Calendar.getInstance().getTime();
             long millis = now.getTime() - date.getTime();
@@ -91,7 +91,7 @@ public class WhatsNewBoxTag extends TagSupport {
                 NumberFormat nf = NumberFormat.getIntegerInstance();
                 buf.append( " last " + nf.format( days ) + " days" );
             }
-            buf.append( "</h3>" );
+            buf.append( "</strong> " );
             buf.append( "<p>" );
 
             int numEEs = newExpressionExperiments.size();
