@@ -278,4 +278,60 @@ h2.helpstep,h3.helpstep {
 	font-size: 1.3em;
 	margin: 0 0 2 0px;
 }
-/* END TYPOGRAPHY */
+
+/* Rounded corners. To get a smooth shaded edge, use colors that are gradually darker; the borders defined for each class are darker than the background.
+
+ 
+ */
+.rounded {
+	display: block
+}
+
+.rounded * {
+	display: block;
+	height: 1px;
+	font-size: .01em;
+	overflow: hidden;
+	background: #EEEEEE
+}
+
+.rounded1 {
+	margin-left: 3px;
+	margin-right: 3px;
+	padding-left: 1px;
+	padding-right: 1px;
+	border-left: 1px solid #870000;
+	border-right: 1px solid #870000;
+	background: #9f0000
+}
+
+.rounded2 {
+	margin-left: 1px;
+	margin-right: 1px;
+	padding-right: 1px;
+	padding-left: 1px;
+	border-left: 1px solid #6f0000;
+	border-right: 1px solid #6f0000;
+	background: #a30000
+}
+
+.rounded3 {
+	margin-left: 1px;
+	margin-right: 1px;
+	border-left: 1px solid #a30000;
+	border-right: 1px solid #a30000;
+}
+
+.rounded4 {
+	border-left: 1px solid #870000;
+	border-right: 1px solid #870000
+}
+
+.rounded5 {
+	border-left: 1px solid #9f0000;
+	border-right: 1px solid #9f0000
+}
+
+.roundedfg {
+	background: #EEEEEE
+}

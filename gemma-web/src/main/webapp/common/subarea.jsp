@@ -11,25 +11,23 @@
 	<a href="<c:url value="/bibRef/showAllEeBibRefs.html"/>">published papers</a>. More information about the project is
 	<a href="<c:url value="/static/about.html"/>">here</a>.
 </p>
-
-<div style="background-color: #F7CC7C; padding: 6px; border: 1px solid #CCCCCC">
-	<h3>
-		March 9, 2008 - Gemma 1.0.1
-	</h3>
-	<p>
-		Gemma 1.0.1 fixes a number of mostly minor problems we found since the 1.0 release, and enables a new feature ('custom
-		search' for coexpression). The most significant fix is the correction of an error that caused negative correlations to
-		go unreported in search results.
-	</p>
-</div>
-
-<div style="background-color: #EEE; margin-top:8px; padding: 6px; border: 1px solid #CCCCCC">
-	<h4>
-		March 2, 2008 - Gemma 1.0 released!
-	</h4>
-	<p>
-		After a long incubation period and a lot of hard work, we consider Gemma complete enough to give it an official 1.0
-		stamp! There is still a lot of work to do, and we value your
-		<a href="mailto:gemma@bioinformatics.ubc.ca">feedback</a> including feature requests and bug reports.
-	</p>
+<div style="background: #FFF; padding: 10px">
+	<b class="rounded"><b class="rounded1"><b></b>
+	</b><b class="rounded2"><b></b>
+	</b><b class="rounded3"></b><b class="rounded4"></b><b class="rounded5"></b>
+	</b>
+	<div style="padding:10px;background: #EEEEEE;">
+		<h3>
+			April X, 2008 - Gemma 1.1
+		</h3>
+		<p  >
+			Gemma 1.1 introduces improved interfaces for coexpression and differential expression analysis. You should notice
+			some speed improvements. We have also included several new 'presets' for analyses of coexpression of data sets
+			relating to the nervous system.
+		</p>
+	</div>
+	<b class="rounded"><b class="rounded5"></b><b class="rounded4"></b><b class="rounded3"></b><b class="rounded2"><b></b>
+	</b><b class="rounded1"><b></b>
+	</b>
+	</b>
 </div>
