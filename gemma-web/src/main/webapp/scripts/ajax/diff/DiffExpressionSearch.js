@@ -22,15 +22,19 @@ Ext.onReady( function() {
 	} );
 	searchPanel.render( "diffExpression-form" );
 	
-	searchPanel.on( "aftersearch", function ( panel, result ) {
-	
-	var diffExGrid = new Ext.Gemma.DifferentialExpressionGrid( {
+	searchPanel.on( "aftersearch", function ( panel, result ){
+
+		var diffExGrid = new Ext.Gemma.DifferentialExpressionGrid( {
     			geneId : result.data.foundGene.id,
     			threshold : 0.01,
-    			renderTo : diffExGridEl,
+    			renderTo : diffExGrid,
     			pageSize : 10,
     			width : 800
     		} );
-	} );
+    		
+    		diffExGrid.render("diffExpression-results");
+	});
+		
+
 	
 } );
