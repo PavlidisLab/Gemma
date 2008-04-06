@@ -24,7 +24,7 @@ Ext.onReady( function() {
 	
 	searchPanel.on( "aftersearch", function ( panel, result ){
 	
-		load(result);
+		ds.load(result);
 		
 		/*
 		var diffExGrid = new Ext.Gemma.DifferentialExpressionGrid( {
