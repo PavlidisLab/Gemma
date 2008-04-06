@@ -22,8 +22,6 @@ Ext.onReady( function() {
 	} );
 	searchPanel.render( "diffExpression-form" );
 	
-	var summaryPanel;
-	
 	var knownGeneDatasetGrid = new Ext.Gemma.DiffExpressionDatasetGrid( {
 		renderTo : "diffExpression-results"
 	} );
@@ -41,20 +39,6 @@ Ext.onReady( function() {
 				eeMap[ee.id] = ee;
 			}
 		}
-		
-		if ( summaryPanel ) {
-			// grid.destroy() seems to be broken...
-			try {
-				summaryPanel.destroy();
-			} catch (e) {}
-		}
-		summaryPanel = new Ext.Gemma.DiffExpressionSummaryGrid( {
-			genes : result.queryGenes,
-			summary : result.summary
-		} );
-		summaryPanel.render( "diffExpression-summary" );
-		summaryPanel.autoSizeColumns();
-		summaryPanel.getView().refresh();
 		
 		// create expression experiment image map
 		var imageMap = Ext.get( "eeMap" );
@@ -85,9 +69,4 @@ Ext.onReady( function() {
 		
 	} );
 	
-} );
-
-/* instance methods...
- */
-Ext.extend( Ext.Gemma.DiffExpressionSummaryGrid, Ext.Gemma.GemmaGridPanel, {
 } );
