@@ -22,23 +22,16 @@ Ext.onReady( function() {
 	} );
 	searchPanel.render( "diffExpression-form" );
 	
+	var diffExGrid = new Ext.Gemma.DifferentialExpressionGrid( {
+		renderTo : "diffExpression-results",
+		title : "Differentially expressed genes",
+		pageSize : 25
+	} );
+	
 	searchPanel.on( "aftersearch", function ( panel, result ){
 	
-		ds.load(result);
+		diffExGrid.ds.load(result);
 		
-		/*
-		var diffExGrid = new Ext.Gemma.DifferentialExpressionGrid( {
-    			experimentExperiment : record.data.expressionExperiment,
-    			probe : record.data.probe,
-    			experimentalFactors : record.data.experimentalFactors,
-    			p : record.data.p,
-    			renderTo : diffExGrid,
-    			pageSize : 10,
-    			width : 800
-    		} );
-    		
-    		diffExGrid.render("diffExpression-results");
-    	*/	
 	});
 		
 
