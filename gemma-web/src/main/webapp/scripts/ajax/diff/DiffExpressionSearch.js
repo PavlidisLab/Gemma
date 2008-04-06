@@ -25,8 +25,10 @@ Ext.onReady( function() {
 	searchPanel.on( "aftersearch", function ( panel, result ){
 
 		var diffExGrid = new Ext.Gemma.DifferentialExpressionGrid( {
-    			geneId : result.data.foundGene.id,
-    			threshold : 0.01,
+    			experimentExperiment : record.data.expressionExperiment,
+    			probe : record.data.probe,
+    			experimentalFactors : record.data.experimentalFactors,
+    			p : record.data.p,
     			renderTo : diffExGrid,
     			pageSize : 10,
     			width : 800
