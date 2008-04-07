@@ -48,13 +48,14 @@ public class PubMedSearchTest extends TestCase {
             searchTerms.add( "habenula" );
             searchTerms.add( "glucose" );
             Collection<BibliographicReference> actualResult = pms.searchAndRetrieveByHTTP( searchTerms );
-            assertEquals( 4, actualResult.size() ); // at least, this was the result on 8/10/2006.
+            assertTrue( "Expected at least 5 results", actualResult.size() >= 5 ); // at least, this was the result on
+                                                                                    // 4/2008
         } catch ( java.net.UnknownHostException e ) {
             log.warn( "Test skipped due to unknown host exception" );
             return;
         }
     }
-    
+
     public void testSearchAndRetrievIdsByHTTP() throws Exception {
         try {
             PubMedSearch pms = new PubMedSearch();
@@ -64,13 +65,14 @@ public class PubMedSearchTest extends TestCase {
             searchTerms.add( "habenula" );
             searchTerms.add( "glucose" );
             Collection<String> actualResult = pms.searchAndRetrieveIdsByHTTP( searchTerms );
-            assertEquals( 4, actualResult.size() ); // at least, this was the result on 8/10/2006.
+            assertTrue( "Expect at least 5 results", actualResult.size() >= 5 ); // at least, this was the result on
+                                                                                    // 4/2008.
         } catch ( java.net.UnknownHostException e ) {
             log.warn( "Test skipped due to unknown host exception" );
             return;
         }
     }
-    
+
     /*
      * Test method for 'ubic.gemma.loader.entrez.pubmed.PubMedSearch.searchAndRetriveByHTTP(Collection<String>)'
      */
