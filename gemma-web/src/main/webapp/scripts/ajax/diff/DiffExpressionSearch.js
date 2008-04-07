@@ -30,7 +30,7 @@ Ext.onReady( function() {
 	
 	searchPanel.on( "aftersearch", function ( panel, result ){
 	
-		diffExGrid.ds.load(result);
+		diffExGrid.getStore().load(result);
 		
 	});
 		
