@@ -22,15 +22,16 @@ Ext.onReady( function() {
 	} );
 	searchPanel.render( "diffExpression-form" );
 	
-	var diffExGrid = new Ext.Gemma.DifferentialExpressionGrid( {
+	var diffExGrid = new Ext.Gemma.DiffExpressionGrid( {
 		renderTo : "diffExpression-results",
 		title : "Differentially expressed genes",
 		pageSize : 25
 	} );
 	
 	searchPanel.on( "aftersearch", function ( panel, result ){
-	
-		diffExGrid.getStore().load(result);
+		
+		//knownGeneGrid.loadData( result.isCannedAnalysis, result.queryGenes.length, result.knownGeneResults, result.knownGeneDatasets );
+		diffExGrid.loadData(result);
 		
 	});
 		
