@@ -30,7 +30,6 @@ Ext.onReady( function() {
 	
 	searchPanel.on( "aftersearch", function ( panel, result ){
 		
-		//knownGeneGrid.loadData( result.isCannedAnalysis, result.queryGenes.length, result.knownGeneResults, result.knownGeneDatasets );
 		diffExGrid.loadData(result);
 		
 	});

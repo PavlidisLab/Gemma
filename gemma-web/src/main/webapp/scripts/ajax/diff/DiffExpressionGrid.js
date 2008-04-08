@@ -11,8 +11,6 @@ Ext.Gemma.DiffExpressionGrid = function ( config ) {
 	Ext.QuickTips.init();
 	
 	this.pageSize = config.pageSize; delete config.pageSize;
-	//this.geneId = config.geneId; delete config.geneId;
-	//this.threshold = config.threshold; delete config.threshold;
 	
 	/* keep a reference to ourselves to avoid convoluted scope issues below...
 	 */
@@ -48,7 +46,6 @@ Ext.Gemma.DiffExpressionGrid = function ( config ) {
 		} );
 	}
 	superConfig.ds.setDefaultSort( 'p' );
-	//superConfig.ds.load( { params: [ this.geneId, this.threshold ] } );
 	
 	superConfig.cm = new Ext.grid.ColumnModel( [
 		{ id: 'ee', header: "Dataset", dataIndex: "expressionExperiment", renderer: Ext.Gemma.DiffExpressionGrid.getEEStyler(), width : 80 },
@@ -131,7 +128,6 @@ Ext.Gemma.DiffExpressionGrid.getEFStyler = function() {
 				names.push( efs[i].name || "unnamed factor" );
 			}
 			return names.join( "," );
-//			return Ext.Gemma.DiffExpressionGrid.efTemplate.apply( ef );
 		};
 	}
 	return Ext.Gemma.DiffExpressionGrid.efStyler;
@@ -153,7 +149,7 @@ loadData : function (data) {
 		this.getStore().proxy.data = data;
 		this.getStore().reload( { resetPage : true } );
 		this.getView().refresh( true ); // refresh column headers
-		this.resizeDatasetColumn();
+		//this.resizeDatasetColumn();
 	},
 	
 	resizeDatasetColumn : function() {
