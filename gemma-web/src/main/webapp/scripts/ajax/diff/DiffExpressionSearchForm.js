@@ -71,9 +71,9 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
 		allowDecimals : true,
 		allowNegative : false,
 		minValue : Ext.Gemma.DiffExpressionSearchForm.MIN_THRESHOLD,
-		maxValue : 1,
+		maxValue : Ext.Gemma.DiffExpressionSearchForm.MAX_THRESHOLD,
 		fieldLabel : 'Threshold',
-		invalidText : "Minimum threshold is " + Ext.Gemma.DiffExpressionSearchForm.MIN_THRESHOLD,
+		invalidText : "Min threshold is " + Ext.Gemma.DiffExpressionSearchForm.MIN_THRESHOLD + " and max is " + Ext.Gemma.DiffExpressionSearchForm.MAX_THRESHOLD,
 		value : 0.01,
 		width : 60
 	} ); 
@@ -204,7 +204,7 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 		}
 		var queryStart = document.URL.indexOf( "?" );
 		var url = queryStart > -1 ? document.URL.substr( 0, queryStart ) : document.URL;
-		url += String.format( "?g={0}&s={1}", dsc.geneIds.join( "," ), dsc.stringency );
+		url += String.format( "?g={0}&s={1}", dsc.geneIds.join( "," ), dsc.threshold );
 		if ( dsc.queryGenesOnly ) {
 			url += "&q";
 		}
@@ -275,5 +275,5 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 	
 } );
 
-Ext.Gemma.DiffExpressionSearchForm.MIN_STRINGENCY = 0.0;
-Ext.Gemma.DiffExpressionSearchForm.MAX_STRINGENCY = 1.0;
+Ext.Gemma.DiffExpressionSearchForm.MIN_THRESHOLD = 0.0;
+Ext.Gemma.DiffExpressionSearchForm.MAX_THRESHOLD = 1.0;
