@@ -30,6 +30,7 @@ import org.apache.commons.cli.OptionBuilder;
 import ubic.gemma.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.ontology.MgedOntologyService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
@@ -66,6 +67,9 @@ public class ExperimentalDesignImportCli extends AbstractSpringAwareCLI {
         Option designFileOption = OptionBuilder.hasArg().isRequired().withArgName( "Design file" ).withDescription(
                 "Experimental designdescriptoin file" ).withLongOpt( "eeListfile" ).create( 'f' );
         addOption( designFileOption );
+
+        Option dryRunOption = OptionBuilder.create( "dryrun" );
+        addOption( dryRunOption );
     }
 
     /*
@@ -78,9 +82,21 @@ public class ExperimentalDesignImportCli extends AbstractSpringAwareCLI {
         Exception e = processCommandLine( "experimentalDesignImport", args );
         if ( e != null ) return e;
 
+        MgedOntologyService mos = ( MgedOntologyService ) this.getBean( "mgedOntologyService" );
+        mos.init( true );
+        while ( !mos.isOntologyLoaded() ) {
+            try {
+                Thread.sleep( 5000 );
+            } catch ( InterruptedException e1 ) {
+                //
+            }
+            log.info( "Waiting for mgedontology to load" );
+        }
+
         ExperimentalDesignImporter edimp = ( ExperimentalDesignImporter ) this.getBean( "experimentalDesignImporter" );
 
         try {
+
             edimp.importDesign( expressionExperiment, inputStream, dryRun );
         } catch ( IOException e1 ) {
             return e1;
@@ -98,6 +114,7 @@ public class ExperimentalDesignImportCli extends AbstractSpringAwareCLI {
         if ( ex != null ) {
             log.fatal( ex, ex );
         }
+        System.exit( 0 );
     }
 
     @SuppressWarnings("unchecked")
@@ -122,7 +139,7 @@ public class ExperimentalDesignImportCli extends AbstractSpringAwareCLI {
             throw new RuntimeException( e );
         }
 
-        if ( this.hasOption( "testing" ) ) {
+        if ( this.hasOption( "dryrun" ) ) {
             this.dryRun = true;
         }
 

@@ -58,7 +58,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
     public final void testParse() throws Exception {
 
         ExperimentalDesignImporter parser = ( ExperimentalDesignImporter ) this.getBean( "experimentalDesignImporter" );
-        parser.setMgedOntologyService( mos );
+      //  parser.setMgedOntologyService( mos );
 
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/experimentalDesignTest.txt" );
 
@@ -77,7 +77,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
     public final void testParseDryRun() throws Exception {
 
         ExperimentalDesignImporter parser = ( ExperimentalDesignImporter ) this.getBean( "experimentalDesignImporter" );
-        parser.setMgedOntologyService( mos );
+     //   parser.setMgedOntologyService( mos );
 
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/experimentalDesignTest.txt" );
 
@@ -93,7 +93,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
     public final void testParseFailedDryRun() throws Exception {
 
         ExperimentalDesignImporter parser = ( ExperimentalDesignImporter ) this.getBean( "experimentalDesignImporter" );
-        parser.setMgedOntologyService( mos );
+     //   parser.setMgedOntologyService( mos );
 
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/experimentalDesignTestBad.txt" );
 
@@ -114,7 +114,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
     public final void testParseWhereExtraValue() throws Exception {
 
         ExperimentalDesignImporter parser = ( ExperimentalDesignImporter ) this.getBean( "experimentalDesignImporter" );
-        parser.setMgedOntologyService( mos );
+     //   parser.setMgedOntologyService( mos );
 
         InputStream is = this.getClass()
                 .getResourceAsStream( "/data/loader/expression/experimentalDesignTestExtra.txt" );

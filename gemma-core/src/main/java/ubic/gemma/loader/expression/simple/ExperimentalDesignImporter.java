@@ -62,16 +62,16 @@ import ubic.gemma.ontology.OntologyTerm;
  * </p>
  * 
  * <pre>
- * # Age : Category=Age Type=Measurement                
- *  # Profile : Category=DiseaseState Type=Categorical              
- *  # PMI (h) : Category=EnvironmentalHistory Type=Measurement              
- *  # Lifetime Alcohol : Category=EnvironmentalHistory Type=Categorical             
- *  ID  Age     Profile     PMI (h)     Lifetime Alcohol    
- *  A-1     30  Bipolar     48  Moderate present 
- *  A-2     30  Bipolar     60  Heavy in present 
- *  A-3     45  Schizophrenia   26  Little or none 
- *  A-4     45  Bipolar     28  Unknown 
- *  A-5     40  Bipolar     70  Little or none 
+ *   # Age : Category=Age Type=Measurement                
+ *    # Profile : Category=DiseaseState Type=Categorical              
+ *    # PMI (h) : Category=EnvironmentalHistory Type=Measurement              
+ *    # Lifetime Alcohol : Category=EnvironmentalHistory Type=Categorical             
+ *    ID  Age     Profile     PMI (h)     Lifetime Alcohol    
+ *    A-1     30  Bipolar     48  Moderate present 
+ *    A-2     30  Bipolar     60  Heavy in present 
+ *    A-3     45  Schizophrenia   26  Little or none 
+ *    A-4     45  Bipolar     28  Unknown 
+ *    A-5     40  Bipolar     70  Little or none 
  * </pre>
  * 
  * @spring.bean id="experimentalDesignImporter"
@@ -114,6 +114,7 @@ public class ExperimentalDesignImporter {
             throw new IllegalStateException( "Please set the MGED OntologyService, thanks." );
         }
 
+        eeService.thawLite( experiment );
         Map<String, BioMaterial> name2BioMaterial = buildBmMap( experiment );
 
         Map<String, FactorType> factorTypes = new HashMap<String, FactorType>();
@@ -227,6 +228,10 @@ public class ExperimentalDesignImporter {
         for ( int i = 1; i < fields.length; i++ ) {
 
             String value = StringUtils.strip( fields[i] );
+
+            if ( StringUtils.isBlank( value ) ) {
+                continue;
+            }
 
             String key = index2Column.get( i );
 
@@ -360,7 +365,8 @@ public class ExperimentalDesignImporter {
 
         ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance( ed );
         ef.setCategory( vc );
-        ef.setName( category );
+        ef.setName( columnHeader );
+        ef.setDescription( columnHeader );
         ed.getExperimentalFactors().add( ef );
 
         if ( !dryRun ) {
@@ -429,6 +435,8 @@ public class ExperimentalDesignImporter {
         VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
         vc.setCategoryUri( t.getUri() );
         vc.setCategory( t.getLabel() );
+        vc.setValueUri( t.getUri() );
+        vc.setValue( t.getLabel() );
         vc.setEvidenceCode( GOEvidenceCode.IC );
         return vc;
     }
