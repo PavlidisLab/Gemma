@@ -55,12 +55,13 @@ public class FactorValueVector {
 
         valuesForFactor = new HashMap<ExperimentalFactor, List<FactorValue>>();
         for ( FactorValue value : values ) {
-            if ( value.getExperimentalFactor() != null )
+            if ( value.getExperimentalFactor() != null ) {
                 getValuesForFactor( value.getExperimentalFactor() ).add( value );
+            }
         }
-        for ( List<FactorValue> storedValues : valuesForFactor.values() )
+        for ( List<FactorValue> storedValues : valuesForFactor.values() ) {
             Collections.sort( storedValues, factorValueComparator );
-
+        }
         factors = new ArrayList<ExperimentalFactor>( valuesForFactor.keySet() );
         Collections.sort( factors, factorComparator );
 
@@ -73,7 +74,8 @@ public class FactorValueVector {
         buf.append( "[" );
         for ( Iterator i = factors.iterator(); i.hasNext(); ) {
             ExperimentalFactor factor = ( ExperimentalFactor ) i.next();
-            buf.append( factor.getName() );
+            buf.append( factor.getCategory() );
+            buf.append( factor.getName() + " (" + factor.getDescription() + ")" );
             buf.append( " => [ " );
             for ( Iterator it = getValuesForFactor( factor ).iterator(); it.hasNext(); ) {
                 buf.append( it.next() );
