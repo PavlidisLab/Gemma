@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2006 Columbia University
+ * Copyright (c) 2006 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ package ubic.gemma.web.controller.diff;
 import java.util.Collection;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.web.controller.expression.experiment.ExperimentalFactorValueObject;
 
 /**
@@ -29,6 +30,7 @@ import ubic.gemma.web.controller.expression.experiment.ExperimentalFactorValueOb
  */
 public class DifferentialExpressionValueObject {
 
+    private Gene gene;
     private ExpressionExperimentValueObject expressionExperiment;
     private String probe;
     private Long probeId;
@@ -73,6 +75,14 @@ public class DifferentialExpressionValueObject {
 
     public void setProbeId( Long probeId ) {
         this.probeId = probeId;
+    }
+
+    public Gene getGene() {
+        return gene;
+    }
+
+    public void setGene( Gene gene ) {
+        this.gene = gene;
     }
 
 }

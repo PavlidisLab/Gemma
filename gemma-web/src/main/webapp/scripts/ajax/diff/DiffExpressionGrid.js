@@ -48,6 +48,7 @@ Ext.Gemma.DiffExpressionGrid = function ( config ) {
 	superConfig.ds.setDefaultSort( 'p' );
 	
 	superConfig.cm = new Ext.grid.ColumnModel( [
+		{ id: 'gene', header: "Gene", dataIndex: "gene", renderer: Ext.Gemma.DiffExpressionGrid.getGeneNameStyler(), sortable: false},
 		{ id: 'ee', header: "Dataset", dataIndex: "expressionExperiment", renderer: Ext.Gemma.DiffExpressionGrid.getEEStyler(), width : 80 },
 		{ id: 'name', header: "Name", dataIndex: "expressionExperiment", renderer: Ext.Gemma.DiffExpressionGrid.getEENameStyler(), width : 120 },
 		{ id: 'probe', header: "Probe", dataIndex: "probe" },
@@ -79,6 +80,7 @@ Ext.Gemma.DiffExpressionGrid = function ( config ) {
 Ext.Gemma.DiffExpressionGrid.getRecord = function() {
 	if ( Ext.Gemma.DiffExpressionGrid.record === undefined ) {
 		Ext.Gemma.DiffExpressionGrid.record = Ext.data.Record.create( [
+			{ name:"gene"},
 			{ name:"expressionExperiment", sortType: function( ee ) { return ee.shortName; }},
 			{ name:"probe", type:"string" },
 			{ name:"experimentalFactors" },
@@ -131,6 +133,17 @@ Ext.Gemma.DiffExpressionGrid.getEFStyler = function() {
 		};
 	}
 	return Ext.Gemma.DiffExpressionGrid.efStyler;
+};
+
+Ext.Gemma.DiffExpressionGrid.getGeneNameStyler = function() {
+	if ( Ext.Gemma.DiffExpressionGrid.geneNameStyler === undefined ) {
+		
+		Ext.Gemma.DiffExpressionGrid.geneNameStyler = function ( value, metadata, record, row, col, ds ) {
+			var gene = record.data.gene;
+			return gene.officialSymbol;
+		};
+	}
+	return Ext.Gemma.DiffExpressionGrid.geneGeneNameStyler;
 };
 
 /* instance methods...
