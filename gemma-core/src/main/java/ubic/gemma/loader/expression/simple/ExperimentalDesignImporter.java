@@ -451,7 +451,9 @@ public class ExperimentalDesignImporter {
         FactorValue newFv = FactorValue.Factory.newInstance();
         newFv.setValue( value );
         VocabCharacteristic newVc = VocabCharacteristic.Factory.newInstance();
-        newVc.setCategory( category.getCategory() );
+        String category2 = category.getCategory();
+        assert category2 != null;
+        newVc.setCategory( category2 );
         newVc.setCategoryUri( category.getCategoryUri() );
         newVc.setValue( value );
         newVc.setEvidenceCode( GOEvidenceCode.IC );

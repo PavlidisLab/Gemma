@@ -27,6 +27,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.association.GOEvidenceCode;
@@ -187,8 +188,32 @@ public class ExperimentalDesignController extends BaseMultiActionController {
         if ( e == null || e.getId() == null ) return;
         ExperimentalDesign ed = this.experimentalDesignService.load( e.getId() );
 
+        // First, remove the factorValues from the bioassays.
+        ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ed );
+
+        if ( ee == null ) {
+            throw new IllegalArgumentException( "No expression experiment for experimental design " + ed );
+        }
+
+        expressionExperimentService.thawLite( ee );
+
         for ( Long efId : efIds ) {
             ExperimentalFactor ef = experimentalFactorService.load( efId );
+            for ( BioAssay ba : ee.getBioAssays() ) {
+                for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                    boolean removed = false;
+                    for ( Iterator<FactorValue> fIt = bm.getFactorValues().iterator(); fIt.hasNext(); ) {
+                        if ( fIt.next().getExperimentalFactor().equals( ef ) ) {
+                            fIt.remove();
+                            removed = true;
+                        }
+                    }
+                    if ( removed ) {
+                        bioMaterialService.update( bm );
+                    }
+                }
+            }
+
             ed.getExperimentalFactors().remove( ef );
             experimentalFactorService.delete( ef );
         }
@@ -460,15 +485,36 @@ public class ExperimentalDesignController extends BaseMultiActionController {
      * @return
      */
     private String getFactorValueString( FactorValue value ) {
+        /*
+         * Note that normally we should not have 'blanks' in the factor values; this is just to make sure something
+         * shows up if that happens.
+         */
         StringBuffer buf = new StringBuffer();
-        for ( Iterator<Characteristic> iter = value.getCharacteristics().iterator(); iter.hasNext(); ) {
-            Characteristic c = iter.next();
-            buf.append( c.getCategory() );
-            buf.append( ": " );
-            buf.append( c.getValue() == null ? "no value" : c.getValue() );
-            if ( iter.hasNext() ) buf.append( ", " );
+        if ( value.getMeasurement() != null ) {
+            if ( StringUtils.isBlank( value.getMeasurement().getValue() ) ) {
+                return "[NA]";
+            } else {
+                return value.getMeasurement().getValue();
+            }
+        } else if ( value.getCharacteristics().size() > 0 ) {
+            for ( Iterator<Characteristic> iter = value.getCharacteristics().iterator(); iter.hasNext(); ) {
+                Characteristic c = iter.next();
+                String category = c.getCategory();
+                if ( category != null ) {
+                    buf.append( category );
+                    buf.append( ": " );
+                }
+                buf.append( StringUtils.isBlank( c.getValue() ) ? "[NA]" : c.getValue() );
+                if ( iter.hasNext() ) buf.append( ", " );
+            }
+            return buf.length() > 0 ? buf.toString() : value.getValue() + " [Non-CSC]";
+        } else {
+            if ( StringUtils.isBlank( value.getValue() ) ) {
+                return "[NA]";
+            } else {
+                return value.getValue();
+            }
         }
-        return buf.length() > 0 ? buf.toString() : value.getValue() + " [Non-CSC]";
     }
 
     /**

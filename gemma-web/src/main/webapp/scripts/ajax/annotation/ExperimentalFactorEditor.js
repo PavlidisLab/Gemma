@@ -195,14 +195,24 @@ Ext.Gemma.ExperimentalFactorToolbar = function ( config ) {
 		tooltip : "Delete selected experimental factors",
 		disabled : true,
 		handler : function() {
+			var oldmsg = this.loadMask.msg;
+			this.loadMask.msg = "Deleting experimental factor(s)";
+			this.loadMask.show();
 			deleteButton.disable();
 			var selected = thisToolbar.grid.getSelectedIds();
 			var callback = function() {
 				thisToolbar.grid.idsDeleted.call( thisToolbar.grid, selected );
+				thisToolbar.grid.loadMask.hide();
+				thisToolbar.grid.loadMask.msg=oldmsg;				
+			};
+			var errorHandler = function() { 
+				thisToolbar.grid.loadMask.hide();
+				thisToolbar.grid.loadMask.msg=oldmsg;	
 			};
 			ExperimentalDesignController.deleteExperimentalFactors(	thisToolbar.experimentalDesign,
-				selected, callback );
-		}
+				selected, { callback : callback, errorHandler : errorHandler } );
+		},
+		scope : this.grid
 	} );
 	this.grid.getSelectionModel().on( "selectionchange", function( model ) {
 		var selected = model.getSelections();
