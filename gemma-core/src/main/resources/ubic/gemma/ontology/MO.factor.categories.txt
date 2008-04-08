@@ -31,6 +31,6 @@ Light
 Ploidy
 PopulationDensity
 SamplingTimePoint
-BiologicalProperty
 HistoryFactor
 Preservation
+Biometrics
