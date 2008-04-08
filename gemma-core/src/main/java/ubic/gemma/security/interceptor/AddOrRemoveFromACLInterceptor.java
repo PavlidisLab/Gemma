@@ -244,8 +244,11 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
         try {
             basicAclExtendedDao.delete( makeObjectIdentity( object ) );
         } catch ( org.springframework.dao.DataRetrievalFailureException e ) {
-            // this happens during tests where we have flushed during a transaction.
-            log.warn( "Could not delete aclObjectIdentity for " + object );
+            /*
+             * this happens during tests where we have flushed during a transaction. It is also observed in some other
+             * situations where the object has already been deleted (due to a cascade?)
+             */
+            log.warn( "Could not delete aclObjectIdentity for " + object + "(" + e.getMessage() + ")" );
         }
         if ( log.isDebugEnabled() ) {
             log.debug( "Deleted object " + object + " ACL permissions for recipient "
