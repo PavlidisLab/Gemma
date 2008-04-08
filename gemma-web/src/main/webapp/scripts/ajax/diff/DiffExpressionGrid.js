@@ -138,29 +138,10 @@ Ext.Gemma.DiffExpressionGrid.getEFStyler = function() {
 Ext.extend( Ext.Gemma.DiffExpressionGrid, Ext.Gemma.GemmaGridPanel, {
 
 loadData : function (data) {
-		//var queryCol = this.getColumnModel().getColumnById( 'query' );
-		//if ( numQueryGenes > 1 ) {
-		//	queryCol.hidden = false;
-		//} else {
-		//	queryCol.hidden = true;
-		//}
-		//this.rowExpander.clearCache();
-		//this.datasets = datasets; // the datasets that are 'relevant'.
+		
 		this.getStore().proxy.data = data;
 		this.getStore().reload( { resetPage : true } );
 		this.getView().refresh( true ); // refresh column headers
-		//this.resizeDatasetColumn();
 	},
-	
-	resizeDatasetColumn : function() {
-		var first = this.getStore().getAt( 0 );
-		if ( first ) {
-			var cm = this.getColumnModel();
-			var c = cm.getIndexById( 'datasets' );
-			var headerWidth = this.view.getHeaderCell( c ).firstChild.scrollWidth;
-			var imageWidth = Ext.Gemma.CoexpressionGrid.bitImageBarWidth * first.data.datasetVector.length;
-			cm.setColumnWidth( c, imageWidth < headerWidth ? headerWidth : imageWidth );
-		}
-	}
 	
 } );
