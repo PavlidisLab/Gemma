@@ -55,9 +55,7 @@
 
 		<td>
 			<c:if test="${requestScope.existsInSystem}">
-				<authz:acl domainObject="${bibliographicReference}"
-					hasPermission="1,6">
-
+				<authz:authorize ifAnyGranted="admin">
 					<div align="right">
 						<form method="GET" action="<c:url value="/bibRefEdit.html"/>">
 							<input type="submit" value="Edit" />
@@ -65,14 +63,13 @@
 								value="${bibliographicReference.id}">
 						</form>
 					</div>
-				</authz:acl>
+				</authz:authorize>
 			</c:if>
 		</td>
 		
 		<td>
 			<c:if test="${requestScope.existsInSystem}">
-				<authz:acl domainObject="${bibliographicReference}"
-					hasPermission="1,6">
+				<authz:authorize ifAnyGranted="admin">
 					<div align="right">
 						<form method="get"
 							action="<c:url value="/bibRef/deleteBibRef.html"/>" 
@@ -80,7 +77,7 @@
 							<input type="submit"  
 										value="Delete" /></form>
 					</div>
-				</authz:acl>
+				</authz:authorize>
 			</c:if>
 		</td>
 
