@@ -434,9 +434,9 @@ public class ExperimentalDesignImporter {
 
         VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
         vc.setCategoryUri( t.getUri() );
-        vc.setCategory( t.getLabel() );
+        vc.setCategory( t.getTerm() );
         vc.setValueUri( t.getUri() );
-        vc.setValue( t.getLabel() );
+        vc.setValue( t.getTerm() );
         vc.setEvidenceCode( GOEvidenceCode.IC );
         return vc;
     }
