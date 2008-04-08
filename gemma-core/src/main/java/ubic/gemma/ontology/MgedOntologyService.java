@@ -115,6 +115,9 @@ public class MgedOntologyService extends AbstractOntologyService {
 
         term = terms.get( MGED_ONTO_BASE_URL + "#MeasurementPackage" );
         results.addAll( getAllTerms( term ) );
+        
+        term = terms.get( MGED_ONTO_BASE_URL + "#MGEDExtendedOntology" );
+        results.addAll( getAllTerms( term ) );
 
         // trim some terms out:
         Collection<OntologyTerm> trimmed = Collections.synchronizedSet( new HashSet<OntologyTerm>() );
@@ -160,10 +163,10 @@ public class MgedOntologyService extends AbstractOntologyService {
                         wantedTerms.add( StringUtils.strip( line ) );
                     }
                     reader.close();
-
-                    for ( OntologyTerm term : getUsefulMgedTerms() ) {
-                        if ( wantedTerms.contains( term.getTerm() ) ) terms.add( term );
-                    }
+                    
+                     for ( OntologyTerm term : getUsefulMgedTerms() ) {
+                         if ( wantedTerms.contains( term.getTerm() ) ) terms.add( term );
+                     }
                 } catch ( IOException ioe ) {
                     log.error( "Error reading from term list '" + termListUrl + "'; returning general term list", ioe );
                     terms = getUsefulMgedTerms();
