@@ -241,6 +241,7 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      * @throws DataAccessException
      */
     public void deletePermission( Object object ) throws DataAccessException, IllegalArgumentException {
+        if ( object == null ) return;
         try {
             basicAclExtendedDao.delete( makeObjectIdentity( object ) );
         } catch ( org.springframework.dao.DataRetrievalFailureException e ) {
