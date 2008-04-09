@@ -46,32 +46,34 @@ public class SecurableDaoImpl extends ubic.gemma.model.common.SecurableDaoBase {
         }
     }
 
-    // /*
-    // *
-    // */
-    // @Override
-    // public Integer getMask( Long aclObjectId ) {
-    // //TODO uncomment me
-    // String queryString = "SELECT mask FROM acl_permission WHERE acl_object_identity = ?";
-    //
-    // try {
-    // org.hibernate.Query queryObject = super.getSession( false ).createSQLQuery( queryString );
-    // queryObject.setParameter( 0, aclObjectId );
-    // return ( Integer ) queryObject.uniqueResult();
-    // } catch ( org.hibernate.HibernateException ex ) {
-    // throw super.convertHibernateAccessException( ex );
-    // }
-    // }
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.SecurableDaoBase#getMask(java.lang.Long)
+     */
+    @Override
+    public Integer getMask( Long aclObjectId ) {
+
+        String queryString = "SELECT mask FROM acl_permission WHERE acl_object_identity = ?";
+
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createSQLQuery( queryString );
+            queryObject.setParameter( 0, aclObjectId );
+            return ( Integer ) queryObject.uniqueResult();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.common.SecurableDaoBase#getAclObjectIdentityId(java.lang.Object, java.lang.Long)
+     * @see ubic.gemma.model.common.SecurableDaoBase#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
      */
     @Override
-    public Long getAclObjectIdentityId( Object target, Long id ) {
+    public Long getAclObjectIdentityId( Securable target ) {
 
-        String objectIdentity = createObjectIdentityFromObject( target, id );
+        String objectIdentity = createObjectIdentityFromObject( target );
 
         String queryString = "SELECT id FROM acl_object_identity WHERE object_identity = ?";
 
@@ -95,11 +97,13 @@ public class SecurableDaoImpl extends ubic.gemma.model.common.SecurableDaoBase {
      * Creates the object_identity to be used in the acl_object_identity table.
      * 
      * @param target
-     * @param id
-     * @return String
+     * @return
      */
-    private String createObjectIdentityFromObject( Object target, Long id ) {
-        Object implementation = EntityUtils.getImplementationForProxy( target );
+    private String createObjectIdentityFromObject( Securable target ) {
+
+        Securable implementation = ( Securable ) EntityUtils.getImplementationForProxy( target );
+        Long id = implementation.getId();
+
         return implementation.getClass().getName() + ":" + id;
     }
 }
