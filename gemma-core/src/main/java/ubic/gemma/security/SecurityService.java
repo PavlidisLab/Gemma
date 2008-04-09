@@ -297,6 +297,31 @@ public class SecurityService {
         return false;
     }
 
+    // /**
+    // * Returns true if the mask on the {@link Securable} is equal to the PRIVATE_MASK or false if it is equal to the
+    // * PUBLIC_MASK.
+    // *
+    // * @param s
+    // * @return
+    // */
+    // public boolean isPrivate( Securable s ) {
+    // //TODO uncomment me
+    // Long aclObjectId = securableDao.getAclObjectIdentityId( s, s.getId() );
+    // int mask = securableDao.getMask(aclObjectId);
+    //
+    // if ( mask == PRIVATE_MASK ) {
+    // return true;
+    // }
+    //
+    // else if ( mask == PUBLIC_MASK ) {
+    // return false;
+    // }
+    //
+    // else {
+    // throw new RuntimeException( "Unsupported mask " + mask + " for object " + s.toString() );
+    // }
+    // }
+
     /**
      * @param aclDao the aclDao to set
      */

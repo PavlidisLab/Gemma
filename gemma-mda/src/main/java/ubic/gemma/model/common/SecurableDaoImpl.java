@@ -46,6 +46,23 @@ public class SecurableDaoImpl extends ubic.gemma.model.common.SecurableDaoBase {
         }
     }
 
+    // /*
+    // *
+    // */
+    // @Override
+    // public Integer getMask( Long aclObjectId ) {
+    // //TODO uncomment me
+    // String queryString = "SELECT mask FROM acl_permission WHERE acl_object_identity = ?";
+    //
+    // try {
+    // org.hibernate.Query queryObject = super.getSession( false ).createSQLQuery( queryString );
+    // queryObject.setParameter( 0, aclObjectId );
+    // return ( Integer ) queryObject.uniqueResult();
+    // } catch ( org.hibernate.HibernateException ex ) {
+    // throw super.convertHibernateAccessException( ex );
+    // }
+    // }
+
     /*
      * (non-Javadoc)
      * 
