@@ -144,6 +144,6 @@ loadData : function (data) {
 		this.getStore().proxy.data = data;
 		this.getStore().reload( { resetPage : true } );
 		this.getView().refresh( true ); // refresh column headers
-	},
+	}
 	
-} );
+});
