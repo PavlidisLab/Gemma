@@ -1,16 +1,24 @@
 <body>
+<h2>
+Differential Expression
+</h2>
 	The differential expression of genes in Gemma is determined by
 	statistical tests run on datasets based on the experiment's design.
 	That is, datasets containing 1 factor and 2 factor values will have
-	differential evidence based on a
-	<b>t-test</b>. Datasets with 1 factor and more than 2 factor values
-	will have differential evidence based on a
-	<b>one way anova</b>. Datasets with 2 factors and an incomplete block
-	design will have differential evidence based on a
-	<b>two way anova without interactions</b>, and those with a complete
-	block design will have evidence based on a
-	<b>2 way anova with interactions</b>.
-
+	differential evidence based on a  <b>t-test</b>.
+	<br>
+	 Datasets with 1 experimental factor and more than 2 factor values
+	will have differential evidence based on a <b>one way anova</b>
+	<br>
+	 Datasets with 2 experimental factors and an incomplete block design will have differential evidence based on a
+	<b>two way anova without interactions</b>
+	
+   <br>
+	Datasets with a complete block design will have evidence based on a
+	<b>2 way anova with interactions</b>
+	
+	<br>
+	
 	<h2>
 		Inputs:
 	</h2>
@@ -20,10 +28,13 @@
 			<i>Query Gene:</i> The search will look for and return experiments
 			for which the input query gene has differential evidence.
 		</li>
-
+<li>
+	<i>Query Genes: </i>The experiments that have differential evidence for any of the given genes will be returned.
+		
+</li>
 		<li>
 			<i>Threshold:</i> Only genes with a q-value less than the input
-			threshold are returned from the search.
+			threshold are returned from the search (default sort order).
 		</li>
 	</ul>
 

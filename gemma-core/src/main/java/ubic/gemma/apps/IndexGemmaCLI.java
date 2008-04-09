@@ -38,7 +38,6 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
     private boolean indexEE = false;
     private boolean indexAD = false;
     private boolean indexG = false;
-    private boolean indexO = false;
     private boolean indexB = false;
     private boolean indexP = false;
     private boolean indexQ = false;
@@ -63,9 +62,6 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
                 "ArrayDesigns" ).create( 'a' );
         addOption( adOption );
 
-        Option ontologyOption = OptionBuilder.withDescription( "Use this option for indexing Ontology Entries" )
-                .withLongOpt( "Ontology" ).create( 'o' );
-        addOption( ontologyOption );
 
         Option bibliographicOption = OptionBuilder.withDescription(
                 "Use this option for indexing Bibliographic References" ).withLongOpt( "Bibliographic" ).create( 'b' );
@@ -93,8 +89,6 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
         if ( hasOption( 'a' ) ) indexAD = true;
 
         if ( hasOption( 'g' ) ) indexG = true;
-
-        if ( hasOption( 'o' ) ) indexO = true;
 
         if ( hasOption( 'b' ) ) indexB = true;
 
@@ -144,9 +138,6 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
             }
             if ( this.indexAD ) {
                 rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "arrayGps" ), "Array Design index" );
-            }
-            if ( this.indexO ) {
-                rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "ontologyGps" ), "Ontology Index" );
             }
             if ( this.indexB ) {
                 rebuildIndex( ( CompassGpsInterfaceDevice ) this.getBean( "bibliographicGps" ),
