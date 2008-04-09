@@ -135,35 +135,32 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         }
     }
 
-//    /**
-//     * @throws Exception
-//     */
-//    public void testMakeTestExpressionExperimentPrivate() throws Exception {
-//        endTransaction();
-//        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false ); // not readonly.
-//
-//        SecurityService securityService = new SecurityService();
-//        securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
-//        securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
-//        securityService.makePrivate( ee );
-//        /*
-//         * uncomment so you can see the acl permission has been changed in the database.
-//         */
-//        // this.setComplete();
-//    }
+    // /**
+    // * @throws Exception
+    // */
+    // public void testMakeTestExpressionExperimentPrivate() throws Exception {
+    // endTransaction();
+    // ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false ); // not readonly.
+    //
+    // SecurityService securityService = new SecurityService();
+    // securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
+    // securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
+    // securityService.makePrivate( ee );
+    // /*
+    // * uncomment so you can see the acl permission has been changed in the database.
+    // */
+    // // this.setComplete();
+    // }
 
     /**
      * @throws Exception
      */
     public void testMakeExpressionExperimentPrivate() throws Exception {
         String expName = "kottmann";// "GSE7480";
-        expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-        ExpressionExperiment ee = expressionExperimentService.findByShortName( expName );
 
-        if ( ee == null ) {
-            log.error( "Cannot find experiment " + expName + " in database. Skipping test." );
-            return;
-        }
+        ExpressionExperiment ee = getExperiment( expName );
+        if ( ee == null ) return;
+
         SecurityService securityService = new SecurityService();
 
         securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
@@ -182,16 +179,11 @@ public class SecurityServiceTest extends BaseSpringContextTest {
     public void testMakeAnalysisPrivate() throws Exception {
         String expName = "GSE1077";
 
+        ExpressionExperiment investigation = getExperiment( expName );
+        if ( investigation == null ) return;
+
         diffAnalysisService = ( DifferentialExpressionAnalysisService ) this
                 .getBean( "differentialExpressionAnalysisService" );
-
-        expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-        ExpressionExperiment investigation = expressionExperimentService.findByShortName( expName );
-
-        if ( investigation == null ) {
-            log.error( "Cannot find experiment " + expName + " in database.  Skipping test." );
-            return;
-        }
 
         Collection<DifferentialExpressionAnalysis> diffAnalyses = diffAnalysisService
                 .findByInvestigation( investigation );
@@ -214,4 +206,37 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         }
     }
 
+    /**
+     * 
+     */
+    @SuppressWarnings("unchecked")
+    public void testIsPrivate() throws Exception {
+        String expName = "GSE1077";
+
+        ExpressionExperiment investigation = getExperiment( expName );
+        if ( investigation == null ) return;
+
+        SecurityService securityService = new SecurityService();
+
+        securityService.setBasicAclExtendedDao( ( BasicAclExtendedDao ) this.getBean( "basicAclExtendedDao" ) );
+        securityService.setSecurableDao( ( SecurableDao ) this.getBean( "securableDao" ) );
+
+        boolean priv = securityService.isPrivate( investigation );
+        assertFalse( priv );
+    }
+
+    /**
+     * @param expName
+     * @return
+     */
+    private ExpressionExperiment getExperiment( String expName ) {
+
+        expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
+        ExpressionExperiment ee = expressionExperimentService.findByShortName( expName );
+
+        if ( ee == null ) {
+            log.error( "Cannot find experiment " + expName + " in database. Skipping test." );
+        }
+        return ee;
+    }
 }
