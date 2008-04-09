@@ -82,6 +82,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * @spring.property name="taxonService" ref="taxonService"
  * @spring.property name="auditTrailService" ref="auditTrailService"
  * @spring.property name="experimentalFactorService" ref="experimentalFactorService"
+ * @spring.property name="securityService" ref="securityService"
  */
 public class ExpressionExperimentController extends BackgroundProcessingMultiActionController {
 
@@ -99,6 +100,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     private OntologyService ontologyService;
 
     private AuditTrailService auditTrailService;
+
+    private SecurityService securityService;
 
     private final String identifierNotFound = "Must provide a valid ExpressionExperiment identifier";
 
@@ -451,6 +454,9 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             mav.addObject( "eeCoexpressionLinks", eeLinks );
 
         }
+
+        boolean isPrivate = securityService.isPrivate( expressionExperiment );
+        mav.addObject( "isPrivate", isPrivate );
 
         return mav;
     }
@@ -945,8 +951,18 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         return DesignMatrixRowValueObject.Factory.getDesignMatrix( ee );
     }
 
+    /**
+     * @param taxonService
+     */
     public void setTaxonService( TaxonService taxonService ) {
         this.taxonService = taxonService;
+    }
+
+    /**
+     * @param securityService
+     */
+    public void setSecurityService( SecurityService securityService ) {
+        this.securityService = securityService;
     }
 
 }

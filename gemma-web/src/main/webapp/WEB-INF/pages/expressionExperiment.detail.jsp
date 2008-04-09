@@ -148,22 +148,25 @@ Experiment detail view for
 			%>
 		</td>
 	</tr>
+	
 	<tr>
 		<td class="label">
 			<fmt:message key="expressionExperiment.owner" />
 		</td>
 		<td>
-			<%
-			    if ( expressionExperiment.getOwner() != null ) {
-			%>
-			<jsp:getProperty name="expressionExperiment" property="owner" />
-			<%
-			    } else {
-			        out.print( "Public" );
-			    }
-			%>
+			<c:choose>
+        		<c:when test='${isPrivate}'>
+        			<img src="/Gemma/images/icons/lock.png" />
+        		</c:when>
+        		<c:otherwise>
+            		<%
+			        	out.print( "Public" );
+					%>
+        		</c:otherwise>
+   			</c:choose>
 		</td>
 	</tr>
+	
 	<tr>
 		<td class="label">
 			<fmt:message key="investigators.title" />
