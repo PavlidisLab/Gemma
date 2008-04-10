@@ -36,7 +36,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContextTest {
 
     static ArrayDesign ad;
-
+    ArrayDesignService arrayDesignService;
     final static String ACCESSION = "GPL140";
 
     /*
@@ -49,7 +49,7 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
         endTransaction();
-        ArrayDesignService arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
+        arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
         ad = arrayDesignService.findByShortName( ACCESSION );
 
         if ( ad == null ) {
