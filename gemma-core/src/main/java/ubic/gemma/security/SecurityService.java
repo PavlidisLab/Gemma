@@ -44,7 +44,7 @@ import ubic.gemma.util.EntityUtils;
 /**
  * @author keshav
  * @version $Id$
- * @spring.bean name="securityService"
+ * @spring.bean id="securityService"
  * @spring.property name="basicAclExtendedDao" ref="basicAclExtendedDao"
  * @spring.property name="securableDao" ref="securableDao"
  */
