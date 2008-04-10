@@ -5,23 +5,8 @@ $Id$
 --%>
 <head>
 	<%@ include file="/common/taglibs.jsp"%>
-	<title><fmt:message key="expressionExperiments.title" />
-	</title>
-	<h3>
-		Displaying
-		<b> <c:out value="${numExpressionExperiments}" /> </b> datasets
-		<c:choose>
-			<c:when test="${taxon != null}">
-	for <c:out value="${taxon.commonName}" />
-			</c:when>
-		</c:choose>
-		<c:choose>
-			<c:when test="${showAll == false}">
-				<span style="font-size: smaller">&nbsp;&nbsp;(<a
-					href="<c:url value="/expressionExperiment/showAllExpressionExperiments.html" />">Show all</a>)</span>
-			</c:when>
-		</c:choose>
-	</h3>
+	<title><fmt:message key="expressionExperiments.title" /></title>
+
 
 	<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
 	<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
@@ -36,7 +21,21 @@ $Id$
 	<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/progressbar.css'/>" />
 
 </head>
-
+<h3>
+	Displaying
+	<b> <c:out value="${numExpressionExperiments}" /> </b> datasets
+	<c:choose>
+		<c:when test="${taxon != null}">
+	for <c:out value="${taxon.commonName}" />
+		</c:when>
+	</c:choose>
+	<c:choose>
+		<c:when test="${showAll == false}">
+			<span style="font-size: smaller">&nbsp;&nbsp;(<a
+				href="<c:url value="/expressionExperiment/showAllExpressionExperiments.html" />">Show all</a>)</span>
+		</c:when>
+	</c:choose>
+</h3>
 <div id="messages" style="margin: 10px; width: 400px"></div>
 <div id="taskId" style="display: none;"></div>
 <div id="progress-area" style="padding: 15px;"></div>
