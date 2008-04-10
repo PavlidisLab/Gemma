@@ -233,7 +233,7 @@ Ext.Gemma.CoexpressionSearchForm = function ( config ) {
 //	this.stringencySpinner = stringencySpinner; 
 
 	Ext.Gemma.CoexpressionSearchForm.searchForGene = function( geneId ) {
-		geneChooserPanel.setGene.call( geneChooserPanel, geneId, thisPanel.doSearch.bind( thisPanel ) );
+		 thisPanel.geneChooserPanel.setGene.call(  thisPanel.geneChooserPanel, geneId, thisPanel.doSearch.bind( thisPanel ) );
 	};
 	
 };
