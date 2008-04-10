@@ -119,6 +119,7 @@ public class ProgressStatusService {
             taskRunningService.cancelTask( taskId, false );
             progressManager.cleanupJob( taskId );
         } catch ( Exception e ) {
+            log.error( e, e );
             return false;
         }
         return true;
