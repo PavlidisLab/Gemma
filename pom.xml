@@ -3,7 +3,7 @@
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
 	<artifactId>gemma</artifactId>
-	<version>1.1</version>
+	<version>1.2-SNAPSHOT</version>
 	<inceptionYear>2005</inceptionYear>
 	<description>The Gemma Project for meta-analysis of genomics data</description>
 	<url>http://www.bioinformatics.ubc.ca/Gemma</url>
@@ -23,7 +23,6 @@
 		<connection>scm:cvs:ext:@broca.ubic.ca:local:/cvs:Gemma</connection>
 		<developerConnection>scm:cvs:ext:@broca.ubic.ca:/cvs:Gemma</developerConnection>
 		<url>http://broca.ubic.ca:8081/viewrep/pavlab/Gemma</url>
-	  <tag>gemma-1_1</tag>
   </scm>
 	<issueManagement>
 		<system>Bugzilla</system>
