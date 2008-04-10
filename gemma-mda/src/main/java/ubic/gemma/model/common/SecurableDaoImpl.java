@@ -59,11 +59,13 @@ public class SecurableDaoImpl extends ubic.gemma.model.common.SecurableDaoBase {
     @Override
     public Integer getMask( Securable securable ) {
 
-        String queryString = "SELECT mask FROM acl_permission WHERE acl_object_identity = ?";
+        String queryString = "SELECT p.mask FROM acl_object_identity i inner join acl_permission p on"
+                + " p.acl_object_identity=i.id WHERE i.object_identity  = ?";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createSQLQuery( queryString );
-            queryObject.setParameter( 0, createObjectIdentityFromObject( securable ) );
+            String identity = createObjectIdentityFromObject( securable );
+            queryObject.setParameter( 0, identity );
             return ( Integer ) queryObject.uniqueResult();
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );

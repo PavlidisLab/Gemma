@@ -306,15 +306,12 @@ public class SecurityService {
      */
     public boolean isPrivate( Securable s ) {
 
-        boolean priv = false;
+        Integer mask = securableDao.getMask( s );
 
-        int mask = securableDao.getMask( s );
-
-        if ( mask == PRIVATE_MASK ) {
-            priv = true;
+        if ( mask != null && mask.equals( PRIVATE_MASK ) ) {
+            return true;
         }
-
-        return priv;
+        return false;
     }
 
     @SuppressWarnings("unchecked")
@@ -323,7 +320,7 @@ public class SecurityService {
         Map<Securable, Boolean> result = new HashMap<Securable, Boolean>();
         for ( Securable s : masks.keySet() ) {
             Integer mask = masks.get( s );
-            if ( mask == PRIVATE_MASK ) {
+            if ( mask.equals( PRIVATE_MASK ) ) {
                 result.put( s, true );
             } else {
                 result.put( s, false );

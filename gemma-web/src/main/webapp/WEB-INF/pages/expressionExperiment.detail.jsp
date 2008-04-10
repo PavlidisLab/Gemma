@@ -17,7 +17,7 @@
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/TaskCompletionController.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentDataFetchController.js'></script> 
+	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentDataFetchController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/ProgressStatusService.js'></script>
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/util/GemmaGridPanel.js'/>"></script>
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/AnnotationGrid.js'/>"></script>
@@ -148,25 +148,26 @@ Experiment detail view for
 			%>
 		</td>
 	</tr>
-	
-	<tr>
-		<td class="label">
-			<fmt:message key="expressionExperiment.owner" />
-		</td>
-		<td>
-			<c:choose>
-        		<c:when test='${isPrivate}'>
-        			<img src="/Gemma/images/icons/lock.png" />
-        		</c:when>
-        		<c:otherwise>
-            		<%
-			        	out.print( "Public" );
-					%>
-        		</c:otherwise>
-   			</c:choose>
-		</td>
-	</tr>
-	
+	<authz:authorize ifAnyGranted="admin">
+		<tr>
+			<td class="label">
+				Security
+			</td>
+			<td>
+				<c:choose>
+					<c:when test='${isPrivate}'>
+						<img src="/Gemma/images/icons/lock.png" />
+					</c:when>
+					<c:otherwise>
+						<%
+						    out.print( "Public" );
+						%>
+					</c:otherwise>
+				</c:choose>
+			</td>
+		</tr>
+	</authz:authorize>
+
 	<tr>
 		<td class="label">
 			<fmt:message key="investigators.title" />
@@ -435,15 +436,11 @@ Experiment detail view for
 					value="Edit">
 			</td>
 			<td>
-				<input type="button"
-					onclick="deleteExperiment(<%=request.getAttribute( "id" )%>);"
-					value="Delete">
+				<input type="button" onclick="deleteExperiment(<%=request.getAttribute( "id" )%>);" value="Delete">
 			</td>
 			<td>
 
-				<input type="button"
-					onclick="updateEEReport(<%=request.getAttribute( "id" )%>);"
-					value="Refresh Link Summary">
+				<input type="button" onclick="updateEEReport(<%=request.getAttribute( "id" )%>);" value="Refresh Link Summary">
 			</td>
 		</authz:authorize>
 	</tr>

@@ -400,12 +400,12 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     }
 
     public String getStatus() {
-        return getTroubleFlag().concat( getValidatedFlag() ).concat( getSampleRemovalFlag() );
+        return getTroubleFlag().concat( getValidatedFlag() ).concat( getSampleRemovalFlag() ).concat( getPrivacyFlag() );
     }
 
     public String getTroubleFlag() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         if ( object.getTroubleFlag() != null ) {
             buf
                     .append( "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt='trouble' title='" );
@@ -417,7 +417,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
 
     public String getSampleRemovalFlag() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         if ( object.getSampleRemovedFlags() != null && object.getSampleRemovedFlags().size() > 0 ) {
             buf
                     .append( "&nbsp;<img src='/Gemma/images/icons/exclamation.png' height='16' width='16' alt='validated' title='" );
@@ -429,9 +429,18 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         return buf.toString();
     }
 
+    public String getPrivacyFlag() {
+        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
+        StringBuilder buf = new StringBuilder();
+        if ( !object.isIsPublic() ) {
+            buf.append( "&nbsp;<img src='/Gemma/images/icons/lock.png' height='16' width='16' alt='private' />" );
+        }
+        return buf.toString();
+    }
+
     public String getValidatedFlag() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         if ( object.getValidatedFlag() != null ) {
             buf.append( "&nbsp;<img src='/Gemma/images/icons/ok.png' height='16' width='16' alt='validated' title='" );
             buf.append( StringEscapeUtils.escapeHtml( object.getValidatedFlag().toString() ) );

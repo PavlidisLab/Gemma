@@ -150,6 +150,11 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         // do this ahead to avoid round trips.
         Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( ids );
 
+        Map<Long, ExpressionExperiment> eemap = new HashMap<Long, ExpressionExperiment>();
+        for ( ExpressionExperiment ee : ees ) {
+            eemap.put( ee.getId(), ee );
+        }
+
         if ( ees.size() == 0 ) {
             return;
         }
@@ -227,8 +232,9 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                 eeVo.setValidatedFlag( validated );
             }
 
-            if ( privacyInfo.containsKey( id ) ) {
-                eeVo.setIsPublic( !privacyInfo.get( id ) );
+            ExpressionExperiment ee = eemap.get( id );
+            if ( privacyInfo.containsKey( ee ) ) {
+                eeVo.setIsPublic( !privacyInfo.get( ee ) );
             }
         }
         log.info( "processed events" );
