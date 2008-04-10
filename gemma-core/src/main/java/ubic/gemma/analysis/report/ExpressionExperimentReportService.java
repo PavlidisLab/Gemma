@@ -44,6 +44,7 @@ import ubic.gemma.grid.javaspaces.SpacesResult;
 import ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.Securable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
@@ -59,6 +60,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEvent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.progress.TaskRunningService;
 
@@ -69,6 +71,7 @@ import ubic.gemma.util.progress.TaskRunningService;
  * @spring.property name="auditTrailService" ref="auditTrailService"
  * @spring.property name="auditEventService" ref="auditEventService"
  * @spring.property name="probe2ProbeCoexpressionService" ref="probe2ProbeCoexpressionService"
+ * @spring.property name="securityService" ref="securityService"
  */
 public class ExpressionExperimentReportService implements ExpressionExperimentReportTask, InitializingBean {
     private Log log = LogFactory.getLog( this.getClass() );
@@ -80,7 +83,12 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
     private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
     private AuditTrailService auditTrailService;
     private AuditEventService auditEventService;
+    private SecurityService securityService;
     private String taskId = null;
+
+    public void setSecurityService( SecurityService securityService ) {
+        this.securityService = securityService;
+    }
 
     /*
      * (non-Javadoc)
@@ -127,7 +135,7 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
     }
 
     /**
-     * fills in event information from the database. This will only retrieve the latest event (if any).
+     * fills in event and security information from the database. This will only retrieve the latest event (if any).
      * 
      * @return the filled out value objects
      */
@@ -156,6 +164,8 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         Map<Long, AuditEvent> differentialAnalysisEvents = getEvents( ees, DifferentialExpressionAnalysisEvent.Factory
                 .newInstance() );
         Map<Long, Collection<AuditEvent>> sampleRemovalEvents = getSampleRemovalEvents( ees );
+
+        Map<Securable, Boolean> privacyInfo = securityService.arePrivate( ees );
 
         // add in the last events of interest for all eeVos
         for ( ExpressionExperimentValueObject eeVo : vos ) {
@@ -215,6 +225,10 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                 AuditEvent validated = validationEvents.get( id );
                 auditEventService.thaw( validated );
                 eeVo.setValidatedFlag( validated );
+            }
+
+            if ( privacyInfo.containsKey( id ) ) {
+                eeVo.setIsPublic( !privacyInfo.get( id ) );
             }
         }
         log.info( "processed events" );

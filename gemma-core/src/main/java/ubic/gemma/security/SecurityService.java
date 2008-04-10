@@ -20,8 +20,10 @@ package ubic.gemma.security;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.acegisecurity.Authentication;
 import org.acegisecurity.GrantedAuthority;
@@ -306,14 +308,28 @@ public class SecurityService {
 
         boolean priv = false;
 
-        Long aclObjectId = securableDao.getAclObjectIdentityId( s );
-        int mask = securableDao.getMask( aclObjectId );
+        int mask = securableDao.getMask( s );
 
         if ( mask == PRIVATE_MASK ) {
             priv = true;
         }
 
         return priv;
+    }
+
+    @SuppressWarnings("unchecked")
+    public java.util.Map<Securable, Boolean> arePrivate( Collection securables ) {
+        Map<Securable, Integer> masks = securableDao.getMasks( securables );
+        Map<Securable, Boolean> result = new HashMap<Securable, Boolean>();
+        for ( Securable s : masks.keySet() ) {
+            Integer mask = masks.get( s );
+            if ( mask == PRIVATE_MASK ) {
+                result.put( s, true );
+            } else {
+                result.put( s, false );
+            }
+        }
+        return result;
     }
 
     /**

@@ -18,6 +18,11 @@
  */
 package ubic.gemma.model.common;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import ubic.gemma.util.EntityUtils;
 
 /**
@@ -52,14 +57,45 @@ public class SecurableDaoImpl extends ubic.gemma.model.common.SecurableDaoBase {
      * @see ubic.gemma.model.common.SecurableDaoBase#getMask(java.lang.Long)
      */
     @Override
-    public Integer getMask( Long aclObjectId ) {
+    public Integer getMask( Securable securable ) {
 
         String queryString = "SELECT mask FROM acl_permission WHERE acl_object_identity = ?";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createSQLQuery( queryString );
-            queryObject.setParameter( 0, aclObjectId );
+            queryObject.setParameter( 0, createObjectIdentityFromObject( securable ) );
             return ( Integer ) queryObject.uniqueResult();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Map<Securable, Integer> getMasks( Collection securables ) {
+
+        Map<String, Securable> objectIdentities = new HashMap<String, Securable>();
+        for ( Securable s : ( Collection<Securable> ) securables ) {
+            objectIdentities.put( createObjectIdentityFromObject( s ), s );
+        }
+
+        String queryString = "SELECT i.object_identity, p.mask FROM acl_object_identity i inner join acl_permission p on"
+                + " p.acl_object_identity=i.id WHERE i.object_identity in ( :ids )";
+
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createSQLQuery( queryString );
+            queryObject.setParameterList( "ids", objectIdentities.keySet() );
+            Map<Securable, Integer> result = new HashMap<Securable, Integer>();
+            List<Object> queryresult = queryObject.list();
+            for ( Object o : queryresult ) {
+                Object[] oa = ( Object[] ) o;
+                String identity = ( String ) oa[0];
+                Integer mask = ( Integer ) oa[1];
+                Securable s = objectIdentities.get( identity );
+                result.put( s, mask );
+            }
+
+            return result;
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
