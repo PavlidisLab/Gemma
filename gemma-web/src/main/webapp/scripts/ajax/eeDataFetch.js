@@ -18,7 +18,7 @@ function handleFetchSuccess(data) {
 		taskId = data;
 		Ext.DomHelper.overwrite("messages", "");  
 		Ext.DomHelper.overwrite("taskId", "<input type = 'hidden' name='taskId' id='taskId' value= '" + taskId + "'/> ");
-		var p = new progressbar();
+		var p = new progressbar({doForward : true });
 	 	p.createIndeterminateProgressBar();
 		p.on('fail', handleFailure);
 		p.on('done', handleDoneGeneratingFile);
