@@ -15,7 +15,8 @@ Ext.Gemma.DatasetSearchField = function ( config ) {
 	this.filterFrom = []; // starting set.
 	
 	var superConfig = { 
-		loadingText : 'Searching...'
+		loadingText : 'Searching...',
+		emptyText : 'Hit enter to search'
 	};
 	
 	for ( property in config ) {
@@ -28,12 +29,14 @@ Ext.Gemma.DatasetSearchField = function ( config ) {
 		if ( this.loadMask ) {
 			this.loadMask.show();
 		}
+		this.disable();
 	} );
 	
 	this.on( 'aftersearch', function( field, results ) {
 		if ( this.loadMask ) {
 			this.loadMask.hide();
 		}
+		this.enable();
 	} );
 };
 
@@ -58,7 +61,11 @@ Ext.extend( Ext.Gemma.DatasetSearchField, Ext.form.TextField, {
 	initEvents : function() {
 		Ext.Gemma.DatasetSearchField.superclass.initEvents.call(this);
 		var queryTask = new Ext.util.DelayedTask( this.findDatasets, this );
-		this.el.on( "keyup", function( e ) { queryTask.delay( 500 ); } );
+		this.el.on( "keyup", function( e ) {
+			if (e.getCharCode() == Ext.EventObject.ENTER ) {
+				queryTask.delay( 5 ); 
+			}
+		} );
 	},
 	
 	filterDatasets : function (   ) {

@@ -46,6 +46,11 @@ Ext.extend( Ext.Gemma.PagingDataStore, Ext.data.Store, {
         return i - this.currentStartIndex;
     },
     
+    add : function(records) {
+    	Ext.Gemma.PagingDataStore.superclass.add.call( this, records );
+    	this.totalLength = this.data.length;
+    },
+    
     load : function ( options ) {
 		options = options || {};
 		if ( options.params !== undefined && ( options.params.start !== undefined || options.params.limit !== undefined ) ) {

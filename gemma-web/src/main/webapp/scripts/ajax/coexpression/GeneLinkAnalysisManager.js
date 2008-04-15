@@ -25,29 +25,37 @@ Ext.onReady( function() {
 		editable : false,
 		admin : admin,
 		title : "Datasets in source analysis",
-		pageSize : 10, 
-		ddGroup : "analysisedit"
+		pageSize : 20, 
+		ddGroup : "analysisedit",
+		rowExpander : true
 	} );
+	
+	sourceAnalysisGrid.getStore().on( "load", function () {
+		toolbar.updateDatasets();
+	}, this );
 	
 	var virtualAnalysisGrid = new Ext.Gemma.ExpressionExperimentGrid( "genelinkanalysis-newanalysis", {
 		readMethod : ExpressionExperimentController.loadExpressionExperiments.bind( this ),
 		editable : admin,
 		title : "Virtual analysis",
-		pageSize : 10,
-		ddGroup : "analysisedit"
+		pageSize : 20,
+		ddGroup : "analysisedit",
+		rowExpander : true
 	} ); 
+	
+	
 	
 	var toolbar = new Ext.Gemma.SourceAnalysisToolBar(sourceAnalysisGrid, { taxonSearch : false, targetGrid : virtualAnalysisGrid } );	
 	
 	
 	var refresh = function( e ){ 
-					this.store.reload( { callback : function(r,options,ok) {
-						// focus on the newly loaded one.
-						var recind = this.store.find("id", e);
-						var rec = this.store.getAt(recind);
-						this.getSelectionModel().selectRecords([rec], false); 
-					}});
-					}
+			this.store.reload( { callback : function(r,options,ok) {
+				// focus on the newly loaded one.
+				var recind = this.store.find("id", e);
+				var rec = this.store.getAt(recind);
+				this.getSelectionModel().selectRecords([rec], false); 
+			}});
+	}
 	
 	if ( admin ) {
 		var newtoolbar = new Ext.Gemma.EditVirtualAnalysisToolBar(virtualAnalysisGrid, {  } );
@@ -62,6 +70,7 @@ Ext.onReady( function() {
 		// Load the source analysis, or the selected one, if it is real.
 		Ext.DomHelper.overwrite("messages", "");
 		toolbar.reset();
+		
 		var row;
 		if (target.grid) { // selectionmodel
 			row = target.grid.getStore().getAt(rowIndex);
@@ -74,21 +83,19 @@ Ext.onReady( function() {
 		var ids = row.get("datasets");
 		this.taxon = row.get("taxon");
 		this.stringency = row.get("stringency");
-		
+		this.setTitle(row.get("name"));
 		if ( virtual ) {
 			id = row.get("viewedAnalysisId");
 			var callback = function( d ) {
 				// load the data sets.
-				this.getStore().load( { params : [ d ] }); 
-				toolbar.updateDatasets();
+				this.getStore().load( { params : [ d ] });  
 			}
 			// Go back to the server to get the ids of the experiments the selected analysis' parent has.
 			GeneLinkAnalysisManagerController.getExperimentIdsInAnalysis( id, {callback : callback.createDelegate(this, [], true) });
 			this.analysisId = id;
 		} else {		
 			this.analysisId = id;
-			this.getStore().load( { params : [ ids ] });
-			toolbar.updateDatasets();
+			this.getStore().load( { params : [ ids ] }); 
 		} 
 	};
 	
@@ -132,7 +139,7 @@ Ext.onReady( function() {
 		showVirtualAnalysis, virtualAnalysisGrid
 	);
   
- 
+	
 });
  
 /*
@@ -148,6 +155,17 @@ Ext.Gemma.EditVirtualAnalysisToolBar = function ( grid, config ) {
 		renderTo : this.thisGrid.tbar
 	} );
 	
+	var createDialog = new Ext.Window( {
+			el: 'createAnalysisDialog',
+			title : "Save new analysis",
+			width: 440,
+			height: 400,
+			shadow: true,
+			minWidth: 200,
+			minHeight: 150, 
+			modal: true,
+			layout : 'fit' 
+	 } );
 	
 	this.createNewAnalysis = function(analysisName, analysisDescription) {
 		
@@ -155,7 +173,6 @@ Ext.Gemma.EditVirtualAnalysisToolBar = function ( grid, config ) {
 			this.updateAnalysis(analysisName, analysisDescription);
 			return;
 		}
-		 
 		
 		var callback = function( newid ) { 
 			Ext.getCmp('newsave').enable();
@@ -215,7 +232,7 @@ Ext.Gemma.EditVirtualAnalysisToolBar = function ( grid, config ) {
 		if ( this.thisGrid.analysisId ) {
 			var callback = function( d ) {
 				// load the data sets.
-				this.getStore().load( { params : [ d ] }); 
+				this.getStore().load( { params : [ d ] });  
 			}
 			// Go back to the server to get the ids of the experiments the selected analysis has.
 			var id = this.thisGrid.analysisId;
@@ -227,47 +244,42 @@ Ext.Gemma.EditVirtualAnalysisToolBar = function ( grid, config ) {
 	
 	this.create = function () {
 		// dialog to get new name and description
+		
+		
 		Ext.DomHelper.overwrite("messages", "");	
 		Ext.getCmp('newsave').disable();
-		var createDialog = new Ext.Window( {
-			renderTo: 'createAnalysisDialog',
-			width: 440,
-			height: 400,
-			shadow: true,
-			minWidth: 200,
-			minHeight: 150, 
-			modal: true,
-			layout : 'fit' 
-		} );
-			
-		var nameField = new Ext.form.TextField({
-                fieldLabel : 'Name', id: 'analysis-name' , minLength : 3
-        });
-		                
-	    var descriptionField = new Ext.form.TextArea({fieldLabel : 'Description', id:'analysis-description', minLength : 3});
-			
-		var analysisForm = new Ext.FormPanel({
-			labelAlign: 'top'
-		});
 		
-		if (this.thisGrid.analysisName) {
-			nameField.setValue(this.thisGrid.analysisName);
-		}
+		if (!createDialog.rendered) {
+			createDialog.render();
 		
-		if (this.thisGrid.analysisDescription) {
-			descriptionField.setValue(this.thisGrid.analysisDescription);
-		}
-						
-		analysisForm.add(nameField);
-		analysisForm.add(descriptionField);
+			var nameField = new Ext.form.TextField({
+	                fieldLabel : 'Name', id: 'analysis-name' , minLength : 3, width : 100
+	        });
+			                
+		    var descriptionField = new Ext.form.TextArea({fieldLabel : 'Description', id:'analysis-description', minLength : 3, width : 300});
+				
+			var analysisForm = new Ext.FormPanel({
+				labelAlign: 'top'
+			});
+			
+			if (this.thisGrid.analysisName) {
+				nameField.setValue(this.thisGrid.analysisName);
+			}
+			
+			if (this.thisGrid.analysisDescription) {
+				descriptionField.setValue(this.thisGrid.analysisDescription);
+			}
+							
+			analysisForm.add(nameField);
+			analysisForm.add(descriptionField);
 			 
-		analysisForm.addButton('Save/Update', function() {
-			createDialog.hide();
-			this.createNewAnalysis(nameField.getValue(), descriptionField.getValue());
-		}, this );
-		analysisForm.addButton('Cancel', function() { createDialog.hide(); }, createDialog);
-		analysisForm.render(createDialog.body);
-
+			analysisForm.addButton('Save/Update', function() {
+				createDialog.hide();
+				this.createNewAnalysis(nameField.getValue(), descriptionField.getValue());
+			}, this );
+			analysisForm.addButton('Cancel', function() { createDialog.hide(); }, createDialog);
+			analysisForm.render(createDialog.body);
+		}
 		createDialog.show();
 		
 		
@@ -328,10 +340,9 @@ Ext.Gemma.SourceAnalysisToolBar = function( grid, config ) {
 			// Can't mix two analyses.
 			if (id != this.targetGrid.sourceAnalysisID ) {
 				this.targetGrid.getStore().removeAll();
-			}
-		
-			this.targetGrid.getStore().add( grid.getSelectionModel().getSelections());
-			this.targetGrid.getView().refresh();
+			} 
+			this.targetGrid.getStore().add(grid.getSelectionModel().getSelections());
+			this.targetGrid.getView().refresh(); 
 			this.targetGrid.sourceAnalysisID = this.owningGrid.analysisId;
 			this.targetGrid.stringency = this.owningGrid.stringency;
 			this.targetGrid.taxon = this.owningGrid.taxon;

@@ -17,6 +17,8 @@ Ext.namespace('Ext.Gemma');
  */
 Ext.Gemma.PagingToolbar = function ( config ) {
 
+	
+
 	Ext.Gemma.PagingToolbar.superclass.constructor.call( this, config );
 
 };
@@ -41,6 +43,32 @@ Ext.extend( Ext.Gemma.PagingToolbar, Ext.PagingToolbar, {
 		if ( definedStartParameter ) {
 			delete o.params[this.paramNames.start];
 		}
-	}
+	},
+	
+	 bind : function(store){
+	 	Ext.Gemma.PagingToolbar.superclass.bind.call( this, store );
+	 	store = Ext.StoreMgr.lookup(store);
+	 	store.on("add", this.onAdd, this);
+	 	this.store = store;
+	 },
+	 
+	 // private
+	 onAdd : function(store, r, o){
+        if(!this.rendered){
+            this.dsLoaded = [store, r, o];
+            return;
+        }
+       this.cursor = ( o && o.params ) ? o.params[this.paramNames.start] : 0;
+       var d = this.getPageData(), ap = d.activePage, ps = d.pages;
+
+       this.afterTextEl.el.innerHTML = String.format(this.afterPageText, d.pages);
+       this.field.dom.value = ap;
+       this.first.setDisabled(ap == 1);
+       this.prev.setDisabled(ap == 1);
+       this.next.setDisabled(ap == ps);
+       this.last.setDisabled(ap == ps);
+       this.loading.enable();
+       this.updateInfo();
+    },
 
 } );
