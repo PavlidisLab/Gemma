@@ -5,5 +5,15 @@
 	</properties>
 	<body>
 		<section name="Gemma news archive"></section>
+		<dl>
+			<dt>
+				<strong>January 22, 2008 - Gemma 1.0 is on the way</strong>
+			</dt>
+			<dd>
+				See the
+				<a href="downloads.html">downloads page</a>
+				for more details.
+			</dd>
+		</dl>
 	</body>
 </document>
