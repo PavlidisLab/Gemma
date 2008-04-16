@@ -100,7 +100,22 @@ public class ExpressionDataWriterUtils {
         }
         String colName = StringUtils.deleteWhitespace( colBuf.toString() );
 
-        return colName;
+        String rCompatibleColName = constructRCompatibleBioAssayName( colName );
+
+        return rCompatibleColName;
+    }
+
+    /**
+     * @param colName
+     * @return
+     */
+    private static String constructRCompatibleBioAssayName( String colName ) {
+
+        String noColon = StringUtils.replaceChars( colName, ':', '.' );
+        String noPipe = StringUtils.replaceChars( noColon, '|', '.' );
+        String noHyphen = StringUtils.replaceChars( noPipe, '-', '.' );
+
+        return noHyphen;
     }
 
     /**
