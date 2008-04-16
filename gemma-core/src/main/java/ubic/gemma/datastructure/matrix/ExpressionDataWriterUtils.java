@@ -111,11 +111,11 @@ public class ExpressionDataWriterUtils {
      */
     private static String constructRCompatibleBioAssayName( String colName ) {
 
-        String noColon = StringUtils.replaceChars( colName, ':', '.' );
-        String noPipe = StringUtils.replaceChars( noColon, '|', '.' );
-        String noHyphen = StringUtils.replaceChars( noPipe, '-', '.' );
+        colName = StringUtils.replaceChars( colName, ':', '.' );
+        colName = StringUtils.replaceChars( colName, '|', '.' );
+        colName = StringUtils.replaceChars( colName, '-', '.' );
 
-        return noHyphen;
+        return colName;
     }
 
     /**
