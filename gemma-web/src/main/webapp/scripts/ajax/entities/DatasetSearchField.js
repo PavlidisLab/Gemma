@@ -89,6 +89,12 @@ Ext.extend( Ext.Gemma.DatasetSearchField, Ext.form.TriggerField, {
 		if ( this.filtering ) {
 			this.filterDatasets( );
 		} else {
+			// If there is no taxon
+			if (!this.taxon) {
+				alert("Please select a taxon first");
+				return;
+			}
+			
 			var params = [ this.getValue(), this.taxon ? this.taxon.id : -1 ];
 			if ( this.lastParams && (params[0] == this.lastParams[0]  &&  params[1] == this.lastParams[1]) ) {
 				return;
