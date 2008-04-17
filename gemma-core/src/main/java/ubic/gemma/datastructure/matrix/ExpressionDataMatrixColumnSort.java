@@ -183,6 +183,9 @@ public class ExpressionDataMatrixColumnSort {
         int chunkStartIndex = 0;
         for ( FactorValue factorValue : chunks.keySet() ) {
 
+            // Note that factorValue can be null, when there are biomaterials that don't have a value assigned for the
+            // current factor.
+
             List<BioMaterial> chunk = chunks.get( factorValue );
 
             log.debug( "Processing chunk for " + factorValue + " with " + chunk.size() + " members" );
@@ -272,6 +275,7 @@ public class ExpressionDataMatrixColumnSort {
                 organized.addAll( chunks.get( fv ) ); // now at least this is in order of this factor
                 if ( leftovers.size() > 0 ) {
                     organized.addAll( leftovers );
+                    chunks.put( ( FactorValue ) null, new ArrayList<BioMaterial>( leftovers ) );
                 }
             }
         }
