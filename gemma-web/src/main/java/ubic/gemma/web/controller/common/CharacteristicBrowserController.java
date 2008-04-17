@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
@@ -141,10 +142,23 @@ public class CharacteristicBrowserController extends BaseFormController {
      * @param chars
      */
     public void updateCharacteristics( Collection<Characteristic> chars ) {
-        log.info( "Update " + chars.size() + " characteristics..." );
+        if ( chars.size() == 0 ) return;
+        log.info( "Updating " + chars.size() + " characteristics..." );
+        StopWatch timer = new StopWatch();
+        timer.start();
         Map charToParent = characteristicService.getParents( chars );
         for ( Characteristic cFromClient : chars ) {
-            Characteristic cFromDatabase = characteristicService.load( cFromClient.getId() );
+            Long characteristicId = cFromClient.getId();
+            if ( characteristicId == null ) {
+                continue;
+            }
+            Characteristic cFromDatabase = characteristicService.load( characteristicId );
+
+            if ( cFromDatabase == null ) {
+                log.warn( "No such characteristic with id=" + characteristicId );
+                continue;
+            }
+
             VocabCharacteristic vcFromClient = ( cFromClient instanceof VocabCharacteristic ) ? ( VocabCharacteristic ) cFromClient
                     : null;
             VocabCharacteristic vcFromDatabase = ( cFromDatabase instanceof VocabCharacteristic ) ? ( VocabCharacteristic ) cFromDatabase
@@ -197,6 +211,10 @@ public class CharacteristicBrowserController extends BaseFormController {
             }
             cFromDatabase.setEvidenceCode( GOEvidenceCode.IC ); // characteristic has been manually updated
             characteristicService.update( cFromDatabase );
+        }
+        timer.stop();
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Done updating" );
         }
     }
 
