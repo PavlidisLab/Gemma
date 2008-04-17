@@ -236,6 +236,15 @@ public class ExpressionDataMatrixColumnSort {
             LinkedHashMap<FactorValue, List<BioMaterial>> chunks, List<BioMaterial> organized ) {
         for ( FactorValue fv : factorValues ) {
 
+            if ( !fv2bms.containsKey( fv ) ) {
+                /*
+                 * This can happen if a factorvalue has been created but not yet associated with any biomaterials. This
+                 * can also be cruft.
+                 */
+                log.warn( "No biomaterials have factor value " + fv + "?" );
+                continue;
+            }
+
             // all in entire experiment, so we might not want them all.
             Collection<BioMaterial> biomsforfv = fv2bms.get( fv );
 
