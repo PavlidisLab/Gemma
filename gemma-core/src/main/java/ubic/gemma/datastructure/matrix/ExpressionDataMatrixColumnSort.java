@@ -247,6 +247,7 @@ public class ExpressionDataMatrixColumnSort {
 
             // all in entire experiment, so we might not want them all.
             Collection<BioMaterial> biomsforfv = fv2bms.get( fv );
+            Collection<BioMaterial> seenBioMaterials = new HashSet<BioMaterial>();
 
             for ( BioMaterial bioMaterial : biomsforfv ) {
                 if ( bms.contains( bioMaterial ) ) {
@@ -254,12 +255,24 @@ public class ExpressionDataMatrixColumnSort {
                         chunks.put( fv, new ArrayList<BioMaterial>() );
                     }
                     chunks.get( fv ).add( bioMaterial );
+                    seenBioMaterials.add( bioMaterial );
+                }
+            }
+
+            // Leftovers contains biomaterials which have no factorvalue assigned for this factor.
+            Collection<BioMaterial> leftovers = new HashSet<BioMaterial>();
+            for ( BioMaterial bm : bms ) {
+                if ( !seenBioMaterials.contains( bm ) ) {
+                    leftovers.add( bm );
                 }
             }
 
             // If we used that fv ...
             if ( chunks.containsKey( fv ) ) {
                 organized.addAll( chunks.get( fv ) ); // now at least this is in order of this factor
+                if ( leftovers.size() > 0 ) {
+                    organized.addAll( leftovers );
+                }
             }
         }
     }
