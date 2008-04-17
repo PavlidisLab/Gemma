@@ -203,7 +203,8 @@ Ext.Gemma.DatasetSearchToolBar = function ( grid, config ) {
 	
 	var eeSearchField = new Ext.Gemma.DatasetSearchField( {
 		fieldLabel : "Experiment keywords",
-		filtering : config.filtering
+		filtering : config.filtering,
+		loadMask : grid.loadMask
 	} );
 	
 	this.eeSearchField = eeSearchField;

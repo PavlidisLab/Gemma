@@ -264,7 +264,7 @@ div.hr {
 	height: 1px;
 	margin: 1.5em 10px;
 	border-bottom: 1px dotted black;
-} 
+}
 
 .error {
 	background: #fff url(../../images/default/grid/invalid_line.gif)
@@ -280,3 +280,11 @@ h2.helpstep,h3.helpstep {
 	margin: 0 0 2 0px;
 }
 
+.x-form-field-wrap  .x-go-trigger {
+	background-image: url(../../images/icons/go-trigger.gif);
+	cursor: pointer;
+}
+
+.x-loading {
+	background-image: url(../../images/default/tree/loading.gif)
+}

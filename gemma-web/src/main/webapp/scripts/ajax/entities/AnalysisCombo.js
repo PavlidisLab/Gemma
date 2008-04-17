@@ -151,7 +151,7 @@ Ext.extend( Ext.Gemma.AnalysisCombo, Ext.form.ComboBox, {
 	},
 
 	taxonChanged : function ( taxon ) {
-		if ( this.selectedAnalysis && this.selectedAnalysis.taxon.id != taxon.id ) {
+		if ( this.selectedAnalysis && this.selectedAnalysis.taxon && this.selectedAnalysis.taxon.id != taxon.id ) {
 			this.reset();
 		}
 		this.store.filterBy( function( record, id ) {
