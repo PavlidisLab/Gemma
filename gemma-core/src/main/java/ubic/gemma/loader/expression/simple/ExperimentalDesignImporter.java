@@ -67,11 +67,11 @@ import ubic.gemma.ontology.OntologyTerm;
  *    # PMI (h) : Category=EnvironmentalHistory Type=Measurement              
  *    # Lifetime Alcohol : Category=EnvironmentalHistory Type=Categorical             
  *    ID  Age     Profile     PMI (h)     Lifetime Alcohol    
- *    A-1     30  Bipolar     48  Moderate present 
- *    A-2     30  Bipolar     60  Heavy in present 
- *    A-3     45  Schizophrenia   26  Little or none 
- *    A-4     45  Bipolar     28  Unknown 
- *    A-5     40  Bipolar     70  Little or none 
+ *    f-aa     50  Bipolar     48  Moderate present 
+ *    f-ab     50  Bipolar     60  Heavy in present 
+ *    f-ac     55  Schizophrenia   26  Little or none 
+ *    f-ad     35  Bipolar     28  Unknown 
+ *    f-af     60  Bipolar     70  Little or none 
  * </pre>
  * 
  * @spring.bean id="experimentalDesignImporter"
@@ -185,6 +185,14 @@ public class ExperimentalDesignImporter {
      * @param bm
      */
     private void addNewMeasurement( ExperimentalFactor ef, String value, BioMaterial bm, boolean dryRun ) {
+
+        // make sure we don't add two values.
+        for ( FactorValue existingfv : bm.getFactorValues() ) {
+            if ( existingfv.getExperimentalFactor().equals( ef ) ) {
+                throw new IllegalStateException( bm + " already has a factorvalue for " + ef + "(" + existingfv + ")" );
+            }
+        }
+
         FactorValue fv = FactorValue.Factory.newInstance( ef );
 
         fv.setValue( value );
@@ -206,6 +214,7 @@ public class ExperimentalDesignImporter {
         if ( !dryRun ) fv = factorValueService.create( fv );
 
         ef.getFactorValues().add( fv );
+        log.debug( "Adding " + fv + " to " + bm );
         bm.getFactorValues().add( fv );
     }
 
@@ -258,6 +267,8 @@ public class ExperimentalDesignImporter {
     }
 
     /**
+     * Replace the placeholder factorvalues associated with the biomaterials with the persistent ones.
+     * 
      * @param bms
      * @param design
      */
@@ -266,28 +277,34 @@ public class ExperimentalDesignImporter {
         Collection<FactorValue> usedFactorValues = new HashSet<FactorValue>();
         for ( BioMaterial bm : bms ) {
             Collection<FactorValue> values = new HashSet<FactorValue>();
-            for ( FactorValue temp : bm.getFactorValues() ) {
-                log.debug( "Trying to find match for " + temp );
+            /*
+             * For each factor, find a value that matches the one on the biomaterial.
+             */
+            factor: for ( ExperimentalFactor factor : design.getExperimentalFactors() ) {
                 boolean found = false;
-                for ( ExperimentalFactor factor : design.getExperimentalFactors() ) {
+                for ( FactorValue temp : bm.getFactorValues() ) {
+                    if ( log.isDebugEnabled() ) log.debug( "Trying to find match for " + temp );
+
+                    if ( !temp.getExperimentalFactor().getName().equals( factor.getName() ) ) {
+                        continue;
+                    }
+
                     for ( FactorValue fv : factor.getFactorValues() ) {
-                        log.debug( "Candidate: " + fv );
+                        if ( log.isDebugEnabled() ) log.debug( "Candidate: " + fv );
                         assert temp.getValue() != null;
                         assert fv.getValue() != null;
-                        /*
-                         * really should check the associated Meas or Charac. but should be ok.
-                         */
+
                         if ( temp.getValue().equals( fv.getValue() ) ) {
                             values.add( factorValueService.load( fv.getId() ) );
                             found = true;
-
                             log.debug( "Match found for " + temp );
-                            break;
+                            continue factor;
                         }
                     }
                 }
                 if ( !found ) {
-                    throw new IllegalStateException( "Could not find match for " + temp );
+                    // this is not uncommon...
+                    log.warn( "Missing data for " + factor + " on " + bm );
                 }
             }
             usedFactorValues.addAll( values );
@@ -459,8 +476,13 @@ public class ExperimentalDesignImporter {
         newVc.setEvidenceCode( GOEvidenceCode.IC );
         newFv.getCharacteristics().add( newVc );
         ef.getFactorValues().add( newFv );
-        bm.getFactorValues().add( newFv );
+
         newFv.setExperimentalFactor( ef ); // this needs to be persisted first
+
+        this.checkForDuplicateValueForFactorOnBiomaterial( ef, bm );
+
+        log.debug( "Adding " + newFv + " to " + bm );
+        bm.getFactorValues().add( newFv );
         log.info( "New factor value: " + value );
     }
 
@@ -472,16 +494,43 @@ public class ExperimentalDesignImporter {
      */
     private boolean seekExistingFactorValue( ExperimentalFactor ef, String value, BioMaterial bm ) {
         for ( FactorValue fv : ef.getFactorValues() ) {
-            for ( Characteristic c : fv.getCharacteristics() ) {
-                if ( c.getValue().equals( value ) ) {
+            if ( fv.getCharacteristics().size() > 0 ) {
+                for ( Characteristic c : fv.getCharacteristics() ) {
+                    if ( c.getValue().equals( value ) ) {
+                        checkForDuplicateValueForFactorOnBiomaterial( ef, bm );
+                        // add this factorvalue to the corresponding sample.
+                        log.debug( "Adding " + fv + " to " + bm );
+                        bm.getFactorValues().add( fv );
+                        return true;
+                    }
+                }
+            } else {
+                if ( fv.getValue().equals( value ) ) {
+                    checkForDuplicateValueForFactorOnBiomaterial( ef, bm );
                     // add this factorvalue to the corresponding sample.
+                    log.debug( "Adding " + fv + " to " + bm );
                     bm.getFactorValues().add( fv );
                     return true;
                 }
             }
+            // measurements are a separate case.
 
         }
         return false;
+    }
+
+    /**
+     * @param ef
+     * @param bm
+     */
+    private void checkForDuplicateValueForFactorOnBiomaterial( ExperimentalFactor ef, BioMaterial bm ) {
+        // make sure the biomaterial doesn't already have a factorvalue for this factor.
+        for ( FactorValue existingfv : bm.getFactorValues() ) {
+            assert existingfv.getExperimentalFactor() != null;
+            if ( existingfv.getExperimentalFactor().equals( ef ) ) {
+                throw new IllegalStateException( bm + " already has a factorvalue for " + ef + "(" + existingfv + ")" );
+            }
+        }
     }
 
     enum FactorType {
