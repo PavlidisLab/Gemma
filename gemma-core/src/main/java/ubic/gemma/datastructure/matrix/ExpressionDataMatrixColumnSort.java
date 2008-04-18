@@ -237,7 +237,15 @@ public class ExpressionDataMatrixColumnSort {
     private static void organizeByFactorValues( Map<FactorValue, Collection<BioMaterial>> fv2bms,
             List<BioMaterial> bms, List<FactorValue> factorValues,
             LinkedHashMap<FactorValue, List<BioMaterial>> chunks, List<BioMaterial> organized ) {
+
+        ExperimentalFactor ef = factorValues.iterator().next().getExperimentalFactor();
+
+        Collection<BioMaterial> seenBioMaterials = new HashSet<BioMaterial>();
         for ( FactorValue fv : factorValues ) {
+
+            if ( fv.getExperimentalFactor() != ef ) {
+                throw new RuntimeException( "Experimental factor for factor value " + fv + " does not match " + ef );
+            }
 
             if ( !fv2bms.containsKey( fv ) ) {
                 /*
@@ -250,7 +258,6 @@ public class ExpressionDataMatrixColumnSort {
 
             // all in entire experiment, so we might not want them all.
             Collection<BioMaterial> biomsforfv = fv2bms.get( fv );
-            Collection<BioMaterial> seenBioMaterials = new HashSet<BioMaterial>();
 
             for ( BioMaterial bioMaterial : biomsforfv ) {
                 if ( bms.contains( bioMaterial ) ) {
@@ -262,23 +269,25 @@ public class ExpressionDataMatrixColumnSort {
                 }
             }
 
-            // Leftovers contains biomaterials which have no factorvalue assigned for this factor.
-            Collection<BioMaterial> leftovers = new HashSet<BioMaterial>();
-            for ( BioMaterial bm : bms ) {
-                if ( !seenBioMaterials.contains( bm ) ) {
-                    leftovers.add( bm );
-                }
-            }
-
             // If we used that fv ...
             if ( chunks.containsKey( fv ) ) {
                 organized.addAll( chunks.get( fv ) ); // now at least this is in order of this factor
-                if ( leftovers.size() > 0 ) {
-                    organized.addAll( leftovers );
-                    chunks.put( ( FactorValue ) null, new ArrayList<BioMaterial>( leftovers ) );
-                }
             }
         }
+
+        // Leftovers contains biomaterials which have no factorvalue assigned for this factor.
+        Collection<BioMaterial> leftovers = new HashSet<BioMaterial>();
+        for ( BioMaterial bm : bms ) {
+            if ( !seenBioMaterials.contains( bm ) ) {
+                leftovers.add( bm );
+            }
+        }
+
+        if ( leftovers.size() > 0 ) {
+            organized.addAll( leftovers );
+            chunks.put( ( FactorValue ) null, new ArrayList<BioMaterial>( leftovers ) );
+        }
+
     }
 
     /**
