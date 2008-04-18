@@ -52,7 +52,8 @@ Ext.Gemma.FactorValueGrid = function ( config ) {
 		enableNoGroups : false,
 		groupTextTpl : groupTextTpl,
 		hideGroupedColumn : true,
-		showGroupName : true
+		showGroupName : true,
+		startCollapsed : true
 	} );
 	
 	var FACTOR_VALUE_COLUMN = 0;
@@ -112,6 +113,7 @@ Ext.Gemma.FactorValueGrid.getRecord = function() {
 			{ name:"category", type:"string" },
 			{ name:"categoryUri", type:"string" },
 			{ name:"value", type:"string" },
+			{ name:"measurement", type:"bool" },
 			{ name:"valueUri", type:"string" },
 			{ name:"factorValueString", type:"string" }
 		] );
@@ -291,6 +293,22 @@ Ext.Gemma.FactorValueToolbar = function ( config ) {
 			deleteFactorValueButton
 		);
 	}
+	
+	if (this.grid.getView().toggleAllGroups) {
+		var refreshButton = new Ext.Toolbar.Button( {
+			text : "Expand/collapse all",
+			tooltip : "Show/hide all factor value details",
+			handler : function() {
+				this.grid.getView().toggleAllGroups()
+			},
+			scope : this
+		} );
+		
+		items.push(
+			new Ext.Toolbar.Fill(),
+			refreshButton
+		);
+	}
 	config.items = config.items ? items.concat( config.items ) : items;
 	
 	for ( property in config ) {
@@ -301,6 +319,8 @@ Ext.Gemma.FactorValueToolbar = function ( config ) {
 	if ( this.editable ) {
 		this.characteristicToolbar = new Ext.Gemma.FactorValueCharacteristicToolbar( { grid : thisToolbar.grid, renderTo : thisToolbar.getEl().createChild() } );
 	}
+	
+	
 };
 
 /* instance methods...

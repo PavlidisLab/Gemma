@@ -74,71 +74,6 @@ public class ExperimentalDesignController extends BaseMultiActionController {
     private final String identifierNotFound = "Must provide a valid ExperimentalDesign identifier";
 
     /**
-     * @param request
-     * @param response
-     * @param errors
-     * @return ModelAndView
-     */
-    @SuppressWarnings("unused")
-    public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
-        Long id = Long.parseLong( request.getParameter( "id" ) );
-
-        if ( id == null ) {
-            // should be a validation error, on 'submit'.
-            throw new EntityNotFoundException( identifierNotFound );
-        }
-
-        ExperimentalDesign experimentalDesign = experimentalDesignService.load( id );
-        if ( experimentalDesign == null ) {
-            throw new EntityNotFoundException( id + " not found" );
-        }
-
-        ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( experimentalDesign );
-
-        if ( ee == null ) {
-            throw new EntityNotFoundException( "Expression experiment  for design " + experimentalDesign + " not found" );
-        }
-
-        request.setAttribute( "id", id );
-
-        ModelAndView mnv = new ModelAndView( "experimentalDesign.detail" );
-        mnv.addObject( "experimentalDesign", experimentalDesign );
-        mnv.addObject( "expressionExperiment", ee );
-        mnv.addObject( "expressionExperimentUrl", GemmaLinkUtils.getExpressionExperimentUrl( ee.getId() ) );
-
-        return mnv;
-    }
-
-    /**
-     * @param request
-     * @param response
-     * @return
-     */
-    @SuppressWarnings("unused")
-    public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
-        return new ModelAndView( "experimentalDesigns" ).addObject( "experimentalDesigns", experimentalDesignService
-                .loadAll() );
-    }
-
-    /**
-     * Returns ExperimentalFactorValueObjects for each ExperimentalFactor in the ExperimentalDesign specified by the
-     * EntityDelegator.
-     * 
-     * @param e an EntityDelegator representing an ExperimentalDesign
-     * @return a collection of ExperimentalFactorValueObjects
-     */
-    public Collection<ExperimentalFactorValueObject> getExperimentalFactors( EntityDelegator e ) {
-        if ( e == null || e.getId() == null ) return null;
-        ExperimentalDesign ed = this.experimentalDesignService.load( e.getId() );
-
-        Collection<ExperimentalFactorValueObject> result = new HashSet<ExperimentalFactorValueObject>();
-        for ( ExperimentalFactor factor : ed.getExperimentalFactors() ) {
-            result.add( new ExperimentalFactorValueObject( factor ) );
-        }
-        return result;
-    }
-
-    /**
      * Creates a new ExperimentalFactor and adds it to the ExperimentalDesign specified by the EntityDelegator.
      * 
      * @param e an EntityDelegator representing an ExperimentalDesign
@@ -161,20 +96,57 @@ public class ExperimentalDesignController extends BaseMultiActionController {
         experimentalDesignService.update( ed );
     }
 
-    private Characteristic createCategoryCharacteristic( String category, String categoryUri ) {
-        Characteristic c;
-        if ( categoryUri != null ) {
-            VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
-            vc.setCategoryUri( categoryUri );
-            vc.setValueUri( categoryUri );
-            c = vc;
-        } else {
-            c = Characteristic.Factory.newInstance();
+    /**
+     * Creates a new FactorValue and adds it to the ExperimentalFactor specified by the EntityDelegator. The new
+     * FactorValue may have some initial Characteristics created to match any previously existing FactorValues for the
+     * same ExperimentalFactor.
+     * 
+     * @param e an EntityDelegator representing an ExperimentalFactor
+     */
+    public void createFactorValue( EntityDelegator e ) {
+        if ( e == null || e.getId() == null ) return;
+        ExperimentalFactor ef = experimentalFactorService.load( e.getId() );
+
+        Collection<Characteristic> chars = new HashSet<Characteristic>();
+        for ( FactorValue fv : ef.getFactorValues() ) {
+            for ( Characteristic c : fv.getCharacteristics() ) {
+                chars.add( createTemplateCharacteristic( c ) );
+                break;
+            }
         }
-        c.setCategory( category );
-        c.setValue( category );
-        c.setEvidenceCode( GOEvidenceCode.IC ); // manually added characteristic
-        return c;
+        if ( chars.isEmpty() ) {
+            if ( ef.getCategory() == null ) {
+                throw new IllegalArgumentException(
+                        "You cannot create new factor values on a experimental factor that is not defined by a formal Category" );
+            } else {
+                chars.add( createTemplateCharacteristic( ef.getCategory() ) );
+            }
+        }
+
+        FactorValue fv = FactorValue.Factory.newInstance();
+        fv.setExperimentalFactor( ef );
+        fv.setCharacteristics( chars );
+        factorValueService.create( fv ); // until the larger problem is fixed...
+
+        if ( ef.getFactorValues() == null ) ef.setFactorValues( new HashSet<FactorValue>() );
+        ef.getFactorValues().add( fv );
+
+        experimentalFactorService.update( ef );
+    }
+
+    /**
+     * Creates a new Characteristic and adds it to the FactorValue specified by the EntityDelegator.
+     * 
+     * @param e an EntityDelegator representing a FactorValue
+     */
+    public void createFactorValueCharacteristic( EntityDelegator e, Characteristic c ) {
+        if ( e == null || e.getId() == null ) return;
+        FactorValue fv = factorValueService.load( e.getId() );
+
+        if ( fv.getCharacteristics() == null ) fv.setCharacteristics( new HashSet<Characteristic>() );
+        fv.getCharacteristics().add( c );
+
+        factorValueService.update( fv );
     }
 
     /**
@@ -221,107 +193,18 @@ public class ExperimentalDesignController extends BaseMultiActionController {
     }
 
     /**
-     * Updates the specified ExperimentalFactors.
+     * Deletes the specified Characteristics from their parent FactorValues.
      * 
-     * @param efvos a collection of ExperimentalFactorValueObjects containing the updated values
+     * @param fvvos a collection of FactorValueValueObjects containing the Characteristics to delete
      */
-    public void updateExperimentalFactors( Collection<ExperimentalFactorValueObject> efvos ) {
-        for ( ExperimentalFactorValueObject efvo : efvos ) {
-            ExperimentalFactor ef = experimentalFactorService.load( efvo.getId() );
-            ef.setName( efvo.getName() );
-            ef.setDescription( efvo.getDescription() );
-
-            /*
-             * at the moment, the characteristic is always going to be a VocabCharacteristic; if that changes, this will
-             * have to...
-             */
-            VocabCharacteristic vc = ( VocabCharacteristic ) ef.getCategory();
-
-            // VC can be null if this was imported from GEO etc.
-            if ( vc == null ) {
-                vc = VocabCharacteristic.Factory.newInstance();
-                ef.setCategory( vc );
-            }
-
-            vc.setCategory( efvo.getCategory() );
-            vc.setCategoryUri( efvo.getCategoryUri() );
-            vc.setValue( efvo.getCategory() );
-            vc.setValueUri( efvo.getCategoryUri() );
-
-            experimentalFactorService.update( ef );
+    public void deleteFactorValueCharacteristics( Collection<FactorValueValueObject> fvvos ) {
+        for ( FactorValueValueObject fvvo : fvvos ) {
+            FactorValue fv = factorValueService.load( fvvo.getFactorValueId() );
+            Characteristic c = characteristicService.load( fvvo.getCharId() );
+            fv.getCharacteristics().remove( c );
+            characteristicService.delete( c );
+            factorValueService.update( fv );
         }
-    }
-
-    /**
-     * Returns FactorValueValueObjects for each FactorValue in the ExperimentalFactor specified by the EntityDelegator.
-     * There will be one row per FactorValue.
-     * 
-     * @param e an EntityDelegator representing an ExperimentalFactor
-     * @return a collection of FactorValueValueObjects
-     */
-    public Collection<FactorValueValueObject> getFactorValues( EntityDelegator e ) {
-        if ( e == null || e.getId() == null ) return null;
-        ExperimentalFactor ef = this.experimentalFactorService.load( e.getId() );
-
-        Collection<FactorValueValueObject> result = new HashSet<FactorValueValueObject>();
-        for ( FactorValue value : ef.getFactorValues() ) {
-            Characteristic category = value.getExperimentalFactor().getCategory();
-            if ( category == null ) {
-                category = Characteristic.Factory.newInstance();
-                category.setValue( value.getExperimentalFactor().getName() );
-            }
-            result.add( new FactorValueValueObject( value, category ) );
-        }
-        return result;
-    }
-
-    /**
-     * Creates a new FactorValue and adds it to the ExperimentalFactor specified by the EntityDelegator. The new
-     * FactorValue may have some initial Characteristics created to match any previously existing FactorValues for the
-     * same ExperimentalFactor.
-     * 
-     * @param e an EntityDelegator representing an ExperimentalFactor
-     */
-    public void createFactorValue( EntityDelegator e ) {
-        if ( e == null || e.getId() == null ) return;
-        ExperimentalFactor ef = experimentalFactorService.load( e.getId() );
-
-        Collection<Characteristic> chars = new HashSet<Characteristic>();
-        for ( FactorValue fv : ef.getFactorValues() ) {
-            for ( Characteristic c : fv.getCharacteristics() ) {
-                chars.add( createTemplateCharacteristic( c ) );
-                break;
-            }
-        }
-        if ( chars.isEmpty() ) {
-            if ( ef.getCategory() == null ) {
-                throw new IllegalArgumentException(
-                        "You cannot create new factor values on a experimental factor that is not defined by a formal Category" );
-            } else {
-                chars.add( createTemplateCharacteristic( ef.getCategory() ) );
-            }
-        }
-
-        FactorValue fv = FactorValue.Factory.newInstance();
-        fv.setExperimentalFactor( ef );
-        fv.setCharacteristics( chars );
-        factorValueService.create( fv ); // until the larger problem is fixed...
-
-        if ( ef.getFactorValues() == null ) ef.setFactorValues( new HashSet<FactorValue>() );
-        ef.getFactorValues().add( fv );
-
-        experimentalFactorService.update( ef );
-    }
-
-    private Characteristic createTemplateCharacteristic( Characteristic source ) {
-        Characteristic template = ( source instanceof VocabCharacteristic ) ? VocabCharacteristic.Factory.newInstance()
-                : Characteristic.Factory.newInstance();
-        template.setCategory( source.getCategory() );
-        if ( source instanceof VocabCharacteristic ) {
-            ( ( VocabCharacteristic ) template ).setCategoryUri( ( ( VocabCharacteristic ) source ).getCategoryUri() );
-        }
-        template.setEvidenceCode( GOEvidenceCode.IEA ); // automatically added characteristic
-        return template;
     }
 
     /**
@@ -340,80 +223,6 @@ public class ExperimentalDesignController extends BaseMultiActionController {
             factorValueService.delete( fv );
         }
         experimentalFactorService.update( ef );
-    }
-
-    /**
-     * Returns FactorValueValueObjects for each Characteristic belonging to a FactorValue in the ExperimentalFactor
-     * specified by the EntityDelegator. There will be one row per Characteristic.
-     * 
-     * @param e an EntityDelegator representing an ExperimentalFactor
-     * @return a collection of FactorValueValueObjects
-     */
-    public Collection<FactorValueValueObject> getFactorValuesWithCharacteristics( EntityDelegator e ) {
-        if ( e == null || e.getId() == null ) return null;
-        ExperimentalFactor ef = this.experimentalFactorService.load( e.getId() );
-
-        Collection<FactorValueValueObject> result = new HashSet<FactorValueValueObject>();
-        for ( FactorValue value : ef.getFactorValues() ) {
-            for ( Characteristic c : value.getCharacteristics() ) {
-                result.add( new FactorValueValueObject( value, c ) );
-            }
-        }
-        return result;
-    }
-
-    /**
-     * Creates a new Characteristic and adds it to the FactorValue specified by the EntityDelegator.
-     * 
-     * @param e an EntityDelegator representing a FactorValue
-     */
-    public void createFactorValueCharacteristic( EntityDelegator e, Characteristic c ) {
-        if ( e == null || e.getId() == null ) return;
-        FactorValue fv = factorValueService.load( e.getId() );
-
-        if ( fv.getCharacteristics() == null ) fv.setCharacteristics( new HashSet<Characteristic>() );
-        fv.getCharacteristics().add( c );
-
-        factorValueService.update( fv );
-    }
-
-    /**
-     * Deletes the specified Characteristics from their parent FactorValues.
-     * 
-     * @param fvvos a collection of FactorValueValueObjects containing the Characteristics to delete
-     */
-    public void deleteFactorValueCharacteristics( Collection<FactorValueValueObject> fvvos ) {
-        for ( FactorValueValueObject fvvo : fvvos ) {
-            FactorValue fv = factorValueService.load( fvvo.getFactorValueId() );
-            Characteristic c = characteristicService.load( fvvo.getCharId() );
-            fv.getCharacteristics().remove( c );
-            characteristicService.delete( c );
-            factorValueService.update( fv );
-        }
-    }
-
-    /**
-     * Updates the specified Characteristics.
-     * 
-     * @param efvos a collection of FactorValueValueObjects containing the updated values
-     */
-    public void updateFactorValueCharacteristics( Collection<FactorValueValueObject> fvvos ) {
-        /*
-         * TODO have this use the same code in CharacteristicBrowserController.updateCharacteristics, probably moving
-         * that code to CharacteristicService.
-         */
-        for ( FactorValueValueObject fvvo : fvvos ) {
-            Characteristic c = characteristicService.load( fvvo.getCharId() );
-            c.setCategory( fvvo.getCategory() );
-            c.setValue( fvvo.getValue() );
-            if ( c instanceof VocabCharacteristic ) {
-                VocabCharacteristic vc = ( VocabCharacteristic ) c;
-                vc.setCategoryUri( fvvo.getCategoryUri() );
-                vc.setValueUri( fvvo.getValueUri() );
-            }
-            c.setEvidenceCode( GOEvidenceCode.IC ); // characteristic has been manually updated
-            characteristicService.update( c );
-        }
     }
 
     /**
@@ -453,68 +262,101 @@ public class ExperimentalDesignController extends BaseMultiActionController {
     }
 
     /**
-     * Updates the specified BioMaterials.
+     * Returns ExperimentalFactorValueObjects for each ExperimentalFactor in the ExperimentalDesign specified by the
+     * EntityDelegator.
      * 
-     * @param efvos a collection of BioMaterialValueObjects containing the updated values
+     * @param e an EntityDelegator representing an ExperimentalDesign
+     * @return a collection of ExperimentalFactorValueObjects
      */
-    public void updateBioMaterials( Collection<BioMaterialValueObject> bmvos ) {
-        for ( BioMaterialValueObject bmvo : bmvos ) {
-            BioMaterial bm = bioMaterialService.load( bmvo.getId() );
-            Collection<FactorValue> values = new HashSet<FactorValue>();
-            for ( String fvIdString : bmvo.getFactorIdToFactorValueId().values() ) {
-                if ( fvIdString.matches( "fv\\d+" ) ) {
-                    long fvId = Long.parseLong( fvIdString.substring( 2 ) );
-                    values.add( factorValueService.load( fvId ) );
-                }
-            }
-            bm.setFactorValues( values );
-            bioMaterialService.update( bm );
+    public Collection<ExperimentalFactorValueObject> getExperimentalFactors( EntityDelegator e ) {
+        if ( e == null || e.getId() == null ) return null;
+        ExperimentalDesign ed = this.experimentalDesignService.load( e.getId() );
+
+        Collection<ExperimentalFactorValueObject> result = new HashSet<ExperimentalFactorValueObject>();
+        for ( ExperimentalFactor factor : ed.getExperimentalFactors() ) {
+            result.add( new ExperimentalFactorValueObject( factor ) );
         }
+        return result;
     }
 
     /**
-     * @param factor
-     * @return
+     * Returns FactorValueValueObjects for each FactorValue in the ExperimentalFactor specified by the EntityDelegator.
+     * There will be one row per FactorValue.
+     * 
+     * @param e an EntityDelegator representing an ExperimentalFactor
+     * @return a collection of FactorValueValueObjects
      */
-    private String getExperimentalFactorString( ExperimentalFactor factor ) {
-        return factor.getName();
+    public Collection<FactorValueValueObject> getFactorValues( EntityDelegator e ) {
+        if ( e == null || e.getId() == null ) return null;
+        ExperimentalFactor ef = this.experimentalFactorService.load( e.getId() );
+
+        Collection<FactorValueValueObject> result = new HashSet<FactorValueValueObject>();
+        for ( FactorValue value : ef.getFactorValues() ) {
+            Characteristic category = value.getExperimentalFactor().getCategory();
+            if ( category == null ) {
+                category = Characteristic.Factory.newInstance();
+                category.setValue( value.getExperimentalFactor().getName() );
+            }
+            result.add( new FactorValueValueObject( value, category ) );
+        }
+        return result;
     }
 
     /**
-     * @param value
-     * @return
+     * Returns FactorValueValueObjects for each Characteristic belonging to a FactorValue in the ExperimentalFactor
+     * specified by the EntityDelegator. There will be one row per Characteristic.
+     * 
+     * @param e an EntityDelegator representing an ExperimentalFactor
+     * @return a collection of FactorValueValueObjects
      */
-    private String getFactorValueString( FactorValue value ) {
-        /*
-         * Note that normally we should not have 'blanks' in the factor values; this is just to make sure something
-         * shows up if that happens.
-         */
-        StringBuffer buf = new StringBuffer();
-        if ( value.getMeasurement() != null ) {
-            if ( StringUtils.isBlank( value.getMeasurement().getValue() ) ) {
-                return "[NA]";
-            } else {
-                return value.getMeasurement().getValue();
-            }
-        } else if ( value.getCharacteristics().size() > 0 ) {
-            for ( Iterator<Characteristic> iter = value.getCharacteristics().iterator(); iter.hasNext(); ) {
-                Characteristic c = iter.next();
-                String category = c.getCategory();
-                if ( category != null ) {
-                    buf.append( category );
-                    buf.append( ": " );
+    public Collection<FactorValueValueObject> getFactorValuesWithCharacteristics( EntityDelegator e ) {
+        if ( e == null || e.getId() == null ) return null;
+        ExperimentalFactor ef = this.experimentalFactorService.load( e.getId() );
+
+        Collection<FactorValueValueObject> result = new HashSet<FactorValueValueObject>();
+        for ( FactorValue value : ef.getFactorValues() ) {
+            if ( value.getCharacteristics().size() > 0 ) {
+                for ( Characteristic c : value.getCharacteristics() ) {
+                    result.add( new FactorValueValueObject( value, c ) );
                 }
-                buf.append( StringUtils.isBlank( c.getValue() ) ? "[NA]" : c.getValue() );
-                if ( iter.hasNext() ) buf.append( ", " );
-            }
-            return buf.length() > 0 ? buf.toString() : value.getValue() + " [Non-CSC]";
-        } else {
-            if ( StringUtils.isBlank( value.getValue() ) ) {
-                return "[NA]";
             } else {
-                return value.getValue();
+                Characteristic category = value.getExperimentalFactor().getCategory();
+                if ( category == null ) {
+                    category = Characteristic.Factory.newInstance();
+                    category.setValue( value.getExperimentalFactor().getName() );
+                }
+                result.add( new FactorValueValueObject( value, category ) );
             }
         }
+        return result;
+    }
+
+    /**
+     * @param bioMaterialService the bioMaterialService to set
+     */
+    public void setBioMaterialService( BioMaterialService bioMaterialService ) {
+        this.bioMaterialService = bioMaterialService;
+    }
+
+    /**
+     * @param characteristicService
+     */
+    public void setCharacteristicService( CharacteristicService characteristicService ) {
+        this.characteristicService = characteristicService;
+    }
+
+    /**
+     * @param experimentalDesignService
+     */
+    public void setExperimentalDesignService( ExperimentalDesignService experimentalDesignService ) {
+        this.experimentalDesignService = experimentalDesignService;
+    }
+
+    /**
+     * @param experimentalFactorService the experimentalFactorService to set
+     */
+    public void setExperimentalFactorService( ExperimentalFactorService experimentalFactorService ) {
+        this.experimentalFactorService = experimentalFactorService;
     }
 
     /**
@@ -568,20 +410,6 @@ public class ExperimentalDesignController extends BaseMultiActionController {
     }
 
     /**
-     * @param bioMaterialService the bioMaterialService to set
-     */
-    public void setBioMaterialService( BioMaterialService bioMaterialService ) {
-        this.bioMaterialService = bioMaterialService;
-    }
-
-    /**
-     * @param experimentalFactorService the experimentalFactorService to set
-     */
-    public void setExperimentalFactorService( ExperimentalFactorService experimentalFactorService ) {
-        this.experimentalFactorService = experimentalFactorService;
-    }
-
-    /**
      * @param factorValueService the factorValueService to set
      */
     public void setFactorValueService( FactorValueService factorValueService ) {
@@ -589,17 +417,198 @@ public class ExperimentalDesignController extends BaseMultiActionController {
     }
 
     /**
-     * @param experimentalDesignService
+     * @param request
+     * @param response
+     * @param errors
+     * @return ModelAndView
      */
-    public void setExperimentalDesignService( ExperimentalDesignService experimentalDesignService ) {
-        this.experimentalDesignService = experimentalDesignService;
+    @SuppressWarnings("unused")
+    public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
+        Long id = Long.parseLong( request.getParameter( "id" ) );
+
+        if ( id == null ) {
+            // should be a validation error, on 'submit'.
+            throw new EntityNotFoundException( identifierNotFound );
+        }
+
+        ExperimentalDesign experimentalDesign = experimentalDesignService.load( id );
+        if ( experimentalDesign == null ) {
+            throw new EntityNotFoundException( id + " not found" );
+        }
+
+        ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( experimentalDesign );
+
+        if ( ee == null ) {
+            throw new EntityNotFoundException( "Expression experiment  for design " + experimentalDesign + " not found" );
+        }
+
+        request.setAttribute( "id", id );
+
+        ModelAndView mnv = new ModelAndView( "experimentalDesign.detail" );
+        mnv.addObject( "experimentalDesign", experimentalDesign );
+        mnv.addObject( "expressionExperiment", ee );
+        mnv.addObject( "expressionExperimentUrl", GemmaLinkUtils.getExpressionExperimentUrl( ee.getId() ) );
+
+        return mnv;
     }
 
     /**
-     * @param characteristicService
+     * @param request
+     * @param response
+     * @return
      */
-    public void setCharacteristicService( CharacteristicService characteristicService ) {
-        this.characteristicService = characteristicService;
+    @SuppressWarnings("unused")
+    public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
+        return new ModelAndView( "experimentalDesigns" ).addObject( "experimentalDesigns", experimentalDesignService
+                .loadAll() );
+    }
+
+    /**
+     * Updates the specified BioMaterials.
+     * 
+     * @param efvos a collection of BioMaterialValueObjects containing the updated values
+     */
+    public void updateBioMaterials( Collection<BioMaterialValueObject> bmvos ) {
+        for ( BioMaterialValueObject bmvo : bmvos ) {
+            BioMaterial bm = bioMaterialService.load( bmvo.getId() );
+            Collection<FactorValue> values = new HashSet<FactorValue>();
+            for ( String fvIdString : bmvo.getFactorIdToFactorValueId().values() ) {
+                if ( fvIdString.matches( "fv\\d+" ) ) {
+                    long fvId = Long.parseLong( fvIdString.substring( 2 ) );
+                    values.add( factorValueService.load( fvId ) );
+                }
+            }
+            bm.setFactorValues( values );
+            bioMaterialService.update( bm );
+        }
+    }
+
+    /**
+     * Updates the specified ExperimentalFactors.
+     * 
+     * @param efvos a collection of ExperimentalFactorValueObjects containing the updated values
+     */
+    public void updateExperimentalFactors( Collection<ExperimentalFactorValueObject> efvos ) {
+        for ( ExperimentalFactorValueObject efvo : efvos ) {
+            ExperimentalFactor ef = experimentalFactorService.load( efvo.getId() );
+            ef.setName( efvo.getName() );
+            ef.setDescription( efvo.getDescription() );
+
+            /*
+             * at the moment, the characteristic is always going to be a VocabCharacteristic; if that changes, this will
+             * have to...
+             */
+            VocabCharacteristic vc = ( VocabCharacteristic ) ef.getCategory();
+
+            // VC can be null if this was imported from GEO etc.
+            if ( vc == null ) {
+                vc = VocabCharacteristic.Factory.newInstance();
+                ef.setCategory( vc );
+            }
+
+            vc.setCategory( efvo.getCategory() );
+            vc.setCategoryUri( efvo.getCategoryUri() );
+            vc.setValue( efvo.getCategory() );
+            vc.setValueUri( efvo.getCategoryUri() );
+
+            experimentalFactorService.update( ef );
+        }
+    }
+
+    /**
+     * Updates the specified Characteristics.
+     * 
+     * @param efvos a collection of FactorValueValueObjects containing the updated values
+     */
+    public void updateFactorValueCharacteristics( Collection<FactorValueValueObject> fvvos ) {
+        /*
+         * TODO have this use the same code in CharacteristicBrowserController.updateCharacteristics, probably moving
+         * that code to CharacteristicService.
+         */
+        for ( FactorValueValueObject fvvo : fvvos ) {
+            Characteristic c = characteristicService.load( fvvo.getCharId() );
+            c.setCategory( fvvo.getCategory() );
+            c.setValue( fvvo.getValue() );
+            if ( c instanceof VocabCharacteristic ) {
+                VocabCharacteristic vc = ( VocabCharacteristic ) c;
+                vc.setCategoryUri( fvvo.getCategoryUri() );
+                vc.setValueUri( fvvo.getValueUri() );
+            }
+            c.setEvidenceCode( GOEvidenceCode.IC ); // characteristic has been manually updated
+            characteristicService.update( c );
+        }
+    }
+
+    private Characteristic createCategoryCharacteristic( String category, String categoryUri ) {
+        Characteristic c;
+        if ( categoryUri != null ) {
+            VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
+            vc.setCategoryUri( categoryUri );
+            vc.setValueUri( categoryUri );
+            c = vc;
+        } else {
+            c = Characteristic.Factory.newInstance();
+        }
+        c.setCategory( category );
+        c.setValue( category );
+        c.setEvidenceCode( GOEvidenceCode.IC ); // manually added characteristic
+        return c;
+    }
+
+    private Characteristic createTemplateCharacteristic( Characteristic source ) {
+        Characteristic template = ( source instanceof VocabCharacteristic ) ? VocabCharacteristic.Factory.newInstance()
+                : Characteristic.Factory.newInstance();
+        template.setCategory( source.getCategory() );
+        if ( source instanceof VocabCharacteristic ) {
+            ( ( VocabCharacteristic ) template ).setCategoryUri( ( ( VocabCharacteristic ) source ).getCategoryUri() );
+        }
+        template.setEvidenceCode( GOEvidenceCode.IEA ); // automatically added characteristic
+        return template;
+    }
+
+    /**
+     * @param factor
+     * @return
+     */
+    private String getExperimentalFactorString( ExperimentalFactor factor ) {
+        return factor.getName();
+    }
+
+    /**
+     * @param value
+     * @return
+     */
+    private String getFactorValueString( FactorValue value ) {
+        /*
+         * Note that normally we should not have 'blanks' in the factor values; this is just to make sure something
+         * shows up if that happens.
+         */
+        StringBuffer buf = new StringBuffer();
+        if ( value.getMeasurement() != null ) {
+            if ( StringUtils.isBlank( value.getMeasurement().getValue() ) ) {
+                return "[NA]";
+            } else {
+                return value.getMeasurement().getValue();
+            }
+        } else if ( value.getCharacteristics().size() > 0 ) {
+            for ( Iterator<Characteristic> iter = value.getCharacteristics().iterator(); iter.hasNext(); ) {
+                Characteristic c = iter.next();
+                String category = c.getCategory();
+                if ( category != null ) {
+                    buf.append( category );
+                    buf.append( ": " );
+                }
+                buf.append( StringUtils.isBlank( c.getValue() ) ? "[NA]" : c.getValue() );
+                if ( iter.hasNext() ) buf.append( ", " );
+            }
+            return buf.length() > 0 ? buf.toString() : value.getValue() + " [Non-CSC]";
+        } else {
+            if ( StringUtils.isBlank( value.getValue() ) ) {
+                return "[NA]";
+            } else {
+                return value.getValue();
+            }
+        }
     }
 
 }
