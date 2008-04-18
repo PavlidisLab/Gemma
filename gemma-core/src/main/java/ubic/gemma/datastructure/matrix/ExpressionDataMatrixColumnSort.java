@@ -238,14 +238,8 @@ public class ExpressionDataMatrixColumnSort {
             List<BioMaterial> bms, List<FactorValue> factorValues,
             LinkedHashMap<FactorValue, List<BioMaterial>> chunks, List<BioMaterial> organized ) {
 
-        ExperimentalFactor ef = factorValues.iterator().next().getExperimentalFactor();
-
         Collection<BioMaterial> seenBioMaterials = new HashSet<BioMaterial>();
         for ( FactorValue fv : factorValues ) {
-
-            if ( fv.getExperimentalFactor() != ef ) {
-                throw new RuntimeException( "Experimental factor for factor value " + fv + " does not match " + ef );
-            }
 
             if ( !fv2bms.containsKey( fv ) ) {
                 /*
