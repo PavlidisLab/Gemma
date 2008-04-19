@@ -68,6 +68,7 @@ public class CoexpressionSearchController extends BaseFormController {
     @SuppressWarnings("unchecked")
     public CoexpressionMetaValueObject doSearch( CoexpressionSearchCommand searchOptions ) {
         Collection<Gene> genes = geneService.loadMultiple( searchOptions.getGeneIds() );
+        this.geneService.thawLite(  genes ); //need to thaw externalDB in taxon for marshling back to client...s
         log.info( "Coexpression search: " + searchOptions );
         if ( genes == null || genes.isEmpty() ) {
             return getEmptyResult();

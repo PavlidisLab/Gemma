@@ -562,6 +562,10 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                     session.lock( gene, LockMode.NONE );
                     Hibernate.initialize( gene );
                     session.lock( gene.getTaxon(), LockMode.NONE );
+                    Hibernate.initialize( gene.getTaxon() );
+                    if ( gene.getTaxon().getExternalDatabase() != null ) {
+                        Hibernate.initialize( gene.getTaxon().getExternalDatabase() );
+                    }
                 }
                 return null;
             }

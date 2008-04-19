@@ -341,7 +341,8 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     @Override
     public Map<Long, Collection<ExpressionExperiment>> handleGetExpressionExperimentsTestedIn( Collection genes,
             Collection expressionExperiments, boolean filterNonSpecific ) {
-        // FIXME implement filterNonSpecific.
+        
+            // FIXME implement filterNonSpecific.
         if ( filterNonSpecific ) {
             throw new UnsupportedOperationException( "Sorry, filterNonSpecific is not supported yet" );
         }
@@ -350,6 +351,8 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
         Map<Long, Collection<ExpressionExperiment>> result = new HashMap<Long, Collection<ExpressionExperiment>>();
 
+        if (genes == null || genes.isEmpty())   return result;
+        
         // this step is fast.
         Map<Long, Collection<Long>> cs2genes = this.getCs2GenesMapFromGenes( genes );
 

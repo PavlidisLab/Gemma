@@ -409,10 +409,9 @@ public class GeneCoexpressionService {
          * of interest and filter the results before the time-consuming analysis is done...
          */
         for ( Gene queryGene : genes ) {
-
+            
             CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis( queryGene,
                     ees, stringency, knownGenesOnly, maxResults );
-
             addExtCoexpressionValueObjects( queryGene, result.getDatasets(), coexpressions.getKnownGeneCoexpression(),
                     stringency, queryGenesOnly, geneIds, result.getKnownGeneResults(), result.getKnownGeneDatasets() );
             addExtCoexpressionValueObjects( queryGene, result.getDatasets(), coexpressions
@@ -504,6 +503,8 @@ public class GeneCoexpressionService {
             ecvo.setMaxGoSim( cvo.getPossibleOverlap() );
 
             StringBuilder datasetVector = new StringBuilder();
+            Collection<Long> supportingEEs = new ArrayList<Long>();
+            
             for ( int i = 0; i < eevos.size(); ++i ) {
                 ExpressionExperimentValueObject eevo = eevos.get( i );
                 boolean tested = cvo.getDatasetsTestedIn() != null && cvo.getDatasetsTestedIn().contains( eevo.getId() );
@@ -512,6 +513,7 @@ public class GeneCoexpressionService {
 
                 if ( supported ) {
                     datasetVector.append( "2" );
+                    supportingEEs.add( eevo.getId() );
                 } else if ( tested ) {
                     datasetVector.append( "1" );
                 } else {
@@ -519,6 +521,10 @@ public class GeneCoexpressionService {
                 }
             }
 
+            ecvo.setDatasetVector( datasetVector.toString() );
+            ecvo.setSupportingExperiments(supportingEEs );
+        
+            
             ecvo.setSortKey();
             results.add( ecvo );
         }
