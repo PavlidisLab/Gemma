@@ -21,11 +21,17 @@ package ubic.gemma.web.controller.diff;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionMetaValueObject;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService;
@@ -40,6 +46,7 @@ import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.util.GemmaLinkUtils;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.controller.expression.experiment.ExperimentalFactorValueObject;
+import ubic.gemma.web.view.TextView;
 
 /**
  * @author keshav
@@ -57,6 +64,8 @@ import ubic.gemma.web.controller.expression.experiment.ExperimentalFactorValueOb
 public class DifferentialExpressionSearchController extends BaseFormController {
 
     private Log log = LogFactory.getLog( this.getClass() );
+
+    private static final double DEFAULT_THRESHOLD = 0.01;
 
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
 
@@ -153,6 +162,51 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         }
         return devos;
+    }
+
+    public DifferentialExpressionMetaValueObject getDifferentialExpressionMeta( Collection<Long> geneIds,
+            double threshold ) {
+
+        List<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
+
+        for ( Long geneId : geneIds ) {
+            devos.addAll( getDifferentialExpression( geneId, threshold ) );
+        }
+
+        DifferentialExpressionMetaValueObject meta = new DifferentialExpressionMetaValueObject( devos );
+
+        return meta;
+    }
+
+    /*
+     * Handles the case exporting results as text.
+     * 
+     * @see org.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.HttpServletRequest,
+     *      javax.servlet.http.HttpServletResponse)
+     */
+    @SuppressWarnings( { "unchecked", "unused" })
+    @Override
+    protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
+            throws Exception {
+
+        double threshold = DEFAULT_THRESHOLD;
+        try {
+            threshold = Double.parseDouble( request.getParameter( "t" ) );
+        } catch ( Exception e ) {
+            log.warn( "invalid threshold; using default " + threshold );
+        }
+
+        Collection<Long> geneIds = extractIds( request.getParameter( "g" ) );
+
+        DifferentialExpressionMetaValueObject result = getDifferentialExpressionMeta( geneIds, threshold );
+        if ( request.getParameter( "export" ) != null ) {
+            ModelAndView mav = new ModelAndView( new TextView() );
+            String output = result.toString();
+            mav.addObject( "text", output.length() > 0 ? output : "no results" );
+            return mav;
+        } else {
+            return new ModelAndView( this.getFormView() );
+        }
     }
 
     /**

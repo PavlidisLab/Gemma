@@ -18,7 +18,6 @@
  */
 package ubic.gemma.web.controller.coexpressionSearch;
 
-import java.util.ArrayList;
 import java.util.Collection;
 
 import javax.servlet.http.HttpServletRequest;
@@ -68,7 +67,7 @@ public class CoexpressionSearchController extends BaseFormController {
     @SuppressWarnings("unchecked")
     public CoexpressionMetaValueObject doSearch( CoexpressionSearchCommand searchOptions ) {
         Collection<Gene> genes = geneService.loadMultiple( searchOptions.getGeneIds() );
-        this.geneService.thawLite(  genes ); //need to thaw externalDB in taxon for marshling back to client...s
+        this.geneService.thawLite( genes ); // need to thaw externalDB in taxon for marshling back to client...s
         log.info( "Coexpression search: " + searchOptions );
         if ( genes == null || genes.isEmpty() ) {
             return getEmptyResult();
@@ -171,23 +170,4 @@ public class CoexpressionSearchController extends BaseFormController {
             return new ModelAndView( this.getFormView() );
         }
     }
-
-    /**
-     * @param idString
-     * @return
-     */
-    private Collection<Long> extractIds( String idString ) {
-        Collection<Long> ids = new ArrayList<Long>();
-        if ( idString != null ) {
-            for ( String s : idString.split( "," ) ) {
-                try {
-                    ids.add( Long.parseLong( s ) );
-                } catch ( NumberFormatException e ) {
-                    log.warn( "invalid id " + s );
-                }
-            }
-        }
-        return ids;
-    }
-
 }

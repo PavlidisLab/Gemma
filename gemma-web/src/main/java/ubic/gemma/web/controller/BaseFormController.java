@@ -19,6 +19,8 @@
 package ubic.gemma.web.controller;
 
 import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -316,6 +318,26 @@ public abstract class BaseFormController extends SimpleFormController {
         }
         mailMessage.setTo( user.getFullName() + "<" + user.getEmail() + ">" );
         mailEngine.sendMessage( mailMessage, templateName, model );
+    }
+
+    /**
+     * Returns a collection of {@link Long} ids from strings.
+     * 
+     * @param idString
+     * @return
+     */
+    protected Collection<Long> extractIds( String idString ) {
+        Collection<Long> ids = new ArrayList<Long>();
+        if ( idString != null ) {
+            for ( String s : idString.split( "," ) ) {
+                try {
+                    ids.add( Long.parseLong( s ) );
+                } catch ( NumberFormatException e ) {
+                    log.warn( "invalid id " + s );
+                }
+            }
+        }
+        return ids;
     }
 
     /**

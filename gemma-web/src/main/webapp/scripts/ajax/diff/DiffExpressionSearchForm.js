@@ -204,19 +204,7 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 		}
 		var queryStart = document.URL.indexOf( "?" );
 		var url = queryStart > -1 ? document.URL.substr( 0, queryStart ) : document.URL;
-		url += String.format( "?g={0}&s={1}", dsc.geneIds.join( "," ), dsc.threshold );
-		if ( dsc.queryGenesOnly ) {
-			url += "&q";
-		}
-		if ( dsc.eeIds ) {
-			url += String.format( "&ees={0}", dsc.eeIds.join( "," ) );
-		} else {
-			url += String.format( "&a={0}", dsc.cannedAnalysisId );
-		}
-		
-		if (dsc.eeQuery) {
-			url += "&eeq=" + dsc.eeQuery;
-		}
+		url += String.format( "?g={0}&t={1}", dsc.geneIds.join( "," ), dsc.threshold );
 		
 		return url;
 	},

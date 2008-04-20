@@ -20,6 +20,8 @@ package ubic.gemma.web.controller.diff;
 
 import java.util.Collection;
 
+import org.apache.commons.lang.StringUtils;
+
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.web.controller.expression.experiment.ExperimentalFactorValueObject;
@@ -85,4 +87,43 @@ public class DifferentialExpressionValueObject {
         this.gene = gene;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        StringBuffer buf = new StringBuffer();
+
+        if ( gene == null ) buf.append( "-\t" );
+
+        if ( StringUtils.isNotBlank( gene.getOfficialSymbol() ) ) {
+            buf.append( gene.getOfficialSymbol() );
+        } else if ( StringUtils.isNotBlank( gene.getOfficialName() ) ) {
+            buf.append( gene.getOfficialName() );
+        } else {
+            buf.append( gene.getName() );
+        }
+        buf.append( "\t" );
+
+        buf.append( expressionExperiment.getShortName() + "\t" );
+        buf.append( expressionExperiment.getName() + "\t" );
+        buf.append( probe + "\t" );
+
+        int i = 0;
+        for ( ExperimentalFactorValueObject f : experimentalFactors ) {
+            buf.append( f.getName() );
+            if ( i < ( experimentalFactors.size() - 1 ) ) {
+                buf.append( ", " );
+            } else {
+                buf.append( "\t" );
+            }
+            i++;
+        }
+
+        buf.append( p );
+
+        return buf.toString();
+    }
 }

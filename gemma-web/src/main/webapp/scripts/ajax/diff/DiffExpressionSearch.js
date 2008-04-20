@@ -30,6 +30,9 @@ Ext.onReady( function() {
 	
 	searchPanel.on( "aftersearch", function ( panel, result ){
 		
+		var link = panel.getBookmarkableLink();
+		diffExGrid.setTitle( String.format( "Differentially expressed genes <a href='{0}'>(bookmarkable link)</a> <a href='{0}&export'>(export as text)</a>", link ) );
+		
 		diffExGrid.loadData(result);
 		
 	});
