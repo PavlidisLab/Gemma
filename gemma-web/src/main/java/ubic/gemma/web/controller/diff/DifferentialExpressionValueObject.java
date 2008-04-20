@@ -107,8 +107,10 @@ public class DifferentialExpressionValueObject {
         }
         buf.append( "\t" );
 
-        buf.append( expressionExperiment.getShortName() + "\t" );
-        buf.append( expressionExperiment.getName() + "\t" );
+        if ( StringUtils.isNotBlank( expressionExperiment.getShortName() ) ) {
+            buf.append( expressionExperiment.getShortName() + "\t" );
+        }
+
         buf.append( probe + "\t" );
 
         int i = 0;
