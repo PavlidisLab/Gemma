@@ -34,6 +34,7 @@ Ext.Gemma.GeneChooserPanel = function ( config ) {
 		emptyText : 'search for a gene'
 	} );
 	geneCombo.on( "select", function( combo, record, index ) {
+		taxonCombo.setTaxonByScientificName(record.data.taxon);
 		addButton.enable();
 	} );
 	this.geneCombo = geneCombo;
@@ -239,8 +240,8 @@ Ext.extend( Ext.Gemma.GeneChooserPanel, Ext.Gemma.GemmaGridPanel, {
 		GenePickerController.getGenes( [ geneId ],
 			function ( genes ) {
 				var g = genes[0];
-				if ( g ) {
-					g.taxon = g.taxon.scientificName;
+				if ( g ) {					
+					g.taxon = g.taxon.scientificName;				
 					this.geneCombo.setGene( g );
 					this.geneCombo.setValue( g.officialSymbol );
 					this.getStore().removeAll();
