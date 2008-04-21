@@ -304,7 +304,7 @@ public class ExperimentalDesignImporter {
                 }
                 if ( !found ) {
                     // this is not uncommon...
-                    log.warn( "Missing data for " + factor + " on " + bm );
+                    log.debug( "Missing data for " + factor + " on " + bm );
                 }
             }
             usedFactorValues.addAll( values );
