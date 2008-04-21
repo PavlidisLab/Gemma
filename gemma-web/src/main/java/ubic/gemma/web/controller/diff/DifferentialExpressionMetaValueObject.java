@@ -16,11 +16,10 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.analysis.expression.diff;
+package ubic.gemma.web.controller.diff;
 
 import java.util.List;
 
-import ubic.gemma.web.controller.diff.DifferentialExpressionValueObject;
 
 /**
  * @author keshav
