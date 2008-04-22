@@ -48,17 +48,9 @@ public class AnalyzerHelperTest extends BaseAnalyzerConfigurationTest {
      * <p>
      * Expected result: null exception
      */
-    public void testCheckBiologicalReplicates() {
+    public void testCheckBiologicalReplicates() throws Exception {
+        boolean result = analyzerHelper.checkBiologicalReplicates( expressionExperiment );
 
-        Exception ex = null;
-        try {
-            analyzerHelper.checkBiologicalReplicates( expressionExperiment );
-        } catch ( Exception e ) {
-            ex = e;
-            e.printStackTrace();
-        } finally {
-            assertNull( ex );
-        }
     }
 
     /**
@@ -66,16 +58,8 @@ public class AnalyzerHelperTest extends BaseAnalyzerConfigurationTest {
      * <p>
      * Expected result: null exception
      */
-    public void testCheckBlockDesign() {
-        Exception ex = null;
-        try {
-            analyzerHelper.checkBlockDesign( expressionExperiment );
-        } catch ( Exception e ) {
-            ex = e;
-            e.printStackTrace();
-        } finally {
-            assertNull( ex );
-        }
+    public void testCheckBlockDesign() throws Exception {
+        boolean result = analyzerHelper.checkBlockDesign( expressionExperiment );
     }
 
     /*

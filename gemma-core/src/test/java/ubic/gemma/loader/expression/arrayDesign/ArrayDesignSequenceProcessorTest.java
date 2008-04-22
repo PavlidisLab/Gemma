@@ -69,10 +69,10 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
 
         // note that the name MG-U74A is not used by the result. this defines genbank ids etc.
         designElementStream = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/MG-U74A.txt" );
-        
+
         //
         app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
-        
+
         // Target sequences
         seqFile = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/MG-U74A_target" );
 
@@ -206,7 +206,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         InputStream f = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/identifierTest.txt" );
         Collection<BioSequence> res = app.processArrayDesign( result, f, new String[] { "testblastdb",
                 "testblastdbPartTwo" }, ConfigUtils.getString( "gemma.home" )
-                + "/gemma-core/src/test/resources/data/loader/genome/blast", true );
+                + "/gemma-core/src/test/resources/data/loader/genome/blast", null, true );
         assertNotNull( res );
         for ( BioSequence sequence : res ) {
             assertNotNull( sequence.getSequence() );

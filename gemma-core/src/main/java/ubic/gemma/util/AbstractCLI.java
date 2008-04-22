@@ -245,6 +245,12 @@ public abstract class AbstractCLI {
         Logger log4jLogger = LogManager.exists( loggerName );
 
         if ( log4jLogger == null ) {
+            try {
+                log4jLogger = LogManager.getLogger( Class.forName( loggerName ) );
+            } catch ( ClassNotFoundException e ) {
+                //
+            }
+
             log.warn( "No logger of name '" + loggerName + "'" );
             return;
         }
@@ -320,7 +326,7 @@ public abstract class AbstractCLI {
             String[] vals = value.split( "=" );
             if ( vals.length != 2 ) throw new RuntimeException( "Logging value must in format [logger]=[value]" );
             try {
-                log.info( "Setting loggin for " + vals[1] + " to " + vals[1] );
+                log.info( "Setting logging for " + vals[0] + " to " + vals[1] );
                 configureLogging( vals[0], Integer.parseInt( vals[1] ) );
             } catch ( NumberFormatException e ) {
                 throw new RuntimeException( "Logging level must be an integer" );

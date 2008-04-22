@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
 import junit.framework.TestCase;
@@ -195,6 +196,26 @@ public class GeoConverterTest extends TestCase {
         series.setSampleCorrespondence( correspondence );
         Object result = this.gc.convert( series );
         assertNotNull( result );
+    }
+
+    /**
+     * Ends up with too few vectors, because of a problem with the quantitation typ guesser.
+     * 
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    public void testFetchAndLoadGSE8294() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE8294_family.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE8294" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner( false );
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Set result = ( Set ) this.gc.convert( series );
+        ExpressionExperiment e = ( ExpressionExperiment ) result.iterator().next();
+        assertEquals( "got " + e.getDesignElementDataVectors().size(), 66, e.getDesignElementDataVectors().size() );
     }
 
     public void testConvertWithLotsOfPlatforms() throws Exception {

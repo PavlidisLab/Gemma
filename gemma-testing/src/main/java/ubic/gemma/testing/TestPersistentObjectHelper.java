@@ -341,6 +341,10 @@ public class TestPersistentObjectHelper {
         gene.setOfficialName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
         gene.setOfficialSymbol( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ).toUpperCase() );
         gene.setTaxon( this.getTestNonPersistentTaxon() );
+        GeneProduct gp = GeneProduct.Factory.newInstance();
+        gp.setGene( gene );
+        gp.setName( RandomStringUtils.randomNumeric( 5 ) + "_test" );
+        gene.getProducts().add( gp );
         return ( Gene ) persisterHelper.persist( gene );
     }
 
@@ -644,6 +648,7 @@ public class TestPersistentObjectHelper {
         qt.setIsNormalized( false );
         qt.setIsPreferred( false );
         qt.setIsRatio( false );
+        qt.setIsMaskedPreferred( false );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setScale( ScaleType.LINEAR );

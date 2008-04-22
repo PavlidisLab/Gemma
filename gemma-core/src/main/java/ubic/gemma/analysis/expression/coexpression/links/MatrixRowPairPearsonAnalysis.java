@@ -203,6 +203,7 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
         m.setIsBackgroundSubtracted( false );
         m.setIsNormalized( false );
         m.setIsPreferred( false );
+        m.setIsMaskedPreferred( false );
         m.setIsRatio( false );
         m.setType( StandardQuantitationType.CORRELATION );
         m.setName( "Pearson correlation" );

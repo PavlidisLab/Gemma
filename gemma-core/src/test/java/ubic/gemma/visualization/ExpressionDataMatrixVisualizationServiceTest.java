@@ -25,6 +25,7 @@ import ubic.basecode.graphics.MatrixDisplay;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -73,6 +74,7 @@ public class ExpressionDataMatrixVisualizationServiceTest extends BaseSpringCont
 
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setName( "VALUE" );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
 
         BioAssayDimension bioAssayDimension = BioAssayDimension.Factory.newInstance();
         bioAssayDimension.setName( "GSM15697, GSM15744" );

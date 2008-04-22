@@ -26,6 +26,7 @@ import java.util.Map;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.genome.Gene;
 
 /**
  * @author pavlidis
@@ -48,12 +49,12 @@ public class DesignElementDataVectorServiceImpl extends
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase#handleGetVectors(java.util.Collection,
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase#handleGetPreferredVectors(java.util.Collection,
      *      java.util.Collection, ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
     @Override
-    protected Map handleGetVectors( Collection ees, Collection genes ) throws Exception {
-        return this.getDesignElementDataVectorDao().getVectors( ees, genes );
+    protected Map handleGetPreferredVectors( Collection ees, Collection genes ) throws Exception {
+        return this.getDesignElementDataVectorDao().getPreferredVectors( ees, genes );
     }
 
     @Override
@@ -175,6 +176,13 @@ public class DesignElementDataVectorServiceImpl extends
     @Override
     protected Map handleGetDedv2GenesMap( Collection dedvs, QuantitationType qt ) throws Exception {
         return this.getDesignElementDataVectorDao().getDedv2GenesMap( dedvs, qt );
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Map<DoubleVectorValueObject, Collection<Gene>> handleGetMaskedPreferredDataArrays( Collection ees,
+            Collection genes ) throws Exception {
+        return this.getDesignElementDataVectorDao().getMaskedPreferredDataArrays( ees, genes );
     }
 
 }

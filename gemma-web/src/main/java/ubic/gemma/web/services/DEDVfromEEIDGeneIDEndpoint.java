@@ -28,10 +28,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
-import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
@@ -109,8 +107,8 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
             geneIDLong.add( Long.parseLong( id ) );
         Collection<Gene> geneResult = geneService.loadMultiple( geneIDLong );
 
-        Map<DesignElementDataVector, Collection<Gene>> dedvMap = designElementDataVectorService.getVectors( eeObjs,
-                geneResult );
+        Map<DoubleVectorValueObject, Collection<Gene>> dedvMap = designElementDataVectorService
+                .getMaskedPreferredDataArrays( eeObjs, geneResult );
 
         // start building the wrapper
         // xml is built manually here instead of using the buildWrapper method inherited from AbstractGemmaEndpoint
@@ -130,19 +128,16 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
             responseElement.appendChild( document.createTextNode( "No " + elementName1 + " result" ) );
         else {
 
-            Set<DesignElementDataVector> keys = dedvMap.keySet();
-            designElementDataVectorService.thaw( keys );
+            Set<DoubleVectorValueObject> keys = dedvMap.keySet();
 
-            ByteArrayConverter converter = new ByteArrayConverter();
             // -build single-row Collections to use for ExpressionDataMatrixBuilder
             // -need to do this so that we can use the .getPrefferedData()
             // also necessary to do each data vector at a time because we
             // already have a mapping to the genes
             // of the design elements
-            for ( DesignElementDataVector dedv : keys ) {
+            for ( DoubleVectorValueObject dedv : keys ) {
 
-                byte[] dedvData = dedv.getData();
-                double[] convertedDEDV = converter.byteArrayToDoubles( dedvData );
+                double[] convertedDEDV = dedv.getData();
 
                 // data vector string for output
                 String elementString1 = encode( convertedDEDV );

@@ -23,6 +23,7 @@ import java.util.Collection;
 import ubic.gemma.analysis.preprocess.DedvRankService.Method;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
+import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -42,7 +43,7 @@ public class DedvRankServiceTest extends AbstractGeoServiceTest {
     }
 
     @SuppressWarnings("unchecked")
-    public void testComputeDevRankForExpressionExperiment() throws Exception {
+    public void testComputeDevRankForExpressionExperimentB() throws Exception {
         endTransaction();
         DedvRankService serv = ( DedvRankService ) this.getBean( "dedvRankService" );
 
@@ -51,14 +52,13 @@ public class DedvRankServiceTest extends AbstractGeoServiceTest {
 
         ExpressionExperimentService eeService = ( ExpressionExperimentService ) this
                 .getBean( "expressionExperimentService" );
-        ExpressionExperiment existing = eeService.findByShortName( "GSE3500" );
-        if ( existing == null ) {
+        try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                    + "gse3500Short" ) );
-            Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GSE3500", false, true, false );
+                    + "gse432Short" ) );
+            Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GSE432", false, true, false );
             ee = results.iterator().next();
-        } else {
-            ee = existing;
+        } catch ( AlreadyExistsInSystemException e ) {
+            ee = ( ExpressionExperiment ) e.getData();
         }
 
         Collection<DesignElementDataVector> preferredVectors = serv.computeDevRankForExpressionExperiment( ee,

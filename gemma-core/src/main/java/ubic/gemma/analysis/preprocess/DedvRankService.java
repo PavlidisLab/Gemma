@@ -336,18 +336,18 @@ public class DedvRankService {
         log.info( "Processing vectors on " + ad );
         ExpressionDataDoubleMatrix intensities;
 
-        intensities = builder.getIntensity( ad );
+        intensities = builder.getIntensity();
         if ( intensities == null ) return null;
 
         // We don't remove missing values for Affymetrix based on absent/present
         // calls.
         if ( ad.getTechnologyType().equals( TechnologyType.TWOCOLOR ) ) {
-            builder.maskMissingValues( intensities, ad );
+            builder.maskMissingValues( intensities );
         }
 
         DoubleArrayList ranks = getRanks( intensities, method );
 
-        Collection<DesignElementDataVector> preferredVectors = builder.getPreferredDataVectors( ad );
+        Collection<DesignElementDataVector> preferredVectors = builder.getPreferredDataVectors();
         log.debug( preferredVectors.size() + " vectors" );
         for ( DesignElementDataVector vector : preferredVectors ) {
             DesignElement de = vector.getDesignElement();

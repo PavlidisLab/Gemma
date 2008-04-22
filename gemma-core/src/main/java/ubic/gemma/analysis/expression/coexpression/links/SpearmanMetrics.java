@@ -81,6 +81,7 @@ public class SpearmanMetrics extends AbstractMatrixRowPairAnalysis {
         m.setIsBackgroundSubtracted( false );
         m.setIsNormalized( false );
         m.setIsPreferred( false );
+        m.setIsMaskedPreferred( false );
         m.setIsRatio( false );
         m.setType( StandardQuantitationType.CORRELATION );
         m.setName( "Spearman's rank correlation" );

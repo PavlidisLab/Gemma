@@ -422,6 +422,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
                     ScaleType scale = qType.getScale();
                     StandardQuantitationType type = qType.getType();
                     boolean isPreferred = qType.getIsPreferred();
+                    boolean isMaskedPreferred = qType.getIsMaskedPreferred();
                     boolean isRatio = qType.getIsRatio();
 
                     String newName = newQtype.getName();
@@ -434,12 +435,14 @@ public class ExpressionExperimentFormController extends BaseFormController {
                     ScaleType newscale = newQtype.getScale();
                     StandardQuantitationType newType = newQtype.getType();
                     boolean newisPreferred = newQtype.getIsPreferred();
+                    boolean newIsmaskedPreferred = newQtype.getIsMaskedPreferred();
                     boolean newisRatio = newQtype.getIsRatio();
 
                     // make it a copy.
                     revisedType.setIsBackgroundSubtracted( newisBkgSub );
                     revisedType.setIsBackground( newisBkg );
                     revisedType.setIsPreferred( newisPreferred );
+                    revisedType.setIsMaskedPreferred( newIsmaskedPreferred );
                     revisedType.setIsRatio( newisRatio );
                     revisedType.setRepresentation( newrep );
                     revisedType.setType( newType );
@@ -452,6 +455,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
                     qType.setIsBackgroundSubtracted( newisBkgSub );
                     qType.setIsBackground( newisBkg );
                     qType.setIsPreferred( newisPreferred );
+                    qType.setIsMaskedPreferred( newIsmaskedPreferred );
                     qType.setIsRatio( newisRatio );
                     qType.setRepresentation( newrep );
                     qType.setType( newType );
@@ -484,6 +488,11 @@ public class ExpressionExperimentFormController extends BaseFormController {
                         // special case - make sure there is only one preferred per platform?
                         dirty = true;
                     }
+                    if ( isMaskedPreferred != newIsmaskedPreferred ) {
+                        // special case - make sure there is only one preferred per platform?
+                        dirty = true;
+                    }
+
                     if ( isBkg != newisBkg ) {
                         dirty = true;
                     }
@@ -515,6 +524,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
      * @throws SAXException
      * @throws ParserConfigurationException
      */
+    @SuppressWarnings("unused")
     private void updatePubMed( HttpServletRequest request, ExpressionExperiment command ) throws IOException,
             SAXException, ParserConfigurationException {
         String pubMedId = request.getParameter( "expressionExperiment.PubMedId" );

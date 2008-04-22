@@ -22,12 +22,24 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 
+import org.apache.commons.lang.RandomStringUtils;
+
+import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.testing.AbstractGeoServiceTest;
 import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.ConfigUtils;
@@ -42,6 +54,9 @@ public class DesignElementDataVectorDaoImplTest extends BaseSpringContextTest {
     ExpressionExperiment newee = null;
     DesignElementDataVector dedv;
     protected AbstractGeoService geoService;
+    ArrayDesignService arrayDesignService;
+    TaxonService taxonService;
+    CompositeSequenceService compositeSequenceService;
 
     /**
      * @param designElementDataVectorDao the designElementDataVectorDao to set
@@ -55,9 +70,10 @@ public class DesignElementDataVectorDaoImplTest extends BaseSpringContextTest {
         super.onSetUpInTransaction();
         dedv = DesignElementDataVector.Factory.newInstance();
         expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-
+        arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
         geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
-
+        compositeSequenceService = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
+        taxonService = ( TaxonService ) this.getBean( "taxonService" );
     }
 
     @Override
@@ -103,13 +119,85 @@ public class DesignElementDataVectorDaoImplTest extends BaseSpringContextTest {
         super.onTearDownAfterTransaction();
 
         if ( newee != null && newee.getId() != null ) {
-            expressionExperimentService.delete( newee );
+            // expressionExperimentService.delete( newee );
         }
 
     }
 
     @SuppressWarnings("unchecked")
-    public void testGetGeneCoexpressionPattern() {
+    public void testGetMaskedPreferredData() {
+        endTransaction();
+
+        // Dataset uses spotted arrays, 11 samples.
+
+        String path = ConfigUtils.getString( "gemma.home" );
+        assert path != null;
+        try {
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
+                    + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "gse432Short" ) );
+            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
+                    "GSE432", false, true, false );
+            newee = results.iterator().next();
+            newee.setShortName( RandomStringUtils.randomAlphabetic( 12 ) );
+            expressionExperimentService.update( newee );
+            TwoChannelMissingValues tcmv = ( TwoChannelMissingValues ) this.getBean( "twoChannelMissingValues" );
+            tcmv.computeMissingValues( newee, 1.5, null );
+            // No masked preferred computation.
+        } catch ( AlreadyExistsInSystemException e ) {
+            newee = ( ExpressionExperiment ) e.getData();
+        }
+
+        this.expressionExperimentService.thawLite( newee );
+
+        DesignElementDataVectorService dedvs = ( DesignElementDataVectorService ) this
+                .getBean( "designElementDataVectorService" );
+
+        Collection<Gene> genes = getGeneAssociatedWithEe();
+
+        Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
+        ees.add( newee );
+
+        Map<DoubleVectorValueObject, Collection<Gene>> v = dedvs.getMaskedPreferredDataArrays( ees, genes );
+
+        assertEquals( 40, v.size() );
+    }
+
+    /**
+     * @return
+     */
+    private Collection<Gene> getGeneAssociatedWithEe() {
+        int i = 0;
+        ArrayDesign ad = newee.getBioAssays().iterator().next().getArrayDesignUsed();
+        Taxon taxon = taxonService.findByCommonName( "mouse" );
+        this.arrayDesignService.thawLite( ad );
+        Collection<Gene> genes = new HashSet<Gene>();
+        for ( CompositeSequence cs : ad.getCompositeSequences() ) {
+            if ( i >= 10 ) break;
+            Gene g = this.getTestPeristentGene();
+            BlatAssociation blata = BlatAssociation.Factory.newInstance();
+            blata.setGeneProduct( g.getProducts().iterator().next() );
+            BlatResult br = BlatResult.Factory.newInstance();
+            BioSequence bs = cs.getBiologicalCharacteristic();
+            if ( bs == null ) {
+                bs = BioSequence.Factory.newInstance();
+                bs.setName( RandomStringUtils.random( 10 ) );
+                bs.setTaxon( taxon );
+                bs = ( BioSequence ) persisterHelper.persist( bs );
+                cs.setBiologicalCharacteristic( bs );
+                compositeSequenceService.update( cs );
+            }
+
+            br.setQuerySequence( bs );
+            blata.setBlatResult( br );
+            blata.setBioSequence( bs );
+            persisterHelper.persist( blata );
+            genes.add( g );
+        }
+        return genes;
+    }
+
+    @SuppressWarnings("unchecked")
+    public void testGetPreferredVectors() {
 
         endTransaction();
         try {
@@ -120,23 +208,26 @@ public class DesignElementDataVectorDaoImplTest extends BaseSpringContextTest {
             Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
                     "GSE432", false, true, false );
             newee = results.iterator().next();
+
         } catch ( AlreadyExistsInSystemException e ) {
             newee = ( ExpressionExperiment ) e.getData();
         }
 
+        newee.setShortName( RandomStringUtils.randomAlphabetic( 12 ) );
+        expressionExperimentService.update( newee );
+
+        this.expressionExperimentService.thawLite( newee );
         DesignElementDataVectorService dedvs = ( DesignElementDataVectorService ) this
                 .getBean( "designElementDataVectorService" );
 
-        Collection<Gene> genes = new HashSet<Gene>();
-        Gene g = this.getTestPeristentGene();
-        genes.add( g );
+        Collection<Gene> genes = getGeneAssociatedWithEe();
 
         Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
         ees.add( newee );
 
-        Map<DesignElementDataVector, Collection<Gene>> geneCoexpressionPattern = dedvs.getVectors( ees, genes );
+        Map<DesignElementDataVector, Collection<Gene>> preferredVectors = dedvs.getPreferredVectors( ees, genes );
 
-        assertNotNull( geneCoexpressionPattern );
-
+        assertNotNull( preferredVectors );
+        assertEquals( 40, preferredVectors.size() );
     }
 }

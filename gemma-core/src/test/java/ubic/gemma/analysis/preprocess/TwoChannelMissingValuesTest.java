@@ -86,8 +86,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         expExp.setAccession( null );
 
         expExp = ( ExpressionExperiment ) persisterHelper.persist( expExp );
-        Collection<DesignElementDataVector> calls = tcmv.computeMissingValues( expExp, null, 2.0,
-                new ArrayList<Double>() );
+        Collection<DesignElementDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>() );
 
         /*
          * There is one array design and it has 10 rows.
@@ -112,8 +111,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         expExp.setName( RandomStringUtils.randomAlphabetic( 200 ) );
         expExp.setAccession( null );
         expExp = ( ExpressionExperiment ) persisterHelper.persist( expExp );
-        Collection<DesignElementDataVector> calls = tcmv.computeMissingValues( expExp, null, 2.0,
-                new ArrayList<Double>() );
+        Collection<DesignElementDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>() );
 
         /*
          * The expected number of rows is 30, because there are two platforms, one with 20 features and one with 10 (in
@@ -143,8 +141,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         expExp.setAccession( null );
         expExp = ( ExpressionExperiment ) persisterHelper.persist( expExp );
 
-        Collection<DesignElementDataVector> calls = tcmv.computeMissingValues( expExp, null, 2.0,
-                new ArrayList<Double>() );
+        Collection<DesignElementDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>() );
 
         assertEquals( 500, calls.size() );
 

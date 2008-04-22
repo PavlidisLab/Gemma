@@ -89,14 +89,43 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
         String a = "AREA";
         String b = "Number of pixels used to calculate a feature's intensity";
         StandardQuantitationType s = QuantitationTypeParameterGuesser.guessType( a.toLowerCase(), b.toLowerCase() );
-        assertEquals( StandardQuantitationType.OTHER, s );
+        assertEquals( "got " + s, StandardQuantitationType.OTHER, s );
     }
 
     public void testPixels() throws Exception {
         String a = "B Pixels";
         String b = "number of background pixels";
-        PrimitiveType s = QuantitationTypeParameterGuesser.guessPrimitiveType( a.toLowerCase(), b.toLowerCase() );
-        assertEquals( PrimitiveType.INT, s );
+        PrimitiveType s = QuantitationTypeParameterGuesser.guessPrimitiveType( a.toLowerCase(), b.toLowerCase(), null );
+        assertEquals( "got " + s, PrimitiveType.INT, s );
+    }
+
+    public void testPrimitiveType() throws Exception {
+        String a = "VALUE";
+        String b = "green_processed_Signal; the signal left after all the Feature extraction processing steps have been completed (e.g. background substraction)";
+        PrimitiveType s = QuantitationTypeParameterGuesser.guessPrimitiveType( a.toLowerCase(), b.toLowerCase(), 1.0 );
+        assertEquals( "got " + s, PrimitiveType.DOUBLE, s );
+    }
+
+    public void testPrimitiveTypeInteger() throws Exception {
+        String a = "B Pixels";
+        String b = "number of background pixels";
+        PrimitiveType s = QuantitationTypeParameterGuesser.guessPrimitiveType( a.toLowerCase(), b.toLowerCase(), 12232 );
+        assertTrue( "got " + s, s.equals( PrimitiveType.INT ) );
+    }
+
+    public void testPrimitiveTypeIntegerWrong() throws Exception {
+        String a = "B Pixels";
+        String b = "number of background pixels";
+        PrimitiveType s = QuantitationTypeParameterGuesser.guessPrimitiveType( a.toLowerCase(), b.toLowerCase(),
+                12232.00 );
+        assertTrue( "got " + s, s.equals( PrimitiveType.DOUBLE ) );
+    }
+
+    public void testPrimitiveTypeDoubleWrong() throws Exception {
+        String a = "VALUE";
+        String b = "green_processed_Signal; the signal left after all the Feature extraction processing steps have been completed (e.g. background substraction)";
+        PrimitiveType s = QuantitationTypeParameterGuesser.guessPrimitiveType( a.toLowerCase(), b.toLowerCase(), "a" );
+        assertFalse( "got " + s, PrimitiveType.DOUBLE.equals( s ) );
     }
 
     public void testPercent() throws Exception {
@@ -104,21 +133,21 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
         String b = "percentage of feature pixels with intensities more than one standard deviation above the background pixel intensity, at wavelength #2 (532 nm, Cy3)";
 
         ScaleType s = QuantitationTypeParameterGuesser.guessScaleType( a.toLowerCase(), b.toLowerCase() );
-        assertEquals( ScaleType.PERCENT, s );
+        assertEquals( "got " + s, ScaleType.PERCENT, s );
     }
 
     public void testbkdst() throws Exception {
         String a = "CH2_BKD_ SD";
         String b = "NChannel 2 background standard deviation";
         StandardQuantitationType s = QuantitationTypeParameterGuesser.guessType( a.toLowerCase(), b.toLowerCase() );
-        assertEquals( StandardQuantitationType.CONFIDENCEINDICATOR, s );
+        assertEquals( "got " + s, StandardQuantitationType.CONFIDENCEINDICATOR, s );
     }
 
     public void testbackground() throws Exception {
         String a = "B635_MEDIAN";
         String b = "median Cy5 feature background intensity";
         Boolean s = QuantitationTypeParameterGuesser.guessIsBackground( a.toLowerCase(), b.toLowerCase() );
-        assertEquals( Boolean.TRUE, s );
+        assertEquals( "got " + s, Boolean.TRUE, s );
     }
 
     public void testbackgroundB() throws Exception {
@@ -126,7 +155,7 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
         String b = "Percent of feature pixels that were greater than two standard deviations of the background over the background signal";
         Boolean s = QuantitationTypeParameterGuesser.guessIsBackground( a.toLowerCase(), b.toLowerCase() )
                 && QuantitationTypeParameterGuesser.maybeBackground( a.toLowerCase(), b.toLowerCase() );
-        assertEquals( Boolean.FALSE, s );
+        assertEquals( "got " + s, Boolean.FALSE, s );
 
     }
 
@@ -134,7 +163,7 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
         String a = "RAT1_MEAN";
         String b = "ratio of CH1D_MEAN to CH2D_MEAN";
         StandardQuantitationType s = QuantitationTypeParameterGuesser.guessType( a.toLowerCase(), b.toLowerCase() );
-        assertEquals( StandardQuantitationType.AMOUNT, s );
+        assertEquals( "got " + s, StandardQuantitationType.AMOUNT, s );
     }
 
     /**

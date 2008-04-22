@@ -227,7 +227,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
                 log.info( "Processing ArrayDesign..." );
 
                 arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign, idFileIs, new String[] { "nt",
-                        "est_others", "est_human", "est_mouse" }, null, force );
+                        "est_others", "est_human", "est_mouse" }, null, taxon, force );
 
                 audit( arrayDesign, "Sequences identifiers from file: " + idFile );
             } else {

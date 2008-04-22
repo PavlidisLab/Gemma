@@ -107,12 +107,14 @@ public class QuantitationTypeParameterGuesser {
                 .add( ".*channel [12] (mean|median) signal background (subtracted|corrected).*(?!ratio).*" );
         derivedSignalNamePatterns.add( "ch[12][nd]_(mean|median).*(?!ratio).*" );
 
-        derivedSignalNamePatterns.add( ".*channel[\\s_ ][12] (mean|median )?(signal|intensity) - background" );
+        derivedSignalNamePatterns.add( ".*channel[\\s_ ][12]\\s?(mean|median)?\\s?(signal|intensity) - background" );
         derivedSignalDescPatterns.add( ".*(?<!ratio).*(?<!un)normalized.*(?!ratio).*" );
+        derivedSignalDescPatterns.add( ".*processed_signal" );
         derivedSignalDescPatterns.add( ".*(?<!ratio).*difference between.*(?!ratio).*" );
         derivedSignalDescPatterns.add( ".*relative abundance of a transcript.*" );
         derivedSignalDescPatterns.add( "mas5 signal.*" );
-        derivedSignalDescPatterns.add( ".*(?<!ratio).*background[\\s-](subtracted|corrected).*(?!ratio).*" );
+        derivedSignalDescPatterns
+                .add( ".*(?<!ratio).*background[\\s-](subtraction|substraction|subtracted|corrected).*(?!ratio).*" );
         derivedSignalDescPatterns.add( ".*processed.*" );
         derivedSignalNamePatterns.add( "pos[/_](neg|fraction).*" );
         derivedSignalDescPatterns.add( "sum_of_(mean|median)s" );
@@ -223,7 +225,8 @@ public class QuantitationTypeParameterGuesser {
         representationNamePatterns.get( PrimitiveType.INT ).add( "pairs[_\\s]in[_\\s]?avg" );
         representationDescPatterns.get( PrimitiveType.INT ).add( "area" );
         representationDescPatterns.get( PrimitiveType.INT ).add( "b[\\s_]pixels" );
-        representationDescPatterns.get( PrimitiveType.INT ).add( ".*(array_row|array_column|top|left|right|bot).*" );
+        representationDescPatterns.get( PrimitiveType.INT ).add(
+                ".*(array_row|array_column|top|left(?!\\safter)|right|bot).*" );
         representationDescPatterns.get( PrimitiveType.INT ).add( ".*(x_coord|y_coord|x_location|y_location).*" );
         representationNamePatterns.get( PrimitiveType.STRING ).add( "abs([ _])?call" );
         representationNamePatterns.get( PrimitiveType.STRING ).add( "flag(s)?" );
@@ -424,16 +427,64 @@ public class QuantitationTypeParameterGuesser {
         return ScaleType.LINEAR; // default
     }
 
-    protected static PrimitiveType guessPrimitiveType( String name, String description ) {
+    protected static PrimitiveType guessPrimitiveType( String name, String description, Object exampleValue ) {
+
+        String exampleString = null;
+        boolean couldBeDouble = true;
+        boolean couldBeInt = true;
+        if ( exampleValue != null ) {
+            if ( exampleValue instanceof Double ) {
+                return PrimitiveType.DOUBLE;
+            } else if ( exampleValue instanceof Integer ) {
+                return PrimitiveType.INT;
+            } else if ( exampleValue instanceof Boolean ) {
+                return PrimitiveType.BOOLEAN;
+            } else if ( exampleValue instanceof String ) {
+                exampleString = ( String ) exampleValue;
+            }
+
+            if ( StringUtils.isNotBlank( exampleString ) ) {
+                try {
+                    Double.parseDouble( exampleString );
+                } catch ( NumberFormatException e ) {
+                    couldBeDouble = false;
+                }
+
+                try {
+                    Integer.parseInt( exampleString );
+                } catch ( NumberFormatException e ) {
+                    couldBeInt = false;
+                }
+            }
+        }
+
         for ( PrimitiveType type : representationDescPatterns.keySet() ) {
             for ( String patt : representationNamePatterns.get( type ) ) {
-                if ( name.matches( patt ) ) return type;
+                if ( name.matches( patt ) ) {
+                    if ( type.equals( PrimitiveType.DOUBLE ) && !couldBeDouble ) {
+                        continue; // cannot be double.
+                    }
+                    if ( type.equals( PrimitiveType.INT ) && !couldBeInt ) {
+                        continue;
+                    }
+                    return type;
+                }
             }
             for ( String patt : representationDescPatterns.get( type ) ) {
-                if ( description.matches( patt ) ) return type;
+                if ( description.matches( patt ) ) {
+                    if ( type.equals( PrimitiveType.DOUBLE ) && !couldBeDouble ) {
+                        continue; // cannot be double.
+                    }
+                    if ( type.equals( PrimitiveType.INT ) && !couldBeInt ) {
+                        continue;
+                    }
+                    return type;
+                }
             }
 
         }
+
+        if ( !couldBeDouble ) return PrimitiveType.STRING;
 
         return PrimitiveType.DOUBLE;
 
@@ -520,14 +571,20 @@ public class QuantitationTypeParameterGuesser {
         return true;
     }
 
+    public static void guessQuantitationTypeParameters( QuantitationType qt, String name, String description ) {
+        guessQuantitationTypeParameters( qt, name, description, null );
+    }
+
     /**
      * Attempt to fill in the details of the quantitation type.
      * 
      * @param qt QuantitationType to fill in details for.
      * @param namelc of the quantitation type from the GEO sample column
      * @param descriptionlc of the quantitation type from the GEO sample column
+     * @param exampleValue to help conversion test whether the parameters match.
      */
-    public static void guessQuantitationTypeParameters( QuantitationType qt, String name, String description ) {
+    public static void guessQuantitationTypeParameters( QuantitationType qt, String name, String description,
+            Object exampleValue ) {
 
         String namelc = name.toLowerCase();
         String descriptionlc = description.toLowerCase();
@@ -547,7 +604,7 @@ public class QuantitationTypeParameterGuesser {
 
         sType = guessScaleType( namelc, descriptionlc );
         qType = guessType( namelc, descriptionlc );
-        rType = guessPrimitiveType( namelc, descriptionlc );
+        rType = guessPrimitiveType( namelc, descriptionlc, exampleValue );
         isBackground = guessIsBackground( namelc, descriptionlc ) && maybeBackground( namelc, descriptionlc );
         isBackgroundSubtracted = isBackgroundSubtracted( namelc, descriptionlc );
         isNormalized = isNormalized( namelc, descriptionlc );
@@ -588,5 +645,6 @@ public class QuantitationTypeParameterGuesser {
         qt.setIsRatio( isRatio );
         qt.setIsPreferred( isPreferred( qt ) );
 
+        qt.setIsMaskedPreferred( Boolean.FALSE );
     }
 }

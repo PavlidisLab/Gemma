@@ -30,13 +30,13 @@ import org.apache.commons.logging.LogFactory;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
@@ -63,62 +63,41 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     }
 
     public ExpressionDataDoubleMatrix( Collection<DesignElementDataVector> dataVectors,
-            BioAssayDimension bioAssayDimension, QuantitationType quantitationType ) {
+            Collection<QuantitationType> quantitationTypes ) {
         init();
-        this.bioAssayDimensions.add( bioAssayDimension );
-        Collection<DesignElementDataVector> selectedVectors = selectVectors( dataVectors, bioAssayDimension,
-                quantitationType );
+        for ( QuantitationType qt : quantitationTypes ) {
+            if ( !qt.getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
+                throw new IllegalStateException( "Cannot convert non-double quantitation types into double matrix: "
+                        + qt );
+            }
+        }
+        Collection<DesignElementDataVector> selectedVectors = selectVectors( dataVectors, quantitationTypes );
+        vectorsToMatrix( selectedVectors );
+    }
+
+    public ExpressionDataDoubleMatrix( Collection<DesignElementDataVector> dataVectors,
+            QuantitationType quantitationType ) {
+        init();
+        if ( !quantitationType.getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
+            throw new IllegalStateException( "Cannot convert non-double quantitation types into double matrix: "
+                    + quantitationType );
+        }
+        Collection<DesignElementDataVector> selectedVectors = selectVectors( dataVectors, quantitationType );
         vectorsToMatrix( selectedVectors );
     }
 
     public ExpressionDataDoubleMatrix( Collection<DesignElementDataVector> vectors ) {
         init();
+
+        for ( DesignElementDataVector dedv : vectors ) {
+            if ( !dedv.getQuantitationType().getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
+                throw new IllegalStateException( "Cannot convert non-double quantitation types into double matrix:"
+                        + dedv.getQuantitationType() );
+            }
+        }
+
         selectVectors( vectors );
         vectorsToMatrix( vectors );
-    }
-
-    /**
-     * @param dataVectors
-     * @param bioAssayDimensions
-     * @param quantitationTypes
-     */
-    public ExpressionDataDoubleMatrix( Collection<DesignElementDataVector> dataVectors,
-            List<BioAssayDimension> bioAssayDimensions, List<QuantitationType> quantitationTypes ) {
-        init();
-        
-        this.expressionExperiment = dataVectors.iterator().next().getExpressionExperiment();
-        this.bioAssayDimensions.addAll( bioAssayDimensions );
-        Collection<DesignElementDataVector> selectedVectors = selectVectors( dataVectors, bioAssayDimensions,
-                quantitationTypes );
-        vectorsToMatrix( selectedVectors );
-    }
-
-    /**
-     * @param expressionExperiment
-     * @param bioAssayDimension
-     * @param quantitationType
-     */
-    public ExpressionDataDoubleMatrix( ExpressionExperiment expressionExperiment, BioAssayDimension bioAssayDimension,
-            QuantitationType quantitationType ) {
-        init();
-        this.bioAssayDimensions.add( bioAssayDimension );
-        Collection<DesignElementDataVector> selectedVectors = selectVectors( expressionExperiment, quantitationType,
-                bioAssayDimension );
-        vectorsToMatrix( selectedVectors );
-    }
-
-    /**
-     * @param expressionExperiment
-     * @param bioAssayDimensions A list of bioAssayDimensions to use.
-     * @param quantitationTypes A list of quantitation types to use, in the same order as the bioAssayDimensions
-     */
-    public ExpressionDataDoubleMatrix( ExpressionExperiment expressionExperiment,
-            List<BioAssayDimension> bioAssayDimensions, List<QuantitationType> quantitationTypes ) {
-        init();
-        this.bioAssayDimensions.addAll( bioAssayDimensions );
-        Collection<DesignElementDataVector> selectedVectors = selectVectors( expressionExperiment, quantitationTypes,
-                bioAssayDimensions );
-        vectorsToMatrix( selectedVectors );
     }
 
     public int columns() {
@@ -404,7 +383,9 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
             BioAssayDimension dimension = vector.getBioAssayDimension();
             Collection<BioAssay> bioAssays = dimension.getBioAssays();
             if ( bioAssays.size() != vals.length )
-                throw new IllegalStateException( "Expected " + vals.length + " got " + bioAssays.size() );
+                throw new IllegalStateException( "Mismatch: " + vals.length + " values in vector ( " + bytes.length
+                        + " bytes) for " + designElement + " got " + bioAssays.size()
+                        + " bioassays in the bioassaydimension" );
 
             Iterator it = bioAssays.iterator();
 

@@ -279,17 +279,18 @@ public class GeoDatasetService extends AbstractGeoService {
     }
 
     /**
-     * Build the map between the existing probe names and the ones in gemma.
+     * Build the map between the existing probe names and the ones in gemma. The information is stored in the
+     * GeoPlatform object
      * 
      * @param pl
      * @param columnWithGemmaNames
      * @param columnWithGeoNames
      */
     private void fillExistingProbeNameMap( GeoPlatform pl, String columnWithGemmaNames, String columnWithGeoNames ) {
-
         List<String> gemmaNames = pl.getColumnData( columnWithGemmaNames );
         List<String> geoNames = pl.getColumnData( columnWithGeoNames );
         assert gemmaNames.size() == geoNames.size();
+        log.info( "Matching up " + geoNames.size() + " probe names" );
         for ( int i = 0; i < gemmaNames.size(); i++ ) {
             String gemmaName = gemmaNames.get( i );
             String geoName = geoNames.get( i );
@@ -338,71 +339,100 @@ public class GeoDatasetService extends AbstractGeoService {
     }
 
     /**
-     * @param pl
+     * @param rawGEOPlatform
      */
-    private void matchToExistingPlatform( GeoPlatform pl ) {
+    private void matchToExistingPlatform( GeoPlatform rawGEOPlatform ) {
         // we have to populate this.
-        Map<String, String> probeNamesInGemma = pl.getProbeNamesInGemma();
+        Map<String, String> probeNamesInGemma = rawGEOPlatform.getProbeNamesInGemma();
 
         // do a partial conversion. We will throw this away;
-        ArrayDesign rawad = ( ArrayDesign ) geoConverter.convert( pl );
+        ArrayDesign geoArrayDesign = ( ArrayDesign ) geoConverter.convert( rawGEOPlatform );
 
         // find in our system
-        ArrayDesign existing = arrayDesignService.find( rawad );
+        ArrayDesign existing = arrayDesignService.find( geoArrayDesign );
 
         if ( existing == null ) {
-            log.info( pl + " looks new to Gemma" );
-            for ( CompositeSequence cs : rawad.getCompositeSequences() ) {
+            log.info( rawGEOPlatform + " looks new to Gemma" );
+            for ( CompositeSequence cs : geoArrayDesign.getCompositeSequences() ) {
                 String geoProbeName = cs.getName();
                 probeNamesInGemma.put( geoProbeName, geoProbeName ); // no mapping needed. NB the converter fills
                 // this in already, we're just being defensive
                 // here.
             }
         } else {
-            log.info( "Platform " + pl + " exists in Gemma, aligning ..." );
+            log.info( "Platform " + rawGEOPlatform
+                    + " exists in Gemma, checking for correct probe names and re-matching if necessary ..." );
             arrayDesignService.thawLite( existing );
 
             String columnWithGeoNames = null;
-            Set<String> geoProbeNames = new HashSet<String>();
-            for ( CompositeSequence cs : rawad.getCompositeSequences() ) {
-                String geoProbeName = cs.getName();
-                geoProbeNames.add( geoProbeName );
-                if ( columnWithGeoNames == null ) {
-                    for ( String colName : pl.getColumnNames() ) {
-                        if ( pl.getColumnData( colName ).contains( geoProbeName ) ) {
-                            columnWithGeoNames = colName;
-                            log.info( "GEO probe names were found in GEO column=" + columnWithGeoNames );
-                            break;
-                        }
-                    }
-                }
-            }
+            columnWithGeoNames = getGEOIDColumnName( rawGEOPlatform, geoArrayDesign, columnWithGeoNames );
 
-            if ( columnWithGeoNames == null ) {
-                throw new IllegalStateException( "Could not figure out which column the GEO probe names came from!" );
-            }
-
-            String columnWithGemmaNames = null;
-            allofit: for ( CompositeSequence cs : existing.getCompositeSequences() ) {
-                String gemmaProbeName = cs.getName();
-                // search the other columns
-                for ( String colName : pl.getColumnNames() ) {
-                    if ( pl.getColumnData( colName ).contains( gemmaProbeName ) ) {
-                        columnWithGemmaNames = colName;
-                        log.info( "Gemma probe names were found in GEO column=" + columnWithGemmaNames );
-
-                        fillExistingProbeNameMap( pl, columnWithGemmaNames, columnWithGeoNames );
-                        break allofit;
-                    }
-                }
-            }
-
-            if ( columnWithGemmaNames == null ) {
-                throw new IllegalStateException(
-                        "Could not figure out which column the Gemma probe names came from for platform=" + pl );
-            }
+            getGemmaIDColumnNameInGEO( rawGEOPlatform, existing, columnWithGeoNames );
 
         }
+    }
+
+    /**
+     * If the names in Gemma are not the same as the ID in GEO, we have to switch the new data over. This only works if
+     * the new names are given in another column in the GEO data. It als happens that sometimes some names in Gemma
+     * match multiple columns in GEO (for example, blank spots). We need to find the column with the unique match.
+     * 
+     * @param rawGEOPlatform
+     * @param existing
+     * @param columnWithGeoNames
+     */
+    private void getGemmaIDColumnNameInGEO( GeoPlatform rawGEOPlatform, ArrayDesign existing, String columnWithGeoNames ) {
+
+        String columnWithGemmaNames = null;
+        for ( CompositeSequence cs : existing.getCompositeSequences() ) {
+            String gemmaProbeName = cs.getName();
+            // search the other columns
+            int numColsMatching = 0;
+            for ( String colName : rawGEOPlatform.getColumnNames() ) {
+                if ( rawGEOPlatform.getColumnData( colName ).contains( gemmaProbeName ) ) {
+                    numColsMatching++;
+                    columnWithGemmaNames = colName;
+                }
+            }
+
+            // if more than one column matches, keep going until we find a unique match. If none match, then we're
+            // probably going to fail.
+            if ( numColsMatching == 1 ) {
+                log.info( "Gemma probe names were found in GEO column=" + columnWithGemmaNames );
+                fillExistingProbeNameMap( rawGEOPlatform, columnWithGemmaNames, columnWithGeoNames );
+                return;
+            }
+        }
+
+        throw new IllegalStateException(
+                "Could not figure out which column the Gemma probe names came from for platform=" + rawGEOPlatform );
+
+    }
+
+    /**
+     * @param rawGEOPlatform
+     * @param geoArrayDesign
+     * @param columnWithGeoNames
+     * @return
+     */
+    private String getGEOIDColumnName( GeoPlatform rawGEOPlatform, ArrayDesign geoArrayDesign, String columnWithGeoNames ) {
+        Set<String> geoProbeNames = new HashSet<String>();
+
+        // This should always be "ID", so this is just defensive programming.
+        for ( CompositeSequence cs : geoArrayDesign.getCompositeSequences() ) {
+            String geoProbeName = cs.getName();
+            geoProbeNames.add( geoProbeName );
+            for ( String colName : rawGEOPlatform.getColumnNames() ) {
+                if ( rawGEOPlatform.getColumnData( colName ).contains( geoProbeName ) ) {
+                    columnWithGeoNames = colName;
+                    log.info( "GEO probe names were found in GEO column=" + columnWithGeoNames );
+                    return columnWithGeoNames;
+                }
+            }
+        }
+
+        throw new IllegalStateException( "Could not figure out which column the GEO probe names came from!" );
+
     }
 
     /**

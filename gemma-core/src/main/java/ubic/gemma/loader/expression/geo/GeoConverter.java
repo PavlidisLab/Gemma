@@ -429,29 +429,31 @@ public class GeoConverter implements Converter {
                 numMissing++;
                 handleMissing( toConvert, pt );
             } else if ( rawValue instanceof String ) { // needs to be coverted.
+                String valueString = ( String ) rawValue;
+                if ( StringUtils.isBlank( valueString ) ) {
+                    numMissing++;
+                    handleMissing( toConvert, pt );
+                    continue;
+                }
                 try {
                     if ( pt.equals( PrimitiveType.DOUBLE ) ) {
-                        toConvert.add( Double.parseDouble( ( String ) rawValue ) );
+                        toConvert.add( Double.parseDouble( valueString ) );
                     } else if ( pt.equals( PrimitiveType.STRING ) ) {
                         toConvert.add( rawValue );
                     } else if ( pt.equals( PrimitiveType.CHAR ) ) {
-                        if ( ( ( String ) rawValue ).length() != 1 ) {
+                        if ( valueString.length() != 1 ) {
                             throw new IllegalStateException( "Attempt to cast a string of length "
-                                    + ( ( String ) rawValue ).length() + " to a char: " + rawValue
-                                    + "(quantitation type =" + qt );
+                                    + valueString.length() + " to a char: " + rawValue + "(quantitation type =" + qt );
                         }
-                        toConvert.add( ( ( String ) rawValue ).toCharArray()[0] );
+                        toConvert.add( valueString.toCharArray()[0] );
                     } else if ( pt.equals( PrimitiveType.INT ) ) {
-                        toConvert.add( Integer.parseInt( ( String ) rawValue ) );
+                        toConvert.add( Integer.parseInt( valueString ) );
                     } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
-                        toConvert.add( Boolean.parseBoolean( ( String ) rawValue ) );
+                        toConvert.add( Boolean.parseBoolean( valueString ) );
                     } else {
                         throw new UnsupportedOperationException( "Data vectors of type " + pt + " not supported" );
                     }
                 } catch ( NumberFormatException e ) {
-                    numMissing++;
-                    handleMissing( toConvert, pt );
-                } catch ( NullPointerException e ) {
                     numMissing++;
                     handleMissing( toConvert, pt );
                 }
@@ -464,7 +466,32 @@ public class GeoConverter implements Converter {
             return null;
         }
 
-        return byteArrayConverter.toBytes( toConvert.toArray() );
+        byte[] bytes = byteArrayConverter.toBytes( toConvert.toArray() );
+
+        /*
+         * Debugging - absolutely make sure we can convert the data back.
+         */
+        if ( pt.equals( PrimitiveType.DOUBLE ) ) {
+            double[] byteArrayToDoubles = byteArrayConverter.byteArrayToDoubles( bytes );
+            if ( byteArrayToDoubles.length != vector.size() ) {
+                throw new IllegalStateException( "Expected " + vector.size() + " got " + byteArrayToDoubles.length
+                        + " doubles" );
+            }
+        } else if ( pt.equals( PrimitiveType.INT ) ) {
+            int[] byteArrayToInts = byteArrayConverter.byteArrayToInts( bytes );
+            if ( byteArrayToInts.length != vector.size() ) {
+                throw new IllegalStateException( "Expected " + vector.size() + " got " + byteArrayToInts.length
+                        + " ints" );
+            }
+        } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
+            boolean[] byteArrayToBooleans = byteArrayConverter.byteArrayToBooleans( bytes );
+            if ( byteArrayToBooleans.length != vector.size() ) {
+                throw new IllegalStateException( "Expected " + vector.size() + " got " + byteArrayToBooleans.length
+                        + " booleans" );
+            }
+        }
+
+        return bytes;
     }
 
     /**
@@ -632,20 +659,23 @@ public class GeoConverter implements Converter {
 
             Map<String, List<Object>> dataVectors = makeDataVectors( values, datasetSamples, quantitationTypeIndex );
 
-            if ( dataVectors == null ) {
+            if ( dataVectors == null || dataVectors.size() == 0 ) {
                 log.debug( "No data for " + quantitationType + " (column=" + quantitationTypeIndex + ")" );
                 continue;
             }
-            log.debug( "Got " + dataVectors.size() + " data vectors for " + quantitationType + " (column="
-                    + quantitationTypeIndex + ")" );
+            log.info( dataVectors.size() + " data vectors for " + quantitationType );
+
+            Object exampleValue = dataVectors.values().iterator().next().iterator().next();
 
             QuantitationType qt = QuantitationType.Factory.newInstance();
             qt.setName( quantitationType );
             String description = quantitationTypeDescriptions.get( columnAccordingToSample );
             qt.setDescription( description );
-            QuantitationTypeParameterGuesser.guessQuantitationTypeParameters( qt, quantitationType, description );
+            QuantitationTypeParameterGuesser.guessQuantitationTypeParameters( qt, quantitationType, description,
+                    exampleValue );
 
             int count = 0;
+            int skipped = 0;
             for ( String designElementName : dataVectors.keySet() ) {
                 List<Object> dataVector = dataVectors.get( designElementName );
                 if ( dataVector == null || dataVector.size() == 0 ) continue;
@@ -654,6 +684,7 @@ public class GeoConverter implements Converter {
                         bioAssayDimension, designElementName, dataVector, qt );
 
                 if ( vector == null ) {
+                    skipped++;
                     if ( log.isDebugEnabled() )
                         log.debug( "Null vector for DE=" + designElementName + " QT=" + quantitationType );
                     continue;
@@ -677,10 +708,13 @@ public class GeoConverter implements Converter {
                     log.debug( count + " Data vectors added for '" + quantitationType + "'" );
                 }
             } else {
-                log.debug( "No vectors were retained for " + quantitationType
+                log.info( "No vectors were retained for " + quantitationType
                         + " -- usually this is due to all values being missing." );
             }
 
+            if ( skipped > 0 ) {
+                log.info( "Skipped " + skipped + " vectors" );
+            }
         }
         log.info( "Total of " + expExp.getDesignElementDataVectors().size() + " vectors on platform " + geoPlatform
                 + ", " + expExp.getQuantitationTypes().size() + " quantitation types." );
@@ -722,6 +756,11 @@ public class GeoConverter implements Converter {
 
         if ( dataVector == null || dataVector.size() == 0 ) return null;
 
+        int numValuesExpected = bioAssayDimension.getBioAssays().size();
+        if ( dataVector.size() != numValuesExpected ) {
+            throw new IllegalArgumentException( "Expected " + numValuesExpected
+                    + " in bioassaydimension, data contains " + dataVector.size() );
+        }
         byte[] blob = convertData( dataVector, qt );
         if ( blob == null ) { // all missing etc.
             if ( log.isDebugEnabled() ) log.debug( "All missing values for DE=" + designElementName + " QT=" + qt );
@@ -737,7 +776,10 @@ public class GeoConverter implements Converter {
         Map<String, CompositeSequence> designMap = platformDesignElementMap.get( p.getShortName() );
         assert designMap != null;
 
-        // replace name with the one we're using in the array design after conversion.
+        /*
+         * Replace name with the one we're using in the array design after conversion. This information gets filled in
+         * earlier in the conversion process (see GeoDatasetService)
+         */
         String mappedName = geoPlatform.getProbeNamesInGemma().get( designElementName );
         CompositeSequence compositeSequence = designMap.get( mappedName );
 
@@ -1259,17 +1301,40 @@ public class GeoConverter implements Converter {
      */
     private void matchSampleVariableToExperimentalFactorValue( BioMaterial bioMaterial,
             Collection<ExperimentalFactor> experimentalFactors, GeoVariable variable ) {
+
         // find the experimentalFactor that matches this.
         FactorValue convertVariableToFactorValue = convertVariableToFactorValue( variable );
         FactorValue matchingFactorValue = findMatchingExperimentalFactorValue( experimentalFactors,
                 convertVariableToFactorValue );
 
-        if ( matchingFactorValue != null ) {
-            bioMaterial.getFactorValues().add( matchingFactorValue );
-        } else {
+        if ( matchingFactorValue == null ) {
             throw new IllegalStateException( "Could not find matching factor value for " + variable
                     + " in experimental design for sample " + bioMaterial );
         }
+
+        // make sure we don't put the factor value on more than once.
+        if ( alreadyHasFactorValueForFactor( bioMaterial, matchingFactorValue.getExperimentalFactor() ) ) {
+            return;
+        }
+
+        bioMaterial.getFactorValues().add( matchingFactorValue );
+
+    }
+
+    /**
+     * @param bioMaterial
+     * @param experimentalFactor
+     * @return true if the biomaterial already has a factorvalue for the given experimentalFactor; false otherwise.
+     */
+    private boolean alreadyHasFactorValueForFactor( BioMaterial bioMaterial, ExperimentalFactor experimentalFactor ) {
+        for ( FactorValue fv : bioMaterial.getFactorValues() ) {
+            ExperimentalFactor existingEf = fv.getExperimentalFactor();
+            // This is a weak form of 'equals' - we just check the name.
+            if ( existingEf.getName().equals( experimentalFactor.getName() ) ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -2259,8 +2324,6 @@ public class GeoConverter implements Converter {
         Map<String, List<Object>> dataVectors = new HashMap<String, List<Object>>( INITIAL_VECTOR_CAPACITY );
         Collections.sort( datasetSamples );
         GeoPlatform platform = getPlatformForSamples( datasetSamples );
-
-        // log.info(values.toString());
 
         // the locations of the data we need in the target vectors (mostly reordering)
         Integer[] indices = values.getIndices( platform, datasetSamples, quantitationTypeIndex );

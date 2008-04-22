@@ -19,6 +19,7 @@
 package ubic.gemma.analysis.service;
 
 import java.util.Collection;
+import java.util.Map;
 
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.analysis.preprocess.filter.ExpressionExperimentFilter;
@@ -29,8 +30,10 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.genome.Gene;
 
 /**
  * Tools for easily getting data matrices for analysis in a consistent way.
@@ -112,7 +115,18 @@ public class AnalysisHelperService {
     public ExpressionDataDoubleMatrix getMaskedPreferredDataMatrix( ExpressionExperiment ee ) {
         Collection<DesignElementDataVector> dataVectors = getPreferredAndMissingValueVectors( ee );
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( dataVectors );
-        return builder.getMaskedPreferredData( null );
+        return builder.getMaskedPreferredData();
+    }
+
+    /**
+     * @param ee
+     * @param genes
+     * @return map of vectors to genes.
+     */
+    @SuppressWarnings("unchecked")
+    public Map<DoubleVectorValueObject, Collection<Gene>> getMaskedPreferredDataVectors(
+            Collection<ExpressionExperiment> ees, Collection<Gene> genes ) {
+        return this.vectorService.getMaskedPreferredDataArrays( ees, genes );
     }
 
     /**

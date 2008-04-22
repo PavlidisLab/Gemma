@@ -33,6 +33,7 @@ import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -344,8 +345,10 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
         quantitationType = QuantitationType.Factory.newInstance();
         quantitationType.setName( "a test quantitation type" );
+        quantitationType.setRepresentation( PrimitiveType.DOUBLE );
         quantitationType.setType( StandardQuantitationType.AMOUNT );
         quantitationType.setIsPreferred( true );
+        quantitationType.setIsMaskedPreferred( false );
         quantitationType.setIsBackground( false );
         quantitationType.setIsNormalized( false );
         quantitationType.setIsBackgroundSubtracted( false );

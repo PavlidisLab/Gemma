@@ -62,6 +62,8 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.BusinessKey;
+import ubic.gemma.util.ChannelUtils;
+import ubic.gemma.util.CommonQueries;
 
 /**
  * @author pavlidis
@@ -382,12 +384,12 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                      */
                     mayBeOneChannel = true;
                     break;
-                } else if ( isSignalChannela( qt.getName() ) ) {
+                } else if ( ChannelUtils.isSignalChannela( qt.getName() ) ) {
                     hasIntensityA = true;
                     if ( hasIntensityB ) {
                         hasBothIntensities = true;
                     }
-                } else if ( isSignalChannelB( qt.getName() ) ) {
+                } else if ( ChannelUtils.isSignalChannelB( qt.getName() ) ) {
                     hasIntensityB = true;
                     if ( hasIntensityA ) {
                         hasBothIntensities = true;
@@ -432,44 +434,6 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
         }
         return results;
-    }
-
-    /**
-     * For two-color arrays: Given the quantitation type name, determine if it represents the channel A signal. (by
-     * convention, green)
-     * <p>
-     * FIXME this duplicates code found in the ExpressionDataMatrixBuilder
-     * 
-     * @param name
-     * @return
-     */
-    private boolean isSignalChannela( String name ) {
-        return name.matches( "CH1(I)?_MEDIAN" ) || name.matches( "CH1(I)?_MEAN" ) || name.equals( "RAW_DATA" )
-                || name.toLowerCase().matches( "f532[\\s_\\.](mean|median)" ) || name.equals( "SIGNAL_CHANNEL 1MEDIAN" )
-                || name.toLowerCase().matches( "ch1_smtm" ) || name.equals( "G_MEAN" ) || name.equals( "Ch1SigMedian" )
-                || name.equals( "ch1.Intensity" ) || name.equals( "CH1_SIG_MEAN" ) || name.equals( "CH1_ Median" )
-                || name.toUpperCase().matches( "\\w{2}\\d{3}_CY3" ) || name.toUpperCase().matches( "NORM(.*)CH1" )
-                || name.equals( "CH1Mean" ) || name.equals( "CH1_SIGNAL" ) || name.equals( "\"log2(532), gN\"" )
-                || name.equals( "gProcessedSignal" );
-    }
-
-    /**
-     * For two-color arrays: Given the quantitation type name, determine if it represents the channel B signal. (by
-     * convention, red)
-     * <p>
-     * FIXME this duplicates code found in the ExpressionDataMatrixBuilder
-     * 
-     * @param name
-     * @return
-     */
-    private boolean isSignalChannelB( String name ) {
-        return name.matches( "CH2(I)?_MEDIAN" ) || name.matches( "CH2(I)?_MEAN" ) || name.equals( "RAW_CONTROL" )
-                || name.toLowerCase().matches( "f635[\\s_\\.](mean|median)" ) || name.equals( "SIGNAL_CHANNEL 2MEDIAN" )
-                || name.toLowerCase().matches( "ch2_smtm" ) || name.equals( "R_MEAN" ) || name.equals( "Ch2SigMedian" )
-                || name.equals( "ch2.Intensity" ) || name.equals( "CH2_SIG_MEAN" ) || name.equals( "CH2_ Median" )
-                || name.toUpperCase().matches( "\\w{2}\\d{3}_CY5" ) || name.toUpperCase().matches( "NORM(.*)CH2" )
-                || name.equals( "CH2Mean" ) || name.equals( "CH2_SIGNAL" ) || name.equals( "\"log2(635), gN\"" )
-                || name.equals( "rProcessedSignal" );
     }
 
     /**
@@ -908,6 +872,18 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         return dedv2genes;
     }
 
+    protected QuantitationType handleGetMaskedPreferredQuantitationType( ExpressionExperiment ee ) throws Exception {
+        String queryString = "select q from ExpressionExperimentImpl e inner join e.quantitationTypes q where e = :ee and q.isMaskedPreferred = true";
+        List k = this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
+        if ( k.size() == 1 ) {
+            return ( QuantitationType ) k.iterator().next();
+        } else if ( k.size() > 1 ) {
+            throw new IllegalStateException(
+                    "There should only be one masked preferred quantitationtype per expressionexperiment (" + ee + ")" );
+        }
+        return null;
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -930,7 +906,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         StopWatch timer = new StopWatch();
         timer.start();
 
-        Map<ArrayDesign, Collection<ExpressionExperiment>> eeAdMap = getArrayDesignsUsed( eeList );
+        Map<ArrayDesign, Collection<ExpressionExperiment>> eeAdMap = CommonQueries.getArrayDesignsUsed( eeList, this
+                .getSession( false ) );
 
         timer.stop();
         if ( timer.getTime() > 1000 ) log.info( "Get array designs used for EEs: " + timer.getTime() );
@@ -976,38 +953,6 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             throw super.convertHibernateAccessException( ex );
         }
         return result;
-    }
-
-    /**
-     * @param eeList
-     * @return map of array designs to the experiments they were used in.
-     */
-    private Map<ArrayDesign, Collection<ExpressionExperiment>> getArrayDesignsUsed( List<ExpressionExperiment> eeList ) {
-        Map<ArrayDesign, Collection<ExpressionExperiment>> eeAdMap = new HashMap<ArrayDesign, Collection<ExpressionExperiment>>();
-        final String eeAdQuery = "select distinct ee,b.arrayDesignUsed from ExpressionExperimentImpl as ee inner join "
-                + "ee.bioAssays b where ee in (:ees)";
-        try {
-            Session session = super.getSession( false );
-            org.hibernate.Query queryObject = session.createQuery( eeAdQuery );
-            queryObject.setCacheable( true );
-            queryObject.setParameterList( "ees", eeList );
-
-            List qr = queryObject.list();
-            for ( Object o : qr ) {
-                Object[] ar = ( Object[] ) o;
-                ExpressionExperiment ee = ( ExpressionExperiment ) ar[0];
-                ArrayDesign ad = ( ArrayDesign ) ar[1];
-                if ( !eeAdMap.containsKey( ad ) ) {
-                    eeAdMap.put( ad, new HashSet<ExpressionExperiment>() );
-                }
-                eeAdMap.get( ad ).add( ee );
-            }
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-
-        return eeAdMap;
     }
 
     /*

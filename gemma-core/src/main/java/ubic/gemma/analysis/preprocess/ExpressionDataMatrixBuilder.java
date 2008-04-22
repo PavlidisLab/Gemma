@@ -44,6 +44,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.util.ChannelUtils;
 
 /**
  * Utility methods for taking an ExpressionExperiment and returning various types of ExpressionDataMatrices, such as the
@@ -58,11 +59,144 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public class ExpressionDataMatrixBuilder {
 
     private static Log log = LogFactory.getLog( ExpressionDataMatrixBuilder.class.getName() );
+
+    /**
+     * @param representation PrimitiveType
+     * @param vectors raw vectors
+     * @return matrix of appropriate type.
+     */
+    public static ExpressionDataMatrix<?> getMatrix( PrimitiveType representation,
+            Collection<DesignElementDataVector> vectors ) {
+        ExpressionDataMatrix expressionDataMatrix = null;
+        if ( representation.equals( PrimitiveType.DOUBLE ) ) {
+            expressionDataMatrix = new ExpressionDataDoubleMatrix( vectors );
+        } else if ( representation.equals( PrimitiveType.STRING ) ) {
+            expressionDataMatrix = new ExpressionDataStringMatrix( vectors );
+        } else if ( representation.equals( PrimitiveType.INT ) ) {
+            expressionDataMatrix = new ExpressionDataIntegerMatrix( vectors );
+        } else if ( representation.equals( PrimitiveType.BOOLEAN ) ) {
+            expressionDataMatrix = new ExpressionDataBooleanMatrix( vectors );
+        } else {
+            throw new UnsupportedOperationException( "Don't know how to deal with matrices of type " + representation );
+        }
+        return expressionDataMatrix;
+    }
+
+    /**
+     * @param expressionExperiment (should be lightly thawed)
+     * @return
+     */
+    public static Collection<QuantitationType> getMissingValueQuantitationTypes(
+            ExpressionExperiment expressionExperiment ) {
+        Collection<QuantitationType> neededQtTypes = new HashSet<QuantitationType>();
+
+        Collection<QuantitationType> eeQtTypes = expressionExperiment.getQuantitationTypes();
+
+        if ( eeQtTypes.size() == 0 )
+            throw new IllegalArgumentException( "No quantitation types for " + expressionExperiment );
+
+        log.debug( "Experiment has " + eeQtTypes.size() + " quantitation types" );
+
+        for ( QuantitationType qType : eeQtTypes ) {
+            if ( qType.getType().equals( StandardQuantitationType.PRESENTABSENT ) ) {
+                log.debug( "Present/absent=" + qType );
+                neededQtTypes.add( qType );
+            }
+        }
+
+        return neededQtTypes;
+    }
+
+    /**
+     * @param expressionExperiment
+     * @return
+     */
+    public static Collection<QuantitationType> getPreferredQuantitationTypes( ExpressionExperiment expressionExperiment ) {
+        Collection<QuantitationType> neededQtTypes = new HashSet<QuantitationType>();
+
+        Collection<QuantitationType> eeQtTypes = expressionExperiment.getQuantitationTypes();
+
+        if ( eeQtTypes.size() == 0 )
+            throw new IllegalArgumentException( "No quantitation types for " + expressionExperiment );
+
+        log.debug( "Experiment has " + eeQtTypes.size() + " quantitation types" );
+
+        for ( QuantitationType qType : eeQtTypes ) {
+            if ( qType.getIsPreferred() ) {
+                log.debug( "Preferred=" + qType );
+                neededQtTypes.add( qType );
+            }
+        }
+
+        return neededQtTypes;
+    }
+
+    /**
+     * @param expressionExperiment
+     * @return
+     */
+    public static Collection<QuantitationType> getPreferredAndMissingQuantitationTypes(
+            ExpressionExperiment expressionExperiment ) {
+        Collection<QuantitationType> neededQtTypes = new HashSet<QuantitationType>();
+        neededQtTypes.addAll( getPreferredQuantitationTypes( expressionExperiment ) );
+        neededQtTypes.addAll( getMissingValueQuantitationTypes( expressionExperiment ) );
+        return neededQtTypes;
+    }
+
+    /**
+     * Get just the quantitation types that are likely to be 'useful': Preferred, present/absent, signals and background
+     * from both channels (if present).
+     * 
+     * @return
+     */
+    public static Collection<QuantitationType> getUsefulQuantitationTypes( ExpressionExperiment expressionExperiment ) {
+        Collection<QuantitationType> neededQtTypes = new HashSet<QuantitationType>();
+
+        Collection<QuantitationType> eeQtTypes = expressionExperiment.getQuantitationTypes();
+
+        if ( eeQtTypes.size() == 0 )
+            throw new IllegalArgumentException( "No quantitation types for " + expressionExperiment );
+
+        log.info( "Experiment has " + eeQtTypes.size() + " quantitation types" );
+
+        for ( QuantitationType qType : eeQtTypes ) {
+
+            String name = qType.getName();
+            if ( qType.getIsPreferred() ) {
+                log.info( "Preferred=" + qType );
+                neededQtTypes.add( qType );
+            } else if ( ChannelUtils.isBackgroundChannelA( name ) ) {
+                neededQtTypes.add( qType );
+                log.info( "Background A=" + qType );
+            } else if ( ChannelUtils.isBackgroundChannelB( name ) ) {
+                neededQtTypes.add( qType );
+                log.info( "Background B=" + qType );
+            } else if ( ChannelUtils.isSignalChannela( name ) ) {
+                neededQtTypes.add( qType );
+                log.info( "Signal A=" + qType );
+            } else if ( ChannelUtils.isSignalChannelB( name ) ) {
+                neededQtTypes.add( qType );
+                log.info( "Signal B=" + qType );
+            } else if ( name.matches( "CH1D_MEAN" ) ) {
+                /*
+                 * Special case. This is the background subtracted channel 1 for Genepix data. It is only needed to
+                 * reconstruct CH1 if it isn't present, which is surprisingly common in Stanford data sets
+                 */
+                neededQtTypes.add( qType );
+            } else if ( qType.getType().equals( StandardQuantitationType.PRESENTABSENT ) ) {
+                log.info( "Present/absent=" + qType );
+                neededQtTypes.add( qType );
+            }
+        }
+
+        return neededQtTypes;
+    }
+
+    Collection<DesignElementDataVector> vectors;
+
     private ExpressionExperiment expressionExperiment;
 
     private Map<ArrayDesign, BioAssayDimension> dimMap = new HashMap<ArrayDesign, BioAssayDimension>();
-
-    Collection<DesignElementDataVector> vectors;
 
     /**
      * @param collection of vectors. They should be thawed first.
@@ -74,13 +208,30 @@ public class ExpressionDataMatrixBuilder {
     }
 
     /**
-     * @param arrayDesign can be null
+     * @param vector
      * @return
      */
-    public ExpressionDataDoubleMatrix getBackgroundChannelA( ArrayDesign arrayDesign ) {
-        QuantitationTypeData dat = getQuantitationTypesNeeded( arrayDesign );
+    public ArrayDesign arrayDesignForVector( DesignElementDataVector vector ) {
+        Collection<BioAssay> bioAssays = vector.getBioAssayDimension().getBioAssays();
+        if ( bioAssays.size() == 0 ) throw new IllegalArgumentException( "No bioassays for vector." );
+        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+        for ( BioAssay ba : bioAssays ) {
+            ads.add( ba.getArrayDesignUsed() );
+        }
+        if ( ads.size() > 1 ) {
+            throw new IllegalArgumentException( "Can't handle vectors with multiple array design represented" );
+        }
+        ArrayDesign adUsed = ads.iterator().next();
+        return adUsed;
+    }
 
-        List<BioAssayDimension> dimensions = getBioAssayDimensions( arrayDesign );
+    /**
+     * @return
+     */
+    public ExpressionDataDoubleMatrix getBackgroundChannelA() {
+        QuantitationTypeData dat = getQuantitationTypesNeeded();
+
+        List<BioAssayDimension> dimensions = getBioAssayDimensions();
 
         List<QuantitationType> qTypes = new ArrayList<QuantitationType>();
 
@@ -90,19 +241,18 @@ public class ExpressionDataMatrixBuilder {
         }
 
         if ( qTypes.size() != 0 ) {
-            return makeMatrix( dimensions, qTypes );
+            return makeMatrix( qTypes );
         }
         return null;
     }
 
     /**
-     * @param arrayDesign can be null
      * @return
      */
-    public ExpressionDataDoubleMatrix getBackgroundChannelB( ArrayDesign arrayDesign ) {
-        QuantitationTypeData dat = getQuantitationTypesNeeded( arrayDesign );
+    public ExpressionDataDoubleMatrix getBackgroundChannelB() {
+        QuantitationTypeData dat = getQuantitationTypesNeeded();
 
-        List<BioAssayDimension> dimensions = getBioAssayDimensions( arrayDesign );
+        List<BioAssayDimension> dimensions = getBioAssayDimensions();
 
         List<QuantitationType> qTypes = new ArrayList<QuantitationType>();
 
@@ -112,26 +262,22 @@ public class ExpressionDataMatrixBuilder {
         }
 
         if ( qTypes.size() != 0 ) {
-            return makeMatrix( dimensions, qTypes );
+            return makeMatrix( qTypes );
         }
         return null;
     }
 
     /**
-     * This will return a single BioAssayDimension except if the arrayDesign is null AND there are multiple array
-     * designs used in the experiment.
+     * This will return a single BioAssayDimension except if there are multiple array designs used in the experiment.
      * 
-     * @param arrayDesign can be null
      * @return
      */
-    public List<BioAssayDimension> getBioAssayDimensions( ArrayDesign arrayDesign ) {
+    public List<BioAssayDimension> getBioAssayDimensions() {
 
         List<BioAssayDimension> result = new ArrayList<BioAssayDimension>();
-        if ( arrayDesign == null && dimMap.keySet().size() > 0 ) {
+
+        if ( dimMap.keySet().size() > 0 ) {
             result.addAll( dimMap.values() );
-            return result;
-        } else if ( arrayDesign != null && dimMap.containsKey( arrayDesign ) ) {
-            result.add( dimMap.get( arrayDesign ) );
             return result;
         }
 
@@ -142,10 +288,10 @@ public class ExpressionDataMatrixBuilder {
             if ( !dimMap.containsKey( adUsed ) ) {
                 dimMap.put( adUsed, vector.getBioAssayDimension() );
             }
-            if ( arrayDesign == null || adUsed.equals( arrayDesign ) ) {
-                assert vector.getBioAssayDimension() != null;
-                dimensions.add( vector.getBioAssayDimension() );
-            }
+            // if ( arrayDesign == null || adUsed.equals( arrayDesign ) ) {
+            assert vector.getBioAssayDimension() != null;
+            dimensions.add( vector.getBioAssayDimension() );
+            // }
         }
 
         log.debug( "got " + dimensions.size() + " bioassaydimensions" );
@@ -154,123 +300,11 @@ public class ExpressionDataMatrixBuilder {
     }
 
     /**
-     * @return a matrix of booleans, or null if a missing value quantitation type ("absent/present", which may have been
-     *         computed by our system) is not found. This will return the values whether the array design is two-color
-     *         or not.
-     */
-    public ExpressionDataBooleanMatrix getMissingValueData( ArrayDesign arrayDesign ) {
-        List<QuantitationType> qtypes = this.getMissingValueQTypes( arrayDesign );
-        if ( qtypes == null || qtypes.size() == 0 ) return null;
-        List<BioAssayDimension> dimensions = this.getBioAssayDimensions( arrayDesign );
-        return new ExpressionDataBooleanMatrix( vectors, dimensions, qtypes );
-    }
-
-    /**
-     * @return Matrix of the 'preferred' data.
-     */
-    public ExpressionDataDoubleMatrix getPreferredData() {
-        return this.getPreferredData( null );
-    }
-
-    /**
-     * arrayDesign The array design to consider; this can be null to get results for all the array designs used.
-     * 
-     * @param arrayDesign, which can be null.
-     * @return Collection of vectors with the 'preferred' quantitation type, for the array design selected.
-     */
-    public Collection<DesignElementDataVector> getPreferredDataVectors( ArrayDesign arrayDesign ) {
-        Collection<DesignElementDataVector> result = new HashSet<DesignElementDataVector>();
-
-        List<BioAssayDimension> dimensions = this.getBioAssayDimensions( arrayDesign );
-        List<QuantitationType> qtypes = this.getPreferredQTypes( arrayDesign );
-
-        for ( DesignElementDataVector vector : vectors ) {
-            if ( dimensions.contains( vector.getBioAssayDimension() ) && qtypes.contains( vector.getQuantitationType() ) )
-                result.add( vector );
-        }
-        return result;
-    }
-
-    /**
-     * @param arrayDesign The array design to consider; this can be null to get results for all the array designs used.
      * @return
      */
-    public ExpressionDataDoubleMatrix getPreferredData( ArrayDesign arrayDesign ) {
-        List<BioAssayDimension> dimensions = this.getBioAssayDimensions( arrayDesign );
-
-        if ( dimensions.size() == 0 ) {
-            throw new IllegalStateException( "Could not find any BioAssayDimensions" );
-        }
-
-        List<QuantitationType> qtypes = this.getPreferredQTypes( arrayDesign );
-
-        if ( qtypes.size() == 0 ) {
-            log.warn( "Could not find a 'preferred' quantitation type" );
-            return null;
-        }
-
-        log.info( qtypes.size() + " preferred quantitation types" );
-        log.info( dimensions.size() + " bioassay dimensions" );
-        log.info( vectors.size() + " vectors" );
-
-        return new ExpressionDataDoubleMatrix( vectors, dimensions, qtypes );
-    }
-
-    /**
-     * @param arrayDesign. Unlike other methods, the array design cannot be null under all conditions.
-     * @return
-     */
-    private ExpressionDataDoubleMatrix getSignalChannelAFancy( ArrayDesign arrayDesign ) {
-        boolean channelANeedsReconstruction = false;
-
-        /*
-         * This is made messy by data sets where the non-background-subtracted data has been omitted, but the background
-         * values are available.
-         */
-        QuantitationTypeData dat = getQuantitationTypesNeeded( arrayDesign );
-        List<BioAssayDimension> dimensions = this.getBioAssayDimensions( arrayDesign );
-
-        BioAssayDimension dimension = dimensions.iterator().next();
-
-        QuantitationType signalChannelA = dat.getSignalChannelA( dimension );
-        QuantitationType signalChannelB = dat.getSignalChannelB( dimension );
-        QuantitationType backgroundChannelA = dat.getBackgroundChannelA( dimension );
-        QuantitationType bkgSubChannelA = dat.getBkgSubChannelA( dimension );
-
-        channelANeedsReconstruction = checkChannelA( signalChannelA, signalChannelB, backgroundChannelA, bkgSubChannelA );
-
-        if ( channelANeedsReconstruction && arrayDesign == null && dimensions.size() > 1 ) {
-            throw new UnsupportedOperationException(
-                    "Cannot create channel A signal matrix for multiple array designs at once when the signal needs the background added back." );
-        }
-
-        ExpressionDataDoubleMatrix signalDataA = null;
-        if ( channelANeedsReconstruction ) {
-
-            ExpressionDataDoubleMatrix bkgDataA = null;
-            if ( backgroundChannelA != null ) {
-                bkgDataA = new ExpressionDataDoubleMatrix( vectors, dimension, backgroundChannelA );
-            }
-
-            // use background-subtracted data and add bkg back on
-            assert bkgDataA != null;
-            assert bkgSubChannelA != null;
-            signalDataA = new ExpressionDataDoubleMatrix( vectors, dimension, bkgSubChannelA );
-            addBackgroundBack( signalDataA, bkgDataA );
-            return signalDataA;
-
-        }
-        return getSignalChannelA( arrayDesign );
-
-    }
-
-    /**
-     * @param arrayDesign
-     * @return
-     */
-    public ExpressionDataDoubleMatrix getBkgSubChannelA( ArrayDesign arrayDesign ) {
-        QuantitationTypeData dat = getQuantitationTypesNeeded( arrayDesign );
-        List<BioAssayDimension> dimensions = this.getBioAssayDimensions( arrayDesign );
+    public ExpressionDataDoubleMatrix getBkgSubChannelA() {
+        QuantitationTypeData dat = getQuantitationTypesNeeded();
+        List<BioAssayDimension> dimensions = this.getBioAssayDimensions();
         List<QuantitationType> qTypes = new ArrayList<QuantitationType>();
 
         for ( BioAssayDimension dimension : dimensions ) {
@@ -279,63 +313,13 @@ public class ExpressionDataMatrixBuilder {
         }
 
         if ( qTypes.size() != 0 ) {
-            return makeMatrix( dimensions, qTypes );
+            return makeMatrix( qTypes );
         }
         return null;
     }
 
-    /**
-     * @param arrayDesign
-     * @return
-     */
-    public ExpressionDataDoubleMatrix getSignalChannelB( ArrayDesign arrayDesign ) {
-        QuantitationTypeData dat = getQuantitationTypesNeeded( arrayDesign );
-        List<BioAssayDimension> dimensions = this.getBioAssayDimensions( arrayDesign );
-        List<QuantitationType> qTypes = new ArrayList<QuantitationType>();
-
-        for ( BioAssayDimension dimension : dimensions ) {
-            QuantitationType qType = dat.getSignalChannelB( dimension );
-            if ( qType != null ) qTypes.add( qType );
-        }
-
-        if ( qTypes.size() != 0 ) {
-            return makeMatrix( dimensions, qTypes );
-        }
-        return null;
-    }
-
-    /**
-     * @param arrayDesign, Can be null. However, in some cases this will fail if the array Design is null. Specifically,
-     *        if there are multiple array designs and one of them has data that needs the signal reconstructed by adding
-     *        back the background, an exception will be thrown. Therefore it is recommended to call this method with a
-     *        non-null array design.
-     * @return
-     */
-    public ExpressionDataDoubleMatrix getSignalChannelA( ArrayDesign arrayDesign ) {
-        QuantitationTypeData dat = getQuantitationTypesNeeded( arrayDesign );
-        List<BioAssayDimension> dimensions = this.getBioAssayDimensions( arrayDesign );
-        List<QuantitationType> qTypes = new ArrayList<QuantitationType>();
-
-        for ( BioAssayDimension dimension : dimensions ) {
-
-            QuantitationType signalChannelA = dat.getSignalChannelA( dimension );
-            QuantitationType signalChannelB = dat.getSignalChannelB( dimension );
-            QuantitationType backgroundChannelA = dat.getBackgroundChannelA( dimension );
-            QuantitationType bkgSubChannelA = dat.getBkgSubChannelA( dimension );
-
-            boolean channelANeedsReconstruction = checkChannelA( signalChannelA, signalChannelB, backgroundChannelA,
-                    bkgSubChannelA );
-
-            if ( channelANeedsReconstruction ) {
-                return getSignalChannelAFancy( arrayDesign );
-            }
-            if ( signalChannelA != null ) qTypes.add( signalChannelA );
-        }
-
-        if ( qTypes.size() != 0 ) {
-            return makeMatrix( dimensions, qTypes );
-        }
-        return null;
+    public ExpressionExperiment getExpressionExperiment() {
+        return expressionExperiment;
     }
 
     /**
@@ -344,27 +328,28 @@ public class ExpressionDataMatrixBuilder {
      * intensities returned are just from the one channel. For one-color arrays, this is the same as the preferred data
      * matrix.
      * 
-     * @param arrayDesign
      * @return
      */
-    public ExpressionDataDoubleMatrix getIntensity( ArrayDesign arrayDesign ) {
-        if ( arrayDesign != null && arrayDesign.getTechnologyType().equals( TechnologyType.TWOCOLOR ) ) {
+    public ExpressionDataDoubleMatrix getIntensity() {
+        if ( this.isTwoColor() ) {
 
-            ExpressionDataDoubleMatrix signalA = this.getSignalChannelA( arrayDesign );
-            ExpressionDataDoubleMatrix signalB = this.getSignalChannelB( arrayDesign );
-            ExpressionDataDoubleMatrix backgroundA = this.getBackgroundChannelA( arrayDesign );
-            ExpressionDataDoubleMatrix backgroundB = this.getBackgroundChannelB( arrayDesign );
+            ExpressionDataDoubleMatrix signalA = this.getSignalChannelA();
+            ExpressionDataDoubleMatrix signalB = this.getSignalChannelB();
+            ExpressionDataDoubleMatrix backgroundA = this.getBackgroundChannelA();
+            ExpressionDataDoubleMatrix backgroundB = this.getBackgroundChannelB();
 
             if ( signalA == null && signalB == null ) {
                 log.warn( "Cannot get signal for either channel" );
                 return null;
             }
 
-            if ( backgroundA != null && signalA != null )
+            if ( backgroundA != null && signalA != null ) {
                 ExpressionDataDoubleMatrixUtil.subtractMatrices( signalA, backgroundA );
+            }
 
-            if ( backgroundB != null && signalB != null )
+            if ( backgroundB != null && signalB != null ) {
                 ExpressionDataDoubleMatrixUtil.subtractMatrices( signalB, backgroundB );
+            }
 
             if ( signalA != null ) {
                 ExpressionDataDoubleMatrixUtil.logTransformMatrix( signalA );
@@ -385,7 +370,7 @@ public class ExpressionDataMatrixBuilder {
             return signalA; // now this contains the answer
 
         }
-        return getPreferredData( arrayDesign );
+        return getPreferredData();
 
     }
 
@@ -396,14 +381,156 @@ public class ExpressionDataMatrixBuilder {
      * @param arrayDesign
      * @return ExpressionDataDoubleMatrix - For two color arrays, the missing values are masked.
      */
-    public ExpressionDataDoubleMatrix getMaskedPreferredData( ArrayDesign arrayDesign ) {
+    public ExpressionDataDoubleMatrix getMaskedPreferredData() {
 
-        ExpressionDataDoubleMatrix preferredData = this.getPreferredData( arrayDesign );
+        ExpressionDataDoubleMatrix preferredData = this.getPreferredData();
         if ( preferredData == null ) return null;
-        if ( arrayDesign != null && arrayDesign.getTechnologyType().equals( TechnologyType.TWOCOLOR ) ) {
-            maskMissingValues( preferredData, arrayDesign );
+
+        if ( this.isTwoColor() ) {
+            maskMissingValues( preferredData );
         }
         return preferredData;
+    }
+
+    /**
+     * @return a matrix of booleans, or null if a missing value quantitation type ("absent/present", which may have been
+     *         computed by our system) is not found. This will return the values whether the array design is two-color
+     *         or not.
+     */
+    public ExpressionDataBooleanMatrix getMissingValueData() {
+        List<QuantitationType> qtypes = this.getMissingValueQTypes();
+        if ( qtypes == null || qtypes.size() == 0 ) return null;
+        return new ExpressionDataBooleanMatrix( vectors, qtypes );
+    }
+
+    /**
+     * @return
+     */
+    public ExpressionDataDoubleMatrix getPreferredData() {
+
+        List<QuantitationType> qtypes = this.getPreferredQTypes();
+
+        if ( qtypes.size() == 0 ) {
+            log.warn( "Could not find a 'preferred' quantitation type" );
+            return null;
+        }
+
+        log.info( qtypes.size() + " preferred quantitation types" );
+        log.info( vectors.size() + " vectors" );
+
+        return new ExpressionDataDoubleMatrix( vectors, qtypes );
+    }
+
+    /**
+     * @return Collection of vectors with the 'preferred' quantitation type, for the array design selected.
+     */
+    public Collection<DesignElementDataVector> getPreferredDataVectors() {
+        Collection<DesignElementDataVector> result = new HashSet<DesignElementDataVector>();
+
+        List<BioAssayDimension> dimensions = this.getBioAssayDimensions();
+        List<QuantitationType> qtypes = this.getPreferredQTypes();
+
+        for ( DesignElementDataVector vector : vectors ) {
+            if ( dimensions.contains( vector.getBioAssayDimension() ) && qtypes.contains( vector.getQuantitationType() ) )
+                result.add( vector );
+        }
+        return result;
+    }
+
+    /**
+     * @param arrayDesign Can be null
+     * @return
+     */
+    public List<QuantitationType> getPreferredQTypes() {
+        List<QuantitationType> result = new ArrayList<QuantitationType>();
+
+        List<BioAssayDimension> dimensions = this.getBioAssayDimensions();
+
+        if ( dimensions.size() == 0 ) {
+            throw new IllegalArgumentException( "No bioassaydimensions!" );
+        }
+
+        for ( BioAssayDimension dimension : dimensions ) {
+            for ( DesignElementDataVector vector : vectors ) {
+
+                if ( !vector.getBioAssayDimension().equals( dimension ) ) continue;
+
+                QuantitationType qType = vector.getQuantitationType();
+                if ( !qType.getIsPreferred() ) continue;
+
+                // ArrayDesign adUsed = arrayDesignForVector( vector );
+                // if ( arrayDesign != null && !adUsed.equals( arrayDesign ) ) continue;
+
+                // if we get here, we're in the right place.
+                result.add( qType );
+                break; // on to the next dimension.
+
+            }
+        }
+
+        return result;
+    }
+
+    public Map<DesignElement, Double> getRanks() {
+        Collection<QuantitationType> qtypes = this.getPreferredQTypes();
+        Map<DesignElement, Double> ranks = new HashMap<DesignElement, Double>();
+
+        for ( DesignElementDataVector v : this.vectors ) {
+            if ( qtypes.contains( v.getQuantitationType() ) ) {
+                ranks.put( v.getDesignElement(), v.getRank() );
+            }
+        }
+
+        return ranks;
+    }
+
+    /**
+     * @return
+     */
+    public ExpressionDataDoubleMatrix getSignalChannelA() {
+        QuantitationTypeData dat = getQuantitationTypesNeeded();
+        List<BioAssayDimension> dimensions = this.getBioAssayDimensions();
+        List<QuantitationType> qTypes = new ArrayList<QuantitationType>();
+
+        for ( BioAssayDimension dimension : dimensions ) {
+
+            QuantitationType signalChannelA = dat.getSignalChannelA( dimension );
+            QuantitationType signalChannelB = dat.getSignalChannelB( dimension );
+            QuantitationType backgroundChannelA = dat.getBackgroundChannelA( dimension );
+            QuantitationType bkgSubChannelA = dat.getBkgSubChannelA( dimension );
+
+            boolean channelANeedsReconstruction = checkChannelA( signalChannelA, signalChannelB, backgroundChannelA,
+                    bkgSubChannelA );
+
+            if ( channelANeedsReconstruction ) {
+                return getSignalChannelAFancy( dimension );
+            }
+            if ( signalChannelA != null ) qTypes.add( signalChannelA );
+        }
+
+        if ( qTypes.size() != 0 ) {
+            return makeMatrix( qTypes );
+        }
+        return null;
+    }
+
+    /**
+     * @return
+     */
+    public ExpressionDataDoubleMatrix getSignalChannelB() {
+        QuantitationTypeData dat = getQuantitationTypesNeeded();
+        List<BioAssayDimension> dimensions = this.getBioAssayDimensions();
+        List<QuantitationType> qTypes = new ArrayList<QuantitationType>();
+
+        for ( BioAssayDimension dimension : dimensions ) {
+            QuantitationType qType = dat.getSignalChannelB( dimension );
+            if ( qType != null ) qTypes.add( qType );
+        }
+
+        if ( qTypes.size() != 0 ) {
+            return makeMatrix( qTypes );
+        }
+        return null;
     }
 
     /**
@@ -413,8 +540,8 @@ public class ExpressionDataMatrixBuilder {
      * @param inMatrix
      * @param missingValueMatrix
      */
-    public void maskMissingValues( ExpressionDataDoubleMatrix inMatrix, ArrayDesign arrayDesign ) {
-        ExpressionDataBooleanMatrix missingValueMatrix = this.getMissingValueData( arrayDesign );
+    public void maskMissingValues( ExpressionDataDoubleMatrix inMatrix ) {
+        ExpressionDataBooleanMatrix missingValueMatrix = this.getMissingValueData();
         if ( missingValueMatrix != null ) ExpressionDataDoubleMatrixUtil.maskMatrix( inMatrix, missingValueMatrix );
     }
 
@@ -432,24 +559,6 @@ public class ExpressionDataMatrixBuilder {
                 signalDataA.set( i, j, oldVal + bkg );
             }
         }
-    }
-
-    /**
-     * @param vector
-     * @return
-     */
-    public ArrayDesign arrayDesignForVector( DesignElementDataVector vector ) {
-        Collection<BioAssay> bioAssays = vector.getBioAssayDimension().getBioAssays();
-        if ( bioAssays.size() == 0 ) throw new IllegalArgumentException( "No bioassays for vector." );
-        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
-        for ( BioAssay ba : bioAssays ) {
-            ads.add( ba.getArrayDesignUsed() );
-        }
-        if ( ads.size() > 1 ) {
-            throw new IllegalArgumentException( "Can't handle vectors with multiple array design represented" );
-        }
-        ArrayDesign adUsed = ads.iterator().next();
-        return adUsed;
     }
 
     /**
@@ -482,14 +591,12 @@ public class ExpressionDataMatrixBuilder {
     }
 
     /**
-     * @param arrayDesign
-     * @param dimensions
      * @return
      */
-    private List<QuantitationType> getMissingValueQTypes( ArrayDesign arrayDesign ) {
+    private List<QuantitationType> getMissingValueQTypes() {
         List<QuantitationType> result = new ArrayList<QuantitationType>();
 
-        List<BioAssayDimension> dimensions = this.getBioAssayDimensions( arrayDesign );
+        List<BioAssayDimension> dimensions = this.getBioAssayDimensions();
 
         for ( BioAssayDimension dim : dimensions ) {
             for ( DesignElementDataVector vector : vectors ) {
@@ -499,8 +606,8 @@ public class ExpressionDataMatrixBuilder {
                 QuantitationType qType = vector.getQuantitationType();
                 if ( !qType.getType().equals( StandardQuantitationType.PRESENTABSENT ) ) continue;
 
-                ArrayDesign adUsed = arrayDesignForVector( vector );
-                if ( arrayDesign != null && !adUsed.equals( arrayDesign ) ) continue;
+                // ArrayDesign adUsed = arrayDesignForVector( vector );
+                // if ( arrayDesign != null && !adUsed.equals( arrayDesign ) ) continue;
 
                 // if we get here, we're in the right place.
                 result.add( qType );
@@ -513,146 +620,17 @@ public class ExpressionDataMatrixBuilder {
     }
 
     /**
-     * @param arrayDesign Can be null
      * @return
      */
-    public List<QuantitationType> getPreferredQTypes( ArrayDesign arrayDesign ) {
-        List<QuantitationType> result = new ArrayList<QuantitationType>();
+    private QuantitationTypeData getQuantitationTypesNeeded() {
 
-        List<BioAssayDimension> dimensions = this.getBioAssayDimensions( arrayDesign );
-
-        if ( dimensions.size() == 0 ) {
-            throw new IllegalArgumentException( "No bioassaydimensions!" );
-        }
-
-        for ( BioAssayDimension dimension : dimensions ) {
-            for ( DesignElementDataVector vector : vectors ) {
-
-                if ( !vector.getBioAssayDimension().equals( dimension ) ) continue;
-
-                QuantitationType qType = vector.getQuantitationType();
-                if ( !qType.getIsPreferred() ) continue;
-
-                ArrayDesign adUsed = arrayDesignForVector( vector );
-                if ( arrayDesign != null && !adUsed.equals( arrayDesign ) ) continue;
-
-                // if we get here, we're in the right place.
-                result.add( qType );
-                break; // on to the next dimension.
-
-            }
-        }
-
-        return result;
-    }
-
-    /**
-     * Get just the quantitation types that are likely to be 'useful': Preferred, present/absent, signals and background
-     * from both channels (if present).
-     * 
-     * @return
-     */
-    public static Collection<QuantitationType> getUsefulQuantitationTypes( ExpressionExperiment expressionExperiment ) {
-        Collection<QuantitationType> neededQtTypes = new HashSet<QuantitationType>();
-
-        Collection<QuantitationType> eeQtTypes = expressionExperiment.getQuantitationTypes();
-
-        if ( eeQtTypes.size() == 0 )
-            throw new IllegalArgumentException( "No quantitation types for " + expressionExperiment );
-
-        log.info( "Experiment has " + eeQtTypes.size() + " quantitation types" );
-
-        for ( QuantitationType qType : eeQtTypes ) {
-
-            String name = qType.getName();
-            if ( qType.getIsPreferred() ) {
-                log.info( "Preferred=" + qType );
-                neededQtTypes.add( qType );
-            } else if ( isBackgroundChannelA( name ) ) {
-                neededQtTypes.add( qType );
-                log.info( "Background A=" + qType );
-            } else if ( isBackgroundChannelB( name ) ) {
-                neededQtTypes.add( qType );
-                log.info( "Background B=" + qType );
-            } else if ( isSignalChannela( name ) ) {
-                neededQtTypes.add( qType );
-                log.info( "Signal A=" + qType );
-            } else if ( isSignalChannelB( name ) ) {
-                neededQtTypes.add( qType );
-                log.info( "Signal B=" + qType );
-            } else if ( name.matches( "CH1D_MEAN" ) ) {
-                /*
-                 * Special case. This is the background subtracted channel 1 for Genepix data. It is only needed to
-                 * reconstruct CH1 if it isn't present, which is surprisingly common in Stanford data sets
-                 */
-                neededQtTypes.add( qType );
-            } else if ( qType.getType().equals( StandardQuantitationType.PRESENTABSENT ) ) {
-                log.info( "Present/absent=" + qType );
-                neededQtTypes.add( qType );
-            }
-        }
-
-        return neededQtTypes;
-    }
-
-    public static Collection<QuantitationType> getPreferredQuantitationTypes( ExpressionExperiment expressionExperiment ) {
-        Collection<QuantitationType> neededQtTypes = new HashSet<QuantitationType>();
-
-        Collection<QuantitationType> eeQtTypes = expressionExperiment.getQuantitationTypes();
-
-        if ( eeQtTypes.size() == 0 )
-            throw new IllegalArgumentException( "No quantitation types for " + expressionExperiment );
-
-        log.debug( "Experiment has " + eeQtTypes.size() + " quantitation types" );
-
-        for ( QuantitationType qType : eeQtTypes ) {
-            if ( qType.getIsPreferred() ) {
-                log.debug( "Preferred=" + qType );
-                neededQtTypes.add( qType );
-            }
-        }
-
-        return neededQtTypes;
-    }
-
-    /**
-     * @param expressionExperiment (should be lightly thawed)
-     * @return
-     */
-    public static Collection<QuantitationType> getMissingValueQuantitationTypes(
-            ExpressionExperiment expressionExperiment ) {
-        Collection<QuantitationType> neededQtTypes = new HashSet<QuantitationType>();
-
-        Collection<QuantitationType> eeQtTypes = expressionExperiment.getQuantitationTypes();
-
-        if ( eeQtTypes.size() == 0 )
-            throw new IllegalArgumentException( "No quantitation types for " + expressionExperiment );
-
-        log.debug( "Experiment has " + eeQtTypes.size() + " quantitation types" );
-
-        for ( QuantitationType qType : eeQtTypes ) {
-            if ( qType.getType().equals( StandardQuantitationType.PRESENTABSENT ) ) {
-                log.debug( "Present/absent=" + qType );
-                neededQtTypes.add( qType );
-            }
-        }
-
-        return neededQtTypes;
-    }
-
-    /**
-     * @param arrayDesign (can be null to get all)
-     */
-    private QuantitationTypeData getQuantitationTypesNeeded( ArrayDesign arrayDesign ) {
-
-        Collection<BioAssayDimension> dimensions = getBioAssayDimensions( arrayDesign );
+        Collection<BioAssayDimension> dimensions = getBioAssayDimensions();
 
         QuantitationTypeData result = new QuantitationTypeData();
+
         for ( BioAssayDimension targetdimension : dimensions ) {
 
             for ( DesignElementDataVector vector : vectors ) {
-                ArrayDesign adUsed = arrayDesignForVector( vector );
-                if ( arrayDesign != null && !adUsed.equals( arrayDesign ) ) continue;
 
                 BioAssayDimension dim = vector.getBioAssayDimension();
 
@@ -661,22 +639,22 @@ public class ExpressionDataMatrixBuilder {
                 QuantitationType qType = vector.getQuantitationType();
                 String name = qType.getName();
                 if ( qType.getIsPreferred() && result.getPreferred( dim ) == null ) {
-                    result.setPreferred( dim, qType );
+                    result.addPreferred( dim, qType );
                     log.info( "Preferred=" + qType );
-                } else if ( result.getBackgroundChannelA( dim ) == null && isBackgroundChannelA( name ) ) {
-                    result.setBackgroundChannelA( dim, qType );
+                } else if ( result.getBackgroundChannelA( dim ) == null && ChannelUtils.isBackgroundChannelA( name ) ) {
+                    result.addBackgroundChannelA( dim, qType );
                     log.info( "Background A=" + qType );
-                } else if ( result.getBackgroundChannelB( dim ) == null && isBackgroundChannelB( name ) ) {
-                    result.setBackgroundChannelB( dim, qType );
+                } else if ( result.getBackgroundChannelB( dim ) == null && ChannelUtils.isBackgroundChannelB( name ) ) {
+                    result.addBackgroundChannelB( dim, qType );
                     log.info( "Background B=" + qType );
-                } else if ( result.getSignalChannelA( dim ) == null && isSignalChannela( name ) ) {
-                    result.setSignalChannelA( dim, qType );
+                } else if ( result.getSignalChannelA( dim ) == null && ChannelUtils.isSignalChannela( name ) ) {
+                    result.addSignalChannelA( dim, qType );
                     log.info( "Signal A=" + qType );
-                } else if ( result.getSignalChannelB( dim ) == null && isSignalChannelB( name ) ) {
-                    result.setSignalChannelB( dim, qType );
+                } else if ( result.getSignalChannelB( dim ) == null && ChannelUtils.isSignalChannelB( name ) ) {
+                    result.addSignalChannelB( dim, qType );
                     log.info( "Signal B=" + qType );
                 } else if ( result.getBkgSubChannelA( dim ) == null && name.matches( "CH1D_MEAN" ) ) {
-                    result.setBkgSubChannelA( dim, qType ); // specific for SGD data bug
+                    result.addBkgSubChannelA( dim, qType ); // specific for SGD data bug
                 }
 
                 if ( result.getSignalChannelA( dim ) != null && result.getSignalChannelB( dim ) != null
@@ -690,87 +668,64 @@ public class ExpressionDataMatrixBuilder {
     }
 
     /**
-     * For two-color arrays: Given the quantitation type name, determine if it represents the channel A background.
-     * 
-     * @param name
+     * @param dimension
      * @return
      */
-    private static boolean isBackgroundChannelA( String name ) {
-        return name.equals( "CH1B_MEDIAN" ) || name.equals( "CH1_BKD" )
-                || name.toLowerCase().matches( "b532[\\s_\\.](mean|median)" )
-                || name.equals( "BACKGROUND_CHANNEL 1MEDIAN" ) || name.equals( "G_BG_MEDIAN" )
-                || name.equals( "Ch1BkgMedian" ) || name.equals( "ch1.Background" ) || name.equals( "CH1_BKG_MEAN" )
-                || name.equals( "CH1_BKD_ Median" ) || name.equals( "BKG1Mean" );
-    }
+    private ExpressionDataDoubleMatrix getSignalChannelAFancy( BioAssayDimension dimension ) {
+        boolean channelANeedsReconstruction = false;
 
-    /**
-     * For two-color arrays: Given the quantitation type name, determine if it represents the channel B background.
-     * 
-     * @param name
-     * @return
-     */
-    private static boolean isBackgroundChannelB( String name ) {
-        return name.equals( "CH2B_MEDIAN" ) || name.equals( "CH2_BKD" )
-                || name.toLowerCase().matches( "b635[\\s_\\.](mean|median)" )
-                || name.equals( "BACKGROUND_CHANNEL 2MEDIAN" ) || name.equals( "R_BG_MEDIAN" )
-                || name.equals( "Ch2BkgMedian" ) || name.equals( "ch2.Background" ) || name.equals( "CH2_BKG_MEAN" )
-                || name.equals( "CH2_BKD_ Median" ) || name.equals( "BKG2Mean" );
-    }
+        /*
+         * This is made messy by data sets where the non-background-subtracted data has been omitted, but the background
+         * values are available.
+         */
+        QuantitationTypeData dat = getQuantitationTypesNeeded();
 
-    /**
-     * For two-color arrays: Given the quantitation type name, determine if it represents the channel A signal. (by
-     * convention, green)
-     * 
-     * @param name
-     * @return
-     */
-    private static boolean isSignalChannela( String name ) {
-        return name.matches( "CH1(I)?_MEDIAN" ) || name.matches( "CH1(I)?_MEAN" ) || name.equals( "RAW_DATA" )
-                || name.toLowerCase().matches( "f532[\\s_\\.](mean|median)" ) || name.equals( "SIGNAL_CHANNEL 1MEDIAN" )
-                || name.toLowerCase().matches( "ch1_smtm" ) || name.equals( "G_MEAN" ) || name.equals( "Ch1SigMedian" )
-                || name.equals( "ch1.Intensity" ) || name.equals( "CH1_SIG_MEAN" ) || name.equals( "CH1_ Median" )
-                || name.toUpperCase().matches( "\\w{2}\\d{3}_CY3" ) || name.toUpperCase().matches( "NORM(.*)CH1" )
-                || name.equals( "CH1Mean" ) || name.equals( "CH1_SIGNAL" ) || name.equals( "\"log2(532), gN\"" )
-                || name.equals( "gProcessedSignal" );
-    }
+        QuantitationType signalChannelA = dat.getSignalChannelA( dimension );
+        QuantitationType signalChannelB = dat.getSignalChannelB( dimension );
+        QuantitationType backgroundChannelA = dat.getBackgroundChannelA( dimension );
+        QuantitationType bkgSubChannelA = dat.getBkgSubChannelA( dimension );
 
-    /**
-     * For two-color arrays: Given the quantitation type name, determine if it represents the channel B signal.(by
-     * convention, red)
-     * 
-     * @param name
-     * @return
-     */
-    private static boolean isSignalChannelB( String name ) {
-        return name.matches( "CH2(I)?_MEDIAN" ) || name.matches( "CH2(I)?_MEAN" ) || name.equals( "RAW_CONTROL" )
-                || name.toLowerCase().matches( "f635[\\s_\\.](mean|median)" ) || name.equals( "SIGNAL_CHANNEL 2MEDIAN" )
-                || name.toLowerCase().matches( "ch2_smtm" ) || name.equals( "R_MEAN" ) || name.equals( "Ch2SigMedian" )
-                || name.equals( "ch2.Intensity" ) || name.equals( "CH2_SIG_MEAN" ) || name.equals( "CH2_ Median" )
-                || name.toUpperCase().matches( "\\w{2}\\d{3}_CY5" ) || name.toUpperCase().matches( "NORM(.*)CH2" )
-                || name.equals( "CH2Mean" ) || name.equals( "CH2_SIGNAL" ) || name.equals( "\"log2(635), gN\"" )
-                || name.equals( "rProcessedSignal" );
-    }
+        channelANeedsReconstruction = checkChannelA( signalChannelA, signalChannelB, backgroundChannelA, bkgSubChannelA );
 
-    /**
-     * @param representation PrimitiveType
-     * @param vectors raw vectors
-     * @return matrix of appropriate type.
-     */
-    public static ExpressionDataMatrix<?> getMatrix( PrimitiveType representation,
-            Collection<DesignElementDataVector> vectors ) {
-        ExpressionDataMatrix expressionDataMatrix = null;
-        if ( representation.equals( PrimitiveType.DOUBLE ) ) {
-            expressionDataMatrix = new ExpressionDataDoubleMatrix( vectors );
-        } else if ( representation.equals( PrimitiveType.STRING ) ) {
-            expressionDataMatrix = new ExpressionDataStringMatrix( vectors );
-        } else if ( representation.equals( PrimitiveType.INT ) ) {
-            expressionDataMatrix = new ExpressionDataIntegerMatrix( vectors );
-        } else if ( representation.equals( PrimitiveType.BOOLEAN ) ) {
-            expressionDataMatrix = new ExpressionDataBooleanMatrix( vectors );
-        } else {
-            throw new UnsupportedOperationException( "Don't know how to deal with matrices of type " + representation );
+        ExpressionDataDoubleMatrix signalDataA = null;
+        if ( channelANeedsReconstruction ) {
+            ExpressionDataDoubleMatrix bkgDataA = null;
+            if ( backgroundChannelA != null ) {
+                bkgDataA = new ExpressionDataDoubleMatrix( vectors, backgroundChannelA );
+            }
+
+            // use background-subtracted data and add bkg back on
+            assert bkgDataA != null;
+            assert bkgSubChannelA != null;
+            signalDataA = new ExpressionDataDoubleMatrix( vectors, bkgSubChannelA );
+            addBackgroundBack( signalDataA, bkgDataA );
+            return signalDataA;
+
         }
-        return expressionDataMatrix;
+        return getSignalChannelA();
+
+    }
+
+    /**
+     * @return
+     */
+    private boolean isTwoColor() {
+        for ( DesignElementDataVector v : vectors ) {
+            DesignElement d = v.getDesignElement();
+            TechnologyType technologyType = d.getArrayDesign().getTechnologyType();
+
+            if ( technologyType.equals( TechnologyType.ONECOLOR ) ) {
+                continue;
+            }
+
+            QuantitationType qt = v.getQuantitationType();
+
+            if ( ( qt.getIsPreferred() || qt.getIsMaskedPreferred() ) && qt.getIsRatio() ) {
+                return true;
+            }
+
+        }
+        return false;
     }
 
     /**
@@ -778,28 +733,11 @@ public class ExpressionDataMatrixBuilder {
      * @param qTypes
      * @return
      */
-    private ExpressionDataDoubleMatrix makeMatrix( List<BioAssayDimension> dimensions, List<QuantitationType> qTypes ) {
+    private ExpressionDataDoubleMatrix makeMatrix( List<QuantitationType> qTypes ) {
         if ( qTypes.size() > 0 ) {
-            return new ExpressionDataDoubleMatrix( vectors, dimensions, qTypes );
+            return new ExpressionDataDoubleMatrix( vectors, qTypes );
         }
         return null;
-    }
-
-    public ExpressionExperiment getExpressionExperiment() {
-        return expressionExperiment;
-    }
-
-    public Map<DesignElement, Double> getRanks() {
-        Collection<QuantitationType> qtypes = this.getPreferredQTypes( null );
-        Map<DesignElement, Double> ranks = new HashMap<DesignElement, Double>();
-
-        for ( DesignElementDataVector v : this.vectors ) {
-            if ( qtypes.contains( v.getQuantitationType() ) ) {
-                ranks.put( v.getDesignElement(), v.getRank() );
-            }
-        }
-
-        return ranks;
     }
 
 }
@@ -842,27 +780,27 @@ class QuantitationTypeData {
         return signalChannelB.get( dim );
     }
 
-    public void setBackgroundChannelA( BioAssayDimension dim, QuantitationType backgroundChannelA ) {
+    public void addBackgroundChannelA( BioAssayDimension dim, QuantitationType backgroundChannelA ) {
         this.backgroundChannelA.put( dim, backgroundChannelA );
     }
 
-    public void setBackgroundChannelB( BioAssayDimension dim, QuantitationType backgroundChannelB ) {
+    public void addBackgroundChannelB( BioAssayDimension dim, QuantitationType backgroundChannelB ) {
         this.backgroundChannelB.put( dim, backgroundChannelB );
     }
 
-    public void setBkgSubChannelA( BioAssayDimension dim, QuantitationType bkgSubChannelA ) {
+    public void addBkgSubChannelA( BioAssayDimension dim, QuantitationType bkgSubChannelA ) {
         this.bkgSubChannelA.put( dim, bkgSubChannelA );
     }
 
-    public void setPreferred( BioAssayDimension dim, QuantitationType preferred ) {
+    public void addPreferred( BioAssayDimension dim, QuantitationType preferred ) {
         this.preferred.put( dim, preferred );
     }
 
-    public void setSignalChannelA( BioAssayDimension dim, QuantitationType signalChannelA ) {
+    public void addSignalChannelA( BioAssayDimension dim, QuantitationType signalChannelA ) {
         this.signalChannelA.put( dim, signalChannelA );
     }
 
-    public void setSignalChannelB( BioAssayDimension dim, QuantitationType signalChannelB ) {
+    public void addSignalChannelB( BioAssayDimension dim, QuantitationType signalChannelB ) {
         this.signalChannelB.put( dim, signalChannelB );
     }
 

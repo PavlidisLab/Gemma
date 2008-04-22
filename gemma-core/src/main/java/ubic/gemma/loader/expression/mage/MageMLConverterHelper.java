@@ -2299,6 +2299,7 @@ public class MageMLConverterHelper {
         result.setIsBackgroundSubtracted( false );
         result.setIsNormalized( false );
         result.setIsPreferred( false );
+        result.setIsMaskedPreferred( false );
         result.setRepresentation( PrimitiveType.DOUBLE );
 
         // note that PrimitiveType and Scale are set via associations.

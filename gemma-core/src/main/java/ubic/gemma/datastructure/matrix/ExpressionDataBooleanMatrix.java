@@ -32,7 +32,6 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.DesignElement;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import cern.colt.matrix.ObjectMatrix1D;
 
 /**
@@ -47,34 +46,25 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
     private ObjectMatrix2DNamed<DesignElement, Integer, Boolean> matrix;
 
     /**
-     * @param expressionExperiment
-     * @param bioAssayDimensions A list of bioAssayDimensions to use.
-     * @param quantitationTypes A list of quantitation types to use, in the same order as the bioAssayDimensions
-     */
-    public ExpressionDataBooleanMatrix( ExpressionExperiment expressionExperiment,
-            List<BioAssayDimension> bioAssayDimensions, List<QuantitationType> quantitationTypes ) {
-        init();
-        this.bioAssayDimensions.addAll( bioAssayDimensions );
-        Collection<DesignElementDataVector> selectedVectors = selectVectors( expressionExperiment, quantitationTypes,
-                bioAssayDimensions );
-        vectorsToMatrix( selectedVectors );
-    }
-
-    /**
      * @param vectors
      * @param dimensions
      * @param qtypes
      */
-    public ExpressionDataBooleanMatrix( Collection<DesignElementDataVector> vectors,
-            List<BioAssayDimension> dimensions, List<QuantitationType> qtypes ) {
+    public ExpressionDataBooleanMatrix( Collection<DesignElementDataVector> vectors, List<QuantitationType> qtypes ) {
         init();
-        this.bioAssayDimensions.addAll( dimensions );
-        Collection<DesignElementDataVector> selectedVectors = selectVectors( vectors, dimensions, qtypes );
+        Collection<DesignElementDataVector> selectedVectors = selectVectors( vectors, qtypes );
         vectorsToMatrix( selectedVectors );
     }
 
     public ExpressionDataBooleanMatrix( Collection<DesignElementDataVector> vectors ) {
         init();
+
+        for ( DesignElementDataVector dedv : vectors ) {
+            if ( !dedv.getQuantitationType().getRepresentation().equals( PrimitiveType.BOOLEAN ) ) {
+                throw new IllegalStateException( "Cannot convert non-boolean quantitation types into boolean matrix" );
+            }
+        }
+
         selectVectors( vectors );
         vectorsToMatrix( vectors );
     }

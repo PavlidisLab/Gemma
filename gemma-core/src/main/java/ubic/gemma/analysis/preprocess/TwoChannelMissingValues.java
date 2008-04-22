@@ -23,12 +23,14 @@ import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.Constants;
+import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
@@ -79,6 +81,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="designElementDataVectorService" ref="designElementDataVectorService"
  * @spring.property name="quantitationTypeService" ref="quantitationTypeService"
+ * @spring.property name="analysisHelperService" ref="analysisHelperService"
  * @author pavlidis
  * @version $Id$
  */
@@ -92,20 +95,20 @@ public class TwoChannelMissingValues {
 
     private QuantitationTypeService quantitationTypeService;
 
+    private AnalysisHelperService analysisHelperService;
+
     /**
      * @param expExp The expression experiment to analyze. The quantitation types to use are selected automatically. If
      *        you want more control use other computeMissingValues methods.
-     * @param ad The array design to consider; this can be null, but should be included if the expression experiment
-     *        uses more than one array design.
      * @param signalToNoiseThreshold A value such as 1.5 or 2.0; only spots for which at least ONE of the channel signal
      *        is more than signalToNoiseThreshold*background (and the preferred data are not missing) will be considered
      *        present.
      * @param extraMissingValueIndicators Values that should be considered missing. For example, some data sets use '0'
-     *        (foolish, but true)
+     *        (foolish, but true). This can be null or empty and it will be ignored.
      * @return DesignElementDataVectors corresponding to a new PRESENTCALL quantitation type for the experiment.
      */
     @SuppressWarnings("unchecked")
-    public Collection<DesignElementDataVector> computeMissingValues( ExpressionExperiment expExp, ArrayDesign ad,
+    public Collection<DesignElementDataVector> computeMissingValues( ExpressionExperiment expExp,
             double signalToNoiseThreshold, Collection<Double> extraMissingValueIndicators ) {
 
         expressionExperimentService.thawLite( expExp );
@@ -123,7 +126,7 @@ public class TwoChannelMissingValues {
         designElementDataVectorService.thaw( vectors );
 
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectors );
-        Collection<BioAssayDimension> dims = builder.getBioAssayDimensions( ad );
+        Collection<BioAssayDimension> dims = builder.getBioAssayDimensions();
         Collection<DesignElementDataVector> finalResults = new HashSet<DesignElementDataVector>();
 
         /*
@@ -131,33 +134,27 @@ public class TwoChannelMissingValues {
          * must be associated with the correct BioAssayDimension.
          */
         log.info( "Study has " + dims.size() + " bioassaydimensions" );
-        for ( BioAssayDimension bioAssayDimension : dims ) {
-            Collection<BioAssay> bioAssays = bioAssayDimension.getBioAssays();
-            Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
-            for ( BioAssay ba : bioAssays ) {
-                ads.add( ba.getArrayDesignUsed() );
-            }
-            if ( ads.size() > 1 ) {
-                throw new IllegalArgumentException( "Can't handle vectors with multiple array design represented" );
-            }
-
-            if ( extraMissingValueIndicators.size() > 0 ) {
-                log.info( "There are " + extraMissingValueIndicators.size() + " manually-set missing value indicators" );
-            }
-
-            ArrayDesign ades = ads.iterator().next();
-            ExpressionDataDoubleMatrix preferredData = builder.getPreferredData( ades );
-            ExpressionDataDoubleMatrix bkgDataA = builder.getBackgroundChannelA( ades );
-            ExpressionDataDoubleMatrix bkgDataB = builder.getBackgroundChannelB( ades );
-            ExpressionDataDoubleMatrix signalDataA = builder.getSignalChannelA( ades );
-            ExpressionDataDoubleMatrix signalDataB = builder.getSignalChannelB( ades );
-
-            Collection<DesignElementDataVector> dimRes = computeMissingValues( expExp, bioAssayDimension,
-                    preferredData, signalDataA, signalDataB, bkgDataA, bkgDataB, signalToNoiseThreshold,
-                    extraMissingValueIndicators );
-
-            finalResults.addAll( dimRes );
+        Collection<BioAssay> bioAssays = expExp.getBioAssays();
+        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+        for ( BioAssay ba : bioAssays ) {
+            ads.add( ba.getArrayDesignUsed() );
         }
+
+        if ( extraMissingValueIndicators != null && extraMissingValueIndicators.size() > 0 ) {
+            log.info( "There are " + extraMissingValueIndicators.size() + " manually-set missing value indicators" );
+        }
+
+        ExpressionDataDoubleMatrix preferredData = builder.getPreferredData();
+        ExpressionDataDoubleMatrix bkgDataA = builder.getBackgroundChannelA();
+        ExpressionDataDoubleMatrix bkgDataB = builder.getBackgroundChannelB();
+        ExpressionDataDoubleMatrix signalDataA = builder.getSignalChannelA();
+        ExpressionDataDoubleMatrix signalDataB = builder.getSignalChannelB();
+
+        Collection<DesignElementDataVector> dimRes = computeMissingValues( expExp, preferredData, signalDataA,
+                signalDataB, bkgDataA, bkgDataB, signalToNoiseThreshold, extraMissingValueIndicators );
+
+        finalResults.addAll( dimRes );
+
         return finalResults;
     }
 
@@ -169,7 +166,6 @@ public class TwoChannelMissingValues {
 
     /**
      * @param source
-     * @param bioAssayDimension
      * @param preferred
      * @param signalChannelA
      * @param signalChannelB
@@ -183,16 +179,16 @@ public class TwoChannelMissingValues {
      */
     @SuppressWarnings("unchecked")
     public Collection<DesignElementDataVector> computeMissingValues( ExpressionExperiment source,
-            BioAssayDimension bioAssayDimension, ExpressionDataDoubleMatrix preferred,
-            ExpressionDataDoubleMatrix signalChannelA, ExpressionDataDoubleMatrix signalChannelB,
-            ExpressionDataDoubleMatrix bkgChannelA, ExpressionDataDoubleMatrix bkgChannelB,
-            double signalToNoiseThreshold, Collection<Double> extraMissingValueIndicators ) {
+            ExpressionDataDoubleMatrix preferred, ExpressionDataDoubleMatrix signalChannelA,
+            ExpressionDataDoubleMatrix signalChannelB, ExpressionDataDoubleMatrix bkgChannelA,
+            ExpressionDataDoubleMatrix bkgChannelB, double signalToNoiseThreshold,
+            Collection<Double> extraMissingValueIndicators ) {
 
         validate( preferred, signalChannelA, signalChannelB, bkgChannelA, bkgChannelB, signalToNoiseThreshold );
 
         ByteArrayConverter converter = new ByteArrayConverter();
         Collection<DesignElementDataVector> results = new HashSet<DesignElementDataVector>();
-        QuantitationType present = getQuantitationType( signalToNoiseThreshold );
+        QuantitationType present = getMissingDataQuantitationType( signalToNoiseThreshold );
         source.getQuantitationTypes().add( present );
 
         int count = 0;
@@ -204,14 +200,14 @@ public class TwoChannelMissingValues {
             vect.setQuantitationType( present );
             vect.setExpressionExperiment( source );
             vect.setDesignElement( designElement );
-            vect.setBioAssayDimension( bioAssayDimension );
+            vect.setBioAssayDimension( signalChannelA.getBioAssayDimension( designElement ) );
 
             int numCols = preferred.columns( designElement );
 
             boolean[] detectionCalls = new boolean[numCols];
             Double[] prefRow = preferred.getRow( designElement );
 
-            Double[] signalA = signalChannelA != null ? signalChannelA.getRow( designElement ) : null;
+            Double[] signalA = signalChannelA.getRow( designElement );
             Double[] signalB = signalChannelB != null ? signalChannelB.getRow( designElement ) : null;
             Double[] bkgA = null;
             Double[] bkgB = null;
@@ -226,7 +222,8 @@ public class TwoChannelMissingValues {
 
                 // If the "preferred" value is already missing, we retain that, or if it is a special value
                 Double pref = prefRow == null ? Double.NaN : prefRow[col];
-                if ( pref == null || pref.isNaN() || extraMissingValueIndicators.contains( pref ) ) {
+                if ( pref == null || pref.isNaN()
+                        || ( extraMissingValueIndicators != null && extraMissingValueIndicators.contains( pref ) ) ) {
                     detectionCalls[col] = false;
                     continue;
                 }
@@ -274,7 +271,7 @@ public class TwoChannelMissingValues {
      * @param signalToNoiseThreshold
      * @return
      */
-    private QuantitationType getQuantitationType( double signalToNoiseThreshold ) {
+    private QuantitationType getMissingDataQuantitationType( double signalToNoiseThreshold ) {
         QuantitationType present = QuantitationType.Factory.newInstance();
         present.setName( "Detection call" );
         present.setDescription( "Detection call based on signal to noise threshold of " + signalToNoiseThreshold
@@ -284,10 +281,28 @@ public class TwoChannelMissingValues {
         present.setRepresentation( PrimitiveType.BOOLEAN );
         present.setScale( ScaleType.OTHER );
         present.setIsPreferred( false );
+        present.setIsMaskedPreferred( false );
         present.setIsBackgroundSubtracted( false );
         present.setIsNormalized( false );
         present.setIsRatio( false );
         present.setType( StandardQuantitationType.PRESENTABSENT );
+        return this.quantitationTypeService.create( present );
+    }
+
+    private QuantitationType getPreferredMaskedDataQuantitationType( QuantitationType preferredQt ) {
+        QuantitationType present = QuantitationType.Factory.newInstance();
+        present.setName( preferredQt.getName() + " - Masked " );
+        present.setDescription( "Data masked with missing values (Computed by " + Constants.APP_NAME + ")" );
+        present.setGeneralType( preferredQt.getGeneralType() );
+        present.setIsBackground( preferredQt.getIsBackground() );
+        present.setRepresentation( preferredQt.getRepresentation() );
+        present.setScale( preferredQt.getScale() );
+        present.setIsPreferred( false ); // I think this is the right thing to do.
+        present.setIsMaskedPreferred( true );
+        present.setIsBackgroundSubtracted( preferredQt.getIsBackgroundSubtracted() );
+        present.setIsNormalized( preferredQt.getIsNormalized() );
+        present.setIsRatio( preferredQt.getIsRatio() );
+        present.setType( preferredQt.getType() );
         return this.quantitationTypeService.create( present );
     }
 
@@ -350,5 +365,66 @@ public class TwoChannelMissingValues {
 
     public void setQuantitationTypeService( QuantitationTypeService quantitationTypeService ) {
         this.quantitationTypeService = quantitationTypeService;
+    }
+
+    /**
+     * Computes and persists the masked preferred data vectors. If the experiment does not have a missing value
+     * quantitation type, this just ends up storing a copy of the preferred data.
+     * 
+     * @param ee
+     */
+    @SuppressWarnings("unchecked")
+    public void computeMaskedPreferredVectors( ExpressionExperiment ee ) {
+        expressionExperimentService.thawLite( ee );
+        int count = 0;
+
+        Collection<DesignElementDataVector> results = new HashSet<DesignElementDataVector>();
+
+        ExpressionDataDoubleMatrix maskedPreferredDataMatrix = analysisHelperService.getMaskedPreferredDataMatrix( ee );
+
+        Collection<QuantitationType> preferredQuantitationTypes = expressionExperimentService
+                .getPreferredQuantitationType( ee );
+        if ( preferredQuantitationTypes.size() == 0 ) {
+            throw new IllegalArgumentException( "No preferred quantitation type found for " + ee );
+        }
+        QuantitationType preferred = preferredQuantitationTypes.iterator().next();
+
+        QuantitationType maskedPreferred = this.getPreferredMaskedDataQuantitationType( preferred );
+
+        ee.getQuantitationTypes().add( maskedPreferred );
+        ByteArrayConverter converter = new ByteArrayConverter();
+
+        for ( ExpressionDataMatrixRowElement element : maskedPreferredDataMatrix.getRowElements() ) {
+
+            DesignElement designElement = element.getDesignElement();
+
+            BioAssayDimension bioAssayDimension = maskedPreferredDataMatrix.getBioAssayDimension( designElement );
+            DesignElementDataVector vect = DesignElementDataVector.Factory.newInstance();
+            vect.setQuantitationType( maskedPreferred );
+            vect.setExpressionExperiment( ee );
+            vect.setDesignElement( designElement );
+            vect.setBioAssayDimension( bioAssayDimension );
+
+            double[] prefRow = ArrayUtils.toPrimitive( maskedPreferredDataMatrix.getRow( designElement ) );
+
+            vect.setData( converter.doubleArrayToBytes( prefRow ) );
+            results.add( vect );
+
+            if ( ++count % 4000 == 0 ) {
+                log.info( count + " vectors examined for missing values, " + results.size()
+                        + " vectors generated so far." );
+            }
+
+        }
+
+        log.info( "Finished: " + count + " vectors examined for missing values and masked" );
+
+        log.info( "Persisting " + results.size() + " vectors ... " );
+        results = designElementDataVectorService.create( results );
+        expressionExperimentService.update( ee ); // this is needed to get the QT filled in properly.
+    }
+
+    public void setAnalysisHelperService( AnalysisHelperService analysisHelperService ) {
+        this.analysisHelperService = analysisHelperService;
     }
 }

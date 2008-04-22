@@ -33,6 +33,7 @@ import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -173,6 +174,8 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         QuantitationType quantitationType = QuantitationType.Factory.newInstance();
         quantitationType.setName( metaData.getQuantitationTypeName() );
         quantitationType.setIsPreferred( true );
+        quantitationType.setRepresentation( PrimitiveType.DOUBLE );
+        quantitationType.setIsMaskedPreferred( false );
         quantitationType.setIsRatio( true );
         quantitationType.setIsBackground( false );
         quantitationType.setIsBackgroundSubtracted( true );
@@ -231,7 +234,8 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         qt.setIsBackground( false );
         qt.setIsRatio( false );
         qt.setIsPreferred( true );
-
+        qt.setIsMaskedPreferred( false );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
         BioAssayDimension bioAssayDimension = BioAssayDimension.Factory.newInstance();
         bioAssayDimension.setName( "GSM15697, GSM15744" );
 

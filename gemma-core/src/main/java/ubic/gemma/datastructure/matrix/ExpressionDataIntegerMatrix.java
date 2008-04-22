@@ -9,13 +9,12 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.matrix.IntegerMatrix2DNamed;
 import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * Warning, not fully tested.
@@ -31,22 +30,15 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
 
     private IntegerMatrix2DNamed<DesignElement, Integer> matrix;
 
-    public ExpressionDataIntegerMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
-
-    }
-
-    public ExpressionDataIntegerMatrix( ExpressionExperiment expressionExperiment,
-            Collection<DesignElement> designElements, QuantitationType quantitationType ) {
-        throw new UnsupportedOperationException( "Not implemented" );
-    }
-
-    public ExpressionDataIntegerMatrix( Collection<DesignElementDataVector> dataVectors,
-            QuantitationType quantitationType ) {
-        throw new UnsupportedOperationException( "Not implemented" );
-    }
-
     public ExpressionDataIntegerMatrix( Collection<DesignElementDataVector> vectors ) {
         init();
+
+        for ( DesignElementDataVector dedv : vectors ) {
+            if ( !dedv.getQuantitationType().getRepresentation().equals( PrimitiveType.INT ) ) {
+                throw new IllegalStateException( "Cannot convert non-integer quantitation types into int matrix" );
+            }
+        }
+
         selectVectors( vectors );
         vectorsToMatrix( vectors );
     }

@@ -884,13 +884,14 @@ public class ArrayDesignSequenceProcessingService {
      *        accession, delimited by tab. Sequences will be fetch from BLAST databases.
      * @param databaseNames
      * @param blastDbHome
+     * @param taxon
      * @param force If true, if an existing BioSequence that matches is found in the system, any existing sequence
      *        information in the BioSequence will be overwritten.
      * @return
      * @throws IOException
      */
     public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceIdentifierFile,
-            String[] databaseNames, String blastDbHome, boolean force ) throws IOException {
+            String[] databaseNames, String blastDbHome, Taxon taxon, boolean force ) throws IOException {
         checkForCompositeSequences( arrayDesign );
 
         Map<String, String> probe2acc = parseAccessionFile( sequenceIdentifierFile );
@@ -904,7 +905,7 @@ public class ArrayDesignSequenceProcessingService {
         Collection<String> accessionsToFetch = new HashSet<String>();
         accessionsToFetch.addAll( probe2acc.values() );
 
-        Taxon taxon = arrayDesignService.getTaxon( arrayDesign.getId() );
+        if ( taxon == null ) taxon = arrayDesignService.getTaxon( arrayDesign.getId() );
         if ( taxon == null ) {
             throw new IllegalStateException( "No taxon available for " + arrayDesign );
         }
@@ -918,6 +919,17 @@ public class ArrayDesignSequenceProcessingService {
             Map<String, BioSequence> found = findOrUpdateSequences( accessionsToFetch, retrievedSequences, taxon, force );
 
             finalResult.addAll( retrievedSequences );
+
+            // replace the sequences.
+            for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+                String probeName = cs.getName();
+                String acc = probe2acc.get( probeName );
+                if ( found.containsKey( acc ) ) {
+                    numSwitched++;
+                    log.debug( "Setting seq. for " + cs + " to " + found.get( acc ) );
+                    cs.setBiologicalCharacteristic( found.get( acc ) );
+                }
+            }
 
             notFound = getUnFound( notFound, found );
 
@@ -939,19 +951,10 @@ public class ArrayDesignSequenceProcessingService {
             }
             notFound = accessionsToFetch;
 
-            // replace the sequences.
-            for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
-                String probeName = cs.getName();
-                String acc = probe2acc.get( probeName );
-                if ( found.containsKey( acc ) ) {
-                    numSwitched++;
-                    log.debug( "Setting seq. for " + cs + " to " + found.get( acc ) );
-                    cs.setBiologicalCharacteristic( found.get( acc ) );
-                }
-            }
             ++versionNumber;
-            arrayDesignService.update( arrayDesign );
+
         }
+        arrayDesignService.update( arrayDesign );
 
         if ( !notFound.isEmpty() ) {
             logMissingSequences( arrayDesign, notFound );

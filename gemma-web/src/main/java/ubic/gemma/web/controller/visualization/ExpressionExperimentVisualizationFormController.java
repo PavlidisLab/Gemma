@@ -50,7 +50,7 @@ import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign; 
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
@@ -294,15 +294,15 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
         ExpressionExperiment expressionExperiment = this.expressionExperimentService.load( id );
         expressionExperimentService.thawLite( expressionExperiment );
-        
+
         if ( expressionExperiment == null ) {
             return processErrors( request, response, command, errors, "No expression experiment with id " + id
                     + " found" );
         }
-//
-//        for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
-//            bioAssayService.thaw( ba );
-//        }
+        //
+        // for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
+        // bioAssayService.thaw( ba );
+        // }
 
         QuantitationType quantitationType = eevc.getQuantitationType();
         if ( quantitationType == null ) {
@@ -322,9 +322,9 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         ExpressionDataDoubleMatrix expressionDataMatrix = null;
 
         if ( eevc.isMaskMissing() ) {
-            expressionDataMatrix = matrixBuilder.getMaskedPreferredData( null );
+            expressionDataMatrix = matrixBuilder.getMaskedPreferredData();
         } else {
-            expressionDataMatrix = matrixBuilder.getPreferredData( null );
+            expressionDataMatrix = matrixBuilder.getPreferredData();
         }
 
         /*

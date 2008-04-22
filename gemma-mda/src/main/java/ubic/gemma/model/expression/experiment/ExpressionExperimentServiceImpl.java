@@ -92,7 +92,7 @@ public class ExpressionExperimentServiceImpl extends
      */
     @Override
     protected void handleDelete( ExpressionExperiment ee ) throws Exception {
-        this.getProbe2ProbeCoexpressionDao().deleteLinks(ee);
+        this.getProbe2ProbeCoexpressionDao().deleteLinks( ee );
         this.getExpressionExperimentDao().remove( ee );
     }
 
@@ -411,15 +411,21 @@ public class ExpressionExperimentServiceImpl extends
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByBibliographicReference(ubic.gemma.model.common.description.BibliographicReference)
      */
     @Override
-    protected Collection handleGetPreferredQuantitationType( ExpressionExperiment EE ) throws Exception {
+    protected Collection<QuantitationType> handleGetPreferredQuantitationType( ExpressionExperiment ee )
+            throws Exception {
         Collection<QuantitationType> preferredQuantitationTypes = new HashSet<QuantitationType>();
-        handleThawLite( EE );
-        for ( QuantitationType qt : EE.getQuantitationTypes() ) {
+        handleThawLite( ee );
+        for ( QuantitationType qt : ee.getQuantitationTypes() ) {
             if ( qt.getIsPreferred() ) {
                 preferredQuantitationTypes.add( qt );
             }
         }
         return preferredQuantitationTypes;
+    }
+
+    @Override
+    protected QuantitationType handleGetMaskedPreferredQuantitationType( ExpressionExperiment ee ) throws Exception {
+        return this.getExpressionExperimentDao().getMaskedPreferredQuantitationType( ee );
     }
 
     /*

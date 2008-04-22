@@ -322,6 +322,7 @@ public class SimpleExpressionDataLoaderService {
         result.setType( metaData.getType() );
         result.setRepresentation( PrimitiveType.DOUBLE ); // no choice here
         result.setIsPreferred( Boolean.TRUE );
+        result.setIsMaskedPreferred( metaData.getIsMaskedPreferred() );
         result.setIsNormalized( Boolean.TRUE );
         result.setIsBackgroundSubtracted( Boolean.TRUE );
         result.setScale( metaData.getScale() );

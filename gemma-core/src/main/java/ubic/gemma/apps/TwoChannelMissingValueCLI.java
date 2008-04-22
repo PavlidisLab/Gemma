@@ -234,7 +234,11 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
         log.info( "Computing missing value data.." );
 
-        tcmv.computeMissingValues( ee, ad, s2n, this.extraMissingValueIndicators );
+        tcmv.computeMissingValues( ee, s2n, this.extraMissingValueIndicators );
+
+        log.info( "Creating masked-preferred data" );
+
+        tcmv.computeMaskedPreferredVectors( ee );
 
     }
 }

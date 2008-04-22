@@ -183,12 +183,14 @@ public interface ExpressionDataMatrix<T> {
     public Collection<BioAssay> getBioAssaysForColumn( int index );
 
     /**
-     * Produce a BioAssayDimension representing the matrix columns
+     * Produce a BioAssayDimension representing the matrix columns for a specific row. The designelement argument is
+     * needed because a matrix can combine data from multiple array designs, each of which will generate its own
+     * bioassaydimension.
      * 
-     * @param matrix
+     * @param designElement
      * @return
      */
-    public BioAssayDimension getBioAssayDimension();
+    public BioAssayDimension getBioAssayDimension( DesignElement designElement );
 
     /**
      * Total number of columns.

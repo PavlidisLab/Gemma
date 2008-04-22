@@ -181,9 +181,9 @@ public class ExpressionExperimentFilter {
 
             if ( twoColor ) {
                 /* Apply two color missing value filter */
-                builder.maskMissingValues( filteredMatrix, null );
+                builder.maskMissingValues( filteredMatrix );
             }
-            
+
             if ( !config.isIgnoreMinimumSampleThreshold() ) {
                 filteredMatrix = minPresentFilter( filteredMatrix );
             }

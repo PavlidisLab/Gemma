@@ -107,7 +107,8 @@ public class SimpleFastaCmd implements FastaCmd {
                     + " in your environment." );
 
         if ( blastHome == null ) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException(
+                    "No blast database location specified, you must set this in your environment" );
         }
         File tmp = File.createTempFile( "sequenceIds", ".txt" );
         Writer tmpOut = new FileWriter( tmp );

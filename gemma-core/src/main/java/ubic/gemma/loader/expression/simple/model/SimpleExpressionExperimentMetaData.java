@@ -66,6 +66,8 @@ public class SimpleExpressionExperimentMetaData {
 
     private Boolean isRatio = Boolean.FALSE;
 
+    private Boolean isMaskedPreferred = Boolean.FALSE;
+
     private DatabaseEntry externalReference;
 
     private String sourceUrl;
@@ -309,6 +311,14 @@ public class SimpleExpressionExperimentMetaData {
 
     public void setArrayDesignIds( Collection<Long> arrayDesignIds ) {
         this.arrayDesignIds = arrayDesignIds;
+    }
+
+    public Boolean getIsMaskedPreferred() {
+        return isMaskedPreferred;
+    }
+
+    public void setIsMaskedPreferred( Boolean isMaskedPreferred ) {
+        this.isMaskedPreferred = isMaskedPreferred;
     }
 
 }
