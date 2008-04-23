@@ -242,7 +242,7 @@ Ext.Gemma.DatasetSearchToolBar = function ( grid, config ) {
 				var callback = function( d ) {
 					// load the data sets.
 					this.getStore().load( { params : [ d ] }); 
-				}
+				};
 				// Go back to the server to get the ids of the experiments the selected analysis' parent has.
 				GeneLinkAnalysisManagerController.getExperimentIdsInAnalysis( this.owningGrid.analysisId, {callback : callback.createDelegate(this.owningGrid, [], true) });
 				

@@ -16,7 +16,7 @@ Ext.Gemma.DatasetSearchField = function ( config ) {
 	
 	var superConfig = { 
 		loadingText : 'Searching...',
-		emptyText : 'Enter search term',
+		emptyText : 'Enter search term'
 		
 	};
 	
