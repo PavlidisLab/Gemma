@@ -37,7 +37,7 @@ import ubic.basecode.dataStructure.matrix.ObjectMatrix2DNamed;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.metaanalysis.CorrelationEffectMetaAnalysis;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
@@ -52,38 +52,38 @@ import cern.colt.list.DoubleArrayList;
  */
 public class GeneEffectSizeCoExpressionAnalyzer {
     private class ExpressedData {
-        public DesignElementDataVector query = null;
-        public DesignElementDataVector coexpressed = null;
+        public DoubleVectorValueObject query = null;
+        public DoubleVectorValueObject coexpressed = null;
 
-        public ExpressedData( DesignElementDataVector query, DesignElementDataVector coexpressed ) {
+        public ExpressedData( DoubleVectorValueObject query, DoubleVectorValueObject coexpressed ) {
             this.query = query;
             this.coexpressed = coexpressed;
         }
     }
 
-    private Map<Long, Map<Long, Collection<DesignElementDataVector>>> ee2gene2dedvs = new HashMap<Long, Map<Long, Collection<DesignElementDataVector>>>();;
+    private Map<Long, Map<Long, Collection<DoubleVectorValueObject>>> ee2gene2dedvs = new HashMap<Long, Map<Long, Collection<DoubleVectorValueObject>>>();;
 
-    private Map<DesignElementDataVector, Collection<Gene>> dedv2genes = new HashMap<DesignElementDataVector, Collection<Gene>>();;
+    private Map<DoubleVectorValueObject, Collection<Gene>> dedv2genes = new HashMap<DoubleVectorValueObject, Collection<Gene>>();;
 
-    // Cached the mean value and STD value for DesignElementDataVector.
+    // Cached the mean value and STD value for DoubleVectorValueObject.
     private Map<Long, Double> dedv2cachedMeanValue = new HashMap<Long, Double>();
     private Map<Long, Double> dedv2cachedSTDValue = new HashMap<Long, Double>();
 
     // The dimension of next two NamedMatrix in the map: coExpressedGenes X expression_experiments
     // The following map save the correlation data between query gene and each coExpressedGene in all EEs
     private Map<Long, DenseDoubleMatrix2DNamed<Long, Long>> queryGene2correlationData = new HashMap<Long, DenseDoubleMatrix2DNamed<Long, Long>>();
-    // The following map save the DesignElementDataVectors (Encapulated in ExpressedData) involved in the correlation
+    // The following map save the DoubleVectorValueObjects (Encapulated in ExpressedData) involved in the correlation
     // caculation
     // between query gene and each coExpressedGene in all EEs, which will be used to get the rank matrix.
     // The reason for using ExpressedData object is that there are many DEDVs for each gene and different correlation
     // calculation
     // may use different DEDV.
-    private Map<Long, ObjectMatrix2DNamed<Long, Long, DesignElementDataVector>> queryGene2coExpressedData = new HashMap<Long, ObjectMatrix2DNamed<Long, Long, DesignElementDataVector>>();
+    private Map<Long, ObjectMatrix2DNamed<Long, Long, DoubleVectorValueObject>> queryGene2coExpressedData = new HashMap<Long, ObjectMatrix2DNamed<Long, Long, DoubleVectorValueObject>>();
 
     // The next NamedMatrix: queryGenes X expression_experiments
     // Each object is a designElementVector which is specifically associated with the query gene in a expression
     // experiment
-    private ObjectMatrix2DNamed<Long, Long, DesignElementDataVector> queryGenesData = null;
+    private ObjectMatrix2DNamed<Long, Long, DoubleVectorValueObject> queryGenesData = null;
 
     // The following two maps are only used for the output.
     private Map<Long, String> geneNames = new HashMap<Long, String>();
@@ -96,7 +96,7 @@ public class GeneEffectSizeCoExpressionAnalyzer {
 
     public GeneEffectSizeCoExpressionAnalyzer( Collection<Gene> queryGenes, Collection<Gene> coExpressedGenes,
             Collection<ExpressionExperiment> ees ) {
-        queryGenesData = new ObjectMatrix2DNamed<Long, Long, DesignElementDataVector>( queryGenes.size(), ees.size() );
+        queryGenesData = new ObjectMatrix2DNamed<Long, Long, DoubleVectorValueObject>( queryGenes.size(), ees.size() );
         for ( Gene queryGene : queryGenes ) {
             queryGenesData.addRowName( queryGene.getId() );
         }
@@ -112,7 +112,7 @@ public class GeneEffectSizeCoExpressionAnalyzer {
         for ( Gene queryGene : queryGenes ) {
             DenseDoubleMatrix2DNamed<Long, Long> correlationData = new DenseDoubleMatrix2DNamed<Long, Long>(
                     coExpressedGenes.size(), ees.size() );
-            ObjectMatrix2DNamed<Long, Long, DesignElementDataVector> coExpressedData = new ObjectMatrix2DNamed<Long, Long, DesignElementDataVector>(
+            ObjectMatrix2DNamed<Long, Long, DoubleVectorValueObject> coExpressedData = new ObjectMatrix2DNamed<Long, Long, DoubleVectorValueObject>(
                     coExpressedGenes.size(), ees.size() );
             for ( int i = 0; i < correlationData.rows(); i++ ) {
                 for ( int j = 0; j < correlationData.columns(); j++ ) {
@@ -147,9 +147,9 @@ public class GeneEffectSizeCoExpressionAnalyzer {
      * @param dedvs
      */
     @SuppressWarnings("unchecked")
-    private void distributeDesignElementDataVector( Set<DesignElementDataVector> dedvs ) {
+    private void distributeDoubleVectorValueObject( Set<DoubleVectorValueObject> dedvs ) {
         // First, get the sample sizes for Expression Experiments
-        for ( DesignElementDataVector dedv : dedvs ) {
+        for ( DoubleVectorValueObject dedv : dedvs ) {
             ExpressionExperiment ee = dedv.getExpressionExperiment();
             if ( !eeSampleSizes.containsKey( ee.getId() ) ) {
                 int sampleSize = getSampleSize( dedv );
@@ -159,29 +159,29 @@ public class GeneEffectSizeCoExpressionAnalyzer {
         // Second, distribute the dedvs to different buckets according to ee and genes, which will be used to caculate
         // the correlation
         // between genes in every expression experiments
-        for ( DesignElementDataVector dedv : dedvs ) {
+        for ( DoubleVectorValueObject dedv : dedvs ) {
             ExpressionExperiment ee = dedv.getExpressionExperiment();
             if ( ee.getId() == null ) {
                 System.err.println( ee + " wrong! " );
             }
-            Map<Long, Collection<DesignElementDataVector>> gene2dedvs = ee2gene2dedvs.get( ee.getId() );
+            Map<Long, Collection<DoubleVectorValueObject>> gene2dedvs = ee2gene2dedvs.get( ee.getId() );
             if ( gene2dedvs == null ) {
-                gene2dedvs = new HashMap<Long, Collection<DesignElementDataVector>>();
+                gene2dedvs = new HashMap<Long, Collection<DoubleVectorValueObject>>();
                 Collection<Long> coExpressionGeneNames = null;
                 for ( Long geneId : this.queryGenesData.getRowNames() ) {
-                    gene2dedvs.put( geneId, new HashSet<DesignElementDataVector>() );
+                    gene2dedvs.put( geneId, new HashSet<DoubleVectorValueObject>() );
                     if ( coExpressionGeneNames == null ) {
                         coExpressionGeneNames = queryGene2coExpressedData.get( geneId ).getRowNames();
                     }
                 }
                 for ( Object geneId : coExpressionGeneNames ) {
-                    gene2dedvs.put( ( Long ) geneId, new HashSet<DesignElementDataVector>() );
+                    gene2dedvs.put( ( Long ) geneId, new HashSet<DoubleVectorValueObject>() );
                 }
                 ee2gene2dedvs.put( ee.getId(), gene2dedvs );
             }
             HashSet<Gene> geneSet = ( HashSet<Gene> ) dedv2genes.get( dedv );
             for ( Gene gene : geneSet ) {
-                Collection<DesignElementDataVector> mappedDevs = gene2dedvs.get( gene.getId() );
+                Collection<DoubleVectorValueObject> mappedDevs = gene2dedvs.get( gene.getId() );
                 /** The mapped gene for dev may not in both query genes and candidate genes** */
                 if ( mappedDevs != null ) {
                     mappedDevs.add( dedv );
@@ -195,14 +195,13 @@ public class GeneEffectSizeCoExpressionAnalyzer {
      * @param dedvJ
      * @return
      */
-    private double weightedCoRelation( DesignElementDataVector dedvI, DesignElementDataVector dedvJ ) {
+    private double weightedCoRelation( DoubleVectorValueObject dedvI, DoubleVectorValueObject dedvJ ) {
         double corr = coRelation( dedvI, dedvJ );
         if ( !Double.isNaN( corr ) ) {
-            ByteArrayConverter bac = new ByteArrayConverter();
-            byte[] bytes = dedvI.getData();
-            double[] ival = bac.byteArrayToDoubles( bytes );
-            bytes = dedvJ.getData();
-            double[] jval = bac.byteArrayToDoubles( bytes );
+
+            double[] ival = dedvI.getData();
+
+            double[] jval = dedvJ.getData();
             int numsamples = 0;
             for ( int i = 0; i < ival.length; i++ ) {
                 if ( !Double.isNaN( ival[i] ) && !Double.isNaN( jval[i] ) ) numsamples++;
@@ -222,14 +221,12 @@ public class GeneEffectSizeCoExpressionAnalyzer {
      * @param dedvJ
      * @return
      */
-    private double correlationPvalue( DesignElementDataVector dedvI, DesignElementDataVector dedvJ ) {
+    private double correlationPvalue( DoubleVectorValueObject dedvI, DoubleVectorValueObject dedvJ ) {
         double corr = coRelation( dedvI, dedvJ );
         if ( !Double.isNaN( corr ) ) {
-            ByteArrayConverter bac = new ByteArrayConverter();
-            byte[] bytes = dedvI.getData();
-            double[] ival = bac.byteArrayToDoubles( bytes );
-            bytes = dedvJ.getData();
-            double[] jval = bac.byteArrayToDoubles( bytes );
+
+            double[] ival = dedvI.getData();
+            double[] jval = dedvJ.getData();
             int numsamples = 0;
             for ( int i = 0; i < ival.length; i++ ) {
                 if ( !Double.isNaN( ival[i] ) && !Double.isNaN( jval[i] ) ) numsamples++;
@@ -251,10 +248,8 @@ public class GeneEffectSizeCoExpressionAnalyzer {
      * @param dedv
      * @return
      */
-    private int getSampleSize( DesignElementDataVector dedv ) {
-        byte[] bytes = dedv.getData();
-        ByteArrayConverter bac = new ByteArrayConverter();
-        double[] val = bac.byteArrayToDoubles( bytes );
+    private int getSampleSize( DoubleVectorValueObject dedv ) {
+        double[] val = dedv.getData();
         return val.length;
     }
 
@@ -263,13 +258,12 @@ public class GeneEffectSizeCoExpressionAnalyzer {
      * @param devJ
      * @return
      */
-    private double coRelation( DesignElementDataVector dedvI, DesignElementDataVector dedvJ ) {
+    private double coRelation( DoubleVectorValueObject dedvI, DoubleVectorValueObject dedvJ ) {
         double corr = 0;
-        byte[] bytes = dedvI.getData();
-        ByteArrayConverter bac = new ByteArrayConverter();
-        double[] ival = bac.byteArrayToDoubles( bytes );
-        bytes = dedvJ.getData();
-        double[] jval = bac.byteArrayToDoubles( bytes );
+
+        double[] ival = dedvI.getData();
+
+        double[] jval = dedvJ.getData();
 
         if ( ival.length != jval.length ) {
             // System.err.print("Error in Dimension " + devI.getId()+ " " + ival.length + " (" +
@@ -347,12 +341,12 @@ public class GeneEffectSizeCoExpressionAnalyzer {
     private void calculateCoRelation() {
         for ( Long eeId : ee2gene2dedvs.keySet() ) {
             /* Calculate the paired gene coexpression values**** */
-            Map<Long, Collection<DesignElementDataVector>> gene2dedvs = ee2gene2dedvs.get( eeId );
+            Map<Long, Collection<DoubleVectorValueObject>> gene2dedvs = ee2gene2dedvs.get( eeId );
             for ( Long queryGeneId : queryGene2correlationData.keySet() ) {
                 Object[] dedvI = gene2dedvs.get( queryGeneId ).toArray();
                 DenseDoubleMatrix2DNamed<Long, Long> correlationDataMatrix = queryGene2correlationData
                         .get( queryGeneId );
-                ObjectMatrix2DNamed<Long, Long, DesignElementDataVector> coExpressedData = queryGene2coExpressedData
+                ObjectMatrix2DNamed<Long, Long, DoubleVectorValueObject> coExpressedData = queryGene2coExpressedData
                         .get( queryGeneId );
 
                 for ( Long coExpressedGeneId : correlationDataMatrix.getRowNames() ) {
@@ -363,8 +357,8 @@ public class GeneEffectSizeCoExpressionAnalyzer {
                     TreeMap<Double, Integer> sortedData = new TreeMap<Double, Integer>();
                     for ( int ii = 0; ii < dedvI.length; ii++ )
                         for ( int jj = 0; jj < dedvJ.length; jj++ ) {
-                            double corr = this.coRelation( ( DesignElementDataVector ) dedvI[ii],
-                                    ( DesignElementDataVector ) dedvJ[jj] );
+                            double corr = this.coRelation( ( DoubleVectorValueObject ) dedvI[ii],
+                                    ( DoubleVectorValueObject ) dedvJ[jj] );
                             if ( !Double.isNaN( corr ) )
                                 sortedData.put( new Double( corr ), new Integer( ii * shift + jj ) );
                         }
@@ -380,8 +374,8 @@ public class GeneEffectSizeCoExpressionAnalyzer {
                         int dedvIndexJ = combinedIndex.intValue() % shift;
 
                         // coExpressedData.set( rowIndex, colIndex, new ExpressedData(
-                        // ( DesignElementDataVector ) dedvI[dedvIndexI],
-                        // ( DesignElementDataVector ) dedvJ[dedvIndexJ] ) );
+                        // ( DoubleVectorValueObject ) dedvI[dedvIndexI],
+                        // ( DoubleVectorValueObject ) dedvJ[dedvIndexJ] ) );
                         throw new UnsupportedOperationException( "This method is messed up. Please fix me." );
                     }
                 }
@@ -568,10 +562,10 @@ public class GeneEffectSizeCoExpressionAnalyzer {
      * @param dedvs
      * @return
      */
-    public boolean analyze( Set<DesignElementDataVector> dedvs ) {
+    public boolean analyze( Set<DoubleVectorValueObject> dedvs ) {
         assert ( this.dedv2genes != null );
         assert ( this.eeService != null );
-        this.distributeDesignElementDataVector( dedvs );
+        this.distributeDoubleVectorValueObject( dedvs );
         this.calculateCoRelation();
         return true;
     }
@@ -579,7 +573,7 @@ public class GeneEffectSizeCoExpressionAnalyzer {
     /**
      * @param devToGenes
      */
-    public void setDedv2Genes( Map<DesignElementDataVector, Collection<Gene>> dedv2genes ) {
+    public void setDedv2Genes( Map<DoubleVectorValueObject, Collection<Gene>> dedv2genes ) {
         this.dedv2genes = dedv2genes;
     }
 
