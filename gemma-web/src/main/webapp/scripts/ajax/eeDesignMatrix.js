@@ -5,12 +5,13 @@ var DesignMatrix = {
 		var factors = rows[0].factors;
 		var record = [];
 		var columns = [];
+		columns.push( { header : "Assays", dataIndex : "count", sortable : "true", tooltip : "How many assays are in this group" } );
 		for (var i=0; i<factors.length; ++i) {
 			record.push( { name : factors[i], type : "string" } );
 			columns.push( { header : factors[i], dataIndex : factors[i], sortable : "true" } );
 		}
 		record.push( { name : "count", type : "int" } );
-		columns.push( { header : "Assays", dataIndex : "count", sortable : "true" } );
+		
 		var DesignMatrixRow = Ext.data.Record.create( record );
 		var cm = new Ext.grid.ColumnModel( columns );
 		
@@ -39,20 +40,20 @@ var DesignMatrix = {
 		} );
 		this.grid.render();
 		
-		this.grid.autoSizeColumns = function() {
-		    for (var i = 0; i < this.colModel.getColumnCount(); i++) {
-    			this.autoSizeColumn(i);
-		    }
-		};
-		this.grid.autoSizeColumn = function(c) {
-			var w = this.view.getHeaderCell(c).firstChild.scrollWidth;
-			for (var i = 0, l = this.store.getCount(); i < l; i++) {
-				w = Math.max(w, this.view.getCell(i, c).firstChild.scrollWidth);
-			}
-			this.colModel.setColumnWidth(c, w);
-			return w;
-		};
-		this.grid.autoSizeColumns();
+//		this.grid.autoSizeColumns = function() {
+//		    for (var i = 0; i < this.colModel.getColumnCount(); i++) {
+//    			this.autoSizeColumn(i);
+//		    }
+//		};
+//		this.grid.autoSizeColumn = function(c) {
+//			var w = this.view.getHeaderCell(c).firstChild.scrollWidth;
+//			for (var i = 0, l = this.store.getCount(); i < l; i++) {
+//				w = Math.max(w, this.view.getCell(i, c).firstChild.scrollWidth);
+//			}
+//			this.colModel.setColumnWidth(c, w);
+//			return w;
+//		};
+//		this.grid.autoSizeColumns();
 		this.grid.doLayout();
 	},
 	init : function() {
