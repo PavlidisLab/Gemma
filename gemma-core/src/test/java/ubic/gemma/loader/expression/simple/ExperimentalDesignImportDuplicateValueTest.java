@@ -120,41 +120,13 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
      * @param bms
      */
     private void checkResults( Collection<BioMaterial> bms ) {
-        // check.
+
         assertEquals( 17, ee.getExperimentalDesign().getExperimentalFactors().size() );
-
-        Collection<Long> seenFactorValueIds = new HashSet<Long>();
-        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-
-            if ( ef.getName().equals( "Profile" ) ) {
-                assertEquals( 3, ef.getFactorValues().size() );
-            } else if ( ef.getName().equals( "PMI (h)" ) ) {
-                assertEquals( 78, ef.getFactorValues().size() ); // measurements are unique.
-            }
-
-            for ( FactorValue fv : ef.getFactorValues() ) {
-                if ( fv.getCharacteristics().size() > 0 ) {
-                    VocabCharacteristic c = ( VocabCharacteristic ) fv.getCharacteristics().iterator().next();
-                    assertNotNull( c.getValue() );
-                    assertNotNull( c.getCategoryUri() );
-                } else {
-                    assertNotNull( fv.getValue() + " should have a measurement or a characteristic", fv
-                            .getMeasurement() );
-                }
-                seenFactorValueIds.add( fv.getId() );
-            }
-        }
-
-        assertEquals( 367, seenFactorValueIds.size() );
 
         for ( BioMaterial bm : bms ) {
             Collection<ExperimentalFactor> seenExperimentalFactors = new HashSet<ExperimentalFactor>();
             for ( FactorValue fv : bm.getFactorValues() ) {
-                assertTrue( seenFactorValueIds.contains( fv.getId() ) );
 
-                /*
-                 * Here is the test of importance to this case.
-                 */
                 if ( seenExperimentalFactors.contains( fv.getExperimentalFactor() ) ) {
                     for ( FactorValue ff : bm.getFactorValues() ) {
                         assertNotNull( ff.getId() );
