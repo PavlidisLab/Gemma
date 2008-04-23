@@ -69,6 +69,6 @@ Ext.extend( Ext.Gemma.PagingToolbar, Ext.PagingToolbar, {
        this.last.setDisabled(ap == ps);
        this.loading.enable();
        this.updateInfo();
-    },
+    }
 
 } );
