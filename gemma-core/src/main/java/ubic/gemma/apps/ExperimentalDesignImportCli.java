@@ -65,7 +65,7 @@ public class ExperimentalDesignImportCli extends AbstractSpringAwareCLI {
         addOption( expOption );
 
         Option designFileOption = OptionBuilder.hasArg().isRequired().withArgName( "Design file" ).withDescription(
-                "Experimental designdescriptoin file" ).withLongOpt( "eeListfile" ).create( 'f' );
+                "Experimental design description file" ).withLongOpt( "designFile" ).create( 'f' );
         addOption( designFileOption );
 
         Option dryRunOption = OptionBuilder.create( "dryrun" );

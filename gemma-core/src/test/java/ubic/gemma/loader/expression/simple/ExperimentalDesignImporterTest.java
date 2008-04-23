@@ -199,8 +199,6 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
             }
         }
 
-        assertEquals( 18, seenFactorValueIds.size() );
-
         for ( BioMaterial bm : bms ) {
             assertEquals( 4, bm.getFactorValues().size() );
             for ( FactorValue fv : bm.getFactorValues() ) {

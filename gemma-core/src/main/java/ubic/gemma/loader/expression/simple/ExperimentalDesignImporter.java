@@ -283,11 +283,18 @@ public class ExperimentalDesignImporter {
             factor: for ( ExperimentalFactor factor : design.getExperimentalFactors() ) {
                 boolean found = false;
                 for ( FactorValue temp : bm.getFactorValues() ) {
-                    if ( log.isDebugEnabled() ) log.debug( "Trying to find match for " + temp );
+
+                    // if ( temp.getId() != null ) {
+                    // // don't throw away old factors, but it won't be replaced either.
+                    // values.add( temp );
+                    //                        continue factor;
+                    //                    }
 
                     if ( !temp.getExperimentalFactor().getName().equals( factor.getName() ) ) {
                         continue;
                     }
+
+                    if ( log.isDebugEnabled() ) log.debug( "Trying to find match for " + temp );
 
                     for ( FactorValue fv : factor.getFactorValues() ) {
                         if ( log.isDebugEnabled() ) log.debug( "Candidate: " + fv );
@@ -384,11 +391,25 @@ public class ExperimentalDesignImporter {
         ef.setCategory( vc );
         ef.setName( columnHeader );
         ef.setDescription( columnHeader );
-        ed.getExperimentalFactors().add( ef );
 
-        if ( !dryRun ) {
-            experimentalDesignService.update( ed );
-            assert ef.getId() != null;
+        /*
+         * Attempt to match to existing experimental factor.
+         */
+        boolean foundMatch = false;
+        for ( ExperimentalFactor existingEfs : ed.getExperimentalFactors() ) {
+            if ( existingEfs.getName().equals( ef.getName() ) ) {
+                log.info( ef + " matches existing " + existingEfs );
+                ef = existingEfs;
+                foundMatch = true;
+            }
+        }
+
+        if ( !foundMatch ) {
+            ed.getExperimentalFactors().add( ef );
+            if ( !dryRun ) {
+                experimentalDesignService.update( ed );
+                assert ef.getId() != null;
+            }
         }
 
         log.info( "Factor: " + columnHeader );
@@ -403,7 +424,6 @@ public class ExperimentalDesignImporter {
      */
     private BioMaterial getBioMaterial( String sampleId, Map<String, BioMaterial> name2BioMaterial ) {
         if ( !name2BioMaterial.containsKey( sampleId ) ) {
-            // throw new IllegalArgumentException( "No Bioassay matching name '" + sampleId + "'" );
             return null;
         }
         return name2BioMaterial.get( sampleId );
@@ -483,7 +503,7 @@ public class ExperimentalDesignImporter {
 
         log.debug( "Adding " + newFv + " to " + bm );
         bm.getFactorValues().add( newFv );
-        log.info( "New factor value: " + value );
+        log.debug( "New factor value: " + value );
     }
 
     /**
@@ -528,6 +548,9 @@ public class ExperimentalDesignImporter {
         for ( FactorValue existingfv : bm.getFactorValues() ) {
             assert existingfv.getExperimentalFactor() != null;
             if ( existingfv.getExperimentalFactor().equals( ef ) ) {
+                /*
+                 * We might change this to allow either over-writing or skipping.
+                 */
                 throw new IllegalStateException( bm + " already has a factorvalue for " + ef + "(" + existingfv + ")" );
             }
         }

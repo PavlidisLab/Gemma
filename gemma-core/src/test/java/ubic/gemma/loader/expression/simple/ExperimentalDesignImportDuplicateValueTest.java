@@ -129,7 +129,7 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
             if ( ef.getName().equals( "Profile" ) ) {
                 assertEquals( 3, ef.getFactorValues().size() );
             } else if ( ef.getName().equals( "PMI (h)" ) ) {
-                assertEquals( 40, ef.getFactorValues().size() );
+                assertEquals( 78, ef.getFactorValues().size() ); // measurements are unique.
             }
 
             for ( FactorValue fv : ef.getFactorValues() ) {
@@ -145,10 +145,9 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
             }
         }
 
-        assertEquals( 182, seenFactorValueIds.size() );
+        assertEquals( 367, seenFactorValueIds.size() );
 
         for ( BioMaterial bm : bms ) {
-            // assertEquals( 15, bm.getFactorValues().size() );
             Collection<ExperimentalFactor> seenExperimentalFactors = new HashSet<ExperimentalFactor>();
             for ( FactorValue fv : bm.getFactorValues() ) {
                 assertTrue( seenFactorValueIds.contains( fv.getId() ) );
@@ -158,6 +157,7 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
                  */
                 if ( seenExperimentalFactors.contains( fv.getExperimentalFactor() ) ) {
                     for ( FactorValue ff : bm.getFactorValues() ) {
+                        assertNotNull( ff.getId() );
                         if ( ff.getExperimentalFactor().equals( fv.getExperimentalFactor() ) ) {
                             log.info( bm + " : " + ff );
                         }
