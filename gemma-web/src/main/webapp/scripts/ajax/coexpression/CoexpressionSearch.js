@@ -88,7 +88,7 @@ Ext.onReady( function() {
 		Ext.Gemma.CoexpressionGrid.getBitImageMapTemplate().overwrite( imageMap, result.datasets );
 		
 		var link = panel.getBookmarkableLink();
-		knownGeneGrid.setTitle( String.format( "Coexpressed genes <a href='{0}'>(bookmarkable link)</a> <a href='{0}&export'>(export as text)</a>", panel.getBookmarkableLink() ) );
+		knownGeneGrid.setTitle( String.format( "Coexpressed genes <a href='{0}'>(bookmarkable link)</a> <a href='{0}&export'>(export as text)</a>", link ) );
 		
 		Ext.Gemma.CoexpressionDatasetGrid.updateDatasetInfo( result.knownGeneDatasets, eeMap );
 		knownGeneDatasetGrid.loadData( result.isCannedAnalysis, result.queryGenes.length, result.knownGeneDatasets ) ;
