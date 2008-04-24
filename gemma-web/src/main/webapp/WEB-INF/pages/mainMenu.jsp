@@ -40,17 +40,22 @@
      datasumbox.applyCornersToAll();
      
      if (Ext.get("whatsNew")) {
-     	var whatsnewbox = new curvyCorners(settings, document.getElementById("whatsNew"));
-     	whatsnewbox.applyCornersToAll();
+     	var box = new curvyCorners(settings, document.getElementById("whatsNew"));
+     	box.applyCornersToAll();
      }
      
       if (Ext.get("adminFunctions")) {
-     	var whatsnewbox = new curvyCorners(settings, document.getElementById("adminFunctions"));
-     	whatsnewbox.applyCornersToAll();
+     	var box = new curvyCorners(settings, document.getElementById("adminFunctions"));
+     	box.applyCornersToAll();
+     }
+     
+       if (Ext.get("contact")) {
+     	var box = new curvyCorners(settings, document.getElementById("contact"));
+     	box.applyCornersToAll();
      }
   } );
 </script>
-<div class="rightcolumn" style="width: 200px; float: right;font-size:smaller">
+<div class="rightcolumn" style="width: 200px; float: right; font-size: smaller">
 	<div id="dataSummary" style="background: #D1D8F8; margin-bottom: 25px; padding: 8px;">
 		<strong>Data Summary</strong>
 		<table>
@@ -99,6 +104,8 @@
 			<Gemma:whatsNew whatsNew="${whatsNew}" />
 		</div>
 	</c:if>
+
+
 
 	<authz:authorize ifAnyGranted="admin">
 		<div id="adminFunctions" style="padding: 10px; background: #D1D8F8;">
@@ -149,7 +156,23 @@
 			</ul>
 		</div>
 	</authz:authorize>
+
+
+	<div id="contact" style="padding: 10px; background: #D1D8F8;">
+		<h4 style="margin-left: 10px">
+			Contacting us
+		</h4>
+		<p>
+			To get emails about updates to the Gemma software, subscribe to the
+			<a href="http://perutz.cmmt.ubc.ca/mailman/bioinformatics.ubc.ca/listinfo/gemma-announce">Gemma-announce mailing
+				list</a>. Please send bug reports or feature requests to
+			<a href="mailto:gemma@bioinformatics.ubc.ca">gemm@bioinformatics.ubc.ca</a>.
+		</p>
+	</div>
+
 </div>
+
+
 
 <div id="coexpression-messages">
 	<h3>

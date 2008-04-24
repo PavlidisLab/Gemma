@@ -26,13 +26,20 @@
 				<a href="http://www.psychiatry.ubc.ca/">Department of Psychiatry</a>
 				.
 			</p>
+			<p>
+				To keep updated about Gemma, subscribe to the
+				<a href="http://perutz.cmmt.ubc.ca/mailman/bioinformatics.ubc.ca/listinfo/gemma-announce">
+					Gemma-announce mailing list
+				</a>
+				.
+			</p>
 			<subsection name="Gemma news">
 				<dl>
 					<dt>
-						<strong>April 11, 2008 - Gemma 1.1</strong>
+						<strong>April 23, 2008 - Gemma 1.1.1</strong>
 					</dt>
 					<dd>
-						See the
+						Gemma 1.1.1 is a maintenance release. See the
 						<a href="downloads.html">downloads page</a>
 						for more details.
 					</dd>

@@ -28,19 +28,15 @@
      newsbox.applyCornersToAll(); 
   } );
 </script>
-<h3>
-	News
-</h3>
-<div class="latestNews" style="background: #FFF47E; padding-bottom: 0.8em">
+
+<div class="latestNews" style="background: #FFF47E; padding-bottom: 1.8em">
 	<h4 style="margin-left: 10px">
 		Gemma software updates
 	</h4>
 	<p>
-		Gemma 1.1 introduces improved interfaces for coexpression and differential expression analysis. You should notice some
-		speed improvements. We have also included several new 'presets' for analyses of coexpression of data sets relating to
-		the nervous system. For a more complete list of changes, see the
-		<a href="<c:url value='/resources/dist/RELEASE-NOTES-1.1.txt' />">release notes</a>.
+		Gemma 1.1.1 fixes some bugs in the user interface. For more details see the
+		<a href="<c:url value='/resources/dist/RELEASE-NOTES-1.1.1.txt' />">release notes</a>.
+
 	</p>
 </div>
-
 
