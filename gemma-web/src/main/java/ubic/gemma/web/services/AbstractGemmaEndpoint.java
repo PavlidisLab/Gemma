@@ -284,18 +284,21 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
             File file = new File( path, fullFileName );
 
             if ( !file.exists() ) {
-                FileOutputStream out = new FileOutputStream( new File( path + fullFileName ) );
+                new File(path).mkdirs();  //in case of the subdirs doesn't exisit. 
+                FileOutputStream out = new FileOutputStream( path +fullFileName );
                 OutputFormat format = new OutputFormat( document );
                 format.setIndenting( true );
                 // to generate a file output use fileoutputstream
                 XMLSerializer serializer = new XMLSerializer( out, null );
-                serializer.serialize( responseWrapper );
-
+                serializer.serialize( responseWrapper );                
+                out.close();
+                
                 log.info( "A report with the filename, " + fullFileName + ", has been created in path, " + path );
             } else
                 log.info( "A report with the filename, " + fullFileName
                         + ", already exists.  A new report was not created." );
 
+           
         } catch ( IOException e ) {
             // TODO Auto-generated catch block
             e.printStackTrace();

@@ -99,7 +99,13 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
         for ( String id : eeIdResult )
             eeIDLong.add( Long.parseLong( id ) );
 
+        //Need to get and thaw the experiments. 
         Collection<ExpressionExperiment> eeObjs = expressionExperimentService.loadMultiple( eeIDLong );
+        for(ExpressionExperiment ee : eeObjs){
+            expressionExperimentService.thawLite( ee);
+        }
+
+        
         // get gene id's from request
         Collection<String> geneIdResult = getArrayValues( requestElement, "gene_ids" );
         Collection<Long> geneIDLong = new HashSet<Long>();

@@ -44,6 +44,10 @@ public class CommonQueries {
     public static Map<ArrayDesign, Collection<ExpressionExperiment>> getArrayDesignsUsed(
             Collection<ExpressionExperiment> ees, Session session ) {
         Map<ArrayDesign, Collection<ExpressionExperiment>> eeAdMap = new HashMap<ArrayDesign, Collection<ExpressionExperiment>>();
+        
+        //Safety 1st....
+        if (ees == null || ees.isEmpty())   return eeAdMap;
+        
         final String eeAdQuery = "select distinct ee,b.arrayDesignUsed from ExpressionExperimentImpl as ee inner join "
                 + "ee.bioAssays b where ee in (:ees)";
 
