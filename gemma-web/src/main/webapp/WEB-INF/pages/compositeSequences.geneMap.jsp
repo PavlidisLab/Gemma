@@ -59,19 +59,19 @@
 		<em>Details about individual probes can be shown here.</em>
 	</div>
 	<div id="probe-details"
-		style="margin:0 0 10px 0; padding: 10px; border: 1px solid #EEEEEE; overflow: hidden; width:590px; height:100px;">
+		style=" overflow: hidden; width:590px; height:100px;">
 	</div>
 </div>
 
 <div id="probe-grid" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width:630px; height:350px;"></div>
 <c:if test="${arrayDesign.id != null}">
 	<div style="font-size:smaller;border-width:thin; border-style:dotted; border-color:#CCCCCC;padding:3px;margin-top:13px;width:40%">
-		Note that for array designs, only 500 probes will be available above. Use the search function to find specific probes
+		When viewing probes for array designs, only 500 probes will be available above. Use the search function to find specific probes.
 	</div>
 </c:if>
 <c:if test="${gene != null}">
 		<div style="font-size:smaller;border-width:thin; border-style:dotted; border-color:#CCCCCC;padding:3px;margin-top:13px;width:40%">
-		Note that in a few cases, to avoid accessing huge amounts of data, not all probes will be shown for a gene.
+		In a few cases, to avoid accessing huge amounts of data, not all probes will be shown for a gene.
 	</div>
 	</c:if>
 
