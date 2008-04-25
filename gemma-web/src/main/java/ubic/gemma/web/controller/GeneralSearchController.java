@@ -105,32 +105,16 @@ public class GeneralSearchController extends BaseFormController {
     }
 
     @Override
-    @SuppressWarnings( { "unused", "unchecked" })
+    @SuppressWarnings("unchecked")
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 
         SearchSettings settings = ( SearchSettings ) command;
 
-        String[] advanced = request.getParameterValues( "advancedSelect" );
-        Map test = request.getParameterMap();
         ModelAndView mav = super.showForm( request, errors, getSuccessView() );
 
-        mav.addObject( "searchDataset", "DataSet" );
-        mav.addObject( "searchGene", "Gene" );
-        mav.addObject( "searchArray", "Array" );
-        mav.addObject( "searchCompositeSequence", "CompositeSequence" );
-        mav.addObject( "searchBioSequence", "bioSequence" );
-        mav.addObject( "searchGoID", "GoID" );
-        mav.addObject( "searchOntology", "ontology" );
-        mav.addObject( "searchBibliographicReference", "bibliographicReference" );
-        mav.addObject( "searchBioSequence", "bioSequence" );
-
-        // first check - searchString should allow searches of 3 characters or
-        // more ONLY
-        // this is to prevent a huge wildcard search
-
         if ( !searchStringValidator( settings.getQuery() ) ) {
-            this.saveMessage( request, "Must use at least three characters for search" );
+            this.saveMessage( request, "Invalid search string" );
             log.info( "User entered an invalid search: " + settings.getQuery() );
             return super.showForm( request, errors, getSuccessView() );
         }
@@ -173,12 +157,12 @@ public class GeneralSearchController extends BaseFormController {
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
             Object command, BindException errors ) throws Exception {
 
-        if (request.getParameter( "query" ) != null) {
+        if ( request.getParameter( "query" ) != null ) {
             ModelAndView mav = new ModelAndView();
-            mav.addObject("query", request.getParameter("query"));
+            mav.addObject( "query", request.getParameter( "query" ) );
             return mav;
         }
-        
+
         if ( request.getParameter( "cancel" ) != null ) {
             this.saveMessage( request, "Cancelled Search" );
             return new ModelAndView( new RedirectView( "mainMenu.html" ) );
@@ -208,10 +192,10 @@ public class GeneralSearchController extends BaseFormController {
         /*
          * FIXME sort by the number of hits per class, so smallest number of hits is at the top.
          */
-        
+
         for ( Class clazz : searchResults.keySet() ) {
             List<SearchResult> results = searchResults.get( clazz );
-            
+
             if ( results.size() == 0 ) continue;
 
             log.info( "Search result: " + results.size() + " " + clazz.getSimpleName() + "s" );
@@ -223,7 +207,7 @@ public class GeneralSearchController extends BaseFormController {
             fillValueObjects( clazz, results, settings );
             finalResults.addAll( results );
         }
-      
+
         return new ListRange( finalResults );
     }
 
@@ -292,7 +276,7 @@ public class GeneralSearchController extends BaseFormController {
     }
 
     /*
-     * (non-Javadoc)
+     * This is where "GET" requests go, e.g. from a 'bookmarkable link'.
      * 
      * @see org.springframework.web.servlet.mvc.SimpleFormController#showForm(javax.servlet.http.HttpServletRequest,
      *      javax.servlet.http.HttpServletResponse, org.springframework.validation.BindException)
@@ -300,10 +284,40 @@ public class GeneralSearchController extends BaseFormController {
     @Override
     protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors )
             throws Exception {
-        if ( request.getParameter( "searchString" ) != null ) {
+        if ( request.getParameter( "query" ) != null ) {
             SearchSettings csc = ( SearchSettings ) this.formBackingObject( request );
+            csc.setQuery( request.getParameter( "query" ) );
             String taxon = request.getParameter( "taxon" );
             if ( taxon != null ) csc.setTaxon( taxonService.findByScientificName( taxon ) );
+
+            String scope = request.getParameter( "scope" );
+            if ( StringUtils.isNotBlank( scope ) ) {
+                char[] scopes = scope.toCharArray();
+                for ( int i = 0; i < scopes.length; i++ ) {
+                    switch ( scopes[i] ) {
+                        case 'G':
+                            csc.setSearchGenes( true );
+                            break;
+                        case 'E':
+                            csc.setSearchExperiments( true );
+                            break;
+                        case 'S':
+                            csc.setSearchBioSequences( true );
+                            break;
+                        case 'P':
+                            csc.setSearchProbes( true );
+                            break;
+                        case 'A':
+                            csc.setSearchArrays( true );
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            } else {
+                csc.setGeneralSearch( true );
+            }
+
             return this.onSubmit( request, response, csc, errors );
         }
 

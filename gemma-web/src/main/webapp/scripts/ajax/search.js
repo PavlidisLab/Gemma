@@ -61,6 +61,23 @@ var search = function(t, event) {
 	sm.set('searchArrays', searchArrays);
 	sm.set('searchSequences', searchSequences);
 	
+	var scopes = "&scope=";
+	if (searchProbes) {
+		scopes = scopes + "P";
+	}
+	if (searchGenes) {
+		scopes = scopes + "G";
+	}
+	if (searchExperiments) {
+		scopes = scopes + "E";
+	}
+	if (searchArrays) {
+		scopes = scopes + "A";
+	}
+	if (searchSequences) {
+		scopes = scopes + "S";
+	}
+	
 	ds.load({params:[{query:query,
 		searchProbes:searchProbes,
 		searchBioSequences:searchSequences,
@@ -71,11 +88,34 @@ var search = function(t, event) {
 	
 	Ext.DomHelper.overwrite('messages',""); 
 	form.findById('submit-button').setDisabled(true);
-	Ext.DomHelper.overwrite('search-bookmark', {tag: 'a', href : "/Gemma/searcher.html?query=" + query, html : 'Bookmarkable link'}); 
+	Ext.DomHelper.overwrite('search-bookmark', {tag: 'a', href : "/Gemma/searcher.html?query=" + query + scopes, html : 'Bookmarkable link'}); 
 };
 
 var searchForm = function() { 
  	sm = Ext.state.Manager;
+ 	
+ 	/*
+ 	 * If we came here by a direct request ('bookmarkable link'), override the cookie.
+ 	 */
+ 	var params = Ext.urlDecode(window.location.href)
+ 	var query = params.query;
+ 	var scopes = params.scope;
+ 
+ 	var searchGenes =  sm.get('searchGenes');
+ 	var searchExp =   sm.get('searchExperiments');
+ 	var searchSeq =  sm.get('searchSequences');
+ 	var searchProbes =  sm.get('searchProbes');
+ 	var searchArrays =  sm.get('searchArrays');
+ 	
+ 	if (scopes) {
+ 	 searchGenes =  scopes.match("G") ;
+ 	 searchExp =  scopes.match("E")  ;
+ 	 searchSeq =  scopes.match("S")  ;
+ 	 searchProbes =   scopes.match("P") ;
+ 	 searchArrays =  scopes.match("A")  ;
+ 	}
+
+ 	
     form = new Ext.form.FormPanel({
     	frame: true, 
     	autoHeight : true,
@@ -97,6 +137,7 @@ var searchForm = function() {
 					   minLengthText : "Query must be at least 3 characters long",
 					   msgTarget : "validation-messages",
 					   validateOnBlur:false,
+					   value : query | '',
 					   minLength : 3}),
     				 
     					new Ext.Button({
@@ -116,11 +157,11 @@ var searchForm = function() {
     			title:'Items to search for',
     			width:180, 
     			items:[
-    	 			{ name : "searchGenes", boxLabel : "Genes", checked: sm.get('searchGenes',true), hideLabel:true}, 
-    				{ name : "searchSequences",boxLabel : "Sequences", checked: sm.get('searchSequences',false), hideLabel:true}, 
-    				{ name : "searchExperiments",boxLabel : "Experiments", checked : sm.get('searchExperiments',true), hideLabel:true}, 
-    				{ name : "searchArrays",boxLabel : "Arrays", checked : sm.get('searchArrays',true), hideLabel:true}, 
-    				{ name : "searchProbes",boxLabel : "Probes", checked : sm.get('searchProbes',false), hideLabel:true}
+    	 			{ name : "searchGenes", boxLabel : "Genes", checked: searchGenes, hideLabel:true}, 
+    				{ name : "searchSequences",boxLabel : "Sequences", checked: searchSeq, hideLabel:true}, 
+    				{ name : "searchExperiments",boxLabel : "Experiments", checked :searchExp, hideLabel:true}, 
+    				{ name : "searchArrays",boxLabel : "Arrays", checked : searchArrays, hideLabel:true}, 
+    				{ name : "searchProbes",boxLabel : "Probes", checked : searchProbes, hideLabel:true}
     			]
     		} 
     	] 
