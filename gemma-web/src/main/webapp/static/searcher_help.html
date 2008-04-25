@@ -1,3 +1,90 @@
+<head>
+	<title>Help for search</title>
+</head>
 <body>
-Add Help
-<body>
+	<h1>
+		Help for search in Gemma
+	</h1>
+
+	<h2>
+		Search terms
+	</h2>
+
+	<p>
+		Search terms can be text ("liver"), gene symbols ("ACAT1") or other accession numbers for specific experiments or
+		probes.
+	</p>
+
+	<h2>
+		Search results
+	</h2>
+
+	<p>
+		Each category of search result is presented separately in the table. A link is provided to a detailed view of each
+		result items. A separate columns shows the text that matched your query, if available (this will not be shown for
+		searches of exact symbols like Genbank identifiers).
+	</p>
+	<p>
+		Results are limited to 500 items.
+	</p>
+
+	<h2>
+		Search scope
+	</h2>
+	<p>
+		Besides the term(s) you want to search for, you must choose the search scope. Assuming you have cookies enabled in
+		your browser, Gemma will remember your settings. It's a good idea to restrict searches to just the items you want to
+		avoid longer waits.
+	</p>
+
+	<p>
+		The available search scopes are:
+	</p>
+
+	<ul class="plainList">
+		<li>
+			Genes, by official symbol, alias, or name. Examples:
+			<a href="/Gemma/searcher.html?query=mGluR5&scope=G">mGluR5</a> or
+			<a href="/Gemma/searcher.html?query=metabotropic%20glutamate%20receptor&scope=G">metabotropic glutamate receptor</a>.
+		</li>
+		<li>
+			Sequences - The nucleotide sequences used on arrays, often referred to by Genbank identifiers identifier. Examples:
+			<a href="/Gemma/searcher.html?query=AA486221&scope=S">AA486221</a>. You can also retrieve sequences via associated
+			genes or probes.
+		</li>
+		<li>
+			Experiments - An expression experiment, searchable by text or the accession. For example
+			<a href="/Gemma/searcher.html?query=GSE60&scope=E">GSE60</a> or
+			<a href="/Gemma/searcher.html?query=liver&scope=E">liver</a>.
+		</li>
+		<li>
+			Arrays - Expression analysis platforms or 'array designs', such as "
+			<a href="/Gemma/searcher.html?query=HG-U133A&scope=A">HG-U133A</a>".
+		</li>
+		<li>
+			Probes - Components of array platforms, usually referred to by the manufacturer's id, the id in GEO, or a Genbank
+			accession. For example,
+			<a href="/Gemma/searcher.html?query=1450202_at&scope=P">1450202_at</a>
+		</li>
+	</ul>
+
+	<h2>
+		Common tasks
+	</h2>
+
+	<h3>
+		Find probes for a gene
+	</h3>
+
+	<p>
+		The best way to do this is to first locate the gene, and follow the link provided to the details page for the genes.
+		From there click on the "probes" link to view all probes for that gene.
+	</p>
+
+	<p>
+		The alternative, of searching for 'probes' with the gene symbol, will yield less precise results.
+	</p>
+
+
+
+</body>
