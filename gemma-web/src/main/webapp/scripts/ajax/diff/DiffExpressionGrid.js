@@ -47,10 +47,12 @@ Ext.Gemma.DiffExpressionGrid = function ( config ) {
 	}
 	superConfig.ds.setDefaultSort( 'p' );
 	
-	this.rowExpander = new Ext.Gemma.DiffExpressionGridRowExpander( {
+	this.rowExpander = new Ext.Gemma.EEGridRowExpander( {
 		tpl : ""
 	} );
-	
+		
+	superConfig.plugins = this.rowExpander;
+
 	superConfig.cm = new Ext.grid.ColumnModel( [
 		this.rowExpander,
 		{ id: 'gene', header: "Gene", dataIndex: "gene", width : 80},
@@ -61,7 +63,6 @@ Ext.Gemma.DiffExpressionGrid = function ( config ) {
 		{ id: 'p', header: "Sig. (FDR)", dataIndex: "p", renderer: function ( p ) { return p.toFixed(6); } }
 	] );
 	superConfig.cm.defaultSortable = true;
-	superConfig.plugins = this.rowExpander;
 	
 	superConfig.autoExpandColumn = 'name';
 
@@ -86,6 +87,7 @@ Ext.Gemma.DiffExpressionGrid = function ( config ) {
 Ext.Gemma.DiffExpressionGrid.getRecord = function() {
 	if ( Ext.Gemma.DiffExpressionGrid.record === undefined ) {
 		Ext.Gemma.DiffExpressionGrid.record = Ext.data.Record.create( [
+		    { name:"id", type:"int", convert: function ( expressionExperiment ) { return expressionExperiment.id; } },
 			{ name:"gene", type:"string", convert: function( gene ) { return gene.officialSymbol; } },
 			{ name:"expressionExperiment"},
 			{ name:"probe", type:"string" },
@@ -94,16 +96,6 @@ Ext.Gemma.DiffExpressionGrid.getRecord = function() {
 		] );
 	}
 	return Ext.Gemma.DiffExpressionGrid.record;
-};
-
-Ext.Gemma.DiffExpressionGrid.getRowExpander = function() {
-	if ( Ext.Gemma.DiffExpressionGrid.rowExpander === undefined ) {
-		Ext.Gemma.DiffExpressionGrid.rowExpander = new Ext.Gemma.DiffExpressionGridRowExpander( {
-			tpl : "",
-			grid : this
-		} );
-	}
-	return Ext.Gemma.DiffExpressionGrid.rowExpander;
 };
 
 Ext.Gemma.DiffExpressionGrid.getEEStyler = function() {
@@ -156,8 +148,7 @@ Ext.Gemma.DiffExpressionGrid.getEFStyler = function() {
 Ext.extend( Ext.Gemma.DiffExpressionGrid, Ext.Gemma.GemmaGridPanel, {
 
 loadData : function (data) {
-		
-		this.rowExpander.clearCache();
+
 		this.getStore().proxy.data = data;
 		this.getStore().reload( { resetPage : true } );
 		this.getView().refresh( true ); // refresh column headers
