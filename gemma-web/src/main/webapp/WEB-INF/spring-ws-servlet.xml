@@ -232,7 +232,7 @@
         </description>
         <property name="taxonService" ref="taxonService"/>
         <property name="geneService" ref="geneService"/>
-        <property name="gene2GeneCoexpressionService" ref="gene2GeneCoexpressionService"/>
+        <property name="geneCoexpressionService" ref="geneCoexpressionService"/>
         <property name="geneCoexpressionAnalysisService" ref="geneCoexpressionAnalysisService"/>
         <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
     </bean>

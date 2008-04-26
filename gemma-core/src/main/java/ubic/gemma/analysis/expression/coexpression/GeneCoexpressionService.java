@@ -200,12 +200,13 @@ public class GeneCoexpressionService {
 
             Collection<Gene2GeneCoexpression> g2gs = gg2gs.get( queryGene );
 
-            Collection<Gene> genesToThaw = new HashSet<Gene>();
             for ( Gene2GeneCoexpression g2g : g2gs ) {
                 Gene foundGene = g2g.getFirstGene().equals( queryGene ) ? g2g.getSecondGene() : g2g.getFirstGene();
                 CoexpressionValueObjectExt ecvo = new CoexpressionValueObjectExt();
-                genesToThaw.add( foundGene );
-
+                
+                Collection<Gene> geneToThaw = new ArrayList<Gene>();
+                geneToThaw.add( foundGene );
+                geneService.thawLite( geneToThaw );    //The thaw needs to be done here because building the value object calls methods that require the gene's info (setSortKey, hashCode)
                 ecvo.setQueryGene( queryGene );
                 ecvo.setFoundGene( foundGene );
 
@@ -269,7 +270,7 @@ public class GeneCoexpressionService {
 
                 seen.add( g2g );
             }
-            geneService.thawLite( genesToThaw );
+            
             CoexpressionSummaryValueObject summary = makeSummary( eevos, datasetsTested, linksMetPositiveStringency,
                     linksMetNegativeStringency );
             result.getSummary().put( queryGene.getOfficialSymbol(), summary );

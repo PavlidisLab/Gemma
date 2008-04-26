@@ -54,6 +54,22 @@
       		<element name="eeIdList" type="xsd:string" />      			 
      		</sequence>
 	     </complexType>
+	     
+	  <complexType name="ArrayOfCoexpressionResult">
+        <complexContent>
+          <restriction base="soapenc:Array">
+            <attribute ref="soapenc:arrayType" wsdl:arrayType="schema:CoexpressionResult[]"/>
+          </restriction>
+        </complexContent>
+      </complexType>
+    
+    	 <complexType name="CoexpressionResult">
+     		 <sequence>
+      	  	<element name="gene" type="xsd:string" />
+      	  	 <element name="support" type="xsd:string" />
+      		<element name="eeIdList" type="xsd:string" />      			 
+     		</sequence>
+	     </complexType>
 	         	     
       <complexType name="ArrayOfDEDV2EEGeneIDs">
         <complexContent>
@@ -221,12 +237,12 @@
     <wsdl:part name="gene2overlap" type="schema:ArrayOfgene2overlapMap" />
   </wsdl:message>
   <wsdl:message name="geneCoexpressionRequest">
-    <wsdl:part name="gene_official_symbol" type="xsd:string" />
+    <wsdl:part name="gene_id" type="xsd:integer" />
      <wsdl:part name="taxon_id" type="xsd:integer" />
      <wsdl:part name="stringency" type="xsd:integer" />
   </wsdl:message>
   <wsdl:message name="geneCoexpressionResponse">
-    <wsdl:part name="coexpressed_genes" type="schema:ArrayOfStrings" />
+    <wsdl:part name="coexpressed_genes" type="schema:ArrayOfCoexpressionResult" />
   </wsdl:message>
   <wsdl:message name="experimentAnnotationRequest">
     <wsdl:part name="ee_ids" type="schema:ArrayOfIDs" />
@@ -548,13 +564,13 @@
     <wsdl:port binding="schema:gemmaBinding" name="gemmaPort">
     
     <!-- for local machine, use localhost instead -->
-   		<!--   
-	<soap:address location="http://localhost:8080/Gemma/ws"/>
-	--> 
+
+	<!-- <soap:address location="http://137.82.157.157:8080/Gemma/ws"/> -->
+
     <!-- for production, use http://bioinformatics.ubc.ca/Gemma/ws -->
-          
+
      <soap:address location="http://bioinformatics.ubc.ca/Gemma/ws"/> 
-          
+  
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>

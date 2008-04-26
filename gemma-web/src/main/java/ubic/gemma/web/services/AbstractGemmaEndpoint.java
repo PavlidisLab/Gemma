@@ -103,7 +103,7 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
 
         Assert.isTrue( NAMESPACE_URI.equals( requestElement.getNamespaceURI() ), "Invalid namespace" );
         Assert.isTrue( localName.equals( requestElement.getLocalName() ), "Invalid local name" );
-        log.info( "Starting " + localName + " endpoint" );
+        log.debug( "Getting inputs for " + localName+ ":" + tagName );
         authenticate();
 
         Collection<String> value = new HashSet<String>();
@@ -131,7 +131,7 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
         }
         watch.stop();
         Long time = watch.getTime();
-        log.info( "XML request for " + localName + " endpoint read in " + time + "ms." );
+        log.debug( "Input read for " + localName +":" + tagName+ "="+ value+ "  read in " + time + "ms." );
         return value;
     }
 
