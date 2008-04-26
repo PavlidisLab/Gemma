@@ -47,7 +47,12 @@ Ext.Gemma.DiffExpressionGrid = function ( config ) {
 	}
 	superConfig.ds.setDefaultSort( 'p' );
 	
+	this.rowExpander = new Ext.Gemma.DiffExpressionGridRowExpander( {
+		tpl : ""
+	} );
+	
 	superConfig.cm = new Ext.grid.ColumnModel( [
+		this.rowExpander,
 		{ id: 'gene', header: "Gene", dataIndex: "gene", width : 80},
 		{ id: 'ee', header: "Dataset", dataIndex: "expressionExperiment", renderer: Ext.Gemma.DiffExpressionGrid.getEEStyler(), width : 80 },
 		{ id: 'name', header: "Name", dataIndex: "expressionExperiment", renderer: Ext.Gemma.DiffExpressionGrid.getEENameStyler(), width : 120 },
@@ -56,6 +61,7 @@ Ext.Gemma.DiffExpressionGrid = function ( config ) {
 		{ id: 'p', header: "Sig. (FDR)", dataIndex: "p", renderer: function ( p ) { return p.toFixed(6); } }
 	] );
 	superConfig.cm.defaultSortable = true;
+	superConfig.plugins = this.rowExpander;
 	
 	superConfig.autoExpandColumn = 'name';
 
@@ -88,6 +94,16 @@ Ext.Gemma.DiffExpressionGrid.getRecord = function() {
 		] );
 	}
 	return Ext.Gemma.DiffExpressionGrid.record;
+};
+
+Ext.Gemma.DiffExpressionGrid.getRowExpander = function() {
+	if ( Ext.Gemma.DiffExpressionGrid.rowExpander === undefined ) {
+		Ext.Gemma.DiffExpressionGrid.rowExpander = new Ext.Gemma.DiffExpressionGridRowExpander( {
+			tpl : "",
+			grid : this
+		} );
+	}
+	return Ext.Gemma.DiffExpressionGrid.rowExpander;
 };
 
 Ext.Gemma.DiffExpressionGrid.getEEStyler = function() {
@@ -141,6 +157,7 @@ Ext.extend( Ext.Gemma.DiffExpressionGrid, Ext.Gemma.GemmaGridPanel, {
 
 loadData : function (data) {
 		
+		this.rowExpander.clearCache();
 		this.getStore().proxy.data = data;
 		this.getStore().reload( { resetPage : true } );
 		this.getView().refresh( true ); // refresh column headers

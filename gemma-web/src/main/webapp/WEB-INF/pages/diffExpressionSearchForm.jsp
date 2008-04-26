@@ -35,12 +35,12 @@ version: $Id$
 	
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/DifferentialExpressionGrid.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionGrid.js'></script>
-	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionGridRowExpander.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionDatasetGrid.js'></script>
 	 --%>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/diff/DiffExpressionGrid.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/diff/DiffExpressionSearchForm.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/diff/DiffExpressionSearch.js'></script>
+	<script type='text/javascript' src='/Gemma/scripts/ajax/diff/DiffExpressionGridRowExpander.js'></script>
 	
 	
 	<content tag="heading"><fmt:message key="diffExpressionSearch.title" /></content>
