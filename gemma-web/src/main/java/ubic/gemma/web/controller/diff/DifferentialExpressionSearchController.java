@@ -105,6 +105,28 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     }
 
     /**
+     * Returns a metadata diff expression value object, which is useful for printing the results
+     * to a text view.
+     * 
+     * @param geneIds
+     * @param threshold
+     * @return
+     */
+    public DifferentialExpressionMetaValueObject getDifferentialExpressionMeta( Collection<Long> geneIds,
+            double threshold ) {
+
+        List<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
+
+        for ( Long geneId : geneIds ) {
+            devos.addAll( getDifferentialExpression( geneId, threshold ) );
+        }
+
+        DifferentialExpressionMetaValueObject meta = new DifferentialExpressionMetaValueObject( devos );
+
+        return meta;
+    }
+
+    /**
      * @param geneId
      * @param threshold
      * @return
@@ -161,20 +183,6 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         }
         return devos;
-    }
-
-    public DifferentialExpressionMetaValueObject getDifferentialExpressionMeta( Collection<Long> geneIds,
-            double threshold ) {
-
-        List<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
-
-        for ( Long geneId : geneIds ) {
-            devos.addAll( getDifferentialExpression( geneId, threshold ) );
-        }
-
-        DifferentialExpressionMetaValueObject meta = new DifferentialExpressionMetaValueObject( devos );
-
-        return meta;
     }
 
     /*
