@@ -87,7 +87,7 @@ Ext.Gemma.DiffExpressionGrid.getRecord = function() {
 	if ( Ext.Gemma.DiffExpressionGrid.record === undefined ) {
 		Ext.Gemma.DiffExpressionGrid.record = Ext.data.Record.create( [
 			{ name:"gene", type:"string", convert: function( gene ) { return gene.officialSymbol; } },
-			{ name:"expressionExperiment", sortType: function( ee ) { return ee.shortName; }},
+			{ name:"expressionExperiment"},
 			{ name:"probe", type:"string" },
 			{ name:"experimentalFactors" },
 			{ name:"p", type:"float" }
