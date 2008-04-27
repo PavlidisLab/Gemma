@@ -24,16 +24,18 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
 /**
  * @author luke
+ * @author keshav
+ * @version $Id$
  */
-public class ExperimentalFactorValueObject  {
+public class ExperimentalFactorValueObject {
 
-    private long   id;
+    private long id;
     private String name;
     private String description;
     private String category;
     private String categoryUri;
-//    private String factorValue;
-    
+    private String factorValues;
+
     public ExperimentalFactorValueObject() {
     }
 
@@ -44,10 +46,9 @@ public class ExperimentalFactorValueObject  {
         this.setCategory( getCategoryString( factor.getCategory() ) );
         this.setCategoryUri( getCategoryUri( factor.getCategory() ) );
     }
-    
+
     private String getCategoryString( Characteristic category ) {
-        if ( category == null )
-            return "no category";
+        if ( category == null ) return "no category";
         StringBuffer buf = new StringBuffer();
         if ( category.getCategory() != null ) {
             buf.append( category.getCategory() );
@@ -60,10 +61,10 @@ public class ExperimentalFactorValueObject  {
         }
         return buf.toString();
     }
-    
+
     private String getCategoryUri( Characteristic category ) {
         if ( category instanceof VocabCharacteristic ) {
-            VocabCharacteristic vc = (VocabCharacteristic)category;
+            VocabCharacteristic vc = ( VocabCharacteristic ) category;
             return vc.getValueUri() == null ? vc.getCategoryUri() : vc.getValueUri();
         } else {
             return null;
@@ -82,40 +83,40 @@ public class ExperimentalFactorValueObject  {
         return name;
     }
 
-    public void setName(String name) {
+    public void setName( String name ) {
         this.name = name;
     }
-    
-    public String getDescription() {
-		return description;
-	}
 
-	public void setDescription(String description) {
-		this.description = description;
-	}
-    
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription( String description ) {
+        this.description = description;
+    }
+
     public String getCategory() {
         return category;
     }
-    
+
     public void setCategory( String category ) {
         this.category = category;
     }
-    
+
     public String getCategoryUri() {
         return categoryUri;
     }
-    
+
     public void setCategoryUri( String categoryUri ) {
         this.categoryUri = categoryUri;
     }
-    
-//    public String getFactorValue() {
-//        return factorValue;
-//    }
-//    
-//    public void setFactorValue( String factorValue ) {
-//        this.factorValue = factorValue;
-//    }
-    
+
+    public String getFactorValues() {
+        return factorValues;
+    }
+
+    public void setFactorValues( String factorValues ) {
+        this.factorValues = factorValues;
+    }
+
 }

@@ -65,6 +65,7 @@ Ext.Gemma.DiffExpressionGrid = function ( config ) {
 	superConfig.cm.defaultSortable = true;
 	
 	superConfig.autoExpandColumn = 'name';
+	superConfig.autoExpandColumn = 'efs';
 
 	for ( property in config ) {
 		superConfig[property] = config[property];
@@ -126,18 +127,17 @@ Ext.Gemma.DiffExpressionGrid.getEENameStyler = function() {
 
 Ext.Gemma.DiffExpressionGrid.getEFStyler = function() {
 	if ( Ext.Gemma.DiffExpressionGrid.efStyler === undefined ) {
-//		Ext.Gemma.DiffExpressionGrid.efTemplate = new Ext.XTemplate(
-//			"<tpl for='.'>",
-//				"{name} ({category})",
-//			"</tpl>"
-//		);
+		Ext.Gemma.DiffExpressionGrid.efTemplate = new Ext.XTemplate(
+			
+			'<tpl for=".">',
+				"<a target='_blank' ext:qtip='{factorValues}'>{name}</a>\n",
+				//'<p><tooltip caption={factorValues} descr="factor values">{name}</tooltip></p>',
+			'</tpl>'
+				
+		);
 		Ext.Gemma.DiffExpressionGrid.efStyler = function ( value, metadata, record, row, col, ds ) {
 			var efs = record.data.experimentalFactors;
-			var names = [];
-			for ( var i=0; i<efs.length; ++i ) {
-				names.push( efs[i].name || "unnamed factor" );
-			}
-			return names.join( "," );
+			return Ext.Gemma.DiffExpressionGrid.efTemplate.apply( efs);
 		};
 	}
 	return Ext.Gemma.DiffExpressionGrid.efStyler;

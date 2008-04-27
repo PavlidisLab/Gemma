@@ -27,6 +27,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
@@ -40,6 +41,7 @@ import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.util.GemmaLinkUtils;
@@ -65,6 +67,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     private Log log = LogFactory.getLog( this.getClass() );
 
     private static final double DEFAULT_THRESHOLD = 0.01;
+
+    private static final String FV_SEP = ", ";
 
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
 
@@ -174,6 +178,22 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                         if ( category instanceof VocabCharacteristic )
                             efvo.setCategoryUri( ( ( VocabCharacteristic ) category ).getCategoryUri() );
                     }
+                    Collection<FactorValue> fvs = ef.getFactorValues();
+                    String factorValuesAsString = StringUtils.EMPTY;
+
+                    for ( FactorValue fv : fvs ) {
+                        String fvName = fv.toString();
+                        if ( StringUtils.isNotBlank( fvName ) ) {
+                            factorValuesAsString += fvName + FV_SEP;
+                        }
+                    }
+
+                    /* clean up the start and end of the string */
+                    factorValuesAsString = StringUtils.remove( factorValuesAsString, ef.getName() + ":" );
+                    factorValuesAsString = StringUtils.removeEnd( factorValuesAsString, FV_SEP );
+
+                    efvo.setFactorValues( factorValuesAsString );
+
                     devo.getExperimentalFactors().add( efvo );
                 }
                 devo.setP( r.getCorrectedPvalue() );
