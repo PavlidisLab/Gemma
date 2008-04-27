@@ -105,8 +105,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     }
 
     /**
-     * Returns a metadata diff expression value object, which is useful for printing the results
-     * to a text view.
+     * Returns a metadata diff expression value object, which is useful for printing the results to a text view.
      * 
      * @param geneIds
      * @param threshold
@@ -152,6 +151,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
             for ( ProbeAnalysisResult r : results ) {
                 DifferentialExpressionValueObject devo = new DifferentialExpressionValueObject();
+                devo.setId( ee.getId() );
                 devo.setGene( g );
                 devo.setExpressionExperiment( eevo );
                 devo.setProbe( r.getProbe().getName() );
