@@ -87,8 +87,6 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
         }
     }
 
-  
-
     public final void testFindByAccession() throws Exception {
         DatabaseEntry accessionEntry = DatabaseEntry.Factory.newInstance( ed );
         accessionEntry.setAccession( accession );
@@ -103,11 +101,16 @@ public class ExpressionExperimentDaoImplTest extends BaseSpringContextTest {
         Collection<DesignElement> designElements = new HashSet<DesignElement>();
         QuantitationType quantitationType = eel.getDesignElementDataVectors().iterator().next().getQuantitationType();
         Collection<DesignElementDataVector> allv = eel.getDesignElementDataVectors();
-        Iterator<DesignElementDataVector> it = allv.iterator();
-        for ( int i = 0; i < 2; i++ ) {
-            designElements.add( it.next().getDesignElement() );
+
+        for ( Iterator<DesignElementDataVector> it = allv.iterator(); it.hasNext(); ) {
+            DesignElement designElement = it.next().getDesignElement();
+            assertNotNull( designElement );
+            if ( designElements.contains( designElement ) ) {
+                continue;
+            }
+            designElements.add( designElement );
+            if ( designElements.size() == 2 ) break;
         }
- 
 
         Collection<DesignElementDataVector> vectors = expressionExperimentDao.getDesignElementDataVectors(
                 designElements, quantitationType );
