@@ -216,17 +216,19 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
             throws Exception {
 
-        double threshold = DEFAULT_THRESHOLD;
-        try {
-            threshold = Double.parseDouble( request.getParameter( "t" ) );
-        } catch ( Exception e ) {
-            log.warn( "invalid threshold; using default " + threshold );
-        }
-
-        Collection<Long> geneIds = extractIds( request.getParameter( "g" ) );
-
-        DifferentialExpressionMetaValueObject result = getDifferentialExpressionMeta( geneIds, threshold );
         if ( request.getParameter( "export" ) != null ) {
+
+            double threshold = DEFAULT_THRESHOLD;
+            try {
+                threshold = Double.parseDouble( request.getParameter( "t" ) );
+            } catch ( Exception e ) {
+                log.warn( "invalid threshold; using default " + threshold );
+            }
+
+            Collection<Long> geneIds = extractIds( request.getParameter( "g" ) );
+
+            DifferentialExpressionMetaValueObject result = getDifferentialExpressionMeta( geneIds, threshold );
+
             ModelAndView mav = new ModelAndView( new TextView() );
             String output = result.toString();
             mav.addObject( "text", output.length() > 0 ? output : "no results" );
