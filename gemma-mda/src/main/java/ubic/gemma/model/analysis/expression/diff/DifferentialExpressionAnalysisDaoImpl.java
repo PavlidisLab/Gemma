@@ -19,9 +19,7 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.Hibernate;
@@ -29,8 +27,6 @@ import org.hibernate.LockMode;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.analysis.Investigation;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
