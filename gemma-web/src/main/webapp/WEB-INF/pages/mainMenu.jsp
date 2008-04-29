@@ -166,7 +166,7 @@
 			To get emails about updates to the Gemma software, subscribe to the
 			<a href="http://perutz.cmmt.ubc.ca/mailman/bioinformatics.ubc.ca/listinfo/gemma-announce">Gemma-announce mailing
 				list</a>. Please send bug reports or feature requests to
-			<a href="mailto:gemma@bioinformatics.ubc.ca">gemm@bioinformatics.ubc.ca</a>.
+			<a href="mailto:gemma@bioinformatics.ubc.ca">gemma@bioinformatics.ubc.ca</a>.
 		</p>
 	</div>
 
