@@ -155,7 +155,6 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
             for ( ProbeAnalysisResult r : results ) {
                 DifferentialExpressionValueObject devo = new DifferentialExpressionValueObject();
-                devo.setId( ee.getId() );
                 devo.setGene( g );
                 devo.setExpressionExperiment( eevo );
                 devo.setProbe( r.getProbe().getName() );

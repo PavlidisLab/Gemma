@@ -47,7 +47,7 @@ Ext.Gemma.DiffExpressionGrid = function ( config ) {
 	}
 	superConfig.ds.setDefaultSort( 'p' );
 	
-	this.rowExpander = new Ext.Gemma.EEGridRowExpander( {
+	this.rowExpander = new Ext.Gemma.DifEEGridRowExpander( {
 		tpl : ""
 	} );
 		
@@ -153,5 +153,29 @@ loadData : function (data) {
 		this.getStore().reload( { resetPage : true } );
 		this.getView().refresh( true ); // refresh column headers
 	}
+	
+});
+
+//Needed to override row expander so that the id for EE would get used and not the id from the differentialExpressionValueObject
+Ext.Gemma.DifEEGridRowExpander = function ( config ) {
+ 
+	this.grid = config.grid;
+	var superConfig = {
+	};
+	
+	for ( property in config ) {
+		superConfig[property] = config[property];
+	}
+	Ext.Gemma.DifEEGridRowExpander.superclass.constructor.call( this, superConfig );
+	
+};
+
+
+Ext.extend( Ext.Gemma.DifEEGridRowExpander, Ext.Gemma.EEGridRowExpander, {
+
+		beforeExpand : function (record, body, rowIndex) {		
+				ExpressionExperimentController.getDescription(record.data.expressionExperiment.id, { callback : this.fillExpander.createDelegate(this, [body, rowIndex], true) } );
+				return true;			
+		}
 	
 });

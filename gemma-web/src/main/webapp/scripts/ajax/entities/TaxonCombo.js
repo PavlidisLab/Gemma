@@ -84,12 +84,11 @@ Ext.extend( Ext.Gemma.TaxonCombo, Ext.form.ComboBox, {
 		this.setValue( taxon.id );
 	},
 	
-	setTaxonByScientificName : function ( scientificName ) {
+	getTaxonByScientificName : function ( scientificName ) {
 		var all = this.store.getRange();
 		for ( var i=0; i<all.length; ++i ) {
-			if ( all[i].data.scientificName === scientificName ) {
-				this.setValue(all[i].data.id );
-				return;
+			if ( all[i].data.scientificName === scientificName ) {			
+				return all[i].data;
 			}
 		}
 	}
