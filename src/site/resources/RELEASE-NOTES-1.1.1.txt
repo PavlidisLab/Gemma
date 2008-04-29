@@ -18,7 +18,11 @@ The Gemma project, version 1.1.1 Release Notes
 
 - Fixed broken 'custom' coexpression analysis and data download links
 
+- Enhancements and bug fixes for differential expression searches.
+
 - Improvements to behavior of the coexpression interface.
+
+- More documentation.
 
 - A number of other bug fixes and behind-the-scenes changes and improvements.
 
