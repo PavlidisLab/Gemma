@@ -61,7 +61,7 @@ Ext.Gemma.GeneCombo.getRecord = function() {
 Ext.Gemma.GeneCombo.getTemplate = function() {
 	if ( Ext.Gemma.GeneCombo.template === undefined ) {
 		Ext.Gemma.GeneCombo.template = new Ext.XTemplate(
-			'<tpl for="."><div ext:qtip="{officialName}" class="x-combo-list-item">{officialSymbol} {officialName} ({taxon})</div></tpl>'
+			'<tpl for="."><div ext:qtip="{officialName} ({taxon})" class="x-combo-list-item">{officialSymbol} {officialName} ({taxon})</div></tpl>'
 		);
 	}
 	return Ext.Gemma.GeneCombo.template;
@@ -71,9 +71,18 @@ Ext.Gemma.GeneCombo.getTemplate = function() {
  */
 Ext.extend( Ext.Gemma.GeneCombo, Ext.form.ComboBox, {
 
+	initComponent : function() {
+        Ext.Gemma.GeneCombo.superclass.initComponent.call(this);
+        this.addEvents( 'genechanged' );
+    },
+
 	onSelect : function ( record, index ) {
 		Ext.Gemma.GeneCombo.superclass.onSelect.call( this, record, index );
 		this.setGene( record.data );
+		if ( record.data != this.selectedGene ) {
+			this.selectedGene = record.data;
+			this.fireEvent( 'genechanged', this, this.selectedGene );
+		}
 	},
 	
 	reset : function() {

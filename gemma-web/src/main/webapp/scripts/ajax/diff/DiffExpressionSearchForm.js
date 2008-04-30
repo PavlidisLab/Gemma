@@ -111,7 +111,7 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
 	this.addButton( submitButton );
 
 	Ext.Gemma.DiffExpressionSearchForm.searchForGene = function( geneId ) {
-		geneChooserPanel.setGene.call( geneChooserPanel, geneId, thisPanel.doSearch.bind( thisPanel ) );
+		geneChooserPanel.setGene.call(thisPanel.geneChooserPanel, geneId, thisPanel.doSearch.bind( thisPanel ) );
 	};
 };
 
@@ -181,6 +181,10 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 		 */
 		if ( dsc.taxonId ) {
 			this.geneChooserPanel.taxonCombo.setValue( dsc.taxonId );
+			//Must update the geneCombo so that it will filter genes by taxon after a page refresh. 
+			//Can't ge the taxon obj from the taxon combo because taxon combo isn't done loading (race condition)
+			//Tried to fire taxonchanged event but event was out of scope.  
+			this.geneChooserPanel.geneCombo.setTaxon({id : dsc.taxonId });
 		}
 		if ( dsc.geneIds.length > 1 ) {
 			this.geneChooserPanel.loadGenes( dsc.geneIds );
@@ -254,7 +258,7 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 	},
 	
 	taxonChanged : function ( taxon ) {
-		this.geneChooserPanel.taxonChanged( taxon );
+		this.geneCombo.setTaxon( taxon );
 	},
 	
 	getActiveEeIds : function() {
