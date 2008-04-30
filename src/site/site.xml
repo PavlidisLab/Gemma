@@ -19,7 +19,7 @@
 			<item name="Resource home" href="http://bioinformatics.ubc.ca/Gemma/resources" />
 			<item name="Downloads" href="/downloads.html" />
 			<item name="baseCode" href="http://bioinformatics.ubc.ca/pavlidis/lab/basecode/" />
-			<item name="Documentation" href="http://bioinformatics.ubc.ca/confluence/Gemma" />
+			<item name="Documentation" href="http://bioinformatics.ubc.ca/confluence/display/Gemma" />
 			<item name="FAQ" href="/faq.html" />
 			<item name="Credits" href="/thanks.html" />
 		</menu>
