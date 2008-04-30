@@ -2,13 +2,13 @@
 	<parent>
 		<artifactId>gemma</artifactId>
 		<groupId>gemma</groupId>
-		<version>1.1.1-SNAPSHOT</version>
+		<version>1.1.1</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>gemma</groupId>
 	<artifactId>gemma-core</artifactId>
 	<name>Gemma Core</name>
-	<version>1.1.1-SNAPSHOT</version>
+	<version>1.1.1</version>
 	<description>Module containing core gemma functionality.</description>
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
@@ -141,17 +141,17 @@
 		<dependency>
 			<groupId>gemma</groupId>
 			<artifactId>gemma-util</artifactId>
-			<version>1.1.1-SNAPSHOT</version>
+			<version>1.1.1</version>
 		</dependency>
 		<dependency>
 			<groupId>gemma</groupId>
 			<artifactId>gemma-mda</artifactId>
-			<version>1.1.1-SNAPSHOT</version>
+			<version>1.1.1</version>
 		</dependency>
 		<dependency>
 			<groupId>gemma</groupId>
 			<artifactId>gemma-testing</artifactId>
-			<version>1.1.1-SNAPSHOT</version>
+			<version>1.1.1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.ibm.icu</groupId>
