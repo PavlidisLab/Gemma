@@ -28,6 +28,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
+import org.hibernate.proxy.HibernateProxy;
 import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -281,7 +282,11 @@ public class CompositeSequenceController extends BaseMultiActionController {
             GeneProduct geneProduct = blatAssociation.getGeneProduct();
             Gene gene = geneProduct.getGene();
             BlatResult blatResult = blatAssociation.getBlatResult();
-            blatResult.getQuerySequence().getTaxon();
+            if ( blatResult instanceof HibernateProxy ) {
+                blatResult = ( BlatResult ) ( ( HibernateProxy ) blatResult ).getHibernateLazyInitializer().getImplementation();
+            }
+            
+            blatResult.getQuerySequence().getTaxon();   //FIXME: Cruft or thaw attempt?
 
             if ( blatResults.containsKey( blatResult ) ) {
                 blatResults.get( blatResult ).addGene( geneProduct, gene );

@@ -958,6 +958,7 @@
 					<property name="excludes">
 						<list>
 							<value>compositeSequences</value>
+							<value>alternateNames</value>
 							<value>technologyType</value>
 							<value>designProvider</value>
 							<value>auditTrail</value>
