@@ -87,7 +87,7 @@ public class ArrayDesignUsedEndpoint extends AbstractGemmaEndpoint {
         // build collection to pass to wrapper
         Collection<String> values = new HashSet<String>();
         for ( ArrayDesign ad : ads ) {
-            values.add( ad.getName() );
+            values.add( ad.getShortName());
         }
 
         Element wrapper = buildWrapper( document, values, "arrayDesign_names" );
