@@ -35,6 +35,7 @@ import org.w3c.dom.Element;
 
 import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
@@ -53,7 +54,7 @@ import ubic.gemma.util.ConfigUtils;
 
 public class Probe2GeneEndpoint extends AbstractGemmaEndpoint {
 
-    private static Log log = LogFactory.getLog( ExperimentDEDVEndpoint.class );
+    private static Log log = LogFactory.getLog( Probe2GeneEndpoint.class );
 
     
     private CompositeSequenceService compositeSequenceService;
@@ -86,13 +87,16 @@ public class Probe2GeneEndpoint extends AbstractGemmaEndpoint {
      * @return the response element
      */
     @SuppressWarnings("unchecked")
-    protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
+    protected Element invokeInternal( Element requestElement, Document document ) throws Exception {        
+        StopWatch watch = new StopWatch();
+        watch.start();
+        
         setLocalName( PROBE_LOCAL_NAME );
        
-        String probeid = "";
-        Collection<String> probeResults = getNodeValues( requestElement, "probe_id" );
-        for ( String id : probeResults ) {
-            probeid = id;
+        String probeName = "";
+        Collection<String> probeResults = getNodeValues( requestElement, "probe_name" );
+        for ( String name : probeResults ) {
+            probeName = name;
         }
         
         String adid = "";
@@ -100,10 +104,13 @@ public class Probe2GeneEndpoint extends AbstractGemmaEndpoint {
         for ( String id : adResults ) {
             adid = id;
         }
-
+        ArrayDesign ad = arrayDesignService.load( Long.parseLong( adid) );
+       
         //get genes, given probe (which is unique to an Array Design
-        //therefore, the Array Design Identifier input is not really necessary
-        CompositeSequence cs = compositeSequenceService.load( Long.parseLong( probeid ) );
+        //therefore, the Array Design Identifier input is not really necessary                
+        log.info( "XML input read: probe name, "+probeName+" & array design, "+ad );
+        
+        CompositeSequence cs = compositeSequenceService.findByName( ad, probeName );
         Collection<Gene> geneCol = compositeSequenceService.getGenes( cs );
         
         // start building the wrapper
@@ -117,7 +124,11 @@ public class Probe2GeneEndpoint extends AbstractGemmaEndpoint {
             geneIds.add( gene.getId().toString() );
         }
         
-        return buildWrapper(document, geneIds, elementName1 );
+        Element wrapper = buildWrapper(document, geneIds, elementName1 );
+        watch.stop();
+        Long time = watch.getTime();
+        log.info( "XML response for gene id result (from gene symbol) built in " + time + "ms." );   
+        return wrapper;
     }
 
 }
