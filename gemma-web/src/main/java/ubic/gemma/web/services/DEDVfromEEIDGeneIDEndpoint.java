@@ -36,8 +36,15 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 
 /**
- * Given list Experiment IDs, list gene IDs, return data vectors satisfying both conditions (i.e., string array) and the
- * corresponding composite gene sequences.
+ Given a list Experiment IDs and a list gene IDs will return design element data vectors (DEDV),
+all the genes that could have been responsible for that DEDV (only needs to contain 1 of the given genes)
+and the Expression Experiment that the data came from. 
+The DEDV's will be a list of white space seperated doubles that might contain NaN's for missing data.
+The gene's will also be a list of white space separated gene Ids.
+
+This query can be time consuming and cause a tcp/ip server timeout .  The service outputs the results to a file which can be found at
+(file wil be name something like dedv-"gene IDs"-"Number of Experiments".xml
+http://bioinformatics.ubc.ca/Gemma/ws/xml/
  * 
  * @author gavin, klc
  * @version$Id$
@@ -56,8 +63,6 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
      * The local name of the expected request/response.
      */
     private static final String EXPERIMENT_LOCAL_NAME = "dEDVfromEEIDGeneID";
-    private static final String DELIMITER = " ";
-
     /**
      * Sets the "business service" to delegate to.
      */

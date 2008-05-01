@@ -33,7 +33,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 /**
- * Given an expression experiment id, return the array design names used
+ *Used for determining which array designs were used in a given expression experiment (EE) 
  * @author klc, gavin
  * @version$Id$
  */

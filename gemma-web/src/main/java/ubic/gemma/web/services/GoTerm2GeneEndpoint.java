@@ -33,8 +33,7 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.ontology.GeneOntologyService;
 
 /**
- * Given a Gene Ontology Term ID and a Taxon as input, will return a collection of gene IDs that match the GO ID and
- * Taxon.
+ * Given a Gene Ontology Term URI and a Taxon ID as input, will return a collection of gene IDs that match the GO Term and Taxon.
  * 
  * @author gavin, klc
  * @version$Id$

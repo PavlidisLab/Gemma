@@ -36,8 +36,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 
 /**
- * Given an Expression Experiment ID, will return a collection of Design Element Data Vectors and the corresponding
- * composite gene sequences.
+ *Allows access to all the Design Element Data Vectors (DEDV's)  for a given Expression Experiment. Returns the DEDV's and the genes that might be 
+ *responsible for that DEDV
  * 
  * @author klc, gavin
  * @version$Id$
@@ -56,8 +56,6 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
      * The local name of the expected request/response.
      */
     private static final String EXPERIMENT_LOCAL_NAME = "experimentDEDV";
-    private static final String DELIMITER = " ";
-
     /**
      * Sets the "business service" to delegate to.
      */

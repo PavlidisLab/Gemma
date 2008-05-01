@@ -21,7 +21,6 @@ package ubic.gemma.web.services;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -41,8 +40,10 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 
 /**
- * Gene (symbol + taxon #, like GRIN1 + 1 (human)) --> gene coexpression (using the'canned' analyses; default would be
- * the 'all' analysis for the taxon)
+ *Allows access to the gene co-expression analysis.  Given a gene, a taxon and a stringency this service will return all the related co-expression data.  
+ *The stringency is the miniumum number of times we found a particular relationship. 
+ *  Returns the coexpressed Gene, the support ( the number of times that coexpression was found )
+ * and the experiments that co-expression was found in (since there should be more than 1 experiment this list will be returned as a space delimted string of EE Ids.
  * 
  * @author gavin, klc
  * @version$Id$

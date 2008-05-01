@@ -32,9 +32,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 /**
- * GCollection of experiments --> map of experiments to its characteristics 
- * don't forget NaN
- * include URI so we know which ontology it came from
+  *Expression Experiments in Gemma contain annotations. These annotations can be retrieved using this service.  
+  *The category often just an ontology URI and the term is the URI of the annotation.  
+  *The category is left blank for terms that are not from ontologies (free text). 
+  * The evidence code represents how the annotation came to be. 
  * 
  * @author klc, gavin
  * @version$Id$

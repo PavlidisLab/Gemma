@@ -32,7 +32,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 /**
- * Given an Expression Experiment ID, will return the number of samples (biomaterials) associated for that experiment
+ * Used for determining the number of samples (biomaterials) associated with a given expression experiment 
  * 
  * @author klc, gavin
  * @version$Id$

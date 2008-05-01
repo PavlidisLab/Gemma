@@ -32,8 +32,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 /**
- * Given an Expression Experiment ID, will return the matching Expression Experiment name. Note: it is not the short
- * name
+ * Used for getting the Short Name given an Expression Experiment ID  eg: 793 --> GSE10470
  * 
  * @author klc, gavin
  * @version$Id$

@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.xml.serialize.OutputFormat;
@@ -56,13 +55,11 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
 
     private static Log log = LogFactory.getLog( AbstractGemmaEndpoint.class );
 
-//    private static final String USER = "guest";
-
-//    private static final String PASSWORD = "";
-
     protected static final String REQUEST = "Request";
 
     protected static final String RESPONSE = "Response";
+
+    public static final String DELIMITER = " ";
 
     private String localName;
 

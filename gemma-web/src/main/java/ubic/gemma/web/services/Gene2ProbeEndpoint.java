@@ -35,8 +35,7 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 
 /**
- * Given an Expression Experiment ID, will return a collection of Design Element Data Vectors and the corresponding
- * composite gene sequences.
+ *for a given Official Gene Symbol and Taxon ID  will return all the probes IDs and their array design IDs  that assay for that given gene.
  * 
  * @author gavin, klc
  * @version$Id$
@@ -56,8 +55,6 @@ public class Gene2ProbeEndpoint extends AbstractGemmaEndpoint {
      * The local name of the expected request/response.
      */
     private static final String PROBE_LOCAL_NAME = "gene2Probe";
-
-    private static final String DELIMITER = " ";
 
     /**
      * Sets the "business service" to delegate to.
@@ -88,6 +85,7 @@ public class Gene2ProbeEndpoint extends AbstractGemmaEndpoint {
         
         setLocalName( PROBE_LOCAL_NAME );
 
+        //FIXME this should take gene_id
         String geneSymbol = "";
         Collection<String> geneResults = getNodeValues( requestElement, "gene_official_symbol" );
         for ( String id : geneResults ) {

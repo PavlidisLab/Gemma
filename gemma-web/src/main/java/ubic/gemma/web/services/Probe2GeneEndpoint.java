@@ -19,11 +19,6 @@
 
 package ubic.gemma.web.services;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -33,20 +28,14 @@ import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import ubic.gemma.analysis.service.AnalysisHelperService;
-import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.util.ConfigUtils;
 
 /**
- * Given an Expression Experiment ID, will return a collection of Design Element Data Vectors and the corresponding
- * composite gene sequences.
+ * Used for determining what genes a probe assays for.  Given a probe name and an array Design Id will return a list of gene ids 
  * 
  * @author gavin, klc
  * @version$Id$
@@ -66,8 +55,6 @@ public class Probe2GeneEndpoint extends AbstractGemmaEndpoint {
      * The local name of the expected request/response.
      */
     private static final String PROBE_LOCAL_NAME = "probe2Gene";
-    private static final String DELIMITER = " ";
-
     /**
      * Sets the "business service" to delegate to.
      */

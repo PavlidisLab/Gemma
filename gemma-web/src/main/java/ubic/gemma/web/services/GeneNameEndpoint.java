@@ -32,7 +32,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 
 /**
- * Given a gene ID, will return the matching gene name. Note: this is not the short name
+ *Given a gene ID, will return the matching gene official symbol eg) 938103--> Grin1 
  * 
  * @author klc, gavin
  * @version$Id$

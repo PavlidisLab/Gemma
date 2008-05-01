@@ -36,7 +36,9 @@ import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.ontology.OntologyTerm;
 
 /**
- * query gene id & collection of gene ids --> map of gene ids to overlapping GO terms
+ *given a query gene id & collection of target gene ids will determine the overlapping Go terms (intersection) 
+ *between each pair of Query Gene and Target Gene. 
+*The actual overlapping go terms will be returned as a single string delimited by white space. 
  * 
  * @author gavin, klc 
  * @version$Id$
