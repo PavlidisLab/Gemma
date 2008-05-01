@@ -44,7 +44,7 @@ import ubic.gemma.model.genome.gene.GeneService;
 
 public class Gene2ProbeEndpoint extends AbstractGemmaEndpoint {
 
-    private static Log log = LogFactory.getLog( ExperimentDEDVEndpoint.class );
+    private static Log log = LogFactory.getLog( Gene2ProbeEndpoint.class );
 
     private TaxonService taxonService;
 
@@ -83,6 +83,9 @@ public class Gene2ProbeEndpoint extends AbstractGemmaEndpoint {
      */
     @SuppressWarnings("unchecked")
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        
         setLocalName( PROBE_LOCAL_NAME );
 
         String geneSymbol = "";
@@ -96,6 +99,8 @@ public class Gene2ProbeEndpoint extends AbstractGemmaEndpoint {
         for ( String id : taxonResults ) {
             taxonid = id;
         }
+        
+        log.info( "XML iput read: Gene symbol, "+geneSymbol+" & taxon id, "+ taxonid );
         // get the probe and array design info
         //get taxon
         Taxon taxon = taxonService.load( Long.parseLong( taxonid ) );
@@ -124,10 +129,8 @@ public class Gene2ProbeEndpoint extends AbstractGemmaEndpoint {
         String elementName1 = "probe_id";
         String elementName2 = "array_design_identifier";
 
-        log.info( "Building " + PROBE_LOCAL_NAME + " XML response" );
-        StopWatch watch = new StopWatch();
-        watch.start();
-
+        
+       
         Element responseWrapper = document.createElementNS( NAMESPACE_URI, PROBE_LOCAL_NAME );
         Element responseElement = document.createElementNS( NAMESPACE_URI, PROBE_LOCAL_NAME + RESPONSE );
         responseWrapper.appendChild( responseElement );
@@ -149,8 +152,8 @@ public class Gene2ProbeEndpoint extends AbstractGemmaEndpoint {
         }
         watch.stop();
         Long time = watch.getTime();
-        log.info( "Finished generating result. Sending response to client." );
-        log.info( "XML response for " + PROBE_LOCAL_NAME + " endpoint built in " + time + "ms." );
+        //log.info( "Finished generating result. Sending response to client." );
+        log.info( "XML response for Probe result built in " + time + "ms." );
         return responseWrapper;
     }
 

@@ -74,16 +74,18 @@ public class Gene2GoTermEndpoint extends AbstractGemmaEndpoint {
      * @return the response element
      */
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
-
+        StopWatch watch = new StopWatch();
+        watch.start();
+        
         setLocalName( GENE2GO_LOCAL_NAME );
 
         Collection<String> geneResult = getArrayValues( requestElement, "gene_ids" );
 
+        log.info( "XML input read: "+geneResult.size()+" gene ids" );
         // start building the wrapper
         // build xml manually for mapped result rather than use buildWrapper inherited from AbstractGemmeEndpoint
-        log.info( "Building " + GENE2GO_LOCAL_NAME + " XML response" );
-        StopWatch watch = new StopWatch();
-        watch.start();
+ //       log.info( "Building " + GENE2GO_LOCAL_NAME + " XML response" );
+     
 
         String elementName1 = "gene_id";
         String elementName2 = "goIdList";
@@ -124,8 +126,8 @@ public class Gene2GoTermEndpoint extends AbstractGemmaEndpoint {
         }
         watch.stop();
         Long time = watch.getTime();
-        log.info( "Finished generating result. Sending response to client." );
-        log.info( "XML response for " + GENE2GO_LOCAL_NAME + " endpoint built in " + time + "ms." );
+//        log.info( "Finished generating result. Sending response to client." );
+        log.info( "XML response for GO Term results built in " + time + "ms." );
 
         return responseWrapper;
 

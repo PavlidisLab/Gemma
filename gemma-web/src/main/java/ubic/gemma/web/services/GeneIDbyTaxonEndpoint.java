@@ -21,6 +21,9 @@ package ubic.gemma.web.services;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -38,7 +41,7 @@ import ubic.gemma.model.genome.gene.GeneService;
 
 public class GeneIDbyTaxonEndpoint extends AbstractGemmaEndpoint {
 
-    // private static Log log = LogFactory.getLog( GeneIDbyTaxonEndpoint.class );
+    private static Log log = LogFactory.getLog( GeneIDbyTaxonEndpoint.class );
 
     private GeneService geneService;
     private TaxonService taxonService;
@@ -68,7 +71,9 @@ public class GeneIDbyTaxonEndpoint extends AbstractGemmaEndpoint {
      */
     @SuppressWarnings("unchecked")
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
-
+        StopWatch watch = new StopWatch();
+        watch.start();
+        
         setLocalName( EXPERIMENT_LOCAL_NAME );
         Collection<String> taxonResults = getNodeValues( requestElement, "taxon_id" );
         String taxonId = "";
@@ -76,6 +81,9 @@ public class GeneIDbyTaxonEndpoint extends AbstractGemmaEndpoint {
         for ( String id : taxonResults ) {
             taxonId = id;
         }
+        
+        log.info( "XML input read: taxon id, "+taxonId );
+        
         // Get Gene matched with Taxon
         Taxon tax = taxonService.load( Long.parseLong( taxonId ) );
 
@@ -91,8 +99,11 @@ public class GeneIDbyTaxonEndpoint extends AbstractGemmaEndpoint {
         for ( Gene gene : geneCollection ) {
             geneIds.add( gene.getId().toString() );
         }
-
-        return buildWrapper( document, geneIds, "gene_ids" );
+        Element wrapper = buildWrapper( document, geneIds, "gene_ids" );
+        watch.stop();
+        Long time = watch.getTime();
+        log.info( "XML response for gene id results built in " + time + "ms." );   
+        return wrapper;
 
     }
 

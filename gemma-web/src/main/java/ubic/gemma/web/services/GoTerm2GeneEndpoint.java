@@ -21,6 +21,9 @@ package ubic.gemma.web.services;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -39,7 +42,7 @@ import ubic.gemma.ontology.GeneOntologyService;
 
 public class GoTerm2GeneEndpoint extends AbstractGemmaEndpoint {
 
-    //private static Log log = LogFactory.getLog( Gene2GoTermEndpoint.class );
+    private static Log log = LogFactory.getLog( GoTerm2GeneEndpoint.class );
 
     private GeneOntologyService geneOntologyService;
 
@@ -69,6 +72,9 @@ public class GoTerm2GeneEndpoint extends AbstractGemmaEndpoint {
      * @return the response element
      */
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        
         setLocalName( GO2Gene_LOCAL_NAME );
         String goId = "";
         String taxonId = "";
@@ -85,6 +91,8 @@ public class GoTerm2GeneEndpoint extends AbstractGemmaEndpoint {
             taxonId = id;
         }
 
+        log.info( "XML input read: GO id, "+goId+" & taxon id, "+taxonId );
+        
         // get gene from GO term
         Taxon taxon = taxonService.load( Long.parseLong( taxonId ) );
         if ( taxon == null ) {
@@ -100,7 +108,12 @@ public class GoTerm2GeneEndpoint extends AbstractGemmaEndpoint {
             geneIds.add( gene.getId().toString() );
         }
 
-        return buildWrapper( document, geneIds, "gene_id" );
+        Element wrapper = buildWrapper( document, geneIds, "gene_id" );
+        
+        watch.stop();
+        Long time = watch.getTime();
+        log.info( "XML response for gene id results built in " + time + "ms." );   
+        return wrapper;
 
     }
 

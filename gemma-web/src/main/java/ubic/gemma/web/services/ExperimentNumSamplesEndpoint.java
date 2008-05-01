@@ -22,6 +22,9 @@ package ubic.gemma.web.services;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -37,7 +40,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 public class ExperimentNumSamplesEndpoint extends AbstractGemmaEndpoint {
 
-    // private static Log log = LogFactory.getLog( ExperimentNumSamplesEndpoint.class );
+    private static Log log = LogFactory.getLog( ExperimentNumSamplesEndpoint.class );
 
     private ExpressionExperimentService expressionExperimentService;
 
@@ -61,6 +64,9 @@ public class ExperimentNumSamplesEndpoint extends AbstractGemmaEndpoint {
      * @return the response element
      */
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        
         setLocalName( EXPERIMENT_LOCAL_NAME );
         String eeId = "";
 
@@ -69,6 +75,8 @@ public class ExperimentNumSamplesEndpoint extends AbstractGemmaEndpoint {
         for ( String id : eeResult )
             eeId = id;
 
+        log.info("XML input read: expression experiment id, " + eeId );
+        
         ExpressionExperiment ee = expressionExperimentService.load( Long.parseLong( eeId ) );
         if ( ee == null ) {
             String msg = "No Expression Experiment with id, " + ee + " can be found.";
@@ -81,7 +89,13 @@ public class ExperimentNumSamplesEndpoint extends AbstractGemmaEndpoint {
         Collection<String> values = new HashSet<String>();
         values.add( bmCount.toString() );
 
-        return buildWrapper( document, values, "eeNumSample_id" );
+        Element wrapper = buildWrapper( document, values, "eeNumSample_id" );
+        
+        watch.stop();
+        Long time = watch.getTime();
+        log.info( "XML response for Expression Experiment Sample Number result built in " + time + "ms." );   
+        
+        return wrapper;
 
     }
 

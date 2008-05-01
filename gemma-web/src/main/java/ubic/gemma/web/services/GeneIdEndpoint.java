@@ -22,6 +22,9 @@ package ubic.gemma.web.services;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -39,7 +42,7 @@ import ubic.gemma.model.genome.gene.GeneService;
 
 public class GeneIdEndpoint extends AbstractGemmaEndpoint {
 
-    // private static Log log = LogFactory.getLog(GeneIdEndpoint.class);
+    private static Log log = LogFactory.getLog(GeneIdEndpoint.class);
 
     private GeneService geneService;
     private TaxonService taxonService;
@@ -69,6 +72,9 @@ public class GeneIdEndpoint extends AbstractGemmaEndpoint {
      */
     @SuppressWarnings("unchecked")
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        
         setLocalName( GENE_LOCAL_NAME );
         String geneName = "";
         String taxString = "";
@@ -83,6 +89,7 @@ public class GeneIdEndpoint extends AbstractGemmaEndpoint {
             taxString = tax;
         }
        
+        log.info( "XML input read: gene symbol, "+geneName+" & taxon id, "+taxString );
         //Collection<Gene> genes = geneService.findByOfficialSymbolInexact( geneName );
         Taxon taxon = taxonService.load( Long.parseLong( taxString ) );
         Gene gene = geneService.findByOfficialSymbol( geneName, taxon );
@@ -96,7 +103,12 @@ public class GeneIdEndpoint extends AbstractGemmaEndpoint {
         Collection<String> gIDs = new HashSet<String>();
         gIDs.add( gene.getId().toString() );
 
-        return buildWrapper( document, gIDs, "gene_name" );
+        Element wrapper = buildWrapper( document, gIDs, "gene_name" );
+        
+        watch.stop();
+        Long time = watch.getTime();
+        log.info( "XML response for gene id result (from gene symbol) built in " + time + "ms." );   
+        return wrapper;
 
     }
 

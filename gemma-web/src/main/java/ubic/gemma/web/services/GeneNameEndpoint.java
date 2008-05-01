@@ -22,6 +22,9 @@ package ubic.gemma.web.services;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -37,7 +40,7 @@ import ubic.gemma.model.genome.gene.GeneService;
 
 public class GeneNameEndpoint extends AbstractGemmaEndpoint {
 
-    // private static Log log = LogFactory.getLog(GeneNameEndpoint.class);
+    private static Log log = LogFactory.getLog(GeneNameEndpoint.class);
 
     private GeneService geneService;
 
@@ -61,7 +64,9 @@ public class GeneNameEndpoint extends AbstractGemmaEndpoint {
      * @return the response element
      */
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
-
+        StopWatch watch = new StopWatch();
+        watch.start();
+        
         setLocalName( GENE_LOCAL_NAME );
         String geneId = "";
 
@@ -71,6 +76,8 @@ public class GeneNameEndpoint extends AbstractGemmaEndpoint {
             geneId = id;
         }
 
+        log.info( "XML input read: gene id, "+geneId );
+        
         Gene geneName = geneService.load( Long.parseLong( geneId ) );
 
         if ( geneName == null ) {
@@ -82,7 +89,12 @@ public class GeneNameEndpoint extends AbstractGemmaEndpoint {
         Collection<String> gName = new HashSet<String>();
         gName.add( geneName.getOfficialSymbol());
 
-        return buildWrapper( document, gName, "gene_name" );
+        Element wrapper = buildWrapper( document, gName, "gene_name" );
+        
+        watch.stop();
+        Long time = watch.getTime();
+        log.info( "XML response for gene name result built in " + time + "ms." );   
+        return wrapper;
 
     }
 

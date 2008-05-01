@@ -74,7 +74,9 @@ public class GeneOverlapEndpoint extends AbstractGemmaEndpoint {
      * @return the response element
      */
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
-
+        StopWatch watch = new StopWatch();
+        watch.start();
+        
         setLocalName( LOCAL_NAME );
 
         String queryInput = "";
@@ -88,14 +90,13 @@ public class GeneOverlapEndpoint extends AbstractGemmaEndpoint {
         for ( String gene_id : geneResult ) {
             geneIdLongs.add( Long.parseLong( gene_id ) );
         }
+        
+        log.info( "XML input read: query gene id, "+queryInput+", against "+geneResult.size()+" other genes" );
 
         // start building the wrapper
         // build xml manually for mapped result rather than use buildWrapper inherited from AbstractGemmeEndpoint
         // start building the wrapper
-        // build xml manually for mapped result rather than use buildWrapper inherited from AbstractGemmeEndpoint
-        log.info( "Building " + LOCAL_NAME + " XML response" );
-        StopWatch watch = new StopWatch();
-        watch.start();
+        // build xml manually for mapped result rather than use buildWrapper inherited from AbstractGemmeEndpoint            
 
         String elementName1 = "gene";
         String elementName2 = "overlap_GO_terms";
@@ -139,8 +140,8 @@ public class GeneOverlapEndpoint extends AbstractGemmaEndpoint {
         }
         watch.stop();
         Long time = watch.getTime();
-        log.info( "Finished generating result. Sending response to client." );
-        log.info( "XML response for " + LOCAL_NAME + " endpoint built in " + time + "ms." );
+       
+        log.info( "XML response for gene overlap results built in " + time + "ms." );
         return responseWrapper;
 
     }
