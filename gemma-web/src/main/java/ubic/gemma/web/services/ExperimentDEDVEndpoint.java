@@ -148,7 +148,7 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
         Long time = watch.getTime();
 //        log.info( "Finished generating result. Sending response to client." );
         log.info( "XML response for design element data vector result built in " + time + "ms." );
-        writeReport( responseWrapper, document, eeid );
+        writeReport( responseWrapper, document, "DEDVforEE-"+eeid );
         return responseWrapper;
     }
 
