@@ -86,11 +86,16 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
      */
     @SuppressWarnings("unchecked")
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        
         setLocalName( EXPERIMENT_LOCAL_NAME );
         String eeid = "";
 
         Collection<String> eeResults = getNodeValues( requestElement, "ee_id" );
 
+        log.info( "XML input read: expression experiment id, "+eeid);
+        
         for ( String id : eeResults ) {
             eeid = id;
         }
@@ -106,10 +111,8 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
         String elementName1 = "dedv";
         String elementName2 = "geneIdist";
 
-        log.info( "Building " + EXPERIMENT_LOCAL_NAME + " XML response" );
-        StopWatch watch = new StopWatch();
-        watch.start();
-
+//        log.info( "Building " + EXPERIMENT_LOCAL_NAME + " XML response" );
+ 
         Element responseWrapper = document.createElementNS( NAMESPACE_URI, EXPERIMENT_LOCAL_NAME );
         Element responseElement = document.createElementNS( NAMESPACE_URI, EXPERIMENT_LOCAL_NAME + RESPONSE );
         responseWrapper.appendChild( responseElement );
@@ -143,8 +146,8 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
 
         watch.stop();
         Long time = watch.getTime();
-        log.info( "Finished generating result. Sending response to client." );
-        log.info( "XML response for " + EXPERIMENT_LOCAL_NAME + " endpoint built in " + time + "ms." );
+//        log.info( "Finished generating result. Sending response to client." );
+        log.info( "XML response for design element data vector result built in " + time + "ms." );
         writeReport( responseWrapper, document, eeid );
         return responseWrapper;
     }
