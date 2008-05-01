@@ -22,6 +22,9 @@ package ubic.gemma.web.services;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -37,10 +40,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 public class ArrayDesignUsedEndpoint extends AbstractGemmaEndpoint {
 
-    //private static Log log = LogFactory.getLog( ArrayDesignUsedEndpoint.class );
-
     private ExpressionExperimentService expressionExperimentService;
-
+    private static Log log = LogFactory.getLog( ArrayDesignUsedEndpoint.class );
     /**
      * The local name of the expected request.
      */
@@ -62,7 +63,9 @@ public class ArrayDesignUsedEndpoint extends AbstractGemmaEndpoint {
      */
     @SuppressWarnings("unchecked")
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
-
+        StopWatch watch = new StopWatch();
+        watch.start();
+        
         setLocalName( ARRAY_LOCAL_NAME );
         String eeId = "";
         Collection<String> eeResult = getNodeValues( requestElement, "ee_id" );
@@ -70,6 +73,8 @@ public class ArrayDesignUsedEndpoint extends AbstractGemmaEndpoint {
         for ( String id : eeResult )
             eeId = id;
 
+        log.info( "XML input read: expression experiment id, " + eeId );
+        
         ExpressionExperiment ee = expressionExperimentService.load( Long.parseLong( eeId ) );
         if ( ee == null ) {
             String msg = "No experiment with id, " + eeId + " can be found.";
@@ -85,8 +90,14 @@ public class ArrayDesignUsedEndpoint extends AbstractGemmaEndpoint {
             values.add( ad.getName() );
         }
 
-        return buildWrapper( document, values, "arrayDesign_names" );
-
+        Element wrapper = buildWrapper( document, values, "arrayDesign_names" );
+        
+        watch.stop();
+        Long time = watch.getTime();
+       
+        log.info( "XML response for array design names used result built in " + time + "ms." );   
+        
+        return wrapper;
     }
 
 }

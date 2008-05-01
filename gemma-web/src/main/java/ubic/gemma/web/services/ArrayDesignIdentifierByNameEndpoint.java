@@ -21,6 +21,9 @@ package ubic.gemma.web.services;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -36,10 +39,9 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 
 public class ArrayDesignIdentifierByNameEndpoint extends AbstractGemmaEndpoint {
 
-    //private static Log log = LogFactory.getLog( ArrayDesignUsedEndpoint.class );
-
+    
     private ArrayDesignService arrayDesignService;
-    //private SearchService searchService;
+    private static Log log = LogFactory.getLog( ArrayDesignIdentifierByNameEndpoint.class );
 
     /**
      * The local name of the expected request.
@@ -65,6 +67,9 @@ public class ArrayDesignIdentifierByNameEndpoint extends AbstractGemmaEndpoint {
      * @return the response element
      */
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        
         setLocalName( ARRAY_LOCAL_NAME );
         String adName = "";
         // get GO id from request
@@ -72,7 +77,7 @@ public class ArrayDesignIdentifierByNameEndpoint extends AbstractGemmaEndpoint {
         for ( String ad : adResult ) {
             adName = ad;
         }
-
+        log.info( "XML input read: array design name, " + adName );
         // using the SearchService to get array design(s) when given free text
 
         // Map<Class, List<SearchResult>> results = searchService.search(SearchSettings.ArrayDesignSearch(name));
@@ -105,8 +110,12 @@ public class ArrayDesignIdentifierByNameEndpoint extends AbstractGemmaEndpoint {
         Collection<String> adId = new HashSet<String>();
         adId.add( ad.getId().toString() );
 
-        return buildWrapper( document, adId, "arrayDesign_ids" );
-
+         Element wrapper = buildWrapper( document, adId, "arrayDesign_ids" );
+        
+         watch.stop();
+         Long time = watch.getTime();
+         log.info( "XML response for array design id result built in " + time + "ms." );
+         return wrapper;
     }
 
 }

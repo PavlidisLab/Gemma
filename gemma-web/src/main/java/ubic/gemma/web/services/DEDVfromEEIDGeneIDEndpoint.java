@@ -91,7 +91,9 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
      */
     @SuppressWarnings("unchecked")
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
-
+        StopWatch watch = new StopWatch();
+        watch.start();
+        
         setLocalName( EXPERIMENT_LOCAL_NAME );
         // get ee id's from request
         Collection<String> eeIdResult = getArrayValues( requestElement, "ee_ids" );
@@ -118,9 +120,8 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
 
         // start building the wrapper
         // xml is built manually here instead of using the buildWrapper method inherited from AbstractGemmaEndpoint
-        log.info( "Building " + EXPERIMENT_LOCAL_NAME + " XML response" );
-        StopWatch watch = new StopWatch();
-        watch.start();
+//        log.info( "Building " + EXPERIMENT_LOCAL_NAME + " XML response" );
+        
 
         String elementName1 = "dedv";
         String elementName2 = "geneIdList";
@@ -173,9 +174,9 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
 
         watch.stop();
         Long time = watch.getTime();
-        log.info( "Finished generating result. Sending response to client." );
-        log.info( "XML response for " + EXPERIMENT_LOCAL_NAME + " endpoint built in " + time + "ms." );
-        log.info( "Finished generating matrix. Sending response to client." );
+ //       log.info( "Finished generating result. Sending response to client." );
+        log.info( "XML response for design element data vector results built in " + time + "ms." );
+ //       log.info( "Finished generating matrix. Sending response to client." );
 
         // naming convention for the xml file report
         String filename = "dedv-";

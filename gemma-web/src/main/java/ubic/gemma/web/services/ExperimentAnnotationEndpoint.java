@@ -42,7 +42,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 public class ExperimentAnnotationEndpoint extends AbstractGemmaEndpoint {
 
-    private static Log log = LogFactory.getLog( Gene2GoTermEndpoint.class );
+    private static Log log = LogFactory.getLog( ExperimentAnnotationEndpoint.class );
 
     private ExpressionExperimentService expressionExperimentService;
 
@@ -70,16 +70,16 @@ public class ExperimentAnnotationEndpoint extends AbstractGemmaEndpoint {
      * @return the response element
      */
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
-
+        StopWatch watch = new StopWatch();
+        watch.start();
+        
         setLocalName( LOCAL_NAME );
 
         Collection<String> eeResult = getArrayValues( requestElement, "ee_ids" );
 
+        log.info( "XML Input read: "+ eeResult.size()+" expression experiment(s)"  );
         // start building the wrapper
-        // build xml manually for mapped result rather than use buildWrapper inherited from AbstractGemmeEndpoint
-        log.info( "Building " + LOCAL_NAME + " XML response" );
-        StopWatch watch = new StopWatch();
-        watch.start();
+        // build xml manually for mapped result rather than use buildWrapper inherited from AbstractGemmeEndpoint             
 
         Element responseWrapper = document.createElementNS( NAMESPACE_URI, LOCAL_NAME );
         Element responseElement = document.createElementNS( NAMESPACE_URI, LOCAL_NAME + RESPONSE );
@@ -125,8 +125,8 @@ public class ExperimentAnnotationEndpoint extends AbstractGemmaEndpoint {
         }
         watch.stop();
         Long time = watch.getTime();
-        log.info( "Finished generating result. Sending response to client." );
-        log.info( "XML response for " + LOCAL_NAME + " endpoint built in " + time + "ms." );       
+        //log.info( "Finished generating result. Sending response to client." );
+        log.info( "XML response for Experiment Annotation result built in " + time + "ms." );       
         return responseWrapper;
 
     }
