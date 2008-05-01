@@ -251,7 +251,7 @@
     <wsdl:part name="annotations" type="schema:ArrayOfee2annotations" />
   </wsdl:message>
   <wsdl:message name="probe2GeneRequest">
-    <wsdl:part name="probe_id" type="xsd:integer" />
+    <wsdl:part name="probe_name" type="xsd:integer" />
     <wsdl:part name="array_design_identifier" type="xsd:integer" />
     </wsdl:message>
   <wsdl:message name="probe2GeneResponse">
