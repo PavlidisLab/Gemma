@@ -44,7 +44,7 @@ import ubic.gemma.model.genome.gene.GeneService;
 
 public class PhysicalLocationEndpoint extends AbstractGemmaEndpoint {
 
-    private static Log log = LogFactory.getLog( GeneIdEndpoint.class );
+    private static Log log = LogFactory.getLog( PhysicalLocationEndpoint.class );
 
     private GeneService geneService;
 
@@ -72,7 +72,9 @@ public class PhysicalLocationEndpoint extends AbstractGemmaEndpoint {
      * @return the response element
      */
     protected Element invokeInternal( Element requestElement, Document document ) {
-
+        StopWatch watch = new StopWatch();
+        watch.start();
+        
         setLocalName( PLOC_LOCAL_NAME );
         Collection<String> geneResults = getNodeValues( requestElement, "gene_id" );
         String geneId = "";
@@ -81,6 +83,7 @@ public class PhysicalLocationEndpoint extends AbstractGemmaEndpoint {
             geneId = id;
         }
 
+        log.info( "XML input read: gene id, "+geneId );
         // get the physical location of gene using GeneService
         Gene gene = geneService.load( Long.parseLong( geneId ) );
 
@@ -157,14 +160,16 @@ public class PhysicalLocationEndpoint extends AbstractGemmaEndpoint {
         // physLoc.add(Long.toString(chromId));
         // physLoc.add(Long.toString(minNT));
         // physLoc.add(Long.toString(maxNT));
-
-        return buildLocationWrapper( document, chromId, Long.toString( minNT ), Long.toString( maxNT ) );
+        Element wrapper = buildLocationWrapper( document, chromId, Long.toString( minNT ), Long.toString( maxNT ) );
+        
+        watch.stop();
+        Long time = watch.getTime();
+        log.info( "XML response for physical location result built in " + time + "ms." );
+        return wrapper;
     }
 
     private Element buildLocationWrapper( Document document, String chrom, String min, String max ) {
-        log.info( "Building " + PLOC_LOCAL_NAME + " XML response" );
-        StopWatch watch = new StopWatch();
-        watch.start();
+       
 
         Element responseWrapper = document.createElementNS( NAMESPACE_URI, PLOC_LOCAL_NAME );
         Element responseElement = document.createElementNS( NAMESPACE_URI, PLOC_LOCAL_NAME + RESPONSE );
@@ -182,10 +187,7 @@ public class PhysicalLocationEndpoint extends AbstractGemmaEndpoint {
         e3.appendChild( document.createTextNode( max ) );
         responseElement.appendChild( e3 );
 
-        watch.stop();
-        Long time = watch.getTime();
-        log.info( "Finished generating result. Sending response to client." );
-        log.info( "XML response for " + PLOC_LOCAL_NAME + " endpoint built in " + time + "ms." );
+        
 
         return responseWrapper;
     }
