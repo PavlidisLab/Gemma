@@ -118,7 +118,7 @@ public class ExperimentAnnotationEndpoint extends AbstractGemmaEndpoint {
                 e3.appendChild( document.createTextNode( elementString2 ) );
                 responseElement.appendChild( e3 );
                 
-                Element e4 = document.createElement( "GOEvidenceCode" );
+                Element e4 = document.createElement( "EvidenceCode" );
                 e4.appendChild( document.createTextNode( elementString4 ) );
                 responseElement.appendChild( e4 );
             }
