@@ -87,7 +87,7 @@ public class ExperimentNameEndpoint extends AbstractGemmaEndpoint {
 
         // build collection to pass to wrapper
         Collection<String> values = new HashSet<String>();
-        values.add( ee.getName() );
+        values.add( ee.getShortName() );
 
         Element wrapper = buildWrapper( document, values, "ee_name" );
         
