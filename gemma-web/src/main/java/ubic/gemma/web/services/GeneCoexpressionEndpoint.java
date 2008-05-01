@@ -19,9 +19,11 @@
 
 package ubic.gemma.web.services;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
@@ -48,7 +50,7 @@ import ubic.gemma.model.genome.gene.GeneService;
 
 public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
 
-    private static Log log = LogFactory.getLog( Gene2GoTermEndpoint.class );
+    private static Log log = LogFactory.getLog( GeneCoexpressionEndpoint.class );
 
     private TaxonService taxonService;
 
@@ -94,6 +96,9 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
      */
     @SuppressWarnings("unchecked")
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        
         setLocalName( LOCAL_NAME );
 
         Collection<String> geneResults = getNodeValues( requestElement, "gene_id" );
@@ -114,6 +119,8 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
             string = id;
         }
 
+        log.info( "XML input read: gene id, "+geneId+" & taxon id, "+taxonId+" & stringency, "+string );
+        
         Taxon taxon = taxonService.load( Long.parseLong( taxonId ) );
         if ( taxon == null ) {
             String msg = "No taxon with id, " + taxon + ", can be found.";
@@ -125,9 +132,9 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
             String msg = "No gene with id, " + geneId + ", can be found.";
             return buildBadResponse( document, msg );
         }
-        Collection<Gene> genes = new HashSet<Gene>();
+        Collection<Gene> genes = new ArrayList<Gene>();
         genes.add( gene );
-        geneService.thaw( gene );
+        geneService.thawLite( genes );
 
         int stringency = Integer.parseInt( string );
 
@@ -176,7 +183,10 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
             responseElement.appendChild( e3 );
 
         }
-
+        watch.stop();
+        Long time = watch.getTime();
+        
+        log.info( "XML response for coexpression canned result built in " + time + "ms." );
         return responseWrapper;
 
     }
