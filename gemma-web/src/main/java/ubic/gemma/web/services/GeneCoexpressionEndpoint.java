@@ -65,8 +65,8 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
      */
     public static final String LOCAL_NAME = "geneCoexpression";
 
-    // The maximum number of coexpression results to return
-    public static final int MAX_RESULTS = 50;
+    // The maximum number of coexpression results to return; a value of zero will return all possible results (ie. max is infinity)
+    public static final int MAX_RESULTS = 0;
 
     /**
      * Sets the "business service" to delegate to.
