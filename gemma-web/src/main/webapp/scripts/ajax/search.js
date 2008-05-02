@@ -97,7 +97,7 @@ var searchForm = function() {
  	/*
  	 * If we came here by a direct request ('bookmarkable link'), override the cookie.
  	 */
- 	var params = Ext.urlDecode(window.location.href)
+ 	var params = Ext.urlDecode(window.location.href);
  	var query = params.query;
  	var scopes = params.scope;
  
@@ -137,7 +137,7 @@ var searchForm = function() {
 					   minLengthText : "Query must be at least 3 characters long",
 					   msgTarget : "validation-messages",
 					   validateOnBlur:false,
-					   value : query | '',
+					   value : 'enter search term',
 					   minLength : 3}),
     				 
     					new Ext.Button({
