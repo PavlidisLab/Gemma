@@ -103,7 +103,7 @@ public class GeneIdEndpoint extends AbstractGemmaEndpoint {
         Collection<String> gIDs = new HashSet<String>();
         gIDs.add( gene.getId().toString() );
 
-        Element wrapper = buildWrapper( document, gIDs, "gene_name" );
+        Element wrapper = buildWrapper( document, gIDs, "gene_id" );
         
         watch.stop();
         Long time = watch.getTime();
