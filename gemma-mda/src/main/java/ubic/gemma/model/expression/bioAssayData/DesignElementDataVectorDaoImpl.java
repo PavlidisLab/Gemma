@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -292,30 +293,50 @@ public class DesignElementDataVectorDaoImpl extends
                 hasMaskedPreferredData.keySet(), cs2gene );
         Map<DoubleVectorValueObject, Collection<Gene>> finalResult = unpack( maskedPreferredData );
 
-        Map<ExpressionExperiment, Boolean> isTwoChannel = new HashMap<ExpressionExperiment, Boolean>();
+        Set<ExpressionExperiment> twoChannel = new HashSet<ExpressionExperiment>();
+        Set<ExpressionExperiment> oneChannel = new HashSet<ExpressionExperiment>();
         Map<ArrayDesign, Collection<ExpressionExperiment>> arrayDesignsUsed = CommonQueries.getArrayDesignsUsed( ees,
                 this.getSession( false ) );
         for ( ArrayDesign ad : arrayDesignsUsed.keySet() ) {
             if ( !ad.getTechnologyType().equals( TechnologyType.ONECOLOR ) ) {
                 for ( ExpressionExperiment ee : arrayDesignsUsed.get( ad ) ) {
-                    if ( !hasMaskedPreferredData.containsKey( ee ) ) isTwoChannel.put( ee, true );
+                    if ( !hasMaskedPreferredData.containsKey( ee ) ) twoChannel.add( ee );
+                }
+            } else {
+                for ( ExpressionExperiment ee : arrayDesignsUsed.get( ad ) ) {
+                    if ( !hasMaskedPreferredData.containsKey( ee ) ) oneChannel.add( ee );
                 }
             }
         }
 
-        if ( isTwoChannel.size() == 0 ) {
+        /*
+         * We got all the data we need.
+         */
+        if ( twoChannel.size() == 0 && oneChannel.size() == 0 ) {
             return finalResult;
         }
 
-        // Otherwise, get the preferred data for the genes, and the missing value data for the genes.
-        Map<DesignElementDataVector, Collection<Gene>> preferredData = getPreferredVectorsForProbes( isTwoChannel
-                .keySet(), cs2gene );
+        /*
+         * If we get here, the 'masked' data is not available and must be computed.
+         */
+        if ( twoChannel.size() > 0 ) {
+            // Otherwise, get the preferred data for the genes, and the missing value data for the genes.
+            Map<DesignElementDataVector, Collection<Gene>> preferredData = getPreferredVectorsForProbes( twoChannel,
+                    cs2gene );
 
-        Map<DesignElementDataVector, Collection<Gene>> missingValueData = getMissingValueVectorsForProbes( isTwoChannel
-                .keySet(), cs2gene );
+            Map<DesignElementDataVector, Collection<Gene>> missingValueData = getMissingValueVectorsForProbes(
+                    twoChannel, cs2gene );
 
-        // Make the masked data, which requires unpacking the vectors. the id of the data vector is used.
-        finalResult.putAll( maskAndUnpack( preferredData, missingValueData ) );
+            // Make the masked data, which requires unpacking the vectors. the id of the data vector is used.
+            finalResult.putAll( maskAndUnpack( preferredData, missingValueData ) );
+        }
+
+        if ( oneChannel.size() > 0 ) {
+            // Otherwise, get the preferred data for the genes (the masked data would be the same thing anyway)
+            Map<DesignElementDataVector, Collection<Gene>> preferredData = getPreferredVectorsForProbes( oneChannel,
+                    cs2gene );
+            finalResult.putAll( unpack( preferredData ) );
+        }
 
         return finalResult;
     }
