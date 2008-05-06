@@ -37,14 +37,14 @@ import ubic.gemma.model.genome.gene.GeneService;
 
 /**
  Given a list Experiment IDs and a list gene IDs will return design element data vectors (DEDV),
-all the genes that could have been responsible for that DEDV (only needs to contain 1 of the given genes)
-and the Expression Experiment that the data came from. 
-The DEDV's will be a list of white space seperated doubles that might contain NaN's for missing data.
-The gene's will also be a list of white space separated gene Ids.
+ all the genes that could have been responsible for that DEDV (only needs to contain 1 of the given genes)
+ and the Expression Experiment that the data came from. 
+ The DEDV's will be a list of white space seperated doubles that might contain NaN's for missing data.
+ The gene's will also be a list of white space separated gene Ids.
 
-This query can be time consuming and cause a tcp/ip server timeout .  The service outputs the results to a file which can be found at
-(file wil be name something like dedv-"gene IDs"-"Number of Experiments".xml
-http://bioinformatics.ubc.ca/Gemma/ws/xml/
+ This query can be time consuming and cause a tcp/ip server timeout .  The service outputs the results to a file which can be found at
+ (file wil be name something like dedv-"gene IDs"-"Number of Experiments".xml
+ http://bioinformatics.ubc.ca/Gemma/ws/xml/
  * 
  * @author gavin, klc
  * @version$Id$
@@ -63,6 +63,7 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
      * The local name of the expected request/response.
      */
     private static final String EXPERIMENT_LOCAL_NAME = "dEDVfromEEIDGeneID";
+
     /**
      * Sets the "business service" to delegate to.
      */
@@ -98,7 +99,7 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
-        
+
         setLocalName( EXPERIMENT_LOCAL_NAME );
         // get ee id's from request
         Collection<String> eeIdResult = getArrayValues( requestElement, "ee_ids" );
@@ -108,11 +109,10 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
 
         //Need to get and thaw the experiments. 
         Collection<ExpressionExperiment> eeObjs = expressionExperimentService.loadMultiple( eeIDLong );
-        for(ExpressionExperiment ee : eeObjs){
-            expressionExperimentService.thawLite( ee);
+        for ( ExpressionExperiment ee : eeObjs ) {
+            expressionExperimentService.thawLite( ee );
         }
 
-        
         // get gene id's from request
         Collection<String> geneIdResult = getArrayValues( requestElement, "gene_ids" );
         Collection<Long> geneIDLong = new HashSet<Long>();
@@ -120,13 +120,14 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
             geneIDLong.add( Long.parseLong( id ) );
         Collection<Gene> geneResult = geneService.loadMultiple( geneIDLong );
 
+        log.info( "XML input read: "+eeIdResult.size()+" experiment ids & "+geneIdResult.size()+" gene ids" );
+        
         Map<DoubleVectorValueObject, Collection<Gene>> dedvMap = designElementDataVectorService
                 .getMaskedPreferredDataArrays( eeObjs, geneResult );
 
         // start building the wrapper
         // xml is built manually here instead of using the buildWrapper method inherited from AbstractGemmaEndpoint
-//        log.info( "Building " + EXPERIMENT_LOCAL_NAME + " XML response" );
-        
+        //        log.info( "Building " + EXPERIMENT_LOCAL_NAME + " XML response" );
 
         String elementName1 = "dedv";
         String elementName2 = "geneIdList";
@@ -137,51 +138,49 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
         responseWrapper.appendChild( responseElement );
 
         if ( dedvMap == null || dedvMap.isEmpty() )
-            responseElement.appendChild( document.createTextNode( "No " + elementName1 + " result" ) );
-        else {
+            return buildBadResponse( document, "No " + elementName1 + " result" );
+        //responseElement.appendChild( document.createTextNode( "No " + elementName1 + " result" ) );
 
-            Set<DoubleVectorValueObject> keys = dedvMap.keySet();
+        Set<DoubleVectorValueObject> keys = dedvMap.keySet();
 
-            // -build single-row Collections to use for ExpressionDataMatrixBuilder
-            // -need to do this so that we can use the .getPrefferedData()
-            // also necessary to do each data vector at a time because we
-            // already have a mapping to the genes
-            // of the design elements
-            for ( DoubleVectorValueObject dedv : keys ) {
+        // -build single-row Collections to use for ExpressionDataMatrixBuilder
+        // -need to do this so that we can use the .getPrefferedData()
+        // also necessary to do each data vector at a time because we
+        // already have a mapping to the genes
+        // of the design elements
+        for ( DoubleVectorValueObject dedv : keys ) {
 
-                double[] convertedDEDV = dedv.getData();
+            double[] convertedDEDV = dedv.getData();
 
-                // data vector string for output
-                String elementString1 = encode( convertedDEDV );
+            // data vector string for output
+            String elementString1 = encode( convertedDEDV );
 
-                Collection<String> geneidCol = gene2ID( dedvMap.get( dedv ) ); //
+            Collection<String> geneidCol = gene2ID( dedvMap.get( dedv ) ); //
 
-                // gene ids, space delimited for output
-                String elementString2 = encode( geneidCol.toArray() );
+            // gene ids, space delimited for output
+            String elementString2 = encode( geneidCol.toArray() );
 
-                String elementString3 = dedv.getExpressionExperiment().getId().toString();
+            String elementString3 = dedv.getExpressionExperiment().getId().toString();
 
-                Element e1 = document.createElement( elementName1 );
-                e1.appendChild( document.createTextNode( elementString1 ) );
-                responseElement.appendChild( e1 );
+            Element e1 = document.createElement( elementName1 );
+            e1.appendChild( document.createTextNode( elementString1 ) );
+            responseElement.appendChild( e1 );
 
-                Element e2 = document.createElement( elementName2 );
-                e2.appendChild( document.createTextNode( elementString2 ) );
-                responseElement.appendChild( e2 );
+            Element e2 = document.createElement( elementName2 );
+            e2.appendChild( document.createTextNode( elementString2 ) );
+            responseElement.appendChild( e2 );
 
-                Element e3 = document.createElement( elementName3 );
-                e3.appendChild( document.createTextNode( elementString3 ) );
-                responseElement.appendChild( e3 );
-
-            }
+            Element e3 = document.createElement( elementName3 );
+            e3.appendChild( document.createTextNode( elementString3 ) );
+            responseElement.appendChild( e3 );
 
         }
 
         watch.stop();
         Long time = watch.getTime();
- //       log.info( "Finished generating result. Sending response to client." );
+        //       log.info( "Finished generating result. Sending response to client." );
         log.info( "XML response for design element data vector results built in " + time + "ms." );
- //       log.info( "Finished generating matrix. Sending response to client." );
+        //       log.info( "Finished generating matrix. Sending response to client." );
 
         // naming convention for the xml file report
         String filename = "dedv-";
