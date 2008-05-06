@@ -239,7 +239,7 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
 
         responseElement.appendChild( document.createTextNode( msg ) );
 
-        log.error( msg );
+        log.error( localName+": "+ msg );
 
 //        watch.stop();
 //        Long time = watch.getTime();
