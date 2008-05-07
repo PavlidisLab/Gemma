@@ -50,10 +50,6 @@ import ubic.gemma.util.ReflectionUtil;
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.bean name="auditAdvice"
- * @spring.property name="userDao" ref="userDao"
- * @spring.property name="crudUtils" ref="crudUtils"
- * @spring.property name="auditTrailDao" ref="auditTrailDao"
  */
 public class AuditInterceptor implements MethodInterceptor {
 
@@ -226,7 +222,7 @@ public class AuditInterceptor implements MethodInterceptor {
             log.warn( "No audit trail for update method call" );
             addCreateAuditEvent( auditable, " - Event added after a load on the existing object." );
         } else {
-            this.auditTrailDao.thaw( at );
+       //     this.auditTrailDao.thaw( at );
             User user = getCurrentUser();
             at.read( getLoadEventNote( auditable ), user );
             persistAndLogAuditEvent( auditable, user, at.getLast().getNote() );
@@ -255,7 +251,7 @@ public class AuditInterceptor implements MethodInterceptor {
         AuditTrail at = d.getAuditTrail();
         assert at != null;
         if ( at.getId() != null ) {
-            this.auditTrailDao.thaw( at );
+        //    this.auditTrailDao.thaw( at );
         }
         if ( log.isTraceEnabled() ) log.trace( "Update: " + d );
 

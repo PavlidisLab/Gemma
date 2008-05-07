@@ -9,8 +9,7 @@
 		<ref bean="velocityEngine" />
 	</property>
 </bean>
-<bean id="mailSender"
-	class="org.springframework.mail.javamail.JavaMailSenderImpl">
+<bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
 	<property name="host">
 		<value>${mail.host}</value>
 	</property>
@@ -21,10 +20,8 @@
 		<value>${mail.password}</value>
 	</property>
 </bean>
-
 <!-- Configure Velocity for sending e-mail -->
-<bean id="velocityEngine"
-	class="org.springframework.ui.velocity.VelocityEngineFactoryBean">
+<bean id="velocityEngine" class="org.springframework.ui.velocity.VelocityEngineFactoryBean">
 	<property name="velocityProperties">
 		<props>
 			<prop key="resource.loader">class</prop>
@@ -34,29 +31,23 @@
 		</props>
 	</property>
 </bean>
-<bean id="mailMessage"
-	class="org.springframework.mail.SimpleMailMessage" singleton="false">
+<bean id="mailMessage" class="org.springframework.mail.SimpleMailMessage" singleton="false">
 	<property name="from">
 		<value>${mail.from.address}</value>
 	</property>
 </bean>
-
 <!-- 
 	==================================================== 
 	configurationPropertyConfigurer allows you to use variables like ${mail.host} in the spring bean definitions.
 	Variables are listed in a resource. If the resource is in your classpath, list in in 'locations'.
 	Other config files can be added by defining PropertiesConfiguration instances  
 	==================================================== -->
-<bean id="userProperties"
-	class="org.apache.commons.configuration.PropertiesConfiguration"
-	dependency-check="none">
+<bean id="userProperties" class="org.apache.commons.configuration.PropertiesConfiguration" dependency-check="none">
 	<constructor-arg index="0">
 		<value>Gemma.properties</value>
 	</constructor-arg>
 </bean>
-
-<bean id="configurationPropertyConfigurer"
-	class="ubic.gemma.util.CommonsConfigurationPropertyPlaceholderConfigurer">
+<bean id="configurationPropertyConfigurer" class="ubic.gemma.util.CommonsConfigurationPropertyPlaceholderConfigurer">
 	<property name="configuration">
 		<ref local="userProperties" />
 	</property>
@@ -69,12 +60,10 @@
 	<property name="ignoreUnresolvablePlaceholders" value="false" />
 	<property name="ignoreResourceNotFound" value="false" />
 </bean>
-
 <!-- ==================================================== -->
 <!-- EXTERNAL DATABASE SESSION FACTORY -->
 <!-- ==================================================== -->
-<bean id="sessionFactoryGoldenPathHuman"
-	class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
+<bean id="sessionFactoryGoldenPathHuman" class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
 	<property name="dataSource">
 		<ref bean="dataSourceGoldenPathHuman" />
 	</property>
@@ -83,24 +72,16 @@
 	</property>
 	<property name="hibernateProperties">
 		<props>
-			<prop key="hibernate.dialect">
-				org.hibernate.dialect.MySQLDialect
-			</prop>
+			<prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
 			<prop key="hibernate.cache.use_query_cache">false</prop>
-			<prop key="hibernate.cache.provider_class">
-				org.hibernate.cache.EhCacheProvider
-			</prop>
-			<prop key="hibernate.cache.query_cache_factory">
-				org.hibernate.cache.StandardQueryCacheFactory
-			</prop>
+			<prop key="hibernate.cache.provider_class">org.hibernate.cache.EhCacheProvider</prop>
+			<prop key="hibernate.cache.query_cache_factory">org.hibernate.cache.StandardQueryCacheFactory</prop>
 			<prop key="hibernate.show_sql">true</prop>
 		</props>
 	</property>
 </bean>
-
 <!-- DATASOURCE USED BY SESSION FACTORY ABOVE -->
-<bean id="dataSourceGoldenPathHuman"
-	class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+<bean id="dataSourceGoldenPathHuman" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
 	<property name="driverClassName">
 		<value>${gemma.goldenpath.db.driver}</value>
 	</property>
@@ -114,5 +95,26 @@
 		<value>jdbc:mysql://${gemma.goldenpath.db.host}:${gemma.goldenpath.db.port}/${gemma.goldenpath.db.human}</value>
 	</property>
 </bean>
-
- 
+<bean id="auditAdvice" class="org.springframework.aop.framework.ProxyFactoryBean">
+	<property name="target">
+		<bean class="ubic.gemma.security.interceptor.AuditInterceptor">
+			<property name="userDao">
+				<ref bean="userDao" />
+			</property>
+			<property name="crudUtils">
+				<ref bean="crudUtils" />
+			</property>
+			<property name="auditTrailDao">
+				<ref bean="auditTrailDao" />
+			</property>
+		</bean>
+	</property>
+	<property name="proxyInterfaces">
+		<value>org.aopalliance.intercept.MethodInterceptor</value>
+	</property>
+	<property name="interceptorNames">
+		<list>
+			<value>hibernateInterceptor</value>
+		</list>
+	</property>
+</bean>
