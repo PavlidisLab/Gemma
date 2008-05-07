@@ -76,11 +76,6 @@ public class DesignElementDataVectorDaoImplTest extends BaseSpringContextTest {
         taxonService = ( TaxonService ) this.getBean( "taxonService" );
     }
 
-    @Override
-    protected void onTearDownInTransaction() throws Exception {
-        super.onTearDownInTransaction();
-    }
-
     /**
      * @deprecated the method under test is deprecated.
      */
@@ -199,7 +194,6 @@ public class DesignElementDataVectorDaoImplTest extends BaseSpringContextTest {
     @SuppressWarnings("unchecked")
     public void testGetPreferredVectors() {
 
-        endTransaction();
         try {
             String path = ConfigUtils.getString( "gemma.home" );
             assert path != null;
@@ -215,6 +209,10 @@ public class DesignElementDataVectorDaoImplTest extends BaseSpringContextTest {
 
         newee.setShortName( RandomStringUtils.randomAlphabetic( 12 ) );
         expressionExperimentService.update( newee );
+
+        setComplete();
+        endTransaction();
+        startNewTransaction();
 
         this.expressionExperimentService.thawLite( newee );
         DesignElementDataVectorService dedvs = ( DesignElementDataVectorService ) this
