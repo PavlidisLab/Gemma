@@ -107,6 +107,9 @@
 			<property name="auditTrailDao">
 				<ref bean="auditTrailDao" />
 			</property>
+			<property name="sessionFactory">
+				<ref bean="sessionFactory" />
+			</property>
 		</bean>
 	</property>
 	<property name="proxyInterfaces">

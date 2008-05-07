@@ -30,9 +30,14 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
+import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
+import org.hibernate.Session;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.persister.entity.EntityPersister;
 import org.springframework.beans.BeanUtils;
+import org.springframework.orm.hibernate3.HibernateCallback;
+import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
@@ -51,7 +56,7 @@ import ubic.gemma.util.ReflectionUtil;
  * @author pavlidis
  * @version $Id$
  */
-public class AuditInterceptor implements MethodInterceptor {
+public class AuditInterceptor extends HibernateDaoSupport implements MethodInterceptor {
 
     private static Log log = LogFactory.getLog( AuditInterceptor.class.getName() );
 
@@ -222,7 +227,7 @@ public class AuditInterceptor implements MethodInterceptor {
             log.warn( "No audit trail for update method call" );
             addCreateAuditEvent( auditable, " - Event added after a load on the existing object." );
         } else {
-       //     this.auditTrailDao.thaw( at );
+            // this.auditTrailDao.thaw( at );
             User user = getCurrentUser();
             at.read( getLoadEventNote( auditable ), user );
             persistAndLogAuditEvent( auditable, user, at.getLast().getNote() );
@@ -246,15 +251,21 @@ public class AuditInterceptor implements MethodInterceptor {
     /**
      * @param d
      */
-    private void addUpdateAuditEvent( Auditable d ) {
+    private void addUpdateAuditEvent( final Auditable d ) {
         assert d != null;
-        AuditTrail at = d.getAuditTrail();
+        final AuditTrail at = d.getAuditTrail();
         assert at != null;
         if ( at.getId() != null ) {
-        //    this.auditTrailDao.thaw( at );
+          //  this.auditTrailDao.thaw( at );
+            this.getHibernateTemplate().execute( new HibernateCallback() {
+                public Object doInHibernate( Session session ) throws HibernateException {
+                    session.lock( at, LockMode.NONE );
+                    at.getEvents().size();
+                    return null;
+                }
+            } );
         }
         if ( log.isTraceEnabled() ) log.trace( "Update: " + d );
-
         if ( at.getEvents().size() == 0 ) {
             log.warn( "No create event for update method call on " + d + ", performing 'create'" );
             addCreateAuditEvent( d, " - Event added on update of existing object." );

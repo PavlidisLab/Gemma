@@ -26,8 +26,7 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
-import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData; 
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
