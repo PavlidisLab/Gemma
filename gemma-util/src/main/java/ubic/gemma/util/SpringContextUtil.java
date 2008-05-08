@@ -23,6 +23,7 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -50,12 +51,18 @@ public class SpringContextUtil {
      * @param compassOn Include the compass (search) configuration. This is usually false for CLIs and tests.
      * @param gigaspacesOn Include the gigaspaces (grid) configuration. This is usually false for CLIs and tests.
      * @param isWebApp If true, configuration specific to the web application will be included.
+     * @param additionalConfigurationLocations, like "classpath*:/myproject/applicationContext-mine.xml"
      * @return BeanFactory or null if no context could be created.
      */
     public static BeanFactory getApplicationContext( boolean testing, boolean compassOn, boolean gigaspacesOn,
-            boolean isWebApp ) {
+            boolean isWebApp, String[] additionalConfigurationLocations ) {
         if ( ctx == null ) {
             String[] paths = getConfigLocations( testing, compassOn, gigaspacesOn, isWebApp );
+
+            if ( additionalConfigurationLocations != null ) {
+                paths = addPaths( additionalConfigurationLocations, paths );
+            }
+
             StopWatch timer = new StopWatch();
             timer.start();
             ctx = new ClassPathXmlApplicationContext( paths );
@@ -67,6 +74,41 @@ public class SpringContextUtil {
             }
         }
         return ctx;
+    }
+
+    /**
+     * @param additionalConfigurationLocations
+     * @param paths
+     * @return
+     */
+    private static String[] addPaths( String[] additionalConfigurationLocations, String[] paths ) {
+        Object[] allPaths = ArrayUtils.addAll( paths, additionalConfigurationLocations );
+        paths = new String[allPaths.length];
+        for ( int i = 0; i < allPaths.length; i++ ) {
+            paths[i] = ( String ) allPaths[i];
+        }
+        return paths;
+    }
+
+    /**
+     * @param testing If true, it will get a test configured-BeanFactory
+     * @param compassOn Include the compass (search) configuration. This is usually false for CLIs and tests.
+     * @param gigaspacesOn Include the gigaspaces (grid) configuration. This is usually false for CLIs and tests.
+     * @param isWebApp If true, configuration specific to the web application will be included.
+     * @return BeanFactory or null if no context could be created.
+     */
+    public static BeanFactory getApplicationContext( boolean testing, boolean compassOn, boolean gigaspacesOn,
+            boolean isWebApp ) {
+        return getApplicationContext( testing, compassOn, gigaspacesOn, isWebApp, new String[] {} );
+    }
+
+    /**
+     * @param additionalConfigurationPaths
+     * @return a minimally-configured standard BeanFactory: no Compass, no Gigaspaces, no Web config, but with the
+     *         additional configuration paths.
+     */
+    public static BeanFactory getApplicationContext( String[] additionalConfigurationPaths ) {
+        return getApplicationContext( false, false, false, false, additionalConfigurationPaths );
     }
 
     /**

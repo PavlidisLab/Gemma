@@ -219,11 +219,23 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
      */
     void createSpringContext() {
 
-        ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), true, hasOption( GIGASPACES_ON ), false );
+        ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), true, hasOption( GIGASPACES_ON ), false,
+                getAdditionalSpringConfigLocations() );
 
         /* disable the scheduler */
         QuartzUtils.disableQuartzScheduler( ( StdScheduler ) this.getBean( "schedulerFactoryBean" ) );
 
+    }
+
+    /**
+     * Override this method in your subclass to provide additional Spring configuration files that will be merged with
+     * the Gemma spring context. See SpringContextUtil; an example path is
+     * "classpath*:/myproject/applicationContext-mine.xml".
+     * 
+     * @return
+     */
+    protected String[] getAdditionalSpringConfigLocations() {
+        return null;
     }
 
     /**
