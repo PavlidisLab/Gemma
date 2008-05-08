@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -62,6 +63,10 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 public class OntologyService {
 
     private static final String USED = " -USED- ";
+
+    //Jena cannot properly parse these characters... gives a query parse error. 
+    //OntologyTerms don't contain them anyway
+    private final static char[] INVALID_CHARS = { ':', '(', ')', '?', '*', '^', '[', ']', '-', '+', '{', '}', '!', '~' };
 
     private static Log log = LogFactory.getLog( OntologyService.class.getName() );
 
@@ -165,11 +170,12 @@ public class OntologyService {
      */
     public Collection<VocabCharacteristic> findTermAsCharacteristic( String search ) {
 
+        String query = stripInvalidCharacters( search );
         Collection<VocabCharacteristic> terms = new HashSet<VocabCharacteristic>();
         Collection<OntologyTerm> results;
 
         for ( AbstractOntologyService ontology : ontologyServices ) {
-            results = ontology.findTerm( search );
+            results = ontology.findTerm( query );
             if ( results != null ) terms.addAll( convert( new HashSet<OntologyResource>( results ) ) );
         }
 
@@ -185,10 +191,11 @@ public class OntologyService {
      */
     public Collection<OntologyTerm> findTerms( String search ) {
 
+        String query = stripInvalidCharacters( search );
         Collection<OntologyTerm> results = new HashSet<OntologyTerm>();
 
         for ( AbstractOntologyService ontology : ontologyServices ) {
-            Collection<OntologyTerm> found = ontology.findTerm( search );
+            Collection<OntologyTerm> found = ontology.findTerm( query );
             if ( found != null ) results.addAll( found );
         }
 
@@ -199,12 +206,13 @@ public class OntologyService {
      * @param search
      * @return
      */
-    public Collection<OntologyIndividual> findIndividuals( String search ) {
+    public Collection<OntologyIndividual> findIndividuals( String givenSearch ) {
 
+        String query = stripInvalidCharacters( givenSearch );
         Collection<OntologyIndividual> results = new HashSet<OntologyIndividual>();
 
         for ( AbstractOntologyService ontology : ontologyServices ) {
-            Collection<OntologyIndividual> found = ontology.findIndividuals( search );
+            Collection<OntologyIndividual> found = ontology.findIndividuals( query );
             if ( found != null ) results.addAll( found );
         }
 
@@ -225,7 +233,7 @@ public class OntologyService {
 
         if ( ( terms == null ) || ( terms.isEmpty() ) ) return filtered;
 
-        String caseInsensitiveFilter = filter.toLowerCase();
+        String caseInsensitiveFilter = filter.toLowerCase().trim();
 
         for ( OntologyResource res : terms ) {
             if ( StringUtils.isNotEmpty( res.getLabel() )
@@ -252,6 +260,24 @@ public class OntologyService {
     }
 
     /**
+     * 
+     * Will remove characters that jena is unable to parse. Will also escape and remove leading and trailing white space
+     * (which also causes jena to die)
+     * 
+     * @param toStrip the string to clean
+     * @return
+     */
+    private String stripInvalidCharacters( String toStrip ) {
+
+        String result = toStrip;
+        for ( char badChar : INVALID_CHARS ) {
+            result = StringUtils.remove( result, badChar );
+        }
+
+        return StringEscapeUtils.escapeJava( result ).trim();
+    }
+
+    /**
      * Given a search string will first look through the characterisc database for any entries that have a match. If a
      * ontologyTermURI is given it will add all the individuals from that URI that match the search term criteria to the
      * returned list also. Then will search the birnlex, obo Disease Ontology and FMA Ontology for OntologyResources
@@ -261,11 +287,14 @@ public class OntologyService {
      * @return
      */
     @SuppressWarnings("unchecked")
-    public Collection<Characteristic> findExactTerm( String queryString, String categoryUri ) {
+    public Collection<Characteristic> findExactTerm( String givenQueryString, String categoryUri ) {
 
         StopWatch watch = new StopWatch();
         watch.start();
-        log.debug( "starting findExactTerm for " + queryString + ". Timining information begins from here" );
+
+        String queryString = givenQueryString;
+
+        log.info( "starting findExactTerm for " + queryString + ". Timining information begins from here" );
 
         if ( queryString == null ) return null;
 
@@ -276,7 +305,7 @@ public class OntologyService {
         // Add the matching individuals
         List<Characteristic> individualResults = new ArrayList<Characteristic>();
         if ( StringUtils.isNotBlank( categoryUri ) && !categoryUri.equals( "{}" ) ) {
-            results = new HashSet<OntologyResource>( mgedOntologyService.getTermIndividuals( categoryUri ) );
+            results = new HashSet<OntologyResource>( mgedOntologyService.getTermIndividuals( categoryUri.trim() ) );
             if ( results.size() > 0 ) individualResults.addAll( filter( results, queryString ) );
         }
         log.debug( "found " + individualResults.size() + " individuals from ontology term " + categoryUri + " in "
@@ -304,6 +333,8 @@ public class OntologyService {
 
         List<Characteristic> searchResults = new ArrayList<Characteristic>();
 
+        queryString = stripInvalidCharacters( givenQueryString ); // Strip out invalid characters so that Jena doesn't
+                                                                    // die parsing them
         // FIXME hard-coding of ontologies to search
         results = mgedOntologyService.findResources( queryString );
         log.debug( "found " + results.size() + " terms from mged in " + watch.getTime() + " ms" );

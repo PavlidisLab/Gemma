@@ -38,6 +38,7 @@ import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -232,7 +233,7 @@ public class SearchService implements InitializingBean {
      */
     @SuppressWarnings("unchecked")
     public Map<Class, List<SearchResult>> search( SearchSettings settings, boolean fillObjects ) {
-        String searchString = settings.getQuery();
+        String searchString = StringEscapeUtils.escapeJava( settings.getQuery());   //probably not necessay to escape...
 
         List<SearchResult> rawResults = new ArrayList<SearchResult>();
 
