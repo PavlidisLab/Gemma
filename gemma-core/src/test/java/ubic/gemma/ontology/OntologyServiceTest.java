@@ -20,8 +20,6 @@ package ubic.gemma.ontology;
 
 import java.util.Collection;
 
-import org.apache.lucene.queryParser.ParseException;
-
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -45,17 +43,6 @@ public class OntologyServiceTest extends BaseSpringContextTest {
     public void testListAvailableOntologies() throws Exception {
         Collection<Ontology> name = OntologyService.listAvailableOntologies();
         assertTrue( name.size() > 0 );
-    }
-
-    public void testSearchIllegalString() throws Exception {
-        OntologyService os = ( OntologyService ) this.getBean( "ontologyService" );
-        try {
-            os.findExactTerm( "a- & *", "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Sex" );
-            fail( "should have an exception" );
-        } catch ( Exception e ) {
-            assertTrue( "Got " + e.getCause().getClass(), e.getCause() instanceof ParseException );
-            // ok!
-        }
     }
 
     public final void testFindExactMatch() throws Exception {
