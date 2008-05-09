@@ -35,7 +35,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
   *Expression Experiments in Gemma contain annotations. These annotations can be retrieved using this service.  
   *The category often just an ontology URI and the term is the URI of the annotation.  
   *The category is left blank for terms that are not from ontologies (free text). 
-  * The evidence code represents how the annotation came to be. 
+  * The evidence code represents how the annotation came to be.  (http://www.geneontology.org/GO.evidence.shtml)
  * 
  * @author klc, gavin
  * @version$Id$
