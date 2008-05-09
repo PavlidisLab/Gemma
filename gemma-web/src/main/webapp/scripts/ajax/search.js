@@ -60,6 +60,7 @@ var search = function(t, event) {
 	sm.set('searchExperiments', searchExperiments);
 	sm.set('searchArrays', searchArrays);
 	sm.set('searchSequences', searchSequences);
+	sm.set('query', query);
 	
 	var scopes = "&scope=";
 	if (searchProbes) {
@@ -97,22 +98,27 @@ var searchForm = function() {
  	/*
  	 * If we came here by a direct request ('bookmarkable link'), override the cookie.
  	 */
- 	var params = Ext.urlDecode(window.location.href);
- 	var query = params.query;
- 	var scopes = params.scope;
- 
+ 	//Get the info from the state manager if there is any
+ 	var query = sm.get('query', 'Enter Search Term'); 	
  	var searchGenes =  sm.get('searchGenes');
  	var searchExp =   sm.get('searchExperiments');
  	var searchSeq =  sm.get('searchSequences');
  	var searchProbes =  sm.get('searchProbes');
  	var searchArrays =  sm.get('searchArrays');
  	
- 	if (scopes) {
- 	 searchGenes =  scopes.match("G") ;
- 	 searchExp =  scopes.match("E")  ;
- 	 searchSeq =  scopes.match("S")  ;
- 	 searchProbes =   scopes.match("P") ;
- 	 searchArrays =  scopes.match("A")  ;
+ 	//Override with info from the URL (bookmarkable link)
+ 	var params = Ext.urlDecode(window.location.href);
+ 	
+ 	if (params.scope) {
+ 	 searchGenes =  params.scope.match("G") ;
+ 	 searchExp =  params.scope.match("E")  ;
+ 	 searchSeq =  params.scope.match("S")  ;
+ 	 searchProbes =   params.scope.match("P") ;
+ 	 searchArrays =  params.scope.match("A")  ;
+ 	}
+ 	
+ 	if (params.query){
+ 		query = params.query;
  	}
 
  	
@@ -137,7 +143,7 @@ var searchForm = function() {
 					   minLengthText : "Query must be at least 3 characters long",
 					   msgTarget : "validation-messages",
 					   validateOnBlur:false,
-					   value : 'enter search term',
+					   value : query,
 					   minLength : 3}),
     				 
     					new Ext.Button({
@@ -164,7 +170,8 @@ var searchForm = function() {
     				{ name : "searchProbes",boxLabel : "Probes", checked : searchProbes, hideLabel:true}
     			]
     		} 
-    	] 
+    	]
+	
     });
     
    form.findById('search-text-field').on('specialKey', function(r, e) {
