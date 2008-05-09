@@ -229,6 +229,17 @@ public class GeneOntologyService {
         return overlap;
     }
 
+    
+    /**
+     * @return a collection of all existing GO terms
+     */
+    public Collection<String> getAllGOTerms (){
+       
+        Collection<String> goTermIds = terms.keySet();
+        return goTermIds;
+    }
+    
+    
     /**
      * @param queryGene1
      * @param queryGene2
