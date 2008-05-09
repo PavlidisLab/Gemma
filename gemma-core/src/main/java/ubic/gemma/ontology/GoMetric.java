@@ -341,7 +341,7 @@ public class GoMetric {
         if ( !geneOntologyService.isReady() )
             log.error( "computeSimpleOverlap called before geneOntologyService is ready!!!" );
         
-        List<String> goTerms = ( List<String> ) geneOntologyService.getAllGOTerms();
+        List<String> goTerms = ( List<String> ) geneOntologyService.getAllGOTermIds();
         DoubleMatrixNamed<Long, String> gene2TermMatrix = createVectorMatrix( gene2go, goTerms );
         
                
