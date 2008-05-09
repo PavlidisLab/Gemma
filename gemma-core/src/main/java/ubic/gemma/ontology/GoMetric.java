@@ -23,10 +23,14 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+
 
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.SparseRaggedDoubleMatrix2DNamed;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
@@ -300,6 +304,49 @@ public class GoMetric {
 
         double avgScore = ( double ) overlappingTerms.size();
         return avgScore;
+    }
+    
+    
+    private DoubleMatrixNamed<Long, String> createVectorMatrix(Map<Long, Collection<String>> gene2go, List<String> goTerms){
+                
+        DoubleMatrixNamed<Long, String> gene2term = new SparseRaggedDoubleMatrix2DNamed<Long, String>();
+        List<Long> geneSet = ( List<Long> ) gene2go.keySet();
+        
+        gene2term.setColumnNames( goTerms );
+        gene2term.setRowNames( geneSet );
+        
+        for (Long id : geneSet){
+            
+            Collection<String> terms = gene2go.get( id );
+            for (String goId : goTerms){
+                
+                if (terms.contains( goId )){
+                    gene2term.setByKeys( id, goId, (double)1 );
+                }
+            }
+            
+        }     
+        
+        return gene2term;
+        
+    }
+    /**
+     * @param gene1
+     * @param gene2
+     * @param includePartOf
+     * @return Similarity score for Cosine Similarity Method (Vector Space Model)
+     */
+    public Double computeCosineSimilarity (Gene gene1, Gene gene2, Map<Long, Collection<String>> gene2go, boolean includePartOf){
+        
+        if ( !geneOntologyService.isReady() )
+            log.error( "computeSimpleOverlap called before geneOntologyService is ready!!!" );
+        
+        List<String> goTerms = ( List<String> ) geneOntologyService.getAllGOTerms();
+        DoubleMatrixNamed<Long, String> gene2TermMatrix = createVectorMatrix( gene2go, goTerms );
+        
+               
+        Double score = null;
+        return score;
     }
 
     /**
