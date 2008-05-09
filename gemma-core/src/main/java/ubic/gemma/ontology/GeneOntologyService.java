@@ -231,9 +231,9 @@ public class GeneOntologyService {
 
     
     /**
-     * @return a collection of all existing GO terms
+     * @return a collection of all existing GO term ids
      */
-    public Collection<String> getAllGOTerms (){
+    public Collection<String> getAllGOTermIds (){
        
         Collection<String> goTermIds = terms.keySet();
         return goTermIds;
