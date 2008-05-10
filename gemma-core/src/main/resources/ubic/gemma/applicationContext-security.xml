@@ -460,6 +460,9 @@
                 ubic.gemma.model.genome.TaxonService.loadAll=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.genome.TaxonService.findByScientificName=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.genome.TaxonService.findByCommonName=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.create=admin
+                ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.update=admin
+                ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.loadAll=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.create=admin
                 ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.update=admin
                 ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.getDatasetsAnalyzed=user,admin,ROLE_ANONYMOUS

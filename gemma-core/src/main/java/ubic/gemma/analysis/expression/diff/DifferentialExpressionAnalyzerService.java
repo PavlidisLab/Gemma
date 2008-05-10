@@ -30,12 +30,14 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor; 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.PersisterHelper;
@@ -93,9 +95,11 @@ public class DifferentialExpressionAnalyzerService {
             return null;
         }
 
-        Collection<ExpressionExperiment> experimentsAnalyzed = diffExpressionAnalysis.getExperimentsAnalyzed();
+        ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
+        Collection<BioAssaySet> experimentsAnalyzed = new HashSet<BioAssaySet>();
         experimentsAnalyzed.add( expressionExperiment );
-        diffExpressionAnalysis.setExperimentsAnalyzed( experimentsAnalyzed );
+        eeSet.setExperiments( experimentsAnalyzed );
+        diffExpressionAnalysis.setExpressionExperimentSetAnalyzed( eeSet );
 
         diffExpressionAnalysis = ( DifferentialExpressionAnalysis ) persisterHelper.persist( diffExpressionAnalysis );
         expressionAnalyses.add( diffExpressionAnalysis );

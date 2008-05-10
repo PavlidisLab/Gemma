@@ -44,7 +44,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
     @Override
     protected Collection handleFindByTaxon( Taxon taxon ) {
-        final String queryString = "select distinct doa from DifferentialExpressionAnalysisImpl as doa inner join doa.experimentsAnalyzed  as ee "
+        final String queryString = "select distinct doa from DifferentialExpressionAnalysisImpl as doa inner join doa.expressionExperimentSetAnalyzed eesa inner join eesa.experiments as ee "
                 + "inner join ee.bioAssays as ba "
                 + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
         return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
@@ -71,7 +71,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
     }
 
     protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
-        final String queryString = "select distinct a from DifferentialExpressionAnalysisImpl a where :e in elements (a.experimentsAnalyzed)";
+        final String queryString = "select distinct a from DifferentialExpressionAnalysisImpl a where :e in elements (a.expressionExperimentSetAnalyzed.experiments)";
         return this.getHibernateTemplate().findByNamedParam( queryString, "e", investigation );
     }
 
@@ -98,13 +98,13 @@ public class DifferentialExpressionAnalysisDaoImpl extends
     @Override
     protected Collection handleFindExperimentsWithAnalyses( Gene gene ) throws Exception {
         final String queryString = "select distinct e from DifferentialExpressionAnalysisImpl a, BlatAssociationImpl bla"
-                + " inner join a.experimentsAnalyzed e inner join e.bioAssays ba inner join ba.arrayDesignUsed ad"
+                + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e inner join e.bioAssays ba inner join ba.arrayDesignUsed ad"
                 + " inner join ad.compositeSequences cs inner join cs.biologicalCharacteristic bs inner join bs.bioSequence2GeneProduct bs2gp inner join bs2gp.geneProduct gp inner join gp.gene gene where bla.bioSequence=bs and gene = :gene";
         return this.getHibernateTemplate().findByNamedParam( queryString, "gene", gene );
     }
 
     final String fetchResultsByGeneAndExperimentQuery = "select distinct r from DifferentialExpressionAnalysisImpl a"
-            + " inner join a.experimentsAnalyzed e inner join e.bioAssays ba inner join ba.arrayDesignUsed ad"
+            + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e inner join e.bioAssays ba inner join ba.arrayDesignUsed ad"
             + " inner join ad.compositeSequences cs inner join cs.biologicalCharacteristic bs inner join "
             + "bs.bioSequence2GeneProduct bs2gp inner join bs2gp.geneProduct gp inner join gp.gene g"
             + " inner join a.resultSets rs inner join rs.results r where r.probe=cs and g=:gene and e=:experimentAnalyzed";

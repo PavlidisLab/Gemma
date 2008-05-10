@@ -28,7 +28,7 @@ import ubic.gemma.analysis.preprocess.DedvRankService;
 import ubic.gemma.analysis.preprocess.DedvRankService.Method;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent; 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 

@@ -49,6 +49,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
  * 
  * @author gozde
  * @version $Id$
+ * @deprecated
  */
 public class ExpressionDataManager {
 
@@ -90,36 +91,6 @@ public class ExpressionDataManager {
     }
 
     /**
-     * @return an array of ExpressionExperimentSubSet names, which correspond to the order of BioAssays in data vectors
-     */
-    protected String[] getSubsetNamesForBioAssays() {
-        Collection<BioAssay> bioAssays = getDataVectorBioAssays();
-        Collection<ExpressionExperimentSubSet> subsets = experiment.getSubsets();
-        String[] subsetNames = new String[bioAssays.size()];
-
-        // store the subset names in order
-        List<ExpressionExperimentSubSet> expExpSubsetList = new Vector<ExpressionExperimentSubSet>();
-        for ( ExpressionExperimentSubSet expExpSubset : subsets )
-            expExpSubsetList.add( expExpSubset );
-
-        int bioAssayCtr = 0;
-        for ( BioAssay bioAssay : bioAssays ) {
-            for ( int j = 0; j < subsets.size(); j++ ) {
-                ExpressionExperimentSubSet subset = expExpSubsetList.get( j );
-                for ( BioAssay assay : subset.getBioAssays() ) {
-                    // if this bioAssay is contained in the current experiment subset
-                    if ( assay.getAccession().getAccession().equals( bioAssay.getAccession().getAccession() ) ) {
-                        subsetNames[bioAssayCtr] = subset.getName();
-                        break;
-                    }
-                }
-            }
-            bioAssayCtr++;
-        }
-        return subsetNames;
-    }
-
-    /**
      * @return a Collection of DesignElementDataVectors of the experiment, which contain expression levels
      */
     protected Collection<DesignElementDataVector> getDesignElementDataVectors() {
@@ -136,27 +107,6 @@ public class ExpressionDataManager {
     }
 
     /**
-     * This method gets the expression data from the ExpressionExperiment and puts it into a hashtable
-     * 
-     * @return a hashtable with one entry containing a String array of the subset names corresponding to bioassays and
-     *         the others a double array of expression levels of genes
-     */
-    protected Map<String, Object> getExpressionData() {
-        Map<String, Object> table = new Hashtable<String, Object>();
-
-        String[] subsetNames = getSubsetNamesForBioAssays();
-        table.put( "subsets", subsetNames );
-
-        Collection<DesignElementDataVector> dataVectors = getDesignElementDataVectors();
-        for ( DesignElementDataVector dataVector : dataVectors ) {
-            String designElementName = dataVector.getDesignElement().getName();
-            double[] expressionLevels = getExpressionLevels( dataVector );
-            table.put( designElementName, expressionLevels );
-        }
-        return table;
-    }
-
-    /**
      * @return an array of the expression levels of a DesignElementDataVector
      */
     protected double[] getExpressionLevels( DesignElementDataVector dataVector ) {
@@ -164,18 +114,6 @@ public class ExpressionDataManager {
         ByteArrayConverter bac = new ByteArrayConverter();
         double[] expressionLevels = bac.byteArrayToDoubles( byteExpLevels );
         return expressionLevels;
-    }
-
-    /**
-     * @return a Collection of BioAssays of the ExpressionExperimentSubSet whose name is given
-     */
-    protected Collection<BioAssay> getBioAssaysOfSubset( String subsetName ) {
-        Collection<ExpressionExperimentSubSet> subsets = experiment.getSubsets();
-
-        for ( ExpressionExperimentSubSet subset : subsets ) {
-            if ( subset.getName().equals( subsetName ) ) return subset.getBioAssays();
-        }
-        return null;
     }
 
     /**
@@ -194,41 +132,6 @@ public class ExpressionDataManager {
             if ( pVal <= threshold && pVal > 0 ) significantGenes.put( probeId, Double.valueOf( pVal ) );
         }
         return significantGenes;
-    }
-
-    /**
-     * This method writes the expression data to a file with the names of the genes and the subsets that refer to each
-     * bioassay
-     * 
-     * @return the number of data vectors (i.e. the number of genes in the experiment)
-     */
-    protected void writeDataVectorsToFile() {
-        BufferedWriter writer = null;
-        try {
-            writer = new BufferedWriter( new FileWriter( analysisResultsPath + experimentName ) );
-        } catch ( IOException e ) {
-            log.error( "File to write DesignElementDataVectors cannot be opened." );
-        }
-
-        Map<String, Object> table = getExpressionData();
-        String[] subsetNames = ( String[] ) table.get( "subsets" );
-        table.remove( "subsets" );
-
-        try {
-            for ( int h = 0; h < subsetNames.length; h++ )
-                writer.write( subsetNames[h] + "\t" );
-            writer.write( "\n" );
-            for ( String key : table.keySet() ) {
-                writer.write( key + "\t" );
-                double[] expressionLevels = ( double[] ) table.get( key );
-                for ( int k = 0; k < expressionLevels.length; k++ )
-                    writer.write( expressionLevels[k] + "\t" );
-                writer.write( "\n" );
-            }
-            writer.close();
-        } catch ( IOException e ) {
-            log.error( "Data vectors cannot be written to file." );
-        }
     }
 
     /**

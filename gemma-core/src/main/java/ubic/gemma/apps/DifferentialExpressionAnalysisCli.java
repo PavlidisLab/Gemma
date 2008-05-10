@@ -32,6 +32,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -91,8 +92,11 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         this.expressionExperimentReportService = ( ExpressionExperimentReportService ) this
                 .getBean( "expressionExperimentReportService" );
 
-        for ( ExpressionExperiment ee : expressionExperiments ) {
-            processExperiment( ee );
+        for ( BioAssaySet ee : expressionExperiments ) {
+            if ( !( ee instanceof ExpressionExperiment ) ) {
+                continue;
+            }
+            processExperiment( ( ExpressionExperiment ) ee );
         }
         summarizeProcessing();
 

@@ -25,13 +25,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.BitUtil;
 import ubic.gemma.model.analysis.Analysis;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
@@ -44,7 +44,7 @@ import ubic.gemma.model.association.coexpression.OtherGeneCoExpression;
 import ubic.gemma.model.association.coexpression.RatGeneCoExpression;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.protocol.ProtocolService;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.PersisterHelper;
@@ -85,7 +85,7 @@ public class GeneLinkCoexpressionAnalyzer {
      *        true. (in fact 'false' is currently not supported)
      * @param analysisName Name of the analysis as it will appear in the system
      */
-    public void analyze( Set<ExpressionExperiment> expressionExperiments, Collection<Gene> toUseGenes, int stringency,
+    public void analyze( Collection<BioAssaySet> expressionExperiments, Collection<Gene> toUseGenes, int stringency,
             boolean knownGenesOnly, String analysisName ) {
         Collection<Gene> processedGenes = new HashSet<Gene>();
 
@@ -158,9 +158,9 @@ public class GeneLinkCoexpressionAnalyzer {
      * @param experimentsAnalyzed
      * @return Map of EE IDs to the location in the vector.
      */
-    public Map<Long, Integer> getOrderingMap( Collection<ExpressionExperiment> experimentsAnalyzed ) {
+    public Map<Long, Integer> getOrderingMap( Collection<BioAssaySet> experimentsAnalyzed ) {
         List<Long> eeIds = new ArrayList<Long>();
-        for ( ExpressionExperiment ee : experimentsAnalyzed ) {
+        for ( BioAssaySet ee : experimentsAnalyzed ) {
             eeIds.add( ee.getId() );
         }
         Collections.sort( eeIds );
@@ -277,14 +277,13 @@ public class GeneLinkCoexpressionAnalyzer {
      * @param eeIdOrder
      * @return
      */
-    private byte[] computeTestedDatasetVector( Collection<ExpressionExperiment> datasetsTestedIn,
-            Map<Long, Integer> eeIdOrder ) {
+    private byte[] computeTestedDatasetVector( Collection<BioAssaySet> datasetsTestedIn, Map<Long, Integer> eeIdOrder ) {
         byte[] result = new byte[( int ) Math.ceil( eeIdOrder.keySet().size() / ( double ) Byte.SIZE )];
         for ( int i = 0, j = result.length; i < j; i++ ) {
             result[i] = 0x0;
         }
 
-        for ( ExpressionExperiment ee : datasetsTestedIn ) {
+        for ( BioAssaySet ee : datasetsTestedIn ) {
             Long id = ee.getId();
             BitUtil.set( result, eeIdOrder.get( id ) );
         }
@@ -297,7 +296,7 @@ public class GeneLinkCoexpressionAnalyzer {
      * @param toUseGenes
      * @return
      */
-    private Protocol createProtocol( Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> toUseGenes ) {
+    private Protocol createProtocol( Collection<BioAssaySet> expressionExperiments, Collection<Gene> toUseGenes ) {
         log.info( "Creating protocol object ... " );
         Protocol protocol = Protocol.Factory.newInstance();
         protocol.setName( "Stored Gene2GeneCoexpressions" );
@@ -332,8 +331,8 @@ public class GeneLinkCoexpressionAnalyzer {
      * @param stringency
      * @return
      */
-    private GeneCoexpressionAnalysis intializeAnalysis( Collection<ExpressionExperiment> expressionExperiments,
-            Taxon taxon, Collection<Gene> toUseGenes, String analysisName, int stringency ) {
+    private GeneCoexpressionAnalysis intializeAnalysis( Collection<BioAssaySet> expressionExperiments, Taxon taxon,
+            Collection<Gene> toUseGenes, String analysisName, int stringency ) {
         GeneCoexpressionAnalysis analysis = GeneCoexpressionAnalysis.Factory.newInstance();
 
         analysis.setDescription( "Coexpression analysis for " + taxon.getCommonName() + " using "
@@ -345,7 +344,10 @@ public class GeneLinkCoexpressionAnalyzer {
         analysis.setStringency( stringency );
         analysis.setName( analysisName );
         analysis.setProtocol( protocol );
-        analysis.setExperimentsAnalyzed( expressionExperiments );
+        ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
+
+        eeSet.setExperiments( expressionExperiments );
+        analysis.setExpressionExperimentSetAnalyzed( eeSet );
 
         analysis = ( GeneCoexpressionAnalysis ) persisterHelper.persist( analysis );
 

@@ -30,9 +30,11 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.analysis.expression.coexpression.CannedAnalysisValueObject;
 import ubic.gemma.analysis.expression.coexpression.GeneCoexpressionService;
 import ubic.gemma.model.analysis.Analysis;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionVirtualAnalysis;
+import ubic.gemma.model.expression.experiment.BioAssaySet; 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -91,8 +93,7 @@ public class GeneLinkAnalysisManagerController extends BaseFormController {
 
         GeneCoexpressionAnalysis analysis = ( GeneCoexpressionAnalysis ) geneCoexpressionAnalysisService
                 .load( viewedAnalysisId );
-        Collection<ExpressionExperiment> datasetsInViewed = geneCoexpressionAnalysisService
-                .getDatasetsAnalyzed( analysis );
+        Collection<BioAssaySet> datasetsInViewed = geneCoexpressionAnalysisService.getDatasetsAnalyzed( analysis );
 
         GeneCoexpressionVirtualAnalysis va = GeneCoexpressionVirtualAnalysis.Factory.newInstance();
         va.setName( obj.getName() );
@@ -100,15 +101,16 @@ public class GeneLinkAnalysisManagerController extends BaseFormController {
         va.setStringency( obj.getStringency() );
         va.setViewedAnalysis( analysis );
         va.setTaxon( taxonService.load( obj.getTaxonId() ) );
-        Collection<ExpressionExperiment> datasetsAnalyzed = expressionExperimentService
-                .loadMultiple( obj.getDatasets() );
+        Collection<BioAssaySet> datasetsAnalyzed = expressionExperimentService.loadMultiple( obj.getDatasets() );
 
         if ( !datasetsInViewed.containsAll( datasetsAnalyzed ) ) {
             throw new IllegalArgumentException(
                     "Some of the datasets in the new virtual analysis aren't in the original" );
         }
 
-        va.setExperimentsAnalyzed( new HashSet<ExpressionExperiment>( datasetsAnalyzed ) );
+        ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
+        eeSet.setExperiments( datasetsAnalyzed );
+        va.setExpressionExperimentSetAnalyzed( eeSet );
 
         GeneCoexpressionVirtualAnalysis newAnalysis = ( GeneCoexpressionVirtualAnalysis ) persisterHelper.persist( va );
         return newAnalysis.getId();
@@ -152,8 +154,8 @@ public class GeneLinkAnalysisManagerController extends BaseFormController {
 
         Collection<ExpressionExperiment> datasetsAnalyzed = expressionExperimentService
                 .loadMultiple( obj.getDatasets() );
-        toUpdateV.getExperimentsAnalyzed().retainAll( datasetsAnalyzed );
-        toUpdateV.getExperimentsAnalyzed().addAll( datasetsAnalyzed );
+        toUpdateV.getExpressionExperimentSetAnalyzed().getExperiments().retainAll( datasetsAnalyzed );
+        toUpdateV.getExpressionExperimentSetAnalyzed().getExperiments().addAll( datasetsAnalyzed );
 
         geneCoexpressionAnalysisService.update( toUpdateV );
 
@@ -240,8 +242,8 @@ public class GeneLinkAnalysisManagerController extends BaseFormController {
         GeneCoexpressionVirtualAnalysis analysis = ( GeneCoexpressionVirtualAnalysis ) a;
         geneCoexpressionAnalysisService.thaw( analysis );
         Collection<ExpressionExperiment> datasetsAnalyzed = expressionExperimentService.loadMultiple( eeIds );
-        analysis.getExperimentsAnalyzed().retainAll( datasetsAnalyzed );
-        analysis.getExperimentsAnalyzed().addAll( datasetsAnalyzed );
+        analysis.getExpressionExperimentSetAnalyzed().getExperiments().retainAll( datasetsAnalyzed );
+        analysis.getExpressionExperimentSetAnalyzed().getExperiments().addAll( datasetsAnalyzed );
         geneCoexpressionAnalysisService.update( analysis );
     }
 

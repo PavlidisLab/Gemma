@@ -22,6 +22,7 @@ package ubic.gemma.model.association.coexpression;
 import java.util.Collection;
 import java.util.Map;
 
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 
@@ -214,9 +215,9 @@ public class Probe2ProbeCoexpressionServiceImpl extends
     }
 
     @Override
-    protected Collection handleGetGenesTestedBy( ExpressionExperiment expressionExperiment, boolean filterNonSpecific )
+    protected Collection handleGetGenesTestedBy( BioAssaySet bioAssaySet, boolean filterNonSpecific )
             throws Exception {
-        return this.getProbe2ProbeCoexpressionDao().getGenesTestedBy( expressionExperiment, filterNonSpecific );
+        return this.getProbe2ProbeCoexpressionDao().getGenesTestedBy( bioAssaySet, filterNonSpecific );
     }
 
 }

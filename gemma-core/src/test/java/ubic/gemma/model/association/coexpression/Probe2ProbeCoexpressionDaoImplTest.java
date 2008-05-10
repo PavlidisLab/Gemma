@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -62,6 +64,15 @@ public class Probe2ProbeCoexpressionDaoImplTest extends BaseSpringContextTest {
 
         int j = dvs.size();
 
+        ProbeCoexpressionAnalysis analysis = ProbeCoexpressionAnalysis.Factory.newInstance();
+        analysis.setName( "foo" );
+        ExpressionExperimentSet se = ExpressionExperimentSet.Factory.newInstance();
+        se.getExperiments().add( ee );
+        se.setName( "bar" );
+        analysis.setExpressionExperimentSetAnalyzed( se );
+
+        analysis = ( ProbeCoexpressionAnalysis ) this.persisterHelper.persist( analysis );
+
         for ( int i = 0; i < j - 1; i += 2 ) {
             Probe2ProbeCoexpression ppc = MouseProbeCoExpression.Factory.newInstance();
             ppc.setFirstVector( dvl.get( i ) );
@@ -69,6 +80,8 @@ public class Probe2ProbeCoexpressionDaoImplTest extends BaseSpringContextTest {
             ppc.setMetric( qt );
             ppc.setScore( 0.0 );
             ppc.setPvalue( 0.2 );
+            ppc.setExpressionBioAssaySet( ee );
+            ppc.setSourceAnalysis( analysis );
             ppcs.create( ppc );
         }
 

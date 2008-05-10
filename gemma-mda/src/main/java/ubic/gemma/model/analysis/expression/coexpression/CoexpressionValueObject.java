@@ -29,7 +29,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.BioAssaySet; 
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.ontology.OntologyTerm;
 
@@ -95,7 +95,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     // the expression experiments that this coexpression was involved in
     private Map<Long, ExpressionExperimentValueObject> expressionExperimentValueObjects;
 
-    private Collection<ExpressionExperiment> datasetsTestedIn = new HashSet<ExpressionExperiment>();
+    private Collection<BioAssaySet> datasetsTestedIn = new HashSet<BioAssaySet>();
 
     public CoexpressionValueObject() {
         geneName = "";
@@ -561,11 +561,11 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         return geneName;
     }
 
-    public Collection<ExpressionExperiment> getDatasetsTestedIn() {
+    public Collection<ubic.gemma.model.expression.experiment.BioAssaySet> getDatasetsTestedIn() {
         return this.datasetsTestedIn;
     }
 
-    public void setDatasetsTestedIn( Collection<ExpressionExperiment> datasetsTestedIn ) {
+    public void setDatasetsTestedIn( Collection<BioAssaySet> datasetsTestedIn ) {
         this.datasetsTestedIn = datasetsTestedIn;
     }
 

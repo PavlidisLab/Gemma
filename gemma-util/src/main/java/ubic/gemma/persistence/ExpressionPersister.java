@@ -25,8 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
-import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.apache.commons.lang.StringUtils; 
 
 import ubic.basecode.util.CancellationException;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
@@ -52,8 +51,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService; 
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
 
@@ -497,44 +495,44 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             }
         }
 
-        for ( ExpressionExperimentSubSet subset : expressionExperiment.getSubsets() ) {
-            for ( BioAssay bA : subset.getBioAssays() ) {
-                bA.setId( persistBioAssay( bA ).getId() );
-                assert bA.getArrayDesignUsed().getId() != null;
-
-                final BioAssay baF = bA;
-
-                // thaw - this is necessary to avoid lazy exceptions later, but perhaps could be done more elegantly!
-                HibernateTemplate templ = this.getHibernateTemplate();
-                templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        ArrayDesign arrayDesignUsed = baF.getArrayDesignUsed();
-                        session.update( arrayDesignUsed );
-                        if ( arrayDesignUsed.getDesignProvider() != null ) {
-                            session.update( arrayDesignUsed.getDesignProvider().getAuditTrail() );
-                            arrayDesignUsed.getDesignProvider().getAuditTrail().getEvents().size();
-                        }
-                        arrayDesignUsed.getMergees().size();
-                        return null;
-                    }
-                } );
-
-                if ( !alreadyFilled.contains( bA ) ) {
-                    /*
-                     * This is an exceptional circumstance that might indicate problems with the source.
-                     */
-                    log.error( "Subset bioassay " + bA + " found that isn't in the parent. Parent contains:" );
-                    StringBuilder buf = new StringBuilder();
-                    buf.append( "\n" );
-                    for ( BioAssay assay : alreadyFilled ) {
-                        buf.append( assay + "\n" );
-                    }
-                    log.error( buf );
-                    throw new IllegalStateException( bA + " in subset " + subset + " not in the parent experiment?" );
-                }
-            }
-        }
+//        for ( ExpressionExperimentSubSet subset : expressionExperiment.getSubsets() ) {
+//            for ( BioAssay bA : subset.getBioAssays() ) {
+//                bA.setId( persistBioAssay( bA ).getId() );
+//                assert bA.getArrayDesignUsed().getId() != null;
+//
+//                final BioAssay baF = bA;
+//
+//                // thaw - this is necessary to avoid lazy exceptions later, but perhaps could be done more elegantly!
+//                HibernateTemplate templ = this.getHibernateTemplate();
+//                templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+//                    public Object doInHibernate( org.hibernate.Session session )
+//                            throws org.hibernate.HibernateException {
+//                        ArrayDesign arrayDesignUsed = baF.getArrayDesignUsed();
+//                        session.update( arrayDesignUsed );
+//                        if ( arrayDesignUsed.getDesignProvider() != null ) {
+//                            session.update( arrayDesignUsed.getDesignProvider().getAuditTrail() );
+//                            arrayDesignUsed.getDesignProvider().getAuditTrail().getEvents().size();
+//                        }
+//                        arrayDesignUsed.getMergees().size();
+//                        return null;
+//                    }
+//                } );
+//
+//                if ( !alreadyFilled.contains( bA ) ) {
+//                    /*
+//                     * This is an exceptional circumstance that might indicate problems with the source.
+//                     */
+//                    log.error( "Subset bioassay " + bA + " found that isn't in the parent. Parent contains:" );
+//                    StringBuilder buf = new StringBuilder();
+//                    buf.append( "\n" );
+//                    for ( BioAssay assay : alreadyFilled ) {
+//                        buf.append( assay + "\n" );
+//                    }
+//                    log.error( buf );
+//                    throw new IllegalStateException( bA + " in subset " + subset + " not in the parent experiment?" );
+//                }
+//            }
+//        }
     }
 
     /**

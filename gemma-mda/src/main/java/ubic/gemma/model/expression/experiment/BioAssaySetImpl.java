@@ -20,15 +20,15 @@
  * This is only generated once! It will never be overwritten.
  * You can (and have to!) safely modify it by hand.
  */
-package ubic.gemma.model.analysis;
+package ubic.gemma.model.expression.experiment;
 
 /**
- * @see ubic.gemma.model.analysis.Investigation
+ * @see ubic.gemma.model.expression.experiment.BioAssaySet
  */
-public abstract class InvestigationImpl extends ubic.gemma.model.analysis.Investigation {
+public abstract class BioAssaySetImpl extends ubic.gemma.model.expression.experiment.BioAssaySet {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
-    private static final long serialVersionUID = -3067178307830387195L;
+    private static final long serialVersionUID = 756355811038088924L;
 
 }

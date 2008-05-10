@@ -95,8 +95,8 @@ public class GeneCoexpressionAnalysisServiceImpl extends
 
             Collection<GeneCoexpressionAnalysis> analyses = anas.get( ee );
             for ( GeneCoexpressionAnalysis a : analyses ) {
-                if ( a.getExperimentsAnalyzed().size() == investigations.size()
-                        && a.getExperimentsAnalyzed().containsAll( investigations ) ) {
+                if ( a.getExpressionExperimentSetAnalyzed().getExperiments().size() == investigations.size()
+                        && a.getExpressionExperimentSetAnalyzed().getExperiments().containsAll( investigations ) ) {
                     return a;
                 }
             }

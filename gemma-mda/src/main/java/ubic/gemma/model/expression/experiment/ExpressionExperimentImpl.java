@@ -20,8 +20,6 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import java.util.Collection;
-
 /**
  * @see ubic.gemma.model.expression.experiment.ExpressionExperiment
  * @author paul
@@ -44,9 +42,4 @@ public class ExpressionExperimentImpl extends ubic.gemma.model.expression.experi
         return super.toString() + " (" + this.getShortName() + ")";
     }
 
-    @Override
-    public Collection getAnalyses() {
-  //     return this.getExpressionAnalyses();
-        return null;
-    }
 }

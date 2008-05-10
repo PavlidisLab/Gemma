@@ -84,7 +84,7 @@ public class GeneCoexpressionAnalysisDaoImpl extends
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.lock( geneCoexpressionAnalysis, LockMode.NONE );
                 Hibernate.initialize( geneCoexpressionAnalysis );
-                Hibernate.initialize( geneCoexpressionAnalysis.getExperimentsAnalyzed() );
+                Hibernate.initialize( geneCoexpressionAnalysis.getExpressionExperimentSetAnalyzed() );
                 return null;
             }
         } );
@@ -96,7 +96,7 @@ public class GeneCoexpressionAnalysisDaoImpl extends
      * @see ubic.gemma.model.analysis.AnalysisDaoImpl#handleFindByInvestigation(ubic.gemma.model.analysis.Investigation)
      */
     protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
-        final String queryString = "select distinct a from GeneCoexpressionAnalysisImpl a where :e in elements (a.experimentsAnalyzed)";
+        final String queryString = "select distinct a from GeneCoexpressionAnalysisImpl a where :e in elements (a.expressionExperimentSetAnalyzed.experiments)";
         return this.getHibernateTemplate().findByNamedParam( queryString, "e", investigation );
     }
 
@@ -117,7 +117,8 @@ public class GeneCoexpressionAnalysisDaoImpl extends
 
     @Override
     protected Collection handleFindByTaxon( Taxon taxon ) {
-        final String queryString = "select distinct goa from GeneCoexpressionAnalysisImpl as goa inner join goa.experimentsAnalyzed  as ee "
+        final String queryString = "select distinct goa from GeneCoexpressionAnalysisImpl as goa inner join goa.expressionExperimentSetAnalyzed"
+                + " as eesa inner join eesa.experiments as ee "
                 + "inner join ee.bioAssays as ba "
                 + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
         return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
@@ -125,14 +126,14 @@ public class GeneCoexpressionAnalysisDaoImpl extends
 
     @Override
     protected int handleGetNumDatasetsAnalyzed( GeneCoexpressionAnalysis analysis ) throws Exception {
-        final String queryString = "select count(e) from GeneCoexpressionAnalysisImpl g inner join g.experimentsAnalyzed e where g=:g";
+        final String queryString = "select count(e) from GeneCoexpressionAnalysisImpl g inner join g.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e where g=:g";
         List list = getHibernateTemplate().findByNamedParam( queryString, "g", analysis );
         return ( ( Long ) list.iterator().next() ).intValue();
     }
 
     @Override
     protected Collection handleGetDatasetsAnalyzed( GeneCoexpressionAnalysis analysis ) throws Exception {
-        final String queryString = "select e from GeneCoexpressionAnalysisImpl g inner join g.experimentsAnalyzed e where g=:g";
+        final String queryString = "select e from GeneCoexpressionAnalysisImpl g inner join g.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e where g=:g";
         return getHibernateTemplate().findByNamedParam( queryString, "g", analysis );
     }
 

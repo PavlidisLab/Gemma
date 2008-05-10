@@ -26,6 +26,7 @@ import ubic.gemma.analysis.service.AnalysisHelperService;
 import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -65,9 +66,13 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
     protected Exception doWork( String[] args ) {
         this.processCommandLine( "corrMat", args );
 
-        for ( ExpressionExperiment ee : expressionExperiments ) {
+        for ( BioAssaySet ee : expressionExperiments ) {
             try {
-                processExperiment( ee );
+                if ( !( ee instanceof ExpressionExperiment ) ) {
+                    errorObjects.add( ee );
+                    continue;
+                }
+                processExperiment( ( ExpressionExperiment ) ee );
                 successObjects.add( ee );
             } catch ( Exception e ) {
                 log.error( "Error while processing " + ee, e );

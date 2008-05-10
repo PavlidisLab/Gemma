@@ -61,6 +61,7 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.experiment.BioAssaySet; 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
@@ -208,7 +209,7 @@ public class LinkAnalysisService {
                 analysis.getProtocol().getDescription() + "# FilterConfig:\n" + filterConfig.toString() );
 
         assert ee.getId() != null;
-        analysis.getExperimentsAnalyzed().add( ee );
+        analysis.getExpressionExperimentSetAnalyzed().getExperiments().add( ee );
 
         /*
          * Add probes used.
@@ -459,13 +460,13 @@ public class LinkAnalysisService {
         Taxon taxon = la.getTaxon();
         Creator c;
         if ( TaxonUtility.isMouse( taxon ) ) {
-            c = new Creator( MouseProbeCoExpression.Factory.class );
+            c = new Creator( MouseProbeCoExpression.Factory.class, la.getExpressionExperiment() );
         } else if ( TaxonUtility.isRat( taxon ) ) {
-            c = new Creator( RatProbeCoExpression.Factory.class );
+            c = new Creator( RatProbeCoExpression.Factory.class, la.getExpressionExperiment() );
         } else if ( TaxonUtility.isHuman( taxon ) ) {
-            c = new Creator( HumanProbeCoExpression.Factory.class );
+            c = new Creator( HumanProbeCoExpression.Factory.class, la.getExpressionExperiment() );
         } else {
-            c = new Creator( OtherProbeCoExpression.Factory.class );
+            c = new Creator( OtherProbeCoExpression.Factory.class, la.getExpressionExperiment() );
         }
 
         List<Probe2ProbeCoexpression> p2plinkBatch = new ArrayList<Probe2ProbeCoexpression>();
@@ -611,8 +612,10 @@ public class LinkAnalysisService {
         Method m;
         private Object[] arg;
         private Class clazz;
+        private BioAssaySet ebas;
 
-        Creator( Class clazz ) {
+        Creator( Class clazz, BioAssaySet experiment ) {
+            this.ebas = experiment;
             this.clazz = clazz;
             this.arg = new Object[] {};
             try {
@@ -625,8 +628,11 @@ public class LinkAnalysisService {
         }
 
         public Probe2ProbeCoexpression create() {
+            Probe2ProbeCoexpression result = null;
             try {
-                return ( Probe2ProbeCoexpression ) m.invoke( clazz, arg );
+                result = ( Probe2ProbeCoexpression ) m.invoke( clazz, arg );
+                result.setExpressionBioAssaySet( ebas );
+                return result;
             } catch ( IllegalArgumentException e ) {
                 throw new RuntimeException( e );
             } catch ( IllegalAccessException e ) {

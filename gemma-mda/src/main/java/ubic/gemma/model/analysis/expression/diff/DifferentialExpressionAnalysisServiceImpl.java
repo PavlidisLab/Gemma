@@ -83,8 +83,8 @@ public class DifferentialExpressionAnalysisServiceImpl extends
 
             Collection<DifferentialExpressionAnalysis> analyses = anas.get( ee );
             for ( DifferentialExpressionAnalysis a : analyses ) {
-                if ( a.getExperimentsAnalyzed().size() == investigations.size()
-                        && a.getExperimentsAnalyzed().containsAll( investigations ) ) {
+                if ( a.getExpressionExperimentSetAnalyzed().getExperiments().size() == investigations.size()
+                        && a.getExpressionExperimentSetAnalyzed().getExperiments().containsAll( investigations ) ) {
                     return a;
                 }
             }

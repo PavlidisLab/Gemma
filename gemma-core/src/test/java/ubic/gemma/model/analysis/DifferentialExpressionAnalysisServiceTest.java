@@ -21,9 +21,10 @@ package ubic.gemma.model.analysis;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Map;
 
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -54,6 +55,8 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
 
         this.analysisService = ( DifferentialExpressionAnalysisService ) getBean( "differentialExpressionAnalysisService" );
 
+        ExpressionExperimentSetDao expressionExperimentSetDao = ( ExpressionExperimentSetDao ) getBean( "expressionExperimentSetDao" );
+
         e1 = ExpressionExperiment.Factory.newInstance();
         e1.setName( "test e1" );
         e1 = expressionExperimentService.create( e1 );
@@ -66,42 +69,48 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         e3.setName( "test e3" );
         e3 = expressionExperimentService.create( e3 );
 
-        Collection<ExpressionExperiment> investigations = new HashSet<ExpressionExperiment>();
-
         eAnalysis1 = DifferentialExpressionAnalysis.Factory.newInstance();
-        investigations.add( e1 );
-        eAnalysis1.setExperimentsAnalyzed( investigations );
+        ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
+        eeSet = ( ExpressionExperimentSet ) expressionExperimentSetDao.create( eeSet );
+
+        eeSet.getExperiments().add( e1 );
+
+        eAnalysis1.setExpressionExperimentSetAnalyzed( eeSet );
         eAnalysis1.setName( "TestAnalysis1" );
         eAnalysis1.setDescription( "An analysis Test 1" );
         eAnalysis1 = analysisService.create( eAnalysis1 );
 
         eAnalysis2 = DifferentialExpressionAnalysis.Factory.newInstance();
-        investigations = new HashSet<ExpressionExperiment>();
-        investigations.add( e1 );
-        investigations.add( e2 );
-        eAnalysis2.setExperimentsAnalyzed( investigations );
+        eeSet = ExpressionExperimentSet.Factory.newInstance();
+        eeSet = ( ExpressionExperimentSet ) expressionExperimentSetDao.create( eeSet );
+        eeSet.getExperiments().add( e1 );
+        eeSet.getExperiments().add( e2 );
+
+        eAnalysis2.setExpressionExperimentSetAnalyzed( eeSet );
         eAnalysis2.setName( "TestAnalysis2" );
         eAnalysis2.setDescription( "An analysis Test 2" );
         eAnalysis2 = analysisService.create( eAnalysis2 );
 
         eAnalysis4 = DifferentialExpressionAnalysis.Factory.newInstance();
-        investigations = new HashSet<ExpressionExperiment>();
-        investigations.add( e1 );
-        investigations.add( e2 );
-        investigations.add( e3 );
+        eeSet = ExpressionExperimentSet.Factory.newInstance();
+        eeSet = ( ExpressionExperimentSet ) expressionExperimentSetDao.create( eeSet );
+        eeSet.getExperiments().add( e1 );
+        eeSet.getExperiments().add( e2 );
+        eeSet.getExperiments().add( e3 );
 
-        eAnalysis4.setExperimentsAnalyzed( investigations );
+        eAnalysis4.setExpressionExperimentSetAnalyzed( eeSet );
         eAnalysis4.setName( "Test" );
         eAnalysis4.setDescription( "An analysis Test 4" );
         eAnalysis4 = analysisService.create( eAnalysis4 );
 
         eAnalysis3 = DifferentialExpressionAnalysis.Factory.newInstance();
-        investigations = new HashSet<ExpressionExperiment>();
-        investigations.add( e1 );
-        investigations.add( e2 );
-        investigations.add( e3 );
+        eeSet = ExpressionExperimentSet.Factory.newInstance();
+        eeSet = ( ExpressionExperimentSet ) expressionExperimentSetDao.create( eeSet );
+        eeSet.getExperiments().add( e1 );
+        eeSet.getExperiments().add( e2 );
+        eeSet.getExperiments().add( e3 );
 
-        eAnalysis3.setExperimentsAnalyzed( investigations );
+        eAnalysis3.setExpressionExperimentSetAnalyzed( eeSet );
         eAnalysis3.setName( "TestAnalysis3" );
         eAnalysis3.setDescription( "An analysis Test 3" );
         eAnalysis3 = analysisService.create( eAnalysis3 );

@@ -547,4 +547,14 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().getSampleRemovalEvents( expressionExperiments );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetSubSets(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     */
+    @Override
+    protected Collection handleGetSubSets( ExpressionExperiment expressionExperiment ) throws Exception {
+        return this.getExpressionExperimentDao().getSubSets( expressionExperiment );
+    }
+
 }

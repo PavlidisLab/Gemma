@@ -328,10 +328,6 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 }
 
                 log.info( "Last bits ..." );
-                for ( ExpressionExperimentSubSet subset : toDelete.getSubsets() ) {
-                    session.delete( subset );
-                }
-                toDelete.getSubsets().clear();
 
                 for ( BioMaterial bm : bioMaterialsToDelete ) {
                     session.delete( bm );
@@ -1406,6 +1402,19 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             results.put( id, count );
         }
         return results;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetSubSets(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection<ExpressionExperimentSubSet> handleGetSubSets( ExpressionExperiment expressionExperiment )
+            throws Exception {
+        String queryString = "select from ExpressionExperimentSubSetImpl eess inner join eess.sourceExperiment ee where ee = :ee";
+        return this.getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
     }
 
 }

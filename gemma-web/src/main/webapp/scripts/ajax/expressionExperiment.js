@@ -1,75 +1,100 @@
 function handleFailure(data, e) {
 	Ext.DomHelper.overwrite("taskId", "");
-	Ext.DomHelper.overwrite("messages", {tag : 'img', src:'/Gemma/images/icons/warning.png' });  
-	Ext.DomHelper.append("messages", {tag : 'span', html : "&nbsp;There was an error:<br/>" + data + e });  
+	Ext.DomHelper.overwrite("messages", {
+		tag : 'img',
+		src : '/Gemma/images/icons/warning.png'
+	});
+	Ext.DomHelper.append("messages", {
+		tag : 'span',
+		html : "&nbsp;There was an error:<br/>" + data + e
+	});
 }
 
 function handleSuccess(data, e) {
-	Ext.DomHelper.overwrite("taskId", ""); 
-	Ext.DomHelper.append("messages", {tag : 'span', html : "Done" });  
+	Ext.DomHelper.overwrite("taskId", "");
+	Ext.DomHelper.append("messages", {
+		tag : 'span',
+		html : "Done"
+	});
 }
- 
+
 function handleWait(data, forward) {
 	try {
 		taskId = data;
-		Ext.DomHelper.overwrite("messages", "");  
-		Ext.DomHelper.overwrite("taskId", "<input type = 'hidden' name='taskId' id='taskId' value= '" + taskId + "'/> ");
-		var p = new progressbar( {doForward : forward });
-	 	p.createIndeterminateProgressBar();
-		p.on('fail', handleFailure); 
+		Ext.DomHelper.overwrite("messages", "");
+		Ext.DomHelper.overwrite("taskId",
+				"<input type = 'hidden' name='taskId' id='taskId' value= '"
+						+ taskId + "'/> ");
+		var p = new progressbar({
+			doForward : forward
+		});
+		p.createIndeterminateProgressBar();
+		p.on('fail', handleFailure);
 		p.on('done', handleSuccess);
-	 	p.startProgress();
-	}
-	catch (e) {
+		p.startProgress();
+	} catch (e) {
 		handleFailure(data, e);
 		return;
 	}
 }
 
 function updateEEReport(id) {
-	var callParams = []; 
+	var callParams = [];
 	callParams.push(id);
 	var delegate = handleWait.createDelegate(this, [], true);
 	var errorHandler = handleFailure.createDelegate(this, [], true);
-	callParams.push({callback : delegate, errorHandler : errorHandler   }); 
-	Ext.DomHelper.overwrite("messages", {tag : 'img', src:'/Gemma/images/default/tree/loading.gif' });  
-	Ext.DomHelper.append("messages", "&nbsp;Submitting ...");  
+	callParams.push({
+		callback : delegate,
+		errorHandler : errorHandler
+	});
+	Ext.DomHelper.overwrite("messages", {
+		tag : 'img',
+		src : '/Gemma/images/default/tree/loading.gif'
+	});
+	Ext.DomHelper.append("messages", "&nbsp;Submitting ...");
 	ExpressionExperimentController.updateReport.apply(this, callParams);
 }
 
-function deleteExperiment (id) {
-	// show  confirmation dialog
+function deleteExperiment(id) {
+	// show confirmation dialog
 	var dialog = new Ext.Window({
 		title : "Confirm deletion",
 		modal : true,
 		layout : 'fit',
-		autoHeight : true, 
+		autoHeight : true,
 		width : 300,
-		closeAction:'hide',
+		closeAction : 'hide',
 		easing : 3,
-		defaultType : 'textfield', 
-	 
-        buttons: [{ 
-        	text: 'Cancel',
-        	handler: function(){ 
-            	dialog.hide();  
-        	} 
-       	},{ 
-        	text: 'Confirm',
-        	handler: function() {
-        		dialog.hide();  
-        		var callParams = []	
+		defaultType : 'textfield',
+
+		buttons : [{
+			text : 'Cancel',
+			handler : function() {
+				dialog.hide();
+			}
+		}, {
+			text : 'Confirm',
+			handler : function() {
+				dialog.hide();
+				var callParams = []
 				callParams.push(id);
 				var delegate = handleWait.createDelegate(this, [], true);
 				var errorHandler = handleFailure.createDelegate(this, [], true);
-				callParams.push({callback : delegate, errorHandler : errorHandler  }); 
-				Ext.DomHelper.overwrite("messages", {tag : 'img', src:'/Gemma/images/default/tree/loading.gif' });  
-				Ext.DomHelper.append("messages", "&nbsp;Submitting ...");  
-				ExpressionExperimentController.deleteById.apply(this, callParams);
-        	}, 
-        	scope : dialog
-       	},]
+				callParams.push({
+					callback : delegate,
+					errorHandler : errorHandler
+				});
+				Ext.DomHelper.overwrite("messages", {
+					tag : 'img',
+					src : '/Gemma/images/default/tree/loading.gif'
+				});
+				Ext.DomHelper.append("messages", "&nbsp;Submitting ...");
+				ExpressionExperimentController.deleteById.apply(this,
+						callParams);
+			},
+			scope : dialog
+		},]
 	});
-	
+
 	dialog.show();
 };

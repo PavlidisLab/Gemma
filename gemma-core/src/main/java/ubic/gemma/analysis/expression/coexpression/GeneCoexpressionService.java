@@ -32,6 +32,7 @@ import org.apache.commons.collections.Predicate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenesDetails;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionValueObject;
@@ -42,6 +43,7 @@ import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService;
 import ubic.gemma.model.common.Securable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -111,7 +113,8 @@ public class GeneCoexpressionService {
                 }
 
                 if ( populateDatasets ) {
-                    cavo.setDatasets( getIds( analysis.getExperimentsAnalyzed() ) ); // this saves a trip back...
+                    cavo.setDatasets( getIds( analysis.getExpressionExperimentSetAnalyzed() ) ); // this saves a trip
+                    // back...
                 }
 
                 /*
@@ -159,7 +162,7 @@ public class GeneCoexpressionService {
                 queryGenesOnly, viewedAnalysis );
 
         geneCoexpressionAnalysisService.thaw( viewedAnalysis );
-        Collection<Long> eeIdsFromAnalysis = getIds( viewedAnalysis.getExperimentsAnalyzed() );
+        Collection<Long> eeIdsFromAnalysis = getIds( viewedAnalysis.getExpressionExperimentSetAnalyzed() );
 
         /*
          * We get this prior to filtering so it matches the vectors stored with the analysis.
@@ -172,7 +175,7 @@ public class GeneCoexpressionService {
         Collection<Long> eeIdsTouse = null;
         if ( virtual ) {
             geneCoexpressionAnalysisService.thaw( analysis );
-            eeIdsTouse = getIds( analysis.getExperimentsAnalyzed() );
+            eeIdsTouse = getIds( analysis.getExpressionExperimentSetAnalyzed() );
         } else if ( eeIds == null ) {
             eeIdsTouse = eeIdsFromAnalysis;
         } else {
@@ -203,10 +206,11 @@ public class GeneCoexpressionService {
             for ( Gene2GeneCoexpression g2g : g2gs ) {
                 Gene foundGene = g2g.getFirstGene().equals( queryGene ) ? g2g.getSecondGene() : g2g.getFirstGene();
                 CoexpressionValueObjectExt ecvo = new CoexpressionValueObjectExt();
-                
+
                 Collection<Gene> geneToThaw = new ArrayList<Gene>();
                 geneToThaw.add( foundGene );
-                geneService.thawLite( geneToThaw );    //The thaw needs to be done here because building the value object calls methods that require the gene's info (setSortKey, hashCode)
+                geneService.thawLite( geneToThaw ); // The thaw needs to be done here because building the value object
+                // calls methods that require the gene's info (setSortKey, hashCode)
                 ecvo.setQueryGene( queryGene );
                 ecvo.setFoundGene( foundGene );
 
@@ -270,7 +274,7 @@ public class GeneCoexpressionService {
 
                 seen.add( g2g );
             }
-            
+
             CoexpressionSummaryValueObject summary = makeSummary( eevos, datasetsTested, linksMetPositiveStringency,
                     linksMetNegativeStringency );
             result.getSummary().put( queryGene.getOfficialSymbol(), summary );
@@ -357,12 +361,12 @@ public class GeneCoexpressionService {
             int stringency, int maxResults, boolean queryGenesOnly ) {
 
         if ( eeIds == null ) eeIds = new HashSet<Long>();
-        Collection<ExpressionExperiment> ees = getPossibleExpressionExperiments( genes );
+        Collection<BioAssaySet> ees = getPossibleExpressionExperiments( genes );
 
         if ( !eeIds.isEmpty() ) {
             // remove the expression experiments we're not interested in...
-            Collection<ExpressionExperiment> eesToRemove = new HashSet<ExpressionExperiment>();
-            for ( ExpressionExperiment ee : ees ) {
+            Collection<BioAssaySet> eesToRemove = new HashSet<BioAssaySet>();
+            for ( BioAssaySet ee : ees ) {
                 if ( !eeIds.contains( ee.getId() ) ) eesToRemove.add( ee );
             }
             ees.removeAll( eesToRemove );
@@ -373,7 +377,7 @@ public class GeneCoexpressionService {
          * to get summary information about the datasets...
          */
         eeIds.clear();
-        for ( ExpressionExperiment ee : ees ) {
+        for ( BioAssaySet ee : ees ) {
             eeIds.add( ee.getId() );
         }
         List<ExpressionExperimentValueObject> eevos = getSortedEEvos( eeIds );
@@ -410,7 +414,7 @@ public class GeneCoexpressionService {
          * of interest and filter the results before the time-consuming analysis is done...
          */
         for ( Gene queryGene : genes ) {
-            
+
             CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis( queryGene,
                     ees, stringency, knownGenesOnly, maxResults );
             addExtCoexpressionValueObjects( queryGene, result.getDatasets(), coexpressions.getKnownGeneCoexpression(),
@@ -505,7 +509,7 @@ public class GeneCoexpressionService {
 
             StringBuilder datasetVector = new StringBuilder();
             Collection<Long> supportingEEs = new ArrayList<Long>();
-            
+
             for ( int i = 0; i < eevos.size(); ++i ) {
                 ExpressionExperimentValueObject eevo = eevos.get( i );
                 boolean tested = cvo.getDatasetsTestedIn() != null && cvo.getDatasetsTestedIn().contains( eevo.getId() );
@@ -523,9 +527,8 @@ public class GeneCoexpressionService {
             }
 
             ecvo.setDatasetVector( datasetVector.toString() );
-            ecvo.setSupportingExperiments(supportingEEs );
-        
-            
+            ecvo.setSupportingExperiments( supportingEEs );
+
             ecvo.setSortKey();
             results.add( ecvo );
         }
@@ -643,7 +646,7 @@ public class GeneCoexpressionService {
      * @return
      */
     @SuppressWarnings("unchecked")
-    private Collection<ExpressionExperiment> getPossibleExpressionExperiments( Collection<Gene> genes ) {
+    private Collection<BioAssaySet> getPossibleExpressionExperiments( Collection<Gene> genes ) {
         Collection<Long> eeIds = new HashSet<Long>();
         for ( Gene g : genes ) {
             eeIds.addAll( expressionExperimentService.findByGene( g ) );
@@ -684,11 +687,11 @@ public class GeneCoexpressionService {
     }
 
     /**
-     * @param datasets
+     * @param expressionExperimentSet
      */
-    private List<Long> getIds( Collection<ExpressionExperiment> datasets ) {
-        List<Long> ids = new ArrayList<Long>( datasets.size() );
-        for ( Securable dataset : datasets ) {
+    private List<Long> getIds( ExpressionExperimentSet expressionExperimentSet ) {
+        List<Long> ids = new ArrayList<Long>( expressionExperimentSet.getExperiments().size() );
+        for ( Securable dataset : expressionExperimentSet.getExperiments() ) {
             ids.add( dataset.getId() );
         }
         return ids;

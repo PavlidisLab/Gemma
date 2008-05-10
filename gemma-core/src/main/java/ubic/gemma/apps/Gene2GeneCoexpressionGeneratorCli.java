@@ -21,11 +21,13 @@ package ubic.gemma.apps;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.analysis.expression.coexpression.GeneLinkCoexpressionAnalyzer;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 
@@ -96,8 +98,10 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
         log.info( "Using " + expressionExperiments.size() + " Expression Experiments." );
         log.debug( displayEEs() );
 
-        geneVoteAnalyzer
-                .analyze( expressionExperiments, toUseGenes, toUseStringency, knownGenesOnly, toUseAnalysisName );
+        Collection<BioAssaySet> sets = new HashSet<BioAssaySet>();
+        sets.addAll( expressionExperiments );
+
+        geneVoteAnalyzer.analyze( sets, toUseGenes, toUseStringency, knownGenesOnly, toUseAnalysisName );
 
         return null;
     }

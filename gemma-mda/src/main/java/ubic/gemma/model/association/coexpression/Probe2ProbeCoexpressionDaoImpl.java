@@ -50,6 +50,7 @@ import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalys
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.NativeQueryUtils;
@@ -139,7 +140,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         for ( String p2pClassName : p2pClassNames ) {
 
             final String queryString = "SELECT COUNT(*) FROM " + getTableName( p2pClassName, false )
-                    + " where EXPRESSION_EXPERIMENT_FK = :eeid";
+                    + " where EXPRESSION_BIO_ASSAY_SET_FK = :eeid";
 
             SQLQuery queryObject = super.getSession( false ).createSQLQuery( queryString );
             queryObject.setMaxResults( 1 );
@@ -199,7 +200,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
              * Get one vector to locate the analysis object to delete.
              */
             final String queryString = "SELECT SOURCE_ANALYSIS_FK FROM " + getTableName( p2pClassName, false )
-                    + " where EXPRESSION_EXPERIMENT_FK = :eeid";
+                    + " where EXPRESSION_BIO_ASSAY_SET_FK = :eeid";
 
             SQLQuery queryObject = super.getSession( false ).createSQLQuery( queryString );
             queryObject.setMaxResults( 1 );
@@ -214,7 +215,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             }
 
             final String nativeDeleteQuery = "DELETE FROM " + getTableName( p2pClassName, false )
-                    + " where EXPRESSION_EXPERIMENT_FK = :eeid";
+                    + " where EXPRESSION_BIO_ASSAY_SET_FK = :eeid";
 
             SQLQuery q = super.getSession( false ).createSQLQuery( nativeDeleteQuery );
             q.setParameter( "eeid", ee.getId() );
@@ -264,7 +265,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         if ( probes.size() == 0 ) return new HashSet<ExpressionExperiment>();
 
         // Locate analyses which use these probes, return the expression experiments
-        String queryString = "select distinct ees from ProbeCoexpressionAnalysisImpl pca inner join pca.experimentsAnalyzed ees inner join pca.probesUsed pu where ees in (:ees) and pu in (:probes)";
+        String queryString = "select distinct ees from ProbeCoexpressionAnalysisImpl pca inner join pca.expressionExperimentSetAnalyzed eesa inner join eesa.experiments ees inner join pca.probesUsed pu where ees in (:ees) and pu in (:probes)";
         return this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "ees", "probes" },
                 new Object[] { expressionExperiments, probes } );
     }
@@ -277,8 +278,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Collection<Long> handleGetGenesTestedBy( ExpressionExperiment ee, boolean filterNonSpecific )
-            throws Exception {
+    protected Collection<Long> handleGetGenesTestedBy( BioAssaySet ee, boolean filterNonSpecific ) throws Exception {
 
         // FIXME implement filterNonSpecific.
         if ( filterNonSpecific ) {
@@ -286,9 +286,10 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         }
 
         // this is _much_ faster than going through blatassociation.
-        final String nativeQueryString = "SELECT gc.GENE FROM EXPRESSION_EXPERIMENT e "
-                + "INNER JOIN EXPERIMENTS_ANALYZED ea ON e.ID=ea.EXPERIMENTS_ANALYZED_FK "
-                + "INNER JOIN ANALYSIS a ON a.ID=ea.EXPRESSION_ANALYSES_FK "
+        final String nativeQueryString = "SELECT gc.GENE FROM INVESTIGATION e "
+                + "INNER JOIN  EXPERIMENTS2EXPRESSION_EXPERIMENT_SETS e2ees ON  e2ees.EXPERIMENTS_FK=e "
+                + "INNER JOIN EXPRESSION_EXPERIMENT_SETS eeset ON eeset.ID=e2ees.EXPRESSION_EXPERIMENT_SETS_FK "
+                + "INNER JOIN ANALYSIS a ON a.EXPRESSION_EXPERIMENT_SET_ANALYZED_FK=eeset.ID "
                 + "INNER JOIN  PROBE_COEXPRESSION_ANALYSIS_PROBES_USED pu ON pu.PROBE_COEXPRESSION_ANALYSES_FK=a.ID "
                 + "INNER JOIN GENE2CS gc ON gc.CS=pu.PROBES_USED_FK WHERE a.class='ProbeCoexpressionAnalysisImpl' AND e.ID= :eeid ";
 
@@ -309,7 +310,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Map<Long, Collection<ExpressionExperiment>> handleGetExpressionExperimentsLinkTestedIn( Gene geneA,
+    protected Map<Long, Collection<BioAssaySet>> handleGetExpressionExperimentsLinkTestedIn( Gene geneA,
             Collection /* Long */genesB, Collection expressionExperiments, boolean filterNonSpecific )
             throws Exception {
 
@@ -318,7 +319,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             throw new UnsupportedOperationException( "Sorry, filterNonSpecific is not supported yet" );
         }
 
-        Map<Long, Collection<ExpressionExperiment>> result = new HashMap<Long, Collection<ExpressionExperiment>>();
+        Map<Long, Collection<BioAssaySet>> result = new HashMap<Long, Collection<BioAssaySet>>();
 
         // this is an upper bound - if it isn't in the query gene, it's not going to be a tested link
         Collection<ExpressionExperiment> eesA = getExpressionExperimentsLinkTestedIn( geneA, expressionExperiments,
@@ -339,20 +340,21 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      */
     @SuppressWarnings("unchecked")
     @Override
-    public Map<Long, Collection<ExpressionExperiment>> handleGetExpressionExperimentsTestedIn( Collection genes,
+    public Map<Long, Collection<BioAssaySet>> handleGetExpressionExperimentsTestedIn( Collection genes,
             Collection expressionExperiments, boolean filterNonSpecific ) {
-        
-            // FIXME implement filterNonSpecific.
+
+        // FIXME implement filterNonSpecific.
         if ( filterNonSpecific ) {
             throw new UnsupportedOperationException( "Sorry, filterNonSpecific is not supported yet" );
         }
 
-        String queryString = "select distinct pu,ees from ProbeCoexpressionAnalysisImpl pca inner join pca.experimentsAnalyzed ees inner join pca.probesUsed pu where pu.id in (:probes)";
+        String queryString = "select distinct pu,ees from ProbeCoexpressionAnalysisImpl pca inner join pca.expressionExperimentSetAnalyzed eesa"
+                + " inner join eesa.experiments ees inner join pca.probesUsed pu where pu.id in (:probes)";
 
-        Map<Long, Collection<ExpressionExperiment>> result = new HashMap<Long, Collection<ExpressionExperiment>>();
+        Map<Long, Collection<BioAssaySet>> result = new HashMap<Long, Collection<BioAssaySet>>();
 
-        if (genes == null || genes.isEmpty())   return result;
-        
+        if ( genes == null || genes.isEmpty() ) return result;
+
         // this step is fast.
         Map<Long, Collection<Long>> cs2genes = this.getCs2GenesMapFromGenes( genes );
 
@@ -372,11 +374,11 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         for ( Object o : eesre ) {
             Object[] ol = ( Object[] ) o;
             CompositeSequence c = ( CompositeSequence ) ol[0];
-            ExpressionExperiment e = ( ExpressionExperiment ) ol[1];
+            BioAssaySet e = ( BioAssaySet ) ol[1];
             Collection<Long> geneIds = cs2genes.get( c.getId() );
             for ( Long id : geneIds ) {
                 if ( !result.containsKey( id ) ) {
-                    result.put( id, new HashSet<ExpressionExperiment>() );
+                    result.put( id, new HashSet<BioAssaySet>() );
                 }
                 result.get( id ).add( e );
             }
@@ -552,8 +554,8 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         s.executeUpdate( queryString );
         queryString = "CREATE TABLE " + tableName
                 + "(id BIGINT NOT NULL AUTO_INCREMENT, FIRST_DESIGN_ELEMENT_FK BIGINT NOT NULL, "
-                + "SECOND_DESIGN_ELEMENT_FK BIGINT NOT NULL, SCORE DOUBLE, EXPRESSION_EXPERIMENT_FK BIGINT NOT NULL, "
-                + "PRIMARY KEY(id), KEY(EXPRESSION_EXPERIMENT_FK)) " + "ENGINE=MYISAM";
+                + "SECOND_DESIGN_ELEMENT_FK BIGINT NOT NULL, SCORE DOUBLE, EXPRESSION_BIO_ASSAY_SET_FK BIGINT NOT NULL, "
+                + "PRIMARY KEY(id), KEY(EXPRESSION_BIO_ASSAY_SET_FK)) " + "ENGINE=MYISAM";
         s.executeUpdate( queryString );
         conn.close();
         session.close();
@@ -731,7 +733,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     private Collection<ProbeLink> getLinks( ExpressionExperiment expressionExperiment, String tableName )
             throws Exception {
         String baseQueryString = "SELECT FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK, SCORE FROM " + tableName
-                + " WHERE EXPRESSION_EXPERIMENT_FK = " + expressionExperiment.getId() + " limit ";
+                + " WHERE EXPRESSION_BIO_ASSAY_SET_FK = " + expressionExperiment.getId() + " limit ";
         int chunkSize = 1000000;
         Session session = getSessionFactory().openSession();
         long start = 0;
@@ -855,7 +857,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             total--;
             if ( count == CHUNK_LIMIT || total == 0 ) {
                 queryString = "INSERT INTO " + tableName
-                        + "(FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK, SCORE, EXPRESSION_EXPERIMENT_FK) "
+                        + "(FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK, SCORE, EXPRESSION_BIO_ASSAY_SET_FK) "
                         + " VALUES " + StringUtils.join( linksInOneChunk, "," ) + ";";
                 s.executeUpdate( queryString );
                 // conn.commit(); //not needed if autocomsmit is true.

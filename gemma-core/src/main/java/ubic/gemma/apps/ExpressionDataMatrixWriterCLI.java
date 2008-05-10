@@ -33,7 +33,6 @@ import ubic.gemma.datastructure.matrix.MatrixWriter;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 
 /**
@@ -84,8 +83,6 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
         AnalysisHelperService ahs = ( AnalysisHelperService ) this.getBean( "analysisHelperService" );
 
         CompositeSequenceService css = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
-
-        ExpressionExperimentService ees = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
 
         for ( ExpressionExperiment ee : expressionExperiments ) {
 
