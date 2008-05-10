@@ -630,13 +630,13 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         // note that with current index scheme, you have to have EE ids specified.
         if ( eeIds.size() > 0 ) {
-            eeClause += " coexp.EXPRESSION_BIO_ASSAY_SET_FK in (";
+            eeClause += " coexp.EXPRESSION_EXPERIMENT_FK in (";
             eeClause += StringUtils.join( eeIds.iterator(), "," );
             eeClause += ") AND ";
         } else {
             log.warn( "This query may run very slowly without EE restriction" );
         }
-        // eeClause = " coexp.EXPRESSION_BIO_ASSAY_SET_FK = " + eeIds.iterator().next() + " AND ";
+        // eeClause = " coexp.EXPRESSION_EXPERIMENT_FK = " + eeIds.iterator().next() + " AND ";
 
         String knownGeneClause = "";
         if ( knownGenesOnly ) {
@@ -658,7 +658,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
          * genetype
          * </pre>
          */
-        String query = "SELECT gcOut.GENE as id, coexp.EXPRESSION_BIO_ASSAY_SET_FK as exper, coexp.PVALUE as pvalue, coexp.SCORE as score, "
+        String query = "SELECT gcOut.GENE as id, coexp.EXPRESSION_EXPERIMENT_FK as exper, coexp.PVALUE as pvalue, coexp.SCORE as score, "
                 + "gcIn.CS as csIdIn, gcOut.CS as csIdOut, gcOut.GTYPE as geneType FROM GENE2CS gcIn INNER JOIN "
                 + p2pClass
                 + " coexp ON gcIn.CS=coexp."
@@ -666,7 +666,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 + " "
                 + " INNER JOIN GENE2CS gcOut ON gcOut.CS=coexp."
                 + outKey
-                + " INNER JOIN EXPRESSION_EXPERIMENT ee ON ee.ID=coexp.EXPRESSION_BIO_ASSAY_SET_FK "
+                + " INNER JOIN EXPRESSION_EXPERIMENT ee ON ee.ID=coexp.EXPRESSION_EXPERIMENT_FK "
                 + " WHERE "
                 + eeClause + knownGeneClause + " gcIn.GENE=:id AND gcOut.GENE <> :id  ";
         // log.info( query );
