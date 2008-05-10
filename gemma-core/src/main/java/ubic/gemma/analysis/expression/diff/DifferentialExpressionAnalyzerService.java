@@ -30,14 +30,14 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor; 
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.PersisterHelper;
@@ -175,44 +175,6 @@ public class DifferentialExpressionAnalyzerService {
             }
         }
         return analysisRun;
-    }
-
-    /**
-     * @param ee
-     * @param forceAnalysis
-     * @return
-     */
-    private DifferentialExpressionAnalysis getDifferentialExpressionAnalysis( ExpressionExperiment ee,
-            boolean forceAnalysis, String analysisType ) {
-        Collection<DifferentialExpressionAnalysis> analyses = this
-                .getDifferentialExpressionAnalyses( ee, forceAnalysis );
-        if ( analyses.isEmpty() ) {
-            if ( !forceAnalysis ) {
-                log.error( "No analyses associated with experiment: " + ee.getShortName() );
-                return null;
-            }
-            boolean analysisRun = runDifferentialExpressionAnalysis( ee, forceAnalysis );
-            if ( !analysisRun ) {
-                return null;
-            }
-            analyses = this.getDifferentialExpressionAnalyses( ee, forceAnalysis );
-        }
-
-        DifferentialExpressionAnalysis analysis = getDifferentialExpressionAnalysisFromAnalyses( analyses, analysisType );
-
-        if ( analysis == null ) {
-            if ( !forceAnalysis ) {
-                log.error( "Differential expression analysis not found for experiment " + ee.getShortName()
-                        + ".  Returning ..." );
-
-                return null;
-            }
-            log.debug( "Was told to run analyis.  Running now ... " );
-            this.runDifferentialExpressionAnalysis( ee, forceAnalysis );
-            analysis = getDifferentialExpressionAnalysisFromAnalyses( analyses, analysisType );
-        }
-
-        return analysis;
     }
 
     /**
@@ -472,6 +434,67 @@ public class DifferentialExpressionAnalyzerService {
     }
 
     /**
+     * @param expressionExperimentService
+     */
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    /**
+     * @param differentialExpressionAnalysis
+     */
+    public void setDifferentialExpressionAnalyzer( DifferentialExpressionAnalyzer differentialExpressionAnalyzer ) {
+        this.differentialExpressionAnalyzer = differentialExpressionAnalyzer;
+    }
+
+    public void setDifferentialExpressionAnalysisService(
+            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
+        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
+    }
+
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
+    }
+
+    /**
+     * @param ee
+     * @param forceAnalysis
+     * @return
+     */
+    private DifferentialExpressionAnalysis getDifferentialExpressionAnalysis( ExpressionExperiment ee,
+            boolean forceAnalysis, String analysisType ) {
+        Collection<DifferentialExpressionAnalysis> analyses = this
+                .getDifferentialExpressionAnalyses( ee, forceAnalysis );
+        if ( analyses.isEmpty() ) {
+            if ( !forceAnalysis ) {
+                log.error( "No analyses associated with experiment: " + ee.getShortName() );
+                return null;
+            }
+            boolean analysisRun = runDifferentialExpressionAnalysis( ee, forceAnalysis );
+            if ( !analysisRun ) {
+                return null;
+            }
+            analyses = this.getDifferentialExpressionAnalyses( ee, forceAnalysis );
+        }
+
+        DifferentialExpressionAnalysis analysis = getDifferentialExpressionAnalysisFromAnalyses( analyses, analysisType );
+
+        if ( analysis == null ) {
+            if ( !forceAnalysis ) {
+                log.error( "Differential expression analysis not found for experiment " + ee.getShortName()
+                        + ".  Returning ..." );
+
+                return null;
+            }
+            log.debug( "Was told to run analyis.  Running now ... " );
+            this.runDifferentialExpressionAnalysis( ee, forceAnalysis );
+            analysis = getDifferentialExpressionAnalysisFromAnalyses( analyses, analysisType );
+        }
+
+        return analysis;
+    }
+
+    /**
      * @param analyses
      * @param analysis
      * @param analysisType
@@ -531,29 +554,6 @@ public class DifferentialExpressionAnalyzerService {
             top = analysisResults.size();
         }
         return top;
-    }
-
-    /**
-     * @param expressionExperimentService
-     */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    /**
-     * @param differentialExpressionAnalysis
-     */
-    public void setDifferentialExpressionAnalyzer( DifferentialExpressionAnalyzer differentialExpressionAnalyzer ) {
-        this.differentialExpressionAnalyzer = differentialExpressionAnalyzer;
-    }
-
-    public void setDifferentialExpressionAnalysisService(
-            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
-        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
-    }
-
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
-        this.persisterHelper = persisterHelper;
     }
 
 }
