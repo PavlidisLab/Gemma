@@ -140,7 +140,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         for ( String p2pClassName : p2pClassNames ) {
 
             final String queryString = "SELECT COUNT(*) FROM " + getTableName( p2pClassName, false )
-                    + " where EXPRESSION_BIO_ASSAY_SET_FK = :eeid";
+                    + " where EXPRESSION_EXPERIMENT_FK = :eeid";
 
             SQLQuery queryObject = super.getSession( false ).createSQLQuery( queryString );
             queryObject.setMaxResults( 1 );
@@ -200,7 +200,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
              * Get one vector to locate the analysis object to delete.
              */
             final String queryString = "SELECT SOURCE_ANALYSIS_FK FROM " + getTableName( p2pClassName, false )
-                    + " where EXPRESSION_BIO_ASSAY_SET_FK = :eeid";
+                    + " where EXPRESSION_EXPERIMENT_FK = :eeid";
 
             SQLQuery queryObject = super.getSession( false ).createSQLQuery( queryString );
             queryObject.setMaxResults( 1 );
@@ -215,7 +215,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             }
 
             final String nativeDeleteQuery = "DELETE FROM " + getTableName( p2pClassName, false )
-                    + " where EXPRESSION_BIO_ASSAY_SET_FK = :eeid";
+                    + " where EXPRESSION_EXPERIMENT_FK = :eeid";
 
             SQLQuery q = super.getSession( false ).createSQLQuery( nativeDeleteQuery );
             q.setParameter( "eeid", ee.getId() );
@@ -554,8 +554,8 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         s.executeUpdate( queryString );
         queryString = "CREATE TABLE " + tableName
                 + "(id BIGINT NOT NULL AUTO_INCREMENT, FIRST_DESIGN_ELEMENT_FK BIGINT NOT NULL, "
-                + "SECOND_DESIGN_ELEMENT_FK BIGINT NOT NULL, SCORE DOUBLE, EXPRESSION_BIO_ASSAY_SET_FK BIGINT NOT NULL, "
-                + "PRIMARY KEY(id), KEY(EXPRESSION_BIO_ASSAY_SET_FK)) " + "ENGINE=MYISAM";
+                + "SECOND_DESIGN_ELEMENT_FK BIGINT NOT NULL, SCORE DOUBLE, EXPRESSION_EXPERIMENT_FK BIGINT NOT NULL, "
+                + "PRIMARY KEY(id), KEY(EXPRESSION_EXPERIMENT_FK)) " + "ENGINE=MYISAM";
         s.executeUpdate( queryString );
         conn.close();
         session.close();
@@ -733,7 +733,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     private Collection<ProbeLink> getLinks( ExpressionExperiment expressionExperiment, String tableName )
             throws Exception {
         String baseQueryString = "SELECT FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK, SCORE FROM " + tableName
-                + " WHERE EXPRESSION_BIO_ASSAY_SET_FK = " + expressionExperiment.getId() + " limit ";
+                + " WHERE EXPRESSION_EXPERIMENT_FK = " + expressionExperiment.getId() + " limit ";
         int chunkSize = 1000000;
         Session session = getSessionFactory().openSession();
         long start = 0;
@@ -857,7 +857,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             total--;
             if ( count == CHUNK_LIMIT || total == 0 ) {
                 queryString = "INSERT INTO " + tableName
-                        + "(FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK, SCORE, EXPRESSION_BIO_ASSAY_SET_FK) "
+                        + "(FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK, SCORE, EXPRESSION_EXPERIMENT_FK) "
                         + " VALUES " + StringUtils.join( linksInOneChunk, "," ) + ";";
                 s.executeUpdate( queryString );
                 // conn.commit(); //not needed if autocomsmit is true.
