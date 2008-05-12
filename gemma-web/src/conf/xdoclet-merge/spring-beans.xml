@@ -522,6 +522,7 @@
 						<list>
 							<value>getDifferentialExpression</value>
 							<value>getDiffExpressionForGenes</value>
+							<value>getDiffMetaAnalysisForGenes</value>
 						</list>
 					</property>
 				</bean>
@@ -1058,6 +1059,11 @@
 				</bean>
 			</entry>
 			<entry key="ubic.gemma.web.controller.diff.DifferentialExpressionValueObject">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.web.controller.diff.DifferentialExpressionMetaAnalysisValueObject">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
 				</bean>

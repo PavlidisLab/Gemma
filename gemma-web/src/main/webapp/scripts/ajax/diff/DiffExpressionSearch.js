@@ -36,7 +36,27 @@ Ext.onReady( function() {
 		diffExGrid.loadData(result);
 		
 	});
+	
+	var metaAnalysisGrid;
+	
+	searchPanel.on("afterMetaAnalysis", function (panel, result){
+		if ( metaAnalysisGrid ) {
+			// grid.destroy() seems to be broken...
+			try {
+				metaAnalysis.destroy();
+			} catch (e) {}
+		}
 		
-
+		metaAnalysisGrid = new Ext.Gemma.DiffExpressionMetaAnalysisGrid( {
+			title : "Differential Expression Meta-Analysis Summary",
+			pageSize : 10
+		} );
+		
+		metaAnalysisGrid.render( "diffExpression-metaAnalysis" );
+		metaAnalysisGrid.autoSizeColumns();
+		metaAnalysisGrid.getView().refresh();
+		metaAnalysisGrid.loadData(result);
+		
+	});
 	
 } );

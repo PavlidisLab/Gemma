@@ -32,6 +32,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.basecode.math.metaanalysis.MetaAnalysis;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService;
@@ -48,6 +49,7 @@ import ubic.gemma.util.GemmaLinkUtils;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.controller.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.web.view.TextView;
+import cern.colt.list.DoubleArrayList;
 
 /**
  * @author keshav
@@ -87,6 +89,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     }
 
     /**
+     * AJAX entry.
+     * <p>
      * Gets the differential expression results for the genes in {@link DiffExpressionSearchCommand}.
      * 
      * @param command
@@ -109,6 +113,30 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     }
 
     /**
+     * AJAX entry.
+     * <p>
+     * 
+     * @param command
+     * @return
+     */
+    public Collection<DifferentialExpressionMetaAnalysisValueObject> getDiffMetaAnalysisForGenes(
+            DiffExpressionSearchCommand command ) {
+
+        Collection<Long> geneIds = command.getGeneIds();
+
+        Collection<DifferentialExpressionMetaAnalysisValueObject> demavos = new ArrayList<DifferentialExpressionMetaAnalysisValueObject>();
+        for ( long geneId : geneIds ) {
+            DifferentialExpressionMetaAnalysisValueObject demavoForGene = getDifferentialExpressionMetaAnalysis( geneId );
+            demavos.add( demavoForGene );
+        }
+
+        return demavos;
+
+    }
+
+    /**
+     * AJAX entry.
+     * <p>
      * Returns a metadata diff expression value object, which is useful for printing the results to a text view.
      * 
      * @param geneIds
@@ -127,6 +155,52 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         DifferentialExpressionMetaValueObject meta = new DifferentialExpressionMetaValueObject( devos );
 
         return meta;
+    }
+
+    /**
+     * @param geneId
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public DifferentialExpressionMetaAnalysisValueObject getDifferentialExpressionMetaAnalysis( Long geneId ) {
+
+        Gene g = geneService.load( geneId );
+        if ( g == null ) return null;
+
+        Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService
+                .findExperimentsWithAnalyses( g );
+
+        DifferentialExpressionMetaAnalysisValueObject demavo = null;
+
+        if ( experimentsAnalyzed.size() > 1 ) {
+            log.debug( "Diff support for gene " + g.getOfficialSymbol() + " from " + experimentsAnalyzed.size()
+                    + " experiments." );
+
+            /* setup for fisher pval correction */
+            DoubleArrayList pvalues = new DoubleArrayList();
+            for ( ExpressionExperiment ee : experimentsAnalyzed ) {
+                // FIXME using 1 as the threshold is a hack for ignoring it.
+                Collection<ProbeAnalysisResult> results = differentialExpressionAnalysisService.find( g, ee, 1 );
+                for ( ProbeAnalysisResult r : results ) {
+                    /*
+                     * if multiple probes map to same gene, correct by multiplying each pval by num probes that map to
+                     * the gene
+                     */
+                    int numProbesForGene = results.size();
+                    double pval = r.getPvalue() * numProbesForGene;
+                    if ( pval > 1 ) pval = 1;
+
+                    pvalues.add( pval );
+                }
+            }
+            double fisherPVal = MetaAnalysis.fisherCombinePvalues( pvalues );
+
+            demavo = new DifferentialExpressionMetaAnalysisValueObject();
+            demavo.setGene( g );
+            demavo.setNumSupportingDataSets( experimentsAnalyzed.size() );
+            demavo.setFisherPValue( fisherPVal );
+        }
+        return demavo;
     }
 
     /**

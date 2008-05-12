@@ -224,6 +224,7 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 				this.loadMask.show();
 				var errorHandler = this.handleError.createDelegate(this, [], true);
 				DifferentialExpressionSearchController.getDiffExpressionForGenes( dsc, {callback : this.returnFromSearch.bind( this ), errorHandler : errorHandler} );
+				DifferentialExpressionSearchController.getDiffMetaAnalysisForGenes( dsc, {callback : this.returnFromMetaAnalysis.bind( this ), errorHandler : errorHandler} );
 			}
 		} else {
 			this.handleError(msg);
@@ -255,6 +256,11 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 	returnFromSearch : function ( result ) {
 		this.loadMask.hide();
 		this.fireEvent( 'aftersearch', this, result );
+	},
+	
+	returnFromMetaAnalysis : function (result) {
+		this.loadMask.hide();
+		this.fireEvent('afterMetaAnalysis', this, result );
 	},
 	
 	taxonChanged : function ( taxon ) {
