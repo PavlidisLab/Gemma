@@ -337,9 +337,9 @@ public abstract class AbstractOntologyService {
 
     /*
      * the number of milliseconds between keep-alive queries; this should be less than or equal to MySQL wait_timeout
-     * server variable.
+     * server variable.  Currently 4 hours.  (half of wait_timeout)
      */
-    private static final int KEEPALIVE_PING_DELAY = 28800 * 1000;
+    private static final int KEEPALIVE_PING_DELAY = 14400 * 1000;   
 
     /*
      * a term to search for; matters not at all...
