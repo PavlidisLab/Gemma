@@ -78,6 +78,10 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
     private GeneService geneService = null;
 
+    private int stringency = 2;
+
+    private final int MAX_PVAL = 1;
+
     /**
      * 
      */
@@ -172,35 +176,47 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         DifferentialExpressionMetaAnalysisValueObject demavo = null;
 
-        if ( experimentsAnalyzed.size() > 1 ) {
-            log.debug( "Diff support for gene " + g.getOfficialSymbol() + " from " + experimentsAnalyzed.size()
-                    + " experiments." );
+        if ( experimentsAnalyzed.size() > stringency ) {
+            log.debug( "Differential evidence for gene " + g.getOfficialSymbol() + " from "
+                    + experimentsAnalyzed.size() + " experiments." );
 
             /* setup for fisher pval correction */
-            DoubleArrayList pvalues = new DoubleArrayList();
-            for ( ExpressionExperiment ee : experimentsAnalyzed ) {
-                // FIXME using 1 as the threshold is a hack for ignoring it.
-                Collection<ProbeAnalysisResult> results = differentialExpressionAnalysisService.find( g, ee, 1 );
-                for ( ProbeAnalysisResult r : results ) {
-                    /*
-                     * if multiple probes map to same gene, correct by multiplying each pval by num probes that map to
-                     * the gene
-                     */
-                    int numProbesForGene = results.size();
-                    double pval = r.getPvalue() * numProbesForGene;
-                    if ( pval > 1 ) pval = 1;
-
-                    pvalues.add( pval );
-                }
-            }
-            double fisherPVal = MetaAnalysis.fisherCombinePvalues( pvalues );
+            double fisherPVal = fisherCombinePvalues( g, experimentsAnalyzed );
 
             demavo = new DifferentialExpressionMetaAnalysisValueObject();
             demavo.setGene( g );
             demavo.setNumSupportingDataSets( experimentsAnalyzed.size() );
             demavo.setFisherPValue( fisherPVal );
+        } else {
+            log.debug( "Differential evidence not confirmed in at least " + stringency );
         }
         return demavo;
+    }
+
+    /**
+     * @param g
+     * @param experimentsAnalyzed
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Double fisherCombinePvalues( Gene g, Collection<ExpressionExperiment> experimentsAnalyzed ) {
+        // TODO move this method
+        DoubleArrayList pvalues = new DoubleArrayList();
+        for ( ExpressionExperiment ee : experimentsAnalyzed ) {
+            Collection<ProbeAnalysisResult> results = differentialExpressionAnalysisService.find( g, ee );
+            for ( ProbeAnalysisResult r : results ) {
+                /*
+                 * if multiple probes map to same gene, correct by multiplying each pval by num probes that map to the
+                 * gene
+                 */
+                int numProbesForGene = results.size();
+                double pval = r.getPvalue() * numProbesForGene;
+                if ( pval > MAX_PVAL ) pval = MAX_PVAL;
+
+                pvalues.add( pval );
+            }
+        }
+        return MetaAnalysis.fisherCombinePvalues( pvalues );
     }
 
     /**
