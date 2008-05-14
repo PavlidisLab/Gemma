@@ -52,12 +52,11 @@ public class GoMetric {
     private GeneService geneService;
     private GeneOntologyService geneOntologyService;
     private boolean partOf = true;
-    private Map<String, Double> GOTermFrequency = new HashMap<String, Double>();
 
     private static org.apache.commons.logging.Log log = LogFactory.getLog( GoMetric.class.getName() );
 
     public enum Metric {
-        jiang, lin, resnik, simple, percent
+        jiang, lin, resnik, simple, percent, kappa, cosine
     };
 
     /**
@@ -311,15 +310,19 @@ public class GoMetric {
 
     /**
      * @param gene2go Map
-     * @param goTermID list
      * @param boolean weight
      * @return Sparse matrix of genes x GOterms
      */
-    private DoubleMatrixNamed<Long, String> createVectorMatrix( Map<Long, Collection<String>> gene2go,
-            List<String> goTerms, boolean weight ) {
+    private DoubleMatrixNamed<Long, String> createVectorMatrix( Map<Long, Collection<String>> gene2go, boolean weight ) {
 
         DoubleMatrixNamed<Long, String> gene2term = new SparseRaggedDoubleMatrix2DNamed<Long, String>();
+        Map<String, Double> GOTermFrequency = new HashMap<String, Double>();
+        List<String> goTerms = ( List<String> ) geneOntologyService.getAllGOTermIds();
         List<Long> geneSet = ( List<Long> ) gene2go.keySet();
+        
+        if ( weight ){
+            GOTermFrequency = createWeightMap( getTermOccurrence( gene2go ), gene2go.keySet().size() );
+        }
 
         gene2term.setColumnNames( goTerms );
         gene2term.setRowNames( geneSet );
@@ -359,31 +362,54 @@ public class GoMetric {
     /**
      * @param gene1
      * @param gene2
-     * @param includePartOf
-     * @param boolean: Use binary values (F) or calculate weights for each GO term (T)
-     * @return Similarity score for Cosine Similarity Method (Vector Space Model)
+     * @param metric
+     * @return
      */
-    public Double computeCosineSimilarity( Gene gene1, Gene gene2, Map<Long, Collection<String>> gene2go, boolean weight ) {
+    public Double computeMatrixSimilarity( Gene gene1, Gene gene2, DoubleMatrixNamed<Long, String> gene2TermMatrix,
+            Metric metric ) {
 
-        if ( !geneOntologyService.isReady() )
-            log.error( "cosineOverlap called before geneOntologyService is ready!!!" );
-
-        List<String> goTerms = ( List<String> ) geneOntologyService.getAllGOTermIds();
-        DoubleMatrixNamed<Long, String> gene2TermMatrix = new SparseRaggedDoubleMatrix2DNamed<Long, String>();
-
-        if ( weight ) {
-            GOTermFrequency = createWeightMap( getTermOccurrence( gene2go ), gene2go.keySet().size() );
-        }
-        
-        gene2TermMatrix = createVectorMatrix( gene2go, goTerms, weight );
+        if ( !geneOntologyService.isReady() ) log.error( "Method called before geneOntologyService is ready!!!" );
+        Double score = null;
 
         double[] g1 = gene2TermMatrix.getRowByName( gene1.getId() );
         double[] g2 = gene2TermMatrix.getRowByName( gene2.getId() );
+
+        if ( metric.equals( GoMetric.Metric.cosine ) ) {
+            score = computeCosineSimilarity( g1, g2 );
+        }
+
+        if ( metric.equals( GoMetric.Metric.kappa ) ) {
+            score = computeKappaSimilarity( gene2TermMatrix, g1, g2 );
+        }
+
+        return score;
+    }
+
+    /**
+     * @param gene2TermMatrix
+     * @param gene1
+     * @param gene2
+     * @return Similarity score for Cosine Similarity Method (Vector Space Model)
+     */
+    private Double computeCosineSimilarity( double[] g1, double[] g2 ) {
+
         Double dotProduct = getDotProduct( g1, g2 );
         Double g1Length = getVectorLength( g1 );
         Double g2Length = getVectorLength( g2 );
 
         Double score = dotProduct / ( g1Length * g2Length );
+        return score;
+    }
+
+    /**
+     * @param gene2TermMatrix
+     * @param gene1
+     * @param gene2
+     * @return Similarity score using kappa statistics
+     */
+    private Double computeKappaSimilarity( DoubleMatrixNamed<Long, String> gene2TermMatrix, double[] g1, double[] g2 ) {
+
+        Double score = 0.0;
         return score;
     }
 
@@ -533,7 +559,7 @@ public class GoMetric {
         for ( Double i : vector ) {
             if ( i != 0 ) {
                 double squared = Math.pow( i, 2 );
-                value+=squared;
+                value += squared;
             }
         }
 
