@@ -1166,12 +1166,12 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 + "count(distinct AD) as arrayDesignCount, "
                 + "ee.shortName as shortName, "
                 + "eventCreated.date as createdDate, "
-                + "AD.technologyType "
-                +
+                + "AD.technologyType, "
+                + " ee.class "
                 // removed to speed up query
                 // "count(distinct dedv) as dedvCount, " +
                 // "count(distict SU) as bioMaterialCount " +
-                " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join ee.auditTrail atr inner join atr.events as eventCreated "
+                + " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join ee.auditTrail atr inner join atr.events as eventCreated "
                 + "inner join BA.samplesUsed as SU inner join BA.arrayDesignUsed as AD "
                 + "inner join SU.sourceTaxon as taxon left join ee.accession acc inner join acc.externalDatabase as ED "
                 + "WHERE eventCreated.action='C'" + " group by ee order by ee.name";
@@ -1200,7 +1200,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 v.setShortName( list.getString( 9 ) );
                 v.setDateCreated( list.getDate( 10 ).toString() );
                 String type = list.get( 11 ) != null ? list.get( 11 ).toString() : null;
-
+                v.setClazz( list.getString( 12 ) );
                 fillQuantitationTypeInfo( qtMap, v, eeId, type );
                 vo.put( eeId, v );
             }
@@ -1215,6 +1215,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleLoadValueObjects(java.util.Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection handleLoadValueObjects( Collection /* <Long> */ids ) throws Exception {
         Map<Long, ExpressionExperimentValueObject> vo = new HashMap<Long, ExpressionExperimentValueObject>();
@@ -1233,7 +1234,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 + "count(distinct AD) as arrayDesignCount, "
                 + "ee.shortName as shortName, "
                 + "eventCreated.date as createdDate, "
-                + "AD.technologyType "
+                + "AD.technologyType, ee.class "
                 + " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA left join ee.auditTrail atr left join atr.events as eventCreated "
                 + "inner join BA.samplesUsed as SU inner join BA.arrayDesignUsed as AD "
                 + "inner join SU.sourceTaxon as taxon left join ee.accession acc left join acc.externalDatabase as ED "
@@ -1274,6 +1275,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                     String type = res[11].toString();
                     fillQuantitationTypeInfo( qtMap, v, eeId, type );
                 }
+                v.setClazz( ( String ) res[12] );
                 vo.put( eeId, v );
             }
 
