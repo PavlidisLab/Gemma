@@ -26,7 +26,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
@@ -44,12 +43,16 @@ import ubic.gemma.model.genome.gene.GeneService;
  * @spring.property name="geneOntologyService" ref="geneOntologyService"
  */
 
+/**
+ * @author meeta
+ */
 public class GoMetric {
 
     private Gene2GOAssociationService gene2GOAssociationService;
     private GeneService geneService;
     private GeneOntologyService geneOntologyService;
     private boolean partOf = true;
+    private Map<String, Double> GOTermFrequency = new HashMap<String, Double>();
 
     private static org.apache.commons.logging.Log log = LogFactory.getLog( GoMetric.class.getName() );
 
@@ -149,12 +152,12 @@ public class GoMetric {
 
         for ( OntologyTerm ontoM : masterGO ) {
             if ( isRoot( ontoM ) ) continue;
-            if (! GOProbMap.containsKey(ontoM.getUri())) continue;
+            if ( !GOProbMap.containsKey( ontoM.getUri() ) ) continue;
             double probM = GOProbMap.get( ontoM.getUri() );
 
             for ( OntologyTerm ontoC : coExpGO ) {
                 if ( isRoot( ontoC ) ) continue;
-                if (! GOProbMap.containsKey(ontoC.getUri())) continue;
+                if ( !GOProbMap.containsKey( ontoC.getUri() ) ) continue;
                 Double probC = GOProbMap.get( ontoC.getUri() );
                 Double pmin = 1.0;
                 Double score = 0.0;
@@ -189,7 +192,7 @@ public class GoMetric {
             double score = computeSimpleOverlap( queryGene, targetGene, partOf );
             return score;
         }
-        
+
         if ( metric.equals( GoMetric.Metric.percent ) ) {
             double score = computePercentOverlap( queryGene, targetGene, partOf );
             return score;
@@ -206,12 +209,12 @@ public class GoMetric {
 
         for ( OntologyTerm ontoM : masterGO ) {
             if ( isRoot( ontoM ) ) continue;
-            if (! GOProbMap.containsKey(ontoM.getUri())) continue;
+            if ( !GOProbMap.containsKey( ontoM.getUri() ) ) continue;
             double probM = GOProbMap.get( ontoM.getUri() );
 
             for ( OntologyTerm ontoC : coExpGO ) {
                 if ( isRoot( ontoC ) ) continue;
-                if (! GOProbMap.containsKey(ontoC.getUri())) continue;
+                if ( !GOProbMap.containsKey( ontoC.getUri() ) ) continue;
                 Double probC = GOProbMap.get( ontoC.getUri() );
                 Double pmin = 1.0;
                 Double score = 0.0;
@@ -305,47 +308,82 @@ public class GoMetric {
         double avgScore = ( double ) overlappingTerms.size();
         return avgScore;
     }
-    
-    
-    private DoubleMatrixNamed<Long, String> createVectorMatrix(Map<Long, Collection<String>> gene2go, List<String> goTerms){
-                
+
+    /**
+     * @param gene2go Map
+     * @param goTermID list
+     * @param boolean weight
+     * @return Sparse matrix of genes x GOterms
+     */
+    private DoubleMatrixNamed<Long, String> createVectorMatrix( Map<Long, Collection<String>> gene2go,
+            List<String> goTerms, boolean weight ) {
+
         DoubleMatrixNamed<Long, String> gene2term = new SparseRaggedDoubleMatrix2DNamed<Long, String>();
         List<Long> geneSet = ( List<Long> ) gene2go.keySet();
-        
+
         gene2term.setColumnNames( goTerms );
         gene2term.setRowNames( geneSet );
-        
-        for (Long id : geneSet){
-            
+
+        for ( Long id : geneSet ) {
+
             Collection<String> terms = gene2go.get( id );
-            for (String goId : goTerms){
-                
-                if (terms.contains( goId )){
-                    gene2term.setByKeys( id, goId, (double)1 );
+            for ( String goId : goTerms ) {
+
+                if ( terms.contains( goId ) ) {
+                    if ( weight ) {
+                        gene2term.setByKeys( id, goId, GOTermFrequency.get( goId ) );
+                    } else {
+                        gene2term.setByKeys( id, goId, ( double ) 1 );
+                    }
                 }
             }
-            
-        }     
-        
+        }
         return gene2term;
-        
     }
+
+    /**
+     * @param GOFreq hashMap of GO term to its frequency in the corpus
+     * @param N number of genes in the corpus
+     * @return
+     */
+    private Map<String, Double> createWeightMap( Map<String, Integer> GOFreq, Integer N ) {
+
+        Map<String, Double> weightMap = new HashMap<String, Double>();
+        for ( String id : GOFreq.keySet() ) {
+            Double weightedGO = Math.log10( ( double ) N ) / GOFreq.get( id );
+            weightMap.put( id, weightedGO );
+        }
+        return weightMap;
+    }
+
     /**
      * @param gene1
      * @param gene2
      * @param includePartOf
+     * @param boolean: Use binary values (F) or calculate weights for each GO term (T)
      * @return Similarity score for Cosine Similarity Method (Vector Space Model)
      */
-    public Double computeCosineSimilarity (Gene gene1, Gene gene2, Map<Long, Collection<String>> gene2go, boolean includePartOf){
-        
+    public Double computeCosineSimilarity( Gene gene1, Gene gene2, Map<Long, Collection<String>> gene2go, boolean weight ) {
+
         if ( !geneOntologyService.isReady() )
-            log.error( "computeSimpleOverlap called before geneOntologyService is ready!!!" );
-        
+            log.error( "cosineOverlap called before geneOntologyService is ready!!!" );
+
         List<String> goTerms = ( List<String> ) geneOntologyService.getAllGOTermIds();
-        DoubleMatrixNamed<Long, String> gene2TermMatrix = createVectorMatrix( gene2go, goTerms );
+        DoubleMatrixNamed<Long, String> gene2TermMatrix = new SparseRaggedDoubleMatrix2DNamed<Long, String>();
+
+        if ( weight ) {
+            GOTermFrequency = createWeightMap( getTermOccurrence( gene2go ), gene2go.keySet().size() );
+        }
         
-               
-        Double score = null;
+        gene2TermMatrix = createVectorMatrix( gene2go, goTerms, weight );
+
+        double[] g1 = gene2TermMatrix.getRowByName( gene1.getId() );
+        double[] g2 = gene2TermMatrix.getRowByName( gene2.getId() );
+        Double dotProduct = getDotProduct( g1, g2 );
+        Double g1Length = getVectorLength( g1 );
+        Double g2Length = getVectorLength( g2 );
+
+        Double score = dotProduct / ( g1Length * g2Length );
         return score;
     }
 
@@ -368,15 +406,15 @@ public class GoMetric {
         }
 
         if ( masterGO.size() < coExpGO.size() ) {
-        	avgScore = ( double )  overlappingTerms.size() / masterGO.size();
+            avgScore = ( double ) overlappingTerms.size() / masterGO.size();
         }
         if ( coExpGO.size() < masterGO.size() ) {
-        	avgScore = ( double )  overlappingTerms.size() / coExpGO.size();
+            avgScore = ( double ) overlappingTerms.size() / coExpGO.size();
         }
         if ( coExpGO.size() == masterGO.size() ) {
-            	avgScore = ( double )  overlappingTerms.size() / coExpGO.size();
+            avgScore = ( double ) overlappingTerms.size() / coExpGO.size();
         }
-        
+
         return avgScore;
     }
 
@@ -465,4 +503,42 @@ public class GoMetric {
 
         return scoreResnik;
     }
+
+    /**
+     * @param vector1
+     * @param vector2
+     * @return the dot product of two vectors
+     */
+    private Double getDotProduct( double[] vector1, double[] vector2 ) {
+
+        if ( vector1.length != vector2.length ) return null;
+        int x = vector1.length;
+        Double dotProduct = 0.0;
+
+        for ( int i = 0; i <= x; i++ ) {
+            double prod = vector1[i] * vector2[i];
+            if ( prod > 0 ) dotProduct += prod;
+        }
+
+        return dotProduct;
+    }
+
+    /**
+     * @param vector
+     * @return the length of the vector
+     */
+    private Double getVectorLength( double[] vector ) {
+
+        Double value = 0.0;
+        for ( Double i : vector ) {
+            if ( i != 0 ) {
+                double squared = Math.pow( i, 2 );
+                value+=squared;
+            }
+        }
+
+        Double length = Math.sqrt( value );
+        return length;
+    }
+
 }
