@@ -42,10 +42,6 @@ import ubic.gemma.model.genome.gene.GeneService;
  * @spring.property name="geneService" ref="geneService"
  * @spring.property name="geneOntologyService" ref="geneOntologyService"
  */
-
-/**
- * @author meeta
- */
 public class GoMetric {
 
     private Gene2GOAssociationService gene2GOAssociationService;
@@ -319,8 +315,8 @@ public class GoMetric {
         Map<String, Double> GOTermFrequency = new HashMap<String, Double>();
         List<String> goTerms = ( List<String> ) geneOntologyService.getAllGOTermIds();
         List<Long> geneSet = ( List<Long> ) gene2go.keySet();
-        
-        if ( weight ){
+
+        if ( weight ) {
             GOTermFrequency = createWeightMap( getTermOccurrence( gene2go ), gene2go.keySet().size() );
         }
 
