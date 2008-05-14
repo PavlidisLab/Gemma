@@ -61,29 +61,29 @@ public class GoMetricTest extends BaseSpringContextTest {
         geneService = ( GeneService ) this.getBean( "geneService" );
         // tests disabled.
         goMetric = ( GoMetric ) this.getBean( "goMetric" );
-        this.enabled = false;
-
-        return;
-        // geneOntologyService.init( false );
-        // if ( !GeneOntologyService.isEnabled() ) {
-        // this.enabled = false;
-        // return;
-        // }
-        // int n = 0;
-        // while ( !geneOntologyService.isReady() ) {
-        // try {
-        // if ( ++n % 10 == 0 ) {
-        // log.info( "Test is waiting for GO to load ..." );
-        // }
-        // Thread.sleep( 1000 );
-        // } catch ( InterruptedException e ) {
-        // }
-        // }
-        // log.info( "Ready to test" );
-        //
-        // entry = GeneOntologyService.getTermForId( "GO:0001963" );
-        // terms = geneOntologyService.getAllChildren( entry, true );
-        // terms.add( entry );
+//        this.enabled = false;
+//
+//        return;
+         geneOntologyService.init( false );
+         if ( !GeneOntologyService.isEnabled() ) {
+         this.enabled = false;
+         return;
+         }
+         int n = 0;
+         while ( !geneOntologyService.isReady() ) {
+         try {
+         if ( ++n % 10 == 0 ) {
+         log.info( "Test is waiting for GO to load ..." );
+         }
+         Thread.sleep( 1000 );
+         } catch ( InterruptedException e ) {
+         }
+         }
+         log.info( "Ready to test" );
+        
+         entry = GeneOntologyService.getTermForId( "GO:0001963" );
+         terms = geneOntologyService.getAllChildren( entry, true );
+         terms.add( entry );
     }
 
     /**
