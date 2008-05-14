@@ -498,6 +498,7 @@ public class DesignElementDataVectorDaoImpl extends
                         Hibernate.initialize( ba.getSamplesUsed() );
 
                         for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                            session.lock( bm, LockMode.NONE );
                             Hibernate.initialize( bm );
                             Hibernate.initialize( bm.getBioAssaysUsedIn() );
                             Hibernate.initialize( bm.getFactorValues() );

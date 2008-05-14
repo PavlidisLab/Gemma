@@ -21,10 +21,22 @@
  * You can (and have to!) safely modify it by hand.
  */
 package ubic.gemma.model.analysis.expression;
+
+import java.util.Collection;
+
 /**
  * @see ubic.gemma.model.analysis.ExpressionExperimentSet
+ * @version $Id$
+ * @author paul
  */
-public class ExpressionExperimentSetDaoImpl
-    extends ubic.gemma.model.analysis.expression.ExpressionExperimentSetDaoBase
-{
+public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.expression.ExpressionExperimentSetDaoBase {
+
+    @Override
+    protected Collection handleGetAnalyses( ExpressionExperimentSet expressionExperimentSet ) throws Exception {
+        return this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select a from ExpressionAnalysisImpl a inner join a.expressionExperimentSetAnalyzed ees where ees = :eeset ",
+                        "eeset", expressionExperimentSet );
+    }
 }

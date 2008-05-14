@@ -22,6 +22,8 @@
  */
 package ubic.gemma.model.analysis.expression;
 
+import java.util.Collection;
+
 /**
  * @version $Id$
  * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService
@@ -79,6 +81,11 @@ public class ExpressionExperimentSetServiceImpl extends
     protected ubic.gemma.model.analysis.expression.ExpressionExperimentSet handleLoad( java.lang.Long id )
             throws java.lang.Exception {
         return ( ExpressionExperimentSet ) this.getExpressionExperimentSetDao().load( id );
+    }
+
+    @Override
+    protected Collection handleGetAnalyses( ExpressionExperimentSet expressionExperimentSet ) throws Exception {
+        return this.getExpressionExperimentSetDao().getAnalyses( expressionExperimentSet );
     }
 
 }
