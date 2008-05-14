@@ -95,6 +95,29 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     /**
      * AJAX entry.
      * <p>
+     * Returns a metadata diff expression value object, which is useful for printing the results to a text view.
+     * 
+     * @param geneIds
+     * @param threshold
+     * @return
+     */
+    public DifferentialExpressionMetaValueObject getDifferentialExpressionMeta( Collection<Long> geneIds,
+            double threshold ) {
+
+        List<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
+
+        for ( Long geneId : geneIds ) {
+            devos.addAll( getDifferentialExpression( geneId, threshold ) );
+        }
+
+        DifferentialExpressionMetaValueObject meta = new DifferentialExpressionMetaValueObject( devos );
+
+        return meta;
+    }
+
+    /**
+     * AJAX entry.
+     * <p>
      * Gets the differential expression results for the genes in {@link DiffExpressionSearchCommand}.
      * 
      * @param command
@@ -128,9 +151,12 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         Collection<Long> geneIds = command.getGeneIds();
 
+        String category = command.getCategory();
+
         Collection<DifferentialExpressionMetaAnalysisValueObject> demavos = new ArrayList<DifferentialExpressionMetaAnalysisValueObject>();
         for ( long geneId : geneIds ) {
-            DifferentialExpressionMetaAnalysisValueObject demavoForGene = getDifferentialExpressionMetaAnalysis( geneId );
+            DifferentialExpressionMetaAnalysisValueObject demavoForGene = getDifferentialExpressionMetaAnalysis(
+                    geneId, category );
             demavos.add( demavoForGene );
         }
 
@@ -139,34 +165,12 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     }
 
     /**
-     * AJAX entry.
-     * <p>
-     * Returns a metadata diff expression value object, which is useful for printing the results to a text view.
-     * 
-     * @param geneIds
-     * @param threshold
-     * @return
-     */
-    public DifferentialExpressionMetaValueObject getDifferentialExpressionMeta( Collection<Long> geneIds,
-            double threshold ) {
-
-        List<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
-
-        for ( Long geneId : geneIds ) {
-            devos.addAll( getDifferentialExpression( geneId, threshold ) );
-        }
-
-        DifferentialExpressionMetaValueObject meta = new DifferentialExpressionMetaValueObject( devos );
-
-        return meta;
-    }
-
-    /**
      * @param geneId
      * @return
      */
     @SuppressWarnings("unchecked")
-    public DifferentialExpressionMetaAnalysisValueObject getDifferentialExpressionMetaAnalysis( Long geneId ) {
+    public DifferentialExpressionMetaAnalysisValueObject getDifferentialExpressionMetaAnalysis( Long geneId,
+            String category ) {
 
         Gene g = geneService.load( geneId );
         if ( g == null ) return null;
@@ -176,33 +180,88 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         DifferentialExpressionMetaAnalysisValueObject demavo = null;
 
-        if ( experimentsAnalyzed.size() > stringency ) {
-            log.debug( "Differential evidence for gene " + g.getOfficialSymbol() + " from "
-                    + experimentsAnalyzed.size() + " experiments." );
+        /* get experiments with category */
+        Collection<ExpressionExperiment> supportingExperiments = getSupportingExperiments( category,
+                experimentsAnalyzed );
 
-            /* setup for fisher pval correction */
-            double fisherPVal = fisherCombinePvalues( g, experimentsAnalyzed );
+        /* check to see we have at least 'stringency' experiments confirming the diff expression */
+        if ( supportingExperiments.size() >= stringency ) {
+
+            /* get fisher pval */
+            double fisherPVal = fisherCombinePvalues( g, supportingExperiments );
 
             demavo = new DifferentialExpressionMetaAnalysisValueObject();
             demavo.setGene( g );
             demavo.setNumSupportingDataSets( experimentsAnalyzed.size() );
             demavo.setFisherPValue( fisherPVal );
-        } else {
-            log.debug( "Differential evidence not confirmed in at least " + stringency );
         }
+
         return demavo;
     }
 
     /**
-     * @param g
      * @param experimentsAnalyzed
+     */
+    private Collection<ExpressionExperiment> getSupportingExperiments( String category,
+            Collection<ExpressionExperiment> experimentsAnalyzed ) {
+
+        Collection<ExpressionExperiment> supportingExperiments = new HashSet<ExpressionExperiment>();
+        for ( ExpressionExperiment ee : experimentsAnalyzed ) {
+
+            /* first check to see if the analyzed experiment has the category in the design */
+            Collection<ExperimentalFactor> eeFactors = ee.getExperimentalDesign().getExperimentalFactors();
+            Collection<String> potentialCategories = getCategories( eeFactors );
+            if ( !potentialCategories.contains( category ) ) continue;
+
+            supportingExperiments.add( ee );
+
+        }
+        return supportingExperiments;
+    }
+
+    /**
+     * @param experimentalFactors
+     * @return
+     */
+    private Collection<String> getCategories( Collection<ExperimentalFactor> experimentalFactors ) {
+        // TODO move this method
+        Collection<String> potentialCategories = new HashSet<String>();
+        for ( ExperimentalFactor ef : experimentalFactors ) {
+
+            Collection<FactorValue> fvs = ef.getFactorValues();
+
+            for ( FactorValue fv : fvs ) {
+                if ( fv == null ) continue;
+                String category = fv.getValue();
+                if ( StringUtils.isNotEmpty( category ) ) {
+                    potentialCategories.add( category );
+                    continue;
+                }
+
+                Collection<Characteristic> chs = fv.getCharacteristics();
+                for ( Characteristic c : chs ) {
+                    if ( c == null ) continue;
+                    String cat = c.getValue();
+                    if ( StringUtils.isNotEmpty( cat ) ) {
+                        potentialCategories.add( cat );
+                    }
+                }
+            }
+        }
+        return potentialCategories;
+    }
+
+    /**
+     * @param g
+     * @param experiments
      * @return
      */
     @SuppressWarnings("unchecked")
-    private Double fisherCombinePvalues( Gene g, Collection<ExpressionExperiment> experimentsAnalyzed ) {
-        // TODO move this method
+    private Double fisherCombinePvalues( Gene g, Collection<ExpressionExperiment> experiments ) {
+
         DoubleArrayList pvalues = new DoubleArrayList();
-        for ( ExpressionExperiment ee : experimentsAnalyzed ) {
+        for ( ExpressionExperiment ee : experiments ) {
+
             Collection<ProbeAnalysisResult> results = differentialExpressionAnalysisService.find( g, ee );
             for ( ProbeAnalysisResult r : results ) {
                 /*

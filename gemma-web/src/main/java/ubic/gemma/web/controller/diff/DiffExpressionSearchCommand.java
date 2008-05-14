@@ -37,8 +37,18 @@ public class DiffExpressionSearchCommand implements Serializable {
 
     private Long taxonId;
 
+    private String category = null;
+
     public Collection<Long> getGeneIds() {
         return geneIds;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory( String category ) {
+        this.category = category;
     }
 
     public void setGeneIds( Collection<Long> geneIds ) {
