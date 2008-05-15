@@ -20,7 +20,6 @@
 package ubic.gemma.web.services;
 
 import java.util.Collection;
-import java.util.HashSet;
 
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -40,7 +39,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 public class ExperimentNameEndpoint extends AbstractGemmaEndpoint {
 
-    private static Log log = LogFactory.getLog(ExperimentNameEndpoint.class);
+    private static Log log = LogFactory.getLog( ExperimentNameEndpoint.class );
 
     private ExpressionExperimentService expressionExperimentService;
 
@@ -66,7 +65,7 @@ public class ExperimentNameEndpoint extends AbstractGemmaEndpoint {
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
-        
+
         setLocalName( EXPERIMENT_LOCAL_NAME );
         String eeId = "";
 
@@ -76,7 +75,7 @@ public class ExperimentNameEndpoint extends AbstractGemmaEndpoint {
             eeId = id;
 
         log.info( "XML input read: expression experiment id, " + eeId );
-        
+
         ExpressionExperiment ee = expressionExperimentService.load( Long.parseLong( eeId ) );
 
         if ( ee == null ) {
@@ -84,18 +83,23 @@ public class ExperimentNameEndpoint extends AbstractGemmaEndpoint {
             return buildBadResponse( document, msg );
         }
 
-        // build collection to pass to wrapper
-        Collection<String> values = new HashSet<String>();
-        values.add( ee.getShortName() );
+        Element responseWrapper = document.createElementNS( NAMESPACE_URI, EXPERIMENT_LOCAL_NAME );
+        Element responseElement = document.createElementNS( NAMESPACE_URI, EXPERIMENT_LOCAL_NAME + RESPONSE );
+        responseWrapper.appendChild( responseElement );
 
-        Element wrapper = buildWrapper( document, values, "ee_name" );
-        
+        Element e1 = document.createElement( "ee_shortName" );
+        e1.appendChild( document.createTextNode( ee.getShortName() ) );
+        responseElement.appendChild( e1 );
+
+        Element e2 = document.createElement( "ee_name" );
+        e2.appendChild( document.createTextNode( ee.getName() ) );
+        responseElement.appendChild( e2 );
+
         watch.stop();
         Long time = watch.getTime();
-        log.info( "XML response for Expression Experiment Name result built in " + time + "ms." );   
-        
-        return wrapper;
+        log.info( "XML response for Expression Experiment Names result built in " + time + "ms." );    
 
+        return responseWrapper;
     }
 
 }

@@ -137,6 +137,20 @@
           </restriction>
         </complexContent>
       </complexType>
+      
+      <complexType name="eeNames">
+     		 <sequence>
+      	  	<element name="ee_short_name" type="xsd:string" /> 
+    		<element name="ee_name" type="xsd:string" />       		     			 
+     		</sequence>
+	     </complexType>
+	  <complexType name="ArrayOfeeNames">
+        <complexContent>
+          <restriction base="soapenc:Array">
+            <attribute ref="soapenc:arrayType" wsdl:arrayType="schema:eeNames[]"/>
+          </restriction>
+        </complexContent>
+      </complexType>
 	     
 </schema>
 
@@ -152,7 +166,7 @@
      <wsdl:part name="gene_ids" type="schema:ArrayOfStrings" />
   </wsdl:message>
   <wsdl:message name="arrayDesignUsedResponse">
-    <wsdl:part name="arrayDesign_names" type="schema:ArrayOfStrings" />
+    <wsdl:part name="arrayDesign_short_names" type="schema:ArrayOfStrings" />
   </wsdl:message>
   <wsdl:message name="experimentIDbyTaxonResponse">
    <wsdl:part name="ee_ids" type="schema:ArrayOfStrings" />
@@ -171,7 +185,7 @@
     <wsdl:part name="ee_short_name" type="xsd:string" />    
   </wsdl:message>
   <wsdl:message name="experimentNameResponse">
-    <wsdl:part name="ee_name" type="xsd:string" />    
+    <wsdl:part name="eeName" type="schema:ArrayOfeeNames" />      
   </wsdl:message>
   <wsdl:message name="arrayDesignIdentifierByNameRequest">
      <wsdl:part name="ad_name" type="xsd:string" /> 
@@ -565,11 +579,11 @@
     
     <!-- for local machine, use localhost instead -->
 
-	<!-- <soap:address location="http://137.82.157.157:8080/Gemma/ws"/> -->
+	<!-- <soap:address location="http://137.82.157.182:8080/Gemma/ws"/> -->
 
     <!-- for production, use http://bioinformatics.ubc.ca/Gemma/ws -->
 
-     <soap:address location="http://bioinformatics.ubc.ca/Gemma/ws"/> 
+    <soap:address location="http://bioinformatics.ubc.ca/Gemma/ws"/> 
   
     </wsdl:port>
   </wsdl:service>
