@@ -30,6 +30,9 @@ version: $Id$
 	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/TaxonCombo.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/GeneChooserPanel.js'></script>
 	
+	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/AnalysisCombo.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/ExtCoexpressionSearchController.js'></script>
+	
 	<script type='text/javascript' src='/Gemma/scripts/ajax/diff/DiffExpressionGrid.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/diff/DiffExpressionMetaAnalysisGrid.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/diff/DiffExpressionSearchForm.js'></script>

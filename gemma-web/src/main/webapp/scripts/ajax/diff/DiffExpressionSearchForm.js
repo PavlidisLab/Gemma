@@ -86,6 +86,80 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
 	  	items : [ this.thresholdField] //
 	} );
 	
+	/*meta analysis options*/
+	
+	/*
+	 * Combo to choose the 'scope' of the query. NOTE if this is not declared first, there are problems getting it to show up.
+	 */
+	this.analysisCombo = new Ext.Gemma.AnalysisCombo( {
+		fieldLabel : 'Search scope',
+		showCustomOption : true
+	} ); 
+	this.analysisCombo.on( "analysisChanged", function ( combo, analysis ) {
+		if ( analysis ) {
+			if ( analysis.id < 0 ) { // custom analysis
+				thisPanel.customAnalysis = true;
+				customFs.doLayout();
+				customFs.show();
+ 				thisPanel.updateDatasetsToBeSearched( this.eeSearchField.getEeIds() );
+ 				this.eeSearchField.findDatasets();
+			} else {
+				thisPanel.customAnalysis = false;
+				customFs.hide();
+				thisPanel.taxonChanged( analysis.taxon );
+				thisPanel.updateDatasetsToBeSearched( analysis.datasets );
+			}
+		} else {
+			thisPanel.customAnalysis = false;
+			customFs.hide();
+			thisPanel.optionsPanel.setTitle( "Analysis options" );
+		}
+	}, this );
+	Ext.Gemma.DiffExpressionSearchForm.addToolTip( this.analysisCombo,
+		"Restrict the list of datasets that will be searched for differential expression" );
+		
+		
+	this.stringencyField = new Ext.form.NumberField( {
+		allowBlank : false,
+		allowDecimals : false,
+		allowNegative : false,
+		minValue : Ext.Gemma.DiffExpressionSearchForm.MIN_STRINGENCY,
+		maxValue : 999,
+		fieldLabel : 'Stringency',
+		invalidText : "Minimum stringency is " + Ext.Gemma.DiffExpressionSearchForm.MIN_STRINGENCY,
+		value : 2,
+		width : 60
+	} ); 
+	Ext.Gemma.DiffExpressionSearchForm.addToolTip( this.stringencyField, 
+		"The minimum number of datasets that must show differential expression for a result to appear" );
+	 
+	 
+	/*
+	 * Custom data set search field, in a hidden (initially) fieldset.
+	 */	
+	this.eeSearchField = new Ext.Gemma.DatasetSearchField( {
+		fieldLabel : "Experiment keywords"  
+	} );
+	 
+	this.eeSearchField.on( 'aftersearch', function ( field, results ) {
+		if ( thisPanel.customAnalysis ) {
+			thisPanel.updateDatasetsToBeSearched( results );
+		}
+	} );
+	Ext.Gemma.DiffExpressionSearchForm.addToolTip( this.eeSearchField,
+		"Search only datasets that match these keywords" );
+	
+	var customFs = new Ext.form.FieldSet( {
+		title : 'Custom analysis options',
+		autoHeight : true,
+		hidden : true,  
+		autoWidth:true,
+		items :  [this.eeSearchField ] 
+	} );
+	
+	this.customFs = customFs;
+	
+	
  	// Panel combining all of the above elements.
 	var optionsPanel = new Ext.Panel({
 		title : 'Analysis options',
@@ -94,6 +168,19 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
 	});
 	
 	this.optionsPanel = optionsPanel;
+	
+	var metaAnalysisFs = new Ext.form.FieldSet( {  
+		autoHeight : true,
+	  	items : [ this.stringencyField, this.analysisCombo, this.customFs ] //
+	} )
+
+	var metaAnalysisPanel = new Ext.Panel({
+		title : 'Meta Analysis options',
+		autoHeight : true,
+		items : [metaAnalysisFs]
+	});
+	
+	this.metaAnalysisPanel = metaAnalysisPanel;
 	
 	var submitButton = new Ext.Button( {
 		text : "Find diff expressed genes",
@@ -107,8 +194,14 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
 	 * Build the form
 	 */
 	this.add( queryFs );
-	this.add( optionsPanel); 
+	this.add( optionsPanel);
+	this.add( metaAnalysisPanel); 
 	this.addButton( submitButton );
+	
+	this.stringencyField.setWidth(20);
+	this.stringencyField.setHeight(20);
+	
+	Ext.Gemma.DiffExpressionSearchForm.MIN_STRINGENCY = 2;
 
 	Ext.Gemma.DiffExpressionSearchForm.searchForGene = function( geneId ) {
 		geneChooserPanel.setGene.call(thisPanel.geneChooserPanel, geneId, thisPanel.doSearch.bind( thisPanel ) );
