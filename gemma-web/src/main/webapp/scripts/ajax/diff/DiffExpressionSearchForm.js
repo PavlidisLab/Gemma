@@ -12,8 +12,7 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
 
 	var thisPanel = this;
 	
-	/* establish default config options...
-	 */
+	/* establish default config options */
 	var superConfig = {
 		width : 550,
 		frame : true,
@@ -23,17 +22,14 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
 		defaults : { }
 	};
 	
-	/* apply user-defined config options and call the superclass constructor...
-	 */
-	for ( property in config ) {
+	/* apply user-defined config options and call the superclass constructor */
+	for ( var property in config ) {
 		superConfig[property] = config[property];
 	}
 	Ext.Gemma.DiffExpressionSearchForm.superclass.constructor.call( this, superConfig );
 	
+	/* analysis options */
 	
-	/*
-	 * Gene settings
-	 */
 	this.geneChooserPanel = new Ext.Gemma.GeneChooserPanel( { 
 		showTaxon : true 
 	} );
@@ -46,8 +42,29 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
 		autoHeight : true 
 	} );
 	queryFs.add( this.geneChooserPanel );
+ 		
+ 	this.thresholdField = new Ext.form.NumberField( {
+		allowBlank : false,
+		allowDecimals : true,
+		allowNegative : false,
+		minValue : Ext.Gemma.DiffExpressionSearchForm.MIN_THRESHOLD,
+		maxValue : Ext.Gemma.DiffExpressionSearchForm.MAX_THRESHOLD,
+		fieldLabel : 'Threshold',
+		invalidText : "Min threshold is " + Ext.Gemma.DiffExpressionSearchForm.MIN_THRESHOLD + " and max is " + Ext.Gemma.DiffExpressionSearchForm.MAX_THRESHOLD,
+		value : 0.01,
+		width : 60
+	} ); 
+	Ext.Gemma.DiffExpressionSearchForm.addToolTip( this.thresholdField, 
+		"Only genes with a qvalue less than this threshold are returned." );
+ 	
+	var analysisFs = new Ext.form.FieldSet( {  
+		autoHeight : true,
+	  	items : [ this.thresholdField] //
+	} );
 	
-	// Window shown when the user wants to see the experiments that are 'in play'.
+	/* meta analysis options */
+	
+	/* window shown when the user wants to see the experiments that are 'in play'. */
 	var activeDatasetsWindow = new Ext.Window({
 			el : 'diffExpression-experiments',
 			title : "Active datasets",
@@ -65,32 +82,8 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
             }]
 			
 		});
- 		
- 	this.thresholdField = new Ext.form.NumberField( {
-		allowBlank : false,
-		allowDecimals : true,
-		allowNegative : false,
-		minValue : Ext.Gemma.DiffExpressionSearchForm.MIN_THRESHOLD,
-		maxValue : Ext.Gemma.DiffExpressionSearchForm.MAX_THRESHOLD,
-		fieldLabel : 'Threshold',
-		invalidText : "Min threshold is " + Ext.Gemma.DiffExpressionSearchForm.MIN_THRESHOLD + " and max is " + Ext.Gemma.DiffExpressionSearchForm.MAX_THRESHOLD,
-		value : 0.01,
-		width : 60
-	} ); 
-	Ext.Gemma.DiffExpressionSearchForm.addToolTip( this.thresholdField, 
-		"Only genes with a qvalue less than this threshold are returned." );
- 	
-	// Field set for the bottom part of the form
-	var analysisFs = new Ext.form.FieldSet( {  
-		autoHeight : true,
-	  	items : [ this.thresholdField] //
-	} );
 	
-	/*meta analysis options*/
-	
-	/*
-	 * Combo to choose the 'scope' of the query. NOTE if this is not declared first, there are problems getting it to show up.
-	 */
+	/* Combo to choose the 'scope' of the query for meta analysis. NOTE if this is not declared first, there are problems getting it to show up. */
 	this.analysisCombo = new Ext.Gemma.AnalysisCombo( {
 		fieldLabel : 'Search scope',
 		showCustomOption : true
@@ -190,9 +183,7 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
 	} );
 	
 	
-	/*
-	 * Build the form
-	 */
+	/* Build the form */
 	this.add( queryFs );
 	this.add( optionsPanel);
 	this.add( metaAnalysisPanel); 
@@ -200,8 +191,6 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
 	
 	this.stringencyField.setWidth(20);
 	this.stringencyField.setHeight(20);
-	
-	Ext.Gemma.DiffExpressionSearchForm.MIN_STRINGENCY = 2;
 
 	Ext.Gemma.DiffExpressionSearchForm.searchForGene = function( geneId ) {
 		geneChooserPanel.setGene.call(thisPanel.geneChooserPanel, geneId, thisPanel.doSearch.bind( thisPanel ) );
@@ -218,7 +207,7 @@ Ext.Gemma.DiffExpressionSearchForm.addToolTip = function( component, html ) {
 };
 
 
-//static click handler method necessary for using html link to generate js onclick event.
+    /* static click handler method necessary for using html link to generate js onclick event */
 	Ext.Gemma.DiffExpressionSearchForm.showSelectedDatasets = function( eeids) {
 		
 		//The close method will remove the div element associated with the window. 
@@ -305,6 +294,7 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 	getDiffExpressionSearchCommand : function () {
 		var dsc = {
 			geneIds : this.geneChooserPanel.getGeneIds(),
+			stringency : this.stringencyField.getValue(),
 			taxonId : this.geneChooserPanel.getTaxonId(),
 			threshold : this.thresholdField.getValue()
 		};
@@ -327,6 +317,9 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 			this.geneChooserPanel.loadGenes( dsc.geneIds );
 		} else {
 			this.geneChooserPanel.setGene( dsc.geneIds[0] );
+		}
+		if ( dsc.stringency ) {
+			this.stringencyField.setValue( dsc.stringency );
 		}
 		if ( dsc.threshold ) {
 			this.thresholdField.setValue( dsc.threshold );
@@ -385,6 +378,8 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 			return "Minimum threshold is " + Ext.Gemma.DiffExpressionSearchForm.MIN_THRESHOLD;
 		} else if ( dsc.threshold > Ext.Gemma.DiffExpressionSearchForm.MAX_THRESHOLD ) {
 			return "Maximum threshold is " + Ext.Gemma.DiffExpressionSearchForm.MAX_THRESHOLD;
+		}else if ( dsc.stringency < Ext.Gemma.DiffExpressionSearchForm.MIN_STRINGENCY ) {
+			return "Minimum stringency is " + Ext.Gemma.DiffExpressionSearchForm.MIN_STRINGENCY;
 		} else {
 			return "";
 		}
@@ -400,8 +395,20 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 		this.fireEvent('afterMetaAnalysis', this, result );
 	},
 	
+	updateDatasetsToBeSearched : function ( datasets ) {
+		var numDatasets = datasets instanceof Array ? datasets.length : datasets;
+		this.stringencyField.maxValue = numDatasets;
+		if (datasets instanceof Array) {
+			 this.eeIds = datasets;
+		}
+				
+		this.metaAnalysisPanel.setTitle( String.format( "Meta Analysis options (Up to <a title='Click here to see dataset details' onclick='Ext.Gemma.DiffExpressionSearchForm.showSelectedDatasets([{0}]);'>  {1} dataset{2} </a>  will be analyzed)", datasets.toString(), numDatasets, numDatasets != 1 ? "s" : "" ) );
+	},
+	
 	taxonChanged : function ( taxon ) {
-		this.geneCombo.setTaxon( taxon );
+		this.analysisCombo.taxonChanged( taxon );
+		this.eeSearchField.taxonChanged( taxon, this.customFs.hidden ? false : true );
+		this.geneChooserPanel.taxonChanged( taxon );
 	},
 	
 	getActiveEeIds : function() {
@@ -412,3 +419,5 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 
 Ext.Gemma.DiffExpressionSearchForm.MIN_THRESHOLD = 0.0;
 Ext.Gemma.DiffExpressionSearchForm.MAX_THRESHOLD = 1.0;
+
+Ext.Gemma.DiffExpressionSearchForm.MIN_STRINGENCY = 2;
