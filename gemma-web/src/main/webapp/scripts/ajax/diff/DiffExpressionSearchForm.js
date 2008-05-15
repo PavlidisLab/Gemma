@@ -217,6 +217,50 @@ Ext.Gemma.DiffExpressionSearchForm.addToolTip = function( component, html ) {
 	} );
 };
 
+
+//static click handler method necessary for using html link to generate js onclick event.
+	Ext.Gemma.DiffExpressionSearchForm.showSelectedDatasets = function( eeids) {
+		
+		//The close method will remove the div element associated with the window. 
+		//  Need to create it every time. 
+		Ext.DomHelper.append("diffExpression-experiments", "<div id='showDatasetsWindow' class='x-hidden''></div> ");  
+		
+		// Window shown when the user wants to see the experiments that are 'in play'.	
+		    var  activeDatasetsWindow = new Ext.Window({
+				el : 'showDatasetsWindow',
+				title : eeids.size() + " active datasets",
+				modal : true,
+				layout : 'fit',
+				autoHeight : true,
+				width : 600,
+				closeAction:'hide',
+				easing : 3, 
+	            buttons: [{ 
+	               text: 'Close',
+	               handler: function(){ 
+	                   activeDatasetsWindow.close();
+	               }
+	            }]
+				
+			});
+			
+		
+			var	activeDatasetsGrid = new Ext.Gemma.ExpressionExperimentGrid( activeDatasetsWindow.getEl(), {
+				readMethod : ExpressionExperimentController.loadExpressionExperiments.bind( this ),
+				editable : false,
+				rowExpander : true,
+				pageSize : 20 
+			});
+		
+		
+		activeDatasetsGrid.getStore().removeAll();	 
+		activeDatasetsGrid.expandedElements = [];
+		activeDatasetsGrid.getStore().load( { params : [ eeids ] }); 
+		activeDatasetsWindow.show();
+		return false;
+	};
+
+
 /* other public methods...
  */
 Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {

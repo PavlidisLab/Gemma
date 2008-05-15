@@ -53,3 +53,6 @@ version: $Id$
 <div id='diffExpression-metaAnalysis' style='float: right; margin: 1em;'></div>
 <div id='diffExpression-form' style='margin-bottom: 1em;'></div>
 <div id='diffExpression-results' ></div>
+
+<div id='diffExpression-experiments' class="x-hidden"></div> 
+<div id='diffExpression-genes' class="x-hidden" ></div> 
