@@ -151,12 +151,9 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         Collection<Long> geneIds = command.getGeneIds();
 
-        String category = command.getCategory();
-
         Collection<DifferentialExpressionMetaAnalysisValueObject> demavos = new ArrayList<DifferentialExpressionMetaAnalysisValueObject>();
         for ( long geneId : geneIds ) {
-            DifferentialExpressionMetaAnalysisValueObject demavoForGene = getDifferentialExpressionMetaAnalysis(
-                    geneId, category );
+            DifferentialExpressionMetaAnalysisValueObject demavoForGene = getDifferentialExpressionMetaAnalysis( geneId );
             demavos.add( demavoForGene );
         }
 
@@ -169,8 +166,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      * @return
      */
     @SuppressWarnings("unchecked")
-    public DifferentialExpressionMetaAnalysisValueObject getDifferentialExpressionMetaAnalysis( Long geneId,
-            String category ) {
+    public DifferentialExpressionMetaAnalysisValueObject getDifferentialExpressionMetaAnalysis( Long geneId ) {
 
         Gene g = geneService.load( geneId );
         if ( g == null ) return null;
@@ -180,15 +176,11 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         DifferentialExpressionMetaAnalysisValueObject demavo = null;
 
-        /* get experiments with category */
-        Collection<ExpressionExperiment> supportingExperiments = getSupportingExperiments( category,
-                experimentsAnalyzed );
-
         /* check to see we have at least 'stringency' experiments confirming the diff expression */
-        if ( supportingExperiments.size() >= stringency ) {
+        if ( experimentsAnalyzed.size() >= stringency ) {
 
             /* get fisher pval */
-            double fisherPVal = fisherCombinePvalues( g, supportingExperiments );
+            double fisherPVal = fisherCombinePvalues( g, experimentsAnalyzed );
 
             demavo = new DifferentialExpressionMetaAnalysisValueObject();
             demavo.setGene( g );
@@ -197,58 +189,6 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         }
 
         return demavo;
-    }
-
-    /**
-     * @param experimentsAnalyzed
-     */
-    private Collection<ExpressionExperiment> getSupportingExperiments( String category,
-            Collection<ExpressionExperiment> experimentsAnalyzed ) {
-
-        Collection<ExpressionExperiment> supportingExperiments = new HashSet<ExpressionExperiment>();
-        for ( ExpressionExperiment ee : experimentsAnalyzed ) {
-
-            /* first check to see if the analyzed experiment has the category in the design */
-            Collection<ExperimentalFactor> eeFactors = ee.getExperimentalDesign().getExperimentalFactors();
-            Collection<String> potentialCategories = getCategories( eeFactors );
-            if ( !potentialCategories.contains( category ) ) continue;
-
-            supportingExperiments.add( ee );
-
-        }
-        return supportingExperiments;
-    }
-
-    /**
-     * @param experimentalFactors
-     * @return
-     */
-    private Collection<String> getCategories( Collection<ExperimentalFactor> experimentalFactors ) {
-        // TODO move this method
-        Collection<String> potentialCategories = new HashSet<String>();
-        for ( ExperimentalFactor ef : experimentalFactors ) {
-
-            Collection<FactorValue> fvs = ef.getFactorValues();
-
-            for ( FactorValue fv : fvs ) {
-                if ( fv == null ) continue;
-                String category = fv.getValue();
-                if ( StringUtils.isNotEmpty( category ) ) {
-                    potentialCategories.add( category );
-                    continue;
-                }
-
-                Collection<Characteristic> chs = fv.getCharacteristics();
-                for ( Characteristic c : chs ) {
-                    if ( c == null ) continue;
-                    String cat = c.getValue();
-                    if ( StringUtils.isNotEmpty( cat ) ) {
-                        potentialCategories.add( cat );
-                    }
-                }
-            }
-        }
-        return potentialCategories;
     }
 
     /**
