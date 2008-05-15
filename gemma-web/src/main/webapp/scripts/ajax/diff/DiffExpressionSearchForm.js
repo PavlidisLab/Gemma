@@ -284,7 +284,6 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 		if ( this.dsc ) {
 			this.initializeFromDiffExpressionSearchCommand( this.dsc );
 		}
-		
     },
 	
 	createLoadMask : function () {
@@ -298,6 +297,13 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 			taxonId : this.geneChooserPanel.getTaxonId(),
 			threshold : this.thresholdField.getValue()
 		};
+		
+		var analysisId = this.analysisCombo.getValue();
+		if ( analysisId < 0 ) {
+			dsc.eeIds = this.eeSearchField.getEeIds();
+		} else {
+			dsc.cannedAnalysisId = analysisId;
+		}
 		
 		return dsc;
 	},

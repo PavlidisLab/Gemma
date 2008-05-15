@@ -31,11 +31,34 @@ public class DiffExpressionSearchCommand implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /* analysis */
     private Collection<Long> geneIds;
 
     private Double threshold;
 
     private Long taxonId;
+
+    /* meta analysis */
+
+    private Integer stringency;
+
+    private Long cannedAnalysisId;
+
+    public Long getCannedAnalysisId() {
+        return cannedAnalysisId;
+    }
+
+    public void setCannedAnalysisId( Long cannedAnalysisId ) {
+        this.cannedAnalysisId = cannedAnalysisId;
+    }
+
+    public Integer getStringency() {
+        return stringency;
+    }
+
+    public void setStringency( Integer stringency ) {
+        this.stringency = stringency;
+    }
 
     public Collection<Long> getGeneIds() {
         return geneIds;

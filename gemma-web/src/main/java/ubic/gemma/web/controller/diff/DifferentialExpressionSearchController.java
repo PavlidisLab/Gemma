@@ -78,8 +78,6 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
     private GeneService geneService = null;
 
-    private int stringency = 2;
-
     private final int MAX_PVAL = 1;
 
     /**
@@ -151,9 +149,12 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         Collection<Long> geneIds = command.getGeneIds();
 
+        Integer stringency = command.getStringency();
+
         Collection<DifferentialExpressionMetaAnalysisValueObject> demavos = new ArrayList<DifferentialExpressionMetaAnalysisValueObject>();
         for ( long geneId : geneIds ) {
-            DifferentialExpressionMetaAnalysisValueObject demavoForGene = getDifferentialExpressionMetaAnalysis( geneId );
+            DifferentialExpressionMetaAnalysisValueObject demavoForGene = getDifferentialExpressionMetaAnalysis(
+                    geneId, stringency );
             demavos.add( demavoForGene );
         }
 
@@ -166,11 +167,13 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      * @return
      */
     @SuppressWarnings("unchecked")
-    public DifferentialExpressionMetaAnalysisValueObject getDifferentialExpressionMetaAnalysis( Long geneId ) {
+    private DifferentialExpressionMetaAnalysisValueObject getDifferentialExpressionMetaAnalysis( Long geneId,
+            Integer stringency ) {
 
         Gene g = geneService.load( geneId );
         if ( g == null ) return null;
 
+        // FIXME filter based on experiments that are part of the set.
         Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService
                 .findExperimentsWithAnalyses( g );
 
