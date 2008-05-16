@@ -405,7 +405,21 @@ public class GoMetric {
      */
     private Double computeKappaSimilarity( DoubleMatrixNamed<Long, String> gene2TermMatrix, double[] g1, double[] g2 ) {
 
-        Double score = 0.0;
+        if ( g1.length != g2.length ) return null;
+        Double[][] contingencyMatrix = new Double[2][2];
+
+        for ( int i = 0; i <= g1.length; i++ ) {
+
+            if ( g1[i] == g2[i] ) {
+                if ( g1[i] == 0 ) contingencyMatrix[1][1]++;
+                if ( g1[i] == 1 ) contingencyMatrix[0][0]++;
+            } else if ( g1[i] != g2[i] ) {
+                if ( g1[i] == 0 && g2[i] == 1 ) contingencyMatrix[0][1]++;
+                if ( g1[i] == 1 && g2[i] == 0 ) contingencyMatrix[1][0]++;
+            }
+        }
+
+        Double score = calcKappaStat( contingencyMatrix );
         return score;
     }
 
@@ -524,6 +538,33 @@ public class GoMetric {
         double scoreResnik = -1 * ( StrictMath.log( pmin ) );
 
         return scoreResnik;
+    }
+
+    /**
+     * @param cMatrix contingency matrix constructed from two gene vectors
+     * @return kappa statistic value (Huang et al, 2007)
+     */
+    private Double calcKappaStat( Double[][] cMatrix ) {
+
+        double a = cMatrix[0][0];
+        double b = cMatrix[0][1];
+        double c = cMatrix[1][0];
+        double d = cMatrix[1][1];
+        double total = a + b + c + d;
+
+        double observed = ( a + d ) / total;
+
+        double r1 = a + b;
+        double r0 = c + d;
+        double c1 = a + c;
+        double c0 = b + d;
+
+        double chance = ( c1 * r1 + c0 * r0 ) / Math.pow( total, 2 );
+
+        Double kappa = ( observed - chance ) / ( 1 - chance );
+
+        return kappa;
+
     }
 
     /**
