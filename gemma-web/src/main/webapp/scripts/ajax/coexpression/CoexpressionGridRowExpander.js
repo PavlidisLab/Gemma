@@ -59,10 +59,11 @@ Ext.extend( Ext.Gemma.CoexpressionGridRowExpander, Ext.grid.RowExpander, {
 				
 			var supporting = this.getSupportingDatasetRecords( record );
 			
-			var dsGrid = new Ext.Gemma.ExpressionExperimentGrid( supportingDsGridEl, {
+			var dsGrid = new Ext.Gemma.ExpressionExperimentGrid( {
 				records : supporting,
 				pageSize : 10,
-    			width : 800
+    			width : 800,
+    			renderTo : supportingDsGridEl
 			} );
 			 
 		 	dsGrid.getStore().load( { params : { start : 0, limit : 10 } });

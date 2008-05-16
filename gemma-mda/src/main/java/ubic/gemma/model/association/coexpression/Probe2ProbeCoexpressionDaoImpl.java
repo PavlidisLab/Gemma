@@ -20,6 +20,7 @@ package ubic.gemma.model.association.coexpression;
 
 import java.math.BigInteger;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -732,45 +733,51 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      */
     private Collection<ProbeLink> getLinks( ExpressionExperiment expressionExperiment, String tableName )
             throws Exception {
-        String baseQueryString = "SELECT FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK, SCORE FROM " + tableName
-                + " WHERE EXPRESSION_EXPERIMENT_FK = " + expressionExperiment.getId() + " limit ";
-        int chunkSize = 1000000;
-        Session session = getSessionFactory().openSession();
-        long start = 0;
-        Collection<ProbeLink> links = new ArrayList<ProbeLink>();
-        while ( true ) {
-            String queryString = baseQueryString + start + "," + chunkSize + ";";
+        final String baseQueryString = "SELECT FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK, SCORE FROM "
+                + tableName + " WHERE EXPRESSION_EXPERIMENT_FK = " + expressionExperiment.getId() + " limit ";
+        final int chunkSize = 1000000;
+        final Collection<ProbeLink> links = new ArrayList<ProbeLink>();
+        getHibernateTemplate().execute( new HibernateCallback() {
 
-            org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
-            queryObject.addScalar( "FIRST_DESIGN_ELEMENT_FK", new LongType() );
-            queryObject.addScalar( "SECOND_DESIGN_ELEMENT_FK", new LongType() );
-            queryObject.addScalar( "SCORE", new DoubleType() );
+            public Object doInHibernate( Session session ) throws HibernateException {
+                long start = 0;
 
-            ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-            int count = 0;
-            int iterations = 0;
-            while ( scroll.next() ) {
-                Long first_design_element_fk = scroll.getLong( 0 );
-                Long second_design_element_fk = scroll.getLong( 1 );
-                Double score = scroll.getDouble( 2 );
+                while ( true ) {
+                    String queryString = baseQueryString + start + "," + chunkSize + ";";
 
-                ProbeLink oneLink = new ProbeLink();
-                oneLink.setFirstDesignElementId( first_design_element_fk );
-                oneLink.setSecondDesignElementId( second_design_element_fk );
-                oneLink.setScore( score );
-                links.add( oneLink );
-                count++;
-                if ( count == chunkSize ) {
-                    start = start + chunkSize;
-                    System.err.print( "." );
-                    iterations++;
-                    if ( iterations % 10 == 0 ) System.err.println();
+                    org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+                    queryObject.addScalar( "FIRST_DESIGN_ELEMENT_FK", new LongType() );
+                    queryObject.addScalar( "SECOND_DESIGN_ELEMENT_FK", new LongType() );
+                    queryObject.addScalar( "SCORE", new DoubleType() );
+
+                    ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+                    int count = 0;
+                    int iterations = 0;
+                    while ( scroll.next() ) {
+                        Long first_design_element_fk = scroll.getLong( 0 );
+                        Long second_design_element_fk = scroll.getLong( 1 );
+                        Double score = scroll.getDouble( 2 );
+
+                        ProbeLink oneLink = new ProbeLink();
+                        oneLink.setFirstDesignElementId( first_design_element_fk );
+                        oneLink.setSecondDesignElementId( second_design_element_fk );
+                        oneLink.setScore( score );
+                        links.add( oneLink );
+                        count++;
+                        if ( count == chunkSize ) {
+                            start = start + chunkSize;
+                            System.err.print( "." );
+                            iterations++;
+                            if ( iterations % 10 == 0 ) System.err.println();
+                        }
+                    }
+                    if ( count < chunkSize ) break;
                 }
+                log.info( "Load " + links.size() );
+                return null;
             }
-            if ( count < chunkSize ) break;
-        }
-        log.info( "Load " + links.size() );
-        session.close();
+        } );
+
         return links;
     }
 

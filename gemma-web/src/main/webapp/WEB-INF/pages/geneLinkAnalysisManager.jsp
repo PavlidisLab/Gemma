@@ -9,7 +9,7 @@ Gene link analysis manager
 </title>
 <link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/${appConfig["theme"]}/theme.css'/>" />
 <script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
-<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
+<script src="<c:url value='/scripts/ext/ext-all-debug.js'/>" type="text/javascript"></script>
 <script src="<c:url value='/scripts/ext/RowExpander.js'/>" type="text/javascript"></script>
 <script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
 <script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
@@ -28,6 +28,7 @@ Gene link analysis manager
 <script type='text/javascript' src='/Gemma/scripts/ajax/util/PagingToolbar.js'></script>
 <script type='text/javascript' src='/Gemma/scripts/ajax/entities/TaxonCombo.js'></script>
 <script type='text/javascript' src='/Gemma/scripts/ajax/entities/ExpressionExperimentGrid.js'></script>
+<script type='text/javascript' src='/Gemma/scripts/ajax/entities/DatasetSearchToolbar.js'></script>
 <script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/GeneLinkAnalysisManager.js'></script>
 </head>
 

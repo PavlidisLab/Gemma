@@ -286,5 +286,5 @@ h2.helpstep,h3.helpstep {
 }
 
 .x-loading {
-	background-image: url(../../images/default/tree/loading.gif)
+	background: url(../../images/default/tree/loading.gif) no-repeat; 
 }

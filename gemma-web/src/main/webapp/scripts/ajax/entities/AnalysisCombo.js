@@ -1,172 +1,111 @@
-/*
- * Combo that shows lists of coexpression analyses.
+Ext.namespace("Ext.Gemma");
+
+/**
+ * 
+ * @class Ext.Gemma.AnalysisCombo
+ * @extends Ext.form.ComboBox
  */
+Ext.Gemma.AnalysisCombo = Ext.extend(Ext.form.ComboBox, {
 
-/*
- * Ext.Gemma.AnalysisCombo constructor...
- */
-Ext.Gemma.AnalysisCombo = function(config) {
-	Ext.QuickTips.init();
+	displayField : 'name',
+	valueField : 'id',
+	editable : false,
+	loadingText : "Loading ...",
+	listWidth : 250,
+	forceSelection : true,
+	mode : 'local',
+	triggerAction : 'all',
+	emptyText : 'Select a search scope',
 
-	this.showCustomOption = config.showCustomOption;
-	delete config.showCustomOption;
-	this.isStoreLoaded = false;
+	record : Ext.data.Record.create([{
+		name : "id",
+		type : "int"
+	}, {
+		name : "name",
+		type : "string"
+	}, {
+		name : "description",
+		type : "string"
+	}, {
+		name : "taxon"
+	}, {
+		name : "numDatasets",
+		type : "int"
+	}, {
+		name : "datasets"
+	}]),
 
-	/*
-	 * establish default config options...
-	 */
-	var superConfig = {
-		displayField : 'name',
-		valueField : 'id',
-		editable : false,
-		hideMode : 'offsets',
-		minListWidth : 100,
-		forceSelection : true,
-		mode : 'local',
-		selectOnFocus : true,
-		triggerAction : 'all',
-		store : new Ext.data.Store({
-			proxy : new Ext.data.DWRProxy(ExtCoexpressionSearchController.getCannedAnalyses),
-			reader : new Ext.data.ListRangeReader({
-				id : "id"
-			}, Ext.Gemma.AnalysisCombo.getRecord()),
-			remoteSort : true
-		}),
-		tpl : Ext.Gemma.AnalysisCombo.getTemplate()
-	};
+	setState : function(v) {
+		this.state = v;
+	},
 
-	var options = {
-		params : []
-	};
-
-	if (this.showCustomOption) {
-		options.callback = function() {
-			var Constructor = Ext.Gemma.AnalysisCombo.getRecord();
-			var record = new Constructor({
-				id : -1,
-				name : "Custom analysis",
-				description : "Select specific datasets to search against"
-			});
-			superConfig.store.add(record);
-			this.storeLoaded();
-		}.bind(this);
-	} else {
-		options.callback = function() {
-			this.storeLoaded();
-		}.bind(this);
-	}
-	superConfig.store.load(options);
-
-	/*
-	 * apply user-defined config options and call the superclass constructor...
-	 */
-	for (var property in config) {
-		superConfig[property] = config[property];
-	}
-	Ext.Gemma.AnalysisCombo.superclass.constructor.call(this, superConfig);
-
-	// call doQuery or the record filtering done in taxonChanged() below doesn't
-	// work...
-	this.doQuery();
-};
-
-/*
- * static methods
- */
-Ext.Gemma.AnalysisCombo.getRecord = function() {
-	if (Ext.Gemma.AnalysisCombo.record === undefined) {
-		Ext.Gemma.AnalysisCombo.record = Ext.data.Record.create([{
-			name : "id",
-			type : "int"
-		}, {
-			name : "name",
-			type : "string"
-		}, {
-			name : "description",
-			type : "string"
-		}, {
-			name : "taxon"
-		}, {
-			name : "numDatasets",
-			type : "int"
-		}, {
-			name : "datasets"
-		}]);
-	}
-	return Ext.Gemma.AnalysisCombo.record;
-};
-
-Ext.Gemma.AnalysisCombo.getTemplate = function() {
-	if (Ext.Gemma.AnalysisCombo.template === undefined) {
-		Ext.Gemma.AnalysisCombo.template = new Ext.XTemplate('<tpl for="."><div ext:qtip="{description}" class="x-combo-list-item">{name}{[ values.taxon ? " (" + values.taxon.scientificName + ")" : "" ]}</div></tpl>');
-	}
-	return Ext.Gemma.AnalysisCombo.template;
-};
-
-/*
- * other public methods...
- */
-Ext.extend(Ext.Gemma.AnalysisCombo, Ext.form.ComboBox, {
+	restoreState : function() {
+		this.setValue(this.state);
+	},
 
 	initComponent : function() {
+
+		var templ = new Ext.XTemplate('<tpl for="."><div ext:qtip="{description}" class="x-combo-list-item">{name}{[ values.taxon ? " (" + values.taxon.scientificName + ")" : "" ]}</div></tpl>');
+
+		Ext.apply(this, {
+			store : new Ext.data.Store({
+				proxy : new Ext.data.DWRProxy(ExtCoexpressionSearchController.getCannedAnalyses),
+				reader : new Ext.data.ListRangeReader({
+					id : "id"
+				}, this.record),
+				remoteSort : true
+			}),
+			tpl : templ
+		});
+
+		var customAnalysisCallback = function(r, options, success) {
+			if (this.showCustomOption) {
+				var Constructor = this.record;
+				var newrec = new Constructor({
+					id : -1,
+					name : "Custom analysis",
+					description : "Select specific datasets to search against"
+				}, -1);
+				this.store.add(newrec); // asynch
+			}
+			this.restoreState();
+		}.createDelegate(this);
+
 		Ext.Gemma.AnalysisCombo.superclass.initComponent.call(this);
+
+		this.store.load({
+			params : [],
+			callback : customAnalysisCallback,
+			scope : this,
+			add : false
+		});
+
+		this.doQuery();
 
 		this.addEvents('analysischanged');
 	},
 
-	render : function(container, position) {
-		Ext.Gemma.AnalysisCombo.superclass.render.apply(this, arguments);
-
-		if (!this.isStoreLoaded) {
-			this.setRawValue("Loading...");
-		}
-	},
-
-	onSelect : function(record, index) {
-		Ext.Gemma.AnalysisCombo.superclass.onSelect.call(this, record, index);
-
-		if (record.data != this.selectedAnalysis) {
-			this.analysisChanged(record.data);
-		}
-	},
-
-	reset : function() {
-		Ext.Gemma.AnalysisCombo.superclass.reset.call(this);
-
-		if (this.selectedAnalysis !== null) {
-			this.analysisChanged(null);
-		}
-	},
-
 	setValue : function(v) {
-		if (this.isStoreLoaded) {
-			Ext.Gemma.AnalysisCombo.superclass.setValue.call(this, v);
+		var changed = false;
+		if (this.getValue() != v) {
+			changed = true;
+		}
 
-			var r = this.findRecord(this.valueField, v);
-			this.analysisChanged(r ? r.data : null);
-		} else {
-			this.delayedSetValue = v;
+		Ext.Gemma.AnalysisCombo.superclass.setValue.call(this, v);
+
+		if (changed) {
+			this.fireEvent('analysischanged', this.getAnalysis());
 		}
 	},
 
-	storeLoaded : function() {
-		this.isStoreLoaded = true;
-		if (this.delayedSetValue !== undefined && this.delayedSetValue !== "") {
-			this.setValue(this.delayedSetValue);
-		} else {
-			this.reset(); // clear the loading message...
-		}
-		this.enable();
-	},
-
-	analysisChanged : function(analysis) {
-		this.selectedAnalysis = analysis;
-		this.fireEvent('analysischanged', this, this.selectedAnalysis);
+	getAnalysis : function() {
+		var analysis = this.store.getById(this.getValue());
+		return analysis;
 	},
 
 	taxonChanged : function(taxon) {
-		if (this.selectedAnalysis && this.selectedAnalysis.taxon
-				&& this.selectedAnalysis.taxon.id != taxon.id) {
+		if (this.getAnalysis() && this.getAnalysis().taxon
+				&& this.getAnalysis().taxon.id != taxon.id) {
 			this.reset();
 		}
 		this.store.filterBy(function(record, id) {
@@ -179,3 +118,5 @@ Ext.extend(Ext.Gemma.AnalysisCombo, Ext.form.ComboBox, {
 	}
 
 });
+
+Ext.reg('analysiscombo', Ext.Gemma.AnalysisCombo);

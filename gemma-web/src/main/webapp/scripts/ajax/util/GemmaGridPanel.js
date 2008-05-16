@@ -1,96 +1,38 @@
 Ext.namespace('Ext.Gemma');
 
-/*
- * Ext.Gemma.GemmaGridPanel constructor... config is a hash with the following
- * options:
+/**
+ * 
+ * @class Ext.Gemma.GemmaGridPanel
+ * @extends Ext.grid.EditorGridPanel*
+ * @author Luke, Paul
+ * @version $Id$
  */
-Ext.Gemma.GemmaGridPanel = function(config) {
+Ext.Gemma.GemmaGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 
-	/*
-	 * establish default config options...
-	 */
-	var superConfig = {
-		loadMask : true,
-		forceFit : true,
-		selModel : new Ext.grid.RowSelectionModel(),
-		autoHeight : true,
-		frame : false,
-		autoScroll : true,
-		bbar : [],
-		tbar : [],
-		stripeRows : true
-	};
-
-	if (config.height) {
-		delete superConfig.autoHeight;
-	}
-
-	if (Ext.isIE) {
-		superConfig.width = 800;
-	}
-
-	/*
-	 * if the toolbars weren't passed in, destroy the default elements that were
-	 * created... (defaults were created so that we can have the option of
-	 * adding toolbars later)
-	 */
-	if (!config.tbar) {
-		this.destroyTopToolbar = true;
-	}
-	if (!config.bbar) {
-		this.destroyBottomToolbar = true;
-	}
-
-	/*
-	 * apply user-defined config options and call the superclass constructor...
-	 */
-	for (property in config) {
-		superConfig[property] = config[property];
-	}
-	Ext.Gemma.GemmaGridPanel.superclass.constructor.call(this, superConfig);
-
-};
-
-/*
- * static methods
- */
-Ext.Gemma.GemmaGridPanel.formatTermWithStyle = function(value, uri) {
-	var style = uri ? "unusedWithUri" : "unusedNoUri";
-	var description = uri || "free text";
-	return String.format("<span class='{0}' ext:qtip='{2}'>{1}</span>", style,
-			value, description);
-};
-
-/*
- * instance methods...
- */
-Ext.extend(Ext.Gemma.GemmaGridPanel, Ext.grid.EditorGridPanel, {
-
-	autoSizeColumns : function() {
-		for (var i = 0; i < this.colModel.getColumnCount(); i++) {
-			// this.autoSizeColumn(i);
-		}
+	stripeRows : true,
+	viewConfig : {
+		forceFit : true
 	},
 
-	autoSizeColumn : function(c) {
-		var w = this.view.getHeaderCell(c).firstChild.scrollWidth;
-		for (var i = 0, l = this.store.getCount(); i < l; i++) {
-			w = Math.max(w, this.view.getCell(i, c).firstChild.scrollWidth);
+	initComponent : function() {
+		if (this.height) {
+			Ext.apply(this, {
+				autoHeight : false
+			});
 		}
-		this.colModel.setColumnWidth(c, w);
-		return w;
-	},
 
-	render : function(ct, p) {
-		Ext.Gemma.GemmaGridPanel.superclass.render.call(this, ct, p);
-		if (this.destroyTopToolbar) {
-			this.getTopToolbar().destroy();
-			delete this.destroyTopToolbar;
+		if (Ext.isIE) {
+			Ext.apply(this, {
+				width : 800
+			});
 		}
-		if (this.destroyBottomToolbar) {
-			this.getBottomToolbar().destroy();
-			delete this.destroyBottomToolbar;
-		}
+
+		Ext.apply(this, {
+			selModel : new Ext.grid.RowSelectionModel({})
+		});
+
+		Ext.Gemma.GemmaGridPanel.superclass.initComponent.call(this);
+
 	},
 
 	getEditedRecords : function() {
@@ -138,6 +80,22 @@ Ext.extend(Ext.Gemma.GemmaGridPanel, Ext.grid.EditorGridPanel, {
 			selected[i].reject();
 		}
 		this.getView().refresh();
+	},
+
+	getReadParams : function() {
+		return (typeof this.readParams == "function")
+				? this.readParams()
+				: this.readParams;
 	}
 
 });
+
+/*
+ * static methods
+ */
+Ext.Gemma.GemmaGridPanel.formatTermWithStyle = function(value, uri) {
+	var style = uri ? "unusedWithUri" : "unusedNoUri";
+	var description = uri || "free text";
+	return String.format("<span class='{0}' ext:qtip='{2}'>{1}</span>", style,
+			value, description);
+};

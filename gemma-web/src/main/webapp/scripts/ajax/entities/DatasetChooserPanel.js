@@ -60,7 +60,7 @@ Ext.Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 
 		this.eeSetGrid = new Ext.Gemma.ExpressionExperimentSetGrid({
 			readMethod : ExpressionExperimentSetController.getAvailableExpressionExperimentSets
-					.bind(this),
+					.createDelegate(this),
 			editable : admin,
 			region : 'north',
 			layout : 'fit',
@@ -356,9 +356,19 @@ Ext.Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 			tooltip : "Reset to stored version"
 		});
 
+//		this.deleteBut = new Ext.Button({
+//			id : 'newreset',
+//			text : "Delete selected",
+//			handler : this.removeSelected.createDelegate(this),
+//			scope : this,
+//			disabled : false,
+//			tooltip : "Reset to stored version"
+//		});
+
 		this.addButton(this.newBut);
 		this.addButton(this.saveBut);
 		this.addButton(this.resetBut);
+	//	this.addButton(this.deleteBut);
 
 		if (!this.admin) {
 			this.saveBut.disable();

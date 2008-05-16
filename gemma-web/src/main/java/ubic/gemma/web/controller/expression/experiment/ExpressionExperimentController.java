@@ -37,6 +37,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
 import ubic.gemma.model.common.description.Characteristic;
@@ -83,6 +84,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * @spring.property name="auditTrailService" ref="auditTrailService"
  * @spring.property name="experimentalFactorService" ref="experimentalFactorService"
  * @spring.property name="securityService" ref="securityService"
+ * @spring.property name="auditEventService" ref="auditEventService"
  */
 public class ExpressionExperimentController extends BackgroundProcessingMultiActionController {
 
@@ -100,6 +102,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     private OntologyService ontologyService;
 
     private AuditTrailService auditTrailService;
+
+    private AuditEventService auditEventService;
 
     private SecurityService securityService;
 
@@ -226,6 +230,19 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         String idStr = StringUtils.join( ids.toArray(), "," );
         return new ModelAndView( new RedirectView(
                 "/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html" ) );
+    }
+
+    /**
+     * AJAX
+     * 
+     * @param query search string
+     * @param taxonId (if null, all taxa are searched)
+     * @return EE ids that match
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<Long> find( String query, Long taxonId ) {
+        log.info( "Search: " + query + " taxon=" + taxonId );
+        return searchService.searchExpressionExperiments( query, taxonId );
     }
 
     /**
@@ -394,24 +411,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         mav.addObject( "prefQt", prefQt.getId() );
 
-        AuditEvent troubleEvent = getLastTroubleEvent( expressionExperiment );
-        if ( troubleEvent != null ) {
-            mav.addObject( "troubleEvent", troubleEvent );
-            mav.addObject( "troubleEventDescription", StringEscapeUtils.escapeHtml( troubleEvent.toString() ) );
-        }
-        AuditEvent validatedEvent = getLastValidationEvent( expressionExperiment );
-        if ( validatedEvent != null ) {
-            mav.addObject( "validatedEvent", validatedEvent );
-            mav.addObject( "validatedEventDescription", StringEscapeUtils.escapeHtml( validatedEvent.toString() ) );
-        }
-
-        Collection<AuditEvent> sampleRemovalEvents = this.getSampleRemovalEvents( expressionExperiment );
-        if ( sampleRemovalEvents.size() > 0 ) {
-            mav.addObject( "samplesRemoved", sampleRemovalEvents.iterator().next() ); // todo: handle multiple
-            mav.addObject( "samplesRemovedDescription", StringEscapeUtils.escapeHtml( sampleRemovalEvents.iterator()
-                    .next().toString()
-                    + " (possibly other removals, not shown)" ) );
-        }
+        getEventsOfInterest( expressionExperiment, mav );
 
         Collection characteristics = expressionExperiment.getCharacteristics();
         mav.addObject( "characteristics", characteristics );
@@ -459,6 +459,36 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         mav.addObject( "isPrivate", isPrivate );
 
         return mav;
+    }
+
+    /**
+     * Trouble, validation, sample removal.
+     * 
+     * @param expressionExperiment
+     * @param mav
+     */
+    private void getEventsOfInterest( ExpressionExperiment expressionExperiment, ModelAndView mav ) {
+        AuditEvent troubleEvent = getLastTroubleEvent( expressionExperiment );
+        if ( troubleEvent != null ) {
+            mav.addObject( "troubleEvent", troubleEvent );
+            auditEventService.thaw( troubleEvent );
+            mav.addObject( "troubleEventDescription", StringEscapeUtils.escapeHtml( troubleEvent.toString() ) );
+        }
+        AuditEvent validatedEvent = getLastValidationEvent( expressionExperiment );
+        if ( validatedEvent != null ) {
+            mav.addObject( "validatedEvent", validatedEvent );
+            auditEventService.thaw( validatedEvent );
+            mav.addObject( "validatedEventDescription", StringEscapeUtils.escapeHtml( validatedEvent.toString() ) );
+        }
+
+        Collection<AuditEvent> sampleRemovalEvents = this.getSampleRemovalEvents( expressionExperiment );
+        if ( sampleRemovalEvents.size() > 0 ) {
+            AuditEvent event = sampleRemovalEvents.iterator().next();
+            mav.addObject( "samplesRemoved", event ); // todo: handle multiple
+            auditEventService.thaw( event );
+            mav.addObject( "samplesRemovedDescription", StringEscapeUtils.escapeHtml( event.toString()
+                    + " (possibly other removals, not shown)" ) );
+        }
     }
 
     /**
@@ -963,6 +993,10 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      */
     public void setSecurityService( SecurityService securityService ) {
         this.securityService = securityService;
+    }
+
+    public void setAuditEventService( AuditEventService auditEventService ) {
+        this.auditEventService = auditEventService;
     }
 
 }

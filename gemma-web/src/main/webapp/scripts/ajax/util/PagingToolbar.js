@@ -1,8 +1,12 @@
 Ext.namespace('Ext.Gemma');
 
-/*
+/**
  * Ext.Gemma.PagingToolbar is an extension of Ext.PagingToolbar that compensates
  * for a bug in how the current active page is calculated.
+ * 
+ * <pre>
+ * Is this bug fixed??
+ * </pre>
  * 
  * An alternative to using this class would be to patch the Ext code thusly:
  * 

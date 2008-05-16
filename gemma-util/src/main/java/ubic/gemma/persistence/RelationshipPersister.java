@@ -69,6 +69,8 @@ public class RelationshipPersister extends ExpressionPersister {
             return persistDifferentialExpressionAnalysis( ( DifferentialExpressionAnalysis ) entity );
         } else if ( entity instanceof GeneCoexpressionAnalysis ) {
             return persistGeneCoexpressionAnalysis( ( GeneCoexpressionAnalysis ) entity );
+        } else if ( entity instanceof ExpressionExperimentSet ) {
+            return persistExpressionExperimentSet( ( ExpressionExperimentSet ) entity );
         }
         return super.persist( entity );
 

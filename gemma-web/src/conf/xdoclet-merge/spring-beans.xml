@@ -416,6 +416,7 @@
 					<property name="includes">
 						<list>
 							<value>deleteById</value>
+							<value>find</value>
 							<value>updateReport</value>
 							<value>getAnnotation</value>
 							<value>getExperimentalFactors</value>
@@ -507,6 +508,24 @@
 							<value>updateExperimentsInAnalysis</value>
 							<value>getExperimentsInAnalysis</value>
 							<value>getExperimentIdsInAnalysis</value>
+						</list>
+					</property>
+				</bean>
+			</entry>
+			<entry key="ExpressionExperimentSetController">
+				<bean class="org.directwebremoting.spring.CreatorConfig">
+					<property name="creator">
+						<bean class="org.directwebremoting.spring.BeanCreator">
+							<property name="bean" ref="expressionExperimentSetController" />
+						</bean>
+					</property>
+					<property name="includes">
+						<list>
+							<value>getAvailableExpressionExperimentSets</value>
+							<value>getExperimentsInSet</value>
+							<value>getAvailableExpressionExperimentSets</value>
+							<value>update</value>
+							<value>create</value>
 						</list>
 					</property>
 				</bean>
@@ -1021,6 +1040,11 @@
 							<value>externalUri</value>
 						</list>
 					</property>
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentSetValueObject">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="hibernate3" />
 				</bean>
 			</entry>
 			<entry key="ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchCommand">

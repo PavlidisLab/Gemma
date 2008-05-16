@@ -10,47 +10,58 @@ Ext.onReady(function() {
 
 	var admin = dwr.util.getValue("hasAdmin");
 
-	var analysisGrid = new Ext.Gemma.GeneLinkAnalysisGrid(
-			"genelinkanalysis-analysisgrid", {
-				readMethod : ExtCoexpressionSearchController.getCannedAnalyses
-						.bind(this),
-				editable : admin,
-				title : "Available analyses"
+	this.analysisGrid = new Ext.Gemma.GeneLinkAnalysisGrid({
+		renderTo : "genelinkanalysis-analysisgrid",
+		readMethod : ExtCoexpressionSearchController.getCannedAnalyses
+				.bind(this),
+		editable : admin,
+		height : 200,
+		title : "Available analyses"
+	});
+
+	this.analysisGrid.render();
+
+	var virtualAnalysisGrid = new Ext.Gemma.ExpressionExperimentGrid({
+		renderTo : "genelinkanalysis-newanalysis",
+		admin : admin,
+		title : "Virtual analysis",
+		pageSize : 20,
+		height : 400,
+		ddGroup : "analysisedit",
+		rowExpander : true,
+		tbar : new Ext.Gemma.EditVirtualAnalysisToolBar()
+	});
+
+	this.sourceAnalysisGrid = new Ext.Gemma.ExpressionExperimentGrid({
+		renderTo : "genelinkanalysis-datasetgrid",
+
+		editable : false,
+		admin : admin,
+		height : 400,
+		title : "Datasets in source analysis",
+		pageSize : 20,
+		ddGroup : "analysisedit",
+		rowExpander : true,
+		tbar : new Ext.Gemma.SourceAnalysisToolBar({
+			taxonSearch : false,
+			targetGrid : virtualAnalysisGrid
+		})
+	});
+
+	sourceAnalysisGrid.getTopToolbar().on('after.tbsearch', function(results) {
+		this.getStore().removeAll();
+		if (results.length > 0) {
+			this.getStore().load({
+				params : [results]
 			});
+		}
+	}, sourceAnalysisGrid);
 
-	analysisGrid.render();
-
-	var sourceAnalysisGrid = new Ext.Gemma.ExpressionExperimentGrid(
-			"genelinkanalysis-datasetgrid", {
-				readMethod : ExpressionExperimentController.loadExpressionExperiments
-						.bind(this),
-				editable : false,
-				admin : admin,
-				title : "Datasets in source analysis",
-				pageSize : 20,
-				ddGroup : "analysisedit",
-				rowExpander : true
-			});
-
-	sourceAnalysisGrid.getStore().on("load", function() {
+	this.sourceAnalysisGrid.getStore().on("load", function() {
 		toolbar.updateDatasets();
 	}, this);
 
-	var virtualAnalysisGrid = new Ext.Gemma.ExpressionExperimentGrid(
-			"genelinkanalysis-newanalysis", {
-				readMethod : ExpressionExperimentController.loadExpressionExperiments
-						.bind(this),
-				editable : admin,
-				title : "Virtual analysis",
-				pageSize : 20,
-				ddGroup : "analysisedit",
-				rowExpander : true
-			});
-
-	var toolbar = new Ext.Gemma.SourceAnalysisToolBar(sourceAnalysisGrid, {
-		taxonSearch : false,
-		targetGrid : virtualAnalysisGrid
-	});
+	this.sourceAnalysisGrid.doLayout();
 
 	var refresh = function(e) {
 		this.store.reload({
@@ -61,22 +72,20 @@ Ext.onReady(function() {
 				this.getSelectionModel().selectRecords([rec], false);
 			}
 		});
-	}
+	};
 
-	if (admin) {
-		var newtoolbar = new Ext.Gemma.EditVirtualAnalysisToolBar(
-				virtualAnalysisGrid, {});
-		newtoolbar.on("newAnalysisCreated", refresh, analysisGrid);
-		newtoolbar.on("analysisUpdated", refresh, analysisGrid);
-	}
+	virtualAnalysisGrid.getTopToolbar().on("newAnalysisCreated", refresh,
+			this.analysisGrid);
+	virtualAnalysisGrid.getTopToolbar().on("analysisUpdated", refresh,
+			this.analysisGrid);
 
-	sourceAnalysisGrid.render();
+	this.sourceAnalysisGrid.render();
 	virtualAnalysisGrid.render();
 
 	var showSourceAnalysis = function(target, rowIndex, ev) {
 		// Load the source analysis, or the selected one, if it is real.
 		Ext.DomHelper.overwrite("messages", "");
-		toolbar.reset();
+		// toolbar.reset();
 
 		var row;
 		if (target.grid) { // selectionmodel
@@ -149,7 +158,7 @@ Ext.onReady(function() {
 	};
 
 	analysisGrid.getSelectionModel().on("rowselect", showSourceAnalysis,
-			sourceAnalysisGrid);
+			this.sourceAnalysisGrid);
 
 	analysisGrid.getSelectionModel().on("rowselect", showVirtualAnalysis,
 			virtualAnalysisGrid);
@@ -160,14 +169,12 @@ Ext.onReady(function() {
  * Toolbar for creating/updating the analysis. Attach to the
  * virtualAnalysisGrid.
  */
-Ext.Gemma.EditVirtualAnalysisToolBar = function(grid, config) {
+Ext.Gemma.EditVirtualAnalysisToolBar = function(config) {
 	var bar = this;
-	this.thisGrid = grid;
 	this.addEvents('newAnalysisCreated', 'createAnalysisError');
 
 	Ext.Gemma.EditVirtualAnalysisToolBar.superclass.constructor.call(this, {
-		autoHeight : true,
-		renderTo : this.thisGrid.tbar
+		autoHeight : true
 	});
 
 	var createDialog = new Ext.Window({
@@ -184,7 +191,7 @@ Ext.Gemma.EditVirtualAnalysisToolBar = function(grid, config) {
 
 	this.createNewAnalysis = function(analysisName, analysisDescription) {
 
-		if (this.thisGrid.analysisId) {
+		if (this.ownerCt.analysisId) {
 			this.updateAnalysis(analysisName, analysisDescription);
 			return;
 		}
@@ -197,7 +204,7 @@ Ext.Gemma.EditVirtualAnalysisToolBar = function(grid, config) {
 		var errorHandler = function(e) {
 			this.fireEvent("createAnalysisError", this, e);
 			Ext.getCmp('newsave').enable();
-			this.thisGrid.loadMask.hide();
+			this.ownerCt.loadMask.hide();
 			Ext.DomHelper.overwrite("messages", {
 				tag : 'img',
 				src : '/Gemma/images/iconWarning.gif'
@@ -210,12 +217,12 @@ Ext.Gemma.EditVirtualAnalysisToolBar = function(grid, config) {
 		};
 
 		GeneLinkAnalysisManagerController.create({
-			taxonId : this.thisGrid.taxon.id,
-			stringency : this.thisGrid.stringency,
+			taxonId : this.ownerCt.taxon.id,
+			stringency : this.ownerCt.stringency,
 			name : analysisName,
 			description : analysisDescription,
-			viewedAnalysisId : this.thisGrid.sourceAnalysisID,
-			datasets : this.thisGrid.getEEIds()
+			viewedAnalysisId : this.ownerCt.sourceAnalysisID,
+			datasets : this.ownerCt.getEEIds()
 		}, {
 			callback : callback.createDelegate(this, [], true),
 			errorHandler : errorHandler.createDelegate(this, [], true)
@@ -226,13 +233,13 @@ Ext.Gemma.EditVirtualAnalysisToolBar = function(grid, config) {
 
 		var callback = function() {
 			Ext.getCmp('newsave').enable();
-			this.fireEvent("analysisUpdated", this, this.thisGrid.analysisId);
+			this.fireEvent("analysisUpdated", this, this.ownerCt.analysisId);
 		};
 
 		var errorHandler = function(e) {
 			this.fireEvent("updateAnalysisError", this, e);
 			Ext.getCmp('newsave').enable();
-			this.thisGrid.loadMask.hide();
+			this.ownerCt.loadMask.hide();
 			Ext.DomHelper.overwrite("messages", {
 				tag : 'img',
 				src : '/Gemma/images/iconWarning.gif'
@@ -245,9 +252,9 @@ Ext.Gemma.EditVirtualAnalysisToolBar = function(grid, config) {
 
 		GeneLinkAnalysisManagerController.update({
 			name : analysisName,
-			id : this.thisGrid.analysisId,
+			id : this.ownerCt.analysisId,
 			description : analysisDescription,
-			datasets : this.thisGrid.getEEIds()
+			datasets : this.ownerCt.getEEIds()
 		}, {
 			callback : callback.createDelegate(this, [], true),
 			errorHandler : errorHandler.createDelegate(this, [], true)
@@ -255,7 +262,7 @@ Ext.Gemma.EditVirtualAnalysisToolBar = function(grid, config) {
 	};
 
 	this.reset = function() {
-		if (this.thisGrid.analysisId) {
+		if (this.ownerCt.analysisId) {
 			var callback = function(d) {
 				// load the data sets.
 				this.getStore().load({
@@ -264,9 +271,9 @@ Ext.Gemma.EditVirtualAnalysisToolBar = function(grid, config) {
 			}
 			// Go back to the server to get the ids of the experiments the
 			// selected analysis has.
-			var id = this.thisGrid.analysisId;
+			var id = this.ownerCt.analysisId;
 			GeneLinkAnalysisManagerController.getExperimentIdsInAnalysis(id, {
-				callback : callback.createDelegate(this.thisGrid, [], true)
+				callback : callback.createDelegate(this.ownerCt, [], true)
 			});
 
 		}
@@ -299,12 +306,12 @@ Ext.Gemma.EditVirtualAnalysisToolBar = function(grid, config) {
 				labelAlign : 'top'
 			});
 
-			if (this.thisGrid.analysisName) {
-				nameField.setValue(this.thisGrid.analysisName);
+			if (this.ownerCt.analysisName) {
+				nameField.setValue(this.ownerCt.analysisName);
 			}
 
-			if (this.thisGrid.analysisDescription) {
-				descriptionField.setValue(this.thisGrid.analysisDescription);
+			if (this.ownerCt.analysisDescription) {
+				descriptionField.setValue(this.ownerCt.analysisDescription);
 			}
 
 			analysisForm.add(nameField);
@@ -326,183 +333,74 @@ Ext.Gemma.EditVirtualAnalysisToolBar = function(grid, config) {
 
 	this.clear = function() {
 		Ext.DomHelper.overwrite("messages", "");
-		this.thisGrid.store.removeAll();
+		this.ownerCt.store.removeAll();
 		Ext.getCmp('newclear').disable();
 	};
 
-	var createBut = new Ext.Button({
-		id : 'newsave',
-		text : "Save",
-		handler : this.create,
-		scope : this,
-		disabled : false,
-		tooltip : "Save the analysis"
-	});
+		// cannot do here.
+		// ownerCt.store.on("add", function() {
+		// Ext.DomHelper.overwrite("messages", "");
+		//
+		// if (grid.analysisId) {
+		// Ext.getCmp('newreset').enable();
+		// } else {
+		// Ext.getCmp('newclear').enable();
+		// }
+		// Ext.getCmp('newsave').enable();
+		//
+		// });
+		//
+		// ownerCt.store.on("remove", function() {
+		// Ext.getCmp('newsave').enable();
+		// if (grid.analysisId) {
+		// Ext.getCmp('newreset').enable();
+		// }
+		// });
 
-	var clearBut = new Ext.Button({
-		id : 'newclear',
-		text : "Clear",
-		handler : this.clear,
-		scope : this,
-		disabled : true,
-		tooltip : "Clear the table"
-	});
-
-	var resetBut = new Ext.Button({
-		id : 'newreset',
-		text : "Reset",
-		handler : this.reset,
-		scope : this,
-		disabled : true,
-		tooltip : "Reset to stored version"
-	});
-
-	grid.store.on("add", function() {
-		Ext.DomHelper.overwrite("messages", "");
-
-		if (grid.analysisId) {
-			Ext.getCmp('newreset').enable();
-		} else {
-			Ext.getCmp('newclear').enable();
-		}
-		Ext.getCmp('newsave').enable();
-
-	});
-
-	grid.store.on("remove", function() {
-		Ext.getCmp('newsave').enable();
-		if (grid.analysisId) {
-			Ext.getCmp('newreset').enable();
-		}
-	});
-
-	this.addButton(createBut);
-	this.addButton(clearBut);
-	this.addButton(resetBut);
 };
 
-Ext.Gemma.SourceAnalysisToolBar = function(grid, config) {
-	var superconfig = config || {};
-	this.owningGrid = grid;
-	this.targetGrid = config.targetGrid;
-	superconfig.filtering = true;
+Ext.Gemma.SourceAnalysisToolBar = function(config) {
 
-	Ext.Gemma.SourceAnalysisToolBar.superclass.constructor.call(this, grid,
-			superconfig);
+	this.filtering = true;
 
-	if (this.targetGrid && this.targetGrid.editable) {
-		var grabber = new Ext.Button({
-			id : 'grab',
-			disabled : true,
-			text : "Grab >>",
-			handler : function(button, ev) {
-
-				var id = this.owningGrid.analysisId;
-
-				// Can't mix two analyses.
-				if (id != this.targetGrid.sourceAnalysisID) {
-					this.targetGrid.getStore().removeAll();
-				}
-				this.targetGrid.getStore().add(grid.getSelectionModel()
-						.getSelections());
-				this.targetGrid.getView().refresh();
-				this.targetGrid.sourceAnalysisID = this.owningGrid.analysisId;
-				this.targetGrid.stringency = this.owningGrid.stringency;
-				this.targetGrid.taxon = this.owningGrid.taxon;
-			},
-			scope : this
-		});
-		this.add(grabber);
-		grid.store.on("load", function() {
-			Ext.getCmp('grab').enable();
-		}, this);
-	}
+	Ext.Gemma.SourceAnalysisToolBar.superclass.constructor.call(this, config);
 
 };
 
 /*
  * Constructor
  */
-Ext.Gemma.GeneLinkAnalysisGrid = function(div, config) {
-	this.readMethod = config.readMethod;
-	delete config.readMethod;
-	this.readParams = config.readParams;
-	delete config.readParams;
-	this.editable = config.editable;
-	delete config.editable;
-	this.pageSize = config.pageSize;
-	delete config.pageSize;
-
-	/*
-	 * keep a reference to ourselves to avoid convoluted scope issues below...
-	 */
-	var thisGrid = this;
-
-	/*
-	 * establish default config options...
-	 */
-	var superConfig = {
-		renderTo : div
-	};
+Ext.Gemma.GeneLinkAnalysisGrid = function(config) {
+	Ext.apply(this, config);
 
 	if (this.pageSize) {
-		superConfig.ds = new Ext.Gemma.PagingDataStore({
+		this.ds = new Ext.Gemma.PagingDataStore({
 			proxy : new Ext.data.DWRProxy(this.readMethod),
 			reader : new Ext.data.ListRangeReader({
 				id : "id"
-			}, Ext.Gemma.GeneLinkAnalysisGrid.getRecord()),
+			}, this.record),
 			pageSize : this.pageSize
 		});
-		superConfig.bbar = new Ext.Gemma.PagingToolbar({
+		this.bbar = new Ext.Gemma.PagingToolbar({
 			pageSize : this.pageSize,
-			store : superConfig.ds
+			store : this.ds
 		});
 	} else {
-		superConfig.ds = new Ext.data.Store({
+		this.ds = new Ext.data.Store({
 			proxy : new Ext.data.DWRProxy(this.readMethod),
 			reader : new Ext.data.ListRangeReader({
 				id : "id"
-			}, Ext.Gemma.GeneLinkAnalysisGrid.getRecord())
+			}, this.record)
 		});
 	}
 
-	superConfig.cm = new Ext.grid.ColumnModel([{
-		id : 'name',
-		header : "Name",
-		dataIndex : "name"
-	}, {
-		id : 'description',
-		header : "Description",
-		dataIndex : "description"
-	}, {
-		id : 'datasets',
-		header : "Num datasets",
-		dataIndex : "numDatasets"
-	}, {
-		id : 'taxon',
-		header : "Taxon",
-		dataIndex : "taxon",
-		renderer : function(r) {
-			return r.commonName;
-		}
-	}, {
-		id : 'stringency',
-		header : "Stringency",
-		dataIndex : "stringency"
-	}, {
-		id : 'virtual',
-		header : "Virtual",
-		dataIndex : "virtual"
-	}]);
+	Ext.Gemma.GeneLinkAnalysisGrid.superclass.constructor.call(this, config);
 
-	superConfig.cm.defaultSortable = true;
-	superConfig.autoExpandColumn = 'description';
+	// this.autoExpandColumn = 'name';
 
-	for (property in config) {
-		superConfig[property] = config[property];
-	}
-	Ext.Gemma.GeneLinkAnalysisGrid.superclass.constructor.call(this,
-			superConfig);
+	this.addEvents({
+		'loadAnalysis' : true
+	});
 
 	this.getStore().on("load", function() {
 		this.autoSizeColumns();
@@ -510,66 +408,163 @@ Ext.Gemma.GeneLinkAnalysisGrid = function(div, config) {
 	}, this);
 
 	if (!this.noInitialLoad) {
-		this.getStore().load({
-			params : this.getReadParams()
-		});
+		this.getStore().load({});
 	}
 };
-
-/*
- * Fields match the Analysis object returned.
- */
-Ext.Gemma.GeneLinkAnalysisGrid.getRecord = function() {
-	if (Ext.Gemma.GeneLinkAnalysisGrid.record === undefined) {
-		Ext.Gemma.GeneLinkAnalysisGrid.record = Ext.data.Record.create([{
-			name : "id",
-			type : "int"
-		}, {
-			name : "name",
-			type : "string"
-		}, {
-			name : "description",
-			type : "string"
-		}, {
-			name : "numDatasets",
-			type : "int"
-		}, {
-			name : "taxon"
-		}, {
-			name : "virtual",
-			type : "bool"
-		}, {
-			name : "stringency",
-			type : "int"
-		}, {
-			name : "viewedAnalysisId",
-			type : "int"
-		}, {
-			name : "datasets"
-		}]);
-	}
-	return Ext.Gemma.GeneLinkAnalysisGrid.record;
-};
-
-Ext.extend(Ext.Gemma.EditVirtualAnalysisToolBar, Ext.Toolbar, {});
-
-Ext.extend(Ext.Gemma.SourceAnalysisToolBar, Ext.Gemma.DatasetSearchToolBar, {});
 
 /*
  * Displays the available analyses.
  */
-Ext.extend(Ext.Gemma.GeneLinkAnalysisGrid, Ext.Gemma.GemmaGridPanel, {
+Ext.extend(Ext.Gemma.GeneLinkAnalysisGrid, Ext.grid.GridPanel, {
 
-	initComponent : function() {
-		Ext.Gemma.GeneLinkAnalysisGrid.superclass.initComponent.call(this);
-		this.addEvents({
-					'loadAnalysis' : true
-				});
+	autoExpandColumn : 'description',
+	selModel : new Ext.grid.RowSelectionModel(),
+	stripeRows : true,
+	viewConfig : {
+		forceFit : true
 	},
+	autoExpandMax : 400,
 
-	getReadParams : function() {
-		return (typeof this.readParams == "function")
-				? this.readParams()
-				: this.readParams;
+	record : Ext.data.Record.create([{
+		name : "id",
+		type : "int"
+	}, {
+		name : "name",
+		type : "string"
+	}, {
+		name : "description",
+		type : "string"
+	}, {
+		name : "numDatasets",
+		type : "int"
+	}, {
+		name : "taxon"
+	}, {
+		name : "virtual",
+		type : "bool"
+	}, {
+		name : "stringency",
+		type : "int"
+	}, {
+		name : "viewedAnalysisId",
+		type : "int"
+	}, {
+		name : "datasets"
+	}]),
+
+	columns : [{
+		id : 'name',
+		header : "Name",
+		dataIndex : "name"
+	}, {
+		id : 'description',
+		header : "Description",
+		dataIndex : "description",
+		sortable : true,
+		width : 100
+	}, {
+		id : 'datasets',
+		header : "Num datasets",
+		dataIndex : "numDatasets",
+		sortable : true
+	}, {
+		id : 'taxon',
+		header : "Taxon",
+		dataIndex : "taxon",
+		renderer : function(r) {
+			return r.commonName;
+		},
+		sortable : true,
+		width : 100
+	}, {
+		id : 'stringency',
+		header : "Stringency",
+		dataIndex : "stringency",
+		sortable : true,
+		width : 100
+	}, {
+		id : 'virtual',
+		header : "Virtual",
+		dataIndex : "virtual",
+		sortable : true,
+		width : 100
+	}]
+
+});
+
+Ext.extend(Ext.Gemma.EditVirtualAnalysisToolBar, Ext.Toolbar, {
+	afterRender : function() {
+		Ext.Gemma.EditVirtualAnalysisToolBar.superclass.afterRender.call(this);
+
+		// add the buttons.
+		var createBut = new Ext.Button({
+			id : 'newsave',
+			text : "Save",
+			handler : this.create,
+			scope : this,
+			disabled : false,
+			tooltip : "Save the analysis"
+		});
+
+		var clearBut = new Ext.Button({
+			id : 'newclear',
+			text : "Clear",
+			handler : this.clear,
+			scope : this,
+			disabled : true,
+			tooltip : "Clear the table"
+		});
+
+		var resetBut = new Ext.Button({
+			id : 'newreset',
+			text : "Reset",
+			handler : this.reset,
+			scope : this,
+			disabled : true,
+			tooltip : "Reset to stored version"
+		});
+
+		if (!this.admin) {
+			this.createBut.disable();
+		}
+		this.addButton(createBut);
+		this.addButton(clearBut);
+		this.addButton(resetBut);
+
 	}
+});
+
+Ext.extend(Ext.Gemma.SourceAnalysisToolBar, Ext.Gemma.DatasetSearchToolBar, {
+
+	afterRender : function() {
+		Ext.Gemma.SourceAnalysisToolBar.superclass.afterRender.call(this);
+		if (this.targetGrid && this.targetGrid.editable) {
+			var grabber = new Ext.Button({
+				id : 'grab',
+				disabled : true,
+				text : "Grab >>",
+				handler : function(button, ev) {
+
+					var id = this.owningGrid.analysisId;
+
+					// Can't mix two analyses.
+					if (id != this.targetGrid.sourceAnalysisID) {
+						this.targetGrid.getStore().removeAll();
+					}
+					this.targetGrid.getStore().add(this.grid
+							.getSelectionModel().getSelections());
+					this.targetGrid.getView().refresh();
+					this.targetGrid.sourceAnalysisID = this.container.analysisId;
+					this.targetGrid.stringency = this.container.stringency;
+					this.targetGrid.taxon = this.container.taxon;
+				},
+				scope : this
+			});
+			this.add(grabber);
+			// grid.store.on("load", function() {
+			// Ext.getCmp('grab').enable();
+			// }, this);
+		}
+	}
+
 });

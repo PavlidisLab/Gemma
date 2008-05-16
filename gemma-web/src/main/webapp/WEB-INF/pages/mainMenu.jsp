@@ -1,32 +1,38 @@
 <%@ include file="/common/taglibs.jsp"%>
 <head>
-	<title><fmt:message key="mainMenu.title" /></title>
-	<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
+	<title><fmt:message key="mainMenu.title" />
+	</title>
+	<script src="<c:url value='/scripts/ext/adapter/ext/ext-base.js'/>" type="text/javascript"></script>
 	<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
 
 	<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
+
 	<script type='text/javascript' src='/Gemma/dwr/interface/GenePickerController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/ExtCoexpressionSearchController.js'></script>
+
+	<script type='text/javascript' src='/Gemma/scripts/ajax/util/GemmaGridPanel.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/GeneCombo.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/TaxonCombo.js'></script>
-	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/GeneChooserPanel.js'></script>
-	<script type='text/javascript' src='/Gemma/scripts/ajax/util/GemmaGridPanel.js'></script>
-	<script type='text/javascript' src='/Gemma/scripts/ajax/util/PagingDataStore.js'></script>
-	<script type='text/javascript' src='/Gemma/scripts/ajax/util/PagingToolbar.js'></script>
-	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/DatasetSearchField.js'></script>
+
 	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/AnalysisCombo.js'></script>
-	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionGrid.js'></script>
-	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionDatasetGrid.js'></script>
-	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionSearchForm.js'></script>
-	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionSearchLite.js'></script>
+	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionSearchFormLite.js'></script>
 	<script type="text/javaScript" src="<c:url value='/scripts/rounded_corners_lite.inc.js'/>"></script>
 
-</head>
-<script type="text/javaScript">
-   Ext.onReady( function() {
+	<script type="text/javaScript">
+	Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
+   	Ext.onReady( function() {
+   
+   Ext.QuickTips.init();
+	Ext.state.Manager.setProvider( new Ext.state.CookieProvider() );
+	
+	var searchForm = new Ext.Gemma.CoexpressionSearchFormLite( {
+		renderTo : "coexpression-form"
+	} ); 
+   
+   // rounded corners
       settings = {
           tl: { radius: 8 },
           tr: { radius: 8 },
@@ -44,17 +50,20 @@
      	box.applyCornersToAll();
      }
      
-      if (Ext.get("adminFunctions")) {
+     if (Ext.get("adminFunctions")) {
      	var box = new curvyCorners(settings, document.getElementById("adminFunctions"));
      	box.applyCornersToAll();
      }
      
-       if (Ext.get("contact")) {
+     if (Ext.get("contact")) {
      	var box = new curvyCorners(settings, document.getElementById("contact"));
      	box.applyCornersToAll();
      }
   } );
-</script>
+	</script>
+
+</head>
+
 <div class="rightcolumn" style="width: 200px; float: right; font-size: smaller">
 	<div id="dataSummary" style="background: #D1D8F8; margin-bottom: 25px; padding: 8px;">
 		<strong>Data Summary</strong>
@@ -179,13 +188,13 @@
 		Coexpression query
 	</h3>
 </div>
-<div id="coexpression-form" style="width: 200px">
 
-</div>
+<div id="coexpression-form"></div>
 
-<div id="sampleQueries" style="padding: 4px;">
+<div id="sampleQueries" style="padding: 4px;width:250px;">
 	Examples: rat
 	<a href="<c:url value="/searchCoexpression.html?g=938103&amp;a=706" />">Ddn</a>; mouse
 	<a href="<c:url value="/searchCoexpression.html?g=598735&amp;s=3&amp;a=708" />">Mapk3</a>
 </div>
+
 

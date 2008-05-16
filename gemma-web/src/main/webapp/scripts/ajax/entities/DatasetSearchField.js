@@ -11,22 +11,10 @@ Ext.namespace('Ext.Gemma');
  */
 Ext.Gemma.DatasetSearchField = function(config) {
 
-	this.loadMask = config.loadMask;
-	this.filtering = config.filtering;
 	this.eeIds = [];
 	this.filterFrom = []; // starting set.
 
-	var superConfig = {
-		loadingText : 'Searching...',
-		emptyText : 'Enter search term'
-
-	};
-
-	for (property in config) {
-		superConfig[property] = config[property];
-	}
-
-	Ext.Gemma.DatasetSearchField.superclass.constructor.call(this, superConfig);
+	Ext.Gemma.DatasetSearchField.superclass.constructor.call(this, config);
 
 	this.on('beforesearch', function(field, query) {
 		if (this.loadMask) {
@@ -49,6 +37,9 @@ Ext.Gemma.DatasetSearchField = function(config) {
  * Type declaration
  */
 Ext.extend(Ext.Gemma.DatasetSearchField, Ext.form.TriggerField, {
+
+	loadingText : 'Searching...',
+	emptyText : 'Enter search term',
 
 	initComponent : function() {
 		Ext.Gemma.DatasetSearchField.superclass.initComponent.call(this);
@@ -93,7 +84,7 @@ Ext.extend(Ext.Gemma.DatasetSearchField, Ext.form.TriggerField, {
 		} else {
 			// If there is no taxon
 			if (!this.taxon) {
-				alert("Please select a taxon first");
+				Ext.Msg.alert("Sorry", "Please select a taxon first");
 				return;
 			}
 
@@ -104,8 +95,8 @@ Ext.extend(Ext.Gemma.DatasetSearchField, Ext.form.TriggerField, {
 			}
 			if (this.fireEvent('beforesearch', this, params) !== false) {
 				this.lastParams = params;
-				ExtCoexpressionSearchController.findExpressionExperiments(
-						params[0], params[1], this.foundDatasets.bind(this));
+				ExpressionExperimentController.find(params[0], params[1],
+						this.foundDatasets.bind(this));
 			}
 		}
 	},
@@ -136,3 +127,5 @@ Ext.extend(Ext.Gemma.DatasetSearchField, Ext.form.TriggerField, {
 	}
 
 });
+
+Ext.reg('datasetsearchfield', Ext.Gemma.DatasetSearchField);

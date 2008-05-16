@@ -1,123 +1,118 @@
 /*
-* Live search field for genes. 
-* Version : $Id$
-* Author : luke
-*/
+ * @version : $Id$
+ * 
+ */
 Ext.namespace('Ext.Gemma');
 
-/* Ext.Gemma.GeneCombo constructor...
+/**
+ * Live search field for genes.
+ * 
+ * @class Ext.Gemma.GeneCombo
+ * @extends Ext.form.ComboBox
  */
-Ext.Gemma.GeneCombo = function ( config ) {
-	Ext.QuickTips.init();
-	
-	/* establish default config options...
-	 */
-	var superConfig = {
-		displayField : 'officialSymbol',
-		valueField : 'id',
-		width : 240,
-		loadingText : 'Searching...',
-		minChars : 1,
-		selectOnFocus : true,
-		store : new Ext.data.Store( {
-			proxy : new Ext.data.DWRProxy( GenePickerController.searchGenes ),
-			reader : new Ext.data.ListRangeReader( {id:"id"}, Ext.Gemma.GeneCombo.getRecord() ),
-			sortInfo : { field: "officialSymbol", dir: "ASC" }
-		} ),
-		tpl : Ext.Gemma.GeneCombo.getTemplate()
-	};
-	
-	/* apply user-defined config options and call the superclass constructor...
-	 */
-	for ( var property in config ) {
-		superConfig[property] = config[property];
-	}
-	Ext.Gemma.GeneCombo.superclass.constructor.call( this, superConfig );
-	
-	this.store.on("datachanged", function() {
-			if ( this.store.getCount() == 0) {
+Ext.Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
+
+	displayField : 'officialSymbol',
+	valueField : 'id',
+	width : 140,// default.
+	listWidth : 350,
+	loadingText : 'Searching...',
+	minChars : 1,
+	selectOnFocus : true,
+	record : Ext.data.Record.create([{
+		name : "id",
+		type : "int"
+	}, {
+		name : "taxon",
+		type : "string",
+		convert : function(t) {
+			return t.scientificName;
+		}
+	}, {
+		name : "officialSymbol",
+		type : "string"
+	}, {
+		name : "officialName",
+		type : "string"
+	}]),
+
+	initComponent : function() {
+
+		var template = new Ext.XTemplate('<tpl for="."><div ext:qtip="{officialName} ({taxon})" class="x-combo-list-item">{officialSymbol} {officialName} ({taxon})</div></tpl>');
+
+		Ext.apply(this, {
+			tpl : template,
+			store : new Ext.data.Store({
+				proxy : new Ext.data.DWRProxy(GenePickerController.searchGenes),
+				reader : new Ext.data.ListRangeReader({
+					id : "id"
+				}, this.record),
+				sortInfo : {
+					field : "officialSymbol",
+					dir : "ASC"
+				}
+			})
+		});
+
+		Ext.Gemma.GeneCombo.superclass.initComponent.call(this);
+		this.addEvents('genechanged');
+
+		this.store.on("datachanged", function() {
+			if (this.store.getCount() == 0) {
 				this.fireEvent("invalid", "No matching genes");
 				this.setRawValue("No matching genes");
 			}
-		},this);
-};
+		}, this);
+	},
 
-/* Static methods. Record representing a gene.
- */
-Ext.Gemma.GeneCombo.getRecord = function() {
-	if ( Ext.Gemma.GeneCombo.record === undefined ) {
-		Ext.Gemma.GeneCombo.record = Ext.data.Record.create( [
-			{ name:"id", type:"int" },
-			{ name:"taxon", type:"string", convert: function ( t ) { return t.scientificName; } },
-			{ name:"officialSymbol", type:"string" },
-			{ name:"officialName", type:"string" } 
-		] );
-	}
-	return Ext.Gemma.GeneCombo.record;
-};
-
-/* Control display of search results.
-*/
-Ext.Gemma.GeneCombo.getTemplate = function() {
-	if ( Ext.Gemma.GeneCombo.template === undefined ) {
-		Ext.Gemma.GeneCombo.template = new Ext.XTemplate(
-			'<tpl for="."><div ext:qtip="{officialName} ({taxon})" class="x-combo-list-item">{officialSymbol} {officialName} ({taxon})</div></tpl>'
-		);
-	}
-	return Ext.Gemma.GeneCombo.template;
-};
-
-/* other public methods...
- */
-Ext.extend( Ext.Gemma.GeneCombo, Ext.form.ComboBox, {
-
-	initComponent : function() {
-        Ext.Gemma.GeneCombo.superclass.initComponent.call(this);
-        this.addEvents( 'genechanged' );
-    },
-
-	onSelect : function ( record, index ) {
-		Ext.Gemma.GeneCombo.superclass.onSelect.call( this, record, index );
-		this.setGene( record.data );
-		if ( record.data != this.selectedGene ) {
+	onSelect : function(record, index) {
+		Ext.Gemma.GeneCombo.superclass.onSelect.call(this, record, index);
+		this.setGene(record.data);
+		if (record.data.id != this.selectedGene.id) {
 			this.selectedGene = record.data;
-			this.fireEvent( 'genechanged', this, this.selectedGene );
+			this.fireEvent('genechanged', this, this.selectedGene);
 		}
 	},
-	
+
 	reset : function() {
-		Ext.Gemma.GeneCombo.superclass.reset.call( this );
-		this.setGene( null );
+		Ext.Gemma.GeneCombo.superclass.reset.call(this);
+		this.setGene(null);
 	},
-	
-	getParams : function ( query ) {
-		return [ query, this.taxon ? this.taxon.id : -1 ];
+
+	getParams : function(query) {
+		return [query, this.taxon ? this.taxon.id : -1];
 	},
-	
-	getGene : function () {
+
+	getGene : function() {
 		return this.selectedGene;
 	},
-	
-	setGene : function ( gene ) {
+
+	setGene : function(gene) {
 		this.selectedGene = gene;
-		if ( this.tooltip ) {
+		if (this.tooltip) {
 			this.tooltip.destroy();
 		}
-		if ( gene ) {
-			this.tooltip = new Ext.ToolTip( {
-				target: this.getEl(),
-				html: String.format( '{0} ({1})', gene.officialName || "no description", gene.taxon )
-			} );
+		if (gene) {
+			this.tooltip = new Ext.ToolTip({
+				target : this.getEl(),
+				html : String.format('{0} ({1})', gene.officialName
+						|| "no description", gene.taxon)
+			});
 		}
 	},
-	
-	setTaxon : function ( taxon ) {
+
+	getTaxon : function() {
+		return this.taxon;
+	},
+
+	setTaxon : function(taxon) {
 		this.taxon = taxon;
-		if ( this.selectedGene && this.selectedGene.taxon != taxon.scientificName ) {
-			this.setGene( null );
+		// If taxon has changed, clear.
+		if (this.selectedGene && this.selectedGene.taxon.id != taxon.id) {
+			this.setGene(null);
 			this.reset();
-			this.lastQuery = ''; // force a reload with the new taxon...
+			this.lastQuery = '';
 		}
 	}
-	
-} );
+
+});

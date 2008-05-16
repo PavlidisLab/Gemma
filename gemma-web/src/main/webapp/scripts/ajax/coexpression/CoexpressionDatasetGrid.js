@@ -53,7 +53,6 @@ Ext.Gemma.CoexpressionDatasetGrid = function ( config ) {
 	Ext.Gemma.CoexpressionDatasetGrid.superclass.constructor.call( this, superConfig );
 	
 	this.getStore().on( "load", function () {
-		this.autoSizeColumns();
 		this.doLayout();
 	}, this );
 	

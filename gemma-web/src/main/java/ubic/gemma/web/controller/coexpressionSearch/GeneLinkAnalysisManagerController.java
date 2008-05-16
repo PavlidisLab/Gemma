@@ -34,7 +34,7 @@ import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionVirtualAnalysis;
-import ubic.gemma.model.expression.experiment.BioAssaySet; 
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -200,10 +200,9 @@ public class GeneLinkAnalysisManagerController extends BaseFormController {
     @SuppressWarnings("unchecked")
     public Collection<Long> getExperimentIdsInAnalysis( Long id ) {
         GeneCoexpressionAnalysis analysis = ( GeneCoexpressionAnalysis ) geneCoexpressionAnalysisService.load( id );
-        Collection<ExpressionExperiment> datasetsAnalyzed = geneCoexpressionAnalysisService
-                .getDatasetsAnalyzed( analysis );
+        Collection<BioAssaySet> datasetsAnalyzed = geneCoexpressionAnalysisService.getDatasetsAnalyzed( analysis );
         Collection<Long> eeids = new HashSet<Long>();
-        for ( ExpressionExperiment ee : datasetsAnalyzed ) {
+        for ( BioAssaySet ee : datasetsAnalyzed ) { // FIXME not secure.
             eeids.add( ee.getId() );
         }
         return eeids;

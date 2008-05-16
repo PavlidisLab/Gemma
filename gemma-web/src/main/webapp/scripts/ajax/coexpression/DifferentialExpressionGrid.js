@@ -59,8 +59,7 @@ Ext.Gemma.DifferentialExpressionGrid = function ( config ) {
 	}
 	Ext.Gemma.DifferentialExpressionGrid.superclass.constructor.call( this, superConfig );
 	
-	this.getStore().on( "load", function () {
-		this.autoSizeColumns();
+	this.getStore().on( "load", function () { 
 		this.doLayout();
 	}, this );
 	

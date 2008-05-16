@@ -4,7 +4,7 @@
 	<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/${appConfig["theme"]}/theme.css'/>" />
 	<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/spinner.css'/>" />
 	<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
-	<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
+	<script src="<c:url value='/scripts/ext/ext-all-debug.js'/>" type="text/javascript"></script>
 	<script src="<c:url value='/scripts/ext/RowExpander.js'/>" type="text/javascript"></script>
 	<script src="<c:url value='/scripts/ext/data/PagingMemoryProxy.js'/>" type="text/javascript"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
@@ -17,10 +17,13 @@
 	<script type='text/javascript' src='/Gemma/dwr/interface/ExtCoexpressionSearchController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/DifferentialExpressionSearchController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentSetController.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/util/GemmaGridPanel.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/util/PagingDataStore.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/util/PagingToolbar.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/DatasetSearchField.js'></script>
+	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/DatasetSearchToolbar.js'></script>
+	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/DatasetChooserPanel.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/ExpressionExperimentGrid.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/AnalysisCombo.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/GeneCombo.js'></script>
@@ -32,6 +35,8 @@
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionGridRowExpander.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionDatasetGrid.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionSearchForm.js'></script>
+	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionSummaryGrid.js'></script>
+	
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionSearch.js'></script>
 	
 	<content tag="heading"><fmt:message key="searchCoexpression.heading" /></content>

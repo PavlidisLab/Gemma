@@ -84,6 +84,7 @@ public class CoexpressionSearchController extends BaseFormController {
      * @param query
      * @param taxonId
      * @return
+     * @deprecated redundant with method in ExpressionExperimentController.
      */
     @SuppressWarnings("unchecked")
     public Collection<Long> findExpressionExperiments( String query, Long taxonId ) {
