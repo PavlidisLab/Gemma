@@ -36,11 +36,17 @@ Ext.Gemma.AnalysisCombo = Ext.extend(Ext.form.ComboBox, {
 	}]),
 
 	setState : function(v) {
-		this.state = v;
+		if (this.state) {
+			this.setValue(this.state);
+		} else {
+			this.state = v;
+		}
 	},
 
 	restoreState : function() {
 		this.setValue(this.state);
+		delete this.state;
+		this.fireEvent('ready');
 	},
 
 	initComponent : function() {
@@ -82,7 +88,7 @@ Ext.Gemma.AnalysisCombo = Ext.extend(Ext.form.ComboBox, {
 
 		this.doQuery();
 
-		this.addEvents('analysischanged');
+		this.addEvents('analysischanged', 'ready');
 	},
 
 	setValue : function(v) {

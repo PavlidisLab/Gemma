@@ -41,7 +41,7 @@ Ext.Gemma.GeneChooserPanel = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 				}.createDelegate(this, [], true));
 	},
 
-	loadGenes : function(geneIds, callback) {
+	loadGenes : function(geneIds, callback, args) {
 		GenePickerController.getGenes(geneIds, function(genes) {
 			var geneData = [];
 			for (var i = 0; i < genes.length; ++i) {
@@ -50,12 +50,12 @@ Ext.Gemma.GeneChooserPanel = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 			}
 			this.getStore().loadData(geneData);
 			if (callback) {
-				callback();
+				callback(args);
 			}
 		}.createDelegate(this, [], true));
 	},
 
-	setGene : function(geneId, callback) {
+	setGene : function(geneId, callback, args) {
 		GenePickerController.getGenes([geneId], function(genes) {
 			var g = genes[0];
 			if (g) {
@@ -66,7 +66,7 @@ Ext.Gemma.GeneChooserPanel = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 				this.addButton.enable();
 			}
 			if (callback) {
-				callback();
+				callback(args);
 			}
 		}.createDelegate(this, [], true));
 	},

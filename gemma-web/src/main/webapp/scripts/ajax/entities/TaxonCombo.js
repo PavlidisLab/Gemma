@@ -21,11 +21,17 @@ Ext.Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 	emptyText : 'Select a taxon',
 
 	setState : function(v) {
-		this.state = v;
+		if (this.state) {
+			this.setValue(this.state);
+		} else {
+			this.state = v;
+		}
 	},
 
 	restoreState : function() {
 		this.setValue(this.state);
+		delete this.state;
+		this.fireEvent('ready');
 	},
 
 	record : Ext.data.Record.create([{
@@ -41,7 +47,7 @@ Ext.Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 
 	initComponent : function() {
 
-		this.addEvents('taxonchanged');
+		this.addEvents('taxonchanged', 'ready');
 
 		var tmpl = new Ext.XTemplate('<tpl for="."><div class="x-combo-list-item">{commonName} ({scientificName})</div></tpl>');
 

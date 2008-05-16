@@ -44,7 +44,11 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 			})
 		});
 
+	},
+
+	restoreState : function() {
 		// initialize from state
+		console.log("restoring state");
 		if (this.csc) {
 			this.initializeFromCoexpressionSearchCommand(this.csc);
 		}
@@ -104,33 +108,43 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 				.getCoexpressionSearchCommandFromQuery(query), true);
 	},
 
+	initializeGenes : function(csc, doSearch) {
+		if (csc.geneIds.length > 1) {
+			this.geneChooserPanel.loadGenes(csc.geneIds, this.maybeDoSearch
+					.createDelegate(this), doSearch);
+		} else {
+			this.geneChooserPanel.setGene(csc.geneIds[0], this.maybeDoSearch
+					.createDelegate(this), doSearch);
+		}
+	},
+
+	/**
+	 * make the form look like it has the right values; this will happen
+	 * asynchronously... so do the search after it is done
+	 */
 	initializeFromCoexpressionSearchCommand : function(csc, doSearch) {
 
 		this.geneChooserPanel = Ext.getCmp('gene-chooser-panel');
 		this.stringencyField = Ext.getCmp('stringencyfield');
 		this.eeSearchField = Ext.getCmp('eeSearchField');
 
-		/*
-		 * make the form look like it has the right values; this will happen
-		 * asynchronously...
-		 */
+		this.initializeGenes(csc, doSearch);
+
 		if (csc.taxonId) {
 			this.geneChooserPanel.taxonCombo.setState(csc.taxonId);
 		}
-		if (csc.geneIds.length > 1) {
-			this.geneChooserPanel.loadGenes(csc.geneIds);
-		} else {
-			this.geneChooserPanel.setGene(csc.geneIds[0]);
-		}
+
 		if (csc.cannedAnalysisId) {
 			this.analysisCombo.setState(csc.cannedAnalysisId);
 		}
 		if (csc.stringency) {
 			this.stringencyField.setValue(csc.stringency);
 		}
+
 		if (csc.queryGenesOnly) {
 			this.queryGenesOnly.setValue(true);
 		}
+
 		if (csc.cannedAnalysisId === null || csc.cannedAnalysisId < 0) {
 			this.customFs.show();
 			this.eeSearchField.setValue(csc.eeQuery);
@@ -139,10 +153,10 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 
 		}
 
-		/*
-		 * perform the search with the specified values...
-		 */
-		if (doSearch) {
+	},
+
+	maybeDoSearch : function(doit) {
+		if (doit) {
 			this.doSearch();
 		}
 	},
@@ -355,6 +369,8 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 		this.analysisCombo
 				.on('analysischanged', this.analysisChanged.createDelegate(
 						this, [this.analysisCombo.getAnalysis()], true));
+
+		this.analysisCombo.on('ready', this.restoreState.createDelegate(this));
 
 		Ext.apply(this, {
 
