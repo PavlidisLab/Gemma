@@ -309,7 +309,7 @@ public class GoMetric {
      * @param boolean weight
      * @return Sparse matrix of genes x GOterms
      */
-    private DoubleMatrixNamed<Long, String> createVectorMatrix( Map<Long, Collection<String>> gene2go, boolean weight ) {
+    public DoubleMatrixNamed<Long, String> createVectorMatrix( Map<Long, Collection<String>> gene2go, boolean weight ) {
 
         DoubleMatrixNamed<Long, String> gene2term = new SparseRaggedDoubleMatrix2DNamed<Long, String>();
         Map<String, Double> GOTermFrequency = new HashMap<String, Double>();
