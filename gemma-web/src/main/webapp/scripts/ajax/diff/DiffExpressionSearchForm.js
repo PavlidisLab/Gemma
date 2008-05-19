@@ -82,35 +82,6 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
             }]
 			
 		});
-	
-	/* Combo to choose the 'scope' of the query for meta analysis. NOTE if this is not declared first, there are problems getting it to show up. */
-	this.analysisCombo = new Ext.Gemma.AnalysisCombo( {
-		fieldLabel : 'Search scope',
-		showCustomOption : true
-	} ); 
-	this.analysisCombo.on( "analysisChanged", function ( combo, analysis ) {
-		if ( analysis ) {
-			if ( analysis.id < 0 ) { // custom analysis
-				thisPanel.customAnalysis = true;
-				customFs.doLayout();
-				customFs.show();
- 				thisPanel.updateDatasetsToBeSearched( this.eeSearchField.getEeIds() );
- 				this.eeSearchField.findDatasets();
-			} else {
-				thisPanel.customAnalysis = false;
-				customFs.hide();
-				thisPanel.taxonChanged( analysis.taxon );
-				thisPanel.updateDatasetsToBeSearched( analysis.datasets );
-			}
-		} else {
-			thisPanel.customAnalysis = false;
-			customFs.hide();
-			thisPanel.optionsPanel.setTitle( "Analysis options" );
-		}
-	}, this );
-	Ext.Gemma.DiffExpressionSearchForm.addToolTip( this.analysisCombo,
-		"Restrict the list of datasets that will be searched for differential expression" );
-		
 		
 	this.stringencyField = new Ext.form.NumberField( {
 		allowBlank : false,
@@ -142,18 +113,7 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
 	Ext.Gemma.DiffExpressionSearchForm.addToolTip( this.eeSearchField,
 		"Search only datasets that match these keywords" );
 	
-	var customFs = new Ext.form.FieldSet( {
-		title : 'Custom analysis options',
-		autoHeight : true,
-		hidden : true,  
-		autoWidth:true,
-		items :  [this.eeSearchField ] 
-	} );
-	
-	this.customFs = customFs;
-	
-	
- 	// Panel combining all of the above elements.
+ 	/* set up the panels */
 	var optionsPanel = new Ext.Panel({
 		title : 'Analysis options',
 		autoHeight : true,
@@ -164,15 +124,24 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
 	
 	var metaAnalysisFs = new Ext.form.FieldSet( {  
 		autoHeight : true,
-	  	items : [ this.stringencyField, this.analysisCombo, this.customFs ] //
+	  	items : [ this.stringencyField, this.eeSearchField ] //
 	} )
+	
+	var chooseDatasetsButton = new Ext.Button( {
+		text : "Choose datasets interactively",
+		handler : this.chooseDatasets.createDelegate(this)
+	} );
 
 	var metaAnalysisPanel = new Ext.Panel({
 		title : 'Meta Analysis options',
 		autoHeight : true,
-		items : [metaAnalysisFs]
+		items : [metaAnalysisFs],
+		buttons: [chooseDatasetsButton],
+		buttonAlign: 'left'
 	});
 	
+	//metaAnalysisPanel.addButton(chooseDatasetsButton);
+		
 	this.metaAnalysisPanel = metaAnalysisPanel;
 	
 	var submitButton = new Ext.Button( {
@@ -367,6 +336,17 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 		}
 	},
 	
+	chooseDatasets : function() {
+		if (!this.dcp) {
+			this.dcp = new Ext.Gemma.DatasetChooserPanel();
+			this.dcp.on("datasets-selected", function(e) {
+				this.updateDatasetsToBeSearched(e.eeIds);
+			}, this);
+		}
+		// todo: provide the current datasets.
+		this.dcp.show( /* current datasets or analysis */);
+	},
+	
 	handleError : function( msg, e ) {
 		Ext.DomHelper.overwrite("diffExpression-messages", {tag : 'img', src:'/Gemma/images/icons/warning.png' }); 
 		Ext.DomHelper.append("diffExpression-messages", {tag : 'span', html : "&nbsp;&nbsp;"  + msg });  
@@ -412,8 +392,6 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 	},
 	
 	taxonChanged : function ( taxon ) {
-		this.analysisCombo.taxonChanged( taxon );
-		this.eeSearchField.taxonChanged( taxon, this.customFs.hidden ? false : true );
 		this.geneChooserPanel.taxonChanged( taxon );
 	},
 	
