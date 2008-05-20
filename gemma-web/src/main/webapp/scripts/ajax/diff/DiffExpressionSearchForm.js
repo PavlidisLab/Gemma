@@ -379,6 +379,9 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 	},
 	
 	taxonChanged : function ( taxon ) {
+		if (!taxon) {
+			return;
+		}
 		this.eeSearchField.taxonChanged(taxon, false);
 		this.geneChooserPanel.taxonChanged( taxon );
 	},
