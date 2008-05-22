@@ -149,12 +149,14 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         Collection<Long> geneIds = command.getGeneIds();
 
+        Collection<Long> eeIds = command.getEeIds();
+
         Integer stringency = command.getStringency();
 
         Collection<DifferentialExpressionMetaAnalysisValueObject> demavos = new ArrayList<DifferentialExpressionMetaAnalysisValueObject>();
         for ( long geneId : geneIds ) {
             DifferentialExpressionMetaAnalysisValueObject demavoForGene = getDifferentialExpressionMetaAnalysis(
-                    geneId, stringency );
+                    geneId, eeIds, stringency );
             demavos.add( demavoForGene );
         }
 
@@ -164,11 +166,13 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
     /**
      * @param geneId
+     * @param eeIds
+     * @param stringency
      * @return
      */
     @SuppressWarnings("unchecked")
     private DifferentialExpressionMetaAnalysisValueObject getDifferentialExpressionMetaAnalysis( Long geneId,
-            Integer stringency ) {
+            Collection<Long> eeIds, Integer stringency ) {
 
         Gene g = geneService.load( geneId );
         if ( g == null ) return null;
@@ -177,17 +181,24 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService
                 .findExperimentsWithAnalyses( g );
 
+        List<ExpressionExperiment> experimentsUsed = new ArrayList<ExpressionExperiment>();
+        for ( ExpressionExperiment ee : experimentsAnalyzed ) {
+            if ( eeIds.contains( ee.getId() ) ) {
+                experimentsUsed.add( ee );
+            }
+        }
+
         DifferentialExpressionMetaAnalysisValueObject demavo = null;
 
         /* check to see we have at least 'stringency' experiments confirming the diff expression */
-        if ( experimentsAnalyzed.size() >= stringency ) {
+        if ( experimentsUsed.size() >= stringency ) {
 
             /* get fisher pval */
-            double fisherPVal = fisherCombinePvalues( g, experimentsAnalyzed );
+            double fisherPVal = fisherCombinePvalues( g, experimentsUsed );
 
             demavo = new DifferentialExpressionMetaAnalysisValueObject();
             demavo.setGene( g );
-            demavo.setNumSupportingDataSets( experimentsAnalyzed.size() );
+            demavo.setNumSupportingDataSets( experimentsUsed.size() );
             demavo.setFisherPValue( fisherPVal );
         }
 

@@ -44,6 +44,8 @@ public class DiffExpressionSearchCommand implements Serializable {
 
     private Long cannedAnalysisId;
 
+    private Collection<Long> eeIds;
+
     public Long getCannedAnalysisId() {
         return cannedAnalysisId;
     }
@@ -82,6 +84,14 @@ public class DiffExpressionSearchCommand implements Serializable {
 
     public void setThreshold( Double threshold ) {
         this.threshold = threshold;
+    }
+
+    public Collection<Long> getEeIds() {
+        return eeIds;
+    }
+
+    public void setEeIds( Collection<Long> eeIds ) {
+        this.eeIds = eeIds;
     }
 
     /*
