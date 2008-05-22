@@ -19,6 +19,7 @@
 
 package ubic.gemma.ontology;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,6 +30,7 @@ import java.util.Map;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.SparseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.SparseRaggedDoubleMatrix2DNamed;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -311,10 +313,10 @@ public class GoMetric {
      */
     public DoubleMatrixNamed<Long, String> createVectorMatrix( Map<Long, Collection<String>> gene2go, boolean weight ) {
 
-        DoubleMatrixNamed<Long, String> gene2term = new SparseRaggedDoubleMatrix2DNamed<Long, String>();
         Map<String, Double> GOTermFrequency = new HashMap<String, Double>();
-        List<String> goTerms = ( List<String> ) geneOntologyService.getAllGOTermIds();
-        List<Long> geneSet = ( List<Long> ) gene2go.keySet();
+        List<String> goTerms =  new ArrayList<String> (geneOntologyService.getAllGOTermIds());
+        List<Long> geneSet = new ArrayList<Long> (gene2go.keySet());
+        DoubleMatrixNamed<Long, String> gene2term = new SparseDoubleMatrix2DNamed<Long, String>(geneSet.size(), goTerms.size());
 
         if ( weight ) {
             GOTermFrequency = createWeightMap( getTermOccurrence( gene2go ), gene2go.keySet().size() );
@@ -323,15 +325,15 @@ public class GoMetric {
         gene2term.setColumnNames( goTerms );
         gene2term.setRowNames( geneSet );
 
-        for ( Long id : geneSet ) {
+        for ( Long id : gene2term.getRowNames() ) {
 
             Collection<String> terms = gene2go.get( id );
-            for ( String goId : goTerms ) {
+            for ( String goId : gene2term.getColNames() ) {
 
                 if ( terms.contains( goId ) ) {
                     if ( weight ) {
                         gene2term.setByKeys( id, goId, GOTermFrequency.get( goId ) );
-                    } else {
+                    } else {             
                         gene2term.setByKeys( id, goId, ( double ) 1 );
                     }
                 }
@@ -340,6 +342,7 @@ public class GoMetric {
         return gene2term;
     }
 
+    
     /**
      * @param GOFreq hashMap of GO term to its frequency in the corpus
      * @param N number of genes in the corpus
@@ -392,8 +395,10 @@ public class GoMetric {
         Double dotProduct = getDotProduct( g1, g2 );
         Double g1Length = getVectorLength( g1 );
         Double g2Length = getVectorLength( g2 );
+        Double score = 0.0;
 
-        Double score = dotProduct / ( g1Length * g2Length );
+        if ( g1Length != 0 && g2Length != 0 ) score = dotProduct / ( g1Length * g2Length );
+
         return score;
     }
 
@@ -578,7 +583,7 @@ public class GoMetric {
         int x = vector1.length;
         Double dotProduct = 0.0;
 
-        for ( int i = 0; i <= x; i++ ) {
+        for ( int i = 0; i < x; i++ ) {
             double prod = vector1[i] * vector2[i];
             if ( prod > 0 ) dotProduct += prod;
         }
