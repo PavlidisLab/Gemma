@@ -229,17 +229,18 @@ public class GeneOntologyService {
         return overlap;
     }
 
-    
     /**
      * @return a collection of all existing GO term ids
      */
-    public Collection<String> getAllGOTermIds (){
-       
+    public Collection<String> getAllGOTermIds() {
+
         Collection<String> goTermIds = terms.keySet();
+        goTermIds.remove( BASE_GO_URI + "GO_0008150" );
+        goTermIds.remove( BASE_GO_URI + "GO_0003674" );
+        goTermIds.remove( BASE_GO_URI + "GO_0005575" );
         return goTermIds;
     }
-    
-    
+
     /**
      * @param queryGene1
      * @param queryGene2
