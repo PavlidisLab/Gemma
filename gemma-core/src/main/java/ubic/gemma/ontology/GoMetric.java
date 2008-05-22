@@ -411,9 +411,9 @@ public class GoMetric {
     private Double computeKappaSimilarity( DoubleMatrixNamed<Long, String> gene2TermMatrix, double[] g1, double[] g2 ) {
 
         if ( g1.length != g2.length ) return null;
-        Double[][] contingencyMatrix = new Double[2][2];
+        Double[][] contingencyMatrix =  new Double [][] {{0.0,0.0},{0.0,0.0}};
 
-        for ( int i = 0; i <= g1.length; i++ ) {
+        for ( int i = 0; i < g1.length; i++ ) {
 
             if ( g1[i] == g2[i] ) {
                 if ( g1[i] == 0 ) contingencyMatrix[1][1]++;
