@@ -53,7 +53,6 @@ Ext.onReady( function() {
 		} );
 		
 		metaAnalysisGrid.render( "diffExpression-metaAnalysis" );
-		metaAnalysisGrid.autoSizeColumns();
 		metaAnalysisGrid.getView().refresh();
 		metaAnalysisGrid.loadData(result);
 		

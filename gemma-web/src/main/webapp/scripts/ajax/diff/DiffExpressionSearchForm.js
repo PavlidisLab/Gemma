@@ -266,6 +266,8 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 			this.thresholdField.setValue( dsc.threshold );
 		}
 		
+		this.updateDatasetsToBeSearched(dsc.eeIds);
+		
 		/* perform the search with the specified values...
 		 */
 		if ( doSearch ) {
