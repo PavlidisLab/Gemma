@@ -151,12 +151,10 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         Collection<Long> eeIds = command.getEeIds();
 
-        Integer stringency = command.getStringency();
-
         Collection<DifferentialExpressionMetaAnalysisValueObject> demavos = new ArrayList<DifferentialExpressionMetaAnalysisValueObject>();
         for ( long geneId : geneIds ) {
             DifferentialExpressionMetaAnalysisValueObject demavoForGene = getDifferentialExpressionMetaAnalysis(
-                    geneId, eeIds, stringency );
+                    geneId, eeIds );
             demavos.add( demavoForGene );
         }
 
@@ -172,7 +170,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      */
     @SuppressWarnings("unchecked")
     private DifferentialExpressionMetaAnalysisValueObject getDifferentialExpressionMetaAnalysis( Long geneId,
-            Collection<Long> eeIds, Integer stringency ) {
+            Collection<Long> eeIds ) {
 
         Gene g = geneService.load( geneId );
         if ( g == null ) return null;
@@ -190,8 +188,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         DifferentialExpressionMetaAnalysisValueObject demavo = null;
 
-        /* check to see we have at least 'stringency' experiments confirming the diff expression */
-        if ( experimentsUsed.size() >= stringency ) {
+        /* check to see we have at least 2 experiments confirming the diff expression */
+        if ( experimentsUsed.size() >= 2 ) {
 
             /* get fisher pval */
             double fisherPVal = fisherCombinePvalues( g, experimentsUsed );

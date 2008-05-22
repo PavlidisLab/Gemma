@@ -39,9 +39,6 @@ public class DiffExpressionSearchCommand implements Serializable {
     private Long taxonId;
 
     /* meta analysis */
-
-    private Integer stringency;
-
     private Long cannedAnalysisId;
 
     private Collection<Long> eeIds;
@@ -52,14 +49,6 @@ public class DiffExpressionSearchCommand implements Serializable {
 
     public void setCannedAnalysisId( Long cannedAnalysisId ) {
         this.cannedAnalysisId = cannedAnalysisId;
-    }
-
-    public Integer getStringency() {
-        return stringency;
-    }
-
-    public void setStringency( Integer stringency ) {
-        this.stringency = stringency;
     }
 
     public Collection<Long> getGeneIds() {

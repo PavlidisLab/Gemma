@@ -82,20 +82,6 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
             }]
 			
 		});
-		
-	this.stringencyField = new Ext.form.NumberField( {
-		allowBlank : false,
-		allowDecimals : false,
-		allowNegative : false,
-		minValue : Ext.Gemma.DiffExpressionSearchForm.MIN_STRINGENCY,
-		maxValue : 999,
-		fieldLabel : 'Stringency',
-		invalidText : "Minimum stringency is " + Ext.Gemma.DiffExpressionSearchForm.MIN_STRINGENCY,
-		value : 2,
-		width : 60
-	} ); 
-	Ext.Gemma.DiffExpressionSearchForm.addToolTip( this.stringencyField, 
-		"The minimum number of datasets that must show differential expression for a result to appear" );
 	 
 	this.eeSearchField = new Ext.Gemma.DatasetSearchField( {
 		fieldLabel : "Experiment keywords"  
@@ -118,7 +104,7 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
 	
 	var metaAnalysisFs = new Ext.form.FieldSet( {  
 		autoHeight : true,
-	  	items : [ this.stringencyField, this.eeSearchField ] //
+	  	items : [ this.eeSearchField ] //
 	} )
 	
 	var chooseDatasetsButton = new Ext.Button( {
@@ -149,9 +135,6 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
 	this.add( optionsPanel);
 	this.add( metaAnalysisPanel); 
 	this.addButton( submitButton );
-	
-	this.stringencyField.setWidth(20);
-	this.stringencyField.setHeight(20);
 
 	Ext.Gemma.DiffExpressionSearchForm.searchForGene = function( geneId ) {
 		geneChooserPanel.setGene.call(thisPanel.geneChooserPanel, geneId, thisPanel.doSearch.bind( thisPanel ) );
@@ -254,7 +237,6 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 	getDiffExpressionSearchCommand : function () {
 		var dsc = {
 			geneIds : this.geneChooserPanel.getGeneIds(),
-			stringency : this.stringencyField.getValue(),
 			taxonId : this.geneChooserPanel.getTaxonId(),
 			threshold : this.thresholdField.getValue()
 		};
@@ -279,9 +261,6 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 			this.geneChooserPanel.loadGenes( dsc.geneIds );
 		} else {
 			this.geneChooserPanel.setGene( dsc.geneIds[0] );
-		}
-		if ( dsc.stringency ) {
-			this.stringencyField.setValue( dsc.stringency );
 		}
 		if ( dsc.threshold ) {
 			this.thresholdField.setValue( dsc.threshold );
@@ -351,9 +330,7 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 			return "Minimum threshold is " + Ext.Gemma.DiffExpressionSearchForm.MIN_THRESHOLD;
 		} else if ( dsc.threshold > Ext.Gemma.DiffExpressionSearchForm.MAX_THRESHOLD ) {
 			return "Maximum threshold is " + Ext.Gemma.DiffExpressionSearchForm.MAX_THRESHOLD;
-		}else if ( dsc.stringency < Ext.Gemma.DiffExpressionSearchForm.MIN_STRINGENCY ) {
-			return "Minimum stringency is " + Ext.Gemma.DiffExpressionSearchForm.MIN_STRINGENCY;
-		} else {
+		}else {
 			return "";
 		}
 	},
@@ -370,7 +347,6 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 	
 	updateDatasetsToBeSearched : function ( datasets ) {
 		var numDatasets = datasets instanceof Array ? datasets.length : datasets;
-		this.stringencyField.maxValue = numDatasets;
 		if (datasets instanceof Array) {
 			 this.eeIds = datasets;
 		}
@@ -394,5 +370,3 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 
 Ext.Gemma.DiffExpressionSearchForm.MIN_THRESHOLD = 0.0;
 Ext.Gemma.DiffExpressionSearchForm.MAX_THRESHOLD = 1.0;
-
-Ext.Gemma.DiffExpressionSearchForm.MIN_STRINGENCY = 2;
