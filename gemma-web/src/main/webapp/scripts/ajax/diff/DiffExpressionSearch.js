@@ -37,25 +37,14 @@ Ext.onReady( function() {
 		
 	});
 	
-	var metaAnalysisGrid;
+	var metaAnalysisGrid = new Ext.Gemma.DiffExpressionMetaAnalysisGrid( {
+		renderTo : "diffExpression-metaAnalysis",
+		title : "Differential Expression Meta-Analysis Summary",
+		pageSize : 10
+	} );
 	
 	searchPanel.on("afterMetaAnalysis", function (panel, result){
-		if ( metaAnalysisGrid ) {
-			// grid.destroy() seems to be broken...
-			try {
-				metaAnalysis.destroy();
-			} catch (e) {}
-		}
-		
-		metaAnalysisGrid = new Ext.Gemma.DiffExpressionMetaAnalysisGrid( {
-			title : "Differential Expression Meta-Analysis Summary",
-			pageSize : 10
-		} );
-		
-		metaAnalysisGrid.render( "diffExpression-metaAnalysis" );
-		metaAnalysisGrid.getView().refresh();
 		metaAnalysisGrid.loadData(result);
-		
 	});
 	
 } );
