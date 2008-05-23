@@ -82,16 +82,7 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
             }]
 			
 		});
-	 
-	this.eeSearchField = new Ext.Gemma.DatasetSearchField( {
-		fieldLabel : "Experiment keywords"  
-	} );
-	 
-	this.eeSearchField.on( 'aftersearch', function ( field, results ) {
-		thisPanel.updateDatasetsToBeSearched( results );
-	} );
-	Ext.Gemma.DiffExpressionSearchForm.addToolTip( this.eeSearchField,
-		"Search only datasets that match these keywords" );
+	 ;
 	
  	/* set up the panels */
 	var optionsPanel = new Ext.Panel({
@@ -102,10 +93,6 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
 	
 	this.optionsPanel = optionsPanel;
 	
-	var metaAnalysisFs = new Ext.form.FieldSet( {  
-		autoHeight : true,
-	  	items : [ this.eeSearchField ] //
-	} )
 	
 	var chooseDatasetsButton = new Ext.Button( {
 		text : "Choose datasets",
@@ -115,7 +102,6 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
 	var metaAnalysisPanel = new Ext.Panel({
 		title : 'Meta Analysis options',
 		autoHeight : true,
-		items : [metaAnalysisFs],
 		buttons: [chooseDatasetsButton],
 		buttonAlign: 'left'
 	});
@@ -164,7 +150,7 @@ Ext.Gemma.DiffExpressionSearchForm.addToolTip = function( component, html ) {
 				title : eeids.size() + " active datasets",
 				modal : true,
 				layout : 'fit',
-				autoHeight : true,
+				height : 400,
 				width : 600,
 				closeAction:'hide',
 				easing : 3, 
@@ -241,7 +227,7 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 			threshold : this.thresholdField.getValue()
 		};
 		
-		dsc.eeIds = this.eeSearchField.getEeIds();
+		dsc.eeIds = this.eeIds;
 		
 		return dsc;
 	},
@@ -360,7 +346,6 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 		if (!taxon) {
 			return;
 		}
-		this.eeSearchField.taxonChanged(taxon, false);
 		this.geneChooserPanel.taxonChanged( taxon );
 	},
 	
