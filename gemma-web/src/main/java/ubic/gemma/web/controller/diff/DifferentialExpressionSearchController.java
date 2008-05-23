@@ -152,6 +152,9 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         Collection<Long> eeIds = command.getEeIds();
 
         Collection<DifferentialExpressionMetaAnalysisValueObject> demavos = new ArrayList<DifferentialExpressionMetaAnalysisValueObject>();
+
+        if ( eeIds == null || eeIds.isEmpty() ) return demavos;
+
         for ( long geneId : geneIds ) {
             DifferentialExpressionMetaAnalysisValueObject demavoForGene = getDifferentialExpressionMetaAnalysis(
                     geneId, eeIds );
@@ -171,6 +174,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     @SuppressWarnings("unchecked")
     private DifferentialExpressionMetaAnalysisValueObject getDifferentialExpressionMetaAnalysis( Long geneId,
             Collection<Long> eeIds ) {
+
+        if ( eeIds == null || eeIds.isEmpty() ) return null;
 
         Gene g = geneService.load( geneId );
         if ( g == null ) return null;
@@ -196,6 +201,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
             demavo = new DifferentialExpressionMetaAnalysisValueObject();
             demavo.setGene( g );
+            demavo.setNumSearchedDataSets( experimentsAnalyzed.size() );
             demavo.setNumSupportingDataSets( experimentsUsed.size() );
             demavo.setFisherPValue( fisherPVal );
         }

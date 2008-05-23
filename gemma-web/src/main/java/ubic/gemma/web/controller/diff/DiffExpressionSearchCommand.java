@@ -39,17 +39,7 @@ public class DiffExpressionSearchCommand implements Serializable {
     private Long taxonId;
 
     /* meta analysis */
-    private Long cannedAnalysisId;
-
     private Collection<Long> eeIds;
-
-    public Long getCannedAnalysisId() {
-        return cannedAnalysisId;
-    }
-
-    public void setCannedAnalysisId( Long cannedAnalysisId ) {
-        this.cannedAnalysisId = cannedAnalysisId;
-    }
 
     public Collection<Long> getGeneIds() {
         return geneIds;

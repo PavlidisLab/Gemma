@@ -13,8 +13,18 @@ public class DifferentialExpressionMetaAnalysisValueObject {
     private Gene gene = null;
 
     private Double fisherPValue = null;
-
+    
+    private Integer numSearchedDataSets;
+    
     private Integer numSupportingDataSets;
+
+    public Integer getNumSearchedDataSets() {
+        return numSearchedDataSets;
+    }
+
+    public void setNumSearchedDataSets( Integer numSearchedDataSets ) {
+        this.numSearchedDataSets = numSearchedDataSets;
+    }
 
     public Double getFisherPValue() {
         return fisherPValue;

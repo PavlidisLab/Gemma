@@ -60,6 +60,7 @@ Ext.Gemma.DiffExpressionMetaAnalysisGrid = function ( config ) {
 	superConfig.cm = new Ext.grid.ColumnModel( [
 		//this.rowExpander,
 		{ id: 'gene', header: "Gene", dataIndex: "gene", width : 80},
+		{ id: 'numSearchedDataSets', header: "Searched", dataIndex: "numSearchedDataSets", width : 80},
 		{ id: 'numSupportingDataSets', header: "Support", dataIndex: "numSupportingDataSets", width : 80},
 		{ id: 'fisherPValue', header: "Sig. (FDR)", dataIndex: "fisherPValue", renderer: function ( fisherPValue ) { return fisherPValue.toFixed(6); } }
 		//{ id: 'probe', header: "Probe", dataIndex: "probe" },
@@ -82,6 +83,7 @@ Ext.Gemma.DiffExpressionMetaAnalysisGrid.getRecord = function() {
 		Ext.Gemma.DiffExpressionMetaAnalysisGrid.record = Ext.data.Record.create( [
 		    //{ name:"id", type:"int"},
 			{ name:"gene", type:"string", convert: function( gene ) { return gene.officialSymbol; } },
+			{ name:"numSearchedDataSets", type:"int" },
 			{ name:"numSupportingDataSets", type:"int" },
 			{ name:"fisherPValue", type:"float" }
 			//{ name:"expressionExperiment"},
