@@ -210,7 +210,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      */
     @SuppressWarnings("unchecked")
     private Double fisherCombinePvalues( Gene g, Collection<ExpressionExperiment> experiments ) {
-
+        // TODO move this to the DifferentialExpressionAnalysisService
         DoubleArrayList pvalues = new DoubleArrayList();
         for ( ExpressionExperiment ee : experiments ) {
 
