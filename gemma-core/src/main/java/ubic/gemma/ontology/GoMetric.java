@@ -31,7 +31,6 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.dataStructure.matrix.SparseDoubleMatrix2DNamed;
-import ubic.basecode.dataStructure.matrix.SparseRaggedDoubleMatrix2DNamed;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
