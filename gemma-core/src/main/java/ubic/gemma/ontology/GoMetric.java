@@ -49,6 +49,7 @@ public class GoMetric {
     private GeneService geneService;
     private GeneOntologyService geneOntologyService;
     private boolean partOf = true;
+    public static final String BASE_GO_URI = "http://purl.org/obo/owl/GO#";
 
     private static org.apache.commons.logging.Log log = LogFactory.getLog( GoMetric.class.getName() );
 
@@ -88,7 +89,9 @@ public class GoMetric {
 
             for ( String uri : Gene2GOMap.get( gene ) ) {
 
-                if ( isRoot( GeneOntologyService.getTermForURI( uri ) ) ) continue;
+                if ( ( uri.equalsIgnoreCase( BASE_GO_URI + "GO_0008150" ) )
+                        || ( uri.equalsIgnoreCase( BASE_GO_URI + "GO_0003674" ) )
+                        || ( uri.equalsIgnoreCase( BASE_GO_URI + "GO_0005575" ) ) )continue;
 
                 if ( countMap.containsKey( uri ) ) {
                     int value = countMap.get( uri );
@@ -332,7 +335,7 @@ public class GoMetric {
                 if ( terms.contains( goId ) ) {
                     if ( weight ) {
                         gene2term.setByKeys( id, goId, GOTermFrequency.get( goId ) );
-                    } else {             
+                    } else {
                         gene2term.setByKeys( id, goId, ( double ) 1 );
                     }
                 }
@@ -341,7 +344,6 @@ public class GoMetric {
         return gene2term;
     }
 
-    
     /**
      * @param GOFreq hashMap of GO term to its frequency in the corpus
      * @param N number of genes in the corpus
@@ -410,7 +412,7 @@ public class GoMetric {
     private Double computeKappaSimilarity( DoubleMatrixNamed<Long, String> gene2TermMatrix, double[] g1, double[] g2 ) {
 
         if ( g1.length != g2.length ) return null;
-        Double[][] contingencyMatrix =  new Double [][] {{0.0,0.0},{0.0,0.0}};
+        Double[][] contingencyMatrix = new Double[][] { { 0.0, 0.0 }, { 0.0, 0.0 } };
 
         for ( int i = 0; i < g1.length; i++ ) {
 
