@@ -82,7 +82,6 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
             }]
 			
 		});
-	 ;
 	
  	/* set up the panels */
 	var optionsPanel = new Ext.Panel({
