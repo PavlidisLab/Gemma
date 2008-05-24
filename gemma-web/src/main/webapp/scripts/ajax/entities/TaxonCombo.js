@@ -21,16 +21,19 @@ Ext.Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 	emptyText : 'Select a taxon',
 
 	setState : function(v) {
-		if (this.state) {
-			this.setValue(this.state);
+		if (this.ready) {
+			Ext.Gemma.TaxonCombo.superclass.setValue.call(this, v);// don't want to fire changed taxon event this.setValue(v);
 		} else {
 			this.state = v;
 		}
 	},
 
 	restoreState : function() {
-		this.setValue(this.state);
-		delete this.state;
+		if (this.state){
+			Ext.Gemma.TaxonCombo.superclass.setValue.call(this, v);
+			delete this.state;
+		}
+		this.ready = true;
 		this.fireEvent('ready');
 	},
 

@@ -36,16 +36,21 @@ Ext.Gemma.AnalysisCombo = Ext.extend(Ext.form.ComboBox, {
 	}]),
 
 	setState : function(v) {
-		if (this.state) {
-			this.setValue(this.state);
+		if (this.ready) {
+			Ext.Gemma.AnalysisCombo.superclass.setValue.call(this, v);
 		} else {
 			this.state = v;
 		}
 	},
 
 	restoreState : function() {
+		if (this.state){
+			Ext.Gemma.AnalysisCombo.superclass.setValue.call(this, v);
+			delete this.state;
+		}
 		this.setValue(this.state);
 		delete this.state;
+		this.ready = true;
 		this.fireEvent('ready');
 	},
 

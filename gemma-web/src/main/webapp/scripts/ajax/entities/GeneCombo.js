@@ -58,7 +58,7 @@ Ext.Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 		this.addEvents('genechanged');
 
 		this.store.on("datachanged", function() {
-			if (this.store.getCount() == 0) {
+			if (this.store.getCount() === 0) {
 				this.fireEvent("invalid", "No matching genes");
 				this.setRawValue("No matching genes");
 			}
