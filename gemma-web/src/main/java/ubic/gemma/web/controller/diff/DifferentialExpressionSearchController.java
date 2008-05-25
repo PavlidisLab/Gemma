@@ -105,12 +105,47 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         List<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
 
         for ( Long geneId : geneIds ) {
-            devos.addAll( getDifferentialExpression( geneId, threshold ) );
+
+            DifferentialExpressionMetaAnalysisValueObject mavo = getDifferentialExpression( geneId, null, threshold );
+
+            devos.addAll( mavo.getProbeResults() );
         }
 
         DifferentialExpressionMetaValueObject meta = new DifferentialExpressionMetaValueObject( devos );
 
         return meta;
+    }
+
+    /**
+     * When multiple probes map to same gene, correct by multiplying each pval by num probes that map to the gene
+     * 
+     * @param results
+     * @return
+     */
+    private DoubleArrayList correctPvalsForMetaAnalysis( Collection<ProbeAnalysisResult> results ) {
+        DoubleArrayList pvalues = new DoubleArrayList();
+
+        for ( ProbeAnalysisResult r : results ) {
+
+            int numProbesForGene = results.size();
+            double pval = r.getPvalue() * numProbesForGene;
+            if ( pval > MAX_PVAL ) pval = MAX_PVAL;
+
+            pvalues.add( pval );
+        }
+        return pvalues;
+    }
+
+    /**
+     * Combine the pvalues using the fisher method.
+     * 
+     * @param pvaluesToCombine
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Double fisherCombinePvalues( Collection<ProbeAnalysisResult> pvaluesToCombine ) {
+        DoubleArrayList metaAnalysisCorrectedPvals = correctPvalsForMetaAnalysis( pvaluesToCombine );
+        return MetaAnalysis.fisherCombinePvalues( metaAnalysisCorrectedPvals );
     }
 
     /**
@@ -121,145 +156,92 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      * @param command
      * @return
      */
-    public Collection<DifferentialExpressionValueObject> getDiffExpressionForGenes( DiffExpressionSearchCommand command ) {
-
-        Collection<Long> geneIds = command.getGeneIds();
-
-        double threshold = command.getThreshold();
-
-        Collection<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
-        for ( long geneId : geneIds ) {
-            Collection<DifferentialExpressionValueObject> devosForGene = getDifferentialExpression( geneId, threshold );
-            devos.addAll( devosForGene );
-        }
-
-        return devos;
-
-    }
-
-    /**
-     * AJAX entry.
-     * <p>
-     * 
-     * @param command
-     * @return
-     */
-    public Collection<DifferentialExpressionMetaAnalysisValueObject> getDiffMetaAnalysisForGenes(
+    public Collection<DifferentialExpressionMetaAnalysisValueObject> getDiffExpressionForGenes(
             DiffExpressionSearchCommand command ) {
 
         Collection<Long> geneIds = command.getGeneIds();
 
         Collection<Long> eeIds = command.getEeIds();
 
-        Collection<DifferentialExpressionMetaAnalysisValueObject> demavos = new ArrayList<DifferentialExpressionMetaAnalysisValueObject>();
+        double threshold = command.getThreshold();
 
-        if ( eeIds == null || eeIds.isEmpty() ) return demavos;
-
+        Collection<DifferentialExpressionMetaAnalysisValueObject> mavos = new ArrayList<DifferentialExpressionMetaAnalysisValueObject>();
         for ( long geneId : geneIds ) {
-            DifferentialExpressionMetaAnalysisValueObject demavoForGene = getDifferentialExpressionMetaAnalysis(
-                    geneId, eeIds );
-            demavos.add( demavoForGene );
+            DifferentialExpressionMetaAnalysisValueObject mavo = getDifferentialExpression( geneId, eeIds, threshold );
+            mavos.add( mavo );
         }
 
-        return demavos;
-
+        return mavos;
     }
 
     /**
      * @param geneId
      * @param eeIds
-     * @param stringency
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private DifferentialExpressionMetaAnalysisValueObject getDifferentialExpressionMetaAnalysis( Long geneId,
-            Collection<Long> eeIds ) {
-
-        if ( eeIds == null || eeIds.isEmpty() ) return null;
-
-        Gene g = geneService.load( geneId );
-        if ( g == null ) return null;
-
-        // FIXME filter based on experiments that are part of the set.
-        Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService
-                .findExperimentsWithAnalyses( g );
-
-        List<ExpressionExperiment> experimentsUsed = new ArrayList<ExpressionExperiment>();
-        for ( ExpressionExperiment ee : experimentsAnalyzed ) {
-            if ( eeIds.contains( ee.getId() ) ) {
-                experimentsUsed.add( ee );
-            }
-        }
-
-        DifferentialExpressionMetaAnalysisValueObject demavo = null;
-
-        /* check to see we have at least 2 experiments confirming the diff expression */
-        if ( experimentsUsed.size() >= 2 ) {
-
-            /* get fisher pval */
-            double fisherPVal = fisherCombinePvalues( g, experimentsUsed );
-
-            demavo = new DifferentialExpressionMetaAnalysisValueObject();
-            demavo.setGene( g );
-            demavo.setNumSearchedDataSets( experimentsAnalyzed.size() );
-            demavo.setNumSupportingDataSets( experimentsUsed.size() );
-            demavo.setFisherPValue( fisherPVal );
-        }
-
-        return demavo;
-    }
-
-    /**
-     * @param g
-     * @param experiments
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private Double fisherCombinePvalues( Gene g, Collection<ExpressionExperiment> experiments ) {
-        // TODO move this to the DifferentialExpressionAnalysisService
-        DoubleArrayList pvalues = new DoubleArrayList();
-        for ( ExpressionExperiment ee : experiments ) {
-
-            Collection<ProbeAnalysisResult> results = differentialExpressionAnalysisService.find( g, ee );
-            for ( ProbeAnalysisResult r : results ) {
-                /*
-                 * if multiple probes map to same gene, correct by multiplying each pval by num probes that map to the
-                 * gene
-                 */
-                int numProbesForGene = results.size();
-                double pval = r.getPvalue() * numProbesForGene;
-                if ( pval > MAX_PVAL ) pval = MAX_PVAL;
-
-                pvalues.add( pval );
-            }
-        }
-        return MetaAnalysis.fisherCombinePvalues( pvalues );
-    }
-
-    /**
-     * @param geneId
      * @param threshold
      * @return
      */
     @SuppressWarnings("unchecked")
-    public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Long geneId, double threshold ) {
-        Collection<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
+    public DifferentialExpressionMetaAnalysisValueObject getDifferentialExpression( Long geneId,
+            Collection<Long> eeIds, double threshold ) {
+
         Gene g = geneService.load( geneId );
-        if ( g == null ) return devos;
+
+        if ( g == null ) return null;
+
+        /* find the analyzed experiments */
         Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService
                 .findExperimentsWithAnalyses( g );
-        for ( ExpressionExperiment ee : experimentsAnalyzed ) {
+
+        /* find the 'active' experiments */
+        Collection<ExpressionExperiment> activeExperiments = null;
+        if ( eeIds == null || eeIds.isEmpty() ) {
+            activeExperiments = experimentsAnalyzed;
+        } else {
+            activeExperiments = new ArrayList<ExpressionExperiment>();
+            for ( ExpressionExperiment ee : experimentsAnalyzed ) {
+                if ( eeIds.contains( ee.getId() ) ) {
+                    activeExperiments.add( ee );
+                }
+            }
+        }
+
+        DifferentialExpressionMetaAnalysisValueObject mavo = new DifferentialExpressionMetaAnalysisValueObject();
+        mavo.setGene( g );
+        mavo.setActiveExperiments( activeExperiments );
+
+        Collection<ProbeAnalysisResult> pvaluesToCombine = new HashSet<ProbeAnalysisResult>();
+
+        /* supporting experiments */
+        Collection<ExpressionExperiment> supportingExperiments = new ArrayList<ExpressionExperiment>();
+
+        /* a gene can have multiple probes that map to it, so store one diff value object for each probe */
+        Collection<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
+
+        /* each gene will have a row, and each row will have a row expander with supporting datasets */
+        for ( ExpressionExperiment ee : activeExperiments ) {
+
             ExpressionExperimentValueObject eevo = new ExpressionExperimentValueObject();
             eevo.setId( ee.getId() );
             eevo.setShortName( ee.getShortName() );
             eevo.setName( ee.getName() );
             eevo.setExternalUri( GemmaLinkUtils.getExpressionExperimentUrl( eevo.getId() ) );
 
+            // FIXME to compute the meta analysis results, we want to ignore the threshold altogether.
+
             Collection<ProbeAnalysisResult> results = differentialExpressionAnalysisService.find( g, ee, threshold );
+            if ( results == null || results.isEmpty() ) {
+                log.debug( "Experiment " + ee.getShortName() + " does not have diff support at threshold " + threshold );
+                continue;
+            }
+            supportingExperiments.add( ee );
+
+            /* for the meta analysis */
+            pvaluesToCombine.addAll( results );
 
             Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> dearToEf = differentialExpressionAnalysisResultService
                     .getExperimentalFactors( results );
 
+            /* for each result, set up a devo */
             for ( ProbeAnalysisResult r : results ) {
                 DifferentialExpressionValueObject devo = new DifferentialExpressionValueObject();
                 devo.setGene( g );
@@ -304,11 +286,15 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                 }
                 devo.setP( r.getCorrectedPvalue() );
                 devos.add( devo );
-
             }
 
         }
-        return devos;
+        double fisherPval = this.fisherCombinePvalues( pvaluesToCombine );
+        mavo.setFisherPValue( fisherPval );
+        mavo.setSupportingExperiments( supportingExperiments );
+        mavo.setProbeResults( devos );
+
+        return mavo;
     }
 
     /*

@@ -31,7 +31,6 @@ version: $Id$
 	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/GeneChooserPanel.js'></script>
 	
 	<script type='text/javascript' src='/Gemma/scripts/ajax/diff/DiffExpressionGrid.js'></script>
-	<script type='text/javascript' src='/Gemma/scripts/ajax/diff/DiffExpressionMetaAnalysisGrid.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/diff/DiffExpressionSearchForm.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/diff/DiffExpressionSearch.js'></script>
 	
@@ -53,7 +52,6 @@ version: $Id$
 </authz:authorize>
 
 <div id='diffExpression-messages' style='width:100%;height:1.2em;margin:5px'></div>
-<div id='diffExpression-metaAnalysis' style='float: right; margin: 1em;'></div>
 <div id='diffExpression-form' style='margin-bottom: 1em;'></div>
 <div id='diffExpression-results' ></div>
 

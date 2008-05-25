@@ -37,14 +37,4 @@ Ext.onReady( function() {
 		
 	});
 	
-	var metaAnalysisGrid = new Ext.Gemma.DiffExpressionMetaAnalysisGrid( {
-		renderTo : "diffExpression-metaAnalysis",
-		title : "Differential Expression Meta-Analysis Summary",
-		pageSize : 10
-	} );
-	
-	searchPanel.on("afterMetaAnalysis", function (panel, result){
-		metaAnalysisGrid.loadData(result);
-	});
-	
 } );

@@ -97,15 +97,6 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
 		text : "Choose datasets",
 		handler : this.chooseDatasets.createDelegate(this)
 	} );
-
-	var metaAnalysisPanel = new Ext.Panel({
-		title : 'Meta Analysis options',
-		autoHeight : true,
-		buttons: [chooseDatasetsButton],
-		buttonAlign: 'left'
-	});
-		
-	this.metaAnalysisPanel = metaAnalysisPanel;
 	
 	var submitButton = new Ext.Button( {
 		text : "Find diff expressed genes",
@@ -118,7 +109,6 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
 	/* Build the form */
 	this.add( queryFs );
 	this.add( optionsPanel);
-	this.add( metaAnalysisPanel); 
 	this.addButton( submitButton );
 
 	Ext.Gemma.DiffExpressionSearchForm.searchForGene = function( geneId ) {
@@ -282,7 +272,6 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 				this.loadMask.show();
 				var errorHandler = this.handleError.createDelegate(this, [], true);
 				DifferentialExpressionSearchController.getDiffExpressionForGenes( dsc, {callback : this.returnFromSearch.bind( this ), errorHandler : errorHandler} );
-				DifferentialExpressionSearchController.getDiffMetaAnalysisForGenes( dsc, {callback : this.returnFromMetaAnalysis.bind( this ), errorHandler : errorHandler} );
 			}
 		} else {
 			this.handleError(msg);
@@ -327,18 +316,13 @@ Ext.extend( Ext.Gemma.DiffExpressionSearchForm, Ext.FormPanel, {
 		this.fireEvent( 'aftersearch', this, result );
 	},
 	
-	returnFromMetaAnalysis : function (result) {
-		this.loadMask.hide();
-		this.fireEvent('afterMetaAnalysis', this, result );
-	},
-	
 	updateDatasetsToBeSearched : function ( datasets ) {
 		var numDatasets = datasets instanceof Array ? datasets.length : datasets;
 		if (datasets instanceof Array) {
 			 this.eeIds = datasets;
 		}
 				
-		this.metaAnalysisPanel.setTitle( String.format( "Meta Analysis options (Up to <a title='Click here to see dataset details' onclick='Ext.Gemma.DiffExpressionSearchForm.showSelectedDatasets([{0}]);'>  {1} dataset{2} </a>  will be analyzed)", datasets.toString(), numDatasets, numDatasets != 1 ? "s" : "" ) );
+		//this.metaAnalysisPanel.setTitle( String.format( "Meta Analysis options (Up to <a title='Click here to see dataset details' onclick='Ext.Gemma.DiffExpressionSearchForm.showSelectedDatasets([{0}]);'>  {1} dataset{2} </a>  will be analyzed)", datasets.toString(), numDatasets, numDatasets != 1 ? "s" : "" ) );
 	},
 	
 	taxonChanged : function ( taxon ) {

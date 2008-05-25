@@ -1,5 +1,8 @@
 package ubic.gemma.web.controller.diff;
 
+import java.util.Collection;
+
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 
 /**
@@ -13,18 +16,12 @@ public class DifferentialExpressionMetaAnalysisValueObject {
     private Gene gene = null;
 
     private Double fisherPValue = null;
-    
-    private Integer numSearchedDataSets;
-    
-    private Integer numSupportingDataSets;
 
-    public Integer getNumSearchedDataSets() {
-        return numSearchedDataSets;
-    }
+    private Collection<ExpressionExperiment> activeExperiments = null;
 
-    public void setNumSearchedDataSets( Integer numSearchedDataSets ) {
-        this.numSearchedDataSets = numSearchedDataSets;
-    }
+    private Collection<ExpressionExperiment> supportingExperiments = null;
+
+    private Collection<DifferentialExpressionValueObject> probeResults = null;
 
     public Double getFisherPValue() {
         return fisherPValue;
@@ -42,12 +39,28 @@ public class DifferentialExpressionMetaAnalysisValueObject {
         this.gene = gene;
     }
 
-    public Integer getNumSupportingDataSets() {
-        return numSupportingDataSets;
+    public Collection<ExpressionExperiment> getSupportingExperiments() {
+        return supportingExperiments;
     }
 
-    public void setNumSupportingDataSets( Integer numSupportingDataSets ) {
-        this.numSupportingDataSets = numSupportingDataSets;
+    public void setSupportingExperiments( Collection<ExpressionExperiment> supportingExperiments ) {
+        this.supportingExperiments = supportingExperiments;
+    }
+
+    public Collection<ExpressionExperiment> getActiveExperiments() {
+        return activeExperiments;
+    }
+
+    public void setActiveExperiments( Collection<ExpressionExperiment> activeExperiments ) {
+        this.activeExperiments = activeExperiments;
+    }
+
+    public Collection<DifferentialExpressionValueObject> getProbeResults() {
+        return probeResults;
+    }
+
+    public void setProbeResults( Collection<DifferentialExpressionValueObject> probeResults ) {
+        this.probeResults = probeResults;
     }
 
 }

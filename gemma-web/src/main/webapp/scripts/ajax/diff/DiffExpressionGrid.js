@@ -45,7 +45,7 @@ Ext.Gemma.DiffExpressionGrid = function ( config ) {
 			sortInfo : { field: 'sortKey', direction: 'ASC' }
 		} );
 	}
-	superConfig.ds.setDefaultSort( 'p' );
+	//superConfig.ds.setDefaultSort( 'p' );
 	
 	this.rowExpander = new Ext.Gemma.DifEEGridRowExpander( {
 		tpl : ""
@@ -54,18 +54,23 @@ Ext.Gemma.DiffExpressionGrid = function ( config ) {
 	superConfig.plugins = this.rowExpander;
 
 	superConfig.cm = new Ext.grid.ColumnModel( [
-		this.rowExpander,
+		//this.rowExpander,
 		{ id: 'gene', header: "Gene", dataIndex: "gene", width : 80},
-		{ id: 'ee', header: "Dataset", dataIndex: "expressionExperiment", renderer: Ext.Gemma.DiffExpressionGrid.getEEStyler(), width : 80 },
+		{ id: 'active', header: "Active Datasets", dataIndex: "activeExperiments", renderer: Ext.Gemma.DiffExpressionGrid.getActiveExperimentsStyler() },
+		{ id: 'supporting', header: "Supporting Datasets", dataIndex: "supportingExperiments", renderer: Ext.Gemma.DiffExpressionGrid.getSupportingExperimentsStyler()},
+		{ id: 'fisherPValue', header: "Fisher P Value", dataIndex: "fisherPValue", renderer: function ( fisherPValue ) { return fisherPValue.toFixed(6); } }
+		/*
 		{ id: 'name', header: "Name", dataIndex: "expressionExperiment", renderer: Ext.Gemma.DiffExpressionGrid.getEENameStyler(), width : 120 },
 		{ id: 'probe', header: "Probe", dataIndex: "probe" },
 		{ id: 'efs', header: "Factor(s)", dataIndex: "experimentalFactors", renderer: Ext.Gemma.DiffExpressionGrid.getEFStyler(), sortable: false },
 		{ id: 'p', header: "Sig. (FDR)", dataIndex: "p", renderer: function ( p ) { return p.toFixed(6); } }
+		*/
 	] );
 	superConfig.cm.defaultSortable = true;
 	
-	superConfig.autoExpandColumn = 'name';
-	superConfig.autoExpandColumn = 'efs';
+	superConfig.autoExpandColumn = 'gene';
+	superConfig.autoExpandColumn = 'supporting';
+	superConfig.autoExpandColumn = 'fisherPValue';
 
 	for ( property in config ) {
 		superConfig[property] = config[property];
@@ -73,14 +78,6 @@ Ext.Gemma.DiffExpressionGrid = function ( config ) {
 	Ext.Gemma.DiffExpressionGrid.superclass.constructor.call( this, superConfig );
 	
 	this.originalTitle = this.title;
-	
-	/*	
-	this.getStore().on( "load", function () {
-		this.autoSizeColumns();
-		this.doLayout();
-	}, this );
-	*/
-	
 };
 
 /* static methods
@@ -90,10 +87,15 @@ Ext.Gemma.DiffExpressionGrid.getRecord = function() {
 		Ext.Gemma.DiffExpressionGrid.record = Ext.data.Record.create( [
 		    { name:"id", type:"int"},
 			{ name:"gene", type:"string", convert: function( gene ) { return gene.officialSymbol; } },
+			{ name:"activeExperiments" },
+			{ name:"supportingExperiments" },			
+			{ name:"fisherPValue", type:"float" }
+			/*	
 			{ name:"expressionExperiment"},
 			{ name:"probe", type:"string" },
 			{ name:"experimentalFactors" },
 			{ name:"p", type:"float" }
+			*/
 		] );
 	}
 	return Ext.Gemma.DiffExpressionGrid.record;
@@ -110,6 +112,26 @@ Ext.Gemma.DiffExpressionGrid.getEEStyler = function() {
 		};
 	}
 	return Ext.Gemma.DiffExpressionGrid.eeNameStyler;
+};
+
+Ext.Gemma.DiffExpressionGrid.getActiveExperimentsStyler = function() {
+	if ( Ext.Gemma.DiffExpressionGrid.activeExperimentsStyler === undefined ) {
+		Ext.Gemma.DiffExpressionGrid.activeExperimentsStyler = function ( value, metadata, record, row, col, ds ) {
+			var ees = record.data.activeExperiments;
+			return ees.size();
+		};
+	}
+	return Ext.Gemma.DiffExpressionGrid.activeExperimentsStyler;
+};
+
+Ext.Gemma.DiffExpressionGrid.getSupportingExperimentsStyler = function() {
+	if ( Ext.Gemma.DiffExpressionGrid.supportingExperimentsStyler === undefined ) {
+		Ext.Gemma.DiffExpressionGrid.supportingExperimentsStyler = function ( value, metadata, record, row, col, ds ) {
+			var ees = record.data.supportingExperiments;
+			return ees.size();
+		};
+	}
+	return Ext.Gemma.DiffExpressionGrid.supportingExperimentsStyler;
 };
 
 Ext.Gemma.DiffExpressionGrid.getEENameStyler = function() {
