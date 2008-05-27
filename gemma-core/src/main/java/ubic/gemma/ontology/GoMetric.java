@@ -353,7 +353,7 @@ public class GoMetric {
 
         Map<String, Double> weightMap = new HashMap<String, Double>();
         for ( String id : GOFreq.keySet() ) {
-            Double weightedGO = Math.log10( ( double ) N ) / GOFreq.get( id );
+            Double weightedGO = Math.log10( ( double ) N  / GOFreq.get( id ));
             weightMap.put( id, weightedGO );
         }
         return weightMap;
