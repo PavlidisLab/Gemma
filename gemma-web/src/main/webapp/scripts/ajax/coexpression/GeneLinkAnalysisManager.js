@@ -525,7 +525,7 @@ Ext.extend(Ext.Gemma.EditVirtualAnalysisToolBar, Ext.Toolbar, {
 		});
 
 		if (!this.admin) {
-			this.createBut.disable();
+			createBut.disable();
 		}
 		this.addButton(createBut);
 		this.addButton(clearBut);
