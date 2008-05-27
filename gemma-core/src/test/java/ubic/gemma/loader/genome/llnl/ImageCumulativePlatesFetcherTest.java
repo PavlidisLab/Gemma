@@ -18,10 +18,7 @@
  */
 package ubic.gemma.loader.genome.llnl;
 
-import java.util.Collection;
-
 import junit.framework.TestCase;
-import ubic.gemma.model.common.description.LocalFile;
 
 /**
  * @author pavlidis
@@ -37,9 +34,10 @@ public class ImageCumulativePlatesFetcherTest extends TestCase {
      * @throws Exception
      */
     public void testFetch() throws Exception {
-        ImageCumulativePlatesFetcher fetcher = new ImageCumulativePlatesFetcher();
-        Collection<LocalFile> files = fetcher.fetch( "20080101" );
-        assertEquals( 1, files.size() );
+        // Test disabled because image.llnl.gov is dead.
+        // ImageCumulativePlatesFetcher fetcher = new ImageCumulativePlatesFetcher();
+        // Collection<LocalFile> files = fetcher.fetch( "20080101" );
+        // assertEquals( 1, files.size() );
     }
 
 }
