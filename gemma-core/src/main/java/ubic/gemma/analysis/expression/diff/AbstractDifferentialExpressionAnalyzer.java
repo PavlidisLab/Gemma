@@ -18,6 +18,10 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
 import java.util.Collection;
 
 import org.apache.commons.logging.Log;
@@ -78,6 +82,25 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
         }
 
         return qvalues;
+    }
+
+    /**
+     * Save the raw pvalues to a file.
+     * 
+     * @param pvalues
+     * @param location
+     * @param file
+     * @throws IOException
+     */
+    protected static void writeRawPValues( Double[] pvalues, File location, String file ) throws IOException {
+        File f = new File( location, file );
+
+        Writer writer = new FileWriter( file );
+        for ( int i = 0; i < pvalues.length; i++ ) {
+            writer.write( pvalues[i].toString() );
+
+            if ( i < pvalues.length - 1 ) writer.write( "\t" );
+        }
     }
 
     /**
