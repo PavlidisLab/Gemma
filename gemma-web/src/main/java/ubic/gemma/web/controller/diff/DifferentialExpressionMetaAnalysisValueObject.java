@@ -19,8 +19,6 @@ public class DifferentialExpressionMetaAnalysisValueObject {
 
     private Collection<ExpressionExperiment> activeExperiments = null;
 
-    private Collection<ExpressionExperiment> supportingExperiments = null;
-
     private Collection<DifferentialExpressionValueObject> probeResults = null;
 
     public Double getFisherPValue() {
@@ -37,14 +35,6 @@ public class DifferentialExpressionMetaAnalysisValueObject {
 
     public void setGene( Gene gene ) {
         this.gene = gene;
-    }
-
-    public Collection<ExpressionExperiment> getSupportingExperiments() {
-        return supportingExperiments;
-    }
-
-    public void setSupportingExperiments( Collection<ExpressionExperiment> supportingExperiments ) {
-        this.supportingExperiments = supportingExperiments;
     }
 
     public Collection<ExpressionExperiment> getActiveExperiments() {

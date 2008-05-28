@@ -39,6 +39,16 @@ public class DifferentialExpressionValueObject {
     private Long probeId;
     private Collection<ExperimentalFactorValueObject> experimentalFactors;
     private Double p;
+    private Boolean metThreshold = false;
+    private Boolean fisherContribution = false;
+
+    public Boolean getMetThreshold() {
+        return metThreshold;
+    }
+
+    public void setMetThreshold( Boolean metThreshold ) {
+        this.metThreshold = metThreshold;
+    }
 
     public Collection<ExperimentalFactorValueObject> getExperimentalFactors() {
         return experimentalFactors;
@@ -144,6 +154,14 @@ public class DifferentialExpressionValueObject {
         buf.append( p );
 
         return buf.toString();
+    }
+
+    public Boolean getFisherContribution() {
+        return fisherContribution;
+    }
+
+    public void setFisherContribution( Boolean fisherContribution ) {
+        this.fisherContribution = fisherContribution;
     }
 
 }
