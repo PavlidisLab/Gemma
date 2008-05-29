@@ -92,12 +92,12 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
      * @param file
      * @throws IOException
      */
-    protected static void writeRawPValues( Double[] pvalues, File location, String file ) throws IOException {
+    protected static void writeRawPValues( double[] pvalues, File location, String file ) throws IOException {
         File f = new File( location, file );
 
         Writer writer = new FileWriter( f );
         for ( int i = 0; i < pvalues.length; i++ ) {
-            writer.write( pvalues[i].toString() );
+            writer.write( String.valueOf( pvalues[i] ) );
 
             if ( i < pvalues.length - 1 ) writer.write( "\t" );
         }
