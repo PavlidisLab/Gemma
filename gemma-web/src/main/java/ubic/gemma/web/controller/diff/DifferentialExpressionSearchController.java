@@ -188,7 +188,9 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         Collection<DifferentialExpressionMetaAnalysisValueObject> mavos = new ArrayList<DifferentialExpressionMetaAnalysisValueObject>();
         for ( long geneId : geneIds ) {
             DifferentialExpressionMetaAnalysisValueObject mavo = getDifferentialExpression( geneId, eeIds, threshold );
+            mavo.setSortKey();
             mavos.add( mavo );
+            
         }
 
         return mavos;
@@ -313,6 +315,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                     devo.getExperimentalFactors().add( efvo );
                 }
                 devo.setP( r.getCorrectedPvalue() );
+                devo.setSortKey();
                 devos.add( devo );
             }
 
@@ -322,6 +325,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         mavo.setGene( g );
         mavo.setActiveExperiments( activeExperiments );
         mavo.setProbeResults( devos );
+        mavo.setSortKey();
 
         return mavo;
     }

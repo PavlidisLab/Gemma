@@ -39,6 +39,7 @@ public class DifferentialExpressionValueObject {
     private Long probeId;
     private Collection<ExperimentalFactorValueObject> experimentalFactors;
     private Double p;
+    private String sortKey;
     private Boolean metThreshold = false;
     private Boolean fisherContribution = false;
 
@@ -50,6 +51,14 @@ public class DifferentialExpressionValueObject {
         this.metThreshold = metThreshold;
     }
 
+    public String getSortKey() {
+        return sortKey;
+    }
+
+    public void setSortKey() {
+        this.sortKey = String.format( "%06f%s", p, gene.getOfficialSymbol() );
+    }
+    
     public Collection<ExperimentalFactorValueObject> getExperimentalFactors() {
         return experimentalFactors;
     }
