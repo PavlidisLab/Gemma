@@ -19,6 +19,7 @@
 package ubic.gemma.model.expression.experiment;
 
 import java.sql.Blob;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -45,6 +46,7 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.BlobType;
 import org.hibernate.type.DoubleType;
 import org.hibernate.type.LongType;
+import org.springframework.orm.hibernate3.HibernateCallback;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -639,30 +641,38 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Collection<Gene> handleGetAssayedGenes( ExpressionExperiment ee, Double rankThreshold ) throws Exception {
+    protected Collection<Gene> handleGetAssayedGenes( final ExpressionExperiment ee, Double rankThreshold )
+            throws Exception {
         // this is actually a real pain to do using HQL.
 
         // default: no threshold.
-        Double thresh = rankThreshold == null ? 0 : rankThreshold;
+        final Double thresh = rankThreshold == null ? 0 : rankThreshold;
 
         final String queryString = "SELECT DISTINCT g2c.GENE as id from DESIGN_ELEMENT_DATA_VECTOR d"
                 + " inner join COMPOSITE_SEQUENCE cs ON cs.ID=d.DESIGN_ELEMENT_FK"
                 + " inner join GENE2CS g2c ON g2c.CS=cs.ID INNER JOIN QUANTITATION_TYPE q ON q.ID=d.QUANTIATION_TYPE_FK"
                 + " WHERE d.EXPRESSION_EXPERIMENT_FK = ?AND (d.RANK > ? OR d.RANK IS NULL) AND q.IS_PREFERRED = 1";
-        Session session = getSessionFactory().openSession();
-        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
-        queryObject.setParameter( 0, ee.getId() );
-        queryObject.setParameter( 1, thresh );
+        final Collection<Long> geneIds = new HashSet<Long>();
+        getHibernateTemplate().execute( new HibernateCallback() {
 
-        queryObject.addScalar( "id", new LongType() );
-        ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        Collection<Long> geneIds = new HashSet<Long>();
-        while ( scroll.next() ) {
-            Long id = scroll.getLong( 0 );
-            geneIds.add( id );
-        }
-        session.close();
-        log.debug( "Loading " + geneIds.size() + " assayed genes" );
+            public Object doInHibernate( Session session ) {
+
+                org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+                queryObject.setParameter( 0, ee.getId() );
+                queryObject.setParameter( 1, thresh );
+
+                queryObject.addScalar( "id", new LongType() );
+                ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+                while ( scroll.next() ) {
+                    Long id = scroll.getLong( 0 );
+                    geneIds.add( id );
+                }
+                session.close();
+                log.debug( "Loading " + geneIds.size() + " assayed genes" );
+                return null;
+
+            }
+        } );
         // NB this repeats code from GeneDaoImpl, but it's pretty trivial.
         final String gqs = "select distinct gene from GeneImpl gene where gene.id in (:ids)";
         try {
@@ -677,50 +687,55 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
     @SuppressWarnings("unchecked")
     @Override
-    protected Collection<CompositeSequence> handleGetAssayedProbes( ExpressionExperiment ee, Double rankThreshold )
-            throws Exception {
+    protected Collection<CompositeSequence> handleGetAssayedProbes( final ExpressionExperiment ee,
+            final Double rankThreshold ) {
         // default: no threshold.
-        Double thresh = rankThreshold == null ? 0 : rankThreshold;
+        final Double thresh = rankThreshold == null ? 0 : rankThreshold;
 
         // FIXME this could just be HQL.
 
+        final Collection<CompositeSequence> result = new HashSet<CompositeSequence>();
         final String queryString = "SELECT DISTINCT d.DESIGN_ELEMENT_FK as id from DESIGN_ELEMENT_DATA_VECTOR d"
                 + "  INNER JOIN QUANTITATION_TYPE q ON q.ID=d.QUANTITATION_TYPE_FK"
                 + " WHERE d.EXPRESSION_EXPERIMENT_FK = ? AND (d.RANK > ? OR d.RANK IS NULL) AND q.IS_PREFERRED = 1";
-        Session session = getSessionFactory().openSession();
-        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
-        queryObject.setParameter( 0, ee.getId() );
-        queryObject.setParameter( 1, thresh );
+        getHibernateTemplate().execute( new HibernateCallback() {
+            public Object doInHibernate( Session session ) {
+                org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+                queryObject.setParameter( 0, ee.getId() );
+                queryObject.setParameter( 1, thresh );
 
-        queryObject.addScalar( "id", new LongType() );
-        ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        Collection<Long> probeIds = new HashSet<Long>();
-        while ( scroll.next() ) {
-            Long id = scroll.getLong( 0 );
-            probeIds.add( id );
-        }
-        session.clear();
+                queryObject.addScalar( "id", new LongType() );
+                ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+                Collection<Long> probeIds = new HashSet<Long>();
+                while ( scroll.next() ) {
+                    Long id = scroll.getLong( 0 );
+                    probeIds.add( id );
+                }
+                session.clear();
 
-        if ( probeIds.size() == 0 ) return new HashSet<CompositeSequence>();
+                if ( probeIds.size() == 0 ) return new HashSet<CompositeSequence>();
 
-        log.debug( "Loading " + probeIds.size() + " assayed probes" );
-        final String gqs = "select distinct cs from CompositeSequenceImpl cs where cs.id in (:ids)";
-        Collection<CompositeSequence> result = new HashSet<CompositeSequence>();
-        Collection<Long> batch = new ArrayList<Long>();
-        final int BATCH_SIZE = 1000;
+                log.debug( "Loading " + probeIds.size() + " assayed probes" );
+                final String gqs = "select distinct cs from CompositeSequenceImpl cs where cs.id in (:ids)";
+                Collection<Long> batch = new ArrayList<Long>();
+                final int BATCH_SIZE = 1000;
 
-        for ( Long probeId : probeIds ) {
-            batch.add( probeId );
-            if ( batch.size() == BATCH_SIZE ) {
-                List list = getHibernateTemplate().findByNamedParam( gqs, "ids", batch );
-                result.addAll( list );
-                batch.clear();
+                for ( Long probeId : probeIds ) {
+                    batch.add( probeId );
+                    if ( batch.size() == BATCH_SIZE ) {
+                        List list = getHibernateTemplate().findByNamedParam( gqs, "ids", batch );
+                        result.addAll( list );
+                        batch.clear();
+                    }
+                }
+                if ( batch.size() > 0 ) {
+                    List list = getHibernateTemplate().findByNamedParam( gqs, "ids", batch );
+                    result.addAll( list );
+                }
+
+                return null;
             }
-        }
-        if ( batch.size() > 0 ) {
-            List list = getHibernateTemplate().findByNamedParam( gqs, "ids", batch );
-            result.addAll( list );
-        }
+        } );
         return result;
     }
 
@@ -823,48 +838,57 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     @SuppressWarnings("unchecked")
     @Override
     protected Map handleGetDesignElementDataVectors(
-    /* Map<Long, Collection<Gene>> */Map cs2gene, QuantitationType qt ) throws Exception {
+    /* Map<Long, Collection<Gene>> */final Map cs2gene, final QuantitationType qt ) {
 
         // FIXME move this method to the DesignElementDataVectorDao/Service.
 
-        Map<DesignElementDataVector, Collection<Gene>> dedv2genes = new HashMap<DesignElementDataVector, Collection<Gene>>();
+        final Map<DesignElementDataVector, Collection<Gene>> dedv2genes = new HashMap<DesignElementDataVector, Collection<Gene>>();
 
         // Native query - faster? Fetches all data for that QT and throws away
         // unneeded portion
-        String queryString = "SELECT ID as dedvId, DATA as dedvData, DESIGN_ELEMENT_FK as csId, RANK as dedvRank FROM DESIGN_ELEMENT_DATA_VECTOR WHERE "
+        final String queryString = "SELECT ID as dedvId, DATA as dedvData, DESIGN_ELEMENT_FK as csId, RANK as dedvRank FROM DESIGN_ELEMENT_DATA_VECTOR WHERE "
                 + " QUANTITATION_TYPE_FK = " + qt.getId();
-        Session session = getSessionFactory().openSession();
-        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+        getHibernateTemplate().execute( new HibernateCallback() {
+            public Object doInHibernate( Session session ) {
+                org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
 
-        queryObject.addScalar( "dedvId", new LongType() );
-        queryObject.addScalar( "dedvData", new BlobType() );
-        queryObject.addScalar( "csId", new LongType() );
-        queryObject.addScalar( "dedvRank", new DoubleType() );
+                queryObject.addScalar( "dedvId", new LongType() );
+                queryObject.addScalar( "dedvData", new BlobType() );
+                queryObject.addScalar( "csId", new LongType() );
+                queryObject.addScalar( "dedvRank", new DoubleType() );
 
-        ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        Collection<Long> desiredCsIds = cs2gene.keySet();
-        while ( scroll.next() ) {
-            Long dedvId = scroll.getLong( 0 );
-            Blob dedvData = scroll.getBlob( 1 );
-            byte data[] = dedvData.getBytes( 1, ( int ) dedvData.length() );
-            Long fetchedCsId = scroll.getLong( 2 );
-            Double rank = scroll.getDouble( 3 );
+                ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+                Collection<Long> desiredCsIds = cs2gene.keySet();
+                while ( scroll.next() ) {
+                    Long dedvId = scroll.getLong( 0 );
+                    Blob dedvData = scroll.getBlob( 1 );
+                    byte data[];
+                    try {
+                        data = dedvData.getBytes( 1, ( int ) dedvData.length() );
+                    } catch ( SQLException e ) {
+                        log.error( e.getMessage() );
+                        continue;
+                    }
+                    Long fetchedCsId = scroll.getLong( 2 );
+                    Double rank = scroll.getDouble( 3 );
 
-            if ( desiredCsIds.contains( fetchedCsId ) ) {
-                DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
-                vector.setId( dedvId );
-                vector.setData( data );
-                // vector.setDesignElement( cs );
-                vector.setQuantitationType( qt );
-                vector.setRank( rank );
-                // vector.setExpressionExperiment( expressionExperiment );
-                // vector.setBioAssayDimension( bioAssayDimension );
-                dedv2genes.put( vector, ( Collection<Gene> ) cs2gene.get( fetchedCsId ) );
+                    if ( desiredCsIds.contains( fetchedCsId ) ) {
+                        DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
+                        vector.setId( dedvId );
+                        vector.setData( data );
+                        // vector.setDesignElement( cs );
+                        vector.setQuantitationType( qt );
+                        vector.setRank( rank );
+                        // vector.setExpressionExperiment( expressionExperiment );
+                        // vector.setBioAssayDimension( bioAssayDimension );
+                        dedv2genes.put( vector, ( Collection<Gene> ) cs2gene.get( fetchedCsId ) );
+                    }
+
+                }
+                session.close();
+                return null;
             }
-
-        }
-        session.clear();
-        session.close();
+        } );
         return dedv2genes;
     }
 
