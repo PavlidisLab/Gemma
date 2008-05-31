@@ -29,8 +29,8 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
@@ -40,7 +40,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor; 
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
@@ -151,6 +151,9 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
         log.debug( pvalueCommand.toString() );
 
         double[] pvalues = rc.doubleArrayEval( pvalueCommand.toString() );
+
+        /* write out pvalues to a file */
+        writeRawPValues( expressionExperiment, pvalues );
 
         /* handle the t-statistics */
         StringBuffer tstatisticCommand = new StringBuffer();

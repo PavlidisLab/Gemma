@@ -18,6 +18,7 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -31,9 +32,10 @@ import org.rosuda.REngine.REXPMismatchException;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.dataStructure.matrix.FastRowAccessDoubleMatrix2DNamed;
+import ubic.basecode.util.FileTools;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
@@ -43,9 +45,10 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor; 
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * A one way anova implementation as described by P. Pavlidis, Methods 31 (2003) 282-289.
@@ -151,6 +154,9 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 j++;
             }
         }
+
+        /* write out pvalues to a file */
+        writeRawPValues( expressionExperiment, filteredPvalues );
 
         /* f-statistic */
         StringBuffer fStatisticCommand = new StringBuffer();

@@ -136,6 +136,9 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
             }
         }
 
+        /* write out pvalues to a file */
+        writeRawPValues( expressionExperiment, filteredPvalues );
+
         /* F-statistics */
         StringBuffer fstatisticCommand = new StringBuffer();
 

@@ -27,12 +27,14 @@ import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.util.FileTools;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * An abstract differential expression analyzer to be extended by analyzers which will make use of R. For example, see
@@ -42,6 +44,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @version $Id$
  */
 public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAnalyzer {
+
+    protected static final String DIFF_DIR_NAME = "diff";
+
+    protected static final String FILE_SUFFIX = "_pvalues.txt";
 
     private Log log = LogFactory.getLog( this.getClass() );
 
@@ -92,15 +98,37 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
      * @param file
      * @throws IOException
      */
-    protected static void writeRawPValues( double[] pvalues, File location, String file ) throws IOException {
-        File f = new File( location, file );
+    protected void writeRawPValues( double[] pvalues, File location, String file ) {
 
-        Writer writer = new FileWriter( f );
-        for ( int i = 0; i < pvalues.length; i++ ) {
-            writer.write( String.valueOf( pvalues[i] ) );
+        try {
+            File f = new File( location, file );
 
-            if ( i < pvalues.length - 1 ) writer.write( "\t" );
+            Writer writer = new FileWriter( f );
+            for ( int i = 0; i < pvalues.length; i++ ) {
+                writer.write( String.valueOf( pvalues[i] ) );
+
+                if ( i < pvalues.length - 1 ) writer.write( "\t" );
+            }
+            writer.close();
+            log.info( "wrote pvalues to file " + f.toString() );
+        } catch ( IOException e ) {
+            log.error( "Could not write p-values to file" );
         }
+
+    }
+
+    /**
+     * @param expressionExperiment
+     * @param filteredPvalues
+     */
+    protected void writeRawPValues( ExpressionExperiment expressionExperiment, double[] filteredPvalues ) {
+        File dir = FileTools.createDir( ConfigUtils.getAnalysisStoragePath() + File.separatorChar
+                + AbstractDifferentialExpressionAnalyzer.DIFF_DIR_NAME );
+
+        String pvaluesFileName = expressionExperiment.getShortName()
+                + AbstractDifferentialExpressionAnalyzer.FILE_SUFFIX;
+
+        writeRawPValues( filteredPvalues, dir, pvaluesFileName );
     }
 
     /**
