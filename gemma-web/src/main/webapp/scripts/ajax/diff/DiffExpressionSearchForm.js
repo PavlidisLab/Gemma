@@ -97,6 +97,15 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
 		text : "Choose datasets",
 		handler : this.chooseDatasets.createDelegate(this)
 	} );
+
+	var metaAnalysisPanel = new Ext.Panel({
+		title : 'Meta Analysis options',
+		autoHeight : true,
+		buttons: [chooseDatasetsButton],
+		buttonAlign: 'left'
+	});
+		
+	this.metaAnalysisPanel = metaAnalysisPanel;
 	
 	var submitButton = new Ext.Button( {
 		text : "Find diff expressed genes",
@@ -109,6 +118,7 @@ Ext.Gemma.DiffExpressionSearchForm = function ( config ) {
 	/* Build the form */
 	this.add( queryFs );
 	this.add( optionsPanel);
+	this.add( metaAnalysisPanel); 
 	this.addButton( submitButton );
 
 	Ext.Gemma.DiffExpressionSearchForm.searchForGene = function( geneId ) {

@@ -18,14 +18,17 @@ Ext.Gemma.DiffExpressionGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 		}
 	}, {
 		name : "fisherPValue",
-		type : "int"
+		type: "float"
 	}, {
 		name : "activeExperiments"
 	}, {
-		name : "supportingExperiments"
+		name : "numSearchedExperiments",
+		type: "int"
 	},{
 		name:  "sortKey",
 		type: "string"
+	},{
+		name: "probeResults"
 	}]),
 
 	initComponent : function() {
@@ -56,7 +59,7 @@ Ext.Gemma.DiffExpressionGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 
 		Ext.apply(this, {
 			columns : [{
-				id : 'query',
+				id : 'gene',
 				header : "Query Gene",
 				dataIndex : "gene",
 				sortable: false
@@ -66,7 +69,16 @@ Ext.Gemma.DiffExpressionGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 				header : "metaP",
 				sortable: false,
 				width : 75
-			}]
+			}, 
+			{
+				id : 'activeExperiments',
+				dataIndex: "activeExperiments",
+				header : "support",
+				sortable: false,
+				width : 75,
+				renderer :Ext.Gemma.DiffExpressionGrid.getSupportStyler()
+			}, 
+			]
 		});
 
 		Ext.apply(this, {
@@ -84,16 +96,16 @@ Ext.Gemma.DiffExpressionGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 		this.originalTitle = this.title;
 	},
 
-	loadData : function(isCannedAnalysis, numQueryGenes, data, datasets) {
+	loadData : function(results) {
 
 		this.rowExpander.clearCache();
-		this.datasets = datasets; // the datasets that are 'relevant'.
-		this.getStore().proxy.data = data;
+		//this.datasets = datasets; // the datasets that are 'relevant'.
+		this.getStore().proxy.data = results;
 		this.getStore().reload({
 			resetPage : true
 		});
 		this.getView().refresh(true); // refresh column headers
-		this.resizeDatasetColumn();
+		//this.resizeDatasetColumn();
 	},
 
 	resizeDatasetColumn : function() {
@@ -146,7 +158,7 @@ Ext.Gemma.DiffExpressionGrid.getSupportStyler = function() {
 		Ext.Gemma.DiffExpressionGrid.supportStyler = function(value, metadata,
 				record, row, col, ds) {
 			var d = record.data;
-			return data.supportingExperiments.size();
+			return String.format("{0}/{1}", d.activeExperiments.size(), d.numSearchedExperiments) ;
 		};
 	}
 	return Ext.Gemma.DiffExpressionGrid.supportStyler;

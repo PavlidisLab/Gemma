@@ -189,6 +189,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         for ( long geneId : geneIds ) {
             DifferentialExpressionMetaAnalysisValueObject mavo = getDifferentialExpression( geneId, eeIds, threshold );
             mavo.setSortKey();
+            mavo.setNumSearchedExperiments( eeIds.size());
             mavos.add( mavo );
             
         }

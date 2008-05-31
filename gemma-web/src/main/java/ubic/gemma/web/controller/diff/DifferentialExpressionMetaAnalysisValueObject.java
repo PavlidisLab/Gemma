@@ -17,6 +17,7 @@ public class DifferentialExpressionMetaAnalysisValueObject {
 
     private String sortKey;
     private Double fisherPValue = null;
+    private int numSearchedExperiments;
 
     private Collection<ExpressionExperiment> activeExperiments = null;
 
@@ -61,6 +62,16 @@ public class DifferentialExpressionMetaAnalysisValueObject {
     public void setSortKey() {
         this.sortKey = String.format( "%06f%s", getFisherPValue(), getGene().getOfficialSymbol() );
     }
+
+    public int getNumSearchedExperiments() {
+        return numSearchedExperiments;
+    }
+
+    public void setNumSearchedExperiments( int numSearchedExperiments ) {
+        this.numSearchedExperiments = numSearchedExperiments;
+    }
+    
+    
     
 
 }
