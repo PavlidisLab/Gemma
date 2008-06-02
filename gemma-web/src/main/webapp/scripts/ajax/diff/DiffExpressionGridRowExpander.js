@@ -32,35 +32,43 @@ Ext.extend( Ext.Gemma.DiffExpressionGridRowExpander, Ext.grid.RowExpander, {
 			
 			var bodyEl = new Ext.Element( body );
 			 
-			bodyEl.addClass('DiffExpressionGridRowExpanded'); // layout.css
-			
-	 		
-			// Tab: supporting data sets. x-hide-display hides the div until we need to show it.
-			var supportingDsGridEl = bodyEl.createChild( { } );
-	 		supportingDsGridEl.addClass("x-hide-display");
-			// Tab: differential expression  
+			bodyEl.addClass('diffExpressionGridRowExpanded'); // layout.css
 			
 			var diffExGridEl = bodyEl.createChild( {  } );  
 			diffExGridEl.addClass("x-hide-display");
-		
+			
+			var tabPanel = new Ext.TabPanel({
+			 	renderTo: bodyEl,
+    			activeTab: 0,
+    			items: [{
+        			title:  "Supporting Datasets",
+        			contentEl: diffExGridEl
+    			}]
+			 });
+			
+			this.expandedElements[ rowIndex ].push(tabPanel);
+			
 			var supporting = this.getSupportingDatasetRecords( record );
-
-			var dsGrid = new Ext.Gemma.DiffExpressionExperimentGrid( {
+		
+			var diffExGrid = new Ext.Gemma.DiffExpressionExperimentGrid( {
 				records : supporting,
+				pageSize : 10,
     			width : 800,
-    			renderTo : supportingDsGridEl
+    			renderTo : diffExGridEl
 			} );
-			
-			this.expandedElements[ rowIndex ].push(dsGrid);
-				
-
-			
-	
-		 	dsGrid.getStore().load( );
+			 
+		 	diffExGrid.getStore().load( { params : { start : 0, limit : 10 } });
     		
+    		/*
+    		var loadMask = new Ext.LoadMask( diffExGridEl, {
+				removeMask : true,
+				store : diffExGrid.getStore()
+			} );
+			loadMask.show();
+			*/
 			
 			// Keep mouse events from propogating to the parent grid. See ExtJS forums topic "nested grids problem" (242878).
-			dsGrid.getEl().swallowEvent(['mouseover','mousedown','click','dblclick']);
+			diffExGrid.getEl().swallowEvent(['mouseover','mousedown','click','dblclick']);
 			
             return true;
          }
@@ -68,8 +76,7 @@ Ext.extend( Ext.Gemma.DiffExpressionGridRowExpander, Ext.grid.RowExpander, {
     },
     
  	getSupportingDatasetRecords : function( record  ) {
-		var ids = record.data.activeExperiments;
-		return ids;
+		return record.data.probeResults;
 	},
     
     clearCache : function () {

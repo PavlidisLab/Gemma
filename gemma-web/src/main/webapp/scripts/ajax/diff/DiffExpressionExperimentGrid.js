@@ -4,9 +4,9 @@ Ext.namespace('Ext.Gemma');
 
 /**
  * 
- * Grid to display ExpressionExperiments. Author: Paul (based on Luke's
- * CoexpressionDatasetGrid) $Id: ExpressionExperimentGrid.js,v 1.13 2008/04/23
- * 19:54:46 kelsey Exp $
+ * Grid to display expression experiments with differential evidence for given probe. 
+ *  
+ * $Id$
  */
 Ext.Gemma.DiffExpressionExperimentGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 
@@ -17,20 +17,16 @@ Ext.Gemma.DiffExpressionExperimentGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 //	readMethod : ExpressionExperimentController.loadExpressionExperiments
 //			.createDelegate(this, [], true),
 
-	autoExpandColumn : 'name',
+	autoExpandColumn : 'probe',
 
 	editable : true,
 
-	record : Ext.data.Record.create([{
-		name : "id",
-		type : "int"
-	}, {
-		name : "shortName",
-		type : "string"
-	}, {
-		name : "name",
-		type : "string"
-	}]),
+	record : Ext.data.Record.create([
+			{ name:"id", type:"int"},
+			{ name:"expressionExperiment"},
+			{ name:"probe", type:"string" },
+			{ name:"experimentalFactors" },
+			{ name:"p", type:"float" }]),
 
 	initComponent : function() {
 		if (this.pageSize) {
@@ -81,31 +77,45 @@ Ext.Gemma.DiffExpressionExperimentGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 
 		Ext.apply(this, {
 			columns : [{
-				id : 'shortName',
+				id : 'expressionExperiment',
 				header : "Dataset",
-				dataIndex : "shortName",
+				dataIndex : "expressionExperiment",
 				width : 80,
-				sortable : true
+				sortable : false,
+				renderer :Ext.Gemma.DiffExpressionExperimentGrid.getEEStyler()
 			}, {
-				id : 'name',
-				header : "Name",
-				dataIndex : "name",
-				width : 120,
-				sortable : true
+				id : 'probe',
+				header : "Probe",
+				dataIndex : "probe",
+				width : 80,
+				sortable : false
+			}, { id: 'efs', 
+				 header: "Factor(s)", 
+				 dataIndex: "experimentalFactors", 
+				 renderer: Ext.Gemma.DiffExpressionExperimentGrid.getEFStyler(), 
+				 sortable: false 
+			}, {
+				 id : 'p',
+				 header : "P Value",
+				 dataIndex : "p",
+				 width : 120,
+				 sortable : true
 			}]
 		});
-
-//			Ext.apply(this, {
-//				rowExpander : new Ext.Gemma.DiffProbeGridRowExpander({
-//					tpl : ""
-//				})
-//			});
-//			this.columns.unshift(this.rowExpander);
-//			Ext.apply(this, {
-//				plugins : this.rowExpander
-//			});
-
-		Ext.Gemma.ExpressionExperimentGrid.superclass.initComponent.call(this);
+		
+		/*
+		Ext.apply(this, {
+			rowExpander : new Ext.Gemma.DiffProbeGridRowExpander({
+				tpl : ""
+			})
+		});
+		this.columns.unshift(this.rowExpander);
+		Ext.apply(this, {
+			plugins : this.rowExpander
+		});
+		*/
+	
+		Ext.Gemma.DiffExpressionExperimentGrid.superclass.initComponent.call(this);
 
 		this.on("keypress", function(e) {
 			if (e.getCharCode() == Ext.EventObject.DELETE) {
@@ -129,7 +139,8 @@ Ext.Gemma.DiffExpressionExperimentGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 			this.getView().refresh();
 		}
 	},
-
+	
+	
 	formatAssayCount : function(value, metadata, record, row, col, ds) {
 		return String
 				.format(
@@ -142,9 +153,6 @@ Ext.Gemma.DiffExpressionExperimentGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 		return eeTemplate.apply(record.data);
 	},
 
-	/**
-	 * Return all the ids of the experiments shown in this grid.
-	 */
 	getEEIds : function() {
 		var result = [];
 		this.store.each(function(rec) {
@@ -152,6 +160,7 @@ Ext.Gemma.DiffExpressionExperimentGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 		});
 		return result;
 	},
+	
 
 	isEditable : function() {
 		return this.editable;
@@ -163,6 +172,7 @@ Ext.Gemma.DiffExpressionExperimentGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 
 });
 
+/*
 Ext.Gemma.ExpressionExperimentGrid.updateDatasetInfo = function(datasets, eeMap) {
 	for (var i = 0; i < datasets.length; ++i) {
 		var ee = eeMap[datasets[i].id];
@@ -172,8 +182,54 @@ Ext.Gemma.ExpressionExperimentGrid.updateDatasetInfo = function(datasets, eeMap)
 		}
 	}
 };
+*/
 
-//Show probes and their associated P values
+/* stylers */
+Ext.Gemma.DiffExpressionExperimentGrid.getEEStyler = function() {
+	if ( Ext.Gemma.DiffExpressionExperimentGrid.eeNameStyler === undefined ) {
+		Ext.Gemma.DiffExpressionExperimentGrid.eeNameTemplate = new Ext.Template(
+			"<a target='_blank' href='/Gemma/expressionExperiment/showExpressionExperiment.html?id={id}' ext:qtip='{name}'>{shortName}</a>"
+		);
+		Ext.Gemma.DiffExpressionExperimentGrid.eeNameStyler = function ( value, metadata, record, row, col, ds ) {
+			var ee = record.data.expressionExperiment;
+			return Ext.Gemma.DiffExpressionExperimentGrid.eeNameTemplate.apply( ee );
+		};
+	}
+	return Ext.Gemma.DiffExpressionExperimentGrid.eeNameStyler;
+};
+
+Ext.Gemma.DiffExpressionExperimentGrid.getEENameStyler = function() {
+	if ( Ext.Gemma.DiffExpressionExperimentGrid.eeStyler === undefined ) {
+		Ext.Gemma.DiffExpressionExperimentGrid.eeTemplate = new Ext.Template(
+			"{name}"
+		);
+		Ext.Gemma.DiffExpressionExperimentGrid.eeStyler = function ( value, metadata, record, row, col, ds ) {
+			var ee = record.data.expressionExperiment;
+			return Ext.Gemma.DiffExpressionExperimentGrid.eeTemplate.apply( ee );
+		};
+	}
+	return Ext.Gemma.DiffExpressionExperimentGrid.eeStyler;
+};
+
+Ext.Gemma.DiffExpressionExperimentGrid.getEFStyler = function() {
+	if ( Ext.Gemma.DiffExpressionExperimentGrid.efStyler === undefined ) {
+		Ext.Gemma.DiffExpressionExperimentGrid.efTemplate = new Ext.XTemplate(
+			
+			'<tpl for=".">',
+				"<a target='_blank' ext:qtip='{factorValues}'>{name}</a>\n",
+				//'<p><tooltip caption={factorValues} descr="factor values">{name}</tooltip></p>',
+			'</tpl>'
+				
+		);
+		Ext.Gemma.DiffExpressionExperimentGrid.efStyler = function ( value, metadata, record, row, col, ds ) {
+			var efs = record.data.experimentalFactors;
+			return Ext.Gemma.DiffExpressionExperimentGrid.efTemplate.apply( efs);
+		};
+	}
+	return Ext.Gemma.DiffExpressionExperimentGrid.efStyler;
+};
+
+/*
 Ext.Gemma.DiffProbeGridRowExpander = Ext.extend(Ext.grid.RowExpander, {
 
 	fillExpander : function(data, body, rowIndex) {
@@ -184,11 +240,12 @@ Ext.Gemma.DiffProbeGridRowExpander = Ext.extend(Ext.grid.RowExpander, {
 	},
 
 	beforeExpand : function(record, body, rowIndex) {
-//		ExpressionExperimentController.getDescription(record.id, {
-//			callback : this.fillExpander.createDelegate(this, [body, rowIndex],
-//					true)
-//		});
+		ExpressionExperimentController.getDescription(record.id, {
+			callback : this.fillExpander.createDelegate(this, [body, rowIndex],
+					true)
+		});
 		return true;
 	}
 
 });
+*/

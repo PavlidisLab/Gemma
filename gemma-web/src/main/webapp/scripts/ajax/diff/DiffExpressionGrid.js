@@ -60,20 +60,20 @@ Ext.Gemma.DiffExpressionGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 		Ext.apply(this, {
 			columns : [{
 				id : 'gene',
-				header : "Query Gene",
 				dataIndex : "gene",
+				header : "Query Gene",
 				sortable: false
 			}, {
 				id : 'fisherPValue',
 				dataIndex: "fisherPValue",
-				header : "metaP",
+				header : "Meta P-Value",
 				sortable: false,
 				width : 75
 			}, 
 			{
 				id : 'activeExperiments',
 				dataIndex: "activeExperiments",
-				header : "support",
+				header : "Support",
 				sortable: false,
 				width : 75,
 				renderer :Ext.Gemma.DiffExpressionGrid.getSupportStyler()
