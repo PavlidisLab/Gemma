@@ -29,7 +29,7 @@
 			</resource>
 		</resources>
 		<filters>
-			<filter>${project.basedir}/src/main/filters/project.properties</filter>
+			<filter>src/main/filters/project.properties</filter>
 		</filters>
 		<plugins>
 			<plugin>
