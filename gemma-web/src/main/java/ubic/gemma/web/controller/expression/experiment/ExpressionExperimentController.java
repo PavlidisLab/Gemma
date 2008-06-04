@@ -955,8 +955,10 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         // required for security filtering.
         Collection<ExpressionExperiment> ees;
         Collection<Long> filteredIds = new HashSet<Long>();
-        if ( ids == null || ids.isEmpty() ) {
+        if ( ids == null ) {
             ees = expressionExperimentService.loadAll();
+        } else if ( ids.isEmpty() ) {
+            return new HashSet<ExpressionExperimentValueObject>();
         } else {
             ees = expressionExperimentService.loadMultiple( ids );
         }
