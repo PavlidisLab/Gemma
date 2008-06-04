@@ -233,7 +233,8 @@ public class SearchService implements InitializingBean {
      */
     @SuppressWarnings("unchecked")
     public Map<Class, List<SearchResult>> search( SearchSettings settings, boolean fillObjects ) {
-        String searchString = StringEscapeUtils.escapeJava( settings.getQuery());   //probably not necessay to escape...
+        String searchString = StringEscapeUtils.escapeJava( settings.getQuery() ); // probably not necessay to
+                                                                                    // escape...
 
         List<SearchResult> rawResults = new ArrayList<SearchResult>();
 
@@ -243,34 +244,34 @@ public class SearchService implements InitializingBean {
         }
 
         Collection<SearchResult> genes = null;
-        if ( settings.isSearchGenes() ) {
+        if ( settings.isSearchGenes() && rawResults.size() < settings.getMaxResults() ) {
             genes = geneSearch( settings );
             accreteResults( rawResults, genes );
         }
 
         Collection<SearchResult> compositeSequences = null;
-        if ( settings.isSearchProbes() ) {
+        if ( settings.isSearchProbes() && rawResults.size() < settings.getMaxResults() ) {
             compositeSequences = compositeSequenceSearch( settings, genes );
             accreteResults( rawResults, compositeSequences );
         }
 
-        if ( settings.isSearchArrays() ) {
+        if ( settings.isSearchArrays() && rawResults.size() < settings.getMaxResults() ) {
             Collection<SearchResult> foundADs = arrayDesignSearch( settings, compositeSequences );
             accreteResults( rawResults, foundADs );
         }
 
-        if ( settings.isSearchBioSequences() ) {
+        if ( settings.isSearchBioSequences() && rawResults.size() < settings.getMaxResults() ) {
             Collection<SearchResult> bioSequences = bioSequenceSearch( settings, genes );
             accreteResults( rawResults, bioSequences );
         }
 
-        if ( settings.isSearchGenesByGO() ) {
+        if ( settings.isSearchGenesByGO() && rawResults.size() < settings.getMaxResults() ) {
             Collection<SearchResult> ontologyGenes = gene2GOAssociationService.findByGOTerm( searchString, settings
                     .getTaxon() );
             accreteResults( rawResults, ontologyGenes );
         }
 
-        if ( settings.isSearchBibrefs() ) {
+        if ( settings.isSearchBibrefs() && rawResults.size() < settings.getMaxResults() ) {
             Collection<SearchResult> bibliographicReferences = compassBibliographicReferenceSearch( settings );
             accreteResults( rawResults, bibliographicReferences );
         }
