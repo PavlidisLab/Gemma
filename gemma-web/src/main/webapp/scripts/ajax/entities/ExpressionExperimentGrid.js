@@ -147,6 +147,13 @@ Ext.Gemma.ExpressionExperimentGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 
 	},
 
+	afterRender : function() {
+		Ext.Gemma.ExpressionExperimentGrid.superclass.afterRender.call(this);
+		if (this.getTopToolbar()) {
+			this.getTopToolbar().grid = this;
+		}
+	},
+
 	removeSelected : function() {
 		var recs = this.getSelectionModel().getSelections();
 		for (var x = 0; x < recs.length; x++) { // for r in recs

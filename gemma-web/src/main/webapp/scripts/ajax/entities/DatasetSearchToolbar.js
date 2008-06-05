@@ -14,13 +14,17 @@ Ext.Gemma.DatasetSearchToolBar = Ext.extend(Ext.Toolbar, {
 		this.addEvents("after.tbsearch");
 	},
 
+	setTaxon : function(taxon) {
+		this.taxonCombo.setValue(taxon);
+	},
+
 	afterRender : function() {
 		Ext.Gemma.DatasetSearchToolBar.superclass.afterRender.call(this);
 
 		if (this.taxonSearch) {
 			this.taxonCombo = new Ext.Gemma.TaxonCombo({
-				emptyText : 'select a taxon',
-				width : 150,
+				emptyText : 'Select a taxon',
+				width : 125,
 				listeners : {
 					'taxonchanged' : {
 						fn : function(taxon) {
@@ -44,52 +48,24 @@ Ext.Gemma.DatasetSearchToolBar = Ext.extend(Ext.Toolbar, {
 			listeners : {
 				'aftersearch' : {
 					fn : function(field, results) {
-						this.resetButton.enable();
 						this.fireEvent('after.tbsearch', results);
+						if (this.grid) {
+							this.grid.getStore().load({
+								params : [results]
+							});
+						}
 					}.createDelegate(this)
 				}
 			}
 		});
 
-		this.resetButton = new Ext.Button({
-			id : 'reset',
-			text : "Reset",
-			handler : this.reset,
-			scope : this,
-			disabled : true,
-			tooltip : "Restore the display list of datasets for the analysis"
-		});
-
 		this.addField(this.eeSearchField);
-
-		this.addFill();
-		this.addField(this.resetButton);
 
 	},
 
 	updateDatasets : function() {
 		if (this.eeSearchField.filtering) {
 			this.eeSearchField.setFilterFrom(this.container.getEEIds());
-		}
-	},
-
-	reset : function() {
-		this.eeSearchField.reset();
-		if (this.owningGrid.analysisId) {
-			var callback = function(d) {
-				// load the data sets.
-				this.getStore().load({
-					params : [d]
-				});
-			};
-			// Go back to the server to get the ids of the experiments the
-			// selected analysis' parent has.
-			GeneLinkAnalysisManagerController.getExperimentIdsInAnalysis(
-					this.owningGrid.analysisId, {
-						callback : callback.createDelegate(this.owningGrid, [],
-								true)
-					});
-
 		}
 	}
 
@@ -103,6 +79,14 @@ Ext.Gemma.DatasetSearchToolBar = Ext.extend(Ext.Toolbar, {
  */
 Ext.Gemma.DataSetSearchAndGrabToolbar = Ext.extend(
 		Ext.Gemma.DatasetSearchToolBar, {
+
+			initComponent : function() {
+				Ext.Gemma.DataSetSearchAndGrabToolbar.superclass.initComponent
+						.call(this);
+				this.addEvents("grabbed");
+
+			},
+
 			afterRender : function() {
 				Ext.Gemma.DataSetSearchAndGrabToolbar.superclass.afterRender
 						.call(this);
@@ -114,18 +98,16 @@ Ext.Gemma.DataSetSearchAndGrabToolbar = Ext.extend(
 						var selmo = this.grid.getSelectionModel();
 						var sels = selmo.getSelections();
 						if (sels.length > 0) {
+							Ext.log("Grabbed " + sels.length);
 							this.targetGrid.getStore().add(sels);
 							this.targetGrid.getView().refresh();
+							this.fireEvent("grabbed", sels);
 						}
 					},
 					scope : this
 				});
 
 				this.add(grabber);
-				// grid.store.on("load", function() {
-				// Ext.getCmp('grab').enable();
-				// }, this);
-
 			}
 
 		});

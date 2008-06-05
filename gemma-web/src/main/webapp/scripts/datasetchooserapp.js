@@ -12,6 +12,8 @@ Gemma.DatasetChooser.app = function() {
 
 			Ext.QuickTips.init();
 
+			Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
+
 			// dcp = new Ext.Gemma.DatasetChooserPanel();
 			//
 			// gp = new Ext.Gemma.GeneChooserPanel({
@@ -20,20 +22,20 @@ Gemma.DatasetChooser.app = function() {
 			// width : 500
 			// });
 			//
-			// btn = new Ext.Button({
-			// renderTo : 'but',
-			// text : "Show ds picker",
-			// handler : function() {
-			// dcp.show();
-			// }
-			// });
+			btn = new Ext.Button({
+				renderTo : 'but',
+				text : "Show ds picker",
+				handler : function() {
+					dcp.show();
+				}
+			});
 
 			// ach = new Ext.Gemma.AnalysisCombo({
 			// renderTo : 'but',
 			// showCustomOption : true
 			// });
 
-			var searchForm = new Ext.Gemma.CoexpressionSearchFormLite({
+			dcp = new Ext.Gemma.DatasetChooserPanel({
 				renderTo : "but"
 			});
 
@@ -41,13 +43,11 @@ Gemma.DatasetChooser.app = function() {
 			// renderTo : 'but'
 			// });
 
-			// Ext.state.Manager.setProvider(new Ext.state.SessionProvider({
-			// state : Ext.appState
-			// }));
-
-			// dcp.on("datasets-selected", function(e) {
-			// Ext.Msg.alert("Yay", "You got " + e.eeIds.length + " ee ids");
-			// });
+			dcp.on("datasets-selected", function(e) {
+				Ext.Msg.alert("Yay", "You got "
+						+ e.selected.get("expressionExperimentIds").length
+						+ " ee ids");
+			});
 
 			// dcp.show();
 		}

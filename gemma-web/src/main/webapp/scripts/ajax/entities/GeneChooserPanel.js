@@ -109,6 +109,11 @@ Ext.Gemma.GeneChooserPanel = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 				this.getStore().remove(all[i]);
 			}
 		}
+
+		if (this.taxonCombo.getTaxon().id != taxon.id) {
+			this.taxonCombo.setTaxon(taxon);
+		}
+
 		this.fireEvent('taxonchanged', taxon);
 	},
 

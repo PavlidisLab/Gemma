@@ -44,7 +44,7 @@ Ext.Gemma.AnalysisCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 
 	restoreState : function() {
-		if (this.state){
+		if (this.state) {
 			Ext.Gemma.AnalysisCombo.superclass.setValue.call(this, v);
 			delete this.state;
 		}
@@ -71,13 +71,7 @@ Ext.Gemma.AnalysisCombo = Ext.extend(Ext.form.ComboBox, {
 
 		var customAnalysisCallback = function(r, options, success) {
 			if (this.showCustomOption) {
-				var Constructor = this.record;
-				var newrec = new Constructor({
-					id : -1,
-					name : "Custom analysis",
-					description : "Select specific datasets to search against"
-				}, -1);
-				this.store.add(newrec); // asynch
+				this.showCustom();
 			}
 			this.restoreState();
 		}.createDelegate(this);
@@ -102,6 +96,11 @@ Ext.Gemma.AnalysisCombo = Ext.extend(Ext.form.ComboBox, {
 			changed = true;
 		}
 
+		// if setting to a filtered value, reset the filter.
+		if (changed && this.store.isFiltered()) {
+			this.store.clearFilter();
+		}
+
 		Ext.Gemma.AnalysisCombo.superclass.setValue.call(this, v);
 
 		if (changed) {
@@ -119,6 +118,10 @@ Ext.Gemma.AnalysisCombo = Ext.extend(Ext.form.ComboBox, {
 				&& this.getAnalysis().taxon.id != taxon.id) {
 			this.reset();
 		}
+		this.applyFilter(taxon);
+	},
+
+	applyFilter : function(taxon) {
 		this.store.filterBy(function(record, id) {
 			if (!record.data.taxon) {
 				return true;
@@ -126,6 +129,50 @@ Ext.Gemma.AnalysisCombo = Ext.extend(Ext.form.ComboBox, {
 				return true;
 			}
 		});
+	},
+
+	showCustom : function(scrollIntoView) {
+		var rec = this.store.getById(-1);
+
+		if (!rec) {
+			var Constructor = this.record;
+			var newrec = new Constructor({
+				id : -1,
+				name : "[Custom]",
+				description : "Unnamed dataset grouping selected by user"
+			}, -1);
+			if (scrollIntoView) {
+				this.store.on("add", this.selectById, this, {
+					id : -1
+				});
+			}
+			this.store.add(newrec); // asynch
+		} else if (scrollIntoView) {
+			this.selectById(-1);
+		}
+
+	},
+
+	/**
+	 * Given the id (primary key in Gemma) of the analysis, select it.
+	 * 
+	 * @param {}
+	 *            args
+	 */
+	selectById : function(args) {
+		this.store.un("add", this.selectById);
+		if (args.id) {
+			this.selectByValue(args.id, true);
+		} else {
+			this.selectByValue(args, true);
+		}
+	},
+
+	clearCustom : function() {
+		var rec = this.store.getById(-1);
+		if (rec) {
+			this.store.remove(rec);
+		}
 	}
 
 });

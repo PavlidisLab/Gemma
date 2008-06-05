@@ -59,6 +59,12 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 
 	},
 
+	/**
+	 * Construct the coexpression command object from the form, to be sent to
+	 * the server.
+	 * 
+	 * @return {}
+	 */
 	getCoexpressionSearchCommand : function() {
 		var csc = {
 			geneIds : this.geneChooserPanel.getGeneIds(),
@@ -66,13 +72,8 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 			taxonId : this.geneChooserPanel.getTaxonId(),
 			queryGenesOnly : Ext.getCmp('querygenesonly').getValue()
 		};
-		var analysisId = this.analysisCombo.getValue();
-		if (analysisId < 0) {
-			csc.eeIds = Ext.getCmp('eeSearchField').getEeIds();
-			csc.eeQuery = Ext.getCmp('eeSearchField').getValue();
-		} else {
-			csc.cannedAnalysisId = analysisId;
-		}
+		csc.eeIds = this.eeIds;
+		csc.cannedAnalysisId = this.analysisCombo.getValue();
 		return csc;
 	},
 
@@ -134,7 +135,7 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 		Ext.log("initialize");
 		this.geneChooserPanel = Ext.getCmp('gene-chooser-panel');
 		this.stringencyField = Ext.getCmp('stringencyfield');
-		this.eeSearchField = Ext.getCmp('eeSearchField');
+		// this.eeSearchField = Ext.getCmp('eeSearchField');
 
 		this.initializeGenes(csc, doSearch);
 
@@ -145,6 +146,7 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 		if (csc.cannedAnalysisId) {
 			this.analysisCombo.setState(csc.cannedAnalysisId);
 		}
+
 		if (csc.stringency) {
 			this.stringencyField.setValue(csc.stringency);
 		}
@@ -154,9 +156,8 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 		}
 
 		if (csc.cannedAnalysisId === null || csc.cannedAnalysisId < 0) {
-			this.customFs.show();
-			this.eeSearchField.setValue(csc.eeQuery);
-			this.updateDatasetsToBeSearched(csc.eeIds);
+			this.updateDatasetsToBeSearched(csc.eeIds, csc.cannedAnalysisId,
+					false);
 		} else {
 
 		}
@@ -221,11 +222,15 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 		if (!this.dcp) {
 			this.dcp = new Ext.Gemma.DatasetChooserPanel();
 			this.dcp.on("datasets-selected", function(e) {
-				this.updateDatasetsToBeSearched(e.eeIds);
+				this.updateDatasetsToBeSearched(e.eeIds, e.eeSet, e.dirty);
 			}, this);
 		}
-		// todo: provide the current datasets.
-		this.dcp.show( /* current datasets or analysis */);
+		this.eeSetViewButton.disable();
+		this.dcp.show({
+			eeSet : this.currentSet || this.analysisCombo.getAnalysis().id,
+			eeIds : this.eeIds
+		});
+
 	},
 
 	handleError : function(msg, e) {
@@ -265,22 +270,43 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 		this.fireEvent('aftersearch', this, result);
 	},
 
-	updateDatasetsToBeSearched : function(datasets) {
-		var numDatasets = datasets instanceof Array
-				? datasets.length
-				: datasets;
-		Ext.getCmp('stringencyfield').maxValue = numDatasets;
-		if (datasets instanceof Array) {
+	/**
+	 * 
+	 * @param {}
+	 *            datasets The selected datasets
+	 * @param {}
+	 *            eeSet The ExpressionExperimentSet that was used (if any) - it
+	 *            could be just as a starting point.
+	 */
+	updateDatasetsToBeSearched : function(datasets, eeSet, dirty) {
+
+		if (datasets) {
+			var numDatasets = datasets.length;
+			Ext.getCmp('stringencyfield').maxValue = numDatasets;
 			this.eeIds = datasets;
+			Ext.getCmp('analysis-options').setTitle(String.format(
+					"Analysis options - Up to {1} dataset{2} will be analyzed",
+					datasets.toString(), numDatasets, numDatasets != 1
+							? "s"
+							: ""));
 		}
 
-		Ext
-				.getCmp('analysis-options')
-				.setTitle(String
-						.format(
-								"Analysis options - Up to <a title='Click here to see dataset details' onclick='Ext.Gemma.CoexpressionSearchForm.showSelectedDatasets([{0}]);'>  {1} dataset{2} </a>  will be analyzed",
-								datasets.toString(), numDatasets,
-								numDatasets != 1 ? "s" : ""));
+		if (eeSet) {
+			Ext.log("Got eeSet: " + eeSet);
+
+			this.currentSet = eeSet;
+			if (dirty) {
+				this.analysisCombo.showCustom(true);
+			} else {
+				this.analysisCombo.setValue(eeSet);
+			}
+		} else {
+			// FIXME keep this from happening when nothing is selected yet.
+			Ext.log("Custom");
+			this.analysisCombo.showCustom(true);
+		}
+		this.eeSetViewButton.enable();
+
 	},
 
 	taxonChanged : function(taxon) {
@@ -288,7 +314,7 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 			return;
 		}
 		Ext.getCmp('analysis-select').taxonChanged(taxon);
-		this.eeSearchField.taxonChanged(taxon, false); // don't automatically
+		// this.eeSearchField.taxonChanged(taxon, false); // don't automatically
 		// update the field.
 		this.geneChooserPanel.taxonChanged(taxon); // endless loop if we're not
 		// careful.
@@ -298,18 +324,11 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 		if (!analysis) {
 			return;
 		}
-		if (analysis.data.id < 0) { // custom
-			// analysis
-			this.customAnalysis = true;
-			Ext.getCmp('custom-analysis-options').show();
-			this.updateDatasetsToBeSearched(this.eeSearchField.getEeIds());
-			// this.eeSearchField.findDatasets(); // should we do this?
-		} else {
-			this.customAnalysis = false;
-			Ext.getCmp('custom-analysis-options').hide();
-			this.taxonChanged(analysis.data.taxon);
-			this.updateDatasetsToBeSearched(analysis.data.datasets);
-		}
+		this.currentSet = analysis.data.id;
+		this.taxonChanged(analysis.data.taxon);
+		this
+				.updateDatasetsToBeSearched(analysis.data.datasets,
+						this.currentSet);
 	},
 
 	getActiveEeIds : function() {
@@ -330,8 +349,13 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 		this.analysisCombo = new Ext.Gemma.AnalysisCombo({
 			fieldLabel : 'Search scope',
 			id : 'analysis-select',
-			showCustomOption : true,
+			showCustomOption : false,
 			tooltip : "Restrict the list of datasets that will be searched for coexpression"
+		});
+
+		this.eeSetViewButton = new Ext.Button({
+			text : "View/Edit datasets",
+			handler : this.chooseDatasets.createDelegate(this)
 		});
 
 		this.analysisCombo
@@ -374,35 +398,7 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 						id : 'querygenesonly',
 						fieldLabel : 'My genes only',
 						tooltip : "Restrict the output to include only links among the listed query genes"
-					}, this.analysisCombo, {
-						xtype : 'fieldset',
-						id : 'custom-analysis-options',
-						title : 'Custom analysis options',
-						autoHeight : true,
-						hidden : true,
-						autoWidth : true,
-						items : [{
-							xtype : 'datasetsearchfield',
-							id : 'eeSearchField',
-							fieldLabel : "Experiment keywords",
-							tooltip : "Search only datasets that match these keywords",
-							listeners : {
-								'aftersearch' : {
-									fn : function(field, results) {
-										if (this.customAnalysis) {
-											this
-													.updateDatasetsToBeSearched(results);
-										}
-									}.createDelegate(this)
-								}
-							}
-
-						}, {
-							xtype : 'button',
-							text : "Choose datasets interactively",
-							handler : this.chooseDatasets.createDelegate(this)
-						}]
-					}]
+					}, this.analysisCombo, this.eeSetViewButton]
 				}]
 			}],
 			buttons : [{
@@ -412,58 +408,6 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 		});
 		Ext.Gemma.CoexpressionSearchForm.superclass.initComponent.call(this);
 		this.addEvents('beforesearch', 'aftersearch');
-
-		// console.log("Loaded: " + document.URL);
-		// this.restoreState();
-		// var stringencySpinner = new Ext.ux.form.Spinner({
-		// renderTo : this.stringencyField.getEl(),
-		// strategy: new Ext.ux.form.Spinner.NumberStrategy({
-		// allowDecimals : false, minValue:2, maxValue:100 })
-		// });
-		// this.stringencySpinner = stringencySpinner;
 	}
 
 });
-
-// Static method. Won't work as class method
-
-Ext.Gemma.CoexpressionSearchForm.showSelectedDatasets = function(eeids) {
-
-	// Window shown when the user wants to see the experiments that are 'in
-	// play'.
-
-	if (!this.activeDatasetsWindow) {
-
-		this.activeDatasetsGrid = new Ext.Gemma.ExpressionExperimentGrid({
-			readMethod : ExpressionExperimentController.loadExpressionExperiments
-					.createDelegate(this),
-			editable : false,
-			rowExpander : true,
-			pageSize : 20
-		});
-
-		this.activeDatasetsWindow = new Ext.Window({
-			title : eeids.size() + " active datasets",
-			modal : true,
-			layout : 'fit',
-			autoHeight : true,
-			width : 600,
-			closeAction : 'hide',
-			easing : 3,
-			items : [this.activeDatasetsGrid],
-			buttons : [{
-				text : 'Close',
-				handler : function() {
-					this.hide.createDelegate(this.activeDatasetsWindow);
-				}
-			}]
-
-		});
-	}
-	this.activeDatasetsGrid.getStore().removeAll();
-	this.activeDatasetsGrid.expandedElements = [];
-	this.activeDatasetsGrid.getStore().load({
-		params : [eeids]
-	});
-	this.activeDatasetsWindow.show();
-};
