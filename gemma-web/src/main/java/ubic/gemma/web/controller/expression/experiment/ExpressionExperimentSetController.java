@@ -94,6 +94,8 @@ public class ExpressionExperimentSetController extends BaseFormController {
                 vo.getExpressionExperimentIds().add( ee.getId() );
             }
 
+            // FIXME : get the taxon.
+
             vo.setNumExperiments( size );
             results.add( vo );
         }

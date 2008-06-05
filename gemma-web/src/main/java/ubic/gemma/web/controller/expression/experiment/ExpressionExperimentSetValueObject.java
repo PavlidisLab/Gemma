@@ -21,6 +21,8 @@ package ubic.gemma.web.controller.expression.experiment;
 import java.util.Collection;
 import java.util.HashSet;
 
+import ubic.gemma.model.genome.Taxon;
+
 /**
  * @author paul
  * @version $Id$
@@ -33,6 +35,7 @@ public class ExpressionExperimentSetValueObject {
     private Collection<Long> expressionExperimentIds;
     private Integer numExperiments;
     private boolean modifiable;
+    private Taxon taxon;
 
     public boolean isModifiable() {
         return modifiable;
@@ -84,6 +87,14 @@ public class ExpressionExperimentSetValueObject {
 
     public void setId( Long id ) {
         this.id = id;
+    }
+
+    public Taxon getTaxon() {
+        return taxon;
+    }
+
+    public void setTaxon( Taxon taxon ) {
+        this.taxon = taxon;
     }
 
 }
