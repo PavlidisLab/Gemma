@@ -55,16 +55,16 @@ Ext.Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 	}]),
 
 	filter : function(taxon) {
-		Ext.log("Filtering taxon");
+		this.store.clearFilter();
 		this.store.filterBy(function(record, id) {
 			if (taxon.id == record.get("id")) {
-				Ext.log("Include: " + taxon.id);
 				return true;
 			} else {
-				Ext.log("Exclude: " + taxon.id);
 				return false;
 			}
 		});
+		this.setTaxon(taxon);
+		this.onLoad();
 	},
 
 	initComponent : function() {

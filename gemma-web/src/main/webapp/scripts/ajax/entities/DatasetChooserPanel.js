@@ -103,6 +103,20 @@ Ext.Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 	triggerAction : 'all',
 	emptyText : 'Select a search scope',
 
+	filterByTaxon : function(taxon) {
+		this.store.clearFilter();
+		this.store.filterBy(function(record, id) {
+			if (!record.get("taxon")) {
+				return true; // no taxon specified
+			} else if (taxon.id == record.get("taxon").id) {
+				return false;
+			} else {
+				return false;
+			}
+		});
+		this.onLoad();
+	},
+
 	initComponent : function() {
 
 		Ext.Gemma.ExpressionExperimentSetCombo.superclass.initComponent
