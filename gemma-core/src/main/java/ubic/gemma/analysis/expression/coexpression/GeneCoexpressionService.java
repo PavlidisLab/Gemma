@@ -369,6 +369,9 @@ public class GeneCoexpressionService {
         /*
          * If possible: instead of using the probeLinkCoexpressionAnalyzer, Use a canned analysis with a filter.
          */
+        /*
+         * FIXME this is borken, as instead of the analysis ID we need the ExpressionExperimentSetId.
+         */
         Collection<CannedAnalysisValueObject> availableAnalyses = getCannedAnalyses( true, false );
         for ( CannedAnalysisValueObject cannedAnalysisValueObject : availableAnalyses ) {
             if ( cannedAnalysisValueObject.getDatasets().containsAll( eeIds ) ) {
