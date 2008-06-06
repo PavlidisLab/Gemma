@@ -278,7 +278,7 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 		var numDatasets = datasets.length;
 		Ext.getCmp('stringencyfield').maxValue = numDatasets;
 		Ext.getCmp('analysis-options').setTitle(String.format(
-				"Analysis options - Up to {1} datasets will be analyzed",
+				"Analysis options - Up to {0} datasets will be analyzed",
 				numDatasets));
 	},
 
@@ -289,6 +289,7 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 
 		this.geneChooserPanel.taxonChanged(taxon); // endless loop if we're not
 		// careful.
+		this.eeSetChooserPanel.filterByTaxon(taxon);
 	},
 
 	getActiveEeIds : function() {
@@ -317,6 +318,7 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 			this.currentSet = eeSetRecord;
 			this.updateDatasetsToBeSearched(eeSetRecord
 					.get("expressionExperimentIds"), eeSetRecord);
+			this.geneChooserPanel.taxonChanged(this.currentSet.get("taxon"));
 		}.createDelegate(this));
 
 		Ext.apply(this, {

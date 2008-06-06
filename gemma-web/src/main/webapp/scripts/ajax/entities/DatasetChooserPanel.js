@@ -34,17 +34,23 @@ Ext.Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 	},
 
 	selectById : function(id) {
-		this.store.select(id); // FIXME
+		var index = this.store.findBy(function(record, i) {
+			return record.get("id") === id;
+		});
+		var rec = this.store.getAt(rec);
+		this.store.select(rec);
 	},
 
 	selectByName : function(name) {
-		this.store.select(name); // FIXME
+		var index = this.store.findBy(function(record, i) {
+			return record.get("name") === name;
+		});
+		var rec = this.store.getAt(rec);
+		this.store.select(rec);
 	},
 
 	filterByTaxon : function(taxon) {
-		this.combo.filterByTaxon(taxon);
-
-		// possibly also filter the grid? Then would need a clearfilter button.
+		this.combo.filterByTaxon(taxon); // side effect: grid is filered too.
 	},
 
 	initComponent : function() {
@@ -122,10 +128,11 @@ Ext.Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 		if (!taxon) {
 			return;
 		}
+
 		this.store.clearFilter();
 		this.store.filterBy(function(record, id) {
 			if (!record.get("taxon")) {
-				return true; // no taxon specified
+				return true; // in case there is none.
 			} else if (taxon.id == record.get("taxon").id) {
 				return true;
 			} else {
@@ -133,6 +140,11 @@ Ext.Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 			}
 		});
 		this.onLoad();
+
+		if (this.store.getSelected()
+				&& this.store.getSelected().get("taxon").id != taxon.id) {
+			this.setValue("");
+		}
 	},
 
 	initComponent : function() {
@@ -205,7 +217,7 @@ Ext.extend(Ext.Gemma.ExpressionExperimentSetStore, Ext.data.Store, {
 	addFromCookie : function() {
 		var recs = this.cookieRetrieveEESets();
 		if (recs && recs.length > 0) {
-			Ext.log("Add " + recs.length + " from cookie");
+			// Ext.log("Add " + recs.length + " from cookie");
 			this.add(recs);
 		}
 	},
@@ -216,7 +228,7 @@ Ext.extend(Ext.Gemma.ExpressionExperimentSetStore, Ext.data.Store, {
 		var toBeUpdated = this.searchCookie(eeSets, rec);
 
 		if (toBeUpdated) {
-			Ext.log("Modifying record");
+			// Ext.log("Modifying record");
 			toBeUpdated.set("name", rec.get("name"));
 			toBeUpdated.set("description", rec.get("description"));
 			toBeUpdated.set("expressionExperimentIds", rec
@@ -224,7 +236,7 @@ Ext.extend(Ext.Gemma.ExpressionExperimentSetStore, Ext.data.Store, {
 			toBeUpdated.set("taxon", rec.get("taxon"));
 			toBeUpdated.commit();
 		} else {
-			Ext.log("Adding record");
+			// Ext.log("Adding record");
 			eeSets.push(rec);
 		}
 
@@ -244,17 +256,13 @@ Ext.extend(Ext.Gemma.ExpressionExperimentSetStore, Ext.data.Store, {
 	searchCookie : function(storedSets, rec) {
 
 		var recName = rec.get("name");
-		// if (rec.isModified("name")) {
-		// Ext.log("Name changed");
-		// recName = rec.modified.name;
-		// }
 
 		for (var i = 0, len = storedSets.length; i < len; i++) {
 			var s = storedSets[i];
 
-			Ext.log("Comparing " + s.get("name") + " to " + recName);
+			// Ext.log("Comparing " + s.get("name") + " to " + recName);
 			if (s.get("name") == recName) {
-				Ext.log("Found existing set in cookie");
+				// Ext.log("Found existing set in cookie");
 				return s;
 			}
 		}
@@ -269,7 +277,7 @@ Ext.extend(Ext.Gemma.ExpressionExperimentSetStore, Ext.data.Store, {
 			if (s.get("name") != rec.get("name")) {
 				updatedSets.push(s);
 			} else {
-				Ext.log("Remove " + s.get("name") + " from cookie");
+				// Ext.log("Remove " + s.get("name") + " from cookie");
 			}
 		}
 

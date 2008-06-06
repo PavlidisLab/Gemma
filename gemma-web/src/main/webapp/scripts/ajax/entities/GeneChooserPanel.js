@@ -110,7 +110,8 @@ Ext.Gemma.GeneChooserPanel = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 			}
 		}
 
-		if (this.taxonCombo.getTaxon().id != taxon.id) {
+		if (!this.taxonCombo.getTaxon()
+				|| this.taxonCombo.getTaxon().id != taxon.id) {
 			this.taxonCombo.setTaxon(taxon);
 		}
 
@@ -123,9 +124,9 @@ Ext.Gemma.GeneChooserPanel = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 
 		this.taxonCombo = new Ext.Gemma.TaxonCombo({
 			listeners : {
-				'taxonchanged' : {
-					fn : this.taxonChanged.createDelegate(this, [], true)
-				}
+				'taxonchanged' : function(taxon) {
+					this.fireEvent('taxonchanged', taxon);
+				}.createDelegate(this)
 			}
 		});
 
@@ -138,7 +139,7 @@ Ext.Gemma.GeneChooserPanel = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 								.getTaxonByScientificName(record.data.taxon);
 						this.taxonCombo.setTaxon(actualTaxon);
 						this.addButton.enable();
-					}.createDelegate(this, [], true)
+					}.createDelegate(this)
 				}
 			}
 		});

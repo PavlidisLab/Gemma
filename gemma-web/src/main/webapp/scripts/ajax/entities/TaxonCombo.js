@@ -17,6 +17,7 @@ Ext.Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 	listWidth : 150,
 	width : 120,
 	stateId : "Ext.Gemma.TaxonCombo",
+	stateful : true,
 
 	emptyText : 'Select a taxon',
 
