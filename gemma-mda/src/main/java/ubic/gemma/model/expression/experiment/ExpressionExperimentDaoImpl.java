@@ -1138,7 +1138,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             queryObject.setParameterList( "ids", idList );
 
             ees = queryObject.list();
-            session.clear();
+            //session.clear();  // this clear can take quite a while.....
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }

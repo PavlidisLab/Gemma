@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.servlet.ModelAndView;
@@ -186,13 +187,18 @@ public class GeneralSearchController extends BaseFormController {
             // return new ListRange( finalResults );
             throw new IllegalArgumentException( "Query " + settings.getQuery() + " was invalid" );
         }
+        StopWatch watch = new StopWatch();
+        watch.start();
         log.info( "Search initiated: " + settings );
         Map<Class, List<SearchResult>> searchResults = searchService.search( settings );
-
+        watch.stop();
+        log.info( "Over all search time for " + settings + " took " + watch.getTime() + " ms" );
         /*
          * FIXME sort by the number of hits per class, so smallest number of hits is at the top.
          */
-
+        watch.reset();
+        watch.start();
+        
         for ( Class clazz : searchResults.keySet() ) {
             List<SearchResult> results = searchResults.get( clazz );
 
@@ -208,6 +214,8 @@ public class GeneralSearchController extends BaseFormController {
             finalResults.addAll( results );
         }
 
+        log.info( "Final parsing of " + settings + " took " + watch.getTime() + " ms" );
+        
         return new ListRange( finalResults );
     }
 
