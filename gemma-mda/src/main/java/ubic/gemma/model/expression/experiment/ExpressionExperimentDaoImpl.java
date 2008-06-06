@@ -418,7 +418,13 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
         Map<Long, Collection<QuantitationType>> results = new HashMap<Long, Collection<QuantitationType>>();
 
+        StopWatch timer = new StopWatch();
+        timer.start();
         List resultsList = queryObject.list();
+        timer.stop();
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Got QT info in " + timer.getTime() + "ms" );
+        }
 
         for ( Object object : resultsList ) {
             Object[] ar = ( Object[] ) object;
@@ -1105,7 +1111,12 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             org.hibernate.Query queryObject = session.createQuery( queryString );
             queryObject.setReadOnly( true );
             queryObject.setCacheable( true );
+            StopWatch timer = new StopWatch();
+            timer.start();
             ees = queryObject.list();
+            if ( timer.getTime() > 1000 ) {
+                log.info( "EEs loaded in " + timer.getTime() + "ms" );
+            }
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
@@ -1131,14 +1142,16 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         Collections.sort( idList );
 
         try {
-
             Session session = this.getSession( false );
             org.hibernate.Query queryObject = session.createQuery( queryString );
             queryObject.setCacheable( true );
             queryObject.setParameterList( "ids", idList );
-
+            StopWatch timer = new StopWatch();
+            timer.start();
             ees = queryObject.list();
-            //session.clear();  // this clear can take quite a while.....
+            if ( timer.getTime() > 1000 ) {
+                log.info( "EEs loaded in " + timer.getTime() + "ms" );
+            }
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
@@ -1269,8 +1282,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             List<Long> idl = new ArrayList<Long>( ids );
             Collections.sort( idl );
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameterList( "ids", idl );
+
             Map<Long, Collection<QuantitationType>> qtMap = getQuantitationTypeMap( idl );
+
+            queryObject.setParameterList( "ids", idl );
             queryObject.setCacheable( true );
 
             List list = queryObject.list();
@@ -1295,7 +1310,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 v.setArrayDesignCount( ( Long ) res[8] );
                 v.setShortName( ( String ) res[9] );
                 v.setDateCreated( ( ( Date ) res[10] ).toString() );
-                if ( res[11] != null ) {
+                if ( !qtMap.isEmpty() && res[11] != null ) {
                     String type = res[11].toString();
                     fillQuantitationTypeInfo( qtMap, v, eeId, type );
                 }

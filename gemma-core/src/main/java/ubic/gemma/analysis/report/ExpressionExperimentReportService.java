@@ -245,6 +245,8 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
      *         values will be null.
      */
     public void fillLinkStatsFromCache( Collection vos ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
         for ( Object object : vos ) {
             ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) object;
             ExpressionExperimentValueObject cacheVo = retrieveValueObject( eeVo.getId() );
@@ -256,6 +258,10 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
                 eeVo.setDateCreated( cacheVo.getDateCreated() );
                 eeVo.setDateLastUpdated( cacheVo.getDateLastUpdated() );
             }
+        }
+        timer.stop();
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Link stats read from cache in " + timer.getTime() + "ms" );
         }
     }
 

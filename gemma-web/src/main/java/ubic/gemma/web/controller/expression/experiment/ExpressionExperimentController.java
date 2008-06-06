@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -568,37 +567,32 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     @SuppressWarnings( { "unused", "unchecked" })
     public ModelAndView showAllLinkSummaries( HttpServletRequest request, HttpServletResponse response ) {
         log.info( "Processing link summary request" );
-        StopWatch timer = new StopWatch();
-        timer.start();
+
         String sId = request.getParameter( "id" );
         Collection<ExpressionExperimentValueObject> expressionExperiments = new ArrayList<ExpressionExperimentValueObject>();
+        Collection<ExpressionExperimentValueObject> eeValObjectCol;
+
+        StopWatch timer = new StopWatch();
+        timer.start();
 
         // if no IDs are specified, then load all expressionExperiments
         if ( sId == null ) {
             this.saveMessage( request, "Displaying all Datasets" );
-            Collection<ExpressionExperimentValueObject> eeValObjectCol = this
-                    .getFilteredExpressionExperimentValueObjects( null );
-            expressionExperiments.addAll( eeValObjectCol );
+            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null );
         } else { // if ids are specified, then display only those expressionExperiments
-            Collection<Long> ids = new ArrayList<Long>();
-
-            String[] idList = StringUtils.split( sId, ',' );
-            for ( int i = 0; i < idList.length; i++ ) {
-                if ( StringUtils.isNotBlank( idList[i] ) ) {
-                    ids.add( new Long( idList[i] ) );
-                }
-            }
-            Collection<ExpressionExperimentValueObject> eeValObjectCol = this
-                    .getFilteredExpressionExperimentValueObjects( ids );
-            expressionExperiments.addAll( eeValObjectCol );
+            Collection<Long> ids = parseIdParameterString( sId );
+            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( ids );
         }
 
-        log.info( "got experiments" );
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Phase 1 done in " + timer.getTime() + "ms" );
+        }
+
+        expressionExperiments.addAll( eeValObjectCol );
 
         expressionExperimentReportService.fillLinkStatsFromCache( expressionExperiments );
         expressionExperimentReportService.fillEventInformation( expressionExperiments );
         expressionExperimentReportService.fillAnnotationInformation( expressionExperiments );
-        log.info( "got annotations, events and link stats" );
 
         Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments, new Comparator() {
             public int compare( Object o1, Object o2 ) {
@@ -614,10 +608,27 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         mav.addObject( "numExpressionExperiments", numExpressionExperiments );
 
         timer.stop();
-        log.info( "Ready with link reports in " + timer.getTime() + "ms" );
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Ready with link reports in " + timer.getTime() + "ms" );
+        }
 
         return mav;
 
+    }
+
+    /**
+     * @param sId
+     * @return
+     */
+    private Collection<Long> parseIdParameterString( String sId ) {
+        Collection<Long> ids = new ArrayList<Long>();
+        String[] idList = StringUtils.split( sId, ',' );
+        for ( int i = 0; i < idList.length; i++ ) {
+            if ( StringUtils.isNotBlank( idList[i] ) ) {
+                ids.add( new Long( idList[i] ) );
+            }
+        }
+        return ids;
     }
 
     /**
@@ -752,13 +763,18 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     @SuppressWarnings("unchecked")
     private Collection<ExpressionExperimentValueObject> getExpressionExperimentValueObjects(
             Collection<ExpressionExperiment> securedEEs ) {
-        Collection ids = new LinkedHashSet();
+        StopWatch timer = new StopWatch();
+        timer.start();
+        Collection<Long> ids = new HashSet<Long>();
         for ( ExpressionExperiment ee : securedEEs ) {
             ids.add( ee.getId() );
         }
-        log.debug( "Filtered EEs: " + ids.toString() );
 
         Collection<ExpressionExperimentValueObject> valueObjs = expressionExperimentService.loadValueObjects( ids );
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Value objects in " + timer.getTime() + "ms" );
+        }
 
         return valueObjs;
     }
@@ -775,12 +791,21 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         Collection<ExpressionExperiment> securedEEs = new ArrayList<ExpressionExperiment>();
 
-        /* Filtering happens here. */
+        StopWatch timer = new StopWatch();
+        timer.start();
+
+        /* Filtering for security happens here. */
         if ( eeIds == null ) {
             securedEEs = expressionExperimentService.loadAll();
         } else {
             securedEEs = expressionExperimentService.loadMultiple( eeIds );
         }
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( "EEs in " + timer.getTime() + "ms" );
+        }
+
+        log.info( "Loading value objects ..." );
         return getExpressionExperimentValueObjects( securedEEs );
     }
 

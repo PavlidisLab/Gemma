@@ -25,15 +25,15 @@ package ubic.gemma.model.common;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
-import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
-import org.hibernate.Session;
+import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
-import org.springframework.orm.hibernate3.HibernateCallback;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
@@ -45,6 +45,8 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
  * @see ubic.gemma.model.common.Auditable
  */
 public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
+
+    private static Log log = LogFactory.getLog( AuditableDaoImpl.class.getName() );
 
     /**
      * This is basically a thaw method.
@@ -149,20 +151,19 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
     @Override
     protected Map<Auditable, AuditEvent> handleGetLastAuditEvent( final Collection auditables, AuditEventType type )
             throws Exception {
+
         Map<Auditable, AuditEvent> result = new HashMap<Auditable, AuditEvent>();
         if ( auditables.size() == 0 ) return result;
-        final Map<AuditTrail, Auditable> atmap = new HashMap<AuditTrail, Auditable>();
 
-        this.getHibernateTemplate().execute( new HibernateCallback() {
+        StopWatch timer = new StopWatch();
+        timer.start();
 
-            public Object doInHibernate( Session session ) throws HibernateException {
-                for ( Auditable a : ( Collection<Auditable> ) auditables ) {
-                    session.lock( a, LockMode.NONE );
-                    atmap.put( a.getAuditTrail(), a );
-                }
-                return null;
-            }
-        } );
+        final Map<AuditTrail, Auditable> atmap = getAuditTrailMap( auditables );
+
+        timer.stop();
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Audit trails retrieved for " + auditables.size() + " items in " + timer.getTime() + "ms" );
+        }
 
         List<String> classes = getClassHierarchy( type.getClass() );
 
@@ -170,10 +171,12 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
                 + "inner join trail.events event inner join event.eventType et inner join fetch event.performer where trail in (:trails) "
                 + "and et.class in (" + StringUtils.join( classes, "," ) + ") order by event.date desc ";
 
+        timer.reset();
+        timer.start();
+
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setCacheable( true );
-            queryObject.setCacheRegion( "auditEvents" );
             queryObject.setParameterList( "trails", atmap.keySet() );
 
             List qr = queryObject.list();
@@ -193,8 +196,49 @@ public class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
+        timer.stop();
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Last event of type " + type.getClass().getSimpleName() + " retrieved for " + auditables.size()
+                    + " items in " + timer.getTime() + "ms" );
+        }
 
         return result;
+    }
+
+    /**
+     * Essential thaw the auditables to the point we get the AuditTrail proxies for them.
+     * 
+     * @param auditables
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Map<AuditTrail, Auditable> getAuditTrailMap( final Collection auditables ) {
+        /*
+         * This is the fastest way I've found to thaw the audit trails of a whole bunch of auditables. Because Auditable
+         * is not mapped, we have to query for each class separately ... just in case the user has passed a
+         * heterogeneous collection.
+         */
+        final Map<AuditTrail, Auditable> atmap = new HashMap<AuditTrail, Auditable>();
+        Map<String, Collection<Auditable>> clazzmap = new HashMap<String, Collection<Auditable>>();
+        for ( Auditable a : ( Collection<Auditable> ) auditables ) {
+            if ( !clazzmap.containsKey( a.getClass().getSimpleName() ) ) {
+                clazzmap.put( a.getClass().getSimpleName(), new HashSet<Auditable>() );
+            }
+            clazzmap.get( a.getClass().getSimpleName() ).add( a );
+        }
+
+        // this is the actual thaw, done in one select.
+        for ( String clazz : clazzmap.keySet() ) {
+            final String trailQuery = "select a, a.auditTrail from " + clazz + " a where a in (:auditables) ";
+            List res = this.getHibernateTemplate().findByNamedParam( trailQuery, "auditables", clazzmap.get( clazz ) );
+            for ( Object o : res ) {
+                Object[] ar = ( Object[] ) o;
+                AuditTrail t = ( AuditTrail ) ar[1];
+                Auditable a = ( Auditable ) ar[0];
+                atmap.put( t, a );
+            }
+        }
+        return atmap;
     }
 
     @SuppressWarnings("unchecked")

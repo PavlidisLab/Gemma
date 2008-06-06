@@ -72,8 +72,8 @@
 				<property name="hibernateDialect">org.hibernate.dialect.MySQLMyISAMDialect</property>
 				<property name="hibernateShowSql">false</property>
 				<property name="hibernateUseQueryCache">true</property>
-				<property name="hibernateJdbcBatchSize">50</property>
-				<property name="hibernateJdbcFetchSize">50</property>
+				<property name="hibernateJdbcBatchSize">500</property>
+				<property name="hibernateJdbcFetchSize">500</property>
 				<property name="hibernateMaxFetchDepth">3</property>
 				<property name="hibernateDefaultBatchFetchSize">500</property>
 				<property name="hibernateJdbcBatchVersionedData">true</property>
