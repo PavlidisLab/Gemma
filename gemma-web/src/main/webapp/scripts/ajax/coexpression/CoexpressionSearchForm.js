@@ -72,8 +72,14 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 			taxonId : this.geneChooserPanel.getTaxonId(),
 			queryGenesOnly : Ext.getCmp('querygenesonly').getValue()
 		};
-		csc.eeIds = this.eeIds;
-		csc.cannedAnalysisId = this.analysisCombo.getValue();
+
+		if (this.currentSet) {
+			csc.eeIds = this.getActiveEeIds();
+			csc.eeSetName = this.currentSet.get("name");
+			csc.eeSetId = this.currentSet.get("id"); // might
+			// be
+			// -1.
+		} // else a problem.
 		return csc;
 	},
 
@@ -102,11 +108,19 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 		if (param.q) {
 			csc.queryGenesOnly = true;
 		}
+
 		if (param.ees) {
 			csc.eeIds = param.ees.split(',');
-			csc.cannedAnalysisId = -1;
+		}
+
+		if (param.eeSetId) {
+			csc.eeSetId = param.a;
 		} else {
-			csc.cannedAnalysisId = param.a;
+			csc.eeSetId = -1;
+		}
+
+		if (param.setName) {
+			csc.eeSetName = param.setName;
 		}
 
 		return csc;
@@ -135,7 +149,6 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 		Ext.log("initialize");
 		this.geneChooserPanel = Ext.getCmp('gene-chooser-panel');
 		this.stringencyField = Ext.getCmp('stringencyfield');
-		// this.eeSearchField = Ext.getCmp('eeSearchField');
 
 		this.initializeGenes(csc, doSearch);
 
@@ -143,8 +156,10 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 			this.geneChooserPanel.taxonCombo.setState(csc.taxonId);
 		}
 
-		if (csc.cannedAnalysisId) {
-			this.analysisCombo.setState(csc.cannedAnalysisId);
+		if (csc.eeSetId >= 0) {
+			this.eeSetChooserPanel.selectById(csc.eeSetId);
+		} else {
+			this.eeSetChooserPanel.selectByName(csc.eeSetName);
 		}
 
 		if (csc.stringency) {
@@ -154,14 +169,6 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 		if (csc.queryGenesOnly) {
 			this.queryGenesOnly.setValue(true);
 		}
-
-		if (csc.cannedAnalysisId === null || csc.cannedAnalysisId < 0) {
-			this.updateDatasetsToBeSearched(csc.eeIds, csc.cannedAnalysisId,
-					false);
-		} else {
-
-		}
-
 	},
 
 	maybeDoSearch : function(doit) {
@@ -171,6 +178,13 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 		}
 	},
 
+	/**
+	 * Create a URL that can be used to query the system.
+	 * 
+	 * @param {}
+	 *            csc
+	 * @return {}
+	 */
 	getBookmarkableLink : function(csc) {
 		if (!csc) {
 			csc = this.getCoexpressionSearchCommand();
@@ -190,17 +204,14 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 			url += String.format("&a={0}", csc.cannedAnalysisId);
 		}
 
-		if (csc.eeQuery) {
-			url += "&eeq=" + csc.eeQuery;
+		if (csc.eeSetName) {
+			url += String.format("&setName={0}", csc.eeSetName);
 		}
-
 		return url;
 	},
 
 	doSearch : function() {
-
 		var csc = this.getCoexpressionSearchCommand();
-
 		this.clearError();
 		var msg = this.validateSearch(csc);
 		if (msg.length === 0) {
@@ -216,21 +227,6 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 		} else {
 			this.handleError(msg);
 		}
-	},
-
-	chooseDatasets : function() {
-		if (!this.dcp) {
-			this.dcp = new Ext.Gemma.DatasetChooserPanel();
-			this.dcp.on("datasets-selected", function(e) {
-				this.updateDatasetsToBeSearched(e.eeIds, e.eeSet, e.dirty);
-			}, this);
-		}
-		this.eeSetViewButton.disable();
-		this.dcp.show({
-			eeSet : this.currentSet || this.analysisCombo.getAnalysis().id,
-			eeIds : this.eeIds
-		});
-
 	},
 
 	handleError : function(msg, e) {
@@ -273,66 +269,33 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 	/**
 	 * 
 	 * @param {}
-	 *            datasets The selected datasets
+	 *            datasets The selected datasets (ids)
 	 * @param {}
 	 *            eeSet The ExpressionExperimentSet that was used (if any) - it
 	 *            could be just as a starting point.
 	 */
 	updateDatasetsToBeSearched : function(datasets, eeSet, dirty) {
-
-		if (datasets) {
-			var numDatasets = datasets.length;
-			Ext.getCmp('stringencyfield').maxValue = numDatasets;
-			this.eeIds = datasets;
-			Ext.getCmp('analysis-options').setTitle(String.format(
-					"Analysis options - Up to {1} dataset{2} will be analyzed",
-					datasets.toString(), numDatasets, numDatasets != 1
-							? "s"
-							: ""));
-		}
-
-		if (eeSet) {
-			Ext.log("Got eeSet: " + eeSet);
-
-			this.currentSet = eeSet;
-			if (dirty) {
-				this.analysisCombo.showCustom(true);
-			} else {
-				this.analysisCombo.setValue(eeSet);
-			}
-		} else {
-			// FIXME keep this from happening when nothing is selected yet.
-			Ext.log("Custom");
-			this.analysisCombo.showCustom(true);
-		}
-		this.eeSetViewButton.enable();
-
+		var numDatasets = datasets.length;
+		Ext.getCmp('stringencyfield').maxValue = numDatasets;
+		Ext.getCmp('analysis-options').setTitle(String.format(
+				"Analysis options - Up to {1} datasets will be analyzed",
+				numDatasets));
 	},
 
 	taxonChanged : function(taxon) {
 		if (!taxon) {
 			return;
 		}
-		Ext.getCmp('analysis-select').taxonChanged(taxon);
-		// this.eeSearchField.taxonChanged(taxon, false); // don't automatically
-		// update the field.
+
 		this.geneChooserPanel.taxonChanged(taxon); // endless loop if we're not
 		// careful.
 	},
 
-	analysisChanged : function(analysis) {
-		if (!analysis) {
-			return;
-		}
-		this.currentSet = analysis.data.id;
-		this.taxonChanged(analysis.data.taxon);
-		this
-				.updateDatasetsToBeSearched(analysis.data.datasets,
-						this.currentSet);
-	},
-
 	getActiveEeIds : function() {
-		return this.eeIds;
+		if (this.currentSet) {
+			return this.currentSet.get("expressionExperimentIds");
+		}
+		return [];
 	},
 
 	initComponent : function() {
@@ -346,23 +309,15 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 			}
 		});
 
-		this.analysisCombo = new Ext.Gemma.AnalysisCombo({
-			fieldLabel : 'Search scope',
-			id : 'analysis-select',
-			showCustomOption : false,
-			tooltip : "Restrict the list of datasets that will be searched for coexpression"
+		this.eeSetChooserPanel = new Ext.Gemma.ExpressionExperimentSetPanel({
+			fieldLabel : "Query scope"
 		});
 
-		this.eeSetViewButton = new Ext.Button({
-			text : "View/Edit datasets",
-			handler : this.chooseDatasets.createDelegate(this)
-		});
-
-		this.analysisCombo
-				.on('analysischanged', this.analysisChanged.createDelegate(
-						this, [this.analysisCombo.getAnalysis()], true));
-
-		this.analysisCombo.on('ready', this.restoreState.createDelegate(this));
+		this.eeSetChooserPanel.on("set-chosen", function(eeSetRecord) {
+			this.currentSet = eeSetRecord;
+			this.updateDatasetsToBeSearched(eeSetRecord
+					.get("expressionExperimentIds"), eeSetRecord);
+		}.createDelegate(this));
 
 		Ext.apply(this, {
 
@@ -398,7 +353,7 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 						id : 'querygenesonly',
 						fieldLabel : 'My genes only',
 						tooltip : "Restrict the output to include only links among the listed query genes"
-					}, this.analysisCombo, this.eeSetViewButton]
+					}, this.eeSetChooserPanel]
 				}]
 			}],
 			buttons : [{

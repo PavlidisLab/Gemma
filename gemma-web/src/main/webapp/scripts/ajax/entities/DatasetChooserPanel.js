@@ -33,6 +33,14 @@ Ext.Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 		return this.store.getSelected();
 	},
 
+	selectById : function(id) {
+		this.store.select(id); // FIXME
+	},
+
+	selectByName : function(name) {
+		this.store.select(name); // FIXME
+	},
+
 	filterByTaxon : function(taxon) {
 		this.combo.filterByTaxon(taxon);
 
@@ -923,18 +931,17 @@ Ext.Gemma.DetailsWindow = Ext.extend(Ext.Window, {
 			return;
 		}
 
-		// Make sure the name chosen is unique. -- broken.
 		var indexOfExisting = this.store.findBy(function(record, id) {
 			return record.get("name") == name;
 		}, this);
 
-		if (indexOfExisting) {
+		this.hide();
+
+		if (indexOfExisting >= 0) {
 			Ext.Msg.alert("Sorry",
 					"Please provide a previously unused name for the set");
 			return;
 		}
-
-		this.hide();
 
 		return this.fireEvent("commit", {
 			name : values.eesetname,

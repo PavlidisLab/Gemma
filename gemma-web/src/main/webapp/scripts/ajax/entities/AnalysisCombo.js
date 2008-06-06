@@ -4,6 +4,7 @@ Ext.namespace("Ext.Gemma");
  * 
  * @class Ext.Gemma.AnalysisCombo
  * @extends Ext.form.ComboBox
+ * @deprecated
  */
 Ext.Gemma.AnalysisCombo = Ext.extend(Ext.form.ComboBox, {
 

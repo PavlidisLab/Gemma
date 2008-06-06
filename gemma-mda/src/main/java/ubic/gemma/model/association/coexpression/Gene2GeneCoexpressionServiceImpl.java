@@ -25,8 +25,6 @@ package ubic.gemma.model.association.coexpression;
 import java.util.Collection;
 import java.util.Map;
 
-import ubic.gemma.model.analysis.Analysis;
-
 /**
  * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService
  */
@@ -132,9 +130,8 @@ public class Gene2GeneCoexpressionServiceImpl extends
      */
     @Override
     protected java.util.Collection handleFindCoexpressionRelationships( ubic.gemma.model.genome.Gene gene,
-            Analysis analysis, int stringency, int maxResults ) throws java.lang.Exception {
-        return this.getGene2GeneCoexpressionDao()
-                .findCoexpressionRelationships( gene, analysis, stringency, maxResults );
+            int stringency, int maxResults ) throws java.lang.Exception {
+        return this.getGene2GeneCoexpressionDao().findCoexpressionRelationships( gene, stringency, maxResults );
     }
 
     private Boolean validCollection( java.util.Collection g2gExpressions ) throws IllegalArgumentException {
@@ -166,10 +163,9 @@ public class Gene2GeneCoexpressionServiceImpl extends
      *      ubic.gemma.model.analysis.Analysis, int)
      */
     @Override
-    protected Map handleFindCoexpressionRelationships( Collection genes, Analysis analysis, int stringency,
-            int maxResults ) throws Exception {
-        return this.getGene2GeneCoexpressionDao().findCoexpressionRelationships( genes, analysis, stringency,
-                maxResults );
+    protected Map handleFindCoexpressionRelationships( Collection genes, int stringency, int maxResults )
+            throws Exception {
+        return this.getGene2GeneCoexpressionDao().findCoexpressionRelationships( genes, stringency, maxResults );
     }
 
     /*
@@ -179,8 +175,7 @@ public class Gene2GeneCoexpressionServiceImpl extends
      *      ubic.gemma.model.analysis.Analysis, int)
      */
     @Override
-    protected Map handleFindInterCoexpressionRelationship( Collection genes, Analysis analysis, int stringency )
-            throws Exception {
-        return this.getGene2GeneCoexpressionDao().findInterCoexpressionRelationships( genes, analysis, stringency );
+    protected Map handleFindInterCoexpressionRelationship( Collection genes, int stringency ) throws Exception {
+        return this.getGene2GeneCoexpressionDao().findInterCoexpressionRelationships( genes, stringency );
     }
 }

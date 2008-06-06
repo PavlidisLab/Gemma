@@ -33,6 +33,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenesDetails;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionValueObject;
@@ -70,6 +71,7 @@ import ubic.gemma.util.GemmaLinkUtils;
  * @spring.property name = "geneOntologyService" ref="geneOntologyService"
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name = "probeLinkCoexpressionAnalyzer" ref="probeLinkCoexpressionAnalyzer"
+ * @spring.property name="expressionExperimentSetService" ref="expressionExperimentSetService"
  */
 public class GeneCoexpressionService {
 
@@ -80,6 +82,7 @@ public class GeneCoexpressionService {
 
     private static Log log = LogFactory.getLog( GeneCoexpressionService.class.getName() );
 
+    private ExpressionExperimentSetService expressionExperimentSetService;
     private Gene2GeneCoexpressionService gene2GeneCoexpressionService;
     private TaxonService taxonService;
     private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
@@ -90,6 +93,7 @@ public class GeneCoexpressionService {
 
     /**
      * @return collection of the available canned analyses, for all taxa.
+     * @deprecated
      */
     public Collection<CannedAnalysisValueObject> getCannedAnalyses( boolean populateDatasets, boolean includeVirtual ) {
         Collection<CannedAnalysisValueObject> analyses = new ArrayList<CannedAnalysisValueObject>();
@@ -128,41 +132,42 @@ public class GeneCoexpressionService {
         return analyses;
     }
 
+    /**
+     * @deprecated
+     * @return
+     */
     public Collection<CannedAnalysisValueObject> getCannedAnalyses() {
         return this.getCannedAnalyses( false, true );
     }
 
     /**
-     * @param cannedAnalysisId
-     * @param eeIds Experiments to limit the results to
+     * @param eeSetId
+     * @param eeIds Experiments to limit the results to (can be null)
      * @param queryGenes
      * @param stringency
      * @param maxResults
      * @param queryGenesOnly return links among the query genes only.
      * @return
      */
-    public CoexpressionMetaValueObject getFilteredCannedAnalysisResults( Long cannedAnalysisId, Collection<Long> eeIds,
+    public CoexpressionMetaValueObject getFilteredCannedAnalysisResults( Long eeSetId, Collection<Long> eeIds,
             Collection<Gene> queryGenes, int stringency, int maxResults, boolean queryGenesOnly ) {
 
-        GeneCoexpressionAnalysis analysis = ( GeneCoexpressionAnalysis ) geneCoexpressionAnalysisService
-                .load( cannedAnalysisId );
+        ExpressionExperimentSet baseSet = expressionExperimentSetService.load( eeSetId );
 
-        if ( analysis == null ) {
-            throw new IllegalArgumentException( "No such analysis with id=" + cannedAnalysisId );
+        // GeneCoexpressionAnalysis analysis = ( GeneCoexpressionAnalysis ) geneCoexpressionAnalysisService
+        // .load( cannedAnalysisId );
+
+        if ( baseSet == null ) {
+            throw new IllegalArgumentException( "No such analysis with id=" + eeSetId );
         }
-
-        boolean virtual = analysis instanceof GeneCoexpressionVirtualAnalysis;
-
-        GeneCoexpressionAnalysis viewedAnalysis = getAnalysis( analysis );
 
         /*
          * This set of links must be filtered to include those in the data sets being analyzed.
          */
         Map<Gene, Collection<Gene2GeneCoexpression>> gg2gs = getRawCoexpression( queryGenes, stringency, maxResults,
-                queryGenesOnly, viewedAnalysis );
+                queryGenesOnly );
 
-        geneCoexpressionAnalysisService.thaw( viewedAnalysis );
-        Collection<Long> eeIdsFromAnalysis = getIds( viewedAnalysis.getExpressionExperimentSetAnalyzed() );
+        Collection<Long> eeIdsFromAnalysis = getIds( baseSet );
 
         /*
          * We get this prior to filtering so it matches the vectors stored with the analysis.
@@ -173,10 +178,7 @@ public class GeneCoexpressionService {
          * Now we get the data sets we area actually concerned with.
          */
         Collection<Long> eeIdsTouse = null;
-        if ( virtual ) {
-            geneCoexpressionAnalysisService.thaw( analysis );
-            eeIdsTouse = getIds( analysis.getExpressionExperimentSetAnalyzed() );
-        } else if ( eeIds == null ) {
+        if ( eeIds == null ) {
             eeIdsTouse = eeIdsFromAnalysis;
         } else {
             eeIdsTouse = eeIds;
@@ -301,39 +303,22 @@ public class GeneCoexpressionService {
      * @param stringency
      * @param maxResults
      * @param queryGenesOnly
-     * @param analysisToUse
      * @return
      */
     @SuppressWarnings("unchecked")
     private Map<Gene, Collection<Gene2GeneCoexpression>> getRawCoexpression( Collection<Gene> queryGenes,
-            int stringency, int maxResults, boolean queryGenesOnly, GeneCoexpressionAnalysis analysisToUse ) {
+            int stringency, int maxResults, boolean queryGenesOnly ) {
         Map<Gene, Collection<Gene2GeneCoexpression>> gg2gs = null;
         if ( queryGenesOnly ) {
-            gg2gs = gene2GeneCoexpressionService.findInterCoexpressionRelationship( queryGenes, analysisToUse,
-                    stringency );
+            gg2gs = gene2GeneCoexpressionService.findInterCoexpressionRelationship( queryGenes, stringency );
         } else {
-            gg2gs = gene2GeneCoexpressionService.findCoexpressionRelationships( queryGenes, analysisToUse, stringency,
-                    maxResults );
+            gg2gs = gene2GeneCoexpressionService.findCoexpressionRelationships( queryGenes, stringency, maxResults );
         }
         return gg2gs;
     }
 
     /**
-     * @param analysis
-     * @return the analysis viewed by the given analysis, if it is virtual; otherwise the analysis given is returned.
-     */
-    private GeneCoexpressionAnalysis getAnalysis( GeneCoexpressionAnalysis analysis ) {
-        GeneCoexpressionAnalysis analysisToUse;
-        if ( analysis instanceof GeneCoexpressionVirtualAnalysis ) {
-            analysisToUse = ( ( GeneCoexpressionVirtualAnalysis ) analysis ).getViewedAnalysis();
-        } else {
-            analysisToUse = analysis;
-        }
-        return analysisToUse;
-    }
-
-    /**
-     * @param cannedAnalysisId of either a virtual or real analysis
+     * @param eeSetId expressionExperimentSetId
      * @param queryGenes
      * @param stringency
      * @param maxResults
@@ -341,10 +326,9 @@ public class GeneCoexpressionService {
      * @return
      */
     @SuppressWarnings("unchecked")
-    public CoexpressionMetaValueObject getCannedAnalysisResults( Long cannedAnalysisId, Collection<Gene> queryGenes,
+    public CoexpressionMetaValueObject getCannedAnalysisResults( Long eeSetId, Collection<Gene> queryGenes,
             int stringency, int maxResults, boolean queryGenesOnly ) {
-        return getFilteredCannedAnalysisResults( cannedAnalysisId, null, queryGenes, stringency, maxResults,
-                queryGenesOnly );
+        return getFilteredCannedAnalysisResults( eeSetId, null, queryGenes, stringency, maxResults, queryGenesOnly );
     }
 
     /**
@@ -775,6 +759,10 @@ public class GeneCoexpressionService {
             this.setOfficialSymbol( name );
             this.setOfficialName( officialName );
         }
+    }
+
+    public void setExpressionExperimentSetService( ExpressionExperimentSetService expressionExperimentSetService ) {
+        this.expressionExperimentSetService = expressionExperimentSetService;
     }
 
 }

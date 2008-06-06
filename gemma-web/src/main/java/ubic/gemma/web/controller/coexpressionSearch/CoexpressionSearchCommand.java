@@ -31,7 +31,9 @@ public class CoexpressionSearchCommand {
 
     private Collection<Long> eeIds;
 
-    private Long cannedAnalysisId;
+    private Long eeSetId;
+
+    private String eeSetName;
 
     private Integer stringency;
 
@@ -62,14 +64,6 @@ public class CoexpressionSearchCommand {
 
     public void setEeIds( Collection<Long> eeIds ) {
         this.eeIds = eeIds;
-    }
-
-    public Long getCannedAnalysisId() {
-        return cannedAnalysisId;
-    }
-
-    public void setCannedAnalysisId( Long cannedAnalysisId ) {
-        this.cannedAnalysisId = cannedAnalysisId;
     }
 
     public Integer getStringency() {
@@ -106,9 +100,25 @@ public class CoexpressionSearchCommand {
 
     @Override
     public String toString() {
-        return "GeneIds=" + StringUtils.join( getGeneIds(), "," ) + " Analysis=" + this.getCannedAnalysisId()
+        return "GeneIds=" + StringUtils.join( getGeneIds(), "," ) + " Analysis=" + this.getEeSetId()
                 + " QueryGenesOnly=" + this.getQueryGenesOnly() + " taxon=" + getTaxonId() + " eeQuery=" + getEeQuery()
                 + " Stringency=" + stringency + " ees=" + StringUtils.join( getEeIds(), "," );
+    }
+
+    public Long getEeSetId() {
+        return eeSetId;
+    }
+
+    public void setEeSetId( Long eeSetId ) {
+        this.eeSetId = eeSetId;
+    }
+
+    public String getEeSetName() {
+        return eeSetName;
+    }
+
+    public void setEeSetName( String eeSetName ) {
+        this.eeSetName = eeSetName;
     }
 
 }
