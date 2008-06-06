@@ -26,6 +26,7 @@ Ext.Gemma.DiffExpressionExperimentGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 			{ name:"expressionExperiment"},
 			{ name:"probe", type:"string" },
 			{ name:"experimentalFactors" },
+			{ name:"metThreshold", type:"boolean" },
 			{ name:"p", type:"float" }]),
 
 	initComponent : function() {
@@ -94,6 +95,12 @@ Ext.Gemma.DiffExpressionExperimentGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 				 dataIndex: "experimentalFactors", 
 				 renderer: Ext.Gemma.DiffExpressionExperimentGrid.getEFStyler(), 
 				 sortable: false 
+			}, {
+				id : 'metThreshold',
+				header : "Met Threshold",
+				dataIndex : "metThreshold",
+				width : 80,
+				sortable : true
 			}, {
 				 id : 'p',
 				 header : "P Value",
