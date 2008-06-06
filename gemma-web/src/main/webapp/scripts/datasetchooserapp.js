@@ -14,25 +14,29 @@ Gemma.DatasetChooser.app = function() {
 
 			Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 
-			// dcp = new Ext.Gemma.DatasetChooserPanel();
-			//
-			// gp = new Ext.Gemma.GeneChooserPanel({
-			// renderTo : 'panel',
-			// frame : true,
-			// width : 500
-			// });
-			//
+			tc = new Ext.Gemma.TaxonCombo({
+				renderTo : 'but'
+			});
+
 			dcp = new Ext.Gemma.ExpressionExperimentSetPanel({
 				renderTo : 'but'
 			});
 
-			dcp.on("datasets-selected", function(e) {
-				Ext.Msg.alert("Yay", "You got "
-						+ e.selected.get("expressionExperimentIds").length
-						+ " ee ids");
+			tc.on("select", function(combo, record, index) {
+				dcp.filterByTaxon(record.data);
 			});
 
-			// dcp.show();
+			tf = new Ext.form.TextField({
+				renderTo : 'but',
+				width : 150
+			});
+
+			dcp.on("set-chosen", function(e) {
+				tf
+						.setValue(e.get("expressionExperimentIds").length
+								+ " ee ids");
+			});
+
 		}
 	};
 }();

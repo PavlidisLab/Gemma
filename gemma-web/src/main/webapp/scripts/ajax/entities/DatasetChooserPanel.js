@@ -33,6 +33,12 @@ Ext.Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 		return this.store.getSelected();
 	},
 
+	filterByTaxon : function(taxon) {
+		this.combo.filterByTaxon(taxon);
+
+		// possibly also filter the grid? Then would need a clearfilter button.
+	},
+
 	initComponent : function() {
 
 		this.store = new Ext.Gemma.ExpressionExperimentSetStore();
@@ -52,9 +58,10 @@ Ext.Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 
 		this.addEvents('set-chosen');
 
-		this.combo.on("select", function(sel) {
+		this.combo.on("select", function(combo, sel) {
 			this.fireEvent('set-chosen', sel);
-		});
+		}.createDelegate(this));
+
 		this.dcp.on("datasets-selected", function(sel) {
 			this.combo.setValue(sel.get("name"));
 			this.fireEvent('set-chosen', sel);
@@ -104,12 +111,15 @@ Ext.Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 	emptyText : 'Select a search scope',
 
 	filterByTaxon : function(taxon) {
+		if (!taxon) {
+			return;
+		}
 		this.store.clearFilter();
 		this.store.filterBy(function(record, id) {
 			if (!record.get("taxon")) {
 				return true; // no taxon specified
 			} else if (taxon.id == record.get("taxon").id) {
-				return false;
+				return true;
 			} else {
 				return false;
 			}
@@ -681,6 +691,7 @@ Ext.Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 		this.addButton(this.cloneBut);
 		this.addButton(this.resetBut);
 		this.addButton(this.deleteBut);
+		this.addButton(this.clearFilterBut);
 
 		this.on("disable", function() {
 			// Ext.log("Someone disabled me!");
@@ -739,6 +750,15 @@ Ext.Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 			tooltip : "Delete selected set"
 		});
 
+		this.clearFilterBut = new Ext.Button({
+			id : 'clearFilt',
+			text : "Show all",
+			handler : this.clearFilter,
+			scope : this,
+			disabled : false,
+			tooltip : "Clear filters"
+		});
+
 		this.addEvents('saveOrUpdate', 'taxonset');
 		this.on("saveOrUpdate", function() {
 			this.commitBut.disable();
@@ -786,6 +806,10 @@ Ext.Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 								this.deleteBut.enable();
 							}, this);
 		}
+	},
+
+	clearFilter : function() {
+		this.grid.getStore().clearFilter();
 	},
 
 	/**
