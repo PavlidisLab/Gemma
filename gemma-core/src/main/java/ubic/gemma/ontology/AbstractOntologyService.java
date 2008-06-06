@@ -171,7 +171,7 @@ public abstract class AbstractOntologyService {
 
         assert index != null : "attempt to search " + this.getOntologyName() + " when index is null";
 
-        Collection<OntologyResource> res = OntologySearch.matchResources( model, index, search + "*" );
+        Collection<OntologyResource> res = OntologySearch.matchResources( model, index, search.trim() + "*" );
 
         return res;
     }

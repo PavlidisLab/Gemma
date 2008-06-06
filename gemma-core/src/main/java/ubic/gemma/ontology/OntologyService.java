@@ -25,7 +25,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -64,9 +63,6 @@ public class OntologyService {
 
     private static final String USED = " -USED- ";
 
-    //Jena cannot properly parse these characters... gives a query parse error. 
-    //OntologyTerms don't contain them anyway
-    private final static char[] INVALID_CHARS = { ':', '(', ')', '?', '*', '^', '[', ']', '-', '+', '{', '}', '!', '~' };
 
     private static Log log = LogFactory.getLog( OntologyService.class.getName() );
 
@@ -170,7 +166,7 @@ public class OntologyService {
      */
     public Collection<VocabCharacteristic> findTermAsCharacteristic( String search ) {
 
-        String query = stripInvalidCharacters( search );
+        String query = OntologySearch.stripInvalidCharacters( search );
         Collection<VocabCharacteristic> terms = new HashSet<VocabCharacteristic>();
         Collection<OntologyTerm> results;
 
@@ -191,7 +187,7 @@ public class OntologyService {
      */
     public Collection<OntologyTerm> findTerms( String search ) {
 
-        String query = stripInvalidCharacters( search );
+        String query = OntologySearch.stripInvalidCharacters( search );
         Collection<OntologyTerm> results = new HashSet<OntologyTerm>();
 
         for ( AbstractOntologyService ontology : ontologyServices ) {
@@ -208,7 +204,7 @@ public class OntologyService {
      */
     public Collection<OntologyIndividual> findIndividuals( String givenSearch ) {
 
-        String query = stripInvalidCharacters( givenSearch );
+        String query = OntologySearch.stripInvalidCharacters( givenSearch );
         Collection<OntologyIndividual> results = new HashSet<OntologyIndividual>();
 
         for ( AbstractOntologyService ontology : ontologyServices ) {
@@ -259,23 +255,6 @@ public class OntologyService {
         return filtered;
     }
 
-    /**
-     * 
-     * Will remove characters that jena is unable to parse. Will also escape and remove leading and trailing white space
-     * (which also causes jena to die)
-     * 
-     * @param toStrip the string to clean
-     * @return
-     */
-    private String stripInvalidCharacters( String toStrip ) {
-
-        String result = toStrip;
-        for ( char badChar : INVALID_CHARS ) {
-            result = StringUtils.remove( result, badChar );
-        }
-
-        return StringEscapeUtils.escapeJava( result ).trim();
-    }
 
     /**
      * Given a search string will first look through the characterisc database for any entries that have a match. If a
@@ -333,7 +312,7 @@ public class OntologyService {
 
         List<Characteristic> searchResults = new ArrayList<Characteristic>();
 
-        queryString = stripInvalidCharacters( givenQueryString ); // Strip out invalid characters so that Jena doesn't
+        queryString = OntologySearch.stripInvalidCharacters( givenQueryString ); // Strip out invalid characters so that Jena doesn't
                                                                     // die parsing them
         // FIXME hard-coding of ontologies to search
         results = mgedOntologyService.findResources( queryString );

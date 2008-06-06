@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -42,6 +43,29 @@ public class OntologySearch {
 
     private static Log log = LogFactory.getLog( OntologySearch.class.getName() );
 
+    //Jena cannot properly parse these characters... gives a query parse error. 
+    //OntologyTerms don't contain them anyway
+    private final static char[] INVALID_CHARS = { ':', '(', ')', '?', '*', '^', '[', ']', '-', '+', '{', '}', '!', '~' };
+
+    /**
+     * 
+     * Will remove characters that jena is unable to parse. Will also escape and remove leading and trailing white space
+     * (which also causes jena to die)
+     * 
+     * @param toStrip the string to clean
+     * @return
+     */
+    public static String stripInvalidCharacters( String toStrip ) {
+
+        String result = toStrip;
+        for ( char badChar : INVALID_CHARS ) {
+            result = StringUtils.remove( result, badChar );
+        }
+
+        return StringEscapeUtils.escapeJava( result ).trim();
+    }
+
+    
     /**
      * Find classes that match the query string
      * 
