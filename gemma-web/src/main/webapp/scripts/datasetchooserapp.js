@@ -22,26 +22,9 @@ Gemma.DatasetChooser.app = function() {
 			// width : 500
 			// });
 			//
-			btn = new Ext.Button({
-				renderTo : 'but',
-				text : "Show ds picker",
-				handler : function() {
-					dcp.show();
-				}
+			dcp = new Ext.Gemma.ExpressionExperimentSetPanel({
+				renderTo : 'but'
 			});
-
-			// ach = new Ext.Gemma.AnalysisCombo({
-			// renderTo : 'but',
-			// showCustomOption : true
-			// });
-
-			dcp = new Ext.Gemma.DatasetChooserPanel({
-				renderTo : "but"
-			});
-
-			// txc = new Ext.Gemma.TaxonCombo({
-			// renderTo : 'but'
-			// });
 
 			dcp.on("datasets-selected", function(e) {
 				Ext.Msg.alert("Yay", "You got "

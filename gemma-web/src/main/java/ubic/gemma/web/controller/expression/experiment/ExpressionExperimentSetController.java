@@ -81,20 +81,23 @@ public class ExpressionExperimentSetController extends BaseFormController {
         for ( ExpressionExperimentSet set : sets ) {
 
             int size = set.getExperiments().size();
-            if ( size < 2 ) continue;
+            if ( size < 2 ) continue; // Ignore sets of size = 1 because there are many!
 
             ExpressionExperimentSetValueObject vo = new ExpressionExperimentSetValueObject();
             vo.setName( set.getName() );
             vo.setId( set.getId() );
-            vo.setDescription( set.getDescription() );
+            vo.setTaxon( set.getTaxon() );
+
+            vo.getTaxon().toString(); // If I don't do this, won't be populated in the downstream object. This is
+                                        // basically a thaw.
+
+            vo.setDescription( set.getDescription() == null ? "" : set.getDescription() );
             if ( expressionExperimentSetService.getAnalyses( set ).size() > 0 ) {
                 vo.setModifiable( false );
             }
             for ( BioAssaySet ee : set.getExperiments() ) {
                 vo.getExpressionExperimentIds().add( ee.getId() );
             }
-
-            // FIXME : get the taxon.
 
             vo.setNumExperiments( size );
             results.add( vo );

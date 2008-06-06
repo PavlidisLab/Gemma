@@ -11995,7 +11995,7 @@ Ext.extend(Ext.Component, Ext.util.Observable, {
 		return null;
 	},
 
-	saveState : function() {
+	saveState : function() { 
 		if (Ext.state.Manager) {
 			var state = this.getState();
 			if (this.fireEvent('beforestatesave', this, state) !== false) {
@@ -16900,6 +16900,7 @@ Ext.extend(Ext.state.CookieProvider, Ext.state.Provider, {
 	},
 
 	setCookie : function(name, value) {
+		Ext.log("ext-all-debug.js::setCookie: Setting cookie: " + name);
 		document.cookie = "ys-"
 				+ name
 				+ "="

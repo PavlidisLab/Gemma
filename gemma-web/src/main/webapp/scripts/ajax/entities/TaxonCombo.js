@@ -22,14 +22,20 @@ Ext.Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 
 	setState : function(v) {
 		if (this.ready) {
-			Ext.Gemma.TaxonCombo.superclass.setValue.call(this, v);// don't want to fire changed taxon event this.setValue(v);
+			Ext.Gemma.TaxonCombo.superclass.setValue.call(this, v);// don't
+			// want to
+			// fire
+			// changed
+			// taxon
+			// event
+			// this.setValue(v);
 		} else {
 			this.state = v;
 		}
 	},
 
 	restoreState : function() {
-		if (this.state){
+		if (this.state) {
 			Ext.Gemma.TaxonCombo.superclass.setValue.call(this, v);
 			delete this.state;
 		}
@@ -47,6 +53,19 @@ Ext.Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 		name : "scientificName",
 		type : "string"
 	}]),
+
+	filter : function(taxon) {
+		Ext.log("Filtering taxon");
+		this.store.filterBy(function(record, id) {
+			if (taxon.id == record.get("id")) {
+				Ext.log("Include: " + taxon.id);
+				return true;
+			} else {
+				Ext.log("Exclude: " + taxon.id);
+				return false;
+			}
+		});
+	},
 
 	initComponent : function() {
 

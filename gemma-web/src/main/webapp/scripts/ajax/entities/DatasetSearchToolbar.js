@@ -18,6 +18,10 @@ Ext.Gemma.DatasetSearchToolBar = Ext.extend(Ext.Toolbar, {
 		this.taxonCombo.setValue(taxon);
 	},
 
+	filterTaxon : function(taxon) {
+		this.taxonCombo.filter(taxon);
+	},
+
 	afterRender : function() {
 		Ext.Gemma.DatasetSearchToolBar.superclass.afterRender.call(this);
 
@@ -107,6 +111,7 @@ Ext.Gemma.DataSetSearchAndGrabToolbar = Ext.extend(
 					scope : this
 				});
 
+				this.addFill();
 				this.add(grabber);
 			}
 

@@ -13,8 +13,281 @@
  * @version $Id$
  */
 Ext.namespace('Ext.Gemma');
+Ext.namespace('Ext.Gemma.ExpressionExperimentSetStore');
 
 /**
+ * 
+ * @class Ext.Gemma.ExpressionExperimentSetPanel
+ * @extends Ext.Panel
+ */
+Ext.Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
+
+	layout : 'table',
+	layoutConfig : {
+		columns : 2
+	},
+	border : false,
+	width : 220,
+
+	getSelected : function() {
+		return this.store.getSelected();
+	},
+
+	initComponent : function() {
+
+		this.store = new Ext.Gemma.ExpressionExperimentSetStore();
+
+		this.dcp = new Ext.Gemma.DatasetChooserPanel({
+			modal : true,
+			eeSetStore : this.store
+		});
+
+		this.combo = new Ext.Gemma.ExpressionExperimentSetCombo({
+			width : 175,
+			store : this.store
+		});
+
+		Ext.Gemma.ExpressionExperimentSetPanel.superclass.initComponent
+				.call(this);
+
+		this.addEvents('set-chosen');
+
+		this.combo.on("select", function(sel) {
+			this.fireEvent('set-chosen', sel);
+		});
+		this.dcp.on("datasets-selected", function(sel) {
+			this.combo.setValue(sel.get("name"));
+			this.fireEvent('set-chosen', sel);
+		}.createDelegate(this));
+
+	},
+
+	onRender : function(ct, position) {
+		Ext.Gemma.ExpressionExperimentSetPanel.superclass.onRender.call(this,
+				ct, position);
+
+		this.add(this.combo);
+
+		this.add(new Ext.Button({
+			text : "Edit",
+			anchor : '',
+			tooltip : "View dataset chooser interface to modify or create sets",
+			handler : function() {
+				this.dcp.show({
+					selected : this.getSelected()
+				});
+			},
+			scope : this
+		}));
+
+	}
+
+});
+
+/**
+ * ComboBox to show ExpressionExperimentSets. Configure this with a
+ * ExpressionExperimentSetStore.
+ * 
+ * @class Ext.Gemma.ExpressionExperimentSetCombo
+ * @extends Ext.form.ComboBox
+ */
+Ext.Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
+
+	displayField : 'name',
+	valueField : 'id',
+	editable : false,
+	loadingText : "Loading ...",
+	listWidth : 250,
+	forceSelection : true,
+	mode : 'local',
+	triggerAction : 'all',
+	emptyText : 'Select a search scope',
+
+	initComponent : function() {
+
+		Ext.Gemma.ExpressionExperimentSetCombo.superclass.initComponent
+				.call(this);
+
+		this.tpl = new Ext.XTemplate('<tpl for="."><div ext:qtip="{description} ({numExperiments} members)" class="x-combo-list-item">{name}{[ values.taxon ? " (" + values.taxon.scientificName + ")" : "" ]}</div></tpl>');
+		this.tpl.compile();
+
+		this.on("select", function(cb, rec, index) {
+			this.store.setSelected(rec);
+		});
+	}
+
+});
+
+/**
+ * @class Ext.Gemma.ExpressionExperimentSetStore
+ * @extends Ext.data.Store
+ */
+Ext.Gemma.ExpressionExperimentSetStore = function(config) {
+
+	this.record = Ext.data.Record.create([{
+		name : "id",
+		type : "int"
+	}, {
+		name : "name"
+	}, {
+		name : "description"
+	}, {
+		name : "numExperiments",
+		type : "int"
+	}, {
+		name : "modifiable",
+		type : "bool"
+	}, {
+		name : "expressionExperimentIds"
+	}, {
+		name : "taxon"
+	}]);
+
+	this.readMethod = ExpressionExperimentSetController.getAvailableExpressionExperimentSets;
+
+	this.proxy = new Ext.data.DWRProxy(this.readMethod);
+
+	this.reader = new Ext.data.ListRangeReader({
+		id : "id"
+	}, this.record);
+
+	Ext.Gemma.ExpressionExperimentSetStore.superclass.constructor.call(this,
+			config);
+
+	this.on("load", this.addFromCookie, this);
+
+	this.load();
+
+};
+
+Ext.extend(Ext.Gemma.ExpressionExperimentSetStore, Ext.data.Store, {
+
+	getSelected : function() {
+		return this.selected;
+	},
+
+	setSelected : function(rec) {
+		this.selected = rec;
+	},
+
+	addFromCookie : function() {
+		var recs = this.cookieRetrieveEESets();
+		if (recs && recs.length > 0) {
+			Ext.log("Add " + recs.length + " from cookie");
+			this.add(recs);
+		}
+	},
+
+	cookieSaveOrUpdateEESet : function(rec) {
+
+		var eeSets = this.cookieRetrieveEESets();
+		var toBeUpdated = this.searchCookie(eeSets, rec);
+
+		if (toBeUpdated) {
+			Ext.log("Modifying record");
+			toBeUpdated.set("name", rec.get("name"));
+			toBeUpdated.set("description", rec.get("description"));
+			toBeUpdated.set("expressionExperimentIds", rec
+					.get("expressionExperimentIds"));
+			toBeUpdated.set("taxon", rec.get("taxon"));
+			toBeUpdated.commit();
+		} else {
+			Ext.log("Adding record");
+			eeSets.push(rec);
+		}
+
+		this.cookieSaveEESets(eeSets);
+
+		Ext.Msg.show({
+			title : "OK",
+			msg : "Saved to cookie",
+			icon : Ext.MessageBox.INFO,
+			buttons : Ext.Msg.OK
+		});
+	},
+
+	/**
+	 * See if the cookie already has an item to match the given one.
+	 */
+	searchCookie : function(storedSets, rec) {
+
+		var recName = rec.get("name");
+		// if (rec.isModified("name")) {
+		// Ext.log("Name changed");
+		// recName = rec.modified.name;
+		// }
+
+		for (var i = 0, len = storedSets.length; i < len; i++) {
+			var s = storedSets[i];
+
+			Ext.log("Comparing " + s.get("name") + " to " + recName);
+			if (s.get("name") == recName) {
+				Ext.log("Found existing set in cookie");
+				return s;
+			}
+		}
+		return null;
+	},
+
+	removeFromCookie : function(rec) {
+		var eeSets = this.cookieRetrieveEESets();
+		var updatedSets = [];
+		for (var i = 0, len = eeSets.length; i < len; i++) {
+			var s = eeSets[i];
+			if (s.get("name") != rec.get("name")) {
+				updatedSets.push(s);
+			} else {
+				Ext.log("Remove " + s.get("name") + " from cookie");
+			}
+		}
+
+		this.cookieSaveEESets(updatedSets);
+	},
+
+	/**
+	 * 
+	 * @param {}
+	 *            eeSets [Records]
+	 */
+	cookieSaveEESets : function(eeSets) {
+		var eeSetData = [];
+		for (var i = 0, len = eeSets.length; i < len; i++) {
+			eeSetData.push(eeSets[i].data);
+		}
+		Ext.state.Manager.set(
+				Ext.Gemma.ExpressionExperimentSetStore.COOKIE_KEY, eeSetData);
+		this.fireEvent("saveOrUpdate");
+	},
+
+	/**
+	 * Retrieve EESets from the user's cookie.
+	 * 
+	 * @return {}
+	 */
+	cookieRetrieveEESets : function() {
+		var storedSets = Ext.state.Manager
+				.get(Ext.Gemma.ExpressionExperimentSetStore.COOKIE_KEY);
+		var eeSets = [];
+		if (storedSets && storedSets.length > 0) {
+			for (var i = 0, len = storedSets.length; i < len; i++) {
+				if (storedSets[i] && storedSets[i].name) {
+					var rec = new this.record(storedSets[i]);
+					if (rec && rec.data) { // make sure data aren't
+						// corrupt.
+						eeSets.push(rec);
+					}
+				}
+			}
+		}
+		return eeSets;
+	}
+
+});
+
+Ext.Gemma.ExpressionExperimentSetStore.COOKIE_KEY = "eeSets";
+
+/**
+ * User interface for viewing, creating and editing ExpressionExperimentSets.
  * 
  * @class Ext.Gemma.DatasetChooserPanel
  * @extends Ext.Window
@@ -29,44 +302,43 @@ Ext.Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 
 	onCommit : function() {
 		var rec = this.eeSetGrid.getSelectionModel().getSelected();
-		if (!rec) {
-			Ext.Msg.alert("Sorry", "You must pick a set to analyze");
-		} else {
-			this.hide();
-			this.fireEvent("datasets-selected", {
-				selected : rec,
-				store : this.eeSetGrid.getStore()
-			});
+		if (rec) {
+			this.eeSetStore.setSelected(rec);
+			this.fireEvent("datasets-selected", rec);
 		}
+		this.hide();
 	},
 
 	initComponent : function() {
+
 		Ext.apply(this, {
 			buttons : [{
 				id : 'done-selecting-button',
 				text : "Done",
-				handler : this.onCommit.createDelegate(this, [], true),
+				handler : this.onCommit.createDelegate(this),
 				scope : this
 			}]
-		})
+		});
 
 		this.addEvents({
 			"datasets-selected" : true
 		});
 
 		Ext.Gemma.DatasetChooserPanel.superclass.initComponent.call(this);
+
 	},
 
 	show : function(config) {
-
-		if (config && config.eeSet) {
+		if (config && config.selected) {
+			// Avoid adding handler multiple times.
 			this.on("show", function() {
-				var index = this.eeSetGrid.store.indexOf(this.eeSetGrid.store
-						.getById(config.eeSet));
-				Ext.log("EEset to select: " + config.eeSet + " at index "
-						+ index);
-				this.eeSetGrid.getSelectionModel().selectRow(index);
-			}, this);
+				this.eeSetGrid.getSelectionModel()
+						.selectRecords([config.selected]);
+				this.eeSetGrid.getView().focusRow(this.eeSetGrid.getStore()
+						.indexOf(config.selected));
+			}, this, {
+				single : true
+			}, config);
 		}
 
 		Ext.Gemma.DatasetChooserPanel.superclass.show.call(this);
@@ -96,30 +368,6 @@ Ext.Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 		});
 
 		/**
-		 * Top grid for showing the dataset.
-		 */
-		this.eeSetGrid = new Ext.Gemma.ExpressionExperimentSetGrid({
-			readMethod : ExpressionExperimentSetController.getAvailableExpressionExperimentSets
-					.createDelegate(this),
-			editable : admin,
-			region : 'north',
-			layout : 'fit',
-			split : true,
-			collapsible : true,
-			collapseMode : 'mini',
-			loadMask : {
-				msg : 'Loading'
-			},
-			height : 200,
-			title : "Available expression experiment sets",
-			displayGrid : this.eeSetMembersGrid,
-			tbar : new Ext.Gemma.EditExpressionExperimentSetToolbar({
-				admin : admin
-			})
-
-		});
-
-		/**
 		 * Datasets that can be added to the current set.
 		 */
 		this.sourceDatasetsGrid = new Ext.Gemma.ExpressionExperimentGrid({
@@ -142,11 +390,27 @@ Ext.Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 		});
 
 		/**
-		 * Change the taxon to the one selected by the user when creating new
-		 * EEsets.
+		 * Top grid for showing the EEsets
 		 */
-		this.eeSetGrid.on('taxonset', function(taxon) {
-			this.sourceDatasetsGrid.getTopToolbar().setTaxon(taxon);
+		this.eeSetGrid = new Ext.Gemma.ExpressionExperimentSetGrid({
+			store : this.eeSetStore,
+			editable : admin,
+			region : 'north',
+			layout : 'fit',
+			split : true,
+			collapsible : true,
+			collapseMode : 'mini',
+			loadMask : {
+				msg : 'Loading'
+			},
+			height : 200,
+			title : "Available expression experiment sets",
+			displayGrid : this.eeSetMembersGrid,
+			searchGrid : this.sourceDatasetsGrid,
+			tbar : new Ext.Gemma.EditExpressionExperimentSetToolbar({
+				admin : admin
+			})
+
 		});
 
 		this.add(this.eeSetGrid);
@@ -177,31 +441,23 @@ Ext.Gemma.ExpressionExperimentSetGrid = Ext.extend(Ext.grid.EditorGridPanel, {
 
 	initComponent : function() {
 
-		this.store = new Ext.data.Store({
-			proxy : new Ext.data.DWRProxy(this.readMethod),
-			reader : new Ext.data.ListRangeReader({
-				id : "id"
-			}, this.record)
-		});
-
 		Ext.Gemma.ExpressionExperimentSetGrid.superclass.initComponent
 				.call(this);
+
+		if (!this.store) {
+			Ext.apply(this, {
+				store : new Ext.Gemma.ExpressionExperimentSetStore()
+			});
+		}
 
 		this.addEvents({
 			'loadExpressionExperimentSet' : true,
 			'dirty' : true
 		});
 
-		this.getStore().on("load", function() {
-			this.doLayout();
-			this.addFromCookie(this.getStore());
-		}, this);
+		this.record = this.getStore().record;
 
 		this.on("dirty", this.getTopToolbar().editing, this.getTopToolbar());
-
-		if (!this.noInitialLoad) {
-			this.getStore().load({});
-		}
 
 	},
 
@@ -228,23 +484,25 @@ Ext.Gemma.ExpressionExperimentSetGrid = Ext.extend(Ext.grid.EditorGridPanel, {
 			}
 		});
 
-		this.getSelectionModel().on("rowselect", function() {
-			// this.getTopToolbar().displayBut.enable();
-			this.displayGrid.setTitle(this.getSelectionModel().getSelected()
-					.get("name"));
-			this.displayGrid.getStore().load({
-				params : [this.getSelectionModel().getSelected()
-						.get("expressionExperimentIds")]
-			});
+		this.getSelectionModel().on("rowselect", function(selmol, index, rec) {
+			if (this.displayGrid) {
+				this.displayGrid.setTitle(rec.get("name"));
+				this.displayGrid.getStore().load({
+					params : [rec.get("expressionExperimentIds")]
+				});
+			}
+
+			if (this.searchGrid && rec.get("taxon")) {
+				this.searchGrid.getTopToolbar().filterTaxon(rec.get("taxon"));
+			}
 		}, this);
 
 		/*
 		 * Suppress updates while loading
 		 */
 		this.displayGrid.on("beforeload", function() {
-			Ext.log("Remove listeners");
-			this, displayGrid.un("add", this.updateMembers);
-			this, displayGrid.un("remove", this.updateMembers);
+			this.displayGrid.un("add", this.updateMembers);
+			this.displayGrid.un("remove", this.updateMembers);
 		});
 
 		/*
@@ -252,7 +510,6 @@ Ext.Gemma.ExpressionExperimentSetGrid = Ext.extend(Ext.grid.EditorGridPanel, {
 		 * aren't fired right away.
 		 */
 		this.displayGrid.getStore().on("load", function() {
-			Ext.log("Add listeners");
 			this.displayGrid.getStore().on("add",
 					this.updateMembers.createDelegate(this),
 					[this.displayGrid.getStore()]);
@@ -264,7 +521,6 @@ Ext.Gemma.ExpressionExperimentSetGrid = Ext.extend(Ext.grid.EditorGridPanel, {
 	},
 
 	updateMembers : function(store) {
-		Ext.log("Updating set members");
 		var rec = this.getSelectionModel().getSelected();
 
 		var ids = [];
@@ -302,33 +558,6 @@ Ext.Gemma.ExpressionExperimentSetGrid = Ext.extend(Ext.grid.EditorGridPanel, {
 		}
 	},
 
-	addFromCookie : function(store) {
-		var recs = this.getTopToolbar().cookieRetrieveEESets();
-		if (recs && recs.length > 0) {
-			Ext.log("Adding " + recs.length + " from cookie");
-			store.add(recs);
-		}
-	},
-
-	record : Ext.data.Record.create([{
-		name : "id",
-		type : "int"
-	}, {
-		name : "name"
-	}, {
-		name : "description"
-	}, {
-		name : "numExperiments",
-		type : "int"
-	}, {
-		name : "modifiable",
-		type : "bool"
-	}, {
-		name : "expressionExperimentIds"
-	}, {
-		name : "taxon"
-	}]),
-
 	columns : [{
 		id : 'name',
 		header : "Name",
@@ -354,7 +583,14 @@ Ext.Gemma.ExpressionExperimentSetGrid = Ext.extend(Ext.grid.EditorGridPanel, {
 		id : 'taxon',
 		header : "Taxon",
 		dataIndex : "taxon",
-		sortable : true
+		sortable : true,
+		renderer : function(v) {
+			if (v) {
+				return v.commonName;
+			} else {
+				return "";
+			}
+		}
 	}]
 
 });
@@ -364,6 +600,8 @@ Ext.Gemma.ExpressionExperimentSetGrid = Ext.extend(Ext.grid.EditorGridPanel, {
  * virtualAnalysisGrid. Either save to the database or to a cookie.
  */
 Ext.Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
+
+	userCanWriteToDB : false, // FIXME configure this properly.
 
 	display : function() {
 		this.grid.display();
@@ -392,8 +630,9 @@ Ext.Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 
 		this.detailsWin.purgeListeners();
 		this.detailsWin.on("commit", function(args) {
-			Ext.log("Add new record");
-			var newRec = new this.grid.record({
+			// Ext.log("Add new record");
+			var constr = this.grid.getStore().record;
+			var newRec = new constr({
 				name : args.name,
 				description : args.description,
 				id : -1,
@@ -404,7 +643,7 @@ Ext.Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 
 			this.grid.getStore().add(newRec);
 			this.grid.getSelectionModel().selectRecords([newRec]);
-			this.grid.getView().focusRow(this.grid.getStore().indexOf(newRec))
+			this.grid.getView().focusRow(this.grid.getStore().indexOf(newRec));
 			this.grid.clearDisplay();
 			this.fireEvent("taxonset", args.taxon);
 			this.commitBut.enable();
@@ -430,7 +669,7 @@ Ext.Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 		this.addButton(this.deleteBut);
 
 		this.on("disable", function() {
-			Ext.log("Someone disabled me!")
+			// Ext.log("Someone disabled me!");
 			this.enable();
 		});
 
@@ -452,7 +691,7 @@ Ext.Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 
 		this.commitBut = new Ext.Button({
 			id : 'update',
-			text : "Commit",
+			text : "Save",
 			handler : this.update,
 			disabled : false,
 			scope : this,
@@ -492,12 +731,12 @@ Ext.Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 		});
 
 		this.resetBut.on("enable", function() {
-			Ext.log("Attempt to enable resetBut");
+			// Ext.log("Attempt to enable resetBut");
 		});
 	},
 
 	initNew : function() {
-		Ext.log("init");
+		// Ext.log("init");
 		this.resetBut.disable();
 		this.commitBut.disable();
 		this.getNewDetails();
@@ -506,34 +745,41 @@ Ext.Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 	remove : function() {
 		var rec = this.getCurrentSet();
 		if (rec) {
-			Ext.Msg.confirm("Delete?",
-					"Are you sure you want to delete this set", function() {
-						if (rec.get("id") < 0) {
-							this.grid.getStore().remove(rec);
-							this.removeFromCookie(rec);
-						} else {
-							if (this.userCanWriteToDB) {
-								Ext.log("Deleting from DB");
-								this.grid.getStore().remove(rec);
-								/* Delete from db */
-							} else {
-								Ext.Msg.alert("Permission denied",
-										"Sorry, you can't delete this set.");
-							}
-						}
-						this.deleteBut.enable();
-					}, this);
+			Ext.Msg
+					.confirm(
+							"Delete?",
+							"Are you sure you want to delete this set? This cannot be undone.",
+							function(but) {
+
+								if (but == 'no') {
+									return;
+								}
+
+								if (rec.get("id") < 0) {
+									this.grid.getStore().remove(rec);
+									this.grid.getStore().removeFromCookie(rec);
+								} else {
+									if (this.userCanWriteToDB) {
+										// Ext.log("Deleting from DB");
+										this.grid.getStore().remove(rec);
+										/* Delete from db */
+									} else {
+										Ext.Msg
+												.alert("Permission denied",
+														"Sorry, you can't delete this set.");
+									}
+								}
+								this.deleteBut.enable();
+							}, this);
 		}
 	},
-
-	userCanWriteToDB : false, // FIXME configure this properly.
 
 	/**
 	 * Save or update a record. If possible save it to the database; otherwise
 	 * use a cookie store.
 	 */
 	update : function() {
-		Ext.log("update");
+		// Ext.log("update");
 		this.resetBut.disable();
 		this.commitBut.disable();
 
@@ -542,27 +788,27 @@ Ext.Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 		var rec = this.getCurrentSet();
 
 		if (!rec.get("expressionExperimentIds")
-				|| rec.get("expressionExperimentIds").length == 0) {
-			Ext.log("no members");
+				|| rec.get("expressionExperimentIds").length === 0) {
+			// Ext.log("no members");
 			return;
 		}
 
 		if (!rec.dirty) {
-			Ext.log("Not dirty");
+			// Ext.log("Not dirty");
 			return;
 		}
 
 		if (rec.get("id") < 0) {
 			if (this.userCanWriteToDB) {
-				Ext.log("Writing new to db");
+				// Ext.log("Writing new to db");
 				/* write new one to the db */
 			} else {
-				Ext.log("Writing to cookie");
-				this.cookieSaveOrUpdateEESet(rec);
+				// Ext.log("Writing to cookie");
+				this.grid.getStore().cookieSaveOrUpdateEESet(rec);
 			}
 		} else {
 			if (this.userCanWriteToDB) {
-				Ext.log("Updating to db");
+				// Ext.log("Updating to db");
 				/* write updated one to the db */
 			} else {
 				Ext.Msg
@@ -575,16 +821,17 @@ Ext.Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 	},
 
 	copy : function() {
-		Ext.log("save as copy");
+		// Ext.log("save as copy");
 		// Create a copy, change the name and give dummy id.
 		var rec = this.getCurrentSet();
-
-		var newRec = new this.grid.record({
+		var constr = this.grid.getStore().record;
+		var newRec = new constr({
 			name : rec.get("name") + "*", // indicate they should edit it.
 			description : rec.get("description"),
 			id : -1,
 			expressionExperimentIds : rec.get("expressionExperimentIds"),
-			numExperiments : rec.get("numExperiments")
+			numExperiments : rec.get("numExperiments"),
+			taxon : rec.get("taxon")
 		}); // note that id is assigned by Ext.
 
 		// ensure the new record is dirty.
@@ -600,7 +847,7 @@ Ext.Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 	},
 
 	reset : function() {
-		Ext.log("reset");
+		// Ext.log("reset");
 		if (this.getCurrentSet()) {
 			this.getCurrentSet().reject();
 			this.resetBut.disable();
@@ -610,94 +857,12 @@ Ext.Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 	},
 
 	editing : function() {
-		Ext.log("editing");
+		// Ext.log("editing");
 		this.cloneBut.enable();
 		this.resetBut.enable();
 		this.commitBut.enable();
 		this.newBut.enable();
-	},
-
-	cookieSaveOrUpdateEESet : function(rec) {
-
-		var eeSets = this.cookieRetrieveEESets();
-
-		var toBeUpdated = this.searchCookie(eeSets, rec);
-
-		if (toBeUpdated) {
-			Ext.log("Update set in cookie");
-			toBeUpdated.set("name", rec.get("name"));
-			toBeUpdated.set("description", rec.get("description"));
-			toBeUpdated.set("expressionExperimentIds", rec
-					.get("expressionExperimentIds"));
-		} else {
-			Ext.log("Save one new set in cookie");
-			eeSets.push(rec);
-		}
-
-		this.cookieSaveEESets(eeSets);
-
-		Ext.Msg.show({
-			title : "OK",
-			msg : "Saved to cookie",
-			icon : Ext.MessageBox.INFO,
-			buttons : Ext.Msg.OK
-		});
-	},
-
-	/**
-	 * See if the cookie already has an item to match the given one.
-	 */
-	searchCookie : function(storedSets, rec) {
-		for (var i = 0, len = storedSets.length; i < len; i++) {
-			var s = storedSets[i];
-			if (s.get("name") == rec.get("name")) {
-				return s;
-			}
-		}
-		return null;
-	},
-
-	removeFromCookie : function(rec) {
-		var eeSets = this.cookieRetrieveEESets();
-		var updatedSets = [];
-		for (var i = 0, len = eeSets.length; i < len; i++) {
-			var s = eeSets[i];
-			if (s.get("name") != rec.get("name")) {
-				updatedSets.push(s);
-			}
-		}
-		this.cookieSaveEESets(updatedSets);
-	},
-
-	/**
-	 * 
-	 * @param {}
-	 *            eeSets [Records]
-	 */
-	cookieSaveEESets : function(eeSets) {
-		Ext.log("Save sets to cookie");
-		var encodedSets = [];
-		for (var i = 0, len = eeSets.length; i < len; i++) {
-			encodedSets.push(eeSets[i].data);
-		}
-		Ext.state.Manager.set(this.cookieKey, encodedSets);
-		this.fireEvent("saveOrUpdate");
-	},
-
-	cookieRetrieveEESets : function() {
-		var storedSets = Ext.state.Manager.get(this.cookieKey);
-		var eeSets = [];
-		if (storedSets) {
-			for (var i = 0, len = storedSets.length; i < len; i++) {
-				var constr = this.grid.record;
-				var rec = new constr(storedSets[i]);
-				eeSets.push(rec);
-			}
-		}
-		return eeSets;
-	},
-
-	cookieKey : "EESET_COOKIE"
+	}
 
 });
 
@@ -715,15 +880,15 @@ Ext.Gemma.DetailsWindow = Ext.extend(Ext.Window, {
 		var values = Ext.getCmp('eeset-form').getForm().getValues();
 
 		var name = values.eesetname;
-		if (!this.nameField.validate() || name == null) {
+		if (!this.nameField.validate() || name === null) {
 			Ext.Msg.alert("Sorry", "You must provide a name for the set");
 			return;
 		}
 
 		// Make sure the name chosen is unique. -- broken.
-		// var indexOfExisting = this.store.findBy(function(record, id) {
-		// return record.get("name") == name;
-		// }, this);
+		var indexOfExisting = this.store.findBy(function(record, id) {
+			return record.get("name") == name;
+		}, this);
 
 		if (indexOfExisting) {
 			Ext.Msg.alert("Sorry",
