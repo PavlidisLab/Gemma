@@ -12,15 +12,15 @@
 	</div>
 </c:if>
 
+<div id="search">
+	<%@ include file="/common/search.jsp"%>
+</div>
 <div id="branding">
-	
+
 	<div id="headerLeft">
 		<a href="/Gemma"><img src="<c:url value='/images/logo/gemma-lg153x350.gif'/>" alt="gemma" /> </a>
 	</div>
-	
-	<div id="search"> 
-		<%@ include file="/common/search.jsp"%>
-	</div>
+
 
 </div>
 

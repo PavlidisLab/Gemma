@@ -11,16 +11,16 @@
 		Gemma is undergoing maintenance! Some functions may not be available.
 	</div>
 </c:if>
+<div id="search">
+	<%@ include file="/common/search.jsp"%>
+</div>
 
 <div id="branding">
 	<div id="headerLeft">
 		<a href="/Gemma"><img src="<c:url value='/images/logo/gemma-sm50x195.png'/>" alt="gemma" /> </a>
 	</div>
-	<div id="search">
-		<%@ include file="/common/search.jsp"%>
-	</div>
-	
-		
+
+
 </div>
 
 <%-- Put constants into request scope --%>
