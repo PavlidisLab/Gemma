@@ -52,7 +52,7 @@ Ext.Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 	selectById : function(id) {
 		this.combo.setValue(id);
 		this.store.selected = this.store.getById(id);
-	//	Ext.log(this.store.selected.get("name"));
+		// Ext.log(this.store.selected.get("name"));
 	},
 
 	selectByName : function(name) {
@@ -139,6 +139,7 @@ Ext.Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 	forceSelection : true,
 	mode : 'local',
 	triggerAction : 'all',
+	lazyInit : false, // important!
 	emptyText : 'Select a search scope',
 
 	filterByTaxon : function(taxon) {
@@ -156,6 +157,7 @@ Ext.Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 				return false;
 			}
 		});
+		this.focus();
 		this.onLoad();
 
 		if (this.store.getSelected()

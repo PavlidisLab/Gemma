@@ -18,6 +18,7 @@ Ext.Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 	width : 120,
 	stateId : "Ext.Gemma.TaxonCombo",
 	stateful : true,
+	stateEvents : ['select'],
 
 	emptyText : 'Select a taxon',
 
@@ -95,19 +96,20 @@ Ext.Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 		Ext.Gemma.TaxonCombo.superclass.initComponent.call(this);
 	},
 
-	setValue : function(v) {
-
-		var changed = false;
-		if (this.getValue() != v) {
-			changed = true;
-		}
-
-		Ext.Gemma.TaxonCombo.superclass.setValue.call(this, v);
-
-		if (changed) {
-			this.fireEvent('taxonchanged', this.getTaxon());
-		}
-	},
+//	setValue : function(v) {
+//
+//		var changed = false;
+//		if (this.getValue() != v) {
+//			changed = true;
+//		}
+//
+//		Ext.Gemma.TaxonCombo.superclass.setValue.call(this, v);
+//
+//		if (changed) {
+//			var rec = this.store.getById(v);
+//			this.fireEvent('select', this, rec, this.store.indexOf(rec));
+//		}
+//	},
 
 	getTaxon : function() {
 		return this.store.getById(this.getValue());
@@ -124,15 +126,6 @@ Ext.Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 			this.setValue(taxon.id);
 		} else {
 			this.setValue(taxon);
-		}
-	},
-
-	getTaxonByScientificName : function(scientificName) {
-		var all = this.store.getRange();
-		for (var i = 0; i < all.length; ++i) {
-			if (all[i].data.scientificName === scientificName) {
-				return all[i].data;
-			}
 		}
 	}
 

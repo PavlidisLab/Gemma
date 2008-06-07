@@ -86,7 +86,11 @@ public class GenePickerController extends BaseMultiActionController {
      * @return
      */
     public Collection<Gene> searchGenes( String query, Long taxonId ) {
-        Taxon taxon = taxonService.load( taxonId );
+        log.info( "Search: " + query + " taxon=" + taxonId );
+        Taxon taxon = null;
+        if ( taxonId != null ) {
+            taxon = taxonService.load( taxonId );
+        }
         SearchSettings settings = SearchSettings.GeneSearch( query, taxon );
         List<SearchResult> geneSearchResults = searchService.search( settings ).get( Gene.class );
 
@@ -119,7 +123,7 @@ public class GenePickerController extends BaseMultiActionController {
             List<SearchResult> geneSearchResults = searchService.search( settings ).get( Gene.class );
 
             // FIXME try not to add more than one gene per query.
-            
+
             // FIXME try to inform the user if there are some that don't have results.
             for ( SearchResult sr : geneSearchResults ) {
                 genes.add( ( Gene ) sr.getResultObject() );

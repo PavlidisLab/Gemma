@@ -130,9 +130,11 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 
 	initializeGenes : function(csc, doSearch) {
 		if (csc.geneIds.length > 1) {
+			// load into table.
 			this.geneChooserPanel.loadGenes(csc.geneIds, this.maybeDoSearch
 					.createDelegate(this, [csc, doSearch]));
 		} else {
+			// show in combobox.
 			this.geneChooserPanel.setGene(csc.geneIds[0], this.maybeDoSearch
 					.createDelegate(this, [csc, doSearch]));
 		}
@@ -146,17 +148,17 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 		this.geneChooserPanel = Ext.getCmp('gene-chooser-panel');
 		this.stringencyField = Ext.getCmp('stringencyfield');
 
-		this.initializeGenes(csc, doSearch);
-
 		if (csc.taxonId) {
 			this.geneChooserPanel.taxonCombo.setState(csc.taxonId);
 		}
+
+		this.initializeGenes(csc, doSearch);
 
 		if (csc.eeSetId >= 0) {
 			this.eeSetChooserPanel.setState(csc.eeSetId);
 		} else if (csc.eeSetName) {
 			this.eeSetChooserPanel.setState(csc.eeSetName); // FIXME this won't
-															// work, expects id.
+			// work, expects id.
 		}
 
 		if (csc.stringency) {
@@ -194,10 +196,13 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 		if (csc.queryGenesOnly) {
 			url += "&q";
 		}
+
+		if (csc.eeSetId) {
+			url += String.format("&a={0}", csc.eeSetId);
+		}
+
 		if (csc.eeIds) {
 			url += String.format("&ees={0}", csc.eeIds.join(","));
-		} else {
-			url += String.format("&a={0}", csc.cannedAnalysisId);
 		}
 
 		if (csc.eeSetName) {
@@ -280,16 +285,6 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 				numDatasets));
 	},
 
-	taxonChanged : function(taxon) {
-		if (!taxon) {
-			return;
-		}
-
-		this.geneChooserPanel.taxonChanged(taxon); // endless loop if we're not
-		// careful.
-		this.eeSetChooserPanel.filterByTaxon(taxon);
-	},
-
 	getActiveEeIds : function() {
 		if (this.currentSet) {
 			return this.currentSet.get("expressionExperimentIds");
@@ -300,17 +295,16 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 	initComponent : function() {
 
 		this.geneChooserPanel = new Ext.Gemma.GeneChooserPanel({
-			id : 'gene-chooser-panel',
-			listeners : {
-				"taxonchanged" : {
-					fn : this.taxonChanged.createDelegate(this)
-				}
-			}
+			id : 'gene-chooser-panel'
 		});
 
 		this.eeSetChooserPanel = new Ext.Gemma.ExpressionExperimentSetPanel({
 			fieldLabel : "Query scope"
 		});
+
+		this.geneChooserPanel.on("taxonchanged", function(taxon) {
+			this.eeSetChooserPanel.filterByTaxon(taxon);
+		}.createDelegate(this));
 
 		this.eeSetChooserPanel.on("set-chosen", function(eeSetRecord) {
 			this.currentSet = eeSetRecord;
@@ -361,7 +355,10 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 			}],
 			buttons : [{
 				text : "Find coexpressed genes",
-				handler : this.doSearch.createDelegate(this, [], true)
+				handler : this.doSearch.createDelegate(this, [], false)
+			// pass
+			// no
+			// parameters!
 			}]
 		});
 		Ext.Gemma.CoexpressionSearchForm.superclass.initComponent.call(this);

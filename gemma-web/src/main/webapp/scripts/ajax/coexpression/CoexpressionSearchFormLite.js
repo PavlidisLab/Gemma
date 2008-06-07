@@ -60,9 +60,9 @@ Ext.Gemma.CoexpressionSearchFormLite = Ext.extend(Ext.FormPanel, {
 							.join(",");
 					document.location.href = String
 							.format(
-									"/Gemma/searchCoexpression.html?g={0}&a={1}&s={2}&ees={3}",
+									"/Gemma/searchCoexpression.html?g={0}&a={1}&s={2}&ees={3}&t={4}",
 									this.geneCombo.getValue(), eeSetId,
-									this.stringencyField.getValue(), eeIds);
+									this.stringencyField.getValue(), eeIds, this.geneCombo.getTaxon().id);
 				} else {
 					this.handleError(msg);
 				}
@@ -106,7 +106,7 @@ Ext.Gemma.CoexpressionSearchFormLite = Ext.extend(Ext.FormPanel, {
 	},
 
 	initializeFromCoexpressionSearchCommand : function(csc) {
-		if (csc.cannedAnalysisId > -1) {
+		if (csc.eeSetId > -1) {
 			// this.eeSetChooserPanel.getSelected().get("id").setState(csc.cannedAnalysisId);
 		}
 		if (csc.stringency) {

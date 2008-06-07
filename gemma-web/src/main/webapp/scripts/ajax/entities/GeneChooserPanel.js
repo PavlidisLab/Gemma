@@ -18,8 +18,24 @@ Ext.Gemma.GeneChooserPanel = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 
 	collapsible : true,
 
+	height : 200,
+	autoScroll : true,
+	emptyText : "Genes will be listed here",
+
+	columns : [{
+		header : 'Symbol',
+		dataIndex : 'officialSymbol',
+		sortable : true
+	}, {
+		id : 'desc',
+		header : 'Name',
+		dataIndex : 'officialName'
+	}],
+	autoExpandColumn : 'desc',
+
 	/**
-	 * Given text, search Gemma for matching genes.
+	 * Given text, search Gemma for matching genes. Used to 'bulk load' genes
+	 * from the GUI.
 	 * 
 	 * @param {}
 	 *            e
@@ -38,10 +54,11 @@ Ext.Gemma.GeneChooserPanel = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 										genes[i].officialName]);
 					}
 					this.getStore().loadData(geneData, true);
-				}.createDelegate(this, [], true));
+				}.createDelegate(this));
 	},
 
 	/**
+	 * Add to table.
 	 * 
 	 * @param {}
 	 *            geneIds
@@ -61,9 +78,19 @@ Ext.Gemma.GeneChooserPanel = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 			if (callback) {
 				callback(args);
 			}
-		}.createDelegate(this, [], true));
+		}.createDelegate(this));
 	},
 
+	/**
+	 * Set value in combobox.
+	 * 
+	 * @param {}
+	 *            geneId
+	 * @param {}
+	 *            callback
+	 * @param {}
+	 *            args
+	 */
 	setGene : function(geneId, callback, args) {
 		GenePickerController.getGenes([geneId], function(genes) {
 			var g = genes[0];
@@ -76,7 +103,7 @@ Ext.Gemma.GeneChooserPanel = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 			if (callback) {
 				callback(args);
 			}
-		}.createDelegate(this, [], true));
+		}.createDelegate(this));
 	},
 
 	getGeneIds : function() {
@@ -100,40 +127,75 @@ Ext.Gemma.GeneChooserPanel = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 	getTaxonId : function() {
 		if (this.taxonCombo) {
 			return this.taxonCombo.getValue();
+		} else {
+			return this.geneCombo.getTaxon().id;
 		}
 	},
 
+	/**
+	 * Check if the taxon needs to be changed, and if so, update it for the
+	 * taxoncombo and the genecombo.
+	 * 
+	 * @param {}
+	 *            taxon
+	 */
 	taxonChanged : function(taxon) {
-		var oldtax = this.geneCombo.getTaxon();
-
-		if (oldtax && oldtax.id == taxon.id) {
+		if (!taxon) {
 			return;
 		}
 
-		this.geneCombo.setTaxon(taxon);
+		var oldtax = this.geneCombo.getTaxon();
+
+		// Update the genecombo and the table.
+		if (!oldtax || oldtax.id != taxon.id) {
+			this.geneCombo.setTaxon(taxon);
+			this.fireEvent("taxonchanged", taxon);
+		}
+
+		// Remove all the genes that are not from the correct taxon.
 		var all = this.getStore().getRange();
 		for (var i = 0; i < all.length; ++i) {
-			if (all[i].data.taxon != taxon.scientificName) {
+			if (all[i].data.taxon.id != taxon.id) {
 				this.getStore().remove(all[i]);
 			}
 		}
 
+		// Update the taxon combo.
 		if (!this.taxonCombo.getTaxon()
 				|| this.taxonCombo.getTaxon().id != taxon.id) {
 			this.taxonCombo.setTaxon(taxon);
 		}
 
-		this.fireEvent('taxonchanged', taxon);
+	},
+
+	addGene : function() {
+		var gene = this.geneCombo.getGene();
+		if (!gene) {
+			return;
+		}
+		if (this.getStore().find("id", gene.id) < 0) {
+			var Constructor = this.geneCombo.record;
+			var record = new Constructor(gene);
+			this.getStore().add([record]);
+		}
+		this.geneCombo.reset();
+		this.addButton.disable();
+	},
+
+	removeGene : function() {
+		var selected = this.getSelectionModel().getSelections();
+		for (var i = 0; i < selected.length; ++i) {
+			this.getStore().remove(selected[i]);
+		}
+		this.removeButton.disable();
 	},
 
 	initComponent : function() {
 
-		this.addEvents('taxonchanged');
-
 		this.taxonCombo = new Ext.Gemma.TaxonCombo({
 			listeners : {
-				'taxonchanged' : function(taxon) {
-					this.fireEvent('taxonchanged', taxon);
+				'select' : function(cb, rec, index) {
+					this.taxonChanged(rec.data);
 				}.createDelegate(this)
 			}
 		});
@@ -142,10 +204,12 @@ Ext.Gemma.GeneChooserPanel = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 			emptyText : 'Search for a gene',
 			listeners : {
 				'select' : {
-					fn : function(combo, record, index) {
-						var actualTaxon = this.taxonCombo
-								.getTaxonByScientificName(record.data.taxon);
-						this.taxonCombo.setTaxon(actualTaxon);
+					fn : function(combo, rec, index) {
+						if (rec.get) {
+							this.taxonCombo.setTaxon(rec.get("taxon"));
+						} else {
+							this.taxonCombo.setTaxon(rec.taxon);
+						}
 						this.addButton.enable();
 					}.createDelegate(this)
 				}
@@ -157,19 +221,7 @@ Ext.Gemma.GeneChooserPanel = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 			cls : "x-btn-icon",
 			tooltip : "Add a gene to the list",
 			disabled : true,
-			handler : function() {
-				var gene = this.geneCombo.getGene();
-				if (!gene) {
-					return;
-				}
-				if (this.getStore().find("id", gene.id) < 0) {
-					var Constructor = this.geneCombo.record;
-					var record = new Constructor(gene);
-					this.getStore().add([record]);
-				}
-				this.geneCombo.reset();
-				this.addButton.disable();
-			}.createDelegate(this, [], true)
+			handler : this.addGene.createDelegate(this)
 		});
 
 		this.removeButton = new Ext.Toolbar.Button({
@@ -177,13 +229,7 @@ Ext.Gemma.GeneChooserPanel = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 			cls : "x-btn-icon",
 			tooltip : "Remove the selected gene from the list",
 			disabled : true,
-			handler : function() {
-				var selected = this.getSelectionModel().getSelections();
-				for (var i = 0; i < selected.length; ++i) {
-					this.getStore().remove(selected[i]);
-				}
-				this.removeButton.disable();
-			}.createDelegate(this, [], true)
+			handler : this.removeGene.createDelegate(this)
 		});
 
 		this.chooser = new Ext.Gemma.GeneImportPanel({
@@ -206,13 +252,7 @@ Ext.Gemma.GeneChooserPanel = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 			}.createDelegate(this, [], true)
 		});
 
-		/*
-		 * establish default config options...
-		 */
 		Ext.apply(this, {
-			height : 200,
-			autoScroll : true,
-			emptyText : "Genes will be listed here",
 			tbar : [this.taxonCombo, {
 				xtype : 'tbspacer'
 			}, this.geneCombo, this.addButton, {
@@ -237,20 +277,12 @@ Ext.Gemma.GeneChooserPanel = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 					field : 'officialSymbol',
 					direction : 'ASC'
 				}
-			}),
-			columns : [{
-				header : 'Symbol',
-				dataIndex : 'officialSymbol',
-				sortable : true
-			}, {
-				id : 'desc',
-				header : 'Name',
-				dataIndex : 'officialName'
-			}],
-			autoExpandColumn : 'desc'
+			})
 		});
 
 		Ext.Gemma.GeneChooserPanel.superclass.initComponent.call(this);
+
+		this.addEvents('taxonchanged');
 
 		/*
 		 * code down here has to be called after the super-constructor so that

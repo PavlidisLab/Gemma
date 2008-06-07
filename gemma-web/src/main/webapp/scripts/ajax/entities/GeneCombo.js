@@ -17,6 +17,7 @@ Ext.Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 	width : 140,// default.
 	listWidth : 350,
 	loadingText : 'Searching...',
+
 	minChars : 1,
 	selectOnFocus : true,
 
@@ -35,7 +36,7 @@ Ext.Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 
 	initComponent : function() {
 
-		var template = new Ext.XTemplate('<tpl for="."><div ext:qtip="{officialName} ({taxon.scientificName})" class="x-combo-list-item">{officialSymbol} {officialName} ({taxon.scientificName})</div></tpl>');
+		var template = new Ext.XTemplate('<tpl for="."><div ext:qtip="{officialName} ({[values.taxon.scientificName]})" class="x-combo-list-item">{officialSymbol} {officialName} ({[values.taxon.scientificName]})</div></tpl>');
 
 		Ext.apply(this, {
 			tpl : template,
@@ -52,25 +53,33 @@ Ext.Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 		});
 
 		Ext.Gemma.GeneCombo.superclass.initComponent.call(this);
+
 		this.addEvents('genechanged');
 
 		this.store.on("datachanged", function() {
 			if (this.store.getCount() === 0) {
 				this.fireEvent("invalid", "No matching genes");
-				this.setRawValue("No matching genes");
+				this.emptyText = "Nothing found";
+				this.clearValue();
 			}
 		}, this);
 	},
 
 	onSelect : function(record, index) {
 		Ext.Gemma.GeneCombo.superclass.onSelect.call(this, record, index);
-
-		if (this.selectedGene && record.data.id != this.selectedGene.id) {
+		if (!this.selectedGene || record.data.id != this.selectedGene.id) {
 			this.setGene(record.data);
-			this.fireEvent('genechanged', this, this.selectedGene);
+			this.fireEvent('select', this, this.selectedGene);
 		}
 	},
 
+	/**
+	 * Parameters for AJAX call.
+	 * 
+	 * @param {}
+	 *            query
+	 * @return {}
+	 */
 	getParams : function(query) {
 		return [query, this.taxon ? this.taxon.id : -1];
 	},
@@ -89,7 +98,7 @@ Ext.Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 			this.tooltip = new Ext.ToolTip({
 				target : this.getEl(),
 				html : String.format('{0} ({1})', gene.officialName
-						|| "no description", gene.taxon)
+						|| "no description", gene.taxon.scientificName)
 			});
 		}
 	},
@@ -99,14 +108,15 @@ Ext.Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 
 	setTaxon : function(taxon) {
-		if (this.taxon && this.taxon.id != taxon.id) {
+		if (!this.taxon || this.taxon.id != taxon.id) {
+			Ext.log("Taxon set to " + taxon.id);
+			this.taxon = taxon;
 			delete this.selectedGene;
 			if (this.tooltip) {
 				this.tooltip.destroy();
 			}
 			this.reset();
 		}
-		this.taxon = taxon;
 	}
 
 });
