@@ -109,7 +109,6 @@ Ext.Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 
 	setTaxon : function(taxon) {
 		if (!this.taxon || this.taxon.id != taxon.id) {
-			Ext.log("Taxon set to " + taxon.id);
 			this.taxon = taxon;
 			delete this.selectedGene;
 			if (this.tooltip) {
