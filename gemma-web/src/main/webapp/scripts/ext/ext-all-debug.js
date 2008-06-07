@@ -16900,7 +16900,6 @@ Ext.extend(Ext.state.CookieProvider, Ext.state.Provider, {
 	},
 
 	setCookie : function(name, value) {
-		Ext.log("ext-all-debug.js::setCookie: Setting cookie: " + name);
 		document.cookie = "ys-"
 				+ name
 				+ "="
