@@ -1,24 +1,25 @@
 /**
- * Progressbar.js. To use this, create a div with id "progress-area" on your page, and a task id in a div with id "taskId". 
- * An optional update area "messages" may be used.
- * Arrange for createIndeterminateProgressBar or createDeterminateProgressBar to be called, followed by startProgress(). 
+ * Progressbar.js. To use this, create a div with id "progress-area" on your
+ * page, and a task id in a div with id "taskId". An optional update area
+ * "messages" may be used. Arrange for createIndeterminateProgressBar or
+ * createDeterminateProgressBar to be called, followed by startProgress().
+ * 
  * @author Kelsey
  * @author Paul
  * @version $Id$
  */
 
-progressbar = function( config ){
-	
-	if (config && config.doForward) {
-		this.doForward = config.doForward;
-	}
-	
-    this.addEvents({
-        finish : true,
-        fail : true,
-        cancel : true
-    });
-    progressbar.superclass.constructor.call(this);
+progressbar = function(config) {
+
+	Ext.apply(this, config);
+
+	this.addEvents({
+		finish : true,
+		fail : true,
+		cancel : true
+	});
+
+	progressbar.superclass.constructor.call(this);
 };
 
 Ext.extend(progressbar, Ext.util.Observable, {
@@ -26,14 +27,14 @@ Ext.extend(progressbar, Ext.util.Observable, {
 	waiting : false,
 	bar : null,
 	determinate : false,
-	previousMessage :  "",
+	previousMessage : "",
 	timeoutid : null,
 	detbarwidth : 200,
-	
-		// time in ms between updates
+
+	// time in ms between updates
 	BAR_UPDATE_INTERVAL : 2000,
-	
-	handleFailure : function (data, e) {
+
+	handleFailure : function(data, e) {
 		this.stopProgress();
 		var messageArea = Ext.get("messages");
 		if (messageArea) {
@@ -42,89 +43,97 @@ Ext.extend(progressbar, Ext.util.Observable, {
 				messageText = data.description;
 			} else if (!e) {
 				messageText = data;
-			} else if  (e.message) {
+			} else if (e.message) {
 				messageText = e.message;
 			} else {
 				messageText = e;
 			}
-	       this.fireEvent("fail", messageText);
+			this.fireEvent("fail", messageText);
 		} else {
 			this.fireEvent('fail');
 		}
 	},
-	
 
 	/**
 	 * Start the progressbar in motion.
 	 */
-	startProgress : function () {
-	   if (this.determinate == 0){
+	startProgress : function() {
+		if (this.determinate == 0) {
 			document.getElementById("progressTextArea").innerHTML = "Starting job...";
 		} else {
-//			document.getElementById("progressTextArea").value = "Please wait...";
+			// document.getElementById("progressTextArea").value = "Please
+			// wait...";
 		}
-		
-		var callParams = [dwr.util.getValue("taskId")];
-		var callback = this.updateProgress.createDelegate(this, [], true) ;
-		var errorHandler = this.handleFailure.createDelegate(this, [], true) ;
+
+		if (!this.taskId) {
+			alert("no task id");
+			return;
+		}
+		var callParams = [];
+		var callback = this.updateProgress.createDelegate(this);
+		var errorHandler = this.handleFailure.createDelegate(this);
 		callParams.push(callback);
 		callParams.push(errorHandler);
 		var f = this.refreshProgress.createDelegate(this, callParams, false);
 		this.timeoutid = window.setInterval(f, this.BAR_UPDATE_INTERVAL);
 	},
-	
-	
-	stopProgress : function () {
-	    window.clearInterval(this.timeoutid);
+
+	stopProgress : function() {
+		window.clearInterval(this.timeoutid);
 		Ext.DomHelper.overwrite("progress-area", "");
-	    this.previousMessage = null;
-	    this.waiting = false;
-	},
-	
-	
-	/* Private
-	 * Callback for DWR
-	 * @param {Object} data
-	 */
-	updateProgress : function (data) {	 
+		this.previousMessage = null;
 		this.waiting = false;
-	 	if (this.determinate == 1) {
-	 		this.updateDeterminateProgress(data);
-	 	} else { 
-	 		this.updateIndeterminateProgress(data);
+	},
+
+	/*
+	 * Private Callback for DWR @param {Object} data
+	 */
+	updateProgress : function(data) {
+		this.waiting = false;
+		if (this.determinate == 1) {
+			this.updateDeterminateProgress(data);
+		} else {
+			this.updateIndeterminateProgress(data);
 		}
 	},
-	
-	updateDeterminateProgress : function (data){
+
+	updateDeterminateProgress : function(data) {
 		var messages = "";
 		var percent = 0;
 		if (data.push) {
-			for(var i = 0, len = data.length; i < len; i++) {
+			for (var i = 0, len = data.length; i < len; i++) {
 				var d = data[i];
 				messages = messages + "<br/>" + d.description;
 				delta = d.percent - percent;
 				percent = d.percent; // use last value.
-				
+
 				if (delta > 5) {
-			//		document.getElementById("progressTextArea").innerHTML = messages + " " + percent + "%";
-					document.getElementById("progress-bar-box-content").style.width = parseInt(percent * detbarwidth/100) + "px";
+					// document.getElementById("progressTextArea").innerHTML =
+					// messages + " " + percent + "%";
+					document.getElementById("progress-bar-box-content").style.width = parseInt(percent
+							* detbarwidth / 100)
+							+ "px";
 				}
-				
+
 				if (d.failed) {
 					this.stopProgress();
-					return  this.handleFailure(d);
+					return this.handleFailure(d);
 				} else if (d.done) {
 					this.fireEvent('done', d.payload);
 					this.stopProgress();
-					if ( this.doFoward &&  d.forwardingURL !== undefined && d.forwardingURL !== null) {
-					  	window.location = d.forwardingURL + "?taskId=" + dwr.util.getValue("taskId");
-					}  else {
-						var callback = this.maybeDoForward.createDelegate(this, [], true) ;
-						TaskCompletionController.checkResult(dwr.util.getValue("taskId"), callback);
+					if (this.doFoward && d.forwardingURL !== undefined
+							&& d.forwardingURL !== null) {
+						window.location = d.forwardingURL + "?taskId="
+								+ this.taskId;
+					} else {
+						var callback = this.maybeDoForward.createDelegate(this,
+								[], true);
+						TaskCompletionController.checkResult(this.taskId,
+								callback);
 					}
 					return;
 				}
-			}	
+			}
 		} else {
 			if (data.done) {
 				this.stopProgress();
@@ -135,22 +144,25 @@ Ext.extend(progressbar, Ext.util.Observable, {
 			}
 			percent = data.percent;
 		}
-	
-	//	document.getElementById("progressTextArea").innerHTML = messages + " " + percent + "%";
-		document.getElementById("progress-bar-box-content").style.width = parseInt(percent * this.detbarwidth/100) + "px";
+
+		// document.getElementById("progressTextArea").innerHTML = messages + "
+		// " + percent + "%";
+		document.getElementById("progress-bar-box-content").style.width = parseInt(percent
+				* this.detbarwidth / 100)
+				+ "px";
 	},
 
 	maybeDoForward : function(url) {
 		if (this.doForward && url) {
 			window.location = url;
-		}	
+		}
 	},
-			
-	updateIndeterminateProgress : function (data){
+
+	updateIndeterminateProgress : function(data) {
 
 		var messages = "";
 		if (data.push) {
-			for(var i = 0, len = data.length; i < len; i++) {
+			for (var i = 0, len = data.length; i < len; i++) {
 				var d = data[i];
 				messages = messages + "<br/>" + d.description;
 				if (d.failed) {
@@ -159,16 +171,23 @@ Ext.extend(progressbar, Ext.util.Observable, {
 				} else if (d.done) {
 					this.fireEvent('done', d.payload);
 					this.stopProgress();
-					if ( this.doFoward &&   d.forwardingURL !== undefined &&  d.forwardingURL !== null ) {
-				  		window.location = d.forwardingURL + "?taskId=" + dwr.util.getValue("taskId");
-					}  else {
-						var callback = this.maybeDoForward.createDelegate(this, [], true) ;
-					    var errorHandler = this.handleFailure.createDelegate(this, [], true) ;
-						TaskCompletionController.checkResult(dwr.util.getValue("taskId"), {callback:callback, errorHandler:errorHandler});
+					if (this.doFoward && d.forwardingURL !== undefined
+							&& d.forwardingURL !== null) {
+						window.location = d.forwardingURL + "?taskId="
+								+ this.taskId;
+					} else {
+						var callback = this.maybeDoForward.createDelegate(this,
+								[], true);
+						var errorHandler = this.handleFailure.createDelegate(
+								this, [], true);
+						TaskCompletionController.checkResult(this.taskId, {
+							callback : callback,
+							errorHandler : errorHandler
+						});
 					}
 					return;
 				}
-			}	
+			}
 		} else {
 			if (data.done) {
 				this.stopProgress();
@@ -178,86 +197,89 @@ Ext.extend(progressbar, Ext.util.Observable, {
 				this.stopProgress();
 			}
 		}
-		
-		if (!document.getElementById("progressTextArea")) return;
-	
-	   if (this.previousMessage != messages && messages.length > 0 ) {
+
+		if (!document.getElementById("progressTextArea"))
+			return;
+
+		if (this.previousMessage != messages && messages.length > 0) {
 			this.previousMessage = messages;
-			document.getElementById("progressTextArea").innerHTML +=   messages;	
-	   		document.getElementById("progressTextArea").scrollTop = document.getElementById("progressTextArea").scrollHeight;
-		} else{
-			document.getElementById("progressTextArea").innerHTML += ".";	
-	   		document.getElementById("progressTextArea").scrollTop = document.getElementById("progressTextArea").scrollHeight;	
+			document.getElementById("progressTextArea").innerHTML += messages;
+			document.getElementById("progressTextArea").scrollTop = document
+					.getElementById("progressTextArea").scrollHeight;
+		} else {
+			document.getElementById("progressTextArea").innerHTML += ".";
+			document.getElementById("progressTextArea").scrollTop = document
+					.getElementById("progressTextArea").scrollHeight;
 		}
 	},
 
-	
-	/* Private
-	 * Send a cancel notification to the server.
+	/*
+	 * Private Send a cancel notification to the server.
 	 */
-	cancelJob : function () {
+	cancelJob : function() {
 		this.waiting = false;
-		var taskId = dwr.util.getValue("taskId");
 		document.getElementById("progressTextArea").innerHTML = "Cancelling...";
-		var f =  this.cancelCallback.createDelegate(this, [], true);
-		ProgressStatusService.cancelJob(taskId, f);
+		var f = this.cancelCallback.createDelegate(this, [], true);
+		ProgressStatusService.cancelJob(this.taskId, f);
 	},
-	
-	/* Private
-	 * Check for status from server.
+
+	/*
+	 * Private Check for status from server.
 	 */
-	refreshProgress : function (taskId, callback, errorHandler) {
+	refreshProgress : function(callback, errorHandler) {
 		// only check for status if we aren't already waiting for a reply.
-		if (!this.waiting) { 
-			ProgressStatusService.getProgressStatus(taskId, {callback:callback, errorHandler:errorHandler});
+		if (!this.waiting) {
+			ProgressStatusService.getProgressStatus(this.taskId, {
+				callback : callback,
+				errorHandler : errorHandler
+			});
 			this.waiting = true;
 		}
 	},
-	
-	/* Private
-	 * Callback to handle cancellation
-	 * @param {Object} data
+
+	/*
+	 * Private Callback to handle cancellation @param {Object} data
 	 */
-	cancelCallback : function (data)  {
+	cancelCallback : function(data) {
 		this.stopProgress();
 		var messageArea = Ext.get("messages");
 		if (messageArea) {
-			Ext.DomHelper.overwrite("messages", {tag : 'img', src:'/Gemma/images/icons/ok.png' });  
+			Ext.DomHelper.overwrite("messages", {
+				tag : 'img',
+				src : '/Gemma/images/icons/ok.png'
+			});
 			Ext.DomHelper.append("messages", "&nbsp;Job was cancelled.");
 		}
-		this.fireEvent('cancel');	
-		
+		this.fireEvent('cancel');
+
 	},
-			
-			
+
 	/**
 	 * Create a progress bar that has no fixed endpoint
 	 */
-	createIndeterminateProgressBar : function (params) {
+	createIndeterminateProgressBar : function() {
 		this.determinate = 0;
-		this.bar= this.createIndeterminateBarDetails();
+		this.bar = this.createIndeterminateBarDetails();
 		f = this.cancelJob.createDelegate(this, [], true);
 		Ext.get("cancel-button").on('click', f);
 	},
-	
-
 
 	/**
 	 * Create a progress bar that has a known endpoint
 	 */
-	createDeterminateProgressBar : function (){
+	createDeterminateProgressBar : function() {
 		this.determinate = 1;
-		var div = '<div style="width:350px;margin:10px;">	<input style="float:left;margin:0px;" type="button" id="cancel-button" name="Cancel" value="Cancel job" />	<div id="progbar" style="margin:5px;width:' + detbarwidth + 'x;float:right;border:1px solid;">		<div id="progress-bar-box-content" style="float:left;height:10px;width:40px;">		</div>	</div></div>'
+		var div = '<div style="width:350px;margin:10px;">	<input style="float:left;margin:0px;" type="button" id="cancel-button" name="Cancel" value="Cancel job" />	<div id="progbar" style="margin:5px;width:'
+				+ detbarwidth
+				+ 'x;float:right;border:1px solid;">		<div id="progress-bar-box-content" style="float:left;height:10px;width:40px;">		</div>	</div></div>'
 		Ext.DomHelper.overwrite("progress-area", div);
-	 	f = this.cancelJob.createDelegate(this, [], true);
+		f = this.cancelJob.createDelegate(this, [], true);
 		Ext.get("cancel-button").on('click', f);
 	},
-	
-	 
-	createIndeterminateBarDetails : function (){
+
+	createIndeterminateBarDetails : function() {
 		var div = '<div id="progressTextArea" class="clob" style="font-size:smaller;width:650px;margin:10px;padding:4px;" ><input type="textarea" /></div><div style="width:650px;"><input style="float:left" type="button" id="cancel-button" name="Cancel" value="Cancel job" /><img style="float:right" src="/Gemma/images/default/basic-dialog/progress2.gif" /></div>';
 		Ext.DomHelper.overwrite("progress-area", div);
-	} 
-	
- 
+	}
+
 });

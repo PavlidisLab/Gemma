@@ -51,7 +51,6 @@
 	<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
 </authz:authorize>
 <div id="messages" style="margin: 10px; width: 400px"></div>
-<div id="taskId" style="display: none;"></div>
 <div id="progress-area"></div>
 
 <form style="float: right;" name="ExpresssionExperimentFilter" action="filterExpressionExperiments.html" method="POST">

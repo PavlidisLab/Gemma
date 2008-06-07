@@ -1,12 +1,11 @@
 function handleFailure(data, e) {
-	Ext.DomHelper.overwrite("taskId", "");
 	Ext.DomHelper.overwrite("messages", {
 		tag : 'img',
 		src : '/Gemma/images/icons/warning.png'
 	});
 	Ext.DomHelper.append("messages", {
 		tag : 'span',
-		html : "&nbsp;There was an error:<br/>" + data + e
+		html : "&nbsp;There was an error:<br/>" + data + " " + (e ? e : "")
 	});
 }
 
@@ -19,14 +18,11 @@ function handleDoneGeneratingFile(data) {
 /*
  * Handler for after the data file creation has been initiated.
  */
-function handleFetchSuccess(data) {
+function handleStartSuccess(taskId) {
 	try {
-		taskId = data;
 		Ext.DomHelper.overwrite("messages", "");
-		Ext.DomHelper.overwrite("taskId",
-				"<input type = 'hidden' name='taskId' id='taskId' value= '"
-						+ taskId + "'/> ");
 		var p = new progressbar({
+			taskId : taskId,
 			doForward : true
 		});
 		p.createIndeterminateProgressBar();
@@ -34,6 +30,7 @@ function handleFetchSuccess(data) {
 		p.on('done', handleDoneGeneratingFile);
 		p.startProgress();
 	} catch (e) {
+		alert("error: " + e);
 		handleFailure(data, e);
 		return;
 	}
@@ -54,11 +51,12 @@ function fetchData(filter, eeId, formatType, qtId, eeDId) {
 
 	callParams.push(commandObj);
 
-	var delegate = handleFetchSuccess.createDelegate(this, [], true);
-	var errorHandler = handleFailure.createDelegate(this, [], true);
+	// callback is just for initiating the process.
+	var cb = handleStartSuccess;
+	var errorHandler = handleFailure;
 
 	callParams.push({
-		callback : delegate,
+		callback : cb,
 		errorHandler : errorHandler
 	});
 

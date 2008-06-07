@@ -1,5 +1,4 @@
 function handleFailure(data, e) {
-	Ext.DomHelper.overwrite("taskId", "");
 	Ext.DomHelper.overwrite("messages", {
 		tag : 'img',
 		src : '/Gemma/images/icons/warning.png'
@@ -51,14 +50,13 @@ function handleNewAlternateName(data) {
 	Ext.DomHelper.overwrite("alternate-names", data);
 }
 
-function handleReportUpdateSuccess(data) {
+function handleReportUpdateSuccess(taskId) {
 	try {
-		taskId = data;
+
 		Ext.DomHelper.overwrite("messages", "");
-		Ext.DomHelper.overwrite("taskId",
-				"<input type = 'hidden' name='taskId' id='taskId' value= '"
-						+ taskId + "'/> ");
-		var p = new progressbar();
+		var p = new progressbar({
+			taskId : taskId
+		});
 		p.createIndeterminateProgressBar();
 		p.on('fail', handleFailure);
 		p.on('cancel', reset);

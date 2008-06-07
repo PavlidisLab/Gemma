@@ -39,7 +39,6 @@
 </h2>
 
 <div id="messages" style="margin: 10px; width: 400px"></div>
-<div id="taskId" style="display: none;"></div>
 <div id="progress-area"></div>
 
 <!--  Summary of array design associations -->
