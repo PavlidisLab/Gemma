@@ -1,7 +1,6 @@
 <%@ include file="/common/taglibs.jsp"%>
 <head>
-	<title><fmt:message key="mainMenu.title" />
-	</title>
+	<title><fmt:message key="mainMenu.title" /></title>
 	<script src="<c:url value='/scripts/ext/adapter/ext/ext-base.js'/>" type="text/javascript"></script>
 	<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
 
@@ -12,12 +11,14 @@
 
 	<script type='text/javascript' src='/Gemma/dwr/interface/GenePickerController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/ExtCoexpressionSearchController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentSetController.js'></script>
 
 	<script type='text/javascript' src='/Gemma/scripts/ajax/util/GemmaGridPanel.js'></script>
-	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/GeneCombo.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/TaxonCombo.js'></script>
 
-	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/AnalysisCombo.js'></script>
+	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/GeneCombo.js'></script>
+
+	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/DatasetChooserPanel.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionSearchFormLite.js'></script>
 	<script type="text/javaScript" src="<c:url value='/scripts/rounded_corners_lite.inc.js'/>"></script>
 
@@ -191,7 +192,7 @@
 
 <div id="coexpression-form"></div>
 
-<div id="sampleQueries" style="padding: 4px;width:250px;">
+<div id="sampleQueries" style="padding: 4px; width: 250px;">
 	Examples: rat
 	<a href="<c:url value="/searchCoexpression.html?g=938103&amp;a=706" />">Ddn</a>; mouse
 	<a href="<c:url value="/searchCoexpression.html?g=598735&amp;s=3&amp;a=708" />">Mapk3</a>

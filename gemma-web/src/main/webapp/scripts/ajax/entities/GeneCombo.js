@@ -19,15 +19,12 @@ Ext.Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 	loadingText : 'Searching...',
 	minChars : 1,
 	selectOnFocus : true,
+
 	record : Ext.data.Record.create([{
 		name : "id",
 		type : "int"
 	}, {
-		name : "taxon",
-		type : "string",
-		convert : function(t) {
-			return t.scientificName;
-		}
+		name : "taxon"
 	}, {
 		name : "officialSymbol",
 		type : "string"
@@ -38,7 +35,7 @@ Ext.Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 
 	initComponent : function() {
 
-		var template = new Ext.XTemplate('<tpl for="."><div ext:qtip="{officialName} ({taxon})" class="x-combo-list-item">{officialSymbol} {officialName} ({taxon})</div></tpl>');
+		var template = new Ext.XTemplate('<tpl for="."><div ext:qtip="{officialName} ({taxon.scientificName})" class="x-combo-list-item">{officialSymbol} {officialName} ({taxon.scientificName})</div></tpl>');
 
 		Ext.apply(this, {
 			tpl : template,
@@ -67,16 +64,11 @@ Ext.Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 
 	onSelect : function(record, index) {
 		Ext.Gemma.GeneCombo.superclass.onSelect.call(this, record, index);
-		this.setGene(record.data);
-		if (record.data.id != this.selectedGene.id) {
-			this.selectedGene = record.data;
+
+		if (this.selectedGene && record.data.id != this.selectedGene.id) {
+			this.setGene(record.data);
 			this.fireEvent('genechanged', this, this.selectedGene);
 		}
-	},
-
-	reset : function() {
-		Ext.Gemma.GeneCombo.superclass.reset.call(this);
-		this.setGene(null);
 	},
 
 	getParams : function(query) {
@@ -88,11 +80,12 @@ Ext.Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 
 	setGene : function(gene) {
-		this.selectedGene = gene;
 		if (this.tooltip) {
 			this.tooltip.destroy();
 		}
 		if (gene) {
+			this.selectedGene = gene;
+			this.taxon = gene.taxon;
 			this.tooltip = new Ext.ToolTip({
 				target : this.getEl(),
 				html : String.format('{0} ({1})', gene.officialName
@@ -106,13 +99,14 @@ Ext.Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 
 	setTaxon : function(taxon) {
-		this.taxon = taxon;
-		// If taxon has changed, clear.
-		if (this.selectedGene && this.selectedGene.taxon.id != taxon.id) {
-			this.setGene(null);
+		if (this.taxon && this.taxon.id != taxon.id) {
+			delete this.selectedGene;
+			if (this.tooltip) {
+				this.tooltip.destroy();
+			}
 			this.reset();
-			this.lastQuery = '';
 		}
+		this.taxon = taxon;
 	}
 
 });

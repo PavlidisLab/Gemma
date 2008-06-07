@@ -29,23 +29,38 @@ Ext.Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 	border : false,
 	width : 220,
 
+	setState : function(state) {
+		if (this.ready) {
+			this.selectById(state);
+		} else {
+			this.storedState = state;
+		}
+	},
+
+	restoreState : function() {
+		if (this.storedState) {
+			this.selectById(this.storedState);
+			delete this.storedState;
+		}
+		this.ready = true;
+	},
+
 	getSelected : function() {
 		return this.store.getSelected();
 	},
 
 	selectById : function(id) {
-		var index = this.store.findBy(function(record, i) {
-			return record.get("id") === id;
-		});
-		var rec = this.store.getAt(rec);
-		this.store.select(rec);
+		this.combo.setValue(id);
+		this.store.selected = this.store.getById(id);
+	//	Ext.log(this.store.selected.get("name"));
 	},
 
 	selectByName : function(name) {
 		var index = this.store.findBy(function(record, i) {
-			return record.get("name") === name;
+			return record.get("name") == name;
 		});
-		var rec = this.store.getAt(rec);
+		var rec = this.store.getAt(index);
+		this.combo.setValue(rec.get("id"));
 		this.store.select(rec);
 	},
 
@@ -80,6 +95,8 @@ Ext.Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 			this.combo.setValue(sel.get("name"));
 			this.fireEvent('set-chosen', sel);
 		}.createDelegate(this));
+
+		this.store.on("load", this.restoreState.createDelegate(this));
 
 	},
 
@@ -158,6 +175,7 @@ Ext.Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 		this.on("select", function(cb, rec, index) {
 			this.store.setSelected(rec);
 		});
+
 	}
 
 });
@@ -186,6 +204,8 @@ Ext.Gemma.ExpressionExperimentSetStore = function(config) {
 	}, {
 		name : "taxon"
 	}]);
+
+	this.addEvents('ready');
 
 	this.readMethod = ExpressionExperimentSetController.getAvailableExpressionExperimentSets;
 
@@ -220,6 +240,7 @@ Ext.extend(Ext.Gemma.ExpressionExperimentSetStore, Ext.data.Store, {
 			// Ext.log("Add " + recs.length + " from cookie");
 			this.add(recs);
 		}
+		this.fireEvent("ready");
 	},
 
 	cookieSaveOrUpdateEESet : function(rec) {

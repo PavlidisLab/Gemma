@@ -47,11 +47,9 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 	},
 
 	restoreState : function() {
-
 		var queryStart = document.URL.indexOf("?");
-		Ext.log("restoring state, url= " + document.URL);
-
 		if (queryStart > -1) {
+			Ext.log("Loading from url= " + document.URL);
 			this.initializeFromQueryString(document.URL.substr(queryStart + 1));
 		} else if (this.csc && queryStart < 0) {
 			this.initializeFromCoexpressionSearchCommand(this.csc);
@@ -91,7 +89,6 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 	 * @return {}
 	 */
 	getCoexpressionSearchCommandFromQuery : function(query) {
-		Ext.log("Parse url");
 		var param = Ext.urlDecode(query);
 		var eeQuery = param.eeq || "";
 		var ees;
@@ -113,7 +110,7 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 			csc.eeIds = param.ees.split(',');
 		}
 
-		if (param.eeSetId) {
+		if (param.a) {
 			csc.eeSetId = param.a;
 		} else {
 			csc.eeSetId = -1;
@@ -134,10 +131,10 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 	initializeGenes : function(csc, doSearch) {
 		if (csc.geneIds.length > 1) {
 			this.geneChooserPanel.loadGenes(csc.geneIds, this.maybeDoSearch
-					.createDelegate(this), doSearch);
+					.createDelegate(this, [csc, doSearch]));
 		} else {
 			this.geneChooserPanel.setGene(csc.geneIds[0], this.maybeDoSearch
-					.createDelegate(this), doSearch);
+					.createDelegate(this, [csc, doSearch]));
 		}
 	},
 
@@ -146,7 +143,6 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 	 * asynchronously... so do the search after it is done
 	 */
 	initializeFromCoexpressionSearchCommand : function(csc, doSearch) {
-		Ext.log("initialize");
 		this.geneChooserPanel = Ext.getCmp('gene-chooser-panel');
 		this.stringencyField = Ext.getCmp('stringencyfield');
 
@@ -157,9 +153,10 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 		}
 
 		if (csc.eeSetId >= 0) {
-			this.eeSetChooserPanel.selectById(csc.eeSetId);
-		} else {
-			this.eeSetChooserPanel.selectByName(csc.eeSetName);
+			this.eeSetChooserPanel.setState(csc.eeSetId);
+		} else if (csc.eeSetName) {
+			this.eeSetChooserPanel.setState(csc.eeSetName); // FIXME this won't
+															// work, expects id.
 		}
 
 		if (csc.stringency) {
@@ -171,10 +168,9 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 		}
 	},
 
-	maybeDoSearch : function(doit) {
-		Ext.log("dosearch");
+	maybeDoSearch : function(csc, doit) {
 		if (doit) {
-			this.doSearch();
+			this.doSearch(csc);
 		}
 	},
 
@@ -210,8 +206,10 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 		return url;
 	},
 
-	doSearch : function() {
-		var csc = this.getCoexpressionSearchCommand();
+	doSearch : function(csc) {
+		if (!csc) {
+			csc = this.getCoexpressionSearchCommand();
+		}
 		this.clearError();
 		var msg = this.validateSearch(csc);
 		if (msg.length === 0) {
@@ -254,7 +252,7 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 			return "Minimum stringency is " + Ext.Gemma.MIN_STRINGENCY;
 		} else if (csc.eeIds && csc.eeIds.length < 1) {
 			return "There are no datasets that match your search terms";
-		} else if (!csc.eeIds && !csc.cannedAnalysisId) {
+		} else if (!csc.eeIds && !csc.eeSetId) {
 			return "Please select an analysis";
 		} else {
 			return "";
@@ -321,6 +319,9 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 			this.geneChooserPanel.taxonChanged(this.currentSet.get("taxon"));
 		}.createDelegate(this));
 
+		this.eeSetChooserPanel.store.on("ready", this.restoreState
+				.createDelegate(this));
+
 		Ext.apply(this, {
 
 			items : [{
@@ -365,6 +366,7 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 		});
 		Ext.Gemma.CoexpressionSearchForm.superclass.initComponent.call(this);
 		this.addEvents('beforesearch', 'aftersearch');
+
 	}
 
 });

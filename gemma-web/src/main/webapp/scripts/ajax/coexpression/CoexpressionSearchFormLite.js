@@ -33,32 +33,36 @@ Ext.Gemma.CoexpressionSearchFormLite = Ext.extend(Ext.FormPanel, {
 
 		this.geneCombo.on("focus", this.clearMessages, this);
 
-		this.analysisCombo = new Ext.Gemma.AnalysisCombo({
-			hiddenName : 'a',
-			id : 'analysis-combo',
+		this.store = new Ext.Gemma.ExpressionExperimentSetStore();
+
+		this.eeSetCombo = new Ext.Gemma.ExpressionExperimentSetCombo({
+			width : 175,
 			fieldLabel : 'Select search scope',
-			showCustomOption : false,
-			width : 200
+			store : this.store
 		});
 
-		this.analysisCombo.on("analysischanged", function(combo, analysis) {
+		this.eeSetCombo.on("select", function(combo, eeSet) {
 			this.clearMessages();
-			if (analysis && analysis.taxon) {
-				this.taxonChanged(analysis.taxon);
+			this.selected = eeSet;
+			if (eeSet && eeSet.get("taxon")) {
+				this.taxonChanged(eeSet.get("taxon"));
 			}
 		}, this);
 
 		var submitButton = new Ext.Button({
 			text : "Find coexpressed genes",
 			handler : function() {
-				var msg = this.validateSearch(this.geneCombo.getValue(),
-						this.analysisCombo.getValue());
+				var msg = this.validateSearch(this.geneCombo.getValue());
 				if (msg.length === 0) {
-					document.location.href = String.format(
-							"/Gemma/searchCoexpression.html?g={0}&a={1}&s={2}",
-							this.geneCombo.getValue(), this.analysisCombo
-									.getValue(), this.stringencyField
-									.getValue());
+					// FIXME add the eeids if the eesetid is -1.
+					var eeSetId = this.selected.get("id");
+					var eeIds = this.selected.get("expressionExperimentIds")
+							.join(",");
+					document.location.href = String
+							.format(
+									"/Gemma/searchCoexpression.html?g={0}&a={1}&s={2}&ees={3}",
+									this.geneCombo.getValue(), eeSetId,
+									this.stringencyField.getValue(), eeIds);
 				} else {
 					this.handleError(msg);
 				}
@@ -67,7 +71,7 @@ Ext.Gemma.CoexpressionSearchFormLite = Ext.extend(Ext.FormPanel, {
 
 		this.add(this.stringencyField);
 		this.add(this.geneCombo);
-		this.add(this.analysisCombo);
+		this.add(this.eeSetCombo);
 		this.addButton(submitButton);
 	},
 
@@ -94,7 +98,8 @@ Ext.Gemma.CoexpressionSearchFormLite = Ext.extend(Ext.FormPanel, {
 	getCoexpressionSearchCommand : function() {
 		var csc = {
 			geneIds : [this.geneCombo.getValue()],
-			analysisId : this.analysisCombo.getValue(),
+			analysisId : this.eeSetChooserPanel.getSelected().get("id")
+					.getValue(),
 			stringency : this.stringencyField.getValue()
 		};
 		return csc;
@@ -102,21 +107,23 @@ Ext.Gemma.CoexpressionSearchFormLite = Ext.extend(Ext.FormPanel, {
 
 	initializeFromCoexpressionSearchCommand : function(csc) {
 		if (csc.cannedAnalysisId > -1) {
-			this.analysisCombo.setState(csc.cannedAnalysisId);
+			// this.eeSetChooserPanel.getSelected().get("id").setState(csc.cannedAnalysisId);
 		}
 		if (csc.stringency) {
 			this.stringencyField.setValue(csc.stringency);
 		}
 	},
 
-	validateSearch : function(gene, analysis) {
+	validateSearch : function(gene) {
 		if (!gene || gene.length === 0) {
 			return "Please select a valid query gene";
-		} else if (!analysis) {
-			return "Please select an analysis";
-		} else {
-			return "";
 		}
+		// else if (!analysis) {
+		// return "Please select an analysis";
+		// } else {
+		// return "";
+		// }
+		return "";
 	},
 
 	handleError : function(msg, e) {

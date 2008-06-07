@@ -144,20 +144,20 @@ public class CoexpressionSearchController extends BaseFormController {
                 log.warn( "invalid stringency; using default " + stringency );
             }
 
-            Long cannedAnalysisId = null;
-            String cannedAnalysisString = request.getParameter( "a" );
-            if ( StringUtils.isNotBlank( cannedAnalysisString ) ) {
+            Long eeSetId = null;
+            String eeSetIdString = request.getParameter( "a" );
+            if ( StringUtils.isNotBlank( eeSetIdString ) ) {
                 try {
-                    cannedAnalysisId = Long.parseLong( cannedAnalysisString );
+                    eeSetId = Long.parseLong( eeSetIdString );
                 } catch ( NumberFormatException e ) {
-                    log.warn( "Invalid canned analysis id: " + cannedAnalysisString );
+                    log.warn( "Invalid eeSet id: " + eeSetIdString );
                     return new ModelAndView( this.getFormView() );
                 }
             }
 
             CoexpressionMetaValueObject result;
-            if ( cannedAnalysisId != null ) {
-                result = geneCoexpressionService.getCannedAnalysisResults( cannedAnalysisId, genes, stringency, 500,
+            if ( eeSetId != null ) {
+                result = geneCoexpressionService.getCannedAnalysisResults( eeSetId, genes, stringency, 500,
                         queryGenesOnly );
             } else {
                 Collection<Long> eeIds = extractIds( request.getParameter( "ee" ) );
