@@ -236,7 +236,6 @@
         <property name="taxonService" ref="taxonService"/>
         <property name="geneService" ref="geneService"/>
         <property name="geneCoexpressionService" ref="geneCoexpressionService"/>
-        <property name="geneCoexpressionAnalysisService" ref="geneCoexpressionAnalysisService"/>
         <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
     </bean>
     
