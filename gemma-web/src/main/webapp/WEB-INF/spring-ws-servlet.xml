@@ -50,7 +50,10 @@
 				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}probe2Gene">probe2GeneEndpoint</prop>
 
 				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}gene2Probe">gene2ProbeEndpoint</prop>
-
+				
+				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}expressionExperimentSetIDs">expressionExperimentSetIDsEndpoint</prop>
+				
+				
           	</props>
          </property>
          
@@ -247,7 +250,7 @@
     
     <bean id="gene2ProbeEndpoint" class="ubic.gemma.web.services.Gene2ProbeEndpoint">
         <description>
-				returns mapping of experiment to its characteristics
+				returns mapping of gene to probes
         </description>
         <property name="compositeSequenceService" ref="compositeSequenceService"/>
         <property name="taxonService" ref="taxonService"/>
@@ -257,12 +260,20 @@
     
     <bean id="probe2GeneEndpoint" class="ubic.gemma.web.services.Probe2GeneEndpoint">
         <description>
-				returns mapping of experiment to its characteristics
+				returns mapping of probes to genes
         </description>
         <property name="compositeSequenceService" ref="compositeSequenceService"/>
         <property name="arrayDesignService" ref="arrayDesignService"/>
         <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
     </bean>
     
-
+    <bean id="expressionExperimentSetIDsEndpoint" class="ubic.gemma.web.services.ExpressionExperimentSetIDsEndpoint">
+        <description>
+				returns all the expression experiment set ids in the database along with its name and containing experiment ids 
+        </description>
+        <property name="taxonService" ref="taxonService"/>
+        <property name="expressionExperimentSetService" ref="expressionExperimentSetService"/>
+        <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
+    </bean>
+   
 </beans>
