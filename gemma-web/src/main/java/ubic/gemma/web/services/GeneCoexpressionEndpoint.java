@@ -19,8 +19,8 @@
 
 package ubic.gemma.web.services;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -31,9 +31,7 @@ import org.w3c.dom.Element;
 import ubic.gemma.analysis.expression.coexpression.CoexpressionMetaValueObject;
 import ubic.gemma.analysis.expression.coexpression.CoexpressionValueObjectExt;
 import ubic.gemma.analysis.expression.coexpression.GeneCoexpressionService;
-import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
-import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionVirtualAnalysis;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
@@ -59,8 +57,6 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
 
     private GeneCoexpressionService geneCoexpressionService;
 
-    private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
-
     /**
      * The local name of the expected request/response.
      */
@@ -80,10 +76,7 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
         this.geneService = geneS;
     }
 
-    public void setgeneCoexpressionAnalysisService( GeneCoexpressionAnalysisService geneCoexpressionAnalysisService ) {
-        this.geneCoexpressionAnalysisService = geneCoexpressionAnalysisService;
-    }
-
+ 
     public void setgeneCoexpressionService( GeneCoexpressionService geneCoexpressionService ) {
         this.geneCoexpressionService = geneCoexpressionService;
     }
@@ -102,25 +95,39 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
         
         setLocalName( LOCAL_NAME );
 
-        Collection<String> geneResults = getNodeValues( requestElement, "gene_id" );
-        String geneId = "";
-        for ( String id : geneResults ) {
-            geneId = id;
-        }
-
-        Collection<String> taxonResults = getNodeValues( requestElement, "taxon_id" );
+        Collection<String> geneInput = getArrayValues( requestElement, "gene_id" );        
+        Collection<Long> geneIDLong = new HashSet<Long>();
+        for ( String id : geneInput )
+            geneIDLong.add( Long.parseLong( id ) );
+        
+        Collection<String> taxonInput = getNodeValues( requestElement, "taxon_id" );
         String taxonId = "";
-        for ( String id : taxonResults ) {
+        for ( String id : taxonInput ) {
             taxonId = id;
         }
 
-        Collection<String> stringencyResults = getNodeValues( requestElement, "stringency" );
+        Collection<String> analysisInput = getNodeValues( requestElement, "expression_experiment_set_id" );
+        String analysisId = "";
+        for ( String id : analysisInput ) {
+            analysisId = id;
+        }
+        
+        Collection<String> stringencyInput = getNodeValues( requestElement, "stringency" );
         String string = "";
-        for ( String id : stringencyResults ) {
+        for ( String id : stringencyInput ) {
             string = id;
         }
-
-        log.info( "XML input read: gene id, "+geneId+" & taxon id, "+taxonId+" & stringency, "+string );
+        
+        Collection<String> queryGenesOnlyInput = getNodeValues( requestElement, "queryGenesOnly");
+        String query = "";
+        for (String id : queryGenesOnlyInput)
+            query = id;
+        boolean queryGenesOnly = false; 
+        if (query.endsWith( "1" ))
+            queryGenesOnly = true;
+       
+        
+        log.info( "XML input read: "+geneInput.size()+" gene ids,  & taxon id, "+taxonId+" & stringency, "+string+ " & queryGenesOnly="+ query);
         
         Taxon taxon = taxonService.load( Long.parseLong( taxonId ) );
         if ( taxon == null ) {
@@ -128,41 +135,41 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
             return buildBadResponse( document, msg );
         }
         
-        Gene gene = geneService.load( Long.parseLong( geneId ) );
-        if ( gene == null ) {
-            String msg = "No gene with id, " + geneId + ", can be found.";
+        Collection<Gene> geneCol = geneService.loadMultiple( geneIDLong );
+        if ( geneCol == null ) {
+            String msg = "None of the gene id's can be found.";
             return buildBadResponse( document, msg );
         }
-        Collection<Gene> genes = new ArrayList<Gene>();
-        genes.add( gene );
-        geneService.thawLite( genes );
+        
+        geneService.thawLite( geneCol );
 
         int stringency = Integer.parseInt( string );
 
-        Collection<GeneCoexpressionAnalysis> analysisCol = geneCoexpressionAnalysisService.findByTaxon( taxon );
-        GeneCoexpressionAnalysis analysis2Use = null;
-
-        // use the 1st canned analysis that isn't virtual  for the given taxon (should be the all"Taxon" analysis)
-        for ( GeneCoexpressionAnalysis analysis : analysisCol ) {
-            if (analysis instanceof GeneCoexpressionVirtualAnalysis)                
-                continue;
-            else{
-                    analysis2Use = analysis;
-                    break;
-            }
-        }
-        
+//        Collection<GeneCoexpressionAnalysis> analysisCol = geneCoexpressionAnalysisService.findByTaxon( taxon );
+//        GeneCoexpressionAnalysis analysis2Use = null;
+//
+//        // use the 1st canned analysis that isn't virtual  for the given taxon (should be the all"Taxon" analysis)
+//        for ( GeneCoexpressionAnalysis analysis : analysisCol ) {
+//            if (analysis instanceof GeneCoexpressionVirtualAnalysis)                
+//                continue;
+//            else{
+//                    analysis2Use = analysis;
+//                    break;
+//            }
+//        }
+              
         // get Gene2GeneCoexpressio objects canned analysis
-        CoexpressionMetaValueObject coexpressedGenes = geneCoexpressionService.getCannedAnalysisResults( analysis2Use
-                .getId(), genes, stringency, MAX_RESULTS, false );
+        CoexpressionMetaValueObject coexpressedGenes = geneCoexpressionService.getCannedAnalysisResults( Long.parseLong(analysisId), geneCol, stringency, MAX_RESULTS, queryGenesOnly );
 
         if ( coexpressedGenes == null || coexpressedGenes.getKnownGeneResults().isEmpty() ) {
             String msg = "No coexpressed genes can be found.";
             return buildBadResponse( document, msg );
         }
 
-        final String GENE_NAME = "gene";
+        final String QUERY_GENE_NAME = "query_gene";
+        final String FOUND_GENE_NAME = "found_gene";
         final String SUPPORT_NAME = "support";
+        final String SIGN_NAME = "sign";
         final String EEID_NAME = "eeIdList";
 
         Element responseWrapper = document.createElementNS( NAMESPACE_URI, LOCAL_NAME );
@@ -171,17 +178,39 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
 
         for ( CoexpressionValueObjectExt cvo : coexpressedGenes.getKnownGeneResults() ) {
 
-            Element e1 = document.createElement( GENE_NAME );
-            e1.appendChild( document.createTextNode( cvo.getFoundGene().getOfficialSymbol() ) );
+            Element e1 = document.createElement( QUERY_GENE_NAME );
+            e1.appendChild( document.createTextNode( cvo.getQueryGene().getOfficialSymbol() ) );
             responseElement.appendChild( e1 );
-
-            Element e2 = document.createElement( SUPPORT_NAME );
-            e2.appendChild( document.createTextNode( cvo.getSupportKey().toString() ) );
+            
+            Element e2 = document.createElement( FOUND_GENE_NAME );
+            e2.appendChild( document.createTextNode( cvo.getFoundGene().getOfficialSymbol() ) );
             responseElement.appendChild( e2 );
 
-            Element e3 = document.createElement( EEID_NAME );
-            e3.appendChild( document.createTextNode( cvo.getSupportingExperiments().toString() ) );
+            Integer support = 0;
+            String sign = "";
+            
+            if (cvo.getPosLinks() > 0){
+                support = cvo.getPosLinks();
+                sign = "+";
+            }
+            else if (cvo.getNegLinks() > 0){
+                support = cvo.getNegLinks();
+                sign = "-";
+            }
+           
+            //If it happens that a result has both neg and pos links, then the pos link and sign will be used
+            //TODO: Handle cases where a result can have both neg and pos links 
+            Element e3 = document.createElement( SUPPORT_NAME );
+            e3.appendChild( document.createTextNode( support.toString() ) );
             responseElement.appendChild( e3 );
+
+            Element e4 = document.createElement( SIGN_NAME );
+            e4.appendChild( document.createTextNode( sign ) );
+            responseElement.appendChild( e4 );
+            
+            Element e5 = document.createElement( EEID_NAME );
+            e5.appendChild( document.createTextNode( encode(cvo.getSupportingExperiments().toArray())) );
+            responseElement.appendChild( e5 );
 
         }
         watch.stop();
