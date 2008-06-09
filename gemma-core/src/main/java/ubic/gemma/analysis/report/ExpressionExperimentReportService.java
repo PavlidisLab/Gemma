@@ -371,6 +371,20 @@ public class ExpressionExperimentReportService implements ExpressionExperimentRe
         Map<Auditable, AuditEvent> events = null;
         if ( type instanceof ArrayDesignAnalysisEvent ) {
             events = expressionExperimentService.getLastArrayDesignUpdate( ees, type.getClass() );
+       
+        } else if (type instanceof TroubleStatusFlagEvent){
+            //This service unlike the others needs ids not EE objects
+            Collection<Long> eeIds = new HashSet<Long>();
+            for(ExpressionExperiment ee : ees){
+                eeIds.add( ee.getId() );
+            }
+            timer.stop();
+            if ( timer.getTime() > 1000 ) {
+                log.info( "Retrieved " + type.getClass().getSimpleName() + " in " + timer.getTime() + "ms" );
+            }
+            //This service unlike the others returns ids to events
+            return expressionExperimentService.getLastTroubleEvent( eeIds );
+            
         } else {
             events = expressionExperimentService.getLastAuditEvent( ees, type );
         }

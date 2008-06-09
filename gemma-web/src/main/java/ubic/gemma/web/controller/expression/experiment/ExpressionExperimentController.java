@@ -337,8 +337,10 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     /**
      * @param ee
      * @return
+     * 
      */
     private AuditEvent getLastTroubleEvent( ExpressionExperiment ee ) {
+        //Why doesn't this use expressionExperimentService.getLastTroubleEvent ??? 
         AuditEvent event = auditTrailService.getLastTroubleEvent( ee );
         if ( event != null ) return event;
 
