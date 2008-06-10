@@ -3,9 +3,9 @@
 	class="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" />
 <head>
 	<title>Expression experiment <%
-	    if ( expressionExperiment.getName() != null ) {
+	if ( expressionExperiment.getName() != null ) {
 	%>: <jsp:getProperty name="expressionExperiment" property="name" /> <%
-     }
+ }
  %>
 	</title>
 
@@ -13,18 +13,19 @@
 	<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
+
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/TaskCompletionController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentDataFetchController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/ProgressStatusService.js'></script>
+
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/util/GemmaGridPanel.js'/>"></script>
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/AnnotationGrid.js'/>"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/progressbar.js'/>"></script>
-	<script type='text/javascript' src="<c:url value='/scripts/ajax/expressionExperimentAnnots.js'/>"></script>
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/eeDesignMatrix.js'/>"></script>
-	<script type="text/javascript" src="<c:url value='/scripts/ajax/eeDataFetch.js'/>"></script>
+	<script type="text/javascript" src="<c:url value='/scripts/app/eeDataFetch.js'/>"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/ajax/expressionExperiment.js'/>"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/scriptaculous/effects.js'/>"></script>
 
@@ -35,13 +36,48 @@
 		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/CharacteristicCombo.js'/>"></script>
 		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/MGEDCombo.js'/>"></script>
 		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/AnnotationToolBar.js'/>"></script>
-		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/ExpressionExperimentToolBar.js'/>"></script>
-
 		<script type='text/javascript' src='/Gemma/dwr/interface/AuditController.js'></script>
-		<script type="text/javascript" src="<c:url value='/scripts/ajax/auditTrail.js'/>" type="text/javascript"></script>
+		<script type="text/javascript" src="<c:url value='/scripts/ajax/entities/AuditTrailGrid.js'/>"></script>
+		<script type="text/javascript">
+	Ext.namespace('Gemma');
+	Ext.onReady(function() {
+	var id = dwr.util.getValue("auditableId");
+ 	if (!id) { return; }
+	var clazz = dwr.util.getValue("auditableClass");
+	var auditable = {
+		id : id,
+		classDelegatingFor : clazz
+	};
+	var grid = new Gemma.AuditTrailGrid({
+		renderTo : 'auditTrail',
+		auditable : auditable
+	});
+});
+</script>
 	</authz:authorize>
 
 	<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/progressbar.css'/>" />
+
+
+	<script type="text/javascript">
+	Ext.onReady(DesignMatrix.init, DesignMatrix);
+	Ext.onReady(function() {
+	var eeId = dwr.util.getValue("eeId");
+	var eeClass = dwr.util.getValue("eeClass");
+	var admin = dwr.util.getValue("hasAdmin");
+
+	var grid = new Ext.Gemma.AnnotationGrid( { renderTo : "eeAnnotations",
+				readMethod : ExpressionExperimentController.getAnnotation,
+				readParams : [{
+					id : eeId,
+					classDelegatingFor : eeClass
+				}],
+				editable : admin,
+				mgedTermKey : "experiment"
+			});
+});
+	 </script>
+
 </head>
 
 <authz:authorize ifAnyGranted="admin">
@@ -63,13 +99,13 @@
 <content tag="heading">
 Experiment detail view for
 <%
-    if ( expressionExperiment.getName() != null ) {
+if ( expressionExperiment.getName() != null ) {
 %>
 :
 <jsp:getProperty name="expressionExperiment" property="name" />
 -
 <%
-    }
+}
 %>
 <jsp:getProperty name="expressionExperiment" property="shortName" />
 &nbsp;
@@ -101,13 +137,13 @@ Experiment detail view for
 		</td>
 		<td>
 			<%
-			    if ( expressionExperiment.getName() != null ) {
+			if ( expressionExperiment.getName() != null ) {
 			%>
 			<jsp:getProperty name="expressionExperiment" property="name" />
 			<%
-			    } else {
-			        out.print( "No name available" );
-			    }
+			                } else {
+			                out.print( "No name available" );
+			            }
 			%>
 		</td>
 	</tr>
@@ -118,16 +154,16 @@ Experiment detail view for
 		</td>
 		<td>
 			<%
-			    if ( expressionExperiment.getDescription() != null ) {
+			if ( expressionExperiment.getDescription() != null ) {
 			%>
 			<div class="clob" style="width: 40%;">
 				<jsp:getProperty name="expressionExperiment" property="description" />
 			</div>
 
 			<%
-			    } else {
-			        out.print( "Description unavailable" );
-			    }
+			                } else {
+			                out.print( "Description unavailable" );
+			            }
 			%>
 		</td>
 	</tr>
@@ -137,13 +173,13 @@ Experiment detail view for
 		</td>
 		<td>
 			<%
-			    if ( expressionExperiment.getSource() != null ) {
+			if ( expressionExperiment.getSource() != null ) {
 			%>
 			<jsp:getProperty name="expressionExperiment" property="source" />
 			<%
-			    } else {
-			        out.print( "Source unavailable" );
-			    }
+			                } else {
+			                out.print( "Source unavailable" );
+			            }
 			%>
 		</td>
 	</tr>
@@ -159,7 +195,7 @@ Experiment detail view for
 					</c:when>
 					<c:otherwise>
 						<%
-						    out.print( "Public" );
+						out.print( "Public" );
 						%>
 					</c:otherwise>
 				</c:choose>
@@ -173,19 +209,19 @@ Experiment detail view for
 		</td>
 		<td>
 			<%
-			    if ( ( expressionExperiment.getInvestigators() ) != null
-			            && ( expressionExperiment.getInvestigators().size() > 0 ) ) {
+			                    if ( ( expressionExperiment.getInvestigators() ) != null
+			                    && ( expressionExperiment.getInvestigators().size() > 0 ) ) {
 			%>
 			<c:forEach end="0" var="investigator" items="${ expressionExperiment.investigators }">
 				<c:out value="${ investigator.name}" />
 			</c:forEach>
 			<%
-			    if ( expressionExperiment.getInvestigators().size() > 1 ) {
-			            out.print( ", et al. " );
-			        }
-			    } else {
-			        out.print( "No investigators known" );
-			    }
+			                    if ( expressionExperiment.getInvestigators().size() > 1 ) {
+			                    out.print( ", et al. " );
+			                }
+			            } else {
+			                out.print( "No investigators known" );
+			            }
 			%>
 		</td>
 	</tr>
@@ -204,13 +240,13 @@ Experiment detail view for
 		</td>
 		<td>
 			<%
-			    if ( expressionExperiment.getPrimaryPublication() != null ) {
+			if ( expressionExperiment.getPrimaryPublication() != null ) {
 			%>
 			<Gemma:citation citation="${expressionExperiment.primaryPublication }" />
 			<%
-			    } else {
-			        out.print( "Primary publication unavailable" );
-			    }
+			                } else {
+			                out.print( "Primary publication unavailable" );
+			            }
 			%>
 		</td>
 	</tr>
@@ -221,11 +257,11 @@ Experiment detail view for
 			</td>
 			<td>
 				<%
-				    if ( expressionExperiment.getAuditTrail() != null ) {
-				        out.print( expressionExperiment.getAuditTrail().getCreationEvent().getDate() );
-				    } else {
-				        out.print( "Create date unavailable" );
-				    }
+				                if ( expressionExperiment.getAuditTrail() != null ) {
+				                out.print( expressionExperiment.getAuditTrail().getCreationEvent().getDate() );
+				            } else {
+				                out.print( "Create date unavailable" );
+				            }
 				%>
 			</td>
 		</tr>
@@ -245,9 +281,10 @@ Experiment detail view for
 	<tr>
 		<td class="label">
 			<fmt:message key="bioAssays.title" />
+		</td>
 		<td>
 			<%
-			    out.print( expressionExperiment.getBioAssays().size() );
+			out.print( expressionExperiment.getBioAssays().size() );
 			%>
 			<a
 				href="/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id=<%out.print(expressionExperiment.getId());%>">
@@ -258,6 +295,7 @@ Experiment detail view for
 	<tr>
 		<td class="label">
 			<fmt:message key="arrayDesigns.title" />
+		</td>
 		<td>
 			<c:forEach var="arrayDesign" items="${ arrayDesigns }">
 				<c:out value="${ arrayDesign.name}" />
@@ -286,6 +324,7 @@ Experiment detail view for
 		<tr>
 			<td class="label">
 				Coexpression Links
+			</td>
 			<td>
 				<c:if test="${ eeCoexpressionLinks != null}">
 				${eeCoexpressionLinks}
@@ -309,13 +348,13 @@ Experiment detail view for
 	<br />
 </div>
 <div id="annots">
-	<div id="eeAnnotations" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden;"></div>
+	<div id="eeAnnotations"></div>
 	<input type="hidden" name="eeId" id="eeId" value="${expressionExperiment.id}" />
 	<input type="hidden" name="eeClass" id="eeClass" value="${expressionExperiment.class.name}" />
 </div>
 
 <%
-    if ( expressionExperiment.getExperimentalDesign() != null ) {
+if ( expressionExperiment.getExperimentalDesign() != null ) {
 %>
 <h3>
 	<fmt:message key="experimentalDesign.title" />
@@ -323,9 +362,9 @@ Experiment detail view for
 	<a
 		href="/Gemma/experimentalDesign/showExperimentalDesign.html?id=<%out.print(expressionExperiment.getExperimentalDesign().getId());%> ">
 		<%
-		    if ( expressionExperiment.getExperimentalDesign().getName() != null ) {
-		            out.print( expressionExperiment.getExperimentalDesign().getName() );
-		        }
+		                    if ( expressionExperiment.getExperimentalDesign().getName() != null ) {
+		                    out.print( expressionExperiment.getExperimentalDesign().getName() );
+		                }
 		%> <img src="/Gemma/images/magnifier.png" /> </a>
 </h3>
 <div style="padding: 2px;" onclick="Effect.toggle('design', 'blind', {duration:0.1})">
@@ -336,11 +375,11 @@ Experiment detail view for
 	<Gemma:eeDesign experimentalDesign="${expressionExperiment.experimentalDesign}"
 		expressionExperiment="${expressionExperiment}"></Gemma:eeDesign>
 
-	<div id="eeDesignMatrix" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden;"></div>
+	<div id="eeDesignMatrix"></div>
 </div>
 
 <%
-    }
+}
 %>
 
 <h3>
@@ -394,8 +433,7 @@ Experiment detail view for
 	</div>
 	<h3>
 		Biomaterials and Assays
-		<a
-			href="/Gemma/expressionExperiment/showBioMaterialsFromExpressionExperiment.html?id=<%=request.getAttribute( "id" )%>">(list
+		<a href="/Gemma/expressionExperiment/showBioMaterialsFromExpressionExperiment.html?id=<%=request.getAttribute( "id" )%>">(list
 			samples)</a>
 	</h3>
 	<div style="padding: 2px;" onclick="Effect.toggle('bms', 'blind', {duration:0.1})">
@@ -409,10 +447,8 @@ Experiment detail view for
 		</div>
 	</div>
 
-	<h3>
-		History
-	</h3>
-	<div id="auditTrail" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width: 650px;"></div>
+
+	<div id="auditTrail"></div>
 	<input type="hidden" name="auditableId" id="auditableId" value="${expressionExperiment.id}" />
 	<input type="hidden" name="auditableClass" id="auditableClass" value="${expressionExperiment.class.name}" />
 	<c:if test="${ lastArrayDesignUpdate != null}">
@@ -425,8 +461,7 @@ Experiment detail view for
 <table>
 	<tr>
 		<td>
-			<input type="button"
-				onclick="location.href='expressionExperimentVisualization.html?id=<%=request.getAttribute( "id" )%>'"
+			<input type="button" onclick="location.href='expressionExperimentVisualization.html?id=<%=request.getAttribute( "id" )%>'"
 				value="Visualize">
 		</td>
 		<authz:authorize ifAnyGranted="admin">

@@ -1,6 +1,5 @@
 <%@ include file="/common/taglibs.jsp"%>
 <%@ page import="java.util.*"%>
-<%@ page import="org.apache.commons.lang.StringUtils"%>
 <%@ page import="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl"%>
 <jsp:useBean id="arrayDesign" scope="request" class="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl" />
 
@@ -11,16 +10,40 @@
 
 	<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
 	<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
+
 	<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
+
+
 	<script type='text/javascript' src='/Gemma/dwr/interface/AuditController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
-	<script type="text/javascript" src="<c:url value='/scripts/ajax/auditTrail.js'/>" type="text/javascript"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/progressbar.js'/>"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/ArrayDesignController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/ProgressStatusService.js'></script>
-	<script type="text/javascript" src="<c:url value='/scripts/ajax/arrayDesign.js'/>" type="text/javascript"></script>
+	<script type="text/javascript" src="<c:url value='/scripts/app/arrayDesign.js'/>"></script>
+
+
+	<authz:authorize ifAnyGranted="admin">
+		<script type="text/javascript" src="<c:url value='/scripts/ajax/entities/AuditTrailGrid.js'/>"></script>
+		<script type="text/javascript">
+	Ext.namespace('Gemma');
+	Ext.onReady(function() {
+	var id = dwr.util.getValue("auditableId");
+ 	if (!id) { return; }
+	var clazz = dwr.util.getValue("auditableClass");
+	var auditable = {
+		id : id,
+		classDelegatingFor : clazz
+	};
+	var grid = new Gemma.AuditTrailGrid({
+		renderTo : 'auditTrail',
+		auditable : auditable
+	});
+});
+</script>
+	</authz:authorize>
+
 	<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/progressbar.css'/>" />
 </head>
 
@@ -144,8 +167,7 @@
 		function doit(event) {showWideHelpTip(event,text); }
 		</script>
 			<td colspan="2">
-				<a class="helpLink" name="?" href="" onclick="doit(event);return false;"> <img src="/Gemma/images/help.png" />
-				</a>
+				<a class="helpLink" name="?" href="" onclick="doit(event);return false;"> <img src="/Gemma/images/help.png" /> </a>
 				<%--"<Gemma:help helpFile='sequenceAnalysisHelp.html'/>" --%>
 			</td>
 		</tr>
@@ -182,15 +204,15 @@
 		</td>
 		<td>
 			<%
-			    if ( arrayDesign.getDesignProvider() != null ) {
+			if ( arrayDesign.getDesignProvider() != null ) {
 			%>
 			<%=arrayDesign.getDesignProvider().getName()%>
 			<%
-			    } else {
+			} else {
 			%>
 			(Not listed)
 			<%
-			    }
+			}
 			%>
 		</td>
 	</tr>
@@ -218,20 +240,19 @@
 	<tr>
 		<td class="label">
 			External accessions&nbsp;
-			<a class="helpLink" href="?"
-				onclick="showHelpTip(event, 'References to this design in other databases'); return false"><img
+			<a class="helpLink" href="?" onclick="showHelpTip(event, 'References to this design in other databases'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
 		</td>
 		<td>
 			<%
-			    if ( ( arrayDesign.getExternalReferences() ) != null && ( arrayDesign.getExternalReferences().size() > 0 ) ) {
+			if ( ( arrayDesign.getExternalReferences() ) != null && ( arrayDesign.getExternalReferences().size() > 0 ) ) {
 			%>
 			<c:forEach var="accession" items="${ arrayDesign.externalReferences }">
 				<Gemma:databaseEntry databaseEntry="${accession}" />
 				<br />
 			</c:forEach>
 			<%
-			    }
+			}
 			%>
 		</td>
 	</tr>
@@ -267,17 +288,17 @@
 		</td>
 		<td>
 			<%
-			    if ( arrayDesign.getDescription() != null && arrayDesign.getDescription().length() > 0 ) {
+			if ( arrayDesign.getDescription() != null && arrayDesign.getDescription().length() > 0 ) {
 			%>
 			<div class="clob">
 				<jsp:getProperty name="arrayDesign" property="description" />
 			</div>
 			<%
-			    } else {
+			} else {
 			%>
 			(None provided)
 			<%
-			    }
+			}
 			%>
 		</td>
 	</tr>
@@ -351,24 +372,14 @@
 			</c:if>
 		</td>
 	</tr>
-
-
-	<authz:authorize ifAnyGranted="admin">
-		<tr>
-			<td colspan="2">
-
-
-				<h3>
-					History
-				</h3>
-				<div id="auditTrail" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width: 630px;"></div>
-				<input type="hidden" name="auditableId" id="auditableId" value="${arrayDesign.id}" />
-				<input type="hidden" name="auditableClass" id="auditableClass" value="${arrayDesign.class.name}" />
-
-			</td>
-		</tr>
-	</authz:authorize>
 </table>
+
+<authz:authorize ifAnyGranted="admin">
+	<div id="auditTrail"></div>
+	<input type="hidden" name="auditableId" id="auditableId" value="${arrayDesign.id}" />
+	<input type="hidden" name="auditableClass" id="auditableClass" value="${arrayDesign.class.name}" />
+</authz:authorize>
+
 
 <div style="padding-top: 20px;">
 	<table>
@@ -387,8 +398,7 @@
 				<td COLSPAN="2">
 					<div align="left">
 						<input type="button"
-							onclick="location.href='/Gemma/arrayDesign/editArrayDesign.html?id=<%=request.getAttribute( "id" )%>'"
-							value="Edit">
+							onclick="location.href='/Gemma/arrayDesign/editArrayDesign.html?id=<%=request.getAttribute( "id" )%>'" value="Edit">
 					</div>
 				</td>
 			</authz:authorize>
