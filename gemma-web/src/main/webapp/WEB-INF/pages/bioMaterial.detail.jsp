@@ -1,10 +1,10 @@
 <%@ include file="/common/taglibs.jsp"%>
-<jsp:useBean id="bioMaterial" scope="request"
-	class="ubic.gemma.model.expression.biomaterial.BioMaterialImpl" />
+<jsp:useBean id="bioMaterial" scope="request" class="ubic.gemma.model.expression.biomaterial.BioMaterialImpl" />
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 
 <head>
-	<title><fmt:message key="bioMaterial.details" /></title>
+	<title><fmt:message key="bioMaterial.details" />
+	</title>
 
 	<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
 	<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
@@ -13,12 +13,30 @@
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/BioMaterialController.js'></script>
-		<script type='text/javascript' src="<c:url value='/scripts/ajax/util/GemmaGridPanel.js'/>"></script>
+	<script type='text/javascript' src="<c:url value='/scripts/ajax/util/GemmaGridPanel.js'/>"></script>
 	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/AnnotationGrid.js'/>"></script>
-	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/BioMaterialGrid.js'/>"></script>
-	
-	<script type='text/javascript' src="<c:url value='/scripts/ajax/bmFactorValues.js'/>"></script>
-	
+
+
+	<script type='text/javascript' src="<c:url value='/scripts/app/bmFactorValues.js'/>"></script>
+
+	<script type='text/javascript'>
+		Ext.namespace('Gemma');
+	Ext.onReady(function() {
+	var bmId = dwr.util.getValue("bmId");
+	var bmClass = dwr.util.getValue("bmClass");
+	var admin = dwr.util.getValue("hasAdmin");
+	var grid = new Ext.Gemma.AnnotationGrid( { renderTo : "bmAnnotations",
+				readMethod :BioMaterialController.getAnnotation,
+				readParams : [{
+					id : bmId,
+					classDelegatingFor : bmClass
+				}],
+				editable : admin,
+				mgedTermKey : "biomaterial"
+			});
+}); 
+	  </script>
+
 	<authz:authorize ifAnyGranted="admin">
 		<script type="text/javascript" src='/Gemma/dwr/interface/OntologyService.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/MgedOntologyService.js'></script>
@@ -26,19 +44,15 @@
 		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/CharacteristicCombo.js'/>"></script>
 		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/MGEDCombo.js'/>"></script>
 		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/AnnotationToolBar.js'/>"></script>
-		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/BioMaterialToolBar.js'/>"></script>
-		
-		<script type='text/javascript' src='/Gemma/dwr/interface/AuditController.js'></script>
-		<script type="text/javascript" src="<c:url value='/scripts/ajax/auditTrail.js'/>" type="text/javascript"></script>
 	</authz:authorize>
 
 </head>
 
 <authz:authorize ifAnyGranted="admin">
-<input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
+	<input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
 </authz:authorize>
 <authz:authorize ifNotGranted="admin">
-<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
+	<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
 </authz:authorize>
 
 <h2>
@@ -115,8 +129,7 @@
 <h3>
 	<fmt:message key="treatments.title" />
 </h3>
-<display:table name="bioMaterial.treatments" defaultsort="1"
-	class="list" requestURI="" id="treatmentList" pagesize="30"
+<display:table name="bioMaterial.treatments" defaultsort="1" class="list" requestURI="" id="treatmentList" pagesize="30"
 	decorator="ubic.gemma.web.taglib.displaytag.expression.biomaterial.BioMaterialWrapper">
 	<display:column sortable="true" property="name" maxWords="20" />
 	<display:column sortable="true" property="description" maxWords="100" />
@@ -128,15 +141,13 @@
 	<fmt:message key="experimentalDesign.factorValues" />
 </h3>
 
-<div id="bmFactorValues" class="x-grid-mso"
-	style="border: 1px solid #c3daf9; overflow: hidden; width:650px;"></div>
+<div id="bmFactorValues" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width: 650px;"></div>
 
 <h3>
 	Annotations
 </h3>
 
-<div id="bmAnnotations" class="x-grid-mso"
-	style="border: 1px solid #c3daf9; overflow: hidden; width:650px;"></div>
+<div id="bmAnnotations"></div>
 <input type="hidden" name="bmId" id="bmId" value="${bioMaterial.id}" />
 <input type="hidden" name="bmClass" id="bmClass" value="${bioMaterial.class.name}" />
 
@@ -146,16 +157,13 @@
 	<tr>
 		<td COLSPAN="2">
 			<DIV align="left">
-				<input type="button"
-					onclick="location.href='/Gemma/expressionExperiment/showAllExpressionExperiments.html'"
-					value="Back">
+				<input type="button" onclick="location.href='/Gemma/expressionExperiment/showAllExpressionExperiments.html'" value="Back">
 			</DIV>
 		</TD>
 		<authz:acl domainObject="${bioMaterial}" hasPermission="1,6">
 			<TD COLSPAN="2">
 				<DIV align="left">
-					<input type="button"
-						onclick="location.href='/Gemma/bioMaterial/editBioMaterial.html?id=<%=bioMaterial.getId()%>'"
+					<input type="button" onclick="location.href='/Gemma/bioMaterial/editBioMaterial.html?id=<%=bioMaterial.getId()%>'"
 						value="Edit">
 				</DIV>
 			</td>
