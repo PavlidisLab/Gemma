@@ -121,7 +121,7 @@ public class CompositeSequenceController extends BaseMultiActionController {
     }
 
     /**
-     * Exposed for AJAX calls.
+     * Exposed for AJAX calls (Probe browser)
      * 
      * @param ids
      * @return
@@ -283,10 +283,11 @@ public class CompositeSequenceController extends BaseMultiActionController {
             Gene gene = geneProduct.getGene();
             BlatResult blatResult = blatAssociation.getBlatResult();
             if ( blatResult instanceof HibernateProxy ) {
-                blatResult = ( BlatResult ) ( ( HibernateProxy ) blatResult ).getHibernateLazyInitializer().getImplementation();
+                blatResult = ( BlatResult ) ( ( HibernateProxy ) blatResult ).getHibernateLazyInitializer()
+                        .getImplementation();
             }
-            
-            blatResult.getQuerySequence().getTaxon();   //FIXME: Cruft or thaw attempt?
+
+            blatResult.getQuerySequence().getTaxon(); // FIXME: Cruft or thaw attempt?
 
             if ( blatResults.containsKey( blatResult ) ) {
                 blatResults.get( blatResult ).addGene( geneProduct, gene );
@@ -324,7 +325,6 @@ public class CompositeSequenceController extends BaseMultiActionController {
         Collection<CompositeSequenceMapValueObject> compositeSequenceSummary = new HashSet<CompositeSequenceMapValueObject>();
         if ( compositeSequences.size() > 0 ) {
             Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences, 0 );
-
             compositeSequenceSummary = arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
         }
         return compositeSequenceSummary;
@@ -340,6 +340,7 @@ public class CompositeSequenceController extends BaseMultiActionController {
             try {
                 arrayDesign = arrayDesignService.load( Long.parseLong( arrayDesignId ) );
             } catch ( NumberFormatException e ) {
+                log.info( "Invalid array design id: " + arrayDesignId );
                 // Fail gracefully, please.
             }
         }
