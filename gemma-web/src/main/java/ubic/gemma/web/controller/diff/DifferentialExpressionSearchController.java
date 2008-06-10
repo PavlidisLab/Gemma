@@ -169,7 +169,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     }
 
     /**
-     * AJAX entry.
+     * AJAX entry. Returns the meta-analysis results.
      * <p>
      * Gets the differential expression results for the genes in {@link DiffExpressionSearchCommand}.
      * 
@@ -198,13 +198,15 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     }
 
     /**
+     * Returns the results of the meta-analysis.
+     * 
      * @param geneId
      * @param eeIds
      * @param threshold
      * @return
      */
     @SuppressWarnings("unchecked")
-    public DifferentialExpressionMetaAnalysisValueObject getDifferentialExpression( Long geneId,
+    private DifferentialExpressionMetaAnalysisValueObject getDifferentialExpression( Long geneId,
             Collection<Long> eeIds, double threshold ) {
 
         Gene g = geneService.load( geneId );
@@ -329,6 +331,84 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         mavo.setSortKey();
 
         return mavo;
+    }
+
+    /**
+     * AJAX entry which returns results on a non-meta analysis basis. That is, the differential expression results for
+     * the gene with the id, geneId, are returned.
+     * 
+     * @param geneId
+     * @param threshold
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Long geneId, double threshold ) {
+        Collection<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
+        Gene g = geneService.load( geneId );
+        if ( g == null ) return devos;
+        Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService
+                .findExperimentsWithAnalyses( g );
+        for ( ExpressionExperiment ee : experimentsAnalyzed ) {
+            ExpressionExperimentValueObject eevo = new ExpressionExperimentValueObject();
+            eevo.setId( ee.getId() );
+            eevo.setShortName( ee.getShortName() );
+            eevo.setName( ee.getName() );
+            eevo.setExternalUri( GemmaLinkUtils.getExpressionExperimentUrl( eevo.getId() ) );
+
+            Collection<ProbeAnalysisResult> results = differentialExpressionAnalysisService.find( g, ee, threshold );
+
+            Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> dearToEf = differentialExpressionAnalysisResultService
+                    .getExperimentalFactors( results );
+
+            for ( ProbeAnalysisResult r : results ) {
+                DifferentialExpressionValueObject devo = new DifferentialExpressionValueObject();
+                devo.setGene( g );
+                devo.setExpressionExperiment( eevo );
+                devo.setProbe( r.getProbe().getName() );
+                devo.setProbeId( r.getProbe().getId() );
+                devo.setExperimentalFactors( new HashSet<ExperimentalFactorValueObject>() );
+                Collection<ExperimentalFactor> efs = dearToEf.get( r );
+                if ( efs == null ) {
+                    // This should not happen any more, but just in case.
+                    log.warn( "No experimentalfactor(s) for ProbeAnalysisResult: " + r.getId() );
+                    continue;
+                }
+                for ( ExperimentalFactor ef : efs ) {
+                    ExperimentalFactorValueObject efvo = new ExperimentalFactorValueObject();
+                    efvo.setId( ef.getId() );
+                    efvo.setName( ef.getName() );
+                    efvo.setDescription( ef.getDescription() );
+                    Characteristic category = ef.getCategory();
+                    if ( category != null ) {
+                        efvo.setCategory( category.getCategory() );
+                        if ( category instanceof VocabCharacteristic )
+                            efvo.setCategoryUri( ( ( VocabCharacteristic ) category ).getCategoryUri() );
+                    }
+                    Collection<FactorValue> fvs = ef.getFactorValues();
+                    String factorValuesAsString = StringUtils.EMPTY;
+
+                    for ( FactorValue fv : fvs ) {
+                        String fvName = fv.toString();
+                        if ( StringUtils.isNotBlank( fvName ) ) {
+                            factorValuesAsString += fvName + FV_SEP;
+                        }
+                    }
+
+                    /* clean up the start and end of the string */
+                    factorValuesAsString = StringUtils.remove( factorValuesAsString, ef.getName() + ":" );
+                    factorValuesAsString = StringUtils.removeEnd( factorValuesAsString, FV_SEP );
+
+                    efvo.setFactorValues( factorValuesAsString );
+
+                    devo.getExperimentalFactors().add( efvo );
+                }
+                devo.setP( r.getCorrectedPvalue() );
+                devos.add( devo );
+
+            }
+
+        }
+        return devos;
     }
 
     /*
