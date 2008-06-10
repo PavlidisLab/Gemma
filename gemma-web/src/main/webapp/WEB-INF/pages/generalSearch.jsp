@@ -13,14 +13,17 @@
 	<script type="text/javascript" src="<c:url value='/scripts/ajax/util/PagingDataStore.js'/>"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/ajax/util/PagingToolbar.js'/>"></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/SearchService.js'></script>
-	<script type="text/javascript" src="<c:url value='/scripts/ajax/util/GemmaGridPanel.js'/>"></script>
-	
 
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 
-	<script type="text/javascript" src="<c:url value='/scripts/ajax/search.js'/>" type="text/javascript"></script>
+	<script type="text/javascript" src="<c:url value='/scripts/ajax/search.js'/>"></script>
 
+	<script type="text/javascript">
+	Ext.state.Manager.setProvider(new Ext.state.CookieProvider( ));
+	Ext.QuickTips.init();
+	Ext.onReady(Ext.Gemma.Search.app.init, Ext.Gemma.Search.app);
+	</script>
 </head>
 
 
@@ -29,8 +32,8 @@
 </h1>
 
 <div id="messages"></div>
-<div style="height:1em;margin-bottom:" id="validation-messages"></div>
-<div style="margin-bottom:10px" id="general-search-form"></div>
-<div style="margin:5px"  id="search-bookmark"></div>
-<div style="margin-top:2px"  id="search-results-grid"></div>
+<div style="height: 1em; margin-bottom: " id="validation-messages"></div>
+<div style="margin-bottom: 10px" id="general-search-form"></div>
+<div style="margin: 5px" id="search-bookmark"></div>
+<div style="margin-top: 2px" id="search-results-grid"></div>
 
