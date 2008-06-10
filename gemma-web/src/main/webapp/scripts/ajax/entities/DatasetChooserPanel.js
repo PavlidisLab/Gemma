@@ -52,6 +52,7 @@ Ext.Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 	selectById : function(id) {
 		this.combo.setValue(id);
 		this.store.selected = this.store.getById(id);
+		this.fireEvent("set-chosen");
 		// Ext.log(this.store.selected.get("name"));
 	},
 
@@ -62,6 +63,7 @@ Ext.Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 		var rec = this.store.getAt(index);
 		this.combo.setValue(rec.get("id"));
 		this.store.select(rec);
+		this.fireEvent("set-chosen");
 	},
 
 	filterByTaxon : function(taxon) {
