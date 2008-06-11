@@ -51,7 +51,7 @@ Gemma.DifferentialExpressionGrid = function(config) {
 	}
 	superConfig.ds.setDefaultSort('p');
 	superConfig.ds.load({
-		params : [this.geneId, null, this.threshold]
+		params : [this.geneId, this.threshold]
 	});
 
 	superConfig.cm = new Ext.grid.ColumnModel([{
