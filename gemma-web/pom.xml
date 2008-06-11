@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<parent>
 		<artifactId>gemma</artifactId>
 		<groupId>gemma</groupId>
@@ -79,13 +80,18 @@
 						</goals>
 						<configuration>
 							<tasks>
-								<springdoclet destdir="${project.build.directory}/Gemma/WEB-INF" mergeDir="${basedir}/src/conf/xdoclet-merge" force="false" validating="false">
+								<springdoclet destdir="${project.build.directory}/Gemma/WEB-INF"
+									mergeDir="${basedir}/src/conf/xdoclet-merge" force="false" validating="false">
 									<fileset includes="**/*.java" dir="${basedir}/src/main/java" />
-									<springxml mergeDir="${basedir}/src/conf/xdoclet-merge" useIds="true" destDir="${project.build.directory}/Gemma/WEB-INF" destinationFile="action-servlet.xml" />
+									<springxml mergeDir="${basedir}/src/conf/xdoclet-merge" useIds="true"
+										destDir="${project.build.directory}/Gemma/WEB-INF" destinationFile="action-servlet.xml" />
 								</springdoclet>
-								<webdoclet destdir="${project.build.directory}/Gemma/WEB-INF" mergeDir="${basedir}/src/conf/xdoclet-merge" force="false">
+								<webdoclet destdir="${project.build.directory}/Gemma/WEB-INF"
+									mergeDir="${basedir}/src/conf/xdoclet-merge" force="false">
 									<fileset includes="**/*.java" dir="${basedir}/src/main/java" />
-									<jsptaglib taglibversion="1.0" xmlencoding="UTF-8" Jspversion="2.0" description="Custom tag library for Gemma" shortname="Gemma" mergeDir="${basedir}/src/conf/xdoclet-merge" filename="Gemma.tld" validateXML="false" destDir="${project.build.directory}/Gemma/WEB-INF" />
+									<jsptaglib taglibversion="1.0" xmlencoding="UTF-8" Jspversion="2.0"
+										description="Custom tag library for Gemma" shortname="Gemma" mergeDir="${basedir}/src/conf/xdoclet-merge"
+										filename="Gemma.tld" validateXML="false" destDir="${project.build.directory}/Gemma/WEB-INF" />
 									<springvalidationxml />
 								</webdoclet>
 							</tasks>
@@ -144,6 +150,68 @@
 						</configuration>
 					</execution>
 				</executions>
+			</plugin>
+			<plugin>
+				<groupId>net.sf.alchim</groupId>
+				<artifactId>yuicompressor-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<!-- 	<goal>jslint</goal> -->
+							<goal>compress</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<force>true</force>
+					<jswarn>false</jswarn>
+					<nosuffix>true</nosuffix>
+					<linebreakpos>5000</linebreakpos>
+					<preserveAllSemiColons>true</preserveAllSemiColons>
+					<nomunge>false</nomunge>
+					<excludes>
+						<exclude>**/*.vm</exclude>
+						<exclude>**/*.css</exclude>
+						<exclude>**/*.xml</exclude>
+						<exclude>**/*.html</exclude>
+						<exclude>**/*.properties</exclude>
+						<exclude>**/ext-all.js</exclude>
+						<exclude>**/ext-all-debug.js</exclude>
+					</excludes>
+					<!-- Currently aggregations do not work. But we can still minify the code
+					<aggregations>
+						<aggregation>
+							<removeIncluded>true</removeIncluded>
+								<insertNewLine>true</insertNewLine>
+							<output>${project.build.directory}/${project.build.finalName}/scripts/gemma-all.js</output>
+							<includes>
+								<include>**/*.js</include>
+							</includes>
+							<excludes>
+								<exclude>lib/*.js</exclude>
+								<exclude>app/*.js</exclude>
+								<exclude>app/test/*.js</exclude>
+								<exclude>prototype.js</exclude>
+								<exclude>scriptaculous/*.js</exclude>
+								<exclude>scriptaculous-all.js</exclude>
+								<exclude>ext/*.js</exclude>
+								<exclude>ext/adapter/**/*.js</exclude>
+								<exclude>ext/adapter/**/*.js</exclude>
+								<exclude>flotr-0.1.0alpha/**/*.js</exclude>
+							</excludes>
+						</aggregation>
+						<aggregation>
+							<removeIncluded>true</removeIncluded>
+							<insertNewLine>true</insertNewLine>
+							<output>
+								${project.build.directory}/${project.build.finalName}/scripts/scriptaculous-all.js
+							</output>
+							<includes>
+								<include>**/scriptaculous/*.js</include>
+							</includes>
+						</aggregation>
+					</aggregations> -->
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
