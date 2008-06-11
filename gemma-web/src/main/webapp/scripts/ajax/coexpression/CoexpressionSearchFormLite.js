@@ -9,16 +9,17 @@ Gemma.CoexpressionSearchFormLite = Ext.extend(Ext.FormPanel, {
 	frame : true,
 	stateful : true,
 	stateEvents : ["beforesearch"],
-	stateId : "Gemma.CoexpressionSearch", // share state with complex
+
+	// share state with complex
 	// form...
+	stateId : "Gemma.CoexpressionSearch",
 	labelAlign : "top",
 
 	width : 230,
 
 	initComponent : function() {
 
-		Gemma.CoexpressionSearchFormLite.superclass.initComponent
-				.call(this);
+		Gemma.CoexpressionSearchFormLite.superclass.initComponent.call(this);
 
 		this.stringencyField = new Ext.form.Hidden({
 			value : 3
@@ -62,7 +63,8 @@ Gemma.CoexpressionSearchFormLite = Ext.extend(Ext.FormPanel, {
 							.format(
 									"/Gemma/searchCoexpression.html?g={0}&a={1}&s={2}&ees={3}&t={4}",
 									this.geneCombo.getValue(), eeSetId,
-									this.stringencyField.getValue(), eeIds, this.geneCombo.getTaxon().id);
+									this.stringencyField.getValue(), eeIds,
+									this.geneCombo.getTaxon().id);
 				} else {
 					this.handleError(msg);
 				}

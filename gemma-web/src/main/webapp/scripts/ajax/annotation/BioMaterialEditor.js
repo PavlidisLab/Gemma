@@ -272,7 +272,7 @@ Gemma.BioMaterialToolbar = function ( config ) {
 		text : "Expand/collapse all",
 		tooltip : "Show/hide all biomaterial details",
 		handler : function() {
-			var expander = Gemma.BioMaterialGrid.getRowExpander()
+			var expander = Gemma.BioMaterialGrid.getRowExpander();
 			expander.toggleAll();
 		}
 	} );

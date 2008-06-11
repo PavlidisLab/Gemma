@@ -1,7 +1,7 @@
-Ext.namespace('Ext.Gemma');
+Ext.namespace('Gemma');
 
 /**
- * Ext.Gemma.PagingToolbar is an extension of Ext.PagingToolbar that compensates
+ * Gemma.PagingToolbar is an extension of Ext.PagingToolbar that compensates
  * for a bug in how the current active page is calculated.
  * 
  * <pre>
@@ -19,13 +19,13 @@ Ext.namespace('Ext.Gemma');
  * 0; var d = this.getPageData(), ap = d.activePage, ps = d.pages;
  * 
  */
-Ext.Gemma.PagingToolbar = function(config) {
+Gemma.PagingToolbar = function(config) {
 
-	Ext.Gemma.PagingToolbar.superclass.constructor.call(this, config);
+	Gemma.PagingToolbar.superclass.constructor.call(this, config);
 
 };
 
-Ext.extend(Ext.Gemma.PagingToolbar, Ext.PagingToolbar, {
+Ext.extend(Gemma.PagingToolbar, Ext.PagingToolbar, {
 
 	onLoad : function(ds, r, o) {
 		/*
@@ -38,7 +38,7 @@ Ext.extend(Ext.Gemma.PagingToolbar, Ext.PagingToolbar, {
 			definedStartParameter = true;
 		}
 
-		Ext.Gemma.PagingToolbar.superclass.onLoad.call(this, ds, r, o);
+		Gemma.PagingToolbar.superclass.onLoad.call(this, ds, r, o);
 
 		/*
 		 * if we defined options.parm.start above, undefine it so we don't
@@ -50,7 +50,7 @@ Ext.extend(Ext.Gemma.PagingToolbar, Ext.PagingToolbar, {
 	},
 
 	bind : function(store) {
-		Ext.Gemma.PagingToolbar.superclass.bind.call(this, store);
+		Gemma.PagingToolbar.superclass.bind.call(this, store);
 		store = Ext.StoreMgr.lookup(store);
 		store.on("add", this.onAdd, this);
 		this.store = store;

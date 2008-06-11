@@ -34,8 +34,9 @@
 		Gemma software updates
 	</h4>
 	<p>
-		Gemma 1.1.1 fixes some bugs in the user interface. For more details see the
-		<a href="<c:url value='/resources/dist/RELEASE-NOTES-1.1.1.txt' />">release notes</a>.
+		Gemma 1.2 introduces more features for differential expression, including meta-analysis. Many parts of the user interface
+		feature improvements. For more details see the
+		<a href="<c:url value='/resources/dist/RELEASE-NOTES-1.2.txt' />">release notes</a>.
 
 	</p>
 </div>

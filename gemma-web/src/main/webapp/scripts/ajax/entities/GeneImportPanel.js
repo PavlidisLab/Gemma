@@ -30,7 +30,7 @@ Gemma.GeneImportPanel = Ext.extend(Ext.Window, {
 
 		this.addEvents({
 			"commit" : true
-		}),
+		});
 
 		Ext.apply(this, {
 			items : [{

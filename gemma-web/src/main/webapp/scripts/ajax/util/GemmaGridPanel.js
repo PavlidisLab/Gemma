@@ -1,13 +1,13 @@
-Ext.namespace('Ext.Gemma');
+Ext.namespace('Gemma');
 
 /**
  * 
- * @class Ext.Gemma.GemmaGridPanel
+ * @class Gemma.GemmaGridPanel
  * @extends Ext.grid.EditorGridPanel*
  * @author Luke, Paul
  * @version $Id$
  */
-Ext.Gemma.GemmaGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
+Gemma.GemmaGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 
 	stripeRows : true,
 	viewConfig : {
@@ -31,7 +31,7 @@ Ext.Gemma.GemmaGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 			selModel : new Ext.grid.RowSelectionModel({})
 		});
 
-		Ext.Gemma.GemmaGridPanel.superclass.initComponent.call(this);
+		Gemma.GemmaGridPanel.superclass.initComponent.call(this);
 
 	},
 
@@ -93,7 +93,7 @@ Ext.Gemma.GemmaGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 /*
  * static methods
  */
-Ext.Gemma.GemmaGridPanel.formatTermWithStyle = function(value, uri) {
+Gemma.GemmaGridPanel.formatTermWithStyle = function(value, uri) {
 	var style = uri ? "unusedWithUri" : "unusedNoUri";
 	var description = uri || "free text";
 	return String.format("<span class='{0}' ext:qtip='{2}'>{1}</span>", style,

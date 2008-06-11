@@ -1,11 +1,11 @@
-Ext.namespace('Ext.Gemma');
+Ext.namespace('Gemma');
 
 /*
- * Ext.Gemma.PagingDataStore constructor... ds is the backing data store config
- * is a hash with the following options: pageSize is the number of rows to show
- * on each page.
+ * Gemma.PagingDataStore constructor... ds is the backing data store config is a
+ * hash with the following options: pageSize is the number of rows to show on
+ * each page.
  */
-Ext.Gemma.PagingDataStore = function(config) {
+Gemma.PagingDataStore = function(config) {
 
 	this.currentStartIndex = 0;
 	this.pageSize = 10;
@@ -14,13 +14,13 @@ Ext.Gemma.PagingDataStore = function(config) {
 		delete config.pageSize;
 	}
 
-	Ext.Gemma.PagingDataStore.superclass.constructor.call(this, config);
+	Gemma.PagingDataStore.superclass.constructor.call(this, config);
 };
 
-Ext.extend(Ext.Gemma.PagingDataStore, Ext.data.Store, {
+Ext.extend(Gemma.PagingDataStore, Ext.data.Store, {
 
 	getAt : function(index) {
-		return Ext.Gemma.PagingDataStore.superclass.getAt.call(this,
+		return Gemma.PagingDataStore.superclass.getAt.call(this,
 				this.currentStartIndex + index);
 	},
 
@@ -34,7 +34,7 @@ Ext.extend(Ext.Gemma.PagingDataStore, Ext.data.Store, {
 		if (windowEnd > this.currentStartIndex + this.pageSize - 1) {
 			windowEnd = this.currentStartIndex + this.pageSize - 1;
 		}
-		return Ext.Gemma.PagingDataStore.superclass.getRange.call(this,
+		return Gemma.PagingDataStore.superclass.getRange.call(this,
 				windowStart, windowEnd);
 	},
 
@@ -49,7 +49,7 @@ Ext.extend(Ext.Gemma.PagingDataStore, Ext.data.Store, {
 	},
 
 	add : function(records) {
-		Ext.Gemma.PagingDataStore.superclass.add.call(this, records);
+		Gemma.PagingDataStore.superclass.add.call(this, records);
 		this.totalLength = this.data.length;
 	},
 
@@ -74,19 +74,19 @@ Ext.extend(Ext.Gemma.PagingDataStore, Ext.data.Store, {
 			if (options.resetPage) {
 				this.currentStartIndex = 0;
 			}
-			Ext.Gemma.PagingDataStore.superclass.load.call(this, options);
+			Gemma.PagingDataStore.superclass.load.call(this, options);
 		}
 	},
 
 	loadRecords : function(o, options, success) {
-		Ext.Gemma.PagingDataStore.superclass.loadRecords.call(this, o, options,
+		Gemma.PagingDataStore.superclass.loadRecords.call(this, o, options,
 				success);
 
 		this.checkStartIndex();
 	},
 
 	remove : function(record) {
-		Ext.Gemma.PagingDataStore.superclass.remove.call(this, record);
+		Gemma.PagingDataStore.superclass.remove.call(this, record);
 
 		// no idea why I should have to do this...
 		this.totalLength = this.data.length;
@@ -95,7 +95,7 @@ Ext.extend(Ext.Gemma.PagingDataStore, Ext.data.Store, {
 	},
 
 	removeAll : function() {
-		Ext.Gemma.PagingDataStore.superclass.removeAll.call(this);
+		Gemma.PagingDataStore.superclass.removeAll.call(this);
 
 		// no idea why I should have to do this...
 		this.totalLength = this.data.length;

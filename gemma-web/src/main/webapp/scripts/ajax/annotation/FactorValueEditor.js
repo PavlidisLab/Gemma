@@ -65,8 +65,8 @@ Gemma.FactorValueGrid = function(config) {
 	}
 	var groupTextTpl = this.editable
 			? '<input type="checkbox" name="selectedFactorValues" value="{[ values.rs[0].data.factorValueId ]}" /> '
-			: ''
-	groupTextTpl = groupTextTpl + '{[ values.rs[0].data.factorValueString ]}'
+			: '';
+	groupTextTpl = groupTextTpl + '{[ values.rs[0].data.factorValueString ]}';
 	superConfig.view = new Ext.grid.GroupingView({
 		enableGroupingMenu : false,
 		enableNoGroups : false,
@@ -355,7 +355,7 @@ Gemma.FactorValueToolbar = function(config) {
 			text : "Expand/collapse all",
 			tooltip : "Show/hide all factor value details",
 			handler : function() {
-				this.grid.getView().toggleAllGroups()
+				this.grid.getView().toggleAllGroups();
 			},
 			scope : this
 		});
@@ -479,10 +479,11 @@ Gemma.FactorValueCharacteristicToolbar = function(config) {
 	});
 	this.grid.getSelectionModel().on("selectionchange", function(model) {
 		var selected = model.getSelections();
-		if (selected.length > 0)
+		if (selected.length > 0) {
 			deleteButton.enable();
-		else
+		} else {
 			deleteButton.disable();
+		}
 	});
 
 	var saveButton = new Ext.Toolbar.Button({

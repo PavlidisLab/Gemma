@@ -107,7 +107,7 @@ Ext.onReady(function() {
 				this.getStore().load({
 					params : [d]
 				});
-			}
+			};
 			// Go back to the server to get the ids of the experiments the
 			// selected analysis' parent has.
 			GeneLinkAnalysisManagerController.getExperimentIdsInAnalysis(id, {
@@ -134,7 +134,7 @@ Ext.onReady(function() {
 		}
 		var id = row.get("id");
 
-		var virtual = row.get("virtual")
+		var virtual = row.get("virtual");
 		if (virtual) {
 			this.sourceAnalysisID = row.get("viewedAnalysisId");
 			this.analysisId = id;
@@ -226,7 +226,7 @@ Gemma.EditVirtualAnalysisToolBar = function(config) {
 		}, {
 			callback : callback.createDelegate(this, [], true),
 			errorHandler : errorHandler.createDelegate(this, [], true)
-		})
+		});
 	};
 
 	this.updateAnalysis = function(analysisName, analysisDescription) {
@@ -258,7 +258,7 @@ Gemma.EditVirtualAnalysisToolBar = function(config) {
 		}, {
 			callback : callback.createDelegate(this, [], true),
 			errorHandler : errorHandler.createDelegate(this, [], true)
-		})
+		});
 	};
 
 	this.reset = function() {
@@ -268,7 +268,7 @@ Gemma.EditVirtualAnalysisToolBar = function(config) {
 				this.getStore().load({
 					params : [d]
 				});
-			}
+			};
 			// Go back to the server to get the ids of the experiments the
 			// selected analysis has.
 			var id = this.ownerCt.analysisId;

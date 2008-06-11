@@ -1,6 +1,4 @@
-/**
- * FIXME this is non-functional.
- */
+
 Ext.onReady(function() {
 	if (getCookie("username") != null) {
 		$("j_username").value = getCookie("username");

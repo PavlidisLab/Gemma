@@ -8,7 +8,7 @@
 	<meta name="menu" content="Login" />
 	<script src="<c:url value='/scripts/ext/adapter/ext/ext-base.js'/>" type="text/javascript"></script>
 	<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
-	<script type='text/javascript' src='/Gemma/scripts/login.js'></script>
+	<script type='text/javascript' src='/Gemma/scripts/app/login.js'></script>
 </head>
 <body id="login" />
 

@@ -1,35 +1,39 @@
 <%@ include file="/common/taglibs.jsp"%>
 <head>
-	<title><fmt:message key="mainMenu.title" /></title>
+	<title><fmt:message key="mainMenu.title" />
+	</title>
 	<script src="<c:url value='/scripts/ext/adapter/ext/ext-base.js'/>" type="text/javascript"></script>
-	<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
+	<script src="<c:url value='/scripts/ext/ext-all-debug.js'/>" type="text/javascript"></script>
 
-	<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
-	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
-
 	<script type='text/javascript' src='/Gemma/dwr/interface/GenePickerController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/ExtCoexpressionSearchController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentSetController.js'></script>
 
+	<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
+	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
+	
 	<script type='text/javascript' src='/Gemma/scripts/ajax/util/GemmaGridPanel.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/TaxonCombo.js'></script>
-
 	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/GeneCombo.js'></script>
 
 	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/DatasetChooserPanel.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionSearchFormLite.js'></script>
 	<script type="text/javaScript" src="<c:url value='/scripts/rounded_corners_lite.inc.js'/>"></script>
 
+<!-- <script src="<c:url value='/scripts/scriptaculous-all.js'/>" type="text/javascript"></script>
+	<script src="<c:url value='/scripts/gemma-all.js'/>" type="text/javascript"></script> -->
+
+
 	<script type="text/javaScript">
 	Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
    	Ext.onReady( function() {
-   
-   Ext.QuickTips.init();
+   	Ext.QuickTips.init();
 	Ext.state.Manager.setProvider( new Ext.state.CookieProvider() );
 	
-	var searchForm = new Ext.Gemma.CoexpressionSearchFormLite( {
+	// Coexpression form.
+	var searchForm = new Gemma.CoexpressionSearchFormLite( {
 		renderTo : "coexpression-form"
 	} ); 
    
@@ -71,7 +75,7 @@
 		<table>
 			<tr>
 				<td>
-					<a href="<c:url value="/expressionExperiment/showAllExpressionExperiments.html"/>"> Expression Experiments: </a>
+					<a href='<c:url value="/expressionExperiment/showAllExpressionExperiments.html"/>'> Expression Experiments: </a>
 				</td>
 				<td align="right">
 					<b><c:out value="${ expressionExperimentCount}" /> </b>
@@ -81,7 +85,7 @@
 				<tr>
 					<td>
 						&emsp;
-						<a href="/Gemma/expressionExperiment/showAllExpressionExperiments.html?taxonId=<c:out value="${ taxon.key.id}" />">
+						<a href='/Gemma/expressionExperiment/showAllExpressionExperiments.html?taxonId=<c:out value="${ taxon.key.id}" />'>
 							<c:out value="${ taxon.key.scientificName}" /> </a>
 
 					</td>
@@ -92,7 +96,7 @@
 			</c:forEach>
 			<tr>
 				<td>
-					<a href="<c:url value="/arrays/showAllArrayDesigns.html"/>"> Array Designs: </a>
+					<a href='<c:url value="/arrays/showAllArrayDesigns.html"/>'> Array Designs: </a>
 				</td>
 				<td align="right">
 					<b><c:out value="${ stats.arrayDesignCount }" /> </b>
@@ -123,44 +127,44 @@
 			<ul class="compactList" style="padding-left: 3px;">
 
 				<li>
-					<a href="<c:url value="/indexer.html"/>"> <fmt:message key="menu.compassIndexer" /> </a>
+					<a href='<c:url value="/indexer.html"/>'> <fmt:message key="menu.compassIndexer" /> </a>
 				</li>
 				<li>
-					<a href="<c:url value="/securityManager.html"/>"> <fmt:message key="menu.securityManager" /> </a>
+					<a href='<c:url value="/securityManager.html"/>'> <fmt:message key="menu.securityManager" /> </a>
 				</li>
 				<li>
-					<a href="<c:url value="/geneLinkAnalysisManager.html" />">Manage gene link analyses</a> ("Canned" analyses)
+					<a href='<c:url value="/geneLinkAnalysisManager.html" />'>Manage gene link analyses</a> ("Canned" analyses)
 				</li>
 				<li>
-					<a href="<c:url value="/maintenanceMode.html" />">Manage maintenance mode</a>
+					<a href='<c:url value="/maintenanceMode.html" />'>Manage maintenance mode</a>
 				</li>
 				<li>
-					<a href="<c:url value="/whatsnew/generateCache.html" />">Regenerate What's New Cache</a>
+					<a href='<c:url value="/whatsnew/generateCache.html" />'>Regenerate What's New Cache</a>
 				</li>
 				<li>
-					<a href="<c:url value="loadSimpleExpressionExperiment.html"/>"> Load expression data from a tabbed file</a>
+					<a href='<c:url value="loadSimpleExpressionExperiment.html"/>'> Load expression data from a tabbed file</a>
 				</li>
 				<li>
-					<a href="<c:url value="/arrayDesign/associateSequences.html"/>"> <fmt:message key="menu.arrayDesignSequenceAdd" />
+					<a href='<c:url value="/arrayDesign/associateSequences.html"/>'> <fmt:message key="menu.arrayDesignSequenceAdd" />
 					</a>
 				</li>
 			</ul>
 			<strong> Inactive, deprecated, or not ready for prime time </strong>
 			<ul class="compactList" style="padding-left: 3px;">
 				<li>
-					<a href="<c:url value="/uploadFile.html"/>"> <fmt:message key="menu.selectFile" /> </a>
+					<a href='<c:url value="/uploadFile.html"/>'> <fmt:message key="menu.selectFile" /> </a>
 				</li>
 				<li>
-					<a href="<c:url value="/geneFinder.html"/>"> <fmt:message key="menu.GeneFinder" /> </a>
+					<a href='<c:url value="/geneFinder.html"/>'> <fmt:message key="menu.GeneFinder" /> </a>
 				</li>
 				<li>
-					<a href="<c:url value="/candidateGeneList.html"/>"> <fmt:message key="menu.CandidateGeneList" /> </a>
+					<a href='<c:url value="/candidateGeneList.html"/>'> <fmt:message key="menu.CandidateGeneList" /> </a>
 				</li>
 				<li>
-					<a href="<c:url value="/bibRefSearch.html"/>"> <fmt:message key="menu.flow.PubMedSearch" /> </a>
+					<a href='<c:url value="/bibRefSearch.html"/>'> <fmt:message key="menu.flow.PubMedSearch" /> </a>
 				</li>
 				<li>
-					<a href="<c:url value="/searchCoexpressionMultiple.html"/>"> <fmt:message key="menu.searchCoexpressionMultiple" />
+					<a href='<c:url value="/searchCoexpressionMultiple.html"/>'> <fmt:message key="menu.searchCoexpressionMultiple" />
 					</a>
 				</li>
 			</ul>
@@ -174,8 +178,8 @@
 		</h4>
 		<p>
 			To get emails about updates to the Gemma software, subscribe to the
-			<a href="http://perutz.cmmt.ubc.ca/mailman/bioinformatics.ubc.ca/listinfo/gemma-announce">Gemma-announce mailing
-				list</a>. Please send bug reports or feature requests to
+			<a href="http://perutz.cmmt.ubc.ca/mailman/bioinformatics.ubc.ca/listinfo/gemma-announce">Gemma-announce mailing list</a>.
+			Please send bug reports or feature requests to
 			<a href="mailto:gemma@bioinformatics.ubc.ca">gemma@bioinformatics.ubc.ca</a>.
 		</p>
 	</div>
@@ -194,8 +198,8 @@
 
 <div id="sampleQueries" style="padding: 4px; width: 250px;">
 	Examples: rat
-	<a href="<c:url value="/searchCoexpression.html?g=938103&amp;a=706" />">Ddn</a>; mouse
-	<a href="<c:url value="/searchCoexpression.html?g=598735&amp;s=3&amp;a=708" />">Mapk3</a>
+	<a href='<c:url value="/searchCoexpression.html?g=938103&amp;a=706" />'>Ddn</a>; mouse
+	<a href='<c:url value="/searchCoexpression.html?g=598735&amp;s=3&amp;a=708" />'>Mapk3</a>
 </div>
 
 

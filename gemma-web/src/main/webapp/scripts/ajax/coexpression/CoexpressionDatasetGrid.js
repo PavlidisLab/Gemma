@@ -110,7 +110,7 @@ Gemma.CoexpressionDatasetGrid.getBooleanStyler = function() {
 		};
 	}
 	return Gemma.CoexpressionDatasetGrid.booleanStyler;
-}
+};
 
 Gemma.CoexpressionDatasetGrid.updateDatasetInfo = function( datasets, eeMap ) {
 	for ( var i=0; i<datasets.length; ++i ) {

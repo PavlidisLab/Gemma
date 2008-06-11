@@ -16,7 +16,7 @@ Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 Gemma.GEMMA_BASE_URL = "http://www.bioinformatics.ubc.ca/Gemma/";
 
 Gemma.UCSC_ICON = "/Gemma/images/logo/ucsc.gif";
-Gemma.NCBI_ICON = "/Gemma/images/logo/ncbi.gif",
+Gemma.NCBI_ICON = "/Gemma/images/logo/ncbi.gif";
 
 Gemma.ProbeBrowser.app = function() {
 
@@ -24,7 +24,7 @@ Gemma.ProbeBrowser.app = function() {
 		init : function() {
 			Ext.QuickTips.init();
 
-			var csidstr = Ext.get("cslist").getValue()
+			var csidstr = Ext.get("cslist").getValue();
 
 			if (csidstr) {
 				var csids = csidstr.split(',');
@@ -67,7 +67,7 @@ Gemma.ProbeBrowser.app = function() {
 			});
 		}
 
-	}
+	};
 }();
 
 Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
@@ -192,7 +192,7 @@ Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 					direction : "DESC"
 				}
 			})
-		}),
+		});
 
 		this.getStore()
 				.on("load", this.updateSequenceInfo.createDelegate(this));
@@ -538,7 +538,7 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 					Ext.DomHelper.overwrite("messages", "There was an error.");
 				}
 			}
-		})
+		});
 	},
 
 	showArrayDesignProbes : function(id) {
@@ -552,7 +552,7 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 					Ext.DomHelper.overwrite("messages", "There was an error.");
 				}
 			}
-		})
+		});
 	},
 
 	/**

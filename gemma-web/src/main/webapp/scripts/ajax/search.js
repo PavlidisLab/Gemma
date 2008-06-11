@@ -95,7 +95,7 @@ Gemma.Search.app = function() {
 				html : 'Bookmarkable link'
 			});
 		}
-	}
+	};
 }();
 
 Gemma.Search.MAX_AUTO_EXPAND_SIZE = 15;
@@ -114,11 +114,11 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 		var params = Ext.urlDecode(window.location.href);
 
 		if (params.scope) {
-			var searchGenes = params.scope.match("G") != null;
-			var searchExp = params.scope.match("E") != null;
-			var searchSeq = params.scope.match("S") != null;
-			var searchProbes = params.scope.match("P") != null;
-			var searchArrays = params.scope.match("A") != null;
+			var searchGenes = params.scope.match("G") !== null;
+			var searchExp = params.scope.match("E") !== null;
+			var searchSeq = params.scope.match("S") !== null;
+			var searchProbes = params.scope.match("P") !== null;
+			var searchArrays = params.scope.match("A") !== null;
 
 			// Populate the form with the values. Note we force false if not
 			// present, even if cookie demands it. This makes the bookmark
@@ -373,8 +373,9 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 
 		for (var i = 1; i < this.getStore().getCount(); i++) {
 			var record = this.getStore().getAt(i).data;
-			if (record.resultClass !== lastResultClass)
+			if (record.resultClass !== lastResultClass) {
 				expand = false;
+			}
 		}
 
 		if (expand) {
