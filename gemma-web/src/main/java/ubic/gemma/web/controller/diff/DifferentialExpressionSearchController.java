@@ -107,7 +107,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         for ( Long geneId : geneIds ) {
 
-            DifferentialExpressionMetaAnalysisValueObject mavo = getDifferentialExpression( geneId, null, threshold );
+            DifferentialExpressionMetaAnalysisValueObject mavo = getDifferentialExpressionMetaAnalysis( geneId, null, threshold );
 
             devos.addAll( mavo.getProbeResults() );
         }
@@ -187,7 +187,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         Collection<DifferentialExpressionMetaAnalysisValueObject> mavos = new ArrayList<DifferentialExpressionMetaAnalysisValueObject>();
         for ( long geneId : geneIds ) {
-            DifferentialExpressionMetaAnalysisValueObject mavo = getDifferentialExpression( geneId, eeIds, threshold );
+            DifferentialExpressionMetaAnalysisValueObject mavo = getDifferentialExpressionMetaAnalysis( geneId, eeIds, threshold );
             mavo.setSortKey();
             if ( eeIds != null && !eeIds.isEmpty() ) mavo.setNumSearchedExperiments( eeIds.size() );
             mavos.add( mavo );
@@ -206,7 +206,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      * @return
      */
     @SuppressWarnings("unchecked")
-    private DifferentialExpressionMetaAnalysisValueObject getDifferentialExpression( Long geneId,
+    private DifferentialExpressionMetaAnalysisValueObject getDifferentialExpressionMetaAnalysis( Long geneId,
             Collection<Long> eeIds, double threshold ) {
 
         Gene g = geneService.load( geneId );
