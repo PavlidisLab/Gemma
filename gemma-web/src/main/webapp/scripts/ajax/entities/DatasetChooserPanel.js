@@ -12,15 +12,15 @@
  * 
  * @version $Id$
  */
-Ext.namespace('Ext.Gemma');
-Ext.namespace('Ext.Gemma.ExpressionExperimentSetStore');
+Ext.namespace('Gemma');
+Ext.namespace('Gemma.ExpressionExperimentSetStore');
 
 /**
  * 
- * @class Ext.Gemma.ExpressionExperimentSetPanel
+ * @class Gemma.ExpressionExperimentSetPanel
  * @extends Ext.Panel
  */
-Ext.Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
+Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 
 	layout : 'table',
 	layoutConfig : {
@@ -72,19 +72,19 @@ Ext.Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 
 	initComponent : function() {
 
-		this.store = new Ext.Gemma.ExpressionExperimentSetStore();
+		this.store = new Gemma.ExpressionExperimentSetStore();
 
-		this.dcp = new Ext.Gemma.DatasetChooserPanel({
+		this.dcp = new Gemma.DatasetChooserPanel({
 			modal : true,
 			eeSetStore : this.store
 		});
 
-		this.combo = new Ext.Gemma.ExpressionExperimentSetCombo({
+		this.combo = new Gemma.ExpressionExperimentSetCombo({
 			width : 175,
 			store : this.store
 		});
 
-		Ext.Gemma.ExpressionExperimentSetPanel.superclass.initComponent
+		Gemma.ExpressionExperimentSetPanel.superclass.initComponent
 				.call(this);
 
 		this.addEvents('set-chosen');
@@ -103,7 +103,7 @@ Ext.Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 	},
 
 	onRender : function(ct, position) {
-		Ext.Gemma.ExpressionExperimentSetPanel.superclass.onRender.call(this,
+		Gemma.ExpressionExperimentSetPanel.superclass.onRender.call(this,
 				ct, position);
 
 		this.add(this.combo);
@@ -128,10 +128,10 @@ Ext.Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
  * ComboBox to show ExpressionExperimentSets. Configure this with a
  * ExpressionExperimentSetStore.
  * 
- * @class Ext.Gemma.ExpressionExperimentSetCombo
+ * @class Gemma.ExpressionExperimentSetCombo
  * @extends Ext.form.ComboBox
  */
-Ext.Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
+Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 
 	displayField : 'name',
 	valueField : 'id',
@@ -170,7 +170,7 @@ Ext.Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 
 	initComponent : function() {
 
-		Ext.Gemma.ExpressionExperimentSetCombo.superclass.initComponent
+		Gemma.ExpressionExperimentSetCombo.superclass.initComponent
 				.call(this);
 
 		this.tpl = new Ext.XTemplate('<tpl for="."><div ext:qtip="{description} ({numExperiments} members)" class="x-combo-list-item">{name}{[ values.taxon ? " (" + values.taxon.scientificName + ")" : "" ]}</div></tpl>');
@@ -185,10 +185,10 @@ Ext.Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 });
 
 /**
- * @class Ext.Gemma.ExpressionExperimentSetStore
+ * @class Gemma.ExpressionExperimentSetStore
  * @extends Ext.data.Store
  */
-Ext.Gemma.ExpressionExperimentSetStore = function(config) {
+Gemma.ExpressionExperimentSetStore = function(config) {
 
 	this.record = Ext.data.Record.create([{
 		name : "id",
@@ -219,7 +219,7 @@ Ext.Gemma.ExpressionExperimentSetStore = function(config) {
 		id : "id"
 	}, this.record);
 
-	Ext.Gemma.ExpressionExperimentSetStore.superclass.constructor.call(this,
+	Gemma.ExpressionExperimentSetStore.superclass.constructor.call(this,
 			config);
 
 	this.on("load", this.addFromCookie, this);
@@ -228,7 +228,7 @@ Ext.Gemma.ExpressionExperimentSetStore = function(config) {
 
 };
 
-Ext.extend(Ext.Gemma.ExpressionExperimentSetStore, Ext.data.Store, {
+Ext.extend(Gemma.ExpressionExperimentSetStore, Ext.data.Store, {
 
 	getSelected : function() {
 		return this.selected;
@@ -320,7 +320,7 @@ Ext.extend(Ext.Gemma.ExpressionExperimentSetStore, Ext.data.Store, {
 			eeSetData.push(eeSets[i].data);
 		}
 		Ext.state.Manager.set(
-				Ext.Gemma.ExpressionExperimentSetStore.COOKIE_KEY, eeSetData);
+				Gemma.ExpressionExperimentSetStore.COOKIE_KEY, eeSetData);
 		this.fireEvent("saveOrUpdate");
 	},
 
@@ -331,7 +331,7 @@ Ext.extend(Ext.Gemma.ExpressionExperimentSetStore, Ext.data.Store, {
 	 */
 	cookieRetrieveEESets : function() {
 		var storedSets = Ext.state.Manager
-				.get(Ext.Gemma.ExpressionExperimentSetStore.COOKIE_KEY);
+				.get(Gemma.ExpressionExperimentSetStore.COOKIE_KEY);
 		var eeSets = [];
 		if (storedSets && storedSets.length > 0) {
 			for (var i = 0, len = storedSets.length; i < len; i++) {
@@ -349,15 +349,15 @@ Ext.extend(Ext.Gemma.ExpressionExperimentSetStore, Ext.data.Store, {
 
 });
 
-Ext.Gemma.ExpressionExperimentSetStore.COOKIE_KEY = "eeSets";
+Gemma.ExpressionExperimentSetStore.COOKIE_KEY = "eeSets";
 
 /**
  * User interface for viewing, creating and editing ExpressionExperimentSets.
  * 
- * @class Ext.Gemma.DatasetChooserPanel
+ * @class Gemma.DatasetChooserPanel
  * @extends Ext.Window
  */
-Ext.Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
+Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 	id : 'dataset-chooser',
 	layout : 'border',
 	width : 800,
@@ -389,7 +389,7 @@ Ext.Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 			"datasets-selected" : true
 		});
 
-		Ext.Gemma.DatasetChooserPanel.superclass.initComponent.call(this);
+		Gemma.DatasetChooserPanel.superclass.initComponent.call(this);
 
 	},
 
@@ -406,11 +406,11 @@ Ext.Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 			}, config);
 		}
 
-		Ext.Gemma.DatasetChooserPanel.superclass.show.call(this);
+		Gemma.DatasetChooserPanel.superclass.show.call(this);
 	},
 
 	onRender : function(ct, position) {
-		Ext.Gemma.DatasetChooserPanel.superclass.onRender.call(this, ct,
+		Gemma.DatasetChooserPanel.superclass.onRender.call(this, ct,
 				position);
 
 		var admin = dwr.util.getValue("hasAdmin");
@@ -418,7 +418,7 @@ Ext.Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 		/**
 		 * Plain grid for displaying datasets in the current set. Editable.
 		 */
-		this.eeSetMembersGrid = new Ext.Gemma.ExpressionExperimentGrid({
+		this.eeSetMembersGrid = new Gemma.ExpressionExperimentGrid({
 			editable : admin,
 			region : 'center',
 			title : "Datasets in current set",
@@ -435,7 +435,7 @@ Ext.Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 		/**
 		 * Datasets that can be added to the current set.
 		 */
-		this.sourceDatasetsGrid = new Ext.Gemma.ExpressionExperimentGrid({
+		this.sourceDatasetsGrid = new Gemma.ExpressionExperimentGrid({
 			editable : false,
 			admin : admin,
 			title : "Dataset locator",
@@ -448,7 +448,7 @@ Ext.Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 			},
 			width : 400,
 			rowExpander : true,
-			tbar : new Ext.Gemma.DataSetSearchAndGrabToolbar({
+			tbar : new Gemma.DataSetSearchAndGrabToolbar({
 				taxonSearch : true,
 				targetGrid : this.eeSetMembersGrid
 			})
@@ -457,7 +457,7 @@ Ext.Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 		/**
 		 * Top grid for showing the EEsets
 		 */
-		this.eeSetGrid = new Ext.Gemma.ExpressionExperimentSetGrid({
+		this.eeSetGrid = new Gemma.ExpressionExperimentSetGrid({
 			store : this.eeSetStore,
 			editable : admin,
 			region : 'north',
@@ -472,7 +472,7 @@ Ext.Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 			title : "Available expression experiment sets",
 			displayGrid : this.eeSetMembersGrid,
 			searchGrid : this.sourceDatasetsGrid,
-			tbar : new Ext.Gemma.EditExpressionExperimentSetToolbar({
+			tbar : new Gemma.EditExpressionExperimentSetToolbar({
 				admin : admin
 			})
 
@@ -488,10 +488,10 @@ Ext.Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 
 /**
  * 
- * @class Ext.Gemma.ExpressionExperimentSetGrid
+ * @class Gemma.ExpressionExperimentSetGrid
  * @extends Ext.grid.GridPanel
  */
-Ext.Gemma.ExpressionExperimentSetGrid = Ext.extend(Ext.grid.EditorGridPanel, {
+Gemma.ExpressionExperimentSetGrid = Ext.extend(Ext.grid.EditorGridPanel, {
 
 	autoExpandColumn : 'description',
 	selModel : new Ext.grid.RowSelectionModel({
@@ -506,12 +506,12 @@ Ext.Gemma.ExpressionExperimentSetGrid = Ext.extend(Ext.grid.EditorGridPanel, {
 
 	initComponent : function() {
 
-		Ext.Gemma.ExpressionExperimentSetGrid.superclass.initComponent
+		Gemma.ExpressionExperimentSetGrid.superclass.initComponent
 				.call(this);
 
 		if (!this.store) {
 			Ext.apply(this, {
-				store : new Ext.Gemma.ExpressionExperimentSetStore()
+				store : new Gemma.ExpressionExperimentSetStore()
 			});
 		}
 
@@ -527,7 +527,7 @@ Ext.Gemma.ExpressionExperimentSetGrid = Ext.extend(Ext.grid.EditorGridPanel, {
 	},
 
 	afterRender : function() {
-		Ext.Gemma.ExpressionExperimentSetGrid.superclass.afterRender.call(this);
+		Gemma.ExpressionExperimentSetGrid.superclass.afterRender.call(this);
 
 		this.getTopToolbar().grid = this;
 
@@ -664,7 +664,7 @@ Ext.Gemma.ExpressionExperimentSetGrid = Ext.extend(Ext.grid.EditorGridPanel, {
  * Toolbar for creating/updating expressionExperimentSet. Attach to the
  * virtualAnalysisGrid. Either save to the database or to a cookie.
  */
-Ext.Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
+Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 
 	userCanWriteToDB : false, // FIXME configure this properly.
 
@@ -688,7 +688,7 @@ Ext.Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 	getNewDetails : function() {
 
 		if (!this.detailsWin) {
-			this.detailsWin = new Ext.Gemma.DetailsWindow({
+			this.detailsWin = new Gemma.DetailsWindow({
 				store : this.grid.getStore()
 			});
 		}
@@ -721,7 +721,7 @@ Ext.Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 	},
 
 	afterRender : function() {
-		Ext.Gemma.EditExpressionExperimentSetToolbar.superclass.afterRender
+		Gemma.EditExpressionExperimentSetToolbar.superclass.afterRender
 				.call(this);
 
 		// this.addButton(this.displayBut);
@@ -743,7 +743,7 @@ Ext.Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 
 	initComponent : function() {
 
-		Ext.Gemma.EditExpressionExperimentSetToolbar.superclass.initComponent
+		Gemma.EditExpressionExperimentSetToolbar.superclass.initComponent
 				.call(this);
 
 		this.newBut = new Ext.Button({
@@ -945,7 +945,7 @@ Ext.Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 
 });
 
-Ext.Gemma.DetailsWindow = Ext.extend(Ext.Window, {
+Gemma.DetailsWindow = Ext.extend(Ext.Window, {
 	width : 500,
 	height : 300,
 	closeAction : 'hide',
@@ -1002,7 +1002,7 @@ Ext.Gemma.DetailsWindow = Ext.extend(Ext.Window, {
 				height : 250,
 				items : new Ext.form.FieldSet({
 					height : 200,
-					items : [new Ext.Gemma.TaxonCombo({
+					items : [new Gemma.TaxonCombo({
 						id : 'eesetTaxon',
 						fieldLabel : 'Taxon'
 					}), this.nameField, new Ext.form.TextArea({
@@ -1025,6 +1025,6 @@ Ext.Gemma.DetailsWindow = Ext.extend(Ext.Window, {
 			})
 		});
 
-		Ext.Gemma.DetailsWindow.superclass.initComponent.call(this);
+		Gemma.DetailsWindow.superclass.initComponent.call(this);
 	}
 });

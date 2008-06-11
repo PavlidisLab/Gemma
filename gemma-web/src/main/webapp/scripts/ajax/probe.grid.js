@@ -8,17 +8,17 @@
  * 
  * @version $Id$
  */
-Ext.namespace('Ext.Gemma.ProbeBrowser');
+Ext.namespace('Gemma.ProbeBrowser');
 
 // FIXME make this configurable
 
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
-Ext.Gemma.GEMMA_BASE_URL = "http://www.bioinformatics.ubc.ca/Gemma/";
+Gemma.GEMMA_BASE_URL = "http://www.bioinformatics.ubc.ca/Gemma/";
 
-Ext.Gemma.UCSC_ICON = "/Gemma/images/logo/ucsc.gif";
-Ext.Gemma.NCBI_ICON = "/Gemma/images/logo/ncbi.gif",
+Gemma.UCSC_ICON = "/Gemma/images/logo/ucsc.gif";
+Gemma.NCBI_ICON = "/Gemma/images/logo/ncbi.gif",
 
-Ext.Gemma.ProbeBrowser.app = function() {
+Gemma.ProbeBrowser.app = function() {
 
 	return {
 		init : function() {
@@ -44,7 +44,7 @@ Ext.Gemma.ProbeBrowser.app = function() {
 		 *            isArrayDesign
 		 */
 		initMainGrid : function(arrayDesignId, csIds) {
-			this.mainGrid = new Ext.Gemma.ProbeGrid({
+			this.mainGrid = new Gemma.ProbeGrid({
 				csIds : csIds,
 				arrayDesignId : arrayDesignId,
 				detailsDataSource : this.detailsGrid.getStore(),
@@ -61,7 +61,7 @@ Ext.Gemma.ProbeBrowser.app = function() {
 		 */
 
 		initDetails : function() {
-			this.detailsGrid = new Ext.Gemma.ProbeDetailsGrid({
+			this.detailsGrid = new Gemma.ProbeDetailsGrid({
 				renderTo : "probe-details",
 				height : 100
 			});
@@ -70,7 +70,7 @@ Ext.Gemma.ProbeBrowser.app = function() {
 	}
 }();
 
-Ext.Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
+Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	loadMask : true,
 
@@ -127,10 +127,10 @@ Ext.Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 		if (database) {
 			var link = "http://genome.ucsc.edu/cgi-bin/hgTracks?org="
 					+ organism + "&pix=850&db=" + database + "&hgt.customText="
-					+ Ext.Gemma.GEMMA_BASE_URL + "blatTrack.html?id=" + d.id;
+					+ Gemma.GEMMA_BASE_URL + "blatTrack.html?id=" + d.id;
 			res = res
 					+ "&nbsp;<a title='Genome browser view (opens in new window)' target='_blank' href='"
-					+ link + "'><img src='" + Ext.Gemma.UCSC_ICON + "' /></a>";
+					+ link + "'><img src='" + Gemma.UCSC_ICON + "' /></a>";
 		}
 		return res;
 	},
@@ -196,7 +196,7 @@ Ext.Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 
 		this.getStore()
 				.on("load", this.updateSequenceInfo.createDelegate(this));
-		Ext.Gemma.ProbeDetailsGrid.superclass.initComponent.call(this);
+		Gemma.ProbeDetailsGrid.superclass.initComponent.call(this);
 
 	},
 
@@ -272,7 +272,7 @@ Ext.Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 
 });
 
-Ext.Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
+Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	autoExpandColumn : 'genes',
 
@@ -433,7 +433,7 @@ Ext.Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 				tooltip : "Symbols of genes this probe potentially targets; if there are more than 3, the total count is provided in parentheses",
 				renderer : this.convertgenes.createDelegate(this)
 			}],
-			store : new Ext.Gemma.PagingDataStore({
+			store : new Gemma.PagingDataStore({
 				proxy : proxy,
 				reader : reader,
 				pageSize : this.pageSize
@@ -445,7 +445,7 @@ Ext.Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 		});
 
 		Ext.apply(this, {
-			bbar : new Ext.Gemma.PagingToolbar({
+			bbar : new Gemma.PagingToolbar({
 				pageSize : this.pageSize,
 				store : this.store
 			})
@@ -492,7 +492,7 @@ Ext.Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 
 		this.store.on("load", this.loadHandler.createDelegate(this));
 
-		Ext.Gemma.ProbeGrid.superclass.initComponent.call(this);
+		Gemma.ProbeGrid.superclass.initComponent.call(this);
 
 		this.getSelectionModel().on("rowselect", function() {
 			var sm = this.getSelectionModel();

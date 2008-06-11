@@ -66,7 +66,7 @@
 	var eeClass = dwr.util.getValue("eeClass");
 	var admin = dwr.util.getValue("hasAdmin");
 
-	var grid = new Ext.Gemma.AnnotationGrid( { renderTo : "eeAnnotations",
+	var grid = new Gemma.AnnotationGrid( { renderTo : "eeAnnotations",
 				readMethod : ExpressionExperimentController.getAnnotation,
 				readParams : [{
 					id : eeId,

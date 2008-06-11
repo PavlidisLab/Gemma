@@ -1,12 +1,12 @@
-Ext.namespace('Ext.Gemma');
+Ext.namespace('Gemma');
 
 /**
  * Combobox to display available taxa.
  * 
- * @class Ext.Gemma.TaxonCombo
+ * @class Gemma.TaxonCombo
  * @extends Ext.form.ComboBox
  */
-Ext.Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
+Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 
 	displayField : 'commonName',
 	valueField : 'id',
@@ -16,7 +16,7 @@ Ext.Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 	mode : 'local', // because we load only at startup.
 	listWidth : 150,
 	width : 120,
-	stateId : "Ext.Gemma.TaxonCombo",
+	stateId : "Gemma.TaxonCombo",
 	stateful : true,
 	stateEvents : ['select'],
 
@@ -24,7 +24,7 @@ Ext.Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 
 	setState : function(v) {
 		if (this.ready) {
-			Ext.Gemma.TaxonCombo.superclass.setValue.call(this, v);// don't
+			Gemma.TaxonCombo.superclass.setValue.call(this, v);// don't
 			// want to
 			// fire
 			// changed
@@ -38,7 +38,7 @@ Ext.Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 
 	restoreState : function() {
 		if (this.state) {
-			Ext.Gemma.TaxonCombo.superclass.setValue.call(this, v);
+			Gemma.TaxonCombo.superclass.setValue.call(this, v);
 			delete this.state;
 		}
 		this.ready = true;
@@ -93,7 +93,7 @@ Ext.Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 			add : false
 		});
 
-		Ext.Gemma.TaxonCombo.superclass.initComponent.call(this);
+		Gemma.TaxonCombo.superclass.initComponent.call(this);
 	},
 
 //	setValue : function(v) {
@@ -103,7 +103,7 @@ Ext.Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 //			changed = true;
 //		}
 //
-//		Ext.Gemma.TaxonCombo.superclass.setValue.call(this, v);
+//		Gemma.TaxonCombo.superclass.setValue.call(this, v);
 //
 //		if (changed) {
 //			var rec = this.store.getById(v);

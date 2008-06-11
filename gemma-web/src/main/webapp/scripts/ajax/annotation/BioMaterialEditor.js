@@ -1,6 +1,6 @@
-Ext.namespace('Ext.Gemma');
+Ext.namespace('Gemma');
 
-Ext.Gemma.BioMaterialEditor = function ( config ) {
+Gemma.BioMaterialEditor = function ( config ) {
 	return {
 		originalConfig : config,
 		expressionExperiment : {
@@ -10,7 +10,7 @@ Ext.Gemma.BioMaterialEditor = function ( config ) {
 		dwrCallback : function( data ) {
 			config = { data : data };
 			Ext.apply( config, this.originalConfig );
-			this.grid = new Ext.Gemma.BioMaterialGrid( config );
+			this.grid = new Gemma.BioMaterialGrid( config );
 			this.grid.refresh = this.init.bind( this );
 			this.grid.render();
 		},
@@ -26,11 +26,11 @@ Ext.Gemma.BioMaterialEditor = function ( config ) {
 	};
 };
 
-/* Ext.Gemma.BioMaterialGrid constructor...
+/* Gemma.BioMaterialGrid constructor...
  * 	config is a hash with the following options:
  * 		data	an array containing the data to display in the grid
  */
-Ext.Gemma.BioMaterialGrid = function ( config ) {
+Gemma.BioMaterialGrid = function ( config ) {
 
 	this.backingArray = config.data; delete config.data;
 	this.edId = config.edId; delete config.edId;
@@ -41,22 +41,22 @@ Ext.Gemma.BioMaterialGrid = function ( config ) {
 	 */
 	var superConfig = {};
 	
-	var data = Ext.Gemma.BioMaterialGrid.transformData( this.backingArray );
+	var data = Gemma.BioMaterialGrid.transformData( this.backingArray );
 	superConfig.ds = new Ext.data.Store( {
 		proxy : new Ext.data.MemoryProxy( data ),
-		reader : new Ext.data.ArrayReader( { }, Ext.Gemma.BioMaterialGrid.createRecord( this.backingArray[0] ) )
+		reader : new Ext.data.ArrayReader( { }, Gemma.BioMaterialGrid.createRecord( this.backingArray[0] ) )
 	} );
 	superConfig.ds.load();
 	
-	superConfig.cm = Ext.Gemma.BioMaterialGrid.createColumnModel.call( this, this.backingArray[0] );
+	superConfig.cm = Gemma.BioMaterialGrid.createColumnModel.call( this, this.backingArray[0] );
 	superConfig.cm.defaultSortable = true;
-	superConfig.plugins = Ext.Gemma.BioMaterialGrid.getRowExpander();
+	superConfig.plugins = Gemma.BioMaterialGrid.getRowExpander();
 	superConfig.viewConfig = { forceFit: true };
 	
 	for ( property in config ) {
 		superConfig[property] = config[property];
 	}
-	Ext.Gemma.BioMaterialGrid.superclass.constructor.call( this, superConfig );
+	Gemma.BioMaterialGrid.superclass.constructor.call( this, superConfig );
 	
 	/* these functions have to happen after we've called the super-constructor so that we know
 	 * we're a Grid...
@@ -76,12 +76,12 @@ Ext.Gemma.BioMaterialGrid = function ( config ) {
 		} );
 	}
 	
-	var tbar = new Ext.Gemma.BioMaterialToolbar( { grid : this, renderTo : this.tbar } );
+	var tbar = new Gemma.BioMaterialToolbar( { grid : this, renderTo : this.tbar } );
 };
 
 /* static methods
  */
-Ext.Gemma.BioMaterialGrid.transformData = function( incoming ) {
+Gemma.BioMaterialGrid.transformData = function( incoming ) {
 	var data = [];
 	for (var i=0; i<incoming.length; ++i) {
 		var bmvo = incoming[i];
@@ -101,7 +101,7 @@ Ext.Gemma.BioMaterialGrid.transformData = function( incoming ) {
 	return data;
 };
 
-Ext.Gemma.BioMaterialGrid.createRecord = function( row ) {
+Gemma.BioMaterialGrid.createRecord = function( row ) {
 	var fields = [
 		{ name:"id", type:"int" },
 		{ name:"bmName", type:"string" },
@@ -117,9 +117,9 @@ Ext.Gemma.BioMaterialGrid.createRecord = function( row ) {
 	return record;
 };
 
-Ext.Gemma.BioMaterialGrid.getFactorValueRecord = function() {
-	if ( Ext.Gemma.BioMaterialGrid.fvRecord === undefined ) {
-		Ext.Gemma.BioMaterialGrid.fvRecord = Ext.data.Record.create( [
+Gemma.BioMaterialGrid.getFactorValueRecord = function() {
+	if ( Gemma.BioMaterialGrid.fvRecord === undefined ) {
+		Gemma.BioMaterialGrid.fvRecord = Ext.data.Record.create( [
 			{ name:"charId", type:"int" },
 			{ name:"factorValueId", type:"string", convert: function( v ) { return "fv" + v; } },
 			{ name:"category", type:"string" },
@@ -129,25 +129,25 @@ Ext.Gemma.BioMaterialGrid.getFactorValueRecord = function() {
 			{ name:"factorValueString", type:"string" }
 		] );
 	}
-	return Ext.Gemma.BioMaterialGrid.fvRecord;
+	return Gemma.BioMaterialGrid.fvRecord;
 };
 
-Ext.Gemma.BioMaterialGrid.createColumnModel = function( row, editable ) {
+Gemma.BioMaterialGrid.createColumnModel = function( row, editable ) {
 	var columns = [
-		Ext.Gemma.BioMaterialGrid.getRowExpander(),
+		Gemma.BioMaterialGrid.getRowExpander(),
 		{ id: "bm", header:"BioMaterial", dataIndex:"bmName" },
 		{ id: "ba", header:"BioAssay", dataIndex:"baName" }
 	];
 	this.fvIdToDescription = row.factorValues;
-	this.columnRenderer = Ext.Gemma.BioMaterialGrid.createValueRenderer( row.factorValues );
+	this.columnRenderer = Gemma.BioMaterialGrid.createValueRenderer( row.factorValues );
 	this.factorValueCombo = [];
 	for ( factorId in row.factors ) {
 		var efId = factorId.substring(6); // strip "factor" from the id...
-		this.factorValueCombo[factorId] = new Ext.Gemma.FactorValueCombo( {
+		this.factorValueCombo[factorId] = new Gemma.FactorValueCombo( {
 			efId: efId,
 			lazyInit: false,
 			lazyRender: true,
-			record: Ext.Gemma.BioMaterialGrid.getFactorValueRecord()
+			record: Gemma.BioMaterialGrid.getFactorValueRecord()
 		} );
 		var editor;
 		if ( this.editable ) {
@@ -158,19 +158,19 @@ Ext.Gemma.BioMaterialGrid.createColumnModel = function( row, editable ) {
 	return new Ext.grid.ColumnModel( columns );
 };
 
-Ext.Gemma.BioMaterialGrid.getRowExpander = function() {
-	if ( Ext.Gemma.BioMaterialGrid.rowExpander === undefined ) {
-		Ext.Gemma.BioMaterialGrid.rowExpander = new Ext.grid.RowExpander( {
+Gemma.BioMaterialGrid.getRowExpander = function() {
+	if ( Gemma.BioMaterialGrid.rowExpander === undefined ) {
+		Gemma.BioMaterialGrid.rowExpander = new Ext.grid.RowExpander( {
 			tpl : new Ext.Template(
 				"<dl style='margin-left: 1em; margin-bottom: 2px;'><dt>BioMaterial {bmName}</dt><dd>{bmDesc}<br>{bmChars}</dd>",
 				"<dt>BioAssay {baName}</dt><dd>{baDesc}</dd></dl>"
 			)
 		} );
 	}
-	return Ext.Gemma.BioMaterialGrid.rowExpander;
+	return Gemma.BioMaterialGrid.rowExpander;
 };
 
-Ext.Gemma.BioMaterialGrid.createValueRenderer = function( factorValues ) {
+Gemma.BioMaterialGrid.createValueRenderer = function( factorValues ) {
 	return function ( value, metadata, record, row, col, ds ) {
 		return factorValues[value] ? factorValues[value] : value;
 	};
@@ -178,7 +178,7 @@ Ext.Gemma.BioMaterialGrid.createValueRenderer = function( factorValues ) {
 
 /* instance methods...
  */
-Ext.extend( Ext.Gemma.BioMaterialGrid, Ext.Gemma.GemmaGridPanel, {
+Ext.extend( Gemma.BioMaterialGrid, Gemma.GemmaGridPanel, {
 
 	reloadFactorValues : function() {
 		for ( var factorId in this.factorValueCombo ) {
@@ -190,7 +190,7 @@ Ext.extend( Ext.Gemma.BioMaterialGrid, Ext.Gemma.GemmaGridPanel, {
 					for ( var i=0; i<r.length; ++i ) {
 						fvs[ "fv" + r[i].data.factorValueId ] = r[i].data.factorValueString;
 					}
-					var renderer = Ext.Gemma.BioMaterialGrid.createValueRenderer( fvs );
+					var renderer = Gemma.BioMaterialGrid.createValueRenderer( fvs );
 					column.renderer = renderer;
 					this.getView().refresh();
 				} );
@@ -200,11 +200,11 @@ Ext.extend( Ext.Gemma.BioMaterialGrid, Ext.Gemma.GemmaGridPanel, {
 	
 } );
 
-/* Ext.Gemma.BioMaterialToolbar constructor...
+/* Gemma.BioMaterialToolbar constructor...
  * 	config is a hash with the following options:
  * 		grid is the grid that contains the factor values.
  */
-Ext.Gemma.BioMaterialToolbar = function ( config ) {
+Gemma.BioMaterialToolbar = function ( config ) {
 
 	this.grid = config.grid; delete config.grid;
 	this.editable = this.grid.editable;
@@ -272,7 +272,7 @@ Ext.Gemma.BioMaterialToolbar = function ( config ) {
 		text : "Expand/collapse all",
 		tooltip : "Show/hide all biomaterial details",
 		handler : function() {
-			var expander = Ext.Gemma.BioMaterialGrid.getRowExpander()
+			var expander = Gemma.BioMaterialGrid.getRowExpander()
 			expander.toggleAll();
 		}
 	} );
@@ -296,10 +296,10 @@ Ext.Gemma.BioMaterialToolbar = function ( config ) {
 	for ( property in config ) {
 		superConfig[property] = config[property];
 	}
-	Ext.Gemma.BioMaterialToolbar.superclass.constructor.call( this, superConfig );
+	Gemma.BioMaterialToolbar.superclass.constructor.call( this, superConfig );
 	
 	if ( this.editable ) {
-		this.factorCombo = new Ext.Gemma.ExperimentalFactorCombo( {
+		this.factorCombo = new Gemma.ExperimentalFactorCombo( {
 			emptyText : "select a factor",
 			edId : this.grid.edId
 		} );
@@ -309,7 +309,7 @@ Ext.Gemma.BioMaterialToolbar = function ( config ) {
 			factorValueCombo.enable(); // TODO do this in the callback
 		} );
 		
-		this.factorValueCombo = new Ext.Gemma.FactorValueCombo( {
+		this.factorValueCombo = new Gemma.FactorValueCombo( {
 			emptyText : "select a factor value",
 			disabled: true
 		} );
@@ -357,6 +357,6 @@ Ext.Gemma.BioMaterialToolbar = function ( config ) {
 
 /* instance methods...
  */
-Ext.extend( Ext.Gemma.BioMaterialToolbar, Ext.Toolbar, {
+Ext.extend( Gemma.BioMaterialToolbar, Ext.Toolbar, {
 
 } );

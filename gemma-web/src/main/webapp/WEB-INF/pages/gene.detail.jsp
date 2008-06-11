@@ -17,15 +17,33 @@
 <script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 
 
-<script type="text/javascript" src="<c:url value='/scripts/ajax/gene.detail.js'/>" type="text/javascript"></script>
+<script type="text/javascript" src="<c:url value='/scripts/app/gene.detail.js'/>" type="text/javascript"></script>
 
 <script type="text/javascript" src="<c:url value='/scripts/scriptaculous/effects.js'/>"></script>
 <authz:authorize ifAnyGranted="admin">
 	<script type='text/javascript' src='/Gemma/dwr/interface/AuditController.js'></script>
-	<script type="text/javascript" src="<c:url value='/scripts/ajax/auditTrail.js'/>" type="text/javascript"></script>
+	<script type="text/javascript" src="<c:url value='/scripts/entities/AuditTrailGrid.js'/>" type="text/javascript"></script>
+	<script type="text/javascript">
+	Ext.namespace('Gemma');
+	Ext.onReady(function() {
+	Ext.QuickTips.init();
+	var id = dwr.util.getValue("auditableId");
+ 	if (!id) { return; }
+	var clazz = dwr.util.getValue("auditableClass");
+	var auditable = {
+		id : id,
+		classDelegatingFor : clazz
+	};
+	var grid = new Gemma.AuditTrailGrid({
+		renderTo : 'auditTrail',
+		auditable : auditable
+	});
+});
+</script>
 </authz:authorize>
 
-<title><fmt:message key="gene.details" /></title>
+<title><fmt:message key="gene.details" />
+</title>
 
 <h1>
 	<fmt:message key="gene.details" />
@@ -175,10 +193,7 @@
 
 
 <authz:authorize ifAnyGranted="admin">
-	<h3>
-		History
-	</h3>
-	<div id="auditTrail" class="x-grid-mso" style="border: 1px solid #c3daf9; overflow: hidden; width: 650px;"></div>
+	<div id="auditTrail"></div>
 	<input type="hidden" name="auditableId" id="auditableId" value="${gene.id}" />
 	<input type="hidden" name="auditableClass" id="auditableClass" value="${gene.class.name}" />
 </authz:authorize>

@@ -1,6 +1,6 @@
 /*
  */
-Ext.namespace('Ext.Gemma');
+Ext.namespace('Gemma');
 
 /**
  * 
@@ -8,7 +8,7 @@ Ext.namespace('Ext.Gemma');
  * CoexpressionDatasetGrid) $Id: ExpressionExperimentGrid.js,v 1.13 2008/04/23
  * 19:54:46 kelsey Exp $
  */
-Ext.Gemma.ExpressionExperimentGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
+Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 	/*
 	 * Do not set header : true here - it breaks it.
@@ -56,7 +56,7 @@ Ext.Gemma.ExpressionExperimentGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 				});
 			} else {
 				Ext.apply(this, {
-					store : new Ext.Gemma.PagingDataStore({
+					store : new Gemma.PagingDataStore({
 						proxy : new Ext.data.DWRProxy(this.readMethod),
 						reader : new Ext.data.ListRangeReader({
 							id : "id"
@@ -66,7 +66,7 @@ Ext.Gemma.ExpressionExperimentGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 				});
 			}
 			Ext.apply(this, {
-				bbar : new Ext.Gemma.PagingToolbar({
+				bbar : new Gemma.PagingToolbar({
 					pageSize : this.pageSize,
 					store : this.store
 				})
@@ -123,7 +123,7 @@ Ext.Gemma.ExpressionExperimentGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 
 		if (this.rowExpander) {
 			Ext.apply(this, {
-				rowExpander : new Ext.Gemma.EEGridRowExpander({
+				rowExpander : new Gemma.EEGridRowExpander({
 					tpl : ""
 				})
 			});
@@ -133,7 +133,7 @@ Ext.Gemma.ExpressionExperimentGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 			});
 		}
 
-		Ext.Gemma.ExpressionExperimentGrid.superclass.initComponent.call(this);
+		Gemma.ExpressionExperimentGrid.superclass.initComponent.call(this);
 
 		this.on("keypress", function(e) {
 			if (e.getCharCode() == Ext.EventObject.DELETE) {
@@ -148,7 +148,7 @@ Ext.Gemma.ExpressionExperimentGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 	},
 
 	afterRender : function() {
-		Ext.Gemma.ExpressionExperimentGrid.superclass.afterRender.call(this);
+		Gemma.ExpressionExperimentGrid.superclass.afterRender.call(this);
 		if (this.getTopToolbar()) {
 			this.getTopToolbar().grid = this;
 		}
@@ -198,7 +198,7 @@ Ext.Gemma.ExpressionExperimentGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 
 });
 
-Ext.Gemma.ExpressionExperimentGrid.updateDatasetInfo = function(datasets, eeMap) {
+Gemma.ExpressionExperimentGrid.updateDatasetInfo = function(datasets, eeMap) {
 	for (var i = 0; i < datasets.length; ++i) {
 		var ee = eeMap[datasets[i].id];
 		if (ee) {
@@ -208,7 +208,7 @@ Ext.Gemma.ExpressionExperimentGrid.updateDatasetInfo = function(datasets, eeMap)
 	}
 };
 
-Ext.Gemma.EEGridRowExpander = Ext.extend(Ext.grid.RowExpander, {
+Gemma.EEGridRowExpander = Ext.extend(Ext.grid.RowExpander, {
 
 	fillExpander : function(data, body, rowIndex) {
 		Ext.DomHelper.overwrite(body, {

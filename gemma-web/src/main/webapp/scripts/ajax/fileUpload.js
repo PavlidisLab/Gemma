@@ -3,7 +3,8 @@
  * AJAX support for file uploads. Uploading a file is done with a multipartform.
  * $Id$
  */
-FileUpload = function(form) {
+Ext.namespace("Gemma");
+Gemma.FileUpload = function(form) {
 	Ext.QuickTips.init();
 	this.formId = form;
 	Ext.form.Field.prototype.msgTarget = 'side';
@@ -15,10 +16,10 @@ FileUpload = function(form) {
 		cancel : true
 	});
 	var aform;
-	FileUpload.superclass.constructor.call(this);
+	Gemma.FileUpload.superclass.constructor.call(this);
 };
 
-Ext.extend(FileUpload, Ext.util.Observable, {
+Ext.extend(Gemma.FileUpload, Ext.util.Observable, {
 	/*
 	 * makeUploadForm : function (divid) {
 	 * 

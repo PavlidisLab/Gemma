@@ -17,7 +17,7 @@
 Note: to get the command object updated with values from the form one has to update the loadExpressionExperiment.js file as it builds the command obj on the fly
 by getting the info it needs from the dom.  The initbinder method in the controller never gets called. 
  --%>
-	<script type="text/javascript" src="<c:url value='/scripts/ajax/loadExpressionExperiment.js'/>" type="text/javascript"></script>
+	<script type="text/javascript" src="<c:url value='/scripts/app/loadExpressionExperiment.js'/>" type="text/javascript"></script>
 
 	<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/progressbar.css'/>" />
 </head>

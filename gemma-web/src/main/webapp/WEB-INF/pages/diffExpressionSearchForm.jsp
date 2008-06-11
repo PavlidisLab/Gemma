@@ -29,7 +29,6 @@ version: $Id$
 	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/GeneImportPanel.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/TaxonCombo.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/GeneChooserPanel.js'></script>
-	
 	<script type='text/javascript' src='/Gemma/scripts/ajax/diff/DiffExpressionGrid.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/diff/DiffExpressionSearchForm.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/diff/DiffExpressionSearch.js'></script>
@@ -42,6 +41,9 @@ version: $Id$
 	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/DatasetChooserPanel.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/DatasetSearchToolbar.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentSetController.js'></script>
+	
+	
+	<script type='text/javascript' src='/Gemma/scripts/app/DiffExpressionSearch.js'></script>
 	
 	<content tag="heading"><fmt:message key="diffExpressionSearch.title" /></content>
 	

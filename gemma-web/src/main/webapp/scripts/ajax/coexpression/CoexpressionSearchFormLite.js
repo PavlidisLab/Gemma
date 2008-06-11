@@ -1,15 +1,15 @@
 /**
  * 
- * @class Ext.Gemma.CoexpressionSearchFormLite
+ * @class Gemma.CoexpressionSearchFormLite
  * @extends Ext.FormPanel
  */
-Ext.Gemma.CoexpressionSearchFormLite = Ext.extend(Ext.FormPanel, {
+Gemma.CoexpressionSearchFormLite = Ext.extend(Ext.FormPanel, {
 
 	autoHeight : true,
 	frame : true,
 	stateful : true,
 	stateEvents : ["beforesearch"],
-	stateId : "Ext.Gemma.CoexpressionSearch", // share state with complex
+	stateId : "Gemma.CoexpressionSearch", // share state with complex
 	// form...
 	labelAlign : "top",
 
@@ -17,14 +17,14 @@ Ext.Gemma.CoexpressionSearchFormLite = Ext.extend(Ext.FormPanel, {
 
 	initComponent : function() {
 
-		Ext.Gemma.CoexpressionSearchFormLite.superclass.initComponent
+		Gemma.CoexpressionSearchFormLite.superclass.initComponent
 				.call(this);
 
 		this.stringencyField = new Ext.form.Hidden({
 			value : 3
 		});
 
-		this.geneCombo = new Ext.Gemma.GeneCombo({
+		this.geneCombo = new Gemma.GeneCombo({
 			hiddenName : 'g',
 			id : 'gene-combo',
 			fieldLabel : 'Select a query gene',
@@ -33,9 +33,9 @@ Ext.Gemma.CoexpressionSearchFormLite = Ext.extend(Ext.FormPanel, {
 
 		this.geneCombo.on("focus", this.clearMessages, this);
 
-		this.store = new Ext.Gemma.ExpressionExperimentSetStore();
+		this.store = new Gemma.ExpressionExperimentSetStore();
 
-		this.eeSetCombo = new Ext.Gemma.ExpressionExperimentSetCombo({
+		this.eeSetCombo = new Gemma.ExpressionExperimentSetCombo({
 			width : 175,
 			fieldLabel : 'Select search scope',
 			store : this.store
@@ -86,7 +86,7 @@ Ext.Gemma.CoexpressionSearchFormLite = Ext.extend(Ext.FormPanel, {
 	},
 
 	render : function(container, position) {
-		Ext.Gemma.CoexpressionSearchFormLite.superclass.render.apply(this,
+		Gemma.CoexpressionSearchFormLite.superclass.render.apply(this,
 				arguments);
 
 		// initialize from state

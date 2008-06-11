@@ -10,7 +10,7 @@ Ext.onReady( function() {
 	/* TODO make sure we've got an edId and display a prominent error message if we don't...
 	 */
 
-	var experimentalFactorGrid = new Ext.Gemma.ExperimentalFactorGrid( {
+	var experimentalFactorGrid = new Gemma.ExperimentalFactorGrid( {
 		title : "Experimental Factors",
 		renderTo : "experimentalFactorPanel",
 		edId : edId,
@@ -22,7 +22,7 @@ Ext.onReady( function() {
 		bioMaterialEditor.init();
 	} );
 	
-	var factorValueGrid = new Ext.Gemma.FactorValueGrid( {
+	var factorValueGrid = new Gemma.FactorValueGrid( {
 		title : "Factor Values",
 		renderTo : "factorValuePanel",
 		form : "factorValueForm",
@@ -40,7 +40,7 @@ Ext.onReady( function() {
 		bioMaterialEditor.grid.reloadFactorValues();
 	} );
 	
-	var bioMaterialEditor = new Ext.Gemma.BioMaterialEditor( {
+	var bioMaterialEditor = new Gemma.BioMaterialEditor( {
 		title : "BioMaterials",
 		renderTo : "bioMaterialsPanel",
 		eeId : eeId,

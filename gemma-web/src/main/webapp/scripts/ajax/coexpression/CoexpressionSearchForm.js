@@ -13,15 +13,15 @@
  * @version $Id$
  */
 
-Ext.Gemma.MIN_STRINGENCY = 2;
+Gemma.MIN_STRINGENCY = 2;
 
-Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
+Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 
 	width : 550,
 	frame : true,
 	stateful : true,
 	stateEvents : ["beforesearch"],
-	stateId : "Ext.Gemma.CoexpressionSearch", // share state with main
+	stateId : "Gemma.CoexpressionSearch", // share state with main
 	// page...
 
 	applyState : function(state, config) {
@@ -35,7 +35,7 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 	},
 
 	afterRender : function(container, position) {
-		Ext.Gemma.CoexpressionSearchForm.superclass.afterRender.apply(this,
+		Gemma.CoexpressionSearchForm.superclass.afterRender.apply(this,
 				arguments);
 
 		Ext.apply(this, {
@@ -98,7 +98,7 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 
 		var csc = {
 			geneIds : param.g ? param.g.split(',') : [],
-			stringency : param.s || Ext.Gemma.MIN_STRINGENCY,
+			stringency : param.s || Gemma.MIN_STRINGENCY,
 			eeQuery : param.eeq,
 			taxonId : param.t
 		};
@@ -253,8 +253,8 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 			return "You must select more than one query gene to use 'search among query genes only'";
 		} else if (!csc.geneIds || csc.geneIds.length === 0) {
 			return "We couldn't figure out which gene you want to query. Please use the search functionality to find genes.";
-		} else if (csc.stringency < Ext.Gemma.MIN_STRINGENCY) {
-			return "Minimum stringency is " + Ext.Gemma.MIN_STRINGENCY;
+		} else if (csc.stringency < Gemma.MIN_STRINGENCY) {
+			return "Minimum stringency is " + Gemma.MIN_STRINGENCY;
 		} else if (csc.eeIds && csc.eeIds.length < 1) {
 			return "There are no datasets that match your search terms";
 		} else if (!csc.eeIds && !csc.eeSetId) {
@@ -294,11 +294,11 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 
 	initComponent : function() {
 
-		this.geneChooserPanel = new Ext.Gemma.GeneChooserPanel({
+		this.geneChooserPanel = new Gemma.GeneChooserPanel({
 			id : 'gene-chooser-panel'
 		});
 
-		this.eeSetChooserPanel = new Ext.Gemma.ExpressionExperimentSetPanel({
+		this.eeSetChooserPanel = new Gemma.ExpressionExperimentSetPanel({
 			fieldLabel : "Query scope"
 		});
 
@@ -337,11 +337,11 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 						allowBlank : false,
 						allowDecimals : false,
 						allowNegative : false,
-						minValue : Ext.Gemma.MIN_STRINGENCY,
+						minValue : Gemma.MIN_STRINGENCY,
 						maxValue : 999,
 						fieldLabel : 'Stringency',
 						invalidText : "Minimum stringency is "
-								+ Ext.Gemma.MIN_STRINGENCY,
+								+ Gemma.MIN_STRINGENCY,
 						value : 2,
 						width : 60,
 						tooltip : "The minimum number of datasets that must show coexpression for a result to appear"
@@ -361,7 +361,7 @@ Ext.Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 			// parameters!
 			}]
 		});
-		Ext.Gemma.CoexpressionSearchForm.superclass.initComponent.call(this);
+		Gemma.CoexpressionSearchForm.superclass.initComponent.call(this);
 		this.addEvents('beforesearch', 'aftersearch');
 
 	}

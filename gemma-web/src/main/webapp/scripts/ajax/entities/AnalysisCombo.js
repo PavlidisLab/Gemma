@@ -1,12 +1,12 @@
-Ext.namespace("Ext.Gemma");
+Ext.namespace("Gemma");
 
 /**
  * 
- * @class Ext.Gemma.AnalysisCombo
+ * @class Gemma.AnalysisCombo
  * @extends Ext.form.ComboBox
  * @deprecated
  */
-Ext.Gemma.AnalysisCombo = Ext.extend(Ext.form.ComboBox, {
+Gemma.AnalysisCombo = Ext.extend(Ext.form.ComboBox, {
 
 	displayField : 'name',
 	valueField : 'id',
@@ -38,7 +38,7 @@ Ext.Gemma.AnalysisCombo = Ext.extend(Ext.form.ComboBox, {
 
 	setState : function(v) {
 		if (this.ready) {
-			Ext.Gemma.AnalysisCombo.superclass.setValue.call(this, v);
+			Gemma.AnalysisCombo.superclass.setValue.call(this, v);
 		} else {
 			this.state = v;
 		}
@@ -46,7 +46,7 @@ Ext.Gemma.AnalysisCombo = Ext.extend(Ext.form.ComboBox, {
 
 	restoreState : function() {
 		if (this.state) {
-			Ext.Gemma.AnalysisCombo.superclass.setValue.call(this, v);
+			Gemma.AnalysisCombo.superclass.setValue.call(this, v);
 			delete this.state;
 		}
 		this.setValue(this.state);
@@ -77,7 +77,7 @@ Ext.Gemma.AnalysisCombo = Ext.extend(Ext.form.ComboBox, {
 			this.restoreState();
 		}.createDelegate(this);
 
-		Ext.Gemma.AnalysisCombo.superclass.initComponent.call(this);
+		Gemma.AnalysisCombo.superclass.initComponent.call(this);
 
 		this.store.load({
 			params : [],
@@ -102,7 +102,7 @@ Ext.Gemma.AnalysisCombo = Ext.extend(Ext.form.ComboBox, {
 			this.store.clearFilter();
 		}
 
-		Ext.Gemma.AnalysisCombo.superclass.setValue.call(this, v);
+		Gemma.AnalysisCombo.superclass.setValue.call(this, v);
 
 		if (changed) {
 			this.fireEvent('analysischanged', this.getAnalysis());
@@ -178,4 +178,4 @@ Ext.Gemma.AnalysisCombo = Ext.extend(Ext.form.ComboBox, {
 
 });
 
-Ext.reg('analysiscombo', Ext.Gemma.AnalysisCombo);
+Ext.reg('analysiscombo', Gemma.AnalysisCombo);

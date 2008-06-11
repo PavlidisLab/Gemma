@@ -3,7 +3,7 @@
  * Version : $Id$
  * Author : luke, paul
  */
-Ext.namespace('Ext.Gemma');
+Ext.namespace('Gemma');
 
 /**
  * Widget that allows user to search for and select one or more genes from the
@@ -11,10 +11,10 @@ Ext.namespace('Ext.Gemma');
  * component is the top part of the coexpression interface, but should be
  * reusable.
  * 
- * @class Ext.Gemma.GeneChooserPanel
- * @extends Ext.Gemma.GemmaGridPanel
+ * @class Gemma.GeneChooserPanel
+ * @extends Gemma.GemmaGridPanel
  */
-Ext.Gemma.GeneChooserPanel = Ext.extend(Ext.Gemma.GemmaGridPanel, {
+Gemma.GeneChooserPanel = Ext.extend(Gemma.GemmaGridPanel, {
 
 	collapsible : true,
 
@@ -192,7 +192,7 @@ Ext.Gemma.GeneChooserPanel = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 
 	initComponent : function() {
 
-		this.taxonCombo = new Ext.Gemma.TaxonCombo({
+		this.taxonCombo = new Gemma.TaxonCombo({
 			listeners : {
 				'select' : function(cb, rec, index) {
 					this.taxonChanged(rec.data);
@@ -200,7 +200,7 @@ Ext.Gemma.GeneChooserPanel = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 			}
 		});
 
-		this.geneCombo = new Ext.Gemma.GeneCombo({
+		this.geneCombo = new Gemma.GeneCombo({
 			emptyText : 'Search for a gene',
 			listeners : {
 				'select' : {
@@ -232,7 +232,7 @@ Ext.Gemma.GeneChooserPanel = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 			handler : this.removeGene.createDelegate(this)
 		});
 
-		this.chooser = new Ext.Gemma.GeneImportPanel({
+		this.chooser = new Gemma.GeneImportPanel({
 			listeners : {
 				'commit' : {
 					fn : this.getGenesFromList.createDelegate(this)
@@ -280,7 +280,7 @@ Ext.Gemma.GeneChooserPanel = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 			})
 		});
 
-		Ext.Gemma.GeneChooserPanel.superclass.initComponent.call(this);
+		Gemma.GeneChooserPanel.superclass.initComponent.call(this);
 
 		this.addEvents('taxonchanged');
 
@@ -314,4 +314,4 @@ Ext.Gemma.GeneChooserPanel = Ext.extend(Ext.Gemma.GemmaGridPanel, {
  * instance methods...
  */
 
-Ext.reg('genechooser', Ext.Gemma.GeneChooserPanel);
+Ext.reg('genechooser', Gemma.GeneChooserPanel);

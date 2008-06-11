@@ -1,7 +1,7 @@
-Ext.namespace('Ext.Gemma');
+Ext.namespace('Gemma');
 
 /*
- * Ext.Gemma.AnnotationGrid constructor... div is the name of the div in which
+ * Gemma.AnnotationGrid constructor... div is the name of the div in which
  * to render the grid. config is a hash with the following options: readMethod :
  * the DWR method that returns the list of AnnotationValueObjects ( e.g.:
  * ExpressionExperimentController.getAnnotation ) readParams : an array of
@@ -13,12 +13,13 @@ Ext.namespace('Ext.Gemma');
  * not be loaded immediately upon creation pageSize : if defined, the grid will
  * be paged on the client side, with the defined page size
  */
-Ext.Gemma.AnnotationGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
+Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 	autoHeight : true,
 	width : 500,
 	maxHeight : 200,
 	loadMask : true,
+	useDefaultToolbar : true,
 
 	record : Ext.data.Record.create([{
 		name : "id",
@@ -74,7 +75,7 @@ Ext.Gemma.AnnotationGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 	},
 
 	termStyler : function(value, metadata, record, row, col, ds) {
-		return Ext.Gemma.GemmaGridPanel.formatTermWithStyle(value,
+		return Gemma.GemmaGridPanel.formatTermWithStyle(value,
 				record.data.termUri);
 	},
 
@@ -120,7 +121,7 @@ Ext.Gemma.AnnotationGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 
 		if (this.pageSize) {
 			Ext.apply(this, {
-				store : new Ext.Gemma.PagingDataStore({
+				store : new Gemma.PagingDataStore({
 					proxy : new Ext.data.DWRProxy(this.readMethod),
 					reader : new Ext.data.ListRangeReader({
 						id : "id"
@@ -129,7 +130,7 @@ Ext.Gemma.AnnotationGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 				})
 			});
 			Ext.apply(this, {
-				bbar : new Ext.Gemma.PagingToolbar({
+				bbar : new Gemma.PagingToolbar({
 					pageSize : this.pageSize,
 					store : this.getStore()
 				})
@@ -146,9 +147,9 @@ Ext.Gemma.AnnotationGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 			});
 		}
 
-		if (this.editable) {
+		if (this.editable && this.useDefaultToolbar) {
 			Ext.apply(this, {
-				tbar : new Ext.Gemma.AnnotationToolBar({
+				tbar : new Gemma.AnnotationToolBar({
 					annotationGrid : this,
 					createHandler : function(characteristic, callback) {
 						OntologyService.saveExpressionExperimentStatement(
@@ -162,7 +163,7 @@ Ext.Gemma.AnnotationGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 				})
 			});
 		}
-		Ext.Gemma.AnnotationGrid.superclass.initComponent.call(this);
+		Gemma.AnnotationGrid.superclass.initComponent.call(this);
 
 		this.getStore().setDefaultSort('className');
 
@@ -175,7 +176,7 @@ Ext.Gemma.AnnotationGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 			var VALUE_COLUMN = 1;
 			var PARENT_COLUMN = 2;
 			var EVIDENCE_COLUMN = 3;
-			this.categoryCombo = new Ext.Gemma.MGEDCombo({
+			this.categoryCombo = new Gemma.MGEDCombo({
 				lazyRender : true,
 				termKey : this.mgedTermKey
 			});
@@ -185,7 +186,7 @@ Ext.Gemma.AnnotationGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 			});
 			this.getColumnModel().setEditor(CATEGORY_COLUMN, categoryEditor);
 
-			this.valueCombo = new Ext.Gemma.CharacteristicCombo({
+			this.valueCombo = new Gemma.CharacteristicCombo({
 				lazyRender : true
 			});
 			var valueEditor = new Ext.grid.GridEditor(this.valueCombo);

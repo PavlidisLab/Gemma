@@ -25,14 +25,14 @@
 	var bmId = dwr.util.getValue("bmId");
 	var bmClass = dwr.util.getValue("bmClass");
 	var admin = dwr.util.getValue("hasAdmin");
-	var grid = new Ext.Gemma.AnnotationGrid( { renderTo : "bmAnnotations",
+	var grid = new Gemma.AnnotationGrid( { renderTo : "bmAnnotations",
 				readMethod :BioMaterialController.getAnnotation,
 				readParams : [{
 					id : bmId,
 					classDelegatingFor : bmClass
 				}],
 				editable : admin,
-				mgedTermKey : "biomaterial"
+				mgedTermKey : "experiment"
 			});
 }); 
 	  </script>
@@ -58,7 +58,7 @@
 <h2>
 	<fmt:message key="bioMaterial.details" />
 </h2>
-<table width="100%" cellspacing="10">
+<table width="50%" cellspacing="5">
 	<tr>
 		<td valign="top">
 			<b> <fmt:message key="bioMaterial.name" /> </b>

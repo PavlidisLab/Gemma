@@ -4,17 +4,17 @@
  * @authors kelsey, paul
  * @version: $Id$
  */
-Ext.namespace("Ext.Gemma.Search");
+Ext.namespace("Gemma.Search");
 
-Ext.Gemma.Search.app = function() {
+Gemma.Search.app = function() {
 	return {
 		init : function() {
 
-			this.form = new Ext.Gemma.SearchForm({
+			this.form = new Gemma.SearchForm({
 				renderTo : 'general-search-form'
 			});
 
-			this.resultGrid = new Ext.Gemma.SearchGrid({
+			this.resultGrid = new Gemma.SearchGrid({
 				renderTo : 'search-results-grid',
 				form : this.form
 			});
@@ -98,9 +98,9 @@ Ext.Gemma.Search.app = function() {
 	}
 }();
 
-Ext.Gemma.Search.MAX_AUTO_EXPAND_SIZE = 15;
+Gemma.Search.MAX_AUTO_EXPAND_SIZE = 15;
 
-Ext.Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
+Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 	frame : true,
 	autoHeight : true,
 	width : 300,
@@ -260,7 +260,7 @@ Ext.Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 				}]
 			}]
 		});
-		Ext.Gemma.SearchForm.superclass.initComponent.call(this);
+		Gemma.SearchForm.superclass.initComponent.call(this);
 		this.addEvents("search");
 
 		this.restoreState();
@@ -268,7 +268,7 @@ Ext.Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 
 });
 
-Ext.Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
+Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	width : 800,
 	height : 500,
@@ -351,7 +351,7 @@ Ext.Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 				}
 			})
 		});
-		Ext.Gemma.SearchGrid.superclass.initComponent.call(this);
+		Gemma.SearchGrid.superclass.initComponent.call(this);
 		this.getStore().on("load", this.handleLoadSuccess.createDelegate(this));
 
 	},
@@ -361,7 +361,7 @@ Ext.Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 		this.form.findById('submit-button').setDisabled(false);
 
 		// If possible to expand all and not scroll then expand
-		if (this.getStore().getCount() < Ext.Gemma.Search.MAX_AUTO_EXPAND_SIZE) {
+		if (this.getStore().getCount() < Gemma.Search.MAX_AUTO_EXPAND_SIZE) {
 			this.getView().expandAllGroups();
 			return; // no point in checking below
 		}

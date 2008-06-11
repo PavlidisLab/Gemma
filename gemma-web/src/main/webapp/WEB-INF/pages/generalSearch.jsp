@@ -22,7 +22,7 @@
 	<script type="text/javascript">
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider( ));
 	Ext.QuickTips.init();
-	Ext.onReady(Ext.Gemma.Search.app.init, Ext.Gemma.Search.app);
+	Ext.onReady(Gemma.Search.app.init, Ext.Gemma.Search.app);
 	</script>
 </head>
 

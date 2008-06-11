@@ -1,7 +1,7 @@
-Ext.namespace('Ext.Gemma');
+Ext.namespace('Gemma');
 
 /*
- * Ext.Gemma.AnnotationToolBar constructor... annotationGrid is the grid that
+ * Gemma.AnnotationToolBar constructor... annotationGrid is the grid that
  * contains the annotations. config is a hash with the following options:
  * createHandler : a function with arguments ( characteristic, callback ) where
  * characteristic is the new characteristic to add and callback is the function
@@ -17,7 +17,7 @@ Ext.namespace('Ext.Gemma');
  * be no save button in the toolbar
  */
 
-Ext.Gemma.AnnotationToolBar = Ext.extend(Ext.Toolbar, {
+Gemma.AnnotationToolBar = Ext.extend(Ext.Toolbar, {
 
 	afterRender : function(l, r) {
 		if (this.annotationGrid.editable && !this.saveHandler) {
@@ -37,9 +37,9 @@ Ext.Gemma.AnnotationToolBar = Ext.extend(Ext.Toolbar, {
 		if (this.mgedTermKey) {
 			mgedComboOpts.termKey = this.mgedTermKey;
 		}
-		this.charCombo = new Ext.Gemma.CharacteristicCombo(charComboOpts);
+		this.charCombo = new Gemma.CharacteristicCombo(charComboOpts);
 
-		this.mgedCombo = new Ext.Gemma.MGEDCombo(mgedComboOpts);
+		this.mgedCombo = new Gemma.MGEDCombo(mgedComboOpts);
 		this.mgedCombo.on("select", function(combo, record, index) {
 			this.charCombo.setCategory(record.data.term, record.data.uri);
 			this.createButton.enable();
@@ -147,7 +147,7 @@ Ext.Gemma.AnnotationToolBar = Ext.extend(Ext.Toolbar, {
 			this.addField(this.saveButton);
 		}
 
-		Ext.Gemma.AnnotationToolBar.superclass.afterRender.call(this, l, r);
+		Gemma.AnnotationToolBar.superclass.afterRender.call(this, l, r);
 	}
 
 });

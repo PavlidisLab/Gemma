@@ -4,17 +4,17 @@
  * which the Gemma database is simply searched and all results returned.
  */
 
-Ext.namespace('Ext.Gemma');
+Ext.namespace('Gemma');
 
 /*
  * Constructor...
  */
-Ext.Gemma.DatasetSearchField = function(config) {
+Gemma.DatasetSearchField = function(config) {
 
 	this.eeIds = [];
 	this.filterFrom = []; // starting set.
 
-	Ext.Gemma.DatasetSearchField.superclass.constructor.call(this, config);
+	Gemma.DatasetSearchField.superclass.constructor.call(this, config);
 
 	this.on('beforesearch', function(field, query) {
 		if (this.loadMask) {
@@ -36,13 +36,13 @@ Ext.Gemma.DatasetSearchField = function(config) {
 /*
  * Type declaration
  */
-Ext.extend(Ext.Gemma.DatasetSearchField, Ext.form.TriggerField, {
+Ext.extend(Gemma.DatasetSearchField, Ext.form.TriggerField, {
 
 	loadingText : 'Searching...',
 	emptyText : 'Enter search term',
 
 	initComponent : function() {
-		Ext.Gemma.DatasetSearchField.superclass.initComponent.call(this);
+		Gemma.DatasetSearchField.superclass.initComponent.call(this);
 
 		this.addEvents('beforesearch', 'aftersearch');
 	},
@@ -54,7 +54,7 @@ Ext.extend(Ext.Gemma.DatasetSearchField, Ext.form.TriggerField, {
 	},
 
 	initEvents : function() {
-		Ext.Gemma.DatasetSearchField.superclass.initEvents.call(this);
+		Gemma.DatasetSearchField.superclass.initEvents.call(this);
 		var queryTask = new Ext.util.DelayedTask(this.findDatasets, this);
 		this.el.on("keyup", function(e) {
 			if (e.getCharCode() == Ext.EventObject.ENTER) {
@@ -128,4 +128,4 @@ Ext.extend(Ext.Gemma.DatasetSearchField, Ext.form.TriggerField, {
 
 });
 
-Ext.reg('datasetsearchfield', Ext.Gemma.DatasetSearchField);
+Ext.reg('datasetsearchfield', Gemma.DatasetSearchField);

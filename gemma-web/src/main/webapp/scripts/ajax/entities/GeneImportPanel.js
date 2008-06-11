@@ -5,10 +5,10 @@
 /**
  * Prompt for a list of gene symbols.
  * 
- * @class Ext.Gemma.GeneImportPanel
+ * @class Gemma.GeneImportPanel
  * @extends Ext.Window
  */
-Ext.Gemma.GeneImportPanel = Ext.extend(Ext.Window, {
+Gemma.GeneImportPanel = Ext.extend(Ext.Window, {
 
 	title : "Import multiple genes (one symbol per row)",
 	modal : true,
@@ -54,7 +54,7 @@ Ext.Gemma.GeneImportPanel = Ext.extend(Ext.Window, {
 			}]
 		});
 
-		Ext.Gemma.GeneImportPanel.superclass.initComponent.call(this);
+		Gemma.GeneImportPanel.superclass.initComponent.call(this);
 	}
 
 });

@@ -1,16 +1,16 @@
-Ext.namespace('Ext.Gemma');
+Ext.namespace('Gemma');
 
 /**
  * 
- * @class Ext.Gemma.DatasetSearchToolBar
+ * @class Gemma.DatasetSearchToolBar
  * @extends Ext.Toolbar
  */
-Ext.Gemma.DatasetSearchToolBar = Ext.extend(Ext.Toolbar, {
+Gemma.DatasetSearchToolBar = Ext.extend(Ext.Toolbar, {
 
 	taxonSearch : true,
 
 	initComponent : function() {
-		Ext.Gemma.DatasetSearchToolBar.superclass.initComponent.call(this);
+		Gemma.DatasetSearchToolBar.superclass.initComponent.call(this);
 		this.addEvents("after.tbsearch");
 	},
 
@@ -23,10 +23,10 @@ Ext.Gemma.DatasetSearchToolBar = Ext.extend(Ext.Toolbar, {
 	},
 
 	afterRender : function() {
-		Ext.Gemma.DatasetSearchToolBar.superclass.afterRender.call(this);
+		Gemma.DatasetSearchToolBar.superclass.afterRender.call(this);
 
 		if (this.taxonSearch) {
-			this.taxonCombo = new Ext.Gemma.TaxonCombo({
+			this.taxonCombo = new Gemma.TaxonCombo({
 				emptyText : 'Select a taxon',
 				width : 125,
 				listeners : {
@@ -46,7 +46,7 @@ Ext.Gemma.DatasetSearchToolBar = Ext.extend(Ext.Toolbar, {
 			this.addSpacer();
 		}
 
-		this.eeSearchField = new Ext.Gemma.DatasetSearchField({
+		this.eeSearchField = new Gemma.DatasetSearchField({
 			fieldLabel : "Experiment keywords",
 			filtering : this.filtering,
 			listeners : {
@@ -78,21 +78,21 @@ Ext.Gemma.DatasetSearchToolBar = Ext.extend(Ext.Toolbar, {
 /**
  * Adds a 'grab' button that can send records to another grid.
  * 
- * @class Ext.Gemma.DataSetSearchAndGrabToolbar
- * @extends Ext.Gemma.DatasetSearchToolBar
+ * @class Gemma.DataSetSearchAndGrabToolbar
+ * @extends Gemma.DatasetSearchToolBar
  */
-Ext.Gemma.DataSetSearchAndGrabToolbar = Ext.extend(
-		Ext.Gemma.DatasetSearchToolBar, {
+Gemma.DataSetSearchAndGrabToolbar = Ext.extend(
+		Gemma.DatasetSearchToolBar, {
 
 			initComponent : function() {
-				Ext.Gemma.DataSetSearchAndGrabToolbar.superclass.initComponent
+				Gemma.DataSetSearchAndGrabToolbar.superclass.initComponent
 						.call(this);
 				this.addEvents("grabbed");
 
 			},
 
 			afterRender : function() {
-				Ext.Gemma.DataSetSearchAndGrabToolbar.superclass.afterRender
+				Gemma.DataSetSearchAndGrabToolbar.superclass.afterRender
 						.call(this);
 				var grabber = new Ext.Button({
 					id : 'grabber',

@@ -15,7 +15,7 @@
 	<script type="text/javascript" src="<c:url value='/scripts/ajax/probe.grid.js'/>"></script>
 
 	<script type="text/javascript">
-	Ext.onReady(Ext.Gemma.ProbeBrowser.app.init, Ext.Gemma.ProbeBrowser.app);
+	Ext.onReady(Gemma.ProbeBrowser.app.init, Ext.Gemma.ProbeBrowser.app);
 	</script>
 </head>
 

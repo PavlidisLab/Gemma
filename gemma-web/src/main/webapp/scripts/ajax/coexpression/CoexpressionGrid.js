@@ -1,10 +1,10 @@
-Ext.namespace('Ext.Gemma');
+Ext.namespace('Gemma');
 
 /*
- * Ext.Gemma.CoexpressionGrid constructor... config is a hash with the following
+ * Gemma.CoexpressionGrid constructor... config is a hash with the following
  * options:
  */
-Ext.Gemma.CoexpressionGrid = function(config) {
+Gemma.CoexpressionGrid = function(config) {
 	Ext.QuickTips.init();
 
 	this.pageSize = config.pageSize;
@@ -29,18 +29,18 @@ Ext.Gemma.CoexpressionGrid = function(config) {
 	};
 
 	if (this.pageSize) {
-		superConfig.store = new Ext.Gemma.PagingDataStore({
+		superConfig.store = new Gemma.PagingDataStore({
 			proxy : new Ext.data.MemoryProxy([]),
 			reader : new Ext.data.ListRangeReader({
 				id : "id"
-			}, Ext.Gemma.CoexpressionGrid.getRecord()),
+			}, Gemma.CoexpressionGrid.getRecord()),
 			sortInfo : {
 				field : 'sortKey',
 				direction : 'ASC'
 			},
 			pageSize : this.pageSize
 		});
-		superConfig.bbar = new Ext.Gemma.PagingToolbar({
+		superConfig.bbar = new Gemma.PagingToolbar({
 			pageSize : this.pageSize,
 			store : superConfig.store
 		});
@@ -49,7 +49,7 @@ Ext.Gemma.CoexpressionGrid = function(config) {
 			proxy : new Ext.data.MemoryProxy([]),
 			reader : new Ext.data.ListRangeReader({
 				id : "id"
-			}, Ext.Gemma.CoexpressionGrid.getRecord()),
+			}, Gemma.CoexpressionGrid.getRecord()),
 			sortInfo : {
 				field : 'sortKey',
 				direction : 'ASC'
@@ -57,7 +57,7 @@ Ext.Gemma.CoexpressionGrid = function(config) {
 		});
 	}
 
-	this.rowExpander = new Ext.Gemma.CoexpressionGridRowExpander({
+	this.rowExpander = new Gemma.CoexpressionGridRowExpander({
 		tpl : ""
 	});
 
@@ -69,24 +69,24 @@ Ext.Gemma.CoexpressionGrid = function(config) {
 		id : 'found',
 		header : "Coexpressed Gene",
 		dataIndex : "foundGene",
-		renderer : Ext.Gemma.CoexpressionGrid.getFoundGeneStyler()
+		renderer : Gemma.CoexpressionGrid.getFoundGeneStyler()
 	}, {
 		id : 'support',
 		header : "Support",
 		dataIndex : "supportKey",
 		width : 75,
-		renderer : Ext.Gemma.CoexpressionGrid.getSupportStyler()
+		renderer : Gemma.CoexpressionGrid.getSupportStyler()
 	}, {
 		id : 'go',
 		header : "GO Overlap",
 		dataIndex : "goSim",
 		width : 75,
-		renderer : Ext.Gemma.CoexpressionGrid.getGoStyler()
+		renderer : Gemma.CoexpressionGrid.getGoStyler()
 	}, {
 		id : 'datasets',
 		header : "Datasets",
 		dataIndex : "datasetVector",
-		renderer : Ext.Gemma.CoexpressionGrid.getBitImageStyler(),
+		renderer : Gemma.CoexpressionGrid.getBitImageStyler(),
 		sortable : false
 	}]);
 	superConfig.cm.defaultSortable = true;
@@ -97,7 +97,7 @@ Ext.Gemma.CoexpressionGrid = function(config) {
 	for (property in config) {
 		superConfig[property] = config[property];
 	}
-	Ext.Gemma.CoexpressionGrid.superclass.constructor.call(this, superConfig);
+	Gemma.CoexpressionGrid.superclass.constructor.call(this, superConfig);
 
 	this.originalTitle = this.title;
 
@@ -106,9 +106,9 @@ Ext.Gemma.CoexpressionGrid = function(config) {
 /*
  * static methods
  */
-Ext.Gemma.CoexpressionGrid.getRecord = function() {
-	if (Ext.Gemma.CoexpressionGrid.record === undefined) {
-		Ext.Gemma.CoexpressionGrid.record = Ext.data.Record.create([{
+Gemma.CoexpressionGrid.getRecord = function() {
+	if (Gemma.CoexpressionGrid.record === undefined) {
+		Gemma.CoexpressionGrid.record = Ext.data.Record.create([{
 			name : "queryGene",
 			type : "string",
 			convert : function(g) {
@@ -158,28 +158,28 @@ Ext.Gemma.CoexpressionGrid.getRecord = function() {
 			name : "supportingExperiments"
 		}]);
 	}
-	return Ext.Gemma.CoexpressionGrid.record;
+	return Gemma.CoexpressionGrid.record;
 };
 
-Ext.Gemma.CoexpressionGrid.getRowExpander = function() {
-	if (Ext.Gemma.CoexpressionGrid.rowExpander === undefined) {
-		Ext.Gemma.CoexpressionGrid.rowExpander = new Ext.Gemma.CoexpressionGridRowExpander({
+Gemma.CoexpressionGrid.getRowExpander = function() {
+	if (Gemma.CoexpressionGrid.rowExpander === undefined) {
+		Gemma.CoexpressionGrid.rowExpander = new Gemma.CoexpressionGridRowExpander({
 			tpl : "",
 			grid : this
 		});
 	}
-	return Ext.Gemma.CoexpressionGrid.rowExpander;
+	return Gemma.CoexpressionGrid.rowExpander;
 };
 
-Ext.Gemma.CoexpressionGrid.searchForGene = function(geneId) {
-	var f = Ext.Gemma.CoexpressionSearchForm.searchForGene;
+Gemma.CoexpressionGrid.searchForGene = function(geneId) {
+	var f = Gemma.CoexpressionSearchForm.searchForGene;
 	f(geneId);
 };
 
 /*
  * instance methods...
  */
-Ext.extend(Ext.Gemma.CoexpressionGrid, Ext.Gemma.GemmaGridPanel, {
+Ext.extend(Gemma.CoexpressionGrid, Gemma.GemmaGridPanel, {
 
 	loadData : function(isCannedAnalysis, numQueryGenes, data, datasets) {
 		var queryCol = this.getColumnModel().getColumnById('query');
@@ -204,7 +204,7 @@ Ext.extend(Ext.Gemma.CoexpressionGrid, Ext.Gemma.GemmaGridPanel, {
 			var cm = this.getColumnModel();
 			var c = cm.getIndexById('datasets');
 			var headerWidth = this.view.getHeaderCell(c).firstChild.scrollWidth;
-			var imageWidth = Ext.Gemma.CoexpressionGrid.bitImageBarWidth
+			var imageWidth = Gemma.CoexpressionGrid.bitImageBarWidth
 					* first.data.datasetVector.length;
 			cm.setColumnWidth(c, imageWidth < headerWidth
 					? headerWidth
@@ -218,29 +218,29 @@ Ext.extend(Ext.Gemma.CoexpressionGrid, Ext.Gemma.GemmaGridPanel, {
  * Stylers
  * 
  */
-Ext.Gemma.CoexpressionGrid.getFoundGeneStyler = function() {
-	if (Ext.Gemma.CoexpressionGrid.foundGeneStyler === undefined) {
-		Ext.Gemma.CoexpressionGrid.foundGeneTemplate = new Ext.Template(
-				"<a href='' onClick='Ext.Gemma.CoexpressionGrid.searchForGene({id}); return false;'>",
+Gemma.CoexpressionGrid.getFoundGeneStyler = function() {
+	if (Gemma.CoexpressionGrid.foundGeneStyler === undefined) {
+		Gemma.CoexpressionGrid.foundGeneTemplate = new Ext.Template(
+				"<a href='' onClick='Gemma.CoexpressionGrid.searchForGene({id}); return false;'>",
 				"<img src='/Gemma/images/logo/gemmaTiny.gif' ext:qtip='Make {officialSymbol} the query gene' />",
 				"</a>",
 				" &nbsp; ",
 				"<a href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}");
-		Ext.Gemma.CoexpressionGrid.foundGeneStyler = function(value, metadata,
+		Gemma.CoexpressionGrid.foundGeneStyler = function(value, metadata,
 				record, row, col, ds) {
 			var g = record.data.foundGene;
 			if (g.officialName === null) {
 				g.officialName = "";
 			}
-			return Ext.Gemma.CoexpressionGrid.foundGeneTemplate.apply(g);
+			return Gemma.CoexpressionGrid.foundGeneTemplate.apply(g);
 		};
 	}
-	return Ext.Gemma.CoexpressionGrid.foundGeneStyler;
+	return Gemma.CoexpressionGrid.foundGeneStyler;
 };
 
-Ext.Gemma.CoexpressionGrid.getSupportStyler = function() {
-	if (Ext.Gemma.CoexpressionGrid.supportStyler === undefined) {
-		Ext.Gemma.CoexpressionGrid.supportStyler = function(value, metadata,
+Gemma.CoexpressionGrid.getSupportStyler = function() {
+	if (Gemma.CoexpressionGrid.supportStyler === undefined) {
+		Gemma.CoexpressionGrid.supportStyler = function(value, metadata,
 				record, row, col, ds) {
 			var d = record.data;
 			if (d.posLinks || d.negLinks) {
@@ -251,7 +251,7 @@ Ext.Gemma.CoexpressionGrid.getSupportStyler = function() {
 									.format(
 											"<span class='positiveLink'>{0}{1}</span> ",
 											d.posLinks,
-											Ext.Gemma.CoexpressionGrid
+											Gemma.CoexpressionGrid
 													.getSpecificLinkString(
 															d.posLinks,
 															d.nonSpecPosLinks));
@@ -262,7 +262,7 @@ Ext.Gemma.CoexpressionGrid.getSupportStyler = function() {
 									.format(
 											"<span class='negativeLink'>{0}{1}</span> ",
 											d.negLinks,
-											Ext.Gemma.CoexpressionGrid
+											Gemma.CoexpressionGrid
 													.getSpecificLinkString(
 															d.negLinks,
 															d.nonSpecNegLinks));
@@ -276,19 +276,19 @@ Ext.Gemma.CoexpressionGrid.getSupportStyler = function() {
 			}
 		};
 	}
-	return Ext.Gemma.CoexpressionGrid.supportStyler;
+	return Gemma.CoexpressionGrid.supportStyler;
 };
 
-Ext.Gemma.CoexpressionGrid.getSpecificLinkString = function(total, nonSpecific) {
+Gemma.CoexpressionGrid.getSpecificLinkString = function(total, nonSpecific) {
 	return nonSpecific
 			? String.format("<span class='specificLink'> ({0})</span>", total
 					- nonSpecific)
 			: "";
 };
 
-Ext.Gemma.CoexpressionGrid.getGoStyler = function() {
-	if (Ext.Gemma.CoexpressionGrid.goStyler === undefined) {
-		Ext.Gemma.CoexpressionGrid.goStyler = function(value, metadata, record,
+Gemma.CoexpressionGrid.getGoStyler = function() {
+	if (Gemma.CoexpressionGrid.goStyler === undefined) {
+		Gemma.CoexpressionGrid.goStyler = function(value, metadata, record,
 				row, col, ds) {
 			var d = record.data;
 			if (d.goSim || d.maxGoSim) {
@@ -298,33 +298,33 @@ Ext.Gemma.CoexpressionGrid.getGoStyler = function() {
 			}
 		};
 	}
-	return Ext.Gemma.CoexpressionGrid.goStyler;
+	return Gemma.CoexpressionGrid.goStyler;
 };
 
-Ext.Gemma.CoexpressionGrid.bitImageBarWidth = 1;
-Ext.Gemma.CoexpressionGrid.bitImageBarHeight = 10;
+Gemma.CoexpressionGrid.bitImageBarWidth = 1;
+Gemma.CoexpressionGrid.bitImageBarHeight = 10;
 
-Ext.Gemma.CoexpressionGrid.getBitImageMapTemplate = function() {
-	if (Ext.Gemma.CoexpressionGrid.bitImageMapTemplate === undefined) {
-		Ext.Gemma.CoexpressionGrid.bitImageMapTemplate = new Ext.XTemplate(
+Gemma.CoexpressionGrid.getBitImageMapTemplate = function() {
+	if (Gemma.CoexpressionGrid.bitImageMapTemplate === undefined) {
+		Gemma.CoexpressionGrid.bitImageMapTemplate = new Ext.XTemplate(
 				'<tpl for=".">',
 				'<area shape="rect" coords="{[ (xindex - 1) * this.barx ]},0,{[ xindex * this.barx ]},{[ this.bary ]}" ext:qtip="{name}" href="{externalUri}" />',
 				'</tpl>', {
-					barx : Ext.Gemma.CoexpressionGrid.bitImageBarWidth,
-					bary : Ext.Gemma.CoexpressionGrid.bitImageBarHeight - 1
+					barx : Gemma.CoexpressionGrid.bitImageBarWidth,
+					bary : Gemma.CoexpressionGrid.bitImageBarHeight - 1
 				});
 	}
-	return Ext.Gemma.CoexpressionGrid.bitImageMapTemplate;
+	return Gemma.CoexpressionGrid.bitImageMapTemplate;
 };
 
-Ext.Gemma.CoexpressionGrid.getBitImageStyler = function() {
-	if (Ext.Gemma.CoexpressionGrid.bitImageStyler === undefined) {
-		Ext.Gemma.CoexpressionGrid.bitImageStyler = function(value, metadata,
+Gemma.CoexpressionGrid.getBitImageStyler = function() {
+	if (Gemma.CoexpressionGrid.bitImageStyler === undefined) {
+		Gemma.CoexpressionGrid.bitImageStyler = function(value, metadata,
 				record, row, col, ds) {
 			var bits = record.data.datasetVector;
-			var width = Ext.Gemma.CoexpressionGrid.bitImageBarWidth
+			var width = Gemma.CoexpressionGrid.bitImageBarWidth
 					* bits.length;
-			var height = Ext.Gemma.CoexpressionGrid.bitImageBarHeight;
+			var height = Gemma.CoexpressionGrid.bitImageBarHeight;
 			var s = '<span style="background-color:#DDDDDD;">'
 					+ '<img src="/Gemma/spark?type=bar&width=' + width
 					+ '&height=' + height + '&color=black&spacing=0&data=';
@@ -348,5 +348,5 @@ Ext.Gemma.CoexpressionGrid.getBitImageStyler = function() {
 			return s;
 		};
 	}
-	return Ext.Gemma.CoexpressionGrid.bitImageStyler;
+	return Gemma.CoexpressionGrid.bitImageStyler;
 };

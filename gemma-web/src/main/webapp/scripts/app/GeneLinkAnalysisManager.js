@@ -2,7 +2,7 @@
  * Interface for modifying and creating GeneCoexpressionAnalyses. Author: Paul
  * $Id$
  */
-Ext.namespace('Ext.Gemma', 'Ext.Gemma.GeneLinkAnalysisGrid');
+Ext.namespace('Gemma', 'Gemma.GeneLinkAnalysisGrid');
 
 Ext.onReady(function() {
 	Ext.QuickTips.init();
@@ -10,7 +10,7 @@ Ext.onReady(function() {
 
 	var admin = dwr.util.getValue("hasAdmin");
 
-	this.analysisGrid = new Ext.Gemma.GeneLinkAnalysisGrid({
+	this.analysisGrid = new Gemma.GeneLinkAnalysisGrid({
 		renderTo : "genelinkanalysis-analysisgrid",
 		readMethod : ExtCoexpressionSearchController.getCannedAnalyses
 				.bind(this),
@@ -21,7 +21,7 @@ Ext.onReady(function() {
 
 	this.analysisGrid.render();
 
-	var virtualAnalysisGrid = new Ext.Gemma.ExpressionExperimentGrid({
+	var virtualAnalysisGrid = new Gemma.ExpressionExperimentGrid({
 		renderTo : "genelinkanalysis-newanalysis",
 		admin : admin,
 		title : "Virtual analysis",
@@ -29,10 +29,10 @@ Ext.onReady(function() {
 		height : 400,
 		ddGroup : "analysisedit",
 		rowExpander : true,
-		tbar : new Ext.Gemma.EditVirtualAnalysisToolBar()
+		tbar : new Gemma.EditVirtualAnalysisToolBar()
 	});
 
-	this.sourceAnalysisGrid = new Ext.Gemma.ExpressionExperimentGrid({
+	this.sourceAnalysisGrid = new Gemma.ExpressionExperimentGrid({
 		renderTo : "genelinkanalysis-datasetgrid",
 
 		editable : false,
@@ -42,7 +42,7 @@ Ext.onReady(function() {
 		pageSize : 20,
 		ddGroup : "analysisedit",
 		rowExpander : true,
-		tbar : new Ext.Gemma.SourceAnalysisToolBar({
+		tbar : new Gemma.SourceAnalysisToolBar({
 			taxonSearch : false,
 			targetGrid : virtualAnalysisGrid
 		})
@@ -169,11 +169,11 @@ Ext.onReady(function() {
  * Toolbar for creating/updating the analysis. Attach to the
  * virtualAnalysisGrid.
  */
-Ext.Gemma.EditVirtualAnalysisToolBar = function(config) {
+Gemma.EditVirtualAnalysisToolBar = function(config) {
 	var bar = this;
 	this.addEvents('newAnalysisCreated', 'createAnalysisError');
 
-	Ext.Gemma.EditVirtualAnalysisToolBar.superclass.constructor.call(this, {
+	Gemma.EditVirtualAnalysisToolBar.superclass.constructor.call(this, {
 		autoHeight : true
 	});
 
@@ -359,29 +359,29 @@ Ext.Gemma.EditVirtualAnalysisToolBar = function(config) {
 
 };
 
-Ext.Gemma.SourceAnalysisToolBar = function(config) {
+Gemma.SourceAnalysisToolBar = function(config) {
 
 	this.filtering = true;
 
-	Ext.Gemma.SourceAnalysisToolBar.superclass.constructor.call(this, config);
+	Gemma.SourceAnalysisToolBar.superclass.constructor.call(this, config);
 
 };
 
 /*
  * Constructor
  */
-Ext.Gemma.GeneLinkAnalysisGrid = function(config) {
+Gemma.GeneLinkAnalysisGrid = function(config) {
 	Ext.apply(this, config);
 
 	if (this.pageSize) {
-		this.ds = new Ext.Gemma.PagingDataStore({
+		this.ds = new Gemma.PagingDataStore({
 			proxy : new Ext.data.DWRProxy(this.readMethod),
 			reader : new Ext.data.ListRangeReader({
 				id : "id"
 			}, this.record),
 			pageSize : this.pageSize
 		});
-		this.bbar = new Ext.Gemma.PagingToolbar({
+		this.bbar = new Gemma.PagingToolbar({
 			pageSize : this.pageSize,
 			store : this.ds
 		});
@@ -394,7 +394,7 @@ Ext.Gemma.GeneLinkAnalysisGrid = function(config) {
 		});
 	}
 
-	Ext.Gemma.GeneLinkAnalysisGrid.superclass.constructor.call(this, config);
+	Gemma.GeneLinkAnalysisGrid.superclass.constructor.call(this, config);
 
 	// this.autoExpandColumn = 'name';
 
@@ -415,7 +415,7 @@ Ext.Gemma.GeneLinkAnalysisGrid = function(config) {
 /*
  * Displays the available analyses.
  */
-Ext.extend(Ext.Gemma.GeneLinkAnalysisGrid, Ext.grid.GridPanel, {
+Ext.extend(Gemma.GeneLinkAnalysisGrid, Ext.grid.GridPanel, {
 
 	autoExpandColumn : 'description',
 	selModel : new Ext.grid.RowSelectionModel(),
@@ -492,9 +492,9 @@ Ext.extend(Ext.Gemma.GeneLinkAnalysisGrid, Ext.grid.GridPanel, {
 
 });
 
-Ext.extend(Ext.Gemma.EditVirtualAnalysisToolBar, Ext.Toolbar, {
+Ext.extend(Gemma.EditVirtualAnalysisToolBar, Ext.Toolbar, {
 	afterRender : function() {
-		Ext.Gemma.EditVirtualAnalysisToolBar.superclass.afterRender.call(this);
+		Gemma.EditVirtualAnalysisToolBar.superclass.afterRender.call(this);
 
 		// add the buttons.
 		var createBut = new Ext.Button({
@@ -534,10 +534,10 @@ Ext.extend(Ext.Gemma.EditVirtualAnalysisToolBar, Ext.Toolbar, {
 	}
 });
 
-Ext.extend(Ext.Gemma.SourceAnalysisToolBar, Ext.Gemma.DatasetSearchToolBar, {
+Ext.extend(Gemma.SourceAnalysisToolBar, Gemma.DatasetSearchToolBar, {
 
 	afterRender : function() {
-		Ext.Gemma.SourceAnalysisToolBar.superclass.afterRender.call(this);
+		Gemma.SourceAnalysisToolBar.superclass.afterRender.call(this);
 		if (this.targetGrid && this.targetGrid.editable) {
 			var grabber = new Ext.Button({
 				id : 'grab',

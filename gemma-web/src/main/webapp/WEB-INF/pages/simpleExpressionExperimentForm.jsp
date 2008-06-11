@@ -4,16 +4,20 @@
 <head>
 	<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
 	<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
+
+	<script type='text/javascript' src='/Gemma/dwr/interface/SimpleExpressionExperimentLoadController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/TaskCompletionController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/FileUploadController.js'></script>
+
 	<script type="text/javascript" src="<c:url value='/scripts/progressbar.js'/>"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/ajax/fileUpload.js'/>"></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/ProgressStatusService.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
-	<script type="text/javascript" src="<c:url value='/scripts/ajax/simpleEELoad.js'/>"></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/SimpleExpressionExperimentLoadController.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/TaskCompletionController.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/FileUploadController.js'></script>
+	
+	<script type="text/javascript" src="<c:url value='/scripts/app/simpleEELoad.js'/>"></script>
+
 	<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/progressbar.css'/>" />
 	<title>Load an expression data set from a flat file</title>
 </head>
@@ -22,8 +26,8 @@
 		Load an expression data set from a flat file
 	</h1>
 	<p>
-		Select an existing array design and taxon; if either one for your experiment aren't listed, provide a name and it will
-		be created based on the data.
+		Select an existing array design and taxon; if either one for your experiment aren't listed, provide a name and it will be
+		created based on the data.
 	</p>
 
 	<div id="messages" style="margin: 10px; width: 400px"></div>
@@ -46,7 +50,7 @@
 	<div style="margin: 10px;" id="file-upload"></div>
 
 
-	<form id="simpleEELoad" method="post" name="simpleEELoad"  >
+	<form id="simpleEELoad" method="post" name="simpleEELoad">
 
 		<table>
 
@@ -82,8 +86,8 @@
 				<td>
 					<Gemma:label key="simpleEEForm.description" />
 					<spring:bind path="simpleExpressionExperimentLoadCommand.description">
-						<textarea rows="5" cols="60" id="<c:out value="${status.expression}"/>"
-							name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>" /></textarea>
+						<textarea rows="5" cols="60" id="<c:out value="${status.expression}"/>" name="<c:out value="${status.expression}"/>"
+							value="<c:out value="${status.value}"/>" /></textarea>
 						<span class="fieldError">${status.errorMessage}</span>
 					</spring:bind>
 				</td>

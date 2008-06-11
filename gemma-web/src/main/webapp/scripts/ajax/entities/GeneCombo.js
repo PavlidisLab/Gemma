@@ -2,15 +2,15 @@
  * @version : $Id$
  * 
  */
-Ext.namespace('Ext.Gemma');
+Ext.namespace('Gemma');
 
 /**
  * Live search field for genes.
  * 
- * @class Ext.Gemma.GeneCombo
+ * @class Gemma.GeneCombo
  * @extends Ext.form.ComboBox
  */
-Ext.Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
+Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 
 	displayField : 'officialSymbol',
 	valueField : 'id',
@@ -52,7 +52,7 @@ Ext.Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 			})
 		});
 
-		Ext.Gemma.GeneCombo.superclass.initComponent.call(this);
+		Gemma.GeneCombo.superclass.initComponent.call(this);
 
 		this.addEvents('genechanged');
 
@@ -66,7 +66,7 @@ Ext.Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 
 	onSelect : function(record, index) {
-		Ext.Gemma.GeneCombo.superclass.onSelect.call(this, record, index);
+		Gemma.GeneCombo.superclass.onSelect.call(this, record, index);
 		if (!this.selectedGene || record.data.id != this.selectedGene.id) {
 			this.setGene(record.data);
 			this.fireEvent('select', this, this.selectedGene);

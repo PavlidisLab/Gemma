@@ -1,10 +1,10 @@
 /**
  * Shows the summary of the coexpression search results.
  * 
- * @class Ext.Gemma.CoexpressionSummaryGrid
- * @extends Ext.Gemma.GemmaGridPanel
+ * @class Gemma.CoexpressionSummaryGrid
+ * @extends Gemma.GemmaGridPanel
  */
-Ext.Gemma.CoexpressionSummaryGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
+Gemma.CoexpressionSummaryGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 	editable : false,
 	title : 'Search Summary',
@@ -69,7 +69,7 @@ Ext.Gemma.CoexpressionSummaryGrid = Ext.extend(Ext.Gemma.GemmaGridPanel, {
 			})
 		});
 
-		Ext.Gemma.CoexpressionSummaryGrid.superclass.initComponent.call(this);
+		Gemma.CoexpressionSummaryGrid.superclass.initComponent.call(this);
 
 	},
 
