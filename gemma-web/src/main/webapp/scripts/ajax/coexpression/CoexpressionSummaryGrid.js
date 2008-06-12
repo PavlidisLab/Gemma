@@ -11,25 +11,28 @@ Gemma.CoexpressionSummaryGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	width : 350,
 	height : 250,
 
-	autoExpandColumn : 'key',
+	//autoExpandColumn : 'key',
 
 	initComponent : function() {
 
 		var columns = [{
 			header : 'Group',
-			dataIndex : 'group'
+			dataIndex : 'group',
+			width : 100
 		}, {
 			id : 'key',
 			header : '',
 			dataIndex : 'key',
-			align : 'right'
+			align : 'right',
+			width : 200
 		}];
 
 		for (var i = 0; i < this.genes.length; ++i) {
 			columns.push({
 				header : this.genes[i].officialSymbol,
 				dataIndex : this.genes[i].officialSymbol,
-				align : 'right'
+				align : 'right',
+				width : 100
 			});
 		}
 

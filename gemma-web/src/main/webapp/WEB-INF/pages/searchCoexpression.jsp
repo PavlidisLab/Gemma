@@ -4,7 +4,7 @@
 	<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/${appConfig["theme"]}/theme.css'/>" />
 	<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/spinner.css'/>" />
 	<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
-	<script src="<c:url value='/scripts/ext/ext-all-debug.js'/>" type="text/javascript"></script>
+	<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
 	<script src="<c:url value='/scripts/ext/RowExpander.js'/>" type="text/javascript"></script>
 	<script src="<c:url value='/scripts/ext/data/PagingMemoryProxy.js'/>" type="text/javascript"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
@@ -50,9 +50,8 @@
 </authz:authorize>
 
 <div id='coexpression-messages' style='width:100%;height:1.2em;margin:5px'></div>
-<div id='coexpression-summary' style='float: right; margin: 1em;'></div>
-<div id='coexpression-form' style='margin-bottom: 1em;'></div>
+<div id='coexpression-summary' style='width:350px;float:right;margin: 1em;'></div>
+<div id='coexpression-form' style='float:left;margin-bottom: 1em;'></div>
 <div id='coexpression-results' ></div>
- 
 <div id='coexpression-experiments' class="x-hidden"></div> 
 <div id='coexpression-genes' class="x-hidden" ></div> 

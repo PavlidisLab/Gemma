@@ -70,10 +70,9 @@ Ext.onReady(function() {
 		}
 		summaryPanel = new Gemma.CoexpressionSummaryGrid({
 			genes : result.queryGenes,
+			renderTo : "coexpression-summary",
 			summary : result.summary
 		});
-		summaryPanel.render("coexpression-summary");
-		summaryPanel.getView().refresh();
 
 		// create expression experiment image map
 		var imageMap = Ext.get("eeMap");
