@@ -47,7 +47,8 @@ Gemma.DiffExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					store : new Ext.data.Store({
 						proxy : new Ext.ux.data.PagingMemoryProxy(this.records),
 						reader : new Ext.data.ListRangeReader({}, this.record),
-						pageSize : this.pageSize
+						pageSize : this.pageSize,
+						sortInfo : { field : "p", direction : "ASC" }  
 					})
 				});
 			} else {
@@ -57,7 +58,8 @@ Gemma.DiffExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 						reader : new Ext.data.ListRangeReader({
 							id : "id"
 						}, this.record),
-						pageSize : this.pageSize
+						pageSize : this.pageSize,
+						sortInfo : { field : "p", direction : "ASC" }   
 					})
 				});
 			}
@@ -74,14 +76,16 @@ Gemma.DiffExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 						proxy : new Ext.data.DWRProxy(this.readMethod),
 						reader : new Ext.data.ListRangeReader({
 							id : "id"
-						}, this.record)
+						}, this.record),
+						sortInfo : { field : "p", direction : "ASC" }   
 					})
 				});
 			} else {
 				Ext.apply(this, {
 					store : new Ext.data.Store({
 						proxy : new Ext.data.MemoryProxy(this.records),
-						reader : new Ext.data.ListRangeReader({}, this.record)
+						reader : new Ext.data.ListRangeReader({}, this.record),
+						sortInfo : { field : "p", direction : "ASC" }  
 					})
 				});
 			}
