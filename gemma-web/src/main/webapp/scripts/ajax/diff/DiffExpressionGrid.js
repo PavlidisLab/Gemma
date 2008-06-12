@@ -80,7 +80,7 @@ Gemma.DiffExpressionGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			}, {
 				id : 'activeExperiments',
 				dataIndex : "activeExperiments",
-				header : "Support",
+				header : "# Datasets Tested In",
 				sortable : false,
 				width : 75,
 				toolTip : "How many experiments met the q-value threshold you selected / how many were tested.",
