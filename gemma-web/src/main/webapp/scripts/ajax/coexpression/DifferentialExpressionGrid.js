@@ -74,14 +74,20 @@ Gemma.DifferentialExpressionGrid = function(config) {
 		id : 'efs',
 		header : "Factor(s)",
 		dataIndex : "experimentalFactors",
+		toolTip : "Experimental factors (variables)",
 		renderer : Gemma.DifferentialExpressionGrid.getEFStyler(),
 		sortable : false
 	}, {
 		id : 'p',
 		header : "Sig. (FDR)",
 		dataIndex : "p",
+		toolTip : "False discovery rate this gene meets (q-value)",
 		renderer : function(p) {
-			return sprintf("%.6e",p);
+			if (p < 0.001) {
+				return sprintf("%.3e", p);
+			} else {
+				return sprintf("%.3f", p);
+			}
 		}
 	}]);
 	superConfig.cm.defaultSortable = true;

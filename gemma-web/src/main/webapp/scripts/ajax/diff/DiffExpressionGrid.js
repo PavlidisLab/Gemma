@@ -67,8 +67,13 @@ Gemma.DiffExpressionGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				id : 'fisherPValue',
 				dataIndex : "fisherPValue",
 				header : "Meta P-Value",
+				toolTip : "Combined p-value for the studies you chose, using the Fisher method.",
 				renderer : function(p) {
-					return sprintf("%.6e",p);
+					if (p < 0.0001) {
+						return sprintf("%.3e", p);
+					} else {
+						return sprintf("%.3f", p)
+					}
 				},
 				sortable : true,
 				width : 75
@@ -78,6 +83,7 @@ Gemma.DiffExpressionGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				header : "Support",
 				sortable : false,
 				width : 75,
+				toolTip : "How many experiments met the q-value threshold you selected / how many were tested.",
 				renderer : Gemma.DiffExpressionGrid.getSupportStyler()
 			},]
 		});

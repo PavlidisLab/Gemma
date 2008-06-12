@@ -5,15 +5,8 @@ Gemma.DiffExpressionGridRowExpander = function(config) {
 
 	this.expandedElements = [];
 
-	this.grid = config.grid;
-
-	var superConfig = {};
-
-	for (property in config) {
-		superConfig[property] = config[property];
-	}
 	Gemma.DiffExpressionGridRowExpander.superclass.constructor.call(this,
-			superConfig);
+			config);
 
 };
 
@@ -56,6 +49,10 @@ Ext.extend(Gemma.DiffExpressionGridRowExpander, Ext.grid.RowExpander, {
 				records : supporting,
 				pageSize : 10,
 				width : 800,
+				layout : fit,
+				layoutConfig : {
+					
+				},
 				renderTo : diffExGridEl
 			});
 
