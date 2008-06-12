@@ -67,8 +67,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.FormPanel, {
 		var dsc = {
 			geneIds : this.geneChooserPanel.getGeneIds(),
 			threshold : Ext.getCmp('thresholdField').getValue(),
-			taxonId : this.geneChooserPanel.getTaxonId(),
-			queryGenesOnly : Ext.getCmp('querygenesonly').getValue()
+			taxonId : this.geneChooserPanel.getTaxonId()
 		};
 
 		if (this.currentSet) {
@@ -102,9 +101,6 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.FormPanel, {
 			eeQuery : param.eeq,
 			taxonId : param.t
 		};
-		if (param.q) {
-			dsc.queryGenesOnly = true;
-		}
 
 		if (param.ees) {
 			dsc.eeIds = param.ees.split(',');
@@ -165,9 +161,6 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.FormPanel, {
 			this.thresholdField.setValue(dsc.threshold);
 		}
 
-		if (dsc.queryGenesOnly) {
-			this.queryGenesOnly.setValue(true);
-		}
 	},
 
 	maybeDoSearch : function(dsc, doit) {
@@ -193,9 +186,6 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.FormPanel, {
 				: document.URL;
 		url += String.format("?g={0}&s={1}&t={2}", dsc.geneIds.join(","),
 				dsc.threshold, dsc.taxonId);
-		if (dsc.queryGenesOnly) {
-			url += "&q";
-		}
 
 		if (dsc.eeSetId) {
 			url += String.format("&a={0}", dsc.eeSetId);
@@ -248,9 +238,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.FormPanel, {
 	},
 
 	validateSearch : function(dsc) {
-		if (dsc.queryGenesOnly && dsc.geneIds.length < 2) {
-			return "You must select more than one query gene to use 'search among query genes only'";
-		} else if (!dsc.geneIds || dsc.geneIds.length === 0) {
+		 if (!dsc.geneIds || dsc.geneIds.length === 0) {
 			return "We couldn't figure out which gene you want to query. Please use the search functionality to find genes.";
 		}  else if (dsc.threshold < Gemma.MIN_THRESHOLD) {
 			return "Minimum threshold is "
@@ -348,12 +336,8 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.FormPanel, {
 						value : Gemma.MIN_THRESHOLD,
 						width : 60,
 						tooltip : "Only genes with a qvalue less than this threshold are returned."
-					}, {
-						xtype : 'checkbox',
-						id : 'querygenesonly',
-						fieldLabel : 'My genes only',
-						tooltip : "Restrict the output to include only links among the listed query genes"
-					}, this.eeSetChooserPanel]
+					}, 
+					this.eeSetChooserPanel]
 				}]
 			}],
 			buttons : [{
