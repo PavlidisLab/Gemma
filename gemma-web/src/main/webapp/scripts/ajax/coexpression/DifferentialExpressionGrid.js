@@ -81,7 +81,7 @@ Gemma.DifferentialExpressionGrid = function(config) {
 		header : "Sig. (FDR)",
 		dataIndex : "p",
 		renderer : function(p) {
-			return p.toFixed(6);
+			return sprintf("%.6e",p);
 		}
 	}]);
 	superConfig.cm.defaultSortable = true;

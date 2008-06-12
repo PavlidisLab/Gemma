@@ -41,6 +41,7 @@ version: $Id$
 	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentSetController.js'></script>
 	
 	<script type='text/javascript' src='/Gemma/scripts/app/DiffExpressionSearch.js'></script>
+	<script type='text/javascript' src='/Gemma/scripts/sprintf.js'></script>
 	
 	<content tag="heading"><fmt:message key="diffExpressionSearch.title" /></content>
 	

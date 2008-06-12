@@ -67,7 +67,10 @@ Gemma.DiffExpressionGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				id : 'fisherPValue',
 				dataIndex : "fisherPValue",
 				header : "Meta P-Value",
-				sortable : false,
+				renderer : function(p) {
+					return sprintf("%.6e",p);
+				},
+				sortable : true,
 				width : 75
 			}, {
 				id : 'activeExperiments',
