@@ -22,15 +22,35 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 
 	emptyText : 'Select a taxon',
 
+	/**
+	 * Custom cookie config.
+	 * 
+	 * @return {}
+	 */
+	getState : function() {
+		return ({
+			taxon : this.getTaxon().data
+		});
+	},
+
+	/**
+	 * Custom cookie config.
+	 * 
+	 * @param {}
+	 *            state
+	 */
+	applyState : function(state) {
+		console.log(state);
+		if (state && state.taxon) {
+			// so we wait for the load.
+			this.setTaxon(state.taxon);
+			this.setState(state.taxon.id);
+		}
+	},
+
 	setState : function(v) {
 		if (this.ready) {
-			Gemma.TaxonCombo.superclass.setValue.call(this, v);// don't
-			// want to
-			// fire
-			// changed
-			// taxon
-			// event
-			// this.setValue(v);
+			Gemma.TaxonCombo.superclass.setValue.call(this, v);
 		} else {
 			this.state = v;
 		}
@@ -38,7 +58,7 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 
 	restoreState : function() {
 		if (this.state) {
-			Gemma.TaxonCombo.superclass.setValue.call(this, v);
+			Gemma.TaxonCombo.superclass.setValue.call(this, this.state);
 			delete this.state;
 		}
 		this.ready = true;
@@ -93,23 +113,12 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 			add : false
 		});
 
+		this.on("statesave", function(cmp, state) {
+			console.log(state.taxon);
+		});
+
 		Gemma.TaxonCombo.superclass.initComponent.call(this);
 	},
-
-//	setValue : function(v) {
-//
-//		var changed = false;
-//		if (this.getValue() != v) {
-//			changed = true;
-//		}
-//
-//		Gemma.TaxonCombo.superclass.setValue.call(this, v);
-//
-//		if (changed) {
-//			var rec = this.store.getById(v);
-//			this.fireEvent('select', this, rec, this.store.indexOf(rec));
-//		}
-//	},
 
 	getTaxon : function() {
 		return this.store.getById(this.getValue());
