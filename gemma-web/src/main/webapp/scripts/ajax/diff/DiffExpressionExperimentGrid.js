@@ -115,9 +115,11 @@ Gemma.DiffExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				sortable : true
 			}, {
 				id : 'p',
-				header : "P Value",
+				header : "Sig. (FDR)",
 				dataIndex : "p",
-				width : 120,
+				renderer : function(p) {
+					return p.toFixed(6);
+				},
 				sortable : true
 			}]
 		});
