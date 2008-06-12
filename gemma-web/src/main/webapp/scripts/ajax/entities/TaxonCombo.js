@@ -42,8 +42,8 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 	applyState : function(state) {
 		console.log(state);
 		if (state && state.taxon) {
-			// so we wait for the load.
 			this.setTaxon(state.taxon);
+			// so we wait for the load.
 			this.setState(state.taxon.id);
 		}
 	},
@@ -111,10 +111,6 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 			callback : this.restoreState.createDelegate(this),
 			scope : this,
 			add : false
-		});
-
-		this.on("statesave", function(cmp, state) {
-			console.log(state.taxon);
 		});
 
 		Gemma.TaxonCombo.superclass.initComponent.call(this);
