@@ -326,7 +326,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.FormPanel, {
 						xtype : 'numberfield',
 						id : 'thresholdField',
 						allowBlank : false,
-						allowDecimals : false,
+						allowDecimals : true,
 						allowNegative : false,
 						minValue : Gemma.MIN_THRESHOLD,
 						maxValue : Gemma.MAX_THRESHOLD,
