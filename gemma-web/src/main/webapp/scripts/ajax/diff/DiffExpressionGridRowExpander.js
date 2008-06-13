@@ -49,10 +49,6 @@ Ext.extend(Gemma.DiffExpressionGridRowExpander, Ext.grid.RowExpander, {
 				records : supporting,
 				pageSize : 10,
 				width : 800,
-				layout : fit,
-				layoutConfig : {
-					
-				},
 				renderTo : diffExGridEl
 			});
 
