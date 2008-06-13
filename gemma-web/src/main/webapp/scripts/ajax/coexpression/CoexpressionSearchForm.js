@@ -301,13 +301,19 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 		});
 
 		this.eeSetChooserPanel = new Gemma.ExpressionExperimentSetPanel({
-			fieldLabel : "Query scope"
+			fieldLabel : "Query scope",
+			store : new Gemma.ExpressionExperimentSetStore()
 		});
 
 		this.geneChooserPanel.on("taxonchanged", function(taxon) {
-			console.log("gene chooser taxon changed");
-			this.eeSetChooserPanel.filterByTaxon(taxon);
-		}.createDelegate(this));
+			// console.log("gene chooser taxon changed");
+			var v = new Ext.util.DelayedTask(
+					this.eeSetChooserPanel.filterByTaxon,
+					this.eeSetChooserPanel, [taxon]);
+			v.delay(100); // this tiny delay is enough to let things get
+				// sorted out and allow correct restoration of
+				// state.
+			}.createDelegate(this));
 
 		this.eeSetChooserPanel.on("set-chosen", function(eeSetRecord) {
 			this.currentSet = eeSetRecord;

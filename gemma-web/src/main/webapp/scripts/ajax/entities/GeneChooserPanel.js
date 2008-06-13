@@ -136,24 +136,6 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 		}
 	},
 
-	getGeneIds : function() {
-		var ids = [];
-		var all = this.getStore().getRange();
-		for (var i = 0; i < all.length; ++i) {
-			ids.push(all[i].data.id);
-		}
-		var gene = this.geneCombo.getGene();
-		if (gene) {
-			for (var i = 0; i < ids.length; ++i) {
-				if (ids[i] == gene.id) {
-					return ids;
-				}
-			}
-			ids.push(gene.id);
-		}
-		return ids;
-	},
-
 	/**
 	 * Given text, search Gemma for matching genes. Used to 'bulk load' genes
 	 * from the GUI.
@@ -235,17 +217,17 @@ Gemma.GeneChooserToolBar = Ext.extend(Ext.Toolbar, {
 			this.fireEvent("taxonchanged", taxon);
 		}
 
-		// Remove all the genes that are not from the correct taxon.
-		var all = this.getStore().getRange();
-		for (var i = 0; i < all.length; ++i) {
-			if (all[i].data.taxon.id != taxon.id) {
-				this.getStore().remove(all[i]);
-			}
-		}
-
 		// Update the taxon combo.
-		if (updateTaxonCombo
-				&& (!this.taxonCombo.getTaxon() || this.taxonCombo.getTaxon().id != taxon.id)) {
+		if (!this.taxonCombo.getTaxon()
+				|| this.taxonCombo.getTaxon().id != taxon.id) {
+			// Remove all the genes that are not from the correct taxon.
+			var all = this.getStore().getRange();
+			for (var i = 0; i < all.length; ++i) {
+				if (all[i].data.taxon.id != taxon.id) {
+					this.getStore().remove(all[i]);
+				}
+			}
+
 			this.taxonCombo.setTaxon(taxon);
 		}
 
@@ -380,7 +362,7 @@ Gemma.GeneChooserPanel = Ext.extend(Ext.Panel, {
 
 	initComponent : function() {
 
-		var geneGrid = new Gemma.GeneGrid({
+		this.geneGrid = new Gemma.GeneGrid({
 			height : 100,
 			region : 'center',
 			frame : false,
@@ -389,7 +371,7 @@ Gemma.GeneChooserPanel = Ext.extend(Ext.Panel, {
 		});
 
 		this.toolbar = new Gemma.GeneChooserToolBar({
-			geneGrid : geneGrid,
+			geneGrid : this.geneGrid,
 			style : "border: #a3bad9 solid 1px;",
 			listeners : {
 				'taxonchanged' : {
@@ -408,10 +390,32 @@ Gemma.GeneChooserPanel = Ext.extend(Ext.Panel, {
 		});
 
 		Ext.apply(this, {
-			items : [geneToolbar, geneGrid]
+			items : [geneToolbar, this.geneGrid]
 		});
 		Gemma.GeneChooserPanel.superclass.initComponent.call(this);
 		this.addEvents('taxonchanged', 'ready');
+	},
+
+	getTaxonId : function() {
+		return this.toolbar.getTaxonId();
+	},
+
+	getGeneIds : function() {
+		var ids = [];
+		var all = this.geneGrid.getStore().getRange();
+		for (var i = 0; i < all.length; ++i) {
+			ids.push(all[i].data.id);
+		}
+		var gene = this.toolbar.geneCombo.getGene();
+		if (gene) {
+			for (var i = 0; i < ids.length; ++i) {
+				if (ids[i] == gene.id) {
+					return ids;
+				}
+			}
+			ids.push(gene.id);
+		}
+		return ids;
 	},
 
 	taxonChanged : function(taxon) {
