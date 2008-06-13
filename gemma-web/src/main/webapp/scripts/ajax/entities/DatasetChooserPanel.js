@@ -67,7 +67,10 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 	},
 
 	filterByTaxon : function(taxon) {
-		this.combo.filterByTaxon(taxon); // side effect: grid is filered too.
+		// side effect: grid is filtered too.
+		if (taxon) {
+			this.combo.filterByTaxon(taxon);
+		}
 	},
 
 	initComponent : function() {
@@ -84,8 +87,7 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 			store : this.store
 		});
 
-		Gemma.ExpressionExperimentSetPanel.superclass.initComponent
-				.call(this);
+		Gemma.ExpressionExperimentSetPanel.superclass.initComponent.call(this);
 
 		this.addEvents('set-chosen');
 
@@ -103,8 +105,8 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 	},
 
 	onRender : function(ct, position) {
-		Gemma.ExpressionExperimentSetPanel.superclass.onRender.call(this,
-				ct, position);
+		Gemma.ExpressionExperimentSetPanel.superclass.onRender.call(this, ct,
+				position);
 
 		this.add(this.combo);
 
@@ -143,14 +145,35 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 	triggerAction : 'all',
 	lazyInit : false, // important!
 	emptyText : 'Select a search scope',
+	isReady : false,
+
+	/**
+	 * Help to restore state asynchronously.
+	 */
+	init : function() {
+		this.isReady = true;
+		if (this.tmpTaxon) {
+			this.filterByTaxon(this.tmpTaxon);
+			delete tmpTaxon;
+		}
+		this.fireEvent("ready");
+	},
 
 	filterByTaxon : function(taxon) {
 		if (!taxon) {
 			return;
 		}
 
-		this.store.clearFilter();
-		this.store.filterBy(function(record, id) {
+		/**
+		 * Waiting for load, so we defer until init gets triggered.
+		 */
+		if (this.store === null || this.store.getTotalCount() == 0
+				|| !this.isReady) {
+			this.tmpTaxon = taxon;
+			return;
+		}
+
+		this.doQueryBy(function(record, id) {
 			if (!record.get("taxon")) {
 				return true; // in case there is none.
 			} else if (taxon.id == record.get("taxon").id) {
@@ -159,19 +182,23 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 				return false;
 			}
 		});
-		this.focus();
-		this.onLoad();
 
 		if (this.store.getSelected()
 				&& this.store.getSelected().get("taxon").id != taxon.id) {
-			this.setValue("");
+			// this.setValue("");
 		}
+	},
+
+	doQueryBy : function(fn) {
+		this.store.clearFilter();
+		this.store.filterBy(fn);
+		this.focus();
+		this.onLoad();
 	},
 
 	initComponent : function() {
 
-		Gemma.ExpressionExperimentSetCombo.superclass.initComponent
-				.call(this);
+		Gemma.ExpressionExperimentSetCombo.superclass.initComponent.call(this);
 
 		this.tpl = new Ext.XTemplate('<tpl for="."><div ext:qtip="{description} ({numExperiments} members)" class="x-combo-list-item">{name}{[ values.taxon ? " (" + values.taxon.scientificName + ")" : "" ]}</div></tpl>');
 		this.tpl.compile();
@@ -180,6 +207,9 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 			this.store.setSelected(rec);
 		});
 
+		this.store.on("load", this.init.createDelegate(this));
+
+		this.addEvents("ready");
 	}
 
 });
@@ -219,8 +249,8 @@ Gemma.ExpressionExperimentSetStore = function(config) {
 		id : "id"
 	}, this.record);
 
-	Gemma.ExpressionExperimentSetStore.superclass.constructor.call(this,
-			config);
+	Gemma.ExpressionExperimentSetStore.superclass.constructor
+			.call(this, config);
 
 	this.on("load", this.addFromCookie, this);
 
@@ -319,8 +349,8 @@ Ext.extend(Gemma.ExpressionExperimentSetStore, Ext.data.Store, {
 		for (var i = 0, len = eeSets.length; i < len; i++) {
 			eeSetData.push(eeSets[i].data);
 		}
-		Ext.state.Manager.set(
-				Gemma.ExpressionExperimentSetStore.COOKIE_KEY, eeSetData);
+		Ext.state.Manager.set(Gemma.ExpressionExperimentSetStore.COOKIE_KEY,
+				eeSetData);
 		this.fireEvent("saveOrUpdate");
 	},
 
@@ -410,8 +440,7 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 	},
 
 	onRender : function(ct, position) {
-		Gemma.DatasetChooserPanel.superclass.onRender.call(this, ct,
-				position);
+		Gemma.DatasetChooserPanel.superclass.onRender.call(this, ct, position);
 
 		var admin = dwr.util.getValue("hasAdmin");
 
@@ -506,8 +535,7 @@ Gemma.ExpressionExperimentSetGrid = Ext.extend(Ext.grid.EditorGridPanel, {
 
 	initComponent : function() {
 
-		Gemma.ExpressionExperimentSetGrid.superclass.initComponent
-				.call(this);
+		Gemma.ExpressionExperimentSetGrid.superclass.initComponent.call(this);
 
 		if (!this.store) {
 			Ext.apply(this, {

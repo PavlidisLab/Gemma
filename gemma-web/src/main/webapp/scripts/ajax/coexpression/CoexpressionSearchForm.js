@@ -295,6 +295,8 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 	initComponent : function() {
 
 		this.geneChooserPanel = new Gemma.GeneChooserPanel({
+			height : 100,
+			region : 'center',
 			id : 'gene-chooser-panel'
 		});
 
@@ -303,6 +305,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 		});
 
 		this.geneChooserPanel.on("taxonchanged", function(taxon) {
+			console.log("gene chooser taxon changed");
 			this.eeSetChooserPanel.filterByTaxon(taxon);
 		}.createDelegate(this));
 
@@ -318,15 +321,14 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 
 		Ext.apply(this, {
 
-			items : [{
-				xtype : 'fieldset',
-				title : 'Query gene(s)',
-				autoHeight : true,
-				items : [this.geneChooserPanel]
-			}, {
+			title : "Search configuration",
+			items : [this.geneChooserPanel, {
 				xtype : 'panel',
 				title : 'Analysis options',
 				id : 'analysis-options',
+				collapsible : true,
+				split : true,
+				region : 'south',
 				autoHeight : true,
 				items : [{
 					xtype : 'fieldset',

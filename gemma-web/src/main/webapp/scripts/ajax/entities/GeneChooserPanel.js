@@ -14,48 +14,32 @@ Ext.namespace('Gemma');
  * @class Gemma.GeneChooserPanel
  * @extends Gemma.GemmaGridPanel
  */
-Gemma.GeneChooserPanel = Ext.extend(Gemma.GemmaGridPanel, {
+
+Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	collapsible : true,
-
-	height : 200,
+	autoWidth : true,
+	// title : "Gene table",
+	frame : true,
+	layout : 'fit',
+	layoutConfig : {
+		forceFit : true
+	},
 	autoScroll : true,
 	emptyText : "Genes will be listed here",
-
 	columns : [{
 		header : 'Symbol',
+		toolTip : 'Gene symbol',
 		dataIndex : 'officialSymbol',
+		width : 75,
 		sortable : true
 	}, {
 		id : 'desc',
+		toolTip : 'Gene name',
 		header : 'Name',
 		dataIndex : 'officialName'
 	}],
 	autoExpandColumn : 'desc',
-
-	/**
-	 * Given text, search Gemma for matching genes. Used to 'bulk load' genes
-	 * from the GUI.
-	 * 
-	 * @param {}
-	 *            e
-	 */
-	getGenesFromList : function(e) {
-		var taxonId = this.getTaxonId();
-		var text = e.geneNames;
-		GenePickerController.searchMultipleGenes(text, taxonId,
-				function(genes) {
-					var geneData = [];
-					for (var i = 0; i < genes.length; ++i) {
-						geneData
-								.push([genes[i].id,
-										genes[i].taxon.scientificName,
-										genes[i].officialSymbol,
-										genes[i].officialName]);
-					}
-					this.getStore().loadData(geneData, true);
-				}.createDelegate(this));
-	},
 
 	/**
 	 * Add to table.
@@ -80,6 +64,123 @@ Gemma.GeneChooserPanel = Ext.extend(Gemma.GemmaGridPanel, {
 			}
 		}.createDelegate(this));
 	},
+
+	initComponent : function() {
+		Ext.apply(this, {
+			store : new Ext.data.SimpleStore({
+				fields : [{
+					name : 'id',
+					type : 'int'
+				}, {
+					name : 'taxon'
+				}, {
+					name : 'officialSymbol',
+					type : 'string'
+				}, {
+					name : 'officialName',
+					type : 'string'
+				}],
+				sortInfo : {
+					field : 'officialSymbol',
+					direction : 'ASC'
+				}
+			})
+		});
+
+		Gemma.GeneGrid.superclass.initComponent.call(this);
+
+		if (this.genes) {
+			var genes = this.genes instanceof Array ? this.genes : this.genes
+					.split(",");
+			this.loadGenes(genes);
+		}
+
+	},
+
+	// afterRender : function() {
+	// Gemma.GeneChooserPanel.superclass.afterRender.call(this);
+	// var r = new Ext.Resizable(this.getEl(), {
+	// handles : 'all'
+	// });
+	// },
+
+	removeGene : function() {
+		var selected = this.getSelectionModel().getSelections();
+		for (var i = 0; i < selected.length; ++i) {
+			this.getStore().remove(selected[i]);
+		}
+	},
+
+	record : Ext.data.Record.create([{
+		name : 'id',
+		type : 'int'
+	}, {
+		name : 'taxon'
+	}, {
+		name : 'officialSymbol',
+		type : 'string'
+	}, {
+		name : 'officialName',
+		type : 'string'
+	}]),
+
+	addGene : function(gene) {
+		if (!gene) {
+			return;
+		}
+
+		if (this.getStore().find("id", gene.id) < 0) {
+			var Constructor = this.record;
+			var record = new Constructor(gene);
+			this.getStore().add([record]);
+		}
+	},
+
+	getGeneIds : function() {
+		var ids = [];
+		var all = this.getStore().getRange();
+		for (var i = 0; i < all.length; ++i) {
+			ids.push(all[i].data.id);
+		}
+		var gene = this.geneCombo.getGene();
+		if (gene) {
+			for (var i = 0; i < ids.length; ++i) {
+				if (ids[i] == gene.id) {
+					return ids;
+				}
+			}
+			ids.push(gene.id);
+		}
+		return ids;
+	},
+
+	/**
+	 * Given text, search Gemma for matching genes. Used to 'bulk load' genes
+	 * from the GUI.
+	 * 
+	 * @param {}
+	 *            e
+	 */
+	getGenesFromList : function(e) {
+		var taxonId = this.getTaxonId();
+		var text = e.geneNames;
+		GenePickerController.searchMultipleGenes(text, taxonId,
+				function(genes) {
+					var geneData = [];
+					for (var i = 0; i < genes.length; ++i) {
+						geneData
+								.push([genes[i].id,
+										genes[i].taxon.scientificName,
+										genes[i].officialSymbol,
+										genes[i].officialName]);
+					}
+					this.getStore().loadData(geneData, true);
+				}.createDelegate(this));
+	}
+
+});
+
+Gemma.GeneChooserToolBar = Ext.extend(Ext.Toolbar, {
 
 	/**
 	 * Set value in combobox.
@@ -106,24 +207,6 @@ Gemma.GeneChooserPanel = Ext.extend(Gemma.GemmaGridPanel, {
 		}.createDelegate(this));
 	},
 
-	getGeneIds : function() {
-		var ids = [];
-		var all = this.getStore().getRange();
-		for (var i = 0; i < all.length; ++i) {
-			ids.push(all[i].data.id);
-		}
-		var gene = this.geneCombo.getGene();
-		if (gene) {
-			for (var i = 0; i < ids.length; ++i) {
-				if (ids[i] == gene.id) {
-					return ids;
-				}
-			}
-			ids.push(gene.id);
-		}
-		return ids;
-	},
-
 	getTaxonId : function() {
 		if (this.taxonCombo) {
 			return this.taxonCombo.getValue();
@@ -139,7 +222,7 @@ Gemma.GeneChooserPanel = Ext.extend(Gemma.GemmaGridPanel, {
 	 * @param {}
 	 *            taxon
 	 */
-	taxonChanged : function(taxon) {
+	taxonChanged : function(taxon, updateTaxonCombo) {
 		if (!taxon) {
 			return;
 		}
@@ -161,42 +244,61 @@ Gemma.GeneChooserPanel = Ext.extend(Gemma.GemmaGridPanel, {
 		}
 
 		// Update the taxon combo.
-		if (!this.taxonCombo.getTaxon()
-				|| this.taxonCombo.getTaxon().id != taxon.id) {
+		if (updateTaxonCombo
+				&& (!this.taxonCombo.getTaxon() || this.taxonCombo.getTaxon().id != taxon.id)) {
 			this.taxonCombo.setTaxon(taxon);
 		}
 
 	},
 
-	addGene : function() {
-		var gene = this.geneCombo.getGene();
-		if (!gene) {
-			return;
-		}
-		if (this.getStore().find("id", gene.id) < 0) {
-			var Constructor = this.geneCombo.record;
-			var record = new Constructor(gene);
-			this.getStore().add([record]);
-		}
-		this.geneCombo.reset();
-		this.addButton.disable();
+	getTaxon : function() {
+		return this.taxonCombo.getTaxon();
 	},
 
-	removeGene : function() {
-		var selected = this.getSelectionModel().getSelections();
-		for (var i = 0; i < selected.length; ++i) {
-			this.getStore().remove(selected[i]);
-		}
-		this.removeButton.disable();
+	getGenesFromList : function() {
+		this.geneGrid.getGenesFromList();
+	},
+
+	getStore : function() {
+		return this.geneGrid.getStore();
 	},
 
 	initComponent : function() {
+		Gemma.GeneChooserToolBar.superclass.initComponent.call(this);
+
+		/*
+		 * code down here has to be called after the super-constructor so that
+		 * we know we're a grid...
+		 */
+		this.geneGrid.getSelectionModel().on("selectionchange",
+				function(model) {
+					var selected = model.getSelections();
+					if (selected.length > 0) {
+						this.removeButton.enable();
+					} else {
+						this.removeButton.disable();
+					}
+				}.createDelegate(this));
+
+		this.addEvents("taxonchanged", "ready");
+	},
+
+	afterRender : function() {
+		Gemma.GeneChooserToolBar.superclass.afterRender.call(this);
 
 		this.taxonCombo = new Gemma.TaxonCombo({
 			listeners : {
-				'select' : function(cb, rec, index) {
-					this.taxonChanged(rec.data);
-				}.createDelegate(this)
+				'select' : {
+					fn : function(cb, rec, index) {
+						this.taxonChanged(rec.data, false);
+					}.createDelegate(this)
+				},
+				'ready' : {
+					fn : function(taxon) {
+						this.taxonChanged(taxon, false);
+						this.fireEvent('ready', taxon);
+					}.createDelegate(this)
+				}
 			}
 		});
 
@@ -221,7 +323,11 @@ Gemma.GeneChooserPanel = Ext.extend(Gemma.GemmaGridPanel, {
 			cls : "x-btn-icon",
 			tooltip : "Add a gene to the list",
 			disabled : true,
-			handler : this.addGene.createDelegate(this)
+			handler : function() {
+				this.geneGrid.addGene(this.geneCombo.getGene());
+				this.geneCombo.reset();
+				this.addButton.disable();
+			}.createDelegate(this)
 		});
 
 		this.removeButton = new Ext.Toolbar.Button({
@@ -229,13 +335,17 @@ Gemma.GeneChooserPanel = Ext.extend(Gemma.GemmaGridPanel, {
 			cls : "x-btn-icon",
 			tooltip : "Remove the selected gene from the list",
 			disabled : true,
-			handler : this.removeGene.createDelegate(this)
+			handler : function() {
+				this.geneGrid.removeGene();
+				this.removeButton.disable();
+			}.createDelegate(this)
 		});
 
 		this.chooser = new Gemma.GeneImportPanel({
 			listeners : {
 				'commit' : {
-					fn : this.getGenesFromList.createDelegate(this)
+					fn : this.getGenesFromList.createDelegate(this),
+					scope : this
 				}
 			}
 		});
@@ -252,62 +362,62 @@ Gemma.GeneChooserPanel = Ext.extend(Gemma.GemmaGridPanel, {
 			}.createDelegate(this, [], true)
 		});
 
-		Ext.apply(this, {
-			tbar : [this.taxonCombo, {
-				xtype : 'tbspacer'
-			}, this.geneCombo, this.addButton, {
-				xtype : 'tbspacer'
-			}, this.removeButton, {
-				xtype : 'tbspacer'
-			}, this.multiButton],
-			store : new Ext.data.SimpleStore({
-				fields : [{
-					name : 'id',
-					type : 'int'
-				}, {
-					name : 'taxon'
-				}, {
-					name : 'officialSymbol',
-					type : 'string'
-				}, {
-					name : 'officialName',
-					type : 'string'
-				}],
-				sortInfo : {
-					field : 'officialSymbol',
-					direction : 'ASC'
-				}
-			})
-		});
-
-		Gemma.GeneChooserPanel.superclass.initComponent.call(this);
-
-		this.addEvents('taxonchanged');
-
-		/*
-		 * code down here has to be called after the super-constructor so that
-		 * we know we're a grid...
-		 */
-		this.getSelectionModel().on("selectionchange", function(model) {
-			var selected = model.getSelections();
-			if (selected.length > 0) {
-				this.removeButton.enable();
-			} else {
-				this.removeButton.disable();
-			}
-		}.createDelegate(this));
-
-		if (this.genes) {
-			var genes = this.genes instanceof Array ? this.genes : this.genes
-					.split(",");
-			this.loadGenes(genes);
-		}
-
-		this.getStore().on("load", function() {
-			this.doLayout();
-		}, this);
+		this.add(this.taxonCombo);
+		this.addSpacer();
+		this.add(this.geneCombo, this.addButton);
+		this.addSpacer();
+		this.add(this.removeButton);
+		this.addSpacer();
+		this.add(this.multiButton);
 
 	}
+
+});
+
+Gemma.GeneChooserPanel = Ext.extend(Ext.Panel, {
+
+	layout : 'border',
+
+	initComponent : function() {
+
+		var geneGrid = new Gemma.GeneGrid({
+			height : 100,
+			region : 'center',
+			frame : false,
+			style : "border: #a3bad9 solid 1px;",
+			split : true
+		});
+
+		this.toolbar = new Gemma.GeneChooserToolBar({
+			geneGrid : geneGrid,
+			style : "border: #a3bad9 solid 1px;",
+			listeners : {
+				'taxonchanged' : {
+					fn : function(taxon) {
+						this.fireEvent("taxonchanged", taxon);
+					}.createDelegate(this),
+					scope : this
+				}
+			}
+		});
+
+		var geneToolbar = new Ext.Panel({
+			tbar : this.toolbar,
+			frame : false,
+			region : 'north'
+		});
+
+		Ext.apply(this, {
+			items : [geneToolbar, geneGrid]
+		});
+		Gemma.GeneChooserPanel.superclass.initComponent.call(this);
+		this.addEvents('taxonchanged', 'ready');
+	},
+
+	taxonChanged : function(taxon) {
+		this.toolbar.taxonChanged(taxon);
+	}
+
 });
 
 /*

@@ -55,7 +55,7 @@ version: $Id$
 </authz:authorize>
 
 <div id='diffExpression-messages' style='width:100%;height:1.2em;margin:5px'></div>
-<div id='diffExpression-form' style='margin-bottom: 1em;'></div>
+<div id='diffExpression-form' style='width:500px;margin-bottom: 1em;'></div>
 <div id='diffExpression-results' ></div>
 
 <div id='diffExpression-experiments' class="x-hidden"></div> 

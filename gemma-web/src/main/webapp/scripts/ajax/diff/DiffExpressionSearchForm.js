@@ -15,9 +15,17 @@
 Gemma.MIN_THRESHOLD = 0.01;
 Gemma.MAX_THRESHOLD = 1.0;
 
-Gemma.DiffExpressionSearchForm = Ext.extend(Ext.FormPanel, {
+Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 
-	width : 550,
+	title : "Search configuration",
+	layout : 'border',
+	defaults : {
+		collapsible : true,
+		split : true,
+		bodyStyle : "padding:10px"
+	},
+
+	height : 500,
 	frame : true,
 	stateful : true,
 	stateEvents : ["beforesearch"],
@@ -97,7 +105,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.FormPanel, {
 
 		var dsc = {
 			geneIds : param.g ? param.g.split(',') : [],
-			threshold : param.t || Gemma.MIN_THRESHOLD ,
+			threshold : param.t || Gemma.MIN_THRESHOLD,
 			eeQuery : param.eeq,
 			taxonId : param.t
 		};
@@ -210,11 +218,14 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.FormPanel, {
 		if (msg.length === 0) {
 			if (this.fireEvent('beforesearch', this, dsc) !== false) {
 				this.loadMask.show();
-				var errorHandler = this.handleError.createDelegate(this, [], true);
-				DifferentialExpressionSearchController.getDiffExpressionForGenes(dsc, {
-					callback : this.returnFromSearch.createDelegate(this),
-					errorHandler : errorHandler
-				});
+				var errorHandler = this.handleError.createDelegate(this, [],
+						true);
+				DifferentialExpressionSearchController
+						.getDiffExpressionForGenes(dsc, {
+							callback : this.returnFromSearch
+									.createDelegate(this),
+							errorHandler : errorHandler
+						});
 			}
 		} else {
 			this.handleError(msg);
@@ -238,14 +249,12 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.FormPanel, {
 	},
 
 	validateSearch : function(dsc) {
-		 if (!dsc.geneIds || dsc.geneIds.length === 0) {
+		if (!dsc.geneIds || dsc.geneIds.length === 0) {
 			return "We couldn't figure out which gene you want to query. Please use the search functionality to find genes.";
-		}  else if (dsc.threshold < Gemma.MIN_THRESHOLD) {
-			return "Minimum threshold is "
-					+ Gemma.MIN_THRESHOLD;
+		} else if (dsc.threshold < Gemma.MIN_THRESHOLD) {
+			return "Minimum threshold is " + Gemma.MIN_THRESHOLD;
 		} else if (dsc.threshold > Gemma.MAX_THRESHOLD) {
-			return "Maximum threshold is "
-					+ Gemma.MAX_THRESHOLD;
+			return "Maximum threshold is " + Gemma.MAX_THRESHOLD;
 		} else if (dsc.eeIds && dsc.eeIds.length < 1) {
 			return "There are no datasets that match your search terms";
 		} else if (!dsc.eeIds && !dsc.eeSetId) {
@@ -286,7 +295,9 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.FormPanel, {
 	initComponent : function() {
 
 		this.geneChooserPanel = new Gemma.GeneChooserPanel({
-			id : 'gene-chooser-panel'
+			id : 'gene-chooser-panel',
+			region : 'center',
+			height : 100
 		});
 
 		this.eeSetChooserPanel = new Gemma.ExpressionExperimentSetPanel({
@@ -308,20 +319,18 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.FormPanel, {
 				.createDelegate(this));
 
 		Ext.apply(this, {
-
-			items : [{
-				xtype : 'fieldset',
-				title : 'Query gene(s)',
-				autoHeight : true,
-				items : [this.geneChooserPanel]
-			}, {
+			items : [this.geneChooserPanel, {
 				xtype : 'panel',
+				region : 'south',
 				title : 'Analysis options',
 				id : 'analysis-options',
-				autoHeight : true,
+				width : 250,
+				height : 150,
+				minSize : 70,
+				cmargins : '5 0 0 0 ',
 				items : [{
 					xtype : 'fieldset',
-					autoHeight : true,
+					height : 90,
 					items : [{
 						xtype : 'numberfield',
 						id : 'thresholdField',
@@ -332,12 +341,12 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.FormPanel, {
 						maxValue : Gemma.MAX_THRESHOLD,
 						fieldLabel : 'Threshold',
 						invalidText : "Minimum threshold is "
-								+ Gemma.MIN_THRESHOLD +".  Max threshold is " + Gemma.MAX_THRESHOLD, 
+								+ Gemma.MIN_THRESHOLD + ".  Max threshold is "
+								+ Gemma.MAX_THRESHOLD,
 						value : Gemma.MIN_THRESHOLD,
 						width : 60,
 						tooltip : "Only genes with a qvalue less than this threshold are returned."
-					}, 
-					this.eeSetChooserPanel]
+					}, this.eeSetChooserPanel]
 				}]
 			}],
 			buttons : [{

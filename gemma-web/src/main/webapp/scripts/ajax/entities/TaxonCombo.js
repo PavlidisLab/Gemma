@@ -19,6 +19,7 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 	stateId : "Gemma.TaxonCombo",
 	stateful : true,
 	stateEvents : ['select'],
+	isReady : false,
 
 	emptyText : 'Select a taxon',
 
@@ -40,29 +41,33 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 	 *            state
 	 */
 	applyState : function(state) {
-		console.log(state);
 		if (state && state.taxon) {
 			this.setTaxon(state.taxon);
 			// so we wait for the load.
+			// console.log("apply state");
 			this.setState(state.taxon.id);
 		}
 	},
 
 	setState : function(v) {
-		if (this.ready) {
+		if (this.isReady) {
+			// console.log("already ready");
 			Gemma.TaxonCombo.superclass.setValue.call(this, v);
 		} else {
-			this.state = v;
+			// console.log("storing state");
+			this.tmpState = v;
 		}
 	},
 
 	restoreState : function() {
-		if (this.state) {
-			Gemma.TaxonCombo.superclass.setValue.call(this, this.state);
-			delete this.state;
+		if (this.tmpState) {
+			// console.log("restore state");
+			Gemma.TaxonCombo.superclass.setValue.call(this, this.tmpState);
+			delete this.tmpState;
+			this.isReady = true;
 		}
-		this.ready = true;
-		this.fireEvent('ready');
+		// console.log("ready");
+		this.fireEvent('ready', this.getTaxon().data);
 	},
 
 	record : Ext.data.Record.create([{
@@ -91,8 +96,6 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 
 	initComponent : function() {
 
-		this.addEvents('taxonchanged', 'ready');
-
 		var tmpl = new Ext.XTemplate('<tpl for="."><div class="x-combo-list-item">{commonName} ({scientificName})</div></tpl>');
 
 		Ext.apply(this, {
@@ -114,6 +117,8 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 		});
 
 		Gemma.TaxonCombo.superclass.initComponent.call(this);
+
+		this.addEvents('taxonchanged', 'ready');
 	},
 
 	getTaxon : function() {

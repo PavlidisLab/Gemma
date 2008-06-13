@@ -11,31 +11,37 @@ Gemma.DatasetChooser.app = function() {
 		init : function() {
 
 			Ext.QuickTips.init();
-
 			Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 
-			tc = new Ext.Gemma.TaxonCombo({
-				renderTo : 'but'
-			});
-
-			dcp = new Ext.Gemma.ExpressionExperimentSetPanel({
-				renderTo : 'but'
-			});
-
-			tc.on("select", function(combo, record, index) {
-				dcp.filterByTaxon(record.data);
-			});
-
-			tf = new Ext.form.TextField({
+			gcp = new Gemma.GeneChooserPanel({
+				frame : true,
 				renderTo : 'but',
-				width : 150
+				width : 400,
+				height : 150
 			});
 
-			dcp.on("set-chosen", function(e) {
-				tf
-						.setValue(e.get("expressionExperimentIds").length
-								+ " ee ids");
-			});
+			// tc = new Ext.Gemma.TaxonCombo({
+			// renderTo : 'but'
+			// });
+			//
+			// dcp = new Ext.Gemma.ExpressionExperimentSetPanel({
+			// renderTo : 'but'
+			// });
+			//
+			// tc.on("select", function(combo, record, index) {
+			// dcp.filterByTaxon(record.data);
+			// });
+			//
+			// tf = new Ext.form.TextField({
+			// renderTo : 'but',
+			// width : 150
+			// });
+			//
+			// dcp.on("set-chosen", function(e) {
+			// tf
+			// .setValue(e.get("expressionExperimentIds").length
+			// + " ee ids");
+			// });
 
 		}
 	};

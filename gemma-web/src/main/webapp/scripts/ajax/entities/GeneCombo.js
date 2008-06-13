@@ -18,6 +18,7 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 	listWidth : 350,
 	loadingText : 'Searching...',
 
+	emptyText : "Search for a gene",
 	minChars : 1,
 	selectOnFocus : true,
 
