@@ -36,7 +36,7 @@ Ext.extend(Gemma.DiffExpressionGridRowExpander, Ext.grid.RowExpander, {
 				renderTo : bodyEl,
 				activeTab : 0,
 				items : [{
-					title : "Supporting Datasets",
+					title : "Probe Level Data",
 					contentEl : diffExGridEl
 				}]
 			});
