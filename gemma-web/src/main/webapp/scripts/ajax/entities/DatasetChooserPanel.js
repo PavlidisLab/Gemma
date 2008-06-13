@@ -167,17 +167,19 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 			// console.log("Read state=" + state.eeSet);
 			var dt = new Ext.util.DelayedTask(this.selectById, this,
 					[state.eeSet]);
-			dt.delay(1000); // delay to let store load (not under control)
+			dt.delay(1500); // delay to let store load (not under this class's
+			// control)
 		}
 		Gemma.ExpressionExperimentSetCombo.superclass.applyState.call(this,
 				state);
 	},
 
 	getState : function() {
-		// console.log("Save state: " + this.getValue());
-		return ({
-			eeSet : this.getValue()
-		});
+		if (this.store.getSelected()) {
+			return ({
+				eeSet : this.store.getSelected().get("id")
+			});
+		}
 	},
 
 	filterByTaxon : function(taxon) {
@@ -233,9 +235,10 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 	 */
 	selectById : function(id) {
 		var index = this.store.find("id", id);
+		// console.log("select by id " + id);
 		if (index >= 0) {
 			var rec = this.store.getAt(index);
-			// console.log("select by id " + index);
+			// console.log("select by index " + index);
 			this.store.setSelected(rec);
 			this.setValue(rec.get("name"), true);
 			this.fireEvent("select", this, rec, index);
