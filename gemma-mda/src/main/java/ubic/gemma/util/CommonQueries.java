@@ -24,10 +24,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 
 /**
  * Contains methods to perform 'common' queries that are needed across DAOs.
@@ -44,10 +48,10 @@ public class CommonQueries {
     public static Map<ArrayDesign, Collection<ExpressionExperiment>> getArrayDesignsUsed(
             Collection<ExpressionExperiment> ees, Session session ) {
         Map<ArrayDesign, Collection<ExpressionExperiment>> eeAdMap = new HashMap<ArrayDesign, Collection<ExpressionExperiment>>();
-        
-        //Safety 1st....
-        if (ees == null || ees.isEmpty())   return eeAdMap;
-        
+
+        // Safety 1st....
+        if ( ees == null || ees.isEmpty() ) return eeAdMap;
+
         final String eeAdQuery = "select distinct ee,b.arrayDesignUsed from ExpressionExperimentImpl as ee inner join "
                 + "ee.bioAssays b where ee in (:ees)";
 
@@ -67,6 +71,34 @@ public class CommonQueries {
         }
 
         return eeAdMap;
+    }
+
+    /**
+     * @param genes
+     * @return
+     */
+    public static Map<CompositeSequence, Collection<Gene>> getCs2GeneMap( Collection genes, Session session ) {
+
+        // first get the composite sequences - FIXME could be done with GENE2CS native query
+        final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
+                + " inner join gene.products gp, BlatAssociationImpl ba, CompositeSequenceImpl cs "
+                + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and  gene in (:genes)";
+
+        Map<CompositeSequence, Collection<Gene>> cs2gene = new HashMap<CompositeSequence, Collection<Gene>>();
+        org.hibernate.Query queryObject = session.createQuery( csQueryString );
+        queryObject.setParameterList( "genes", genes );
+        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        while ( results.next() ) {
+            CompositeSequence cs = ( CompositeSequence ) results.get( 0 );
+            Gene g = ( Gene ) results.get( 1 );
+            if ( !cs2gene.containsKey( cs ) ) {
+                cs2gene.put( cs, new HashSet<Gene>() );
+            }
+
+            cs2gene.get( cs ).add( g );
+        }
+        results.close();
+        return cs2gene;
     }
 
 }

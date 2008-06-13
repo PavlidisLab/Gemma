@@ -273,7 +273,7 @@ public class DesignElementDataVectorDaoImpl extends
 
         // ees must be thawed first as currently implemented.
 
-        Map<CompositeSequence, Collection<Gene>> cs2gene = getCs2GeneMap( genes );
+        Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genes, this.getSession() );
         if ( cs2gene.keySet().size() == 0 ) {
             log.warn( "No composite sequences found for genes" );
             return new HashMap<DoubleVectorValueObject, Collection<Gene>>();
@@ -353,7 +353,7 @@ public class DesignElementDataVectorDaoImpl extends
         StopWatch watch = new StopWatch();
         watch.start();
 
-        Map<CompositeSequence, Collection<Gene>> cs2gene = getCs2GeneMap( genes );
+        Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genes, this.getSession() );
         watch.stop();
 
         if ( cs2gene.keySet().size() == 0 ) {
@@ -552,38 +552,6 @@ public class DesignElementDataVectorDaoImpl extends
             }
         }, true );
 
-    }
-
-    /**
-     * @param genes
-     * @return
-     */
-    private Map<CompositeSequence, Collection<Gene>> getCs2GeneMap( Collection genes ) {
-
-        // first get the composite sequences - FIXME could be done with GENE2CS native query
-        final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
-                + " inner join gene.products gp, BlatAssociationImpl ba, CompositeSequenceImpl cs "
-                + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and  gene in (:genes)";
-
-        Map<CompositeSequence, Collection<Gene>> cs2gene = new HashMap<CompositeSequence, Collection<Gene>>();
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( csQueryString );
-            queryObject.setParameterList( "genes", genes );
-            ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-            while ( results.next() ) {
-                CompositeSequence cs = ( CompositeSequence ) results.get( 0 );
-                Gene g = ( Gene ) results.get( 1 );
-                if ( !cs2gene.containsKey( cs ) ) {
-                    cs2gene.put( cs, new HashSet<Gene>() );
-                }
-
-                cs2gene.get( cs ).add( g );
-            }
-            results.close();
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-        return cs2gene;
     }
 
     private Map<DesignElementDataVector, Collection<Gene>> getMaskedPreferredVectorsForProbes( Collection ees,
