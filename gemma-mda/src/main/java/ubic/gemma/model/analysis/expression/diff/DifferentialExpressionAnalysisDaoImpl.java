@@ -33,6 +33,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.util.CommonQueries;
 
 /**
  * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysis
@@ -97,10 +98,13 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      */
     @Override
     protected Collection handleFindExperimentsWithAnalyses( Gene gene ) throws Exception {
-        final String queryString = "select distinct e from DifferentialExpressionAnalysisImpl a, BlatAssociationImpl bla"
+
+        Collection<CompositeSequence> probes = CommonQueries.getCompositeSequences( gene, this.getSession() );
+
+        final String queryString = "select distinct e from DifferentialExpressionAnalysisImpl a "
                 + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e inner join e.bioAssays ba inner join ba.arrayDesignUsed ad"
-                + " inner join ad.compositeSequences cs inner join cs.biologicalCharacteristic bs inner join bs.bioSequence2GeneProduct bs2gp inner join bs2gp.geneProduct gp inner join gp.gene gene where bla.bioSequence=bs and gene = :gene";
-        return this.getHibernateTemplate().findByNamedParam( queryString, "gene", gene );
+                + " inner join ad.compositeSequences cs where cs in (:probes)";
+        return this.getHibernateTemplate().findByNamedParam( queryString, "probes", probes );
     }
 
     final String fetchResultsByGeneAndExperimentQuery = "select distinct r from DifferentialExpressionAnalysisImpl a"

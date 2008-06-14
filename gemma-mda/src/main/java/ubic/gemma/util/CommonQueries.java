@@ -101,4 +101,24 @@ public class CommonQueries {
         return cs2gene;
     }
 
+    /**
+     * Given a gene, get all the composite sequences that map to it.
+     * 
+     * @param gene
+     * @param session
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public static Collection<CompositeSequence> getCompositeSequences( Gene gene, Session session ) {
+
+        // first get the composite sequences - FIXME could be done with GENE2CS native query
+        final String csQueryString = "select distinct cs from GeneImpl as gene"
+                + " inner join gene.products gp, BlatAssociationImpl ba, CompositeSequenceImpl cs "
+                + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and  gene = :gene";
+
+        org.hibernate.Query queryObject = session.createQuery( csQueryString );
+        queryObject.setParameter( "gene", gene );
+        return queryObject.list();
+    }
+
 }
