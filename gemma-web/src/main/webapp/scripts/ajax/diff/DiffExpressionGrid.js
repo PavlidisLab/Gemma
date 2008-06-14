@@ -72,7 +72,7 @@ Gemma.DiffExpressionGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					if (p < 0.0001) {
 						return sprintf("%.3e", p);
 					} else {
-						return sprintf("%.3f", p)
+						return sprintf("%.3f", p);
 					}
 				},
 				sortable : true,
@@ -85,7 +85,7 @@ Gemma.DiffExpressionGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				width : 75,
 				toolTip : "How many experiments met the q-value threshold you selected / how many were tested.",
 				renderer : Gemma.DiffExpressionGrid.getSupportStyler()
-			},]
+			}]
 		});
 
 		Ext.apply(this, {
