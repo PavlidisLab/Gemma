@@ -18,51 +18,21 @@ Ext.extend(Gemma.DiffExpressionGridRowExpander, Ext.grid.RowExpander, {
 	beforeExpand : function(record, body, rowIndex) {
 		if (this.fireEvent('beforeexpand', this, record, body, rowIndex) !== false) {
 
-			// don't do it twice.
-			if (this.expandedElements[rowIndex]) {
-				return true;
-			}
-
-			this.expandedElements[rowIndex] = [];
-
-			var bodyEl = new Ext.Element(body);
-
-			bodyEl.addClass('diffExpressionGridRowExpanded'); // layout.css
-
-			var diffExGridEl = bodyEl.createChild({});
-			diffExGridEl.addClass("x-hide-display");
-
-			var tabPanel = new Ext.TabPanel({
-				renderTo : bodyEl,
-				activeTab : 0,
-				items : [{
-					title : "Probe Level Data",
-					contentEl : diffExGridEl
-				}]
-			});
-
-			this.expandedElements[rowIndex].push(tabPanel);
-
-			var supporting = this.getSupportingDatasetRecords(record);
-
-			var diffExGrid = new Gemma.DiffExpressionExperimentGrid({
-				records : supporting,
-				pageSize : 10,
-				width : 800,
-				renderTo : diffExGridEl
-			});
-
-			diffExGrid.getStore().load({
-				params : {
-					start : 0,
-					limit : 10
-				}
-			});
-
 			/*
-			 * var loadMask = new Ext.LoadMask( diffExGridEl, { removeMask :
-			 * true, store : diffExGrid.getStore() } ); loadMask.show();
+			 * I haven't figured out a good way to cache this. I think we need
+			 * to check whether 'body' already has something in it.
 			 */
+
+			Ext.DomHelper.overwrite(body, "");
+
+			var supporting = this.getDatasetRecords(record);
+			var diffExGrid = new Gemma.DiffExpressionExperimentGrid({
+				title : "Probe-level results for " + record.get("gene"),
+				records : supporting,
+				renderTo : body
+			});
+
+			diffExGrid.getStore().load();
 
 			// Keep mouse events from propogating to the parent grid. See ExtJS
 			// forums topic "nested grids problem" (242878).
@@ -74,7 +44,7 @@ Ext.extend(Gemma.DiffExpressionGridRowExpander, Ext.grid.RowExpander, {
 		return false;
 	},
 
-	getSupportingDatasetRecords : function(record) {
+	getDatasetRecords : function(record) {
 		return record.data.probeResults;
 	},
 

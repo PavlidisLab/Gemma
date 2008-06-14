@@ -9,18 +9,18 @@ Ext.namespace('Gemma');
  * 
  * $Id$
  */
-Gemma.DiffExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
+Gemma.DiffExpressionExperimentGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	/*
 	 * Do not set header : true here - it breaks it.
 	 */
-	collapsible : false,
-	// readMethod : ExpressionExperimentController.loadExpressionExperiments
-	// .createDelegate(this, [], true),
-
-	autoExpandColumn : 'probe',
-
-	editable : true,
+	autoExpandColumn : 'experimentalFactors',
+	height : 200,
+	layout : 'fit',
+	viewConfig : {
+		forceFit : true
+	},
+	autoScroll : true,
 
 	record : Ext.data.Record.create([{
 		name : "id",
@@ -28,8 +28,7 @@ Gemma.DiffExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	}, {
 		name : "expressionExperiment"
 	}, {
-		name : "probe",
-		type : "string"
+		name : "probe"
 	}, {
 		name : "experimentalFactors"
 	}, {
@@ -42,6 +41,7 @@ Gemma.DiffExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 	initComponent : function() {
 		if (this.pageSize) {
+			// paging.
 			if (this.records) {
 				Ext.apply(this, {
 					store : new Ext.data.Store({
@@ -76,7 +76,9 @@ Gemma.DiffExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				})
 			});
 		} else {
+			// nonpaging
 			if (!this.records) {
+				// data read from server.
 				Ext.apply(this, {
 					store : new Ext.data.Store({
 						proxy : new Ext.data.DWRProxy(this.readMethod),
@@ -90,6 +92,7 @@ Gemma.DiffExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					})
 				});
 			} else {
+				// initialize with records.
 				Ext.apply(this, {
 					store : new Ext.data.Store({
 						proxy : new Ext.data.MemoryProxy(this.records),
@@ -108,14 +111,12 @@ Gemma.DiffExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				id : 'expressionExperiment',
 				header : "Dataset",
 				dataIndex : "expressionExperiment",
-				width : 80,
 				sortable : false,
 				renderer : Gemma.DiffExpressionExperimentGrid.getEEStyler()
 			}, {
 				id : 'probe',
 				header : "Probe",
 				dataIndex : "probe",
-				width : 80,
 				sortable : false
 			}, {
 				id : 'efs',
@@ -127,7 +128,6 @@ Gemma.DiffExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				id : 'metThreshold',
 				header : "Met Threshold",
 				dataIndex : "metThreshold",
-				width : 80,
 				sortable : true
 			}, {
 				id : 'p',
@@ -152,27 +152,11 @@ Gemma.DiffExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 		Gemma.DiffExpressionExperimentGrid.superclass.initComponent.call(this);
 
-		this.on("keypress", function(e) {
-			if (e.getCharCode() == Ext.EventObject.DELETE) {
-				this.removeSelected();
-			}
-		}, this);
+		// this.getStore().on("load", function() {
+		// this.doLayout();
+		// this.getView().refresh();
+		// }, this);
 
-		this.getStore().on("load", function() {
-			this.doLayout();
-		}, this);
-
-	},
-
-	removeSelected : function() {
-		var recs = this.getSelectionModel().getSelections();
-		for (var x = 0; x < recs.length; x++) { // for r in recs
-			// does
-			// not
-			// work!
-			this.getStore().remove(recs[x]);
-			this.getView().refresh();
-		}
 	},
 
 	formatAssayCount : function(value, metadata, record, row, col, ds) {
@@ -255,17 +239,3 @@ Gemma.DiffExpressionExperimentGrid.getEFStyler = function() {
 	}
 	return Gemma.DiffExpressionExperimentGrid.efStyler;
 };
-
-/*
- * Gemma.DiffProbeGridRowExpander = Ext.extend(Ext.grid.RowExpander, {
- * 
- * fillExpander : function(data, body, rowIndex) { Ext.DomHelper.overwrite(body, {
- * tag : 'p', html : data }); },
- * 
- * beforeExpand : function(record, body, rowIndex) {
- * ExpressionExperimentController.getDescription(record.id, { callback :
- * this.fillExpander.createDelegate(this, [body, rowIndex], true) }); return
- * true; }
- * 
- * });
- */

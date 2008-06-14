@@ -9,8 +9,7 @@
 	<script src="<c:url value='/scripts/ext/data/PagingMemoryProxy.js'/>" type="text/javascript"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
-	<script type="text/javascript" src="<c:url value='/scripts/ext/Spinner.js'/>"></script>
-	<script type="text/javascript" src="<c:url value='/scripts/ext/SpinnerStrategy.js'/>"></script>
+	<script type="text/javascript" src="<c:url value='/scripts/ext/CollapsedPanelTitlePlugin.js'/>"></script>
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/GenePickerController.js'></script>

@@ -286,5 +286,14 @@ h2.helpstep,h3.helpstep {
 }
 
 .x-loading {
-	background: url(../../images/default/tree/loading.gif) no-repeat; 
+	background: url(../../images/default/tree/loading.gif) no-repeat;
+}
+
+/* used by CollapsedPanelTitlePlugin.js, style based on ext-all.css x-panel-header */
+.x-panel-collapsed-text {
+	color : #15428B ;
+	font: bold 11px tahoma, arial, verdana, sans-serif;
+	padding: 5px 3px 4px 5px; 
+	float:right;
+	line-height: 13px;
 }

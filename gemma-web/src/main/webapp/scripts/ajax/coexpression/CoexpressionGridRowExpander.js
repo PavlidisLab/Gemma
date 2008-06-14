@@ -4,28 +4,18 @@
 Gemma.CoexpressionGridRowExpander = Ext.extend(Ext.grid.RowExpander, {
 
 	expandedElements : [],
-	
+
 	beforeExpand : function(record, body, rowIndex) {
 		if (this.fireEvent('beforeexpand', this, record, body, rowIndex) !== false) {
 
 			var gene = record.data.foundGene;
-			
-			// don't do it twice.
-			if (this.expandedElements[rowIndex]) {
-				return true;
-			}
-
-			this.expandedElements[rowIndex] = [];
 
 			var bodyEl = new Ext.Element(body);
 
-			bodyEl.addClass('coexpressionGridRowExpanded'); // layout.css
+			Ext.DomHelper.overwrite(bodyEl, "");
 
-			// Tab: supporting data sets. x-hide-display hides the div until we
-			// need to show it.
 			var supportingDsGridEl = bodyEl.createChild({});
 			supportingDsGridEl.addClass("x-hide-display");
-			// Tab: differential expression
 
 			var diffExGridEl = bodyEl.createChild({});
 			diffExGridEl.addClass("x-hide-display");
@@ -37,23 +27,20 @@ Gemma.CoexpressionGridRowExpander = Ext.extend(Ext.grid.RowExpander, {
 					title : "Supporting datasets",
 					contentEl : supportingDsGridEl
 				}, {
-					title : "Differential expression of "
-							+ gene.officialSymbol,
+					title : "Differential expression of " + gene.officialSymbol,
 					contentEl : diffExGridEl
 				}]
 			});
 
-			this.expandedElements[rowIndex].push(tabPanel);
-
 			var supporting = this.getSupportingDatasetRecords(record);
 
 			var dsGrid = new Gemma.ExpressionExperimentGrid({
-				records : supporting, 
+				records : supporting,
 				width : 800,
 				renderTo : supportingDsGridEl
 			});
 
-			dsGrid.getStore().load( );
+			dsGrid.getStore().load();
 
 			var diffExGrid = new Gemma.DifferentialExpressionGrid({
 				geneId : gene.id,
@@ -111,7 +98,7 @@ Gemma.CoexpressionGridRowExpander = Ext.extend(Ext.grid.RowExpander, {
 				this.expandedElements[i] = null;
 			}
 		}
-	} 
+	}
 });
 
 /*

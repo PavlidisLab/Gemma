@@ -84,7 +84,12 @@ Gemma.CoexpressionSearchFormLite = Ext.extend(Ext.FormPanel, {
 	},
 
 	getState : function() {
-		return this.getCoexpressionSearchCommand();
+		var obj = this.getCoexpressionSearchCommand();
+		// Do not save the taxon or the eeSet picker, they maintain state separately.
+		return {
+			geneIds : obj.geneIds,
+			stringency : obj.stringency
+		};
 	},
 
 	render : function(container, position) {

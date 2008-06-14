@@ -9,6 +9,7 @@ Gemma.DiffExpressionGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	collapsible : true,
 	editable : false,
 	autoHeight : true,
+	width : 600,
 	style : 'margin-bottom: 1em;',
 
 	record : Ext.data.Record.create([{

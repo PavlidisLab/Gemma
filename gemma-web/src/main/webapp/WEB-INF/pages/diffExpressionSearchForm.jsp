@@ -4,7 +4,8 @@ version: $Id$
 --%>
 <%@ include file="/common/taglibs.jsp"%>
 <head>
-	<title><fmt:message key="diffExpressionSearch.title" /></title>
+	<title><fmt:message key="diffExpressionSearch.title" />
+	</title>
 	<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/${appConfig["theme"]}/theme.css'/>" />
 	<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/spinner.css'/>" />
 	<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
@@ -13,8 +14,7 @@ version: $Id$
 	<script src="<c:url value='/scripts/ext/data/PagingMemoryProxy.js'/>" type="text/javascript"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
-	<script type="text/javascript" src="<c:url value='/scripts/ext/Spinner.js'/>"></script>
-	<script type="text/javascript" src="<c:url value='/scripts/ext/SpinnerStrategy.js'/>"></script>
+	<script type="text/javascript" src="<c:url value='/scripts/ext/CollapsedPanelTitlePlugin.js'/>"></script>
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/GenePickerController.js'></script>
@@ -33,30 +33,30 @@ version: $Id$
 	<script type='text/javascript' src='/Gemma/scripts/ajax/diff/DiffExpressionSearchForm.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/diff/DiffExpressionGridRowExpander.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/diff/DiffExpressionExperimentGrid.js'></script>
-	
+
 	<script type='text/javascript' src='/Gemma/dwr/interface/ExtCoexpressionSearchController.js'></script>
-		
+
 	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/DatasetChooserPanel.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/DatasetSearchToolbar.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentSetController.js'></script>
-	
+
 	<script type='text/javascript' src='/Gemma/scripts/app/DiffExpressionSearch.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/sprintf.js'></script>
-	
-	<content tag="heading"><fmt:message key="diffExpressionSearch.title" /></content>
-	
+
+	<content tag="heading">
+	<fmt:message key="diffExpressionSearch.title" />
+	</content>
+
 </head>
 
 <authz:authorize ifAnyGranted="admin">
-<input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
+	<input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
 </authz:authorize>
 <authz:authorize ifNotGranted="admin">
-<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
+	<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
 </authz:authorize>
 
-<div id='diffExpression-messages' style='width:100%;height:1.2em;margin:5px'></div>
-<div id='diffExpression-form' style='width:500px;margin-bottom: 1em;'></div>
-<div id='diffExpression-results' ></div>
+<div id='diffExpression-messages' style='width: 100%; height: 1.2em; margin: 5px'></div>
+<div id='diffExpression-form' style='width: 500px; margin-bottom: 1em;'></div>
+<div id='diffExpression-results'></div>
 
-<div id='diffExpression-experiments' class="x-hidden"></div> 
-<div id='diffExpression-genes' class="x-hidden" ></div> 

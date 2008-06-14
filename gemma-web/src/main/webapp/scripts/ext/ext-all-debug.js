@@ -2907,6 +2907,8 @@ Ext.EventObject = function() {
 		},
 
 		setOverflow : function(v) {
+			console.log("setting overflow "  + v);
+			console.log(this);
 			if (v == 'auto' && Ext.isMac && Ext.isGecko) {
 				this.dom.style.overflow = 'hidden';
 				(function() {
@@ -7533,8 +7535,8 @@ Ext.util.TextMetrics.Instance = function(bindTo, fixedWidth) {
 
 		bind : function(el) {
 			ml.setStyle(Ext.fly(el).getStyles('font-size', 'font-style',
-							'font-weight', 'font-family', 'line-height',
-							'text-transform', 'letter-spacing'));
+					'font-weight', 'font-family', 'line-height',
+					'text-transform', 'letter-spacing'));
 		},
 
 		setFixedWidth : function(width) {
@@ -10580,7 +10582,7 @@ Ext.extend(Ext.data.Store, Ext.util.Observable, {
 		return r;
 	},
 
-	clearFilter : function(suppressEvent) {
+	clearFilter : function(suppressEvent) { 
 		if (this.isFiltered()) {
 			this.data = this.snapshot;
 			delete this.snapshot;
@@ -11806,8 +11808,8 @@ Ext.ComponentMgr = function() {
 }();
 
 Ext.reg = Ext.ComponentMgr.registerType; // this will be called a lot
-											// internally, shorthand to keep the
-											// bytes down
+// internally, shorthand to keep the
+// bytes down
 
 Ext.Component = function(config) {
 	config = config || {};
@@ -11995,7 +11997,7 @@ Ext.extend(Ext.Component, Ext.util.Observable, {
 		return null;
 	},
 
-	saveState : function() { 
+	saveState : function() {
 		if (Ext.state.Manager) {
 			var state = this.getState();
 			if (this.fireEvent('beforestatesave', this, state) !== false) {
@@ -15705,14 +15707,14 @@ Ext.Panel = Ext.extend(Ext.Container, {
 			if (!this.collapsed) {
 				if (typeof w == 'number') {
 					this.body.setWidth(this.adjustBodyWidth(w
-									- this.getFrameWidth()));
+							- this.getFrameWidth()));
 				} else if (w == 'auto') {
 					this.body.setWidth(w);
 				}
 
 				if (typeof h == 'number') {
 					this.body.setHeight(this.adjustBodyHeight(h
-									- this.getFrameHeight()));
+							- this.getFrameHeight()));
 				} else if (h == 'auto') {
 					this.body.setHeight(h);
 				}
@@ -15880,8 +15882,8 @@ Ext.Panel = Ext.extend(Ext.Container, {
 
 	doAutoLoad : function() {
 		this.body.load(typeof this.autoLoad == 'object' ? this.autoLoad : {
-					url : this.autoLoad
-				});
+			url : this.autoLoad
+		});
 	}
 
 });
@@ -16891,8 +16893,9 @@ Ext.extend(Ext.state.CookieProvider, Ext.state.Provider, {
 		var matches;
 		while ((matches = re.exec(c)) != null) {
 			var name = matches[1];
-			var value = matches[2];
+			var value = matches[2]; 
 			if (name && name.substring(0, 3) == "ys-") {
+				// console.log("Read cookie");
 				cookies[name.substr(3)] = this.decodeValue(value);
 			}
 		}
@@ -16900,6 +16903,7 @@ Ext.extend(Ext.state.CookieProvider, Ext.state.Provider, {
 	},
 
 	setCookie : function(name, value) {
+		// Ext.log("set cookie:" + name);
 		document.cookie = "ys-"
 				+ name
 				+ "="
@@ -20361,9 +20365,9 @@ Ext.Resizable.Handle = function(rz, pos, disableTrackOver, transparent) {
 	if (!this.tpl) {
 
 		var tpl = Ext.DomHelper.createTemplate({
-					tag : "div",
-					cls : "x-resizable-handle x-resizable-handle-{0}"
-				});
+			tag : "div",
+			cls : "x-resizable-handle x-resizable-handle-{0}"
+		});
 		tpl.compile();
 		Ext.Resizable.Handle.prototype.tpl = tpl;
 	}
@@ -28863,10 +28867,10 @@ Ext.grid.GridPanel = Ext.extend(Ext.Panel, {
 	getSelectionModel : function() {
 		if (!this.selModel) {
 			this.selModel = new Ext.grid.RowSelectionModel(this.disableSelection
-							? {
-								selectRow : Ext.emptyFn
-							}
-							: null);
+					? {
+						selectRow : Ext.emptyFn
+					}
+					: null);
 		}
 		return this.selModel;
 	},
@@ -33276,7 +33280,7 @@ Ext.debug.DomTree = Ext.extend(Ext.tree.TreePanel, {
 		this.root = this.setRootNode(new Ext.tree.TreeNode('Ext'));
 
 		hnode = this.root.appendChild(new Ext.debug.HtmlNode(document
-						.getElementsByTagName('html')[0]));
+				.getElementsByTagName('html')[0]));
 
 	}
 });

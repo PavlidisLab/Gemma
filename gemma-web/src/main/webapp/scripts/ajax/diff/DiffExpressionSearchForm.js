@@ -21,11 +21,11 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 	layout : 'border',
 	defaults : {
 		collapsible : true,
-		split : true,
+		// split : true,
 		bodyStyle : "padding:10px"
 	},
 
-	height : 500,
+	height : 300,
 	frame : true,
 	stateful : true,
 	stateEvents : ["beforesearch"],
@@ -323,14 +323,17 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 				xtype : 'panel',
 				region : 'south',
 				title : 'Analysis options',
+				collapsedTitle : '[Analysis options]',
 				id : 'analysis-options',
 				width : 250,
-				height : 150,
+				height : 110,
 				minSize : 70,
 				cmargins : '5 0 0 0 ',
+				margins : '5 0 0 0 ',
+				plugins : new Ext.ux.CollapsedPanelTitlePlugin(),
 				items : [{
 					xtype : 'fieldset',
-					height : 90,
+					height : 70,
 					items : [{
 						xtype : 'numberfield',
 						id : 'thresholdField',

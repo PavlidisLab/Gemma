@@ -15,14 +15,23 @@
 
 Gemma.MIN_STRINGENCY = 2;
 
-Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
+Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 
+	layout : 'border',
 	width : 550,
+	height : 300,
 	frame : true,
 	stateful : true,
 	stateEvents : ["beforesearch"],
-	stateId : "Gemma.CoexpressionSearch", // share state with main
-	// page...
+
+	// share state with main page...
+	stateId : "Gemma.CoexpressionSearch",
+
+	defaults : {
+		collapsible : true,
+		// split : true,
+		bodyStyle : "padding:10px"
+	},
 
 	applyState : function(state, config) {
 		if (state) {
@@ -331,14 +340,18 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.FormPanel, {
 			items : [this.geneChooserPanel, {
 				xtype : 'panel',
 				title : 'Analysis options',
+				collapsedTitle : '[Analysis options]',
 				id : 'analysis-options',
-				collapsible : true,
-				split : true,
 				region : 'south',
-				autoHeight : true,
+				cmargins : '5 0 0 0 ',
+				margins : '5 0 0 0 ',
+				plugins : new Ext.ux.CollapsedPanelTitlePlugin(),
+				width : 250,
+				height : 130,
 				items : [{
 					xtype : 'fieldset',
 					autoHeight : true,
+					height : 90,
 					items : [{
 						xtype : 'numberfield',
 						id : 'stringencyfield',
