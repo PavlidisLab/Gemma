@@ -2907,8 +2907,8 @@ Ext.EventObject = function() {
 		},
 
 		setOverflow : function(v) {
-			console.log("setting overflow "  + v);
-			console.log(this);
+//			console.log("setting overflow "  + v);
+//			console.log(this);
 			if (v == 'auto' && Ext.isMac && Ext.isGecko) {
 				this.dom.style.overflow = 'hidden';
 				(function() {
