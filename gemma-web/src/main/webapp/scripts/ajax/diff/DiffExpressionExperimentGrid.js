@@ -35,6 +35,9 @@ Gemma.DiffExpressionExperimentGrid = Ext.extend(Ext.grid.GridPanel, {
 		name : "metThreshold",
 		type : "boolean"
 	}, {
+		name : "fisherContribution",
+		type : "boolean"
+	}, {
 		name : "p",
 		type : "float"
 	}]),
