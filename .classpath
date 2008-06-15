@@ -119,7 +119,7 @@
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/jaxen/jaxen/1.1-beta-9/jaxen-1.1-beta-9.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-pool/commons-pool/1.2/commons-pool-1.2.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/directwebremoting/dwr/2.0.1/dwr-2.0.1.jar" sourcepath="/JAR_SOURCE/dwr-2.0.1-src/java"/>
+	<classpathentry kind="var" path="M2_REPO/org/directwebremoting/dwr/2.0.4/dwr-2.0.4.jar" sourcepath="/JAR_SOURCE/dwr-2.0.1-src/java"/>
 	<classpathentry kind="var" path="M2_REPO/opensymphony/clickstream/1.0.2/clickstream-1.0.2.jar"/>
 	<classpathentry kind="var" path="M2_REPO/xalan/xalan/2.7.0/xalan-2.7.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-io/commons-io/1.1/commons-io-1.1.jar"/>
