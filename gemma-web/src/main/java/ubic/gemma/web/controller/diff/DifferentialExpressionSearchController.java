@@ -20,7 +20,6 @@ package ubic.gemma.web.controller.diff;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -107,7 +106,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         for ( Long geneId : geneIds ) {
 
-            DifferentialExpressionMetaAnalysisValueObject mavo = getDifferentialExpressionMetaAnalysis( geneId, null, threshold );
+            DifferentialExpressionMetaAnalysisValueObject mavo = getDifferentialExpressionMetaAnalysis( geneId, null,
+                    threshold );
 
             devos.addAll( mavo.getProbeResults() );
         }
@@ -121,20 +121,15 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      * When n probes map to the same gene, penalize by multiplying each pval by n and then take the 'best' value.
      * 
      * @param results
-     * @return A map keyed by the result with the lowest penalized pval (there is only one key). The value is the
-     *         collection the 'other' probe analysis results.
+     * @return the result with the min p value.
      */
-    private Map<ProbeAnalysisResult, Collection<ProbeAnalysisResult>> findMinPenalizedProbeResult(
-            Collection<ProbeAnalysisResult> results ) {
-
-        Map<ProbeAnalysisResult, Collection<ProbeAnalysisResult>> contribAndNonContribPvals = new HashMap<ProbeAnalysisResult, Collection<ProbeAnalysisResult>>();
+    private ProbeAnalysisResult findMinPenalizedProbeResult( Collection<ProbeAnalysisResult> results ) {
 
         ProbeAnalysisResult minResult = null;
 
         int numProbesForGene = results.size();
         if ( numProbesForGene == 1 ) {
-            contribAndNonContribPvals.put( results.iterator().next(), new HashSet<ProbeAnalysisResult>() );
-            return contribAndNonContribPvals;
+            return results.iterator().next();
         }
 
         double min = 0;
@@ -155,16 +150,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             i++;
         }
 
-        /* set up the non-contrib results ... */
-        Collection<ProbeAnalysisResult> nonContribResults = new HashSet<ProbeAnalysisResult>();
-        for ( ProbeAnalysisResult r : results ) {
-            if ( r.equals( minResult ) ) continue;
-            nonContribResults.add( r );
-        }
-
-        contribAndNonContribPvals.put( minResult, nonContribResults );
-
-        return contribAndNonContribPvals;
+        return minResult;
 
     }
 
@@ -187,7 +173,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         Collection<DifferentialExpressionMetaAnalysisValueObject> mavos = new ArrayList<DifferentialExpressionMetaAnalysisValueObject>();
         for ( long geneId : geneIds ) {
-            DifferentialExpressionMetaAnalysisValueObject mavo = getDifferentialExpressionMetaAnalysis( geneId, eeIds, threshold );
+            DifferentialExpressionMetaAnalysisValueObject mavo = getDifferentialExpressionMetaAnalysis( geneId, eeIds,
+                    threshold );
             mavo.setSortKey();
             if ( eeIds != null && !eeIds.isEmpty() ) mavo.setNumSearchedExperiments( eeIds.size() );
             mavos.add( mavo );
@@ -256,13 +243,10 @@ public class DifferentialExpressionSearchController extends BaseFormController {
              * For the diff expression meta analysis, ignore threshold. Select the 'best' penalized probe if multiple
              * probes map to the same gene.
              */
-            Map<ProbeAnalysisResult, Collection<ProbeAnalysisResult>> fisherContribAndNonContribProbes = findMinPenalizedProbeResult( results );
+            ProbeAnalysisResult res = findMinPenalizedProbeResult( results );
 
-            ProbeAnalysisResult res = fisherContribAndNonContribProbes.keySet().iterator().next();
             Double p = res.getPvalue();
             pvaluesToCombine.add( p );
-
-            Collection<ProbeAnalysisResult> nonContributingProbes = fisherContribAndNonContribProbes.get( res );
 
             Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> dearToEf = differentialExpressionAnalysisResultService
                     .getExperimentalFactors( results );
@@ -274,7 +258,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                 Boolean metThreshold = r.getCorrectedPvalue() <= threshold ? true : false;
                 devo.setMetThreshold( metThreshold );
 
-                Boolean fisherContribution = nonContributingProbes.contains( r ) ? true : false;
+                Boolean fisherContribution = r.equals( res ) ? true : false;
                 devo.setFisherContribution( fisherContribution );
 
                 devo.setGene( g );

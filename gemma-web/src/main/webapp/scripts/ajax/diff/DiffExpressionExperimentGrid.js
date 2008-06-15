@@ -117,6 +117,7 @@ Gemma.DiffExpressionExperimentGrid = Ext.extend(Ext.grid.GridPanel, {
 				id : 'probe',
 				header : "Probe",
 				dataIndex : "probe",
+				renderer : Gemma.DiffExpressionExperimentGrid.getProbeStyler(),
 				sortable : false
 			}, {
 				id : 'efs',
@@ -219,6 +220,24 @@ Gemma.DiffExpressionExperimentGrid.getEENameStyler = function() {
 	}
 	return Gemma.DiffExpressionExperimentGrid.eeStyler;
 };
+
+Gemma.DiffExpressionExperimentGrid.getProbeStyler = function() {
+	if (Gemma.DiffExpressionExperimentGrid.probeStyler === undefined) {
+		Gemma.DiffExpressionExperimentGrid.probeStyler = function(value, metadata,
+				record, row, col, ds) {
+			
+			var probe = record.data.probe;
+
+			if (record.data.fisherContribution){
+				return "<span style='color:#3A3'>"+probe+"</span>";
+			}
+			else{
+				return "<span style='color:#808080'>"+probe+"</span>";
+			}
+		};
+	}
+	return Gemma.DiffExpressionExperimentGrid.probeStyler;
+};			
 
 Gemma.DiffExpressionExperimentGrid.getEFStyler = function() {
 	if (Gemma.DiffExpressionExperimentGrid.efStyler === undefined) {
