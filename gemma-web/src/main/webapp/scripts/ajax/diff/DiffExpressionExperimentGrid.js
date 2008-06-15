@@ -225,10 +225,9 @@ Gemma.DiffExpressionExperimentGrid.getEFStyler = function() {
 		Gemma.DiffExpressionExperimentGrid.efTemplate = new Ext.XTemplate(
 
 		'<tpl for=".">',
-				"<a target='_blank' ext:qtip='{factorValues}'>{name}</a>\n",
-				// '<p><tooltip caption={factorValues} descr="factor
-				// values">{name}</tooltip></p>',
-				'</tpl>'
+				//"<a target='_blank' ext:qtip='{factorValues}'>{name}</a>\n",
+				"<div ext:qtip='{factorValues}'>{name}</div>",	
+		'</tpl>'
 
 		);
 		Gemma.DiffExpressionExperimentGrid.efStyler = function(value, metadata,
