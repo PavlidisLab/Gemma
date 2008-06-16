@@ -20,40 +20,42 @@ Gemma.CoexpressionGridRowExpander = Ext.extend(Ext.grid.RowExpander, {
 			var diffExGridEl = bodyEl.createChild({});
 			diffExGridEl.addClass("x-hide-display");
 
-			var tabPanel = new Ext.TabPanel({
-				renderTo : bodyEl,
-				activeTab : 0,
-				items : [{
-					title : "Supporting datasets",
-					contentEl : supportingDsGridEl
-				}, {
-					title : "Differential expression of " + gene.officialSymbol,
-					contentEl : diffExGridEl
-				}]
-			});
-
 			var supporting = this.getSupportingDatasetRecords(record);
 
 			var dsGrid = new Gemma.ExpressionExperimentGrid({
 				records : supporting,
-				width : 800,
 				renderTo : supportingDsGridEl
 			});
 
 			dsGrid.getStore().load();
 
-			var diffExGrid = new Gemma.DifferentialExpressionGrid({
+			var diffExGrid = new Gemma.DiffExpressionExperimentGrid({
 				geneId : gene.id,
 				threshold : 0.01,
-				renderTo : diffExGridEl,
-				width : 800
+				renderTo : diffExGridEl
 			});
 
-			var loadMask = new Ext.LoadMask(diffExGridEl, {
-				removeMask : true,
-				store : diffExGrid.getStore()
+			var tabPanel = new Ext.TabPanel({
+				renderTo : bodyEl,
+				activeTab : 0,
+				// layout : 'fit',
+				items : [{
+					title : "Supporting datasets",
+					contentEl : supportingDsGridEl
+				}, {
+					title : "Differential expression of " + gene.officialSymbol,
+					contentEl : diffExGridEl,
+					listeners : {
+						"activate" : {
+							fn : function() {
+								diffExGrid.getStore().load({
+									params : [gene.id, 0.01]
+								});
+							}
+						}
+					}
+				}]
 			});
-			loadMask.show();
 
 			// Keep mouse events from propogating to the parent grid. See ExtJS
 			// forums topic "nested grids problem" (242878).

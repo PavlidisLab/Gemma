@@ -32,7 +32,7 @@ version: $Id$
 	<script type='text/javascript' src='/Gemma/scripts/ajax/diff/DiffExpressionGrid.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/diff/DiffExpressionSearchForm.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/diff/DiffExpressionGridRowExpander.js'></script>
-	<script type='text/javascript' src='/Gemma/scripts/ajax/diff/DiffExpressionExperimentGrid.js'></script>
+	<script type='text/javascript' src='/Gemma/scripts/ajax/diff/ProbeLevelDiffExGrid.js'></script>
 
 	<script type='text/javascript' src='/Gemma/dwr/interface/ExtCoexpressionSearchController.js'></script>
 

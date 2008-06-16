@@ -385,8 +385,10 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                     efvo.setFactorValues( factorValuesAsString );
 
                     devo.getExperimentalFactors().add( efvo );
+                    devo.setSortKey();
                 }
                 devo.setP( r.getCorrectedPvalue() );
+                devo.setMetThreshold( r.getCorrectedPvalue() < threshold );
                 devos.add( devo );
 
             }

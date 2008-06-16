@@ -21,11 +21,11 @@ Gemma.DiffExpressionExperimentGrid = Ext.extend(Ext.grid.GridPanel, {
 		forceFit : true
 	},
 	autoScroll : true,
+	loadMask : true,
+
+	readMethod : DifferentialExpressionSearchController.getDifferentialExpression,
 
 	record : Ext.data.Record.create([{
-		name : "id",
-		type : "int"
-	}, {
 		name : "expressionExperiment"
 	}, {
 		name : "probe"
@@ -43,6 +43,7 @@ Gemma.DiffExpressionExperimentGrid = Ext.extend(Ext.grid.GridPanel, {
 	}]),
 
 	initComponent : function() {
+
 		if (this.pageSize) {
 			// paging.
 			if (this.records) {
@@ -61,9 +62,7 @@ Gemma.DiffExpressionExperimentGrid = Ext.extend(Ext.grid.GridPanel, {
 				Ext.apply(this, {
 					store : new Gemma.PagingDataStore({
 						proxy : new Ext.data.DWRProxy(this.readMethod),
-						reader : new Ext.data.ListRangeReader({
-							id : "id"
-						}, this.record),
+						reader : new Ext.data.ListRangeReader({}, this.record),
 						pageSize : this.pageSize,
 						sortInfo : {
 							field : "p",
@@ -85,9 +84,7 @@ Gemma.DiffExpressionExperimentGrid = Ext.extend(Ext.grid.GridPanel, {
 				Ext.apply(this, {
 					store : new Ext.data.Store({
 						proxy : new Ext.data.DWRProxy(this.readMethod),
-						reader : new Ext.data.ListRangeReader({
-							id : "id"
-						}, this.record),
+						reader : new Ext.data.ListRangeReader({}, this.record),
 						sortInfo : {
 							field : "p",
 							direction : "ASC"
@@ -114,14 +111,14 @@ Gemma.DiffExpressionExperimentGrid = Ext.extend(Ext.grid.GridPanel, {
 				id : 'expressionExperiment',
 				header : "Dataset",
 				dataIndex : "expressionExperiment",
-				sortable : false,
+				sortable : true,
 				renderer : Gemma.DiffExpressionExperimentGrid.getEEStyler()
 			}, {
 				id : 'probe',
 				header : "Probe",
 				dataIndex : "probe",
 				renderer : Gemma.DiffExpressionExperimentGrid.getProbeStyler(),
-				sortable : false
+				sortable : true
 			}, {
 				id : 'efs',
 				header : "Factor(s)",
@@ -148,18 +145,7 @@ Gemma.DiffExpressionExperimentGrid = Ext.extend(Ext.grid.GridPanel, {
 			}]
 		});
 
-		/*
-		 * Ext.apply(this, { rowExpander : new Gemma.DiffProbeGridRowExpander({
-		 * tpl : "" }) }); this.columns.unshift(this.rowExpander);
-		 * Ext.apply(this, { plugins : this.rowExpander });
-		 */
-
 		Gemma.DiffExpressionExperimentGrid.superclass.initComponent.call(this);
-
-		// this.getStore().on("load", function() {
-		// this.doLayout();
-		// this.getView().refresh();
-		// }, this);
 
 	},
 
@@ -226,30 +212,28 @@ Gemma.DiffExpressionExperimentGrid.getEENameStyler = function() {
 
 Gemma.DiffExpressionExperimentGrid.getProbeStyler = function() {
 	if (Gemma.DiffExpressionExperimentGrid.probeStyler === undefined) {
-		Gemma.DiffExpressionExperimentGrid.probeStyler = function(value, metadata,
-				record, row, col, ds) {
-			
+		Gemma.DiffExpressionExperimentGrid.probeStyler = function(value,
+				metadata, record, row, col, ds) {
+
 			var probe = record.data.probe;
 
-			if (record.data.fisherContribution){
-				return "<span style='color:#3A3'>"+probe+"</span>";
-			}
-			else{
-				return "<span style='color:#808080'>"+probe+"</span>";
+			if (record.data.fisherContribution) {
+				return "<span style='color:#3A3'>" + probe + "</span>";
+			} else {
+				return "<span style='color:#808080'>" + probe + "</span>";
 			}
 		};
 	}
 	return Gemma.DiffExpressionExperimentGrid.probeStyler;
-};			
+};
 
 Gemma.DiffExpressionExperimentGrid.getEFStyler = function() {
 	if (Gemma.DiffExpressionExperimentGrid.efStyler === undefined) {
 		Gemma.DiffExpressionExperimentGrid.efTemplate = new Ext.XTemplate(
 
 		'<tpl for=".">',
-				//"<a target='_blank' ext:qtip='{factorValues}'>{name}</a>\n",
-				"<div ext:qtip='{factorValues}'>{name}</div>",	
-		'</tpl>'
+				// "<a target='_blank' ext:qtip='{factorValues}'>{name}</a>\n",
+				"<div ext:qtip='{factorValues}'>{name}</div>", '</tpl>'
 
 		);
 		Gemma.DiffExpressionExperimentGrid.efStyler = function(value, metadata,

@@ -1,39 +1,33 @@
 <%@ include file="/common/taglibs.jsp"%>
 <head>
-	<title><fmt:message key="mainMenu.title" />
-	</title>
-	<script src="<c:url value='/scripts/ext/adapter/ext/ext-base.js'/>" type="text/javascript"></script>
-	<script src="<c:url value='/scripts/ext/ext-all-debug.js'/>" type="text/javascript"></script>
-
-	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
+	<title><fmt:message key="mainMenu.title" /></title>
 	<script type='text/javascript' src='/Gemma/dwr/interface/GenePickerController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/ExtCoexpressionSearchController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentSetController.js'></script>
 
 	<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
-	
+
 	<script type='text/javascript' src='/Gemma/scripts/ajax/util/GemmaGridPanel.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/TaxonCombo.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/GeneCombo.js'></script>
 
 	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/DatasetChooserPanel.js'></script>
 	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionSearchFormLite.js'></script>
-	<script type="text/javaScript" src="<c:url value='/scripts/rounded_corners_lite.inc.js'/>"></script>
+	<script type="text/javascript" src="<c:url value='/scripts/rounded_corners_lite.inc.js'/>"></script>
 
-<!-- <script src="<c:url value='/scripts/scriptaculous-all.js'/>" type="text/javascript"></script>
+	<!-- <script src="<c:url value='/scripts/scriptaculous-all.js'/>" type="text/javascript"></script>
 	<script src="<c:url value='/scripts/gemma-all.js'/>" type="text/javascript"></script> -->
 
 
-	<script type="text/javaScript">
+	<script type="text/javascript">
 	Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
    	Ext.onReady( function() {
    	Ext.QuickTips.init();
 	Ext.state.Manager.setProvider( new Ext.state.CookieProvider() );
 	
 	// Coexpression form.
-	var searchForm = new Gemma.CoexpressionSearchFormLite( {
+	var searchForm = new Gemma.CoexpressionSearchFormLite ( {
 		renderTo : "coexpression-form"
 	} ); 
    
@@ -179,8 +173,8 @@
 		<p>
 			To get emails about updates to the Gemma software, subscribe to the
 			<a href="http://perutz.cmmt.ubc.ca/mailman/bioinformatics.ubc.ca/listinfo/gemma-announce">Gemma-announce mailing list</a>.
-			Please send bug reports or feature requests to
-			<a href="mailto:gemma@bioinformatics.ubc.ca">gemma@bioinformatics.ubc.ca</a>.
+			Please send bug reports or feature requests
+			<a href="mailto:gemma@bioinformatics.ubc.ca">here</a>.
 		</p>
 	</div>
 

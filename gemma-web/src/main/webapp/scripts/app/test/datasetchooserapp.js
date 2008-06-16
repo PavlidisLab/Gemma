@@ -13,12 +13,25 @@ Gemma.DatasetChooser.app = function() {
 			Ext.QuickTips.init();
 			Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 
-			gcp = new Gemma.GeneChooserPanel({
-				frame : true,
+			// gcp = new Gemma.GeneChooserPanel({
+			// frame : true,
+			// renderTo : 'but',
+			// width : 400,
+			// height : 150
+			// });
+
+			this.dg = new Gemma.DiffExpressionExperimentGrid({
 				renderTo : 'but',
-				width : 400,
-				height : 150
+
+				height : 100,
+				width : 400 
 			});
+
+			this.dg.getStore().load({
+				params : [544510, 0.01]
+			});
+			
+			this.dg.getView().refresh();
 
 			// tc = new Ext.Gemma.TaxonCombo({
 			// renderTo : 'but'

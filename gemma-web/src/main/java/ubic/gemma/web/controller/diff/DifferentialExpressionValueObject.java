@@ -32,7 +32,6 @@ import ubic.gemma.web.controller.expression.experiment.ExperimentalFactorValueOb
  */
 public class DifferentialExpressionValueObject {
 
-    private Long id;
     private Gene gene;
     private ExpressionExperimentValueObject expressionExperiment;
     private String probe;
@@ -58,7 +57,7 @@ public class DifferentialExpressionValueObject {
     public void setSortKey() {
         this.sortKey = String.format( "%06f%s", p, gene.getOfficialSymbol() );
     }
-    
+
     public Collection<ExperimentalFactorValueObject> getExperimentalFactors() {
         return experimentalFactors;
     }
@@ -105,22 +104,6 @@ public class DifferentialExpressionValueObject {
 
     public void setGene( Gene gene ) {
         this.gene = gene;
-    }
-
-    /**
-     * Returns the id of the experiment.
-     * 
-     * @return
-     */
-    public Long getId() {
-        return id;
-    }
-
-    /**
-     * @param id The id of the experiment.
-     */
-    public void setId( Long id ) {
-        this.id = id;
     }
 
     /*

@@ -7,8 +7,7 @@
 	<head>
 		<%-- Include common set of meta tags for each layout --%>
 		<%@ include file="/common/meta.jsp"%>
-		<title><decorator:title /> | <fmt:message key="webapp.name" />
-		</title>
+		<title><decorator:title /> | <fmt:message key="webapp.name" /></title>
 
 
 		<link href="<c:url value='/styles/ext-all.css'/>" media="screen" rel="stylesheet" type="text/css" />
@@ -21,6 +20,13 @@
 		<script type="text/javascript" src="<c:url value='/scripts/scriptaculous/scriptaculous.js'/>"></script>
 		<script type="text/javascript" src="<c:url value='/scripts/global.js'/>"></script>
 		<script type="text/javascript" src="<c:url value='/scripts/helptip.js'/>"></script>
+		<script type="text/javascript" src="<c:url value='/scripts/sprintf.js'/>"></script>
+
+		<script src="<c:url value='/scripts/ext/adapter/ext/ext-base.js'/>" type="text/javascript"></script>
+		<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
+		<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
+		<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
+
 		<decorator:head />
 	</head>
 	<body <decorator:getProperty property="body.id" writeEntireProperty="true"/>
@@ -98,6 +104,15 @@
 				<jsp:include page="/common/footer.jsp" />
 			</div>
 		</div>
+		<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+		<script type="text/javascript">
+var pageTracker = _gat._getTracker('${appConfig["ga.tracker"]}');
+pageTracker._initData();
+pageTracker._trackPageview();
+</script>
 	</body>
 </html>
 

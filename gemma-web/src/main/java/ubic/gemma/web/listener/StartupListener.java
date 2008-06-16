@@ -77,6 +77,16 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
      */
     private static final String DEFAULT_THEME = "simplicity";
 
+    /**
+     * Key for the tracker ID in your configuration file. Tracker id for Google is something like 'UA-12441-1'. In your
+     * Gemma.properties file add a line like
+     * 
+     * <pre>
+     * ga.tracker = UA - 12441 - 1
+     * </pre>
+     */
+    private static final String ANALYTICS_TRACKER_PROPERTY = "ga.tracker";
+
     private static final Log log = LogFactory.getLog( StartupListener.class );
 
     /*
@@ -101,6 +111,8 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
         loadTheme( servletContext, config );
 
         loadVersionInformation( config );
+        
+        loadTrackerInformation( config );
 
         ApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext( servletContext );
 
@@ -203,6 +215,16 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
     private void loadVersionInformation( Map<String, Object> config ) {
         log.debug( "Version is " + ConfigUtils.getAppVersion() );
         config.put( "version", ConfigUtils.getAppVersion() );
+    }
+
+    /**
+     * For google analytics
+     * 
+     * @param config
+     */
+    private void loadTrackerInformation( Map<String, Object> config ) {
+        log.debug( "Tracker is " + ConfigUtils.getProperty( ANALYTICS_TRACKER_PROPERTY ) );
+        config.put( "ga.tracker", ConfigUtils.getProperty( ANALYTICS_TRACKER_PROPERTY ) );
     }
 
     /**
