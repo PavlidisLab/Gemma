@@ -59,7 +59,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		// console.log("restoreState");
 		var queryStart = document.URL.indexOf("?");
 		if (queryStart > -1) {
-			//Ext.log("Loading from url= " + document.URL);
+			// Ext.log("Loading from url= " + document.URL);
 			this.initializeFromQueryString(document.URL.substr(queryStart + 1));
 		} else if (this.csc && queryStart < 0) {
 			this.initializeFromCoexpressionSearchCommand(this.csc);
@@ -74,12 +74,17 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 	 * @return {}
 	 */
 	getCoexpressionSearchCommand : function() {
-		var csc = {
+		var newCsc = {};
+		if (this.csc) {
+			newCsc = this.csc;
+		}
+
+		Ext.apply(newCsc, {
 			geneIds : this.geneChooserPanel.getGeneIds(),
 			stringency : Ext.getCmp('stringencyfield').getValue(),
 			taxonId : this.geneChooserPanel.getTaxonId(),
 			queryGenesOnly : Ext.getCmp('querygenesonly').getValue()
-		};
+		});
 
 		if (this.currentSet) {
 			csc.eeIds = this.getActiveEeIds();
