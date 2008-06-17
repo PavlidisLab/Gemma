@@ -324,12 +324,12 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 			fieldLabel : "Choose Factors"
 		});
 					
-		this.efChooserPanel.on('choose-factors', function(eeSetRecord){
+		this.eeSetChooserPanel.on('choose-factors', function(eeSetRecord){
 			var eeIds = eeSetRecord.get("expressionExperimentIds");
-			
+			this.efChooserPanel.show(eeIds);
 		}.createDelegate(this));
 		*/
-
+		
 		Ext.apply(this, {
 			items : [this.geneChooserPanel, {
 				xtype : 'panel',
