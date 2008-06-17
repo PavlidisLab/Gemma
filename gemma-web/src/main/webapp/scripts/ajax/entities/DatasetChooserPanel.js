@@ -505,6 +505,7 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 
 		this.addEvents({
 			"datasets-selected" : true
+			//,"choose-factors" : true
 		});
 
 		Gemma.DatasetChooserPanel.superclass.initComponent.call(this);
