@@ -105,6 +105,12 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 			this.combo.setValue(sel.get("name"));
 			this.fireEvent('set-chosen', sel);
 		}.createDelegate(this));
+		
+		/*
+		this.dcp.on("choose-factors", function(sel) {
+			this.fireEvent('choose-factors', sel);
+		}.createDelegate(this));
+		*/
 
 		this.store.on("load", this.restoreState.createDelegate(this));
 
