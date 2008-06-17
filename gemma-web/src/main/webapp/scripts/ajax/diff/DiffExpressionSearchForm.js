@@ -319,15 +319,14 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 				.createDelegate(this));
 		
 		/* factor chooser */
-		
 		/*
-		this.eeSetChooserPanel = new Gemma.ExperimentalFactorChooserPanel({
+		this.efChooserPanel = new Gemma.ExperimentalFactorChooserPanel({
 			fieldLabel : "Choose Factors"
 		});
 					
 		this.efChooserPanel.on('choose-factors', function(eeSetRecord){
 			var eeIds = eeSetRecord.get("expressionExperimentIds");
-			TODO open the window and process eeIds here.
+			
 		}.createDelegate(this));
 		*/
 
