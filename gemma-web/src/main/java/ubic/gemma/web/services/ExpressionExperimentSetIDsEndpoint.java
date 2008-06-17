@@ -31,12 +31,10 @@ import org.w3c.dom.Element;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
 
 /**
- * A service to return the full list of Expression Experiment Set IDs along with 
- * the corresponding name and experiment ids it contains.
+ * A service to return the full list of Expression Experiment Set IDs along with the corresponding name and experiment
+ * ids it contains.
  * 
  * @author gavin
  * @version$Id$
@@ -44,10 +42,9 @@ import ubic.gemma.model.genome.TaxonService;
 
 public class ExpressionExperimentSetIDsEndpoint extends AbstractGemmaEndpoint {
 
-    private static Log log = LogFactory.getLog( GeneIdEndpoint.class );
+    private static Log log = LogFactory.getLog( ExpressionExperimentSetIDsEndpoint.class );
 
     private ExpressionExperimentSetService expressionExperimentSetService;
-    private TaxonService taxonService;
 
     /**
      * The local name of the expected Request/Response.
@@ -59,10 +56,6 @@ public class ExpressionExperimentSetIDsEndpoint extends AbstractGemmaEndpoint {
      */
     public void setExpressionExperimentSetService( ExpressionExperimentSetService expressionExperimentSetService ) {
         this.expressionExperimentSetService = expressionExperimentSetService;
-    }
-
-    public void setTaxonService( TaxonService taxonService ) {
-        this.taxonService = taxonService;
     }
 
     /**
@@ -78,36 +71,36 @@ public class ExpressionExperimentSetIDsEndpoint extends AbstractGemmaEndpoint {
         watch.start();
 
         setLocalName( LOCAL_NAME );
-        //no input is used since I can't properly filter using the taxon
-        //TODO include taxon as input and use it to filter the analyses returned.  
-//        String taxString = "";
-//
-//        Collection<String> taxonInput = getNodeValues( requestElement, "taxon_id" );
-//        for ( String tax : taxonInput ) {
-//            taxString = tax;
-//        }
-//
-//        log.info( "XML input read: taxon, " + taxString);
-//        //Collection<Gene> genes = geneService.findByOfficialSymbolInexact( geneName );
-//        Taxon taxon = taxonService.load( Long.parseLong( taxString ) );
-//
-//        if ( taxon == null ) {
-//            String msg = "Taxon, " + taxon + "can't be found.";
-//            return buildBadResponse( document, msg );
-//        }
+        // no input is used since I can't properly filter using the taxon
+        // TODO include taxon as input and use it to filter the analyses returned.
+        // String taxString = "";
+        //
+        // Collection<String> taxonInput = getNodeValues( requestElement, "taxon_id" );
+        // for ( String tax : taxonInput ) {
+        // taxString = tax;
+        // }
+        //
+        // log.info( "XML input read: taxon, " + taxString);
+        // //Collection<Gene> genes = geneService.findByOfficialSymbolInexact( geneName );
+        // Taxon taxon = taxonService.load( Long.parseLong( taxString ) );
+        //
+        // if ( taxon == null ) {
+        // String msg = "Taxon, " + taxon + "can't be found.";
+        // return buildBadResponse( document, msg );
+        // }
 
         Collection<ExpressionExperimentSet> eesCol = expressionExperimentSetService.loadAll();
 
-        //retain expression experiment sets that have a name assigned
+        // retain expression experiment sets that have a name assigned
         Collection<ExpressionExperimentSet> eesColToUse = new HashSet<ExpressionExperimentSet>();
         for ( ExpressionExperimentSet ees : eesCol ) {
-            if (ees.getName()!=null)
-                //if ( ees.getTaxon().equals( taxon ) ) eesColToUse.add( ees );
-                eesColToUse.add(ees);
+            if ( ees.getName() != null )
+            // if ( ees.getTaxon().equals( taxon ) ) eesColToUse.add( ees );
+                eesColToUse.add( ees );
         }
 
         // start building the wrapper
-        // build xml manually for mapped result rather than use buildWrapper inherited from AbstractGemmeEndpoint             
+        // build xml manually for mapped result rather than use buildWrapper inherited from AbstractGemmeEndpoint
 
         Element responseWrapper = document.createElementNS( NAMESPACE_URI, LOCAL_NAME );
         Element responseElement = document.createElementNS( NAMESPACE_URI, LOCAL_NAME + RESPONSE );
@@ -118,16 +111,15 @@ public class ExpressionExperimentSetIDsEndpoint extends AbstractGemmaEndpoint {
             Element e1 = document.createElement( "expression_experiment_set_id" );
             e1.appendChild( document.createTextNode( ees.getId().toString() ) );
             responseElement.appendChild( e1 );
-            
+
             Element e2 = document.createElement( "ees_name" );
-            e2.appendChild( document.createTextNode(  ees.getName() ));
+            e2.appendChild( document.createTextNode( ees.getName() ) );
             responseElement.appendChild( e2 );
-            
+
             Collection<Long> eeIds = getExperimentIDs( ees );
             Element e3 = document.createElement( "datasets" );
             e3.appendChild( document.createTextNode( encode( eeIds.toArray() ) ) );
             responseElement.appendChild( e3 );
-
 
         }
 
