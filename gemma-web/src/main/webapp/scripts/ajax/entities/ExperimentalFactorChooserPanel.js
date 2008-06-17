@@ -52,25 +52,6 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 		Gemma.ExperimentalFactorChooserPanel.superclass.onRender.call(this, ct, position);
 
 		var admin = dwr.util.getValue("hasAdmin");
-
-		/**
-		 * Plain grid for displaying datasets in the current set. Editable.
-		 */
-		this.eeGrid = new Gemma.ExpressionExperimentGrid({
-			editable : admin,
-			region : 'center',
-			title : "Datasets in current set",
-			pageSize : 15,
-			loadMask : {
-				msg : 'Loading datasets ...'
-			},
-			split : true,
-			height : 200,
-			width : 400,
-			rowExpander : true
-		});
-
-		this.add(this.eeGrid);
 	}
 
 });
