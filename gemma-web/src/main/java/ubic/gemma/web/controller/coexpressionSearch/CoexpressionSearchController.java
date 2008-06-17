@@ -73,10 +73,11 @@ public class CoexpressionSearchController extends BaseFormController {
             return getEmptyResult();
         } else {
             Long eeSetId = searchOptions.getEeSetId();
-            if ( eeSetId != null && eeSetId >= 0 ) {
+            if ( eeSetId != null && ( eeSetId >= 0 && !searchOptions.isDirty() ) ) {
                 return geneCoexpressionService.getCannedAnalysisResults( eeSetId, genes, searchOptions.getStringency(),
                         MAX_RESULTS, searchOptions.getQueryGenesOnly() );
             } else {
+                assert ( searchOptions.getEeIds() != null && searchOptions.getEeIds().size() > 0 );
                 return geneCoexpressionService.getCustomAnalysisResults( searchOptions.getEeIds(), genes, searchOptions
                         .getStringency(), MAX_RESULTS, searchOptions.getQueryGenesOnly() );
             }

@@ -22,11 +22,11 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 	// title : "Gene table",
 	frame : true,
 	layout : 'fit',
-	layoutConfig : {
-		forceFit : true
+	viewConfig : {
+		forceFit : true,
+		emptyText : "Multiple genes can be listed here"
 	},
 	autoScroll : true,
-	emptyText : "Genes will be listed here",
 	columns : [{
 		header : 'Symbol',
 		toolTip : 'Gene symbol',
@@ -398,6 +398,14 @@ Gemma.GeneChooserPanel = Ext.extend(Ext.Panel, {
 
 	getTaxonId : function() {
 		return this.toolbar.getTaxonId();
+	},
+
+	setGene : function(geneId, callback, args) {
+		this.toolbar.setGene(geneId, callback, args);
+	},
+
+	loadGenes : function(geneIds, callback, args) {
+		this.geneGrid.loadGenes(geneIds, callback, args);
 	},
 
 	getGeneIds : function() {

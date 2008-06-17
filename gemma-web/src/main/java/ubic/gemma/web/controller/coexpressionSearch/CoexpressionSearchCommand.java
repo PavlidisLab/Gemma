@@ -39,6 +39,11 @@ public class CoexpressionSearchCommand {
 
     private boolean queryGenesOnly;
 
+    /**
+     * Set to true to signal that the eeSet has been modified from its stored version.
+     */
+    private boolean dirty = false;
+
     /*
      * we're storing the actual ee ids in the command object; the query string is only here so we can use this object to
      * store the state of the search form between visits...
@@ -119,6 +124,14 @@ public class CoexpressionSearchCommand {
 
     public void setEeSetName( String eeSetName ) {
         this.eeSetName = eeSetName;
+    }
+
+    public boolean isDirty() {
+        return dirty;
+    }
+
+    public void setDirty( boolean dirty ) {
+        this.dirty = dirty;
     }
 
 }

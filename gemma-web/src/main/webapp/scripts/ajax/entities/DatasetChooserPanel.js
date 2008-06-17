@@ -155,9 +155,10 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 	stateful : true,
 	stateId : "Gemma.EESetComboF",
 	stateEvents : ['select'],
+	suppressFiltering : false,
 
 	/**
-	 * Custom cookie config.
+	 * Custom cookie config. This method will be called by the state manager.
 	 * 
 	 * @param {}
 	 *            state
@@ -165,10 +166,7 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 	applyState : function(state) {
 		if (state && state.eeSet) {
 			// console.log("Read state=" + state.eeSet);
-			var dt = new Ext.util.DelayedTask(this.selectById, this,
-					[state.eeSet]);
-			dt.delay(1500); // delay to let store load (not under this class's
-			// control)
+			this.setState(state.eeSet);
 		}
 		Gemma.ExpressionExperimentSetCombo.superclass.applyState.call(this,
 				state);
@@ -182,8 +180,38 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 		}
 	},
 
+	setState : function(v) {
+		if (this.isReady) {
+			// console.log("already ready");
+			this.selectById(v);
+		} else {
+			// console.log("storing state " + v);
+			this.tmpState = v;
+			// wait for restoreState is called.
+		}
+	},
+
+	restoreState : function() {
+		if (this.tmpState) {
+			// console.log("restore state " + this.tmpState);
+			this.selectById(this.tmpState);
+			delete this.tmpState;
+			this.isReady = true;
+			// console.log("ready");
+		} else {
+			// console.log("no state to restore");
+		}
+
+		if (this.store.getSelected()) {
+			this.fireEvent('comboReady', this.store.getSelected().data);
+		} else {
+			// console.log("no selection");
+		}
+	},
+
 	filterByTaxon : function(taxon) {
-		if (!taxon || this.store === null || this.store.getRange().length == 0) {
+		if (this.suppressFiltering || !taxon || this.store === null
+				|| this.store.getRange().length == 0) {
 			// not ready.
 			return;
 		}
@@ -240,7 +268,7 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 			var rec = this.store.getAt(index);
 			// console.log("select by index " + index);
 			this.store.setSelected(rec);
-			this.setValue(rec.get("name"), true);
+			this.setValue(rec.get("name"));
 			this.fireEvent("select", this, rec, index);
 		}
 	},
@@ -252,15 +280,18 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 		Gemma.ExpressionExperimentSetCombo.superclass.initComponent.call(this);
 
 		if (!this.store) {
-			this.store = new Gemma.ExpressionExperimentSetStore();
+			// this.store = new Gemma.ExpressionExperimentSetStore();
 		}
 
 		this.tpl = new Ext.XTemplate('<tpl for="."><div ext:qtip="{description} ({numExperiments} members)" class="x-combo-list-item">{name}{[ values.taxon ? " (" + values.taxon.scientificName + ")" : "" ]}</div></tpl>');
 		this.tpl.compile();
 
+		this.addEvents("comboReady");
 		this.on("select", function(cb, rec, index) {
 			this.store.setSelected(rec);
 		});
+
+		this.store.on("ready", this.restoreState, this);
 
 	}
 
@@ -305,7 +336,6 @@ Gemma.ExpressionExperimentSetStore = function(config) {
 			.call(this, config);
 
 	this.on("load", this.addFromCookie, this);
-
 	this.load();
 
 };
@@ -316,6 +346,8 @@ Gemma.ExpressionExperimentSetStore = function(config) {
  * @extends Ext.data.Store
  */
 Ext.extend(Gemma.ExpressionExperimentSetStore, Ext.data.Store, {
+
+	autoLoad : false,
 
 	getSelected : function() {
 		return this.selected;
@@ -328,7 +360,6 @@ Ext.extend(Gemma.ExpressionExperimentSetStore, Ext.data.Store, {
 	addFromCookie : function() {
 		var recs = this.cookieRetrieveEESets();
 		if (recs && recs.length > 0) {
-			// Ext.log("Add " + recs.length + " from cookie");
 			this.add(recs);
 		}
 		this.fireEvent("ready");

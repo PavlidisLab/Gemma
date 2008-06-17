@@ -56,9 +56,10 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 	},
 
 	restoreState : function() {
+		// console.log("restoreState");
 		var queryStart = document.URL.indexOf("?");
 		if (queryStart > -1) {
-			Ext.log("Loading from url= " + document.URL);
+			//Ext.log("Loading from url= " + document.URL);
 			this.initializeFromQueryString(document.URL.substr(queryStart + 1));
 		} else if (this.csc && queryStart < 0) {
 			this.initializeFromCoexpressionSearchCommand(this.csc);
@@ -83,10 +84,10 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		if (this.currentSet) {
 			csc.eeIds = this.getActiveEeIds();
 			csc.eeSetName = this.currentSet.get("name");
-			csc.eeSetId = this.currentSet.get("id"); // might
-			// be
-			// -1.
-		} // else a problem.
+			csc.eeSetId = this.currentSet.get("id"); // might be -1 (=
+			// temporary)
+			csc.dirty = this.currentSet.dirty; // modified without save
+		}
 		return csc;
 	},
 
@@ -117,6 +118,10 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 
 		if (param.ees) {
 			csc.eeIds = param.ees.split(',');
+		}
+
+		if (param.dirty) {
+			csc.dirty = true;
 		}
 
 		if (param.a) {
@@ -157,8 +162,14 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		this.geneChooserPanel = Ext.getCmp('gene-chooser-panel');
 		this.stringencyField = Ext.getCmp('stringencyfield');
 
+		if (csc.dirty) {
+			/*
+			 * Need to add a record to the eeSetChooserPanel.
+			 */
+		}
+
 		if (csc.taxonId) {
-			this.geneChooserPanel.taxonCombo.setState(csc.taxonId);
+			this.geneChooserPanel.toolbar.taxonCombo.setState(csc.taxonId);
 		}
 
 		this.initializeGenes(csc, doSearch);
@@ -210,8 +221,12 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 			url += String.format("&a={0}", csc.eeSetId);
 		}
 
-		if (csc.eeIds) {
+		if (csc.eeIds && csc.dirty) {
 			url += String.format("&ees={0}", csc.eeIds.join(","));
+		}
+
+		if (csc.dirty) {
+			url += "&dirty=1";
 		}
 
 		if (csc.eeSetName) {
@@ -277,7 +292,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		this.loadMask.hide();
 		this.fireEvent('aftersearch', this, result);
 		if (typeof pageTracker == 'function') {
-			console.log("yay");
+			// console.log("yay");
 			pageTracker._trackPageview("/pagefilename1"); // google analytics.
 		}
 	},
@@ -305,6 +320,19 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		return [];
 	},
 
+	onRender : function(c, p) {
+
+		Gemma.CoexpressionSearchForm.superclass.onRender.call(this, c, p);
+
+		if (this.geneChooserPanel.toolbar.taxonCombo) {
+			this.geneChooserPanel.toolbar.taxonCombo.on("ready",
+					function(taxon) {
+						// console.log("Filtering combo");
+						this.eeSetChooserPanel.filterByTaxon(taxon);
+					}, this);
+		}
+	},
+
 	initComponent : function() {
 
 		this.geneChooserPanel = new Gemma.GeneChooserPanel({
@@ -320,12 +348,11 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 
 		this.geneChooserPanel.on("taxonchanged", function(taxon) {
 			// console.log("gene chooser taxon changed");
-			var v = new Ext.util.DelayedTask(
-					this.eeSetChooserPanel.filterByTaxon,
-					this.eeSetChooserPanel, [taxon]);
-			v.delay(100); // this tiny delay is enough to let things get
-				// sorted out and allow correct restoration of
-				// state.
+			// var v = new Ext.util.DelayedTask(
+			this.eeSetChooserPanel.filterByTaxon(taxon);
+				// v.delay(100); // this tiny delay is enough to let things get
+				// // sorted out and allow correct restoration of
+				// // state.
 			}.createDelegate(this));
 
 		this.eeSetChooserPanel.on("set-chosen", function(eeSetRecord) {
@@ -335,7 +362,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 			this.geneChooserPanel.taxonChanged(this.currentSet.get("taxon"));
 		}.createDelegate(this));
 
-		this.eeSetChooserPanel.store.on("ready", this.restoreState
+		this.eeSetChooserPanel.combo.on("comboReady", this.restoreState
 				.createDelegate(this));
 
 		Ext.apply(this, {
@@ -388,6 +415,8 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		});
 		Gemma.CoexpressionSearchForm.superclass.initComponent.call(this);
 		this.addEvents('beforesearch', 'aftersearch');
+
+		// this.eeSetChooserPanel.store.load();
 
 	}
 
