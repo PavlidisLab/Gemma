@@ -5,7 +5,7 @@
 
 	<title><fmt:message key="generalSearch.title" /></title>
 
-	<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
+	<script src="<c:url value='/scripts/ext/adapter/ext/ext-base.js'/>" type="text/javascript"></script>
 	<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
 
 	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
@@ -22,7 +22,7 @@
 	<script type="text/javascript">
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider( ));
 	Ext.QuickTips.init();
-	Ext.onReady(Gemma.Search.app.init, Ext.Gemma.Search.app);
+	Ext.onReady(Gemma.Search.app.init, Gemma.Search.app);
 	</script>
 </head>
 

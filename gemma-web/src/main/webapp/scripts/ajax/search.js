@@ -273,8 +273,8 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 	width : 800,
 	height : 500,
 	loadMask : true,
-
-	collapsible : true,
+	collapsible : false,
+	title : "Search results",
 
 	record : Ext.data.Record.create([{
 		name : "score",
