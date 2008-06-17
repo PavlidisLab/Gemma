@@ -488,6 +488,7 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 		if (rec) {
 			this.eeSetStore.setSelected(rec);
 			this.fireEvent("datasets-selected", rec);
+			//this.fireEvent("choose-factors", rec);
 		}
 		this.hide();
 	},
