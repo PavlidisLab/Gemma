@@ -153,7 +153,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		this.thresholdField = Ext.getCmp('thresholdField');
 
 		if (dsc.taxonId) {
-			this.geneChooserPanel.taxonCombo.setState(dsc.taxonId);
+			this.geneChooserPanel.toolbar.taxonCombo.setState(dsc.taxonId);
 		}
 
 		this.initializeGenes(dsc, doSearch);
@@ -322,14 +322,17 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		/*
 		this.efChooserPanel = new Gemma.ExperimentalFactorChooserPanel({
 			fieldLabel : "Choose Factors"
-		});
-					
+		});		
 		this.eeSetChooserPanel.on('choose-factors', function(eeSetRecord){
 			var eeIds = eeSetRecord.get("expressionExperimentIds");
+			this.eeSetChooserPanel.hide();
 			this.efChooserPanel.show(eeIds);
 		}.createDelegate(this));
-		*/
 		
+		this.eeSetChooserPanel.on('factors-chosen', function(eeSetRecord){
+			this.efChooserPanel.hide();
+		}.createDelegate(this));
+		*/
 		Ext.apply(this, {
 			items : [this.geneChooserPanel, {
 				xtype : 'panel',
