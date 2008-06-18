@@ -35,6 +35,9 @@ Gemma.CoexpressionGridRowExpander = Ext.extend(Ext.grid.RowExpander, {
 				renderTo : diffExGridEl
 			});
 
+			//Hide metThreshold Column
+			diffExGrid.getColumnModel().setHidden(3,true);
+			
 			var tabPanel = new Ext.TabPanel({
 				renderTo : bodyEl,
 				activeTab : 0,
