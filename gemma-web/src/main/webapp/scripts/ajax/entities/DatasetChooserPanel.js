@@ -107,6 +107,7 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 		}.createDelegate(this));
 		
 		this.dcp.on("choose-factors", function(sel) {
+			this.dcp.hide();
 			this.fireEvent('choose-factors', sel);
 		}.createDelegate(this));
 		
