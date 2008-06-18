@@ -57,7 +57,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 	restoreState : function() {
 		var queryStart = document.URL.indexOf("?");
 		if (queryStart > -1) {
-			//Ext.log("Loading from url= " + document.URL);
+			// Ext.log("Loading from url= " + document.URL);
 			this.initializeFromQueryString(document.URL.substr(queryStart + 1));
 		} else if (this.dsc && queryStart < 0) {
 			this.initializeFromDiffSearchCommand(this.dsc);
@@ -87,11 +87,12 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		if (this.currentSet) {
 			newDsc.eeIds = this.getActiveEeIds();
 			newDsc.eeSetName = this.currentSet.get("name");
-			newDsc.eeSetId = this.currentSet.get("id"); // might be -1 (= temporary)
+			newDsc.eeSetId = this.currentSet.get("id"); // might be -1 (=
+														// temporary)
 			newDsc.dirty = this.currentSet.dirty; // modified without save
 		}
 		return newDsc;
-		
+
 	},
 
 	/**
@@ -318,20 +319,20 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 
 		this.eeSetChooserPanel.store.on("ready", this.restoreState
 				.createDelegate(this));
-		
+
 		/* factor chooser */
 		this.efChooserPanel = new Gemma.ExperimentalFactorChooserPanel({
 			fieldLabel : "Choose Factors"
-		});		
-		this.eeSetChooserPanel.on('choose-factors', function(eeSetRecord){
+		});
+		this.eeSetChooserPanel.on('choose-factors', function(eeSetRecord) {
 			var eeIds = eeSetRecord.get("expressionExperimentIds");
 			this.efChooserPanel.show(eeIds);
 		}.createDelegate(this));
-		
-		this.eeSetChooserPanel.on('factors-chosen', function(eeSetRecord){
+
+		this.eeSetChooserPanel.on('factors-chosen', function(eeSetRecord) {
 			this.efChooserPanel.hide();
 		}.createDelegate(this));
-		
+
 		Ext.apply(this, {
 			items : [this.geneChooserPanel, {
 				xtype : 'panel',
