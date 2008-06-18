@@ -319,7 +319,6 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 				.createDelegate(this));
 		
 		/* factor chooser */
-		/*
 		this.efChooserPanel = new Gemma.ExperimentalFactorChooserPanel({
 			fieldLabel : "Choose Factors"
 		});		
@@ -332,7 +331,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		this.eeSetChooserPanel.on('factors-chosen', function(eeSetRecord){
 			this.efChooserPanel.hide();
 		}.createDelegate(this));
-		*/
+		
 		Ext.apply(this, {
 			items : [this.geneChooserPanel, {
 				xtype : 'panel',

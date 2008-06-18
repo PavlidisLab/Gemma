@@ -106,11 +106,10 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 			this.fireEvent('set-chosen', sel);
 		}.createDelegate(this));
 		
-		/*
 		this.dcp.on("choose-factors", function(sel) {
 			this.fireEvent('choose-factors', sel);
 		}.createDelegate(this));
-		*/
+		
 
 		this.store.on("load", this.restoreState.createDelegate(this));
 
@@ -210,6 +209,7 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 
 		if (this.store.getSelected()) {
 			this.fireEvent('comboReady', this.store.getSelected().data);
+			this.fireEvent('choose-factors', this.store.getSelected().data);
 		} else {
 			// console.log("no selection");
 		}
@@ -293,6 +293,7 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 		this.tpl.compile();
 
 		this.addEvents("comboReady");
+		this.addEvents("choose-factors");
 		this.on("select", function(cb, rec, index) {
 			this.store.setSelected(rec);
 		});
@@ -494,7 +495,7 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 		if (rec) {
 			this.eeSetStore.setSelected(rec);
 			this.fireEvent("datasets-selected", rec);
-			//this.fireEvent("choose-factors", rec);
+			this.fireEvent("choose-factors", rec);
 		}
 		this.hide();
 	},
@@ -512,7 +513,7 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 
 		this.addEvents({
 			"datasets-selected" : true
-			//,"choose-factors" : true
+			,"choose-factors" : true
 		});
 
 		Gemma.DatasetChooserPanel.superclass.initComponent.call(this);
