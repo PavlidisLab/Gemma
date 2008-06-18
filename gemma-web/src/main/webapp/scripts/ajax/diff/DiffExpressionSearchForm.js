@@ -57,7 +57,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 	restoreState : function() {
 		var queryStart = document.URL.indexOf("?");
 		if (queryStart > -1) {
-			Ext.log("Loading from url= " + document.URL);
+			//Ext.log("Loading from url= " + document.URL);
 			this.initializeFromQueryString(document.URL.substr(queryStart + 1));
 		} else if (this.dsc && queryStart < 0) {
 			this.initializeFromDiffSearchCommand(this.dsc);
@@ -72,20 +72,26 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 	 * @return {}
 	 */
 	getDiffSearchCommand : function() {
-		var dsc = {
+
+		var newDsc = {};
+		if (this.dsc) {
+			newDsc = this.dsc;
+		}
+
+		Ext.apply(newDsc, {
 			geneIds : this.geneChooserPanel.getGeneIds(),
 			threshold : Ext.getCmp('thresholdField').getValue(),
 			taxonId : this.geneChooserPanel.getTaxonId()
-		};
+		});
 
 		if (this.currentSet) {
-			dsc.eeIds = this.getActiveEeIds();
-			dsc.eeSetName = this.currentSet.get("name");
-			dsc.eeSetId = this.currentSet.get("id"); // might
-			// be
-			// -1.
-		} // else a problem.
-		return dsc;
+			newDsc.eeIds = this.getActiveEeIds();
+			newDsc.eeSetName = this.currentSet.get("name");
+			newDsc.eeSetId = this.currentSet.get("id"); // might be -1 (= temporary)
+			newDsc.dirty = this.currentSet.dirty; // modified without save
+		}
+		return newDsc;
+		
 	},
 
 	/**
@@ -97,16 +103,11 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 	 */
 	getDiffSearchCommandFromQuery : function(query) {
 		var param = Ext.urlDecode(query);
-		var eeQuery = param.eeq || "";
-		var ees;
-		if (param.ees) {
-			ees = param.ees.split(',');
-		}
 
 		var dsc = {
 			geneIds : param.g ? param.g.split(',') : [],
-			threshold : param.t || Gemma.MIN_THRESHOLD,
-			eeQuery : param.eeq,
+			threshold : param.thres ? param.thres : Gemma.MIN_THRESHOLD,
+			eeQuery : param.eeq ? param.eeq : "",
 			taxonId : param.t
 		};
 
@@ -192,7 +193,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		var url = queryStart > -1
 				? document.URL.substr(0, queryStart)
 				: document.URL;
-		url += String.format("?g={0}&s={1}&t={2}", dsc.geneIds.join(","),
+		url += String.format("?g={0}&thres={1}&t={2}", dsc.geneIds.join(","),
 				dsc.threshold, dsc.taxonId);
 
 		if (dsc.eeSetId) {
