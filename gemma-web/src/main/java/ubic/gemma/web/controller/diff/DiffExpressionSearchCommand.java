@@ -41,6 +41,36 @@ public class DiffExpressionSearchCommand implements Serializable {
     /* meta analysis */
     private Collection<Long> eeIds;
 
+    private String eeQuery;
+    
+    private Long eeSetId;
+    
+    private String eeSetName;
+    
+    public String getEeQuery() {
+        return eeQuery;
+    }
+
+    public void setEeQuery( String eeQuery ) {
+        this.eeQuery = eeQuery;
+    }
+
+    public Long getEeSetId() {
+        return eeSetId;
+    }
+
+    public void setEeSetId( Long eeSetId ) {
+        this.eeSetId = eeSetId;
+    }
+
+    public String getEeSetName() {
+        return eeSetName;
+    }
+
+    public void setEeSetName( String eeSetName ) {
+        this.eeSetName = eeSetName;
+    }
+
     public Collection<Long> getGeneIds() {
         return geneIds;
     }
