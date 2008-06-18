@@ -72,8 +72,8 @@ Gemma.CoexpressionSearchFormLite = Ext.extend(Ext.FormPanel, {
 		});
 
 		this.add(this.stringencyField);
-		this.add(this.geneCombo);
 		this.add(this.eeSetCombo);
+		this.add(this.geneCombo);		
 		this.addButton(submitButton);
 	},
 
