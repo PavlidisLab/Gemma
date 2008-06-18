@@ -19,8 +19,8 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	constrainHeader : true,
 
 	onCommit : function() {
-		this.hide();
 		this.fireEvent("factors-chosen");
+		this.hide();
 	},
 
 	/*
