@@ -19,11 +19,8 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	constrainHeader : true,
 
 	onCommit : function() {
-
+		this.hide();
 		this.fireEvent("factors-chosen");
-
-		this.hide(); // FIXME this hide doesn't seem to work ... instead I
-		// call hide in the DiffExpressionSearchForm.js
 	},
 
 	/*
@@ -91,13 +88,14 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 		this.loadMask.hide();
 		efGrid.loadData(results);
 		// this.fireEvent('factors-retrieved', this, results);
-	},
-
-	onRender : function(ct, position) {
-		Gemma.ExperimentalFactorChooserPanel.superclass.onRender.call(this, ct,
-				position);
-
-		var admin = dwr.util.getValue("hasAdmin");
 	}
 
-});
+// ,onRender : function(ct, position) {
+		// Gemma.ExperimentalFactorChooserPanel.superclass.onRender.call(this,
+		// ct,
+		// position);
+		//
+		// var admin = dwr.util.getValue("hasAdmin");
+		// }
+
+		});
