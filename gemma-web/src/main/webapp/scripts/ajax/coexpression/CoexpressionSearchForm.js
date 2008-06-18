@@ -87,11 +87,10 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		});
 
 		if (this.currentSet) {
-			csc.eeIds = this.getActiveEeIds();
-			csc.eeSetName = this.currentSet.get("name");
-			csc.eeSetId = this.currentSet.get("id"); // might be -1 (=
-			// temporary)
-			csc.dirty = this.currentSet.dirty; // modified without save
+			newCsc.eeIds = this.getActiveEeIds();
+			newCsc.eeSetName = this.currentSet.get("name");
+			newCsc.eeSetId = this.currentSet.get("id"); // might be -1 (= temporary)
+			newCsc.dirty = this.currentSet.dirty; // modified without save
 		}
 		return newCsc;
 	},
