@@ -8,7 +8,7 @@
  * 
  * If scope=custom, a DatasetSearchField is shown.
  * 
- * @authors Luke, Paul
+ * @authors Luke, Paul, klc
  * 
  * @version $Id$
  */
@@ -93,7 +93,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 			// temporary)
 			csc.dirty = this.currentSet.dirty; // modified without save
 		}
-		return csc;
+		return newCsc;
 	},
 
 	/**
