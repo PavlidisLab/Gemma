@@ -29,7 +29,7 @@ Gemma.CoexpressionSearchFormLite = Ext.extend(Ext.FormPanel, {
 			hiddenName : 'g',
 			id : 'gene-combo',
 			fieldLabel : 'Select a query gene',
-			width : 200
+			width : 175
 		});
 
 		this.geneCombo.on("focus", this.clearMessages, this);
