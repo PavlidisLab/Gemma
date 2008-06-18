@@ -64,7 +64,7 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				header : "Experimental Factors",
 				toolTip : "Factors for the dataset."
 
-					// editor : new Ext.form.ComboBox({ typeAhead : true,
+					// ,editor : new Ext.form.ComboBox({ typeAhead : true,
 					// triggerAction : 'all', transform : 'light', lazyRender :
 					// true, listClass : 'x-combo-list-small' }), sortable :
 					// false, width : 75
@@ -72,7 +72,7 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					}]
 		});
 
-		Gemma.DiffExpressionGrid.superclass.initComponent.call(this);
+		Gemma.ExperimentalFactorGrid.superclass.initComponent.call(this);
 
 		this.originalTitle = this.title;
 	},
