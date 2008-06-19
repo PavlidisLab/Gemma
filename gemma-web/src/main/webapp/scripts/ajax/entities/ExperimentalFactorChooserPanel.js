@@ -84,7 +84,7 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	 *            result
 	 */
 	returnFromGetFactors : function(results) {
-		this.loadMask.hide();
+		// this.loadMask.hide();
 		this.efGrid.loadData(results);
 		// this.fireEvent('factors-retrieved', this, results);
 	}

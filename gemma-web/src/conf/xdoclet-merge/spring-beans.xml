@@ -542,6 +542,7 @@
 							<value>getDifferentialExpression</value>
 							<value>getDiffExpressionForGenes</value>
 							<value>getDiffMetaAnalysisForGenes</value>
+							<value>getFactors</value>
 						</list>
 					</property>
 				</bean>
@@ -1203,6 +1204,11 @@
 				</bean>
 			</entry>
 			<entry key="ubic.gemma.web.controller.expression.experiment.FactorValueValueObject">
+				<bean class="org.directwebremoting.spring.ConverterConfig">
+					<property name="type" value="bean" />
+				</bean>
+			</entry>
+			<entry key="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExperimentalFactorValueObject">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
 				</bean>

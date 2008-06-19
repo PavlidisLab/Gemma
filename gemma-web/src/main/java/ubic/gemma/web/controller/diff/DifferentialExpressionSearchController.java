@@ -34,6 +34,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.basecode.math.metaanalysis.MetaAnalysis;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
@@ -41,6 +42,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
@@ -48,6 +50,7 @@ import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.util.GemmaLinkUtils;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.controller.expression.experiment.ExperimentalFactorValueObject;
+import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExperimentalFactorValueObject;
 import ubic.gemma.web.view.TextView;
 import cern.colt.list.DoubleArrayList;
 
@@ -63,6 +66,7 @@ import cern.colt.list.DoubleArrayList;
  * @spring.property name = "differentialExpressionAnalysisResultService"
  *                  ref="differentialExpressionAnalysisResultService"
  * @spring.property name = "geneService" ref="geneService"
+ * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  */
 public class DifferentialExpressionSearchController extends BaseFormController {
 
@@ -77,6 +81,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     private DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService = null;
 
     private GeneService geneService = null;
+
+    private ExpressionExperimentService expressionExperimentService = null;
 
     private final int MAX_PVAL = 1;
 
@@ -227,11 +233,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         /* each gene will have a row, and each row will have a row expander with supporting datasets */
         for ( ExpressionExperiment ee : activeExperiments ) {
 
-            ExpressionExperimentValueObject eevo = new ExpressionExperimentValueObject();
-            eevo.setId( ee.getId() );
-            eevo.setShortName( ee.getShortName() );
-            eevo.setName( ee.getName() );
-            eevo.setExternalUri( GemmaLinkUtils.getExpressionExperimentUrl( eevo.getId() ) );
+            ExpressionExperimentValueObject eevo = configExpressionExperimentValueObject( ee );
 
             /*
              * use the threshold for regular diff expression (handling the threhold check below since we ignore this for
@@ -273,31 +275,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                     continue;
                 }
                 for ( ExperimentalFactor ef : efs ) {
-                    ExperimentalFactorValueObject efvo = new ExperimentalFactorValueObject();
-                    efvo.setId( ef.getId() );
-                    efvo.setName( ef.getName() );
-                    efvo.setDescription( ef.getDescription() );
-                    Characteristic category = ef.getCategory();
-                    if ( category != null ) {
-                        efvo.setCategory( category.getCategory() );
-                        if ( category instanceof VocabCharacteristic )
-                            efvo.setCategoryUri( ( ( VocabCharacteristic ) category ).getCategoryUri() );
-                    }
-                    Collection<FactorValue> fvs = ef.getFactorValues();
-                    String factorValuesAsString = StringUtils.EMPTY;
-
-                    for ( FactorValue fv : fvs ) {
-                        String fvName = fv.toString();
-                        if ( StringUtils.isNotBlank( fvName ) ) {
-                            factorValuesAsString += fvName + FV_SEP;
-                        }
-                    }
-
-                    /* clean up the start and end of the string */
-                    factorValuesAsString = StringUtils.remove( factorValuesAsString, ef.getName() + ":" );
-                    factorValuesAsString = StringUtils.removeEnd( factorValuesAsString, FV_SEP );
-
-                    efvo.setFactorValues( factorValuesAsString );
+                    ExperimentalFactorValueObject efvo = configExperimentalFactorValueObject( ef );
 
                     devo.getExperimentalFactors().add( efvo );
                 }
@@ -333,11 +311,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService
                 .findExperimentsWithAnalyses( g );
         for ( ExpressionExperiment ee : experimentsAnalyzed ) {
-            ExpressionExperimentValueObject eevo = new ExpressionExperimentValueObject();
-            eevo.setId( ee.getId() );
-            eevo.setShortName( ee.getShortName() );
-            eevo.setName( ee.getName() );
-            eevo.setExternalUri( GemmaLinkUtils.getExpressionExperimentUrl( eevo.getId() ) );
+            ExpressionExperimentValueObject eevo = configExpressionExperimentValueObject( ee );
 
             Collection<ProbeAnalysisResult> results = differentialExpressionAnalysisService.find( g, ee, threshold );
 
@@ -358,31 +332,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                     continue;
                 }
                 for ( ExperimentalFactor ef : efs ) {
-                    ExperimentalFactorValueObject efvo = new ExperimentalFactorValueObject();
-                    efvo.setId( ef.getId() );
-                    efvo.setName( ef.getName() );
-                    efvo.setDescription( ef.getDescription() );
-                    Characteristic category = ef.getCategory();
-                    if ( category != null ) {
-                        efvo.setCategory( category.getCategory() );
-                        if ( category instanceof VocabCharacteristic )
-                            efvo.setCategoryUri( ( ( VocabCharacteristic ) category ).getCategoryUri() );
-                    }
-                    Collection<FactorValue> fvs = ef.getFactorValues();
-                    String factorValuesAsString = StringUtils.EMPTY;
-
-                    for ( FactorValue fv : fvs ) {
-                        String fvName = fv.toString();
-                        if ( StringUtils.isNotBlank( fvName ) ) {
-                            factorValuesAsString += fvName + FV_SEP;
-                        }
-                    }
-
-                    /* clean up the start and end of the string */
-                    factorValuesAsString = StringUtils.remove( factorValuesAsString, ef.getName() + ":" );
-                    factorValuesAsString = StringUtils.removeEnd( factorValuesAsString, FV_SEP );
-
-                    efvo.setFactorValues( factorValuesAsString );
+                    ExperimentalFactorValueObject efvo = configExperimentalFactorValueObject( ef );
 
                     devo.getExperimentalFactors().add( efvo );
                     devo.setSortKey();
@@ -395,6 +345,96 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         }
         return devos;
+    }
+
+    /**
+     * @param ef
+     * @return
+     */
+    private ExperimentalFactorValueObject configExperimentalFactorValueObject( ExperimentalFactor ef ) {
+        ExperimentalFactorValueObject efvo = new ExperimentalFactorValueObject();
+        efvo.setId( ef.getId() );
+        efvo.setName( ef.getName() );
+        efvo.setDescription( ef.getDescription() );
+        Characteristic category = ef.getCategory();
+        if ( category != null ) {
+            efvo.setCategory( category.getCategory() );
+            if ( category instanceof VocabCharacteristic )
+                efvo.setCategoryUri( ( ( VocabCharacteristic ) category ).getCategoryUri() );
+        }
+        Collection<FactorValue> fvs = ef.getFactorValues();
+        String factorValuesAsString = StringUtils.EMPTY;
+
+        for ( FactorValue fv : fvs ) {
+            String fvName = fv.toString();
+            if ( StringUtils.isNotBlank( fvName ) ) {
+                factorValuesAsString += fvName + FV_SEP;
+            }
+        }
+
+        /* clean up the start and end of the string */
+        factorValuesAsString = StringUtils.remove( factorValuesAsString, ef.getName() + ":" );
+        factorValuesAsString = StringUtils.removeEnd( factorValuesAsString, FV_SEP );
+
+        efvo.setFactorValues( factorValuesAsString );
+        return efvo;
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    private ExpressionExperimentValueObject configExpressionExperimentValueObject( ExpressionExperiment ee ) {
+        ExpressionExperimentValueObject eevo = new ExpressionExperimentValueObject();
+        eevo.setId( ee.getId() );
+        eevo.setShortName( ee.getShortName() );
+        eevo.setName( ee.getName() );
+        eevo.setExternalUri( GemmaLinkUtils.getExpressionExperimentUrl( eevo.getId() ) );
+        return eevo;
+    }
+
+    /**
+     * AJAX entry.
+     * <p>
+     * Value objects returned contain experiments that have 2 factors and have had the diff analysis run on it.
+     * 
+     * @param eeIds
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<ExpressionExperimentExperimentalFactorValueObject> getFactors( Collection<Long> eeIds ) {
+
+        Collection<ExpressionExperimentExperimentalFactorValueObject> eeefvos = new HashSet<ExpressionExperimentExperimentalFactorValueObject>();
+
+        for ( Long id : eeIds ) {
+
+            ExpressionExperiment ee = expressionExperimentService.load( id );
+            expressionExperimentService.thawLite( ee );
+            Collection<ExperimentalFactor> efs = ee.getExperimentalDesign().getExperimentalFactors();
+
+            /* Do nothing if the experiment does not have more than one factor. */
+            if ( efs == null || efs.isEmpty() || efs.size() == 1 ) continue;
+
+            /* Diff tool only supports 2 factors. */
+            if ( efs.size() > 2 ) continue;
+
+            /* Leaves us with 2 factors or more factors. */
+            Collection<DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
+                    .findByInvestigation( ee );
+
+            /* Diff analysis not run on experiment. */
+            if ( diffAnalyses == null || diffAnalyses.isEmpty() ) continue;
+
+            /* FOUND SOMETHING USEFUL */
+            ExpressionExperimentExperimentalFactorValueObject eeefvo = new ExpressionExperimentExperimentalFactorValueObject();
+            ExpressionExperimentValueObject eevo = configExpressionExperimentValueObject( ee );
+            eeefvo.setExpressionExperiment( eevo );
+            for ( ExperimentalFactor ef : efs ) {
+                ExperimentalFactorValueObject efvo = configExperimentalFactorValueObject( ef );
+                eeefvo.getExperimenalFactors().add( efvo );
+            }
+            eeefvos.add( eeefvo );
+        }
+        return eeefvos;
     }
 
     /*
@@ -451,5 +491,12 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      */
     public void setGeneService( GeneService geneService ) {
         this.geneService = geneService;
+    }
+
+    /**
+     * @param expressionExperimentService
+     */
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
     }
 }
