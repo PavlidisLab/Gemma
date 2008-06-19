@@ -12,7 +12,7 @@ Ext.namespace('Gemma');
  */
 Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	id : 'factor-chooser',
-	layout : 'border',
+	layout : 'fit',
 	width : 800,
 	height : 500,
 	closeAction : 'hide',
@@ -43,15 +43,14 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 			}]
 		});
 
-		this.addEvents({
-			"factors-chosen" : true
-		});
-
-		this.add(this.efGrid);
-
 		Gemma.ExperimentalFactorChooserPanel.superclass.initComponent
 				.call(this);
 
+		this.addEvents({
+			"factors-chosen" : true
+		});
+		
+		this.add(this.efGrid);
 	},
 
 	/**
@@ -60,9 +59,9 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	 * @param {}
 	 *            config
 	 */
-	show : function(config) {
-		this.populateFactors.createDelegate(this);
-		Gemma.ExperimentalFactorChooserPanel.superclass.show.call(this);
+	show : function(eeIds) {
+		this.populateFactors(eeIds);
+	    Gemma.ExperimentalFactorChooserPanel.superclass.show.call(this);
 	},
 
 	/**
@@ -86,7 +85,7 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	 */
 	returnFromGetFactors : function(results) {
 		this.loadMask.hide();
-		efGrid.loadData(results);
+		this.efGrid.loadData(results);
 		// this.fireEvent('factors-retrieved', this, results);
 	}
 
