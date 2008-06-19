@@ -105,12 +105,11 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 			this.combo.setValue(sel.get("name"));
 			this.fireEvent('set-chosen', sel);
 		}.createDelegate(this));
-		
+
 		this.dcp.on("choose-factors", function(sel) {
 			this.dcp.hide();
 			this.fireEvent('choose-factors', sel);
 		}.createDelegate(this));
-		
 
 		this.store.on("load", this.restoreState.createDelegate(this));
 
@@ -330,8 +329,6 @@ Gemma.ExpressionExperimentSetStore = function(config) {
 		name : "taxon"
 	}]);
 
-	this.addEvents('ready');
-
 	this.readMethod = ExpressionExperimentSetController.getAvailableExpressionExperimentSets;
 
 	this.proxy = new Ext.data.DWRProxy(this.readMethod);
@@ -342,6 +339,8 @@ Gemma.ExpressionExperimentSetStore = function(config) {
 
 	Gemma.ExpressionExperimentSetStore.superclass.constructor
 			.call(this, config);
+
+	this.addEvents('ready');
 
 	this.on("load", this.addFromCookie, this);
 	this.load();
@@ -512,12 +511,12 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 			}]
 		});
 
-		this.addEvents({
-			"datasets-selected" : true
-			,"choose-factors" : true
-		});
-
 		Gemma.DatasetChooserPanel.superclass.initComponent.call(this);
+
+		this.addEvents({
+			"datasets-selected" : true,
+			"choose-factors" : true
+		});
 
 	},
 

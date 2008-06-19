@@ -49,7 +49,7 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 		this.addEvents({
 			"factors-chosen" : true
 		});
-		
+
 		this.add(this.efGrid);
 	},
 
@@ -61,7 +61,7 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	 */
 	show : function(eeIds) {
 		this.populateFactors(eeIds);
-	    Gemma.ExperimentalFactorChooserPanel.superclass.show.call(this);
+		Gemma.ExperimentalFactorChooserPanel.superclass.show.call(this);
 	},
 
 	/**
@@ -72,9 +72,9 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	 */
 	populateFactors : function(eeIds) {
 		DifferentialExpressionSearchController.getFactors(eeIds, {
-			callback : this.returnFromGetFactors.createDelegate(this),
-			errorHandler : errorHandler
-		});
+			callback : this.returnFromGetFactors.createDelegate(this)
+				// ,errorHandler : errorHandler
+				});
 	},
 
 	/**
