@@ -412,12 +412,12 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             Collection<ExperimentalFactor> efs = ee.getExperimentalDesign().getExperimentalFactors();
 
             /* Do nothing if the experiment does not have more than one factor. */
-            if ( efs == null || efs.isEmpty() || efs.size() == 1 ) continue;
+            if ( efs == null || efs.isEmpty() ) continue;
 
             /* Diff tool only supports 2 factors. */
             if ( efs.size() > 2 ) continue;
 
-            /* Leaves us with 2 factors or more factors. */
+            /* Leaves us with 1 or more factors. */
             Collection<DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
                     .findByInvestigation( ee );
 

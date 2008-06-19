@@ -19,6 +19,7 @@
 package ubic.gemma.web.controller.expression.experiment;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
@@ -32,12 +33,12 @@ public class ExpressionExperimentExperimentalFactorValueObject {
 
     private Collection<ExperimentalFactorValueObject> experimenalFactors;
 
-    public Collection<ExperimentalFactorValueObject> getExperimenalFactors() {
-        return experimenalFactors;
+    public ExpressionExperimentExperimentalFactorValueObject() {
+        experimenalFactors = new HashSet<ExperimentalFactorValueObject>();
     }
 
-    public void setExperimenalFactors( Collection<ExperimentalFactorValueObject> experimenalFactors ) {
-        this.experimenalFactors = experimenalFactors;
+    public Collection<ExperimentalFactorValueObject> getExperimenalFactors() {
+        return experimenalFactors;
     }
 
     public ExpressionExperimentValueObject getExpressionExperiment() {
