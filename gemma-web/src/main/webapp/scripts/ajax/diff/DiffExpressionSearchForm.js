@@ -311,7 +311,10 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		}.createDelegate(this));
 
 		this.eeSetChooserPanel.on("set-chosen", function(eeSetRecord) {
-			this.currentSet = eeSetRecord;
+			if (!eeSetRecord)
+				return;
+				
+			this.currentSet = eeSetRecord;			
 			this.updateDatasetsToBeSearched(eeSetRecord
 					.get("expressionExperimentIds"), eeSetRecord);
 			this.geneChooserPanel.taxonChanged(this.currentSet.get("taxon"));
