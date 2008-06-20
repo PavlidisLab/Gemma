@@ -12,10 +12,15 @@
 
 	<script type="text/javascript" src="<c:url value='/scripts/ajax/probe.grid.js'/>"></script>
 
-	<script type="text/javascript">
-	Ext.onReady(Gemma.ProbeBrowser.app.init());
-	</script>
 </head>
+
+<input type="hidden" name="cslist" id="cslist" value="${compositeSequenceIdList}" />
+
+<input type="hidden" name="arrayDesignId" id="arrayDesignId" value="${arrayDesign.id}" />
+
+	<script type="text/javascript">
+	Ext.onReady(Gemma.ProbeBrowser.app.init(), Gemma.ProbeBrowser.app);
+	</script>
 
 
 <title><c:if test="${arrayDesign.id != null}">&nbsp; 
@@ -68,6 +73,4 @@
 	</div>
 </c:if>
 
-<input type="hidden" name="cslist" id="cslist" value="${compositeSequenceIdList}" />
 
-<input type="hidden" name="arrayDesignId" id="arrayDesignId" value="${arrayDesign.id}" />
