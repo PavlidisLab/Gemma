@@ -8,8 +8,6 @@ $Id$
 	<title><fmt:message key="expressionExperiments.title" /></title>
 
 
-	<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
-	<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/progressbar.js'/>"></script>
 	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentController.js'></script>

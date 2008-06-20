@@ -2,8 +2,6 @@
 <jsp:useBean id="simpleExpressionExperimentLoadCommand" scope="request"
 	class="ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentLoadCommand" />
 <head>
-	<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
-	<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
 
 	<script type='text/javascript' src='/Gemma/dwr/interface/SimpleExpressionExperimentLoadController.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/interface/TaskCompletionController.js'></script>

@@ -4,22 +4,15 @@
 <jsp:directive.page import="ubic.gemma.model.genome.gene.*" />
 <jsp:useBean id="gene" scope="request" class="ubic.gemma.model.genome.GeneImpl" />
 
-<script src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>" type="text/javascript"></script>
-<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
 
 <script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
-
 <script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
-
 <script type='text/javascript' src='/Gemma/dwr/interface/GeneController.js'></script>
-
 <script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 <script type='text/javascript' src='/Gemma/dwr/util.js'></script>
-
-
 <script type="text/javascript" src="<c:url value='/scripts/app/gene.detail.js'/>" type="text/javascript"></script>
-
 <script type="text/javascript" src="<c:url value='/scripts/scriptaculous/effects.js'/>"></script>
+
 <authz:authorize ifAnyGranted="admin">
 	<script type='text/javascript' src='/Gemma/dwr/interface/AuditController.js'></script>
 	<script type="text/javascript" src="<c:url value='/scripts/entities/AuditTrailGrid.js'/>" type="text/javascript"></script>

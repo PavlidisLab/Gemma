@@ -7,67 +7,35 @@
 <head>
 	<title><fmt:message key="experimentalDesign.details" /></title>
 
-	<script
-		src="<c:url value='/scripts/ext/adapter/prototype/ext-prototype-adapter.js'/>"
-		type="text/javascript"></script>
-	<script src="<c:url value='/scripts/ext/ext-all.js'/>"
-		type="text/javascript"></script>
-	<script src="<c:url value='/scripts/ext/RowExpander.js'/>"
-		type="text/javascript"></script>
-	<script type="text/javascript"
-		src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
-	<script type="text/javascript"
-		src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
+	<script src="<c:url value='/scripts/ext/RowExpander.js'/>"	type="text/javascript"></script>
+	<script type="text/javascript"	src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
+	<script type="text/javascript"	src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
 	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
-	<script type='text/javascript'
-		src='/Gemma/dwr/interface/BioMaterialController.js'></script>
-	<script type='text/javascript'
-		src='/Gemma/dwr/interface/ExpressionExperimentController.js'></script>
-	<script type='text/javascript'
-		src='/Gemma/dwr/interface/ExperimentalDesignController.js'></script>
-	<script type='text/javascript'
-		src='/Gemma/dwr/interface/CharacteristicBrowserController.js'></script>
-	<script type='text/javascript'
-		src='/Gemma/dwr/interface/MgedOntologyService.js'></script>
-	<script type="text/javascript"
-		src='/Gemma/dwr/interface/OntologyService.js'></script>
-	<script type='text/javascript'
-		src="<c:url value='/scripts/ajax/annotation/CharacteristicCombo.js'/>"></script>
-	<script type='text/javascript'
-		src="<c:url value='/scripts/ajax/annotation/MGEDCombo.js'/>"></script>
-	<script type='text/javascript'
-		src="<c:url value='/scripts/ajax/annotation/AnnotationToolBar.js'/>"></script>
-	<script type='text/javascript'
-		src="<c:url value='/scripts/ajax/util/GemmaGridPanel.js'/>"></script>
-	<script type='text/javascript'
-		src="<c:url value='/scripts/ajax/annotation/ExperimentalFactorEditor.js'/>"></script>
-	<script type='text/javascript'
-		src="<c:url value='/scripts/ajax/annotation/ExperimentalFactorCombo.js'/>"></script>
-	<script type='text/javascript'
-		src="<c:url value='/scripts/ajax/annotation/FactorValueCombo.js'/>"></script>
-	<script type='text/javascript'
-		src="<c:url value='/scripts/ajax/annotation/FactorValueEditor.js'/>"></script>
-	<script type='text/javascript'
-		src="<c:url value='/scripts/ajax/annotation/BioMaterialEditor.js'/>"></script>
-	<script type='text/javascript'
-		src="<c:url value='/scripts/ajax/annotation/ExperimentalDesign.js'/>"></script>
-	<script type='text/javascript'
-		src='/Gemma/dwr/interface/ExpressionExperimentDataFetchController.js'></script>
-	<script type="text/javascript"
-		src="<c:url value='/scripts/ajax/eeDataFetch.js'/>"
-		type="text/javascript"></script>
-	<script type='text/javascript'
-		src='/Gemma/dwr/interface/TaskCompletionController.js'></script>
-	<script type='text/javascript'
-		src='/Gemma/dwr/interface/ProgressStatusService.js'></script>
-	<script type="text/javascript"
-		src="<c:url value='/scripts/scriptaculous/effects.js'/>"></script>
-	<script type="text/javascript"
-		src="<c:url value='/scripts/progressbar.js'/>"></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/BioMaterialController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/ExperimentalDesignController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/CharacteristicBrowserController.js'></script>
+	<script type='text/javascript' src='/Gemma/dwr/interface/MgedOntologyService.js'></script>
+	<script type="text/javascript"	src='/Gemma/dwr/interface/OntologyService.js'></script>
+	<script type='text/javascript'	src="<c:url value='/scripts/ajax/annotation/CharacteristicCombo.js'/>"></script>
+	<script type='text/javascript'	src="<c:url value='/scripts/ajax/annotation/MGEDCombo.js'/>"></script>
+	<script type='text/javascript'	src="<c:url value='/scripts/ajax/annotation/AnnotationToolBar.js'/>"></script>
+	<script type='text/javascript'	src="<c:url value='/scripts/ajax/util/GemmaGridPanel.js'/>"></script>
+	<script type='text/javascript'	src="<c:url value='/scripts/ajax/annotation/ExperimentalFactorEditor.js'/>"></script>
+	<script type='text/javascript'	src="<c:url value='/scripts/ajax/annotation/ExperimentalFactorCombo.js'/>"></script>
+	<script type='text/javascript'	src="<c:url value='/scripts/ajax/annotation/FactorValueCombo.js'/>"></script>
+	<script type='text/javascript'	src="<c:url value='/scripts/ajax/annotation/FactorValueEditor.js'/>"></script>
+	<script type='text/javascript'	src="<c:url value='/scripts/ajax/annotation/BioMaterialEditor.js'/>"></script>
+	<script type='text/javascript'	src="<c:url value='/scripts/ajax/annotation/ExperimentalDesign.js'/>"></script>
+	<script type='text/javascript'	src='/Gemma/dwr/interface/ExpressionExperimentDataFetchController.js'></script>
+	<script type="text/javascript"	src="<c:url value='/scripts/ajax/eeDataFetch.js'/>"	type="text/javascript"></script>
+	<script type='text/javascript'	src='/Gemma/dwr/interface/TaskCompletionController.js'></script>
+	<script type='text/javascript'	src='/Gemma/dwr/interface/ProgressStatusService.js'></script>
+	<script type="text/javascript"	src="<c:url value='/scripts/scriptaculous/effects.js'/>"></script>
+	<script type="text/javascript"	src="<c:url value='/scripts/progressbar.js'/>"></script>
 
-	<link rel="stylesheet" type="text/css" media="all"
-		href="<c:url value='/styles/progressbar.css'/>" />
+	<link rel="stylesheet" type="text/css" media="all"	href="<c:url value='/styles/progressbar.css'/>" />
 
 </head>
 
