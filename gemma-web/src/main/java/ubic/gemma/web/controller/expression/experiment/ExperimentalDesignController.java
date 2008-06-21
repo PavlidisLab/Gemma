@@ -18,9 +18,9 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import java.util.Collection; 
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator; 
+import java.util.Iterator;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -234,25 +234,10 @@ public class ExperimentalDesignController extends BaseMultiActionController {
         if ( e == null || e.getId() == null ) return null;
         ExpressionExperiment ee = expressionExperimentService.load( e.getId() );
 
-//        /*
-//         * TODO to get this information in a less redundant way requires two asynchronous DWR calls, so it's a bit of a
-//         * pain; definitely cleaner, though.
-//         */
-//        Map<String, String> factors = new HashMap<String, String>();
-//        Map<String, String> factorValues = new HashMap<String, String>();
-//        for ( ExperimentalFactor factor : ee.getExperimentalDesign().getExperimentalFactors() ) {
-//            factors.put( String.format( "factor%d", factor.getId() ), getExperimentalFactorString( factor ) );
-//            for ( FactorValue value : factor.getFactorValues() ) {
-//                factorValues.put( String.format( "fv%d", value.getId() ), getFactorValueString( value ) );
-//            }
-//        }
-
         Collection<BioMaterialValueObject> result = new HashSet<BioMaterialValueObject>();
         for ( BioAssay assay : ee.getBioAssays() ) {
             for ( BioMaterial sample : assay.getSamplesUsed() ) {
                 BioMaterialValueObject bmvo = new BioMaterialValueObject( sample, assay );
-//                bmvo.setFactors( factors );
-//                bmvo.setFactorValues( factorValues );
                 result.add( bmvo );
             }
         }
@@ -260,20 +245,31 @@ public class ExperimentalDesignController extends BaseMultiActionController {
     }
 
     /**
-     * Returns ExperimentalFactorValueObjects for each ExperimentalFactor in the ExperimentalDesign specified by the
-     * EntityDelegator.
+     * Returns ExperimentalFactorValueObjects for each ExperimentalFactor in the ExperimentalDesign or
+     * ExpressionExperiment specified by the EntityDelegator.
      * 
-     * @param e an EntityDelegator representing an ExperimentalDesign
+     * @param e an EntityDelegator representing an ExperimentalDesign OR an ExpressionExperiment
      * @return a collection of ExperimentalFactorValueObjects
      */
     public Collection<ExperimentalFactorValueObject> getExperimentalFactors( EntityDelegator e ) {
         if ( e == null || e.getId() == null ) return null;
-        ExperimentalDesign ed = this.experimentalDesignService.load( e.getId() );
 
         Collection<ExperimentalFactorValueObject> result = new HashSet<ExperimentalFactorValueObject>();
+        Long designId = null;
+        if ( e.getClassDelegatingFor().equalsIgnoreCase( "ExpressionExperiment" ) ) {
+            ExpressionExperiment ee = this.expressionExperimentService.load( e.getId() );
+            designId = ee.getExperimentalDesign().getId();
+        } else if ( e.getClassDelegatingFor().equalsIgnoreCase( "ExperimentalDesign" ) ) {
+            designId = e.getId();
+        } else {
+            throw new RuntimeException( "Don't know how to process a " + e.getClassDelegatingFor() );
+        }
+        ExperimentalDesign ed = this.experimentalDesignService.load( designId );
+
         for ( ExperimentalFactor factor : ed.getExperimentalFactors() ) {
             result.add( new ExperimentalFactorValueObject( factor ) );
         }
+
         return result;
     }
 

@@ -24,34 +24,36 @@ Ext.onReady(function() {
 	});
 	bioMaterialEditor.init();
 
-//	var experimentalFactorGrid = new Gemma.ExperimentalFactorGrid({
-//		title : "Experimental Factors",
-//		renderTo : "experimentalFactorPanel",
-//		edId : edId,
-//		editable : editable
-//	});
-//	experimentalFactorGrid.on("experimentalfactorchange",
-//			function(efgrid, efs) {
-//				factorValueGrid.reloadExperimentalFactors();
-//				bioMaterialEditor.init();
-//			});
-//
-//	var factorValueGrid = new Gemma.FactorValueGrid({
-//		title : "Factor Values",
-//		renderTo : "factorValuePanel",
-//		form : "factorValueForm",
-//		edId : edId,
-//		editable : editable
-//	});
-//
-//	factorValueGrid.on("factorvaluecreate", function(fvgrid, fvs) {
-//		bioMaterialEditor.grid.reloadFactorValues();
-//	});
-//	factorValueGrid.on("factorvaluechange", function(fvgrid, fvs) {
-//		bioMaterialEditor.grid.reloadFactorValues();
-//	});
-//	factorValueGrid.on("factorvaluedelete", function(fvgrid, fvs) {
-//		bioMaterialEditor.grid.reloadFactorValues();
-//	});
+	var experimentalFactorGrid = new Gemma.ExperimentalFactorGrid({
+		title : "Experimental Factors",
+		renderTo : "experimentalFactorPanel",
+		edId : edId,
+		editable : editable,
+		autoHeight : true
+	});
+	experimentalFactorGrid.on("experimentalfactorchange",
+			function(efgrid, efs) {
+				factorValueGrid.reloadExperimentalFactors();
+				bioMaterialEditor.init();
+			});
+
+	var factorValueGrid = new Gemma.FactorValueGrid({
+		title : "Factor Values",
+		renderTo : "factorValuePanel",
+		form : "factorValueForm",
+		edId : edId,
+		editable : editable,
+		autoHeight : true
+	});
+
+	factorValueGrid.on("factorvaluecreate", function(fvgrid, fvs) {
+		bioMaterialEditor.grid.reloadFactorValues();
+	});
+	factorValueGrid.on("factorvaluechange", function(fvgrid, fvs) {
+		bioMaterialEditor.grid.reloadFactorValues();
+	});
+	factorValueGrid.on("factorvaluedelete", function(fvgrid, fvs) {
+		bioMaterialEditor.grid.reloadFactorValues();
+	});
 
 });

@@ -21,10 +21,17 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 	categoryStyler : function(value, metadata, record, row, col, ds) {
 		return Gemma.GemmaGridPanel.formatTermWithStyle(value,
-				record.data.categoryUri);
+				record.get("categoryUri"));
 	},
 
-	columns : [{
+	initComponent : function() {
+
+		this.experimentalDesign = {
+			id : this.edId,
+			classDelegatingFor : "ExperimentalDesign"
+		};
+
+		Ext.apply(this, {	columns : [{
 		header : "Name",
 		dataIndex : "name",
 		sortable : true
@@ -38,14 +45,38 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		header : "Description",
 		dataIndex : "description",
 		sortable : true
-	}],
+	}]});
+		
+		this.store = new Ext.data.Store({
+			proxy : new Ext.data.DWRProxy(ExperimentalDesignController.getExperimentalFactors),
+			reader : new Ext.data.ListRangeReader({
+				id : "id"
+			}, this.record)
+		});
 
-	initComponent : function() {
+		if (this.editable) {
+			this.tbar = new Gemma.ExperimentalFactorToolbar({});
+		}
 
-		this.experimentalDesign = {
-			id : config.edId,
-			classDelegatingFor : "ExperimentalDesign"
-		};
+		Gemma.ExperimentalFactorGrid.superclass.initComponent.call(this);
+
+		this.addEvents('experimentalfactorchange');
+
+		this.store.load({
+			params : [this.experimentalDesign]
+		});
+
+	},
+
+	onRender : function(c, l) {
+
+		Gemma.ExperimentalFactorGrid.superclass.onRender.call(this, c, l);
+
+		var NAME_COLUMN = 0;
+		var CATEGORY_COLUMN = 1;
+		var DESCRIPTION_COLUMN = 2;
+
+		this.autoExpandColumn = DESCRIPTION_COLUMN;
 
 		this.nameField = new Ext.form.TextField({});
 		var nameEditor = new Ext.grid.GridEditor(this.nameField);
@@ -62,39 +93,52 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		this.descriptionField = new Ext.form.TextField({});
 		var descriptionEditor = new Ext.grid.GridEditor(this.descriptionField);
 
-		this.store = new Ext.data.Store({
-			proxy : new Ext.data.DWRProxy(ExperimentalDesignController.getExperimentalFactors),
-			reader : new Ext.data.ListRangeReader({
-				id : "id"
-			}, Gemma.ExperimentalFactorGrid.getRecord())
-		});
-		this.store.load({
-			params : [this.experimentalDesign]
-		});
-
-		Gemma.ExperimentalFactorGrid.superclass.initComponent.call(this);
-
-		this.addEvents('experimentalfactorchange');
-	},
-
-	onRender : function(c, l) {
-
-		Gemma.ExperimentalFactorGrid.superclass.onRender.call(this, c, l);
-
-		var NAME_COLUMN = 0;
-		var CATEGORY_COLUMN = 1;
-		var DESCRIPTION_COLUMN = 2;
-
-		this.autoExpandColumn = DESCRIPTION_COLUMN;
-
 		if (this.editable) {
 			this.getColumnModel().setEditor(NAME_COLUMN, nameEditor);
 			this.getColumnModel().setEditor(CATEGORY_COLUMN, categoryEditor);
 			this.getColumnModel().setEditor(DESCRIPTION_COLUMN,
 					descriptionEditor);
-		}
 
-		if (this.editable) {
+			this.getTopToolbar().on("create", function(newFactorValue) {
+				var callback = function() {
+					this.factorCreated(created);
+				}.createDelegate(this);
+				ExperimentalDesignController.createExperimentalFactor(
+						this.experimentalDesign, newFactorValue, callback);
+			});
+
+			this.getTopToolbar().on("delete", function() {
+				var selected = this.getSelectedIds();
+				var oldmsg = this.loadMask.msg;
+				this.loadMask.msg = "Deleting experimental factor(s)";
+				this.loadMask.show();
+				var callback = function() {
+					this.idsDeleted(selected);
+					this.loadMask.hide();
+					this.loadMask.msg = oldmsg;
+				}.createDelegate(this);
+				var errorHandler = function() {
+					this.loadMask.hide();
+					this.loadMask.msg = oldmsg;
+				};
+				ExperimentalDesignController.deleteExperimentalFactors(
+						this.experimentalDesign, selected, {
+							callback : callback,
+							errorHandler : errorHandler
+						});
+			});
+			
+			this.getTopToolbar().on("save", function() {
+				var edited = this.getEditedRecords();
+				var callback = function() {
+					this.recordsChanged.(edited);
+				}.createDelegate(this);
+				ExperimentalDesignController.updateExperimentalFactors(edited,
+						callback);
+			});
+			
+			this.getTopToolbar().on("undo", function() {this.revertSelected();});
+
 			this.on("afteredit", function(e) {
 				var col = this.getColumnModel().getColumnId(e.column);
 				if (col == CATEGORY_COLUMN) {
@@ -104,13 +148,29 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					e.record.set("categoryUri", term.uri);
 				}
 			});
-
-			var tbar = new Gemma.ExperimentalFactorToolbar({
-				grid : this,
-				renderTo : this.tbar
-			});
-		}
-
+			
+			
+		this.on("afteredit", function(model) {
+			this.saveButton.enable();
+			this.revertButton.enable();
+		},   this.getTopToolbar());
+		
+		this.getSelectionModel().on("selectionchange", function(model) {
+			var selected = model.getSelections();
+			if (selected.length > 0) {
+				this.deleteButton.enable();
+			} else {
+				this.deleteButton.disable();
+			}
+			this.revertButton.disable();
+			for (var i = 0; i < selected.length; ++i) {
+				if (selected[i].dirty) {
+					this.revertButton.enable();
+					break;
+				}
+			}
+		}, this.getTopToolbar());
+		} // if editable.
 	},
 
 	factorCreated : function(factor) {
@@ -138,149 +198,94 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	}
 
 });
-
-/*
- * Gemma.ExperimentalFactorToolbar constructor... config is a hash with the
- * following options: grid is the grid that contains the factors.
- */
-Gemma.ExperimentalFactorToolbar = function(config) {
-
-	this.grid = config.grid;
-	delete config.grid;
-	this.experimentalDesign = this.grid.experimentalDesign;
-
-	/*
-	 * keep a reference to ourselves so we don't have to worry about scope in
-	 * the button handlers below...
-	 */
-	var thisToolbar = this;
-
-	/*
-	 * establish default config options...
-	 */
-	var superConfig = {};
-
-	/*
-	 * add our items in front of anything specified in the config above...
-	 */
-	this.categoryCombo = new Gemma.MGEDCombo({
-		emptyText : "Select a category",
-		termKey : "factor"
-	});
-	this.categoryCombo.on("select", function() {
-		createButton.enable();
-	});
-	this.descriptionField = new Ext.form.TextField({
-		emptyText : "Type a description"
-	});
-	var createButton = new Ext.Toolbar.Button({
-		text : "create",
-		tooltip : "Create the new experimental factor",
-		disabled : true,
-		handler : function() {
-			var created = thisToolbar.getExperimentalFactorValueObject();
-			createButton.disable();
-			thisToolbar.categoryCombo.reset();
-			thisToolbar.descriptionField.reset();
-			var callback = function() {
-				thisToolbar.grid.factorCreated.call(thisToolbar.grid, created);
-			};
-			ExperimentalDesignController.createExperimentalFactor(
-					thisToolbar.experimentalDesign, created, callback);
-		}
-	});
-	var deleteButton = new Ext.Toolbar.Button({
-		text : "delete",
-		tooltip : "Delete selected experimental factors",
-		disabled : true,
-		handler : function() {
-			var oldmsg = this.loadMask.msg;
-			this.loadMask.msg = "Deleting experimental factor(s)";
-			this.loadMask.show();
-			deleteButton.disable();
-			var selected = thisToolbar.grid.getSelectedIds();
-			var callback = function() {
-				thisToolbar.grid.idsDeleted.call(thisToolbar.grid, selected);
-				thisToolbar.grid.loadMask.hide();
-				thisToolbar.grid.loadMask.msg = oldmsg;
-			};
-			var errorHandler = function() {
-				thisToolbar.grid.loadMask.hide();
-				thisToolbar.grid.loadMask.msg = oldmsg;
-			};
-			ExperimentalDesignController.deleteExperimentalFactors(
-					thisToolbar.experimentalDesign, selected, {
-						callback : callback,
-						errorHandler : errorHandler
-					});
-		},
-		scope : this.grid
-	});
-	this.grid.getSelectionModel().on("selectionchange", function(model) {
-		var selected = model.getSelections();
-		if (selected.length > 0) {
-			deleteButton.enable();
-		} else {
-			deleteButton.disable();
-		}
-	});
-	var saveButton = new Ext.Toolbar.Button({
-		text : "save",
-		tooltip : "Save changed experimental factors",
-		disabled : true,
-		handler : function() {
-			saveButton.disable();
-			var edited = thisToolbar.grid.getEditedRecords();
-			var callback = function() {
-				thisToolbar.grid.recordsChanged.call(thisToolbar.grid, edited);
-			};
-			ExperimentalDesignController.updateExperimentalFactors(edited,
-					callback);
-		}
-	});
-	this.grid.on("afteredit", function(model) {
-		saveButton.enable();
-		revertButton.enable();
-	});
-	var revertButton = new Ext.Toolbar.Button({
-		text : "revert",
-		tooltip : "Undo changes to selected experimental factors",
-		disabled : true,
-		handler : function() {
-			thisToolbar.grid.revertSelected();
-		}
-	});
-	this.grid.getSelectionModel().on("selectionchange", function(model) {
-		var selected = model.getSelections();
-		revertButton.disable();
-		for (var i = 0; i < selected.length; ++i) {
-			if (selected[i].dirty) {
-				revertButton.enable();
-				break;
-			}
-		}
-	});
-
-	var items = [new Ext.Toolbar.TextItem("Add an Experimental Factor:"),
-			new Ext.Toolbar.Spacer(), this.categoryCombo,
-			new Ext.Toolbar.Spacer(), this.descriptionField,
-			new Ext.Toolbar.Spacer(), createButton,
-			new Ext.Toolbar.Separator(), deleteButton,
-			new Ext.Toolbar.Separator(), saveButton,
-			new Ext.Toolbar.Separator(), revertButton];
-	config.items = config.items ? items.concat(config.items) : items;
-
-	for (property in config) {
-		superConfig[property] = config[property];
-	}
-	Gemma.ExperimentalFactorToolbar.superclass.constructor.call(this,
-			superConfig);
-};
-
+ 
 /*
  * instance methods...
  */
-Ext.extend(Gemma.ExperimentalFactorToolbar, Ext.Toolbar, {
+Gemma.ExperimentalFactorToolbar =Ext.extend( Ext.Toolbar, {
+
+	onRender : function(c, l) {
+		Gemma.ExperimentalFactorToolbar.superclass.onRender.call(this, c, l);
+
+		/*
+		 * add our items in front of anything specified in the config above...
+		 */
+		this.categoryCombo = new Gemma.MGEDCombo({
+			emptyText : "Select a category",
+			termKey : "factor"
+		});
+		this.categoryCombo.on("select", function() {
+			this.createButton.enable();
+		});
+		this.descriptionField = new Ext.form.TextField({
+			emptyText : "Type a description"
+		});
+		this.createButton = new Ext.Toolbar.Button({
+			text : "create",
+			tooltip : "Create the new experimental factor",
+			disabled : true,
+			handler : function() {
+				this.fireEvent("create", this
+						.getExperimentalFactorValueObject());
+
+				this.createButton.disable();
+				this.categoryCombo.reset();
+				this.descriptionField.reset();
+			},
+			scope : this
+		});
+		this. deleteButton = new Ext.Toolbar.Button({
+			text : "delete",
+			tooltip : "Delete selected experimental factors",
+			disabled : true,
+			handler : function() {
+				this.deleteButton.disable();
+				this.fireEvent("delete");
+			},
+			scope : this
+		});
+		
+		this. revertButton = new Ext.Toolbar.Button({
+			text : "revert",
+			tooltip : "Undo changes to selected experimental factors",
+			disabled : true,
+			handler : function() {
+				this.fireEvent("undo");
+			},
+			scope : this
+		});
+		
+		this.saveButton = new Ext.Toolbar.Button({
+			text : "save",
+			tooltip : "Save changed experimental factors",
+			disabled : true,
+			handler : function() {
+				this.saveButton.disable();
+				this.fireEvent("save");
+			}
+		});
+	
+
+		this.addText("Add an Experimental Factor:");
+		this.addSpacer();
+		this.add(this.categoryCombo);
+		this.addSpacer();
+		this.add(this.descriptionField);
+		this.addSpacer();
+		this.addButton(this.createButton);
+		this.addSeparator();
+		this.addButton(this.deleteButton);
+		this.addSeparator();
+		this.addButton(this.saveButton);
+		this.addSeparator();
+		this.addButton(this.revertButton);
+
+	},
+	
+	initComponent : function() {
+		Gemma.ExperimentalFactorToolbar.superclass.initComponent.call(this);
+		this.addEvents("save", "undo", "create", "delete");
+	},
 
 	getExperimentalFactorValueObject : function() {
 		var category = this.categoryCombo.getTerm();

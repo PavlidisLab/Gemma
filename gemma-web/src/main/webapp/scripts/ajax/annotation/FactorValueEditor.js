@@ -274,12 +274,6 @@ Gemma.FactorValueToolbar = function(config) {
 	this.editable = this.grid.editable;
 
 	/*
-	 * keep a reference to ourselves so we don't have to worry about scope in
-	 * the button handlers below...
-	 */
-	var thisToolbar = this;
-
-	/*
 	 * establish default config options...
 	 */
 	var superConfig = {};
@@ -292,10 +286,10 @@ Gemma.FactorValueToolbar = function(config) {
 	});
 	var factorCombo = this.factorCombo;
 	factorCombo.on("select", function(combo, record, index) {
-		thisToolbar.grid.setExperimentalFactor(record.id);
+		this.grid.setExperimentalFactor(record.id);
 		createFactorValueButton.enable();
-		if (thisToolbar.characteristicToolbar) {
-			thisToolbar.characteristicToolbar.setExperimentalFactor(record.id);
+		if (this.characteristicToolbar) {
+			this.characteristicToolbar.setExperimentalFactor(record.id);
 		}
 	});
 
@@ -304,13 +298,13 @@ Gemma.FactorValueToolbar = function(config) {
 		tooltip : "Create a new factor value",
 		disabled : true,
 		handler : function() {
-			var ef = thisToolbar.grid.experimentalFactor;
+			var ef = this.grid.experimentalFactor;
 			var callback = function() {
-				thisToolbar.grid.factorValueCreated.call(thisToolbar.grid, ef);
-				thisToolbar.characteristicToolbar.setExperimentalFactor(ef.id);
+				this.grid.factorValueCreated.call(this.grid, ef);
+				this.characteristicToolbar.setExperimentalFactor(ef.id);
 			};
 			ExperimentalDesignController.createFactorValue(
-					thisToolbar.grid.experimentalFactor, callback);
+					this.grid.experimentalFactor, callback);
 		}
 	});
 
@@ -319,10 +313,10 @@ Gemma.FactorValueToolbar = function(config) {
 		tooltip : "Delete selected factor values",
 		disabled : false,
 		handler : function() {
-			var ef = thisToolbar.grid.experimentalFactor;
-			var selected = thisToolbar.grid.getSelectedFactorValues();
+			var ef = this.grid.experimentalFactor;
+			var selected = this.grid.getSelectedFactorValues();
 			var callback = function() {
-				thisToolbar.grid.factorValuesDeleted.call(thisToolbar.grid,
+				this.grid.factorValuesDeleted.call(this.grid,
 						selected);
 			};
 			ExperimentalDesignController.deleteFactorValues(ef, selected,
@@ -358,8 +352,7 @@ Gemma.FactorValueToolbar = function(config) {
 
 	if (this.editable) {
 		this.characteristicToolbar = new Gemma.FactorValueCharacteristicToolbar({
-			grid : thisToolbar.grid,
-			renderTo : thisToolbar.getEl().createChild()
+			grid : this.grid
 		});
 	}
 
@@ -392,12 +385,6 @@ Gemma.FactorValueCharacteristicToolbar = function(config) {
 	};
 
 	/*
-	 * keep a reference to ourselves so we don't have to worry about scope in
-	 * the button handlers below...
-	 */
-	var thisToolbar = this;
-
-	/*
 	 * establish default config options...
 	 */
 	var superConfig = {};
@@ -410,7 +397,7 @@ Gemma.FactorValueCharacteristicToolbar = function(config) {
 	});
 	var factorValueCombo = this.factorValueCombo;
 	factorValueCombo.on("select", function(combo, record, index) {
-		thisToolbar.factorValue.id = record.data.factorValueId;
+		this.factorValue.id = record.data.factorValueId;
 		mgedCombo.enable();
 	});
 
@@ -439,13 +426,13 @@ Gemma.FactorValueCharacteristicToolbar = function(config) {
 			// removed in response to bug 1016 mgedCombo.reset();
 			charCombo.reset();
 			var callback = function() {
-				thisToolbar.grid.factorValuesChanged.call(thisToolbar.grid, []);
-				thisToolbar.factorValueCombo.store.reload();
+				this.grid.factorValuesChanged.call(this.grid, []);
+				this.factorValueCombo.store.reload();
 					// TODO do something to reset the text of the selected item,
 					// in case it changed...
 			};
 			ExperimentalDesignController.createFactorValueCharacteristic(
-					thisToolbar.factorValue, c, callback);
+					this.factorValue, c, callback);
 		}
 	});
 
@@ -455,9 +442,9 @@ Gemma.FactorValueCharacteristicToolbar = function(config) {
 		disabled : true,
 		handler : function() {
 			deleteButton.disable();
-			var selected = thisToolbar.grid.getSelectedRecords();
+			var selected = this.grid.getSelectedRecords();
 			var callback = function() {
-				thisToolbar.grid.factorValuesChanged.call(thisToolbar.grid,
+				this.grid.factorValuesChanged.call(this.grid,
 						selected);
 			};
 			ExperimentalDesignController.deleteFactorValueCharacteristics(
@@ -479,13 +466,13 @@ Gemma.FactorValueCharacteristicToolbar = function(config) {
 		disabled : true,
 		handler : function() {
 			saveButton.disable();
-			var edited = thisToolbar.grid.getEditedRecords();
+			var edited = this.grid.getEditedRecords();
 			var seen = {}, fvids = [];
 			for (var i = 0; i < edited.length; ++i) {
 				// ??
 			}
 			var callback = function() {
-				thisToolbar.grid.factorValuesChanged.call(thisToolbar.grid,
+				this.grid.factorValuesChanged.call(this.grid,
 						edited);
 			};
 			ExperimentalDesignController.updateFactorValueCharacteristics(
@@ -500,7 +487,7 @@ Gemma.FactorValueCharacteristicToolbar = function(config) {
 		tooltip : "Undo changes to selected characteristics",
 		disabled : true,
 		handler : function() {
-			thisToolbar.grid.revertSelected();
+			this.grid.revertSelected();
 		}
 	});
 	this.grid.getSelectionModel().on("selectionchange", function(model) {

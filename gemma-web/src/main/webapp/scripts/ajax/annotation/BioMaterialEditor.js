@@ -8,14 +8,28 @@ Gemma.BioMaterialEditor = function(config) {
 			classDelegatingFor : "ExpressionExperiment"
 		},
 
-		dwrCallback : function(data) {
-			config = {
-				backingArray : data
-			};
-			Ext.apply(config, this.originalConfig);
-			this.grid = new Gemma.BioMaterialGrid(config);
-			this.grid.refresh = this.init.bind(this);
-			this.grid.render();
+		/**
+		 * We make two ajax calls; the first gets the biomaterials, the second
+		 * gets the experimentalfactors. These are run in succession so both
+		 * values can be given to the BioMaterialGrid constructor.
+		 */
+		firstCallback : function(data) {
+
+			// second ajax call.
+			ExperimentalDesignController.getExperimentalFactors(
+					this.expressionExperiment, function(factorData) {
+						config = {
+							factors : factorData,
+							bioMaterials : data
+						};
+						Ext.apply(config, this.originalConfig);
+
+						// construct the grid.
+						this.grid = new Gemma.BioMaterialGrid(config);
+						this.grid.init = this.init.createDelegate(this);
+						this.grid.render(); // not needed?
+						this.grid.getTopToolbar().grid = this.grid;
+					}.createDelegate(this));
 		},
 
 		/**
@@ -29,8 +43,11 @@ Gemma.BioMaterialEditor = function(config) {
 				} catch (e) {
 				}
 			}
+
+			// first ajax call.
 			ExperimentalDesignController.getBioMaterials(
-					this.expressionExperiment, this.dwrCallback.bind(this));
+					this.expressionExperiment, this.firstCallback
+							.createDelegate(this, [], true));
 		}
 	};
 };
@@ -41,13 +58,14 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	},
 
 	/**
-	 * See ExperimentalDesignController.getBioMaterials BioMaterialValueObject
-	 * to see layout of the object that is passed.
+	 * See ExperimentalDesignController.getExperimentalFactors and
+	 * ExperimentalFactorValueObject AND FactorValueValueObject to see layout of
+	 * the object that is passed.
 	 * 
-	 * @param biomaterial
-	 *            A template so we know how many columns we need.
+	 * @param factors,
+	 *            fetched with getExperimentalFactors.
 	 */
-	createColumns : function(biomaterial) {
+	createColumns : function(factors) {
 		var columns = [this.rowExpander, {
 			id : "bm",
 			header : "BioMaterial",
@@ -59,46 +77,57 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			dataIndex : "baName",
 			sortable : true
 		}];
-		this.fvIdToDescription = biomaterial.factorValues;
 
-		/*
-		 * Generate a function to render the factor value column.
-		 */
-		this.columnRenderer = this
-				.createValueRenderer(biomaterial.factorValues)
-				.createDelegate(this);
-
-		/*
-		 * Each row has a combo that holds the possible factor values.
-		 */
-		this.factorValueCombo = [];
-		for (factorId in biomaterial.factors) {
+		this.factorValueCombos = [];
+		for (f in factors) {
+			var factor = factors[f];
 			// f is the id.
-			if (factorId.indexOf("factor") >= 0) {
-				// strip "factor" from the id
-				var efId = factorId.substring(6);
-				this.factorValueCombo[factorId] = new Gemma.FactorValueCombo({
-					efId : efId,
+			if (factor.id) {
+				var factorId = "factor" + factor.id;
+				// Create one factorValueCombo per factor.
+				this.factorValueCombos[factorId] = new Gemma.FactorValueCombo({
+					efId : factor.id,
 					lazyInit : false,
 					lazyRender : true,
 					record : this.fvRecord
 				});
 				var editor;
 				if (this.editable) {
-					editor = this.factorValueCombo[factorId];
+					editor = this.factorValueCombos[factorId];
 				}
+
+				var factorValues = [];
+				// factorValueValueObjects
+				for (fv in factor.values) {
+					if (!factor.values[fv].factorValueId) {
+						continue;
+					}
+					var fvs = factor.values[fv].factorValueString;
+					var id = "fv" + factor.values[fv].factorValueId;
+					if (factorValues.indexOf(fvs < 0)) {
+						factorValues[id] = fvs;
+					}
+				}
+
+				/*
+				 * Generate a function to render the factor values as displayed
+				 * in the cells. At this point factorValue contains all the
+				 * possible values for this factor.
+				 */
+				var rend = this.createValueRenderer(factorValues);
 
 				/*
 				 * Define the column for this particular factor.
 				 */
 				columns.push({
 					id : factorId,
-					header : biomaterial.factors[factorId],
+					header : factor.name,
 					dataIndex : factorId,
-					renderer : this.columnRenderer,
+					renderer : rend,
 					editor : editor,
 					sortable : true
 				});
+
 			}
 		}
 		return columns;
@@ -134,12 +163,13 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		}];
 
 		// Add one slot per factor. The name of the fields will be like
-		// 'factor428'.
+		// 'factor428'. This must be used as the dataIndex for the columnModel.
 		if (biomaterial.factors) {
 			for (factorId in biomaterial.factors) {
 				if (factorId.indexOf("factor") >= 0) {
 					var o = {
-						name : biomaterial.factors[factorId],
+						name : factorId, // the dataIndex, used in the
+						// columnModel to access this.
 						type : "string"
 					};
 					fields.push(o);
@@ -152,19 +182,25 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 	initComponent : function() {
 
-		var data = this.transformData(this.backingArray);
+		var data = this.transformData(this.bioMaterials);
 
-		this.record = this.createRecord(this.backingArray[0]);
+		this.record = this.createRecord(this.bioMaterials[0]);
 
 		Ext.apply(this, {
 			factorValueCombo : {},
 			plugins : this.rowExpander,
-			columns : this.createColumns(this.backingArray[0]),
 			store : new Ext.data.Store({
 				proxy : new Ext.data.MemoryProxy(data),
 				reader : new Ext.data.ArrayReader({}, this.record)
 			})
 		});
+
+		// must be done separately.
+		Ext.apply(this, {
+			columns : this.createColumns(this.factors)
+		});
+
+		this.tbar = new Gemma.BioMaterialToolbar({});
 
 		Gemma.BioMaterialGrid.superclass.initComponent.call(this);
 
@@ -178,12 +214,49 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			});
 		}
 
-		var tbar = new Gemma.BioMaterialToolbar({
-			grid : this,
-			renderTo : this.tbar
-		});
+		/*
+		 * Event handlers for toolbar buttons.
+		 * 
+		 */
+		this.getTopToolbar().on("toggleExpand", function() {
+			this.rowExpander.toggleAll();
+		}, this);
+
+		this.getTopToolbar().on("apply", function(factor, factorValue) {
+			var selected = this.getSelectionModel().getSelections();
+			for (var i = 0; i < selected.length; ++i) {
+				selected[i].set(factor, factorValue);
+			}
+			this.getView().refresh();
+		}, this);
+
+		this.getTopToolbar().on("save", function() {
+			var edited = this.getEditedRecords();
+			var bmvos = [];
+			for (var i = 0; i < edited.length; ++i) {
+				var row = edited[i];
+				var bmvo = {
+					id : row.id,
+					factorIdToFactorValueId : {}
+				};
+				for (var j in row) {
+					if (row[j].substring(0, 6) == "factor") {
+						bmvo.factorIdToFactorValueId[j] = row[j];
+					}
+				}
+				bmvos.push(bmvo);
+			}
+			var callback = this.refresh.createDelegate(this); // check
+			ExperimentalDesignController.updateBioMaterials(bmvos, callback);
+		}, this);
 
 		this.getStore().load();
+	},
+
+	onRender : function(c, l) {
+		this.getTopToolbar().grid = this;
+		this.getTopToolbar().editable = this.editable;
+		Gemma.BioMaterialGrid.superclass.onRender.call(this, c, l);
 	},
 
 	/**
@@ -239,6 +312,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			if (factorId.substring(0, 6) == "factor") {
 				var combo = this.factorValueCombo[factorId];
 				var column = this.getColumnModel().getColumnById(factorId);
+				// FIXME this wll no longer work.
 				combo.setExperimentalFactor(combo.experimentalFactor.id,
 						function(r, options, success) {
 							var fvs = {};
@@ -271,159 +345,120 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
  * Gemma.BioMaterialToolbar constructor... config is a hash with the following
  * options: grid is the grid that contains the factor values.
  */
-Gemma.BioMaterialToolbar = function(config) {
+Gemma.BioMaterialToolbar = Ext.extend(Ext.Toolbar, {
 
-	this.grid = config.grid;
-	delete config.grid;
-	this.editable = this.grid.editable;
+	initComponent : function() {
+		Gemma.BioMaterialToolbar.superclass.initComponent.call(this);
 
-	/*
-	 * keep a reference to ourselves so we don't have to worry about scope in
-	 * the button handlers below...
-	 */
-	var thisToolbar = this;
+		this.addEvents("revertSelected", "toggleExpand", "apply", "save");
+	},
 
-	/*
-	 * establish default config options...
-	 */
-	var superConfig = {};
+	onRender : function(c, l) {
+		Gemma.BioMaterialToolbar.superclass.onRender.call(this, c, l);
 
-	/*
-	 * add our items in front of anything specified in the config above...
-	 */
-	var saveButton = new Ext.Toolbar.Button({
-		text : "save",
-		tooltip : "Save changed biomaterials",
-		disabled : true,
-		handler : function() {
-			var edited = thisToolbar.grid.getEditedRecords();
-			var bmvos = [];
-			for (var i = 0; i < edited.length; ++i) {
-				var row = edited[i];
-				var bmvo = {
-					id : row.id,
-					factorIdToFactorValueId : {}
-				};
-				for (var j in row) {
-					if (row[j].substring(0, 6) == "factor") {
-						bmvo.factorIdToFactorValueId[j] = row[j];
-					}
-				}
-				bmvos.push(bmvo);
-			}
-			var callback = thisToolbar.grid.refresh.bind(thisToolbar.grid);
-			ExperimentalDesignController.updateBioMaterials(bmvos, callback);
-			saveButton.disable();
-		}
-	});
-	this.grid.on("afteredit", function(model) {
-		saveButton.enable();
-	});
-
-	var revertButton = new Ext.Toolbar.Button({
-		text : "revert",
-		tooltip : "Undo changes to selected biomaterials",
-		disabled : true,
-		handler : function() {
-			thisToolbar.grid.revertSelected();
-		}
-	});
-	this.grid.getSelectionModel().on("selectionchange", function(model) {
-		var selected = model.getSelections();
-		revertButton.disable();
-		for (var i = 0; i < selected.length; ++i) {
-			if (selected[i].dirty) {
-				revertButton.enable();
-				break;
-			}
-		}
-	});
-
-	var refreshButton = new Ext.Toolbar.Button({
-		text : "Expand/collapse all",
-		tooltip : "Show/hide all biomaterial details",
-		handler : function() {
-			var expander = this.grid.rowExpander;
-			expander.toggleAll();
-		}
-	});
-
-	var items = [];
-	if (this.editable) {
-		items.push(new Ext.Toolbar.TextItem("Make changes in the grid below:"),
-				new Ext.Toolbar.Spacer(), saveButton,
-				new Ext.Toolbar.Separator(), revertButton);
-	}
-	items.push(new Ext.Toolbar.Fill(), refreshButton);
-	config.items = config.items ? items.concat(config.items) : items;
-
-	for (property in config) {
-		superConfig[property] = config[property];
-	}
-	Gemma.BioMaterialToolbar.superclass.constructor.call(this, superConfig);
-
-	if (this.editable) {
-		this.factorCombo = new Gemma.ExperimentalFactorCombo({
-			emptyText : "select a factor",
-			edId : this.grid.edId
-		});
-		var factorCombo = this.factorCombo;
-		factorCombo.on("select", function(combo, record, index) {
-			factorValueCombo.setExperimentalFactor(record.id);
-			factorValueCombo.enable(); // TODO do this in the callback
-		});
-
-		this.factorValueCombo = new Gemma.FactorValueCombo({
-			emptyText : "select a factor value",
-			disabled : true
-		});
-		var factorValueCombo = this.factorValueCombo;
-		factorValueCombo.on("select", function(combo, record, index) {
-			thisToolbar.grid.getSelectionModel().on("selectionchange",
-					enableApplyOnSelect);
-			enableApplyOnSelect(thisToolbar.grid.getSelectionModel());
-		});
-
-		var applyButton = new Ext.Toolbar.Button({
-			text : "apply",
-			tooltip : "Apply this value to selected biomaterials",
+		var saveButton = new Ext.Toolbar.Button({
+			text : "save",
+			tooltip : "Save changed biomaterials",
 			disabled : true,
 			handler : function() {
-				var selected = thisToolbar.grid.getSelectionModel()
-						.getSelections();
-				var factor = "factor" + factorCombo.getValue();
-				var factorValue = "fv" + factorValueCombo.getValue();
-				for (var i = 0; i < selected.length; ++i) {
-					selected[i].set(factor, factorValue);
-				}
-				saveButton.enable();
-				thisToolbar.grid.getView().refresh();
+				this.fireEvent("save");
+				saveButton.disable();
 			}
 		});
-		var enableApplyOnSelect = function(model) {
-			var selected = model.getSelections();
-			if (selected.length > 0) {
-				applyButton.enable();
-			} else {
-				applyButton.disable();
+
+		this.grid.on("afteredit", function(model) {
+			saveButton.enable();
+		});
+
+		var revertButton = new Ext.Toolbar.Button({
+			text : "revert",
+			tooltip : "Undo changes to selected biomaterials",
+			disabled : true,
+			handler : function() {
+				this.grid.revertSelected();
 			}
-		};
+		});
 
-		var secondToolbar = new Ext.Toolbar(this.getEl().createChild());
-		secondToolbar.addText("Bulk changes:");
-		secondToolbar.addSpacer();
-		secondToolbar.addField(factorCombo);
-		secondToolbar.addSpacer();
-		secondToolbar.addField(factorValueCombo);
-		secondToolbar.addSpacer();
-		secondToolbar.addField(applyButton);
+		this.grid.getSelectionModel().on("selectionchange", function(model) {
+			var selected = model.getSelections();
+			revertButton.disable();
+			for (var i = 0; i < selected.length; ++i) {
+				if (selected[i].dirty) {
+					revertButton.enable();
+					break;
+				}
+			}
+		});
+
+		var refreshButton = new Ext.Toolbar.Button({
+			text : "Expand/collapse all",
+			tooltip : "Show/hide all biomaterial details",
+			handler : function() {
+				this.fireEvent("toggleExpand");
+			}.createDelegate(this)
+		});
+
+		if (this.editable) {
+			this.addText("Make changes to the grid below");
+			this.addSpacer();
+			this.addButton(saveButton);
+			this.addSeparator();
+			this.addButton(revertButton);
+		}
+		this.addFill();
+		this.addButton(refreshButton);
+
+		if (this.editable) {
+			this.factorCombo = new Gemma.ExperimentalFactorCombo({
+				emptyText : "select a factor",
+				edId : this.grid.edId
+			});
+			var factorCombo = this.factorCombo;
+			factorCombo.on("select", function(combo, record, index) {
+				factorValueCombo.setExperimentalFactor(record.id);
+				factorValueCombo.enable(); // TODO do this in the callback
+			});
+
+			this.factorValueCombo = new Gemma.FactorValueCombo({
+				emptyText : "select a factor value",
+				disabled : true
+			});
+			var factorValueCombo = this.factorValueCombo;
+			factorValueCombo.on("select", function(combo, record, index) {
+				this.grid.getSelectionModel().on("selectionchange",
+						enableApplyOnSelect);
+				enableApplyOnSelect(this.grid.getSelectionModel());
+			});
+
+			var applyButton = new Ext.Toolbar.Button({
+				text : "apply",
+				tooltip : "Apply this value to selected biomaterials",
+				disabled : true,
+				handler : function() {
+					var factor = "factor" + factorCombo.getValue();
+					var factorValue = "fv" + factorValueCombo.getValue();
+					this.fireEvent("apply", factor, factorValue)
+					saveButton.enable();
+				}
+			});
+
+			var enableApplyOnSelect = function(model) {
+				var selected = model.getSelections();
+				if (selected.length > 0) {
+					applyButton.enable();
+				} else {
+					applyButton.disable();
+				}
+			};
+
+			var secondToolbar = new Ext.Toolbar(this.getEl().createChild());
+			secondToolbar.addText("Bulk changes:");
+			secondToolbar.addSpacer();
+			secondToolbar.addField(factorCombo);
+			secondToolbar.addSpacer();
+			secondToolbar.addField(factorValueCombo);
+			secondToolbar.addSpacer();
+			secondToolbar.addField(applyButton);
+		}
 	}
-
-};
-
-/*
- * instance methods...
- */
-Ext.extend(Gemma.BioMaterialToolbar, Ext.Toolbar, {
-
 });

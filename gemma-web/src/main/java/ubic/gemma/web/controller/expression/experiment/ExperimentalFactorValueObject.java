@@ -18,9 +18,13 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * @author luke
@@ -35,6 +39,15 @@ public class ExperimentalFactorValueObject {
     private String category;
     private String categoryUri;
     private String factorValues;
+    private Collection<FactorValueValueObject> values;
+
+    public Collection<FactorValueValueObject> getValues() {
+        return values;
+    }
+
+    public void setValues( Collection<FactorValueValueObject> values ) {
+        this.values = values;
+    }
 
     public ExperimentalFactorValueObject() {
     }
@@ -45,6 +58,21 @@ public class ExperimentalFactorValueObject {
         this.setDescription( factor.getDescription() );
         this.setCategory( getCategoryString( factor.getCategory() ) );
         this.setCategoryUri( getCategoryUri( factor.getCategory() ) );
+
+        /*
+         * Note: this code copied from the ExperimentalDesignController.
+         */
+        Collection<FactorValueValueObject> vals = new HashSet<FactorValueValueObject>();
+        for ( FactorValue value : factor.getFactorValues() ) {
+            Characteristic category = value.getExperimentalFactor().getCategory();
+            if ( category == null ) {
+                category = Characteristic.Factory.newInstance();
+                category.setValue( value.getExperimentalFactor().getName() );
+            }
+            vals.add( new FactorValueValueObject( value, category ) );
+        }
+
+        this.setValues( vals );
     }
 
     private String getCategoryString( Characteristic category ) {

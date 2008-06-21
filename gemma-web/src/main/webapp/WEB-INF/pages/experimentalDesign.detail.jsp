@@ -1,14 +1,15 @@
 <%@ include file="/common/taglibs.jsp"%>
-<jsp:useBean id="experimentalDesign" scope="request" class="ubic.gemma.model.expression.experiment.ExperimentalDesignImpl" />
+<jsp:useBean id="experimentalDesign" scope="request"
+	class="ubic.gemma.model.expression.experiment.ExperimentalDesignImpl" />
 <jsp:useBean id="expressionExperiment" scope="request"
 	class="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" />
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <head>
-	<title><fmt:message key="experimentalDesign.details" /></title>
+	<title><fmt:message key="experimentalDesign.details" />
+	</title>
 
-	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
+	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' useRandomParam="false" />
 	<jwr:script src='/scripts/app/ExperimentalDesign.js' />
-
 </head>
 
 <authz:authorize ifAnyGranted="admin">
@@ -44,13 +45,13 @@
 				</td>
 				<td>
 					<%
-					if ( experimentalDesign.getName() != null ) {
+					    if ( experimentalDesign.getName() != null ) {
 					%>
 					<jsp:getProperty name="experimentalDesign" property="name" />
 					<%
-					                } else {
-					                out.print( "Experimental Design Name unavailable" );
-					            }
+					    } else {
+					        out.print( "Experimental Design Name unavailable" );
+					    }
 					%>
 				</td>
 			</tr>
@@ -60,13 +61,13 @@
 				</td>
 				<td>
 					<%
-					if ( experimentalDesign.getDescription() != null ) {
+					    if ( experimentalDesign.getDescription() != null ) {
 					%>
 					<jsp:getProperty name="experimentalDesign" property="description" />
 					<%
-					                } else {
-					                out.print( "Description unavailable" );
-					            }
+					    } else {
+					        out.print( "Description unavailable" );
+					    }
 					%>
 				</td>
 			</tr>
@@ -77,13 +78,13 @@
 				</td>
 				<td>
 					<%
-					if ( experimentalDesign.getReplicateDescription() != null ) {
+					    if ( experimentalDesign.getReplicateDescription() != null ) {
 					%>
 					<jsp:getProperty name="experimentalDesign" property="replicateDescription" />
 					<%
-					                } else {
-					                out.print( "Replicate description unavailable" );
-					            }
+					    } else {
+					        out.print( "Replicate description unavailable" );
+					    }
 					%>
 				</td>
 			</tr>
@@ -94,13 +95,13 @@
 				</td>
 				<td>
 					<%
-					if ( experimentalDesign.getQualityControlDescription() != null ) {
+					    if ( experimentalDesign.getQualityControlDescription() != null ) {
 					%>
 					<jsp:getProperty name="experimentalDesign" property="qualityControlDescription" />
 					<%
-					                } else {
-					                out.print( "Quality control description unavailable" );
-					            }
+					    } else {
+					        out.print( "Quality control description unavailable" );
+					    }
 					%>
 				</td>
 			</tr>
@@ -111,20 +112,20 @@
 				</td>
 				<td>
 					<%
-					if ( experimentalDesign.getNormalizationDescription() != null ) {
+					    if ( experimentalDesign.getNormalizationDescription() != null ) {
 					%>
 					<jsp:getProperty name="experimentalDesign" property="normalizationDescription" />
 					<%
-					                } else {
-					                out.print( "Normalization description unavailable" );
-					            }
+					    } else {
+					        out.print( "Normalization description unavailable" );
+					    }
 					%>
 				</td>
 			</tr>
 
 			<%
-			                    if ( experimentalDesign.getExperimentalFactors() != null
-			                    && experimentalDesign.getExperimentalFactors().size() > 0 ) {
+			    if ( experimentalDesign.getExperimentalFactors() != null
+			            && experimentalDesign.getExperimentalFactors().size() > 0 ) {
 			%>
 			<tr>
 				<td class="label">
@@ -141,7 +142,7 @@
 				</td>
 			</tr>
 			<%
-			}
+			    }
 			%>
 
 			<authz:authorize ifAllGranted="admin">
@@ -151,11 +152,11 @@
 					</td>
 					<td>
 						<%
-						                if ( experimentalDesign.getAuditTrail() != null ) {
-						                out.print( experimentalDesign.getAuditTrail().getCreationEvent().getDate() );
-						            } else {
-						                out.print( "Create date unavailable" );
-						            }
+						    if ( experimentalDesign.getAuditTrail() != null ) {
+						        out.print( experimentalDesign.getAuditTrail().getCreationEvent().getDate() );
+						    } else {
+						        out.print( "Create date unavailable" );
+						    }
 						%>
 					</td>
 				</tr>
@@ -182,13 +183,13 @@
 				</td>
 				<td>
 					<%
-					if ( expressionExperiment.getName() != null ) {
+					    if ( expressionExperiment.getName() != null ) {
 					%>
 					<jsp:getProperty name="expressionExperiment" property="name" />
 					<%
-					                } else {
-					                out.print( "Expression Experiment Name unavailable" );
-					            }
+					    } else {
+					        out.print( "Expression Experiment Name unavailable" );
+					    }
 					%>
 				</td>
 			</tr>
@@ -198,16 +199,16 @@
 				</td>
 				<td>
 					<%
-					if ( expressionExperiment.getDescription() != null ) {
+					    if ( expressionExperiment.getDescription() != null ) {
 					%>
 					<div class="clob" style="width: 40%;">
 						<jsp:getProperty name="expressionExperiment" property="description" />
 					</div>
 
 					<%
-					                } else {
-					                out.print( "Description unavailable" );
-					            }
+					    } else {
+					        out.print( "Description unavailable" );
+					    }
 					%>
 				</td>
 			</tr>
@@ -225,13 +226,13 @@
 				</td>
 				<td>
 					<%
-					if ( expressionExperiment.getPrimaryPublication() != null ) {
+					    if ( expressionExperiment.getPrimaryPublication() != null ) {
 					%>
 					<Gemma:citation citation="${expressionExperiment.primaryPublication }" />
 					<%
-					                } else {
-					                out.print( "Primary publication unavailable" );
-					            }
+					    } else {
+					        out.print( "Primary publication unavailable" );
+					    }
 					%>
 				</td>
 			</tr>
