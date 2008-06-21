@@ -151,68 +151,6 @@
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
-				<groupId>net.sf.alchim</groupId>
-				<artifactId>yuicompressor-maven-plugin</artifactId>
-				<executions>
-					<execution>
-						<goals>
-							<!-- 	<goal>jslint</goal> -->
-							<goal>compress</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<force>true</force>
-					<jswarn>false</jswarn>
-					<nosuffix>true</nosuffix>
-					<linebreakpos>5000</linebreakpos>
-					<preserveAllSemiColons>true</preserveAllSemiColons>
-					<nomunge>false</nomunge>
-					<excludes>
-						<exclude>**/*.vm</exclude>
-						<exclude>**/*.css</exclude>
-						<exclude>**/*.xml</exclude>
-						<exclude>**/*.html</exclude>
-						<exclude>**/*.properties</exclude>
-						<exclude>**/ext-all.js</exclude>
-						<exclude>**/ext-all-debug.js</exclude>
-					</excludes>
-					<!-- Currently aggregations do not work. But we can still minify the code
-						<aggregations>
-						<aggregation>
-						<removeIncluded>true</removeIncluded>
-						<insertNewLine>true</insertNewLine>
-						<output>${project.build.directory}/${project.build.finalName}/scripts/gemma-all.js</output>
-						<includes>
-						<include>**/*.js</include>
-						</includes>
-						<excludes>
-						<exclude>lib/*.js</exclude>
-						<exclude>app/*.js</exclude>
-						<exclude>app/test/*.js</exclude>
-						<exclude>prototype.js</exclude>
-						<exclude>scriptaculous/*.js</exclude>
-						<exclude>scriptaculous-all.js</exclude>
-						<exclude>ext/*.js</exclude>
-						<exclude>ext/adapter/**/*.js</exclude>
-						<exclude>ext/adapter/**/*.js</exclude>
-						<exclude>flotr-0.1.0alpha/**/*.js</exclude>
-						</excludes>
-						</aggregation>
-						<aggregation>
-						<removeIncluded>true</removeIncluded>
-						<insertNewLine>true</insertNewLine>
-						<output>
-						${project.build.directory}/${project.build.finalName}/scripts/scriptaculous-all.js
-						</output>
-						<includes>
-						<include>**/scriptaculous/*.js</include>
-						</includes>
-						</aggregation>
-						</aggregations> -->
-				</configuration>
-			</plugin>
 		</plugins>
 	</build>
 	<profiles>
