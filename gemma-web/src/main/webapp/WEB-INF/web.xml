@@ -32,9 +32,7 @@
 	<!-- Context Configuration locations for Spring XML files -->
 	<context-param>
 		<param-name>contextConfigLocation</param-name>
-		<param-value>
-			classpath*:/ubic/gemma/applicationContext-*.xml,classpath*:/ubic/gemma/dataSource.xml
-		</param-value>
+		<param-value>classpath*:/ubic/gemma/applicationContext-*.xml,classpath*:/ubic/gemma/dataSource.xml</param-value>
 	</context-param>
 
 	<!-- Gemma Project Filters.  -->
@@ -56,7 +54,7 @@
 	</filter>
 
 	<!--  Filter that passes pages through sitemesh. Must come after acegi filter -->
- 
+
 	<filter>
 		<filter-name>clickstreamFilter</filter-name>
 		<filter-class>com.opensymphony.clickstream.ClickstreamFilter</filter-class>
@@ -92,11 +90,11 @@
 	</filter>
 	<!--
 		This caused big performance problems.	-->
-		<filter>
+	<filter>
 		<filter-name>compressionFilter</filter-name>
 		<filter-class>ubic.gemma.web.filter.GZIPFilter</filter-class>
-		</filter>
-		
+	</filter>
+
 
 	<filter-mapping>
 		<filter-name>encodingFilter</filter-name>
@@ -208,20 +206,48 @@
 		<load-on-startup>2</load-on-startup>
 	</servlet>
 
-   <!-- Defines the Spring-WS MessageDispatcherServlet -->
-    <servlet>
-        <servlet-name>spring-ws</servlet-name>
-        <servlet-class>org.springframework.ws.transport.http.MessageDispatcherServlet</servlet-class>
-        <init-param>
-            <!-- Transform the location attributes in WSDLs -->
-            <param-name>transformWsdlLocations</param-name>
-            <param-value>false</param-value>
-        </init-param>
-    </servlet>
-    
+	<!-- Defines the Spring-WS MessageDispatcherServlet -->
+	<servlet>
+		<servlet-name>spring-ws</servlet-name>
+		<servlet-class>org.springframework.ws.transport.http.MessageDispatcherServlet</servlet-class>
+		<init-param>
+			<!-- Transform the location attributes in WSDLs -->
+			<param-name>transformWsdlLocations</param-name>
+			<param-value>false</param-value>
+		</init-param>
+	</servlet>
+
 	<servlet>
 		<servlet-name>SparkLines</servlet-name>
 		<servlet-class>com.representqueens.spark.service.SparkController</servlet-class>
+	</servlet>
+
+	<servlet>
+		<servlet-name>JavascriptCompressServlet</servlet-name>
+		<servlet-class>net.jawr.web.servlet.JawrServlet</servlet-class>
+
+		<!-- Location in classpath of the config file -->
+		<init-param>
+			<param-name>configLocation</param-name>
+			<param-value>/jawr.properties</param-value>
+		</init-param>
+		<load-on-startup>3</load-on-startup>
+	</servlet>
+
+	<servlet>
+		<servlet-name>CSSCompressServlet</servlet-name>
+		<servlet-class>net.jawr.web.servlet.JawrServlet</servlet-class>
+
+		<!-- Location in classpath of the config file -->
+		<init-param>
+			<param-name>configLocation</param-name>
+			<param-value>/jawr.properties</param-value>
+		</init-param>
+		<init-param>
+			<param-name>type</param-name>
+			<param-value>css</param-value>
+		</init-param>
+		<load-on-startup>4</load-on-startup>
 	</servlet>
 
 	<!--  servlet mappings -->
@@ -229,11 +255,12 @@
 		<servlet-name>action</servlet-name>
 		<url-pattern>/</url-pattern>
 	</servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>spring-ws</servlet-name>
-        <url-pattern>/ws/*</url-pattern>
-    </servlet-mapping>
 	<servlet-mapping>
+		<servlet-name>spring-ws</servlet-name>
+		<url-pattern>/ws/*</url-pattern>
+	</servlet-mapping>
+	
+	<!-- 	<servlet-mapping>
 		<servlet-name>default</servlet-name>
 		<url-pattern>*.css</url-pattern>
 	</servlet-mapping>
@@ -242,6 +269,7 @@
 		<servlet-name>default</servlet-name>
 		<url-pattern>*.js</url-pattern>
 	</servlet-mapping>
+-->
 
 	<servlet-mapping>
 		<servlet-name>default</servlet-name>
@@ -273,12 +301,12 @@
 		<url-pattern>*.html</url-pattern>
 	</servlet-mapping>
 
-	<servlet-mapping>
+	 <servlet-mapping>
 		<servlet-name>action</servlet-name>
 		<url-pattern>/dwr/*</url-pattern>
 	</servlet-mapping>
-
-	<!-- static content; the /s/ gets stripped from the url and we use a rewrite so the user doesn't see it. -->
+	
+ 	<!-- static content; the /s/ gets stripped from the url and we use a rewrite so the user doesn't see it. -->
 	<servlet-mapping>
 		<servlet-name>default</servlet-name>
 		<url-pattern>/s/*</url-pattern>
@@ -288,6 +316,19 @@
 		<servlet-name>SparkLines</servlet-name>
 		<url-pattern>/spark</url-pattern>
 	</servlet-mapping>
+
+
+	<!-- JAWR js and css compression -->
+	<servlet-mapping>
+		<servlet-name>JavascriptCompressServlet</servlet-name>
+		<url-pattern>*.js</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>CSSCompressServlet</servlet-name>
+		<url-pattern>*.css</url-pattern>
+	</servlet-mapping>
+
 
 	<session-config>
 		<session-timeout>60</session-timeout>

@@ -5,17 +5,8 @@
 
 	<title><fmt:message key="generalSearch.title" /></title>
 
-
-	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
-	<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
-	<script type="text/javascript" src="<c:url value='/scripts/ajax/util/PagingDataStore.js'/>"></script>
-	<script type="text/javascript" src="<c:url value='/scripts/ajax/util/PagingToolbar.js'/>"></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/SearchService.js'></script>
-
-	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
-
-	<script type="text/javascript" src="<c:url value='/scripts/ajax/search.js'/>"></script>
+	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
+	<jwr:script src='/scripts/app/search.js' />
 
 	<script type="text/javascript">
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider( ));

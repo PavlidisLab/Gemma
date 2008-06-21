@@ -9,32 +9,10 @@
  %>
 	</title>
 
-	<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
-	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
-	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentController.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/TaskCompletionController.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentDataFetchController.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/ProgressStatusService.js'></script>
-
-	<script type='text/javascript' src="<c:url value='/scripts/ajax/util/GemmaGridPanel.js'/>"></script>
-	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/AnnotationGrid.js'/>"></script>
-	<script type="text/javascript" src="<c:url value='/scripts/progressbar.js'/>"></script>
-	<script type='text/javascript' src="<c:url value='/scripts/ajax/eeDesignMatrix.js'/>"></script>
-	<script type="text/javascript" src="<c:url value='/scripts/app/eeDataFetch.js'/>"></script>
-	<script type="text/javascript" src="<c:url value='/scripts/ajax/expressionExperiment.js'/>"></script>
-	<script type="text/javascript" src="<c:url value='/scripts/scriptaculous/effects.js'/>"></script>
+	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
+	<jwr:script src='/scripts/app/eeDataFetch.js' />
 
 	<authz:authorize ifAnyGranted="admin">
-		<script type="text/javascript" src='/Gemma/dwr/interface/OntologyService.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/MgedOntologyService.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/CharacteristicBrowserController.js'></script>
-		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/CharacteristicCombo.js'/>"></script>
-		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/MGEDCombo.js'/>"></script>
-		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/AnnotationToolBar.js'/>"></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/AuditController.js'></script>
-		<script type="text/javascript" src="<c:url value='/scripts/ajax/entities/AuditTrailGrid.js'/>"></script>
 		<script type="text/javascript">
 	Ext.namespace('Gemma');
 	Ext.onReady(function() {
@@ -52,10 +30,6 @@
 });
 </script>
 	</authz:authorize>
-
-	<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/progressbar.css'/>" />
-
-
 	<script type="text/javascript">
 	Ext.onReady(DesignMatrix.init, DesignMatrix);
 	Ext.onReady(function() {

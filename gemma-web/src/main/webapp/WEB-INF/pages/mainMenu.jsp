@@ -1,23 +1,6 @@
 <%@ include file="/common/taglibs.jsp"%>
 <head>
 	<title><fmt:message key="mainMenu.title" /></title>
-	<script type='text/javascript' src='/Gemma/dwr/interface/GenePickerController.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/ExtCoexpressionSearchController.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentSetController.js'></script>
-
-	<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
-	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
-
-	<script type='text/javascript' src='/Gemma/scripts/ajax/util/GemmaGridPanel.js'></script>
-	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/TaxonCombo.js'></script>
-	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/GeneCombo.js'></script>
-
-	<script type='text/javascript' src='/Gemma/scripts/ajax/entities/DatasetChooserPanel.js'></script>
-	<script type='text/javascript' src='/Gemma/scripts/ajax/coexpression/CoexpressionSearchFormLite.js'></script>
-	<script type="text/javascript" src="<c:url value='/scripts/rounded_corners_lite.inc.js'/>"></script>
-
-	<!-- <script src="<c:url value='/scripts/scriptaculous-all.js'/>" type="text/javascript"></script>
-	<script src="<c:url value='/scripts/gemma-all.js'/>" type="text/javascript"></script> -->
 
 
 	<script type="text/javascript">
@@ -149,17 +132,7 @@
 					<a href='<c:url value="/uploadFile.html"/>'> <fmt:message key="menu.selectFile" /> </a>
 				</li>
 				<li>
-					<a href='<c:url value="/geneFinder.html"/>'> <fmt:message key="menu.GeneFinder" /> </a>
-				</li>
-				<li>
-					<a href='<c:url value="/candidateGeneList.html"/>'> <fmt:message key="menu.CandidateGeneList" /> </a>
-				</li>
-				<li>
 					<a href='<c:url value="/bibRefSearch.html"/>'> <fmt:message key="menu.flow.PubMedSearch" /> </a>
-				</li>
-				<li>
-					<a href='<c:url value="/searchCoexpressionMultiple.html"/>'> <fmt:message key="menu.searchCoexpressionMultiple" />
-					</a>
 				</li>
 			</ul>
 		</div>

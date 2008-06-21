@@ -131,7 +131,7 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
         sw.stop();
 
         double time = sw.getTime() / 1000.00;
-        log.info( "Startup of Gemma took " + time + " s " );
+        log.info( "Initialization of Gemma Spring context in " + time + " s " );
     }
 
     /**

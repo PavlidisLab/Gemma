@@ -12,8 +12,7 @@ var saveUsername = function(theForm) {
 	var expires = new Date();
 	// sets it for approx 30 days.
 	expires.setTime(expires.getTime() + 24 * 30 * 60 * 60 * 1000);
-	setCookie("username", theForm.j_username.value, expires, "<c:url value="
-			/ "/>");
+	setCookie("username", theForm.j_username.value, expires, "/Gemma/");
 }
 
 var  validateForm = function(form) {
@@ -27,7 +26,7 @@ var passwordHint = function() {
 				+ "/> field must be filled in to get a password hint sent to you.");
 		$("j_username").focus();
 	} else {
-		location.href = "Gemma/passwordHint.html?username="
+		location.href = "/Gemma/passwordHint.html?username="
 				+ $("j_username").value;
 	}
 }

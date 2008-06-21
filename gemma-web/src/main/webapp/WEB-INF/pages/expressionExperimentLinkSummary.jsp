@@ -3,15 +3,8 @@
 
 	<title>Expression Experiment Link Summary</title>
 
-	<script type="text/javascript" src="<c:url value='/scripts/progressbar.js'/>"></script>
-	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentController.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/ProgressStatusService.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/TaskCompletionController.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
-	<script type="text/javascript" src="<c:url value='/scripts/ajax/expressionExperiment.js'/>" type="text/javascript"></script>
-	<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/progressbar.css'/>" />
+	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
+	<jwr:script src='/scripts/app/expressionExperiment.js' />
 
 </head>
 
@@ -28,8 +21,8 @@
 <authz:authorize ifAnyGranted="admin">
 	<p>
 		<a href="<c:url value="/expressionExperiment/generateExpressionExperimentLinkSummary.html"/>"
-			onclick="return confirm('Regenerate reports for all experiments?');"> Regenerate Expression Experiment Link
-			Summaries </a>
+			onclick="return confirm('Regenerate reports for all experiments?');"> Regenerate Expression Experiment Link Summaries
+		</a>
 
 	</p>
 	<display:table pagesize="200" name="expressionExperiments" sort="list" defaultsort="10" defaultorder="descending"
@@ -64,12 +57,12 @@
 		<display:column property="dateDifferentialAnalysisNoTime" sortable="true" defaultorder="descending"
 			titleKey="menu.differential" comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />
 
-		<display:column property="dateMissingValueAnalysisNoTime" sortable="true" defaultorder="descending"
-			title="MV Analysis" comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />
+		<display:column property="dateMissingValueAnalysisNoTime" sortable="true" defaultorder="descending" title="MV Analysis"
+			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />
 		<display:column property="dateRankComputationNoTime" sortable="true" defaultorder="descending" title="Rank Computed"
 			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />
-		<display:column property="dateLastArrayDesignUpdatedNoTime" sortable="true" defaultorder="descending"
-			title="Probe Map" comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />
+		<display:column property="dateLastArrayDesignUpdatedNoTime" sortable="true" defaultorder="descending" title="Probe Map"
+			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />
 		<display:column property="dateLinkAnalysisNoTime" sortable="true" defaultorder="descending" title="Link Analyzed"
 			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" />
 		<display:column property="refreshReport" title="Refresh" />

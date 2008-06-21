@@ -18,11 +18,9 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import java.util.Collection;
-import java.util.HashMap;
+import java.util.Collection; 
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.Iterator; 
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -236,25 +234,25 @@ public class ExperimentalDesignController extends BaseMultiActionController {
         if ( e == null || e.getId() == null ) return null;
         ExpressionExperiment ee = expressionExperimentService.load( e.getId() );
 
-        /*
-         * TODO to get this information in a less redundant way requires two asynchronous DWR calls, so it's a bit of a
-         * pain; definitely cleaner, though.
-         */
-        Map<String, String> factors = new HashMap<String, String>();
-        Map<String, String> factorValues = new HashMap<String, String>();
-        for ( ExperimentalFactor factor : ee.getExperimentalDesign().getExperimentalFactors() ) {
-            factors.put( String.format( "factor%d", factor.getId() ), getExperimentalFactorString( factor ) );
-            for ( FactorValue value : factor.getFactorValues() ) {
-                factorValues.put( String.format( "fv%d", value.getId() ), getFactorValueString( value ) );
-            }
-        }
+//        /*
+//         * TODO to get this information in a less redundant way requires two asynchronous DWR calls, so it's a bit of a
+//         * pain; definitely cleaner, though.
+//         */
+//        Map<String, String> factors = new HashMap<String, String>();
+//        Map<String, String> factorValues = new HashMap<String, String>();
+//        for ( ExperimentalFactor factor : ee.getExperimentalDesign().getExperimentalFactors() ) {
+//            factors.put( String.format( "factor%d", factor.getId() ), getExperimentalFactorString( factor ) );
+//            for ( FactorValue value : factor.getFactorValues() ) {
+//                factorValues.put( String.format( "fv%d", value.getId() ), getFactorValueString( value ) );
+//            }
+//        }
 
         Collection<BioMaterialValueObject> result = new HashSet<BioMaterialValueObject>();
         for ( BioAssay assay : ee.getBioAssays() ) {
             for ( BioMaterial sample : assay.getSamplesUsed() ) {
                 BioMaterialValueObject bmvo = new BioMaterialValueObject( sample, assay );
-                bmvo.setFactors( factors );
-                bmvo.setFactorValues( factorValues );
+//                bmvo.setFactors( factors );
+//                bmvo.setFactorValues( factorValues );
                 result.add( bmvo );
             }
         }

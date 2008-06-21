@@ -3,20 +3,10 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 
 <head>
-	<title><fmt:message key="bioMaterial.details" />
-	</title>
+	<title><fmt:message key="bioMaterial.details" /></title>
+	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
+	<jwr:script src='/scripts/app/bmFactorValues.js' />
 
-
-	<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
-	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
-	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/BioMaterialController.js'></script>
-	<script type='text/javascript' src="<c:url value='/scripts/ajax/util/GemmaGridPanel.js'/>"></script>
-	<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/AnnotationGrid.js'/>"></script>
-
-
-	<script type='text/javascript' src="<c:url value='/scripts/app/bmFactorValues.js'/>"></script>
 
 	<script type='text/javascript'>
 		Ext.namespace('Gemma');
@@ -36,14 +26,6 @@
 }); 
 	  </script>
 
-	<authz:authorize ifAnyGranted="admin">
-		<script type="text/javascript" src='/Gemma/dwr/interface/OntologyService.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/MgedOntologyService.js'></script>
-		<script type='text/javascript' src='/Gemma/dwr/interface/CharacteristicBrowserController.js'></script>
-		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/CharacteristicCombo.js'/>"></script>
-		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/MGEDCombo.js'/>"></script>
-		<script type='text/javascript' src="<c:url value='/scripts/ajax/annotation/AnnotationToolBar.js'/>"></script>
-	</authz:authorize>
 
 </head>
 

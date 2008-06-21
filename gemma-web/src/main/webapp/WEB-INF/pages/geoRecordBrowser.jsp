@@ -3,19 +3,8 @@
 <head>
 	<title>GEO Record browser</title>
 
-	<script type="text/javascript" src="<c:url value='/scripts/progressbar.js'/>"></script>
-	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentLoadController.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/GeoBrowserService.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/TaskCompletionController.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/ProgressStatusService.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
-
-	<script type="text/javascript" src="<c:url value='/scripts/ajax/loadExpressionExperiment.js'/>" type="text/javascript"></script>
-	<script type="text/javascript" src="<c:url value='/scripts/ajax/geoBrowse.js'/>" type="text/javascript"></script>
-
-	<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/progressbar.css'/>" />
+	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
+	<jwr:script src='/scripts/app/geoBrowse.js' />
 </head>
 <body>
 	<authz:authorize ifAnyGranted="admin">
@@ -26,12 +15,11 @@
 		<br />
 		<p>
 			Displaying
-			<b> <c:out value="${numGeoRecords}" /> </b> GEO records. Records are not shown for taxa not in the Gemma system. If
-			you choose to load an experiment, please be careful: experiments that have two (or more) array designs should be
-			loaded using the regular load form if you need to suppress the sample-matching functions.
-			<strong>Details</strong> will display more information about the dataset, if available from GEO, including
-			information about platforms. This information is often not available for a day or two after the data sets becomes
-			publicly available.
+			<b> <c:out value="${numGeoRecords}" /> </b> GEO records. Records are not shown for taxa not in the Gemma system. If you
+			choose to load an experiment, please be careful: experiments that have two (or more) array designs should be loaded using
+			the regular load form if you need to suppress the sample-matching functions.
+			<strong>Details</strong> will display more information about the dataset, if available from GEO, including information
+			about platforms. This information is often not available for a day or two after the data sets becomes publicly available.
 		</p>
 		<form action="<c:url value="/geoBrowser/showBatch.html" />" method="POST">
 			<input type="submit" name="prev" value="Show Last Batch" />

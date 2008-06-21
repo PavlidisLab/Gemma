@@ -1,161 +1,117 @@
 Ext.namespace('Gemma');
 
-/*
- * Gemma.ExperimentalFactorGrid constructor... config is a hash with the
- * following options: edId the id of the ExperimentalDesign whose
- * ExperimentalFactors are displayed in the grid
- */
-Gemma.ExperimentalFactorGrid = function(config) {
+Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
-	this.experimentalDesign = {
-		id : config.edId,
-		classDelegatingFor : "ExperimentalDesign"
-	};
-	delete config.edId;
+	record : Ext.data.Record.create([{
+		name : "id",
+		type : "int"
+	}, {
+		name : "name",
+		type : "string"
+	}, {
+		name : "description",
+		type : "string"
+	}, {
+		name : "category",
+		type : "string"
+	}, {
+		name : "categoryUri",
+		type : "string"
+	}]),
 
-	this.editable = config.editable;
+	categoryStyler : function(value, metadata, record, row, col, ds) {
+		return Gemma.GemmaGridPanel.formatTermWithStyle(value,
+				record.data.categoryUri);
+	},
 
-	this.nameField = new Ext.form.TextField({});
-	var nameEditor = new Ext.grid.GridEditor(this.nameField);
-
-	this.categoryCombo = new Gemma.MGEDCombo({
-		lazyRender : true,
-		termKey : "factor"
-	});
-	var categoryEditor = new Ext.grid.GridEditor(this.categoryCombo);
-	this.categoryCombo.on("select", function(combo, record, index) {
-		categoryEditor.completeEdit();
-	});
-
-	this.descriptionField = new Ext.form.TextField({});
-	var descriptionEditor = new Ext.grid.GridEditor(this.descriptionField);
-
-	/*
-	 * establish default config options...
-	 */
-	var superConfig = {};
-
-	superConfig.ds = new Ext.data.Store({
-		proxy : new Ext.data.DWRProxy(ExperimentalDesignController.getExperimentalFactors),
-		reader : new Ext.data.ListRangeReader({
-			id : "id"
-		}, Gemma.ExperimentalFactorGrid.getRecord())
-	});
-	superConfig.ds.load({
-		params : [this.experimentalDesign]
-	});
-
-	var NAME_COLUMN = 0;
-	var CATEGORY_COLUMN = 1;
-	var DESCRIPTION_COLUMN = 2;
-	superConfig.cm = new Ext.grid.ColumnModel([{
+	columns : [{
 		header : "Name",
-		dataIndex : "name"
+		dataIndex : "name",
+		sortable : true
 	}, {
 		header : "Category",
 		dataIndex : "category",
-		renderer : Gemma.ExperimentalFactorGrid.getCategoryStyler()
+		renderer : this.categoryStyler,
+		sortable : true
+
 	}, {
 		header : "Description",
-		dataIndex : "description"
-	}]);
-	superConfig.cm.defaultSortable = true;
-	superConfig.autoExpandColumn = DESCRIPTION_COLUMN;
-	if (this.editable) {
-		superConfig.cm.setEditor(NAME_COLUMN, nameEditor);
-		superConfig.cm.setEditor(CATEGORY_COLUMN, categoryEditor);
-		superConfig.cm.setEditor(DESCRIPTION_COLUMN, descriptionEditor);
-	}
-
-	for (property in config) {
-		superConfig[property] = config[property];
-	}
-	Gemma.ExperimentalFactorGrid.superclass.constructor.call(this, superConfig);
-
-	/*
-	 * these functions have to happen after we've called the super-constructor
-	 * so that we know we're a Grid...
-	 */
-	this.getStore().on("load", function() {
-		this.autoSizeColumns();
-		this.doLayout();
-	}, this);
-
-	if (this.editable) {
-		this.on("afteredit", function(e) {
-			var col = this.getColumnModel().getColumnId(e.column);
-			if (col == CATEGORY_COLUMN) {
-				var f = this.categoryCombo.getTerm.bind(this.categoryCombo);
-				var term = f();
-				e.record.set("category", term.term);
-				e.record.set("categoryUri", term.uri);
-			}
-		});
-
-		var tbar = new Gemma.ExperimentalFactorToolbar({
-			grid : this,
-			renderTo : this.tbar
-		});
-	}
-};
-
-/*
- * static methods
- */
-Gemma.ExperimentalFactorGrid.getRecord = function() {
-	if (Gemma.ExperimentalFactorGrid.record === undefined) {
-		Gemma.ExperimentalFactorGrid.record = Ext.data.Record.create([{
-			name : "id",
-			type : "int"
-		}, {
-			name : "name",
-			type : "string"
-		}, {
-			name : "description",
-			type : "string"
-		}, {
-			name : "category",
-			type : "string"
-		}, {
-			name : "categoryUri",
-			type : "string"
-		}]);
-	}
-	return Gemma.ExperimentalFactorGrid.record;
-};
-
-Gemma.ExperimentalFactorGrid.getCategoryStyler = function() {
-	if (Gemma.ExperimentalFactorGrid.categoryStyler === undefined) {
-		/*
-		 * apply a CSS class depending on whether or not the characteristic has
-		 * a URI.
-		 */
-		Gemma.ExperimentalFactorGrid.categoryStyler = function(value, metadata,
-				record, row, col, ds) {
-			return Gemma.GemmaGridPanel.formatTermWithStyle(value,
-					record.data.categoryUri);
-		};
-	}
-	return Gemma.ExperimentalFactorGrid.categoryStyler;
-};
-
-/*
- * instance methods...
- */
-Ext.extend(Gemma.ExperimentalFactorGrid, Gemma.GemmaGridPanel, {
+		dataIndex : "description",
+		sortable : true
+	}],
 
 	initComponent : function() {
+
+		this.experimentalDesign = {
+			id : config.edId,
+			classDelegatingFor : "ExperimentalDesign"
+		};
+
+		this.nameField = new Ext.form.TextField({});
+		var nameEditor = new Ext.grid.GridEditor(this.nameField);
+
+		this.categoryCombo = new Gemma.MGEDCombo({
+			lazyRender : true,
+			termKey : "factor"
+		});
+		var categoryEditor = new Ext.grid.GridEditor(this.categoryCombo);
+		this.categoryCombo.on("select", function(combo, record, index) {
+			categoryEditor.completeEdit();
+		});
+
+		this.descriptionField = new Ext.form.TextField({});
+		var descriptionEditor = new Ext.grid.GridEditor(this.descriptionField);
+
+		this.store = new Ext.data.Store({
+			proxy : new Ext.data.DWRProxy(ExperimentalDesignController.getExperimentalFactors),
+			reader : new Ext.data.ListRangeReader({
+				id : "id"
+			}, Gemma.ExperimentalFactorGrid.getRecord())
+		});
+		this.store.load({
+			params : [this.experimentalDesign]
+		});
+
 		Gemma.ExperimentalFactorGrid.superclass.initComponent.call(this);
 
 		this.addEvents('experimentalfactorchange');
 	},
 
-	// refresh : function( ct, p ) {
-	// Gemma.ExperimentalFactorGrid.superclass.refresh.call( this, ct, p );
-	// if ( this.onRefresh ) {
-	// this.onRefresh();
-	// }
-	// },
+	onRender : function(c, l) {
+
+		Gemma.ExperimentalFactorGrid.superclass.onRender.call(this, c, l);
+
+		var NAME_COLUMN = 0;
+		var CATEGORY_COLUMN = 1;
+		var DESCRIPTION_COLUMN = 2;
+
+		this.autoExpandColumn = DESCRIPTION_COLUMN;
+
+		if (this.editable) {
+			this.getColumnModel().setEditor(NAME_COLUMN, nameEditor);
+			this.getColumnModel().setEditor(CATEGORY_COLUMN, categoryEditor);
+			this.getColumnModel().setEditor(DESCRIPTION_COLUMN,
+					descriptionEditor);
+		}
+
+		if (this.editable) {
+			this.on("afteredit", function(e) {
+				var col = this.getColumnModel().getColumnId(e.column);
+				if (col == CATEGORY_COLUMN) {
+					var f = this.categoryCombo.getTerm.bind(this.categoryCombo);
+					var term = f();
+					e.record.set("category", term.term);
+					e.record.set("categoryUri", term.uri);
+				}
+			});
+
+			var tbar = new Gemma.ExperimentalFactorToolbar({
+				grid : this,
+				renderTo : this.tbar
+			});
+		}
+
+	},
 
 	factorCreated : function(factor) {
 		this.refresh();

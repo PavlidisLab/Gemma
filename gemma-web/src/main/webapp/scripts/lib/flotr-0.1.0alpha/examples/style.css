@@ -1,0 +1,80 @@
+body{
+	font-family:Arial,Helvetica,sans-serif;
+	font-size: 12px;
+}
+
+#wrapper{
+	width: 700px;
+	margin: 50px auto;
+}
+
+a:link, a:visited{
+	color: #004892;
+	font-weight: bold;
+	text-decoration: none;
+}
+
+a:visited{
+	color: #1763b5;
+}
+
+a:focus, a:hover, a:active{
+	color: #3c85d4;
+	background-color: #b6d9ff;
+}
+
+h1, h2, h3 {
+	font-family:Georgia,"Times New Roman",Times,serif;
+	font-style:italic;
+	font-weight:normal;
+	letter-spacing:-1px;
+	font-size: 1.5em;
+	color: #050404;
+}
+
+h2{
+	font-size: 1.4em;
+}
+
+p{
+	margin: 10px;
+}
+
+code {
+	background: #b6d9ff;
+	font-size: 0.9em;
+	color: #004892;
+}
+
+pre{
+	border: 4px solid #B6D9FF;
+	background:#d2e8ff;
+	color: #004892;
+	padding: 15px;
+	margin:5px 0;
+}
+
+pre code{
+	background-color: transparent;
+	display:block;
+	line-height:16px;
+	overflow-x: auto;
+	overflow-y: hidden;
+	white-space:pre;
+	padding:0 5px;
+}
+
+#footer{
+	margin: 30px 0;
+	text-align:center;
+}
+
+iframe {
+	border:3px solid #B6D9FF;
+}
+
+.ad{
+	width: 740px;
+	margin: 10px auto;
+}
+

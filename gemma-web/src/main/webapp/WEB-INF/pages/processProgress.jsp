@@ -1,15 +1,9 @@
 <%@ include file="/common/taglibs.jsp"%>
 <%-- DEPRECATED, please use form-page-embedded ajaxified progress bar instead; see loadExpressionExperiment.js for some pointers. --%>
 
-<title><fmt:message key="processProgress.title" /></title>
-
-	<script type="text/javascript" src="<c:url value='/scripts/progressbar.js'/>"></script>
-	
-	<script type='text/javascript' src='/Gemma/dwr/interface/ProgressStatusService.js'> </script>
-	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
-	<script type='text/javascript' src='/Gemma/scripts/progressbar.js'></script>
-	<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/progressbar.css'/>" />
+<title><fmt:message key="processProgress.title" />
+</title>
+<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 
 <h1>
 	<fmt:message key="processProgress.title" />
@@ -24,9 +18,9 @@
 	 	p.startProgress(); });
 		</script>
 
-<input type = 'hidden' name='taskId' id='taskId' value= '${taskid }'/>
-<div id="messages" style="margin:10px;width:400px"></div>
-<div id="progress-area" style="padding:5px;"></div>
+<input type='hidden' name='taskId' id='taskId' value='${taskid }' />
+<div id="messages" style="margin: 10px; width: 400px"></div>
+<div id="progress-area" style="padding: 5px;"></div>
 
 
 

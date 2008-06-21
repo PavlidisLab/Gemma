@@ -1,0 +1,108 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+		<title>Flotr: Negative Values Example</title>
+		<link rel="stylesheet" href="style.css" type="text/css" />
+		<!--[if IE]><script type="text/javascript" src="../flotr/lib/excanvas.js"></script><![endif]-->
+		<script type="text/javascript" src="../flotr/lib/prototype-1.6.0.2.js"></script>
+		<script type="text/javascript" src="../flotr/flotr-0.1.0alpha.js"></script>
+		<style type="text/css">
+			.flotr-legend{
+				border: 2px solid #B6D9FF;
+			}			
+		</style>
+	</head>
+	<body>
+		<div id="wrapper">
+			<h1>Flotr: Negative Values Example</h1>
+			<div id="container" class="graph" style="width:600px;height:300px;"></div>
+			
+			<h2>Example</h2>
+			<p>This example shows a graph with negative values. There are three series, but the legend
+			shows only two. This is because I didn't supply a <code>label</code> property in the d1 series.
+			Read more about <a href="http://www.solutoire.com/flotr/docs/legend/" title="Configure And Style Flotr Legends">Flotr legends</a>.</p>
+			
+			<ul>
+				<li>The first series is just a line through y = 0.</li>
+				<li>The second series contains random data presented as a scatter plot.</li>
+				<li>The third series draws the regression line.</li>				
+			</ul>
+			<p>Finished? Go to the example <a href="index.html" title="Flotr Example Index Page">index page</a> or the <a href="http://www.solutoire.com/flotr/docs/" title="Flotr Documentation Pages">Flotr Documentation Pages</a>.</p>
+			<h2>The Code</h2>
+			<pre><code class="javascript">var f = Flotr.draw(
+	$('container'), [ 
+		{data:d0, shadowSize:0, color:'#545454'}, // => Horizontal line through y = 0
+		{data:d1, label:'y = x + (Math.random() * 8) - 15', points:{ show:true } },	// => Scatterplot
+		{data:d2, label:'y = '+alpha.toFixed(2)+' + ' + beta.toFixed(2) + '*x'}	// => Regression line																
+	],
+	{
+		legend:{position:'se',backgroundColor: '#D2E8FF'}
+	}
+);
+</code></pre>
+		<div id="footer">Copyright &copy; 2008 Bas Wenneker, <a href="http://www.solutoire.com">solutoire.com</a></div>
+		</div>
+		<script type="text/javascript">
+		/**
+		 * Wait till dom's finished loading.
+		 */
+		document.observe('dom:loaded', function(){
+			/**
+			 * Fill series d0, d1 and d2. 
+			 * 
+			 * The first series is just a line through y = 0.
+			 * The second series will contain random data presented as a scatter plot. 
+			 * The third series draws the regression line. 
+			 * 
+			 * Please don't be distracted by the math.
+			 */
+			var d0 = [];
+			var d1 = [];
+			var d2 = [];
+							
+			var n, x, y, sx = 0, sy = 0, sxy = 0, sxsq = 0;
+			for(n = 0; n < 20; n++){
+				x = n;
+				y = x + Math.random()*8 - 15;
+				d0.push([x, 0]);
+		        d1.push([x, y]);
+				
+				/**
+				 * Do some math, we need these later to compute the regression line.
+				 */
+				sx += x;
+				sy += y;
+				sxy += x*y;
+				sxsq += Math.pow(x,2);
+			}
+		
+			var xmean = sx/n;
+			var ymean = sy/n;
+			var beta = ((n*sxy) - (sx*sy))/((n*sxsq)-(Math.pow(sx,2)));
+			var alpha = ymean - (beta * xmean);
+			
+			/**
+			 * Compute the regression line.
+			 */
+			for(var i = 0; i < 20; i++){
+				d2.push([i, alpha + beta*i])
+			}			
+					    
+			/**
+			 * Draw the graph.
+			 */
+		    var f = Flotr.draw(
+				$('container'), [ 
+					{data:d0, shadowSize:0, color:'#545454'}, // => Horizontal line through y = 0
+					{data:d1, label:'y = x + (Math.random() * 8) - 15', points:{ show:true } },	// => Scatterplot
+					{data:d2, label:'y = '+alpha.toFixed(2)+' + ' + beta.toFixed(2) + '*x'}	// => Regression line																
+				],
+				{
+					legend:{position:'se',backgroundColor: '#D2E8FF'}
+				}
+			);				
+		});			
+		</script>
+	</body>
+</html>

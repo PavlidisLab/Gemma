@@ -1,0 +1,55 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+		<title>Flotr: Basic Bar Example</title>
+		<link rel="stylesheet" href="style.css" type="text/css" />
+		<!--[if IE]><script type="text/javascript" src="../flotr/lib/excanvas.js"></script><![endif]-->
+		<script type="text/javascript" src="../flotr/lib/prototype-1.6.0.2.js"></script>
+		<script type="text/javascript" src="../flotr/flotr-0.1.0alpha.js"></script>
+	</head>
+	<body>
+		<div id="wrapper">
+			<h1>Flotr: Basic Bar Example</h1>
+			<div id="container" style="width:600px;height:300px;"></div>
+			<h2>Example</h2>
+			<p>Random bar graph.</p>
+			<p><b>Note</b>: Opera 9.2x has problems with the fill area, this should be fixed in version 9.50.</p>
+			<p>Finished? Go to the example <a href="index.html" title="Flotr Example Index Page">index page</a> or the <a href="http://www.solutoire.com/flotr/docs/" title="Flotr Documentation Pages">Flotr Documentation Pages</a>.</p>
+			<h2>The Code</h2>
+			<pre><code class="javascript">Flotr.draw(
+	$('container'),
+	[d1, d2],
+	{bars: {show:true, barWidth:0.5}}
+);</code></pre>
+			<div id="footer">Copyright &copy; 2008 Bas Wenneker, <a href="http://www.solutoire.com">solutoire.com</a></div>
+		</div>
+		
+		
+		<script type="text/javascript">
+			/**
+			 * Wait till dom's finished loading.
+			 */
+			document.observe('dom:loaded', function(){
+				/**
+				 * Fill series d1 and d2 width random values.
+				 */
+				var d1 = [];
+				var d2 = [];				
+			    for(var i = 0; i < 4; i++ ){
+					d1.push([i,Math.ceil(Math.random()*10)]);
+					d2.push([i+0.5, Math.ceil(Math.random()*10)]);
+				}
+				
+				/**
+				 * Draw the graph in the first container.
+				 */
+				Flotr.draw(
+					$('container'),
+					[d1, d2],
+					{bars: {show:true, barWidth:0.5}}
+				);
+			});			
+		</script>
+	</body>
+</html>

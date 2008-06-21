@@ -5,18 +5,11 @@ $Id$
 --%>
 <head>
 	<%@ include file="/common/taglibs.jsp"%>
-	<title><fmt:message key="expressionExperiments.title" /></title>
+	<title><fmt:message key="expressionExperiments.title" />
+	</title>
 
-
-	<script type="text/javascript" src="<c:url value='/scripts/progressbar.js'/>"></script>
-	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentController.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/ProgressStatusService.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/TaskCompletionController.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
-	<script type="text/javascript" src="<c:url value='/scripts/ajax/expressionExperiment.js'/>" type="text/javascript"></script>
-	<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/progressbar.css'/>" />
+	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
+	<jwr:script src='/scripts/app/expressionExperiment.js' />
 
 </head>
 <h3>
@@ -38,8 +31,7 @@ $Id$
 <div id="taskId" style="display: none;"></div>
 <div id="progress-area" style="padding: 15px;"></div>
 
-<form
-	style="border-color: #444; border-style: solid; border-width: 1px; width: 450px; padding: 10px; background-color: #DDD"
+<form style="border-color: #444; border-style: solid; border-width: 1px; width: 450px; padding: 10px; background-color: #DDD"
 	name="ExpresssionExperimentFilter" action="filterExpressionExperiments.html" method="POST">
 	<span class="list">Enter search criteria for finding datasets</span>
 	<br>

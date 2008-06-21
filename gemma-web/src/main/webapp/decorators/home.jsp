@@ -11,21 +11,18 @@
 		<%@ include file="/common/meta.jsp"%>
 		<title><decorator:title /> | <fmt:message key="webapp.name" /></title>
 
-		<link href="<c:url value='/styles/ext-all.css'/>" media="screen" rel="stylesheet" type="text/css" />
-		<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/${appConfig["theme"]}/theme.css'/>" />
-		<link rel="stylesheet" type="text/css" media="print" href="<c:url value='/styles/${appConfig["theme"]}/print.css'/>" />
-		<!--[if gte IE 6]><link rel="stylesheet" type="text/css" media="screen" href="/styles/css/ie-standards.css" /><![endif]-->
-		<script type="text/javascript" src="<c:url value='/scripts/helptip.js'/>"></script>
-		<script type="text/javascript" src="<c:url value='/scripts/prototype.js'/>"></script>
-		<script type="text/javascript" src="<c:url value='/scripts/scriptaculous/scriptaculous.js'/>"></script>
-		<script type="text/javascript" src="<c:url value='/scripts/global.js'/>"></script>
-		<script type="text/javascript" src="<c:url value='/scripts/sprintf.js'/>"></script>
-
-		<script src="<c:url value='/scripts/ext/adapter/ext/ext-base.js'/>" type="text/javascript"></script>
-		<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
 		<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 
+		<script type='text/javascript' src='/Gemma/dwr/interface/GenePickerController.js'></script>
+		<script type='text/javascript' src='/Gemma/dwr/interface/ExtCoexpressionSearchController.js'></script>
+		<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentSetController.js'></script>
+		<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentController.js'></script>
+		<script type='text/javascript' src='/Gemma/dwr/interface/DifferentialExpressionSearchController.js'></script>
+
+		<jwr:style src="/bundles/gemma-all.css" />
+		<jwr:script src="/bundles/include.js" />
+		<jwr:script src="/bundles/gemma-lib.js" />
 
 		<decorator:head />
 	</head>

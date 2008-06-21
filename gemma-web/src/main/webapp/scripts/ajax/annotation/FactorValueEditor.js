@@ -13,15 +13,11 @@ Gemma.FactorValueGrid = function(config) {
 		id : config.edId,
 		classDelegatingFor : "ExperimentalDesign"
 	};
-	delete config.edId;
 	this.experimentalFactor = {
 		id : config.efId,
 		classDelegatingFor : "ExperimentalFactor"
 	};
-	delete config.efId;
-
 	this.form = config.form;
-	delete config.form;
 
 	this.editable = config.editable;
 
@@ -102,15 +98,6 @@ Gemma.FactorValueGrid = function(config) {
 		superConfig[property] = config[property];
 	}
 	Gemma.FactorValueGrid.superclass.constructor.call(this, superConfig);
-
-	/*
-	 * these functions have to happen after we've called the super-constructor
-	 * so that we know we're a Grid...
-	 */
-	this.getStore().on("load", function() {
-		this.autoSizeColumns();
-		this.doLayout();
-	}, this);
 
 	if (this.editable) {
 		this.on("afteredit", function(e) {
@@ -495,6 +482,7 @@ Gemma.FactorValueCharacteristicToolbar = function(config) {
 			var edited = thisToolbar.grid.getEditedRecords();
 			var seen = {}, fvids = [];
 			for (var i = 0; i < edited.length; ++i) {
+				// ??
 			}
 			var callback = function() {
 				thisToolbar.grid.factorValuesChanged.call(thisToolbar.grid,

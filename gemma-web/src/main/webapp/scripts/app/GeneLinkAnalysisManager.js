@@ -402,11 +402,6 @@ Gemma.GeneLinkAnalysisGrid = function(config) {
 		'loadAnalysis' : true
 	});
 
-	this.getStore().on("load", function() {
-		this.autoSizeColumns();
-		this.doLayout();
-	}, this);
-
 	if (!this.noInitialLoad) {
 		this.getStore().load({});
 	}

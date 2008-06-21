@@ -15,5 +15,4 @@
 <%@ taglib uri="/WEB-INF/Gemma.tld" prefix="Gemma"%>
 <%@ taglib uri="/WEB-INF/ajaxanywhere.tld" prefix="aa"%>
 <%@ taglib uri="http://www.representqueens.com/taglibs/spark" prefix="spark" %>
-
-
+<%@ taglib uri="http://jawr.net/tags" prefix="jwr" %>

@@ -13,7 +13,7 @@
 <c:set var="ctxPath" value="${pageContext.request.contextPath}"
 	scope="request" />
 	
-<meta name="author" content="Paul Pavlidis (paul@ubic.ca)" />
+<meta name="author" content="Gemma admin (gemma@ubic.ca)" />
 
 <meta name="robots" content="nofollow" />
 <meta name="msnbot" content="nofollow" />

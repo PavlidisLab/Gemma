@@ -3,21 +3,9 @@
 	class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand" />
 <head>
 
-	<script type="text/javascript" src="<c:url value='/scripts/progressbar.js'/>"></script>
-	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentLoadController.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/TaskCompletionController.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/ProgressStatusService.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
+	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
+	<jwr:script src='/scripts/app/loadExpressionExperiment.js' />
 
-	<%--
-Note: to get the command object updated with values from the form one has to update the loadExpressionExperiment.js file as it builds the command obj on the fly
-by getting the info it needs from the dom.  The initbinder method in the controller never gets called. 
- --%>
-	<script type="text/javascript" src="<c:url value='/scripts/app/loadExpressionExperiment.js'/>" type="text/javascript"></script>
-
-	<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/progressbar.css'/>" />
 </head>
 
 <title><fmt:message key="expressionExperimentLoad.title" />
@@ -58,8 +46,7 @@ by getting the info it needs from the dom.  The initbinder method in the control
 	<tr>
 		<th>
 			<Gemma:label key="expressionExperimentLoad.arrayExpress" />
-			<a class="helpLink" href="?"
-				onclick="showHelpTip(event, 'Check if data is to come from ArrayExpress.'); return false"><img
+			<a class="helpLink" href="?" onclick="showHelpTip(event, 'Check if data is to come from ArrayExpress.'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
 		</th>
 		<td align="left">

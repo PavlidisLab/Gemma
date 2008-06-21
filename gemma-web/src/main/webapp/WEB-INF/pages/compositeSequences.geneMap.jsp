@@ -1,33 +1,20 @@
 <%@ include file="/common/taglibs.jsp"%>
 <head>
-
-	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
-	<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/CompositeSequenceController.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/ArrayDesignController.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
-	<script type='text/javascript' src='/Gemma/scripts/ajax/util/PagingDataStore.js'></script>
-	<script type='text/javascript' src='/Gemma/scripts/ajax/util/PagingToolbar.js'></script>
-
-	<script type="text/javascript" src="<c:url value='/scripts/ajax/probe.grid.js'/>"></script>
-
-</head>
-
-<input type="hidden" name="cslist" id="cslist" value="${compositeSequenceIdList}" />
-
-<input type="hidden" name="arrayDesignId" id="arrayDesignId" value="${arrayDesign.id}" />
+	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
+	<jwr:script src='/scripts/app/probe.grid.js' />
 
 	<script type="text/javascript">
-	Ext.onReady(Gemma.ProbeBrowser.app.init(), Gemma.ProbeBrowser.app);
+	Ext.onReady(Gemma.ProbeBrowser.app.init, Gemma.ProbeBrowser.app);
 	</script>
+</head>
 
 
 <title><c:if test="${arrayDesign.id != null}">&nbsp; 
 		Probes for : ${arrayDesign.name} 
 	</c:if> <c:if test="${gene != null}">
 		Probes for : ${gene.officialSymbol}
-	</c:if></title>
+	</c:if>
+</title>
 
 
 <div id="toparea" style="height: 60px">
@@ -54,11 +41,11 @@
 		style="font-size: smaller; background-color: #EEEEEE; margin: 0 0 10px 0; padding: 5px; width: 600px; height: 150px">
 		<em>Details about individual probes can be shown here.</em>
 	</div>
-	<div id="probe-details" style="overflow: hidden; width: 590px">
+	<div id="probe-details">
 	</div>
 </div>
 
-<div id="probe-grid" style="overflow: hidden; width: 730px; height: 350px;"></div>
+<div id="probe-grid"></div>
 <c:if test="${arrayDesign.id != null}">
 	<div
 		style="font-size: smaller; border-width: thin; border-style: dotted; border-color: #CCCCCC; padding: 3px; margin-top: 13px; width: 100%">
@@ -73,4 +60,6 @@
 	</div>
 </c:if>
 
+<input type="hidden" name="cslist" id="cslist" value="${compositeSequenceIdList}" />
 
+<input type="hidden" name="arrayDesignId" id="arrayDesignId" value="${arrayDesign.id}" />

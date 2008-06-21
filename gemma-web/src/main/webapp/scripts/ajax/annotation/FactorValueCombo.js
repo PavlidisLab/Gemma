@@ -1,64 +1,49 @@
-/*
- * Gemma.FactorValueCombo constructor... config is a hash with the following
- * options: efId the id of the ExperimentalFactor whose FactorValues are
- * displayed in the combo
- */
-Gemma.FactorValueCombo = function(config) {
+Gemma.FactorValueCombo = Ext.extend(Ext.form.ComboBox, {
 
-	this.experimentalFactor = {
-		id : config.efId,
-		classDelegatingFor : "ExperimentalFactor"
-	};
-	delete config.efId;
+	displayField : "factorValueString",
+	valueField : "factorValueId",
+	editable : false,
+	mode : "local",
+	triggerAction : "all",
 
-	/*
-	 * establish default config options...
-	 */
-	var superConfig = {};
+	initComponent : function() {
 
-	var record = config.record || Gemma.FactorValueGrid.getRecord();
-	delete config.record;
-	superConfig.store = new Ext.data.Store({
-		proxy : new Ext.data.DWRProxy(ExperimentalDesignController.getFactorValues),
-		reader : new Ext.data.ListRangeReader({
-			id : "factorValueId"
-		}, record),
-		remoteSort : false,
-		sortInfo : {
-			field : "factorValueId"
-		}
-	});
-	if (this.experimentalFactor.id) {
-		superConfig.store.load({
-			params : [this.experimentalFactor]
+		var record = this.record || Gemma.FactorValueGrid.getRecord();
+
+		this.store = new Ext.data.Store({
+			proxy : new Ext.data.DWRProxy(ExperimentalDesignController.getFactorValues),
+			reader : new Ext.data.ListRangeReader({
+				id : "factorValueId"
+			}, record),
+			remoteSort : false,
+			sortInfo : {
+				field : "factorValueId"
+			}
 		});
-	}
 
-	superConfig.displayField = "factorValueString";
-	superConfig.valueField = "factorValueId";
-	superConfig.editable = false;
-	superConfig.mode = "local";
-	superConfig.triggerAction = "all";
+		Gemma.FactorValueCombo.superclass.initComponent.call(this);
 
-	for (property in config) {
-		superConfig[property] = config[property];
-	}
-	Gemma.FactorValueCombo.superclass.constructor.call(this, superConfig);
+		if (this.experimentalFactor) {
+			this.store.load({
+				params : [{
+					id : this.experimentalFactor.id,
+					classDelegatingFor : "ExperimentalFactor"
+				}]
+			});
+		}
 
-	this.on("select", function(combo, record, index) {
-		this.selectedValue = record.data;
-	});
-};
+		this.on("select", function(combo, record, index) {
+			this.selectedValue = record.data;
+		});
 
-/*
- * instance methods...
- */
-Ext.extend(Gemma.FactorValueCombo, Ext.form.ComboBox, {
+	},
 
 	setExperimentalFactor : function(efId, callback) {
-		this.experimentalFactor.id = efId;
 		var options = {
-			params : [this.experimentalFactor]
+			params : [{
+				id : efId,
+				classDelegatingFor : "ExperimentalFactor"
+			}]
 		};
 		if (callback) {
 			options.callback = callback;
@@ -69,5 +54,4 @@ Ext.extend(Gemma.FactorValueCombo, Ext.form.ComboBox, {
 	getFactorValue : function() {
 		return this.selectedValue;
 	}
-
 });

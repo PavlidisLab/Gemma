@@ -1,22 +1,10 @@
 <%@ include file="/common/taglibs.jsp"%>
-<jsp:useBean id="compositeSequence" scope="request"
-	class="ubic.gemma.model.expression.designElement.CompositeSequenceImpl" />
+<jsp:useBean id="compositeSequence" scope="request" class="ubic.gemma.model.expression.designElement.CompositeSequenceImpl" />
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <head>
-	<title><fmt:message key="compositeSequence.title" /></title>
-
-	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
-
-	<script type="text/javascript" src="<c:url value='/scripts/ext/data/ListRangeReader.js'/>"></script>
-
-	<script type='text/javascript' src='/Gemma/dwr/interface/CompositeSequenceController.js'></script>
-
-	<script type='text/javascript' src='/Gemma/dwr/interface/ArrayDesignController.js'></script>
-
-	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
-
-	<script type="text/javascript" src="<c:url value='/scripts/ajax/probe.grid.js'/>" type="text/javascript"></script>
+	<title><fmt:message key="compositeSequence.title" />
+	</title>
+	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 
 	<script type="text/javascript" type="text/javascript">
 	  	Ext.onReady(function() {

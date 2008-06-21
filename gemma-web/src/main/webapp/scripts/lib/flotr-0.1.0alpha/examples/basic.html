@@ -1,0 +1,45 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+		<title>Flotr: Basic Example</title>
+		<link rel="stylesheet" href="style.css" type="text/css" />
+		<!--[if IE]><script type="text/javascript" src="../flotr/lib/excanvas.js"></script><![endif]-->
+		<script type="text/javascript" src="../flotr/lib/prototype-1.6.0.2.js"></script>
+		<script type="text/javascript" src="../flotr/flotr-0.1.0alpha.js"></script>
+	</head>
+	<body>
+		<div id="wrapper">
+			<h1>Flotr: Basic Example</h1>
+			<div id="container" style="width:600px;height:300px;"></div>
+			<h2>Example</h2>
+			<p>This example shows the ease of using Flotr. With just one line of javascript you can
+			draw a nice looking graph.</p>
+			<p>Finished? Go to the example <a href="index.html" title="Flotr Example Index Page">index page</a> or the <a href="http://www.solutoire.com/flotr/docs/" title="Flotr Documentation Pages">Flotr Documentation Pages</a>.</p>
+			<h2>The Code</h2>
+			<pre><code class="javascript">var f = Flotr.draw($('container'), [ d1, d2 ]);</code></pre>
+			<div id="footer">Copyright &copy; 2008 Bas Wenneker, <a href="http://www.solutoire.com">solutoire.com</a></div>
+		</div>
+		
+		<script type="text/javascript">
+			/**
+			 * Wait till dom's finished loading.
+			 */
+			document.observe('dom:loaded', function(){
+				/**
+				 * Fill series d1 and d2.
+				 */
+				var d1 = [];
+			    for(var i = 0; i < 14; i += 0.5)
+			        d1.push([i, Math.sin(i)]);
+			
+			    var d2 = [[0, 3], [4, 8], [8, 5], [9, 13]];
+			    
+				/**
+				 * Draw the graph.
+				 */
+			    var f = Flotr.draw($('container'), [ d1, d2 ]);
+			});			
+		</script>
+	</body>
+</html>

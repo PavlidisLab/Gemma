@@ -3,20 +3,11 @@
 	class="ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentLoadCommand" />
 <head>
 
-	<script type='text/javascript' src='/Gemma/dwr/interface/SimpleExpressionExperimentLoadController.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/TaskCompletionController.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/FileUploadController.js'></script>
+	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
+	<jwr:script src='/scripts/app/expressionExperiment.js' />
 
-	<script type="text/javascript" src="<c:url value='/scripts/progressbar.js'/>"></script>
-	<script type="text/javascript" src="<c:url value='/scripts/ext/data/DwrProxy.js'/>"></script>
-	<script type="text/javascript" src="<c:url value='/scripts/ajax/fileUpload.js'/>"></script>
-	<script type='text/javascript' src='/Gemma/dwr/interface/ProgressStatusService.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
-	<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
-	
 	<script type="text/javascript" src="<c:url value='/scripts/app/simpleEELoad.js'/>"></script>
 
-	<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/progressbar.css'/>" />
 	<title>Load an expression data set from a flat file</title>
 </head>
 <body>

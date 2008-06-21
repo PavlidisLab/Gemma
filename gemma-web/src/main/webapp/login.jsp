@@ -1,14 +1,13 @@
 <%@ include file="/common/taglibs.jsp"%>
 <head>
-	<title><fmt:message key="login.title" />
-	</title>
+	<title><fmt:message key="login.title" /></title>
 	<content tag="heading">
 	<fmt:message key="login.heading" />
 	</content>
 	<meta name="menu" content="Login" />
-	<script src="<c:url value='/scripts/ext/adapter/ext/ext-base.js'/>" type="text/javascript"></script>
-	<script src="<c:url value='/scripts/ext/ext-all.js'/>" type="text/javascript"></script>
-	<script type='text/javascript' src='/Gemma/scripts/app/login.js'></script>
+
+	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
+	<jwr:script src='/scripts/app/login.js' />
 </head>
 <body id="login" />
 
