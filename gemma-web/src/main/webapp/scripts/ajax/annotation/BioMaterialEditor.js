@@ -366,10 +366,6 @@ Gemma.BioMaterialToolbar = Ext.extend(Ext.Toolbar, {
 			}
 		});
 
-		this.grid.on("afteredit", function(model) {
-			saveButton.enable();
-		});
-
 		var revertButton = new Ext.Toolbar.Button({
 			text : "revert",
 			tooltip : "Undo changes to selected biomaterials",
@@ -379,6 +375,12 @@ Gemma.BioMaterialToolbar = Ext.extend(Ext.Toolbar, {
 			}
 		});
 
+		// FIXME
+		this.grid.on("afteredit", function(model) {
+			saveButton.enable();
+		});
+
+		// FIXME
 		this.grid.getSelectionModel().on("selectionchange", function(model) {
 			var selected = model.getSelections();
 			revertButton.disable();
@@ -411,7 +413,8 @@ Gemma.BioMaterialToolbar = Ext.extend(Ext.Toolbar, {
 		if (this.editable) {
 			this.factorCombo = new Gemma.ExperimentalFactorCombo({
 				emptyText : "select a factor",
-				edId : this.grid.edId
+				edId : this.edId
+					// fixme
 			});
 			var factorCombo = this.factorCombo;
 			factorCombo.on("select", function(combo, record, index) {
@@ -423,42 +426,43 @@ Gemma.BioMaterialToolbar = Ext.extend(Ext.Toolbar, {
 				emptyText : "select a factor value",
 				disabled : true
 			});
-			var factorValueCombo = this.factorValueCombo;
-			factorValueCombo.on("select", function(combo, record, index) {
+			// fixme
+			this.factorValueCombo.on("select", function(combo, record, index) {
 				this.grid.getSelectionModel().on("selectionchange",
-						enableApplyOnSelect);
-				enableApplyOnSelect(this.grid.getSelectionModel());
+						this.enableApplyOnSelect); // add args
+				this.enableApplyOnSelect(this.getSelectionModel());
 			});
 
-			var applyButton = new Ext.Toolbar.Button({
+			this.applyButton = new Ext.Toolbar.Button({
 				text : "apply",
 				tooltip : "Apply this value to selected biomaterials",
 				disabled : true,
 				handler : function() {
 					var factor = "factor" + factorCombo.getValue();
-					var factorValue = "fv" + factorValueCombo.getValue();
+					var factorValue = "fv" + this.factorValueCombo.getValue();
 					this.fireEvent("apply", factor, factorValue)
 					saveButton.enable();
 				}
 			});
 
-			var enableApplyOnSelect = function(model) {
-				var selected = model.getSelections();
-				if (selected.length > 0) {
-					applyButton.enable();
-				} else {
-					applyButton.disable();
-				}
-			};
+		
 
 			var secondToolbar = new Ext.Toolbar(this.getEl().createChild());
 			secondToolbar.addText("Bulk changes:");
 			secondToolbar.addSpacer();
-			secondToolbar.addField(factorCombo);
+			secondToolbar.add(factorCombo);
 			secondToolbar.addSpacer();
-			secondToolbar.addField(factorValueCombo);
+			secondToolbar.dd(this.factorValueCombo);
 			secondToolbar.addSpacer();
-			secondToolbar.addField(applyButton);
+			secondToolbar.add(applyButton);
 		}
-	}
+	},
+		 enableApplyOnSelect : function(model) {
+				var selected = model.getSelections();
+				if (selected.length > 0) {
+					this.applyButton.enable();
+				} else {
+					this.applyButton.disable();
+				}
+			};
 });

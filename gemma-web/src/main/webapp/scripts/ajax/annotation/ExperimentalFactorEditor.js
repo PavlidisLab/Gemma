@@ -101,11 +101,11 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 			this.getTopToolbar().on("create", function(newFactorValue) {
 				var callback = function() {
-					this.factorCreated(created);
+					this.factorCreated(newFactorValue);
 				}.createDelegate(this);
 				ExperimentalDesignController.createExperimentalFactor(
 						this.experimentalDesign, newFactorValue, callback);
-			});
+			}.createDelegate(this));
 
 			this.getTopToolbar().on("delete", function() {
 				var selected = this.getSelectedIds();
@@ -216,7 +216,7 @@ Gemma.ExperimentalFactorToolbar =Ext.extend( Ext.Toolbar, {
 		});
 		this.categoryCombo.on("select", function() {
 			this.createButton.enable();
-		});
+		}, this);
 		this.descriptionField = new Ext.form.TextField({
 			emptyText : "Type a description"
 		});

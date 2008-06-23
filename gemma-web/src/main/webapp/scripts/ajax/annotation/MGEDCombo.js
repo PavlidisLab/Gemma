@@ -2,6 +2,8 @@ Ext.namespace("Gemma");
 
 /**
  * 
+ * @class Gemma.MGEDCombo
+ * @extends Ext.form.ComboBox
  */
 Gemma.MGEDCombo = Ext.extend(Ext.form.ComboBox, {
 
@@ -10,6 +12,7 @@ Gemma.MGEDCombo = Ext.extend(Ext.form.ComboBox, {
 	selectOnFocus : true,
 	triggerAction : 'all',
 	typeAhead : true,
+	displayField : 'term',
 
 	record : Ext.data.Record.create([{
 		name : "id",
@@ -19,6 +22,9 @@ Gemma.MGEDCombo = Ext.extend(Ext.form.ComboBox, {
 		type : "string"
 	}, {
 		name : "term",
+		type : "string"
+	}, {
+		name : "comment",
 		type : "string"
 	}]),
 
@@ -47,6 +53,9 @@ Gemma.MGEDCombo = Ext.extend(Ext.form.ComboBox, {
 		});
 
 		Gemma.MGEDCombo.superclass.initComponent.call(this);
+
+		this.tpl = new Ext.XTemplate('<tpl for="."><div ext:qtip="{comment}<br/>{uri}" class="x-combo-list-item">{term}</div></tpl>');
+		this.tpl.compile();
 
 		this.on("select", function(combo, record, index) {
 			this.selectedTerm = record.data;

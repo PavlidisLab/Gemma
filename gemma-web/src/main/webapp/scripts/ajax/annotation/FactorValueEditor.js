@@ -186,16 +186,13 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 						break;
 					}
 				}
-			}, this.getTopToolbar());
 
-			this.getSelectionModel().on("selectionchange", function(model) {
-				var selected = model.getSelections();
 				if (selected.length > 0) {
 					this.deleteButton.enable();
 				} else {
 					this.deleteButton.disable();
 				}
-			}, this.getTopToolbar());
+			});
 
 			this.on("afteredit", function(model) {
 				this.saveButton.enable();
@@ -204,6 +201,9 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			this.getTopToolbar().on("save", function() {
 			});
 
+			/*
+			 * Create a new factorvalue
+			 */
 			this.getTopToolbar().on("create", function() {
 				var ef = this.experimentalFactor;
 				var callback = function() {
@@ -213,8 +213,11 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				};
 				ExperimentalDesignController.createFactorValue(
 						this.experimentalFactor, callback);
-			});
+			}.createDelegate(this));
 
+			/*
+			 * delete a factor value
+			 */
 			this.getTopToolbar().on("delete", function() {
 				var selected = this.getSelectedFactorValues();
 				var ef = this.experimentalFactor;
@@ -223,10 +226,10 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				};
 				ExperimentalDesignController.deleteFactorValues(ef, selected,
 						callback);
-			});
+			}.createDelegate(this));
 
-			this.getTopToolbar()
-					.on("toggleAll", this.getView().toggleAllGroups);
+			this.getTopToolbar().on("toggleExpand",
+					this.getView().toggleAllGroups.createDelegate(this));
 
 			var ct = this.getTopToolbar().characteristicToolbar;
 			if (ct) {
@@ -358,7 +361,8 @@ Gemma.FactorValueToolbar = Ext.extend(Ext.Toolbar, {
 			disabled : true,
 			handler : function() {
 				this.fireEvent("create");
-			}
+			},
+			scope : this
 		});
 
 		this.deleteFactorValueButton = new Ext.Toolbar.Button({
@@ -394,7 +398,10 @@ Gemma.FactorValueToolbar = Ext.extend(Ext.Toolbar, {
 		this.addButton(this.refreshButton);
 
 		if (this.editable) {
-			this.characteristicToolbar = new Gemma.FactorValueCharacteristicToolbar({});
+			this.characteristicToolbar = new Gemma.FactorValueCharacteristicToolbar({
+				renderTo : this.getEl().createChild()
+			});
+			this.add(this.characteristicToolbar);
 		}
 	},
 
@@ -404,24 +411,29 @@ Gemma.FactorValueToolbar = Ext.extend(Ext.Toolbar, {
 
 });
 
-/*
- * instance methods...
+/**
+ * 
+ * @class Gemma.FactorValueCharacteristicToolbar
+ * @extends Ext.Toolbar
  */
 Gemma.FactorValueCharacteristicToolbar = Ext.extend(Ext.Toolbar, {
-
-	factorValue : {
-		id : -1,
-		classDelegatingFor : "FactorValue"
-	},
-
-	experimentalFactor : {
-		id : -1,
-		classDelegatingFor : "ExperimentalFactor"
-	},
 
 	initComponent : function() {
 		Gemma.FactorValueCharacteristicToolbar.superclass.initComponent
 				.call(this);
+
+		Ext.apply(this, {
+			factorValue : {
+				id : -1,
+				classDelegatingFor : "FactorValue"
+			},
+
+			experimentalFactor : {
+				id : -1,
+				classDelegatingFor : "ExperimentalFactor"
+			}
+		});
+
 		this.addEvents("save", "create", "delete", "undo");
 	},
 
@@ -432,21 +444,23 @@ Gemma.FactorValueCharacteristicToolbar = Ext.extend(Ext.Toolbar, {
 		this.factorValueCombo = new Gemma.FactorValueCombo({
 			disabled : this.experimentalFactor.id ? false : true
 		});
+
 		this.factorValueCombo.on("select", function(combo, record, index) {
-			this.factorValue.id = record.data.factorValueId;
+			this.factorValue.id = record.get("factorValueId");
 			mgedCombo.enable();
-		});
+		}.createDelegate(this));
 
 		var mgedCombo = new Gemma.MGEDCombo({
 			disabled : true,
 			emptyText : "Select a class",
 			termKey : "factorvalue"
 		});
+
 		mgedCombo.on("select", function(combo, record, index) {
 			charCombo.setCategory(record.get("term"), record.get("uri"));
 			charCombo.enable();
 			this.createButton.enable();
-		});
+		}.createDelegate(this));
 
 		var charCombo = new Gemma.CharacteristicCombo({
 			disabled : true
@@ -462,7 +476,8 @@ Gemma.FactorValueCharacteristicToolbar = Ext.extend(Ext.Toolbar, {
 				// removed in response to bug 1016 mgedCombo.reset();
 				charCombo.reset();
 				this.fireEvent("create", this.factorValue, c);
-			}
+			},
+			scope : this
 		});
 
 		this.deleteButton = new Ext.Toolbar.Button({
@@ -498,7 +513,7 @@ Gemma.FactorValueCharacteristicToolbar = Ext.extend(Ext.Toolbar, {
 		this.addText("Add a characteristic to:");
 		this.add(this.factorValueCombo);
 		this.addSpacer();
-		this.addEventListener(mgedCombo);
+		this.add(mgedCombo);
 		this.addSpacer();
 		this.add(charCombo);
 		this.addSpacer();
