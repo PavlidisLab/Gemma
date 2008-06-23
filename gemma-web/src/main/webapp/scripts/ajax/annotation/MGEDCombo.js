@@ -48,12 +48,12 @@ Gemma.MGEDCombo = Ext.extend(Ext.form.ComboBox, {
 
 		Gemma.MGEDCombo.superclass.initComponent.call(this);
 
-		this.store.load({
-			params : this.dwrParams
-		});
-
 		this.on("select", function(combo, record, index) {
 			this.selectedTerm = record.data;
+		});
+
+		this.store.load({
+			params : this.dwrParams
 		});
 	}
 });

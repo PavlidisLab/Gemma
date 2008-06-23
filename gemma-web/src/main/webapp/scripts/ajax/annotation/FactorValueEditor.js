@@ -9,112 +9,6 @@ Ext.namespace('Gemma');
  */
 Gemma.FactorValueGrid = function(config) {
 
-	this.experimentalDesign = {
-		id : config.edId,
-		classDelegatingFor : "ExperimentalDesign"
-	};
-	this.experimentalFactor = {
-		id : config.efId,
-		classDelegatingFor : "ExperimentalFactor"
-	};
-	this.form = config.form;
-
-	this.editable = config.editable;
-
-	this.categoryCombo = new Gemma.MGEDCombo({
-		lazyRender : true,
-		termKey : "factorvalue"
-	});
-	var categoryEditor = new Ext.grid.GridEditor(this.categoryCombo);
-	this.categoryCombo.on("select", function(combo, record, index) {
-		categoryEditor.completeEdit();
-	});
-
-	this.valueCombo = new Gemma.CharacteristicCombo({
-		lazyRender : true
-	});
-	var valueEditor = new Ext.grid.GridEditor(this.valueCombo);
-	this.valueCombo.on("select", function(combo, record, index) {
-		valueEditor.completeEdit();
-	});
-
-	/*
-	 * establish default config options...
-	 */
-	var superConfig = {};
-
-	superConfig.ds = new Ext.data.GroupingStore({
-		proxy : new Ext.data.DWRProxy(ExperimentalDesignController.getFactorValuesWithCharacteristics),
-		reader : new Ext.data.ListRangeReader({
-			id : "charId"
-		}, Gemma.FactorValueGrid.getRecord()),
-		groupField : "factorValueId",
-		sortInfo : {
-			field : "category",
-			direction : "ASC"
-		}
-	});
-	if (this.experimentalFactor.id) {
-		superConfig.ds.load({
-			params : [this.experimentalFactor]
-		});
-	}
-	var groupTextTpl = this.editable
-			? '<input type="checkbox" name="selectedFactorValues" value="{[ values.rs[0].data.factorValueId ]}" /> '
-			: '';
-	groupTextTpl = groupTextTpl + '{[ values.rs[0].data.factorValueString ]}';
-	superConfig.view = new Ext.grid.GroupingView({
-		enableGroupingMenu : false,
-		enableNoGroups : false,
-		groupTextTpl : groupTextTpl,
-		hideGroupedColumn : true,
-		showGroupName : true,
-		startCollapsed : true
-	});
-
-	var FACTOR_VALUE_COLUMN = 0;
-	var CATEGORY_COLUMN = 1;
-	var VALUE_COLUMN = 2;
-	superConfig.cm = new Ext.grid.ColumnModel([{
-		header : "FactorValue",
-		dataIndex : "factorValueId"
-	}, {
-		header : "Category",
-		dataIndex : "category",
-		renderer : Gemma.FactorValueGrid.getCategoryStyler()
-	}, {
-		header : "Value",
-		dataIndex : "value",
-		renderer : Gemma.FactorValueGrid.getValueStyler()
-	}]);
-	superConfig.cm.defaultSortable = true;
-	superConfig.autoExpandColumn = VALUE_COLUMN;
-	if (this.editable) {
-		superConfig.cm.setEditor(CATEGORY_COLUMN, categoryEditor);
-		superConfig.cm.setEditor(VALUE_COLUMN, valueEditor);
-	}
-
-	for (property in config) {
-		superConfig[property] = config[property];
-	}
-	Gemma.FactorValueGrid.superclass.constructor.call(this, superConfig);
-
-	if (this.editable) {
-		this.on("afteredit", function(e) {
-			var col = this.getColumnModel().getColumnId(e.column);
-			if (col == CATEGORY_COLUMN) {
-				var term = this.categoryCombo.getTerm.call(this.categoryCombo);
-				e.record.set("category", term.term);
-				e.record.set("categoryUri", term.uri);
-			} else if (col == VALUE_COLUMN) {
-				var c = this.valueCombo.getCharacteristic.call(this.valueCombo);
-				e.record.set("value", c.value);
-				e.record.set("valueUri", c.valueUri);
-			}
-			this.getView().refresh();
-		});
-	}
-
 	this.factorValueToolbar = new Gemma.FactorValueToolbar({
 		grid : this,
 		renderTo : this.tbar
@@ -122,100 +16,270 @@ Gemma.FactorValueGrid = function(config) {
 };
 
 /*
- * static methods
- */
-Gemma.FactorValueGrid.getRecord = function() {
-	if (Gemma.FactorValueGrid.record === undefined) {
-		Gemma.FactorValueGrid.record = Ext.data.Record.create([{
-			name : "charId",
-			type : "int"
-		}, {
-			name : "factorValueId",
-			type : "int"
-		}, {
-			name : "category",
-			type : "string"
-		}, {
-			name : "categoryUri",
-			type : "string"
-		}, {
-			name : "value",
-			type : "string"
-		}, {
-			name : "measurement",
-			type : "bool"
-		}, {
-			name : "valueUri",
-			type : "string"
-		}, {
-			name : "factorValueString",
-			type : "string"
-		}]);
-	}
-	return Gemma.FactorValueGrid.record;
-};
-
-Gemma.FactorValueGrid.getCategoryStyler = function() {
-	if (Gemma.FactorValueGrid.categoryStyler === undefined) {
-		/*
-		 * apply a CSS class depending on whether or not the characteristic has
-		 * a URI.
-		 */
-		Gemma.FactorValueGrid.categoryStyler = function(value, metadata,
-				record, row, col, ds) {
-			return Gemma.GemmaGridPanel.formatTermWithStyle(value,
-					record.data.categoryUri);
-		};
-	}
-	return Gemma.FactorValueGrid.categoryStyler;
-};
-
-Gemma.FactorValueGrid.getValueStyler = function() {
-	if (Gemma.FactorValueGrid.valueStyler === undefined) {
-		/*
-		 * apply a CSS class depending on whether or not the characteristic has
-		 * a URI.
-		 */
-		Gemma.FactorValueGrid.valueStyler = function(value, metadata, record,
-				row, col, ds) {
-			return Gemma.GemmaGridPanel.formatTermWithStyle(value,
-					record.data.valueUri);
-		};
-	}
-	return Gemma.FactorValueGrid.valueStyler;
-};
-
-Gemma.FactorValueGrid.flattenCharacteristics = function(chars) {
-	var s = "";
-	for (var i = 0; i < chars.length; ++i) {
-		var c = chars[i].data;
-		var category = c.category.length > 0
-				? c.category
-				: "&lt;no category&gt;";
-		var value = c.value.length > 0 ? c.value : "&lt;no value&gt;";
-		s = s + String.format("{0}: {1}", category, value);
-		if (i + 1 < chars.length) {
-			s = s + ", ";
-		}
-	}
-	return s;
-};
-
-/*
  * instance methods...
  */
-Ext.extend(Gemma.FactorValueGrid, Gemma.GemmaGridPanel, {
+Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
+	record : Ext.data.Record.create([{
+		name : "charId",
+		type : "int"
+	}, {
+		name : "factorValueId",
+		type : "int"
+	}, {
+		name : "category",
+		type : "string"
+	}, {
+		name : "categoryUri",
+		type : "string"
+	}, {
+		name : "value",
+		type : "string"
+	}, {
+		name : "measurement",
+		type : "bool"
+	}, {
+		name : "valueUri",
+		type : "string"
+	}, {
+		name : "factorValueString",
+		type : "string"
+	}]),
+	categoryStyler : function(value, metadata, record, row, col, ds) {
+		return Gemma.GemmaGridPanel.formatTermWithStyle(value,
+				record.data.categoryUri);
+	},
+	valueStyler : function(value, metadata, record, row, col, ds) {
+		return Gemma.GemmaGridPanel.formatTermWithStyle(value,
+				record.data.valueUri);
+	},
+	flattenCharacteristics : function(chars) {
+		var s = "";
+		for (var i = 0; i < chars.length; ++i) {
+			var c = chars[i].data;
+			var category = c.category.length > 0
+					? c.category
+					: "&lt;no category&gt;";
+			var value = c.value.length > 0 ? c.value : "&lt;no value&gt;";
+			s = s + String.format("{0}: {1}", category, value);
+			if (i + 1 < chars.length) {
+				s = s + ", ";
+			}
+		}
+		return s;
+	},
 	initComponent : function() {
+
+		this.columns = [{
+			header : "FactorValue",
+			dataIndex : "factorValueId"
+		}, {
+			header : "Category",
+			dataIndex : "category",
+			renderer : this.categoryStyler
+		}, {
+			header : "Value",
+			dataIndex : "value",
+			renderer : this.valueStyler
+		}];
+
+		this.experimentalDesign = {
+			id : this.edId,
+			classDelegatingFor : "ExperimentalDesign"
+		};
+		this.experimentalFactor = {
+			id : this.efId,
+			classDelegatingFor : "ExperimentalFactor"
+		};
+
+		this.categoryCombo = new Gemma.MGEDCombo({
+			lazyRender : true,
+			termKey : "factorvalue"
+		});
+		var categoryEditor = new Ext.grid.GridEditor(this.categoryCombo);
+		this.categoryCombo.on("select", function(combo, record, index) {
+			categoryEditor.completeEdit();
+		});
+
+		this.valueCombo = new Gemma.CharacteristicCombo({
+			lazyRender : true
+		});
+		var valueEditor = new Ext.grid.GridEditor(this.valueCombo);
+		this.valueCombo.on("select", function(combo, record, index) {
+			valueEditor.completeEdit();
+		});
+
+		this.store = new Ext.data.GroupingStore({
+			proxy : new Ext.data.DWRProxy(ExperimentalDesignController.getFactorValuesWithCharacteristics),
+			reader : new Ext.data.ListRangeReader({
+				id : "charId"
+			}, this.record),
+			groupField : "factorValueId",
+			sortInfo : {
+				field : "category",
+				direction : "ASC"
+			}
+		});
+
+		var groupTextTpl = this.editable
+				? '<input type="checkbox" name="selectedFactorValues" value="{[ values.rs[0].data.factorValueId ]}" /> '
+				: '';
+		groupTextTpl = groupTextTpl
+				+ '{[ values.rs[0].data.factorValueString ]}';
+
+		this.view = new Ext.grid.GroupingView({
+			enableGroupingMenu : false,
+			enableNoGroups : false,
+			groupTextTpl : groupTextTpl,
+			hideGroupedColumn : true,
+			showGroupName : true,
+			startCollapsed : true
+		});
+
+		this.tbar = new Gemma.FactorValueToolbar({
+			editable : this.editable,
+			experimentalDesign : this.experimentalDesign
+		});
+
+		var FACTOR_VALUE_COLUMN = 0;
+		var CATEGORY_COLUMN = 1;
+		var VALUE_COLUMN = 2;
+		this.autoExpandColumn = VALUE_COLUMN;
+
+		// ///////////////////////////////////////
 		Gemma.FactorValueGrid.superclass.initComponent.call(this);
 
 		this.addEvents('factorvaluecreate', 'factorvaluechange',
 				'factorvaluedelete');
+
+		this.getTopToolbar().on("select", function(id) {
+			this.setExperimentalFactor(id);
+		}.createDelegate(this), this);
+
+		if (this.editable) {
+
+			this.getColumnModel().setEditor(CATEGORY_COLUMN, categoryEditor);
+			this.getColumnModel().setEditor(VALUE_COLUMN, valueEditor);
+
+			this.on("afteredit", function(e) {
+				var col = this.getColumnModel().getColumnId(e.column);
+				if (col == CATEGORY_COLUMN) {
+					var term = this.categoryCombo.getTerm
+							.call(this.categoryCombo);
+					e.record.set("category", term.term);
+					e.record.set("categoryUri", term.uri);
+				} else if (col == VALUE_COLUMN) {
+					var c = this.valueCombo.getCharacteristic
+							.call(this.valueCombo);
+					e.record.set("value", c.value);
+					e.record.set("valueUri", c.valueUri);
+				}
+				this.getView().refresh();
+			});
+
+			this.getSelectionModel().on("selectionchange", function(model) {
+				var selected = model.getSelections();
+				this.revertButton.disable();
+				for (var i = 0; i < selected.length; ++i) {
+					if (selected[i].dirty) {
+						this.revertButton.enable();
+						break;
+					}
+				}
+			}, this.getTopToolbar());
+
+			this.getSelectionModel().on("selectionchange", function(model) {
+				var selected = model.getSelections();
+				if (selected.length > 0) {
+					this.deleteButton.enable();
+				} else {
+					this.deleteButton.disable();
+				}
+			}, this.getTopToolbar());
+
+			this.on("afteredit", function(model) {
+				this.saveButton.enable();
+			}, this.getTopToolbar());
+
+			this.getTopToolbar().on("save", function() {
+			});
+
+			this.getTopToolbar().on("create", function() {
+				var ef = this.experimentalFactor;
+				var callback = function() {
+					this.factorValueCreated.call(this, ef);
+					this.getTopToolbar().characteristicToolbar
+							.setExperimentalFactor(ef.id);
+				};
+				ExperimentalDesignController.createFactorValue(
+						this.experimentalFactor, callback);
+			});
+
+			this.getTopToolbar().on("delete", function() {
+				var selected = this.getSelectedFactorValues();
+				var ef = this.experimentalFactor;
+				var callback = function() {
+					this.factorValuesDeleted.call(this, selected);
+				};
+				ExperimentalDesignController.deleteFactorValues(ef, selected,
+						callback);
+			});
+
+			this.getTopToolbar()
+					.on("toggleAll", this.getView().toggleAllGroups);
+
+			var ct = this.getTopToolbar().characteristicToolbar;
+			if (ct) {
+				ct.on("save", function() {
+					var edited = this.getEditedRecords();
+					var seen = {}, fvids = [];
+					for (var i = 0; i < edited.length; ++i) {
+						// ??
+					}
+					var callback = function() {
+						this.factorValuesChanged.call(this, edited);
+					};
+					ExperimentalDesignController
+							.updateFactorValueCharacteristics(edited, callback);
+				});
+				ct.on("create", function(f, c) {
+					var callback = function() {
+						this.factorValueCombo.store.reload();
+
+						this.factorValuesChanged.call(this, []);
+							// TODO do something to reset the text of the
+							// selected
+							// item,
+							// in case it changed...
+					};
+					ExperimentalDesignController
+							.createFactorValueCharacteristic(f, c, callback);
+				});
+
+				ct.on("undo", this.revertSelected);
+
+				ct.on("delete", function() {
+					var selected = this.getSelectedRecords();
+					var callback = function() {
+						this.factorValuesChanged.call(this, selected);
+					};
+					ExperimentalDesignController
+							.deleteFactorValueCharacteristics(selected,
+									callback);
+				});
+			}
+		}
+
+		if (this.experimentalFactor.id) {
+			this.store.load({
+				params : [this.experimentalFactor]
+			});
+		}
 	},
 
-	// refresh : function( ct, p ) {
-	// Gemma.FactorValueGrid.superclass.refresh.call( this, ct, p );
-	// if ( this.onRefresh ) {
+	// refresh : function(ct, p) {
+	// Gemma.FactorValueGrid.superclass.refresh.call(this, ct, p);
+	// if (this.onRefresh) {
 	// this.onRefresh();
 	// }
 	// },
@@ -266,102 +330,73 @@ Ext.extend(Gemma.FactorValueGrid, Gemma.GemmaGridPanel, {
  * Gemma.FactorValueToolbar constructor... config is a hash with the following
  * options: grid is the grid that contains the factor values.
  */
-Gemma.FactorValueToolbar = function(config) {
+Gemma.FactorValueToolbar = Ext.extend(Ext.Toolbar, {
+	initComponent : function() {
+		Gemma.FactorValueToolbar.superclass.initComponent.call(this);
+		this.addEvents("select", "create", "delete", "toggleAll");
+	},
 
-	this.grid = config.grid;
-	delete config.grid;
-	this.experimentalDesign = this.grid.experimentalDesign;
-	this.editable = this.grid.editable;
+	onRender : function(c, p) {
 
-	/*
-	 * establish default config options...
-	 */
-	var superConfig = {};
+		Gemma.FactorValueToolbar.superclass.onRender.call(this, c, p);
 
-	/*
-	 * add our items in front of anything specified in the config above...
-	 */
-	this.factorCombo = new Gemma.ExperimentalFactorCombo({
-		edId : this.experimentalDesign.id
-	});
-	var factorCombo = this.factorCombo;
-	factorCombo.on("select", function(combo, record, index) {
-		this.grid.setExperimentalFactor(record.id);
-		createFactorValueButton.enable();
-		if (this.characteristicToolbar) {
-			this.characteristicToolbar.setExperimentalFactor(record.id);
+		this.factorCombo = new Gemma.ExperimentalFactorCombo({
+			edId : this.experimentalDesign.id
+		});
+
+		this.factorCombo.on("select", function(combo, record, index) {
+			this.fireEvent("select", record.id);
+			this.createFactorValueButton.enable();
+			if (this.characteristicToolbar) {
+				this.characteristicToolbar.setExperimentalFactor(record.id);
+			}
+		}, this);
+
+		this.createFactorValueButton = new Ext.Toolbar.Button({
+			text : "create",
+			tooltip : "Create a new factor value",
+			disabled : true,
+			handler : function() {
+				this.fireEvent("create");
+			}
+		});
+
+		this.deleteFactorValueButton = new Ext.Toolbar.Button({
+			text : "delete",
+			tooltip : "Delete selected factor values",
+			disabled : false,
+			handler : function() {
+				this.fireEvent("delete");
+			}
+		});
+
+		this.addText("Show Factor Values for:");
+		this.addSpacer();
+		this.add(this.factorCombo);
+
+		if (this.editable) {
+			this.addSpacer();
+			this.addButton(this.createFactorValueButton);
+			this.addSeparator();
+			this.addButton(this.deleteFactorValueButton);
 		}
-	});
 
-	var createFactorValueButton = new Ext.Toolbar.Button({
-		text : "create",
-		tooltip : "Create a new factor value",
-		disabled : true,
-		handler : function() {
-			var ef = this.grid.experimentalFactor;
-			var callback = function() {
-				this.grid.factorValueCreated.call(this.grid, ef);
-				this.characteristicToolbar.setExperimentalFactor(ef.id);
-			};
-			ExperimentalDesignController.createFactorValue(
-					this.grid.experimentalFactor, callback);
-		}
-	});
-
-	var deleteFactorValueButton = new Ext.Toolbar.Button({
-		text : "delete",
-		tooltip : "Delete selected factor values",
-		disabled : false,
-		handler : function() {
-			var ef = this.grid.experimentalFactor;
-			var selected = this.grid.getSelectedFactorValues();
-			var callback = function() {
-				this.grid.factorValuesDeleted.call(this.grid,
-						selected);
-			};
-			ExperimentalDesignController.deleteFactorValues(ef, selected,
-					callback);
-		}
-	});
-
-	var items = [new Ext.Toolbar.TextItem("Show Factor Values for:"),
-			new Ext.Toolbar.Spacer(), factorCombo];
-	if (this.editable) {
-		items.push(new Ext.Toolbar.Spacer(), createFactorValueButton,
-				new Ext.Toolbar.Separator(), deleteFactorValueButton);
-	}
-
-	if (this.grid.getView().toggleAllGroups) {
-		var refreshButton = new Ext.Toolbar.Button({
+		this.refreshButton = new Ext.Toolbar.Button({
 			text : "Expand/collapse all",
 			tooltip : "Show/hide all factor value details",
 			handler : function() {
-				this.grid.getView().toggleAllGroups();
+				this.fireEvent("toggleExpand");
 			},
 			scope : this
 		});
 
-		items.push(new Ext.Toolbar.Fill(), refreshButton);
-	}
-	config.items = config.items ? items.concat(config.items) : items;
+		this.addFill();
+		this.addButton(this.refreshButton);
 
-	for (property in config) {
-		superConfig[property] = config[property];
-	}
-	Gemma.FactorValueToolbar.superclass.constructor.call(this, superConfig);
-
-	if (this.editable) {
-		this.characteristicToolbar = new Gemma.FactorValueCharacteristicToolbar({
-			grid : this.grid
-		});
-	}
-
-};
-
-/*
- * instance methods...
- */
-Ext.extend(Gemma.FactorValueToolbar, Ext.Toolbar, {
+		if (this.editable) {
+			this.characteristicToolbar = new Gemma.FactorValueCharacteristicToolbar({});
+		}
+	},
 
 	reloadExperimentalFactors : function() {
 		this.factorCombo.store.reload();
@@ -370,159 +405,110 @@ Ext.extend(Gemma.FactorValueToolbar, Ext.Toolbar, {
 });
 
 /*
- * Gemma.FactorValueCharacteristicToolbar constructor... config is a hash with
- * the following options: grid is the grid that contains the factor values.
- */
-Gemma.FactorValueCharacteristicToolbar = function(config) {
-
-	this.grid = config.grid;
-	delete config.grid;
-	this.experimentalDesign = this.grid.experimentalDesign;
-	this.experimentalFactor = this.grid.experimentalFactor;
-	this.factorValue = {
-		id : 0,
-		classDelegatingFor : "FactorValue"
-	};
-
-	/*
-	 * establish default config options...
-	 */
-	var superConfig = {};
-
-	/*
-	 * add our items in front of anything specified in the config above...
-	 */
-	this.factorValueCombo = new Gemma.FactorValueCombo({
-		disabled : this.experimentalFactor.id ? false : true
-	});
-	var factorValueCombo = this.factorValueCombo;
-	factorValueCombo.on("select", function(combo, record, index) {
-		this.factorValue.id = record.data.factorValueId;
-		mgedCombo.enable();
-	});
-
-	var mgedCombo = new Gemma.MGEDCombo({
-		disabled : true,
-		emptyText : "Select a class",
-		termKey : "factorvalue"
-	});
-	mgedCombo.on("select", function(combo, record, index) {
-		charCombo.setCategory(record.data.term, record.data.uri);
-		charCombo.enable();
-		createButton.enable();
-	});
-
-	var charCombo = new Gemma.CharacteristicCombo({
-		disabled : true
-	});
-
-	var createButton = new Ext.Toolbar.Button({
-		text : "create",
-		tooltip : "Create the new characteristic",
-		disabled : true,
-		handler : function() {
-			var c = charCombo.getCharacteristic();
-			createButton.disable();
-			// removed in response to bug 1016 mgedCombo.reset();
-			charCombo.reset();
-			var callback = function() {
-				this.grid.factorValuesChanged.call(this.grid, []);
-				this.factorValueCombo.store.reload();
-					// TODO do something to reset the text of the selected item,
-					// in case it changed...
-			};
-			ExperimentalDesignController.createFactorValueCharacteristic(
-					this.factorValue, c, callback);
-		}
-	});
-
-	var deleteButton = new Ext.Toolbar.Button({
-		text : "delete",
-		tooltip : "Delete selected characteristics",
-		disabled : true,
-		handler : function() {
-			deleteButton.disable();
-			var selected = this.grid.getSelectedRecords();
-			var callback = function() {
-				this.grid.factorValuesChanged.call(this.grid,
-						selected);
-			};
-			ExperimentalDesignController.deleteFactorValueCharacteristics(
-					selected, callback);
-		}
-	});
-	this.grid.getSelectionModel().on("selectionchange", function(model) {
-		var selected = model.getSelections();
-		if (selected.length > 0) {
-			deleteButton.enable();
-		} else {
-			deleteButton.disable();
-		}
-	});
-
-	var saveButton = new Ext.Toolbar.Button({
-		text : "save",
-		tooltip : "Save changed characteristics",
-		disabled : true,
-		handler : function() {
-			saveButton.disable();
-			var edited = this.grid.getEditedRecords();
-			var seen = {}, fvids = [];
-			for (var i = 0; i < edited.length; ++i) {
-				// ??
-			}
-			var callback = function() {
-				this.grid.factorValuesChanged.call(this.grid,
-						edited);
-			};
-			ExperimentalDesignController.updateFactorValueCharacteristics(
-					edited, callback);
-		}
-	});
-	this.grid.on("afteredit", function(model) {
-		saveButton.enable();
-	});
-	var revertButton = new Ext.Toolbar.Button({
-		text : "revert",
-		tooltip : "Undo changes to selected characteristics",
-		disabled : true,
-		handler : function() {
-			this.grid.revertSelected();
-		}
-	});
-	this.grid.getSelectionModel().on("selectionchange", function(model) {
-		var selected = model.getSelections();
-		revertButton.disable();
-		for (var i = 0; i < selected.length; ++i) {
-			if (selected[i].dirty) {
-				revertButton.enable();
-				break;
-			}
-		}
-	});
-
-	// TODO when factor values are added or deleted, refresh the factor value
-	// combo as appropriate...
-
-	var items = [new Ext.Toolbar.TextItem("Add a Characteristic to:"),
-			factorValueCombo, new Ext.Toolbar.Spacer(), mgedCombo,
-			new Ext.Toolbar.Spacer(), charCombo, new Ext.Toolbar.Spacer(),
-			createButton, new Ext.Toolbar.Spacer(), deleteButton,
-			new Ext.Toolbar.Spacer(), saveButton, new Ext.Toolbar.Spacer(),
-			revertButton];
-	config.items = config.items ? items.concat(config.items) : items;
-
-	for (property in config) {
-		superConfig[property] = config[property];
-	}
-	Gemma.FactorValueCharacteristicToolbar.superclass.constructor.call(this,
-			superConfig);
-};
-
-/*
  * instance methods...
  */
-Ext.extend(Gemma.FactorValueCharacteristicToolbar, Ext.Toolbar, {
+Gemma.FactorValueCharacteristicToolbar = Ext.extend(Ext.Toolbar, {
+
+	factorValue : {
+		id : -1,
+		classDelegatingFor : "FactorValue"
+	},
+
+	experimentalFactor : {
+		id : -1,
+		classDelegatingFor : "ExperimentalFactor"
+	},
+
+	initComponent : function() {
+		Gemma.FactorValueCharacteristicToolbar.superclass.initComponent
+				.call(this);
+		this.addEvents("save", "create", "delete", "undo");
+	},
+
+	onRender : function(c, l) {
+		Gemma.FactorValueCharacteristicToolbar.superclass.onRender.call(this,
+				c, l);
+
+		this.factorValueCombo = new Gemma.FactorValueCombo({
+			disabled : this.experimentalFactor.id ? false : true
+		});
+		this.factorValueCombo.on("select", function(combo, record, index) {
+			this.factorValue.id = record.data.factorValueId;
+			mgedCombo.enable();
+		});
+
+		var mgedCombo = new Gemma.MGEDCombo({
+			disabled : true,
+			emptyText : "Select a class",
+			termKey : "factorvalue"
+		});
+		mgedCombo.on("select", function(combo, record, index) {
+			charCombo.setCategory(record.get("term"), record.get("uri"));
+			charCombo.enable();
+			this.createButton.enable();
+		});
+
+		var charCombo = new Gemma.CharacteristicCombo({
+			disabled : true
+		});
+
+		this.createButton = new Ext.Toolbar.Button({
+			text : "create",
+			tooltip : "Create the new characteristic",
+			disabled : true,
+			handler : function() {
+				var c = charCombo.getCharacteristic();
+				this.createButton.disable();
+				// removed in response to bug 1016 mgedCombo.reset();
+				charCombo.reset();
+				this.fireEvent("create", this.factorValue, c);
+			}
+		});
+
+		this.deleteButton = new Ext.Toolbar.Button({
+			text : "delete",
+			tooltip : "Delete selected characteristics",
+			disabled : true,
+			handler : function() {
+				deleteButton.disable();
+				this.fireEvent("delete");
+			}
+		});
+
+		this.saveButton = new Ext.Toolbar.Button({
+			text : "save",
+			tooltip : "Save changed characteristics",
+			disabled : true,
+			handler : function() {
+				saveButton.disable();
+				this.fireEvent("save");
+
+			}
+		});
+
+		this.revertButton = new Ext.Toolbar.Button({
+			text : "revert",
+			tooltip : "Undo changes to selected characteristics",
+			disabled : true,
+			handler : function() {
+				this.fireEvent("undo");
+			}
+		});
+
+		this.addText("Add a characteristic to:");
+		this.add(this.factorValueCombo);
+		this.addSpacer();
+		this.addEventListener(mgedCombo);
+		this.addSpacer();
+		this.add(charCombo);
+		this.addSpacer();
+		this.addButton(this.createButton);
+		this.addSpacer();
+		this.addButton(this.saveButton)
+		this.addSpacer();
+		this.addButton(this.revertButton);
+
+	},
 
 	setExperimentalFactor : function(efId) {
 		this.experimentalFactor.id = efId;
