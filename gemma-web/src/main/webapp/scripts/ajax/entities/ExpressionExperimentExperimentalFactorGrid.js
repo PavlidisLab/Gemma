@@ -8,7 +8,7 @@ Ext.namespace('Gemma');
  * @class Gemma.ExperimentalFactorGrid
  * @extends Gemma.GemmaGridPanel
  */
-Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
+Gemma.ExpressionExperimentExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 	collapsible : true,
 	editable : false,
