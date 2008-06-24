@@ -378,7 +378,8 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 Gemma.BioMaterialToolbar = Ext.extend(Ext.Toolbar, {
 
 	initComponent : function() {
-
+		
+		this.items = [];
 		if (this.editable) {
 
 			this.saveButton = new Ext.Toolbar.Button({
