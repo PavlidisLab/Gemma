@@ -31,6 +31,9 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 
 		this.efGrid = new Gemma.ExpressionExperimentExperimentalFactorGrid({
 			title : "Experimental Factors Per Experiment",
+			loadMask : {
+				msg : 'Loading factors ...'
+			},
 			pageSize : 25
 		});
 
