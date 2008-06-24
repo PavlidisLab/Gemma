@@ -71,7 +71,7 @@ Gemma.ExpressionExperimentExperimentalFactorGrid = Ext.extend(
 							// fields : ['id', 'name'],
 							// data : "experimentalFactors"
 							// }),
-							// displayField : 'name',
+							displayField : 'name',
 							typeAhead : true,
 							triggerAction : 'all',
 							// transform : 'experimentalFactors',
