@@ -403,6 +403,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     @SuppressWarnings("unchecked")
     public Collection<ExpressionExperimentExperimentalFactorValueObject> getFactors( Collection<Long> eeIds ) {
 
+        log.info( "getting factors for experiments with ids: " + eeIds.toString() );
+
         Collection<ExpressionExperimentExperimentalFactorValueObject> eeefvos = new HashSet<ExpressionExperimentExperimentalFactorValueObject>();
 
         for ( Long id : eeIds ) {
