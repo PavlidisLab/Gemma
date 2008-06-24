@@ -67,10 +67,10 @@ Gemma.ExpressionExperimentExperimentalFactorGrid = Ext.extend(
 						header : "Experimental Factors",
 						toolTip : "Factors for the dataset.",
 						editor : new Ext.form.ComboBox({
-							// store : new Ext.data.SimpleStore({
-							// fields : ['id', 'name'],
-							// data : "experimentalFactors"
-							// }),
+							store : new Ext.data.Store({
+								proxy : new Ext.data.MemoryProxy(this.records),
+								autoLoad : true
+							}),
 							displayField : 'name',
 							typeAhead : true,
 							triggerAction : 'all',
@@ -86,7 +86,7 @@ Gemma.ExpressionExperimentExperimentalFactorGrid = Ext.extend(
 					}]
 				});
 
-				Gemma.ExperimentalFactorGrid.superclass.initComponent
+				Gemma.ExpressionExperimentExperimentalFactorGrid.superclass.initComponent
 						.call(this);
 
 				this.originalTitle = this.title;
