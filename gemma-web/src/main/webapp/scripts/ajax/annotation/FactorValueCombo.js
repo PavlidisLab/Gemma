@@ -32,6 +32,36 @@ Gemma.FactorValueCombo = Ext.extend(Ext.form.ComboBox, {
 		type : "string"
 	}]),
 
+	// http://extjs.com/forum/showthread.php?p=177623
+	onRender : function(ct, position) {
+		Gemma.FactorValueCombo.superclass.onRender.call(this, ct, position);
+
+		this.wrap.setWidth = this.wrap.setWidth.createInterceptor(function(
+				width) {
+			if (width && width * 1 > 0) {
+				return true;
+			} else {
+				return false;
+			}
+		});
+
+	},
+
+	// http://extjs.com/forum/showthread.php?p=177623
+	onResize : function(w, h) {
+		Gemma.FactorValueCombo.superclass.onResize.call(this, w, h);
+		if (this.trigger.isDisplayed()) {
+			var realWidth = this.trigger.getWidth() == 0 ? (w - 20) : w
+					- this.trigger.getWidth();
+		} else {
+			var realWidth = this.trigger.getWidth() == 0 ? (w - 5) : w
+					- this.trigger.getWidth();
+		}
+		if (typeof w == 'number') {
+			this.el.setWidth(this.adjustWidth('input', realWidth));
+		}
+	},
+
 	initComponent : function() {
 
 		this.store = new Ext.data.Store({

@@ -1,9 +1,12 @@
 /**
  * Experimental design editor application.
  */
+
+Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 Ext.onReady(function() {
 
 	Ext.QuickTips.init();
+	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 
 	var eeId = dwr.util.getValue("expressionExperimentID");
 	var edId = dwr.util.getValue("experimentalDesignID");
@@ -25,32 +28,35 @@ Ext.onReady(function() {
 		renderTo : "bioMaterialsPanel",
 		eeId : eeId,
 		edId : edId,
-		editable : editable,
-		height : 700
+		height : 700,
+		width : 1000,
+		editable : editable
 	});
+	bioMaterialEditor.init();
 
 	var experimentalFactorGrid = new Gemma.ExperimentalFactorGrid({
 		title : "Experimental Factors",
 		region : 'center',
 		edId : edId,
 		editable : editable,
-		height : 300
+		height : 200
 	});
 
 	var factorValueGrid = new Gemma.FactorValueGrid({
 		title : "Factor Values",
 		region : 'south',
+		form : 'factorValueForm', // hack
 		split : true,
-		// renderTo : "factorValuePanel",
-		// form : "factorValueForm",
 		edId : edId,
 		editable : editable,
-		height : 400
+		width : 1000,
+		height : 500
 	});
 
 	var efPanel = new Ext.Panel({
 		layout : 'border',
 		height : 700,
+		width : 1000,
 		renderTo : "experimentalFactorPanel",
 		items : [experimentalFactorGrid, factorValueGrid]
 	})
@@ -58,7 +64,11 @@ Ext.onReady(function() {
 	var tabPanel = new Ext.TabPanel({
 		renderTo : "experimentalDesignPanel",
 		height : 700,
-		width : 900,
+		width : 1000,
+		defaults : {
+			layout : 'fit'
+		},
+		layoutOnTabChange : true,
 		activeTab : 0,
 		items : [{
 			contentEl : "experimentalFactorPanel",
@@ -68,8 +78,6 @@ Ext.onReady(function() {
 			title : "Biomaterials"
 		}]
 	});
-
-	bioMaterialEditor.init();
 
 	experimentalFactorGrid.on("experimentalfactorchange",
 			function(efgrid, efs) {

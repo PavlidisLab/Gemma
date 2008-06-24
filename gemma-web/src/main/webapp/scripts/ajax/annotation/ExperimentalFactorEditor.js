@@ -2,6 +2,8 @@ Ext.namespace('Gemma');
 
 Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
+	loadMask : true,
+	
 	record : Ext.data.Record.create([{
 		name : "id",
 		type : "int"
@@ -137,14 +139,14 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				var errorHandler = function() {
 					this.loadMask.hide();
 					this.loadMask.msg = oldmsg;
-				};
+				}.createDelegate(this);
 
 				ExperimentalDesignController.deleteExperimentalFactors(
 						this.experimentalDesign, selected, {
 							callback : callback,
 							errorHandler : errorHandler
 						});
-			});
+			}.createDelegate(this));
 
 			this.getTopToolbar().on("save", function() {
 				var edited = this.getEditedRecords();
@@ -154,7 +156,7 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 				ExperimentalDesignController.updateExperimentalFactors(edited,
 						callback);
-			});
+			}.createDelegate(this));
 
 			this.getTopToolbar().on("undo",
 					this.revertSelected.createDelegate(this));
@@ -167,7 +169,7 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					e.record.set("category", term.term);
 					e.record.set("categoryUri", term.uri);
 				}
-			});
+			}.createDelegate(this));
 
 			this.on("afteredit", function(model) {
 				this.saveButton.enable();
@@ -264,7 +266,7 @@ Gemma.ExperimentalFactorToolbar = Ext.extend(Ext.Toolbar, {
 								this.deleteButton.disable();
 								this.fireEvent("delete");
 							}
-						});
+						}.createDelegate(this));
 
 			},
 			scope : this
