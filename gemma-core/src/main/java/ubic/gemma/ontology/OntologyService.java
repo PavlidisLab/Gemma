@@ -63,7 +63,6 @@ public class OntologyService {
 
     private static final String USED = " -USED- ";
 
-
     private static Log log = LogFactory.getLog( OntologyService.class.getName() );
 
     private BirnLexOntologyService birnLexOntologyService;
@@ -255,7 +254,6 @@ public class OntologyService {
         return filtered;
     }
 
-
     /**
      * Given a search string will first look through the characterisc database for any entries that have a match. If a
      * ontologyTermURI is given it will add all the individuals from that URI that match the search term criteria to the
@@ -273,7 +271,7 @@ public class OntologyService {
 
         String queryString = givenQueryString;
 
-        log.info( "starting findExactTerm for " + queryString + ". Timining information begins from here" );
+        log.info( "starting findExactTerm for " + queryString + ". Timing information begins from here" );
 
         if ( queryString == null ) return null;
 
@@ -312,8 +310,9 @@ public class OntologyService {
 
         List<Characteristic> searchResults = new ArrayList<Characteristic>();
 
-        queryString = OntologySearch.stripInvalidCharacters( givenQueryString ); // Strip out invalid characters so that Jena doesn't
-                                                                    // die parsing them
+        queryString = OntologySearch.stripInvalidCharacters( givenQueryString ); // Strip out invalid characters so
+                                                                                    // that Jena doesn't
+        // die parsing them
         // FIXME hard-coding of ontologies to search
         results = mgedOntologyService.findResources( queryString );
         log.debug( "found " + results.size() + " terms from mged in " + watch.getTime() + " ms" );
