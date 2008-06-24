@@ -111,7 +111,8 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		});
 
 		/*
-		 * FIXME: Form not working
+		 * The checkboxes defined here require that this.form be set: a <form>
+		 * element wrapping the div that this goes in. Clumsy but it works.
 		 */
 		var groupTextTpl = this.editable
 				? '<input id="{[ values.rs[0].data.factorValueId ]}" type="checkbox" name="selectedFactorValues" value="{[ values.rs[0].data.factorValueId ]}" /> '
@@ -166,6 +167,7 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			});
 
 			this.getSelectionModel().on("selectionchange", function(model) {
+				// console.log("selection");
 				var selected = model.getSelections();
 				this.revertButton.disable();
 				for (var i = 0; i < selected.length; ++i) {
@@ -216,7 +218,7 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					ExperimentalDesignController.deleteFactorValues(ef,
 							selected, callback);
 				}
-			}, this);
+			}.createDelegate(this), this);
 
 			/*
 			 * Commit changes to factor values (added characteristics)
@@ -241,33 +243,6 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				this.getView().toggleAllGroups()
 			}.createDelegate(this), this);
 
-			var ct = this.getTopToolbar().characteristicToolbar;
-			if (ct) {
-
-				ct.on("create", function(f, c) {
-					var callback = function() {
-						this.factorValueCombo.store.reload();
-
-						this.factorValuesChanged.call(this, []);
-							// TODO do something to reset the text of the
-							// selected
-							// item,
-							// in case it changed...
-					};
-					ExperimentalDesignController
-							.createFactorValueCharacteristic(f, c, callback);
-				}, this);
-
-				ct.on("delete", function() {
-					var selected = this.getSelectedRecords();
-					var callback = function() {
-						this.factorValuesChanged.call(this, selected);
-					};
-					ExperimentalDesignController
-							.deleteFactorValueCharacteristics(selected,
-									callback);
-				}, this);
-			}
 		}
 
 		if (this.experimentalFactor.id) {
@@ -276,6 +251,38 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			});
 		}
 	}, // init component
+
+	onRender : function(c, p) {
+		Gemma.FactorValueGrid.superclass.onRender.call(this, c, p);
+		// have to do this here, because the toolbar isn't created until
+		// rendering.
+		var ct = this.getTopToolbar().characteristicToolbar;
+		if (ct) {
+			ct.on("create", function(f, c) {
+				var callback = function() {
+					this.factorValueCombo.store.reload();
+
+					this.factorValuesChanged.call(this, []);
+						// TODO do something to reset the text of the
+						// selected
+						// item,
+						// in case it changed...
+				};
+				ExperimentalDesignController.createFactorValueCharacteristic(f,
+						c, callback);
+			}.createDelegate(this), this);
+
+			ct.on("delete", function() {
+				console.log("deleting factorvalue(s)");
+				var selected = this.getSelectedRecords();
+				var callback = function() {
+					this.factorValuesChanged.call(this, selected);
+				};
+				ExperimentalDesignController.deleteFactorValueCharacteristics(
+						selected, callback);
+			}.createDelegate(this), this);
+		}
+	},
 
 	factorValueCreated : function(ef) {
 		this.refresh();
@@ -299,8 +306,12 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		this.getTopToolbar().setExperimentalFactor(efId);
 	},
 
+	/**
+	 * Processing of the checkboxes defined in the tmpl for the groups. Requires
+	 * that this.form be set: a <form> element wrapping the div that this goes
+	 * in. Clumsy but it works.
+	 */
 	getSelectedFactorValues : function() {
-		// FIXME BROKEN
 		if (this.form) {
 			var form = document.forms[this.form];
 			var checkboxes = form.selectedFactorValues;
@@ -476,8 +487,7 @@ Gemma.FactorValueCharacteristicToolbar = Ext.extend(Ext.Toolbar, {
 		}.createDelegate(this));
 
 		this.charCombo = new Gemma.CharacteristicCombo({
-			disabled : true,
-			enableKeyEvents : true
+			disabled : true
 		});
 
 		this.createButton = new Ext.Toolbar.Button({
@@ -498,18 +508,19 @@ Gemma.FactorValueCharacteristicToolbar = Ext.extend(Ext.Toolbar, {
 			this.createButton.enable();
 		}.createDelegate(this));
 
-		this.charCombo.on("keyup", function() {
+		this.charCombo.on("change", function() {
 			this.createButton.enable();
 		}.createDelegate(this));
 
 		this.deleteButton = new Ext.Toolbar.Button({
 			text : "Remove Characteristic",
-			tooltip : "Delete the selected characteristics from selected factor value(s)",
+			tooltip : "Delete the selected characteristic(s) from factor values",
 			disabled : true,
 			handler : function() {
 				this.deleteButton.disable();
 				this.fireEvent("delete");
-			}.createDelegate(this)
+			},
+			scope : this
 		});
 
 		this.addText("Add a characteristic to:");
