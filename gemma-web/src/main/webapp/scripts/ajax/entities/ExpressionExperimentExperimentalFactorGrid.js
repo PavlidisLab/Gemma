@@ -67,10 +67,15 @@ Gemma.ExpressionExperimentExperimentalFactorGrid = Ext.extend(
 						header : "Experimental Factors",
 						toolTip : "Factors for the dataset.",
 						editor : new Ext.form.ComboBox({
+							// store : new Ext.data.SimpleStore({
+							// fields : ['id', 'name'],
+							// data : "experimentalFactors"
+							// }),
+							// displayField : 'name',
 							typeAhead : true,
 							triggerAction : 'all',
-							// transform : 'light'
-							lazyRender : true,
+							// transform : 'experimentalFactors',
+							lazyRender : false,
 							listClass : 'x-combo-list-small',
 							renderer : function(value, metadata, record, row,
 									col, ds) {
