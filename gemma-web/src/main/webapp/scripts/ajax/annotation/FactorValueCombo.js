@@ -6,7 +6,7 @@ Gemma.FactorValueCombo = Ext.extend(Ext.form.ComboBox, {
 	mode : "local",
 	triggerAction : "all",
 
-record : Ext.data.Record.create([{
+	record : Ext.data.Record.create([{
 		name : "charId",
 		type : "int"
 	}, {
@@ -31,9 +31,9 @@ record : Ext.data.Record.create([{
 		name : "factorValueString",
 		type : "string"
 	}]),
-	
+
 	initComponent : function() {
- 
+
 		this.store = new Ext.data.Store({
 			proxy : new Ext.data.DWRProxy(ExperimentalDesignController.getFactorValues),
 			reader : new Ext.data.ListRangeReader({
@@ -47,10 +47,10 @@ record : Ext.data.Record.create([{
 
 		Gemma.FactorValueCombo.superclass.initComponent.call(this);
 
-		if (this.experimentalFactor) {
+		if (this.efId) {
 			this.store.load({
 				params : [{
-					id : this.experimentalFactor.id,
+					id : this.efId,
 					classDelegatingFor : "ExperimentalFactor"
 				}]
 			});

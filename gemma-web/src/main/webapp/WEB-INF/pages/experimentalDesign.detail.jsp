@@ -241,10 +241,10 @@
 </div>
 
 <!-- Experimental Factors -->
-
+<div id="experimentalDesignPanel"  ></div>
 <div id="experimentalFactorPanel" style="margin-bottom: 1em;"></div>
 <form name="factorValueForm">
-	<div id="factorValuePanel" style="margin-bottom: 1em;"></div>
+	<div id="factorValuePanel"  class="x-hide-display" style="margin-bottom: 1em;"></div>
 </form>
-<div id="bioMaterialsPanel"></div>
+<div id="bioMaterialsPanel"  class="x-hide-display" ></div>
 

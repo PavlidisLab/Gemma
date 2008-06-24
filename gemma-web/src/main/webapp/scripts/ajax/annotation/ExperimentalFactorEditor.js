@@ -20,8 +20,8 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	}]),
 
 	categoryStyler : function(value, metadata, record, row, col, ds) {
-		return Gemma.GemmaGridPanel.formatTermWithStyle(value,
-				record.get("categoryUri"));
+		return Gemma.GemmaGridPanel.formatTermWithStyle(value, record
+				.get("categoryUri"));
 	},
 
 	initComponent : function() {
@@ -31,22 +31,24 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			classDelegatingFor : "ExperimentalDesign"
 		};
 
-		Ext.apply(this, {	columns : [{
-		header : "Name",
-		dataIndex : "name",
-		sortable : true
-	}, {
-		header : "Category",
-		dataIndex : "category",
-		renderer : this.categoryStyler,
-		sortable : true
+		Ext.apply(this, {
+			columns : [{
+				header : "Name",
+				dataIndex : "name",
+				sortable : true
+			}, {
+				header : "Category",
+				dataIndex : "category",
+				renderer : this.categoryStyler,
+				sortable : true
 
-	}, {
-		header : "Description",
-		dataIndex : "description",
-		sortable : true
-	}]});
-		
+			}, {
+				header : "Description",
+				dataIndex : "description",
+				sortable : true
+			}]
+		});
+
 		this.store = new Ext.data.Store({
 			proxy : new Ext.data.DWRProxy(ExperimentalDesignController.getExperimentalFactors),
 			reader : new Ext.data.ListRangeReader({
@@ -60,7 +62,17 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 		Gemma.ExperimentalFactorGrid.superclass.initComponent.call(this);
 
-		this.addEvents('experimentalfactorchange');
+		this
+				.addEvents('experimentalfactorchange',
+						'experimentalfactorselected');
+
+		this.getSelectionModel().on("selectionchange", function(model) {
+			var selected = model.getSelections();
+			if (selected.length == 1) {
+				this.fireEvent("experimentalfactorselected", selected[0]);
+			}
+
+		}.createDelegate(this));
 
 		this.store.load({
 			params : [this.experimentalDesign]
@@ -85,15 +97,17 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			lazyRender : true,
 			termKey : "factor"
 		});
-		var categoryEditor = new Ext.grid.GridEditor(this.categoryCombo);
-		this.categoryCombo.on("select", function(combo, record, index) {
-			categoryEditor.completeEdit();
-		});
 
 		this.descriptionField = new Ext.form.TextField({});
-		var descriptionEditor = new Ext.grid.GridEditor(this.descriptionField);
 
 		if (this.editable) {
+
+			var categoryEditor = new Ext.grid.GridEditor(this.categoryCombo);
+			this.categoryCombo.on("select", function(combo, record, index) {
+				categoryEditor.completeEdit();
+			});
+
+			var descriptionEditor = new Ext.grid.GridEditor(this.descriptionField);
 			this.getColumnModel().setEditor(NAME_COLUMN, nameEditor);
 			this.getColumnModel().setEditor(CATEGORY_COLUMN, categoryEditor);
 			this.getColumnModel().setEditor(DESCRIPTION_COLUMN,
@@ -103,6 +117,7 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				var callback = function() {
 					this.factorCreated(newFactorValue);
 				}.createDelegate(this);
+
 				ExperimentalDesignController.createExperimentalFactor(
 						this.experimentalDesign, newFactorValue, callback);
 			}.createDelegate(this));
@@ -112,32 +127,37 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				var oldmsg = this.loadMask.msg;
 				this.loadMask.msg = "Deleting experimental factor(s)";
 				this.loadMask.show();
+
 				var callback = function() {
 					this.idsDeleted(selected);
 					this.loadMask.hide();
 					this.loadMask.msg = oldmsg;
 				}.createDelegate(this);
+
 				var errorHandler = function() {
 					this.loadMask.hide();
 					this.loadMask.msg = oldmsg;
 				};
+
 				ExperimentalDesignController.deleteExperimentalFactors(
 						this.experimentalDesign, selected, {
 							callback : callback,
 							errorHandler : errorHandler
 						});
 			});
-			
+
 			this.getTopToolbar().on("save", function() {
 				var edited = this.getEditedRecords();
 				var callback = function() {
-					this.recordsChanged.(edited);
+					this.recordsChanged(edited);
 				}.createDelegate(this);
+
 				ExperimentalDesignController.updateExperimentalFactors(edited,
 						callback);
 			});
-			
-			this.getTopToolbar().on("undo", function() {this.revertSelected();});
+
+			this.getTopToolbar().on("undo",
+					this.revertSelected.createDelegate(this));
 
 			this.on("afteredit", function(e) {
 				var col = this.getColumnModel().getColumnId(e.column);
@@ -148,28 +168,27 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					e.record.set("categoryUri", term.uri);
 				}
 			});
-			
-			
-		this.on("afteredit", function(model) {
-			this.saveButton.enable();
-			this.revertButton.enable();
-		},   this.getTopToolbar());
-		
-		this.getSelectionModel().on("selectionchange", function(model) {
-			var selected = model.getSelections();
-			if (selected.length > 0) {
-				this.deleteButton.enable();
-			} else {
-				this.deleteButton.disable();
-			}
-			this.revertButton.disable();
-			for (var i = 0; i < selected.length; ++i) {
-				if (selected[i].dirty) {
-					this.revertButton.enable();
-					break;
+
+			this.on("afteredit", function(model) {
+				this.saveButton.enable();
+				this.revertButton.enable();
+			}, this.getTopToolbar());
+
+			this.getSelectionModel().on("selectionchange", function(model) {
+				var selected = model.getSelections();
+				if (selected.length > 0) {
+					this.deleteButton.enable();
+				} else {
+					this.deleteButton.disable();
 				}
-			}
-		}, this.getTopToolbar());
+				this.revertButton.disable();
+				for (var i = 0; i < selected.length; ++i) {
+					if (selected[i].dirty) {
+						this.revertButton.enable();
+						break;
+					}
+				}
+			}, this.getTopToolbar());
 		} // if editable.
 	},
 
@@ -198,11 +217,11 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	}
 
 });
- 
+
 /*
  * instance methods...
  */
-Gemma.ExperimentalFactorToolbar =Ext.extend( Ext.Toolbar, {
+Gemma.ExperimentalFactorToolbar = Ext.extend(Ext.Toolbar, {
 
 	onRender : function(c, l) {
 		Gemma.ExperimentalFactorToolbar.superclass.onRender.call(this, c, l);
@@ -234,37 +253,43 @@ Gemma.ExperimentalFactorToolbar =Ext.extend( Ext.Toolbar, {
 			},
 			scope : this
 		});
-		this. deleteButton = new Ext.Toolbar.Button({
+		this.deleteButton = new Ext.Toolbar.Button({
 			text : "delete",
-			tooltip : "Delete selected experimental factors",
+			tooltip : "Delete the selected experimental factors",
 			disabled : true,
 			handler : function() {
-				this.deleteButton.disable();
-				this.fireEvent("delete");
+				Ext.Msg.confirm('Deleting records',
+						'Are you sure? This cannot be undone', function(but) {
+							if (but == 'yes') {
+								this.deleteButton.disable();
+								this.fireEvent("delete");
+							}
+						});
+
 			},
 			scope : this
 		});
-		
-		this. revertButton = new Ext.Toolbar.Button({
-			text : "revert",
-			tooltip : "Undo changes to selected experimental factors",
+
+		this.revertButton = new Ext.Toolbar.Button({
+			text : "undo",
+			tooltip : "Undo changes to the selected experimental factors",
 			disabled : true,
 			handler : function() {
 				this.fireEvent("undo");
 			},
 			scope : this
 		});
-		
+
 		this.saveButton = new Ext.Toolbar.Button({
 			text : "save",
-			tooltip : "Save changed experimental factors",
+			tooltip : "Commit changes",
 			disabled : true,
 			handler : function() {
 				this.saveButton.disable();
+				this.revertButton.disable();
 				this.fireEvent("save");
 			}
 		});
-	
 
 		this.addText("Add an Experimental Factor:");
 		this.addSpacer();
@@ -281,7 +306,7 @@ Gemma.ExperimentalFactorToolbar =Ext.extend( Ext.Toolbar, {
 		this.addButton(this.revertButton);
 
 	},
-	
+
 	initComponent : function() {
 		Gemma.ExperimentalFactorToolbar.superclass.initComponent.call(this);
 		this.addEvents("save", "undo", "create", "delete");
