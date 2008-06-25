@@ -29,14 +29,6 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	 */
 	initComponent : function() {
 
-		this.efGrid = new Gemma.ExpressionExperimentExperimentalFactorGrid({
-			title : "Experimental Factors Per Experiment",
-			loadMask : {
-				msg : 'Loading factors ...'
-			},
-			pageSize : 25
-		});
-
 		Ext.apply(this, {
 			buttons : [{
 				id : 'done-selecting-button',
@@ -52,8 +44,6 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 		this.addEvents({
 			"factors-chosen" : true
 		});
-
-		this.add(this.efGrid);
 	},
 
 	/**
@@ -87,17 +77,18 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	 *            result
 	 */
 	returnFromGetFactors : function(results) {
-		// this.loadMask.hide();
-		this.efGrid.loadData(results);
-		// this.fireEvent('factors-retrieved', this, results);
+		var dataFromServer = {
+			data : results
+		};
+		this.efGrid = new Gemma.ExpressionExperimentExperimentalFactorGrid(dataFromServer);
 	}
 
 // ,onRender : function(ct, position) {
-		// Gemma.ExperimentalFactorChooserPanel.superclass.onRender.call(this,
-		// ct,
-		// position);
-		//
-		// var admin = dwr.util.getValue("hasAdmin");
-		// }
+// Gemma.ExperimentalFactorChooserPanel.superclass.onRender.call(this,
+// ct,
+// position);
+//
+// var admin = dwr.util.getValue("hasAdmin");
+// }
 
-		});
+});

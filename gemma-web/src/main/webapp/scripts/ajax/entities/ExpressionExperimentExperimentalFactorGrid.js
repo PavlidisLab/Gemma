@@ -10,23 +10,18 @@ Ext.namespace('Gemma');
  * @extends Gemma.GemmaGridPanel
  */
 Gemma.ExpressionExperimentExperimentalFactorGrid = Ext.extend(
-		Gemma.GemmaGridPanel, {
+		Ext.grid.PropertyGrid, {
 
+			title : "Experimental Factors Per Experiment",
+			loadMask : {
+				msg : 'Loading factors ...'
+			},
+			pageSize : 25,
 			collapsible : true,
 			editable : false,
 			autoHeight : true,
 			width : 600,
 			style : 'margin-bottom: 1em;',
-
-			/* set what the record should look like */
-			record : Ext.data.Record.create([{
-				name : "expressionExperiment",
-				convert : function(e) {
-					return e.shortName;
-				}
-			}, {
-				name : "experimentalFactors"
-			}]),
 
 			initComponent : function() {
 				if (this.pageSize) {
@@ -48,62 +43,39 @@ Gemma.ExpressionExperimentExperimentalFactorGrid = Ext.extend(
 				} else {
 					Ext.apply(this, {
 						store : new Ext.data.Store({
-							proxy : new Ext.data.MemoryProxy(this.records),
+							proxy : new Ext.data.MemoryProxy(this.record),
 							reader : new Ext.data.ListRangeReader({},
 									this.record)
 						})
 					});
 				}
 
-				Ext.apply(this, {
-					columns : [{
-						id : 'expressionExperiment',
-						dataIndex : "expressionExperiment",
-						header : "Dataset",
-						sortable : false
-					}, {
-						id : 'experimentalFactors',
-						dataIndex : "experimentalFactors",
-						header : "Experimental Factors",
-						toolTip : "Factors for the dataset.",
-						editor : new Ext.form.ComboBox({
-							store : new Ext.data.Store({
-								proxy : new Ext.data.MemoryProxy(this.records),
-								autoLoad : true
-							}),
-							displayField : 'name',
+				var source = [];
+				var customEditors = [];
+				var d;
+				for (d in this.data) {
+					if (d.expressionExperiment) {
+						customEditors[d.expressionExperiment.name] = new Ext.grid.GridEditor(new Ext.form.ComboBox({
+							store : new Ext.data.SimpleStore(d.experimentalFactors),
 							typeAhead : true,
+							displayField : 'name',
+							selectOnFocus : true,
 							triggerAction : 'all',
-							// transform : 'experimentalFactors',
-							lazyRender : false,
-							listClass : 'x-combo-list-small',
-							renderer : function(value, metadata, record, row,
-									col, ds) {
-								return record.data.name;
-							}
-						})
+							mode : 'local'
+						}));
+						source[d.expressionExperiment.name] = d.experimentalFactors[0].name;
+					};
+				};
 
-					}]
+				Ext.apply(this, {
+					source : source,
+					customEditors : customEditors
 				});
 
 				Gemma.ExpressionExperimentExperimentalFactorGrid.superclass.initComponent
 						.call(this);
 
 				this.originalTitle = this.title;
-			},
-
-			/**
-			 * Load the data.
-			 * 
-			 * @param {}
-			 *            results
-			 */
-			loadData : function(results) {
-				this.getStore().proxy.data = results;
-				this.getStore().reload({
-					resetPage : true
-				});
-				this.getView().refresh(true); // refresh column headers
 			}
 
 		});
