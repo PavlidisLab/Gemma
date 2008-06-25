@@ -74,7 +74,7 @@ Ext.extend(Gemma.DatasetSearchField, Ext.form.TriggerField, {
 			this.lastParams = params;
 			GeneLinkAnalysisManagerController.filterExpressionExperiments(
 					params[0], params[1], params[2], this.foundDatasets
-							.bind(this));
+							.createDelegate(this));
 		}
 	},
 
@@ -93,10 +93,10 @@ Ext.extend(Gemma.DatasetSearchField, Ext.form.TriggerField, {
 					&& (params[0] == this.lastParams[0] && params[1] == this.lastParams[1])) {
 				return;
 			}
-			if (this.fireEvent('beforesearch', this, params) !== false) {
+			if (this.fireEvent('beforesearch', this, params) !== false) { 
 				this.lastParams = params;
 				ExpressionExperimentController.find(params[0], params[1],
-						this.foundDatasets.bind(this));
+						this.foundDatasets.createDelegate(this));
 			}
 		}
 	},

@@ -30,14 +30,24 @@ Gemma.DatasetSearchToolBar = Ext.extend(Ext.Toolbar, {
 				emptyText : 'Select a taxon',
 				width : 125,
 				listeners : {
-					'taxonchanged' : {
+					'select' : {
+						fn : function(combo, record, index) {
+							var taxon = record.data;
+							this.eeSearchField.taxonChanged(taxon, false); // false:
+							// don't
+							// search for EE
+							// sets right
+							// away.
+						}.createDelegate(this, [], true)
+					},
+					'ready' : {
 						fn : function(taxon) {
 							this.eeSearchField.taxonChanged(taxon, false); // false:
 							// don't
 							// search for EE
 							// sets right
 							// away.
-						}.createDelegate(this)
+						}.createDelegate(this, [], true)
 					}
 				}
 			});
@@ -81,38 +91,34 @@ Gemma.DatasetSearchToolBar = Ext.extend(Ext.Toolbar, {
  * @class Gemma.DataSetSearchAndGrabToolbar
  * @extends Gemma.DatasetSearchToolBar
  */
-Gemma.DataSetSearchAndGrabToolbar = Ext.extend(
-		Gemma.DatasetSearchToolBar, {
+Gemma.DataSetSearchAndGrabToolbar = Ext.extend(Gemma.DatasetSearchToolBar, {
 
-			initComponent : function() {
-				Gemma.DataSetSearchAndGrabToolbar.superclass.initComponent
-						.call(this);
-				this.addEvents("grabbed");
+	initComponent : function() {
+		Gemma.DataSetSearchAndGrabToolbar.superclass.initComponent.call(this);
+		this.addEvents("grabbed");
 
+	},
+
+	afterRender : function() {
+		Gemma.DataSetSearchAndGrabToolbar.superclass.afterRender.call(this);
+		var grabber = new Ext.Button({
+			id : 'grabber',
+			disabled : false,
+			text : "Grab >>",
+			handler : function(button, ev) {
+				var selmo = this.grid.getSelectionModel();
+				var sels = selmo.getSelections();
+				if (sels.length > 0) {
+					this.targetGrid.getStore().add(sels);
+					this.targetGrid.getView().refresh();
+					this.fireEvent("grabbed", sels);
+				}
 			},
-
-			afterRender : function() {
-				Gemma.DataSetSearchAndGrabToolbar.superclass.afterRender
-						.call(this);
-				var grabber = new Ext.Button({
-					id : 'grabber',
-					disabled : false,
-					text : "Grab >>",
-					handler : function(button, ev) {
-						var selmo = this.grid.getSelectionModel();
-						var sels = selmo.getSelections();
-						if (sels.length > 0) {
-							Ext.log("Grabbed " + sels.length);
-							this.targetGrid.getStore().add(sels);
-							this.targetGrid.getView().refresh();
-							this.fireEvent("grabbed", sels);
-						}
-					},
-					scope : this
-				});
-
-				this.addFill();
-				this.add(grabber);
-			}
-
+			scope : this
 		});
+
+		this.addFill();
+		this.add(grabber);
+	}
+
+});

@@ -109,7 +109,7 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 			}),
 			tpl : tmpl
 		});
-
+		
 		this.store.load({
 			params : [],
 			callback : this.restoreState.createDelegate(this),
@@ -119,7 +119,7 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 
 		Gemma.TaxonCombo.superclass.initComponent.call(this);
 
-		this.addEvents('taxonchanged', 'ready');
+		this.addEvents('ready');
 	},
 
 	getTaxon : function() {
