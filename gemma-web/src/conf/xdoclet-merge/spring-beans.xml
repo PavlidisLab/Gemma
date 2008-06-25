@@ -71,6 +71,7 @@
 			<prop key="/indexer.html">indexController</prop>
 			<prop key="/searcher.html">generalSearchController</prop>
 			<prop key="/searchCoexpression.html">coexpressionSearchController</prop>
+			<prop key="/gene/*">geneController</prop>
 			<prop key="/geneLinkAnalysisManager.html">geneLinkAnalysisManagerController</prop>
 			<prop key="/securityManager.html">securityFormController</prop>
 			<prop key="/geoBrowser/*">geoRecordBrowserController</prop>
