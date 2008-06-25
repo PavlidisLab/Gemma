@@ -35,9 +35,9 @@ Gemma.CoexpressionGridRowExpander = Ext.extend(Ext.grid.RowExpander, {
 				renderTo : diffExGridEl
 			});
 
-			//Hide metThreshold Column
-			diffExGrid.getColumnModel().setHidden(3,true);
-			
+			// Hide metThreshold Column
+			diffExGrid.getColumnModel().setHidden(3, true);
+
 			var tabPanel = new Ext.TabPanel({
 				renderTo : bodyEl,
 				activeTab : 0,
@@ -48,12 +48,16 @@ Gemma.CoexpressionGridRowExpander = Ext.extend(Ext.grid.RowExpander, {
 				}, {
 					title : "Differential expression of " + gene.officialSymbol,
 					contentEl : diffExGridEl,
+					loaded : false,
 					listeners : {
 						"activate" : {
 							fn : function() {
-								diffExGrid.getStore().load({
-									params : [gene.id, 0.01]
-								});
+								if (!this.loaded) {
+									diffExGrid.getStore().load({
+										params : [gene.id, 0.01]
+									});
+								}
+								this.loaded = true;
 							}
 						}
 					}
