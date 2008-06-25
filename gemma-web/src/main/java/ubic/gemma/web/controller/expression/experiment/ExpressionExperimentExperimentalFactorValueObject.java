@@ -31,14 +31,14 @@ public class ExpressionExperimentExperimentalFactorValueObject {
 
     private ExpressionExperimentValueObject expressionExperiment;
 
-    private Collection<ExperimentalFactorValueObject> experimenalFactors;
+    private Collection<ExperimentalFactorValueObject> experimentalFactors;
 
     public ExpressionExperimentExperimentalFactorValueObject() {
-        experimenalFactors = new HashSet<ExperimentalFactorValueObject>();
+        experimentalFactors = new HashSet<ExperimentalFactorValueObject>();
     }
 
-    public Collection<ExperimentalFactorValueObject> getExperimenalFactors() {
-        return experimenalFactors;
+    public Collection<ExperimentalFactorValueObject> getExperimentalFactors() {
+        return experimentalFactors;
     }
 
     public ExpressionExperimentValueObject getExpressionExperiment() {

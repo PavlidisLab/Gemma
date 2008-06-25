@@ -432,7 +432,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             eeefvo.setExpressionExperiment( eevo );
             for ( ExperimentalFactor ef : efs ) {
                 ExperimentalFactorValueObject efvo = configExperimentalFactorValueObject( ef );
-                eeefvo.getExperimenalFactors().add( efvo );
+                eeefvo.getExperimentalFactors().add( efvo );
             }
             eeefvos.add( eeefvo );
         }
