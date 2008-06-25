@@ -552,6 +552,10 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 			loadMask : {
 				msg : 'Loading datasets ...'
 			},
+			tbar : ['->',{
+				text : "Delete selected",
+				handler :  this.removeSelectedFromEeSetMembersGrid.createDelegate(this)
+			}],
 			split : true,
 			height : 200,
 			width : 400,
@@ -608,6 +612,10 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 		this.add(this.eeSetMembersGrid);
 		this.add(this.sourceDatasetsGrid);
 
+	},
+	
+	removeSelectedFromEeSetMembersGrid : function() {
+		this.eeSetMembersGrid.removeSelected();
 	}
 
 });
