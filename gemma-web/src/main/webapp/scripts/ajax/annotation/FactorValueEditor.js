@@ -277,7 +277,7 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				var selected = this.getSelectedRecords();
 				var callback = function() {
 					this.factorValuesChanged.call(this, selected);
-				};
+				}.createDelegate(this);
 				ExperimentalDesignController.deleteFactorValueCharacteristics(
 						selected, callback);
 			}.createDelegate(this), this);
