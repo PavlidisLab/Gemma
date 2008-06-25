@@ -24,36 +24,37 @@ Gemma.ExpressionExperimentExperimentalFactorGrid = Ext.extend(
 			style : 'margin-bottom: 1em;',
 
 			initComponent : function() {
-				if (this.pageSize) {
-					Ext.apply(this, {
-						store : new Gemma.PagingDataStore({
-							proxy : new Ext.data.MemoryProxy([]),
-							reader : new Ext.data.ListRangeReader({
-								id : "id"
-							}, this.record),
-							pageSize : this.pageSize
-						})
-					});
-					Ext.apply(this, {
-						bbar : new Gemma.PagingToolbar({
-							pageSize : this.pageSize,
-							store : this.store
-						})
-					});
-				} else {
-					Ext.apply(this, {
-						store : new Ext.data.Store({
-							proxy : new Ext.data.MemoryProxy(this.record),
-							reader : new Ext.data.ListRangeReader({},
-									this.record)
-						})
-					});
-				}
+//				if (this.pageSize) {
+//					Ext.apply(this, {
+//						store : new Gemma.PagingDataStore({
+//							proxy : new Ext.data.MemoryProxy([]),
+//							reader : new Ext.data.ListRangeReader({
+//								id : "id"
+//							}, this.record),
+//							pageSize : this.pageSize
+//						})
+//					});
+//					Ext.apply(this, {
+//						bbar : new Gemma.PagingToolbar({
+//							pageSize : this.pageSize,
+//							store : this.store
+//						})
+//					});
+//				} else {
+//					Ext.apply(this, {
+//						store : new Ext.data.Store({
+//							proxy : new Ext.data.MemoryProxy(this.record),
+//							reader : new Ext.data.ListRangeReader({},
+//									this.record)
+//						})
+//					});
+//				}
 
 				var source = [];
 				var customEditors = [];
 				var d;
-				for (d in this.data) {
+				for (i in this.data) {
+					var d = this.data[i];
 					if (d.expressionExperiment) {
 						customEditors[d.expressionExperiment.name] = new Ext.grid.GridEditor(new Ext.form.ComboBox({
 							store : new Ext.data.SimpleStore(d.experimentalFactors),
