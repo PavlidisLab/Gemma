@@ -1,3 +1,16 @@
+ /*
+  * Licences for bundled javascript.
+  */
+  
+ /*
+ * Ext JS Library 2.1
+ * Copyright(c) 2006-2008, Ext JS, LLC.
+ * licensing@extjs.com
+ * http://extjs.com/license
+ */
+ 
+ 
+
 /*  Prototype JavaScript framework, version 1.6.0.2
  *  (c) 2005-2008 Sam Stephenson
  *
@@ -5,6 +18,64 @@
  *  For details, see the Prototype web site: http://www.prototypejs.org/
  *
  *--------------------------------------------------------------------------*/
+
+/* 
+ * sprintf.js from:
+ *
+ * More info at: http://kevin.vanzonneveld.net/techblog/article/phpjs_licensing/
+ * 
+ * This is version: 1.26
+ * php.js is copyright 2008 Kevin van Zonneveld.
+ * 
+ * Portions copyright Michael White (http://crestidg.com), _argos, Jonas
+ * Raoni Soares Silva (http://www.jsfromhell.com), Legaev Andrey, Ates Goral
+ * (http://magnetiq.com), Philip Peterson, Martijn Wieringa, Webtoolkit.info
+ * (http://www.webtoolkit.info/), Carlos R. L. Rodrigues
+ * (http://www.jsfromhell.com), Ash Searle (http://hexmen.com/blog/),
+ * Erkekjetter, marrtins, Alfonso Jimenez (http://www.alfonsojimenez.com),
+ * Aman Gupta, Arpad Ray (mailto:arpad@php.net), Karol Kowalski, Mirek Slugen,
+ * Thunder.m, Tyler Akins (http://rumkin.com), d3x, mdsjack
+ * (http://www.mdsjack.bo.it), Alex, Alexander Ermolaev
+ * (http://snippets.dzone.com/user/AlexanderErmolaev), Allan Jensen
+ * (http://www.winternet.no), Andrea Giammarchi
+ * (http://webreflection.blogspot.com), Bayron Guevara, Ben Bryan, Benjamin
+ * Lupton, Brad Touesnard, Brett Zamir, Cagri Ekin, Cord, David, David James,
+ * DxGx, FGFEmperor, Felix Geisendoerfer (http://www.debuggable.com/felix),
+ * FremyCompany, Gabriel Paderni, Howard Yeend, J A R, Leslie Hoare, Lincoln
+ * Ramsay, MeEtc (http://yass.meetcweb.com), Mick@el, Nick Callen, Ozh, Pedro
+ * Tainha (http://www.pedrotainha.com), Peter-Paul Koch
+ * (http://www.quirksmode.org/js/beat.html), Philippe Baumann, Sakimori,
+ * Sanjoy Roy, Simon Willison (http://simonwillison.net), Steve Clay, Steve
+ * Hilder, Steven Levithan (http://blog.stevenlevithan.com), T0bsn, Thiago
+ * Mata (http://thiagomata.blog.com), Tim Wiel, XoraX (http://www.xorax.info),
+ * Yannoo, baris ozdil, booeyOH, djmix, duncan, echo is bad, gabriel paderni,
+ * ger, gorthaur, john (http://www.jd-tech.net), kenneth, loonquawl,
+ * penutbutterjelly, stensi
+ * 
+ * Dual licensed under the MIT (MIT-LICENSE.txt)
+ * and GPL (GPL-LICENSE.txt) licenses.
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL KEVIN VAN ZONNEVELD BE LIABLE FOR ANY CLAIM, DAMAGES
+ * OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ */ 
+
+
 
  // script.aculo.us scriptaculous.js v1.7.0, Fri Jan 19 19:16:36 CET 2007
 
@@ -82,16 +153,7 @@
   *  MA 02111-1307 USA                                           *
   *                                                              *
   ****************************************************************/
-  
-  /*
- * Ext JS Library 2.1
- * Copyright(c) 2006-2008, Ext JS, LLC.
- * licensing@extjs.com
- * 
- * http://extjs.com/license
- */
- 
- 
+
  /*
  
  flotr
