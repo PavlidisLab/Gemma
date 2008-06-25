@@ -3,7 +3,7 @@ Ext.namespace('Gemma');
 /**
  * 
  * @class Gemma.GemmaGridPanel
- * @extends Ext.grid.EditorGridPanel*
+ * @extends Ext.grid.EditorGridPanel
  * @author Luke, Paul
  * @version $Id$
  */
@@ -15,17 +15,17 @@ Gemma.GemmaGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 	},
 
 	initComponent : function() {
-		if (this.height) {
-			Ext.apply(this, {
-				autoHeight : false
-			});
-		}
+		// if (this.height) {
+		// Ext.apply(this, {
+		// autoHeight : false
+		// });
+		//		}
 
-		if (Ext.isIE) {
-			Ext.apply(this, {
-				width : 800
-			});
-		}
+//		if (Ext.isIE) {
+//			Ext.apply(this, {
+//				width : 800
+//			});
+//		}
 
 		Ext.apply(this, {
 			selModel : new Ext.grid.RowSelectionModel({})
@@ -94,7 +94,7 @@ Gemma.GemmaGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
  * static methods
  */
 Gemma.GemmaGridPanel.formatTermWithStyle = function(value, uri) {
-	var style = uri ? "unusedWithUri" : "unusedNoUri";
+	var style = uri ? "unusedWithUri" : "unusedNoUri"; // typo.css
 	var description = uri || "free text";
 	return String.format("<span class='{0}' ext:qtip='{2}'>{1}</span>", style,
 			value, description);

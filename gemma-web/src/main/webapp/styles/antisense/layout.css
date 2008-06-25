@@ -83,7 +83,7 @@ div#main {
 }
 
 div#main.home {
-	margin : 10px;
+	margin: 10px;
 	/* border-left: 1px dotted #CCCCCC; */
 }
 
@@ -136,8 +136,6 @@ div#footer a:hover {
 }
 
 /* END FOOTER */ /* END LAYOUT */ /* custom layout for data summary */
-
-
 .datasummaryarea {
 	float: right;
 }
@@ -177,7 +175,6 @@ div#footer a:hover {
 	-moz-border-radius: 0px 0px 0px 0px;
 }
 
-
 /* custom layout for search tables */
 .searchTable {
 	border-width: 1px 1px 1px 1px;
@@ -204,123 +201,4 @@ table.list {
 	border-color: gray gray gray gray;
 	border-collapse: separate;
 	background-color: white;
-}
-
-/* reduced font size elements */
-.small {
-	font-size: smaller;
-}
-
-/* css for scriptaculous hovering */
-.drophover {
-	background-color: #ff0;
-}
-
-.dragItem {
-	cursor: move;
-}
-
-/* styles for pure CSS tooltips */
-a.info {
-	position: relative;
-	z-index: 24;
-	color: #000;
-	text-decoration: none;
-}
-
-/* colours for positive and negative link counts*/
-.positiveLink {
-	color: darkgreen;
-}
-
-.negativeLink {
-	color: red;
-}
-
-/* colours for validation/trouble */
-.trouble {
-	color: red;
-}
-
-.validated {
-	color: darkgreen;
-}
-
-/* colours for characteristics */
-.usedWithUri {
-	background: lightgreen;
-	font-weight: bold;
-}
-
-.usedNoUri {
-	font-weight: bold;
-}
-
-.unusedWithUri {
-	background: lightgreen;
-}
-
-.unusedNoUri {
-	
-}
-
-a.info:hover {
-	z-index: 25;
-	background-color: #ff0;
-}
-
-a.info span {
-	display: none
-}
-
-a.info:hover span { /*the span will display just on :hover state*/
-	display: block;
-	position: absolute;
-	top: 2em;
-	left: 2em;
-	width: 45em;
-	border: 1px solid #0cf;
-	background-color: #cff;
-	color: #000;
-	text-align: center;
-}
-
-/* make sure link text is white when selected in Ext tables
- */
-.x-grid-row-selected a {
-	color: white !important;
-}
-
-/* tooltips, modified from http://psacake.com/web/jl.asp
- */
-a.tooltip {
-	position: relative;
-	z-index: 20001;
-}
-
-a.tooltip:hover {
-	z-index: 20002;
-}
-
-a.tooltip .tooltiptext {
-	display: none;
-}
-
-a.tooltip:hover .tooltiptext {
-	display: block;
-	position: absolute;
-	top: 1em;
-	left: 1em;
-	border: 1px solid darkgoldenrod;
-	padding: 2px;
-	color: black;
-	background-color: lightgoldenrodyellow;
-}
-
-.wrap {
-	white-space: normal;
-}
-
-.coexpressionGridRowExpanded {
-	background-color: #EEEEEE;
 }

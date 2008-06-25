@@ -60,8 +60,6 @@
 			<prop key="/expressionExperiment/visualizeProbeCorrDist.html">expressionExperimentQCController</prop>
 			<prop key="/getData.html">expressionExperimentDataFetchController</prop>
 			<prop key="/candidateGeneList*">candidateGeneListController</prop>
-			<prop key="/gene/*">geneController</prop>
-			<prop key="/geneFinder.html">geneFinderController</prop>
 			<prop key="/characteristicBrowser.html">characteristicBrowserController</prop>
 			<prop key="/addTestData.html">testDataAddingController</prop>
 			<prop key="/genome/goldenPathSequenceLoad.html">goldenPathSequenceLoadController</prop>

@@ -37,13 +37,15 @@ Gemma.BioMaterialEditor = function(config) {
 		 * Gets called on startup but also when a refresh is needed.
 		 */
 		init : function() {
-			// if (this.grid) {
-			// // grid.destroy() seems to be broken...
-			// try {
-			// this.grid.destroy();
-			// } catch (e) {
-			// }
-			// }
+			// console.log("Reinitializing");
+			if (this.grid) {
+				try {
+					this.grid.destroy();
+				} catch (e) {
+					// console.log(e);
+				}
+
+			}
 
 			// first ajax call.
 			ExperimentalDesignController.getBioMaterials(
@@ -58,6 +60,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		forceFit : true
 	},
 
+	loadMask : true,
 	autoExpandColumn : 'bm',
 
 	/**
@@ -220,6 +223,10 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			this.rowExpander.toggleAll();
 		}, this);
 
+		this.getTopToolbar().on("refresh", function() {
+			this.init();
+		}, this);
+
 		if (this.editable) {
 			this.on("afteredit", function(e) {
 				var factorId = this.getColumnModel().getColumnId(e.column);
@@ -254,20 +261,25 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					// looking for 'factor569' -> fv54910
 					for (var j in row) {
 						if (typeof row[j] == 'string'
-								&& row[j].indexOf("factor") >= 0) {
+								&& row[j].indexOf("fv") >= 0) {
 							bmvo.factorIdToFactorValueId[j] = row[j];
 						}
 					}
 					bmvos.push(bmvo);
 				}
-				var callback = this.refresh.createDelegate(this); // check
+				
+				/*
+				 * When we return from the server, reload the factor values.
+				 */
+				var callback = this.init; // check
+				
 				ExperimentalDesignController
 						.updateBioMaterials(bmvos, callback);
 			}.createDelegate(this), this);
 
 			this.on("afteredit", function(model) {
-				this.getTopToolber().saveButton.enable();
-			});
+				this.getTopToolbar().saveButton.enable();
+			}.createDelegate(this));
 
 			this.getSelectionModel().on("selectionchange", function(model) {
 				var selected = model.getSelections();
@@ -340,7 +352,8 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	reloadFactorValues : function() {
 		for (var i in this.factorValueCombos) {
 			var factorId = this.factorValueCombos[i];
-			if (factorId.substring(0, 6) == "factor") {
+			if (typeof factorId == 'string'
+					&& factorId.substring(0, 6) == "factor") {
 				var combo = this.factorValueCombos[factorId];
 				var column = this.getColumnModel().getColumnById(factorId);
 				combo.setExperimentalFactor(combo.experimentalFactor.id,
@@ -356,6 +369,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 						});
 			}
 		}
+		this.getTopToolbar().factorValueCombo.store.reload();
 	},
 
 	createValueRenderer : function(factorValues) {
@@ -378,7 +392,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 Gemma.BioMaterialToolbar = Ext.extend(Ext.Toolbar, {
 
 	initComponent : function() {
-		
+
 		this.items = [];
 		if (this.editable) {
 
@@ -440,6 +454,15 @@ Gemma.BioMaterialToolbar = Ext.extend(Ext.Toolbar, {
 					this.factorValueCombo, this.applyButton];
 		}
 
+		var refreshButton = new Ext.Toolbar.Button({
+			text : "Refresh",
+			tooltip : "Reload the data",
+			handler : function() {
+				this.fireEvent("refresh");
+			}.createDelegate(this)
+
+		});
+
 		var expandButton = new Ext.Toolbar.Button({
 			text : "Expand/collapse all",
 			tooltip : "Show/hide all biomaterial details",
@@ -449,12 +472,13 @@ Gemma.BioMaterialToolbar = Ext.extend(Ext.Toolbar, {
 		});
 
 		this.items.push('->');
+		this.items.push(refreshButton);
 		this.items.push(expandButton);
 
 		Gemma.BioMaterialToolbar.superclass.initComponent.call(this);
 
 		this.addEvents("revertSelected", "toggleExpand", "apply", "save",
-				"undo");
+				"refresh", "undo");
 	},
 
 	enableApplyOnSelect : function(model) {

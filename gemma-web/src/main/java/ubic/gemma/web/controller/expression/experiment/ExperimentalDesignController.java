@@ -141,7 +141,14 @@ public class ExperimentalDesignController extends BaseMultiActionController {
         if ( e == null || e.getId() == null ) return;
         FactorValue fv = factorValueService.load( e.getId() );
 
-        if ( fv.getCharacteristics() == null ) fv.setCharacteristics( new HashSet<Characteristic>() );
+        if ( fv == null ) {
+            throw new EntityNotFoundException( "No such factor value with id=" + e.getId() );
+        }
+
+        if ( fv.getCharacteristics() == null ) {
+            fv.setCharacteristics( new HashSet<Characteristic>() );
+        }
+
         fv.getCharacteristics().add( c );
 
         factorValueService.update( fv );
@@ -458,23 +465,28 @@ public class ExperimentalDesignController extends BaseMultiActionController {
     }
 
     /**
-     * Updates the specified BioMaterials.
+     * Updates the specified BioMaterials's factor values. This completely removes any pre-existing factor values.
      * 
      * @param efvos a collection of BioMaterialValueObjects containing the updated values
      */
     public void updateBioMaterials( Collection<BioMaterialValueObject> bmvos ) {
         for ( BioMaterialValueObject bmvo : bmvos ) {
             BioMaterial bm = bioMaterialService.load( bmvo.getId() );
-            Collection<FactorValue> values = new HashSet<FactorValue>();
+            bm.getFactorValues().clear();
             for ( String fvIdString : bmvo.getFactorIdToFactorValueId().values() ) {
                 if ( fvIdString.matches( "fv\\d+" ) ) {
                     long fvId = Long.parseLong( fvIdString.substring( 2 ) );
-                    values.add( factorValueService.load( fvId ) );
+                    FactorValue fv = factorValueService.load( fvId );
+                    if ( fv == null ) {
+                        log.warn("Illegal request");
+                        throw new EntityNotFoundException( "No such factorValue with id=" + fvId );
+                    }
+                    bm.getFactorValues().add( fv );
                 }
             }
-            bm.setFactorValues( values );
             bioMaterialService.update( bm );
-        }
+            log.info( bm );
+        }        
     }
 
     /**

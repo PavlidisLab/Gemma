@@ -3,7 +3,7 @@ Ext.namespace('Gemma');
 Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 	loadMask : true,
-	
+
 	record : Ext.data.Record.create([{
 		name : "id",
 		type : "int"
@@ -116,12 +116,27 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					descriptionEditor);
 
 			this.getTopToolbar().on("create", function(newFactorValue) {
+
+				var oldmsg = this.loadMask.msg;
+				this.loadMask.msg = "Creating new experimental factor";
+				this.loadMask.show();
+
 				var callback = function() {
 					this.factorCreated(newFactorValue);
+					this.loadMask.hide();
+					this.loadMask.msg = oldmsg;
+				}.createDelegate(this);
+
+				var errorHandler = function() {
+					this.loadMask.hide();
+					this.loadMask.msg = oldmsg;
 				}.createDelegate(this);
 
 				ExperimentalDesignController.createExperimentalFactor(
-						this.experimentalDesign, newFactorValue, callback);
+						this.experimentalDesign, newFactorValue, {
+							callback : callback,
+							errorHandler : errorHandler
+						});
 			}.createDelegate(this));
 
 			this.getTopToolbar().on("delete", function() {
@@ -150,8 +165,18 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 			this.getTopToolbar().on("save", function() {
 				var edited = this.getEditedRecords();
+				var oldmsg = this.loadMask.msg;
+				this.loadMask.msg = "Saving ...";
+				this.loadMask.show();
 				var callback = function() {
 					this.recordsChanged(edited);
+					this.loadMask.hide();
+					this.loadMask.msg = oldmsg;
+				}.createDelegate(this);
+
+				var errorHandler = function() {
+					this.loadMask.hide();
+					this.loadMask.msg = oldmsg;
 				}.createDelegate(this);
 
 				ExperimentalDesignController.updateExperimentalFactors(edited,
@@ -290,7 +315,8 @@ Gemma.ExperimentalFactorToolbar = Ext.extend(Ext.Toolbar, {
 				this.saveButton.disable();
 				this.revertButton.disable();
 				this.fireEvent("save");
-			}
+			},
+			scope : this
 		});
 
 		this.addText("Add an Experimental Factor:");

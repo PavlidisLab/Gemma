@@ -81,8 +81,7 @@ Ext.onReady(function() {
 
 	experimentalFactorGrid.on("experimentalfactorchange",
 			function(efgrid, efs) {
-				factorValueGrid.reloadExperimentalFactors();
-				bioMaterialEditor.init();
+				bioMaterialEditor.init(); // refresh available factors.
 			});
 
 	experimentalFactorGrid.on("experimentalfactorselected", function(factor) {

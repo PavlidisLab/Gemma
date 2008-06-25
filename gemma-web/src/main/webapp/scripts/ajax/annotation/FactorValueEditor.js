@@ -41,21 +41,21 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				record.data.valueUri);
 	},
 
-	flattenCharacteristics : function(chars) {
-		var s = "";
-		for (var i = 0; i < chars.length; ++i) {
-			var c = chars[i].data;
-			var category = c.category.length > 0
-					? c.category
-					: "&lt;no category&gt;";
-			var value = c.value.length > 0 ? c.value : "&lt;no value&gt;";
-			s = s + String.format("{0}: {1}", category, value);
-			if (i + 1 < chars.length) {
-				s = s + ", ";
-			}
-		}
-		return s;
-	},
+	// flattenCharacteristics : function(chars) {
+	// var s = "";
+	// for (var i = 0; i < chars.length; ++i) {
+	// var c = chars[i].data;
+	// var category = c.category.length > 0
+	// ? c.category
+	// : "&lt;no category&gt;";
+	// var value = c.value.length > 0 ? c.value : "&lt;no value&gt;";
+	// s = s + String.format("{0}: {1}", category, value);
+	// if (i + 1 < chars.length) {
+	// s = s + ", ";
+	// }
+	// }
+	// return s;
+	// },
 
 	initComponent : function() {
 
@@ -197,10 +197,10 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			this.getTopToolbar().on("create", function() {
 				var ef = this.experimentalFactor;
 				var callback = function() {
-					this.factorValueCreated.call(this, ef);
+					this.factorValueCreated(ef);
 					this.getTopToolbar().characteristicToolbar
 							.setExperimentalFactor(ef.id);
-				};
+				}.createDelegate(this);
 				ExperimentalDesignController.createFactorValue(
 						this.experimentalFactor, callback);
 			}.createDelegate(this));
@@ -213,8 +213,8 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				if (selected) {
 					var ef = this.experimentalFactor;
 					var callback = function() {
-						this.factorValuesDeleted.call(this, selected);
-					};
+						this.factorValuesDeleted(selected);
+					}.createDelegate(this);
 					ExperimentalDesignController.deleteFactorValues(ef,
 							selected, callback);
 				}
@@ -230,8 +230,8 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					// ??
 				}
 				var callback = function() {
-					this.factorValuesChanged.call(this, edited);
-				};
+					this.factorValuesChanged(edited);
+				}.createDelegate(this);
 				ExperimentalDesignController.updateFactorValueCharacteristics(
 						edited, callback);
 			}, this);
@@ -260,14 +260,14 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		if (ct) {
 			ct.on("create", function(f, c) {
 				var callback = function() {
-					this.factorValueCombo.store.reload();
+					ct.factorValueCombo.store.reload();
 
 					this.factorValuesChanged.call(this, []);
 						// TODO do something to reset the text of the
 						// selected
 						// item,
 						// in case it changed...
-				};
+				}.createDelegate(this);
 				ExperimentalDesignController.createFactorValueCharacteristic(f,
 						c, callback);
 			}.createDelegate(this), this);
@@ -326,10 +326,6 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			}
 			return values;
 		}
-	},
-
-	reloadExperimentalFactors : function() {
-		this.getTopToolbar().reloadExperimentalFactors();
 	}
 
 });
@@ -365,7 +361,7 @@ Gemma.FactorValueToolbar = Ext.extend(Ext.Toolbar, {
 				Ext.Msg.confirm('Deleting factor value(s)',
 						'Are you sure? This cannot be undone', function(but) {
 							if (but == 'yes') {
-								this.deleteFactorValueButton.disable();
+								// this.deleteFactorValueButton.disable();
 								this.fireEvent("delete");
 							}
 						}.createDelegate(this));
@@ -496,10 +492,17 @@ Gemma.FactorValueCharacteristicToolbar = Ext.extend(Ext.Toolbar, {
 			disabled : true,
 			handler : function() {
 				var c = this.charCombo.getCharacteristic();
-				this.createButton.disable();
-				// removed in response to bug 1016 mgedCombo.reset();
-				this.charCombo.reset();
-				this.fireEvent("create", this.factorValue, c);
+
+				if (!this.factorValue || !c) {
+					Ext.Msg
+							.alert("You must select a factor value and set a characteristic.");
+				} else {
+
+					this.createButton.disable();
+					// removed in response to bug 1016 mgedCombo.reset();
+					this.charCombo.reset();
+					this.fireEvent("create", this.factorValue, c);
+				}
 			},
 			scope : this
 		});
