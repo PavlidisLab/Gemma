@@ -168,6 +168,22 @@
           </restriction>
         </complexContent>
       </complexType>
+      
+      <complexType name="dedvResult">
+     		 <sequence>
+      	  	<element name="gene_ids" type="xsd:string" /> 
+      	  	<element name="ee_ids" type="xsd:string" /> 
+      	  	<element name="ranks" type="xsd:string" />     		      		     			 
+     		</sequence>
+	     </complexType>
+	  <complexType name="ArrayOfDEDVRankResult">
+        <complexContent>
+          <restriction base="soapenc:Array">
+            <attribute ref="soapenc:arrayType" wsdl:arrayType="schema:dedvResult[]"/>
+          </restriction>
+        </complexContent>
+      </complexType>
+      
 	     
 </schema>
 
@@ -269,7 +285,7 @@
   </wsdl:message>
   <wsdl:message name="geneCoexpressionRequest">
   	<wsdl:part name="expression_experiment_set_id" type="xsd:integer" />
-    <wsdl:part name="gene_id" type="schema:ArrayOfIDs" />
+    <wsdl:part name="gene_ids" type="schema:ArrayOfIDs" />
      <wsdl:part name="taxon_id" type="xsd:integer" />
      <wsdl:part name="stringency" type="xsd:integer" />
      <wsdl:part name="queryGenesOnly" type="xsd:boolean" />
@@ -302,6 +318,15 @@
   <wsdl:message name="expressionExperimentSetIDsResponse">
     <wsdl:part name="expression_experiment_set_ids" type="schema:ArrayOfEESResult" />
   </wsdl:message>
+  <wsdl:message name="dEDVRankRequest">
+  <wsdl:part name="gene_ids" type="schema:ArrayOfIDs" />
+  <wsdl:part name="ee_ids" type="schema:ArrayOfIDs" />
+  <wsdl:part name="method" type="xsd:string" />
+    </wsdl:message>
+  <wsdl:message name="dEDVRankResponse">
+    <wsdl:part name="dEDVRank_results" type="schema:ArrayOfDEDVRankResult" />
+  </wsdl:message>
+ 
   
   <wsdl:portType name="gemma">
     <wsdl:operation name="experimentIDbyTaxon">
@@ -424,7 +449,13 @@
       <wsdl:output message="schema:expressionExperimentSetIDsResponse" name="expressionExperimentSetIDsResponse">
     </wsdl:output>
     </wsdl:operation> 
-  
+  <wsdl:operation name="dEDVRank">
+      <wsdl:input message="schema:dEDVRankRequest" name="dEDVRankRequest">
+    </wsdl:input>
+      <wsdl:output message="schema:dEDVRankResponse" name="dEDVRankResponse">
+    </wsdl:output>
+    </wsdl:operation> 
+    
   </wsdl:portType>
   <wsdl:binding name="gemmaBinding" type="schema:gemma">
     <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
@@ -607,6 +638,15 @@
            <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
       <wsdl:output name="expressionExperimentSetIDsResponse">
+           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="dEDVRank">
+      <soap:operation soapAction=""/>
+      <wsdl:input name="dEDVRankRequest">
+           <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </wsdl:input>
+      <wsdl:output name="dEDVRankResponse">
            <soap:body use="encoded" namespace="http://bioinformatics.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:output>
     </wsdl:operation>

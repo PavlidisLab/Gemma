@@ -53,6 +53,8 @@
 				
 				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}expressionExperimentSetIDs">expressionExperimentSetIDsEndpoint</prop>
 				
+				<prop key="{http://bioinformatics.ubc.ca/Gemma/ws}dEDVRank">dEDVRankEndpoint</prop>
+				
 				
           	</props>
          </property>
@@ -271,6 +273,16 @@
 				returns all the expression experiment set ids in the database along with its name and containing experiment ids 
         </description>
         <property name="expressionExperimentSetService" ref="expressionExperimentSetService"/>
+        <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
+    </bean>
+    
+    <bean id="dEDVRankEndpoint" class="ubic.gemma.web.services.DEDVRankEndpoint">
+        <description>
+				returns all the expression experiment set ids in the database along with its name and containing experiment ids 
+        </description>        
+        <property name="expressionExperimentService" ref="expressionExperimentService"/>
+        <property name="dedvRankService" ref="dedvRankService"/>
+        <property name="geneService" ref="geneService"/>
         <property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
     </bean>
    
