@@ -38,10 +38,18 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 
 /**
- *Allows access to the gene co-expression analysis.  Given a gene, a taxon and a stringency this service will return all the related co-expression data.  
+ *Allows access to the gene co-expression analysis.  Given 1) a collection of gene ids, 2) a taxon id, 3) a stringency,
+ *4) an expression experiment set id, and 5) a boolean for whether to return results that are within the query set only.
+ *
+ * The Expression Experiment Set ID (4) can be found by using the ExpressionExperimentSetIDEndpoint, which will return
+ * all the expression experiment set ids for all taxons and their corresponding description.
  *The stringency is the miniumum number of times we found a particular relationship. 
- *  Returns the coexpressed Gene, the support ( the number of times that coexpression was found )
- * and the experiments that co-expression was found in (since there should be more than 1 experiment this list will be returned as a space delimted string of EE Ids.
+ *
+ *  Returns a list consisting of 5 columns:
+ *  1) the query Gene, 2) the found Gene, 3) the support ( the number of times that coexpression was found ), 4) Sign
+ *  (+/-; denotes whehter the correlation between the coexpression pair is positive or negative), and 5)the experiment ids
+ *  that this co-expression was found in (since there should be more than 1 experiment this list will be returned as a 
+ *  space delimted string of EE Ids.)
  * 
  * @author gavin, klc
  * @version$Id$
@@ -92,10 +100,9 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
     protected Element invokeInternal( Element requestElement, Document document ) throws Exception {
         StopWatch watch = new StopWatch();
         watch.start();
-        
         setLocalName( LOCAL_NAME );
 
-        Collection<String> geneInput = getArrayValues( requestElement, "gene_id" );        
+        Collection<String> geneInput = getArrayValues( requestElement, "gene_ids" );        
         Collection<Long> geneIDLong = new HashSet<Long>();
         for ( String id : geneInput )
             geneIDLong.add( Long.parseLong( id ) );
