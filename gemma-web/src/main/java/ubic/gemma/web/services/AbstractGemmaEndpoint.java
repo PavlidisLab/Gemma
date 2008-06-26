@@ -123,7 +123,7 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
             node = null;
         }
 
-        if ( value == null ) {
+        if ( value == null || value.isEmpty()) {
             throw new IllegalArgumentException( "Could not find request text node" );
         }
 //        watch.stop();
@@ -133,7 +133,7 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
     }
 
     /**
-     * A method written for array input from MATLAB clients. The more generic method to use is getNodeValues(). Column
+     * A method written for array input from MATLAB clients. A more generic method to use is getNodeValues(). Column
      * Arrays and Horizontal Arrays from MATLAB both work, but it must be passed in directly (i.e. EEArray.ee_ids)
      * 
      * @param requestElement
@@ -158,16 +158,20 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
 
         NodeList children = requestElement.getElementsByTagName( tagName ).item( 0 ).getChildNodes();
 
+        // generic clients
         // iterate over the child nodes
-        // but it appears that MATLAB encodes it so that every odd (ie. 1, 3, 5, 7, etc) great-grandchild holds the
-        // array value
-        for ( int i = 1; i < children.getLength(); i += 2 ) {
+        for ( int i = 0; i < children.getLength(); i++ ) {
 
             // need to go one more level down into the great-grandchildren
             Node child = children.item( i ).getChildNodes().item( 0 );
             // Node child = children.item(i).getFirstChild();
-
-            if ( child.getNodeType() == Node.TEXT_NODE ) {
+            
+            //new check to see if the request is a Matlab one
+            //Matlab seems to package the xml such that values are found in every odd (ie. 1, 3, 5, 7, etc) 
+            //great-grandchild.  If at i=0, there is no value, then it IS a Matlab request.
+            if (i==0 && child ==null)
+                break;
+            if (child.getNodeType() == Node.TEXT_NODE ) {
                 node = child.getNodeValue();
                 // if (StringUtils.isNotEmpty(node)
                 // && StringUtils.isNumeric(node)) {
@@ -179,8 +183,31 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
             node = "";
         }
 
-        if ( value == null ) {
-            throw new IllegalArgumentException( "Could not find request text node" );
+        //MATLAB specific
+        //but it appears that MATLAB encodes it so that every odd (ie. 1, 3, 5, 7, etc) great-grandchild holds the
+        // array value
+        if ( value==null || value.isEmpty() ) {
+            
+            for ( int i = 1; i < children.getLength(); i=i+2 ) {
+
+                // need to go one more level down into the great-grandchildren
+                Node child = children.item( i ).getChildNodes().item( 0 );
+                // Node child = children.item(i).getFirstChild();
+
+                if ( child.getNodeType() == Node.TEXT_NODE ) {
+                    node = child.getNodeValue();
+                    // if (StringUtils.isNotEmpty(node)
+                    // && StringUtils.isNumeric(node)) {
+                    // break;
+                    // }
+                    value.add( node );
+
+                }
+                node = null;
+            }
+            if ( value==null || value.isEmpty() ) { 
+              throw new IllegalArgumentException( "Could not find request text node" );
+            }
         }
 //        watch.stop();
 //        Long time = watch.getTime();
