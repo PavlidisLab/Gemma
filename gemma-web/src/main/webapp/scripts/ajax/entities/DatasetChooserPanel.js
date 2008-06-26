@@ -552,9 +552,10 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 			loadMask : {
 				msg : 'Loading datasets ...'
 			},
-			tbar : ['->',{
+			tbar : ['->', {
 				text : "Delete selected",
-				handler :  this.removeSelectedFromEeSetMembersGrid.createDelegate(this)
+				handler : this.removeSelectedFromEeSetMembersGrid
+						.createDelegate(this)
 			}],
 			split : true,
 			height : 200,
@@ -613,7 +614,7 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 		this.add(this.sourceDatasetsGrid);
 
 	},
-	
+
 	removeSelectedFromEeSetMembersGrid : function() {
 		this.eeSetMembersGrid.removeSelected();
 	}
@@ -939,8 +940,8 @@ Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 		});
 
 		this.resetBut.on("enable", function() {
-			// Ext.log("Attempt to enable resetBut");
-		});
+				// Ext.log("Attempt to enable resetBut");
+			});
 	},
 
 	initNew : function() {
@@ -1024,7 +1025,8 @@ Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 				/* write updated one to the db */
 			} else {
 				Ext.Msg
-						.alert("Sorry, you can't edit this set. Try saving a clone instead.");
+						.alert("Permission denied",
+								"Sorry, you can't edit this set. Try saving a clone instead.");
 			}
 		}
 
