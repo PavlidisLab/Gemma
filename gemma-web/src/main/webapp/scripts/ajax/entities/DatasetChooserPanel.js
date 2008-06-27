@@ -840,9 +840,14 @@ Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 				taxon : args.taxon
 			}); // Ext creates the id.
 
+			// make the new record dirty.
+			newRec.set("description", "");
+			newRec.set("description", args.description);
+
 			this.grid.getStore().add(newRec);
 			this.grid.getSelectionModel().selectRecords([newRec]);
 			this.grid.getView().focusRow(this.grid.getStore().indexOf(newRec));
+
 			this.grid.clearDisplay();
 			this.fireEvent("taxonset", args.taxon);
 			this.commitBut.enable();
@@ -913,7 +918,7 @@ Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 			handler : this.reset,
 			scope : this,
 			disabled : false,
-			tooltip : "Reset to stored version"
+			tooltip : "Reset selected set to stored version"
 		});
 
 		this.deleteBut = new Ext.Button({
@@ -971,7 +976,7 @@ Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 									if (this.userCanWriteToDB) {
 										// Ext.log("Deleting from DB");
 										this.grid.getStore().remove(rec);
-										/* Delete from db */
+										/* FIXME Delete from db */
 									} else {
 										Ext.Msg
 												.alert("Permission denied",
@@ -1014,7 +1019,8 @@ Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 		if (rec.get("id") < 0) {
 			if (this.userCanWriteToDB) {
 				// Ext.log("Writing new to db");
-				/* write new one to the db */
+				/* FIXME write new one to the db */
+				rec.commit(); // to make it non-dirty.
 			} else {
 				// Ext.log("Writing to cookie");
 				this.grid.getStore().cookieSaveOrUpdateEESet(rec);
@@ -1022,7 +1028,8 @@ Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 		} else {
 			if (this.userCanWriteToDB) {
 				// Ext.log("Updating to db");
-				/* write updated one to the db */
+				/* FIXME write updated one to the db */
+				rec.commit(); // to make it non-dirty.
 			} else {
 				Ext.Msg
 						.alert("Permission denied",
@@ -1030,7 +1037,6 @@ Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 			}
 		}
 
-		rec.commit(); // to make it non-dirty.
 		this.cloneBut.enable();
 	},
 
@@ -1093,29 +1099,29 @@ Gemma.DetailsWindow = Ext.extend(Ext.Window, {
 
 		var values = Ext.getCmp('eeset-form').getForm().getValues();
 
+		var taxon = Ext.getCmp('eesetTaxon').getTaxon().data;
+
 		var name = values.eesetname;
-		if (!this.nameField.validate() || name === null) {
-			Ext.Msg.alert("Sorry", "You must provide a name for the set");
-			return;
-		}
 
 		var indexOfExisting = this.store.findBy(function(record, id) {
 			return record.get("name") == name;
 		}, this);
 
-		this.hide();
-
-		if (indexOfExisting >= 0) {
+		if (!this.nameField.validate() ) {
+			Ext.Msg.alert("Sorry", "You must provide a name for the set");
+			return;
+		} else if (indexOfExisting >= 0) {
 			Ext.Msg.alert("Sorry",
 					"Please provide a previously unused name for the set");
 			return;
+		} else {
+			this.hide();
+			return this.fireEvent("commit", {
+				name : values.eesetname,
+				description : values.eesetdescription,
+				taxon : taxon
+			});
 		}
-
-		return this.fireEvent("commit", {
-			name : values.eesetname,
-			description : values.eesetdescription,
-			taxon : values.eesetTaxon
-		});
 	},
 
 	initComponent : function() {
@@ -1161,5 +1167,7 @@ Gemma.DetailsWindow = Ext.extend(Ext.Window, {
 		});
 
 		Gemma.DetailsWindow.superclass.initComponent.call(this);
+
+		this.addEvents("commit");
 	}
 });
