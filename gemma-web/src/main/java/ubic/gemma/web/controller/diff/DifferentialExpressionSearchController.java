@@ -416,10 +416,13 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             /* Do nothing if the experiment does not have more than one factor. */
             if ( efs == null || efs.isEmpty() ) continue;
 
+            /* FIXME may changes this and return ees with 1 factor */
+            if ( efs.size() == 1 ) continue;
+
             /* Diff tool only supports 2 factors. */
             if ( efs.size() > 2 ) continue;
 
-            /* Leaves us with 1 or more factors. */
+            /* Leaves us with 2 factors. */
             Collection<DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
                     .findByInvestigation( ee );
 

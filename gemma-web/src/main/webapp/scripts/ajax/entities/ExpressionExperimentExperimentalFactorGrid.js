@@ -24,40 +24,32 @@ Gemma.ExpressionExperimentExperimentalFactorGrid = Ext.extend(
 			style : 'margin-bottom: 1em;',
 
 			initComponent : function() {
-//				if (this.pageSize) {
-//					Ext.apply(this, {
-//						store : new Gemma.PagingDataStore({
-//							proxy : new Ext.data.MemoryProxy([]),
-//							reader : new Ext.data.ListRangeReader({
-//								id : "id"
-//							}, this.record),
-//							pageSize : this.pageSize
-//						})
-//					});
-//					Ext.apply(this, {
-//						bbar : new Gemma.PagingToolbar({
-//							pageSize : this.pageSize,
-//							store : this.store
-//						})
-//					});
-//				} else {
-//					Ext.apply(this, {
-//						store : new Ext.data.Store({
-//							proxy : new Ext.data.MemoryProxy(this.record),
-//							reader : new Ext.data.ListRangeReader({},
-//									this.record)
-//						})
-//					});
-//				}
 
 				var source = [];
 				var customEditors = [];
-				var d;
 				for (i in this.data) {
 					var d = this.data[i];
 					if (d.expressionExperiment) {
+
+						var myData = [
+								[d.experimentalFactors[0].id,
+										d.experimentalFactors[0].name],
+								[d.experimentalFactors[1].id,
+										d.experimentalFactors[1].name]];
+
+						var s = new Ext.data.SimpleStore({
+							fields : [{
+								name : 'id',
+								type : 'int'
+							}, {
+								name : 'name',
+								type : 'string'
+							}]
+						});
+						s.loadData(myData);
+
 						customEditors[d.expressionExperiment.name] = new Ext.grid.GridEditor(new Ext.form.ComboBox({
-							store : new Ext.data.SimpleStore(d.experimentalFactors),
+							store : s,
 							typeAhead : true,
 							displayField : 'name',
 							selectOnFocus : true,
@@ -68,9 +60,20 @@ Gemma.ExpressionExperimentExperimentalFactorGrid = Ext.extend(
 					};
 				};
 
+				var cm = Ext.grid.ColumnModel([{
+					header : "Dataset",
+					width : 60,
+					sortable : true
+				}, {
+					header : "Factors",
+					width : 60,
+					sortable : false
+				}]);
+
 				Ext.apply(this, {
 					source : source,
-					customEditors : customEditors
+					customEditors : customEditors,
+					colModel : cm
 				});
 
 				Gemma.ExpressionExperimentExperimentalFactorGrid.superclass.initComponent
