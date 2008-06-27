@@ -89,6 +89,11 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
     private static final Boolean AJAX = true;
 
+    /*
+     * If this is too long, tooltips break.
+     */
+    private static final int MAX_EVENT_DESCRIPTION_LENGTH = 200;
+
     private ExpressionExperimentService expressionExperimentService = null;
     private ExperimentalFactorService experimentalFactorService;
 
@@ -337,10 +342,9 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     /**
      * @param ee
      * @return
-     * 
      */
     private AuditEvent getLastTroubleEvent( ExpressionExperiment ee ) {
-        //Why doesn't this use expressionExperimentService.getLastTroubleEvent ??? 
+        // Why doesn't this use expressionExperimentService.getLastTroubleEvent ???
         AuditEvent event = auditTrailService.getLastTroubleEvent( ee );
         if ( event != null ) return event;
 
@@ -400,7 +404,10 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             return redirectToList( request );
         }
 
-        expressionExperimentService.thawLite( expressionExperiment );
+        expressionExperimentService.thawLite( expressionExperiment ); // need to get at bioassays.
+
+        Collection<Long> ids = new HashSet<Long>();
+        ids.add( id );
 
         request.setAttribute( "id", id );
 
@@ -434,6 +441,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         }
 
         mav.addObject( "arrayDesigns", arrayDesigns );
+
         // add count of designElementDataVectors
         Long designElementDataVectorCount = new Long( expressionExperimentService
                 .getDesignElementDataVectorCountById( id ) );
@@ -453,8 +461,10 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             ExpressionExperimentValueObject vo = eeVos.iterator().next();
             String eeLinks = vo.getCoexpressionLinkCount().toString() + " (as of " + vo.getDateCached() + ")";
             mav.addObject( "eeCoexpressionLinks", eeLinks );
-
         }
+
+        mav.addObject( "eeId", id );
+        mav.addObject( "eeClass", "ExpressionExperiment" );
 
         boolean isPrivate = securityService.isPrivate( expressionExperiment );
         mav.addObject( "isPrivate", isPrivate );
@@ -473,13 +483,15 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         if ( troubleEvent != null ) {
             mav.addObject( "troubleEvent", troubleEvent );
             auditEventService.thaw( troubleEvent );
-            mav.addObject( "troubleEventDescription", StringEscapeUtils.escapeHtml( troubleEvent.toString() ) );
+            mav.addObject( "troubleEventDescription", StringEscapeUtils.escapeXml( troubleEvent.toString() ).substring(
+                    0, MAX_EVENT_DESCRIPTION_LENGTH ) );
         }
         AuditEvent validatedEvent = getLastValidationEvent( expressionExperiment );
         if ( validatedEvent != null ) {
             mav.addObject( "validatedEvent", validatedEvent );
             auditEventService.thaw( validatedEvent );
-            mav.addObject( "validatedEventDescription", StringEscapeUtils.escapeHtml( validatedEvent.toString() ) );
+            mav.addObject( "validatedEventDescription", StringEscapeUtils.escapeXml( validatedEvent.toString() )
+                    .substring( 0, MAX_EVENT_DESCRIPTION_LENGTH ) );
         }
 
         Collection<AuditEvent> sampleRemovalEvents = this.getSampleRemovalEvents( expressionExperiment );
@@ -487,8 +499,9 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             AuditEvent event = sampleRemovalEvents.iterator().next();
             mav.addObject( "samplesRemoved", event ); // todo: handle multiple
             auditEventService.thaw( event );
-            mav.addObject( "samplesRemovedDescription", StringEscapeUtils.escapeHtml( event.toString()
-                    + " (possibly other removals, not shown)" ) );
+            mav.addObject( "samplesRemovedDescription", StringEscapeUtils.escapeXml(
+                    event.toString() + " (possibly other removals, not shown)" ).substring( 0,
+                    MAX_EVENT_DESCRIPTION_LENGTH ) );
         }
     }
 
