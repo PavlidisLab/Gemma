@@ -18,9 +18,10 @@ Gemma.ExpressionExperimentExperimentalFactorGrid = Ext.extend(
 			},
 			pageSize : 25,
 			collapsible : true,
-			editable : false,
+			editable : true,
 			autoHeight : true,
 			width : 600,
+			height : 400,
 			style : 'margin-bottom: 1em;',
 
 			initComponent : function() {
@@ -60,20 +61,9 @@ Gemma.ExpressionExperimentExperimentalFactorGrid = Ext.extend(
 					};
 				};
 
-				var cm = Ext.grid.ColumnModel([{
-					header : "Dataset",
-					width : 60,
-					sortable : true
-				}, {
-					header : "Factors",
-					width : 60,
-					sortable : false
-				}]);
-
 				Ext.apply(this, {
 					source : source,
-					customEditors : customEditors,
-					colModel : cm
+					customEditors : customEditors
 				});
 
 				Gemma.ExpressionExperimentExperimentalFactorGrid.superclass.initComponent
