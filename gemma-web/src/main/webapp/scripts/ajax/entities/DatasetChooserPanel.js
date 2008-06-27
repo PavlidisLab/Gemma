@@ -1130,6 +1130,7 @@ Gemma.DetailsWindow = Ext.extend(Ext.Window, {
 			fieldLabel : 'Name',
 			value : this.name,
 			id : 'eesetname',
+			allowBlank : false,
 			minLength : 3,
 			invalidText : "You must provide a name",
 			width : 300
