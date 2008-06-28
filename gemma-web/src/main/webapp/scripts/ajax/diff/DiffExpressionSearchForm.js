@@ -332,7 +332,8 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 			this.efChooserPanel.show(eeIds);
 		}.createDelegate(this));
 
-		this.eeSetChooserPanel.on('factors-chosen', function(eeFactorsMap) {
+		this.efChooserPanel.on('factors-chosen', function(eeFactorsMap) {
+			var test;
 			
 		}.createDelegate(this));
 

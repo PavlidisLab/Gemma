@@ -20,7 +20,6 @@ Gemma.ExpressionExperimentExperimentalFactorGrid = Ext.extend(
 			collapsible : true,
 			editable : true,
 			autoHeight : true,
-			width : 600,
 			height : 400,
 			style : 'margin-bottom: 1em;',
 
