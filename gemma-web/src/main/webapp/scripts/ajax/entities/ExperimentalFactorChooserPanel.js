@@ -21,10 +21,10 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	onCommit : function() {
 
 		if (this.efGrid) {
-			var data = this.efGrid.data;
+			var eeFactorsMap = this.efGrid.data;
 		}
 
-		this.fireEvent("factors-chosen", data);
+		this.fireEvent("factors-chosen", eeFactorsMap);
 		this.hide();
 	},
 
