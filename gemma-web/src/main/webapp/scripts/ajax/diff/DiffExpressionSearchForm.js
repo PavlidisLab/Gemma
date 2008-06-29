@@ -88,7 +88,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 			newDsc.eeIds = this.getActiveEeIds();
 			newDsc.eeSetName = this.currentSet.get("name");
 			newDsc.eeSetId = this.currentSet.get("id"); // might be -1 (=
-														// temporary)
+			// temporary)
 			newDsc.dirty = this.currentSet.dirty; // modified without save
 		}
 		return newDsc;
@@ -313,8 +313,8 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		this.eeSetChooserPanel.on("set-chosen", function(eeSetRecord) {
 			if (!eeSetRecord)
 				return;
-				
-			this.currentSet = eeSetRecord;			
+
+			this.currentSet = eeSetRecord;
 			this.updateDatasetsToBeSearched(eeSetRecord
 					.get("expressionExperimentIds"), eeSetRecord);
 			this.geneChooserPanel.taxonChanged(this.currentSet.get("taxon"));
@@ -333,8 +333,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		}.createDelegate(this));
 
 		this.efChooserPanel.on('factors-chosen', function(eeFactorsMap) {
-			var test;
-			
+			// do something
 		}.createDelegate(this));
 
 		Ext.apply(this, {
