@@ -19,7 +19,12 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	constrainHeader : true,
 
 	onCommit : function() {
-		this.fireEvent("factors-chosen");
+
+		if (this.efGrid) {
+			var data = this.efGrid.data;
+		}
+
+		this.fireEvent("factors-chosen", data);
 		this.hide();
 	},
 
