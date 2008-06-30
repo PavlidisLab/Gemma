@@ -403,10 +403,11 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     @SuppressWarnings("unchecked")
     public Collection<ExpressionExperimentExperimentalFactorValueObject> getFactors( Collection<Long> eeIds ) {
 
-        log.info( "getting factors for experiments with ids: " + eeIds.toString() );
+        log.info( "Getting factors for experiments with ids: " + eeIds.toString() );
 
         Collection<ExpressionExperimentExperimentalFactorValueObject> eeefvos = new HashSet<ExpressionExperimentExperimentalFactorValueObject>();
 
+        Collection<Long> filteredEeIds = new HashSet<Long>();
         for ( Long id : eeIds ) {
 
             ExpressionExperiment ee = expressionExperimentService.load( id );
@@ -430,6 +431,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             if ( diffAnalyses == null || diffAnalyses.isEmpty() ) continue;
 
             /* FOUND SOMETHING USEFUL */
+            filteredEeIds.add( id );
             ExpressionExperimentExperimentalFactorValueObject eeefvo = new ExpressionExperimentExperimentalFactorValueObject();
             ExpressionExperimentValueObject eevo = configExpressionExperimentValueObject( ee );
             eeefvo.setExpressionExperiment( eevo );
@@ -439,6 +441,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             }
             eeefvos.add( eeefvo );
         }
+        log.info( "Filtered experiments.  Returning factors for experiments with ids: " + filteredEeIds.toString() );
         return eeefvos;
     }
 

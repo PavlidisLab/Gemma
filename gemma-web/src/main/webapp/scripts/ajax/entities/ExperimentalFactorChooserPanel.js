@@ -21,8 +21,31 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	onCommit : function() {
 
 		if (this.efGrid) {
-			var eeFactorsMap = this.efGrid.selModel;
+			var eeFactorsSelModel = this.efGrid.selModel;
+
+			var experiments = [];
+			var factors = [];
+
+			var i = 0;
+			while (eeFactorsSelModel.hasSelection()) {
+
+				eeFactorsSelModel.select(i, 0);
+				var experiment = eeFactorsSelModel.selection.record.data.name;
+				experiments[i] = experiment;
+
+				eeFactorsSelModel.select(i, 1);
+				var selectedFactor = eeFactorsSelModel.selection.record.data.value;
+				factors[i] = selectedFactor;
+
+				i++;
+			}
+
 		}
+
+		var eeFactorsMap = {
+			experiments : experiments,
+			factors : factors
+		};
 
 		this.fireEvent("factors-chosen", eeFactorsMap);
 		this.hide();
@@ -59,7 +82,6 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	 */
 	show : function(eeIds) {
 		this.populateFactors(eeIds);
-		Gemma.ExperimentalFactorChooserPanel.superclass.show.call(this);
 	},
 
 	/**
@@ -85,9 +107,12 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 		var dataFromServer = {
 			data : results
 		};
-		this.efGrid = new Gemma.ExpressionExperimentExperimentalFactorGrid(dataFromServer);
-		this.add(this.efGrid);
-		this.efGrid.doLayout();
+		if (results.size() > 0) {
+			this.efGrid = new Gemma.ExpressionExperimentExperimentalFactorGrid(dataFromServer);
+			this.add(this.efGrid);
+			this.efGrid.doLayout();
+			Gemma.ExperimentalFactorChooserPanel.superclass.show.call(this);
+		}
 	}
 
 // ,onRender : function(ct, position) {
