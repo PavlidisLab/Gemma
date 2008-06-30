@@ -20,24 +20,43 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 
 	onCommit : function() {
 
+		var experiments = [];
+		var factors = [];
+
 		if (this.efGrid) {
 			var eeFactorsSelModel = this.efGrid.selModel;
 
-			var experiments = [];
-			var factors = [];
+			eeFactorsSelModel.select(0, 0);
 
-			var i = 0;
-			while (eeFactorsSelModel.hasSelection()) {
+			var data = eeFactorsSelModel.grid.data;
+
+			for (var i = 0; i < data.size(); i++) {
+
+				var d = data[i];
+				if (!d.expressionExperiment) {
+					break;
+				}
 
 				eeFactorsSelModel.select(i, 0);
-				var experiment = eeFactorsSelModel.selection.record.data.name;
-				experiments[i] = experiment;
 
-				eeFactorsSelModel.select(i, 1);
-				var selectedFactor = eeFactorsSelModel.selection.record.data.value;
-				factors[i] = selectedFactor;
+				var ee = data[i].expressionExperiment.name;
+				if (ee == eeFactorsSelModel.selection.record.data.name) {
+					experiments[i] = data[i].expressionExperiment.id;
 
-				i++;
+					var efs = data[i].experimentalFactors;
+					for (var j = 0; j < efs.size(); j++) {
+						var ef = efs[j].name;
+						if (ef == eeFactorsSelModel.selection.record.data.value) {
+							factors[i] = efs[j].id;
+							break;
+						} else {
+							// continue
+						}
+					}
+
+				} else {
+					// continue
+				}
 			}
 
 		}
