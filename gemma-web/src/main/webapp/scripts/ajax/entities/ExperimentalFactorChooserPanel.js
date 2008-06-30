@@ -21,7 +21,7 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	onCommit : function() {
 
 		if (this.efGrid) {
-			var eeFactorsMap = this.efGrid.data;
+			var eeFactorsMap = this.efGrid.selModel;
 		}
 
 		this.fireEvent("factors-chosen", eeFactorsMap);
