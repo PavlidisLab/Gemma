@@ -26,7 +26,7 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 		if (this.efGrid) {
 			var eeFactorsSelModel = this.efGrid.selModel;
 
-			eeFactorsSelModel.select(0, 0);
+			eeFactorsSelModel.select(0, 1);
 
 			var data = eeFactorsSelModel.grid.data;
 
@@ -37,7 +37,7 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 					break;
 				}
 
-				eeFactorsSelModel.select(i, 0);
+				eeFactorsSelModel.select(i, 1);
 
 				var ee = data[i].expressionExperiment.name;
 				if (ee == eeFactorsSelModel.selection.record.data.name) {
