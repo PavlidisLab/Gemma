@@ -77,15 +77,18 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		if (this.dsc) {
 			newDsc = this.dsc;
 		}
-
+		this
 		Ext.apply(newDsc, {
 			geneIds : this.geneChooserPanel.getGeneIds(),
+			eeIds : this.efChooserPanel.eeFactorsMap.eeIds,
+			efIds : this.efChooserPanel.eeFactorsMap.efIds,
 			threshold : Ext.getCmp('thresholdField').getValue(),
 			taxonId : this.geneChooserPanel.getTaxonId()
 		});
 
 		if (this.currentSet) {
-			newDsc.eeIds = this.getActiveEeIds();
+			newDsc.eeIds = this.efChooserPanel.eeFactorsMap.eeIds;
+			newDsc.efIds = this.efChooserPanel.eeFactorsMap.efIds;
 			newDsc.eeSetName = this.currentSet.get("name");
 			newDsc.eeSetId = this.currentSet.get("id"); // might be -1 (=
 			// temporary)
@@ -330,10 +333,6 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		this.eeSetChooserPanel.on('choose-factors', function(eeSetRecord) {
 			var eeIds = eeSetRecord.get("expressionExperimentIds");
 			this.efChooserPanel.show(eeIds);
-		}.createDelegate(this));
-
-		this.efChooserPanel.on('factors-chosen', function(eeFactorsMap) {
-			// do something
 		}.createDelegate(this));
 
 		Ext.apply(this, {

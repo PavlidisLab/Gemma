@@ -175,6 +175,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         Collection<Long> eeIds = command.getEeIds();
 
+        Collection<Long> efIds = command.getEfIds();
+
         double threshold = command.getThreshold();
 
         Collection<DifferentialExpressionMetaAnalysisValueObject> mavos = new ArrayList<DifferentialExpressionMetaAnalysisValueObject>();

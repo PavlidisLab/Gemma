@@ -40,13 +40,14 @@ public class DiffExpressionSearchCommand implements Serializable {
 
     /* meta analysis */
     private Collection<Long> eeIds;
+    private Collection<Long> efIds;
 
     private String eeQuery;
-    
+
     private Long eeSetId;
-    
+
     private String eeSetName;
-    
+
     public String getEeQuery() {
         return eeQuery;
     }
@@ -95,14 +96,6 @@ public class DiffExpressionSearchCommand implements Serializable {
         this.threshold = threshold;
     }
 
-    public Collection<Long> getEeIds() {
-        return eeIds;
-    }
-
-    public void setEeIds( Collection<Long> eeIds ) {
-        this.eeIds = eeIds;
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -112,5 +105,21 @@ public class DiffExpressionSearchCommand implements Serializable {
     public String toString() {
         return "GeneIds=" + StringUtils.join( getGeneIds(), "," ) + " taxon=" + getTaxonId() + " Threshold="
                 + threshold;
+    }
+
+    public Collection<Long> getEfIds() {
+        return efIds;
+    }
+
+    public void setEfIds( Collection<Long> efIds ) {
+        this.efIds = efIds;
+    }
+
+    public Collection<Long> getEeIds() {
+        return eeIds;
+    }
+
+    public void setEeIds( Collection<Long> eeIds ) {
+        this.eeIds = eeIds;
     }
 }

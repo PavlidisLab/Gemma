@@ -17,11 +17,12 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	height : 500,
 	closeAction : 'hide',
 	constrainHeader : true,
+	eeFactorsMap : null,
 
 	onCommit : function() {
 
-		var experiments = [];
-		var factors = [];
+		var eeIds = [];
+		var efIds = [];
 
 		if (this.efGrid) {
 			var eeFactorsSelModel = this.efGrid.selModel;
@@ -41,13 +42,13 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 
 				var ee = data[i].expressionExperiment.name;
 				if (ee == eeFactorsSelModel.selection.record.data.name) {
-					experiments[i] = data[i].expressionExperiment.id;
+					eeIds[i] = data[i].expressionExperiment.id;
 
 					var efs = data[i].experimentalFactors;
 					for (var j = 0; j < efs.size(); j++) {
 						var ef = efs[j].name;
 						if (ef == eeFactorsSelModel.selection.record.data.value) {
-							factors[i] = efs[j].id;
+							efIds[i] = efs[j].id;
 							break;
 						} else {
 							// continue
@@ -62,11 +63,12 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 		}
 
 		var eeFactorsMap = {
-			experiments : experiments,
-			factors : factors
+			eeIds : eeIds,
+			efIds : efIds
 		};
 
-		this.fireEvent("factors-chosen", eeFactorsMap);
+		this.eeFactorsMap = eeFactorsMap;
+
 		this.hide();
 	},
 
@@ -88,9 +90,6 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 		Gemma.ExperimentalFactorChooserPanel.superclass.initComponent
 				.call(this);
 
-		this.addEvents({
-			"factors-chosen" : true
-		});
 	},
 
 	/**
