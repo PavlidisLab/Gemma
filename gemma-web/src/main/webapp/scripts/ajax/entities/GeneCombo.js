@@ -111,7 +111,7 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 
 	setTaxon : function(taxon) {
 		if (!this.taxon || this.taxon.id != taxon.id) {
-			console.log("taxon =" + taxon.id);
+			//console.log("taxon =" + taxon.id);
 			this.taxon = taxon;
 			delete this.selectedGene;
 			if (this.tooltip) {
