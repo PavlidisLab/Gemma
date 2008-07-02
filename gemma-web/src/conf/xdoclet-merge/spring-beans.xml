@@ -101,6 +101,7 @@
 	<property name="configParams">
 		<map>
 			<entry key="allowScriptTagRemoting" value="true"></entry>
+			<!-- <entry key="crossDomainSessionSecurity" value="false"></entry> Uncomment for development if you are getting DWR security errors -->
 			<!--			 <entry key="activeReverseAjaxEnabled" value="true"></entry>
 				<entry key="org.directwebremoting.extend.ServerLoadMonitor" value="org.directwebremoting.impl.PollingServerLoadMonitor"></entry>
 				<entry key="disconnectedTime" value="1000"></entry>-->
@@ -1207,7 +1208,8 @@
 					<property name="type" value="bean" />
 				</bean>
 			</entry>
-			<entry key="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExperimentalFactorValueObject">
+			<entry
+				key="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExperimentalFactorValueObject">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
 				</bean>
