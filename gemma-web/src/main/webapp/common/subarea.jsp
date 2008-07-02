@@ -13,31 +13,24 @@
 	<a href="<c:url value="/static/about.html"/>">here</a>.
 </p>
 
-<script type="text/JavaScript">
-  Ext.onReady( function() {
-      settings = {
-          tl: { radius: 10 },
-          tr: { radius: 10 },
-          bl: { radius: 10 },
-          br: { radius: 10 },
-          antiAlias: true,
-          autoPad: true,
-          validTags: ["div"]
-      }
-     var newsbox = new curvyCorners(settings, "latestNews");
-     newsbox.applyCornersToAll(); 
-  } );
-</script>
+<div class="roundedcornr_box_962327">
+	<div class="roundedcornr_top_962327">
+		<div></div>
+	</div>
+	<div class="roundedcornr_content_962327">
+		<h4 style="margin-left: 10px">
+			Gemma software updates
+		</h4>
+		<p>
+			Gemma 1.2 introduces more features for differential expression, including meta-analysis. Many parts of the user interface
+			feature improvements. For more details see the
+			<a href="<c:url value='/resources/dist/RELEASE-NOTES-1.2.txt' />">release notes</a>.
 
-<div class="latestNews" style="background: #FFF47E; padding-bottom: 1.8em">
-	<h4 style="margin-left: 10px">
-		Gemma software updates
-	</h4>
-	<p>
-		Gemma 1.2 introduces more features for differential expression, including meta-analysis. Many parts of the user interface
-		feature improvements. For more details see the
-		<a href="<c:url value='/resources/dist/RELEASE-NOTES-1.2.txt' />">release notes</a>.
-
-	</p>
+		</p>
+	</div>
+	<div class="roundedcornr_bottom_962327">
+		<div></div>
+	</div>
 </div>
+
 

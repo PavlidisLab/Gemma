@@ -202,3 +202,74 @@ table.list {
 	border-collapse: separate;
 	background-color: white;
 }
+
+/* Curved corners */
+.roundedcornr_box_962327 {
+	background: #fff47e;
+}
+
+.roundedcornr_top_962327 div {
+	background: url(images/corners/roundedcornr_962327_tl.png) no-repeat top
+		left;
+}
+
+.roundedcornr_top_962327 {
+	background: url(images/corners/roundedcornr_962327_tr.png) no-repeat top
+		right;
+}
+
+.roundedcornr_bottom_962327 div {
+	background: url(images/corners/roundedcornr_962327_bl.png) no-repeat
+		bottom left;
+}
+
+.roundedcornr_bottom_962327 {
+	background: url(images/corners/roundedcornr_962327_br.png) no-repeat
+		bottom right;
+}
+
+.roundedcornr_top_962327 div,.roundedcornr_top_962327,.roundedcornr_bottom_962327 div,.roundedcornr_bottom_962327
+	{
+	width: 100%;
+	height: 10px;
+	font-size: 1px;
+}
+
+.roundedcornr_content_962327 {
+	margin: 0 10px;
+}
+
+.roundedcornr_box_777249 {
+	background: #d1d8f8;
+}
+
+.roundedcornr_top_777249 div {
+	background: url(images/corners/roundedcornr_777249_tl.png) no-repeat top
+		left;
+}
+
+.roundedcornr_top_777249 {
+	background: url(images/corners/roundedcornr_777249_tr.png) no-repeat top
+		right;
+}
+
+.roundedcornr_bottom_777249 div {
+	background: url(images/corners/roundedcornr_777249_bl.png) no-repeat
+		bottom left;
+}
+
+.roundedcornr_bottom_777249 {
+	background: url(images/corners/roundedcornr_777249_br.png) no-repeat
+		bottom right;
+}
+
+.roundedcornr_top_777249 div,.roundedcornr_top_777249,.roundedcornr_bottom_777249 div,.roundedcornr_bottom_777249
+	{
+	width: 100%;
+	height: 15px;
+	font-size: 1px;
+}
+
+.roundedcornr_content_777249 {
+	margin: 0 10px;
+}

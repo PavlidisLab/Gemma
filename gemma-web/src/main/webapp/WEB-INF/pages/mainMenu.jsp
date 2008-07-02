@@ -1,6 +1,7 @@
 <%@ include file="/common/taglibs.jsp"%>
 <head>
-	<title><fmt:message key="mainMenu.title" /></title>
+	<title><fmt:message key="mainMenu.title" />
+	</title>
 
 
 	<script type="text/javascript">
@@ -14,142 +15,166 @@
 		renderTo : "coexpression-form"
 	} ); 
    
-   // rounded corners
-      settings = {
-          tl: { radius: 8 },
-          tr: { radius: 8 },
-          bl: { radius: 8 },
-          br: { radius: 8 },
-          antiAlias: true,
-          autoPad: true,
-          validTags: ["div"]
-      }
-     var datasumbox = new curvyCorners(settings, document.getElementById("dataSummary"));
-     datasumbox.applyCornersToAll();
-     
-     if (Ext.get("whatsNew")) {
-     	var box = new curvyCorners(settings, document.getElementById("whatsNew"));
-     	box.applyCornersToAll();
-     }
-     
-     if (Ext.get("adminFunctions")) {
-     	var box = new curvyCorners(settings, document.getElementById("adminFunctions"));
-     	box.applyCornersToAll();
-     }
-     
-     if (Ext.get("contact")) {
-     	var box = new curvyCorners(settings, document.getElementById("contact"));
-     	box.applyCornersToAll();
-     }
+  
   } );
 	</script>
 
 </head>
 
-<div class="rightcolumn" style="width: 200px; float: right; font-size: smaller">
-	<div id="dataSummary" style="background: #D1D8F8; margin-bottom: 25px; padding: 8px;">
-		<strong>Data Summary</strong>
-		<table>
-			<tr>
-				<td>
-					<a href='<c:url value="/expressionExperiment/showAllExpressionExperiments.html"/>'> Expression Experiments: </a>
-				</td>
-				<td align="right">
-					<b><c:out value="${ expressionExperimentCount}" /> </b>
-				</td>
-			</tr>
-			<c:forEach var="taxon" items="${ taxonCount }">
-				<tr>
-					<td>
-						&emsp;
-						<a href='/Gemma/expressionExperiment/showAllExpressionExperiments.html?taxonId=<c:out value="${ taxon.key.id}" />'>
-							<c:out value="${ taxon.key.scientificName}" /> </a>
 
-					</td>
-					<td align="right">
-						<c:out value="${ taxon.value}" />
-					</td>
-				</tr>
-			</c:forEach>
-			<tr>
-				<td>
-					<a href='<c:url value="/arrays/showAllArrayDesigns.html"/>'> Array Designs: </a>
-				</td>
-				<td align="right">
-					<b><c:out value="${ stats.arrayDesignCount }" /> </b>
-				</td>
-			</tr>
-			<tr>
-				<td>
-					Assays:
-				</td>
-				<td align="right">
-					<b><c:out value="${ stats.bioAssayCount }" /> </b>
-				</td>
-			</tr>
-		</table>
+<div class="rightcolumn" style="width: 200px; float: right; font-size: smaller">
+
+	<div class="roundedcornr_box_777249" style="margin-bottom: 15px;">
+		<div class="roundedcornr_top_777249">
+			<div></div>
+		</div>
+		<div class="roundedcornr_content_777249">
+			<div id="dataSummary">
+				<strong>Data Summary</strong>
+				<table>
+					<tr>
+						<td>
+							<a href='<c:url value="/expressionExperiment/showAllExpressionExperiments.html"/>'> Expression Experiments: </a>
+						</td>
+						<td align="right">
+							<b><c:out value="${ expressionExperimentCount}" /> </b>
+						</td>
+					</tr>
+					<c:forEach var="taxon" items="${ taxonCount }">
+						<tr>
+							<td>
+								&emsp;
+								<a href='/Gemma/expressionExperiment/showAllExpressionExperiments.html?taxonId=<c:out value="${ taxon.key.id}" />'>
+									<c:out value="${ taxon.key.scientificName}" /> </a>
+
+							</td>
+							<td align="right">
+								<c:out value="${ taxon.value}" />
+							</td>
+						</tr>
+					</c:forEach>
+					<tr>
+						<td>
+							<a href='<c:url value="/arrays/showAllArrayDesigns.html"/>'> Array Designs: </a>
+						</td>
+						<td align="right">
+							<b><c:out value="${ stats.arrayDesignCount }" /> </b>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							Assays:
+						</td>
+						<td align="right">
+							<b><c:out value="${ stats.bioAssayCount }" /> </b>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+		<div class="roundedcornr_bottom_777249">
+			<div></div>
+		</div>
 	</div>
 
+
+
+
 	<c:if test="${whatsNew != null}">
-		<div id="whatsNew" style="padding: 10px; margin-bottom: 25px; background: #D1D8F8">
-			<Gemma:whatsNew whatsNew="${whatsNew}" />
+
+		<div class="roundedcornr_box_777249" style="margin-bottom: 15px;">
+			<div class="roundedcornr_top_777249">
+				<div></div>
+			</div>
+			<div class="roundedcornr_content_777249">
+				<div id="whatsNew">
+					<Gemma:whatsNew whatsNew="${whatsNew}" />
+				</div>
+			</div>
+			<div class="roundedcornr_bottom_777249">
+				<div></div>
+			</div>
 		</div>
+
+
+
 	</c:if>
 
 
 
 	<authz:authorize ifAnyGranted="admin">
-		<div id="adminFunctions" style="padding: 10px; background: #D1D8F8;">
-			<strong> More administrative functions </strong>
-			<ul class="compactList" style="padding-left: 3px;">
+		<div id="adminFunctions" class="roundedcornr_box_777249" style="margin-bottom: 15px;">
+			<div class="roundedcornr_top_777249">
+				<div></div>
+			</div>
+			<div class="roundedcornr_content_777249">
+				<strong> More administrative functions </strong>
+				<ul class="compactList" style="padding-left: 3px;">
 
-				<li>
-					<a href='<c:url value="/indexer.html"/>'> <fmt:message key="menu.compassIndexer" /> </a>
-				</li>
-				<li>
-					<a href='<c:url value="/securityManager.html"/>'> <fmt:message key="menu.securityManager" /> </a>
-				</li>
-				<li>
-					<a href='<c:url value="/geneLinkAnalysisManager.html" />'>Manage gene link analyses</a> ("Canned" analyses)
-				</li>
-				<li>
-					<a href='<c:url value="/maintenanceMode.html" />'>Manage maintenance mode</a>
-				</li>
-				<li>
-					<a href='<c:url value="/whatsnew/generateCache.html" />'>Regenerate What's New Cache</a>
-				</li>
-				<li>
-					<a href='<c:url value="loadSimpleExpressionExperiment.html"/>'> Load expression data from a tabbed file</a>
-				</li>
-				<li>
-					<a href='<c:url value="/arrayDesign/associateSequences.html"/>'> <fmt:message key="menu.arrayDesignSequenceAdd" />
-					</a>
-				</li>
-			</ul>
-			<strong> Inactive, deprecated, or not ready for prime time </strong>
-			<ul class="compactList" style="padding-left: 3px;">
-				<li>
-					<a href='<c:url value="/uploadFile.html"/>'> <fmt:message key="menu.selectFile" /> </a>
-				</li>
-				<li>
-					<a href='<c:url value="/bibRefSearch.html"/>'> <fmt:message key="menu.flow.PubMedSearch" /> </a>
-				</li>
-			</ul>
+					<li>
+						<a href='<c:url value="/indexer.html"/>'> <fmt:message key="menu.compassIndexer" /> </a>
+					</li>
+					<li>
+						<a href='<c:url value="/securityManager.html"/>'> <fmt:message key="menu.securityManager" /> </a>
+					</li>
+					<li>
+						<a href='<c:url value="/geneLinkAnalysisManager.html" />'>Manage gene link analyses</a> ("Canned" analyses)
+					</li>
+					<li>
+						<a href='<c:url value="/maintenanceMode.html" />'>Manage maintenance mode</a>
+					</li>
+					<li>
+						<a href='<c:url value="/whatsnew/generateCache.html" />'>Regenerate What's New Cache</a>
+					</li>
+					<li>
+						<a href='<c:url value="loadSimpleExpressionExperiment.html"/>'> Load expression data from a tabbed file</a>
+					</li>
+					<li>
+						<a href='<c:url value="/arrayDesign/associateSequences.html"/>'> <fmt:message key="menu.arrayDesignSequenceAdd" />
+						</a>
+					</li>
+				</ul>
+				<strong> Inactive, deprecated, or not ready for prime time </strong>
+				<ul class="compactList" style="padding-left: 3px;">
+					<li>
+						<a href='<c:url value="/uploadFile.html"/>'> <fmt:message key="menu.selectFile" /> </a>
+					</li>
+					<li>
+						<a href='<c:url value="/bibRefSearch.html"/>'> <fmt:message key="menu.flow.PubMedSearch" /> </a>
+					</li>
+				</ul>
+			</div>
+			<div class="roundedcornr_bottom_777249">
+				<div></div>
+			</div>
 		</div>
+
+
+
 	</authz:authorize>
 
-
-	<div id="contact" style="padding: 10px; background: #D1D8F8;">
-		<h4 style="margin-left: 10px">
-			Contacting us
-		</h4>
-		<p>
-			To get emails about updates to the Gemma software, subscribe to the
-			<a href="http://perutz.cmmt.ubc.ca/mailman/bioinformatics.ubc.ca/listinfo/gemma-announce">Gemma-announce mailing list</a>.
-			Please send bug reports or feature requests
-			<a href="mailto:gemma@bioinformatics.ubc.ca">here</a>.
-		</p>
+	<div class="roundedcornr_box_777249" style="margin-bottom: 10px;">
+		<div class="roundedcornr_top_777249">
+			<div></div>
+		</div>
+		<div class="roundedcornr_content_777249" id="contact">
+			<div>
+				<strong>Contacting us</strong>
+				<p class="emphasized">
+					To get emails about updates to the Gemma software, subscribe to the
+					<a href="http://perutz.cmmt.ubc.ca/mailman/bioinformatics.ubc.ca/listinfo/gemma-announce">Gemma-announce mailing
+						list</a>. Please send bug reports or feature requests
+					<a href="mailto:gemma@bioinformatics.ubc.ca">here</a>.
+				</p>
+			</div>
+		</div>
+		<div class="roundedcornr_bottom_777249">
+			<div></div>
+		</div>
 	</div>
+
+
+
 
 </div>
 
