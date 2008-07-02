@@ -246,27 +246,8 @@ Gemma.GeneChooserToolBar = Ext.extend(Ext.Toolbar, {
 	},
 
 	initComponent : function() {
+
 		Gemma.GeneChooserToolBar.superclass.initComponent.call(this);
-
-		/*
-		 * code down here has to be called after the super-constructor so that
-		 * we know we're a grid...
-		 */
-		this.geneGrid.getSelectionModel().on("selectionchange",
-				function(model) {
-					var selected = model.getSelections();
-					if (selected.length > 0) {
-						this.removeButton.enable();
-					} else {
-						this.removeButton.disable();
-					}
-				}.createDelegate(this));
-
-		this.addEvents("taxonchanged", "ready");
-	},
-
-	afterRender : function() {
-		Gemma.GeneChooserToolBar.superclass.afterRender.call(this);
 
 		this.taxonCombo = new Gemma.TaxonCombo({
 			listeners : {
@@ -343,6 +324,26 @@ Gemma.GeneChooserToolBar = Ext.extend(Ext.Toolbar, {
 				this.chooser.show();
 			}.createDelegate(this, [], true)
 		});
+
+		/*
+		 * code down here has to be called after the super-constructor so that
+		 * we know we're a grid...
+		 */
+		this.geneGrid.getSelectionModel().on("selectionchange",
+				function(model) {
+					var selected = model.getSelections();
+					if (selected.length > 0) {
+						this.removeButton.enable();
+					} else {
+						this.removeButton.disable();
+					}
+				}.createDelegate(this));
+
+		this.addEvents("taxonchanged", "ready");
+	},
+
+	afterRender : function(c,l) {
+		Gemma.GeneChooserToolBar.superclass.afterRender.call(this, c,l);
 
 		this.add(this.taxonCombo);
 		this.addSpacer();

@@ -8,12 +8,6 @@ Gemma.CoexpressionGrid = function(config) {
 	Ext.QuickTips.init();
 
 	this.pageSize = config.pageSize;
-	delete config.pageSize;
-
-	/*
-	 * keep a reference to ourselves to avoid convoluted scope issues below...
-	 */
-	var thisGrid = this;
 
 	var dataSets; // The data sets that are 'relevant'. Updated during
 	// loaddata.
@@ -250,8 +244,7 @@ Gemma.CoexpressionGrid.getSupportStyler = function() {
 							+ String
 									.format(
 											"<span class='positiveLink'>{0}{1}</span> ",
-											d.posLinks,
-											Gemma.CoexpressionGrid
+											d.posLinks, Gemma.CoexpressionGrid
 													.getSpecificLinkString(
 															d.posLinks,
 															d.nonSpecPosLinks));
@@ -261,8 +254,7 @@ Gemma.CoexpressionGrid.getSupportStyler = function() {
 							+ String
 									.format(
 											"<span class='negativeLink'>{0}{1}</span> ",
-											d.negLinks,
-											Gemma.CoexpressionGrid
+											d.negLinks, Gemma.CoexpressionGrid
 													.getSpecificLinkString(
 															d.negLinks,
 															d.nonSpecNegLinks));
@@ -322,8 +314,7 @@ Gemma.CoexpressionGrid.getBitImageStyler = function() {
 		Gemma.CoexpressionGrid.bitImageStyler = function(value, metadata,
 				record, row, col, ds) {
 			var bits = record.data.datasetVector;
-			var width = Gemma.CoexpressionGrid.bitImageBarWidth
-					* bits.length;
+			var width = Gemma.CoexpressionGrid.bitImageBarWidth * bits.length;
 			var height = Gemma.CoexpressionGrid.bitImageBarHeight;
 			var s = '<span style="background-color:#DDDDDD;">'
 					+ '<img src="/Gemma/spark?type=bar&width=' + width

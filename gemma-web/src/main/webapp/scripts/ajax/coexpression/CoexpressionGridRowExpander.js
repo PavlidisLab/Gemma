@@ -40,6 +40,7 @@ Gemma.CoexpressionGridRowExpander = Ext.extend(Ext.grid.RowExpander, {
 
 			var tabPanel = new Ext.TabPanel({
 				renderTo : bodyEl,
+				width : 750,
 				activeTab : 0,
 				// layout : 'fit',
 				items : [{
@@ -64,7 +65,7 @@ Gemma.CoexpressionGridRowExpander = Ext.extend(Ext.grid.RowExpander, {
 				}]
 			});
 
-			// Keep mouse events from propogating to the parent grid. See ExtJS
+			// Keep mouse events from propagating to the parent grid. See ExtJS
 			// forums topic "nested grids problem" (242878).
 			dsGrid.getEl().swallowEvent(['mouseover', 'mousedown', 'click',
 					'dblclick']);

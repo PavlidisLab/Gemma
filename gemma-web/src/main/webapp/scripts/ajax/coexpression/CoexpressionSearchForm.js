@@ -18,7 +18,7 @@ Gemma.MIN_STRINGENCY = 2;
 Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 
 	layout : 'border',
-	width : 550,
+	width : 370,
 	height : 300,
 	frame : true,
 	stateful : true,
@@ -43,16 +43,14 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		return this.getCoexpressionSearchCommand();
 	},
 
-	afterRender : function(container, position) {
-		Gemma.CoexpressionSearchForm.superclass.afterRender.apply(this,
-				arguments);
+	onRender : function() {
+		Gemma.CoexpressionSearchForm.superclass.onRender.apply(this, arguments);
 
 		Ext.apply(this, {
 			loadMask : new Ext.LoadMask(this.getEl(), {
 				msg : "Searching  ..."
 			})
 		});
-
 	},
 
 	restoreState : function() {
@@ -89,7 +87,8 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		if (this.currentSet) {
 			newCsc.eeIds = this.getActiveEeIds();
 			newCsc.eeSetName = this.currentSet.get("name");
-			newCsc.eeSetId = this.currentSet.get("id"); // might be -1 (= temporary)
+			newCsc.eeSetId = this.currentSet.get("id"); // might be -1 (=
+			// temporary)
 			newCsc.dirty = this.currentSet.dirty; // modified without save
 		}
 		return newCsc;
@@ -255,6 +254,10 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 					errorHandler : errorHandler
 				});
 			}
+			if (pageTracker) {
+				pageTracker
+						._trackPageview("/Gemma/coexpressionSearch.doSearch");
+			}
 		} else {
 			this.handleError(msg);
 		}
@@ -324,23 +327,19 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		return [];
 	},
 
-	onRender : function(c, p) {
+	afterRender : function() {
 
-		Gemma.CoexpressionSearchForm.superclass.onRender.call(this, c, p);
+		Gemma.CoexpressionSearchForm.superclass.afterRender.call(this);
+		// if (this.geneChooserPanel.toolbar.taxonCombo) {
 
-		if (this.geneChooserPanel.toolbar.taxonCombo) {
-			this.geneChooserPanel.toolbar.taxonCombo.on("ready",
-					function(taxon) {
-						// console.log("Filtering combo");
-						this.eeSetChooserPanel.filterByTaxon(taxon);
-					}, this);
-		}
+		// }
 	},
 
 	initComponent : function() {
 
 		this.geneChooserPanel = new Gemma.GeneChooserPanel({
 			height : 100,
+			width : 230,
 			region : 'center',
 			id : 'gene-chooser-panel'
 		});
@@ -420,7 +419,28 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		Gemma.CoexpressionSearchForm.superclass.initComponent.call(this);
 		this.addEvents('beforesearch', 'aftersearch');
 
-		// this.eeSetChooserPanel.store.load();
+		/*
+		 * This horrible mess. We listen to taxon ready event and filter the
+		 * presets on the taxon.
+		 */
+		// this.geneChooserPanel.on("render", function() {
+		// this.geneChooserPanel.toolbar.on("render", function() {
+		this.geneChooserPanel.toolbar.taxonCombo.on("ready", function(taxon) {
+			// console.log("setting up filtering of combo");
+			if (taxon) {
+				if (this.eeSetChooserPanel.store.getRange().length > 0) {
+					// console.log("Load was done, filtering");
+					this.eeSetChooserPanel.filterByTaxon(taxon);
+				} else {
+					this.eeSetChooserPanel.store.on("load", function() {
+						// console.log("Filtering after load");
+						this.eeSetChooserPanel.filterByTaxon(taxon);
+					}, this);
+				}
+			}
+		}, this);
+		// }, this);
+		// }, this);
 
 	}
 

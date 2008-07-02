@@ -380,6 +380,29 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		Gemma.DiffExpressionSearchForm.superclass.initComponent.call(this);
 		this.addEvents('beforesearch', 'aftersearch');
 
+		/*
+		 * This horrible mess. We listen to taxon ready event and filter the
+		 * presets on the taxon.
+		 */
+		// this.geneChooserPanel.on("render", function() {
+		// this.geneChooserPanel.toolbar.on("render", function() {
+		this.geneChooserPanel.toolbar.taxonCombo.on("ready", function(taxon) {
+			// console.log("setting up filtering of combo");
+			if (taxon) {
+				if (this.eeSetChooserPanel.store.getRange().length > 0) {
+					// console.log("Load was done, filtering");
+					this.eeSetChooserPanel.filterByTaxon(taxon);
+				} else {
+					this.eeSetChooserPanel.store.on("load", function() {
+						// console.log("Filtering after load");
+						this.eeSetChooserPanel.filterByTaxon(taxon);
+					}, this);
+				}
+			}
+		}, this);
+		// }, this);
+		// }, this);
+
 	}
 
 });

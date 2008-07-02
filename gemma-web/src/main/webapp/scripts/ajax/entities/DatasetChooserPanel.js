@@ -216,12 +216,11 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 
 	filterByTaxon : function(taxon) {
-		if (this.suppressFiltering || !taxon || this.store === null
-				|| this.store.getRange().length == 0) {
-			// not ready.
+		if (this.suppressFiltering) {
 			return;
 		}
 
+		// console.log("filter by " + taxon.id);
 		this.doQueryBy(function(record, id) {
 			if (!record.get("taxon")) {
 				return true; // in case there is none.
@@ -1107,7 +1106,7 @@ Gemma.DetailsWindow = Ext.extend(Ext.Window, {
 			return record.get("name") == name;
 		}, this);
 
-		if (!this.nameField.validate() ) {
+		if (!this.nameField.validate()) {
 			Ext.Msg.alert("Sorry", "You must provide a name for the set");
 			return;
 		} else if (indexOfExisting >= 0) {

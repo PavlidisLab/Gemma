@@ -20,10 +20,12 @@ Ext.onReady(function() {
 	var summaryPanel;
 
 	var knownGeneDatasetGrid = new Gemma.CoexpressionDatasetGrid({
-		renderTo : "coexpression-results"
+		renderTo : "coexpression-results",
+		width : 800
 	});
 	var knownGeneGrid = new Gemma.CoexpressionGrid({
 		renderTo : "coexpression-results",
+		width : 800,
 		title : "Coexpressed genes",
 		pageSize : 25
 	});
@@ -32,20 +34,24 @@ Ext.onReady(function() {
 	if (admin) {
 		var predictedGeneDatasetGrid = new Gemma.CoexpressionDatasetGrid({
 			renderTo : "coexpression-results",
+			width : 800,
 			adjective : "predicted gene"
 		});
 		predictedGeneGrid = new Gemma.CoexpressionGrid({
 			renderTo : "coexpression-results",
+			width : 800,
 			title : "Coexpressed predicted genes",
 			pageSize : 25,
 			collapsed : true
 		});
 		var probeAlignedDatasetGrid = new Gemma.CoexpressionDatasetGrid({
 			renderTo : "coexpression-results",
+			width : 800,
 			adjective : "probe-aligned region"
 		});
 		probeAlignedGrid = new Gemma.CoexpressionGrid({
 			renderTo : "coexpression-results",
+			width : 800,
 			title : "Coexpressed probe-aligned regions",
 			pageSize : 25,
 			collapsed : true
