@@ -39,8 +39,7 @@ public class DiffExpressionSearchCommand implements Serializable {
     private Long taxonId;
 
     /* meta analysis */
-    private Collection<Long> eeIds;
-    private Collection<Long> efIds;
+    private Collection<DiffExpressionSelectedFactorCommand> selectedFactors;
 
     private String eeQuery;
 
@@ -107,19 +106,11 @@ public class DiffExpressionSearchCommand implements Serializable {
                 + threshold;
     }
 
-    public Collection<Long> getEfIds() {
-        return efIds;
+    public Collection<DiffExpressionSelectedFactorCommand> getSelectedFactors() {
+        return selectedFactors;
     }
 
-    public void setEfIds( Collection<Long> efIds ) {
-        this.efIds = efIds;
-    }
-
-    public Collection<Long> getEeIds() {
-        return eeIds;
-    }
-
-    public void setEeIds( Collection<Long> eeIds ) {
-        this.eeIds = eeIds;
+    public void setSelectedFactors( Collection<DiffExpressionSelectedFactorCommand> selectedFactors ) {
+        this.selectedFactors = selectedFactors;
     }
 }

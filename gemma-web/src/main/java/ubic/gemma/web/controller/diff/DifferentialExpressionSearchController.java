@@ -20,6 +20,7 @@ package ubic.gemma.web.controller.diff;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -173,18 +174,17 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         Collection<Long> geneIds = command.getGeneIds();
 
-        Collection<Long> eeIds = command.getEeIds();
-
-        Collection<Long> efIds = command.getEfIds();
+        Collection<DiffExpressionSelectedFactorCommand> selectedFactors = command.getSelectedFactors();
 
         double threshold = command.getThreshold();
 
         Collection<DifferentialExpressionMetaAnalysisValueObject> mavos = new ArrayList<DifferentialExpressionMetaAnalysisValueObject>();
         for ( long geneId : geneIds ) {
-            DifferentialExpressionMetaAnalysisValueObject mavo = getDifferentialExpressionMetaAnalysis( geneId, eeIds,
-                    threshold );
+            DifferentialExpressionMetaAnalysisValueObject mavo = getDifferentialExpressionMetaAnalysis( geneId,
+                    selectedFactors, threshold );
             mavo.setSortKey();
-            if ( eeIds != null && !eeIds.isEmpty() ) mavo.setNumSearchedExperiments( eeIds.size() );
+            if ( selectedFactors != null && !selectedFactors.isEmpty() )
+                mavo.setNumSearchedExperiments( selectedFactors.size() );
             mavos.add( mavo );
 
         }
@@ -202,24 +202,30 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      */
     @SuppressWarnings("unchecked")
     private DifferentialExpressionMetaAnalysisValueObject getDifferentialExpressionMetaAnalysis( Long geneId,
-            Collection<Long> eeIds, double threshold ) {
+            Collection<DiffExpressionSelectedFactorCommand> selectedFactors, double threshold ) {
 
         Gene g = geneService.load( geneId );
 
         if ( g == null ) return null;
 
-        /* find the analyzed experiments (those that had the diff cli run on it and have the gene g) */
+        /* find experiments that have had the diff cli run on it and have the gene g (analyzed) */
         Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService
                 .findExperimentsWithAnalyses( g );
 
-        /* find the 'active' experiments (those that had the diff cli run on it and are in the scope of eeIds) */
+        /* the 'chosen' factors (and their associated experiments) */
+        Map<Long, Long> eeFactorsMap = new HashMap<Long, Long>();
+        for ( DiffExpressionSelectedFactorCommand selectedFactor : selectedFactors ) {
+            eeFactorsMap.put( selectedFactor.getEeId(), selectedFactor.getEfId() );
+        }
+
+        /* filter experiments that had the diff cli run on it and are in the scope of eeFactorsMap eeIds (active) */
         Collection<ExpressionExperiment> activeExperiments = null;
-        if ( eeIds == null || eeIds.isEmpty() ) {
+        if ( eeFactorsMap.keySet() == null || eeFactorsMap.isEmpty() ) {
             activeExperiments = experimentsAnalyzed;
         } else {
             activeExperiments = new ArrayList<ExpressionExperiment>();
             for ( ExpressionExperiment ee : experimentsAnalyzed ) {
-                if ( eeIds.contains( ee.getId() ) ) {
+                if ( eeFactorsMap.keySet().contains( ee.getId() ) ) {
                     activeExperiments.add( ee );
                 }
             }
@@ -238,25 +244,48 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             ExpressionExperimentValueObject eevo = configExpressionExperimentValueObject( ee );
 
             /*
-             * use the threshold for regular diff expression (handling the threhold check below since we ignore this for
-             * the meta analysis)
+             * Get results with experiment and gene. Handling the threshold check below since we ignore this for the
+             * meta analysis.
              */
             Collection<ProbeAnalysisResult> results = differentialExpressionAnalysisService.find( g, ee );
+
+            /* filter results for duplicate probes (those from experiments that had 2 way anova) */
+            Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> dearToEf = differentialExpressionAnalysisResultService
+                    .getExperimentalFactors( results );
+
+            Collection<ProbeAnalysisResult> filteredResults = new HashSet<ProbeAnalysisResult>();
+            for ( ProbeAnalysisResult r : results ) {
+
+                /* ignore probe results with interaction effect (2 way anova with interactions) */
+                Collection<ExperimentalFactor> efs = dearToEf.get( r );
+                if ( efs.size() >= 2 ) continue;
+
+                /*
+                 * leaves us with probe results with 1 factor (main effects from 2 way anova). now filter for chosen
+                 * factor
+                 */
+                ExperimentalFactor ef = efs.iterator().next();
+                long sfId = eeFactorsMap.get( ee.getId() );
+                if ( ef.getId() != sfId ) {
+                    continue;
+                }
+
+                /* filtered result with chosen factor */
+                filteredResults.add( r );
+
+            }
 
             /*
              * For the diff expression meta analysis, ignore threshold. Select the 'best' penalized probe if multiple
              * probes map to the same gene.
              */
-            ProbeAnalysisResult res = findMinPenalizedProbeResult( results );
+            ProbeAnalysisResult res = findMinPenalizedProbeResult( filteredResults );
 
             Double p = res.getPvalue();
             pvaluesToCombine.add( p );
 
-            Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> dearToEf = differentialExpressionAnalysisResultService
-                    .getExperimentalFactors( results );
-
-            /* for each result, set up a devo */
-            for ( ProbeAnalysisResult r : results ) {
+            /* for each filtered result, set up a devo (contains only results with chosen factor) */
+            for ( ProbeAnalysisResult r : filteredResults ) {
                 DifferentialExpressionValueObject devo = new DifferentialExpressionValueObject();
 
                 Boolean metThreshold = r.getCorrectedPvalue() <= threshold ? true : false;
@@ -276,11 +305,11 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                     log.warn( "No experimentalfactor(s) for ProbeAnalysisResult: " + r.getId() );
                     continue;
                 }
-                for ( ExperimentalFactor ef : efs ) {
-                    ExperimentalFactorValueObject efvo = configExperimentalFactorValueObject( ef );
+                ExperimentalFactor ef = efs.iterator().next();
 
-                    devo.getExperimentalFactors().add( efvo );
-                }
+                ExperimentalFactorValueObject efvo = configExperimentalFactorValueObject( ef );
+                devo.getExperimentalFactors().add( efvo );
+
                 devo.setP( r.getCorrectedPvalue() );
                 devo.setSortKey();
                 devos.add( devo );
