@@ -86,7 +86,7 @@ public class GenePickerController extends BaseMultiActionController {
      * @return
      */
     public Collection<Gene> searchGenes( String query, Long taxonId ) {
-        log.info( "Search: " + query + " taxon=" + taxonId );
+
         Taxon taxon = null;
         if ( taxonId != null ) {
             taxon = taxonService.load( taxonId );
@@ -98,6 +98,7 @@ public class GenePickerController extends BaseMultiActionController {
         for ( SearchResult sr : geneSearchResults ) {
             genes.add( ( Gene ) sr.getResultObject() );
         }
+        log.info( "Gene search: " + query + " taxon=" + taxonId + ", " + genes.size() + " found" );
         return genes;
     }
 

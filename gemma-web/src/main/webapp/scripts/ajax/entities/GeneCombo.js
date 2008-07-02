@@ -15,10 +15,10 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 	displayField : 'officialSymbol',
 	valueField : 'id',
 	width : 140,// default.
-	listWidth : 450, // ridiculously large so IE displays it properly (usually)
+	listWidth : 450, // ridiculously large so IE displays it properly
+	// (usually)
 
 	loadingText : 'Searching...',
-
 	emptyText : "Search for a gene",
 	minChars : 1,
 	selectOnFocus : true,
@@ -111,12 +111,21 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 
 	setTaxon : function(taxon) {
 		if (!this.taxon || this.taxon.id != taxon.id) {
+			console.log("taxon =" + taxon.id);
 			this.taxon = taxon;
 			delete this.selectedGene;
 			if (this.tooltip) {
 				this.tooltip.destroy();
 			}
 			this.reset();
+
+			/*
+			 * this is to make sure we always search again after a taxon change,
+			 * in case the user searches for the same gene. Otherwise Ext just
+			 * keeps the old results.
+			 */
+			this.lastQuery = null;
+
 		}
 	}
 
