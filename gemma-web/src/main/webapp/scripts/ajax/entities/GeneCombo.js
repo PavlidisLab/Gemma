@@ -15,7 +15,8 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 	displayField : 'officialSymbol',
 	valueField : 'id',
 	width : 140,// default.
-	listWidth : 350,
+	listWidth : 450, // ridiculously large so IE displays it properly (usually)
+
 	loadingText : 'Searching...',
 
 	emptyText : "Search for a gene",
@@ -37,7 +38,7 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 
 	initComponent : function() {
 
-		var template = new Ext.XTemplate('<tpl for="."><div ext:qtip="{officialName} ({[values.taxon.scientificName]})" class="x-combo-list-item">{officialSymbol} {officialName} ({[values.taxon.scientificName]})</div></tpl>');
+		var template = new Ext.XTemplate('<tpl for="."><div style="font-size:11px" class="x-combo-list-item" ext:qtip="{officialName} ({[values.taxon.scientificName]})">{officialSymbol} {officialName} ({[values.taxon.scientificName]})</div></tpl>');
 
 		Ext.apply(this, {
 			tpl : template,

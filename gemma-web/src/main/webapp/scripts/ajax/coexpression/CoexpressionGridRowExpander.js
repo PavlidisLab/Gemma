@@ -24,6 +24,7 @@ Gemma.CoexpressionGridRowExpander = Ext.extend(Ext.grid.RowExpander, {
 
 			var dsGrid = new Gemma.ExpressionExperimentGrid({
 				records : supporting,
+				width : 750,
 				renderTo : supportingDsGridEl
 			});
 
@@ -32,6 +33,7 @@ Gemma.CoexpressionGridRowExpander = Ext.extend(Ext.grid.RowExpander, {
 			var diffExGrid = new Gemma.DiffExpressionExperimentGrid({
 				geneId : gene.id,
 				threshold : 0.01,
+				width : 750,
 				renderTo : diffExGridEl
 			});
 
@@ -40,6 +42,7 @@ Gemma.CoexpressionGridRowExpander = Ext.extend(Ext.grid.RowExpander, {
 
 			var tabPanel = new Ext.TabPanel({
 				renderTo : bodyEl,
+				layoutOnTabChange : true,
 				width : 750,
 				activeTab : 0,
 				// layout : 'fit',

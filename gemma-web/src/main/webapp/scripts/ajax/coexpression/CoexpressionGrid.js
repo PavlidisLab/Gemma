@@ -5,7 +5,7 @@ Ext.namespace('Gemma');
  * options:
  */
 Gemma.CoexpressionGrid = function(config) {
-	Ext.QuickTips.init();
+ 
 
 	this.pageSize = config.pageSize;
 
@@ -173,8 +173,13 @@ Gemma.CoexpressionGrid.searchForGene = function(geneId) {
 /*
  * instance methods...
  */
-Ext.extend(Gemma.CoexpressionGrid, Gemma.GemmaGridPanel, {
+Ext.extend(Gemma.CoexpressionGrid, Ext.grid.GridPanel, {
 
+	viewConfig : {
+		forceFit : true
+	},
+	
+	
 	loadData : function(isCannedAnalysis, numQueryGenes, data, datasets) {
 		var queryCol = this.getColumnModel().getColumnById('query');
 		if (numQueryGenes > 1) {
