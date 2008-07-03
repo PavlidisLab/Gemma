@@ -448,9 +448,6 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             /* Do nothing if the experiment does not have more than one factor. */
             if ( efs == null || efs.isEmpty() ) continue;
 
-            // FIXME remove this, but make sure check in the eeefGrid to see if the second factor exists
-            if ( efs.size() == 1 ) continue;
-
             /* Diff tool only supports 2 factors. */
             if ( efs.size() > 2 ) continue;
 

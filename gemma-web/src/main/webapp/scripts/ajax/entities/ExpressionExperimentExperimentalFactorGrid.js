@@ -31,11 +31,15 @@ Gemma.ExpressionExperimentExperimentalFactorGrid = Ext.extend(
 					var d = this.data[i];
 					if (d.expressionExperiment) {
 
-						var myData = [
-								[d.experimentalFactors[0].id,
-										d.experimentalFactors[0].name],
-								[d.experimentalFactors[1].id,
-										d.experimentalFactors[1].name]];
+						var myData = [];
+
+						for (j in d.experimentalFactors) {
+							var f = d.experimentalFactors[j];
+							if (f.id) {
+								var row = [f.id, f.name];
+								myData.push(row);
+							}
+						}
 
 						var s = new Ext.data.SimpleStore({
 							fields : [{
