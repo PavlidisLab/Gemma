@@ -97,26 +97,26 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				header : "Dataset",
 				dataIndex : "shortName",
 				renderer : this.formatEE,
-				width : 80,
+		//		width : 80,
 				sortable : true
 			}, {
 				id : 'name',
 				header : "Name",
 				dataIndex : "name",
-				width : 120,
+			//	width : 120,
 				sortable : true
 			}, {
 				id : 'arrays',
 				header : "Arrays",
 				dataIndex : "arrayDesignCount",
-				width : 50,
+			//	width : 50,
 				sortable : true
 			}, {
 				id : 'assays',
 				header : "Assays",
 				dataIndex : "bioAssayCount",
 				renderer : this.formatAssayCount,
-				width : 50,
+			//	width : 50,
 				sortable : true
 			}]
 		});

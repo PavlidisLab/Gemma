@@ -170,7 +170,6 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 	 */
 	applyState : function(state) {
 		if (state && state.eeSet) {
-			// console.log("Read state=" + state.eeSet);
 			this.setState(state.eeSet);
 		}
 		Gemma.ExpressionExperimentSetCombo.superclass.applyState.call(this,
@@ -187,31 +186,23 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 
 	setState : function(v) {
 		if (this.isReady) {
-			// console.log("already ready");
 			this.selectById(v);
 		} else {
-			// console.log("storing state " + v);
 			this.tmpState = v;
-			// wait for restoreState is called.
 		}
 	},
 
 	restoreState : function() {
 		if (this.tmpState) {
-			// console.log("restore state " + this.tmpState);
 			this.selectById(this.tmpState);
 			delete this.tmpState;
 			this.isReady = true;
-			// console.log("ready");
-		} else {
-			// console.log("no state to restore");
 		}
-
 		if (this.store.getSelected()) {
 			this.fireEvent('comboReady', this.store.getSelected().data);
 			this.fireEvent('choose-factors', this.store.getSelected().data);
 		} else {
-			// console.log("no selection");
+			this.fireEvent('comboReady');
 		}
 	},
 
@@ -220,12 +211,10 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 			return;
 		}
 
-		// console.log("filter by " + taxon.id);
 		this.doQueryBy(function(record, id) {
 			if (!record.get("taxon")) {
 				return true; // in case there is none.
 			} else if (taxon.id == record.get("taxon").id) {
-				// console.log("keep: " + record.get("id"));
 				return true;
 			} else {
 				return false;
@@ -268,10 +257,8 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 	 */
 	selectById : function(id) {
 		var index = this.store.find("id", id);
-		// console.log("select by id " + id);
 		if (index >= 0) {
 			var rec = this.store.getAt(index);
-			// console.log("select by index " + index);
 			this.store.setSelected(rec);
 			this.setValue(rec.get("name"));
 			this.fireEvent("select", this, rec, index);
@@ -341,8 +328,10 @@ Gemma.ExpressionExperimentSetStore = function(config) {
 
 	this.addEvents('ready');
 
-	this.on("load", this.addFromCookie, this);
-	this.load();
+	// this.on("load", this.addFromCookie, this);
+	this.load({
+		callback : this.addFromCookie
+	});
 
 };
 
@@ -368,6 +357,7 @@ Ext.extend(Gemma.ExpressionExperimentSetStore, Ext.data.Store, {
 		if (recs && recs.length > 0) {
 			this.add(recs);
 		}
+		this.isReady = true;
 		this.fireEvent("ready");
 	},
 
