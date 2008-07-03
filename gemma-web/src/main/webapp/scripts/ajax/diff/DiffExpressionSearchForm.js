@@ -345,7 +345,9 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 			fieldLabel : "Choose Factors"
 		});
 		this.eeSetChooserPanel.on('choose-factors', function(eeSetRecord) {
+			this.loadMask.msg = "Retrieving factors ...";
 			this.loadMask.show();
+			this.loadMask.msg = "Searching ...";// set back to default
 			var eeIds = eeSetRecord.get("expressionExperimentIds");
 			this.efChooserPanel.show(eeIds);
 		}.createDelegate(this));
