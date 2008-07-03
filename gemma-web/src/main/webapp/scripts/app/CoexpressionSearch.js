@@ -56,6 +56,32 @@ Ext.onReady(function() {
 			pageSize : 25,
 			collapsed : true
 		});
+
+		probeAlignedGrid.on("cellclick", function(grid, rowIndex, columnIndex,
+				e) {
+			if (this.getSelectionModel().hasSelection()) {
+
+				var record = this.getStore().getAt(rowIndex);
+				var fieldName = this.getColumnModel().getDataIndex(columnIndex);
+
+				if (fieldName == 'foundGene') {
+					searchPanel.searchForGene(record.get("foundGene").id);
+				}
+			}
+		}, probeAlignedGrid);
+
+		predictedGeneGrid.on("cellclick", function(grid, rowIndex, columnIndex,
+				e) {
+			if (this.getSelectionModel().hasSelection()) {
+
+				var record = this.getStore().getAt(rowIndex);
+				var fieldName = this.getColumnModel().getDataIndex(columnIndex);
+
+				if (fieldName == 'foundGene') {
+					searchPanel.searchForGene(record.get("foundGene").id);
+				}
+			}
+		}, predictedGeneGrid);
 	}
 
 	knownGeneGrid.on("cellclick", function(grid, rowIndex, columnIndex, e) {
@@ -64,7 +90,7 @@ Ext.onReady(function() {
 			var record = this.getStore().getAt(rowIndex);
 			var fieldName = this.getColumnModel().getDataIndex(columnIndex);
 
-			if (fieldName == 'foundGene') { 
+			if (fieldName == 'foundGene') {
 				searchPanel.searchForGene(record.get("foundGene").id);
 			}
 		}
