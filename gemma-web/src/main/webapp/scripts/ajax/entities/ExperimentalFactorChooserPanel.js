@@ -127,6 +127,9 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 			data : results
 		};
 		if (results.size() > 0) {
+			if (this.efGrid) {
+				this.efGrid.destroy();
+			}
 			this.efGrid = new Gemma.ExpressionExperimentExperimentalFactorGrid(dataFromServer);
 			this.add(this.efGrid);
 			this.efGrid.doLayout();
