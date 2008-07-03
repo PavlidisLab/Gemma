@@ -140,6 +140,28 @@ public class DifferentialExpressionAnalysisDaoImpl extends
     }
 
     @Override
+    protected Collection handleFind( Gene gene, ExpressionAnalysisResultSet resultSet, double threshold )
+            throws Exception {
+        final String findByResultSet = "select distinct r from DifferentialExpressionAnalysisImpl a"
+                + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e inner join e.bioAssays ba inner join ba.arrayDesignUsed ad"
+                + " inner join ad.compositeSequences cs inner join cs.biologicalCharacteristic bs inner join "
+                + "bs.bioSequence2GeneProduct bs2gp inner join bs2gp.geneProduct gp inner join gp.gene g"
+                + " inner join a.resultSets rs inner join rs.results r where r.probe=cs and g=:gene and rs=:resultSet and r.correctedPvalue < :threshold";
+
+        String[] paramNames = { "gene", "resultSet", "threshold" };
+        Object[] objectValues = { gene, resultSet, threshold };
+
+        return this.getHibernateTemplate().findByNamedParam( findByResultSet, paramNames, objectValues );
+    }
+
+    @Override
+    protected Collection handleGetResultSets( ExpressionExperiment expressionExperiment ) throws Exception {
+        final String query = "select r from ExpressionAnalysisResultSet r inner join r.analysis a"
+                + " inner join a.expressionExperimentSetAnalyzed eeset inner join eeset.experiments ee where ee=:expressionExperiment ";
+        return this.getHibernateTemplate().findByNamedParam( query, "expressionExperiment", expressionExperiment );
+    }
+
+    @Override
     protected void handleThaw( final DifferentialExpressionAnalysis differentialExpressionAnalysis ) throws Exception {
         HibernateTemplate templ = this.getHibernateTemplate();
 
@@ -170,4 +192,5 @@ public class DifferentialExpressionAnalysisDaoImpl extends
             }
         } );
     }
+
 }
