@@ -488,6 +488,11 @@
 			<artifactId>jawr</artifactId>
 			<version>2.4.1</version>
 		</dependency>
+		<dependency>
+			<groupId>commons-el</groupId>
+			<artifactId>commons-el</artifactId>
+			<version>1.0</version>
+		</dependency>
 	</dependencies>
 	<repositories>
 		<repository>
