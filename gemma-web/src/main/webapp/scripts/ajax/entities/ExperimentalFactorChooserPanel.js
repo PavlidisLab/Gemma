@@ -68,7 +68,6 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 		};
 
 		this.eeFactorsMap = eeFactorsMap;
-
 		this.hide();
 	},
 
@@ -89,6 +88,8 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 
 		Gemma.ExperimentalFactorChooserPanel.superclass.initComponent
 				.call(this);
+
+		this.addEvents("factors-chosen");
 
 	},
 
@@ -129,6 +130,7 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 			this.efGrid = new Gemma.ExpressionExperimentExperimentalFactorGrid(dataFromServer);
 			this.add(this.efGrid);
 			this.efGrid.doLayout();
+			this.fireEvent("factors-chosen");
 			Gemma.ExperimentalFactorChooserPanel.superclass.show.call(this);
 		}
 	}
