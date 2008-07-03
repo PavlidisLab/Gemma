@@ -34,14 +34,14 @@ Gemma.CoexpressionDatasetGrid = function ( config ) {
 	} );
 	
 	superConfig.cm = new Ext.grid.ColumnModel( [
-		{ id: 'shortName', header: "Dataset", dataIndex: "shortName" , renderer: Gemma.CoexpressionDatasetGrid.getEEStyler() },
-		{ id: 'name', header: "Name", dataIndex: "name" },
+		{ id: 'shortName', header: "Dataset", dataIndex: "shortName" , tooltip : "Dataset common name", renderer: Gemma.CoexpressionDatasetGrid.getEEStyler() },
+		{ id: 'name', header: "Name", dataIndex: "name", tooltip : "Dataset Long Name"},
 		{ id: 'queryGene', header: "Query Gene", dataIndex: "queryGene", hidden: true },
-		{ header: "Raw Links", dataIndex: "rawCoexpressionLinkCount" },
-		{ header: "Contributing Links", dataIndex: "coexpressionLinkCount" },
-		{ header: "Specific Probe", dataIndex: "probeSpecificForQueryGene", type:"boolean", renderer: Gemma.CoexpressionDatasetGrid.getBooleanStyler()  },
-		{ id: 'arrays', header: "Arrays", dataIndex: "arrayDesignCount" },
-		{ id: 'assays', header: "Assays", dataIndex: "bioAssayCount", renderer: Gemma.CoexpressionDatasetGrid.getAssayCountStyler()  }
+		{ header: "Raw Links", dataIndex: "rawCoexpressionLinkCount", tooltip : "# of possible links"},
+		{ header: "Contributing Links", dataIndex: "coexpressionLinkCount", tooltip : "# links used" },
+		{ header: "Specific Probe", dataIndex: "probeSpecificForQueryGene", type:"boolean", tooltip : "was probe specific?", renderer: Gemma.CoexpressionDatasetGrid.getBooleanStyler()  },
+		{ id: 'arrays', header: "Arrays", dataIndex: "arrayDesignCount", tooltip : "# of Array Designs" },
+		{ id: 'assays', header: "Assays", dataIndex: "bioAssayCount", tooltip : "# of Assays", renderer: Gemma.CoexpressionDatasetGrid.getAssayCountStyler()  }
 	] );
 	superConfig.cm.defaultSortable = true;
 	

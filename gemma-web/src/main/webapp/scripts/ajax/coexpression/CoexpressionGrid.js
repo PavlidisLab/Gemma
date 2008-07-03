@@ -58,29 +58,35 @@ Gemma.CoexpressionGrid = function(config) {
 	superConfig.cm = new Ext.grid.ColumnModel([this.rowExpander, {
 		id : 'query',
 		header : "Query Gene",
-		dataIndex : "queryGene"
+		dataIndex : "queryGene",
+		tooltip : "Query Gene"
 	}, {
 		id : 'found',
 		header : "Coexpressed Gene",
 		dataIndex : "foundGene",
-		renderer : Gemma.CoexpressionGrid.getFoundGeneStyler()
+		renderer : Gemma.CoexpressionGrid.getFoundGeneStyler(),
+		tooltip : "Coexpressed Gene"
 	}, {
 		id : 'support',
 		header : "Support",
 		dataIndex : "supportKey",
 		width : 75,
-		renderer : Gemma.CoexpressionGrid.getSupportStyler()
+		renderer : Gemma.CoexpressionGrid.getSupportStyler(),
+	    tooltip : "# of Datasets that confirm coexpression"
 	}, {
 		id : 'go',
 		header : "GO Overlap",
 		dataIndex : "goSim",
 		width : 75,
-		renderer : Gemma.CoexpressionGrid.getGoStyler()
+		renderer : Gemma.CoexpressionGrid.getGoStyler(),
+		tooltip : "GO Similarity Score"
+
 	}, {
 		id : 'datasets',
 		header : "Datasets",
 		dataIndex : "datasetVector",
 		renderer : Gemma.CoexpressionGrid.getBitImageStyler(),
+		tooltip : "Dataset relevence map",
 		sortable : false
 	}]);
 	superConfig.cm.defaultSortable = true;
