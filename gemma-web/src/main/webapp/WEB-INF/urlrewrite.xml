@@ -8,9 +8,12 @@
         <from>^/user/(.*).html$</from>
         <to type="forward">/editUser.html\?username=$1</to>
     </rule>
-     <rule>
-        <from>^/static/(.*)$</from>
-        <to type="forward">/s/static/$1</to>
-    </rule>
+
+<!-- Take out by klc: Not sure what was trying to be achieved here. --> 
+    
+ <!--    <rule> -->
+ <!--       <from>^/static/(.*)$</from> -->
+ <!--       <to type="forward">/s/static/$1</to> -->
+ <!--   </rule> -->
   
 </urlrewrite>
