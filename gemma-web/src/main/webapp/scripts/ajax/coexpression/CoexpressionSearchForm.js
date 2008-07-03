@@ -233,7 +233,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		}
 
 		if (csc.eeSetName) {
-			url += String.format("&setName={0}", csc.eeSetName);
+			// url += String.format("&setName={0}", csc.eeSetName);
 		}
 		return url;
 	},
@@ -333,6 +333,11 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		// if (this.geneChooserPanel.toolbar.taxonCombo) {
 
 		// }
+	},
+
+	searchForGene : function(geneId) {
+		this.geneChooserPanel.setGene.call(this.geneChooserPanel, geneId,
+				this.doSearch.createDelegate(this));
 	},
 
 	initComponent : function() {

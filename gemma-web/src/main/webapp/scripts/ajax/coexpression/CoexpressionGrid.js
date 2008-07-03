@@ -5,7 +5,6 @@ Ext.namespace('Gemma');
  * options:
  */
 Gemma.CoexpressionGrid = function(config) {
- 
 
 	this.pageSize = config.pageSize;
 
@@ -72,7 +71,7 @@ Gemma.CoexpressionGrid = function(config) {
 		dataIndex : "supportKey",
 		width : 75,
 		renderer : Gemma.CoexpressionGrid.getSupportStyler(),
-	    tooltip : "# of Datasets that confirm coexpression"
+		tooltip : "# of Datasets that confirm coexpression"
 	}, {
 		id : 'go',
 		header : "GO Overlap",
@@ -171,11 +170,6 @@ Gemma.CoexpressionGrid.getRowExpander = function() {
 	return Gemma.CoexpressionGrid.rowExpander;
 };
 
-Gemma.CoexpressionGrid.searchForGene = function(geneId) {
-	var f = Gemma.CoexpressionSearchForm.searchForGene;
-	f(geneId);
-};
-
 /*
  * instance methods...
  */
@@ -184,8 +178,7 @@ Ext.extend(Gemma.CoexpressionGrid, Ext.grid.GridPanel, {
 	viewConfig : {
 		forceFit : true
 	},
-	
-	
+
 	loadData : function(isCannedAnalysis, numQueryGenes, data, datasets) {
 		var queryCol = this.getColumnModel().getColumnById('query');
 		if (numQueryGenes > 1) {
@@ -226,9 +219,9 @@ Ext.extend(Gemma.CoexpressionGrid, Ext.grid.GridPanel, {
 Gemma.CoexpressionGrid.getFoundGeneStyler = function() {
 	if (Gemma.CoexpressionGrid.foundGeneStyler === undefined) {
 		Gemma.CoexpressionGrid.foundGeneTemplate = new Ext.Template(
-				"<a href='' onClick='Gemma.CoexpressionGrid.searchForGene({id}); return false;'>",
+
 				"<img src='/Gemma/images/logo/gemmaTiny.gif' ext:qtip='Make {officialSymbol} the query gene' />",
-				"</a>",
+
 				" &nbsp; ",
 				"<a href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}");
 		Gemma.CoexpressionGrid.foundGeneStyler = function(value, metadata,

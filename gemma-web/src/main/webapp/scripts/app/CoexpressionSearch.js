@@ -58,6 +58,18 @@ Ext.onReady(function() {
 		});
 	}
 
+	knownGeneGrid.on("cellclick", function(grid, rowIndex, columnIndex, e) {
+		if (this.getSelectionModel().hasSelection()) {
+
+			var record = this.getStore().getAt(rowIndex);
+			var fieldName = this.getColumnModel().getDataIndex(columnIndex);
+
+			if (fieldName == 'foundGene') { 
+				searchPanel.searchForGene(record.get("foundGene").id);
+			}
+		}
+	}, knownGeneGrid);
+
 	searchPanel.on("aftersearch", function(panel, result) {
 		var eeMap = {};
 		if (result.datasets) {
