@@ -265,7 +265,17 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                  * factor
                  */
                 ExperimentalFactor ef = efs.iterator().next();
-                long sfId = eeFactorsMap.get( ee.getId() );
+
+                if ( ee == null ) {
+                    log.info( "Null expression experiment" );
+                }
+
+                if ( !eeFactorsMap.containsKey( ee.getId() ) ) {
+                    log.info( "eeFactorsMap does not contain ee=" + ee.getId() );
+                    continue;
+                }
+
+                Long sfId = eeFactorsMap.get( ee.getId() );
                 if ( ef.getId() != sfId ) {
                     continue;
                 }
@@ -280,6 +290,11 @@ public class DifferentialExpressionSearchController extends BaseFormController {
              * probes map to the same gene.
              */
             ProbeAnalysisResult res = findMinPenalizedProbeResult( filteredResults );
+
+            if ( res == null ) {
+                log.warn( "No result for filtered result" );
+                continue;
+            }
 
             Double p = res.getPvalue();
             pvaluesToCombine.add( p );
