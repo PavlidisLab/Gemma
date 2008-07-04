@@ -313,6 +313,8 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 
 	initComponent : function() {
 
+		var isAdmin = dwr.util.getValue("hasAdmin");
+
 		this.geneChooserPanel = new Gemma.GeneChooserPanel({
 			id : 'gene-chooser-panel',
 			region : 'center',
@@ -320,7 +322,8 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		});
 
 		this.eeSetChooserPanel = new Gemma.ExpressionExperimentSetPanel({
-			fieldLabel : "Query scope"
+			fieldLabel : "Query scope",
+			isAdmin : isAdmin
 		});
 
 		this.geneChooserPanel.on("taxonchanged", function(taxon) {
