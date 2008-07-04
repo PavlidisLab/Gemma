@@ -96,8 +96,9 @@ public class DifferentialExpressionAnalysisServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceBase#handleThaw(java.util.Collection)
+     * @see
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceBase#handleThaw(java.util.Collection
+     * )
      */
     @Override
     protected void handleThaw( Collection expressionAnalyses ) throws Exception {
@@ -106,8 +107,9 @@ public class DifferentialExpressionAnalysisServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceBase#handleFind(ubic.gemma.model.genome.Gene)
+     * @see
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceBase#handleFind(ubic.gemma.model
+     * .genome.Gene)
      */
     @Override
     protected Collection handleFindExperimentsWithAnalyses( Gene gene ) throws Exception {
@@ -116,9 +118,9 @@ public class DifferentialExpressionAnalysisServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceBase#handleFind(ubic.gemma.model.genome.Gene,
-     *      ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     * @see
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceBase#handleFind(ubic.gemma.model
+     * .genome.Gene, ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
     protected Collection handleFind( Gene gene, ExpressionExperiment experimentAnalyzed ) throws Exception {
@@ -127,8 +129,8 @@ public class DifferentialExpressionAnalysisServiceImpl extends
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceBase#handleDelete(java.lang.Long)
+     * @see
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceBase#handleDelete(java.lang.Long)
      */
     @Override
     protected void handleDelete( Long idToDelete ) throws Exception {
@@ -155,5 +157,10 @@ public class DifferentialExpressionAnalysisServiceImpl extends
     @Override
     protected Collection handleGetResultSets( ExpressionExperiment expressionExperiment ) throws Exception {
         return this.getDifferentialExpressionAnalysisDao().getResultSets( expressionExperiment );
+    }
+
+    @Override
+    protected Map handleFindByInvestigationIds( Collection investigationIds ) throws Exception {
+        return this.getDifferentialExpressionAnalysisDao().findByInvestigationIds( investigationIds );
     }
 }

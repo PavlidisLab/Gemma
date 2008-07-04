@@ -20,6 +20,8 @@ package ubic.gemma.model.analysis.expression.diff;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.Hibernate;
@@ -30,6 +32,7 @@ import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -57,28 +60,48 @@ public class DifferentialExpressionAnalysisDaoImpl extends
                 "select a from DifferentialExpressionAnalysisImpl as a where a.name = :name", "name", name );
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected Map handleFindByInvestigations( Collection investigations ) throws Exception {
-        // I don't know how to do this in a single query.
         Map<Investigation, Collection<DifferentialExpressionAnalysis>> results = new HashMap<Investigation, Collection<DifferentialExpressionAnalysis>>();
 
-        for ( ExpressionExperiment ee : ( Collection<ExpressionExperiment> ) investigations ) {
-            Collection<DifferentialExpressionAnalysis> ae = this.findByInvestigation( ee );
-            results.put( ee, ae );
+        final String queryString = "select distinct e, a from DifferentialExpressionAnalysisImpl a"
+                + " inner join a.expressionExperimentSetAnalyzed eeSet inner join eeSet.experiments e where e in (:investigations)";
+        List qresult = this.getHibernateTemplate().findByNamedParam( queryString, "eeIds", investigations );
+        for ( Object o : qresult ) {
+            Object[] oa = ( Object[] ) o;
+            BioAssaySet bas = ( BioAssaySet ) oa[0];
+            DifferentialExpressionAnalysis dea = ( DifferentialExpressionAnalysis ) oa[1];
+            Collection<DifferentialExpressionAnalysis> deas = new HashSet<DifferentialExpressionAnalysis>();
+            deas.add( dea );
+            results.put( bas, deas );
         }
         return results;
-
     }
 
+    @Override
     protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
         final String queryString = "select distinct a from DifferentialExpressionAnalysisImpl a where :e in elements (a.expressionExperimentSetAnalyzed.experiments)";
         return this.getHibernateTemplate().findByNamedParam( queryString, "e", investigation );
     }
 
+    @Override
+    protected Map<Long, DifferentialExpressionAnalysis> handleFindByInvestigationIds( Collection investigationIds )
+            throws Exception {
+        Map<Long, DifferentialExpressionAnalysis> results = new HashMap<Long, DifferentialExpressionAnalysis>();
+        final String queryString = "select distinct e, a from DifferentialExpressionAnalysisImpl a"
+                + " inner join a.expressionExperimentSetAnalyzed eeSet inner join eeSet.experiments e where e.id in (:eeIds)";
+        List qresult = this.getHibernateTemplate().findByNamedParam( queryString, "eeIds", investigationIds );
+        for ( Object o : qresult ) {
+            Object[] oa = ( Object[] ) o;
+            BioAssaySet bas = ( BioAssaySet ) oa[0];
+            DifferentialExpressionAnalysis dea = ( DifferentialExpressionAnalysis ) oa[1];
+            results.put( bas.getId(), dea );
+        }
+        return results;
+    }
+
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisDaoBase#handleThaw(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -93,7 +116,6 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisDaoBase#handleFind(ubic.gemma.model.genome.Gene)
      */
     @Override
@@ -115,9 +137,8 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisDaoBase#handleFind(ubic.gemma.model.genome.Gene,
-     *      ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     * ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
     protected Collection handleFind( Gene gene, ExpressionExperiment experimentAnalyzed ) throws Exception {
