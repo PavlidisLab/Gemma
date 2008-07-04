@@ -166,10 +166,11 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	},
 
 	formatAssayCount : function(value, metadata, record, row, col, ds) {
-		return String
-				.format(
-						"{0}&nbsp;<a href='/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id={1}'><img src='/Gemma/images/magnifier.png' height='10' width='10'/></a>",
-						record.data.bioAssayCount, record.data.id);
+		return record.get("bioAssayCount");
+//		return String
+//				.format(
+//						"{0}&nbsp;<a target='_blank' href='/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id={1}'><img src='/Gemma/images/magnifier.png' height='10' width='10'/></a>",
+//						record.data.bioAssayCount, record.data.id);
 	},
 
 	formatEE : function(value, metadata, record, row, col, ds) {
