@@ -28,6 +28,7 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 	},
 	border : false,
 	width : 220,
+	isAdmin : false,
 
 	setState : function(state) {
 		if (this.ready) {
@@ -82,6 +83,7 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 		}
 
 		this.dcp = new Gemma.DatasetChooserPanel({
+			isAdmin : this.isAdmin,
 			modal : true,
 			eeSetStore : this.store
 		});
@@ -307,9 +309,6 @@ Gemma.ExpressionExperimentSetStore = function(config) {
 		name : "numExperiments",
 		type : "int"
 	}, {
-		name : "modifiable",
-		type : "bool"
-	}, {
 		name : "expressionExperimentIds"
 	}, {
 		name : "taxon"
@@ -378,15 +377,7 @@ Ext.extend(Gemma.ExpressionExperimentSetStore, Ext.data.Store, {
 			// Ext.log("Adding record");
 			eeSets.push(rec);
 		}
-
 		this.cookieSaveEESets(eeSets);
-
-		Ext.Msg.show({
-			title : "OK",
-			msg : "Saved to cookie",
-			icon : Ext.MessageBox.INFO,
-			buttons : Ext.Msg.OK
-		});
 	},
 
 	/**
@@ -478,15 +469,57 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 	height : 500,
 	closeAction : 'hide',
 	constrainHeader : true,
+	isAdmin : false,
 
 	onCommit : function() {
 		var rec = this.eeSetGrid.getSelectionModel().getSelected();
-		if (rec) {
-			this.eeSetStore.setSelected(rec);
-			this.fireEvent("datasets-selected", rec);
-			this.fireEvent("choose-factors", rec);
+		/*
+		 * If any are dirty, and if any of the modified records are saveable by
+		 * this user, then prompt for save.
+		 */
+		var numModified = this.eeSetStore.getModifiedRecords().length;
+
+		var canSave = this.isAdmin;
+		for (var i = 0; i < numModified; i++) {
+			if (this.eeSetStore.getModifiedRecords()[i].get("id") < 0) {
+				// console.log("can save");
+				canSave = true;
+				break;
+			}
 		}
-		this.hide();
+
+		if (numModified > 0 && canSave) {
+			Ext.Msg.show({
+				animEl : this.getEl(),
+				title : 'Save Changes?',
+				msg : 'You have unsaved changes. Would you like to save them?',
+				buttons : {
+					ok : 'Yes',
+					cancel : 'No'
+				},
+				fn : function(btn, text) {
+					if (btn == 'ok') {
+						this.eeSetStore.commitChanges();
+					}
+					if (rec) {
+						this.eeSetStore.setSelected(rec);
+						this.fireEvent("datasets-selected", rec);
+						this.fireEvent("choose-factors", rec);
+					}
+					this.hide();
+				}.createDelegate(this),
+				scope : this,
+				icon : Ext.MessageBox.QUESTION
+			});
+		} else {
+			if (rec) {
+				this.eeSetStore.setSelected(rec);
+				this.fireEvent("datasets-selected", rec);
+				this.fireEvent("choose-factors", rec);
+			}
+			this.hide();
+		}
+
 	},
 
 	initComponent : function() {
@@ -534,7 +567,7 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 		 * Plain grid for displaying datasets in the current set. Editable.
 		 */
 		this.eeSetMembersGrid = new Gemma.ExpressionExperimentGrid({
-			editable : admin,
+			isAdmin : this.isAdmin,
 			region : 'center',
 			title : "Datasets in current set",
 			pageSize : 15,
@@ -557,7 +590,7 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 		 */
 		this.sourceDatasetsGrid = new Gemma.ExpressionExperimentGrid({
 			editable : false,
-			admin : admin,
+			isAdmin : this.isAdmin,
 			title : "Dataset locator",
 			region : 'west',
 			split : true,
@@ -579,7 +612,6 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 		 */
 		this.eeSetGrid = new Gemma.ExpressionExperimentSetGrid({
 			store : this.eeSetStore,
-			editable : admin,
 			region : 'north',
 			layout : 'fit',
 			split : true,
@@ -593,7 +625,7 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 			displayGrid : this.eeSetMembersGrid,
 			searchGrid : this.sourceDatasetsGrid,
 			tbar : new Gemma.EditExpressionExperimentSetToolbar({
-				admin : admin
+				userCanWriteToDB : this.isAdmin
 			})
 
 		});
@@ -645,6 +677,21 @@ Gemma.ExpressionExperimentSetGrid = Ext.extend(Ext.grid.EditorGridPanel, {
 
 		this.record = this.getStore().record;
 
+		this.getStore().on("update", function(store, record, operation) {
+			if (operation == Ext.data.Record.COMMIT) {
+				// console.log("update: " + record.get("name"));
+
+				if (!record.get("expressionExperimentIds")
+						|| record.get("expressionExperimentIds").length === 0) {
+					Ext.Msg
+							.alert("Cannot save",
+									"You must add some experiments to the set before you can save it.");
+				} else {
+					this.getTopToolbar().update(record);
+				}
+			}
+		}, this);
+
 		this.on("dirty", this.getTopToolbar().editing, this.getTopToolbar());
 
 	},
@@ -657,6 +704,7 @@ Gemma.ExpressionExperimentSetGrid = Ext.extend(Ext.grid.EditorGridPanel, {
 		this.getSelectionModel().on("selectionchange", function() {
 			if (this.getCurrentSet && this.getCurrentSet()
 					&& this.getCurrentSet().dirty) {
+				// console.log("Enabling");
 				this.cloneBut.enable();
 				this.resetBut.enable();
 				this.commitBut.enable();
@@ -666,11 +714,12 @@ Gemma.ExpressionExperimentSetGrid = Ext.extend(Ext.grid.EditorGridPanel, {
 		this.getStore().on("datachanged", function() {
 			if (this.getCurrentSet && this.getCurrentSet()
 					&& this.getCurrentSet().dirty) {
+				// console.log("Enabling");
 				this.cloneBut.enable();
 				this.resetBut.enable();
 				this.commitBut.enable();
 			}
-		});
+		}, this.getTopToolbar());
 
 		this.getSelectionModel().on("rowselect", function(selmol, index, rec) {
 			if (this.displayGrid) {
@@ -789,7 +838,7 @@ Gemma.ExpressionExperimentSetGrid = Ext.extend(Ext.grid.EditorGridPanel, {
  */
 Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 
-	userCanWriteToDB : false, // FIXME configure this properly.
+	userCanWriteToDB : false,
 
 	display : function() {
 		this.grid.display();
@@ -824,6 +873,7 @@ Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 				name : args.name,
 				description : args.description,
 				id : -1,
+				userCanSave : true,
 				expressionExperimentIds : [],
 				numExperiments : 0,
 				taxon : args.taxon
@@ -886,7 +936,9 @@ Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 		this.commitBut = new Ext.Button({
 			id : 'update',
 			text : "Save",
-			handler : this.update,
+			handler : function() {
+				this.updateSelected();
+			},
 			disabled : false,
 			scope : this,
 			tooltip : "Save or update the set"
@@ -898,7 +950,7 @@ Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 			handler : this.copy,
 			scope : this,
 			disabled : false,
-			tooltip : "Create as new set (click update to save)"
+			tooltip : "Create as new set (click 'save' afterwards)"
 		});
 
 		this.resetBut = new Ext.Button({
@@ -934,8 +986,8 @@ Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 		});
 
 		this.resetBut.on("enable", function() {
-				// Ext.log("Attempt to enable resetBut");
-			});
+			// Ext.log("Attempt to enable resetBut");
+		});
 	},
 
 	initNew : function() {
@@ -981,44 +1033,40 @@ Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 		this.grid.getStore().clearFilter();
 	},
 
+	updateSelected : function() {
+		var rec = this.getCurrentSet();
+		if (rec) {
+			rec.commit();
+		}
+	},
+
 	/**
-	 * Save or update a record. If possible save it to the database; otherwise
-	 * use a cookie store.
+	 * Method to get called by the 'update' event from the store. Save or update
+	 * a record. If possible save it to the database; otherwise use a cookie
+	 * store.
 	 */
-	update : function() {
+	update : function(rec) {
+
+		if (!rec) {
+			return;
+		}
+
 		// Ext.log("update");
 		this.resetBut.disable();
 		this.commitBut.disable();
 
-		// if the current set has no members, forget it.(save button should be
-		// disabled)
-		var rec = this.getCurrentSet();
-
-		if (!rec.get("expressionExperimentIds")
-				|| rec.get("expressionExperimentIds").length === 0) {
-			// Ext.log("no members");
-			return;
-		}
-
-		if (!rec.dirty) {
-			// Ext.log("Not dirty");
-			return;
-		}
-
 		if (rec.get("id") < 0) {
 			if (this.userCanWriteToDB) {
-				// Ext.log("Writing new to db");
+				// console.log("Writing new to db");
 				/* FIXME write new one to the db */
-				rec.commit(); // to make it non-dirty.
 			} else {
-				// Ext.log("Writing to cookie");
+				// console.log("Writing to cookie");
 				this.grid.getStore().cookieSaveOrUpdateEESet(rec);
 			}
 		} else {
 			if (this.userCanWriteToDB) {
-				// Ext.log("Updating to db");
+				// console.log("Updating to db");
 				/* FIXME write updated one to the db */
-				rec.commit(); // to make it non-dirty.
 			} else {
 				Ext.Msg
 						.alert("Permission denied",
@@ -1038,6 +1086,7 @@ Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 			name : rec.get("name") + "*", // indicate they should edit it.
 			description : rec.get("description"),
 			id : -1,
+			userCanSave : true,
 			expressionExperimentIds : rec.get("expressionExperimentIds"),
 			numExperiments : rec.get("numExperiments"),
 			taxon : rec.get("taxon")
