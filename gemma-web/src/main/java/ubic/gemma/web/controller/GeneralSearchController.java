@@ -189,22 +189,25 @@ public class GeneralSearchController extends BaseFormController {
         }
         StopWatch watch = new StopWatch();
         watch.start();
-        log.info( "Search initiated: " + settings );
         Map<Class, List<SearchResult>> searchResults = searchService.search( settings );
         watch.stop();
-        log.info( "Over all search time for " + settings + " took " + watch.getTime() + " ms" );
+
+        if ( watch.getTime() > 500 ) {
+            log.info( "Over all search time for " + settings + " took " + watch.getTime() + " ms" );
+        }
+
         /*
          * FIXME sort by the number of hits per class, so smallest number of hits is at the top.
          */
         watch.reset();
         watch.start();
-        
+
         for ( Class clazz : searchResults.keySet() ) {
             List<SearchResult> results = searchResults.get( clazz );
 
             if ( results.size() == 0 ) continue;
 
-            log.info( "Search result: " + results.size() + " " + clazz.getSimpleName() + "s" );
+            log.info( "Search for: " + settings + "; result: " + results.size() + " " + clazz.getSimpleName() + "s" );
 
             /*
              * Now put the valueObjects inside the SearchResults in score order.
@@ -214,8 +217,10 @@ public class GeneralSearchController extends BaseFormController {
             finalResults.addAll( results );
         }
 
-        log.info( "Final parsing of " + settings + " took " + watch.getTime() + " ms" );
-        
+        if ( watch.getTime() > 500 ) {
+            log.info( "Final parsing of " + settings + " took " + watch.getTime() + " ms" );
+        }
+
         return new ListRange( finalResults );
     }
 
