@@ -137,4 +137,38 @@ Gemma.DiffExpressionGrid.searchForGene = function(geneId) {
 	f(geneId);
 };
 
+/*
+ * Stylers FIXME:  where are these being used?
+ * 
+ */
+Gemma.DiffExpressionGrid.getFoundGeneStyler = function() {
+	if (Gemma.DiffExpressionGrid.foundGeneStyler === undefined) {
+		Gemma.DiffExpressionGrid.foundGeneTemplate = new Ext.Template(
+				"<a href='' onClick='Gemma.DiffExpressionGrid.searchForGene({id}); return false;'>",
+				"<img src='/Gemma/images/logo/gemmaTiny.gif' ext:qtip='Make {officialSymbol} the query gene' />",
+				"</a>",
+				" &nbsp; ",
+				"<a href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}");
+		Gemma.DiffExpressionGrid.foundGeneStyler = function(value, metadata,
+				record, row, col, ds) {
+			var g = record.data.foundGene;
+			if (g.officialName === null) {
+				g.officialName = "";
+			}
+			return Gemma.DiffExpressionGrid.foundGeneTemplate.apply(g);
+		};
+	}
+	return Gemma.DiffExpressionGrid.foundGeneStyler;
+};
 
+Gemma.DiffExpressionGrid.getSupportStyler = function() {
+	if (Gemma.DiffExpressionGrid.supportStyler === undefined) {
+		Gemma.DiffExpressionGrid.supportStyler = function(value, metadata,
+				record, row, col, ds) {
+			var d = record.data;
+			return String.format("{0}/{1}", d.activeExperiments.size(),
+					d.numSearchedExperiments);
+		};
+	}
+	return Gemma.DiffExpressionGrid.supportStyler;
+};
