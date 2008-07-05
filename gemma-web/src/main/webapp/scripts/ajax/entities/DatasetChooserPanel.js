@@ -504,7 +504,6 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 					if (rec) {
 						this.eeSetStore.setSelected(rec);
 						this.fireEvent("datasets-selected", rec);
-						this.fireEvent("choose-factors", rec);
 					}
 					this.hide();
 				}.createDelegate(this),
@@ -515,7 +514,6 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 			if (rec) {
 				this.eeSetStore.setSelected(rec);
 				this.fireEvent("datasets-selected", rec);
-				this.fireEvent("choose-factors", rec);
 			}
 			this.hide();
 		}
@@ -536,8 +534,7 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 		Gemma.DatasetChooserPanel.superclass.initComponent.call(this);
 
 		this.addEvents({
-			"datasets-selected" : true,
-			"choose-factors" : true
+			"datasets-selected" : true
 		});
 
 	},
@@ -571,6 +568,7 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 			region : 'center',
 			title : "Datasets in current set",
 			pageSize : 15,
+			showAnalysisInfo : true,
 			loadMask : {
 				msg : 'Loading datasets ...'
 			},
@@ -594,6 +592,7 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 			title : "Dataset locator",
 			region : 'west',
 			split : true,
+			showAnalysisInfo : true,
 			pageSize : 15,
 			height : 200,
 			loadMask : {

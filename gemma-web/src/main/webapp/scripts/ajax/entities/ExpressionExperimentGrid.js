@@ -42,6 +42,9 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	}, {
 		name : "description",
 		type : "string"
+	}, {
+		name : "differentialExpressionAnalysisId",
+		type : "string"
 	}]),
 
 	initComponent : function() {
@@ -97,29 +100,39 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				header : "Dataset",
 				dataIndex : "shortName",
 				renderer : this.formatEE,
-		//		width : 80,
+				// width : 80,
 				sortable : true
 			}, {
 				id : 'name',
 				header : "Name",
 				dataIndex : "name",
-			//	width : 120,
+				// width : 120,
 				sortable : true
 			}, {
 				id : 'arrays',
 				header : "Arrays",
 				dataIndex : "arrayDesignCount",
-			//	width : 50,
+				// width : 50,
 				sortable : true
 			}, {
 				id : 'assays',
 				header : "Assays",
 				dataIndex : "bioAssayCount",
 				renderer : this.formatAssayCount,
-			//	width : 50,
+				// width : 50,
 				sortable : true
 			}]
 		});
+
+		if (this.showAnalysisInfo) {
+			this.columns.push({
+				id : 'analyses',
+				header : "Analysis",
+				dataIndex : "differentialExpressionAnalysisId",
+				renderer : this.formatAnalysisInfo,
+				sortable : true
+			});
+		}
 
 		if (this.rowExpander) {
 			Ext.apply(this, {
@@ -165,12 +178,23 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		}
 	},
 
+	formatAnalysisInfo : function(value, metadata, record, row, col, ds) {
+		var id = record.get("differentialExpressionAnalysisId");
+		if (id) {
+			return "<img src='/Gemma/images/icons/ok.png' height='16' width='16' ext:qtip='Has differential expression analysis' />";
+		} else {
+			return "";
+		}
+	},
+
 	formatAssayCount : function(value, metadata, record, row, col, ds) {
 		return record.get("bioAssayCount");
-//		return String
-//				.format(
-//						"{0}&nbsp;<a target='_blank' href='/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id={1}'><img src='/Gemma/images/magnifier.png' height='10' width='10'/></a>",
-//						record.data.bioAssayCount, record.data.id);
+		// return String
+		// .format(
+		// "{0}&nbsp;<a target='_blank'
+		// href='/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id={1}'><img
+		// src='/Gemma/images/magnifier.png' height='10' width='10'/></a>",
+		// record.data.bioAssayCount, record.data.id);
 	},
 
 	formatEE : function(value, metadata, record, row, col, ds) {

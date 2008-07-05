@@ -20,15 +20,17 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.web.controller.BaseFormController;
 
@@ -38,29 +40,46 @@ import ubic.gemma.web.controller.BaseFormController;
  * @spring.bean id="expressionExperimentSetController"
  * @spring.property name="expressionExperimentSetService" ref="expressionExperimentSetService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
- * @spring.property name="taxonService" ref="taxonService"
+ * @spring.property name="differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
  * @spring.property name="persisterHelper" ref="persisterHelper"
  * @author paul
  * @version $Id$
  */
 public class ExpressionExperimentSetController extends BaseFormController {
-    ExpressionExperimentSetService expressionExperimentSetService;
-
-    ExpressionExperimentService expressionExperimentService;
+    private ExpressionExperimentSetService expressionExperimentSetService;
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+    private ExpressionExperimentService expressionExperimentService;
     private PersisterHelper persisterHelper;
-    TaxonService taxonService;
 
     @SuppressWarnings("unchecked")
     public Collection<ExpressionExperimentValueObject> getExperimentsInSet( Long id ) {
         Collection<Long> eeids = getExperimentIdsInSet( id );
-        return expressionExperimentService.loadValueObjects( eeids );
+        Collection<ExpressionExperimentValueObject> result = expressionExperimentService.loadValueObjects( eeids );
+        populateAnalyses( eeids, result );
+        return result;
+    }
+
+    /**
+     * Fill in information about analyses done on the experiments.
+     * 
+     * @param result
+     */
+    @SuppressWarnings("unchecked")
+    private void populateAnalyses( Collection<Long> eeids, Collection<ExpressionExperimentValueObject> result ) {
+        Map<Long, DifferentialExpressionAnalysis> analysisMap = differentialExpressionAnalysisService
+                .findByInvestigationIds( eeids );
+        for ( ExpressionExperimentValueObject eevo : result ) {
+            if ( !analysisMap.containsKey( eevo.getId() ) ) {
+                continue;
+            }
+            eevo.setDifferentialExpressionAnalysisId( analysisMap.get( eevo.getId() ).getId() );
+        }
     }
 
     /**
      * @param id
      * @return
      */
-    @SuppressWarnings("unchecked")
     public Collection<Long> getExperimentIdsInSet( Long id ) {
         ExpressionExperimentSet eeSet = expressionExperimentSetService.load( id ); // secure
         Collection<BioAssaySet> datasets = eeSet.getExperiments(); // Not secure.
@@ -89,7 +108,7 @@ public class ExpressionExperimentSetController extends BaseFormController {
             vo.setTaxon( set.getTaxon() );
 
             vo.getTaxon().toString(); // If I don't do this, won't be populated in the downstream object. This is
-                                        // basically a thaw.
+            // basically a thaw.
 
             vo.setDescription( set.getDescription() == null ? "" : set.getDescription() );
             if ( expressionExperimentSetService.getAnalyses( set ).size() > 0 ) {
@@ -180,12 +199,13 @@ public class ExpressionExperimentSetController extends BaseFormController {
         this.expressionExperimentService = expressionExperimentService;
     }
 
-    public void setTaxonService( TaxonService taxonService ) {
-        this.taxonService = taxonService;
-    }
-
     public void setPersisterHelper( PersisterHelper persisterHelper ) {
         this.persisterHelper = persisterHelper;
+    }
+
+    public void setDifferentialExpressionAnalysisService(
+            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
+        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
     }
 
 }

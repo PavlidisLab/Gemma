@@ -1039,6 +1039,7 @@
 							<value>rawCoexpressionLinkCount</value>
 							<value>coexpressionLinkCount</value>
 							<value>externalUri</value>
+							<value>differentialExpressionAnalysisId</value>
 						</list>
 					</property>
 				</bean>

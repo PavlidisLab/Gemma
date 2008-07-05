@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -35,6 +36,8 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
@@ -76,6 +79,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name = "expressionExperimentSubSetService" ref="expressionExperimentSubSetService"
  * @spring.property name = "expressionExperimentReportService" ref="expressionExperimentReportService"
+ * @spring.property name="differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
  * @spring.property name="methodNameResolver" ref="expressionExperimentActions"
  * @spring.property name="searchService" ref="searchService"
  * @spring.property name="ontologyService" ref="ontologyService"
@@ -94,6 +98,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      */
     private static final int MAX_EVENT_DESCRIPTION_LENGTH = 200;
 
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
     private ExpressionExperimentService expressionExperimentService = null;
     private ExperimentalFactorService experimentalFactorService;
 
@@ -464,7 +469,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         }
 
         mav.addObject( "eeId", id );
-        mav.addObject( "eeClass", "ExpressionExperiment" );
+        mav.addObject( "eeClass", ExpressionExperiment.class.getName() );
 
         boolean isPrivate = securityService.isPrivate( expressionExperiment );
         mav.addObject( "isPrivate", isPrivate );
@@ -483,15 +488,15 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         if ( troubleEvent != null ) {
             mav.addObject( "troubleEvent", troubleEvent );
             auditEventService.thaw( troubleEvent );
-            mav.addObject( "troubleEventDescription", StringEscapeUtils.escapeXml( troubleEvent.toString() ).substring(
-                    0, MAX_EVENT_DESCRIPTION_LENGTH ) );
+            mav.addObject( "troubleEventDescription", StringUtils.abbreviate( StringEscapeUtils.escapeXml( troubleEvent
+                    .toString() ), MAX_EVENT_DESCRIPTION_LENGTH ) );
         }
         AuditEvent validatedEvent = getLastValidationEvent( expressionExperiment );
         if ( validatedEvent != null ) {
             mav.addObject( "validatedEvent", validatedEvent );
             auditEventService.thaw( validatedEvent );
-            mav.addObject( "validatedEventDescription", StringEscapeUtils.escapeXml( validatedEvent.toString() )
-                    .substring( 0, MAX_EVENT_DESCRIPTION_LENGTH ) );
+            mav.addObject( "validatedEventDescription", StringUtils.abbreviate( StringEscapeUtils
+                    .escapeXml( validatedEvent.toString() ), MAX_EVENT_DESCRIPTION_LENGTH ) );
         }
 
         Collection<AuditEvent> sampleRemovalEvents = this.getSampleRemovalEvents( expressionExperiment );
@@ -499,9 +504,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             AuditEvent event = sampleRemovalEvents.iterator().next();
             mav.addObject( "samplesRemoved", event ); // todo: handle multiple
             auditEventService.thaw( event );
-            mav.addObject( "samplesRemovedDescription", StringEscapeUtils.escapeXml(
-                    event.toString() + " (possibly other removals, not shown)" ).substring( 0,
-                    MAX_EVENT_DESCRIPTION_LENGTH ) );
+            mav.addObject( "samplesRemovedDescription", StringUtils.abbreviate( StringEscapeUtils
+                    .escapeXml( validatedEvent.toString() ), MAX_EVENT_DESCRIPTION_LENGTH ) );
         }
     }
 
@@ -1005,7 +1009,28 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         for ( ExpressionExperiment ee : ees ) {
             filteredIds.add( ee.getId() );
         }
-        return expressionExperimentService.loadValueObjects( filteredIds );
+        Collection<ExpressionExperimentValueObject> result = expressionExperimentService.loadValueObjects( filteredIds );
+
+        populateAnalyses( ids, result ); // FIXME make this optional.
+
+        return result;
+    }
+
+    /**
+     * Fill in information about analyses done on the experiments.
+     * 
+     * @param result
+     */
+    @SuppressWarnings("unchecked")
+    private void populateAnalyses( Collection<Long> eeids, Collection<ExpressionExperimentValueObject> result ) {
+        Map<Long, DifferentialExpressionAnalysis> analysisMap = differentialExpressionAnalysisService
+                .findByInvestigationIds( eeids );
+        for ( ExpressionExperimentValueObject eevo : result ) {
+            if ( !analysisMap.containsKey( eevo.getId() ) ) {
+                continue;
+            }
+            eevo.setDifferentialExpressionAnalysisId( analysisMap.get( eevo.getId() ).getId() );
+        }
     }
 
     /**
@@ -1039,6 +1064,11 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
     public void setAuditEventService( AuditEventService auditEventService ) {
         this.auditEventService = auditEventService;
+    }
+
+    public void setDifferentialExpressionAnalysisService(
+            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
+        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
     }
 
 }

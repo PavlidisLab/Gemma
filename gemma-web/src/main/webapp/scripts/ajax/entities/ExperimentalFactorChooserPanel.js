@@ -62,12 +62,11 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 
 		}
 
-		var eeFactorsMap = {
+		this.eeFactorsMap = {
 			eeIds : eeIds,
 			efIds : efIds
 		};
-
-		this.eeFactorsMap = eeFactorsMap;
+ 
 		this.hide();
 	},
 

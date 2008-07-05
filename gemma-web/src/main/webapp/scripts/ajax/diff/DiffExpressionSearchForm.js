@@ -79,7 +79,19 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		}
 
 		var dsfcs = [];
+
+		/*
+		 * if the user has not gone through the dataset chooser this will be
+		 * null.
+		 */
 		var efMap = this.efChooserPanel.eeFactorsMap;
+
+		if (efMap === null) {
+			/*
+			 * Decide if we need to retrieve and check factors.
+			 */
+		}
+
 		for (var i = 0; efMap.eeIds.size(); i++) {
 			var d = efMap.eeIds[i];
 			if (isNaN(d)) {
@@ -347,7 +359,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		this.efChooserPanel = new Gemma.ExperimentalFactorChooserPanel({
 			fieldLabel : "Choose Factors"
 		});
-		this.eeSetChooserPanel.on('choose-factors', function(eeSetRecord) {
+		this.eeSetChooserPanel.on('datasets-selected', function(eeSetRecord) {
 			this.loadMask.msg = "Retrieving factors ...";
 			this.loadMask.show();
 			this.loadMask.msg = "Searching ...";// set back to default
