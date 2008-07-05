@@ -228,7 +228,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/cglib/cglib-nodep/2.1_3/cglib-nodep-2.1_3.jar"/>
-	<classpathentry kind="con" path="GROOVY_SUPPORT"/>
 	<classpathentry kind="var" path="M2_REPO/lucene/lucene-snowball/2.3.1/lucene-snowball-2.3.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/net/jawr/jawr/2.4.1/jawr-2.4.1.jar" sourcepath="/JAR_SOURCE/jawr/src/main/java"/>
 	<classpathentry kind="output" path="build/Gemma/WEB-INF/classes"/>
