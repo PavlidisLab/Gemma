@@ -183,7 +183,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
     @Override
     protected Collection handleGetResultSets( ExpressionExperiment expressionExperiment ) throws Exception {
-        final String query = "select r from ExpressionAnalysisResultSet r inner join r.analysis a"
+        final String query = "select r from ExpressionAnalysisResultSetImpl r inner join r.analysis a"
                 + " inner join a.expressionExperimentSetAnalyzed eeset inner join eeset.experiments ee where ee=:expressionExperiment ";
         return this.getHibernateTemplate().findByNamedParam( query, "expressionExperiment", expressionExperiment );
     }
