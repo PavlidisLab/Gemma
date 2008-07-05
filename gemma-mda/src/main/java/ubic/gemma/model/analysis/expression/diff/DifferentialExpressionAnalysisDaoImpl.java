@@ -61,7 +61,8 @@ public class DifferentialExpressionAnalysisDaoImpl extends
     }
 
     @Override
-    protected Map handleFindByInvestigations( Collection investigations ) throws Exception {
+    protected Map<Investigation, Collection<DifferentialExpressionAnalysis>> handleFindByInvestigations(
+            Collection investigations ) throws Exception {
         Map<Investigation, Collection<DifferentialExpressionAnalysis>> results = new HashMap<Investigation, Collection<DifferentialExpressionAnalysis>>();
 
         final String queryString = "select distinct e, a from DifferentialExpressionAnalysisImpl a"
@@ -71,9 +72,11 @@ public class DifferentialExpressionAnalysisDaoImpl extends
             Object[] oa = ( Object[] ) o;
             BioAssaySet bas = ( BioAssaySet ) oa[0];
             DifferentialExpressionAnalysis dea = ( DifferentialExpressionAnalysis ) oa[1];
-            Collection<DifferentialExpressionAnalysis> deas = new HashSet<DifferentialExpressionAnalysis>();
-            deas.add( dea );
-            results.put( bas, deas );
+            if ( !results.containsKey( bas ) ) {
+                Collection<DifferentialExpressionAnalysis> deas = new HashSet<DifferentialExpressionAnalysis>();
+                results.put( bas, deas );
+            }
+            results.get( bas ).add( dea );
         }
         return results;
     }
@@ -102,6 +105,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisDaoBase#handleThaw(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -116,6 +120,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisDaoBase#handleFind(ubic.gemma.model.genome.Gene)
      */
     @Override
@@ -137,8 +142,9 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisDaoBase#handleFind(ubic.gemma.model.genome.Gene,
-     * ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     *      ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
     protected Collection handleFind( Gene gene, ExpressionExperiment experimentAnalyzed ) throws Exception {
