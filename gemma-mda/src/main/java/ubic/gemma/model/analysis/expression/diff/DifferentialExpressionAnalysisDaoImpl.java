@@ -66,7 +66,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
         final String queryString = "select distinct e, a from DifferentialExpressionAnalysisImpl a"
                 + " inner join a.expressionExperimentSetAnalyzed eeSet inner join eeSet.experiments e where e in (:investigations)";
-        List qresult = this.getHibernateTemplate().findByNamedParam( queryString, "eeIds", investigations );
+        List qresult = this.getHibernateTemplate().findByNamedParam( queryString, "investigations", investigations );
         for ( Object o : qresult ) {
             Object[] oa = ( Object[] ) o;
             BioAssaySet bas = ( BioAssaySet ) oa[0];
