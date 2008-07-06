@@ -87,8 +87,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		if (this.currentSet) {
 			newCsc.eeIds = this.getActiveEeIds();
 			newCsc.eeSetName = this.currentSet.get("name");
-			newCsc.eeSetId = this.currentSet.get("id"); // might be -1 (=
-			// temporary)
+			newCsc.eeSetId = this.currentSet.get("id");
 			newCsc.dirty = this.currentSet.dirty; // modified without save
 		}
 		return newCsc;
@@ -354,13 +353,8 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		});
 
 		this.geneChooserPanel.on("taxonchanged", function(taxon) {
-			// console.log("gene chooser taxon changed");
-			// var v = new Ext.util.DelayedTask(
 			this.eeSetChooserPanel.filterByTaxon(taxon);
-				// v.delay(100); // this tiny delay is enough to let things get
-				// // sorted out and allow correct restoration of
-				// // state.
-			}.createDelegate(this));
+		}.createDelegate(this));
 
 		this.eeSetChooserPanel.on("set-chosen", function(eeSetRecord) {
 			this.currentSet = eeSetRecord;
@@ -427,8 +421,6 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		 * This horrible mess. We listen to taxon ready event and filter the
 		 * presets on the taxon.
 		 */
-		// this.geneChooserPanel.on("render", function() {
-		// this.geneChooserPanel.toolbar.on("render", function() {
 		this.geneChooserPanel.toolbar.taxonCombo.on("ready", function(taxon) {
 			// console.log("setting up filtering of combo");
 			if (taxon) {
@@ -443,8 +435,6 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 				}
 			}
 		}, this);
-		// }, this);
-		// }, this);
 
 	}
 
