@@ -334,7 +334,6 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		});
 
 		this.eeSetChooserPanel = new Gemma.ExpressionExperimentSetPanel({
-			fieldLabel : "Query scope",
 			isAdmin : isAdmin
 		});
 
@@ -343,23 +342,28 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		}.createDelegate(this));
 
 		this.eeSetChooserPanel.on("set-chosen", function(eeSetRecord) {
-			if (!eeSetRecord)
+			if (!eeSetRecord) {
 				return;
-
+			}
 			this.currentSet = eeSetRecord;
 			this.updateDatasetsToBeSearched(eeSetRecord
 					.get("expressionExperimentIds"), eeSetRecord);
 			this.geneChooserPanel.taxonChanged(this.currentSet.get("taxon"));
 		}.createDelegate(this));
 
-		this.eeSetChooserPanel.store.on("ready", this.restoreState
+//		this.eeSetChooserPanel.store.on("ready", this.restoreState
+//				.createDelegate(this));
+
+		this.eeSetChooserPanel.combo.on("comboReady", this.restoreState
 				.createDelegate(this));
 
 		/* factor chooser */
-		this.efChooserPanel = new Gemma.ExperimentalFactorChooserPanel({
-			fieldLabel : "Choose Factors"
-		});
-		this.eeSetChooserPanel.on('datasets-selected', function(eeSetRecord) {
+		this.efChooserPanel = new Gemma.ExperimentalFactorChooserPanel();
+
+		this.eeSetChooserPanel.on('commit', function(eeSetRecord) {
+			if (!eeSetRecord) {
+				return;
+			}
 			this.loadMask.msg = "Retrieving factors ...";
 			this.loadMask.show();
 			this.loadMask.msg = "Searching ...";// set back to default

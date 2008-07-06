@@ -93,8 +93,6 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 			store : this.store
 		});
 
-		this.addEvents('set-chosen');
-
 		this.combo.on("select", function(combo, sel) {
 			this.fireEvent('set-chosen', sel);
 		}.createDelegate(this));
@@ -104,17 +102,22 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 		}.createDelegate(this));
 
 		this.dcp.on("datasets-selected", function(sel) {
-			this.combo.setValue(sel.get("name"));
-			this.fireEvent('set-chosen', sel);
+			if (sel) {
+				this.fireEvent('set-chosen', sel);
+				this.combo.setValue(sel.get("name"));
+			}
 		}.createDelegate(this));
 
-		this.dcp.on("choose-factors", function(sel) {
-			this.dcp.hide();
-			this.fireEvent('choose-factors', sel);
+		this.dcp.on("commit", function(sel) {
+			if (sel) {
+				this.combo.setValue(sel.get("name"));
+			}
+			this.fireEvent('commit', sel);
 		}.createDelegate(this));
 
 		this.store.on("load", this.restoreState.createDelegate(this));
 
+		this.addEvents("set-chosen", "commit");
 	},
 
 	onRender : function(ct, position) {
@@ -202,7 +205,6 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 		}
 		if (this.store.getSelected()) {
 			this.fireEvent('comboReady', this.store.getSelected().data);
-			this.fireEvent('choose-factors', this.store.getSelected().data);
 		} else {
 			this.fireEvent('comboReady');
 		}
@@ -281,7 +283,6 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 		this.tpl.compile();
 
 		this.addEvents("comboReady");
-		this.addEvents("choose-factors");
 		this.on("select", function(cb, rec, index) {
 			this.store.setSelected(rec);
 		});
@@ -472,7 +473,7 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 	isAdmin : false,
 
 	onCommit : function() {
-		var rec = this.eeSetGrid.getSelectionModel().getSelected();
+		var rec = this.eeSetGrid.getStore().getSelected();
 		/*
 		 * If any are dirty, and if any of the modified records are saveable by
 		 * this user, then prompt for save.
@@ -504,6 +505,7 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 					if (rec) {
 						this.eeSetStore.setSelected(rec);
 						this.fireEvent("datasets-selected", rec);
+						this.fireEvent("commit", rec);
 					}
 					this.hide();
 				}.createDelegate(this),
@@ -511,11 +513,14 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 				icon : Ext.MessageBox.QUESTION
 			});
 		} else {
+			this.hide();
 			if (rec) {
 				this.eeSetStore.setSelected(rec);
 				this.fireEvent("datasets-selected", rec);
+			} else {
+				console.log("Nothing selected");
 			}
-			this.hide();
+			this.fireEvent("commit", rec);
 		}
 
 	},
@@ -534,7 +539,8 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 		Gemma.DatasetChooserPanel.superclass.initComponent.call(this);
 
 		this.addEvents({
-			"datasets-selected" : true
+			"datasets-selected" : true,
+			"commit" : true
 		});
 
 	},
@@ -727,6 +733,8 @@ Gemma.ExpressionExperimentSetGrid = Ext.extend(Ext.grid.EditorGridPanel, {
 					params : [rec.get("expressionExperimentIds")]
 				});
 			}
+
+			this.getStore().setSelected(rec);
 
 			if (this.searchGrid && rec.get("taxon")) {
 				this.searchGrid.getTopToolbar().filterTaxon(rec.get("taxon"));

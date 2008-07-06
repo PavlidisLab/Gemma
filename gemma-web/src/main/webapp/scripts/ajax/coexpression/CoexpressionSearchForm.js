@@ -350,7 +350,6 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		});
 
 		this.eeSetChooserPanel = new Gemma.ExpressionExperimentSetPanel({
-			fieldLabel : "Query scope",
 			store : new Gemma.ExpressionExperimentSetStore()
 		});
 
