@@ -34,6 +34,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.basecode.math.metaanalysis.MetaAnalysis;
+import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
@@ -454,31 +455,33 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         Collection<ExpressionExperimentExperimentalFactorValueObject> eeefvos = new HashSet<ExpressionExperimentExperimentalFactorValueObject>();
 
         Collection<Long> filteredEeIds = new HashSet<Long>();
-        for ( Long id : eeIds ) {
 
-            ExpressionExperiment ee = expressionExperimentService.load( id );
-            expressionExperimentService.thawLite( ee );
-            Collection<ExperimentalFactor> efs = ee.getExperimentalDesign().getExperimentalFactors();
+        Map<Long, DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
+                .findByInvestigationIds( eeIds );
 
-            /* Do nothing if the experiment does not have more than one factor. */
-            if ( efs == null || efs.isEmpty() ) continue;
+        Collection<ExpressionExperimentValueObject> eevos = this.expressionExperimentService
+                .loadValueObjects( diffAnalyses.keySet() );
 
-            /* Diff tool only supports 2 factors. FIXME flawed if we allow choosing which of >2 factors to use. */
-            if ( efs.size() > 2 ) continue;
+        Map<Long, ExpressionExperimentValueObject> eevoMap = new HashMap<Long, ExpressionExperimentValueObject>();
+        for ( ExpressionExperimentValueObject eevo : eevos ) {
+            eevoMap.put( eevo.getId(), eevo );
+        }
 
-            /* Leaves us with 1 or 2 factors. */
-            Collection<DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
-                    .findByInvestigation( ee );
+        for ( Long id : diffAnalyses.keySet() ) {
 
-            /* Diff analysis not run on experiment. */
-            if ( diffAnalyses == null || diffAnalyses.isEmpty() ) continue;
+            DifferentialExpressionAnalysis analysis = diffAnalyses.get( id );
 
-            /* FOUND SOMETHING USEFUL */
+            Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
+            for ( FactorAssociatedAnalysisResultSet fars : analysis.getResultSets() ) {
+                factors.addAll( fars.getExperimentalFactor() ); // FIXME includes interaction terms, but shouldn't
+                                                                // matter.
+            }
+
             filteredEeIds.add( id );
+            ExpressionExperimentValueObject eevo = eevoMap.get( id );
             ExpressionExperimentExperimentalFactorValueObject eeefvo = new ExpressionExperimentExperimentalFactorValueObject();
-            ExpressionExperimentValueObject eevo = configExpressionExperimentValueObject( ee );
             eeefvo.setExpressionExperiment( eevo );
-            for ( ExperimentalFactor ef : efs ) {
+            for ( ExperimentalFactor ef : factors ) {
                 ExperimentalFactorValueObject efvo = configExperimentalFactorValueObject( ef );
                 eeefvo.getExperimentalFactors().add( efvo );
             }
