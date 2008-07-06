@@ -52,9 +52,12 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 
 	selectById : function(id) {
 		this.combo.setValue(id);
-		this.store.selected = this.store.getById(id);
-		this.fireEvent("set-chosen");
-		// Ext.log(this.store.selected.get("name"));
+		var rec = this.store.getById(id);
+		if (!rec) {
+			this.store.selectedId = id;
+		}
+		this.store.setSelected(rec);
+		this.fireEvent("set-chosen", rec);
 	},
 
 	selectByName : function(name) {
@@ -63,8 +66,8 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 		});
 		var rec = this.store.getAt(index);
 		this.combo.setValue(rec.get("id"));
-		this.store.select(rec);
-		this.fireEvent("set-chosen");
+		this.store.setSelected(rec);
+		this.fireEvent("set-chosen", rec);
 	},
 
 	filterByTaxon : function(taxon) {
@@ -163,7 +166,7 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 	emptyText : 'Select a search scope',
 	isReady : false,
 	stateful : true,
-	stateId : "Gemma.EESetComboF",
+	stateId : "Gemma.EESetCombo",
 	stateEvents : ['select'],
 	suppressFiltering : false,
 
@@ -174,6 +177,7 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 	 *            state
 	 */
 	applyState : function(state) {
+		// console.log("apply state");
 		if (state && state.eeSet) {
 			this.setState(state.eeSet);
 		}
@@ -190,6 +194,7 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 
 	setState : function(v) {
+		// console.log("Set state=" + v);
 		if (this.isReady) {
 			this.selectById(v);
 		} else {
@@ -198,6 +203,7 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 
 	restoreState : function() {
+		// console.log("Restoring state");
 		if (this.tmpState) {
 			this.selectById(this.tmpState);
 			delete this.tmpState;
@@ -260,6 +266,7 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 	 *            id
 	 */
 	selectById : function(id) {
+		// console.log("Selecting id:" + id);
 		var index = this.store.find("id", id);
 		if (index >= 0) {
 			var rec = this.store.getAt(index);
@@ -270,20 +277,13 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 
 	initComponent : function() {
-
-		// This gets a pre-loaded store, typically.
-
 		Gemma.ExpressionExperimentSetCombo.superclass.initComponent.call(this);
-
-		if (!this.store) {
-			// this.store = new Gemma.ExpressionExperimentSetStore();
-		}
-
 		this.tpl = new Ext.XTemplate('<tpl for="."><div ext:qtip="{description} ({numExperiments} members)" class="x-combo-list-item">{name}{[ values.taxon ? " (" + values.taxon.scientificName + ")" : "" ]}</div></tpl>');
 		this.tpl.compile();
 
 		this.addEvents("comboReady");
 		this.on("select", function(cb, rec, index) {
+			// console.log("selected " + rec.get("id"));
 			this.store.setSelected(rec);
 		});
 
@@ -345,11 +345,24 @@ Ext.extend(Gemma.ExpressionExperimentSetStore, Ext.data.Store, {
 	autoLoad : false,
 
 	getSelected : function() {
-		return this.selected;
+		if (this.selected) {
+			return this.selected;
+		} else if (this.selectedId) {
+			return this.getById(this.selectedId);
+		} else {
+			return null;
+		}
+	},
+
+	setSelectedId : function(id) {
+		this.selectedId = rec;
 	},
 
 	setSelected : function(rec) {
-		this.selected = rec;
+		if (rec) {
+			this.selected = rec;
+			this.selectedId = rec.get("id");
+		}
 	},
 
 	addFromCookie : function() {
@@ -470,6 +483,7 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 	height : 500,
 	closeAction : 'hide',
 	constrainHeader : true,
+	title : "Dataset set chooser",
 	isAdmin : false,
 
 	onCommit : function() {
@@ -518,7 +532,7 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 				this.eeSetStore.setSelected(rec);
 				this.fireEvent("datasets-selected", rec);
 			} else {
-				console.log("Nothing selected");
+				// console.log("Nothing selected");
 			}
 			this.fireEvent("commit", rec);
 		}

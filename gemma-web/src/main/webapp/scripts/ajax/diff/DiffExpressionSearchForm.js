@@ -43,8 +43,8 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 	},
 
 	afterRender : function(container, position) {
-		Gemma.DiffExpressionSearchForm.superclass.afterRender.apply(this,
-				arguments);
+		Gemma.DiffExpressionSearchForm.superclass.afterRender.call(this,
+				container, position);
 
 		Ext.apply(this, {
 			loadMask : new Ext.LoadMask(this.getEl(), {
@@ -81,31 +81,26 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		var dsfcs = [];
 
 		/*
-		 * if the user has not gone through the dataset chooser this will be
-		 * null.
+		 * eeFactorsMap has to be populated ahead of time.
 		 */
 		var efMap = this.efChooserPanel.eeFactorsMap;
 
-		if (efMap === null) {
-			/*
-			 * Decide if we need to retrieve and check factors.
-			 */
+		if (efMap != null) {
+			for (var i = 0; efMap.eeIds.size(); i++) {
+				var d = efMap.eeIds[i];
+				if (isNaN(d)) {
+					break;
+				}
+				var eeId = d;
+				var efId = efMap.efIds[i];
+				var dsfc = {};
+				Ext.apply(dsfc, {
+					eeId : eeId,
+					efId : efId
+				});
+				dsfcs[i] = dsfc;
+			};
 		}
-
-		for (var i = 0; efMap.eeIds.size(); i++) {
-			var d = efMap.eeIds[i];
-			if (isNaN(d)) {
-				break;
-			}
-			var eeId = d;
-			var efId = efMap.efIds[i];
-			var dsfc = {};
-			Ext.apply(dsfc, {
-				eeId : eeId,
-				efId : efId
-			});
-			dsfcs[i] = dsfc;
-		};
 
 		Ext.apply(newDsc, {
 			geneIds : this.geneChooserPanel.getGeneIds(),
@@ -116,8 +111,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 
 		if (this.currentSet) {
 			newDsc.eeSetName = this.currentSet.get("name");
-			newDsc.eeSetId = this.currentSet.get("id"); // might be -1 (=
-			// temporary)
+			newDsc.eeSetId = this.currentSet.get("id");
 			newDsc.dirty = this.currentSet.dirty; // modified without save
 		}
 		return newDsc;
@@ -154,6 +148,8 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		if (param.setName) {
 			dsc.eeSetName = param.setName;
 		}
+
+		// FIXME : include the factors
 
 		return dsc;
 	},
@@ -209,6 +205,20 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 	},
 
 	/**
+	 * Show the user interface for choosing factors. This happens
+	 * asynchronously, so listen for the factors-chosen event.
+	 * 
+	 * 
+	 */
+	chooseFactors : function() {
+		// this.loadMask.msg = "Retrieving factors ...";
+		// this.loadMask.show();
+		// this.loadMask.msg = "Searching ...";// set back to default
+		var eeIds = this.currentSet.get("expressionExperimentIds");
+		this.efChooserPanel.show(eeIds);
+	},
+
+	/**
 	 * Create a URL that can be used to query the system.
 	 * 
 	 * @param {}
@@ -237,29 +247,41 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		if (dsc.eeSetName) {
 			url += String.format("&setName={0}", dsc.eeSetName);
 		}
+
+		/*
+		 * FIXME we need the factors here as well.
+		 */
+
 		return url;
 	},
 
 	doSearch : function(dsc) {
-		if (!dsc) {
-			dsc = this.getDiffSearchCommand();
-		}
-		this.clearError();
-		var msg = this.validateSearch(dsc);
-		if (msg.length === 0) {
-			if (this.fireEvent('beforesearch', this, dsc) !== false) {
-				this.loadMask.show();
-				var errorHandler = this.handleError.createDelegate(this, [],
-						true);
-				DifferentialExpressionSearchController
-						.getDiffExpressionForGenes(dsc, {
-							callback : this.returnFromSearch
-									.createDelegate(this),
-							errorHandler : errorHandler
-						});
-			}
+		if (this.efChooserPanel.eeFactorsMap === null) {
+			this.efChooserPanel.on("factors-chosen", this.doSearch, this, {
+				single : true
+			});
+			this.chooseFactors();
 		} else {
-			this.handleError(msg);
+			if (!dsc) {
+				dsc = this.getDiffSearchCommand();
+			}
+			this.clearError();
+			var msg = this.validateSearch(dsc);
+			if (msg.length === 0) {
+				if (this.fireEvent('beforesearch', this, dsc) !== false) {
+					this.loadMask.show();
+					var errorHandler = this.handleError.createDelegate(this,
+							[], true);
+					DifferentialExpressionSearchController
+							.getDiffExpressionForGenes(dsc, {
+								callback : this.returnFromSearch
+										.createDelegate(this),
+								errorHandler : errorHandler
+							});
+				}
+			} else {
+				this.handleError(msg);
+			}
 		}
 	},
 
@@ -342,33 +364,26 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		}.createDelegate(this));
 
 		this.eeSetChooserPanel.on("set-chosen", function(eeSetRecord) {
-			if (!eeSetRecord) {
-				return;
-			}
 			this.currentSet = eeSetRecord;
 			this.updateDatasetsToBeSearched(eeSetRecord
 					.get("expressionExperimentIds"), eeSetRecord);
 			this.geneChooserPanel.taxonChanged(this.currentSet.get("taxon"));
 		}.createDelegate(this));
 
-//		this.eeSetChooserPanel.store.on("ready", this.restoreState
-//				.createDelegate(this));
-
 		this.eeSetChooserPanel.combo.on("comboReady", this.restoreState
 				.createDelegate(this));
 
 		/* factor chooser */
-		this.efChooserPanel = new Gemma.ExperimentalFactorChooserPanel();
+		this.efChooserPanel = new Gemma.ExperimentalFactorChooserPanel({
+			modal : true
+		});
 
 		this.eeSetChooserPanel.on('commit', function(eeSetRecord) {
 			if (!eeSetRecord) {
 				return;
 			}
-			this.loadMask.msg = "Retrieving factors ...";
-			this.loadMask.show();
-			this.loadMask.msg = "Searching ...";// set back to default
-			var eeIds = eeSetRecord.get("expressionExperimentIds");
-			this.efChooserPanel.show(eeIds);
+			this.currentSet = eeSetRecord;
+			this.chooseFactors();
 		}.createDelegate(this));
 
 		this.efChooserPanel.on('factors-chosen', function() {
@@ -424,8 +439,6 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		 * This horrible mess. We listen to taxon ready event and filter the
 		 * presets on the taxon.
 		 */
-		// this.geneChooserPanel.on("render", function() {
-		// this.geneChooserPanel.toolbar.on("render", function() {
 		this.geneChooserPanel.toolbar.taxonCombo.on("ready", function(taxon) {
 			// console.log("setting up filtering of combo");
 			if (taxon) {
@@ -440,8 +453,6 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 				}
 			}
 		}, this);
-		// }, this);
-		// }, this);
 
 	}
 

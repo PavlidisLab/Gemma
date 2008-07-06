@@ -17,6 +17,8 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	height : 500,
 	closeAction : 'hide',
 	constrainHeader : true,
+
+	title : "Choose the factors to analyze in each experiment",
 	eeFactorsMap : null,
 
 	onCommit : function() {
@@ -66,7 +68,7 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 			eeIds : eeIds,
 			efIds : efIds
 		};
- 
+		this.fireEvent("factors-chosen");
 		this.hide();
 	},
 
@@ -99,6 +101,7 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	 *            config
 	 */
 	show : function(eeIds) {
+		Gemma.ExperimentalFactorChooserPanel.superclass.show.call(this);
 		this.populateFactors(eeIds);
 	},
 
@@ -109,10 +112,19 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	 *            eeIds
 	 */
 	populateFactors : function(eeIds) {
+		if (!this.efGrid) {
+			Ext.apply(this, {
+				loadMask : new Ext.LoadMask(this.getEl(), {
+					msg : "Loading factors ..."
+				})
+			});
+			this.loadMask.show();
+		} else {
+			this.efGrid.loadMask.show();
+		}
 		DifferentialExpressionSearchController.getFactors(eeIds, {
 			callback : this.returnFromGetFactors.createDelegate(this)
-				// ,errorHandler : errorHandler
-				});
+		});
 	},
 
 	/**
@@ -123,26 +135,21 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	 */
 	returnFromGetFactors : function(results) {
 		var dataFromServer = {
+			// renderTo : this,
 			data : results
 		};
 		if (results.size() > 0) {
 			if (this.efGrid) {
 				this.remove(this.efGrid, true);
+			} else {
+				this.loadMask.hide();
+				// delete this.loadMask;
 			}
 			this.efGrid = new Gemma.ExpressionExperimentExperimentalFactorGrid(dataFromServer);
 			this.add(this.efGrid);
-			this.efGrid.doLayout();
-			this.fireEvent("factors-chosen");
-			Gemma.ExperimentalFactorChooserPanel.superclass.show.call(this);
+			// this.efGrid.render();
+			this.doLayout();
 		}
 	}
-
-// ,onRender : function(ct, position) {
-// Gemma.ExperimentalFactorChooserPanel.superclass.onRender.call(this,
-// ct,
-// position);
-//
-// var admin = dwr.util.getValue("hasAdmin");
-// }
 
 });
