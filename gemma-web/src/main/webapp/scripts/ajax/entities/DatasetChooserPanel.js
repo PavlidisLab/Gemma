@@ -26,8 +26,11 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 	layoutConfig : {
 		columns : 2
 	},
+	defaults : {
+		bodyStyle : 'padding:3px'
+	},
 	border : false,
-	width : 220,
+	width : 230,
 	isAdmin : false,
 
 	setState : function(state) {

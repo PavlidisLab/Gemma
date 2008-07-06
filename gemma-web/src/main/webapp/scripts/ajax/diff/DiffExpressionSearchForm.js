@@ -25,7 +25,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		bodyStyle : "padding:10px"
 	},
 
-	height : 300,
+	height : 330,
 	frame : true,
 	stateful : true,
 	stateEvents : ["beforesearch"],
@@ -211,9 +211,6 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 	 * 
 	 */
 	chooseFactors : function() {
-		// this.loadMask.msg = "Retrieving factors ...";
-		// this.loadMask.show();
-		// this.loadMask.msg = "Searching ...";// set back to default
 		var eeIds = this.currentSet.get("expressionExperimentIds");
 		this.efChooserPanel.show(eeIds);
 	},
@@ -386,26 +383,26 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 			this.chooseFactors();
 		}.createDelegate(this));
 
-		this.efChooserPanel.on('factors-chosen', function() {
-			this.loadMask.hide();
-		}.createDelegate(this));
-
 		Ext.apply(this, {
 			items : [this.geneChooserPanel, {
 				xtype : 'panel',
 				region : 'south',
 				title : 'Analysis options',
 				collapsedTitle : '[Analysis options]',
-				id : 'analysis-options',
+				id : 'analysis-options-wrapper',
 				width : 250,
-				height : 110,
-				minSize : 70,
-				cmargins : '5 0 0 0 ',
-				margins : '5 0 0 0 ',
+				height : 140,
+				minSize : 90,
+				cmargins : '5 5 5 5 ',
+				margins : '5 5 5 5 ',
 				plugins : new Ext.ux.CollapsedPanelTitlePlugin(),
 				items : [{
 					xtype : 'fieldset',
-					height : 70,
+					defaults : {
+						bodyStyle : 'padding:3px'
+					},
+					id : 'diff-ex-analysis-options',
+					height : 100,
 					items : [{
 						xtype : 'numberfield',
 						id : 'thresholdField',
@@ -421,7 +418,14 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 						value : Gemma.MIN_THRESHOLD,
 						width : 60,
 						tooltip : "Only genes with a qvalue less than this threshold are returned."
-					}, this.eeSetChooserPanel]
+					}, this.eeSetChooserPanel, {
+						xtype : 'button',
+						id : 'showFactorChooserButton',
+						text : "Factor chooser",
+						tooltip : "Show experimental factor chooser",
+						handler : this.chooseFactors,
+						scope : this
+					}]
 				}]
 			}],
 			buttons : [{
