@@ -12,8 +12,9 @@
  *          Exp $
  */
 
-Gemma.MIN_THRESHOLD = 0.01;
+Gemma.MIN_THRESHOLD = 0.00;
 Gemma.MAX_THRESHOLD = 1.0;
+Gemma.DEFAULT_THRESHOLD = 0.01;
 
 Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 
@@ -313,7 +314,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 	updateDatasetsToBeSearched : function(datasets, eeSet, dirty) {
 		var numDatasets = datasets.length;
 		Ext.getCmp('thresholdField').maxValue = numDatasets;
-		Ext.getCmp('analysis-options').setTitle(String.format(
+		Ext.getCmp('analysis-options-wrapper').setTitle(String.format(
 				"Analysis options - Up to {0} datasets will be analyzed",
 				numDatasets));
 	},
@@ -339,6 +340,11 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 			isAdmin : isAdmin
 		});
 
+		/* factor chooser */
+		this.efChooserPanel = new Gemma.ExperimentalFactorChooserPanel({
+			modal : true
+		});
+
 		this.geneChooserPanel.on("taxonchanged", function(taxon) {
 			this.eeSetChooserPanel.filterByTaxon(taxon);
 		}.createDelegate(this));
@@ -348,15 +354,11 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 			this.updateDatasetsToBeSearched(eeSetRecord
 					.get("expressionExperimentIds"), eeSetRecord);
 			this.geneChooserPanel.taxonChanged(this.currentSet.get("taxon"));
+			this.efChooserPanel.reset(eeSetRecord.get("name"));
 		}.createDelegate(this));
 
 		this.eeSetChooserPanel.combo.on("comboReady", this.restoreState
 				.createDelegate(this));
-
-		/* factor chooser */
-		this.efChooserPanel = new Gemma.ExperimentalFactorChooserPanel({
-			modal : true
-		});
 
 		this.eeSetChooserPanel.on('commit', function(eeSetRecord) {
 			if (!eeSetRecord) {
@@ -398,7 +400,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 						invalidText : "Minimum threshold is "
 								+ Gemma.MIN_THRESHOLD + ".  Max threshold is "
 								+ Gemma.MAX_THRESHOLD,
-						value : Gemma.MIN_THRESHOLD,
+						value : Gemma.DEFAULT_THRESHOLD,
 						width : 60,
 						tooltip : "Only genes with a qvalue less than this threshold are returned."
 					}, this.eeSetChooserPanel, {

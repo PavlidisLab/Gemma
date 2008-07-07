@@ -21,6 +21,14 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	title : "Choose the factors to analyze in each experiment",
 	eeFactorsMap : null,
 
+	reset : function(eeSet) {
+		if (this.currentEEset != null && eeSet != this.currentEEset) {
+			//console.log("reset " + eeSet);
+			this.eeFactorsMap = null;
+		}
+		this.currentEEset = eeSet;
+	},
+
 	onCommit : function() {
 
 		if (!this.efGrid) {
