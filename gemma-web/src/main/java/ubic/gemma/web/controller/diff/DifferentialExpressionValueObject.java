@@ -113,7 +113,7 @@ public class DifferentialExpressionValueObject {
      */
     @Override
     public String toString() {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
 
         if ( gene == null ) buf.append( "-\t" );
 

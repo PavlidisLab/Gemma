@@ -95,29 +95,30 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         setSessionForm( true );
     }
 
-    /**
-     * AJAX entry.
-     * <p>
-     * Returns a metadata diff expression value object, which is useful for printing the results to a text view.
-     * 
-     * @param geneIds
-     * @param threshold
-     * @return
-     */
-    public DifferentialExpressionMetaValueObject getDifferentialExpressionMeta( Collection<Long> geneIds,
-            double threshold ) {
-
-        List<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
-
-        for ( Long geneId : geneIds ) {
-            DifferentialExpressionMetaAnalysisValueObject mavo = getDifferentialExpressionMetaAnalysis( geneId, null,
-                    threshold );
-            devos.addAll( mavo.getProbeResults() );
-        }
-
-        DifferentialExpressionMetaValueObject meta = new DifferentialExpressionMetaValueObject( devos );
-        return meta;
-    }
+    //
+    // /**
+    // * AJAX entry.
+    // * <p>
+    // * Returns a metadata diff expression value object, which is useful for printing the results to a text view.
+    // *
+    // * @param geneIds
+    // * @param threshold
+    // * @return
+    // */
+    // public DifferentialExpressionMetaValueObject getDifferentialExpressionMeta( Collection<Long> geneIds,
+    // double threshold ) {
+    //
+    // List<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
+    //
+    // for ( Long geneId : geneIds ) {
+    // DifferentialExpressionMetaAnalysisValueObject mavo = getDifferentialExpressionMetaAnalysis( geneId, null,
+    // threshold );
+    // devos.addAll( mavo.getProbeResults() );
+    // }
+    //
+    // DifferentialExpressionMetaValueObject meta = new DifferentialExpressionMetaValueObject( devos );
+    // return meta;
+    // }
 
     /**
      * When n probes map to the same gene, penalize by multiplying each pval by n and then take the 'best' value.
@@ -507,16 +508,59 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             double threshold = DEFAULT_THRESHOLD;
             try {
                 threshold = Double.parseDouble( request.getParameter( "t" ) );
-            } catch ( Exception e ) {
+            } catch ( NumberFormatException e ) {
                 log.warn( "invalid threshold; using default " + threshold );
             }
 
             Collection<Long> geneIds = extractIds( request.getParameter( "g" ) );
 
-            DifferentialExpressionMetaValueObject result = getDifferentialExpressionMeta( geneIds, threshold );
+            Long eeSetId = null;
+            try {
+                eeSetId = Long.parseLong( request.getParameter( "a" ) );
+            } catch ( NumberFormatException e ) {
+                //
+            }
+
+            Collection<DiffExpressionSelectedFactorCommand> selectedFactors = new HashSet<DiffExpressionSelectedFactorCommand>();
+            String fs = request.getParameter( "fm" );
+            try {
+                if ( fs != null ) {
+                    String[] fss = fs.split( "," );
+                    for ( String fm : fss ) {
+                        String[] m = fm.split( "\\." );
+                        if ( m.length != 2 ) {
+                            continue;
+                        }
+                        String eeIdStr = m[0];
+                        String efIdStr = m[1];
+
+                        Long eeId = Long.parseLong( eeIdStr );
+                        Long efId = Long.parseLong( efIdStr );
+                        DiffExpressionSelectedFactorCommand dsfc = new DiffExpressionSelectedFactorCommand( eeId, efId );
+                        selectedFactors.add( dsfc );
+                    }
+                }
+            } catch ( NumberFormatException e ) {
+                log.warn( "Error parsing factor info" );
+            }
+
+            DiffExpressionSearchCommand command = new DiffExpressionSearchCommand();
+            command.setGeneIds( geneIds );
+            command.setEeSetId( eeSetId );
+            command.setSelectedFactors( selectedFactors );
+            command.setThreshold( threshold );
+
+            Collection<DifferentialExpressionMetaAnalysisValueObject> result = getDiffExpressionForGenes( command );
 
             ModelAndView mav = new ModelAndView( new TextView() );
-            String output = result.toString();
+
+            StringBuilder buf = new StringBuilder();
+            for ( DifferentialExpressionMetaAnalysisValueObject demavo : result ) {
+                buf.append( demavo );
+            }
+
+            String output = buf.toString();
+
             mav.addObject( "text", output.length() > 0 ? output : "no results" );
             return mav;
         } else {

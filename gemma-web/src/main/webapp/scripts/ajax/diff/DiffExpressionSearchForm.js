@@ -229,9 +229,16 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 			url += String.format("&setName={0}", dsc.eeSetName);
 		}
 
-		/*
-		 * FIXME we need the factors here as well.
-		 */
+		if (dsc.selectedFactors) {
+			url += "&fm=";
+			for (var i in dsc.selectedFactors) {
+				var o = dsc.selectedFactors[i];
+				if (!o.eeId) {
+					continue;
+				}
+				url += o.eeId + "." + o.efId + ",";
+			}
+		}
 
 		return url;
 	},

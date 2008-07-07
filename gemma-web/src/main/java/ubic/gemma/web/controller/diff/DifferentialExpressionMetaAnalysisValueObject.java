@@ -54,7 +54,7 @@ public class DifferentialExpressionMetaAnalysisValueObject {
     public void setProbeResults( Collection<DifferentialExpressionValueObject> probeResults ) {
         this.probeResults = probeResults;
     }
-    
+
     public String getSortKey() {
         return sortKey;
     }
@@ -70,8 +70,18 @@ public class DifferentialExpressionMetaAnalysisValueObject {
     public void setNumSearchedExperiments( int numSearchedExperiments ) {
         this.numSearchedExperiments = numSearchedExperiments;
     }
-    
-    
-    
+
+    public String toString() {
+        StringBuilder buf = new StringBuilder();
+
+        buf.append( "# MetaP = " + this.getFisherPValue() + "\n" );
+
+        // FIXME add other information here, like the date and details about experiments.
+
+        for ( DifferentialExpressionValueObject result : this.getProbeResults() ) {
+            buf.append( result + "\n" );
+        }
+        return buf.toString();
+    }
 
 }
