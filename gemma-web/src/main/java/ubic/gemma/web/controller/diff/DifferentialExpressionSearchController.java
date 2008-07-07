@@ -423,6 +423,11 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         factorValuesAsString = StringUtils.remove( factorValuesAsString, ef.getName() + ":" );
         factorValuesAsString = StringUtils.removeEnd( factorValuesAsString, FV_SEP );
 
+        /*
+         * Preformat the factor name; due to Ext PropertyGrid limitations we can't do this on the client.
+         */
+        efvo.setName( ef.getName() + " (" + StringUtils.abbreviate( factorValuesAsString, 50 ) + ")" );
+
         efvo.setFactorValues( factorValuesAsString );
         return efvo;
     }
@@ -474,7 +479,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
             for ( FactorAssociatedAnalysisResultSet fars : analysis.getResultSets() ) {
                 factors.addAll( fars.getExperimentalFactor() ); // FIXME includes interaction terms, but shouldn't
-                                                                // matter.
+                // matter.
             }
 
             filteredEeIds.add( id );
@@ -485,6 +490,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                 ExperimentalFactorValueObject efvo = configExperimentalFactorValueObject( ef );
                 eeefvo.getExperimentalFactors().add( efvo );
             }
+
             eeefvos.add( eeefvo );
         }
         log.info( "Filtered experiments.  Returning factors for experiments with ids: " + filteredEeIds.toString() );

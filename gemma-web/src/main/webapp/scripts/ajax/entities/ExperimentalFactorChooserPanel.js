@@ -14,7 +14,7 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	id : 'factor-chooser',
 	layout : 'fit',
 	width : 800,
-	height : 500,
+	height : 250,
 	closeAction : 'hide',
 	constrainHeader : true,
 
