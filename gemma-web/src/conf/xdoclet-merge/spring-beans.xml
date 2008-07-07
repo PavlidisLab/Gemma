@@ -526,6 +526,7 @@
 							<value>getAvailableExpressionExperimentSets</value>
 							<value>update</value>
 							<value>create</value>
+							<value>remove</value>
 						</list>
 					</property>
 				</bean>

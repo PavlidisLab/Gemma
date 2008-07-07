@@ -114,6 +114,15 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 			}
 		}.createDelegate(this));
 
+		this.dcp.on("delete-set", function(rec) {
+			if (this.store.getPreviousSelection()) {
+				this.combo.setValue(this.store.getPreviousSelection()
+						.get("name"))
+			} else {
+				this.combo.setValue("");
+			}
+		}.createDelegate(this));
+
 		this.dcp.on("commit", function(sel) {
 			if (sel) {
 				this.combo.setValue(sel.get("name"));
@@ -358,14 +367,27 @@ Ext.extend(Gemma.ExpressionExperimentSetStore, Ext.data.Store, {
 	},
 
 	setSelectedId : function(id) {
-		this.selectedId = rec;
+		this.selectedId = id;
 	},
 
 	setSelected : function(rec) {
+		this.previousSelection = this.getSelected();
 		if (rec) {
 			this.selected = rec;
 			this.selectedId = rec.get("id");
 		}
+	},
+
+	getPreviousSelection : function() {
+		return this.previousSelection;
+	},
+
+	clearSelected : function() {
+		// console.log("clear");
+		this.selected = null;
+		this.selectedId = null;
+		delete this.selected;
+		delete this.selectedId;
 	},
 
 	addFromCookie : function() {
@@ -491,6 +513,7 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 
 	onCommit : function() {
 		var rec = this.eeSetGrid.getStore().getSelected();
+
 		/*
 		 * If any are dirty, and if any of the modified records are saveable by
 		 * this user, then prompt for save.
@@ -557,7 +580,8 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 
 		this.addEvents({
 			"datasets-selected" : true,
-			"commit" : true
+			"commit" : true,
+			'delete-set' : true
 		});
 
 	},
@@ -615,6 +639,7 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 			title : "Dataset locator",
 			region : 'west',
 			split : true,
+			// disabled : true, // enable after selecting a set
 			showAnalysisInfo : true,
 			pageSize : 15,
 			height : 200,
@@ -655,6 +680,11 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 		this.add(this.eeSetGrid);
 		this.add(this.eeSetMembersGrid);
 		this.add(this.sourceDatasetsGrid);
+
+		this.eeSetGrid.getTopToolbar().on("delete-set", function(rec) {
+			this.eeSetMembersGrid.setTitle('Set members');
+			this.fireEvent('delete-set');
+		}.createDelegate(this));
 
 	},
 
@@ -783,6 +813,20 @@ Gemma.ExpressionExperimentSetGrid = Ext.extend(Ext.grid.EditorGridPanel, {
 
 	updateMembers : function(store) {
 		var rec = this.getSelectionModel().getSelected();
+
+		if (!rec) {
+			// if no EEset is currently selected.
+			Ext.Msg
+					.alert(
+							"Sorry",
+							"You must select a set or create a new set before adding experiments.",
+							function() {
+								store.un("remove", this.updateMembers);
+								store.un("add", this.updateMembers);
+								store.removeAll();
+							});
+			return;
+		}
 
 		var ids = [];
 		store.each(function(rec) {
@@ -1004,7 +1048,7 @@ Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 			tooltip : "Clear filters"
 		});
 
-		this.addEvents('saveOrUpdate', 'taxonset');
+		this.addEvents('saveOrUpdate', 'taxonset', 'remove-set');
 		this.on("saveOrUpdate", function() {
 			this.commitBut.disable();
 		});
@@ -1037,11 +1081,25 @@ Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 								if (rec.get("id") < 0) {
 									this.grid.getStore().remove(rec);
 									this.grid.getStore().removeFromCookie(rec);
+									this.grid.getStore().clearSelected();
+									this.fireEvent("delete-set", rec);
 								} else {
 									if (this.userCanWriteToDB) {
 										// Ext.log("Deleting from DB");
 										this.grid.getStore().remove(rec);
+										this.grid.getStore().clearSelected();
+										this.fireEvent("delete-set", rec);
 										/* FIXME Delete from db */
+										var callback = function(data) {
+											if (data) {
+												Ext.Msg.alert("Deleted");
+											} else {
+												Ext.Msg
+														.alert("Could not delete. See the logs for details.");
+											}
+										}.createDelegate(this);
+										ExpressionExperimentSetController
+												.remove(rec.data, callback);
 									} else {
 										Ext.Msg
 												.alert("Permission denied",
@@ -1083,13 +1141,31 @@ Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 			if (this.userCanWriteToDB) {
 				// console.log("Writing new to db");
 				/* FIXME write new one to the db */
+				var callback = function(data) {
+					if (data) {
+						Ext.Msg.alert("Created");
+					} else {
+						Ext.Msg
+								.alert("Could not create. See the logs for details.");
+					}
+				}.createDelegate(this);
+				ExpressionExperimentSetController.create(rec.data, callback);
 			} else {
 				// console.log("Writing to cookie");
+				var callback = function(data) {
+					if (data) {
+						Ext.Msg.alert("Updated");
+					} else {
+						Ext.Msg
+								.alert("Could not update. See the logs for details.");
+					}
+				}.createDelegate(this);
 				this.grid.getStore().cookieSaveOrUpdateEESet(rec);
 			}
 		} else {
 			if (this.userCanWriteToDB) {
 				// console.log("Updating to db");
+				ExpressionExperimentSetController.update(rec.data, callback);
 				/* FIXME write updated one to the db */
 			} else {
 				Ext.Msg

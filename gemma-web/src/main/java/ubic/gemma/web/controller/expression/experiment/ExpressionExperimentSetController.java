@@ -163,6 +163,32 @@ public class ExpressionExperimentSetController extends BaseFormController {
     }
 
     /**
+     * Delete a EEset from the system. NOTE this will fail if it has analyses associated with it.
+     * 
+     * @param obj
+     * @return true if it was deleted.
+     */
+    public boolean remove( ExpressionExperimentSetValueObject obj ) {
+        Long id = obj.getId();
+        if ( id == null || id < 0 ) {
+            log.warn( "Cannot delete eeset with id=" + id );
+            return false;
+        }
+        ExpressionExperimentSet expressionExperimentSet = expressionExperimentSetService.load( id );
+        if ( expressionExperimentSet == null ) {
+            log.warn( "No such eeset id=" + id );
+            return false;
+        }
+        try {
+            expressionExperimentSetService.delete( expressionExperimentSet );
+        } catch ( Exception e ) {
+            log.warn( e, e );
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * @param obj
      * @return
      */
