@@ -133,8 +133,25 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 			dsc.eeSetName = param.setName;
 		}
 
-		// FIXME : include the factors
-
+		// include the factors
+		if (param.fm) {
+			var fss = param.fm.split(",");
+			var factorMap = [];
+			for (var i in fss) {
+				var fm = fss[i];
+				if (typeof fm != 'string') {
+					continue;
+				}
+				var m = fm.split(".");
+				if (m.length == 2) {
+					factorMap.push({
+						eeId : m[0],
+						efId : m[1]
+					});
+				}
+			}
+			dsc.selectedFactors = factorMap;
+		}
 		return dsc;
 	},
 
@@ -244,7 +261,8 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 	},
 
 	doSearch : function(dsc) {
-		if (this.efChooserPanel.eeFactorsMap === null) {
+		if ((dsc && !dsc.selectedFactors)
+				|| (!dsc && !this.efChooserPanel.eeFactorsMap)) {
 			this.efChooserPanel.on("factors-chosen", function(efmap) {
 				this.doSearch();
 			}, this, {

@@ -521,28 +521,9 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                 //
             }
 
-            Collection<DiffExpressionSelectedFactorCommand> selectedFactors = new HashSet<DiffExpressionSelectedFactorCommand>();
+            
             String fs = request.getParameter( "fm" );
-            try {
-                if ( fs != null ) {
-                    String[] fss = fs.split( "," );
-                    for ( String fm : fss ) {
-                        String[] m = fm.split( "\\." );
-                        if ( m.length != 2 ) {
-                            continue;
-                        }
-                        String eeIdStr = m[0];
-                        String efIdStr = m[1];
-
-                        Long eeId = Long.parseLong( eeIdStr );
-                        Long efId = Long.parseLong( efIdStr );
-                        DiffExpressionSelectedFactorCommand dsfc = new DiffExpressionSelectedFactorCommand( eeId, efId );
-                        selectedFactors.add( dsfc );
-                    }
-                }
-            } catch ( NumberFormatException e ) {
-                log.warn( "Error parsing factor info" );
-            }
+            Collection<DiffExpressionSelectedFactorCommand> selectedFactors = extractFactorInfo( fs );
 
             DiffExpressionSearchCommand command = new DiffExpressionSearchCommand();
             command.setGeneIds( geneIds );
@@ -566,6 +547,35 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         } else {
             return new ModelAndView( this.getFormView() );
         }
+    }
+
+    /**
+     * @param fs
+     * @return
+     */
+    private Collection<DiffExpressionSelectedFactorCommand> extractFactorInfo( String fs ) {
+        Collection<DiffExpressionSelectedFactorCommand> selectedFactors = new HashSet<DiffExpressionSelectedFactorCommand>();
+        try {
+            if ( fs != null ) {
+                String[] fss = fs.split( "," );
+                for ( String fm : fss ) {
+                    String[] m = fm.split( "\\." );
+                    if ( m.length != 2 ) {
+                        continue;
+                    }
+                    String eeIdStr = m[0];
+                    String efIdStr = m[1];
+
+                    Long eeId = Long.parseLong( eeIdStr );
+                    Long efId = Long.parseLong( efIdStr );
+                    DiffExpressionSelectedFactorCommand dsfc = new DiffExpressionSelectedFactorCommand( eeId, efId );
+                    selectedFactors.add( dsfc );
+                }
+            }
+        } catch ( NumberFormatException e ) {
+            log.warn( "Error parsing factor info" );
+        }
+        return selectedFactors;
     }
 
     /**
