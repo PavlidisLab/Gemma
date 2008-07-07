@@ -309,7 +309,7 @@
  	<!-- static content; the /s/ gets stripped from the url and we use a rewrite so the user doesn't see it. -->
 	<servlet-mapping>
 		<servlet-name>default</servlet-name>
-		<url-pattern>/static/*</url-pattern>
+		<url-pattern>/s/*</url-pattern>
 	</servlet-mapping>
 
 	<servlet-mapping>
