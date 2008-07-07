@@ -85,26 +85,9 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		 */
 		var efMap = this.efChooserPanel.eeFactorsMap;
 
-		if (efMap != null) {
-			for (var i = 0; efMap.eeIds.size(); i++) {
-				var d = efMap.eeIds[i];
-				if (isNaN(d)) {
-					break;
-				}
-				var eeId = d;
-				var efId = efMap.efIds[i];
-				var dsfc = {};
-				Ext.apply(dsfc, {
-					eeId : eeId,
-					efId : efId
-				});
-				dsfcs[i] = dsfc;
-			};
-		}
-
 		Ext.apply(newDsc, {
 			geneIds : this.geneChooserPanel.getGeneIds(),
-			selectedFactors : dsfcs,
+			selectedFactors : efMap,
 			threshold : Ext.getCmp('thresholdField').getValue(),
 			taxonId : this.geneChooserPanel.getTaxonId()
 		});

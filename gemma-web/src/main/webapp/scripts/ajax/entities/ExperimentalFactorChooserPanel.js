@@ -23,52 +23,63 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 
 	onCommit : function() {
 
-		var eeIds = [];
-		var efIds = [];
+		if (!this.efGrid) {
+			return;
+		}
+		this.eeFactorsMap = [];
 
-		if (this.efGrid) {
-			var eeFactorsSelModel = this.efGrid.selModel;
+		var eeFactorSource = this.efGrid.getSource();
+		// var store = this.efGrid.getStore();
 
-			eeFactorsSelModel.select(0, 1);
+		for (var experimentName in eeFactorSource) {
+			var factorName = eeFactorSource[experimentName];
+			if (typeof factorName != 'string') {
+				continue;
+			}
+			// console.log(experimentName + " --> " + factorName);
+			// var eeIndex = store.find("name", experimentName);
 
-			var data = eeFactorsSelModel.grid.data;
+			// locate the experiment in the data
+			for (var i in this.data) {
+				var rec = this.data[i];
+				if (!rec.expressionExperiment) {
+					continue;
+				}
+				var eeInfo = rec.expressionExperiment;
 
-			for (var i = 0; i < data.size(); i++) {
+				var eeName = eeInfo.name;
 
-				var d = data[i];
-				if (!d.expressionExperiment) {
-					break;
+				if (eeName != experimentName) {
+					continue;
 				}
 
-				eeFactorsSelModel.select(i, 1);
+				var eeId = eeInfo.id;
+				var efInfo = rec.experimentalFactors;
 
-				var ee = data[i].expressionExperiment.name;
-				if (ee == eeFactorsSelModel.selection.record.data.name) {
-					eeIds[i] = data[i].expressionExperiment.id;
-
-					var efs = data[i].experimentalFactors;
-					for (var j = 0; j < efs.size(); j++) {
-						var ef = efs[j].name;
-						if (ef == eeFactorsSelModel.selection.record.data.value) {
-							efIds[i] = efs[j].id;
-							break;
-						} else {
-							// continue
-						}
+				// locate the experimental factor.
+				for (var j in efInfo) {
+					var ef = efInfo[j];
+					if (!ef.name) {
+						continue;
 					}
+					var efName = ef.name;
+					if (efName == factorName) {
+						var efId = ef.id;
+						this.eeFactorsMap.push({
+							efId : efId,
+							eeId : eeId
+						});
 
-				} else {
-					// continue
+						// console.log(eeId + " --> " + efId);
+						break;
+					}
 				}
+
 			}
 
 		}
 
-		this.eeFactorsMap = {
-			eeIds : eeIds,
-			efIds : efIds
-		};
-		this.fireEvent("factors-chosen");
+		this.fireEvent("factors-chosen", this.eeFactorsMap);
 		this.hide();
 	},
 
@@ -134,8 +145,8 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	 *            result
 	 */
 	returnFromGetFactors : function(results) {
+		this.data = results;
 		var dataFromServer = {
-			// renderTo : this,
 			data : results
 		};
 		if (results.size() > 0) {
@@ -143,11 +154,9 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 				this.remove(this.efGrid, true);
 			} else {
 				this.loadMask.hide();
-				// delete this.loadMask;
 			}
 			this.efGrid = new Gemma.ExpressionExperimentExperimentalFactorGrid(dataFromServer);
 			this.add(this.efGrid);
-			// this.efGrid.render();
 			this.doLayout();
 		}
 	}

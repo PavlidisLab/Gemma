@@ -79,11 +79,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     private static final String FV_SEP = ", ";
 
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
-
     private DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService = null;
-
     private GeneService geneService = null;
-
     private ExpressionExperimentService expressionExperimentService = null;
 
     private final int MAX_PVAL = 1;
@@ -113,15 +110,12 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         List<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
 
         for ( Long geneId : geneIds ) {
-
             DifferentialExpressionMetaAnalysisValueObject mavo = getDifferentialExpressionMetaAnalysis( geneId, null,
                     threshold );
-
             devos.addAll( mavo.getProbeResults() );
         }
 
         DifferentialExpressionMetaValueObject meta = new DifferentialExpressionMetaValueObject( devos );
-
         return meta;
     }
 
@@ -207,7 +201,10 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         Gene g = geneService.load( geneId );
 
-        if ( g == null ) return null;
+        if ( g == null ) {
+            log.warn( "No Gene with id=" + geneId );
+            return null;
+        }
 
         /* find experiments that have had the diff cli run on it and have the gene g (analyzed) */
         Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService
@@ -217,6 +214,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         Map<Long, Long> eeFactorsMap = new HashMap<Long, Long>();
         for ( DiffExpressionSelectedFactorCommand selectedFactor : selectedFactors ) {
             eeFactorsMap.put( selectedFactor.getEeId(), selectedFactor.getEfId() );
+            log.debug( selectedFactor.getEeId() + " --> " + selectedFactor.getEfId() );
         }
 
         /* filter experiments that had the diff cli run on it and are in the scope of eeFactorsMap eeIds (active) */
@@ -245,10 +243,12 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             ExpressionExperimentValueObject eevo = configExpressionExperimentValueObject( ee );
 
             /*
-             * Get results with experiment and gene. Handling the threshold check below since we ignore this for the
-             * meta analysis.
+             * Get results for experiment on given gene. Handling the threshold check below since we ignore this for the
+             * meta analysis. The results returned are for all factors, not just the factors we are seeking.
              */
             Collection<ProbeAnalysisResult> results = differentialExpressionAnalysisService.find( g, ee );
+
+            log.debug( results.size() + " results for " + g + " in " + ee );
 
             /* filter results for duplicate probes (those from experiments that had 2 way anova) */
             Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> dearToEf = differentialExpressionAnalysisResultService
@@ -256,28 +256,22 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
             Collection<ProbeAnalysisResult> filteredResults = new HashSet<ProbeAnalysisResult>();
             for ( ProbeAnalysisResult r : results ) {
-
-                /* ignore probe results with interaction effect (2 way anova with interactions) */
                 Collection<ExperimentalFactor> efs = dearToEf.get( r );
-                if ( efs.size() >= 2 ) continue;
-
-                /*
-                 * leaves us with probe results with 1 factor (main effects from 2 way anova). now filter for chosen
-                 * factor
-                 */
-                ExperimentalFactor ef = efs.iterator().next();
-
-                if ( ee == null ) {
-                    log.info( "Null expression experiment" );
-                }
-
-                if ( !eeFactorsMap.containsKey( ee.getId() ) ) {
-                    log.info( "eeFactorsMap does not contain ee=" + ee.getId() );
+                assert efs.size() > 0;
+                if ( efs.size() > 1 ) {
+                    // We always ignore interaction effects.
                     continue;
                 }
 
+                ExperimentalFactor ef = efs.iterator().next();
+
+                assert eeFactorsMap.containsKey( ee.getId() ) : "eeFactorsMap does not contain ee=" + ee.getId();
+
                 Long sfId = eeFactorsMap.get( ee.getId() );
-                if ( ef.getId() != sfId ) {
+                if ( !ef.getId().equals( sfId ) ) {
+                    /*
+                     * Screen out factors we're not using.
+                     */
                     continue;
                 }
 
@@ -286,16 +280,16 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
             }
 
+            if ( filteredResults.size() == 0 ) {
+                log.warn( "No result for ee=" + ee );
+                continue;
+            }
+
             /*
              * For the diff expression meta analysis, ignore threshold. Select the 'best' penalized probe if multiple
              * probes map to the same gene.
              */
             ProbeAnalysisResult res = findMinPenalizedProbeResult( filteredResults );
-
-            if ( res == null ) {
-                log.warn( "No result for filtered result" );
-                continue;
-            }
 
             Double p = res.getPvalue();
             pvaluesToCombine.add( p );
