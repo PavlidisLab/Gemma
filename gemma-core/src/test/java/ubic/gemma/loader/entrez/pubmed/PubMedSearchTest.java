@@ -62,6 +62,9 @@ public class PubMedSearchTest extends TestCase {
         } catch ( java.io.IOException e ) {
             if ( e.getMessage().contains( "503" ) ) {
                 log.warn( "Test skipped due to a 503 from NCBI" );
+                return;
+            } else {
+                throw e;
             }
         }
     }
@@ -89,6 +92,9 @@ public class PubMedSearchTest extends TestCase {
         } catch ( java.io.IOException e ) {
             if ( e.getMessage().contains( "503" ) ) {
                 log.warn( "Test skipped due to a 503 from NCBI" );
+                return;
+            } else {
+                throw e;
             }
         }
     }
@@ -109,6 +115,9 @@ public class PubMedSearchTest extends TestCase {
         } catch ( java.io.IOException e ) {
             if ( e.getMessage().contains( "503" ) ) {
                 log.warn( "Test skipped due to a 503 from NCBI" );
+                return;
+            } else {
+                throw e;
             }
         }
     }
@@ -130,6 +139,9 @@ public class PubMedSearchTest extends TestCase {
         } catch ( java.io.IOException e ) {
             if ( e.getMessage().contains( "503" ) ) {
                 log.warn( "Test skipped due to a 503 from NCBI" );
+                return;
+            } else {
+                throw e;
             }
         }
 
