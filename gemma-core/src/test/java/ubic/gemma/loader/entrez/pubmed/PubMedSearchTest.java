@@ -49,16 +49,20 @@ public class PubMedSearchTest extends TestCase {
             searchTerms.add( "glucose" );
             Collection<BibliographicReference> actualResult = pms.searchAndRetrieveByHTTP( searchTerms );
             assertTrue( "Expected at least 5 results, got " + actualResult.size(), actualResult.size() >= 5 ); // at
-                                                                                                                // least,
-                                                                                                                // this
-                                                                                                                // was
-                                                                                                                // the
-                                                                                                                // result
-                                                                                                                // on
+            // least,
+            // this
+            // was
+            // the
+            // result
+            // on
             // 4/2008
         } catch ( java.net.UnknownHostException e ) {
             log.warn( "Test skipped due to unknown host exception" );
             return;
+        } catch ( java.io.IOException e ) {
+            if ( e.getMessage().contains( "503" ) ) {
+                log.warn( "Test skipped due to a 503 from NCBI" );
+            }
         }
     }
 
@@ -72,16 +76,20 @@ public class PubMedSearchTest extends TestCase {
             searchTerms.add( "glucose" );
             Collection<String> actualResult = pms.searchAndRetrieveIdsByHTTP( searchTerms );
             assertTrue( "Expect at least 5 results, got " + actualResult.size(), actualResult.size() >= 5 ); // at
-                                                                                                                // least,
-                                                                                                                // this
-                                                                                                                // was
-                                                                                                                // the
-                                                                                                                // result
-                                                                                                                // on
+            // least,
+            // this
+            // was
+            // the
+            // result
+            // on
             // 4/2008.
         } catch ( java.net.UnknownHostException e ) {
             log.warn( "Test skipped due to unknown host exception" );
             return;
+        } catch ( java.io.IOException e ) {
+            if ( e.getMessage().contains( "503" ) ) {
+                log.warn( "Test skipped due to a 503 from NCBI" );
+            }
         }
     }
 
@@ -98,6 +106,10 @@ public class PubMedSearchTest extends TestCase {
         } catch ( java.net.UnknownHostException e ) {
             log.warn( "Test skipped due to unknown host exception" );
             return;
+        } catch ( java.io.IOException e ) {
+            if ( e.getMessage().contains( "503" ) ) {
+                log.warn( "Test skipped due to a 503 from NCBI" );
+            }
         }
     }
 
@@ -115,6 +127,10 @@ public class PubMedSearchTest extends TestCase {
             assertTrue( actualResult.size() >= 10 ); // at least, this was the result on 4/2008. }
         } catch ( java.net.UnknownHostException e ) {
             log.warn( "Test skipped due to unknown host exception" );
+        } catch ( java.io.IOException e ) {
+            if ( e.getMessage().contains( "503" ) ) {
+                log.warn( "Test skipped due to a 503 from NCBI" );
+            }
         }
 
         return;
