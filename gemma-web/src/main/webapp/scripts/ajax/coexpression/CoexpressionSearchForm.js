@@ -349,6 +349,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		});
 
 		this.eeSetChooserPanel = new Gemma.ExpressionExperimentSetPanel({
+			isAdmin : this.admin,
 			store : new Gemma.ExpressionExperimentSetStore()
 		});
 

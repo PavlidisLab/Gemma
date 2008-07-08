@@ -31,6 +31,8 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisS
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.web.controller.BaseFormController;
 
@@ -42,6 +44,7 @@ import ubic.gemma.web.controller.BaseFormController;
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
  * @spring.property name="persisterHelper" ref="persisterHelper"
+ * @spring.property name="taxonService" ref="taxonService"
  * @author paul
  * @version $Id$
  */
@@ -50,6 +53,7 @@ public class ExpressionExperimentSetController extends BaseFormController {
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
     private ExpressionExperimentService expressionExperimentService;
     private PersisterHelper persisterHelper;
+    private TaxonService taxonService;
 
     @SuppressWarnings("unchecked")
     public Collection<ExpressionExperimentValueObject> getExperimentsInSet( Long id ) {
@@ -105,9 +109,9 @@ public class ExpressionExperimentSetController extends BaseFormController {
             ExpressionExperimentSetValueObject vo = new ExpressionExperimentSetValueObject();
             vo.setName( set.getName() );
             vo.setId( set.getId() );
-            vo.setTaxon( set.getTaxon() );
-
-            vo.getTaxon().toString(); // If I don't do this, won't be populated in the downstream object. This is
+            vo.setTaxonId( set.getTaxon().getId() );
+            vo.setTaxonName( set.getTaxon().getCommonName() ); // If I don't do this, won't be populated in the
+            // downstream object. This is
             // basically a thaw.
 
             vo.setDescription( set.getDescription() == null ? "" : set.getDescription() );
@@ -145,7 +149,7 @@ public class ExpressionExperimentSetController extends BaseFormController {
         }
 
         if ( expressionExperimentSetService.getAnalyses( toUpdate ).size() > 0 ) {
-            throw new IllegalArgumentException( "Sorry, can't update this analysis" );
+            throw new IllegalArgumentException( "Sorry, can't update this set, it is associated with active analyses." );
         }
 
         toUpdate.setName( obj.getName() );
@@ -155,6 +159,17 @@ public class ExpressionExperimentSetController extends BaseFormController {
                 .getExpressionExperimentIds() );
         toUpdate.getExperiments().retainAll( datasetsAnalyzed );
         toUpdate.getExperiments().addAll( datasetsAnalyzed );
+
+        /*
+         * Check that all the datasets match the given taxon.
+         */
+        for ( BioAssaySet ee : toUpdate.getExperiments() ) {
+            Taxon t = expressionExperimentService.getTaxon( ee.getId() );
+            if ( !t.equals( toUpdate.getTaxon() ) ) {
+                throw new IllegalArgumentException( "You cannot add a " + t.getCommonName() + " dataset to a "
+                        + toUpdate.getTaxon().getCommonName() + " set" );
+            }
+        }
 
         expressionExperimentSetService.update( toUpdate );
 
@@ -171,19 +186,21 @@ public class ExpressionExperimentSetController extends BaseFormController {
     public boolean remove( ExpressionExperimentSetValueObject obj ) {
         Long id = obj.getId();
         if ( id == null || id < 0 ) {
-            log.warn( "Cannot delete eeset with id=" + id );
-            return false;
+            throw new IllegalArgumentException( "Cannot delete eeset with id=" + id );
         }
-        ExpressionExperimentSet expressionExperimentSet = expressionExperimentSetService.load( id );
-        if ( expressionExperimentSet == null ) {
-            log.warn( "No such eeset id=" + id );
-            return false;
+        ExpressionExperimentSet toDelete = expressionExperimentSetService.load( id );
+        if ( toDelete == null ) {
+            throw new IllegalArgumentException( "No such eeset id=" + id );
         }
+
+        if ( expressionExperimentSetService.getAnalyses( toDelete ).size() > 0 ) {
+            throw new IllegalArgumentException( "Sorry, can't delete this set, it is associated with active analyses." );
+        }
+
         try {
-            expressionExperimentSetService.delete( expressionExperimentSet );
+            expressionExperimentSetService.delete( toDelete );
         } catch ( Exception e ) {
-            log.warn( e, e );
-            return false;
+            throw new RuntimeException( e );
         }
         return true;
     }
@@ -195,7 +212,7 @@ public class ExpressionExperimentSetController extends BaseFormController {
     @SuppressWarnings("unchecked")
     public Long create( ExpressionExperimentSetValueObject obj ) {
 
-        if ( obj.getId() != null ) {
+        if ( obj.getId() != null && obj.getId() >= 0 ) {
             throw new IllegalArgumentException( "Should not provide an id for 'create': " + obj.getId() );
         }
 
@@ -206,6 +223,11 @@ public class ExpressionExperimentSetController extends BaseFormController {
         ExpressionExperimentSet va = ExpressionExperimentSet.Factory.newInstance();
         va.setName( obj.getName() );
         va.setDescription( obj.getDescription() );
+        va.setTaxon( taxonService.load( obj.getTaxonId() ) );
+
+        if ( va.getTaxon() == null ) {
+            throw new IllegalArgumentException( "No such taxon with id=" + obj.getTaxonId() );
+        }
 
         Collection<? extends BioAssaySet> datasetsAnalyzed = expressionExperimentService.loadMultiple( obj
                 .getExpressionExperimentIds() );
@@ -232,6 +254,10 @@ public class ExpressionExperimentSetController extends BaseFormController {
     public void setDifferentialExpressionAnalysisService(
             DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
         this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
+    }
+
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
     }
 
 }

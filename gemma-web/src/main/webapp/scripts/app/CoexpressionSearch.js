@@ -14,7 +14,9 @@ Ext.onReady(function() {
 		});
 	}
 
-	var searchPanel = new Gemma.CoexpressionSearchForm({});
+	var searchPanel = new Gemma.CoexpressionSearchForm({
+		admin : admin
+	});
 	searchPanel.render("coexpression-form");
 
 	var summaryPanel;

@@ -35,7 +35,8 @@ public class ExpressionExperimentSetValueObject {
     private Collection<Long> expressionExperimentIds;
     private Integer numExperiments;
     private boolean modifiable;
-    private Taxon taxon;
+    private String taxonName;
+    private Long taxonId;
 
     public boolean isModifiable() {
         return modifiable;
@@ -89,12 +90,20 @@ public class ExpressionExperimentSetValueObject {
         this.id = id;
     }
 
-    public Taxon getTaxon() {
-        return taxon;
+    public String getTaxonName() {
+        return taxonName;
     }
 
-    public void setTaxon( Taxon taxon ) {
-        this.taxon = taxon;
+    public void setTaxonName( String taxonName ) {
+        this.taxonName = taxonName;
+    }
+
+    public Long getTaxonId() {
+        return taxonId;
+    }
+
+    public void setTaxonId( Long taxonId ) {
+        this.taxonId = taxonId;
     }
 
 }

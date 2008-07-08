@@ -76,7 +76,7 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 	filterByTaxon : function(taxon) {
 		// side effect: grid is filtered too.
 		if (taxon) {
-			this.combo.filterByTaxon(taxon);
+			this.combo.filterByTaxon(taxon.id);
 		}
 	},
 
@@ -228,15 +228,15 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 		}
 	},
 
-	filterByTaxon : function(taxon) {
+	filterByTaxon : function(taxonId) {
 		if (this.suppressFiltering) {
 			return;
 		}
 
 		this.doQueryBy(function(record, id) {
-			if (!record.get("taxon")) {
+			if (!record.get("taxonId")) {
 				return true; // in case there is none.
-			} else if (taxon.id == record.get("taxon").id) {
+			} else if (taxonId == record.get("taxonId")) {
 				return true;
 			} else {
 				return false;
@@ -244,7 +244,7 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 		});
 
 		if (this.store.getSelected()
-				&& this.store.getSelected().get("taxon").id != taxon.id) {
+				&& this.store.getSelected().get("taxonId") != taxonId) {
 			this.setValue("");
 		}
 	},
@@ -324,7 +324,10 @@ Gemma.ExpressionExperimentSetStore = function(config) {
 	}, {
 		name : "expressionExperimentIds"
 	}, {
-		name : "taxon"
+		name : "taxonId",
+		type : "int"
+	}, {
+		name : "taxonName"
 	}]);
 
 	this.readMethod = ExpressionExperimentSetController.getAvailableExpressionExperimentSets;
@@ -410,7 +413,8 @@ Ext.extend(Gemma.ExpressionExperimentSetStore, Ext.data.Store, {
 			toBeUpdated.set("description", rec.get("description"));
 			toBeUpdated.set("expressionExperimentIds", rec
 					.get("expressionExperimentIds"));
-			toBeUpdated.set("taxon", rec.get("taxon"));
+			toBeUpdated.set("taxonId", rec.get("taxonId"));
+			toBeUpdated.set("taxonName", rec.get("taxonName"));
 			toBeUpdated.commit();
 		} else {
 			// Ext.log("Adding record");
@@ -783,8 +787,9 @@ Gemma.ExpressionExperimentSetGrid = Ext.extend(Ext.grid.EditorGridPanel, {
 
 			this.getStore().setSelected(rec);
 
-			if (this.searchGrid && rec.get("taxon")) {
-				this.searchGrid.getTopToolbar().filterTaxon(rec.get("taxon"));
+			if (this.searchGrid && rec.get("taxonName")) {
+				this.searchGrid.getTopToolbar().filterTaxon(rec
+						.get("taxonName"));
 			}
 		}, this);
 
@@ -887,16 +892,16 @@ Gemma.ExpressionExperimentSetGrid = Ext.extend(Ext.grid.EditorGridPanel, {
 	}, {
 		id : 'taxon',
 		header : "Taxon",
-		dataIndex : "taxon",
-		sortable : true,
-		renderer : function(v) {
-			if (v) {
-				return v.commonName;
-			} else {
-				return "";
-			}
-		}
-	}]
+		dataIndex : "taxonName",
+		sortable : true
+			// ,renderer : function(v) {
+			// if (v) {
+			// return v.commonName;
+			// } else {
+			// return "";
+			// }
+			// }
+			}]
 
 });
 
@@ -941,7 +946,7 @@ Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 				name : args.name,
 				description : args.description,
 				id : -1,
-				userCanSave : true,
+				modifiable : true,
 				expressionExperimentIds : [],
 				numExperiments : 0,
 				taxon : args.taxon
@@ -1085,17 +1090,13 @@ Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 									this.fireEvent("delete-set", rec);
 								} else {
 									if (this.userCanWriteToDB) {
-										// Ext.log("Deleting from DB");
-										this.grid.getStore().remove(rec);
-										this.grid.getStore().clearSelected();
 										this.fireEvent("delete-set", rec);
-										/* FIXME Delete from db */
 										var callback = function(data) {
 											if (data) {
-												Ext.Msg.alert("Deleted");
-											} else {
-												Ext.Msg
-														.alert("Could not delete. See the logs for details.");
+												this.grid.getStore()
+														.remove(rec);
+												this.grid.getStore()
+														.clearSelected();
 											}
 										}.createDelegate(this);
 										ExpressionExperimentSetController
@@ -1133,14 +1134,14 @@ Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 			return;
 		}
 
-		// Ext.log("update");
 		this.resetBut.disable();
 		this.commitBut.disable();
 
 		if (rec.get("id") < 0) {
 			if (this.userCanWriteToDB) {
-				// console.log("Writing new to db");
-				/* FIXME write new one to the db */
+				/*
+				 * try to create it in the db.
+				 */
 				var callback = function(data) {
 					if (data) {
 						Ext.Msg.alert("Created");
@@ -1151,7 +1152,6 @@ Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 				}.createDelegate(this);
 				ExpressionExperimentSetController.create(rec.data, callback);
 			} else {
-				// console.log("Writing to cookie");
 				var callback = function(data) {
 					if (data) {
 						Ext.Msg.alert("Updated");
@@ -1164,9 +1164,7 @@ Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 			}
 		} else {
 			if (this.userCanWriteToDB) {
-				// console.log("Updating to db");
 				ExpressionExperimentSetController.update(rec.data, callback);
-				/* FIXME write updated one to the db */
 			} else {
 				Ext.Msg
 						.alert("Permission denied",
@@ -1178,18 +1176,17 @@ Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 	},
 
 	copy : function() {
-		// Ext.log("save as copy");
-		// Create a copy, change the name and give dummy id.
 		var rec = this.getCurrentSet();
 		var constr = this.grid.getStore().record;
 		var newRec = new constr({
 			name : rec.get("name") + "*", // indicate they should edit it.
 			description : rec.get("description"),
 			id : -1,
-			userCanSave : true,
+			modifiable : true,
 			expressionExperimentIds : rec.get("expressionExperimentIds"),
 			numExperiments : rec.get("numExperiments"),
-			taxon : rec.get("taxon")
+			taxonId : rec.get("taxonId"),
+			taxonName : rec.get("taxonName")
 		}); // note that id is assigned by Ext.
 
 		// ensure the new record is dirty.
@@ -1205,7 +1202,6 @@ Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 	},
 
 	reset : function() {
-		// Ext.log("reset");
 		if (this.getCurrentSet()) {
 			this.getCurrentSet().reject();
 			this.resetBut.disable();
@@ -1215,7 +1211,6 @@ Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 	},
 
 	editing : function() {
-		// Ext.log("editing");
 		this.cloneBut.enable();
 		this.resetBut.enable();
 		this.commitBut.enable();
