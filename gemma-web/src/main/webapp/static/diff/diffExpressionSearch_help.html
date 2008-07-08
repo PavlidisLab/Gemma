@@ -1,24 +1,29 @@
 <body>
-<h2>
-Differential Expression
-</h2>
+	<h2>
+		Differential Expression
+	</h2>
 	The differential expression of genes in Gemma is determined by
 	statistical tests run on datasets based on the experiment's design.
 	That is, datasets containing 1 factor and 2 factor values will have
-	differential evidence based on a  <b>t-test</b>.
+	differential evidence based on a
+	<b>t-test</b>.
 	<br>
-	 Datasets with 1 experimental factor and more than 2 factor values
-	will have differential evidence based on a <b>one way anova</b>
+	Datasets with 1 experimental factor and more than 2 factor values will
+	have differential evidence based on a
+	<b>one way anova</b>.
 	<br>
-	 Datasets with 2 experimental factors and an incomplete block design will have differential evidence based on a
-	<b>two way anova without interactions</b>
-	
-   <br>
-	Datasets with a complete block design will have evidence based on a
-	<b>2 way anova with interactions</b>
-	
+	Datasets with 2 experimental factors and an incomplete block design
+	will have differential evidence based on a
+	<b>two way anova without interactions</b>.
+
 	<br>
-	
+	Datasets with 2 experimental factors and a complete block design will
+	have evidence based on a
+	<b>2 way anova with interactions</b>.
+
+	<br>
+	<br>
+
 	<h2>
 		Inputs:
 	</h2>
@@ -28,34 +33,63 @@ Differential Expression
 			<i>Query Gene:</i> The search will look for and return experiments
 			for which the input query gene has differential evidence.
 		</li>
-<li>
-	<i>Query Genes: </i>The experiments that have differential evidence for any of the given genes will be returned.
-		
-</li>
 		<li>
-			<i>Threshold:</i> Only genes with a q-value less than the input
-			threshold are returned from the search (default sort order).
+			<i>Query Genes: </i>The experiments that have differential evidence
+			for any of the given genes will be returned.
+
+		</li>
+		<li>
+			<i>Threshold:</i> Genes with a q-value less than the input threshold
+			are returned from the search (default sort order). The threshold is
+			igored when computing the meta-analysis results.
+		</li>
+		<li>
+			<i>Scope:</i> The set of experiments to include in the search.
 		</li>
 	</ul>
+
+	<br>
 
 	<h2>
 		Results:
 	</h2>
-
+	The results contain both the meta-analysis results and the differential
+	expression results (dropdown).
 	<ul>
+		<h3>
+			Meta analysis Results
+		</h3>
 		<li>
-			<i>Experiment:</i> The experiment containing the queried gene.
+			<i>Query Gene:</i> The input query gene(s).
+		</li>
+		<li>
+			<i>Meta P-Value:</i> The fisher combined p-value which includes raw
+			p-values from datasets with diff evidence for the query gene. In
+			cases where multiple probes (n) in a dataset map to the same input
+			query gene, the probes are penalized by multiplying by n. The
+			smallest p-value is then used in the combined p-value.
+		</li>
+		<li>
+			<i># Datasets Tested In:</i> # datasets with diff results / #
+			datasets tested in
+		</li>
+
+		<h3>
+			Differential Expression Results (dropdown)
+		</h3>
+		<li>
+			<i>Experiment:</i> The experiment with diff evidence for the query
+			gene.
+		</li>
+		<li>
+			<i>Probe:</i> The probe that maps to the query gene. Green indicates
+			the probe contributes to the fisher (meta) p-value.
 		</li>
 
 		<li>
 			<i>Factors:</i> The factors for which the queried gene has
 			differential expression evidence. For example, genes that belong to
 			experiments analyzed with one way anova will have 1 factor.
-		</li>
-
-		<li>
-			<i>Probe:</i> The probes that align with the queried gene in the
-			given experiment.
 		</li>
 
 		<li>
