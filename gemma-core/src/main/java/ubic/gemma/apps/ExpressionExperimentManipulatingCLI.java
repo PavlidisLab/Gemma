@@ -32,8 +32,12 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
 import org.apache.commons.collections.Transformer;
+import org.apache.commons.lang.StringUtils;
 
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
@@ -51,7 +55,8 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * <ul>
  * <li>All EEs
  * <li>All EEs for a particular taxon.
- * <li>OA comma-delimited list of one or more EEs identified by short name given on the command line
+ * <li>A specific ExpressionExperimentSet, identified by name</li>
+ * <li>A comma-delimited list of one or more EEs identified by short name given on the command line
  * <li>From a file, with one short name per line.
  * <li>EEs matching a query string (e.g., 'brain')
  * <li>(Optional) 'Auto' mode, in which experiments to analyze are selected automatically based on their workflow
@@ -78,11 +83,13 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
 
     protected Taxon taxon = null;
 
-    protected Set<ExpressionExperiment> expressionExperiments = new HashSet<ExpressionExperiment>();
+    protected Set<BioAssaySet> expressionExperiments = new HashSet<BioAssaySet>();
 
-    protected Collection<ExpressionExperiment> excludeExperiments;
+    protected Collection<BioAssaySet> excludeExperiments;
 
     protected boolean force = false;
+
+    protected ExpressionExperimentSet expressionExperimentSet;
 
     protected void addForceOption() {
         this.addForceOption( null );
@@ -116,6 +123,11 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
                 .withLongOpt( "eeListfile" ).create( 'f' );
         addOption( eeFileListOption );
 
+        Option eeSetOption = OptionBuilder.hasArg().withArgName( "eeSetName" ).withDescription(
+                "Name of expression experiment set to use" ).create( "eeset" );
+
+        addOption( eeSetOption );
+
         Option taxonOption = OptionBuilder.hasArg().withDescription( "taxon name" ).withDescription(
                 "taxon of the expression experiments and genes" ).withLongOpt( "taxon" ).create( 't' );
         addOption( taxonOption );
@@ -145,8 +157,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
      * @param ee
      * @return true if the expression experiment has an active 'trouble' flag
      */
-    protected boolean isTroubled( ExpressionExperiment ee ) {
-        Collection<ExpressionExperiment> eec = new HashSet<ExpressionExperiment>();
+    protected boolean isTroubled( BioAssaySet ee ) {
+        Collection<BioAssaySet> eec = new HashSet<BioAssaySet>();
         eec.add( ee );
         removeTroubledEes( eec );
         if ( eec.size() == 0 ) {
@@ -200,7 +212,9 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
             this.autoSeek = true;
         }
 
-        if ( this.hasOption( 'e' ) ) {
+        if ( this.hasOption( "eeset" ) ) {
+            experimentsFromEeSet( getOptionValue( "eeset" ) );
+        } else if ( this.hasOption( 'e' ) ) {
             experimentsFromCliList();
         } else if ( hasOption( 'f' ) ) {
             String experimentListFile = getOptionValue( 'f' );
@@ -227,8 +241,12 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
 
         if ( expressionExperiments != null && expressionExperiments.size() > 0 && !force ) {
 
-            for ( ExpressionExperiment ee : expressionExperiments ) {
-                eeService.thawLite( ee );
+            for ( BioAssaySet ee : expressionExperiments ) {
+                if ( ee instanceof ExpressionExperiment ) {
+                    eeService.thawLite( ( ExpressionExperiment ) ee );
+                } else {
+                    throw new UnsupportedOperationException( "Can't handle non-EE BioAssaySets yet" );
+                }
             }
 
             removeTroubledEes( expressionExperiments );
@@ -240,6 +258,27 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
         } else if ( expressionExperiments.size() == 0 ) {
             log.info( "No experiments selected" );
         }
+
+    }
+
+    @SuppressWarnings("unchecked")
+    private void experimentsFromEeSet( String optionValue ) {
+
+        if ( StringUtils.isBlank( optionValue ) ) {
+            throw new IllegalArgumentException( "Please provide an eeset name" );
+        }
+
+        ExpressionExperimentSetService expressionExperimentSetService = ( ExpressionExperimentSetService ) this
+                .getBean( "expressionExperimentSetService" );
+        Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.findByName( optionValue );
+        if ( sets.size() > 1 ) {
+            throw new IllegalArgumentException( "More than on EE set has name '" + optionValue + "'" );
+        } else if ( sets.size() == 0 ) {
+            throw new IllegalArgumentException( "No EE set has name '" + optionValue + "'" );
+        }
+        ExpressionExperimentSet set = sets.iterator().next();
+        this.expressionExperimentSet = set;
+        this.expressionExperiments = new HashSet<BioAssaySet>( set.getExperiments() );
 
     }
 
@@ -312,8 +351,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
      * 
      * @param query
      */
-    private Set<ExpressionExperiment> findExpressionExperimentsByQuery( String query, Taxon taxon ) {
-        Set<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
+    private Set<BioAssaySet> findExpressionExperimentsByQuery( String query, Taxon taxon ) {
+        Set<BioAssaySet> ees = new HashSet<BioAssaySet>();
         Collection<SearchResult> eeSearchResults = searchService.search(
                 SearchSettings.ExpressionExperimentSearch( query ) ).get( ExpressionExperiment.class );
 
@@ -338,8 +377,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
      * @return
      * @throws IOException
      */
-    private Set<ExpressionExperiment> readExpressionExperimentListFile( String fileName ) throws IOException {
-        Set<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
+    private Set<BioAssaySet> readExpressionExperimentListFile( String fileName ) throws IOException {
+        Set<BioAssaySet> ees = new HashSet<BioAssaySet>();
         for ( String eeName : readExpressionExperimentListFileToStrings( fileName ) ) {
             ExpressionExperiment ee = eeService.findByShortName( eeName );
             if ( ee == null ) {
@@ -370,12 +409,12 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
     }
 
     @SuppressWarnings("unchecked")
-    private void removeTroubledEes( Collection<ExpressionExperiment> ees ) {
+    private void removeTroubledEes( Collection<BioAssaySet> ees ) {
         if ( ees == null || ees.size() == 0 ) {
             log.warn( "No experiments to remove troubled from" );
             return;
         }
-        ExpressionExperiment theOnlyOne = null;
+        BioAssaySet theOnlyOne = null;
         if ( ees.size() == 1 ) {
             theOnlyOne = ees.iterator().next();
         }
@@ -399,7 +438,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
         if ( newSize != size ) {
             assert newSize < size;
             if ( size == 0 && theOnlyOne != null ) {
-                log.info( theOnlyOne.getShortName() + " has an active trouble flag" );
+                log.info( theOnlyOne.getName() + " has an active trouble flag" );
             } else {
                 log.info( "Removed " + ( size - newSize ) + " experiments with 'trouble' flags, leaving " + newSize );
             }

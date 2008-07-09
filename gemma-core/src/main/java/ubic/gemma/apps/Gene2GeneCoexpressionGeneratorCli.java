@@ -21,7 +21,6 @@ package ubic.gemma.apps;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashSet;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -32,6 +31,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 
 /**
+ * Run the gene link analysis, which converts probe links to gene links stored in the system.
+ * 
  * @author klc
  * @author paul (refactoring)
  * @version $Id$
@@ -95,13 +96,17 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
         Exception err = processCommandLine( "Gene 2 Gene Coexpression Caching tool ", args );
         if ( err != null ) return err;
 
-        log.info( "Using " + expressionExperiments.size() + " Expression Experiments." );
         log.debug( displayEEs() );
-
-        Collection<BioAssaySet> sets = new HashSet<BioAssaySet>();
-        sets.addAll( expressionExperiments );
-
-        geneVoteAnalyzer.analyze( sets, toUseGenes, toUseStringency, knownGenesOnly, toUseAnalysisName );
+        if ( this.expressionExperimentSet != null ) {
+            log.info( "Using EESet:" + this.expressionExperimentSet.getName() + " - "
+                    + this.expressionExperiments.size() + " Expression Experiments." );
+            geneVoteAnalyzer.analyze( this.expressionExperimentSet, toUseGenes, toUseStringency, knownGenesOnly,
+                    toUseAnalysisName );
+        } else {
+            log.info( "Using " + this.expressionExperiments.size() + " Expression Experiments." );
+            geneVoteAnalyzer.analyze( this.expressionExperiments, toUseGenes, toUseStringency, knownGenesOnly,
+                    toUseAnalysisName );
+        }
 
         return null;
     }
@@ -151,10 +156,20 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
 
     }
 
+    /**
+     * Debugging.
+     * 
+     * @return
+     */
     private String displayEEs() {
         String results = " ";
-        for ( ExpressionExperiment ee : expressionExperiments ) {
-            results += ee.getShortName() + "  ";
+        for ( BioAssaySet ee : expressionExperiments ) {
+            if ( ee instanceof ExpressionExperiment ) {
+                results += ( ( ExpressionExperiment ) ee ).getShortName() + "  ";
+            } else {
+                throw new UnsupportedOperationException( "Can't handle non-EE BioAssaySets yet" );
+            }
+
         }
         return results;
     }

@@ -22,6 +22,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.analysis.preprocess.VectorMergingService;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -74,8 +75,13 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
 
         mergingService = ( VectorMergingService ) this.getBean( "vectorMergingService" );
 
-        for ( ExpressionExperiment ee : expressionExperiments ) {
-            processExperiment( ee );
+        for ( BioAssaySet ee : expressionExperiments ) {
+            if ( ee instanceof ExpressionExperiment ) {
+                processExperiment( ( ExpressionExperiment ) ee );
+            } else {
+                throw new UnsupportedOperationException(
+                        "Can't do vector merging on non-expressionExperiment bioassaysets" );
+            }
         }
 
         summarizeProcessing();

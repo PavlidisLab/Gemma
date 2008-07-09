@@ -27,6 +27,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -51,8 +52,13 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
 
         serv = ( ExpressionExperimentPlatformSwitchService ) this.getBean( "expressionExperimentPlatformSwitchService" );
 
-        for ( ExpressionExperiment ee : expressionExperiments ) {
-            processExperiment( ee );
+        for ( BioAssaySet ee : expressionExperiments ) {
+            if ( ee instanceof ExpressionExperiment ) {
+                processExperiment( ( ExpressionExperiment ) ee );
+            } else {
+                throw new UnsupportedOperationException( "Can't handle non-EE BioAssaySets yet" );
+            }
+
         }
         summarizeProcessing();
         return null;

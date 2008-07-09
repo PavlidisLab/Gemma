@@ -39,4 +39,10 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
                         "select a from ExpressionAnalysisImpl a inner join a.expressionExperimentSetAnalyzed ees where ees = :eeset ",
                         "eeset", expressionExperimentSet );
     }
+
+    @SuppressWarnings("unchecked")
+    protected Collection<ExpressionExperimentSet> handleFindByName( String name ) throws Exception {
+        return this.getHibernateTemplate().findByNamedParam( "from ExpressionExperimentSetImpl where name=:query",
+                "query", name );
+    }
 }

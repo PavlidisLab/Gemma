@@ -32,6 +32,7 @@ import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.MatrixWriter;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 
@@ -84,9 +85,9 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
 
         CompositeSequenceService css = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
 
-        for ( ExpressionExperiment ee : expressionExperiments ) {
+        for ( BioAssaySet ee : expressionExperiments ) {
 
-            ExpressionDataDoubleMatrix dataMatrix = ahs.getMaskedPreferredDataMatrix( ee );
+            ExpressionDataDoubleMatrix dataMatrix = ahs.getMaskedPreferredDataMatrix( ( ExpressionExperiment ) ee );
 
             Map<Long, Collection<Gene>> genesByProbeId = new HashMap<Long, Collection<Gene>>();
 
@@ -99,8 +100,8 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
 
             try {
                 MatrixWriter out = new MatrixWriter();
-                PrintWriter writer = new PrintWriter( outFileName + "_" + ee.getShortName().replaceAll( "\\s", "" )
-                        + ".txt" );
+                PrintWriter writer = new PrintWriter( outFileName + "_"
+                        + ( ( ExpressionExperiment ) ee ).getShortName().replaceAll( "\\s", "" ) + ".txt" );
 
                 out.write( writer, dataMatrix, genesByProbeId, true, false, addGeneInfo );
                 writer.flush();

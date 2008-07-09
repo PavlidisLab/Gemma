@@ -38,6 +38,7 @@ import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
@@ -127,8 +128,13 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
         Exception err = processCommandLine( "Two-channel missing values", args );
         if ( err != null ) return err;
-        for ( ExpressionExperiment ee : expressionExperiments ) {
-            processExperiment( ee );
+        for ( BioAssaySet ee : expressionExperiments ) {
+            if ( ee instanceof ExpressionExperiment ) {
+                processExperiment( ( ExpressionExperiment ) ee );
+            } else {
+                throw new UnsupportedOperationException(
+                        "Can't do two-channel missing values on non-expressionExperiment bioassaysets" );
+            }
         }
 
         summarizeProcessing();

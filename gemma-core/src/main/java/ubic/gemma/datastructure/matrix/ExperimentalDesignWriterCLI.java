@@ -25,6 +25,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.apps.ExpressionExperimentManipulatingCLI;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -83,19 +84,24 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     protected Exception doWork( String[] args ) {
         processCommandLine( "experimentalDesignWriterCLI", args );
 
-        for ( ExpressionExperiment ee : expressionExperiments ) {
+        for ( BioAssaySet ee : expressionExperiments ) {
 
-            try {
-                ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
+            if ( ee instanceof ExpressionExperiment ) {
 
-                PrintWriter writer = new PrintWriter( outFileName + "_" + ee.getShortName().replaceAll( "\\s", "" )
-                        + ".txt" );
+                try {
+                    ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
 
-                edWriter.write( writer, ee, true );
-                writer.flush();
-                writer.close();
-            } catch ( IOException e ) {
-                return e;
+                    PrintWriter writer = new PrintWriter( outFileName + "_"
+                            + ( ( ExpressionExperiment ) ee ).getShortName().replaceAll( "\\s", "" ) + ".txt" );
+
+                    edWriter.write( writer, ( ExpressionExperiment ) ee, true );
+                    writer.flush();
+                    writer.close();
+                } catch ( IOException e ) {
+                    return e;
+                }
+            } else {
+                throw new UnsupportedOperationException( "Can't handle non-EE BioAssaySets yet" );
             }
         }
 

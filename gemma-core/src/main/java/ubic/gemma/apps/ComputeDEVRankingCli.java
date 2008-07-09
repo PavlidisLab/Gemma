@@ -28,7 +28,8 @@ import ubic.gemma.analysis.preprocess.DedvRankService;
 import ubic.gemma.analysis.preprocess.DedvRankService.Method;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent; 
+import ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
@@ -104,8 +105,8 @@ public class ComputeDEVRankingCli extends ExpressionExperimentManipulatingCLI {
             return err;
         }
 
-        for ( ExpressionExperiment ee : expressionExperiments ) {
-            processExperiment( ee );
+        for ( BioAssaySet ee : expressionExperiments ) {
+            processExperiment( ( ExpressionExperiment ) ee );
         }
         summarizeProcessing();
         return null;

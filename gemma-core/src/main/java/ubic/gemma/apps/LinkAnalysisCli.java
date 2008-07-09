@@ -34,6 +34,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEvent;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -136,8 +137,12 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
         this.linkAnalysisService = ( LinkAnalysisService ) this.getBean( "linkAnalysisService" );
 
-        for ( ExpressionExperiment ee : expressionExperiments ) {
-            processExperiment( ee );
+        for ( BioAssaySet ee : expressionExperiments ) {
+            if ( ee instanceof ExpressionExperiment ) {
+                processExperiment( ( ExpressionExperiment ) ee );
+            } else {
+                throw new UnsupportedOperationException( "Can't handle non-EE BioAssaySets yet" );
+            }
         }
 
         summarizeProcessing();

@@ -88,4 +88,10 @@ public class ExpressionExperimentSetServiceImpl extends
         return this.getExpressionExperimentSetDao().getAnalyses( expressionExperimentSet );
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection<ExpressionExperimentSet> handleFindByName( String name ) throws Exception {
+        return this.getExpressionExperimentSetDao().findByName( name );
+    }
+
 }

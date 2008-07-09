@@ -48,6 +48,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.security.SecurityService;
 
 /**
  * Used to analyze already-persisted probe-level 'links' and turn them into gene-level coexpression information. The
@@ -62,6 +63,7 @@ import ubic.gemma.persistence.PersisterHelper;
  * @spring.property name="geneCoexpressionAnalysisService" ref="geneCoexpressionAnalysisService"
  * @spring.property name="probeLinkCoexpressionAnalyzer" ref="probeLinkCoexpressionAnalyzer"
  * @spring.property name="persisterHelper" ref="persisterHelper"
+ * @spring.property name="securityService" ref="securityService"
  * @author paul
  * @version $Id$
  */
@@ -74,6 +76,52 @@ public class GeneLinkCoexpressionAnalyzer {
     private ProtocolService protocolService;
     private ProbeLinkCoexpressionAnalyzer probeLinkCoexpressionAnalyzer;
     private PersisterHelper persisterHelper;
+    private SecurityService securityService;
+
+    /**
+     * Perform a Gene-to-gene analysis for the given experiments and genes, subject to the other parameters.
+     * 
+     * @param expressionExperimentSet to use
+     * @param toUseGenes The genes to limit the analysis to, as query genes.
+     * @param stringency The minimum support before a gene2gene link will be stored
+     * @param knownGenesOnly if true, only 'known genes' (not predicted/PARs) will be used. Usually we set this to be
+     *        true. (in fact 'false' is currently not supported)
+     * @param analysisName Name of the analysis as it will appear in the system
+     */
+    public void analyze( ExpressionExperimentSet eeSet, Collection<Gene> toUseGenes, int stringency,
+            boolean knownGenesOnly, String analysisName ) {
+
+        Analysis existingAnalysis = geneCoexpressionAnalysisService.findByName( analysisName );
+        if ( existingAnalysis != null ) {
+            throw new IllegalArgumentException( "Analysis with name '" + analysisName + "' exists already (id="
+                    + existingAnalysis.getId() + ")" );
+        }
+
+        if ( !knownGenesOnly ) {
+            throw new UnsupportedOperationException(
+                    "Sorry, using other than 'known genes' is not currently supported." );
+        }
+
+        log.info( "Initializing gene link analysis ... " );
+
+        Taxon taxon = null;
+        Map<Long, Gene> genesToAnalyzeMap = new HashMap<Long, Gene>();
+        for ( Gene g : toUseGenes ) {
+            if ( taxon == null ) {
+                taxon = g.getTaxon();
+            } else if ( !taxon.equals( g.getTaxon() ) ) {
+                // sanity check.
+                throw new IllegalArgumentException( "Cannot analyze genes from multiple taxa" );
+            }
+            genesToAnalyzeMap.put( g.getId(), g );
+        }
+
+        GeneCoexpressionAnalysis analysis = intializeAnalysis( eeSet, taxon, toUseGenes, analysisName, stringency );
+        assert analysis != null;
+
+        doAnalysis( eeSet.getExperiments(), toUseGenes, stringency, knownGenesOnly, analysisName, genesToAnalyzeMap,
+                analysis );
+    }
 
     /**
      * Perform a Gene-to-gene analysis for the given experiments and genes, subject to the other parameters.
@@ -87,7 +135,6 @@ public class GeneLinkCoexpressionAnalyzer {
      */
     public void analyze( Collection<BioAssaySet> expressionExperiments, Collection<Gene> toUseGenes, int stringency,
             boolean knownGenesOnly, String analysisName ) {
-        Collection<Gene> processedGenes = new HashSet<Gene>();
 
         Analysis existingAnalysis = geneCoexpressionAnalysisService.findByName( analysisName );
         if ( existingAnalysis != null ) {
@@ -118,8 +165,26 @@ public class GeneLinkCoexpressionAnalyzer {
                 stringency );
         assert analysis != null;
 
-        int totalLinks = 0;
+        doAnalysis( expressionExperiments, toUseGenes, stringency, knownGenesOnly, analysisName, genesToAnalyzeMap,
+                analysis );
 
+    }
+
+    /**
+     * @param expressionExperiments
+     * @param toUseGenes
+     * @param stringency
+     * @param knownGenesOnly
+     * @param analysisName
+     * @param genesToAnalyzeMap
+     * @param analysis
+     * @return genes that were processed.
+     */
+    private Collection<Gene> doAnalysis( Collection<BioAssaySet> expressionExperiments, Collection<Gene> toUseGenes,
+            int stringency, boolean knownGenesOnly, String analysisName, Map<Long, Gene> genesToAnalyzeMap,
+            GeneCoexpressionAnalysis analysis ) {
+        int totalLinks = 0;
+        Collection<Gene> processedGenes = new HashSet<Gene>();
         Map<Long, Integer> eeIdOrder = getOrderingMap( expressionExperiments );
 
         log.info( "Starting gene link analysis '" + analysisName + " on " + toUseGenes.size() + " genes in "
@@ -145,13 +210,15 @@ public class GeneLinkCoexpressionAnalyzer {
             analysis.setDescription( analysis.getDescription() + "; " + totalLinks + " gene pairs stored." );
             geneCoexpressionAnalysisService.update( analysis );
             log.info( totalLinks + " gene pairs stored." );
-            // TODO set this analysis to be 'public' now.
+
+            securityService.makePublic( analysis );
+
         } catch ( Exception e ) {
             log.error( "There was an error during analysis. Cleaning up ..." );
             geneCoexpressionAnalysisService.delete( analysis );
             throw new RuntimeException( e );
         }
-
+        return processedGenes;
     }
 
     /**
@@ -351,7 +418,38 @@ public class GeneLinkCoexpressionAnalyzer {
 
         analysis = ( GeneCoexpressionAnalysis ) persisterHelper.persist( analysis );
 
-        // TODO set this analysis to be 'private' until it is done.
+        securityService.makePrivate( analysis );
+        log.info( "Done" );
+        return analysis;
+    }
+
+    /**
+     * @param expressionExperimentSet
+     * @param taxon
+     * @param toUseGenes
+     * @param analysisName
+     * @param stringency
+     * @return
+     */
+    private GeneCoexpressionAnalysis intializeAnalysis( ExpressionExperimentSet expressionExperimentSet, Taxon taxon,
+            Collection<Gene> toUseGenes, String analysisName, int stringency ) {
+        GeneCoexpressionAnalysis analysis = GeneCoexpressionAnalysis.Factory.newInstance();
+
+        analysis.setDescription( "Coexpression analysis for " + taxon.getCommonName() + " using "
+                + expressionExperimentSet.getExperiments().size() + " expression experiments (set="
+                + expressionExperimentSet.getName() + "); stringency=" + stringency );
+
+        Protocol protocol = createProtocol( expressionExperimentSet.getExperiments(), toUseGenes );
+
+        analysis.setTaxon( taxon );
+        analysis.setStringency( stringency );
+        analysis.setName( analysisName );
+        analysis.setProtocol( protocol );
+        analysis.setExpressionExperimentSetAnalyzed( expressionExperimentSet );
+
+        analysis = ( GeneCoexpressionAnalysis ) persisterHelper.persist( analysis );
+
+        securityService.makePrivate( analysis );
         log.info( "Done" );
         return analysis;
     }
@@ -449,5 +547,9 @@ public class GeneLinkCoexpressionAnalyzer {
         }
         return all;
 
+    }
+
+    public void setSecurityService( SecurityService securityService ) {
+        this.securityService = securityService;
     }
 }
