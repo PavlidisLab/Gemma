@@ -4,9 +4,8 @@ Ext.namespace('Gemma');
 
 /**
  * 
- * Grid to display ExpressionExperiments. Author: Paul (based on Luke's
- * CoexpressionDatasetGrid) $Id: ExpressionExperimentGrid.js,v 1.13 2008/04/23
- * 19:54:46 kelsey Exp $
+ * Grid to display ExpressionExperiments. Author: Paul (based on Luke's CoexpressionDatasetGrid) $Id:
+ * ExpressionExperimentGrid.js,v 1.13 2008/04/23 19:54:46 kelsey Exp $
  */
 Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
@@ -14,8 +13,7 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	 * Do not set header : true here - it breaks it.
 	 */
 	collapsible : false,
-	readMethod : ExpressionExperimentController.loadExpressionExperiments
-			.createDelegate(this, [], true),
+	readMethod : ExpressionExperimentController.loadExpressionExperiments.createDelegate(this, [], true),
 
 	autoExpandColumn : 'name',
 
@@ -154,7 +152,10 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			}
 		}, this);
 
-		this.getStore().on("load", function() {
+		this.getStore().on("load", function(store, records, options) {
+			// if (this.title) {
+			// this.setTitle(this.title + " - " + records.length + " items");
+			// }
 			this.doLayout();
 		}, this);
 
@@ -244,8 +245,7 @@ Gemma.EEGridRowExpander = Ext.extend(Ext.grid.RowExpander, {
 
 	beforeExpand : function(record, body, rowIndex) {
 		ExpressionExperimentController.getDescription(record.id, {
-			callback : this.fillExpander.createDelegate(this, [body, rowIndex],
-					true)
+			callback : this.fillExpander.createDelegate(this, [body, rowIndex], true)
 		});
 		return true;
 	}

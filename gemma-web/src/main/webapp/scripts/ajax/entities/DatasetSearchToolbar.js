@@ -60,10 +60,16 @@ Gemma.DatasetSearchToolBar = Ext.extend(Ext.Toolbar, {
 			fieldLabel : "Experiment keywords",
 			filtering : this.filtering,
 			listeners : {
+				'beforesearch' : {
+					fn : function() {
+						this.grid.setTitle("Dataset locator");
+					}.createDelegate(this)
+				},
 				'aftersearch' : {
 					fn : function(field, results) {
 						this.fireEvent('after.tbsearch', results);
 						if (this.grid) {
+							this.grid.setTitle("Dataset locator - " + results.length + " found");
 							this.grid.getStore().load({
 								params : [results]
 							});
@@ -96,7 +102,6 @@ Gemma.DataSetSearchAndGrabToolbar = Ext.extend(Gemma.DatasetSearchToolBar, {
 	initComponent : function() {
 		Gemma.DataSetSearchAndGrabToolbar.superclass.initComponent.call(this);
 		this.addEvents("grabbed");
-
 	},
 
 	afterRender : function() {
@@ -105,6 +110,7 @@ Gemma.DataSetSearchAndGrabToolbar = Ext.extend(Gemma.DatasetSearchToolBar, {
 			id : 'grabber',
 			disabled : false,
 			text : "Grab >>",
+			toolTip : "Transfer selected items to the set",
 			handler : function(button, ev) {
 				var selmo = this.grid.getSelectionModel();
 				var sels = selmo.getSelections();
@@ -117,7 +123,26 @@ Gemma.DataSetSearchAndGrabToolbar = Ext.extend(Gemma.DatasetSearchToolBar, {
 			scope : this
 		});
 
+		var allGrabber = new Ext.Button({
+			id : 'all-grabber',
+			disabled : false,
+			text : "Grab All",
+			toolTip : "Transfer all the results to the set",
+			handler : function(button, ev) {
+				var sels = this.grid.getStore().getRange();
+				if (sels.length > 0) {
+					//console.log("Adding " + sels.length);
+					this.targetGrid.getStore().add(sels);
+					this.targetGrid.getView().refresh();
+					this.fireEvent("grabbed", sels);
+				}
+			},
+			scope : this
+		});
+
 		this.addFill();
+		this.add(allGrabber);
+		this.addSeparator();
 		this.add(grabber);
 	}
 

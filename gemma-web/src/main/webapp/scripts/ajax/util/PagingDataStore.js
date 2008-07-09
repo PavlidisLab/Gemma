@@ -1,27 +1,17 @@
 Ext.namespace('Gemma');
 
-/*
- * Gemma.PagingDataStore constructor... ds is the backing data store config is a
- * hash with the following options: pageSize is the number of rows to show on
- * each page.
+/**
+ * 
+ * @class Gemma.PagingDataStore
+ * @extends Ext.data.Store
  */
-Gemma.PagingDataStore = function(config) {
+Gemma.PagingDataStore = Ext.extend(Ext.data.Store, {
 
-	this.currentStartIndex = 0;
-	this.pageSize = 10;
-	if (config && config.pageSize) {
-		this.pageSize = config.pageSize;
-		delete config.pageSize;
-	}
-
-	Gemma.PagingDataStore.superclass.constructor.call(this, config);
-};
-
-Ext.extend(Gemma.PagingDataStore, Ext.data.Store, {
+	pageSize : 10,
+	currentStartIndex : 0,
 
 	getAt : function(index) {
-		return Gemma.PagingDataStore.superclass.getAt.call(this,
-				this.currentStartIndex + index);
+		return Gemma.PagingDataStore.superclass.getAt.call(this, this.currentStartIndex + index);
 	},
 
 	getCount : function() {
@@ -29,13 +19,12 @@ Ext.extend(Gemma.PagingDataStore, Ext.data.Store, {
 	},
 
 	getRange : function(start, end) {
-		var windowStart = this.currentStartIndex + start;
-		var windowEnd = this.currentStartIndex + end;
+		var windowStart = start ? this.currentStartIndex + start : start;
+		var windowEnd = end ? this.currentStartIndex + end : end;
 		if (windowEnd > this.currentStartIndex + this.pageSize - 1) {
 			windowEnd = this.currentStartIndex + this.pageSize - 1;
 		}
-		return Gemma.PagingDataStore.superclass.getRange.call(this,
-				windowStart, windowEnd);
+		return Gemma.PagingDataStore.superclass.getRange.call(this, windowStart, windowEnd);
 	},
 
 	indexOf : function(record) {
@@ -55,8 +44,7 @@ Ext.extend(Gemma.PagingDataStore, Ext.data.Store, {
 
 	load : function(options) {
 		options = options || {};
-		if (options.params !== undefined
-				&& (options.params.start !== undefined || options.params.limit !== undefined)) {
+		if (options.params !== undefined && (options.params.start !== undefined || options.params.limit !== undefined)) {
 			if (this.fireEvent("beforeload", this, options) !== false) {
 				if (options.params.start !== undefined) {
 					this.currentStartIndex = options.params.start;
@@ -79,8 +67,7 @@ Ext.extend(Gemma.PagingDataStore, Ext.data.Store, {
 	},
 
 	loadRecords : function(o, options, success) {
-		Gemma.PagingDataStore.superclass.loadRecords.call(this, o, options,
-				success);
+		Gemma.PagingDataStore.superclass.loadRecords.call(this, o, options, success);
 
 		this.checkStartIndex();
 	},
