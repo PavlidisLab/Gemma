@@ -35,7 +35,7 @@ Gemma.ProbeBrowser.app = function() {
 
 			var detailsDs = this.initDetails();
 			this.initMainGrid(arrayDesignId, csids);
-
+			this.mainGrid.reset();
 		},
 
 		/**
@@ -75,7 +75,9 @@ Gemma.ProbeBrowser.app = function() {
 
 Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 
-	loadMask : true,
+	loadMask : {
+		msg : "Loading details ..."
+	},
 
 	autoExpandColumn : 'alignment',
 
@@ -286,6 +288,10 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	pageSize : 30,
 
+	loadMask : {
+		msg : "Loading probes ..."
+	},
+
 	viewConfig : {
 		forceFit : true
 	},
@@ -299,7 +305,6 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 	 *            id
 	 */
 	reset : function() {
-
 		if (this.arrayDesignId) {
 			this.showArrayDesignProbes(this.arrayDesignId);
 		} else {
@@ -502,9 +507,9 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 			});
 		}
 
-		this.store.on("load", this.loadHandler.createDelegate(this));
-
 		Gemma.ProbeGrid.superclass.initComponent.call(this);
+
+		this.store.on("load", this.loadHandler.createDelegate(this));
 
 		this.getSelectionModel().on("rowselect", function() {
 			var sm = this.getSelectionModel();
@@ -512,7 +517,6 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 			this.showDetails(id);
 		}.createDelegate(this));
 
-		this.reset();
 	},
 
 	/**
@@ -541,7 +545,7 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 		// note how we pass the new array in directly, without wrapping it in an
 		// object first. We're not returning an object, just a bare array.
 		this.getStore().load({
-			params : [idss],
+			params : [ids],
 			callback : function(r, options, success, scope) {
 				if (success) {
 					Ext.DomHelper.overwrite("messages", this.getCount()
@@ -611,7 +615,6 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 				html : "Sequence name: " + seqName + "&nbsp;"
 			}]
 		});
-
 	},
 
 	/**
