@@ -30,6 +30,7 @@
 		<script type='text/javascript' src='/Gemma/dwr/interface/ExpressionExperimentSetController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/FileUploadController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/GeneLinkAnalysisManagerController.js'></script>
+		<script type='text/javascript' src='/Gemma/dwr/interface/GeneController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/GenePickerController.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/interface/MgedOntologyService.js'></script>
 		<script type="text/javascript" src='/Gemma/dwr/interface/OntologyService.js'></script>
