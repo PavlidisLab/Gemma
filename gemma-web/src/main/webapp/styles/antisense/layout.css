@@ -209,23 +209,27 @@ table.list {
 }
 
 .roundedcornr_top_962327 div {
-	background: url(images/corners/roundedcornr_962327_tl.png) no-repeat top
-		left;
+	background-image: url(images/corners/roundedcornr_962327_tl.png);
+	background-position: top left;
+	background-repeat: no-repeat;
 }
 
 .roundedcornr_top_962327 {
-	background: url(images/corners/roundedcornr_962327_tr.png) no-repeat top
-		right;
+	background-image: url(images/corners/roundedcornr_962327_tr.png);
+	background-position: top right;
+	background-repeat: no-repeat;
 }
 
 .roundedcornr_bottom_962327 div {
-	background: url(images/corners/roundedcornr_962327_bl.png) no-repeat
-		bottom left;
+	background-image: url(images/corners/roundedcornr_962327_bl.png);
+	background-position: bottom left;
+	background-repeat: no-repeat;
 }
 
 .roundedcornr_bottom_962327 {
-	background: url(images/corners/roundedcornr_962327_br.png) no-repeat
-		bottom right;
+	background-image: url(images/corners/roundedcornr_962327_br.png);
+	background-position: bottom right;
+	background-repeat: no-repeat;
 }
 
 .roundedcornr_top_962327 div,.roundedcornr_top_962327,.roundedcornr_bottom_962327 div,.roundedcornr_bottom_962327
@@ -244,23 +248,27 @@ table.list {
 }
 
 .roundedcornr_top_777249 div {
-	background: url(images/corners/roundedcornr_777249_tl.png) no-repeat top
-		left;
+	background-image: url(images/corners/roundedcornr_777249_tl.png);
+	background-position: top left;
+	background-repeat: no-repeat;
 }
 
 .roundedcornr_top_777249 {
-	background: url(images/corners/roundedcornr_777249_tr.png) no-repeat top
-		right;
+	background: url(images/corners/roundedcornr_777249_tr.png);
+	background-repeat: no-repeat;
+	background-position: top right;
 }
 
 .roundedcornr_bottom_777249 div {
-	background: url(images/corners/roundedcornr_777249_bl.png) no-repeat
-		bottom left;
+	background-image: url(images/corners/roundedcornr_777249_bl.png);
+	background-repeat: no-repeat;
+	background-position: bottom left;
 }
 
 .roundedcornr_bottom_777249 {
-	background: url(images/corners/roundedcornr_777249_br.png) no-repeat
-		bottom right;
+	background-image: url(images/ corners/ roundedcornr_777249_br.png);
+	background-position: bottom right;
+	background-repeat: no-repeat;
 }
 
 .roundedcornr_top_777249 div,.roundedcornr_top_777249,.roundedcornr_bottom_777249 div,.roundedcornr_bottom_777249
