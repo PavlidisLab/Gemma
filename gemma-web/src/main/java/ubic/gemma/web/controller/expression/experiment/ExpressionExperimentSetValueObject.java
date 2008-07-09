@@ -21,8 +21,6 @@ package ubic.gemma.web.controller.expression.experiment;
 import java.util.Collection;
 import java.util.HashSet;
 
-import ubic.gemma.model.genome.Taxon;
-
 /**
  * @author paul
  * @version $Id$

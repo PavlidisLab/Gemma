@@ -55,43 +55,38 @@ public class ExpressionExperimentSetController extends BaseFormController {
     private PersisterHelper persisterHelper;
     private TaxonService taxonService;
 
-    @SuppressWarnings("unchecked")
-    public Collection<ExpressionExperimentValueObject> getExperimentsInSet( Long id ) {
-        Collection<Long> eeids = getExperimentIdsInSet( id );
-        Collection<ExpressionExperimentValueObject> result = expressionExperimentService.loadValueObjects( eeids );
-        populateAnalyses( eeids, result );
-        return result;
-    }
-
     /**
-     * Fill in information about analyses done on the experiments.
-     * 
-     * @param result
-     */
-    @SuppressWarnings("unchecked")
-    private void populateAnalyses( Collection<Long> eeids, Collection<ExpressionExperimentValueObject> result ) {
-        Map<Long, DifferentialExpressionAnalysis> analysisMap = differentialExpressionAnalysisService
-                .findByInvestigationIds( eeids );
-        for ( ExpressionExperimentValueObject eevo : result ) {
-            if ( !analysisMap.containsKey( eevo.getId() ) ) {
-                continue;
-            }
-            eevo.setDifferentialExpressionAnalysisId( analysisMap.get( eevo.getId() ).getId() );
-        }
-    }
-
-    /**
-     * @param id
+     * @param obj
      * @return
      */
-    public Collection<Long> getExperimentIdsInSet( Long id ) {
-        ExpressionExperimentSet eeSet = expressionExperimentSetService.load( id ); // secure
-        Collection<BioAssaySet> datasets = eeSet.getExperiments(); // Not secure.
-        Collection<Long> eeids = new HashSet<Long>();
-        for ( BioAssaySet ee : datasets ) {
-            eeids.add( ee.getId() );
+    @SuppressWarnings("unchecked")
+    public Long create( ExpressionExperimentSetValueObject obj ) {
+
+        if ( obj.getId() != null && obj.getId() >= 0 ) {
+            throw new IllegalArgumentException( "Should not provide an id for 'create': " + obj.getId() );
         }
-        return eeids;
+
+        if ( StringUtils.isBlank( obj.getName() ) ) {
+            throw new IllegalArgumentException( "You must provide a name" );
+        }
+
+        ExpressionExperimentSet va = ExpressionExperimentSet.Factory.newInstance();
+        va.setName( obj.getName() );
+        va.setDescription( obj.getDescription() );
+        va.setTaxon( taxonService.load( obj.getTaxonId() ) );
+
+        if ( va.getTaxon() == null ) {
+            throw new IllegalArgumentException( "No such taxon with id=" + obj.getTaxonId() );
+        }
+
+        Collection<? extends BioAssaySet> datasetsAnalyzed = expressionExperimentService.loadMultiple( obj
+                .getExpressionExperimentIds() );
+
+        ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
+        eeSet.getExperiments().addAll( datasetsAnalyzed );
+
+        ExpressionExperimentSet newAnalysis = ( ExpressionExperimentSet ) persisterHelper.persist( va );
+        return newAnalysis.getId();
     }
 
     /**
@@ -129,52 +124,25 @@ public class ExpressionExperimentSetController extends BaseFormController {
     }
 
     /**
-     * @param obj
+     * @param id
+     * @return
      */
+    public Collection<Long> getExperimentIdsInSet( Long id ) {
+        ExpressionExperimentSet eeSet = expressionExperimentSetService.load( id ); // secure
+        Collection<BioAssaySet> datasets = eeSet.getExperiments(); // Not secure.
+        Collection<Long> eeids = new HashSet<Long>();
+        for ( BioAssaySet ee : datasets ) {
+            eeids.add( ee.getId() );
+        }
+        return eeids;
+    }
+
     @SuppressWarnings("unchecked")
-    public void update( ExpressionExperimentSetValueObject obj ) {
-
-        if ( obj.getId() == null ) {
-            throw new IllegalArgumentException( "Can only update an existing eeset (passed id=" + obj.getId() + ")" );
-        }
-
-        if ( StringUtils.isBlank( obj.getName() ) ) {
-            throw new IllegalArgumentException( "You must provide a name" );
-        }
-
-        ExpressionExperimentSet toUpdate = expressionExperimentSetService.load( obj.getId() );
-
-        if ( toUpdate == null ) {
-            throw new IllegalArgumentException( "No such set with id = " + obj.getId() );
-        }
-
-        if ( expressionExperimentSetService.getAnalyses( toUpdate ).size() > 0 ) {
-            throw new IllegalArgumentException( "Sorry, can't update this set, it is associated with active analyses." );
-        }
-
-        toUpdate.setName( obj.getName() );
-        toUpdate.setDescription( obj.getDescription() );
-
-        Collection<? extends BioAssaySet> datasetsAnalyzed = expressionExperimentService.loadMultiple( obj
-                .getExpressionExperimentIds() );
-        toUpdate.getExperiments().retainAll( datasetsAnalyzed );
-        toUpdate.getExperiments().addAll( datasetsAnalyzed );
-
-        /*
-         * Check that all the datasets match the given taxon.
-         */
-        for ( BioAssaySet ee : toUpdate.getExperiments() ) {
-            Taxon t = expressionExperimentService.getTaxon( ee.getId() );
-            if ( !t.equals( toUpdate.getTaxon() ) ) {
-                throw new IllegalArgumentException( "You cannot add a " + t.getCommonName() + " dataset to a "
-                        + toUpdate.getTaxon().getCommonName() + " set" );
-            }
-        }
-
-        expressionExperimentSetService.update( toUpdate );
-
-        log.info( "Updated " + obj.getName() );
-
+    public Collection<ExpressionExperimentValueObject> getExperimentsInSet( Long id ) {
+        Collection<Long> eeids = getExperimentIdsInSet( id );
+        Collection<ExpressionExperimentValueObject> result = expressionExperimentService.loadValueObjects( eeids );
+        populateAnalyses( eeids, result );
+        return result;
     }
 
     /**
@@ -205,59 +173,131 @@ public class ExpressionExperimentSetController extends BaseFormController {
         return true;
     }
 
-    /**
-     * @param obj
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public Long create( ExpressionExperimentSetValueObject obj ) {
-
-        if ( obj.getId() != null && obj.getId() >= 0 ) {
-            throw new IllegalArgumentException( "Should not provide an id for 'create': " + obj.getId() );
-        }
-
-        if ( StringUtils.isBlank( obj.getName() ) ) {
-            throw new IllegalArgumentException( "You must provide a name" );
-        }
-
-        ExpressionExperimentSet va = ExpressionExperimentSet.Factory.newInstance();
-        va.setName( obj.getName() );
-        va.setDescription( obj.getDescription() );
-        va.setTaxon( taxonService.load( obj.getTaxonId() ) );
-
-        if ( va.getTaxon() == null ) {
-            throw new IllegalArgumentException( "No such taxon with id=" + obj.getTaxonId() );
-        }
-
-        Collection<? extends BioAssaySet> datasetsAnalyzed = expressionExperimentService.loadMultiple( obj
-                .getExpressionExperimentIds() );
-
-        ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
-        eeSet.getExperiments().addAll( datasetsAnalyzed );
-
-        ExpressionExperimentSet newAnalysis = ( ExpressionExperimentSet ) persisterHelper.persist( va );
-        return newAnalysis.getId();
-    }
-
-    public void setExpressionExperimentSetService( ExpressionExperimentSetService expressionExperimentSetService ) {
-        this.expressionExperimentSetService = expressionExperimentSetService;
+    public void setDifferentialExpressionAnalysisService(
+            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
+        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
     }
 
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
     }
 
+    public void setExpressionExperimentSetService( ExpressionExperimentSetService expressionExperimentSetService ) {
+        this.expressionExperimentSetService = expressionExperimentSetService;
+    }
+
     public void setPersisterHelper( PersisterHelper persisterHelper ) {
         this.persisterHelper = persisterHelper;
     }
 
-    public void setDifferentialExpressionAnalysisService(
-            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
-        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
-    }
-
     public void setTaxonService( TaxonService taxonService ) {
         this.taxonService = taxonService;
+    }
+
+    /**
+     * @param obj
+     */
+    @SuppressWarnings("unchecked")
+    public void update( ExpressionExperimentSetValueObject obj ) {
+
+        if ( obj.getId() == null ) {
+            throw new IllegalArgumentException( "Can only update an existing eeset (passed id=" + obj.getId() + ")" );
+        }
+
+        if ( StringUtils.isBlank( obj.getName() ) ) {
+            throw new IllegalArgumentException( "You must provide a name" );
+        }
+
+        ExpressionExperimentSet toUpdate = expressionExperimentSetService.load( obj.getId() );
+
+        if ( toUpdate == null ) {
+            throw new IllegalArgumentException( "No such set with id = " + obj.getId() );
+        }
+
+        boolean needUpdate = updateExperimentsInSet( obj, toUpdate );
+
+        /*
+         * Allow updating of the name & description.
+         */
+        if ( !obj.getName().equals( toUpdate.getName() ) ) {
+            toUpdate.setName( obj.getName() );
+            needUpdate = true;
+        }
+
+        if ( !obj.getDescription().equals( toUpdate.getDescription() ) ) {
+            toUpdate.setDescription( obj.getDescription() );
+            needUpdate = true;
+        }
+
+        if ( needUpdate ) {
+            expressionExperimentSetService.update( toUpdate );
+            log.info( "Updated " + obj.getName() );
+        } else {
+            log.info( "No changes found for " + obj.getName() );
+        }
+
+    }
+
+    /**
+     * Fill in information about analyses done on the experiments.
+     * 
+     * @param result
+     */
+    @SuppressWarnings("unchecked")
+    private void populateAnalyses( Collection<Long> eeids, Collection<ExpressionExperimentValueObject> result ) {
+        Map<Long, DifferentialExpressionAnalysis> analysisMap = differentialExpressionAnalysisService
+                .findByInvestigationIds( eeids );
+        for ( ExpressionExperimentValueObject eevo : result ) {
+            if ( !analysisMap.containsKey( eevo.getId() ) ) {
+                continue;
+            }
+            eevo.setDifferentialExpressionAnalysisId( analysisMap.get( eevo.getId() ).getId() );
+        }
+    }
+
+    /**
+     * Check if the user has requested a change in membership; if so, check if the set can be safely modified.
+     * 
+     * @param obj
+     * @param toUpdate
+     * @return true if the set of experiments has changed, false otherwise.
+     * @throws IllegalArgumentException if the set cannot be modified becasue it is is associated with an analysis
+     *         object.
+     */
+    @SuppressWarnings("unchecked")
+    private boolean updateExperimentsInSet( ExpressionExperimentSetValueObject obj, ExpressionExperimentSet toUpdate ) {
+
+        Collection<Long> idsInExistingSet = this.getExperimentIdsInSet( obj.getId() );
+        boolean membersAreTheSame = idsInExistingSet.containsAll( obj.getExpressionExperimentIds() )
+                && obj.getExpressionExperimentIds().containsAll( idsInExistingSet );
+        /*
+         * If there is an existing analysis, we have to disallow alteration of the set. Warn the user if they are
+         * attempting to do this.
+         */
+        if ( !membersAreTheSame && expressionExperimentSetService.getAnalyses( toUpdate ).size() > 0 ) {
+            throw new IllegalArgumentException(
+                    "Sorry, you can't update members of this set, it is associated with active analyses." );
+        }
+
+        if ( membersAreTheSame ) {
+            return false;
+        } else {
+            Collection<? extends BioAssaySet> datasetsAnalyzed = expressionExperimentService.loadMultiple( obj
+                    .getExpressionExperimentIds() );
+            toUpdate.getExperiments().retainAll( datasetsAnalyzed );
+            toUpdate.getExperiments().addAll( datasetsAnalyzed );
+            /*
+             * Check that all the datasets match the given taxon.
+             */
+            for ( BioAssaySet ee : toUpdate.getExperiments() ) {
+                Taxon t = expressionExperimentService.getTaxon( ee.getId() );
+                if ( !t.equals( toUpdate.getTaxon() ) ) {
+                    throw new IllegalArgumentException( "You cannot add a " + t.getCommonName() + " dataset to a "
+                            + toUpdate.getTaxon().getCommonName() + " set" );
+                }
+            }
+            return true;
+        }
     }
 
 }
