@@ -28,7 +28,7 @@
  			${gene.officialSymbol}
 		</c:if>
 </h2>
-
+<div id="messages" style="font-size:smaller;height:12px;"></div>
 
 <div style="background-color: #EEEEEE; margin: 0 0 10px 0; padding: 5px; width: 620px;">
 	<div id="details-title"

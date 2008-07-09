@@ -18,6 +18,9 @@ Gemma.GEMMA_BASE_URL = "http://www.bioinformatics.ubc.ca/Gemma/";
 Gemma.UCSC_ICON = "/Gemma/images/logo/ucsc.gif";
 Gemma.NCBI_ICON = "/Gemma/images/logo/ncbi.gif";
 
+/**
+ * 
+ */
 Gemma.ProbeBrowser.app = function() {
 
 	return {
@@ -73,6 +76,11 @@ Gemma.ProbeBrowser.app = function() {
 	};
 }();
 
+/**
+ * 
+ * @class Gemma.ProbeDetailsGrid
+ * @extends Ext.grid.GridPanel
+ */
 Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	loadMask : {
@@ -80,6 +88,7 @@ Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 	},
 
 	autoExpandColumn : 'alignment',
+	autoScroll : true,
 
 	record : Ext.data.Record.create([{
 		name : "identity",
@@ -116,7 +125,8 @@ Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 
 		for (var i in data) {
 			if (data[i].id) {
-				res = res + "<a href='/Gemma/gene/showGene.html?id="
+				res = res
+						+ "<a title='View gene details (opens new window)' target='_blank' href='/Gemma/gene/showGene.html?id="
 						+ data[i].id + "'>" + data[i].officialSymbol
 						+ "</a><br />";
 			}
@@ -194,7 +204,7 @@ Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 			store : new Ext.data.Store({
 				proxy : new Ext.data.DWRProxy(CompositeSequenceController.getBlatMappingSummary),
 				reader : new Ext.data.ListRangeReader({
-					id : "blatResult"
+					//id : "blatResult" // don't use an id; let Ext define one for us.
 				}, this.record),
 				remoteSort : false,
 				sortInfo : {
@@ -211,7 +221,7 @@ Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 	},
 
 	/**
-	 * Update the details grid.
+	 * Update the details listing.
 	 */
 	updateSequenceInfo : function() {
 
@@ -287,6 +297,11 @@ Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 
 });
 
+/**
+ * 
+ * @class Gemma.ProbeGrid
+ * @extends Ext.grid.GridPanel
+ */
 Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	autoExpandColumn : 'genes',
@@ -347,7 +362,7 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 		var count = 0;
 		for (var g in d) {
 			if (d[g].id) {
-				r = r + "&nbsp;<a href='/Gemma/gene/showGene.html?id="
+				r = r + "&nbsp;<a  title='View gene details (opens new window)' target='_blank' href='/Gemma/gene/showGene.html?id="
 						+ d[g].id + "'>" + d[g].officialSymbol + "</a>,";
 				++count;
 			}
