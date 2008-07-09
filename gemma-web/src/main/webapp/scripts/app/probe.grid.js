@@ -248,22 +248,26 @@ Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 
 		dh.append("sequence-info", {
 			tag : 'li',
-			html : "Length: " + seq.length
+			html : "Length: " + seq.length,
+			"ext:qtip" : "Sequence length in bases"
 		});
 		dh.append("sequence-info", {
 			tag : 'li',
-			html : "Type: " + seq.type.value
+			html : "Type: " + seq.type.value,
+			"ext:qtip" : "Sequence type as classified by Gemma"
 		});
-		if (seq.fractionRepeats) {
-			dh.append("sequence-info", {
-				tag : 'li',
-				html : "Repeat-masked bases: "
-						+ Math.round(seq.fractionRepeats * 1000) / 10 + "%"
-			});
-		}
 		dh.append("sequence-info", {
 			tag : 'li',
-			html : "Sequence: <div class='clob' style='margin:3px;height:30px;font-size:smaller;font-style:courier'>"
+			html : "Repeat-masked bases: "
+					+ (seq.fractionRepeats ? Math.round(seq.fractionRepeats
+							* 1000)
+							/ 10 : 0) + "%",
+			"ext:qtip" : "Percent bases masked by RepeatMasker"
+		});
+
+		dh.append("sequence-info", {
+			tag : 'li',
+			html : "Sequence: <div ext:qtip='Bases in lower-case were masked by RepeatMasker' class='clob' style='margin:3px;height:30px;font-size:smaller;font-style:courier'>"
 					+ seq.sequence + "</div>"
 		});
 
@@ -275,7 +279,8 @@ Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 				title : "view at NCBI",
 				href : "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=Nucleotide&cmd=search&term="
 						+ seq.sequenceDatabaseEntry.accession,
-				html : "<img src ='" + NCBI_ICON + "'/>"
+				html : "<img src ='" + NCBI_ICON + "'/>",
+				"ext:qtip" : "View sequence at NCBI"
 			});
 		}
 	}

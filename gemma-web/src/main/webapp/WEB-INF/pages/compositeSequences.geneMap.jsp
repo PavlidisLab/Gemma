@@ -18,13 +18,13 @@
 
 
 <h2>
-	Probe Viewer for:
-	<c:if test="${arrayDesign.id != null}">
+	Probe Viewer for
+	<c:if test="${arrayDesign.id != null}"> array design: 
 		<a href="<c:url value='/arrays/showArrayDesign.html?id=${arrayDesign.id }' />">${arrayDesign.shortName}</a>
 
 		<span>Full name: ${arrayDesign.name}</span>
 	</c:if>
-	<c:if test="${gene != null}">
+	<c:if test="${gene != null}"> gene: 
  			${gene.officialSymbol}
 		</c:if>
 </h2>
