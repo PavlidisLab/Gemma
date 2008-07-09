@@ -60,8 +60,8 @@ public class PubMedSearchTest extends TestCase {
             log.warn( "Test skipped due to unknown host exception" );
             return;
         } catch ( java.io.IOException e ) {
-            if ( e.getMessage().contains( "503" ) ) {
-                log.warn( "Test skipped due to a 503 from NCBI" );
+            if ( e.getMessage().contains( "503" ) || e.getMessage().contains( "502" ) ) {
+                log.warn( "Test skipped due to a 50X error from NCBI" );
                 return;
             } else {
                 throw e;
@@ -90,8 +90,8 @@ public class PubMedSearchTest extends TestCase {
             log.warn( "Test skipped due to unknown host exception" );
             return;
         } catch ( java.io.IOException e ) {
-            if ( e.getMessage().contains( "503" ) ) {
-                log.warn( "Test skipped due to a 503 from NCBI" );
+            if ( e.getMessage().contains( "503" ) || e.getMessage().contains( "502" ) ) {
+                log.warn( "Test skipped due to a 50x from NCBI" );
                 return;
             } else {
                 throw e;
@@ -113,8 +113,8 @@ public class PubMedSearchTest extends TestCase {
             log.warn( "Test skipped due to unknown host exception" );
             return;
         } catch ( java.io.IOException e ) {
-            if ( e.getMessage().contains( "503" ) ) {
-                log.warn( "Test skipped due to a 503 from NCBI" );
+            if ( e.getMessage().contains( "503" ) || e.getMessage().contains( "502" ) ) {
+                log.warn( "Test skipped due to a 50x from NCBI" );
                 return;
             } else {
                 throw e;
@@ -137,8 +137,8 @@ public class PubMedSearchTest extends TestCase {
         } catch ( java.net.UnknownHostException e ) {
             log.warn( "Test skipped due to unknown host exception" );
         } catch ( java.io.IOException e ) {
-            if ( e.getMessage().contains( "503" ) ) {
-                log.warn( "Test skipped due to a 503 from NCBI" );
+            if ( e.getMessage().contains( "503" ) || e.getMessage().contains( "502" ) ) {
+                log.warn( "Test skipped due to a 50x from NCBI" );
                 return;
             } else {
                 throw e;
