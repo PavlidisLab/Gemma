@@ -17,25 +17,19 @@
 </title>
 
 
-<div id="toparea" style="height: 60px">
-	<div id="pagetitle">
-		<h2>
-			Probe Viewer for:
-			<c:if test="${arrayDesign.id != null}">
-				<a href="<c:url value='/arrays/showArrayDesign.html?id=${arrayDesign.id }' />">${arrayDesign.shortName}</a>
+<h2>
+	Probe Viewer for:
+	<c:if test="${arrayDesign.id != null}">
+		<a href="<c:url value='/arrays/showArrayDesign.html?id=${arrayDesign.id }' />">${arrayDesign.shortName}</a>
 
-				<span>Full name: ${arrayDesign.name}</span>
-			</c:if>
-			<c:if test="${gene != null}">
+		<span>Full name: ${arrayDesign.name}</span>
+	</c:if>
+	<c:if test="${gene != null}">
  			${gene.officialSymbol}
 		</c:if>
-		</h2>
-	</div>
-</div>
+</h2>
 
-<div style="height: 10px; padding: 5px;" id="messages">
-</div>
-<div id="padding" style="padding: 15px; width: 610px;"></div>
+
 <div style="background-color: #EEEEEE; margin: 0 0 10px 0; padding: 5px; width: 620px;">
 	<div id="details-title"
 		style="font-size: smaller; background-color: #EEEEEE; margin: 0 0 10px 0; padding: 5px; width: 600px; height: 150px">
