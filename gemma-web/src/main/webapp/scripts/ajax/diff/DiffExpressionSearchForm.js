@@ -1,6 +1,6 @@
 /*
- * The input for differential expression searches. This form has two main parts:
- * a GeneChooserPanel, and the differential expression search parameters.
+ * The input for differential expression searches. This form has two main parts: a GeneChooserPanel, and the
+ * differential expression search parameters.
  * 
  * Differential expression search has one main setting, the threshold.
  * 
@@ -8,8 +8,7 @@
  * 
  * @author keshav
  * 
- * @version $Id: DiffExpressionSearchForm.js,v 1.25 2008/05/31 00:40:42 kelsey
- *          Exp $
+ * @version $Id$
  */
 
 Gemma.MIN_THRESHOLD = 0.00;
@@ -44,8 +43,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 	},
 
 	afterRender : function(container, position) {
-		Gemma.DiffExpressionSearchForm.superclass.afterRender.call(this,
-				container, position);
+		Gemma.DiffExpressionSearchForm.superclass.afterRender.call(this, container, position);
 
 		Ext.apply(this, {
 			loadMask : new Ext.LoadMask(this.getEl(), {
@@ -67,8 +65,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 	},
 
 	/**
-	 * Construct the differential command object from the form, to be sent to
-	 * the server.
+	 * Construct the differential command object from the form, to be sent to the server.
 	 * 
 	 * @return {}
 	 */
@@ -156,25 +153,22 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 	},
 
 	initializeFromQueryString : function(query) {
-		this.initializeFromDiffSearchCommand(this
-				.getDiffSearchCommandFromQuery(query), true);
+		this.initializeFromDiffSearchCommand(this.getDiffSearchCommandFromQuery(query), true);
 	},
 
 	initializeGenes : function(dsc, doSearch) {
 		if (dsc.geneIds.length > 1) {
 			// load into table.
-			this.geneChooserPanel.loadGenes(dsc.geneIds, this.maybeDoSearch
-					.createDelegate(this, [dsc, doSearch]));
+			this.geneChooserPanel.loadGenes(dsc.geneIds, this.maybeDoSearch.createDelegate(this, [dsc, doSearch]));
 		} else {
 			// show in combobox.
-			this.geneChooserPanel.setGene(dsc.geneIds[0], this.maybeDoSearch
-					.createDelegate(this, [dsc, doSearch]));
+			this.geneChooserPanel.setGene(dsc.geneIds[0], this.maybeDoSearch.createDelegate(this, [dsc, doSearch]));
 		}
 	},
 
 	/**
-	 * make the form look like it has the right values; this will happen
-	 * asynchronously... so do the search after it is done
+	 * make the form look like it has the right values; this will happen asynchronously... so do the search after it is
+	 * done
 	 */
 	initializeFromDiffSearchCommand : function(dsc, doSearch) {
 		this.geneChooserPanel = Ext.getCmp('gene-chooser-panel');
@@ -206,19 +200,16 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 	},
 
 	/**
-	 * Show the user interface for choosing factors. This happens
-	 * asynchronously, so listen for the factors-chosen event.
+	 * Show the user interface for choosing factors. This happens asynchronously, so listen for the factors-chosen
+	 * event.
 	 * 
 	 * 
 	 */
 	chooseFactors : function() {
 		if (!this.currentSet) {
-			Ext.Msg
-					.alert("Warning",
-							"You must select an expression experiment set before choosing factors");
+			Ext.Msg.alert("Warning", "You must select an expression experiment set before choosing factors");
 		} else if (this.currentSet.get("expressionExperimentIds").length == 0) {
-			Ext.Msg.alert("Warning",
-					"You should select at least one experiment to analyze");
+			Ext.Msg.alert("Warning", "You should select at least one experiment to analyze");
 		} else {
 			var eeIds = this.currentSet.get("expressionExperimentIds");
 			this.efChooserPanel.show(eeIds);
@@ -237,11 +228,8 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 			dsc = this.getDiffSearchCommand();
 		}
 		var queryStart = document.URL.indexOf("?");
-		var url = queryStart > -1
-				? document.URL.substr(0, queryStart)
-				: document.URL;
-		url += String.format("?g={0}&thres={1}&t={2}", dsc.geneIds.join(","),
-				dsc.threshold, dsc.taxonId);
+		var url = queryStart > -1 ? document.URL.substr(0, queryStart) : document.URL;
+		url += String.format("?g={0}&thres={1}&t={2}", dsc.geneIds.join(","), dsc.threshold, dsc.taxonId);
 
 		if (dsc.eeSetId) {
 			url += String.format("&a={0}", dsc.eeSetId);
@@ -270,8 +258,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 	},
 
 	doSearch : function(dsc) {
-		if ((dsc && !dsc.selectedFactors)
-				|| (!dsc && !this.efChooserPanel.eeFactorsMap)) {
+		if ((dsc && !dsc.selectedFactors) || (!dsc && !this.efChooserPanel.eeFactorsMap)) {
 			this.efChooserPanel.on("factors-chosen", function(efmap) {
 				this.doSearch();
 			}, this, {
@@ -287,14 +274,14 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 			if (msg.length === 0) {
 				if (this.fireEvent('beforesearch', this, dsc) !== false) {
 					this.loadMask.show();
-					var errorHandler = this.handleError.createDelegate(this,
-							[], true);
-					DifferentialExpressionSearchController
-							.getDiffExpressionForGenes(dsc, {
-								callback : this.returnFromSearch
-										.createDelegate(this),
-								errorHandler : errorHandler
-							});
+					var errorHandler = this.handleError.createDelegate(this, [], true);
+					DifferentialExpressionSearchController.getDiffExpressionForGenes(dsc, {
+						callback : this.returnFromSearch.createDelegate(this),
+						errorHandler : errorHandler
+					});
+				}
+				if (pageTracker) {
+					pageTracker._trackPageview("/Gemma/differentialExpressionSearch.doSearch");
 				}
 			} else {
 				this.handleError(msg);
@@ -344,15 +331,13 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 	 * @param {}
 	 *            datasets The selected datasets (ids)
 	 * @param {}
-	 *            eeSet The ExpressionExperimentSet that was used (if any) - it
-	 *            could be just as a starting point.
+	 *            eeSet The ExpressionExperimentSet that was used (if any) - it could be just as a starting point.
 	 */
 	updateDatasetsToBeSearched : function(datasets, eeSet, dirty) {
 		var numDatasets = datasets.length;
 		Ext.getCmp('thresholdField').maxValue = numDatasets;
 		Ext.getCmp('analysis-options-wrapper').setTitle(String.format(
-				"Analysis options - Up to {0} datasets will be analyzed",
-				numDatasets));
+				"Analysis options - Up to {0} datasets will be analyzed", numDatasets));
 	},
 
 	getActiveEeIds : function() {
@@ -387,14 +372,12 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 
 		this.eeSetChooserPanel.on("set-chosen", function(eeSetRecord) {
 			this.currentSet = eeSetRecord;
-			this.updateDatasetsToBeSearched(eeSetRecord
-					.get("expressionExperimentIds"), eeSetRecord);
+			this.updateDatasetsToBeSearched(eeSetRecord.get("expressionExperimentIds"), eeSetRecord);
 			this.geneChooserPanel.taxonChanged(this.currentSet.get("taxon"));
 			this.efChooserPanel.reset(eeSetRecord.get("name"));
 		}.createDelegate(this));
 
-		this.eeSetChooserPanel.combo.on("comboReady", this.restoreState
-				.createDelegate(this));
+		this.eeSetChooserPanel.combo.on("comboReady", this.restoreState.createDelegate(this));
 
 		this.eeSetChooserPanel.on('commit', function(eeSetRecord) {
 			if (!eeSetRecord) {
@@ -433,8 +416,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 						minValue : Gemma.MIN_THRESHOLD,
 						maxValue : Gemma.MAX_THRESHOLD,
 						fieldLabel : 'Threshold',
-						invalidText : "Minimum threshold is "
-								+ Gemma.MIN_THRESHOLD + ".  Max threshold is "
+						invalidText : "Minimum threshold is " + Gemma.MIN_THRESHOLD + ".  Max threshold is "
 								+ Gemma.MAX_THRESHOLD,
 						value : Gemma.DEFAULT_THRESHOLD,
 						width : 60,
@@ -461,8 +443,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		this.addEvents('beforesearch', 'aftersearch');
 
 		/*
-		 * This horrible mess. We listen to taxon ready event and filter the
-		 * presets on the taxon.
+		 * This horrible mess. We listen to taxon ready event and filter the presets on the taxon.
 		 */
 		this.geneChooserPanel.toolbar.taxonCombo.on("ready", function(taxon) {
 			// console.log("setting up filtering of combo");

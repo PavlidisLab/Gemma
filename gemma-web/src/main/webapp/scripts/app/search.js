@@ -28,8 +28,7 @@ Gemma.Search.app = function() {
 			if (url.indexOf("?") > -1) {
 				var sq = url.substr(url.indexOf("?") + 1);
 				if (Ext.urlDecode(sq).query) {
-					this.form.getForm().findField('query').setValue(Ext
-							.urlDecode(sq).query);
+					this.form.getForm().findField('query').setValue(Ext.urlDecode(sq).query);
 					this.search();
 				}
 			}
@@ -49,6 +48,7 @@ Gemma.Search.app = function() {
 			var searchExperiments = Ext.getCmp('search-exps-chkbx').getValue();
 			var searchArrays = Ext.getCmp('search-ars-chkbx').getValue();
 			var searchSequences = Ext.getCmp('search-seqs-chkbx').getValue();
+
 			//
 			// var sm = Ext.state.Manager;
 			//
@@ -86,6 +86,10 @@ Gemma.Search.app = function() {
 					searchGenes : searchGenes
 				}]
 			});
+
+			if (pageTracker) {
+				pageTracker._trackPageview("/Gemma/searcher.search?query=" + query + scopes);
+			}
 
 			Ext.DomHelper.overwrite('messages', "");
 			this.form.findById('submit-button').setDisabled(true);
@@ -420,30 +424,23 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 		var dh = Ext.DomHelper;
 		var clazz = record.get("resultClass");
 		if (clazz == "ExpressionExperimentValueObject") {
-			return "<a href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id="
-					+ data.id + "\">" + data.shortName + "</a> - " + data.name;
+			return "<a href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + data.id + "\">"
+					+ data.shortName + "</a> - " + data.name;
 		} else if (clazz == "CompositeSequence") {
-			return "<a href=\"/Gemma/compositeSequence/show.html?id=" + data.id
-					+ "\">" + data.name + "</a> - " + data.description
-					+ "; Array: " + data.arrayDesign.shortName;
+			return "<a href=\"/Gemma/compositeSequence/show.html?id=" + data.id + "\">" + data.name + "</a> - "
+					+ data.description + "; Array: " + data.arrayDesign.shortName;
 		} else if (clazz == "ArrayDesignValueObject") {
-			return "<a href=\"/Gemma/arrays/showArrayDesign.html?id=" + data.id
-					+ "\">" + data.shortName + "</a>  " + data.name;
+			return "<a href=\"/Gemma/arrays/showArrayDesign.html?id=" + data.id + "\">" + data.shortName + "</a>  "
+					+ data.name;
 		} else if (/^BioSequence.*/.exec(clazz)) {
-			return "<a href=\"/Gemma/genome/bioSequence/showBioSequence.html?id="
-					+ data.id
-					+ "\">"
-					+ data.name
-					+ "</a> - "
-					+ data.taxon.commonName + " " + data.description;
-		} else if (clazz == "Gene" || clazz == "PredictedGene"
-				|| clazz == "ProbeAlignedRegion") {
-			return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">"
-					+ data.officialSymbol + "</a>  - Species: "
-					+ data.taxon.commonName + " Desc: " + data.officialName;
+			return "<a href=\"/Gemma/genome/bioSequence/showBioSequence.html?id=" + data.id + "\">" + data.name
+					+ "</a> - " + data.taxon.commonName + " " + data.description;
+		} else if (clazz == "Gene" || clazz == "PredictedGene" || clazz == "ProbeAlignedRegion") {
+			return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">" + data.officialSymbol
+					+ "</a>  - Species: " + data.taxon.commonName + " Desc: " + data.officialName;
 		} else if (clazz == "Bibliographicreference") {
-			return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">"
-					+ data.title + "</a> [" + data.pubmedId + "]";
+			return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">" + data.title + "</a> [" + data.pubmedId
+					+ "]";
 		}
 	}
 
