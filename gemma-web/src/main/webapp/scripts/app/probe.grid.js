@@ -1,8 +1,8 @@
 /*
  * The 'probe viewer' application.
  * 
- * This handles situations where we're viewing probes from an array design, or
- * those for a specific gene. For array designs it allows searches.
+ * This handles situations where we're viewing probes from an array design, or those for a specific gene. For array
+ * designs it allows searches.
  * 
  * @author Paul
  * 
@@ -61,8 +61,7 @@ Gemma.ProbeBrowser.app = function() {
 		},
 
 		/**
-		 * Separate grid for 'details' about the probe and its alignment
-		 * results.
+		 * Separate grid for 'details' about the probe and its alignment results.
 		 */
 
 		initDetails : function() {
@@ -127,8 +126,7 @@ Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 			if (data[i].id) {
 				res = res
 						+ "<a title='View gene details (opens new window)' target='_blank' href='/Gemma/gene/showGene.html?id="
-						+ data[i].id + "'>" + data[i].officialSymbol
-						+ "</a><br />";
+						+ data[i].id + "'>" + data[i].officialSymbol + "</a><br />";
 			}
 		}
 		return res;
@@ -139,18 +137,15 @@ Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 			return "";
 		}
 
-		var res = "chr" + d.targetChromosome.name + " (" + d.strand + ") "
-				+ d.targetStart + "-" + d.targetEnd;
+		var res = "chr" + d.targetChromosome.name + " (" + d.strand + ") " + d.targetStart + "-" + d.targetEnd;
 
 		var organism = d.targetChromosome.taxon;
 		var database = this.getDb(organism);
 		if (database) {
-			var link = "http://genome.ucsc.edu/cgi-bin/hgTracks?org="
-					+ organism + "&pix=850&db=" + database + "&hgt.customText="
-					+ Gemma.GEMMA_BASE_URL + "blatTrack.html?id=" + d.id;
-			res = res
-					+ "&nbsp;<a title='Genome browser view (opens in new window)' target='_blank' href='"
-					+ link + "'><img src='" + Gemma.UCSC_ICON + "' /></a>";
+			var link = "http://genome.ucsc.edu/cgi-bin/hgTracks?org=" + organism + "&pix=850&db=" + database
+					+ "&hgt.customText=" + Gemma.GEMMA_BASE_URL + "blatTrack.html?id=" + d.id;
+			res = res + "&nbsp;<a title='Genome browser view (opens in new window)' target='_blank' href='" + link
+					+ "'><img src='" + Gemma.UCSC_ICON + "' /></a>";
 		}
 		return res;
 	},
@@ -204,8 +199,9 @@ Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 			store : new Ext.data.Store({
 				proxy : new Ext.data.DWRProxy(CompositeSequenceController.getBlatMappingSummary),
 				reader : new Ext.data.ListRangeReader({
-					//id : "blatResult" // don't use an id; let Ext define one for us.
-				}, this.record),
+						// id : "blatResult" // don't use an id; let Ext define
+						// one for us.
+						}, this.record),
 				remoteSort : false,
 				sortInfo : {
 					field : "score",
@@ -214,8 +210,7 @@ Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 			})
 		});
 
-		this.getStore()
-				.on("load", this.updateSequenceInfo.createDelegate(this));
+		this.getStore().on("load", this.updateSequenceInfo.createDelegate(this));
 		Gemma.ProbeDetailsGrid.superclass.initComponent.call(this);
 
 	},
@@ -245,9 +240,7 @@ Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 		var cs = record.get("compositeSequence");
 
 		if (cs !== null) {
-			var csDesc = cs.description !== null
-					? cs.description
-					: "[None provided]";
+			var csDesc = cs.description !== null ? cs.description : "[None provided]";
 			dh.overwrite("probe-description", {
 				tag : 'li',
 				id : "probe-description",
@@ -266,12 +259,10 @@ Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 			html : "Type: " + seq.type.value,
 			"ext:qtip" : "Sequence type as classified by Gemma"
 		});
+		var repeatFrac = seq.fractionRepeats ? Math.round((seq.fractionRepeats * 1000) / 10) : 0;
 		dh.append("sequence-info", {
 			tag : 'li',
-			html : "Repeat-masked bases: "
-					+ (seq.fractionRepeats ? Math.round(seq.fractionRepeats
-							* 1000)
-							/ 10 : 0) + "%",
+			html : "Repeat-masked bases: " + repeatFrac + "%",
 			"ext:qtip" : "Percent bases masked by RepeatMasker"
 		});
 
@@ -341,8 +332,7 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 	},
 
 	arraylink : function(data, metadata, record, row, column, store) {
-		return "<a href='/Gemma/arrays/showArrayDesign.html?id="
-				+ record.get("arrayDesignId") + "'>"
+		return "<a href='/Gemma/arrays/showArrayDesign.html?id=" + record.get("arrayDesignId") + "'>"
 				+ record.get("arrayDesignName") + "</a>";
 	},
 
@@ -362,7 +352,8 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 		var count = 0;
 		for (var g in d) {
 			if (d[g].id) {
-				r = r + "&nbsp;<a  title='View gene details (opens new window)' target='_blank' href='/Gemma/gene/showGene.html?id="
+				r = r
+						+ "&nbsp;<a  title='View gene details (opens new window)' target='_blank' href='/Gemma/gene/showGene.html?id="
 						+ d[g].id + "'>" + d[g].officialSymbol + "</a>,";
 				++count;
 			}
@@ -568,8 +559,7 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 			params : [ids],
 			callback : function(r, options, success, scope) {
 				if (success) {
-					Ext.DomHelper.overwrite("messages", this.getCount()
-							+ " probes shown");
+					Ext.DomHelper.overwrite("messages", this.getCount() + " probes shown");
 				} else {
 					Ext.DomHelper.overwrite("messages", "There was an error.");
 				}
@@ -614,8 +604,7 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 		if (!seqName) {
 			seqName = "[Unavailable]";
 		}
-		var arName = record.get("arrayName") ? " on "
-				+ record.get("arrayDesignName") : "";
+		var arName = record.get("arrayName") ? " on " + record.get("arrayDesignName") : "";
 
 		var dh = Ext.DomHelper;
 		dh.overwrite("details-title", {
