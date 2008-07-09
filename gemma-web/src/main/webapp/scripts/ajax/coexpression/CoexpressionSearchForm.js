@@ -403,6 +403,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 						xtype : 'checkbox',
 						id : 'querygenesonly',
 						fieldLabel : 'My genes only',
+						disabled : true,
 						tooltip : "Restrict the output to include only links among the listed query genes"
 					}, this.eeSetChooserPanel]
 				}]
@@ -417,6 +418,20 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		});
 		Gemma.CoexpressionSearchForm.superclass.initComponent.call(this);
 		this.addEvents('beforesearch', 'aftersearch');
+
+		this.geneChooserPanel.on("addgenes", function(geneids) {
+			if (this.geneChooserPanel.getGeneIds().length > 1) {
+				Ext.getCmp("querygenesonly").enable();
+			}
+		}, this);
+
+		this.geneChooserPanel.on("removegenes", function() {
+			if (this.geneChooserPanel.getGeneIds().length < 2) {
+				Ext.getCmp("querygenesonly").disable();
+			} else {
+				console.log(this.geneChooserPanel.getGeneIds().length);
+			}
+		}, this);
 
 		/*
 		 * This horrible mess. We listen to taxon ready event and filter the

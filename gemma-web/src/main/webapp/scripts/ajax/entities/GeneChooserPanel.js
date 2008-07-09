@@ -342,8 +342,8 @@ Gemma.GeneChooserToolBar = Ext.extend(Ext.Toolbar, {
 		this.addEvents("taxonchanged", "ready");
 	},
 
-	afterRender : function(c,l) {
-		Gemma.GeneChooserToolBar.superclass.afterRender.call(this, c,l);
+	afterRender : function(c, l) {
+		Gemma.GeneChooserToolBar.superclass.afterRender.call(this, c, l);
 
 		this.add(this.taxonCombo);
 		this.addSpacer();
@@ -394,7 +394,16 @@ Gemma.GeneChooserPanel = Ext.extend(Ext.Panel, {
 			items : [geneToolbar, this.geneGrid]
 		});
 		Gemma.GeneChooserPanel.superclass.initComponent.call(this);
-		this.addEvents('taxonchanged', 'ready');
+		this.addEvents('taxonchanged', 'ready', 'addgenes', 'removegenes');
+		
+		this.toolbar.geneCombo.on("select", function() {
+			this.fireEvent("addgenes");
+		}, this);
+
+		this.geneGrid.getStore().on("remove", function() {
+			this.fireEvent("removegenes");
+		}, this);
+
 	},
 
 	getTaxonId : function() {
@@ -403,10 +412,12 @@ Gemma.GeneChooserPanel = Ext.extend(Ext.Panel, {
 
 	setGene : function(geneId, callback, args) {
 		this.toolbar.setGene(geneId, callback, args);
+		this.fireEvent("addgenes", [geneId]);
 	},
 
 	loadGenes : function(geneIds, callback, args) {
 		this.geneGrid.loadGenes(geneIds, callback, args);
+		this.fireEvent("addgenes", geneIds);
 	},
 
 	getGeneIds : function() {
@@ -414,10 +425,11 @@ Gemma.GeneChooserPanel = Ext.extend(Ext.Panel, {
 		var all = this.geneGrid.getStore().getRange();
 		for (var i = 0; i < all.length; ++i) {
 			ids.push(all[i].data.id);
-		}
+		} 
 		var gene = this.toolbar.geneCombo.getGene();
 		if (gene) {
 			for (var i = 0; i < ids.length; ++i) {
+				// don't add twice.
 				if (ids[i] == gene.id) {
 					return ids;
 				}
