@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -473,8 +472,9 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
             Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
             for ( FactorAssociatedAnalysisResultSet fars : analysis.getResultSets() ) {
-                factors.addAll( fars.getExperimentalFactor() ); // FIXME includes interaction terms, but shouldn't
-                // matter.
+                // FIXME includes factors making up interaction terms, but shouldn't
+                // matter, because they will be included as main effects too. If not, this will be wrong!
+                factors.addAll( fars.getExperimentalFactor() );
             }
 
             filteredEeIds.add( id );
@@ -521,7 +521,6 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                 //
             }
 
-            
             String fs = request.getParameter( "fm" );
             Collection<DiffExpressionSelectedFactorCommand> selectedFactors = extractFactorInfo( fs );
 
