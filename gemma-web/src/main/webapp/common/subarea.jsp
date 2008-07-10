@@ -19,11 +19,16 @@
 	</div>
 	<div class="roundedcornr_content_962327">
 		<h4 style="margin-left: 10px">
-			Gemma software updates
+			Latest news
 		</h4>
 		<p>
-			Gemma 1.2 introduces more features for differential expression, including meta-analysis. Many parts of the user interface
-			feature improvements. For more details see the
+			Gemma now features differential expression meta-analysis, with access to nearly 300 pre-analyzed studies. We also
+			recently made a number of improvements to to the interface and to performance. Gemma also now has a
+			<a href="http://bioinformatics.ubc.ca/confluence/display/gemma">Wiki</a> where you can read additional documentation, in
+			addition to the in-line help.
+		</p>
+		<p>
+			For more details on the latest release see the
 			<a href="<c:url value='/resources/dist/RELEASE-NOTES-1.2.txt' />">release notes</a>.
 
 		</p>
