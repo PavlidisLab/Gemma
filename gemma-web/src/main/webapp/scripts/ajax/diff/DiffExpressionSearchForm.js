@@ -91,6 +91,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		});
 
 		if (this.currentSet) {
+			newDsc.eeIds = this.getActiveEeIds();
 			newDsc.eeSetName = this.currentSet.get("name");
 			newDsc.eeSetId = this.currentSet.get("id");
 			newDsc.dirty = this.currentSet.dirty; // modified without save
