@@ -128,6 +128,10 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
         Collection<CompositeSequence> probes = CommonQueries.getCompositeSequences( gene, this.getSession() );
 
+        if ( probes.size() == 0 ) {
+            return new HashSet<ExpressionExperiment>();
+        }
+
         final String queryString = "select distinct e from DifferentialExpressionAnalysisImpl a "
                 + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e inner join e.bioAssays ba inner join ba.arrayDesignUsed ad"
                 + " inner join ad.compositeSequences cs where cs in (:probes)";
