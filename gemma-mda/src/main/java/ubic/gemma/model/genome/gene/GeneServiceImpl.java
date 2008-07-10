@@ -23,6 +23,10 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -34,6 +38,8 @@ import ubic.gemma.model.genome.Taxon;
  * @see ubic.gemma.model.genome.gene.GeneService
  */
 public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBase {
+
+    private static Log log = LogFactory.getLog( GeneServiceImpl.class.getName() );
 
     @Override
     protected Integer handleCountAll() throws Exception {
@@ -321,6 +327,22 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
 
     public void handleThawLite( Collection genes ) {
         this.getGeneDao().thawLite( genes );
+    }
+
+    @Override
+    protected Gene handleFindByAccession( String accession, ExternalDatabase source ) throws Exception {
+        return this.getGeneDao().findByAccession( accession, source );
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Gene handleFindByNCBIId( String accession ) throws Exception {
+        Collection<Gene> genes = this.getGeneDao().findByNcbiId( accession );
+        if ( genes.size() > 1 ) {
+            log.warn( "More than one gene with accession=" + accession );
+        }
+        return genes.iterator().next();
+
     }
 
 }

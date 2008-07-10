@@ -48,6 +48,7 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenesDetails;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionValueObject;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -844,5 +845,32 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         queryObject.setLong( "id", id );
 
         return queryObject;
+    }
+
+    @SuppressWarnings( { "unchecked", "cast" })
+    @Override
+    protected Gene handleFindByAccession( String accession, ExternalDatabase source ) throws Exception {
+        Collection<Gene> genes;
+        final String accessionQuery = "select g from GeneImpl g inner join g.accessions a where a.accession = :accession";
+        final String externalDbquery = accessionQuery + " and a.externalDatabase = :source";
+
+        if ( source == null ) {
+            genes = this.getHibernateTemplate().findByNamedParam( accessionQuery, "accession", "accession" );
+            if ( genes.size() == 0 ) {
+                genes = this.findByNcbiId( accession );
+            }
+        } else {
+            if ( source.getName().equalsIgnoreCase( "NCBI" ) ) {
+                genes = this.findByNcbiId( accession );
+            } else {
+                genes = this.getHibernateTemplate().findByNamedParam( externalDbquery,
+                        new String[] { "accession", "source" }, new Object[] { accession, source } );
+            }
+        }
+        if ( genes.size() > 0 ) {
+            return ( Gene ) genes.iterator().next();
+        } else {
+            return null;
+        }
     }
 }

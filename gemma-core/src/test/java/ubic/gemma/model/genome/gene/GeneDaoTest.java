@@ -22,6 +22,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -111,9 +114,101 @@ public class GeneDaoTest extends BaseSpringContextTest {
 
         Collection genes = geneDao.getMicroRnaByTaxon( human );
         assertNotNull( genes );
-        assert ( genes.contains( gene ) );
+        assertTrue( genes.contains( gene ) );
         geneDao.remove( gene );
 
+    }
+
+    public void testFindByNcbiId() {
+        geneDao = ( GeneDao ) this.getBean( "geneDao" );
+        TaxonService taxonSrv = ( TaxonService ) this.getBean( "taxonService" );
+
+        Gene gene = Gene.Factory.newInstance();
+        gene.setId( ( long ) 1 );
+        gene.setNcbiId( "12345" );
+        gene.setName( "test_genedao" );
+
+        Taxon human = taxonSrv.findByCommonName( "human" );
+        gene.setTaxon( human );
+
+        geneDao.create( gene );
+
+        Collection genes = geneDao.findByNcbiId( "12345" );
+        assertNotNull( genes );
+        assertTrue( genes.contains( gene ) );
+        geneDao.remove( gene );
+    }
+
+    public void testFindByAccessionNcbi() {
+        geneDao = ( GeneDao ) this.getBean( "geneDao" );
+        TaxonService taxonSrv = ( TaxonService ) this.getBean( "taxonService" );
+
+        Gene gene = Gene.Factory.newInstance();
+        gene.setId( ( long ) 1 );
+        gene.setNcbiId( "12345" );
+        gene.setName( "test_genedao" );
+
+        Taxon human = taxonSrv.findByCommonName( "human" );
+        gene.setTaxon( human );
+
+        geneDao.create( gene );
+
+        Gene g = geneDao.findByAccession( "12345", null );
+        assertNotNull( g );
+        assertEquals( g, gene );
+        geneDao.remove( gene );
+    }
+
+    public void testFindByAccessionOther() {
+        geneDao = ( GeneDao ) this.getBean( "geneDao" );
+        TaxonService taxonSrv = ( TaxonService ) this.getBean( "taxonService" );
+        ExternalDatabaseService edbs = ( ExternalDatabaseService ) this.getBean( "externalDatabaseService" );
+
+        Gene gene = Gene.Factory.newInstance();
+        gene.setId( ( long ) 1 );
+        gene.setNcbiId( "12345" );
+        gene.setName( "test_genedao" );
+        ExternalDatabase ensembl = edbs.find( "Ensembl" );
+        DatabaseEntry dbe = DatabaseEntry.Factory.newInstance();
+        dbe.setAccession( "E129458" );
+        dbe.setExternalDatabase( ensembl );
+        gene.getAccessions().add( dbe );
+
+        Taxon human = taxonSrv.findByCommonName( "human" );
+        gene.setTaxon( human );
+
+        geneDao.create( gene );
+
+        Gene g = geneDao.findByAccession( "E129458", ensembl );
+        assertNotNull( g );
+        assertEquals( g, gene );
+        geneDao.remove( gene );
+    }
+
+    public void testFindByAccessionNcbiWithSource() {
+        geneDao = ( GeneDao ) this.getBean( "geneDao" );
+        TaxonService taxonSrv = ( TaxonService ) this.getBean( "taxonService" );
+        ExternalDatabaseService edbs = ( ExternalDatabaseService ) this.getBean( "externalDatabaseService" );
+
+        Gene gene = Gene.Factory.newInstance();
+        gene.setId( ( long ) 1 );
+        gene.setNcbiId( "12345" );
+        gene.setName( "test_genedao" );
+        ExternalDatabase ncbi = edbs.find( "Entrez Gene" );
+        DatabaseEntry dbe = DatabaseEntry.Factory.newInstance();
+        dbe.setAccession( "12345" ); // this gets ignored, because the ncbi id is part of the object.
+        dbe.setExternalDatabase( ncbi );
+        gene.getAccessions().add( dbe );
+
+        Taxon human = taxonSrv.findByCommonName( "human" );
+        gene.setTaxon( human );
+
+        geneDao.create( gene );
+
+        Gene g = geneDao.findByAccession( "12345", ncbi );
+        assertNotNull( g );
+        assertEquals( g, gene );
+        geneDao.remove( gene );
     }
 
     public void testLoadGenes() {

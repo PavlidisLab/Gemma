@@ -41,6 +41,8 @@ public class GeneServiceImplTest extends TestCase {
 
     private Taxon t = null;
     private Gene g = null;
+    private Gene g2 = null;
+    private Gene g3 = null;
     private GeneDao geneDaoMock;
     private QtlDao qtlDaoMock;
     GeneServiceImpl svc;
@@ -66,15 +68,35 @@ public class GeneServiceImplTest extends TestCase {
         allThree.add( g );
         justRab.add( g );
 
-        g = Gene.Factory.newInstance();
-        g.setOfficialName( "rabblebong" );
-        g.setTaxon( t );
-        allThree.add( g );
-        g = Gene.Factory.newInstance();
-        g.setOfficialName( "rabble" );
-        allThree.add( g );
-        justRabble.add( g );
+        g2 = Gene.Factory.newInstance();
+        g2.setOfficialName( "rabblebong" );
+        g2.setTaxon( t );
+        allThree.add( g2 );
 
+        g3 = Gene.Factory.newInstance();
+        g3.setOfficialName( "rabble" );
+        g3.setNcbiId( "12345" );
+        allThree.add( g3 );
+        justRabble.add( g3 );
+
+    }
+
+    public void testFindByAccessionNoSource() {
+        reset( geneDaoMock );
+        geneDaoMock.findByAccession( "12345", null );
+        expectLastCall().andReturn( g3 );
+        replay( geneDaoMock );
+        svc.findByAccession( "12345", null );
+        verify( geneDaoMock );
+    }
+
+    public void testFindByNcbiId() {
+        reset( geneDaoMock );
+        geneDaoMock.findByNcbiId( "12345" );
+        expectLastCall().andReturn( justRabble );
+        replay( geneDaoMock );
+        svc.findByNCBIId( "12345" );
+        verify( geneDaoMock );
     }
 
     public void testFindByOfficialName() {
