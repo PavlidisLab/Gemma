@@ -340,8 +340,10 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
         Collection<Gene> genes = this.getGeneDao().findByNcbiId( accession );
         if ( genes.size() > 1 ) {
             log.warn( "More than one gene with accession=" + accession );
+        } else if ( genes.size() == 1 ) {
+            return genes.iterator().next();
         }
-        return genes.iterator().next();
+        return null;
 
     }
 
