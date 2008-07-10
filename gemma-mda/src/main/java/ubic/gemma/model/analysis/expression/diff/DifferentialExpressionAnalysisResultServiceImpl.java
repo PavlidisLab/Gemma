@@ -25,6 +25,7 @@ package ubic.gemma.model.analysis.expression.diff;
 import java.util.Collection;
 import java.util.Map;
 
+import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 
 /**
@@ -58,4 +59,8 @@ public class DifferentialExpressionAnalysisResultServiceImpl extends
                 differentialExpressionAnalysisResults );
     }
 
+    @Override
+    protected void handleThaw( ExpressionAnalysisResultSet resultSet ) throws Exception {
+        this.getExpressionAnalysisResultSetDao().thaw( resultSet );
+    }
 }
