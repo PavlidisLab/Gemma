@@ -91,7 +91,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		});
 
 		if (this.currentSet) {
-			newDsc.eeScopeIds = this.getEeScopeIds();
+			newDsc.eeIds = this.getActiveEeIds();
 			newDsc.eeSetName = this.currentSet.get("name");
 			newDsc.eeSetId = this.currentSet.get("id");
 			newDsc.dirty = this.currentSet.dirty; // modified without save
@@ -341,7 +341,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 				"Analysis options - Up to {0} datasets will be analyzed", numDatasets));
 	},
 
-	getEeScopeIds : function() {
+	getActiveEeIds : function() {
 		if (this.currentSet) {
 			return this.currentSet.get("expressionExperimentIds");
 		}

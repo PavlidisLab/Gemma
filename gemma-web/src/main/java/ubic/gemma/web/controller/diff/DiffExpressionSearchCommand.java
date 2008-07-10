@@ -47,7 +47,7 @@ public class DiffExpressionSearchCommand implements Serializable {
 
     private String eeSetName;
 
-    private Collection<Long> eeScopeIds;
+    private Collection<Long> eeIds;
 
     private boolean dirty;
 
@@ -126,11 +126,11 @@ public class DiffExpressionSearchCommand implements Serializable {
         this.dirty = dirty;
     }
 
-    public Collection<Long> getEeScopeIds() {
-        return eeScopeIds;
+    public Collection<Long> getEeIds() {
+        return eeIds;
     }
 
-    public void setEeScopeIds( Collection<Long> eeScopeIds ) {
-        this.eeScopeIds = eeScopeIds;
+    public void setEeIds( Collection<Long> eeIds ) {
+        this.eeIds = eeIds;
     }
 }

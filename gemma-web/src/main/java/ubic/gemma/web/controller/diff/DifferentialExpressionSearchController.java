@@ -167,7 +167,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     public Collection<DifferentialExpressionMetaAnalysisValueObject> getDiffExpressionForGenes(
             DiffExpressionSearchCommand command ) {
 
-        Collection<Long> eeScopeIds = command.getEeScopeIds();
+        Collection<Long> eeScopeIds = command.getEeIds();
 
         Collection<Long> geneIds = command.getGeneIds();
 
