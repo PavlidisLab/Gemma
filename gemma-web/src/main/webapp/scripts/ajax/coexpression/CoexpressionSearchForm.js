@@ -103,10 +103,6 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 	getCoexpressionSearchCommandFromQuery : function(query) {
 		var param = Ext.urlDecode(query);
 		var eeQuery = param.eeq || "";
-		var ees;
-		if (param.ees) {
-			ees = param.ees.split(',');
-		}
 
 		var csc = {
 			geneIds : param.g ? param.g.split(',') : [],
@@ -179,8 +175,8 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		if (csc.eeSetId >= 0) {
 			this.eeSetChooserPanel.setState(csc.eeSetId);
 		} else if (csc.eeSetName) {
-			this.eeSetChooserPanel.setState(csc.eeSetName); // FIXME this won't
-			// work, expects id.
+			this.eeSetChooserPanel.setState(csc.eeSetName); // FIXME this won't work, expects id.
+			this.updateDatasetsToBeSearched(csc.eeIds, csc.eeSetName, csc.dirty);
 		}
 
 		if (csc.stringency) {
@@ -219,17 +215,19 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 			url += "&q";
 		}
 
+
 		if (csc.eeSetId) {
 			url += String.format("&a={0}", csc.eeSetId);
 		}
 
-		if (csc.eeIds && csc.dirty) {
+		if (csc.eeIds) {
 			url += String.format("&ees={0}", csc.eeIds.join(","));
 		}
 
 		if (csc.dirty) {
 			url += "&dirty=1";
 		}
+
 
 		if (csc.eeSetName) {
 			// url += String.format("&setName={0}", csc.eeSetName);
@@ -311,7 +309,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 	 *            eeSet The ExpressionExperimentSet that was used (if any) - it
 	 *            could be just as a starting point.
 	 */
-	updateDatasetsToBeSearched : function(datasets, eeSet, dirty) {
+	updateDatasetsToBeSearched : function(datasets, eeSetName, dirty) {
 		var numDatasets = datasets.length;
 		Ext.getCmp('stringencyfield').maxValue = numDatasets;
 		Ext.getCmp('analysis-options').setTitle(String.format(
