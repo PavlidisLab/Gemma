@@ -94,10 +94,10 @@ Gemma.DiffExpressionGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			}, {
 				id : 'numSignificant',
 				dataIndex : "numMetThresholdt",
-				header : "# Significant",
+				header : "# Significant Probes",
 				sortable : true,
 				width : 75,
-				tooltip : "How many experiments met the q-value threshold you selected / num datasets with diff evidence for gene",
+				tooltip : "How many probes met the q-value threshold you selected / num datasets with diff evidence for gene",
 				renderer : Gemma.DiffExpressionGrid.getMetThresholdStyler()
 			}]
 		});
