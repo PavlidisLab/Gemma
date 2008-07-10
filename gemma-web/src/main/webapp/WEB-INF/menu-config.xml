@@ -18,25 +18,26 @@
 		<Menu name="MainMenu" title="mainMenu.title">
 			<Item name="Home" title="menu.home" page="/mainMenu.html" />
 			<Item name="Search" title="menu.search" page="/searcher.html" />
-			<Item name="Coexpression analysis" description="Search for gene coexpression patterns" title="menu.coexpression"
-				page="/searchCoexpression.html" />
-			<Item name="Differential expression" description="Examine differential expression patterns" title="menu.differential"
-				page="/diff/diffExpressionSearch.html" />
+			<Item name="Coexpression analysis" description="Search for gene coexpression patterns"
+				title="menu.coexpression" page="/searchCoexpression.html" />
+			<Item name="Differential expression" description="Examine differential expression patterns"
+				title="menu.differential" page="/diff/diffExpressionSearch.html" />
 			<Item name="Data sets in Gemma" description="View a list of expression data sets" title="menu.experiments"
 				page="/expressionExperiment/showAllExpressionExperiments.html" />
 			<Item name="Array Designs in Gemma" description="View a list of expression platforms" title="menu.arrays"
 				page="/arrays/showAllArrayDesigns.html" />
 		</Menu>
 		<Menu name="ResourcesMenu" title="resourcesMenu.title">
-			<Item name="Overview of Gemma" description="Gemma overview and general help" title="resourcesMenu.generalhelp"
-				page="/static/about.html" />
-			<!-- <Item name="Help for this page" description="Context-specific help" title="resourcesMenu.pagehelp"
-				page="/help.html" /> -->
+			<Item name="Overview of Gemma" description="Gemma overview and general help"
+				title="resourcesMenu.generalhelp" page="/static/about.html" />
+			<Item name="Wiki" description="Gemma wiki" title="Wiki"
+				location="http://bioinformatics.ubc.ca/confluence/display/gemma" />
 			<Item name="Downloads" description="Download Gemma software and data" title="resourcesMenu.downloads"
 				location="http://bioinformatics.ubc.ca/Gemma/resources/downloads.html" />
 			<Item name="For developers" description="About the Gemma framework" title="resourcesMenu.software"
 				location="http://bioinformatics.ubc.ca/Gemma/resources/" />
-			<Item name="Credits" description="Credits and more" title="resourcesMenu.credits" location="http://bioinformatics.ubc.ca/Gemma/resources/thanks.html" />
+			<Item name="Credits" description="Credits and more" title="resourcesMenu.credits"
+				location="http://bioinformatics.ubc.ca/Gemma/resources/thanks.html" />
 		</Menu>
 		<Menu name="UserMenu" title="menu.user" description="User Menu" page="/editProfile.html" roles="admin,user" />
 		<Menu name="AdminMenu" title="menu.admin" description="Admin Menu" roles="admin">
