@@ -91,6 +91,10 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 		this.hide();
 	},
 
+	onHelp : function(){
+		window.open('http://bioinformatics.ubc.ca/confluence/display/gemma/Dataset+chooser ','DataSetChooserHelp');
+	},
+	
 	/*
 	 * initialize this panel by adding 'things' to it, like the data-store,
 	 * columns, buttons (and events for buttons), etc.
@@ -102,6 +106,11 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 				id : 'done-selecting-button',
 				text : "Done",
 				handler : this.onCommit.createDelegate(this),
+				scope : this
+			}, {
+				id : 'help-selecting-button',
+				text : "Help",
+				handler : this.onHelp.createDelegate(this),
 				scope : this
 			}]
 		});

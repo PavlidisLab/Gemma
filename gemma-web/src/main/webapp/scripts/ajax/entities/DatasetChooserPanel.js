@@ -569,6 +569,10 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 
 	},
 
+	onHelp : function(){
+		window.open('http://bioinformatics.ubc.ca/confluence/display/gemma/Dataset+chooser ','DataSetChooserHelp');
+	},
+	
 	initComponent : function() {
 
 		Ext.apply(this, {
@@ -576,6 +580,11 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 				id : 'done-selecting-button',
 				text : "Done",
 				handler : this.onCommit.createDelegate(this),
+				scope : this
+			}, {
+				id : 'help-selecting-button',
+				text : "Help",
+				handler : this.onHelp.createDelegate(this),
 				scope : this
 			}]
 		});
