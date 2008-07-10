@@ -19,6 +19,7 @@ public class DifferentialExpressionMetaAnalysisValueObject {
     private Double fisherPValue = null;
     private int numSearchedExperiments;
     private int numExperimentsInScope;
+    private int numMetThreshold;
 
     private Collection<ExpressionExperiment> activeExperiments = null;
 
@@ -72,6 +73,22 @@ public class DifferentialExpressionMetaAnalysisValueObject {
         this.numSearchedExperiments = numSearchedExperiments;
     }
 
+    public int getNumExperimentsInScope() {
+        return numExperimentsInScope;
+    }
+
+    public void setNumExperimentsInScope( int numExperimentsInScope ) {
+        this.numExperimentsInScope = numExperimentsInScope;
+    }
+
+    public int getNumMetThreshold() {
+        return numMetThreshold;
+    }
+
+    public void setNumMetThreshold( int numMetThreshold ) {
+        this.numMetThreshold = numMetThreshold;
+    }
+
     public String toString() {
         StringBuilder buf = new StringBuilder();
 
@@ -83,14 +100,6 @@ public class DifferentialExpressionMetaAnalysisValueObject {
             buf.append( result + "\n" );
         }
         return buf.toString();
-    }
-
-    public int getNumExperimentsInScope() {
-        return numExperimentsInScope;
-    }
-
-    public void setNumExperimentsInScope( int numExperimentsInScope ) {
-        this.numExperimentsInScope = numExperimentsInScope;
     }
 
 }

@@ -243,6 +243,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         /* a gene can have multiple probes that map to it, so store one diff value object for each probe */
         Collection<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
 
+        int numMetThreshold = 0;
         /* each gene will have a row, and each row will have a row expander with supporting datasets */
         for ( ExpressionExperiment ee : activeExperiments ) {
 
@@ -307,6 +308,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                 Boolean metThreshold = r.getCorrectedPvalue() <= threshold ? true : false;
                 devo.setMetThreshold( metThreshold );
 
+                if ( metThreshold ) numMetThreshold++;
+
                 Boolean fisherContribution = r.equals( res ) ? true : false;
                 devo.setFisherContribution( fisherContribution );
 
@@ -332,11 +335,13 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             }
 
         }
+
         double fisherPval = MetaAnalysis.fisherCombinePvalues( pvaluesToCombine );
         mavo.setFisherPValue( fisherPval );
         mavo.setGene( g );
         mavo.setActiveExperiments( activeExperiments );
         mavo.setProbeResults( devos );
+        mavo.setNumMetThreshold( numMetThreshold );
         mavo.setSortKey();
 
         return mavo;

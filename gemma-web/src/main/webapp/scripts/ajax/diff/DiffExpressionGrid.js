@@ -28,6 +28,9 @@ Gemma.DiffExpressionGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		name : "numExperimentsInScope",
 		type : "int"
 	}, {
+		name : "numMetThreshold",
+		type : "int"
+	}, {
 		name : "sortKey",
 		type : "string"
 	}, {
@@ -86,8 +89,16 @@ Gemma.DiffExpressionGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				header : "# Datasets Tested In",
 				sortable : false,
 				width : 75,
-				tooltip : "How many experiments met the q-value threshold you selected / how many were tested.",
+				tooltip : "How many experiments met the q-value threshold you selected / num datasets with diff evidence for gene",
 				renderer : Gemma.DiffExpressionGrid.getSupportStyler()
+			}, {
+				id : 'numSignificant',
+				dataIndex : "numMetThresholdt",
+				header : "# Significant",
+				sortable : true,
+				width : 75,
+				tooltip : "How many experiments met the q-value threshold you selected / num datasets with diff evidence for gene",
+				renderer : Gemma.DiffExpressionGrid.getMetThresholdStyler()
 			}]
 		});
 
@@ -149,11 +160,23 @@ Gemma.DiffExpressionGrid.getSupportStyler = function() {
 	if (Gemma.DiffExpressionGrid.supportStyler === undefined) {
 		Gemma.DiffExpressionGrid.supportStyler = function(value, metadata, record, row, col, ds) {
 			var d = record.data;
-			var s = String.format("{0}/{1}", d.activeExperiments.size(), d.numSearchedExperiments);
-			var n = d.numExperimentsInScope;
-			return String.format("{0}/{1}", s, n);
-
+			return String.format("{0}/{1}/{2}", d.activeExperiments.size(), d.numSearchedExperiments,
+					d.numExperimentsInScope);
 		};
 	}
 	return Gemma.DiffExpressionGrid.supportStyler;
+};
+
+/**
+ * 
+ * @return {}
+ */
+Gemma.DiffExpressionGrid.getMetThresholdStyler = function() {
+	if (Gemma.DiffExpressionGrid.metThresholdStyler === undefined) {
+		Gemma.DiffExpressionGrid.metThresholdStyler = function(value, metadata, record, row, col, ds) {
+			var d = record.data;
+			return String.format("{0}/{1}", d.numMetThreshold, d.activeExperiments.size());
+		};
+	}
+	return Gemma.DiffExpressionGrid.metThresholdStyler;
 };
