@@ -97,7 +97,7 @@ Gemma.DiffExpressionGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				header : "# Significant Probes",
 				sortable : true,
 				width : 75,
-				tooltip : "How many probes met the q-value threshold you selected / num datasets with diff evidence for gene",
+				tooltip : "How many probes met the q-value threshold you selected / num probes mapping to gene (and contain diff evidence)",
 				renderer : Gemma.DiffExpressionGrid.getMetThresholdStyler()
 			}]
 		});
