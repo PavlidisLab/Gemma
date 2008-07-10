@@ -333,10 +333,10 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 				hidden : true,
 				sortable : true
 			}, {
-				header : "Matching text",
+				header : "Matched via:",
 				width : 180,
 				dataIndex : "highlightedText",
-				tooltip : "The text that matched the search",
+				tooltip : "The text or part of the result that matched the search",
 				sortable : true
 			}],
 			store : new Ext.data.GroupingStore({

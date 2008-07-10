@@ -27,15 +27,33 @@ import ubic.gemma.util.ReflectionUtil;
  */
 public class SearchResult implements Comparable<SearchResult> {
 
+    /**
+     * @param searchResult
+     */
     public SearchResult( Object searchResult ) {
         this.resultObject = searchResult;
         this.resultClass = ReflectionUtil.getBaseForImpl( searchResult.getClass() );
         this.objectId = EntityUtils.getId( resultObject );
     }
 
+    /**
+     * @param searchResult
+     * @param score
+     */
     public SearchResult( Object searchResult, double score ) {
         this( searchResult );
         this.score = score;
+    }
+
+    /**
+     * @param searchResult
+     * @param score
+     * @param matchingText
+     */
+    public SearchResult( Object searchResult, double score, String matchingText ) {
+        this( searchResult );
+        this.score = score;
+        this.highlightedText = matchingText;
     }
 
     boolean indexSearch;

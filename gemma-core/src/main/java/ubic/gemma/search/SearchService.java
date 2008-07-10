@@ -234,7 +234,7 @@ public class SearchService implements InitializingBean {
     @SuppressWarnings("unchecked")
     public Map<Class, List<SearchResult>> search( SearchSettings settings, boolean fillObjects ) {
         String searchString = StringEscapeUtils.escapeJava( settings.getQuery() ); // probably not necessay to
-                                                                                    // escape...
+        // escape...
 
         List<SearchResult> rawResults = new ArrayList<SearchResult>();
 
@@ -501,6 +501,7 @@ public class SearchService implements InitializingBean {
     /**
      * @param settings
      */
+    @SuppressWarnings("unchecked")
     private Collection<SearchResult> characteristicExpressionExperimentSearch( final SearchSettings settings ) {
         Collection<SearchResult> results = new HashSet<SearchResult>();
 
@@ -511,20 +512,52 @@ public class SearchService implements InitializingBean {
 
         Collection<SearchResult> characterSearchResults = ontologySearchAnnotatedObject( classesToSearch, settings );
 
+        StopWatch watch = new StopWatch();
+        watch.start();
+
         // filter and get parents...
+        int numEEs = 0;
+        Collection<BioMaterial> biomaterials = new HashSet<BioMaterial>();
+        Collection<FactorValue> factorValues = new HashSet<FactorValue>();
+
         for ( SearchResult sr : characterSearchResults ) {
             Class resultClass = sr.getResultClass();
             if ( ExpressionExperiment.class.isAssignableFrom( resultClass ) ) {
                 results.add( sr );
+                numEEs++;
             } else if ( BioMaterial.class.isAssignableFrom( resultClass ) ) {
-                ExpressionExperiment ee = expressionExperimentService.findByBioMaterial( ( BioMaterial ) sr
-                        .getResultObject() );
-                if ( ee != null ) results.add( new SearchResult( ee, INDIRECT_DB_HIT_PENALTY ) );
+                biomaterials.add( ( BioMaterial ) sr.getResultObject() );
             } else if ( FactorValue.class.isAssignableFrom( resultClass ) ) {
-                ExpressionExperiment ee = expressionExperimentService.findByFactorValue( ( FactorValue ) sr
-                        .getResultObject() );
-                if ( ee != null ) results.add( new SearchResult( ee, INDIRECT_DB_HIT_PENALTY ) );
+                factorValues.add( ( FactorValue ) sr.getResultObject() );
             }
+        }
+
+        /*
+         * Much faster to batch it...
+         */
+        if ( biomaterials.size() > 0 ) {
+            Collection<ExpressionExperiment> ees = expressionExperimentService.findByBioMaterials( biomaterials );
+            for ( ExpressionExperiment ee : ees ) {
+                if ( !results.contains( ee ) ) {
+                    results.add( new SearchResult( ee, INDIRECT_DB_HIT_PENALTY, "BioMaterial" ) );
+                }
+            }
+        }
+
+        if ( factorValues.size() > 0 ) {
+            Collection<ExpressionExperiment> ees = expressionExperimentService.findByFactorValues( factorValues );
+            for ( ExpressionExperiment ee : ees ) {
+                if ( !results.contains( ee ) ) {
+                    results.add( new SearchResult( ee, INDIRECT_DB_HIT_PENALTY, "Factor" ) );
+                }
+            }
+        }
+
+        if ( watch.getTime() > 1000 ) {
+            log.info( "Retrieving " + results.size() + " experiments from " + characterSearchResults.size()
+                    + " retrieved characteristics took " + watch.getTime() + " ms" );
+            log.info( "Breakdown: " + numEEs + " via direct association with EE; " + biomaterials.size()
+                    + " via association with Biomaterial; " + factorValues.size() + " via experimental design" );
         }
 
         return results;
@@ -625,8 +658,9 @@ public class SearchService implements InitializingBean {
                 }
             }
         }
-        if ( watch.getTime() > 1000 )
+        if ( watch.getTime() > 1000 ) {
             log.info( "Found " + inSystem.size() + " matches in our system in " + watch.getTime() + "ms" );
+        }
 
         watch.stop();
         return inSystem;
@@ -931,10 +965,8 @@ public class SearchService implements InitializingBean {
     }
 
     /**
-     * Does search on exact string by: id, name and short name.
-     * <p>
-     * The compass search is backed by a database search so the returned collection is filtered based on access
-     * permissions to the objects in the collection.
+     * Does search on exact string by: id, name and short name. This only returns results if these fields match exactly,
+     * but it's fast.
      * 
      * @param query
      * @return {@link Collection}
@@ -986,6 +1018,30 @@ public class SearchService implements InitializingBean {
         String searchString = settings.getQuery();
         if ( StringUtils.isBlank( searchString ) ) return new HashSet<SearchResult>();
 
+        Collection<SearchResult> results = new HashSet<SearchResult>();
+
+        /*
+         * First search by accession. If we find it, stop.
+         */
+        Gene result = geneService.findByNCBIId( searchString );
+        if ( result != null ) {
+            results.add( this.dbHitToSearchResult( null, result ) );
+        } else {
+            result = geneService.findByAccession( searchString, null );
+            if ( result != null ) {
+                results.add( this.dbHitToSearchResult( null, result ) );
+
+            }
+        }
+        if ( results.size() > 0 ) {
+            filterByTaxon( settings, results );
+            watch.stop();
+            if ( watch.getTime() > 1000 )
+                log.info( "Gene DB search for " + searchString + " took " + watch.getTime() + " ms and found "
+                        + results.size() + " genes" );
+            return results;
+        }
+
         // replace * at end with % for inexact symbol search
         String inexactString = searchString;
         Pattern pattern = Pattern.compile( "\\*$" );
@@ -1036,7 +1092,7 @@ public class SearchService implements InitializingBean {
             log.info( "Gene DB search for " + searchString + " took " + watch.getTime() + " ms and found "
                     + geneSet.size() + " genes" );
 
-        Collection<SearchResult> results = dbHitsToSearchResult( geneSet );
+        results = dbHitsToSearchResult( geneSet );
         filterByTaxon( settings, results );
         return results;
     }
@@ -1064,16 +1120,26 @@ public class SearchService implements InitializingBean {
             SearchResult compassHitDerivedFrom ) {
         List<SearchResult> results = new ArrayList<SearchResult>();
         for ( Object e : entities ) {
-            if ( compassHitDerivedFrom != null ) {
-                SearchResult esr = new SearchResult( e, compassHitDerivedFrom.getScore() * INDIRECT_DB_HIT_PENALTY );
-                esr.setHighlightedText( compassHitDerivedFrom.getHighlightedText() );
-                results.add( esr );
-            } else {
-
-                results.add( new SearchResult( e, 1.0 ) );
-            }
+            SearchResult esr = dbHitToSearchResult( compassHitDerivedFrom, e );
+            results.add( esr );
         }
         return results;
+    }
+
+    /**
+     * @param compassHitDerivedFrom
+     * @param e
+     * @return
+     */
+    private SearchResult dbHitToSearchResult( SearchResult compassHitDerivedFrom, Object e ) {
+        SearchResult esr = null;
+        if ( compassHitDerivedFrom != null ) {
+            esr = new SearchResult( e, compassHitDerivedFrom.getScore() * INDIRECT_DB_HIT_PENALTY );
+            esr.setHighlightedText( compassHitDerivedFrom.getHighlightedText() );
+        } else {
+            esr = new SearchResult( e, 1.0 );
+        }
+        return esr;
     }
 
     /**
@@ -1084,10 +1150,17 @@ public class SearchService implements InitializingBean {
      */
     private Collection<SearchResult> expressionExperimentSearch( final SearchSettings settings ) {
         StopWatch watch = startTiming();
+
         Collection<SearchResult> results = databaseExpressionExperimentSearch( settings );
-        Collection<SearchResult> compassExpressionSearchResults = compassExpressionSearch( settings );
-        results.addAll( compassExpressionSearchResults );
-        results.addAll( characteristicExpressionExperimentSearch( settings ) );
+
+        if ( results.size() == 0 ) {
+            /*
+             * User didn't put in an exact id, so they get a slower more thorough search.
+             */
+            Collection<SearchResult> compassExpressionSearchResults = compassExpressionSearch( settings );
+            results.addAll( compassExpressionSearchResults );
+            results.addAll( characteristicExpressionExperimentSearch( settings ) );
+        }
 
         watch.stop();
         if ( watch.getTime() > 1000 )
@@ -1166,14 +1239,19 @@ public class SearchService implements InitializingBean {
         String searchString = settings.getQuery();
 
         Collection<SearchResult> geneDbList = databaseGeneSearch( settings );
-        Collection<SearchResult> geneCompassList = compassGeneSearch( settings );
-
-        Collection<SearchResult> geneCsList = databaseCompositeSequenceSearch( settings );
-
         Set<SearchResult> combinedGeneList = new HashSet<SearchResult>();
         combinedGeneList.addAll( geneDbList );
-        combinedGeneList.addAll( geneCompassList );
-        combinedGeneList.addAll( geneCsList );
+
+        /*
+         * Only do the other searches if the more precise database searches come up dry (might want to make this more
+         * configurable)
+         */
+        if ( geneDbList.size() == 0 ) {
+            Collection<SearchResult> geneCompassList = compassGeneSearch( settings );
+            Collection<SearchResult> geneCsList = databaseCompositeSequenceSearch( settings );
+            combinedGeneList.addAll( geneCompassList );
+            combinedGeneList.addAll( geneCsList );
+        }
 
         filterByTaxon( settings, combinedGeneList );
 
@@ -1301,7 +1379,11 @@ public class SearchService implements InitializingBean {
         /*
          * Direct search.
          */
+        StopWatch watch = startTiming();
         Collection<SearchResult> results = databaseCharacteristicSearchForOwners( classes, settings );
+        if ( watch.getTime() > 1000 ) {
+            log.info( "Search for characteristics matching '" + settings + "' took " + watch.getTime() + " ms" );
+        }
 
         /*
          * Include children in ontologies, if any. This can be very slow.

@@ -557,4 +557,14 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().getSubSets( expressionExperiment );
     }
 
+    @Override
+    protected Collection handleFindByBioMaterials( Collection bioMaterials ) throws Exception {
+        return this.getExpressionExperimentDao().findByBioMaterials( bioMaterials );
+    }
+
+    @Override
+    protected Collection handleFindByFactorValues( Collection factorValues ) throws Exception {
+        return this.getExpressionExperimentDao().findByFactorValues( factorValues );
+    }
+
 }

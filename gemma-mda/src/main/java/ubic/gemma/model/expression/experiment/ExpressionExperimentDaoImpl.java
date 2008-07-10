@@ -491,9 +491,23 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             return null;
         }
         if ( list.size() > 1 ) {
+            /*
+             * This really shouldn't happen!
+             */
             log.warn( "Found " + list.size() + " expression experiment for the given bm: " + bm + " Only 1 returned." );
         }
         return ( ExpressionExperiment ) list.iterator().next();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleFindByBioMaterials( Collection bms ) throws Exception {
+        if ( bms == null || bms.size() == 0 ) {
+            return new HashSet<ExpressionExperiment>();
+        }
+        final String queryString = "select distinct ee from ExpressionExperimentImpl as ee "
+                + "inner join ee.bioAssays as ba inner join ba.samplesUsed as sample where sample in (:bms)";
+        return getHibernateTemplate().findByNamedParam( queryString, "bms", bms );
     }
 
     /*
@@ -547,6 +561,22 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             return null;
         }
         return ( ExpressionExperiment ) results.iterator().next();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleFindByFactorValues( Collection fvs ) {
+        Collection<ExperimentalDesign> eds = new HashSet<ExperimentalDesign>();
+        for ( FactorValue fv : ( Collection<FactorValue> ) fvs ) {
+            eds.add( fv.getExperimentalFactor().getExperimentalDesign() );
+        }
+
+        if ( eds.size() > 0 ) {
+            final String queryString = "select distinct ee from ExpressionExperimentImpl as ee inner join ee.experimentalDesign ed where ed in (:eds) ";
+            return getHibernateTemplate().findByNamedParam( queryString, "eds", eds );
+        } else {
+            return new HashSet<ExpressionExperiment>();
+        }
     }
 
     /*
