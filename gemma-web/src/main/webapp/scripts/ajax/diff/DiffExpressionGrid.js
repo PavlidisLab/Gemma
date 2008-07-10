@@ -1,8 +1,7 @@
 Ext.namespace('Gemma');
 
 /*
- * Gemma.DiffExpressionGrid constructor... config is a hash with the following
- * options:
+ * Gemma.DiffExpressionGrid constructor... config is a hash with the following options:
  */
 Gemma.DiffExpressionGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
@@ -24,6 +23,9 @@ Gemma.DiffExpressionGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		name : "activeExperiments"
 	}, {
 		name : "numSearchedExperiments",
+		type : "int"
+	}, {
+		name : "numExperimentsInScope",
 		type : "int"
 	}, {
 		name : "sortKey",
@@ -122,52 +124,35 @@ Gemma.DiffExpressionGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			var cm = this.getColumnModel();
 			var c = cm.getIndexById('datasets');
 			var headerWidth = this.view.getHeaderCell(c).firstChild.scrollWidth;
-			var imageWidth = Gemma.DiffExpressionGrid.bitImageBarWidth
-					* first.data.datasetVector.length;
-			cm.setColumnWidth(c, imageWidth < headerWidth
-					? headerWidth
-					: imageWidth);
+			var imageWidth = Gemma.DiffExpressionGrid.bitImageBarWidth * first.data.datasetVector.length;
+			cm.setColumnWidth(c, imageWidth < headerWidth ? headerWidth : imageWidth);
 		}
 	}
 
 });
 
+/**
+ * 
+ * @param {}
+ *            geneId
+ */
 Gemma.DiffExpressionGrid.searchForGene = function(geneId) {
 	var f = Gemma.DiffExpressionSearchForm.searchForGene;
 	f(geneId);
 };
 
-/*
- * Stylers FIXME:  where are these being used?
+/**
  * 
+ * @return {}
  */
-Gemma.DiffExpressionGrid.getFoundGeneStyler = function() {
-	if (Gemma.DiffExpressionGrid.foundGeneStyler === undefined) {
-		Gemma.DiffExpressionGrid.foundGeneTemplate = new Ext.Template(
-				"<a href='' onClick='Gemma.DiffExpressionGrid.searchForGene({id}); return false;'>",
-				"<img src='/Gemma/images/logo/gemmaTiny.gif' ext:qtip='Make {officialSymbol} the query gene' />",
-				"</a>",
-				" &nbsp; ",
-				"<a href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}");
-		Gemma.DiffExpressionGrid.foundGeneStyler = function(value, metadata,
-				record, row, col, ds) {
-			var g = record.data.foundGene;
-			if (g.officialName === null) {
-				g.officialName = "";
-			}
-			return Gemma.DiffExpressionGrid.foundGeneTemplate.apply(g);
-		};
-	}
-	return Gemma.DiffExpressionGrid.foundGeneStyler;
-};
-
 Gemma.DiffExpressionGrid.getSupportStyler = function() {
 	if (Gemma.DiffExpressionGrid.supportStyler === undefined) {
-		Gemma.DiffExpressionGrid.supportStyler = function(value, metadata,
-				record, row, col, ds) {
+		Gemma.DiffExpressionGrid.supportStyler = function(value, metadata, record, row, col, ds) {
 			var d = record.data;
-			return String.format("{0}/{1}", d.activeExperiments.size(),
-					d.numSearchedExperiments);
+			var s = String.format("{0}/{1}", d.activeExperiments.size(), d.numSearchedExperiments);
+			var n = d.numExperimentsInScope;
+			return String.format("{0}/{1}", s, n);
+
 		};
 	}
 	return Gemma.DiffExpressionGrid.supportStyler;

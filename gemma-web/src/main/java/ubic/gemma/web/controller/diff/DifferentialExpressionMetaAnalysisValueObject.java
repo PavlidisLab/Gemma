@@ -18,6 +18,7 @@ public class DifferentialExpressionMetaAnalysisValueObject {
     private String sortKey;
     private Double fisherPValue = null;
     private int numSearchedExperiments;
+    private int numExperimentsInScope;
 
     private Collection<ExpressionExperiment> activeExperiments = null;
 
@@ -82,6 +83,14 @@ public class DifferentialExpressionMetaAnalysisValueObject {
             buf.append( result + "\n" );
         }
         return buf.toString();
+    }
+
+    public int getNumExperimentsInScope() {
+        return numExperimentsInScope;
+    }
+
+    public void setNumExperimentsInScope( int numExperimentsInScope ) {
+        this.numExperimentsInScope = numExperimentsInScope;
     }
 
 }

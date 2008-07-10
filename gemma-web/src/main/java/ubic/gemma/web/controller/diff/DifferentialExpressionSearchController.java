@@ -167,6 +167,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     public Collection<DifferentialExpressionMetaAnalysisValueObject> getDiffExpressionForGenes(
             DiffExpressionSearchCommand command ) {
 
+        Collection<Long> eeScopeIds = command.getEeScopeIds();
+
         Collection<Long> geneIds = command.getGeneIds();
 
         Collection<DiffExpressionSelectedFactorCommand> selectedFactors = command.getSelectedFactors();
@@ -178,8 +180,12 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             DifferentialExpressionMetaAnalysisValueObject mavo = getDifferentialExpressionMetaAnalysis( geneId,
                     selectedFactors, threshold );
             mavo.setSortKey();
-            if ( selectedFactors != null && !selectedFactors.isEmpty() )
+            if ( selectedFactors != null && !selectedFactors.isEmpty() ) {
                 mavo.setNumSearchedExperiments( selectedFactors.size() );
+            }
+
+            mavo.setNumExperimentsInScope( eeScopeIds.size() );
+
             mavos.add( mavo );
 
         }

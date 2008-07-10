@@ -46,7 +46,9 @@ public class DiffExpressionSearchCommand implements Serializable {
     private Long eeSetId;
 
     private String eeSetName;
-    
+
+    private Collection<Long> eeScopeIds;
+
     private boolean dirty;
 
     public String getEeQuery() {
@@ -116,11 +118,19 @@ public class DiffExpressionSearchCommand implements Serializable {
         this.selectedFactors = selectedFactors;
     }
 
-	public boolean isDirty() {
-		return dirty;
-	}
+    public boolean isDirty() {
+        return dirty;
+    }
 
-	public void setDirty(boolean dirty) {
-		this.dirty = dirty;
-	}
+    public void setDirty( boolean dirty ) {
+        this.dirty = dirty;
+    }
+
+    public Collection<Long> getEeScopeIds() {
+        return eeScopeIds;
+    }
+
+    public void setEeScopeIds( Collection<Long> eeScopeIds ) {
+        this.eeScopeIds = eeScopeIds;
+    }
 }
