@@ -175,7 +175,7 @@ Gemma.DiffExpressionGrid.getMetThresholdStyler = function() {
 	if (Gemma.DiffExpressionGrid.metThresholdStyler === undefined) {
 		Gemma.DiffExpressionGrid.metThresholdStyler = function(value, metadata, record, row, col, ds) {
 			var d = record.data;
-			return String.format("{0}/{1}", d.numMetThreshold, d.activeExperiments.size());
+			return String.format("{0}/{1}", d.numMetThreshold, d.probeResults.size());
 		};
 	}
 	return Gemma.DiffExpressionGrid.metThresholdStyler;
