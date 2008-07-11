@@ -45,8 +45,11 @@ Gemma.CoexpressionSearchFormLite = Ext.extend(Ext.FormPanel, {
 		this.eeSetCombo.on("select", function(combo, eeSet) {
 			this.clearMessages();
 			this.selected = eeSet;
-			if (eeSet && eeSet.get("taxon")) {
-				this.taxonChanged(eeSet.get("taxon"));
+			if (eeSet && eeSet.store.getSelected().get("taxonId")) {
+				var taxon = {id : eeSet.store.getSelected().get("taxonId"),
+							 name: eeSet.store.getSelected().get("taxonName")
+				}
+				this.taxonChanged(taxon);
 			}
 		}, this);
 
