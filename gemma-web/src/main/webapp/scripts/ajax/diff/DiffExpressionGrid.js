@@ -90,7 +90,7 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 				id : 'fisherPValue',
 				dataIndex : "fisherPValue",
 				header : "Meta P-Value",
-				tooltip : "Combined p-value for the studies you chose, using Fisher's method.",
+				tooltip : "Combined p-value for the datasets you chose, using Fisher's method.",
 				renderer : function(p) {
 					if (p < 0.0001) {
 						return sprintf("%.3e", p);
@@ -106,7 +106,7 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 				header : "# Datasets Tested In",
 				sortable : false,
 				width : 75,
-				tooltip : "# datasets testing the gene  / num datasets with diff analysis / num datasets in the scope",
+				tooltip : "# datasets testing the gene  / # with diff analysis / # in set",
 				renderer : this.supportStyler
 			}, {
 				id : 'numSignificant',
@@ -114,7 +114,7 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 				header : "# Significant",
 				sortable : true,
 				width : 75,
-				tooltip : "How many experiments met the q-value threshold you selected / num datasets testing the gene",
+				tooltip : "How many datasets met the q-value threshold you selected / # testing gene",
 				renderer : this.metThresholdStyler
 			}]
 		});
