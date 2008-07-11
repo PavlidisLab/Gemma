@@ -513,13 +513,13 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         for ( Object o : bms ) {
             batch.add( o );
             if ( batch.size() == BATCH_SIZE ) {
-                results.add( getHibernateTemplate().findByNamedParam( queryString, "bms", batch ) );
+                results.addAll( getHibernateTemplate().findByNamedParam( queryString, "bms", batch ) );
                 batch.clear();
             }
         }
 
         if ( batch.size() > 0 ) {
-            results.add( getHibernateTemplate().findByNamedParam( queryString, "bms", batch ) );
+            results.addAll( getHibernateTemplate().findByNamedParam( queryString, "bms", batch ) );
         }
 
         return results;
@@ -593,13 +593,13 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             for ( Object o : fvs ) {
                 batch.add( o );
                 if ( batch.size() == BATCH_SIZE ) {
-                    results.add( getHibernateTemplate().findByNamedParam( queryString, "eds", batch ) );
+                    results.addAll( getHibernateTemplate().findByNamedParam( queryString, "eds", batch ) );
                     batch.clear();
                 }
             }
 
             if ( batch.size() > 0 ) {
-                results.add( getHibernateTemplate().findByNamedParam( queryString, "bms", batch ) );
+                results.addAll( getHibernateTemplate().findByNamedParam( queryString, "bms", batch ) );
             }
 
             return results;
