@@ -149,6 +149,10 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 				}
 			}
 			dsc.selectedFactors = factorMap;
+			/*
+			 * Initialize the chooser panel with this data.
+			 */
+			this.efChooserPanel.eeFactorsMap = factorMap;
 		}
 		return dsc;
 	},
@@ -243,7 +247,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		if (dsc.eeSetName) {
 			url += String.format("&setName={0}", dsc.eeSetName);
 		}
-
+		
 		if (dsc.selectedFactors) {
 			url += "&fm=";
 			for (var i in dsc.selectedFactors) {
