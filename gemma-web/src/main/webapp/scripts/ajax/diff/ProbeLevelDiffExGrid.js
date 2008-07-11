@@ -88,17 +88,14 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 				renderer : Gemma.ProbeLevelDiffExGrid.getEFStyler(),
 				sortable : false
 			}, {
-				id : 'metThreshold',
-				header : "q&lt;thresh?",
-				dataIndex : "metThreshold",
-				renderer : this.metThresholdStyler.createDelegate(this),
-				sortable : true
-			}, {
 				id : 'p',
 				header : "Sig. (q-value)",
 				dataIndex : "p",
 				width : 90,
-				renderer : function(p) {
+				renderer : function(p, metadata, record) {
+					if (record.get("metThreshold")) {
+						metadata.css = "metThreshold"; // typo.css
+					}
 					if (p < 0.001) {
 						return sprintf("%.3e", p);
 					} else {

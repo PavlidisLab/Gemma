@@ -24,8 +24,7 @@ Ext.extend(Gemma.DiffExpressionGridRowExpander, Ext.grid.RowExpander, {
 			Ext.DomHelper.overwrite(bodyEl, "");
 
 			var diffExGrid = new Gemma.ProbeLevelDiffExGrid({
-				width : 750,
-				frame : true,
+				width : 750, 
 				title : "Probe-level results for " + record.get("gene"),
 				renderTo : bodyEl
 			});

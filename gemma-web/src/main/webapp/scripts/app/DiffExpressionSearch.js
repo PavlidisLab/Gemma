@@ -23,7 +23,7 @@ Ext.onReady(function() {
 
 	var diffExGrid = new Gemma.DiffExpressionGrid({
 		renderTo : "diffExpression-results",
-		title : "Differentially expressed genes",
+		title : "Differentially expressed genes", 
 		pageSize : 25
 	});
 

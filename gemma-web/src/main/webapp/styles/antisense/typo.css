@@ -416,3 +416,11 @@ a.tooltip:hover .tooltiptext {
 .coexpressionGridRowExpanded {
 	background-color: #EEEEEE;
 }
+
+/*
+* To indicate that a value met a user-set threshold.
+*/
+.metThreshold {
+	font-weight : bold;
+	color: #339900;
+}
