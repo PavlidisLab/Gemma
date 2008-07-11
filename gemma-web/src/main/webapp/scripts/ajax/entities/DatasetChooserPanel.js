@@ -226,6 +226,9 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 		} else {
 			this.fireEvent('comboReady');
 		}
+		
+		this.store.sort('name');
+		
 	},
 
 	filterByTaxon : function(taxonId) {
