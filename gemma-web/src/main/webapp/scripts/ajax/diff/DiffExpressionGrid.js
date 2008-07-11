@@ -93,7 +93,7 @@ Gemma.DiffExpressionGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				renderer : Gemma.DiffExpressionGrid.getSupportStyler()
 			}, {
 				id : 'numSignificant',
-				dataIndex : "numMetThresholdt",
+				dataIndex : "numMetThreshold",
 				header : "# Significant Probes",
 				sortable : true,
 				width : 75,
