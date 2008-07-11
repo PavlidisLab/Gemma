@@ -74,6 +74,7 @@ import ubic.gemma.util.CommonQueries;
  */
 public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase {
 
+    private static final int BATCH_SIZE = 1000;
     static Log log = LogFactory.getLog( ExpressionExperimentDaoImpl.class.getName() );
 
     public ExpressionExperiment expressionExperimentValueObjectToEntity(
@@ -507,7 +508,21 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         }
         final String queryString = "select distinct ee from ExpressionExperimentImpl as ee "
                 + "inner join ee.bioAssays as ba inner join ba.samplesUsed as sample where sample in (:bms)";
-        return getHibernateTemplate().findByNamedParam( queryString, "bms", bms );
+        Collection results = new HashSet();
+        Collection batch = new HashSet();
+        for ( Object o : bms ) {
+            batch.add( o );
+            if ( batch.size() == BATCH_SIZE ) {
+                results.add( getHibernateTemplate().findByNamedParam( queryString, "bms", batch ) );
+                batch.clear();
+            }
+        }
+
+        if ( batch.size() > 0 ) {
+            results.add( getHibernateTemplate().findByNamedParam( queryString, "bms", batch ) );
+        }
+
+        return results;
     }
 
     /*
@@ -573,7 +588,22 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
         if ( eds.size() > 0 ) {
             final String queryString = "select distinct ee from ExpressionExperimentImpl as ee inner join ee.experimentalDesign ed where ed in (:eds) ";
-            return getHibernateTemplate().findByNamedParam( queryString, "eds", eds );
+            Collection results = new HashSet();
+            Collection batch = new HashSet();
+            for ( Object o : fvs ) {
+                batch.add( o );
+                if ( batch.size() == BATCH_SIZE ) {
+                    results.add( getHibernateTemplate().findByNamedParam( queryString, "eds", batch ) );
+                    batch.clear();
+                }
+            }
+
+            if ( batch.size() > 0 ) {
+                results.add( getHibernateTemplate().findByNamedParam( queryString, "bms", batch ) );
+            }
+
+            return results;
+
         } else {
             return new HashSet<ExpressionExperiment>();
         }
