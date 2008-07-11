@@ -72,8 +72,8 @@ Gemma.CoexpressionGridRowExpander = Ext.extend(Ext.grid.RowExpander, {
 
 			// Keep mouse events from propagating to the parent grid. See ExtJS
 			// forums topic "nested grids problem" (242878).
-			dsGrid.getEl().swallowEvent(['mousedown', 'click', 'dblclick']);
-			diffExGrid.getEl().swallowEvent(['mousedown', 'click', 'dblclick']);
+			dsGrid.getEl().swallowEvent(['mouseover','mousedown', 'click', 'dblclick']);
+			diffExGrid.getEl().swallowEvent(['mouseover','mousedown', 'click', 'dblclick']);
 
 			return true;
 		}
