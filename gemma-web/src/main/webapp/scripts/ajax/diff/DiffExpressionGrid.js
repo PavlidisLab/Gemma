@@ -3,13 +3,17 @@ Ext.namespace('Gemma');
 /*
  * Gemma.DiffExpressionGrid constructor... config is a hash with the following options:
  */
-Gemma.DiffExpressionGrid = Ext.extend(Gemma.GemmaGridPanel, {
+Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
+	width : 800,
 	collapsible : true,
 	editable : false,
 	autoHeight : true,
-	width : 600,
-	style : 'margin-bottom: 1em;',
+	style : "margin-bottom: 1em;",
+
+	viewConfig : {
+		forceFit : true
+	},
 
 	record : Ext.data.Record.create([{
 		name : "gene",
@@ -38,6 +42,11 @@ Gemma.DiffExpressionGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	}]),
 
 	initComponent : function() {
+
+		Ext.apply(this, {
+			plugins : this.rowExpander
+		});
+
 		if (this.pageSize) {
 			Ext.apply(this, {
 				store : new Gemma.PagingDataStore({
@@ -64,7 +73,14 @@ Gemma.DiffExpressionGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		}
 
 		Ext.apply(this, {
-			columns : [{
+			rowExpander : new Gemma.DiffExpressionGridRowExpander({
+				tpl : "",
+				grid : this
+			})
+		});
+
+		Ext.apply(this, {
+			columns : [this.rowExpander, {
 				id : 'gene',
 				dataIndex : "gene",
 				header : "Query Gene",
@@ -73,7 +89,7 @@ Gemma.DiffExpressionGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				id : 'fisherPValue',
 				dataIndex : "fisherPValue",
 				header : "Meta P-Value",
-				tooltip : "Combined p-value for the studies you chose, using the Fisher method.",
+				tooltip : "Combined p-value for the studies you chose, using Fisher's method.",
 				renderer : function(p) {
 					if (p < 0.0001) {
 						return sprintf("%.3e", p);
@@ -89,25 +105,19 @@ Gemma.DiffExpressionGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				header : "# Datasets Tested In",
 				sortable : false,
 				width : 75,
-				tooltip : "# datasets with diff evidence for the gene  / num datasets with diff results in the scope / num datasets in the scope",
-				renderer : Gemma.DiffExpressionGrid.getSupportStyler()
+				tooltip : "# datasets testing the gene  / num datasets wiff diff analysis / num datasets in the scope",
+				renderer : this.supportStyler
 			}, {
 				id : 'numSignificant',
 				dataIndex : "numMetThreshold",
-				header : "# Significant Probes",
+				header : "# Significant",
 				sortable : true,
 				width : 75,
-				tooltip : "How many probes met the q-value threshold you selected / num probes mapping to gene (and contain diff evidence)",
-				renderer : Gemma.DiffExpressionGrid.getMetThresholdStyler()
+				tooltip : "How many experiments met the q-value threshold you selected / num datasets testing the gene",
+				renderer : this.metThresholdStyler
 			}]
 		});
 
-		Ext.apply(this, {
-			rowExpander : new Gemma.DiffExpressionGridRowExpander({
-				tpl : ""
-			})
-		});
-		this.columns.unshift(this.rowExpander);
 		Ext.apply(this, {
 			plugins : this.rowExpander
 		});
@@ -129,54 +139,15 @@ Gemma.DiffExpressionGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		// this.resizeDatasetColumn();
 	},
 
-	resizeDatasetColumn : function() {
-		var first = this.getStore().getAt(0);
-		if (first) {
-			var cm = this.getColumnModel();
-			var c = cm.getIndexById('datasets');
-			var headerWidth = this.view.getHeaderCell(c).firstChild.scrollWidth;
-			var imageWidth = Gemma.DiffExpressionGrid.bitImageBarWidth * first.data.datasetVector.length;
-			cm.setColumnWidth(c, imageWidth < headerWidth ? headerWidth : imageWidth);
-		}
+	metThresholdStyler : function(value, metadata, record, row, col, ds) {
+		var d = record.data;
+		return String.format("{0}/{1}", d.numMetThreshold, d.activeExperiments.size());
+	},
+
+	supportStyler : function(value, metadata, record, row, col, ds) {
+		var d = record.data;
+		return String.format("{0}/{1}/{2}", d.activeExperiments.size(), d.numSearchedExperiments,
+				d.numExperimentsInScope);
 	}
 
 });
-
-/**
- * 
- * @param {}
- *            geneId
- */
-Gemma.DiffExpressionGrid.searchForGene = function(geneId) {
-	var f = Gemma.DiffExpressionSearchForm.searchForGene;
-	f(geneId);
-};
-
-/**
- * 
- * @return {}
- */
-Gemma.DiffExpressionGrid.getSupportStyler = function() {
-	if (Gemma.DiffExpressionGrid.supportStyler === undefined) {
-		Gemma.DiffExpressionGrid.supportStyler = function(value, metadata, record, row, col, ds) {
-			var d = record.data;
-			return String.format("{0}/{1}/{2}", d.activeExperiments.size(), d.numSearchedExperiments,
-					d.numExperimentsInScope);
-		};
-	}
-	return Gemma.DiffExpressionGrid.supportStyler;
-};
-
-/**
- * 
- * @return {}
- */
-Gemma.DiffExpressionGrid.getMetThresholdStyler = function() {
-	if (Gemma.DiffExpressionGrid.metThresholdStyler === undefined) {
-		Gemma.DiffExpressionGrid.metThresholdStyler = function(value, metadata, record, row, col, ds) {
-			var d = record.data;
-			return String.format("{0}/{1}", d.numMetThreshold, d.probeResults.size());
-		};
-	}
-	return Gemma.DiffExpressionGrid.metThresholdStyler;
-};

@@ -19,7 +19,6 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	initComponent : function() {
 
-		this.plugins = this.rowExpander;
 		if (this.pageSize) {
 			this.store = new Gemma.PagingDataStore({
 				proxy : new Ext.data.MemoryProxy([]),

@@ -5,8 +5,7 @@ Gemma.DiffExpressionGridRowExpander = function(config) {
 
 	this.expandedElements = [];
 
-	Gemma.DiffExpressionGridRowExpander.superclass.constructor.call(this,
-			config);
+	Gemma.DiffExpressionGridRowExpander.superclass.constructor.call(this, config);
 
 };
 
@@ -19,25 +18,24 @@ Ext.extend(Gemma.DiffExpressionGridRowExpander, Ext.grid.RowExpander, {
 		if (this.fireEvent('beforeexpand', this, record, body, rowIndex) !== false) {
 
 			/*
-			 * I haven't figured out a good way to cache this. I think we need
-			 * to check whether 'body' already has something in it.
+			 * Clear out old tables, otherwise they pile up. I haven't figured out a good way to cache this.
 			 */
+			var bodyEl = new Ext.Element(body);
+			Ext.DomHelper.overwrite(bodyEl, "");
 
-			Ext.DomHelper.overwrite(body, "");
-
-			var supporting = this.getDatasetRecords(record);
-			var diffExGrid = new Gemma.DiffExpressionExperimentGrid({
+			var diffExGrid = new Gemma.ProbeLevelDiffExGrid({
+				width : 750,
+				frame : true,
 				title : "Probe-level results for " + record.get("gene"),
-				records : supporting,
-				renderTo : body
+				renderTo : bodyEl
 			});
 
-			diffExGrid.getStore().load();
+			var supporting = this.getDatasetRecords(record);
+			diffExGrid.getStore().loadData(supporting);
 
 			// Keep mouse events from propogating to the parent grid. See ExtJS
 			// forums topic "nested grids problem" (242878).
-			diffExGrid.getEl().swallowEvent(['mouseover', 'mousedown', 'click',
-					'dblclick']);
+			diffExGrid.getEl().swallowEvent(['mouseover', 'mousedown', 'click', 'dblclick']);
 
 			return true;
 		}

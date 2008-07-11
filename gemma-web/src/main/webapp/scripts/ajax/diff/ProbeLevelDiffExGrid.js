@@ -1,27 +1,19 @@
-/*
- */
 Ext.namespace('Gemma');
 
 /**
  * 
- * Grid to display expression experiments with differential evidence for given
- * probe.
+ * Grid to display expression experiments with differential evidence for each probe (e.g., for a single gene).
  * 
  * $Id$
  */
-Gemma.DiffExpressionExperimentGrid = Ext.extend(Ext.grid.GridPanel, {
+Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 
-	/*
-	 * Do not set header : true here - it breaks it.
-	 */
-	autoExpandColumn : 'experimentalFactors',
-	height : 200,
-	layout : 'fit',
+	autoExpandColumn : 'efs',
+	height : 300,
+	loadMask : true,
 	viewConfig : {
 		forceFit : true
 	},
-	autoScroll : true,
-	loadMask : true,
 
 	readMethod : DifferentialExpressionSearchController.getDifferentialExpression,
 
@@ -45,32 +37,17 @@ Gemma.DiffExpressionExperimentGrid = Ext.extend(Ext.grid.GridPanel, {
 	initComponent : function() {
 
 		if (this.pageSize) {
-			// paging.
-			if (this.records) {
-				Ext.apply(this, {
-					store : new Ext.data.Store({
-						proxy : new Ext.ux.data.PagingMemoryProxy(this.records),
-						reader : new Ext.data.ListRangeReader({}, this.record),
-						pageSize : this.pageSize,
-						sortInfo : {
-							field : "p",
-							direction : "ASC"
-						}
-					})
-				});
-			} else {
-				Ext.apply(this, {
-					store : new Gemma.PagingDataStore({
-						proxy : new Ext.data.DWRProxy(this.readMethod),
-						reader : new Ext.data.ListRangeReader({}, this.record),
-						pageSize : this.pageSize,
-						sortInfo : {
-							field : "p",
-							direction : "ASC"
-						}
-					})
-				});
-			}
+			Ext.apply(this, {
+				store : new Gemma.PagingDataStore({
+					proxy : new Ext.data.DWRProxy(this.readMethod),
+					reader : new Ext.data.ListRangeReader({}, this.record),
+					pageSize : this.pageSize,
+					sortInfo : {
+						field : "p",
+						direction : "ASC"
+					}
+				})
+			});
 			Ext.apply(this, {
 				bbar : new Gemma.PagingToolbar({
 					pageSize : this.pageSize,
@@ -79,31 +56,16 @@ Gemma.DiffExpressionExperimentGrid = Ext.extend(Ext.grid.GridPanel, {
 			});
 		} else {
 			// nonpaging
-			if (!this.records) {
-				// data read from server.
-				Ext.apply(this, {
-					store : new Ext.data.Store({
-						proxy : new Ext.data.DWRProxy(this.readMethod),
-						reader : new Ext.data.ListRangeReader({}, this.record),
-						sortInfo : {
-							field : "p",
-							direction : "ASC"
-						}
-					})
-				});
-			} else {
-				// initialize with records.
-				Ext.apply(this, {
-					store : new Ext.data.Store({
-						proxy : new Ext.data.MemoryProxy(this.records),
-						reader : new Ext.data.ListRangeReader({}, this.record),
-						sortInfo : {
-							field : "p",
-							direction : "ASC"
-						}
-					})
-				});
-			}
+			Ext.apply(this, {
+				store : new Ext.data.Store({
+					proxy : new Ext.data.DWRProxy(this.readMethod),
+					reader : new Ext.data.ListRangeReader({}, this.record),
+					sortInfo : {
+						field : "p",
+						direction : "ASC"
+					}
+				})
+			});
 		}
 
 		Ext.apply(this, {
@@ -112,28 +74,30 @@ Gemma.DiffExpressionExperimentGrid = Ext.extend(Ext.grid.GridPanel, {
 				header : "Dataset",
 				dataIndex : "expressionExperiment",
 				sortable : true,
-				renderer : Gemma.DiffExpressionExperimentGrid.getEEStyler()
+				renderer : Gemma.ProbeLevelDiffExGrid.getEEStyler()
 			}, {
 				id : 'probe',
 				header : "Probe",
 				dataIndex : "probe",
-				renderer : Gemma.DiffExpressionExperimentGrid.getProbeStyler(),
+				renderer : Gemma.ProbeLevelDiffExGrid.getProbeStyler(),
 				sortable : true
 			}, {
 				id : 'efs',
 				header : "Factor(s)",
 				dataIndex : "experimentalFactors",
-				renderer : Gemma.DiffExpressionExperimentGrid.getEFStyler(),
+				renderer : Gemma.ProbeLevelDiffExGrid.getEFStyler(),
 				sortable : false
 			}, {
 				id : 'metThreshold',
-				header : "Met Threshold",
+				header : "q&lt;thresh?",
 				dataIndex : "metThreshold",
+				renderer : this.metThresholdStyler.createDelegate(this),
 				sortable : true
 			}, {
 				id : 'p',
-				header : "Sig. (FDR)",
+				header : "Sig. (q-value)",
 				dataIndex : "p",
+				width : 90,
 				renderer : function(p) {
 					if (p < 0.001) {
 						return sprintf("%.3e", p);
@@ -145,7 +109,7 @@ Gemma.DiffExpressionExperimentGrid = Ext.extend(Ext.grid.GridPanel, {
 			}]
 		});
 
-		Gemma.DiffExpressionExperimentGrid.superclass.initComponent.call(this);
+		Gemma.ProbeLevelDiffExGrid.superclass.initComponent.call(this);
 
 	},
 
@@ -175,45 +139,49 @@ Gemma.DiffExpressionExperimentGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	setEditable : function(b) {
 		this.editable = b;
+	},
+
+	metThresholdStyler : function(value, metadata, record, row, col, ds) {
+		if (value) {
+			return "&bull;";
+		} else {
+			return "";
+		}
 	}
 
 });
 
 /*
- * Gemma.ExpressionExperimentGrid.updateDatasetInfo = function(datasets, eeMap) {
- * for (var i = 0; i < datasets.length; ++i) { var ee = eeMap[datasets[i].id];
- * if (ee) { datasets[i].shortName = ee.shortName; datasets[i].name = ee.name; } } };
+ * Gemma.ExpressionExperimentGrid.updateDatasetInfo = function(datasets, eeMap) { for (var i = 0; i < datasets.length;
+ * ++i) { var ee = eeMap[datasets[i].id]; if (ee) { datasets[i].shortName = ee.shortName; datasets[i].name = ee.name; } } };
  */
 
 /* stylers */
-Gemma.DiffExpressionExperimentGrid.getEEStyler = function() {
-	if (Gemma.DiffExpressionExperimentGrid.eeNameStyler === undefined) {
-		Gemma.DiffExpressionExperimentGrid.eeNameTemplate = new Ext.Template("<a target='_blank' href='/Gemma/expressionExperiment/showExpressionExperiment.html?id={id}' ext:qtip='{name}'>{shortName}</a>");
-		Gemma.DiffExpressionExperimentGrid.eeNameStyler = function(value,
-				metadata, record, row, col, ds) {
+Gemma.ProbeLevelDiffExGrid.getEEStyler = function() {
+	if (Gemma.ProbeLevelDiffExGrid.eeNameStyler === undefined) {
+		Gemma.ProbeLevelDiffExGrid.eeNameTemplate = new Ext.Template("<a target='_blank' href='/Gemma/expressionExperiment/showExpressionExperiment.html?id={id}' ext:qtip='{name}'>{shortName}</a>");
+		Gemma.ProbeLevelDiffExGrid.eeNameStyler = function(value, metadata, record, row, col, ds) {
 			var ee = record.data.expressionExperiment;
-			return Gemma.DiffExpressionExperimentGrid.eeNameTemplate.apply(ee);
+			return Gemma.ProbeLevelDiffExGrid.eeNameTemplate.apply(ee);
 		};
 	}
-	return Gemma.DiffExpressionExperimentGrid.eeNameStyler;
+	return Gemma.ProbeLevelDiffExGrid.eeNameStyler;
 };
 
-Gemma.DiffExpressionExperimentGrid.getEENameStyler = function() {
-	if (Gemma.DiffExpressionExperimentGrid.eeStyler === undefined) {
-		Gemma.DiffExpressionExperimentGrid.eeTemplate = new Ext.Template("{name}");
-		Gemma.DiffExpressionExperimentGrid.eeStyler = function(value, metadata,
-				record, row, col, ds) {
+Gemma.ProbeLevelDiffExGrid.getEENameStyler = function() {
+	if (Gemma.ProbeLevelDiffExGrid.eeStyler === undefined) {
+		Gemma.ProbeLevelDiffExGrid.eeTemplate = new Ext.Template("{name}");
+		Gemma.ProbeLevelDiffExGrid.eeStyler = function(value, metadata, record, row, col, ds) {
 			var ee = record.data.expressionExperiment;
-			return Gemma.DiffExpressionExperimentGrid.eeTemplate.apply(ee);
+			return Gemma.ProbeLevelDiffExGrid.eeTemplate.apply(ee);
 		};
 	}
-	return Gemma.DiffExpressionExperimentGrid.eeStyler;
+	return Gemma.ProbeLevelDiffExGrid.eeStyler;
 };
 
-Gemma.DiffExpressionExperimentGrid.getProbeStyler = function() {
-	if (Gemma.DiffExpressionExperimentGrid.probeStyler === undefined) {
-		Gemma.DiffExpressionExperimentGrid.probeStyler = function(value,
-				metadata, record, row, col, ds) {
+Gemma.ProbeLevelDiffExGrid.getProbeStyler = function() {
+	if (Gemma.ProbeLevelDiffExGrid.probeStyler === undefined) {
+		Gemma.ProbeLevelDiffExGrid.probeStyler = function(value, metadata, record, row, col, ds) {
 
 			var probe = record.data.probe;
 
@@ -224,23 +192,22 @@ Gemma.DiffExpressionExperimentGrid.getProbeStyler = function() {
 			}
 		};
 	}
-	return Gemma.DiffExpressionExperimentGrid.probeStyler;
+	return Gemma.ProbeLevelDiffExGrid.probeStyler;
 };
 
-Gemma.DiffExpressionExperimentGrid.getEFStyler = function() {
-	if (Gemma.DiffExpressionExperimentGrid.efStyler === undefined) {
-		Gemma.DiffExpressionExperimentGrid.efTemplate = new Ext.XTemplate(
+Gemma.ProbeLevelDiffExGrid.getEFStyler = function() {
+	if (Gemma.ProbeLevelDiffExGrid.efStyler === undefined) {
+		Gemma.ProbeLevelDiffExGrid.efTemplate = new Ext.XTemplate(
 
 		'<tpl for=".">',
 				// "<a target='_blank' ext:qtip='{factorValues}'>{name}</a>\n",
 				"<div ext:qtip='{factorValues}'>{name}</div>", '</tpl>'
 
 		);
-		Gemma.DiffExpressionExperimentGrid.efStyler = function(value, metadata,
-				record, row, col, ds) {
+		Gemma.ProbeLevelDiffExGrid.efStyler = function(value, metadata, record, row, col, ds) {
 			var efs = record.data.experimentalFactors;
-			return Gemma.DiffExpressionExperimentGrid.efTemplate.apply(efs);
+			return Gemma.ProbeLevelDiffExGrid.efTemplate.apply(efs);
 		};
 	}
-	return Gemma.DiffExpressionExperimentGrid.efStyler;
+	return Gemma.ProbeLevelDiffExGrid.efStyler;
 };
