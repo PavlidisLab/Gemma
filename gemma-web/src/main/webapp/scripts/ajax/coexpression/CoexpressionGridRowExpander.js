@@ -30,7 +30,7 @@ Gemma.CoexpressionGridRowExpander = Ext.extend(Ext.grid.RowExpander, {
 
 			dsGrid.getStore().load();
 
-			var diffExGrid = new Gemma.DiffExpressionExperimentGrid({
+			var diffExGrid = new Gemma.ProbeLevelDiffExGrid({
 				geneId : gene.id,
 				threshold : 0.01,
 				width : 750,
