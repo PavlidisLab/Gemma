@@ -12,7 +12,8 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 	style : "margin-bottom: 1em;",
 
 	viewConfig : {
-		forceFit : true
+		forceFit : true,
+		emptyText : "Results will be displayed here"
 	},
 
 	record : Ext.data.Record.create([{
@@ -105,7 +106,7 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 				header : "# Datasets Tested In",
 				sortable : false,
 				width : 75,
-				tooltip : "# datasets testing the gene  / num datasets wiff diff analysis / num datasets in the scope",
+				tooltip : "# datasets testing the gene  / num datasets with diff analysis / num datasets in the scope",
 				renderer : this.supportStyler
 			}, {
 				id : 'numSignificant',
@@ -128,15 +129,12 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 	},
 
 	loadData : function(results) {
-
 		this.rowExpander.clearCache();
-		// this.datasets = datasets; // the datasets that are 'relevant'.
 		this.getStore().proxy.data = results;
 		this.getStore().reload({
 			resetPage : true
 		});
 		this.getView().refresh(true); // refresh column headers
-		// this.resizeDatasetColumn();
 	},
 
 	metThresholdStyler : function(value, metadata, record, row, col, ds) {
