@@ -17,24 +17,36 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	readMethod : DifferentialExpressionSearchController.getDifferentialExpression,
 
-	record : Ext.data.Record.create([{
-		name : "expressionExperiment"
-	}, {
-		name : "probe"
-	}, {
-		name : "experimentalFactors"
-	}, {
-		name : "metThreshold",
-		type : "boolean"
-	}, {
-		name : "fisherContribution",
-		type : "boolean"
-	}, {
-		name : "p",
-		type : "float"
-	}]),
+	convertEE : function(s) {
+		return s.shortName;
+	},
+
+	convertEF : function(s) {
+		return s[0].name;
+	},
 
 	initComponent : function() {
+
+		Ext.apply(this, {
+			record : Ext.data.Record.create([{
+				name : "expressionExperiment",
+				sortType : this.convertEE
+			}, {
+				name : "probe"
+			}, {
+				name : "experimentalFactors",
+				sortType : this.convertEF
+			}, {
+				name : "metThreshold",
+				type : "boolean"
+			}, {
+				name : "fisherContribution",
+				type : "boolean"
+			}, {
+				name : "p",
+				type : "float"
+			}])
+		});
 
 		if (this.pageSize) {
 			Ext.apply(this, {
@@ -73,23 +85,27 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 				id : 'expressionExperiment',
 				header : "Dataset",
 				dataIndex : "expressionExperiment",
+				toolTip : "The study/expression experiment the result came from",
 				sortable : true,
 				renderer : Gemma.ProbeLevelDiffExGrid.getEEStyler()
 			}, {
 				id : 'probe',
 				header : "Probe",
 				dataIndex : "probe",
+				toolTip : "The specific probe; shown in color if it was used for the Meta-P-value computation",
 				renderer : Gemma.ProbeLevelDiffExGrid.getProbeStyler(),
 				sortable : true
 			}, {
 				id : 'efs',
-				header : "Factor(s)",
+				header : "Factor",
+				toolTip : "The factor that was examined",
 				dataIndex : "experimentalFactors",
 				renderer : Gemma.ProbeLevelDiffExGrid.getEFStyler(),
-				sortable : false
+				sortable : true
 			}, {
 				id : 'p',
 				header : "Sig. (q-value)",
+				toolTip : "The significance measure of the result for the probe, shown in color if it met your threshold",
 				dataIndex : "p",
 				width : 90,
 				renderer : function(p, metadata, record) {
