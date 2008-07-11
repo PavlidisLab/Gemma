@@ -92,7 +92,7 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	},
 
 	onHelp : function(){
-		window.open('http://bioinformatics.ubc.ca/confluence/display/gemma/Dataset+chooser ','DataSetChooserHelp');
+		window.open('http://bioinformatics.ubc.ca/confluence/display/gemma/Dataset+chooser#FactorChooser','DataSetChooserHelp');
 	},
 	
 	/*
