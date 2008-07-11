@@ -599,7 +599,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             }
 
             if ( batch.size() > 0 ) {
-                results.addAll( getHibernateTemplate().findByNamedParam( queryString, "bms", batch ) );
+                results.addAll( getHibernateTemplate().findByNamedParam( queryString, "eds", batch ) );
             }
 
             return results;
