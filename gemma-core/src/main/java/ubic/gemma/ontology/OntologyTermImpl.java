@@ -46,31 +46,33 @@ public class OntologyTermImpl extends AbstractOntologyResource implements Ontolo
 
     @Override
     public int hashCode() {
-    if ( ontResource == null ) {
-    log.warn( "ontResource is null in hashCode()" );
-    return 0;
-    }
-    return getUri().hashCode();
+        if ( ontResource == null ) {
+            log.warn( "ontResource is null in hashCode()" );
+            return 0;
+        }
+        assert this.getUri() != null;
+        return this.getUri().hashCode();
     }
 
     @Override
     public boolean equals( Object obj ) {
-    if ( this == obj ) return true;
+        if ( this == obj ) return true;
 
-    if ( !super.equals( obj ) ) return false;
-    if ( getClass() != obj.getClass() ) return false;
+        if ( !super.equals( obj ) ) return false;
+        if ( getClass() != obj.getClass() ) return false;
 
-    final OntologyTermImpl that = ( OntologyTermImpl ) obj;
-    if ( ontResource == null ) {
-    log.warn( "ontResource is null in equals()" );
+        final OntologyTermImpl that = ( OntologyTermImpl ) obj;
+        if ( ontResource == null ) {
+            log.warn( "ontResource is null in equals()" );
+        }
+        if ( that.ontResource == null ) {
+            log.warn( "argument ontResource is null in equals()" );
+        }
+
+        return ObjectUtils.equals( this.getUri(), that.getUri() );
+
     }
-    if ( that.ontResource == null ) {
-    log.warn( "argument ontResource is null in equals()" );
-    }
 
-    return ObjectUtils.equals( this.getUri(), that.getUri() );
-
-    }
     public OntologyTermImpl( OntClass resource, ExternalDatabase source ) {
         this.ontResource = resource;
         this.sourceOntology = source;
@@ -107,7 +109,7 @@ public class OntologyTermImpl extends AbstractOntologyResource implements Ontolo
             // some reasoners will infer owl#Nothing as a subclass of everything
             if ( c.getURI().equals( NOTHING ) ) continue;
             result.add( this.fromOntClass( c ) );
-         //   log.info( c );
+            // log.info( c );
         }
         return result;
     }
@@ -183,9 +185,11 @@ public class OntologyTermImpl extends AbstractOntologyResource implements Ontolo
                         sr = sc.asRestriction();
 
                         // only add it if the class doesn't already have one.
-                        OntologyRestriction candidateRestriction = RestrictionFactory.asRestriction( sr, sourceOntology );
+                        OntologyRestriction candidateRestriction = RestrictionFactory
+                                .asRestriction( sr, sourceOntology );
                         for ( OntologyRestriction restr : result ) {
-                            if ( restr.getRestrictionOn().equals( candidateRestriction.getRestrictionOn() ) ) continue loop;
+                            if ( restr.getRestrictionOn().equals( candidateRestriction.getRestrictionOn() ) )
+                                continue loop;
                         }
                         result.add( candidateRestriction );
 
@@ -276,19 +280,18 @@ public class OntologyTermImpl extends AbstractOntologyResource implements Ontolo
     public String getUri() {
         return this.ontResource.getURI();
     }
-    
-    
-    public Collection<String> getAlternativeIds(){
+
+    public Collection<String> getAlternativeIds() {
         Collection<String> results = new HashSet<String>();
-        
-        Property alternate = ResourceFactory.createProperty(HAS_ALTERNATE_ID);
-        for (java.util.Iterator it = this.ontResource.listProperties( alternate ); it.hasNext();){
-            Statement statement = (Statement) it.next();      
-            results.add( statement.asTriple().getMatchObject().getLiteralLexicalForm() );            
+
+        Property alternate = ResourceFactory.createProperty( HAS_ALTERNATE_ID );
+        for ( java.util.Iterator it = this.ontResource.listProperties( alternate ); it.hasNext(); ) {
+            Statement statement = ( Statement ) it.next();
+            results.add( statement.asTriple().getMatchObject().getLiteralLexicalForm() );
         }
 
         return results;
-        
+
     }
-    
+
 }
