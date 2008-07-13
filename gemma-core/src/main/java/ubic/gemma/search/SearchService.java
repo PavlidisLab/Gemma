@@ -53,8 +53,11 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.store.Directory;
@@ -621,30 +624,42 @@ public class SearchService implements InitializingBean {
             SearchSettings settings ) {
 
         String query = settings.getQuery();
-        //
-        // StringReader sr = new StringReader( query );
-        // TokenStream ts = this.analyzer.tokenStream( "", sr );
-        Query lquer = this.makeLuceneQuery( query );
 
-        Set<Term> terms = new HashSet<Term>();
-        lquer.extractTerms( terms );
+        Set<String> rawTerms = extractTerms( query );
+
         Collection<SearchResult> allResults = new HashSet<SearchResult>();
         Map<SearchResult, String> matchMap = new HashMap<SearchResult, String>();
 
-        // try {
-        // Token nextTok = null;
-        // while ( ( nextTok = ts.next() ) != null ) {
-        for ( Term o : terms ) {
-            allResults.addAll( characteristicSearchWord( classes, matchMap, o.text() ) );
+        for ( String o : rawTerms ) {
+            allResults.addAll( characteristicSearchWord( classes, matchMap, o ) );
         }
-
-        // ts.close();
-        // } catch ( IOException e ) {
-        // throw new RuntimeException( e );
-        // }
 
         return postProcessCharacteristicResults( query, allResults, matchMap );
 
+    }
+
+    /**
+     * @param query
+     * @return
+     */
+    private Set<String> extractTerms( String query ) {
+        Query lquer = this.makeLuceneQuery( query );
+        Set<Term> terms = new HashSet<Term>();
+        Set<String> rawTerms = new HashSet<String>();
+        if ( lquer instanceof BooleanQuery ) {
+            BooleanClause[] clauses = ( ( BooleanQuery ) lquer ).getClauses();
+            for ( BooleanClause booleanClause : clauses ) {
+                rawTerms.add( booleanClause.toString() );
+            }
+        } else if ( lquer instanceof PhraseQuery ) {
+            rawTerms.add( ( ( PhraseQuery ) lquer ).toString().replaceAll( "\"", "" ) );
+        } else {
+            lquer.extractTerms( terms );
+            for ( Term term : terms ) {
+                rawTerms.add( term.text().replaceAll( "\"", "" ) );
+            }
+        }
+        return rawTerms;
     }
 
     /**
