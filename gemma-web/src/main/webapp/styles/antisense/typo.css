@@ -424,3 +424,14 @@ a.tooltip:hover .tooltiptext {
 	font-weight : bold;
 	color: #339900;
 }
+
+/*
+* for display of search results, see search.js
+*/
+.search-result-body {
+	/*font-style: italic; */
+}
+
+.details .x-btn-text {
+	background-image: url(../../images/icons/details.gif);
+}

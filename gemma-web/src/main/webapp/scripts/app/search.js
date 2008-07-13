@@ -27,10 +27,38 @@ Gemma.Search.app = function() {
 			var url = document.URL;
 			if (url.indexOf("?") > -1) {
 				var sq = url.substr(url.indexOf("?") + 1);
-				if (Ext.urlDecode(sq).query) {
-					this.form.getForm().findField('query').setValue(Ext.urlDecode(sq).query);
-					this.search();
+				var params = Ext.urlDecode(sq);
+				if (params.query) {
+					this.form.getForm().findField('query').setValue(params.query);
 				}
+				if (params.scope) {
+					if (params.scope.indexOf('E') > -1) {
+						Ext.getCmp('search-exps-chkbx').setValue(true);
+					} else {
+						Ext.getCmp('search-exps-chkbx').setValue(false);
+					}
+					if (params.scope.indexOf('A') > -1) {
+						Ext.getCmp('search-ars-chkbx').setValue(true);
+					} else {
+						Ext.getCmp('search-ars-chkbx').setValue(false);
+					}
+					if (params.scope.indexOf('P') > -1) {
+						Ext.getCmp('search-prbs-chkbx').setValue(true);
+					} else {
+						Ext.getCmp('search-prbs-chkbx').setValue(false);
+					}
+					if (params.scope.indexOf('G') > -1) {
+						Ext.getCmp('search-genes-chkbx').setValue(true);
+					} else {
+						Ext.getCmp('search-genes-chkbx').setValue(false);
+					}
+					if (params.scope.indexOf('S') > -1) {
+						Ext.getCmp('search-seqs-chkbx').setValue(true);
+					} else {
+						Ext.getCmp('search-seqs-chkbx').setValue(false);
+					}
+				}
+				this.search();
 			}
 
 		},
@@ -277,6 +305,7 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 	width : 800,
 	height : 500,
 	loadMask : true,
+	stripeRows : true,
 	collapsible : false,
 	title : "Search results",
 
@@ -290,7 +319,8 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 		name : "id",
 		type : "int"
 	}, {
-		name : "resultObject"
+		name : "resultObject",
+		sortType : this.sortInfo
 	}, {
 		name : "highlightedText",
 		type : "string"
@@ -299,13 +329,35 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 		type : "boolean"
 	}]),
 
+	toggleDetails : function(btn, pressed) {
+		var view = this.getView();
+		view.showPreview = pressed;
+		view.refresh();
+	},
+
 	initComponent : function() {
 		var proxy = new Ext.data.DWRProxy(SearchService.search);
 
 		proxy.on("loadexception", this.handleLoadError.createDelegate(this));
 
 		Ext.apply(this, {
+			tbar : new Ext.Toolbar({
+				items : [{
+					pressed : true,
+					enableToggle : true,
+					text : 'Show details',
+					cls : 'x-btn-text-icon details',
+					toggleHandler : this.toggleDetails.createDelegate(this)
+				}]
+			}),
 			view : new Ext.grid.GroupingView({
+				enableRowBody : true,
+				getRowClass : function(record, index, p, store) {
+					if (this.showPreview) {
+						p.body = "<p class='search-result-body' >" + record.get("highlightedText") + "</p>"; // typo.css
+					}
+					return '';
+				},
 				startCollapsed : true,
 				forceFit : true,
 				groupTextTpl : '{text}s ({[values.rs.length]} {[values.rs.length > 1 ? "Items" : "Item"]})'
@@ -335,6 +387,7 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 			}, {
 				header : "Matched via:",
 				width : 180,
+				hidden : true,
 				dataIndex : "highlightedText",
 				tooltip : "The text or part of the result that matched the search",
 				sortable : true
@@ -347,7 +400,6 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 					totalProperty : "totalSize"
 				}, this.record),
 				remoteSort : false,
-				pageSize : 20,
 				groupField : 'resultClass',
 				sortInfo : {
 					field : "score",
@@ -415,6 +467,23 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 			return "Sequence";
 		} else if (clazz == "Gene") {
 			return "Gene";
+		} else {
+			return clazz;
+		}
+	},
+
+	sortInfo : function(record) {
+		var clazz = record.resultsClass;
+		if (clazz == "ExpressionExperimentValueObject") {
+			return record.shortName;
+		} else if (clazz == "CompositeSequence") {
+			return record.name;
+		} else if (clazz == "ArrayDesignValueObject") {
+			return record.shortName;
+		} else if (/^BioSequence.*/.exec(clazz)) { // because we get proxies.
+			return record.name;
+		} else if (clazz == "Gene") {
+			return record.name;
 		} else {
 			return clazz;
 		}

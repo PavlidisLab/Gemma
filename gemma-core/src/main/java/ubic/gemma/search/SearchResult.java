@@ -148,6 +148,11 @@ public class SearchResult implements Comparable<SearchResult> {
         return true;
     }
 
+    @Override
+    public String toString() {
+        return this.getResultObject() + " matched in: " + ( this.highlightedText != null ? "'" + this.highlightedText + "'" : "(?)" );
+    }
+
     /**
      * Results with higher scores get put at the FRONT (Descending order!)
      */
