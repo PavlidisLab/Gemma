@@ -49,7 +49,7 @@ public class BirnLexOntologyService extends AbstractOntologyService {
 
     @Override
     protected String getOntologyUrl() {
-        return " http://purl.org/nbirn/birnlex/ontology/birnlex.owl";
+        return "http://purl.org/nbirn/birnlex/ontology/birnlex.owl";
     }
 
 }
