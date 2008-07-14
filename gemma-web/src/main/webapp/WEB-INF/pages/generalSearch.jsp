@@ -3,7 +3,8 @@
 
 <head>
 
-	<title><fmt:message key="generalSearch.title" /></title>
+	<title><fmt:message key="generalSearch.title" />
+	</title>
 
 	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 	<jwr:script src='/scripts/app/search.js' />
@@ -19,6 +20,12 @@
 <h1>
 	General search tool for Gemma
 </h1>
+<authz:authorize ifAnyGranted="admin">
+	<input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
+</authz:authorize>
+<authz:authorize ifNotGranted="admin">
+	<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
+</authz:authorize>
 
 <div id="messages"></div>
 <div style="height: 1em; margin-bottom: " id="validation-messages"></div>

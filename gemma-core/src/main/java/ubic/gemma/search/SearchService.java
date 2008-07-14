@@ -954,9 +954,6 @@ public class SearchService implements InitializingBean {
 
     /**
      * A Compass search on array designs.
-     * <p>
-     * The compass search is backed by a database search so the returned collection is filtered based on access
-     * permissions to the objects in the collection.
      * 
      * @param query
      * @return {@link Collection}
@@ -1489,15 +1486,24 @@ public class SearchService implements InitializingBean {
     private Collection<SearchResult> expressionExperimentSearch( final SearchSettings settings ) {
         StopWatch watch = startTiming();
 
-        Collection<SearchResult> results = databaseExpressionExperimentSearch( settings );
+        Collection<SearchResult> results = new HashSet<SearchResult>();
+
+        if ( settings.isUseDatabase() ) {
+            results.addAll( databaseExpressionExperimentSearch( settings ) );
+        }
 
         if ( results.size() == 0 ) {
             /*
              * User didn't put in an exact id, so they get a slower more thorough search.
              */
-            Collection<SearchResult> compassExpressionSearchResults = compassExpressionSearch( settings );
-            results.addAll( compassExpressionSearchResults );
-            results.addAll( characteristicExpressionExperimentSearch( settings ) );
+
+            if ( settings.isUseIndices() ) {
+                results.addAll( compassExpressionSearch( settings ) );
+            }
+
+            if ( settings.isUseCharacteristics() ) {
+                results.addAll( characteristicExpressionExperimentSearch( settings ) );
+            }
         }
 
         watch.stop();
@@ -1631,6 +1637,32 @@ public class SearchService implements InitializingBean {
             r.setScore( new Double( compassHit.getScore() * COMPASS_HIT_SCORE_PENALTY_FACTOR ) );
 
             CompassHighlightedText highlightedText = compassHit.highlightedText();
+            if ( highlightedText != null && highlightedText.getHighlightedText() != null ) {
+                r.setHighlightedText( "... " + highlightedText.getHighlightedText() + " ..." );
+            } else {
+                log.debug( "No highlighted text for " + r );
+            }
+            results.add( r );
+            i++;
+        }
+        return results;
+    }
+
+    /**
+     * @param hits
+     * @return
+     */
+    private Collection<SearchResult> getSearchResults( CompassHits hits ) {
+        Collection<SearchResult> results = new HashSet<SearchResult>();
+        for ( int i = 0, len = hits.getLength(); i < len; i++ ) {
+
+            SearchResult r = new SearchResult( hits.data( i ) );
+            /*
+             * Always give compass hits a lower score so they can be differentiated from exact database hits.
+             */
+            r.setScore( new Double( hits.score( i ) * COMPASS_HIT_SCORE_PENALTY_FACTOR ) );
+
+            CompassHighlightedText highlightedText = hits.highlightedText( i );
             if ( highlightedText != null && highlightedText.getHighlightedText() != null ) {
                 r.setHighlightedText( "... " + highlightedText.getHighlightedText() + " ..." );
             } else {
@@ -1779,16 +1811,17 @@ public class SearchService implements InitializingBean {
         // Put a limit on the number of hits to detach.
         // Detaching hits can be time consuming (somewhat like thawing).
 
-        CompassDetachedHits detachedHits = hits.detach( 0, Math.min( hits.getLength(), MAX_COMPASS_HITS_TO_DETACH ) );
+        // CompassDetachedHits detachedHits = hits.detach( 0, Math.min( hits.getLength(), MAX_COMPASS_HITS_TO_DETACH )
+        // );
 
         watch.stop();
 
-        if ( watch.getTime() > 1000 ) {
-            log.info( "Detaching " + detachedHits.getLength() + " hits for " + query + " took " + watch.getTime()
-                    + " ms" );
-        }
+        // if ( watch.getTime() > 1000 ) {
+        // log.info( "Detaching " + detachedHits.getLength() + " hits for " + query + " took " + watch.getTime()
+        // + " ms" );
+        // }
 
-        Collection<SearchResult> searchResults = getSearchResults( detachedHits.getHits() );
+        Collection<SearchResult> searchResults = getSearchResults( hits );
 
         return searchResults;
     }
@@ -1816,7 +1849,7 @@ public class SearchService implements InitializingBean {
     /**
      * Defines the properties we look at for 'highlighting'.
      */
-    static final String[] propertiesToSearch = new String[] { "name", "description",
+    static final String[] propertiesToSearch = new String[] { "all", "name", "description",
             "expressionExperiment.description", "expressionExperiment.name", "shortName", "abstract",
             "expressionExperiment.bioAssays.name", "expressionExperiment.bioAssays.description", "title",
             "expressionExperiment.experimentalDesign.experimentalFactors.name",
@@ -1824,8 +1857,7 @@ public class SearchService implements InitializingBean {
             "expressionExperiment.primaryPublication.title", "expressionExperiment.primaryPublication.abstractText",
             "expressionExperiment.primaryPublication.authorList",
             "expressionExperiment.otherRelevantPublications.abstractText",
-            "expressionExperiment.otherRelevantPublications.title", "arrayDesign.designProvider.name",
-            "arrayDesign.alternateNames.name" };
+            "expressionExperiment.otherRelevantPublications.title" };
 
     /**
      * @param hits
@@ -1837,21 +1869,22 @@ public class SearchService implements InitializingBean {
 
         for ( String p : propertiesToSearch ) {
             try {
-                String text = highlighter.fragment( p );
-                if ( text != null ) {
+                String text = highlighter.fragmentsWithSeparator( p );
+                if ( text != null && StringUtils.isNotBlank( text ) ) {
                     return text + " (" + p + ")"; // note we don't actually use this.
                 }
             } catch ( SearchEngineException e ) {
                 // no big deal - we asked for a property it doesn't have. Must be a
                 // better way...
+                // log.debug( e );
             } catch ( IllegalArgumentException e ) {
-                // log.debug( e ); // can be useful for debugging properties searched.
+                log.debug( e ); // can be useful for debugging properties searched.
                 // again, the property isn't in the compass bean, ignore.
             }
         }
 
-        // Explanation exp = LuceneHelper.getLuceneSearchEngineHits( hits ).explain( i );
-        // log.info( hits.detach( i, 1 ).getDatas()[0] + " " + exp.toString() );
+        Explanation exp = LuceneHelper.getLuceneSearchEngineHits( hits ).explain( i );
+        log.info( hits.data( i ) + " " + exp.toString() );
         return null;
     }
 

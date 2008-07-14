@@ -193,7 +193,7 @@ public class GeneralSearchController extends BaseFormController {
         watch.stop();
 
         if ( watch.getTime() > 500 ) {
-            log.info( "Over all search time for " + settings + " took " + watch.getTime() + " ms" );
+            log.info( "Search service work on: " + settings + " took " + watch.getTime() + " ms" );
         }
 
         /*
@@ -218,7 +218,7 @@ public class GeneralSearchController extends BaseFormController {
         }
 
         if ( watch.getTime() > 500 ) {
-            log.info( "Final parsing of " + settings + " took " + watch.getTime() + " ms" );
+            log.info( "Final unpacking of results for query:" + settings + " took " + watch.getTime() + " ms" );
         }
 
         return new ListRange( finalResults );

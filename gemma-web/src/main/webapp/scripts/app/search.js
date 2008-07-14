@@ -77,15 +77,14 @@ Gemma.Search.app = function() {
 			var searchArrays = Ext.getCmp('search-ars-chkbx').getValue();
 			var searchSequences = Ext.getCmp('search-seqs-chkbx').getValue();
 
-			//
-			// var sm = Ext.state.Manager;
-			//
-			// // FIXME combine these into a single cookie.
-			// sm.set('searchProbes', searchProbes);
-			// sm.set('searchGenes', searchGenes);
-			// sm.set('searchExperiments', searchExperiments);
-			// sm.set('searchArrays', searchArrays);
-			// sm.set('searchSequences', searchSequences);
+			var searchDatabase = true;
+			var searchIndices = true;
+			var searchCharacteristics = true;
+			if (dwr.util.getValue("hasAdmin")) {
+				searchDatabase = Ext.getCmp('search-database-chkbx').getValue();
+				searchIndices = Ext.getCmp('search-indices-chkbx').getValue();
+				searchCharacteristics = Ext.getCmp('search-characteristics-chkbx').getValue();
+			}
 
 			var scopes = "&scope=";
 			if (searchProbes) {
@@ -111,7 +110,10 @@ Gemma.Search.app = function() {
 					searchBioSequences : searchSequences,
 					searchArrays : searchArrays,
 					searchExperiments : searchExperiments,
-					searchGenes : searchGenes
+					searchGenes : searchGenes,
+					useDatabase : searchDatabase,
+					useIndices : searchIndices,
+					useCharacteristics : searchCharacteristics
 				}]
 			});
 
@@ -292,6 +294,41 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 				}]
 			}]
 		});
+
+		var showAdvancedOptions = dwr.util.getValue("hasAdmin");
+
+		if (showAdvancedOptions) {
+			var advancedOptions = {
+				width : 180,
+				xtype : 'fieldset',
+				defaultType : 'checkbox',
+				collapsible : true,
+				autoHeight : true,
+				title : 'Advanced options',
+				items : [{
+					id : 'search-database-chkbx',
+					name : "searchDatabase",
+					boxLabel : "Search database",
+					hideLabel : true,
+					checked : true
+				}, {
+					id : 'search-indices-chkbx',
+					name : "searchIndices",
+					boxLabel : "Seach indices",
+					hideLabel : true,
+					checked : true
+				}, {
+					id : 'search-characteristics-chkbx',
+					name : "searchCharacteristics",
+					boxLabel : "Search characteristics",
+					hideLabel : true,
+					checked : true
+				}]
+			};
+
+			this.items.push(advancedOptions);
+		}
+
 		Gemma.SearchForm.superclass.initComponent.call(this);
 		this.addEvents("search");
 

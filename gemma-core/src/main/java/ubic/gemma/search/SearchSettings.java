@@ -44,6 +44,10 @@ public class SearchSettings {
     private boolean searchBibrefs = false;
     private boolean searchGenesByGO = false;
 
+    private boolean useIndices = true;
+    private boolean useDatabase = true;
+    private boolean useCharacteristics = true;
+
     /**
      * If the search is 'specific', we can use that to refine the search criteria
      */
@@ -230,6 +234,30 @@ public class SearchSettings {
 
     public void setArrayDesign( ArrayDesign arrayDesign ) {
         this.arrayDesign = arrayDesign;
+    }
+
+    public boolean isUseIndices() {
+        return useIndices;
+    }
+
+    public void setUseIndices( boolean useIndices ) {
+        this.useIndices = useIndices;
+    }
+
+    public boolean isUseDatabase() {
+        return useDatabase;
+    }
+
+    public void setUseDatabase( boolean useDatabase ) {
+        this.useDatabase = useDatabase;
+    }
+
+    public boolean isUseCharacteristics() {
+        return useCharacteristics;
+    }
+
+    public void setUseCharacteristics( boolean useCharacteristics ) {
+        this.useCharacteristics = useCharacteristics;
     }
 
 }
